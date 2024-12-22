@@ -28,10 +28,10 @@ const (
 	screenWidth  = 320
 	screenHeight = 240
 
-	frameOX     = 0
-	frameOY     = 32
-	frameWidth  = 32
-	frameHeight = 32
+	frameOX     = 510
+	frameOY     = 640
+	frameWidth  = 65
+	frameHeight = 65
 	frameCount  = 8
 )
 
@@ -63,14 +63,14 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func main() {
 	// Decode an image from the image file's byte slice.
-	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
+	img, _, err := image.Decode(bytes.NewReader(images.Spritesheet_png))
 	if err != nil {
 		log.Fatal(err)
 	}
 	runnerImage = ebiten.NewImageFromImage(img)
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
-	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
+	ebiten.SetWindowTitle("Ascending Duel")
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}

@@ -63,7 +63,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Step 3: Render the image
 	screen.DrawImage(elementImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
-	//ebitenutil.DebugPrint(screen, "Hello, World!")
+
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("frame sx: %d, sy: %d", sx, sy))
 }
 

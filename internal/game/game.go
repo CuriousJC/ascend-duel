@@ -49,6 +49,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// random comment
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Step 1: Compute the frame
 	i := (g.count / 50) % frameCount

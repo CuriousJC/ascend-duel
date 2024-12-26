@@ -18,6 +18,16 @@ func main() {
 
 	g := game.NewGame()
 	g.Assets = assets.LoadAssets()
+	g.Fonts = assets.LoadFonts()
+
+	buttonPlay := game.NewButton(g, 100, 50, 120, 40, "Play", game.PlayAction)
+	g.Buttons = append(g.Buttons, buttonPlay)
+
+	buttonSettings := game.NewButton(g, 100, 100, 120, 40, "Settings", game.SettingsAction)
+	g.Buttons = append(g.Buttons, buttonSettings)
+
+	buttonExit := game.NewButton(g, 100, 150, 120, 40, "Exit", game.ExitAction)
+	g.Buttons = append(g.Buttons, buttonExit)
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

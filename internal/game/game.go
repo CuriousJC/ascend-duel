@@ -1,5 +1,10 @@
 package game
 
+//TODO:  Play with fonts that I've embedded (https://github.com/hajimehoshi/ebiten/blob/main/examples/fontfeature/main.go#L107)
+//TODO: Maybe use the image.fill function instead of a gradient? (https://ebitengine.org/en/tour/fill.html)
+//TODO:  Use a one byte vertical gradient for the buttons
+//TODO: Make the buttons do stuff on the screen instead of changing hues
+
 import (
 	"fmt"
 	"image"
@@ -21,19 +26,25 @@ const (
 )
 
 type Game struct {
-	Buttons []Button
-	count   int
-	mouseX  int
-	mouseY  int
-	Assets  map[string]*ebiten.Image          // Store images as a map in the Game struct
-	Fonts   map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
+	Buttons             []Button
+	count               int
+	mouseX              int
+	mouseY              int
+	buttonHue128        int
+	buttonSaturation128 int
+	buttonValue128      int
+	Assets              map[string]*ebiten.Image          // Store images as a map in the Game struct
+	Fonts               map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
 }
 
 func NewGame() *Game {
 	return &Game{
-		Assets:  make(map[string]*ebiten.Image),          // Initialize the assets map
-		Fonts:   make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
-		Buttons: []Button{},                              // Initialize the buttons slice
+		buttonHue128:        0,
+		buttonSaturation128: 0,
+		buttonValue128:      0,
+		Assets:              make(map[string]*ebiten.Image),          // Initialize the assets map
+		Fonts:               make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
+		Buttons:             []Button{},                              // Initialize the buttons slice
 	}
 }
 
@@ -59,7 +70,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Drawing our buttons
 	for i := range g.Buttons {
-		g.Buttons[i].Draw(screen)
+		g.Buttons[i].Draw(g, screen)
 	}
 
 }

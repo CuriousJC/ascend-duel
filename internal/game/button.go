@@ -1,6 +1,8 @@
 package game
 
 import (
+	"math"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -40,10 +42,16 @@ func (b *Button) Update() {
 	}
 }
 
-func (b *Button) Draw(screen *ebiten.Image) {
+func (b *Button) Draw(game *Game, screen *ebiten.Image) {
 	op := &colorm.DrawImageOptions{}
 	op.GeoM.Translate(float64(b.x), float64(b.y))
+
+	hue := float64(game.buttonHue128) * 2 * math.Pi / 128
+	saturation := float64(game.buttonSaturation128) / 128
+	value := float64(game.buttonValue128) / 128
 	var c colorm.ColorM
+	c.ChangeHSV(hue, saturation, value)
+
 	colorm.DrawImage(screen, b.game.Assets["frozenring_png"], c, op)
 	ebitenutil.DebugPrintAt(screen, b.label, b.x+10, b.y+10)
 

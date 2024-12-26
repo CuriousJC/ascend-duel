@@ -7,12 +7,16 @@ import (
 
 func PlayAction(g *Game) {
 	fmt.Println("Play button clicked!")
-	//TODO:  change the color of the button here?  maybe?  I think set the color and use it
-	//  in the draw method
+	g.buttonHue128 += 10
+	g.buttonSaturation128 += 10
+	g.buttonValue128 += 10
 }
 
 func SettingsAction(g *Game) {
 	fmt.Println("Settings button clicked!")
+	g.buttonHue128 -= 10
+	g.buttonSaturation128 -= 10
+	g.buttonValue128 -= 10
 }
 
 func ExitAction(g *Game) {

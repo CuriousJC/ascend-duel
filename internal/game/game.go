@@ -1,84 +1,98 @@
 package game
 
+//TODO:  Play with fonts that I've embedded (https://github.com/hajimehoshi/ebiten/blob/main/examples/fontfeature/main.go#L107)
+//TODO: Maybe use the image.fill function instead of a gradient? (https://ebitengine.org/en/tour/fill.html)
+//TODO:  Use a one byte vertical gradient for the buttons
+//TODO: Make the buttons do stuff on the screen instead of changing hues
+
 import (
-	"bytes"
 	"fmt"
-	"image"
-	_ "image/png"
-	"log"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 const (
-	screenWidth  = 320
-	screenHeight = 240
-	frameOX      = 510
-	frameOY      = 640
-	frameWidth   = 65
-	frameHeight  = 65
-	frameCount   = 8
-)
-
-var (
-	elementImage *ebiten.Image
+	screenWidth  = 1280
+	screenHeight = 960
 )
 
 type Game struct {
-	buttons []Button
-	count   int
+	Buttons             []Button
+	count               int
+	countSecond         int
+	mouseX              int
+	mouseY              int
+	buttonHue128        int
+	buttonSaturation128 int
+	buttonValue128      int
+	isDebug             bool
+	Assets              map[string]*ebiten.Image          // Store images as a map in the Game struct
+	Fonts               map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
 }
 
 func NewGame() *Game {
 	return &Game{
-		buttons: []Button{
-			NewButton(100, 50, 120, 40, "Play", PlayAction),
-			NewButton(100, 100, 120, 40, "Settings", SettingsAction),
-			NewButton(100, 150, 120, 40, "Exit", ExitAction),
-		},
+		buttonHue128:        0,
+		buttonSaturation128: 0,
+		buttonValue128:      0,
+		isDebug:             true,
+		Assets:              make(map[string]*ebiten.Image),          // Initialize the assets map
+		Fonts:               make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
+		Buttons:             []Button{},                              // Initialize the buttons slice
 	}
 }
 
 func (g *Game) Update() error {
-	for i := range g.buttons {
-		g.buttons[i].Update()
+	for i := range g.Buttons {
+		g.Buttons[i].Update()
 	}
 	g.count++
+	g.mouseX, g.mouseY = ebiten.CursorPosition()
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	// Step 1: Compute the frame
-	i := (g.count / 50) % frameCount
-	sx, sy := frameOX+i*frameWidth, frameOY
 
-	// Step 2: Set up transformations
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(frameWidth)/2, -float64(frameHeight)/2) // Center the origin
-	op.GeoM.Translate(screenWidth/2, screenHeight/2)                   // Move to screen center
-	op.GeoM.Scale(0.5, 0.5)                                            // Scale down
+	// Drawing our buttons
+	for i := range g.Buttons {
+		g.Buttons[i].Draw(g, screen)
+	}
 
-	// Step 3: Render the image
-	screen.DrawImage(elementImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("frame sx: %d, sy: %d", sx, sy))
+	// Drawing our text with a particular font
+	if g.count%60 == 0 {
+		g.countSecond++
+	}
 
-	// Step 4: Draw the buttons
-	for i := range g.buttons {
-		g.buttons[i].Draw(screen)
+	if g.isDebug {
+		g.DrawDebugInfo(screen)
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
-	// Decode an image from the image file's byte slice.
-	//TODO: switch this to something embedded in our own source code
-	img, _, err := image.Decode(bytes.NewReader(images.Spritesheet_png))
-	if err != nil {
-		log.Fatal(err)
-	}
-	elementImage = ebiten.NewImageFromImage(img)
+	return screenWidth, screenHeight
+}
 
-	return 320, 240
+func (g *Game) DrawDebugInfo(screen *ebiten.Image) {
+	SecondTextOp := &text.DrawOptions{}
+	SecondTextOp.GeoM.Translate(0, 900)
+	SecondTextOp.LineSpacing = 30
+	if g.countSecond%2 == 0 {
+		text.Draw(screen, "EVEN", &text.GoTextFace{Source: g.Fonts["firaSansRegular"], Size: 20}, SecondTextOp)
+	} else {
+		text.Draw(screen, "ODD", &text.GoTextFace{Source: g.Fonts["robotoFlexRegular"], Size: 20}, SecondTextOp)
+	}
+
+	UpdateCountOp := &text.DrawOptions{}
+	UpdateCountOp.GeoM.Translate(150, 900)
+	text.Draw(screen, strconv.Itoa(g.count), &text.GoTextFace{Source: g.Fonts["firaSansRegular"], Size: 20}, UpdateCountOp)
+
+	UpdateSecondOp := &text.DrawOptions{}
+	UpdateSecondOp.GeoM.Translate(300, 900)
+	text.Draw(screen, strconv.Itoa(g.countSecond), &text.GoTextFace{Source: g.Fonts["robotoFlexRegular"], Size: 20}, UpdateSecondOp)
+
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Mouse: %d, %d", g.mouseX, g.mouseY), 450, 900)
 }

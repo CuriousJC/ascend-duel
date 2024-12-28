@@ -29,7 +29,7 @@ var robotoFlexRegular []byte
 
 // loadFont Function flip embedded font into GoTextFaceSource
 func loadFont(data []byte) *text.GoTextFaceSource {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(firaSansRegular))
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(data))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -28,7 +28,7 @@ type Game struct {
 	buttonHue128        int
 	buttonSaturation128 int
 	buttonValue128      int
-	isDebug             bool
+	ActiveDebug         bool
 	Assets              map[string]*ebiten.Image          // Store images as a map in the Game struct
 	Fonts               map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
 }
@@ -38,35 +38,40 @@ func NewGame() *Game {
 		buttonHue128:        0,
 		buttonSaturation128: 0,
 		buttonValue128:      0,
-		isDebug:             true,
+		ActiveDebug:         true,
 		Assets:              make(map[string]*ebiten.Image),          // Initialize the assets map
 		Fonts:               make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
-		Buttons:             []Button{},                              // Initialize the buttons slice
+		Buttons:             []Button{},
 	}
 }
 
 func (g *Game) Update() error {
-	for i := range g.Buttons {
-		g.Buttons[i].Update()
-	}
-	g.count++
+
+	// Handling Mouse Position
 	g.mouseX, g.mouseY = ebiten.CursorPosition()
-	return nil
-}
 
-func (g *Game) Draw(screen *ebiten.Image) {
-
-	// Drawing our buttons
-	for i := range g.Buttons {
-		g.Buttons[i].Draw(g, screen)
-	}
-
-	// Drawing our text with a particular font
+	// Counters
+	g.count++
 	if g.count%60 == 0 {
 		g.countSecond++
 	}
 
-	if g.isDebug {
+	// Handing Button Clicks
+	for i := range g.Buttons {
+		g.Buttons[i].Update()
+	}
+
+	return nil
+
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+
+	for i := range g.Buttons {
+		g.Buttons[i].Draw(g, screen)
+	}
+
+	if g.ActiveDebug {
 		g.DrawDebugInfo(screen)
 	}
 }

@@ -8,28 +8,18 @@ import (
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  = 1280
+	screenHeight = 960
 )
 
 func main() {
-	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
+	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Ascending Duel")
 
 	//LOAD
 	g := game.NewGame()
-	g.Assets = assets.LoadAssets()
-	g.Fonts = assets.LoadFonts()
-
-	// INITIAL BUTTONS
-	buttonPlay := game.NewButton(g, 100, 50, 120, 40, "Play", game.PlayAction)
-	g.Buttons = append(g.Buttons, buttonPlay)
-
-	buttonSettings := game.NewButton(g, 100, 100, 120, 40, "Settings", game.SettingsAction)
-	g.Buttons = append(g.Buttons, buttonSettings)
-
-	buttonExit := game.NewButton(g, 100, 150, 120, 40, "Exit", game.ExitAction)
-	g.Buttons = append(g.Buttons, buttonExit)
+	g.GlobalState.Assets = assets.LoadAssets()
+	g.GlobalState.Fonts = assets.LoadFonts()
 
 	//RUN
 	if err := ebiten.RunGame(g); err != nil {

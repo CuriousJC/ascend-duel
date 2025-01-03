@@ -6,6 +6,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
 )
 
@@ -31,5 +32,16 @@ func DrawTitleScreen(screen *ebiten.Image, gs *state.GlobalState) {
 	} else {
 		text.Draw(screen, "TITLE SCREEN ODD", &text.GoTextFace{Source: gs.Fonts["robotoFlexRegular"], Size: 20}, SecondTextOp)
 	}
+
+	ThirdTextOp := &text.DrawOptions{}
+	ThirdTextOp.GeoM.Translate(0, 200)
+	text.Draw(screen, "BOUNDS TESTING", &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, ThirdTextOp)
+
+	vector.DrawFilledRect(screen, 100, 100, 200, 200, color.RGBA{R: 255, G: 0, B: 0, A: 255}, false)
+
+	vector.StrokeCircle(screen, 300, 300, 50, 5, color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
+
+	//TODO:  Keep playing with vector stuff:
+	//https://ebitengine.org/en/examples/vector.html
 
 }

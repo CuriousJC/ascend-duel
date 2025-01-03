@@ -27,6 +27,9 @@ var firaSansRegular []byte
 //go:embed RobotoFlex.ttf
 var robotoFlexRegular []byte
 
+//go:embed Kubasta.ttf
+var kubasta []byte
+
 // loadFont Function flip embedded font into GoTextFaceSource
 func loadFont(data []byte) *text.GoTextFaceSource {
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(data))
@@ -43,6 +46,7 @@ func LoadFonts() map[string]*text.GoTextFaceSource {
 
 	fonts["firaSansRegular"] = loadFont(firaSansRegular)
 	fonts["robotoFlexRegular"] = loadFont(robotoFlexRegular)
+	fonts["kubasta"] = loadFont(kubasta)
 
 	return fonts
 

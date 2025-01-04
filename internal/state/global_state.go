@@ -2,11 +2,17 @@
 package state
 
 import (
+	"fmt"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
+// GlobalState is the shared state that all components of the game use to know what to do
+// and what they will act upon during changes
 type GlobalState struct {
+	ActiveDebug         bool
+	ActiveScreen        string
 	Count               int
 	CountSecond         int
 	MouseX              int
@@ -14,14 +20,22 @@ type GlobalState struct {
 	ButtonHue128        int
 	ButtonSaturation128 int
 	ButtonValue128      int
-	ActiveDebug         bool
-	Assets              map[string]*ebiten.Image          // Store images as a map in the Game struct
-	Fonts               map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
-	Buttons             []Button
+	HelloButton         *models.Button //-- this is what I want to draw first on my title screen
+
+	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
+	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
+
+	Debug1 string
+	Debug2 string
+	Debug3 string
+	Debug4 string
 }
 
+// NewGlobalState used at the start of the game to start us off
 func NewGlobalState() *GlobalState {
 	return &GlobalState{
+		ActiveDebug:         true,
+		ActiveScreen:        "title",
 		Count:               0,
 		CountSecond:         0,
 		MouseX:              0,
@@ -29,41 +43,8 @@ func NewGlobalState() *GlobalState {
 		ButtonHue128:        0,
 		ButtonSaturation128: 0,
 		ButtonValue128:      0,
-		ActiveDebug:         true,
 		Assets:              make(map[string]*ebiten.Image),          // Initialize the assets map
 		Fonts:               make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
-		Buttons:             []Button{},
+		HelloButton:         models.NewButton(300, 300, "Hello", func() { fmt.Println("Hello button clicked!") }),
 	}
-}
-
-// todo: move to models?
-type Button struct {
-	Bounds       Rectangle
-	Text         string
-	Pressed      bool
-	IsJustActive bool
-}
-
-func CreateButton(bounds Rectangle, text string) *Button {
-	return &Button{
-		Bounds:       bounds,
-		Text:         text,
-		Pressed:      false,
-		IsJustActive: false,
-	}
-}
-
-type Size struct {
-	Width  int
-	Height int
-}
-
-type Point struct {
-	X int
-	Y int
-}
-
-type Rectangle struct {
-	Point
-	Size
 }

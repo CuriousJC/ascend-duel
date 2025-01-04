@@ -32,7 +32,7 @@ func (g *Game) Update() error {
 		g.GlobalState.CountSecond++
 	}
 
-	// Handle updates to state from the Title Screen
+	//TODO: Here is where I'll determine screen to update based on global state
 	screens.UpdateTitleScreen(g.GlobalState)
 
 	return nil
@@ -40,8 +40,11 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+
+	//TODO: Here is where I will determine which screen to draw based on global state.
 	screens.DrawTitleScreen(screen, g.GlobalState)
 
+	// Debug Info will clobber everything and is drawn last on the screen
 	if g.GlobalState.ActiveDebug {
 		g.DrawDebugInfo(screen)
 	}

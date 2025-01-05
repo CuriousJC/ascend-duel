@@ -2,36 +2,37 @@ package main
 
 import (
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/game"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  = 1280
+	screenHeight = 960
 )
 
 func main() {
-	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
+	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Ascending Duel")
+	ebiten.SetWindowClosingHandled(true)
 
-	//LOAD
+	//Create our Game instance
 	g := game.NewGame()
-	g.Assets = assets.LoadAssets()
-	g.Fonts = assets.LoadFonts()
+	g.GlobalState.ActiveDebug = true
 
-	// INITIAL BUTTONS
-	buttonPlay := game.NewButton(g, 100, 50, 120, 40, "Play", game.PlayAction)
-	g.Buttons = append(g.Buttons, buttonPlay)
+	//Load assets into memory one time at startup
+	g.GlobalState.Assets = assets.LoadAssets()
+	g.GlobalState.Fonts = assets.LoadFonts()
 
-	buttonSettings := game.NewButton(g, 100, 100, 120, 40, "Settings", game.SettingsAction)
-	g.Buttons = append(g.Buttons, buttonSettings)
+	// Buttons are assigned actions as part of the initial creation
+	g.GlobalState.CombatButton = models.NewButton(275, 100, "Combat", func() { actions.CombatButtonAction(g.GlobalState) })
+	g.GlobalState.SettingsButton = models.NewButton(275, 100, "Settings", func() { actions.SettingsButtonAction(g.GlobalState) })
+	g.GlobalState.ExitButton = models.NewButton(275, 100, "Exit", func() { actions.ExitButtonAction(g.GlobalState) })
 
-	buttonExit := game.NewButton(g, 100, 150, 120, 40, "Exit", game.ExitAction)
-	g.Buttons = append(g.Buttons, buttonExit)
-
-	//RUN
+	//Run game is the infinite loop
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

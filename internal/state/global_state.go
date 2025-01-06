@@ -29,12 +29,15 @@ type GlobalState struct {
 	HalfwayX     int
 	HalfwayY     int
 
-	//Assets
-	Assets         map[string]*ebiten.Image          // Store images as a map in the Game struct
-	Fonts          map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
+	//Models
 	CombatButton   *models.Button
 	SettingsButton *models.Button
 	ExitButton     *models.Button
+
+	//Assets
+	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
+	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
+
 }
 
 // NewGlobalState used at the start of the game to start us off
@@ -43,7 +46,6 @@ func NewGlobalState() *GlobalState {
 		ActiveScreen: Title,
 		Assets:       make(map[string]*ebiten.Image),          // Initialize the assets map
 		Fonts:        make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
-		CombatButton: nil,
 	}
 }
 
@@ -56,8 +58,8 @@ const (
 	Credits
 )
 
-func (as ActiveScreen) String() string {
-	switch as {
+func (active ActiveScreen) String() string {
+	switch active {
 	case Title:
 		return "Title"
 	case Ascend:

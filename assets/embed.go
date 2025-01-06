@@ -20,6 +20,12 @@ var title_png []byte
 //go:embed title-easter-egg.png
 var titleEaster_png []byte
 
+//go:embed tyrian_monster_sprites.png
+var tyrian_monster_sprites_png []byte
+
+//go:embed tyrian_ship_sprites.png
+var tyrian_ship_sprites_png []byte
+
 //go:embed spritesheet.png
 var spritesheet_png []byte
 
@@ -49,6 +55,8 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["spritesheet_png"] = loadImage(spritesheet_png)
 	assets["firering_png"] = loadImage(firering_png)
 	assets["frozenring_png"] = loadImage(frozenring_png)
+	assets["tyrian_ship_sprites_png"] = loadImage(tyrian_ship_sprites_png)
+	assets["tyrian_monster_sprites_png"] = loadImage(tyrian_monster_sprites_png)
 
 	return assets
 }

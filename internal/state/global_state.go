@@ -20,14 +20,18 @@ type GlobalState struct {
 	ShouldClose    bool
 
 	//Layout
-	ScreenWidth  int
-	ScreenHeight int
-	FirstThirdX  int
-	SecondThirdX int
-	FirstThirdY  int
-	SecondThirdY int
-	HalfwayX     int
-	HalfwayY     int
+	ScreenWidth   int
+	ScreenHeight  int
+	FirstThirdX   int
+	SecondThirdX  int
+	FirstThirdY   int
+	SecondThirdY  int
+	FirstQuarterX int
+	ThirdQuarterX int
+	FirstQuarterY int
+	ThirdQuarterY int
+	HalfwayX      int
+	HalfwayY      int
 
 	//Models
 	CombatButton   *models.Button

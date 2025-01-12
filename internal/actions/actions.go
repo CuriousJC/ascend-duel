@@ -8,6 +8,7 @@ import (
 
 func CombatButtonAction(gs *state.GlobalState) {
 	gs.ActiveScreen = state.Combat
+	gs.NewScreen = true
 	fmt.Println("Combat button clicked!")
 	gs.Debug1 = "Combat button clicked!"
 	gs.Debug2 = gs.ActiveScreen.String()
@@ -15,6 +16,7 @@ func CombatButtonAction(gs *state.GlobalState) {
 
 func SettingsButtonAction(gs *state.GlobalState) {
 	fmt.Println("Settings Button Clicked!")
+	gs.NewScreen = true
 }
 
 func ExitButtonAction(gs *state.GlobalState) {

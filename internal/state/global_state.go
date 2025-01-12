@@ -2,6 +2,7 @@
 package state
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -10,9 +11,11 @@ import (
 // GlobalState is the shared state that all components of the game use to know what to do
 // and what they will act upon during changes
 type GlobalState struct {
+	//Global Game Stuff
 	ActiveDebug    bool
 	Debug1, Debug2 string
 	ActiveScreen   ActiveScreen
+	NewScreen      bool
 	Count          int
 	CountSecond    int
 	MouseX         int
@@ -38,6 +41,10 @@ type GlobalState struct {
 	SettingsButton *models.Button
 	ExitButton     *models.Button
 
+	//Entities
+	Fighter *entities.Combatant
+	Enemy   *entities.Combatant
+
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
 	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
@@ -47,7 +54,8 @@ type GlobalState struct {
 // NewGlobalState used at the start of the game to start us off
 func NewGlobalState() *GlobalState {
 	return &GlobalState{
-		ActiveScreen: Title,
+		ActiveScreen: Combat,
+		NewScreen:    true,
 		Assets:       make(map[string]*ebiten.Image),          // Initialize the assets map
 		Fonts:        make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
 	}

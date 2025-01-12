@@ -93,6 +93,11 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	g.GlobalState.HalfwayX = g.GlobalState.ScreenWidth / 2
 	g.GlobalState.HalfwayY = g.GlobalState.ScreenHeight / 2
 
+	g.GlobalState.FirstQuarterX = g.GlobalState.ScreenWidth / 4
+	g.GlobalState.ThirdQuarterX = g.GlobalState.ScreenWidth / 4 * 3
+	g.GlobalState.FirstQuarterY = g.GlobalState.ScreenHeight / 4
+	g.GlobalState.ThirdQuarterY = g.GlobalState.ScreenHeight / 4 * 3
+
 	return g.GlobalState.ScreenWidth, g.GlobalState.ScreenHeight
 }
 
@@ -130,5 +135,10 @@ func (g *Game) DrawDebugInfo(screen *ebiten.Image) {
 	vector.StrokeLine(screen, 0, float32(g.GlobalState.SecondThirdY), 5000, float32(g.GlobalState.SecondThirdY), 1, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
 	vector.StrokeLine(screen, float32(g.GlobalState.FirstThirdX), 0, float32(g.GlobalState.FirstThirdX), 5000, 3, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
 	vector.StrokeLine(screen, float32(g.GlobalState.SecondThirdX), 0, float32(g.GlobalState.SecondThirdX), 5000, 3, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
+
+	vector.StrokeLine(screen, 0, float32(g.GlobalState.FirstQuarterY), 5000, float32(g.GlobalState.FirstQuarterY), 1, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
+	vector.StrokeLine(screen, 0, float32(g.GlobalState.ThirdQuarterY), 5000, float32(g.GlobalState.ThirdQuarterY), 1, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
+	vector.StrokeLine(screen, float32(g.GlobalState.FirstQuarterX), 0, float32(g.GlobalState.FirstQuarterX), 5000, 3, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
+	vector.StrokeLine(screen, float32(g.GlobalState.ThirdQuarterX), 0, float32(g.GlobalState.ThirdQuarterX), 5000, 3, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
 
 }

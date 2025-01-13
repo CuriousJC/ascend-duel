@@ -17,18 +17,22 @@ import (
 func InitCombatScreen(gs *state.GlobalState) {
 
 	if gs.Fighter == nil {
-		gs.Fighter = entities.NewCombatant(10, 11, 12)
-		fighterRect := image.Rect(98, 142, 191, 222)                                                   //TODO: Move to data.go
-		gs.Fighter.Sprite = gs.Assets["tyrian_ship_sprites_png"].SubImage(fighterRect).(*ebiten.Image) //TODO: Move to data.go
+		gs.Fighter = entities.NewCombatant()
+		gs.Fighter.Str = gs.Combatants["Fighter1"].Strength
+		gs.Fighter.Spd = gs.Combatants["Fighter1"].Speed
+		gs.Fighter.Con = gs.Combatants["Fighter1"].Constitution
+		gs.Fighter.SpriteRect = image.Rect(gs.Combatants["Fighter1"].SpriteRect[0], gs.Combatants["Fighter1"].SpriteRect[1], gs.Combatants["Fighter1"].SpriteRect[2], gs.Combatants["Fighter1"].SpriteRect[3])
+		gs.Fighter.Sprite = gs.Assets[gs.Combatants["Fighter1"].SpriteSheet].SubImage(gs.Fighter.SpriteRect).(*ebiten.Image)
 	}
 
 	if gs.Enemy == nil {
-		gs.Enemy = entities.NewCombatant(1, 31, 32)
-		monsterRect := image.Rect(5, 58, 119, 152)                                                      //TODO: Move to data.go
-		gs.Enemy.Sprite = gs.Assets["tyrian_monster_sprites_png"].SubImage(monsterRect).(*ebiten.Image) //TODO: Move to data.go
-
+		gs.Enemy = entities.NewCombatant()
+		gs.Enemy.Str = gs.Combatants["Monster1"].Strength
+		gs.Enemy.Spd = gs.Combatants["Monster1"].Speed
+		gs.Enemy.Con = gs.Combatants["Monster1"].Constitution
+		gs.Enemy.SpriteRect = image.Rect(gs.Combatants["Monster1"].SpriteRect[0], gs.Combatants["Monster1"].SpriteRect[1], gs.Combatants["Monster1"].SpriteRect[2], gs.Combatants["Monster1"].SpriteRect[3])
+		gs.Enemy.Sprite = gs.Assets[gs.Combatants["Monster1"].SpriteSheet].SubImage(gs.Fighter.SpriteRect).(*ebiten.Image)
 	}
-
 }
 
 func UpdateCombatScreen(gs *state.GlobalState) error {
@@ -58,6 +62,8 @@ func DrawCombatScreen(gs *state.GlobalState, screen *ebiten.Image) {
 	DrawActions(gs, screen)
 	DrawCharacter(gs, screen)
 	DrawEnemy(gs, screen)
+
+	//TODO: Create the DUEL! button which will perform the calculations and run through the actions
 
 }
 

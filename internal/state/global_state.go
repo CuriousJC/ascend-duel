@@ -2,6 +2,7 @@
 package state
 
 import (
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -44,6 +45,9 @@ type GlobalState struct {
 	//Entities
 	Fighter *entities.Combatant
 	Enemy   *entities.Combatant
+
+	//Data
+	Combatants map[string]data.CombatantData
 
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -26,6 +27,7 @@ func main() {
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()
 	g.GlobalState.Fonts = assets.LoadFonts()
+	g.GlobalState.Combatants = data.LoadCombatants()
 
 	// Buttons are assigned actions as part of the initial creation
 	g.GlobalState.CombatButton = models.NewButton(275, 100, "Combat", func() { actions.CombatButtonAction(g.GlobalState) })

@@ -2,6 +2,7 @@ package entities
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"image"
 )
 
 type Combatant struct {
@@ -11,16 +12,12 @@ type Combatant struct {
 	Life_max     int           // Maximum life
 	Life_current int           // Current life
 	Sprite       *ebiten.Image // Sprite image
+	SpriteRect   image.Rectangle
 }
 
 // NewButton creates a new button with the given width, height, and text
-func NewCombatant(con, str, spd int) *Combatant {
+func NewCombatant() *Combatant {
 	return &Combatant{
-		Con:          con,
-		Str:          str,
-		Spd:          spd,
-		Life_max:     con * 10,
-		Life_current: con * 10,
-		Sprite:       nil,
+		Sprite: nil,
 	}
 }

@@ -31,7 +31,7 @@ func InitCombatScreen(gs *state.GlobalState) {
 		gs.Enemy.Spd = gs.Combatants["Monster1"].Speed
 		gs.Enemy.Con = gs.Combatants["Monster1"].Constitution
 		gs.Enemy.SpriteRect = image.Rect(gs.Combatants["Monster1"].SpriteRect[0], gs.Combatants["Monster1"].SpriteRect[1], gs.Combatants["Monster1"].SpriteRect[2], gs.Combatants["Monster1"].SpriteRect[3])
-		gs.Enemy.Sprite = gs.Assets[gs.Combatants["Monster1"].SpriteSheet].SubImage(gs.Fighter.SpriteRect).(*ebiten.Image)
+		gs.Enemy.Sprite = gs.Assets[gs.Combatants["Monster1"].SpriteSheet].SubImage(gs.Enemy.SpriteRect).(*ebiten.Image)
 	}
 }
 

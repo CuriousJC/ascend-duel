@@ -1,0 +1,20 @@
+[
+  {
+    "CombatantRecord": "Monster1",
+    "SpriteSheet": "tyrian_monster_sprites_png",
+    "SpriteRect": [5, 58, 119, 152],
+    "Strength": 1,
+    "Speed": 31,
+    "Constitution": 32,
+    "AvailableAffixes": ["cold", "hot", "charged", "undying"]
+  },
+  {
+    "CombatantRecord": "Fighter1",
+    "SpriteSheet": "tyrian_ship_sprites_png",
+    "SpriteRect": [98, 142, 191, 222],
+    "Strength": 10,
+    "Speed": 11,
+    "Constitution": 12,
+    "AvailableAffixes": []
+  }
+]

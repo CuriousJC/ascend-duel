@@ -14,6 +14,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// ScreenWidth and ScreenHeight are the fixed internal resolution. Layout always
+// reports these regardless of window size, so Ebiten scales and letterboxes to fit
+// and every absolute coordinate in the game is safe against resizing.
+const (
+	ScreenWidth  = 1280
+	ScreenHeight = 960
+)
+
 type Game struct {
 	GlobalState *state.GlobalState
 }
@@ -59,6 +67,14 @@ func (g *Game) Update() error {
 // Draw runs as needed to update the screen at each frame
 func (g *Game) Draw(screen *ebiten.Image) {
 
+	// An action that switches screens sets ActiveScreen and NewScreen together, but the
+	// new screen's Init does not run until the next Update. Draw would otherwise run
+	// first and touch entities the Init has not built yet. Skipping that single frame
+	// is cheaper than nil-guarding every Draw*Screen.
+	if g.GlobalState.NewScreen {
+		return
+	}
+
 	switch g.GlobalState.ActiveScreen {
 	case state.Title:
 		screens.DrawTitleScreen(g.GlobalState, screen)
@@ -78,12 +94,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
-// Layout is called when the window is resized and will resize the screen to the new size
+// Layout reports the fixed internal resolution. The window size is ignored — Ebiten
+// scales the result to the window and letterboxes the remainder.
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
-	//Not playing any games with altering the size right now
-	g.GlobalState.ScreenWidth = outsideWidth
-	g.GlobalState.ScreenHeight = outsideHeight
+	g.GlobalState.ScreenWidth = ScreenWidth
+	g.GlobalState.ScreenHeight = ScreenHeight
 
 	g.GlobalState.FirstThirdX = g.GlobalState.ScreenWidth / 3
 	g.GlobalState.SecondThirdX = g.GlobalState.ScreenWidth / 3 * 2
@@ -98,7 +114,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	g.GlobalState.FirstQuarterY = g.GlobalState.ScreenHeight / 4
 	g.GlobalState.ThirdQuarterY = g.GlobalState.ScreenHeight / 4 * 3
 
-	return g.GlobalState.ScreenWidth, g.GlobalState.ScreenHeight
+	return ScreenWidth, ScreenHeight
 }
 
 // DrawDebugInfo is the final drawing and will place information on the screen at the specified row if requested

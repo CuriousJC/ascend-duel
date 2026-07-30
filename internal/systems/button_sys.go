@@ -7,6 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -21,17 +22,30 @@ func UpdateButton(gs *state.GlobalState, button *models.Button) {
 	centerX := button.ScreenX - button.Width/2
 	centerY := button.ScreenY - button.Height/2
 	buttonLocation := button.Image.Bounds().Add(image.Pt(centerX, centerY))
+	mouseOver := image.Pt(gs.MouseX, gs.MouseY).In(buttonLocation)
 
-	if image.Pt(gs.MouseX, gs.MouseY).In(buttonLocation.Bounds()) {
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-			button.State = models.ButtonStatePressed
-			if button.OnClick != nil {
-				button.OnClick()
-			}
-		} else {
-			button.State = models.ButtonStateHovered
+	// A click is a press and a release on the same button.  inpututil reports the
+	// tick the state changed, where ebiten.IsMouseButtonPressed reports the button
+	// being held, which would fire OnClick on every tick of a held mouse.
+	if mouseOver && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		button.PressedInside = true
+	}
+
+	// Firing on the release rather than the press lets a misclick be taken back by
+	// dragging off the button before letting go
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		if mouseOver && button.PressedInside && button.OnClick != nil {
+			button.OnClick()
 		}
-	} else {
+		button.PressedInside = false
+	}
+
+	switch {
+	case mouseOver && button.PressedInside:
+		button.State = models.ButtonStatePressed
+	case mouseOver:
+		button.State = models.ButtonStateHovered
+	default:
 		button.State = models.ButtonStateNormal
 	}
 }

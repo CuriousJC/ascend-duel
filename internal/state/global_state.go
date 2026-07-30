@@ -3,6 +3,7 @@ package state
 
 import (
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -41,10 +42,27 @@ type GlobalState struct {
 	CombatButton   *models.Button
 	SettingsButton *models.Button
 	ExitButton     *models.Button
+	DuelButton     *models.Button
 
 	//Entities
 	Fighter *entities.Combatant
 	Enemy   *entities.Combatant
+
+	//Duel — a round at a time. The player spends an action-point budget on
+	//FighterActions, ResolveRound turns that into an event log, and the screen
+	//replays the log before handing control back for the next round. The screen
+	//never computes an outcome; it replays this.
+	FighterActions []combat.ActionKind
+	EnemyActions   []combat.ActionKind
+	DuelLog        []combat.Event
+	DuelCursor     int
+	DuelTicks      int
+	DuelRound      int
+
+	//The authoritative end-of-round state, adopted once playback catches up. Guard
+	//flags in particular only exist here — no event carries them.
+	FighterAfter combat.Duelist
+	EnemyAfter   combat.Duelist
 
 	//Data
 	Combatants map[string]data.CombatantData
@@ -58,7 +76,7 @@ type GlobalState struct {
 // NewGlobalState used at the start of the game to start us off
 func NewGlobalState() *GlobalState {
 	return &GlobalState{
-		ActiveScreen: Combat,
+		ActiveScreen: Title,
 		NewScreen:    true,
 		Assets:       make(map[string]*ebiten.Image),          // Initialize the assets map
 		Fonts:        make(map[string]*text.GoTextFaceSource), // Initialize the fonts map

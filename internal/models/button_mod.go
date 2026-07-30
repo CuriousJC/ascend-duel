@@ -23,6 +23,10 @@ type Button struct {
 	Text    string
 	State   ButtonState
 	OnClick func()
+
+	// PressedInside records that the mouse went down while over this button, so
+	// the release can tell a real click from a drag that happened to end here.
+	PressedInside bool
 }
 
 // NewButton creates a new button with the given width, height, and text

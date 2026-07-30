@@ -21,3 +21,6 @@
 
 # Go workspace file
 # go.work  #I want to include this at least for now
+
+# Scratch notes and analysis, not part of the project
+analysis.md

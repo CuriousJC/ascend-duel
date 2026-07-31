@@ -94,6 +94,33 @@ do not write code that forecloses it.
   before playback begins, so animation speed, the planned game-speed setting, and any
   skip button are free to alter pacing and must not alter results.
 
+## UI: clicks and drag-and-drop only
+
+A firm design decision, not a current limitation. The entire input vocabulary is:
+
+- **Left click** — buttons and selection.
+- **Drag and drop** — the action box, and anything else that needs ordering or moving.
+- **Long press** — reveal further information about the thing under the cursor. Not
+  built yet.
+- **One typed-text field in the whole game** — entering a seed to replay a run. Nothing
+  else anywhere accepts keyboard input.
+
+**No right click, ever.** There is no context menu and no secondary action. Anything
+that feels like it wants one needs a different design.
+
+- **Wanting a text field is a design smell.** Find the click or drag version instead.
+  A settings value is a row of buttons or a slider, never a number you type.
+- **No UI toolkit dependency.** Widgets are hand-rolled following the
+  `models.Button` + `systems.UpdateButton`/`DrawButton` split. Add new widgets the same
+  way: a plain struct in `models`, behaviour in `systems`, owned by the scene that uses
+  it.
+- ebitenui was evaluated and declined — see the entry in `TODO.md` for the reasoning and
+  the repo data behind it. Do not reach for it without revisiting that.
+
+The action box is a *game* widget, not a UI widget: draggable action cards with live
+action-point validation. General-purpose toolkits are weakest at exactly that, so
+hand-rolling costs little and buys full control.
+
 ## Architecture
 
 ### Ebitengine game loop
@@ -121,7 +148,7 @@ Scenes also build their own widgets in `Init` and wire them to their own methods
 Key conventions:
 - `ActiveScreen` (`Title`/`Ascend`/`Combat`/`Credits`) selects the scene. Adding a screen means adding an `ActiveScreen` constant and one entry in the `scenes` map.
 - `NewScreen bool` is the one-shot init flag, consumed centrally in `game.Update`. Actions that change screens set it back to `true`; scenes never touch it.
-- Layout fields (`HalfwayX`, `FirstThirdY`, `ThirdQuarterX`, …) are recomputed in `Layout` and are the intended way to place things — avoid hardcoded pixel coordinates.
+- `gs.PctX(pct)` / `gs.PctY(pct)` are the intended way to place things — avoid hardcoded pixel coordinates. They replaced a dozen cached fields for halves, thirds and quarters, which could not express 40% and could not be extended to without inventing a field name per fraction. **Percentages anchor a group; offsets within a group stay in pixels** (see the title menu), and sizes are never percentages. The debug overlay rules the screen at the halves/thirds/quarters and ticks every 10% along the top and left edges, so a position can be read straight off the screen.
 - `Debug1`/`Debug2` are free-form strings printed by `DrawDebugInfo`; scratch tracing goes there.
 
 ### Package layout and its layering

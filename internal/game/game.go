@@ -114,19 +114,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	g.GlobalState.ScreenWidth = ScreenWidth
 	g.GlobalState.ScreenHeight = ScreenHeight
 
-	g.GlobalState.FirstThirdX = g.GlobalState.ScreenWidth / 3
-	g.GlobalState.SecondThirdX = g.GlobalState.ScreenWidth / 3 * 2
-	g.GlobalState.FirstThirdY = g.GlobalState.ScreenHeight / 3
-	g.GlobalState.SecondThirdY = g.GlobalState.ScreenHeight / 3 * 2
-
-	g.GlobalState.HalfwayX = g.GlobalState.ScreenWidth / 2
-	g.GlobalState.HalfwayY = g.GlobalState.ScreenHeight / 2
-
-	g.GlobalState.FirstQuarterX = g.GlobalState.ScreenWidth / 4
-	g.GlobalState.ThirdQuarterX = g.GlobalState.ScreenWidth / 4 * 3
-	g.GlobalState.FirstQuarterY = g.GlobalState.ScreenHeight / 4
-	g.GlobalState.ThirdQuarterY = g.GlobalState.ScreenHeight / 4 * 3
-
 	return ScreenWidth, ScreenHeight
 }
 
@@ -156,18 +143,64 @@ func (g *Game) DrawDebugInfo(screen *ebiten.Image) {
 	debugState := fmt.Sprintf("Debug1: %s \nDebug2: %s", g.GlobalState.Debug1, g.GlobalState.Debug2)
 	ebitenutil.DebugPrintAt(screen, debugState, 450, debugYRow+30)
 
-	// Layout Lines
-	vector.StrokeLine(screen, 0, float32(g.GlobalState.HalfwayY), 5000, float32(g.GlobalState.HalfwayY), 1, color.RGBA{R: 50, G: 205, B: 50, A: 255}, false)
-	vector.StrokeLine(screen, float32(g.GlobalState.HalfwayX), 0, float32(g.GlobalState.HalfwayX), 5000, 3, color.RGBA{R: 50, G: 205, B: 50, A: 255}, false)
+	g.drawLayoutGuides(screen)
+	g.drawPercentTicks(screen)
+}
 
-	vector.StrokeLine(screen, 0, float32(g.GlobalState.FirstThirdY), 5000, float32(g.GlobalState.FirstThirdY), 1, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
-	vector.StrokeLine(screen, 0, float32(g.GlobalState.SecondThirdY), 5000, float32(g.GlobalState.SecondThirdY), 1, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
-	vector.StrokeLine(screen, float32(g.GlobalState.FirstThirdX), 0, float32(g.GlobalState.FirstThirdX), 5000, 3, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
-	vector.StrokeLine(screen, float32(g.GlobalState.SecondThirdX), 0, float32(g.GlobalState.SecondThirdX), 5000, 3, color.RGBA{R: 255, G: 105, B: 180, A: 75}, false)
+// drawLayoutGuides rules the screen at the halves, thirds and quarters. These were the
+// only positions the old cached layout fields could express; they survive as guides
+// because they are still the positions things get placed at most often.
+//
+// Thirds are exact division rather than PctY(33) — 33% of 960 is four pixels off the
+// real third, which is visible when eyeballing a sprite against the line.
+func (g *Game) drawLayoutGuides(screen *ebiten.Image) {
+	w := float32(g.GlobalState.ScreenWidth)
+	h := float32(g.GlobalState.ScreenHeight)
 
-	vector.StrokeLine(screen, 0, float32(g.GlobalState.FirstQuarterY), 5000, float32(g.GlobalState.FirstQuarterY), 1, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
-	vector.StrokeLine(screen, 0, float32(g.GlobalState.ThirdQuarterY), 5000, float32(g.GlobalState.ThirdQuarterY), 1, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
-	vector.StrokeLine(screen, float32(g.GlobalState.FirstQuarterX), 0, float32(g.GlobalState.FirstQuarterX), 5000, 3, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
-	vector.StrokeLine(screen, float32(g.GlobalState.ThirdQuarterX), 0, float32(g.GlobalState.ThirdQuarterX), 5000, 3, color.RGBA{R: 50, G: 105, B: 180, A: 75}, false)
+	guideX := func(x float32, c color.Color) { vector.StrokeLine(screen, x, 0, x, h, 3, c, false) }
+	guideY := func(y float32, c color.Color) { vector.StrokeLine(screen, 0, y, w, y, 1, c, false) }
 
+	halves := color.RGBA{R: 50, G: 205, B: 50, A: 255}
+	guideY(h/2, halves)
+	guideX(w/2, halves)
+
+	thirds := color.RGBA{R: 255, G: 105, B: 180, A: 75}
+	guideY(h/3, thirds)
+	guideY(h/3*2, thirds)
+	guideX(w/3, thirds)
+	guideX(w/3*2, thirds)
+
+	quarters := color.RGBA{R: 50, G: 105, B: 180, A: 75}
+	guideY(h/4, quarters)
+	guideY(h/4*3, quarters)
+	guideX(w/4, quarters)
+	guideX(w/4*3, quarters)
+}
+
+// drawPercentTicks marks every 10% along the top and left edges, so a position can be
+// read off the screen while laying things out. Short ticks rather than full-width
+// rules, so they locate without obscuring what is being positioned.
+func (g *Game) drawPercentTicks(screen *ebiten.Image) {
+	const (
+		step      = 10 // percent between ticks
+		tickScale = 10 // tick length as a percent of the perpendicular dimension
+	)
+
+	tickColor := color.RGBA{R: 220, G: 220, B: 220, A: 140}
+	w := float32(g.GlobalState.ScreenWidth)
+	h := float32(g.GlobalState.ScreenHeight)
+	tickDown := h * tickScale / 100   // length of the ticks hanging off the top edge
+	tickAcross := w * tickScale / 100 // length of the ticks running off the left edge
+
+	for pct := step; pct < 100; pct += step {
+		// Along the top edge: vertical ticks marking X positions.
+		x := w * float32(pct) / 100
+		vector.StrokeLine(screen, x, 0, x, tickDown, 1, tickColor, false)
+		ebitenutil.DebugPrintAt(screen, strconv.Itoa(pct), int(x)+2, 2)
+
+		// Down the left edge: horizontal ticks marking Y positions.
+		y := h * float32(pct) / 100
+		vector.StrokeLine(screen, 0, y, tickAcross, y, 1, tickColor, false)
+		ebitenutil.DebugPrintAt(screen, strconv.Itoa(pct), 2, int(y)+2)
+	}
 }

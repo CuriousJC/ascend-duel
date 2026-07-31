@@ -16,9 +16,25 @@ import (
 	"image/color"
 )
 
-// duelTicksPerEvent is how long each event in the log is held on screen during
-// playback, at 60 TPS. Destined to become the game-speed setting.
-const duelTicksPerEvent = 8
+// Playback pacing at 60 TPS. Destined to become the game-speed setting.
+//
+// The budget is spent per action rather than spread evenly over events: an action holds
+// the screen for three seconds, and the damage and guard events that belong to it pass
+// in a quick beat. Splitting three seconds across every event instead would make a
+// Guard — which emits nothing but its own event — take as long as a Heavy that lands.
+const (
+	ticksPerSecond   = 60
+	actionDwellTicks = 3 * ticksPerSecond
+	beatTicks        = ticksPerSecond / 4
+)
+
+// dwellFor is how long one event holds the screen.
+func dwellFor(e combat.Event) int {
+	if e.Kind == combat.KindAction {
+		return actionDwellTicks
+	}
+	return beatTicks
+}
 
 // CombatScene runs one duel: the player plans a set of actions against an action
 // point budget, presses DUEL!, watches the round play out, and plans again.
@@ -62,14 +78,19 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The scene builds its own widget and wires it to its own method, so no other
 	// package needs to know this screen has a button or what pressing it means.
 	if s.duelButton == nil {
-		s.duelButton = models.NewButton(275, 100, "DUEL!", s.startRound)
+		s.duelButton = models.NewButton(138, 50, "DUEL!", s.startRound)
+		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
 	}
-	s.duelButton.ScreenX = gs.HalfwayX
-	s.duelButton.ScreenY = gs.ThirdQuarterY
+	s.duelButton.ScreenX = gs.PctX(20)
+	s.duelButton.ScreenY = gs.PctY(85) // centred in the 80–90% band
 
 	// Placeholder queue until the action box is draggable. It must fit the AP budget.
 	s.fighterActions = defaultFighterPlan(s.fighter.Duelist)
-	s.enemyActions = nil
+
+	// Planned up front only so the enemy pane has something in it before the first
+	// DUEL!. startRound re-plans it every round regardless, so this is display, not a
+	// commitment the resolver ever reads.
+	s.enemyActions = combat.PlanGreedy(s.enemy.Duelist)
 
 	s.fighter.CurrentLife = s.fighter.MaxLife
 	s.enemy.CurrentLife = s.enemy.MaxLife
@@ -128,7 +149,7 @@ func (s *CombatScene) advancePlayback() {
 	}
 
 	s.ticks++
-	if s.ticks < duelTicksPerEvent {
+	if s.ticks < dwellFor(s.log[s.cursor]) {
 		return
 	}
 	s.ticks = 0
@@ -186,8 +207,6 @@ func (s *CombatScene) caption() string {
 	switch e.Kind {
 	case combat.KindRoundStart:
 		return fmt.Sprintf("Round %d!", e.Round)
-	case combat.KindVolleyStart:
-		return fmt.Sprintf("%s acts", who)
 	case combat.KindAction:
 		return fmt.Sprintf("%s uses %s", who, e.Action)
 	case combat.KindGuarded:
@@ -214,19 +233,222 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	text.Draw(screen, s.caption(),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, captionOp)
 
-	s.drawActionBox(gs, screen)
 	s.drawActions(gs, screen)
-	s.drawCombatant(screen, s.fighter, float64(gs.FirstQuarterX), float64(gs.HalfwayY))
-	s.drawCombatant(screen, s.enemy, float64(gs.ThirdQuarterX), float64(gs.HalfwayY))
+	s.drawActionBox(gs, screen)
+	s.drawResolution(gs, screen)
+	s.drawEnemyActions(gs, screen)
+	s.drawCombatant(screen, s.fighter, float64(gs.PctX(10)), float64(gs.PctY(50)))
+	s.drawCombatant(screen, s.enemy, float64(gs.PctX(75)), float64(gs.PctY(50)))
 	systems.DrawButton(gs, screen, s.duelButton)
+}
+
+// The three panes share one vertical band and differ only in their horizontal slot.
+const (
+	paneTopPct    = 20
+	paneBottomPct = 70
+
+	paneTitleInset = 10 // gap from the pane's top edge to its title
+	paneFirstRow   = 45 // gap from the top edge to the first action row
+	paneRowHeight  = 30
+	paneRowInset   = 10 // gap from the pane's left edge to a row's swatch
+	swatchSize     = 16
+	swatchGap      = 6 // gap between a swatch and its label
+)
+
+// panePlacement is one pane's horizontal slot, label and identifying colour. The
+// colours are loud on purpose — these are placeholders for finding the layout, not a
+// palette anyone has chosen yet.
+type panePlacement struct {
+	leftPct, rightPct int
+	title             string
+	color             color.RGBA
+}
+
+var (
+	availableActionsPane = panePlacement{leftPct: 20, rightPct: 30, title: "Player", color: color.RGBA{R: 60, G: 200, B: 90, A: 255}}
+	chosenActionsPane    = panePlacement{leftPct: 35, rightPct: 45, title: "Chosen", color: color.RGBA{R: 70, G: 130, B: 230, A: 255}}
+	resolutionPane       = panePlacement{leftPct: 55, rightPct: 65, title: "Resolution", color: color.RGBA{R: 235, G: 105, B: 170, A: 255}}
+	enemyActionsPane     = panePlacement{leftPct: 85, rightPct: 95, title: "Enemy", color: color.RGBA{R: 225, G: 200, B: 60, A: 255}}
+)
+
+// paneRow is one line in a pane: a label, optionally preceded by a colour swatch
+// saying whose action it is. A zero-alpha swatch means the row has none, in which case
+// the label is centred instead of sitting in a column beside the squares.
+type paneRow struct {
+	label  string
+	swatch color.RGBA
+
+	// highlighted marks the row as the one happening right now, drawn lit against the
+	// dim pane behind it.
+	highlighted bool
 }
 
 func (s *CombatScene) drawActionBox(gs *state.GlobalState, screen *ebiten.Image) {
 	//This will be the box that contains all the selected actions
+	s.drawPane(gs, screen, chosenActionsPane, actionRows(s.fighterActions))
 }
 
 func (s *CombatScene) drawActions(gs *state.GlobalState, screen *ebiten.Image) {
 	//This will be the box of available actions that can be dragged into the Action Box
+	s.drawPane(gs, screen, availableActionsPane, paletteRows())
+}
+
+// drawEnemyActions shows what the opponent has queued. Read-only forever — nothing is
+// ever dragged into this one.
+func (s *CombatScene) drawEnemyActions(gs *state.GlobalState, screen *ebiten.Image) {
+	s.drawPane(gs, screen, enemyActionsPane, actionRows(s.enemyActions))
+}
+
+// drawResolution shows the two queues merged into play order.
+func (s *CombatScene) drawResolution(gs *state.GlobalState, screen *ebiten.Image) {
+	s.drawPane(gs, screen, resolutionPane, s.resolutionRows(s.fighterActions, s.enemyActions))
+}
+
+// drawPane draws one column: a dim fill in its identifying colour, a full-strength
+// border, a title and a row per action.
+func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, rows []paneRow) {
+	x := float32(gs.PctX(p.leftPct))
+	y := float32(gs.PctY(paneTopPct))
+	w := float32(gs.PctX(p.rightPct)) - x
+	h := float32(gs.PctY(paneBottomPct)) - y
+
+	// Dim fill, full-strength border: the pane reads as green or blue or yellow at a
+	// glance without drowning the text drawn on top of it.
+	vector.DrawFilledRect(screen, x, y, w, h, systems.ColorAtStrength(p.color, 25), false)
+	vector.StrokeRect(screen, x, y, w, h, 2, p.color, false)
+
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
+
+	titleOp := &text.DrawOptions{}
+	titleOp.GeoM.Translate(float64(x+w/2), float64(y+paneTitleInset))
+	titleOp.PrimaryAlign = text.AlignCenter
+	text.Draw(screen, p.title, face, titleOp)
+
+	for i, row := range rows {
+		rowY := y + paneFirstRow + float32(i*paneRowHeight)
+		rowOp := &text.DrawOptions{}
+
+		// The row happening right now gets a lit bar the full width of the pane, so it
+		// carries across the room at a glance rather than needing the label read.
+		if row.highlighted {
+			vector.DrawFilledRect(screen, x+2, rowY-4, w-4, paneRowHeight-2,
+				systems.ColorAtStrength(p.color, 70), false)
+		}
+
+		if row.swatch.A == 0 {
+			rowOp.GeoM.Translate(float64(x+w/2), float64(rowY))
+			rowOp.PrimaryAlign = text.AlignCenter
+		} else {
+			// A swatch turns the row into a column: square on the left, label beside it,
+			// so the squares line up down the pane and the alternation is readable as a
+			// pattern rather than as text.
+			//
+			// Idle swatches are dimmed so the lit one is the brightest thing in the pane.
+			swatch := row.swatch
+			if !row.highlighted {
+				swatch = systems.ColorAtStrength(swatch, 55)
+			}
+			vector.DrawFilledRect(screen, x+paneRowInset, rowY+2, swatchSize, swatchSize, swatch, false)
+			rowOp.GeoM.Translate(float64(x+paneRowInset+swatchSize+swatchGap), float64(rowY))
+		}
+
+		text.Draw(screen, row.label, face, rowOp)
+	}
+}
+
+// paletteRows lists every action a duelist can queue, with its cost, in the order the
+// combat package says the UI should offer them.
+func paletteRows() []paneRow {
+	rows := make([]paneRow, 0, len(combat.AllActions))
+	for _, a := range combat.AllActions {
+		rows = append(rows, paneRow{label: fmt.Sprintf("%s %d", a, a.Cost())})
+	}
+	return rows
+}
+
+// actionRows renders a queued set one action per row.
+func actionRows(actions []combat.ActionKind) []paneRow {
+	if len(actions) == 0 {
+		return []paneRow{{label: "(empty)"}}
+	}
+
+	rows := make([]paneRow, 0, len(actions))
+	for _, a := range actions {
+		rows = append(rows, paneRow{label: a.String()})
+	}
+	return rows
+}
+
+// resolutionRows interleaves the two queued sets one action each, and marks the row for
+// the action currently playing back. Each row is swatched in its side's pane colour, so
+// who-acts-when reads as a pattern of squares before any of the labels are read.
+//
+// Whichever set is longer keeps going alone once the other runs out — a faster duelist
+// buys more actions, and the tail is exactly where that advantage shows.
+//
+// This layout is the order combat.ResolveRound actually plays, so the highlight walks
+// straight down the pane. Keep the two in step: the pane is the player's model of the
+// round, and effects that reorder resolution will have to move both.
+func (s *CombatScene) resolutionRows(fighter, enemy []combat.ActionKind) []paneRow {
+	if len(fighter) == 0 && len(enemy) == 0 {
+		return []paneRow{{label: "(empty)"}}
+	}
+
+	playingSide, playingOrdinal, playing := s.currentAction()
+	row := func(a combat.ActionKind, side combat.Side, ordinal int, swatch color.RGBA) paneRow {
+		return paneRow{
+			label:       a.String(),
+			swatch:      swatch,
+			highlighted: playing && side == playingSide && ordinal == playingOrdinal,
+		}
+	}
+
+	rows := make([]paneRow, 0, len(fighter)+len(enemy))
+	for i := 0; i < len(fighter) || i < len(enemy); i++ {
+		if i < len(fighter) {
+			rows = append(rows, row(fighter[i], combat.SideA, i, chosenActionsPane.color))
+		}
+		if i < len(enemy) {
+			rows = append(rows, row(enemy[i], combat.SideB, i, enemyActionsPane.color))
+		}
+	}
+	return rows
+}
+
+// currentAction reports which queued action the playback cursor is inside: its side and
+// its index within that side's queue. It is derived by counting the action events walked
+// so far rather than tracked in a field, so it cannot drift out of step with the cursor.
+//
+// ok is false before the first action of a round and once playback has finished.
+func (s *CombatScene) currentAction() (combat.Side, int, bool) {
+	if s.cursor >= len(s.log) {
+		return combat.SideA, 0, false
+	}
+
+	fighterSeen, enemySeen := -1, -1
+	side := combat.SideA
+	found := false
+
+	for _, e := range s.log[:s.cursor+1] {
+		if e.Kind != combat.KindAction {
+			continue
+		}
+		if e.Side == combat.SideA {
+			fighterSeen++
+		} else {
+			enemySeen++
+		}
+		side = e.Side
+		found = true
+	}
+
+	if !found {
+		return combat.SideA, 0, false
+	}
+	if side == combat.SideA {
+		return combat.SideA, fighterSeen, true
+	}
+	return combat.SideB, enemySeen, true
 }
 
 // drawCombatant draws one duelist and its health bar. The fighter and the monster

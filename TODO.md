@@ -62,16 +62,24 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         and ~20 lines of screen glue. No drawing code moved. That is the payoff of the
         split, and it is worth remembering the next time the rules change.
 - [x] **Define `Action`.** `ActionKind` is Strike / Guard / Heavy / Quick, costing
-      1 / 2 / 2 / 4 action points. A duel is a sequence of rounds: the player spends an
-      AP budget on a set, side A's set resolves in full, then side B's, then control
-      returns to re-plan. `Spd` buys budget (`AP = 4 + Spd/10`), not turn frequency.
-      All integer arithmetic, so rounds are exactly reproducible.
-      - Side A always resolves first, and the screen maps the player to A. A Guard the
-        player places is therefore up for exactly the enemy's reply.
-      - The enemy raises its guard *after* A has acted, so `Guarded` persists on the
-        `Duelist` across rounds — otherwise the enemy's Guard could never protect
-        anything. It clears at the start of its owner's next volley, which means it is
-        still set in the state returned from the round it was raised in.
+      1 / 2 / 2 / 4 action points. A duel is a sequence of rounds: both sides spend an
+      AP budget on a set, the two sets resolve **alternately** — one of A's, one of B's —
+      then control returns to re-plan. `Spd` buys budget (`AP = 4 + Spd/10`), not turn
+      frequency. All integer arithmetic, so rounds are exactly reproducible.
+      - Side A takes the first turn, and the screen maps the player to A. A Guard the
+        player places is therefore up for the enemy's reply.
+      - Whichever queue is longer keeps acting alone once the other empties, so a speed
+        advantage is spent at the tail of the round.
+      - **Alternating replaced volley-per-side on 2026-07-31**, when the resolution pane
+        made the old order visible and it read wrong. The point is that resolution order
+        is a thing the player can see and, later, manipulate — speed effects and other
+        tweaks need somewhere to bite, and two monolithic volleys gave them none.
+        `KindVolleyStart` went with it; there are no volleys to start.
+      - `Guarded` persists on the `Duelist` and clears at the start of its owner's next
+        *action*, so it covers every opposing action in between, across a round boundary
+        if the guard was queued last. A duelist who queues nothing therefore keeps its
+        guard — deliberate, pinned by `TestGuardHoldsWhileItsOwnerDoesNothing`, and
+        harmless because standing still deals no damage.
       - Superseded an earlier speed-timeline model where a fast duelist took whole
         extra turns. That is wrong for a game you re-plan every round: extra turns are
         invisible when you only ever plan one.
@@ -89,9 +97,25 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       `DrawActionBox` / `DrawActions` are still empty stubs. The engine side is ready and
       waiting: `combat.AllActions` is the palette, `ActionKind.Cost()` the price,
       `Duelist.ActionPoints()` the budget and `CanAfford` the validity check — the UI
-      just has to write `gs.FighterActions`. Until it exists, `defaultFighterPlan` in
+      just has to write `s.fighterActions`. Until it exists, `defaultFighterPlan` in
       [combat.go](internal/screens/combat.go) stands in for the player's choices.
-      This is the decision point on hand-rolled UI vs ebitenui — see "Open decisions".
+      - Hand-rolled, no toolkit — decided, see "Open decisions". Drag state lives on
+        `CombatScene` alongside everything else it owns.
+      - **Flow, decided:** build a plan → DUEL! → watch playback → build a *fresh* plan →
+        DUEL! again. The queue empties every round; nothing carries over. Makes each
+        round a real decision rather than a default nobody revisits.
+      - `defaultFighterPlan` is deleted once this lands — it only ever stood in for the
+        player.
+      - The planning/playback phase stays derived from `cursor >= len(log)` rather than
+        becoming its own field, so there is one source of truth.
+      - DUEL! is disabled while the queue is empty — first real use of the existing
+        `models.ButtonStateDisabled`. An empty plan is mechanically legal and
+        `ResolveRound` handles it, but it means standing still while being hit.
+      - Under-spending the budget is allowed; forbidding it would add a rule for no gain.
+      - **No "repeat last plan" shortcut.** Explicitly not wanted: every round being a
+        real decision is where the balance and design work lives, and a repeat button
+        undercuts that. Revisit only if playtesting proves it tedious — do not add it
+        pre-emptively.
 - [ ] **Real opponent AI.** `combat.PlanGreedy` buys the biggest attack it can afford and
       never guards. Deterministic and fine for testing, but not a fight.
 - [x] **Wire `Str` / `Spd` / `Con`.** `Con` feeds `MaxLife`, `Str` sets action damage,
@@ -298,10 +322,32 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ## Open decisions
 
-- [?] **Hand-rolled UI vs [ebitenui](https://github.com/ebitenui/ebitenui) (MIT).**
-      Not part of Ebitengine — separate community project. Drag-and-drop for the action
-      box is where hand-rolling stops being cheap, so this decision lands with the next
-      feature.
+- [x] **Hand-rolled UI vs [ebitenui](https://github.com/ebitenui/ebitenui) — decided:
+      hand-roll everything.** Not part of Ebitengine; a separate community project.
+      - **The design decision that settles it:** every interaction in this game is a
+        click or a drag-and-drop, and there will be exactly **one** text input in the
+        whole game — the seed field. Recorded as a firm rule in `CLAUDE.md`.
+      - Drag-and-drop was the wrong trigger for this decision. The action box is a *game*
+        widget — draggable cards with live AP validation — and general-purpose toolkits
+        are weakest at bespoke game widgets. Roughly 200–300 lines hand-rolled, using hit
+        testing and `inpututil` handling the codebase already has.
+      - Repo data as of 2026-07-31, via the GitHub API: created 2020, last push
+        2026-04-22, 928 stars, 74 forks, **73 open issues**, MIT, not archived. Releases
+        v0.7.3 (Mar 2026), v0.7.2 (Sep 2025), v0.7.0 (Aug 2025). Contributors:
+        mcarpenter622 322 commits, blizzy78 151, mat007 42, then a long tail.
+      - What that means: two people are effectively the project, it is still pre-1.0
+        after six years (so API churn is expected, not just abandonment risk), and a
+        non-critical issue would likely sit. Fine for a hobby dependency, poor for
+        something load-bearing in a product being sold.
+      - It is also retained-mode — it owns a widget tree and its own event dispatch —
+        which is a second UI architecture running alongside the `Scene` design rather
+        than a layer that slides out cleanly.
+      - [?] Revisit **only** if the seed text field turns out to be genuinely painful.
+            Even then it is the easiest possible text input: short, ASCII, fixed
+            charset, no selection or clipboard or IME needed. `ebiten.AppendInputChars`
+            plus backspace handling is plausibly ~60 lines, so this trigger may never
+            actually fire. If it does, confine any toolkit to whole screens and keep its
+            types out of scene fields and signatures.
 - [?] **Title hue shift.** `title.go` calls `ChangeHSV(1, 1, 1)`; `hueTheta` is *radians*,
       so that's a ~57° rotation, not identity. Source PNG is warm gold/amber. If the
       title looks greener on screen than the file, it's unintended — identity is

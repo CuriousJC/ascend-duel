@@ -31,14 +31,18 @@ func (s *TitleScene) Init(gs *state.GlobalState) {
 		s.exitButton = models.NewButton(275, 100, "Exit", func() { actions.QuitGame(gs) })
 	}
 
-	s.combatButton.ScreenX = gs.HalfwayX
-	s.combatButton.ScreenY = gs.FirstThirdY
+	// The percentage anchors the menu; the 150px steps space it. Giving each button its
+	// own percentage would let the spacing drift apart the next time the menu moves.
+	menuTop := gs.PctY(33)
 
-	s.settingsButton.ScreenX = gs.HalfwayX
-	s.settingsButton.ScreenY = gs.FirstThirdY + 150
+	s.combatButton.ScreenX = gs.PctX(50)
+	s.combatButton.ScreenY = menuTop
 
-	s.exitButton.ScreenX = gs.HalfwayX
-	s.exitButton.ScreenY = gs.FirstThirdY + 300
+	s.settingsButton.ScreenX = gs.PctX(50)
+	s.settingsButton.ScreenY = menuTop + 150
+
+	s.exitButton.ScreenX = gs.PctX(50)
+	s.exitButton.ScreenY = menuTop + 300
 }
 
 func (s *TitleScene) Update(gs *state.GlobalState) error {
@@ -65,7 +69,7 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	op := &colorm.DrawImageOptions{}
 	scaleFactor := 0.75
 	op.GeoM.Scale(scaleFactor, scaleFactor)
-	op.GeoM.Translate(float64(gs.HalfwayX)-imageCenterX*scaleFactor, 150-imageCenterY*scaleFactor)
+	op.GeoM.Translate(float64(gs.PctX(50))-imageCenterX*scaleFactor, 150-imageCenterY*scaleFactor)
 	hue := float64(1)
 	saturation := float64(1)
 	value := float64(1)

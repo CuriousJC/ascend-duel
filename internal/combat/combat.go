@@ -5,16 +5,16 @@
 // outcome itself. That split is what makes the rules unit-testable and what would
 // let a headless balance sim run thousands of duels with no window.
 //
-// A duel is a sequence of rounds. Each round the player spends an action-point
-// budget on a set of actions, those resolve in order, then the enemy's set resolves.
-// Control returns to the player to re-plan. Nothing here runs a duel to completion —
-// that is the screen's loop, and the point is that the player re-evaluates between
+// A duel is a sequence of rounds. Each round both sides spend an action-point budget
+// on a set of actions, and those resolve alternately — one of A's, one of B's, and so
+// on. Control returns to the player to re-plan. Nothing here runs a duel to completion
+// — that is the screen's loop, and the point is that the player re-evaluates between
 // rounds.
 package combat
 
 // Side identifies which duelist an event belongs to. The engine is deliberately
 // symmetric — it has no notion of "player" — so callers map A and B onto whatever
-// they like. Side A resolves first every round.
+// they like. Side A takes the first turn of every round.
 type Side int
 
 const (
@@ -39,9 +39,10 @@ type Duelist struct {
 	MaxLife     int
 	CurrentLife int
 
-	// Guarded is a raised guard carried out of the round it was raised in. Side B
-	// raises its guard after side A has already acted, so without this the enemy's
-	// Guard could never protect anything.
+	// Guarded is a raised guard. It protects from the moment it goes up until its
+	// owner's next action, which means it covers every opposing action that falls
+	// between the two — including across a round boundary, since a guard raised on the
+	// last action of a round is still up when the next one starts.
 	Guarded bool
 }
 
@@ -156,7 +157,6 @@ type EventKind int
 
 const (
 	KindRoundStart EventKind = iota
-	KindVolleyStart
 	KindAction
 	KindGuarded
 	KindDamage
@@ -176,7 +176,11 @@ type Event struct {
 }
 
 // ResolveRound plays out one round and returns its event log along with the state
-// both sides end in. Side A's whole set resolves first, then side B's.
+// both sides end in. The two queues alternate one action each, side A first.
+//
+// Alternating rather than resolving one side's whole set and then the other's is what
+// makes resolution order a thing the player can reason about and, later, manipulate:
+// the order is the visible plan, so speed and other effects have somewhere to bite.
 //
 // Inputs are taken by value and never mutated, so a caller can re-run a round from
 // the same starting state — the returned duelists are the authority on what changed.
@@ -184,33 +188,37 @@ func ResolveRound(a, b Duelist, aActions, bActions []ActionKind, round int) (eve
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
-	// Side A first. A's guard from last round has already served its purpose against
-	// B's reply, so it drops as A comes back around.
-	a.Guarded = false
-	events, a, b = resolveVolley(events, SideA, a, b, aActions, round)
+	// Whichever queue is longer keeps acting alone once the other runs out. That tail
+	// is exactly where a speed advantage shows, so it is the point rather than an edge
+	// case to be smoothed away.
+	for i := 0; i < len(aActions) || i < len(bActions); i++ {
+		if i < len(aActions) {
+			events, a, b = resolveAction(events, SideA, a, b, aActions[i], round)
+			if !b.Alive() {
+				break
+			}
+		}
 
-	if !b.Alive() {
-		events = append(events, Event{Kind: KindRoundEnd, Round: round})
-		return events, a, b
+		if i < len(bActions) {
+			events, b, a = resolveAction(events, SideB, b, a, bActions[i], round)
+			if !a.Alive() {
+				break
+			}
+		}
 	}
-
-	// Side B replies. Its guard from last round protected it against the volley
-	// above, and drops now.
-	b.Guarded = false
-	events, b, a = resolveVolley(events, SideB, b, a, bActions, round)
 
 	events = append(events, Event{Kind: KindRoundEnd, Round: round})
 	return events, a, b
 }
 
-// resolveVolley runs one side's whole queued set against the other. Returning the
+// resolveAction runs a single action by one side against the other. Returning the
 // duelists by value keeps ResolveRound free of pointer aliasing between the two
 // sides, which is the kind of bug that only shows up when both queue a Guard.
-func resolveVolley(
+func resolveAction(
 	events []Event,
 	side Side,
 	actor, target Duelist,
-	actions []ActionKind,
+	action ActionKind,
 	round int,
 ) ([]Event, Duelist, Duelist) {
 	targetSide := SideB
@@ -218,57 +226,58 @@ func resolveVolley(
 		targetSide = SideA
 	}
 
-	events = append(events, Event{Kind: KindVolleyStart, Side: side, Round: round})
+	// A raised guard has served its purpose by the time its owner comes back around,
+	// so it drops here — at the start of the actor's turn, before this action gets the
+	// chance to re-raise it. A duelist who queues nothing therefore keeps a guard up:
+	// see TestGuardHoldsWhileItsOwnerDoesNothing, which pins that as intended.
+	actor.Guarded = false
 
-	for _, action := range actions {
+	events = append(events, Event{
+		Kind:   KindAction,
+		Side:   side,
+		Action: action,
+		Round:  round,
+	})
+
+	if action == Guard {
+		actor.Guarded = true
+		return events, actor, target
+	}
+
+	dmg := action.damage(actor.Str)
+	if target.Guarded {
+		dmg /= guardDivisor
 		events = append(events, Event{
-			Kind:   KindAction,
-			Side:   side,
-			Action: action,
-			Round:  round,
-		})
-
-		if action == Guard {
-			actor.Guarded = true
-			continue
-		}
-
-		dmg := action.damage(actor.Str)
-		if target.Guarded {
-			dmg /= guardDivisor
-			events = append(events, Event{
-				Kind:   KindGuarded,
-				Side:   side,
-				Target: targetSide,
-				Amount: dmg,
-				Life:   target.CurrentLife,
-				Round:  round,
-			})
-		}
-
-		target.CurrentLife -= dmg
-		if target.CurrentLife < 0 {
-			target.CurrentLife = 0
-		}
-
-		events = append(events, Event{
-			Kind:   KindDamage,
+			Kind:   KindGuarded,
 			Side:   side,
 			Target: targetSide,
 			Amount: dmg,
 			Life:   target.CurrentLife,
 			Round:  round,
 		})
+	}
 
-		if !target.Alive() {
-			events = append(events, Event{
-				Kind:   KindDefeated,
-				Side:   side,
-				Target: targetSide,
-				Round:  round,
-			})
-			break
-		}
+	target.CurrentLife -= dmg
+	if target.CurrentLife < 0 {
+		target.CurrentLife = 0
+	}
+
+	events = append(events, Event{
+		Kind:   KindDamage,
+		Side:   side,
+		Target: targetSide,
+		Amount: dmg,
+		Life:   target.CurrentLife,
+		Round:  round,
+	})
+
+	if !target.Alive() {
+		events = append(events, Event{
+			Kind:   KindDefeated,
+			Side:   side,
+			Target: targetSide,
+			Round:  round,
+		})
 	}
 
 	return events, actor, target

@@ -14,6 +14,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// ErrClosing is returned from Update to stop the game loop on a deliberate quit.
+// Ebitengine treats any non-nil error from Update as "stop", so a clean exit has to
+// travel as an error; main checks for this one specifically so quitting does not
+// look like a crash.
+var ErrClosing = errors.New("closing")
+
 // ScreenWidth and ScreenHeight are the fixed internal resolution. Layout always
 // reports these regardless of window size, so Ebiten scales and letterboxes to fit
 // and every absolute coordinate in the game is safe against resizing.
@@ -36,7 +42,7 @@ func (g *Game) Update() error {
 
 	if g.GlobalState.ShouldClose || ebiten.IsWindowBeingClosed() {
 		//Would handle any saving of state or confirmation here
-		return errors.New("Closing")
+		return ErrClosing
 	}
 	// Handling Mouse Position
 	g.GlobalState.MouseX, g.GlobalState.MouseY = ebiten.CursorPosition()
@@ -47,21 +53,21 @@ func (g *Game) Update() error {
 		g.GlobalState.CountSecond++
 	}
 
+	// Screen errors propagate rather than being discarded. Ebitengine stops the loop
+	// on any non-nil error from Update, so a screen returning one is fatal by design —
+	// which is the only sensible reading of an error a screen cannot handle itself.
 	switch g.GlobalState.ActiveScreen {
 	case state.Title:
-		screens.UpdateTitleScreen(g.GlobalState)
+		return screens.UpdateTitleScreen(g.GlobalState)
 	case state.Ascend:
-		//Ascend Screen
+		return nil //Ascend Screen
 	case state.Combat:
-		screens.UpdateCombatScreen(g.GlobalState)
+		return screens.UpdateCombatScreen(g.GlobalState)
 	case state.Credits:
-		//Credits
+		return nil //Credits
 	default:
-		screens.UpdateTitleScreen(g.GlobalState)
+		return screens.UpdateTitleScreen(g.GlobalState)
 	}
-
-	return nil
-
 }
 
 // Draw runs as needed to update the screen at each frame

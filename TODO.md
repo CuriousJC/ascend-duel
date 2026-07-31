@@ -125,10 +125,16 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       `Credits` are empty cases in both switches.
 - [ ] **Affixes.** `cold` / `hot` / `charged` / `undying` are in `combatants.json` and
       never read. Ring and effect art is partly present.
-- [ ] **Replace Tyrian placeholder art.** Not a blocker — the `SpriteSheet` +
-      `SpriteRect` indirection means it's a data swap. Keep it that way: no identifiers
-      or packages named for it, no assumptions baked in about its palette or rect
-      conventions.
+- [ ] **Replace Tyrian placeholder art — now a release blocker, not a cosmetic swap.**
+      Technically still easy: the `SpriteSheet` + `SpriteRect` indirection means it's a
+      data change. Keep it that way — no identifiers or packages named for it, no
+      assumptions baked in about its palette or rect conventions.
+      - The reason it got promoted: the Tyrian set has no formal license, only "use and
+        abuse them as desired" on a 2007 Lost Garden blog post. That is fine for a public
+        hobby repo and thin for a paid release. **This has to be resolved before the game
+        is sold anywhere.**
+      - Applies to everything under `assets/tyrian_graphics/` plus the two consolidated
+        sheets actually embedded (`tyrian_monster_sprites.png`, `tyrian_ship_sprites.png`).
 
 ## Housekeeping
 
@@ -161,9 +167,44 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ## Licensing (for an eventual Steam release)
 
-- [x] Ebitengine — Apache 2.0. Commercial use fine, no source disclosure, no royalty.
-- [x] All transitive deps — BSD (`golang.org/x/*`) or Apache. **No GPL anywhere.**
+Model: source stays public, nobody else may commercialise it. Justin and Sherman
+have a signed agreement covering the relicense.
+
+- [x] **Relicensed from Apache 2.0 to PolyForm Noncommercial 1.0.0.** Source-available,
+      not open source. Read / build / modify / share for noncommercial purposes; selling
+      is reserved to the copyright holders. README states the terms in plain English.
+- [ ] **Put Sherman's legal name in `LICENSE`.** The Required Notice currently names the
+      GitHub handle `KingSherman1820`. Deliberately deferred — a written partnership
+      agreement covers the two of them — but a copyright notice naming only a handle is
+      weak if it ever has to be enforced.
+- [x] **Contributor grant — `CONTRIBUTING.md`.** Under a noncommercial licence an outside
+      contributor keeps copyright and has *not* granted the right to sell their work, so
+      merging unlicensed contributions would leave the game unsellable. Contributors now
+      grant a perpetual, royalty-free, commercial-use-and-relicense licence, signalled by
+      `git commit -s` (DCO convention). Landed before the repo has outside PRs, which is
+      the only cheap time to do it.
+- [x] **Streaming and video explicitly permitted, including monetized.** Additional
+      Permissions section at the top of `LICENSE`, restated in the README. Keeps the
+      standard PolyForm text unmodified rather than editing the licence body.
+- [ ] **`THIRD-PARTY-NOTICES` file.** Apache-2.0 and BSD deps may sit inside a
+      restricted-licence product, but only if their notices and attributions travel with
+      the binary. Needed for a Steam build, not for the repo.
+- [ ] Contact address for licensing enquiries. Deferred deliberately; anonymous is fine
+      for now, and `CONTRIBUTING.md` points people at issues instead. Use a purpose-made
+      address rather than a personal one when it happens.
+- [ ] Get thirty minutes of actual legal review before relying on any of this. The
+      licence is standard and well drafted; the contributor grant in `CONTRIBUTING.md`
+      is a reasonable draft written by a non-lawyer.
+- [x] Ebitengine — Apache 2.0. Permissive, so it can be included in a
+      noncommercially-licensed product; notices must be retained.
+- [x] All transitive deps — BSD (`golang.org/x/*`) or Apache. **No GPL anywhere** — this
+      is what makes the relicense possible at all.
 - [x] `Kubasta.ttf` — CC0, per the author's own FontStruct page.
 - [ ] Confirm FiraSans and RobotoFlex (expected OFL / Apache — low risk).
-- [ ] Tyrian art has no formal license, just "use and abuse them as desired" on Lost
-      Garden. Moot once the art is replaced; listed only so it isn't forgotten.
+- [ ] Tyrian art — see the release blocker under "Later". No formal licence, and that
+      must be resolved before the game is sold.
+
+Note: the Apache 2.0 grant on everything published before this change is irrevocable.
+Anyone who already had the code keeps commercial rights to those snapshots. Accepted
+deliberately — there was not enough there to matter — so no history rewrite. The new
+licence governs from here forward.

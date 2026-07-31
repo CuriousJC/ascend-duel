@@ -6,7 +6,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ascending Duel — a roguelike where you duel your way up a tower, collecting rings, brands of power, and pets. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
-`ideas.md` holds informal design notes (bosses, attributes, floors, rings) that are not yet implemented.
+`ideas.md` holds informal design notes (bosses, attributes, floors, rings) that are not yet implemented. `TODO.md` is the running work list and the record of decisions already made — read it before proposing design changes.
+
+## Licensing and IP — read before adding dependencies or assets
+
+The project is **source-available, not open source**, and is intended to be sold
+(Steam) by its two copyright holders while the source stays public.
+
+- **License: PolyForm Noncommercial 1.0.0** (`LICENSE`), relicensed from Apache 2.0 on
+  2026-07-31. Anyone may read/build/modify/share noncommercially; selling is reserved
+  to the copyright holders. Additional Permissions at the top of `LICENSE` explicitly
+  allow monetized streaming and video of gameplay.
+- **Copyright holders: Justin Crosby (CuriousJC) and KingSherman1820.** They have a
+  written partnership agreement; Justin can speak for both on licensing and IP, so
+  there is no need to ask whether Sherman agrees.
+- **`CONTRIBUTING.md` carries a contributor grant.** Outside contributions must come
+  with a commercial-use grant, or merging them would leave the game unsellable. Do not
+  weaken or remove that document.
+- **No GPL, ever.** Every dependency must be permissive (MIT / BSD / Apache-2.0) or it
+  cannot go into a product licensed this way. Check the license before adding anything
+  to `go.mod`, and flag it in the PR.
+- **Assets need provable licenses.** The Tyrian placeholder art is a known release
+  blocker — informal blog-post permission, not a license. Do not add assets with
+  unclear provenance; "found it online" is not sufficient for a paid release.
+- The pre-relicense Apache 2.0 grant on already-published commits is irrevocable and
+  the owners have accepted that. Do not propose rewriting history over it.
 
 ## Commands
 
@@ -17,7 +41,14 @@ go vet ./...
 gofmt -l .          # list unformatted files
 ```
 
-There are no tests in the repo yet. When they exist: `go test ./...`, or a single one with `go test ./internal/systems -run TestName`.
+```powershell
+go test ./...                                   # all tests
+go test ./internal/combat -run TestName         # a single test
+git commit -s                                   # sign-off, per CONTRIBUTING.md
+```
+
+Tests live in `internal/combat` — the only package that can be tested without a
+window, by design. Keep it that way: rules go in `combat`, not in screens.
 
 ## Architecture
 

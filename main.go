@@ -2,14 +2,12 @@ package main
 
 import (
 	"errors"
+	"log"
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
-	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/game"
-	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
-	"log"
 )
 
 func main() {
@@ -29,11 +27,8 @@ func main() {
 	g.GlobalState.Fonts = assets.LoadFonts()
 	g.GlobalState.Combatants = data.LoadCombatants()
 
-	// Buttons are assigned actions as part of the initial creation
-	g.GlobalState.CombatButton = models.NewButton(275, 100, "Combat", func() { actions.CombatButtonAction(g.GlobalState) })
-	g.GlobalState.SettingsButton = models.NewButton(275, 100, "Settings", func() { actions.SettingsButtonAction(g.GlobalState) })
-	g.GlobalState.ExitButton = models.NewButton(275, 100, "Exit", func() { actions.ExitButtonAction(g.GlobalState) })
-	g.GlobalState.DuelButton = models.NewButton(275, 100, "DUEL!", func() { actions.DuelButtonAction(g.GlobalState) })
+	// Widgets are no longer wired up here. Each scene builds its own in Init, so main
+	// does not need to know which screens have buttons or what pressing them does.
 
 	//Run game is the infinite loop. A deliberate quit comes back as game.ErrClosing,
 	//which is a normal exit rather than a failure — anything else is a real error.

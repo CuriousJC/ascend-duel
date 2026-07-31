@@ -3,15 +3,17 @@ package state
 
 import (
 	"github.com/curiousjc/ascend-duel/data"
-	"github.com/curiousjc/ascend-duel/internal/combat"
-	"github.com/curiousjc/ascend-duel/internal/entities"
-	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// GlobalState is the shared state that all components of the game use to know what to do
-// and what they will act upon during changes
+// GlobalState is what is genuinely shared: input, timing, layout, loaded resources,
+// and which screen is active. It is threaded by pointer into every scene.
+//
+// A screen's own working state does NOT belong here — that lives on the scene that
+// owns it (see screens.Scene). This struct previously carried the combat screen's
+// duel log, playback cursor and combatants, which meant every screen could see them
+// and none of them were anyone else's business.
 type GlobalState struct {
 	//Global Game Stuff
 	ActiveDebug    bool
@@ -37,32 +39,6 @@ type GlobalState struct {
 	ThirdQuarterY int
 	HalfwayX      int
 	HalfwayY      int
-
-	//Models
-	CombatButton   *models.Button
-	SettingsButton *models.Button
-	ExitButton     *models.Button
-	DuelButton     *models.Button
-
-	//Entities
-	Fighter *entities.Combatant
-	Enemy   *entities.Combatant
-
-	//Duel — a round at a time. The player spends an action-point budget on
-	//FighterActions, ResolveRound turns that into an event log, and the screen
-	//replays the log before handing control back for the next round. The screen
-	//never computes an outcome; it replays this.
-	FighterActions []combat.ActionKind
-	EnemyActions   []combat.ActionKind
-	DuelLog        []combat.Event
-	DuelCursor     int
-	DuelTicks      int
-	DuelRound      int
-
-	//The authoritative end-of-round state, adopted once playback catches up. Guard
-	//flags in particular only exist here — no event carries them.
-	FighterAfter combat.Duelist
-	EnemyAfter   combat.Duelist
 
 	//Data
 	Combatants map[string]data.CombatantData

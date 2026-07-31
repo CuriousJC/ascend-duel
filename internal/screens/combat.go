@@ -5,6 +5,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -16,133 +17,167 @@ import (
 )
 
 // duelTicksPerEvent is how long each event in the log is held on screen during
-// playback, at 60 TPS.
+// playback, at 60 TPS. Destined to become the game-speed setting.
 const duelTicksPerEvent = 8
 
-// InitCombatScreen is run at the initialization of the combat screen
-func InitCombatScreen(gs *state.GlobalState) {
+// CombatScene runs one duel: the player plans a set of actions against an action
+// point budget, presses DUEL!, watches the round play out, and plans again.
+//
+// The fields below are the screen's own working state. None of it belongs to any
+// other screen, and the action box will add more of it.
+type CombatScene struct {
+	fighter *entities.Combatant
+	enemy   *entities.Combatant
 
-	if gs.Fighter == nil {
-		gs.Fighter = combatantFromRecord(gs, "Fighter1")
-	}
+	// The queued sets for the coming round. fighterActions is what the action box
+	// will eventually write; enemyActions is re-planned by the opponent each round.
+	fighterActions []combat.ActionKind
+	enemyActions   []combat.ActionKind
 
-	if gs.Enemy == nil {
-		gs.Enemy = combatantFromRecord(gs, "Monster1")
-	}
+	// The resolved round and the playback cursor walking it. The screen never
+	// computes an outcome — it replays this.
+	log    []combat.Event
+	cursor int
+	ticks  int
+	round  int
 
-	// Placeholder queue until the action box is draggable — this is what the
-	// drag-and-drop UI will eventually write, and it must fit the AP budget.
-	gs.FighterActions = defaultFighterPlan(gs.Fighter.Duelist)
-	gs.EnemyActions = nil
+	// The authoritative end-of-round state, adopted once playback catches up. Guard
+	// flags in particular only exist here, since no event carries them.
+	fighterAfter combat.Duelist
+	enemyAfter   combat.Duelist
 
-	gs.DuelButton.ScreenX = gs.HalfwayX
-	gs.DuelButton.ScreenY = gs.ThirdQuarterY
-
-	// A fresh duel: full health, no log, round zero.
-	gs.Fighter.CurrentLife = gs.Fighter.MaxLife
-	gs.Enemy.CurrentLife = gs.Enemy.MaxLife
-	gs.Fighter.Guarded = false
-	gs.Enemy.Guarded = false
-	gs.DuelLog = nil
-	gs.DuelCursor = 0
-	gs.DuelTicks = 0
-	gs.DuelRound = 0
+	duelButton *models.Button
 }
 
-// defaultFighterPlan spends the budget on a Guard plus whatever attacks still fit.
-// It stands in for the player's choices until the action box exists.
-func defaultFighterPlan(d combat.Duelist) []combat.ActionKind {
-	plan := []combat.ActionKind{combat.Guard}
-	for combat.CostOf(append(plan, combat.Strike)) <= d.ActionPoints() {
-		plan = append(plan, combat.Strike)
+// Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
+// built once, everything else resets every visit.
+func (s *CombatScene) Init(gs *state.GlobalState) {
+	if s.fighter == nil {
+		s.fighter = combatantFromRecord(gs, "Fighter1")
 	}
-	for combat.CostOf(append(plan, combat.Quick)) <= d.ActionPoints() {
-		plan = append(plan, combat.Quick)
+	if s.enemy == nil {
+		s.enemy = combatantFromRecord(gs, "Monster1")
 	}
-	return plan
+
+	// The scene builds its own widget and wires it to its own method, so no other
+	// package needs to know this screen has a button or what pressing it means.
+	if s.duelButton == nil {
+		s.duelButton = models.NewButton(275, 100, "DUEL!", s.startRound)
+	}
+	s.duelButton.ScreenX = gs.HalfwayX
+	s.duelButton.ScreenY = gs.ThirdQuarterY
+
+	// Placeholder queue until the action box is draggable. It must fit the AP budget.
+	s.fighterActions = defaultFighterPlan(s.fighter.Duelist)
+	s.enemyActions = nil
+
+	s.fighter.CurrentLife = s.fighter.MaxLife
+	s.enemy.CurrentLife = s.enemy.MaxLife
+	s.fighter.Guarded = false
+	s.enemy.Guarded = false
+
+	s.log = nil
+	s.cursor = 0
+	s.ticks = 0
+	s.round = 0
 }
 
-// combatantFromRecord resolves a combatant record and its sprite sheet out of global
-// state, then hands both to the entity constructor.
-func combatantFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
-	d := gs.Combatants[record]
-	return entities.NewCombatantFrom(d, gs.Assets[d.SpriteSheet])
-}
-
-func UpdateCombatScreen(gs *state.GlobalState) error {
-
-	if gs.NewScreen {
-		InitCombatScreen(gs)
-		gs.NewScreen = false
-	}
-
-	systems.UpdateButton(gs, gs.DuelButton)
-	advanceDuelPlayback(gs)
-
+func (s *CombatScene) Update(gs *state.GlobalState) error {
+	systems.UpdateButton(gs, s.duelButton)
+	s.advancePlayback()
 	return nil
 }
 
-// advanceDuelPlayback walks the round's event log one entry at a time, applying each
-// to the on-screen combatants. This is the whole of the screen's combat logic: the
-// round was already decided by combat.ResolveRound, so playback can never disagree
-// with it.
-func advanceDuelPlayback(gs *state.GlobalState) {
-	if gs.DuelCursor >= len(gs.DuelLog) {
+// startRound resolves a single round and hands playback an event log. It does not
+// run the duel to a conclusion — control returns to the player to re-plan.
+func (s *CombatScene) startRound() {
+	// Ignore the press while a round is still playing back, or once someone is down.
+	if s.cursor < len(s.log) {
+		return
+	}
+	if !s.fighter.Alive() || !s.enemy.Alive() {
 		return
 	}
 
-	gs.DuelTicks++
-	if gs.DuelTicks < duelTicksPerEvent {
+	s.round++
+	s.enemyActions = combat.PlanGreedy(s.enemy.Duelist)
+
+	log, fighterAfter, enemyAfter := combat.ResolveRound(
+		s.fighter.Duelist, s.enemy.Duelist,
+		s.fighterActions, s.enemyActions,
+		s.round,
+	)
+
+	s.fighterAfter = fighterAfter
+	s.enemyAfter = enemyAfter
+	s.log = log
+	s.cursor = 0
+	s.ticks = 0
+
+	fmt.Printf("Round %d: %d events (fighter %d AP, enemy %d AP)\n",
+		s.round, len(log),
+		s.fighter.ActionPoints(), s.enemy.ActionPoints())
+}
+
+// advancePlayback walks the round's event log one entry at a time, applying each to
+// the on-screen combatants. This is the whole of the screen's combat logic: the round
+// was already decided by combat.ResolveRound, so playback can never disagree with it.
+func (s *CombatScene) advancePlayback() {
+	if s.cursor >= len(s.log) {
 		return
 	}
-	gs.DuelTicks = 0
 
-	applyDuelEvent(gs, gs.DuelLog[gs.DuelCursor])
-	gs.DuelCursor++
+	s.ticks++
+	if s.ticks < duelTicksPerEvent {
+		return
+	}
+	s.ticks = 0
+
+	s.applyEvent(s.log[s.cursor])
+	s.cursor++
 
 	// Playback has caught up with the resolver. Adopt the authoritative end-of-round
-	// state — the guard flags live only there, since no event carries them — and hand
-	// control back to the player to plan the next round.
-	if gs.DuelCursor >= len(gs.DuelLog) {
-		gs.Fighter.Duelist = gs.FighterAfter
-		gs.Enemy.Duelist = gs.EnemyAfter
+	// state and hand control back to the player to plan the next round.
+	if s.cursor >= len(s.log) {
+		s.fighter.Duelist = s.fighterAfter
+		s.enemy.Duelist = s.enemyAfter
 	}
 }
 
-// applyDuelEvent moves the visible state to match one event. Only damage moves the
-// health bars; the rest are for the caption and, later, animation cues.
-func applyDuelEvent(gs *state.GlobalState, e combat.Event) {
+// applyEvent moves the visible state to match one event. Only damage moves the health
+// bars; the rest are for the caption and, later, animation cues.
+func (s *CombatScene) applyEvent(e combat.Event) {
 	if e.Kind != combat.KindDamage {
 		return
 	}
 
 	if e.Target == combat.SideA {
-		gs.Fighter.CurrentLife = e.Life
+		s.fighter.CurrentLife = e.Life
 	} else {
-		gs.Enemy.CurrentLife = e.Life
+		s.enemy.CurrentLife = e.Life
 	}
 }
 
-// duelCaption describes where the round has got to, so the duel is legible before the
+// caption describes where the round has got to, so the duel is legible before the
 // action box exists.
-func duelCaption(gs *state.GlobalState) string {
-	if !gs.Enemy.Alive() {
-		return fmt.Sprintf("The monster falls in round %d — you win!", gs.DuelRound)
+func (s *CombatScene) caption() string {
+	if !s.enemy.Alive() {
+		return fmt.Sprintf("The monster falls in round %d — you win!", s.round)
 	}
-	if !gs.Fighter.Alive() {
-		return fmt.Sprintf("You fall in round %d. The monster wins.", gs.DuelRound)
+	if !s.fighter.Alive() {
+		return fmt.Sprintf("You fall in round %d. The monster wins.", s.round)
 	}
 
 	// Between rounds: show the plan and what it costs.
-	if gs.DuelCursor >= len(gs.DuelLog) {
+	if s.cursor >= len(s.log) {
 		return fmt.Sprintf("Round %d — your plan: %s  (%d/%d AP)   press DUEL!",
-			gs.DuelRound+1,
-			planLabel(gs.FighterActions),
-			combat.CostOf(gs.FighterActions),
-			gs.Fighter.ActionPoints())
+			s.round+1,
+			planLabel(s.fighterActions),
+			combat.CostOf(s.fighterActions),
+			s.fighter.ActionPoints())
 	}
 
-	e := gs.DuelLog[gs.DuelCursor]
+	e := s.log[s.cursor]
 	who := "Fighter"
 	if e.Side == combat.SideB {
 		who = "Monster"
@@ -166,6 +201,60 @@ func duelCaption(gs *state.GlobalState) string {
 	}
 }
 
+func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
+	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255})
+
+	headingOp := &text.DrawOptions{}
+	headingOp.GeoM.Translate(50, 50)
+	text.Draw(screen, "Duel to the Top of the Pyramid",
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, headingOp)
+
+	captionOp := &text.DrawOptions{}
+	captionOp.GeoM.Translate(50, 100)
+	text.Draw(screen, s.caption(),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, captionOp)
+
+	s.drawActionBox(gs, screen)
+	s.drawActions(gs, screen)
+	s.drawCombatant(screen, s.fighter, float64(gs.FirstQuarterX), float64(gs.HalfwayY))
+	s.drawCombatant(screen, s.enemy, float64(gs.ThirdQuarterX), float64(gs.HalfwayY))
+	systems.DrawButton(gs, screen, s.duelButton)
+}
+
+func (s *CombatScene) drawActionBox(gs *state.GlobalState, screen *ebiten.Image) {
+	//This will be the box that contains all the selected actions
+}
+
+func (s *CombatScene) drawActions(gs *state.GlobalState, screen *ebiten.Image) {
+	//This will be the box of available actions that can be dragged into the Action Box
+}
+
+// drawCombatant draws one duelist and its health bar. The fighter and the monster
+// differed only in which coordinate they were placed at, so they share this.
+func (s *CombatScene) drawCombatant(screen *ebiten.Image, c *entities.Combatant, hPosition, vPosition float64) {
+	var cm colorm.ColorM
+
+	op := &colorm.DrawImageOptions{}
+	op.GeoM.Translate(-float64(c.Sprite.Bounds().Dx())/2, -float64(c.Sprite.Bounds().Dy())/2) //center our origin
+	op.GeoM.Translate(hPosition, vPosition)                                                   //position
+	colorm.DrawImage(screen, c.Sprite, cm, op)
+
+	DrawHealthBar(screen, hPosition, vPosition, c.CurrentLife, c.MaxLife)
+}
+
+// defaultFighterPlan spends the budget on a Guard plus whatever attacks still fit.
+// It stands in for the player's choices until the action box exists.
+func defaultFighterPlan(d combat.Duelist) []combat.ActionKind {
+	plan := []combat.ActionKind{combat.Guard}
+	for combat.CostOf(append(plan, combat.Strike)) <= d.ActionPoints() {
+		plan = append(plan, combat.Strike)
+	}
+	for combat.CostOf(append(plan, combat.Quick)) <= d.ActionPoints() {
+		plan = append(plan, combat.Quick)
+	}
+	return plan
+}
+
 // planLabel renders a queued set as "Guard + Strike + Quick".
 func planLabel(actions []combat.ActionKind) string {
 	if len(actions) == 0 {
@@ -179,74 +268,14 @@ func planLabel(actions []combat.ActionKind) string {
 	return label
 }
 
-func DrawCombatScreen(gs *state.GlobalState, screen *ebiten.Image) {
-
-	screen.Fill(color.RGBA{
-		R: 50,
-		G: 50,
-		B: 50,
-		A: 255,
-	})
-
-	combatHeadingOp := &text.DrawOptions{}
-	combatHeadingOp.GeoM.Translate(50, 50)
-	text.Draw(screen, "Duel to the Top of the Pyramid", &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, combatHeadingOp)
-
-	captionOp := &text.DrawOptions{}
-	captionOp.GeoM.Translate(50, 100)
-	text.Draw(screen, duelCaption(gs), &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, captionOp)
-
-	DrawActionBox(gs, screen)
-	DrawActions(gs, screen)
-	DrawCharacter(gs, screen)
-	DrawEnemy(gs, screen)
-	DrawCombatButton(gs, screen)
-
+// combatantFromRecord resolves a combatant record and its sprite sheet out of global
+// state, then hands both to the entity constructor.
+func combatantFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
+	d := gs.Combatants[record]
+	return entities.NewCombatantFrom(d, gs.Assets[d.SpriteSheet])
 }
 
-func DrawActionBox(gs *state.GlobalState, screen *ebiten.Image) {
-	//This will be the box that contains all the selected actions
-
-}
-
-func DrawActions(gs *state.GlobalState, screen *ebiten.Image) {
-	//This will be the box of available actions that can be dragged into the Action Box
-
-}
-
-func DrawEnemy(gs *state.GlobalState, screen *ebiten.Image) {
-	hPosition := float64(gs.ThirdQuarterX)
-	vPosition := float64(gs.HalfwayY)
-	var c colorm.ColorM
-
-	monsterOp := &colorm.DrawImageOptions{}
-	monsterOp.GeoM.Translate(-float64(gs.Enemy.Sprite.Bounds().Dx())/2, -float64(gs.Enemy.Sprite.Bounds().Dy())/2) //center our origin
-	monsterOp.GeoM.Translate(hPosition, vPosition)                                                                 //position
-	colorm.DrawImage(screen, gs.Enemy.Sprite, c, monsterOp)
-
-	DrawHealthBar(gs, screen, hPosition, vPosition, gs.Enemy.CurrentLife, gs.Enemy.MaxLife)
-}
-
-func DrawCharacter(gs *state.GlobalState, screen *ebiten.Image) {
-	hPosition := float64(gs.FirstQuarterX)
-	vPosition := float64(gs.HalfwayY)
-	var c colorm.ColorM
-
-	characterOp := &colorm.DrawImageOptions{}
-	characterOp.GeoM.Translate(-float64(gs.Fighter.Sprite.Bounds().Dx())/2, -float64(gs.Fighter.Sprite.Bounds().Dy())/2) //center our origin
-	characterOp.GeoM.Translate(hPosition, vPosition)                                                                     //position
-	colorm.DrawImage(screen, gs.Fighter.Sprite, c, characterOp)
-
-	DrawHealthBar(gs, screen, hPosition, vPosition, gs.Fighter.CurrentLife, gs.Fighter.MaxLife)
-
-}
-
-func DrawCombatButton(gs *state.GlobalState, screen *ebiten.Image) {
-	//The DUEL! button. Position is set in InitCombatScreen; Draw only draws.
-	systems.DrawButton(gs, screen, gs.DuelButton)
-}
-
-func DrawHealthBar(gs *state.GlobalState, screen *ebiten.Image,
+func DrawHealthBar(screen *ebiten.Image,
 	hPositionEntity float64, vPositionEntity float64,
 	currentLife int, maxLife int) {
 
@@ -285,7 +314,6 @@ func DrawHealthBar(gs *state.GlobalState, screen *ebiten.Image,
 	healthBarOp.GeoM.Translate(-float64(rectWidth)/2, -float64(rectHeight)/2) //center our origin
 	healthBarOp.GeoM.Translate(hPosition, vPosition)                          //position
 	screen.DrawImage(healthBar, healthBarOp)
-
 }
 
 func CreateRoundedRecMask(mask *ebiten.Image, x, y, width, height, radius float32, maskColor color.Color) {

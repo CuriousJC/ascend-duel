@@ -30,12 +30,32 @@ const (
 
 type Game struct {
 	GlobalState *state.GlobalState
+
+	// One registry, replacing the two parallel switches Update and Draw used to
+	// carry. Those could drift out of sync — a screen added to one and forgotten in
+	// the other silently did nothing — and now cannot.
+	scenes map[state.ActiveScreen]screens.Scene
 }
 
 func NewGame() *Game {
 	return &Game{
 		GlobalState: state.NewGlobalState(),
+		scenes: map[state.ActiveScreen]screens.Scene{
+			state.Title:   &screens.TitleScene{},
+			state.Ascend:  &screens.AscendScene{},
+			state.Combat:  &screens.CombatScene{},
+			state.Credits: &screens.CreditsScene{},
+		},
 	}
+}
+
+// scene returns the active scene, falling back to the title screen if ActiveScreen
+// somehow names one that was never registered.
+func (g *Game) scene() screens.Scene {
+	if s, ok := g.scenes[g.GlobalState.ActiveScreen]; ok {
+		return s
+	}
+	return g.scenes[state.Title]
 }
 
 func (g *Game) Update() error {
@@ -53,46 +73,33 @@ func (g *Game) Update() error {
 		g.GlobalState.CountSecond++
 	}
 
-	// Screen errors propagate rather than being discarded. Ebitengine stops the loop
-	// on any non-nil error from Update, so a screen returning one is fatal by design —
-	// which is the only sensible reading of an error a screen cannot handle itself.
-	switch g.GlobalState.ActiveScreen {
-	case state.Title:
-		return screens.UpdateTitleScreen(g.GlobalState)
-	case state.Ascend:
-		return nil //Ascend Screen
-	case state.Combat:
-		return screens.UpdateCombatScreen(g.GlobalState)
-	case state.Credits:
-		return nil //Credits
-	default:
-		return screens.UpdateTitleScreen(g.GlobalState)
+	scene := g.scene()
+
+	// One-shot init on entering a screen. Doing it here rather than inside each
+	// scene's Update means no scene has to remember the NewScreen dance.
+	if g.GlobalState.NewScreen {
+		scene.Init(g.GlobalState)
+		g.GlobalState.NewScreen = false
 	}
+
+	// Scene errors propagate rather than being discarded. Ebitengine stops the loop
+	// on any non-nil error from Update, so a scene returning one is fatal by design —
+	// which is the only sensible reading of an error a scene cannot handle itself.
+	return scene.Update(g.GlobalState)
 }
 
 // Draw runs as needed to update the screen at each frame
 func (g *Game) Draw(screen *ebiten.Image) {
 
 	// An action that switches screens sets ActiveScreen and NewScreen together, but the
-	// new screen's Init does not run until the next Update. Draw would otherwise run
-	// first and touch entities the Init has not built yet. Skipping that single frame
-	// is cheaper than nil-guarding every Draw*Screen.
+	// incoming scene's Init does not run until the next Update. Draw would otherwise
+	// run first and touch state the Init has not built yet. Skipping that single frame
+	// is cheaper than nil-guarding every scene's Draw.
 	if g.GlobalState.NewScreen {
 		return
 	}
 
-	switch g.GlobalState.ActiveScreen {
-	case state.Title:
-		screens.DrawTitleScreen(g.GlobalState, screen)
-	case state.Ascend:
-		//Ascend Screen
-	case state.Combat:
-		screens.DrawCombatScreen(g.GlobalState, screen)
-	case state.Credits:
-		//Credits
-	default:
-		screens.DrawTitleScreen(g.GlobalState, screen)
-	}
+	g.scene().Draw(g.GlobalState, screen)
 
 	// Debug Info will front-run everything and is drawn last on the screen
 	if g.GlobalState.ActiveDebug {

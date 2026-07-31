@@ -1,6 +1,8 @@
 package screens
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/actions"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -9,44 +11,45 @@ import (
 	"image/color"
 )
 
-// InitTitleScreen places the buttons. Positioning belongs here rather than in Draw:
-// Update hit-tests against ScreenX/Y, so a Draw-time assignment leaves the first frame
-// testing against zeroes and goes stale any frame Ebiten chooses to skip Draw. The
-// internal resolution is fixed, so these coordinates only need computing once.
-func InitTitleScreen(gs *state.GlobalState) {
-	gs.CombatButton.ScreenX = gs.HalfwayX
-	gs.CombatButton.ScreenY = gs.FirstThirdY
-
-	gs.SettingsButton.ScreenX = gs.HalfwayX
-	gs.SettingsButton.ScreenY = gs.FirstThirdY + 150
-
-	gs.ExitButton.ScreenX = gs.HalfwayX
-	gs.ExitButton.ScreenY = gs.FirstThirdY + 300
+// TitleScene is the front screen: the logo and the three menu buttons.
+type TitleScene struct {
+	combatButton   *models.Button
+	settingsButton *models.Button
+	exitButton     *models.Button
 }
 
-func UpdateTitleScreen(gs *state.GlobalState) error {
-
-	if gs.NewScreen {
-		InitTitleScreen(gs)
-		gs.NewScreen = false
+// Init builds the buttons on first entry and positions them every time.
+//
+// Positioning belongs here rather than in Draw: Update hit-tests against ScreenX/Y,
+// so a Draw-time assignment leaves the first frame testing against zeroes and goes
+// stale any frame Ebiten chooses to skip Draw. The internal resolution is fixed, so
+// these coordinates only need computing once per visit.
+func (s *TitleScene) Init(gs *state.GlobalState) {
+	if s.combatButton == nil {
+		s.combatButton = models.NewButton(275, 100, "Combat", func() { actions.GoToCombat(gs) })
+		s.settingsButton = models.NewButton(275, 100, "Settings", func() { actions.OpenSettings(gs) })
+		s.exitButton = models.NewButton(275, 100, "Exit", func() { actions.QuitGame(gs) })
 	}
 
-	// Update our button while updating our screen
-	systems.UpdateButton(gs, gs.CombatButton)
-	systems.UpdateButton(gs, gs.SettingsButton)
-	systems.UpdateButton(gs, gs.ExitButton)
+	s.combatButton.ScreenX = gs.HalfwayX
+	s.combatButton.ScreenY = gs.FirstThirdY
 
+	s.settingsButton.ScreenX = gs.HalfwayX
+	s.settingsButton.ScreenY = gs.FirstThirdY + 150
+
+	s.exitButton.ScreenX = gs.HalfwayX
+	s.exitButton.ScreenY = gs.FirstThirdY + 300
+}
+
+func (s *TitleScene) Update(gs *state.GlobalState) error {
+	systems.UpdateButton(gs, s.combatButton)
+	systems.UpdateButton(gs, s.settingsButton)
+	systems.UpdateButton(gs, s.exitButton)
 	return nil
 }
 
-func DrawTitleScreen(gs *state.GlobalState, screen *ebiten.Image) {
-
-	screen.Fill(color.RGBA{
-		R: 109,
-		G: 141,
-		B: 138,
-		A: 255,
-	})
+func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
+	screen.Fill(color.RGBA{R: 109, G: 141, B: 138, A: 255})
 
 	//TITLE
 	//
@@ -72,8 +75,8 @@ func DrawTitleScreen(gs *state.GlobalState, screen *ebiten.Image) {
 
 	//BUTTONS
 	//
-	// Positions are set in InitTitleScreen; Draw only draws.
-	systems.DrawButton(gs, screen, gs.CombatButton)
-	systems.DrawButton(gs, screen, gs.SettingsButton)
-	systems.DrawButton(gs, screen, gs.ExitButton)
+	// Positions are set in Init; Draw only draws.
+	systems.DrawButton(gs, screen, s.combatButton)
+	systems.DrawButton(gs, screen, s.settingsButton)
+	systems.DrawButton(gs, screen, s.exitButton)
 }

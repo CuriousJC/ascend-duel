@@ -65,27 +65,64 @@ window, by design. Keep it that way: rules go in `combat`, not in screens.
 - The owner reviews diffs in VS Code, so leave work **unstaged** unless asked to
   commit. Do not push or open a PR without being asked for that step.
 
+## Determinism — a planned feature that constrains code written now
+
+Runs will eventually be **replayable from a seed**: the same tower, enemies and rolls,
+so the player can retry and make different choices. Nothing is stochastic yet, which is
+exactly why these rules are cheap to follow — retrofitting determinism is expensive, so
+do not write code that forecloses it.
+
+- **Never call the `math/rand` package-level functions** (`rand.Intn`, `rand.Float64`,
+  `rand.Shuffle`, …). They draw from a global source shared with every other caller,
+  which makes a run unreproducible. Randomness comes from an explicit `*rand.Rand`
+  carried on state and seeded once per run.
+- **Three separate streams: enemy selection, loot offers, floor offers.** Never share
+  one source between them, or a change to loot generation silently rerolls every enemy
+  in the tower. A stream is only ever advanced by its own concern. Tower layout is fixed
+  (8 floors × 3 fights, endless later) and draws no randomness.
+- **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is
+  an infinite deterministic list, and the planned endless tower gives no worst case to
+  size an array against. Rerolls simply advance the cursor.
+- **Never let map iteration order affect an outcome.** Go deliberately randomises it.
+  `gs.Combatants` is a map — iterate a sorted key slice if a choice depends on order.
+- **No `time.Now()` in game rules.** Wall-clock decisions cannot be replayed. Tick
+  counters are fine; they are part of the simulation.
+- **`internal/combat` is pure integer arithmetic with no randomness and no clock.**
+  `TestRoundIsDeterministic` pins this. If randomness ever enters combat it arrives as
+  an injected source parameter, never a global.
+- **Presentation may never change outcomes.** `ResolveRound` decides a whole round
+  before playback begins, so animation speed, the planned game-speed setting, and any
+  skip button are free to alter pacing and must not alter results.
+
 ## Architecture
 
 ### Ebitengine game loop
 
-`main.go` builds the `game.Game`, loads assets/fonts/data once, wires up the title-screen buttons, then hands control to `ebiten.RunGame`. Ebitengine then drives three methods on [game.go](internal/game/game.go):
+`main.go` builds the `game.Game`, loads assets/fonts/data once, then hands control to `ebiten.RunGame`. It does **not** wire up widgets — scenes build their own. Ebitengine then drives three methods on [game.go](internal/game/game.go):
 
-- `Update()` — 60 TPS logic tick. Advances counters, reads the mouse, and dispatches to the active screen's `Update*Screen`. Returning a non-nil error quits the game; that is how `ShouldClose` exits (window close is intercepted via `SetWindowClosingHandled(true)`).
-- `Draw(screen)` — per-frame rendering. Dispatches to the active screen's `Draw*Screen`, then overlays debug info last if `ActiveDebug`.
-- `Layout(w, h)` — called on resize; recomputes the cached thirds/quarters/halfway coordinates used for positioning everywhere else.
+- `Update()` — 60 TPS logic tick. Advances counters, reads the mouse, runs the active scene's `Init` if `NewScreen` is set, then returns the scene's `Update`. Returning a non-nil error quits the game; `ShouldClose` becomes `game.ErrClosing`, which `main` treats as a clean exit (window close is intercepted via `SetWindowClosingHandled(true)`).
+- `Draw(screen)` — per-frame rendering. Returns early while `NewScreen` is set, so a scene is never drawn before its `Init` has run; then calls the scene's `Draw` and overlays debug info last if `ActiveDebug`.
+- `Layout(w, h)` — returns the fixed 1280x960 internal resolution and recomputes the cached thirds/quarters/halfway coordinates used for positioning everywhere else.
 
-### GlobalState is the spine
+### Scenes own their own state
 
-[internal/state/global_state.go](internal/state/global_state.go) defines one `GlobalState` struct threaded by pointer (`gs`) into every screen, system, and action. There is no ECS and no dependency injection — if a component needs something, it lives on `GlobalState`. Adding a new screen, entity, or asset map generally means adding a field here.
+[internal/screens/scene.go](internal/screens/scene.go) defines the `Scene` interface — `Init` / `Update` / `Draw`. Each screen is a struct implementing it, registered once in `NewGame`'s `scenes` map. There is one registry rather than parallel `Update` and `Draw` switches, which used to be able to drift apart.
 
-Key conventions on `GlobalState`:
-- `ActiveScreen` (`Title`/`Ascend`/`Combat`/`Credits`) selects which screen runs. Both the `Update` and `Draw` switches in `game.go` must be updated together when adding a screen.
-- `NewScreen bool` is the one-shot init flag: a screen's `Update` checks it, runs `Init*Screen`, then clears it. Actions that change screens set it back to `true`.
+**A screen's working state belongs on its scene, not on `GlobalState`.** `CombatScene` owns the combatants, the queued action sets, the resolved event log, the playback cursor and its DUEL! button. Adding per-screen state means adding a field to the scene.
+
+Scenes also build their own widgets in `Init` and wire them to their own methods (`models.NewButton(..., s.startRound)`). Nothing outside the scene needs to know it has a button.
+
+`Init` may run more than once — a screen can be re-entered — so build expensive things behind a nil check and reset per-visit state unconditionally.
+
+### GlobalState is what is genuinely shared
+
+[internal/state/global_state.go](internal/state/global_state.go) is threaded by pointer (`gs`) into every scene and system, and carries only what is actually global: input, timing, layout, loaded resources, `ActiveScreen`, `NewScreen`, `ShouldClose`, and debug scratch. It imports nothing from `combat`, `entities` or `models`.
+
+Key conventions:
+- `ActiveScreen` (`Title`/`Ascend`/`Combat`/`Credits`) selects the scene. Adding a screen means adding an `ActiveScreen` constant and one entry in the `scenes` map.
+- `NewScreen bool` is the one-shot init flag, consumed centrally in `game.Update`. Actions that change screens set it back to `true`; scenes never touch it.
 - Layout fields (`HalfwayX`, `FirstThirdY`, `ThirdQuarterX`, …) are recomputed in `Layout` and are the intended way to place things — avoid hardcoded pixel coordinates.
 - `Debug1`/`Debug2` are free-form strings printed by `DrawDebugInfo`; scratch tracing goes there.
-
-Note: `NewGlobalState()` currently starts on `Combat`, not `Title` — a development shortcut, not the intended flow.
 
 ### Package layout and its layering
 
@@ -93,11 +130,12 @@ Note: `NewGlobalState()` currently starts on `Combat`, not `Title` — a develop
 - `data/` — `//go:embed`s `combatants.json` and unmarshals it into `map[string]CombatantData` keyed by `CombatantRecord`. This is the pattern for all static game data: JSON next to a small Go loader. `SpriteSheet` in the JSON must match an `assets` map key, and `SpriteRect` is `[x0, y0, x1, y1]` used with `SubImage` to slice the sheet.
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
-- `internal/entities/` — game-world actors (`Combatant`), hydrated from `data` records at screen init.
-- `internal/screens/` — one file per screen, each exporting `Init*Screen` / `Update*Screen` / `Draw*Screen`. Screens own their composition and call into `systems`.
-- `internal/actions/` — button `OnClick` callbacks. They take `gs` and mutate it (change screen, set `ShouldClose`); they never draw. Actions are bound at button construction in `main.go` via closures over `g.GlobalState`.
+- `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
+- `internal/combat/` — the duel rules. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window.
+- `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
+- `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 
-Dependency direction: `main` → `game` → `screens` → `systems`/`entities` → `models`/`state`/`data`/`assets`. Nothing lower reaches back up.
+Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions` → `models`/`state`/`combat`/`data`/`assets`. Nothing lower reaches back up. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.
 
 ### Drawing idioms
 

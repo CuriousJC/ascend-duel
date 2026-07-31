@@ -114,13 +114,146 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ## Later
 
-- [ ] **`Scene` interface** to replace the two parallel switches in `game.go`. Deferred
-      until per-screen combat state starts crowding `GlobalState` — that's the trigger.
-      *(analysis §1, §2)*
-- [ ] **Split `GlobalState`** into `Resources` (assets/fonts, read-only), `Layout`,
-      `Session` (run progress), and per-screen state.
+- [ ] **Game speed setting.** User-facing options: *very slow · slow · normal · fast ·
+      very fast*, scaling how quickly the duel event log plays back. Ship "normal" only
+      to begin with, but route it through a setting rather than a constant so the other
+      four are a data change later.
+      - Today the pacing is `duelTicksPerEvent = 8` in
+        [combat.go](internal/screens/combat.go) — one constant, one caller, so this is
+        cheap right now and gets steadily more expensive as animation and sound land and
+        each grows its own timing constant.
+      - Speed must scale *presentation only*. `combat.ResolveRound` already decided the
+        whole round before playback starts, so speed can never change an outcome — worth
+        protecting, since "fast mode plays differently" is a classic bug in this shape of
+        game.
+      - Belongs to whatever settings screen eventually backs `SettingsButtonAction`,
+        which currently only prints.
+- [ ] **Seeded randomness for replayable runs.** Goal: record a seed with a run so the
+      same enemies and offers can be replayed while the player makes different choices.
+      Nothing is stochastic yet, so there is no work to do — but see the determinism
+      rules in `CLAUDE.md`, which exist to keep this cheap.
+      - **Three separate streams, decided:** enemy selection, loot offers, floor offers.
+        Tower layout is *not* a stream — it is fixed at 8 floors of 3 fights.
+      - Separate streams mean adding a random call in one system cannot shift another
+        system's results. Without that, tweaking loot generation silently rerolls every
+        enemy in the tower, and balance testing becomes impossible to reason about.
+      - Show the seed somewhere and allow entering one, or the feature is invisible.
+      - `internal/combat` is currently pure integer arithmetic with no randomness at all,
+        and `TestRoundIsDeterministic` pins that. Keep it that way — if randomness enters
+        combat, it arrives as an injected source, not a global.
+- [ ] **Don't pre-roll into a fixed array — keep a seeded stream per concern.** A
+      `*rand.Rand` seeded once *is* an infinite deterministic list; a pre-generated slice
+      is just the first N entries of it, and N has to be guessed. The endless tower has
+      no worst case to size against, so any N is eventually wrong.
+      - **Rerolls advance the cursor**, which is exactly the intended behaviour: reroll
+        and you get the next offer down the list. No separate reroll stream needed.
+      - Replay stays exact because the *list* is fixed by the seed. Identical choices
+        consume identical draws; different choices land at a different position in the
+        same list. That is the property worth having, and it survives rerolls.
+      - Materialize a window of a stream into a slice only when something needs to
+        *inspect* it — a balance sim or a test — not as the storage model.
+      - The one discipline this needs: a stream is only ever advanced by its own
+        concern. Never borrow the loot stream to pick an enemy.
+- [x] **`Scene` interface** replacing the two parallel switches in `game.go`, plus the
+      per-screen half of the `GlobalState` split — the same trigger fired both, and they
+      were one piece of work. *(analysis §1, §2)*
+      - `Scene` is `Init`/`Update`/`Draw`; scenes are registered once in a map, so the
+        `Update` and `Draw` paths can no longer drift apart.
+      - Scenes own their state *and* build their own widgets, wiring them to their own
+        methods. `main.go` no longer constructs buttons for screens it knows nothing
+        about, and `DuelButtonAction` became `CombatScene.startRound`.
+      - `NewScreen` is consumed centrally in `game.Update`; scenes never touch it.
+      - `GlobalState` went from 34 fields to 20 and no longer imports `combat`,
+        `entities` or `models`.
+- [ ] **Split the rest of `GlobalState`** into `Resources` (assets/fonts/data,
+      read-only), `Layout`, and `Session` (run progress). Deferred: `Session` has nothing
+      to hold until the tower loop exists, and the remaining fields are not crowding
+      anything. The seed streams will live in `Session` when it lands.
 - [ ] **Ascend / tower loop.** `ascend.go` is a bare `package screens`; `Ascend` and
-      `Credits` are empty cases in both switches.
+      `Credits` are empty cases in both switches. Structure decided:
+      - **8 floors, 3 fights each — 24 fights to the top.** The layout is fixed, not
+        generated. Only the enemies and the offers are random.
+      - **A binary loot choice after every fight.** Two options, pick one.
+      - **A binary floor choice after the last fight on a floor**, on top of that fight's
+        loot choice.
+      - **Floor 8 ends the run** for the first version — 7 floor choices, no offer at the
+        top.
+      - Floor choices steer **enemy affixes and behaviour** — "this is a cold floor",
+        "this is a fire floor" — plus whatever other levers exist by then. The specific
+        options are undecided; the mechanism is the part that matters.
+      - Run progress (current floor, current fight, collected rings/brands/pets) is the
+        `Session` state in the `GlobalState` split below — this is the feature that
+        forces that refactor.
+- [ ] **Save format: seed plus choice log, not serialized state.** Falls out of seeding
+      for free, and only stays free if nobody builds save/load the other way first.
+      - A run is fully described by its seed and the ordered list of **every player
+        input**, which is more than the loot and floor picks:
+        - **The action set queued each round.** ~5 rounds x 24 fights, so this is the
+          bulk of the log, not a footnote.
+        - Which of the two loot offers was taken, per fight.
+        - Which of the two floor offers was taken, per floor.
+        - Every reroll — it is a decision *and* it advances a stream, so omitting it
+          desyncs everything after it.
+      - A few KB rather than a few dozen bytes, and it grows with duel length rather
+        than being fixed size. Still trivial. It survives every change to the shape of
+        in-memory state, and doubles as a replay file and a reproducible bug report.
+      - Recording action plans is what makes hand-editing a save interesting: loot picks
+        only answer "what if I took the other ring", where plans answer "what if I had
+        guarded on round 3". It is also what makes a "this seed is winnable" claim
+        checkable — a proof is just a choice log that replays to a win.
+      - **Serialize action names, not `iota` ordinals.** `ActionKind` is `iota`-based, so
+        inserting a new action anywhere but the end silently reinterprets every existing
+        log — a saved `Guard` becomes whatever now sits at 1, with no error. Same applies
+        to any other enum that reaches the save file.
+      - Serializing live state instead means a migration every time state changes — the
+        refactor this whole set of decisions exists to avoid.
+      - Cost: loading replays the run to reach the current point. Trivial here, since
+        combat is pure integer arithmetic and a whole duel resolves in microseconds.
+      - Caveat: this only holds while the rules are stable. A balance change invalidates
+        old saves, so the format needs a rules-version stamp and a plan for what happens
+        when it does not match.
+- [ ] **Watch: "is this seed winnable?" as a solvable question.** Not a feature to build
+      now — a *property to avoid destroying*. Deterministic combat plus deterministic
+      streams plus a bounded choice space means a run is in principle searchable.
+      - What it would give: guaranteeing a daily seed is beatable, difficulty grading a
+        seed by how narrow its winning lines are, and finding degenerate loot combos
+        without playing thousands of runs.
+      - Feasibility is unclear and worth being honest about. 24 binary loot choices and 7
+        binary floor choices is only ~2^31 paths, which pruning handles easily — but the
+        *combat plan* each fight is also a choice, and the number of ways to spend an AP
+        budget multiplies that out fast. Fixing a plan policy makes it tractable and
+        answers a weaker question: winnable *by this policy*.
+      - What would kill it, and therefore what to weigh decisions against:
+        - Hidden information the solver cannot see.
+        - Randomness resolved *during* a fight. `internal/combat` has none today, and
+          this is another reason to keep it that way.
+        - Unbounded state — anything that makes a position not comparable to another.
+        - Real-time or reflex elements.
+      - None of those are on the roadmap, so the property is currently free. Re-read this
+        before adding anything that breaks one.
+- [ ] **Endless tower (after the 8-floor version works).** Keep climbing until the curve
+      stops you, rather than a fixed summit. Scaling probably exponential.
+      - Design the floor loop so 8 is a *configured stop*, not a baked-in constant, or
+        this becomes a rewrite instead of a setting.
+      - Exponential scaling wants a sanity check on integer range and on the health bar:
+        `DrawHealthBar` scales by `CurrentLife/MaxLife` so it copes, but a four-digit
+        damage number will not fit the current caption.
+      - The interesting design question is what actually stops you. Enemy stats
+        outrunning yours, or a resource that runs down?
+- [ ] **Enemy model: one archetype, scaled and affixed.** Enemies are essentially the
+      same creature with main stats growing by depth, plus affixes that may stack. This
+      contradicts how `combatants.json` is shaped today — a flat list of fully-specified
+      records — so the data wants to become a base statline, a scaling rule, and a pool
+      of affixes to draw from.
+      - `AvailableAffixes` already anticipates this and is still unread.
+      - Affixes must compose. Two on one enemy is the normal case, not an edge case.
+      - Floor choices feed this directly: "a cold floor" biases which affixes appear.
+- [ ] **Headless balance sim for the difficulty curve.** The curve gets playtested a lot,
+      and most of that testing should not require playing.
+      - `internal/combat` has no Ebitengine dependency precisely so this is possible:
+        run thousands of duels across floor depths and plot where the player loses.
+      - Needs the enemy scaling rule and a plausible player-plan model first, so it is
+        downstream of the two items above — but it is the reason to keep combat pure.
 - [ ] **Affixes.** `cold` / `hot` / `charged` / `undying` are in `combatants.json` and
       never read. Ring and effect art is partly present.
 - [ ] **Replace Tyrian placeholder art — now a release blocker, not a cosmetic swap.**

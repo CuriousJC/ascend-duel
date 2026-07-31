@@ -94,6 +94,25 @@ do not write code that forecloses it.
   before playback begins, so animation speed, the planned game-speed setting, and any
   skip button are free to alter pacing and must not alter results.
 
+## Resolution order is a player lever, not just an output
+
+A round resolves the two queues **alternately**, one action each, side A first, with the
+longer queue acting alone once the other empties. This replaced volley-per-side on
+2026-07-31 — see the entry in `TODO.md` for the full reasoning.
+
+The intended loop is: **the player chooses their actions, then possibly alters the
+default resolution order.** Speed and later effects are meant to rearrange that order,
+which is why two monolithic volleys were wrong — they gave those effects nowhere to
+bite and gave the player nothing to manipulate.
+
+- **The Resolution pane and `ResolveRound` must stay in step.** The pane is the player's
+  model of the round; anything that reorders resolution has to move both.
+- **Ordering is a rule.** It belongs in `internal/combat`, never in a screen.
+- A raised Guard lasts until its owner's next action, so it covers every opposing action
+  in between, across a round boundary if it was queued last. A duelist who queues
+  nothing therefore keeps its guard — deliberate, pinned by
+  `TestGuardHoldsWhileItsOwnerDoesNothing`, and worth revisiting during balancing.
+
 ## UI: clicks and drag-and-drop only
 
 A firm design decision, not a current limitation. The entire input vocabulary is:
@@ -121,6 +140,40 @@ The action box is a *game* widget, not a UI widget: draggable action cards with 
 action-point validation. General-purpose toolkits are weakest at exactly that, so
 hand-rolling costs little and buys full control.
 
+### Colour: name one colour and scale it
+
+A widget names the colour it wants at **full strength**, and its other states are
+scaled down from that with `systems.ColorAtStrength`. `models.Button.BaseColor` is the
+reference case: the button rests at 65%, hovers at 82% and reaches the named colour at
+100%, so pressing it lights it up to exactly the colour in the source.
+
+- **Scale a colour, never add to it.** Adding a fixed step to every channel walks a
+  saturated colour toward white — crimson hovering to a washed-out pink — and a channel
+  already near 255 has nowhere to go. Scaling holds the hue.
+- A zero-alpha colour means "use the default", so widgets that never pick one are
+  unaffected.
+- Disabled deliberately ignores the widget's colour. A disabled control should read as
+  unavailable first and as itself second.
+
+### Combat screen panes are scaffolding
+
+The four columns on the combat screen are placeholders for finding the layout, not a
+chosen palette. Colours identify the role, and the Resolution pane's per-row swatches
+reuse the pane colour of whichever side is acting.
+
+| Pane | Slot | Colour | Role |
+|---|---|---|---|
+| Player | 20–30% | green | palette of available actions to drag from |
+| Chosen | 35–45% | blue | the player's queued set |
+| Resolution | 55–65% | pink | both queues interleaved in play order |
+| Enemy | 85–95% | yellow | the opponent's queued set |
+
+Two known problems, neither decided: the columns are 128px wide, which holds `Strike 2`
+at size 16 but will not hold a real action card with a name, cost and icon; and the
+Enemy pane at 85–95% sits a long way from the enemy sprite at 75%. Expect to widen them
+when the draggable action box replaces `defaultFighterPlan`. Do not treat the current
+colours or widths as settled.
+
 ## Architecture
 
 ### Ebitengine game loop
@@ -129,7 +182,7 @@ hand-rolling costs little and buys full control.
 
 - `Update()` — 60 TPS logic tick. Advances counters, reads the mouse, runs the active scene's `Init` if `NewScreen` is set, then returns the scene's `Update`. Returning a non-nil error quits the game; `ShouldClose` becomes `game.ErrClosing`, which `main` treats as a clean exit (window close is intercepted via `SetWindowClosingHandled(true)`).
 - `Draw(screen)` — per-frame rendering. Returns early while `NewScreen` is set, so a scene is never drawn before its `Init` has run; then calls the scene's `Draw` and overlays debug info last if `ActiveDebug`.
-- `Layout(w, h)` — returns the fixed 1280x960 internal resolution and recomputes the cached thirds/quarters/halfway coordinates used for positioning everywhere else.
+- `Layout(w, h)` — returns the fixed 1280x960 internal resolution and records it on `GlobalState`, which is what `PctX`/`PctY` read to place things.
 
 ### Scenes own their own state
 
@@ -147,6 +200,7 @@ Scenes also build their own widgets in `Init` and wire them to their own methods
 
 Key conventions:
 - `ActiveScreen` (`Title`/`Ascend`/`Combat`/`Credits`) selects the scene. Adding a screen means adding an `ActiveScreen` constant and one entry in the `scenes` map.
+- **`NewGlobalState` boots into `Combat`, not `Title`, on purpose.** The combat screen is the one under construction and clicking through the title every run costs a step in a loop that runs often. `ActiveDebug` in `main.go` is on by default for the same reason. Leave both unless asked; put `ActiveScreen` back to `Title` once combat stops being the active work, and flag it when a change needs the title screen to be seen.
 - `NewScreen bool` is the one-shot init flag, consumed centrally in `game.Update`. Actions that change screens set it back to `true`; scenes never touch it.
 - `gs.PctX(pct)` / `gs.PctY(pct)` are the intended way to place things — avoid hardcoded pixel coordinates. They replaced a dozen cached fields for halves, thirds and quarters, which could not express 40% and could not be extended to without inventing a field name per fraction. **Percentages anchor a group; offsets within a group stay in pixels** (see the title menu), and sizes are never percentages. The debug overlay rules the screen at the halves/thirds/quarters and ticks every 10% along the top and left edges, so a position can be read straight off the screen.
 - `Debug1`/`Debug2` are free-form strings printed by `DrawDebugInfo`; scratch tracing goes there.
@@ -158,7 +212,7 @@ Key conventions:
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
-- `internal/combat/` — the duel rules. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window.
+- `internal/combat/` — the duel rules. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 

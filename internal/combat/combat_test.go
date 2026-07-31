@@ -19,27 +19,70 @@ func firstDamage(t *testing.T, events []Event, by Side) Event {
 	return Event{}
 }
 
-// volleyOrder returns the sides in the order their volleys started.
-func volleyOrder(events []Event) []Side {
+// actionOrder returns the sides in the order they acted.
+func actionOrder(events []Event) []Side {
 	var order []Side
 	for _, e := range events {
-		if e.Kind == KindVolleyStart {
+		if e.Kind == KindAction {
 			order = append(order, e.Side)
 		}
 	}
 	return order
 }
 
-func TestSideAResolvesBeforeSideB(t *testing.T) {
+// sidesEqual compares two action orders.
+func sidesEqual(got, want []Side) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestSideAActsBeforeSideB(t *testing.T) {
 	// The player maps to side A and always swings first, however fast the enemy is.
 	a := duelist(10, 1, 200)
 	b := duelist(10, 500, 200)
 
 	events, _, _ := ResolveRound(a, b, []ActionKind{Strike}, []ActionKind{Strike}, 1)
 
-	order := volleyOrder(events)
-	if len(order) != 2 || order[0] != SideA || order[1] != SideB {
-		t.Errorf("volley order = %v, want [A B] even with B far faster", order)
+	if order := actionOrder(events); !sidesEqual(order, []Side{SideA, SideB}) {
+		t.Errorf("action order = %v, want [A B] even with B far faster", order)
+	}
+}
+
+func TestActionsAlternateBetweenSides(t *testing.T) {
+	// The queues interleave one action each rather than resolving as two volleys. This
+	// is the ordering the resolution pane shows the player, and the thing later effects
+	// are meant to be able to rearrange.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, _, _ := ResolveRound(a, b,
+		[]ActionKind{Strike, Strike}, []ActionKind{Quick, Quick}, 1)
+
+	want := []Side{SideA, SideB, SideA, SideB}
+	if order := actionOrder(events); !sidesEqual(order, want) {
+		t.Errorf("action order = %v, want %v", order, want)
+	}
+}
+
+func TestTheLongerQueueActsAloneOnceTheOtherRunsOut(t *testing.T) {
+	// A faster duelist buys more actions, and the tail of the round is where that
+	// advantage is actually spent.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, _, _ := ResolveRound(a, b,
+		[]ActionKind{Quick, Quick, Quick}, []ActionKind{Quick}, 1)
+
+	want := []Side{SideA, SideB, SideA, SideA}
+	if order := actionOrder(events); !sidesEqual(order, want) {
+		t.Errorf("action order = %v, want %v", order, want)
 	}
 }
 
@@ -84,8 +127,8 @@ func TestQuickHitsForHalfButNeverZero(t *testing.T) {
 }
 
 func TestPlayerGuardCoversTheEnemyReplyInTheSameRound(t *testing.T) {
-	// This is the whole point of resolving A first: a Guard placed now is up for the
-	// reply that immediately follows it.
+	// A acts first in the alternation, so a Guard placed now is up for the reply that
+	// immediately follows it.
 	a := duelist(10, 10, 200)
 	b := duelist(10, 10, 200)
 
@@ -102,9 +145,9 @@ func TestPlayerGuardCoversTheEnemyReplyInTheSameRound(t *testing.T) {
 }
 
 func TestEnemyGuardCarriesToTheNextRound(t *testing.T) {
-	// Side B raises its guard after A has already acted, so it can only protect
-	// against the next round. Without carrying Guarded across rounds the enemy's
-	// Guard would be dead weight.
+	// A guard raised on the last action of a round is still up when the next round
+	// starts — it lasts until its owner acts again, and round boundaries are not
+	// actions. Without that, a Guard queued last would be dead weight.
 	a := duelist(10, 10, 200)
 	b := duelist(10, 10, 200)
 
@@ -121,11 +164,11 @@ func TestEnemyGuardCarriesToTheNextRound(t *testing.T) {
 	}
 }
 
-func TestGuardDropsAfterItHasBeenUsed(t *testing.T) {
-	// A's guard covers B's reply in the same round, then stops protecting. The flag
-	// is still set in the returned state — it clears at the start of A's next volley,
-	// not at the end of the round — so the behaviour is what this asserts, not the
-	// bookkeeping.
+func TestGuardDropsWhenItsOwnerActsAgain(t *testing.T) {
+	// A's guard covers B's reply in the same round, then drops the moment A next acts.
+	// The flag is still set in the returned state — it clears at the start of A's next
+	// action, not at the end of the round — so the behaviour is what this asserts, not
+	// the bookkeeping.
 	a := duelist(10, 10, 200)
 	b := duelist(10, 10, 200)
 
@@ -134,10 +177,26 @@ func TestGuardDropsAfterItHasBeenUsed(t *testing.T) {
 		t.Errorf("damage into a fresh guard = %d, want 5", hit.Amount)
 	}
 
-	// A queues nothing in round 2, so nothing re-raises the guard.
-	round2, _, _ := ResolveRound(a1, b1, nil, []ActionKind{Strike}, 2)
+	// A acts in round 2, which drops the guard before B's reply lands.
+	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Quick}, []ActionKind{Strike}, 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
 		t.Errorf("damage after guard expired = %d, want full 10", hit.Amount)
+	}
+}
+
+func TestGuardHoldsWhileItsOwnerDoesNothing(t *testing.T) {
+	// The flip side of "a guard lasts until you act again": queue nothing and it stays
+	// up. Deliberate rather than accidental — standing still behind a guard deals no
+	// damage, so it buys time and nothing else. If that ever proves too strong, the fix
+	// is an expiry rule here, not a special case at the call site.
+	a := duelist(10, 10, 200)
+	b := duelist(10, 10, 200)
+
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, nil, 1)
+
+	round2, _, _ := ResolveRound(a1, b1, nil, []ActionKind{Strike}, 2)
+	if hit := firstDamage(t, round2, SideB); hit.Amount != 5 {
+		t.Errorf("damage into a held guard = %d, want 5 — an idle duelist keeps its guard", hit.Amount)
 	}
 }
 
@@ -169,7 +228,7 @@ func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	}
 }
 
-func TestDefeatStopsTheVolleyEarly(t *testing.T) {
+func TestDefeatStopsTheRoundEarly(t *testing.T) {
 	// A queues three strikes into an enemy that dies on the first. The rest must not
 	// resolve, and B must never get its reply.
 	a := duelist(100, 10, 100)
@@ -189,11 +248,11 @@ func TestDefeatStopsTheVolleyEarly(t *testing.T) {
 		}
 	}
 	if damageEvents != 1 {
-		t.Errorf("damage events = %d, want 1 — the volley should stop at the kill", damageEvents)
+		t.Errorf("damage events = %d, want 1 — the round should stop at the kill", damageEvents)
 	}
 
-	if order := volleyOrder(events); len(order) != 1 {
-		t.Errorf("volleys = %v, want only A's — B is dead and cannot reply", order)
+	if order := actionOrder(events); !sidesEqual(order, []Side{SideA}) {
+		t.Errorf("actions = %v, want only A's — B is dead and cannot reply", order)
 	}
 }
 
@@ -225,7 +284,7 @@ func TestResolveRoundDoesNotMutateItsInputs(t *testing.T) {
 }
 
 func TestBothSidesGuardingDoesNotAlias(t *testing.T) {
-	// resolveVolley passes duelists by value; if that ever became pointer-based, a
+	// resolveAction passes duelists by value; if that ever became pointer-based, a
 	// mutual Guard is where an aliasing bug would surface — one side's raised guard
 	// leaking onto the other.
 	a := duelist(10, 10, 100)
@@ -236,8 +295,9 @@ func TestBothSidesGuardingDoesNotAlias(t *testing.T) {
 		t.Fatalf("both raised a guard; got a=%v b=%v", a1.Guarded, b1.Guarded)
 	}
 
-	// Round 2, both strike. B's guard carried over and should halve A's hit. A's
-	// guard clears as A's own volley begins, so B's hit lands in full.
+	// Round 2, both strike. A acts first: its own guard clears as it does, so B's later
+	// hit lands in full — but B's guard is still up when A's strike arrives, so that
+	// one is halved.
 	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Strike}, []ActionKind{Strike}, 2)
 
 	if hit := firstDamage(t, round2, SideA); hit.Amount != 5 {

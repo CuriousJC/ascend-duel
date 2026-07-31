@@ -50,27 +50,68 @@ func UpdateButton(gs *state.GlobalState, button *models.Button) {
 	}
 }
 
+// defaultButtonColor is the full-strength fill for any button that does not name its
+// own. It is the old olive ramp's brightest step, so buttons that never set a colour
+// land within a shade or two of where they have always looked.
+var defaultButtonColor = color.RGBA{R: 95, G: 95, B: 40, A: 255}
+
+// disabledButtonColor is flat grey for every button. A disabled control should read as
+// unavailable first and as itself second, so it deliberately ignores BaseColor.
+var disabledButtonColor = color.RGBA{R: 35, G: 35, B: 35, A: 255}
+
+// How bright each state draws, as a percentage of the button's full colour. Resting at
+// two thirds means hover and press have somewhere to climb to.
+const (
+	normalStrength  = 65
+	hoveredStrength = 82
+	pressedStrength = 100
+)
+
+// buttonStateColor picks the fill for a button's current state by dimming its colour
+// rather than adding to it. Adding a fixed step to every channel walks a saturated
+// colour toward white — crimson hovered to a washed-out pink instead of a brighter red,
+// and a colour already near 255 had nowhere to go at all. Scaling keeps the hue and
+// lets the button light up to exactly the colour it names when pressed.
+func buttonStateColor(button *models.Button) color.RGBA {
+	full := button.BaseColor
+	if full.A == 0 {
+		full = defaultButtonColor
+	}
+
+	switch button.State {
+	case models.ButtonStateHovered:
+		return ColorAtStrength(full, hoveredStrength)
+	case models.ButtonStatePressed:
+		return ColorAtStrength(full, pressedStrength)
+	case models.ButtonStateDisabled:
+		return disabledButtonColor
+	default:
+		return ColorAtStrength(full, normalStrength)
+	}
+}
+
+// ColorAtStrength scales each colour channel to pct of its full value, leaving alpha
+// alone so dimming never turns into fading out. Exported because dimming one named
+// colour is how anything else gets a matching background without picking a second
+// colour by hand.
+func ColorAtStrength(c color.RGBA, pct int) color.RGBA {
+	scale := func(v uint8) uint8 { return uint8(int(v) * pct / 100) }
+	return color.RGBA{R: scale(c.R), G: scale(c.G), B: scale(c.B), A: c.A}
+}
+
 // DrawButton uses
 func DrawButton(gs *state.GlobalState, screen *ebiten.Image, button *models.Button) {
 
-	//Create our button image
-	var buttonColor color.RGBA
-	switch button.State {
-	case models.ButtonStateNormal:
-		buttonColor = color.RGBA{R: 55, G: 55, B: 0, A: 255}
-	case models.ButtonStateHovered:
-		buttonColor = color.RGBA{R: 75, G: 75, B: 20, A: 255}
-	case models.ButtonStatePressed:
-		buttonColor = color.RGBA{R: 95, G: 95, B: 40, A: 255}
-	case models.ButtonStateDisabled:
-		buttonColor = color.RGBA{R: 35, G: 35, B: 35, A: 255}
-	}
 	img := ebiten.NewImage(button.Width, button.Height)
-	vector.DrawFilledRect(img, 0, 0, float32(button.Width), float32(button.Height), buttonColor, false)
+	vector.DrawFilledRect(img, 0, 0, float32(button.Width), float32(button.Height), buttonStateColor(button), false)
 
-	//Place text on our button
+	// Text is centred by alignment against the button's midpoint rather than by a fixed
+	// offset. The old hardcoded Translate(50, 50) only landed correctly on a button of
+	// one particular size and put the label off the bottom edge of a shorter one.
 	centerButtonTextOp := &text.DrawOptions{}
-	centerButtonTextOp.GeoM.Translate(50, 50)
+	centerButtonTextOp.GeoM.Translate(float64(button.Width)/2, float64(button.Height)/2)
+	centerButtonTextOp.PrimaryAlign = text.AlignCenter
+	centerButtonTextOp.SecondaryAlign = text.AlignCenter
 	text.Draw(img, button.Text, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, centerButtonTextOp)
 
 	//Locate our button according to screen coords and adjust to use the center point for translation

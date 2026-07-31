@@ -1,6 +1,8 @@
 package models
 
 import (
+	"image/color"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -23,6 +25,13 @@ type Button struct {
 	Text    string
 	State   ButtonState
 	OnClick func()
+
+	// BaseColor is the button at full strength — the colour it reaches when pressed.
+	// It rests dimmer than this and brightens toward it on hover, so a button only has
+	// to name the one colour it actually wants to be. The zero value means "use the
+	// default", which is why buttons that never set it keep the original olive.
+	// Disabled ignores it — a disabled button should not still read as its own colour.
+	BaseColor color.RGBA
 
 	// PressedInside records that the mouse went down while over this button, so
 	// the release can tell a real click from a drag that happened to end here.

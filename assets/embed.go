@@ -35,6 +35,18 @@ var firering_png []byte
 //go:embed frozen-ring.png
 var frozenring_png []byte
 
+//go:embed thunder-ring.png
+var thunderring_png []byte
+
+//go:embed fire-effect.png
+var fireeffect_png []byte
+
+//go:embed frozen-effect.png
+var frozeneffect_png []byte
+
+//go:embed thunder-effect.png
+var thundereffect_png []byte
+
 // FONTS
 //
 //go:embed FiraSans-Regular.ttf
@@ -55,6 +67,10 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["spritesheet_png"] = loadImage(spritesheet_png)
 	assets["firering_png"] = loadImage(firering_png)
 	assets["frozenring_png"] = loadImage(frozenring_png)
+	assets["thunderring_png"] = loadImage(thunderring_png)
+	assets["fireeffect_png"] = loadImage(fireeffect_png)
+	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
+	assets["thundereffect_png"] = loadImage(thundereffect_png)
 	assets["tyrian_ship_sprites_png"] = loadImage(tyrian_ship_sprites_png)
 	assets["tyrian_monster_sprites_png"] = loadImage(tyrian_monster_sprites_png)
 

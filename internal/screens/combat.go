@@ -298,6 +298,6 @@ func CreateRoundedRecMask(mask *ebiten.Image, x, y, width, height, radius float3
 	//Rectangle Edges
 	vector.DrawFilledRect(mask, x+radius, y, width-2*radius, radius, maskColor, false)               //top edge
 	vector.DrawFilledRect(mask, x+radius, y+height-radius, width-2*radius, radius, maskColor, false) //bottom edge
-	vector.DrawFilledRect(mask, x, y+radius, radius+width, height-2*radius, maskColor, false)        //left edge
+	vector.DrawFilledRect(mask, x, y+radius, radius, height-2*radius, maskColor, false)              //left edge
 	vector.DrawFilledRect(mask, x+width-radius, y+radius, radius, height-2*radius, maskColor, false) //right edge
 }

@@ -18,8 +18,6 @@ type CombatantData struct {
 	AvailableAffixes []string `json:"AvailableAffixes"`
 }
 
-var Combatants map[string]CombatantData
-
 // LoadCombatants parses the embedded JSON and returns a map keyed by CombatantRecord
 func LoadCombatants() map[string]CombatantData {
 	var tempCombatants []CombatantData

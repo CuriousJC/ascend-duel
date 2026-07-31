@@ -1,0 +1,12 @@
+# Line endings.
+#
+# Go tooling assumes LF. Without this, a Windows checkout gets CRLF and every
+# single .go file fails `gofmt -l` on line endings alone, which makes the check
+# useless. Setting it here rather than in each developer's git config means it
+# applies to every clone automatically.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted — doing so corrupts them.
+*.png binary
+*.ttf binary
+*.ico binary

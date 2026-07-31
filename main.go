@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/actions"
@@ -33,8 +35,9 @@ func main() {
 	g.GlobalState.ExitButton = models.NewButton(275, 100, "Exit", func() { actions.ExitButtonAction(g.GlobalState) })
 	g.GlobalState.DuelButton = models.NewButton(275, 100, "DUEL!", func() { actions.DuelButtonAction(g.GlobalState) })
 
-	//Run game is the infinite loop
-	if err := ebiten.RunGame(g); err != nil {
+	//Run game is the infinite loop. A deliberate quit comes back as game.ErrClosing,
+	//which is a normal exit rather than a failure — anything else is a real error.
+	if err := ebiten.RunGame(g); err != nil && !errors.Is(err, game.ErrClosing) {
 		log.Fatal(err)
 	}
 }

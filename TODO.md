@@ -75,18 +75,16 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - Superseded an earlier speed-timeline model where a fast duelist took whole
         extra turns. That is wrong for a game you re-plan every round: extra turns are
         invisible when you only ever plan one.
-- [x] **DUEL! button.** `DuelButtonAction` resolves the whole duel up front; the screen
-      only replays. A caption line reports what playback is showing.
-- [~] **Decide Constitution → HP.** First real game rule. Wired: `NewCombatantFrom` sets
-      `MaxLife = Con * entities.LifePerCon` and starts `CurrentLife` full, and
-      `DrawHealthBar` now scales the red fill by `CurrentLife/MaxLife` over a darker
-      track, so the bars are live rather than decorative.
-      - [ ] `LifePerCon = 5` is a placeholder, not a decision. With current
-            `combatants.json` it gives Fighter1 60 HP and Monster1 160 — the source Con
-            values (12 vs 32) are lopsided, so tune the data before the constant.
-      - [x] `CurrentLife` now moves, driven by playback of the resolved log.
-- [ ] **Define `Action`.** Duel is: queue N actions → hit DUEL! → alternating turns,
-      multiple actions per side per turn.
+- [x] **DUEL! button.** `DuelButtonAction` resolves **one round** and hands the screen a
+      log to replay; control returns to the player to re-plan. It ignores presses during
+      playback and once someone is down. A caption line reports what playback is showing,
+      and between rounds shows the queued plan and its AP cost.
+- [x] **Decide Constitution → HP.** `NewCombatantFrom` sets
+      `MaxLife = Con * entities.LifePerCon` and starts `CurrentLife` full;
+      `DrawHealthBar` scales the red fill by `CurrentLife/MaxLife` over a darker track,
+      and playback of the resolved log drives it. `LifePerCon = 5` survived the rebalance
+      and now gives Fighter 60 and Monster 100 — the lopsided 60-vs-160 spread was a data
+      problem, not a constant problem, and was fixed in `combatants.json`.
 - [ ] **Drag-and-drop for the action box.** `DrawCombatButton` is the DUEL! button now;
       `DrawActionBox` / `DrawActions` are still empty stubs. The engine side is ready and
       waiting: `combat.AllActions` is the palette, `ActionKind.Cost()` the price,
@@ -138,19 +136,32 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ## Housekeeping
 
-- [ ] `data.Combatants` package var is declared and never assigned — dead, and a trap.
-- [ ] `Update*Screen` returns `error`; callers discard it. Propagate or drop it.
+- [x] `data.Combatants` package var is declared and never assigned — dead, and a trap.
+      Removed; `LoadCombatants()` returns the map and `GlobalState.Combatants` holds it.
+- [x] `Update*Screen` returns `error`; callers discard it. Now propagated out of
+      `Game.Update`. Ebitengine stops the loop on any non-nil error from `Update`, so a
+      screen error is fatal by design — the only sensible reading of an error a screen
+      cannot handle itself.
 - [x] `Life_max` / `Life_current` → `MaxLife` / `CurrentLife` (Go naming).
-- [ ] `CreateRoundedRecMask` left edge is `radius+width` wide, should be `radius`. Works
-      only because it's clipped at x=0.
-- [ ] Quitting exits status 1 and logs `Closing` like a crash — `Update` returns an
-      error, `main` hands it to `log.Fatal`. Wants a sentinel error and an `errors.Is`
-      check so a clean quit exits 0.
-- [ ] `.gitattributes` with `*.go text eol=lf` — every file currently fails `gofmt -l`
-      on line endings alone.
-- [ ] Embedded-asset drift: `thunder-ring.png` and the three `*-effect.png` files exist
-      in `assets/` but aren't embedded.
-- [ ] Local `main` branch is ~40 commits stale. `git merge --ff-only origin/main`.
+- [x] `CreateRoundedRecMask` left edge is `radius+width` wide, should be `radius`. Works
+      only because it's clipped at x=0. Fixed — no visual change, since the overdraw was
+      always clipped away; it would have corrupted the mask the moment the function was
+      called with a non-zero x.
+- [x] Quitting exits status 1 and logs `Closing` like a crash. Now `game.ErrClosing`, a
+      sentinel, with an `errors.Is` check in `main` — a deliberate quit exits 0 silently
+      and anything else still goes to `log.Fatal`.
+- [x] `.gitattributes` with `* text=auto eol=lf` — every file used to fail `gofmt -l` on
+      line endings alone, making the check useless. PNG and TTF marked binary so they are
+      never converted. The existing working tree was normalized with `gofmt -w`; the file
+      only governs what git writes on checkout, so it would not have fixed files already
+      on disk. `gofmt -l .` is now clean and worth running.
+- [x] Embedded-asset drift: `thunder-ring.png` and the three `*-effect.png` files existed
+      in `assets/` but were not embedded. All four now embedded and mapped
+      (`thunderring_png`, `fireeffect_png`, `frozeneffect_png`, `thundereffect_png`),
+      ready for the affix work.
+- [x] Local `main` branch was 47 commits stale — fast-forwarded, and the merged
+      `dad-work` / feature branches deleted locally and on the remote. `origin` now
+      carries `main` only.
 
 ## Open decisions
 
@@ -162,8 +173,9 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       so that's a ~57° rotation, not identity. Source PNG is warm gold/amber. If the
       title looks greener on screen than the file, it's unintended — identity is
       `ChangeHSV(0, 1, 1)`.
-- [?] **Start screen.** `NewGlobalState()` opens on `Combat` as a dev shortcut. Flip back
-      to `Title` when combat has enough to be worth navigating to.
+- [x] **Start screen.** Flipped from the `Combat` dev shortcut back to `Title`. Combat is
+      one click away and is now worth navigating to. Flipping it is also what surfaced
+      the screen-transition nil deref above.
 
 ## Licensing (for an eventual Steam release)
 

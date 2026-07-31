@@ -50,6 +50,21 @@ git commit -s                                   # sign-off, per CONTRIBUTING.md
 Tests live in `internal/combat` — the only package that can be tested without a
 window, by design. Keep it that way: rules go in `combat`, not in screens.
 
+## Git workflow
+
+- **Squash merge every PR.** One commit on `main` per PR, so the history reads as a
+  list of milestones. The number of commits on the branch does not matter — write
+  them freely and let the squash collapse them.
+- Because of squashing, `git branch -d` will *always* refuse a merged feature branch:
+  the squash creates a new commit, so the branch tip is never an ancestor of `main`.
+  Confirm the content landed (`git diff main <branch>` returns nothing), then `-D`.
+- Branch off `main`; never commit directly to it.
+- `git checkout main` **before** `git pull`. Pulling while on a feature branch drags
+  `main`'s history onto that branch and causes confusion.
+- Commits use the GitHub noreply identity, not a personal address.
+- The owner reviews diffs in VS Code, so leave work **unstaged** unless asked to
+  commit. Do not push or open a PR without being asked for that step.
+
 ## Architecture
 
 ### Ebitengine game loop

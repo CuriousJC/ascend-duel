@@ -100,6 +100,31 @@ func (a ActionKind) Cost() int {
 	}
 }
 
+// Initiative is how quickly an action lands, lower being faster. It is a lever entirely
+// separate from Cost: cost decides what a plan may contain, initiative decides when the
+// pieces of it happen. Guard is deliberately quicker than the Strike it is meant to
+// answer, so raising it in the same exchange actually beats the blow to the punch.
+const (
+	initQuick  = 1
+	initGuard  = 2
+	initStrike = 3
+	initHeavy  = 5
+)
+
+// Initiative is where in an exchange this action lands. Lower goes first.
+func (a ActionKind) Initiative() int {
+	switch a {
+	case Quick:
+		return initQuick
+	case Guard:
+		return initGuard
+	case Heavy:
+		return initHeavy
+	default:
+		return initStrike
+	}
+}
+
 // Budget conversion: everyone gets a usable turn, and speed is a real edge without
 // being a landslide.
 const (
@@ -175,8 +200,57 @@ type Event struct {
 	Round  int
 }
 
+// Slot is one action's place in a round's resolution order: whose it is, where it sits
+// in that side's queue, and what it is.
+type Slot struct {
+	Side   Side
+	Index  int
+	Action ActionKind
+}
+
+// ResolutionOrder is the sequence in which two queued sets resolve, and the single
+// authority on that order. ResolveRound plays it and the combat screen's Resolution pane
+// draws it; neither works the order out for itself, so the pane and the engine cannot
+// drift apart.
+//
+// The queues alternate one action each, as they always have. What initiative adds is who
+// moves first *inside* one exchange: the faster action lands first, lower initiative
+// winning, and side A takes a tie. That is what makes the position a card is dragged to
+// a real decision — it chooses which of the opponent's actions that card contests, and
+// therefore whether it beats that action or answers it.
+//
+// Whichever queue is longer keeps acting alone once the other runs out. That tail is
+// where a speed advantage shows, so it is the point rather than an edge case.
+func ResolutionOrder(aActions, bActions []ActionKind) []Slot {
+	slots := make([]Slot, 0, len(aActions)+len(bActions))
+
+	for i := 0; i < len(aActions) || i < len(bActions); i++ {
+		aHas, bHas := i < len(aActions), i < len(bActions)
+
+		// Side A leads unless B's action in this exchange is strictly faster. A tie going
+		// to A preserves the behaviour from before initiative existed and keeps the round
+		// reproducible — no comparison here may depend on anything but these two actions.
+		aFirst := true
+		if aHas && bHas {
+			aFirst = aActions[i].Initiative() <= bActions[i].Initiative()
+		}
+
+		if aHas && aFirst {
+			slots = append(slots, Slot{Side: SideA, Index: i, Action: aActions[i]})
+		}
+		if bHas {
+			slots = append(slots, Slot{Side: SideB, Index: i, Action: bActions[i]})
+		}
+		if aHas && !aFirst {
+			slots = append(slots, Slot{Side: SideA, Index: i, Action: aActions[i]})
+		}
+	}
+
+	return slots
+}
+
 // ResolveRound plays out one round and returns its event log along with the state
-// both sides end in. The two queues alternate one action each, side A first.
+// both sides end in. ResolutionOrder decides the order it plays them in.
 //
 // Alternating rather than resolving one side's whole set and then the other's is what
 // makes resolution order a thing the player can reason about and, later, manipulate:
@@ -188,22 +262,18 @@ func ResolveRound(a, b Duelist, aActions, bActions []ActionKind, round int) (eve
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
-	// Whichever queue is longer keeps acting alone once the other runs out. That tail
-	// is exactly where a speed advantage shows, so it is the point rather than an edge
-	// case to be smoothed away.
-	for i := 0; i < len(aActions) || i < len(bActions); i++ {
-		if i < len(aActions) {
-			events, a, b = resolveAction(events, SideA, a, b, aActions[i], round)
+	for _, slot := range ResolutionOrder(aActions, bActions) {
+		if slot.Side == SideA {
+			events, a, b = resolveAction(events, SideA, a, b, slot.Action, round)
 			if !b.Alive() {
 				break
 			}
+			continue
 		}
 
-		if i < len(bActions) {
-			events, b, a = resolveAction(events, SideB, b, a, bActions[i], round)
-			if !a.Alive() {
-				break
-			}
+		events, b, a = resolveAction(events, SideB, b, a, slot.Action, round)
+		if !a.Alive() {
+			break
 		}
 	}
 

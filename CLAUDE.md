@@ -76,10 +76,20 @@ do not write code that forecloses it.
   `rand.Shuffle`, …). They draw from a global source shared with every other caller,
   which makes a run unreproducible. Randomness comes from an explicit `*rand.Rand`
   carried on state and seeded once per run.
-- **Three separate streams: enemy selection, loot offers, floor offers.** Never share
-  one source between them, or a change to loot generation silently rerolls every enemy
-  in the tower. A stream is only ever advanced by its own concern. Tower layout is fixed
-  (8 floors × 3 fights, endless later) and draws no randomness.
+- **Four separate streams: enemy selection, loot offers, floor offers, card shuffles.**
+  Never share one source between them, or a change to loot generation silently rerolls
+  every enemy in the tower. A stream is only ever advanced by its own concern. Tower
+  layout is fixed (8 floors × 3 fights, endless later) and draws no randomness.
+- **The card shuffle is the only stream that exists yet**, and it lives on `CombatScene`
+  as `rng`, seeded in `Init` from the `deckSeed` constant. That constant is a placeholder
+  for the per-run seed: every launch deals the same opening hand, which is what makes a
+  layout problem reproducible while the screen is being built. When `Session` state lands,
+  the seed reads from there and nothing else about the deck code changes.
+- **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of
+  the rules package is what preserves its purity, its tests and the headless balance sim.
+  Moving draw into `combat` is a real option later, but it has to arrive as an injected
+  source parameter on `ResolveRound` and it changes `TestRoundIsDeterministic` — see the
+  deckbuilder entry in `TODO.md` before doing it.
 - **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is
   an infinite deterministic list, and the planned endless tower gives no worst case to
   size an array against. Rerolls simply advance the cursor.
@@ -96,18 +106,26 @@ do not write code that forecloses it.
 
 ## Resolution order is a player lever, not just an output
 
-A round resolves the two queues **alternately**, one action each, side A first, with the
-longer queue acting alone once the other empties. This replaced volley-per-side on
-2026-07-31 — see the entry in `TODO.md` for the full reasoning.
+A round resolves the two queues **alternately**, one action each, with the longer queue
+acting alone once the other empties. This replaced volley-per-side on 2026-07-31 — see the
+entry in `TODO.md` for the full reasoning.
 
-The intended loop is: **the player chooses their actions, then possibly alters the
-default resolution order.** Speed and later effects are meant to rearrange that order,
-which is why two monolithic volleys were wrong — they gave those effects nowhere to
-bite and gave the player nothing to manipulate.
+Within one exchange, **the faster action lands first**: lower `ActionKind.Initiative()`
+wins, and side A takes a tie. Initiative is a lever wholly separate from cost — cost
+decides what a plan may *contain*, initiative decides *when* its pieces happen — and it is
+separate from `Spd`, which buys action points and never priority.
 
-- **The Resolution pane and `ResolveRound` must stay in step.** The pane is the player's
-  model of the round; anything that reorders resolution has to move both.
-- **Ordering is a rule.** It belongs in `internal/combat`, never in a screen.
+The intended loop is: **the player chooses their actions, then alters the resolution
+order.** That is why two monolithic volleys were wrong; they gave the player nothing to
+manipulate. Dragging a card to a different slot changes which of the opponent's actions it
+contests, and therefore whether it beats that action or answers it.
+
+- **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
+  it returns and the Resolution pane draws what it returns. Neither derives the order
+  independently, which is what makes it structurally impossible for the pane to lie to the
+  player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
+- **Ordering is a rule.** It belongs in `internal/combat`, never in a screen. A new effect
+  that rearranges resolution changes `ResolutionOrder` and both consumers follow.
 - A raised Guard lasts until its owner's next action, so it covers every opposing action
   in between, across a round boundary if it was queued last. A duelist who queues
   nothing therefore keeps its guard — deliberate, pinned by
@@ -157,22 +175,71 @@ reference case: the button rests at 65%, hovers at 82% and reaches the named col
 
 ### Combat screen panes are scaffolding
 
-The four columns on the combat screen are placeholders for finding the layout, not a
-chosen palette. Colours identify the role, and the Resolution pane's per-row swatches
-reuse the pane colour of whichever side is acting.
+The combat screen reads **fighter / palette / resolution / enemy**: two panes with the
+duelists as bookends and the round between them. Colours identify the role and are
+placeholders, not a chosen palette.
 
-| Pane | Slot | Colour | Role |
+| Element | Slot | Colour | Role |
 |---|---|---|---|
-| Player | 20–30% | green | palette of available actions to drag from |
-| Chosen | 35–45% | blue | the player's queued set |
-| Resolution | 55–65% | pink | both queues interleaved in play order |
-| Enemy | 85–95% | yellow | the opponent's queued set |
+| Fighter sprite | 9% | — | the player |
+| Actions | 18–38% | green | available cards, the AP budget, then the queue |
+| Resolution | 45–78% | pink | both queues interleaved in play order |
+| Enemy sprite | 88% | — | the opponent |
 
-Two known problems, neither decided: the columns are 128px wide, which holds `Strike 2`
-at size 16 but will not hold a real action card with a name, cost and icon; and the
-Enemy pane at 85–95% sits a long way from the enemy sprite at 75%. Expect to widen them
-when the draggable action box replaces `defaultFighterPlan`. Do not treat the current
-colours or widths as settled.
+**The Actions pane stacks two zones in one column.** Available cards from `availableTop`,
+the AP text and bar acting as the divider, then the queued cards from `chosenTop` — and
+`chosenZone` is the lower one, which is the drop target. A card released anywhere else,
+including on the available cards above, is discarded. Card geometry keys off a zone offset
+rather than a pane, which is what `cardSlot(gs, top, i)` takes.
+
+**The Resolution pane is the centrepiece and gets the width to prove it.** It is the only
+pane that has to grow: once exchanges have structure — an initiator and a response — it
+has to draw that rather than a flat list of rows.
+
+Two panes rather than four, decided 2026-08-02. Chosen folded into the palette because one
+column can hold both zones; Enemy went entirely because an interleaved Resolution already
+shows the opponent's actions in a better order than a column of its own. The player's rows
+carry the palette's green and the opponent's carry `enemySwatch` yellow, so the screen
+reads as two colours: green is you, yellow is them. Do not treat the widths or colours as
+settled.
+
+### The action box
+
+[combat_actionbox.go](internal/screens/combat_actionbox.go) is the drag-and-drop queue,
+and the reference for building a *game* widget: state on the scene, hand-rolled hit
+testing, no toolkit. Drag from the available zone to queue, drag within the queue zone to
+reorder, drag out of the queue zone to discard.
+
+- **`planning()` is the single predicate** for "the player may edit the queue" — derived
+  from `cursor >= len(log)` plus both duelists alive, not stored. Drag and the DUEL!
+  button both gate on it, so they can never disagree.
+- **The action-point budget is enforced at pick-up.** A card the remaining points will
+  not cover cannot be lifted and draws dimmed. Accepting a drag and then bouncing the
+  drop is a worse conversation than never letting the card leave.
+- **A card dragged out of the queue leaves it on pick-up**, not on drop, so the gap
+  closes under the cursor and the drop index is measured against the real list.
+  Dropping outside the pane is therefore how an action is removed.
+- The in-flight card is drawn last in `Draw`, so it rides over the panes it crosses.
+- **The AP budget is drawn twice, on purpose.** A `3/6 AP` line for the exact figure and a
+  bar under it for the glanceable one. A card in flight from the palette adds a dimmer
+  segment ahead of the fill, so the bar answers "does this fit" before the card lands —
+  it has not joined the queue yet and would otherwise not move the bar at all.
+
+### Hidden information is gated on `ActiveDebug`
+
+The opponent's queued actions are concealed in both the Enemy pane and the enemy rows of
+the Resolution pane, unless `ActiveDebug` is on. `CombatScene.concealEnemy` is the single
+predicate — `!gs.ActiveDebug && s.planning()` — and anything else that becomes secret
+should join it rather than growing a second rule.
+
+- **Concealment lifts once playback starts.** An action that has already resolved is not a
+  secret, and the Resolution pane still has to narrate the round.
+- **Concealed rows keep their real count**, so the opponent's AP spend stays readable even
+  when the actions do not. Deliberate, and recorded as open in `TODO.md`: collapsing the
+  rows would hide the spend and destroy the pane's account of who acts when, which is the
+  one thing that pane exists to show.
+- Debug is a *view*, never a rule. `ResolveRound` never sees the flag, so turning debug on
+  or off cannot change an outcome — the same constraint that applies to playback speed.
 
 ## Architecture
 

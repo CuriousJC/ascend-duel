@@ -44,6 +44,21 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       actually runs.
       - [x] Verified on screen: the scene scales as a unit and letterboxes, and the
             layout no longer reflows on resize.
+- [x] **AP bar in the Chosen pane.** The budget was a `3/6 AP` text line; it is now that
+      line plus a bar underneath, filling in the pane's blue as the queue is built. The
+      number answers "exactly how much", the bar answers "how much room is left" without
+      being read. `drawAPBar` in [combat_actionbox.go](internal/screens/combat_actionbox.go).
+      - A card lifted off the palette draws its cost as a dimmer segment ahead of the fill,
+        because it has not joined the queue yet and would otherwise not move the bar until
+        it landed. The bar answers "does this still fit" while the card is in the air.
+      - A card lifted *out* of the queue already leaves it on pick-up, so that direction
+        needs no special case — the fill drops the moment it is grabbed.
+- [ ] **AP cost as dots on each action card — very soon.** The cost is currently a numeral
+      in the card's right edge. Dots make expense visible as quantity rather than read as a
+      digit, and line up against the bar above them so a 4-cost card visibly is most of a
+      6-point budget. Same treatment on both panes, palette and queue.
+      - Wants the bar to be segmented per point rather than continuous, so the dots on a
+        card and the segments in the bar are the same unit. Worth doing together.
 - [ ] **Stop allocating in `Draw`.** `DrawButton` makes a new `ebiten.Image` per button
       per frame (180/sec); `DrawHealthBar` makes two per bar per frame (240/sec).
       `Button.Image` already exists and is only used for bounds — render into it on
@@ -93,29 +108,206 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       and playback of the resolved log drives it. `LifePerCon = 5` survived the rebalance
       and now gives Fighter 60 and Monster 100 — the lopsided 60-vs-160 spread was a data
       problem, not a constant problem, and was fixed in `combatants.json`.
-- [ ] **Drag-and-drop for the action box.** `DrawCombatButton` is the DUEL! button now;
-      `DrawActionBox` / `DrawActions` are still empty stubs. The engine side is ready and
-      waiting: `combat.AllActions` is the palette, `ActionKind.Cost()` the price,
-      `Duelist.ActionPoints()` the budget and `CanAfford` the validity check — the UI
-      just has to write `s.fighterActions`. Until it exists, `defaultFighterPlan` in
-      [combat.go](internal/screens/combat.go) stands in for the player's choices.
+- [x] **Drag-and-drop for the action box.** Built hand-rolled in
+      [combat_actionbox.go](internal/screens/combat_actionbox.go). Drag a card out of the
+      green Player palette into the blue Chosen pane to queue it, drag a chosen card to a
+      new position to reorder it, drag one out of the pane to discard it. The Resolution
+      pane updates live, because it reads `s.fighterActions` directly.
       - Hand-rolled, no toolkit — decided, see "Open decisions". Drag state lives on
         `CombatScene` alongside everything else it owns.
       - **Flow, decided:** build a plan → DUEL! → watch playback → build a *fresh* plan →
         DUEL! again. The queue empties every round; nothing carries over. Makes each
         round a real decision rather than a default nobody revisits.
-      - `defaultFighterPlan` is deleted once this lands — it only ever stood in for the
-        player.
+      - `defaultFighterPlan` is deleted — it only ever stood in for the player.
       - The planning/playback phase stays derived from `cursor >= len(log)` rather than
-        becoming its own field, so there is one source of truth.
+        becoming its own field, so there is one source of truth. `planning()` is the one
+        predicate; drag and DUEL! both gate on it.
       - DUEL! is disabled while the queue is empty — first real use of the existing
         `models.ButtonStateDisabled`. An empty plan is mechanically legal and
         `ResolveRound` handles it, but it means standing still while being hit.
       - Under-spending the budget is allowed; forbidding it would add a rule for no gain.
+      - **The budget is enforced at pick-up, not at drop.** An action the remaining points
+        will not cover cannot be lifted off the palette at all, and draws dimmed. Letting
+        a card be dragged and then bounced is a worse conversation than never letting it
+        leave. Re-checked on drop anyway, since the two are separated by time.
+      - **A card lifted out of the queue leaves it immediately** rather than on drop, so
+        the gap closes under the cursor and the insertion index is measured against the
+        list the card actually lands in. Dropping outside the pane is therefore the
+        removal gesture, with no separate delete affordance to find.
       - **No "repeat last plan" shortcut.** Explicitly not wanted: every round being a
         real decision is where the balance and design work lives, and a repeat button
         undercuts that. Revisit only if playtesting proves it tedious — do not add it
         pre-emptively.
+- [x] **Hide the enemy's plan, behind `ActiveDebug`.** The yellow pane and the enemy rows
+      of the Resolution pane showed the opponent's queued actions while the player built
+      theirs — perfect information, and only ever there so the pane had content. Both now
+      render `???` unless `ActiveDebug` is on, so the plan stays readable while debugging
+      alongside the layout guides and is invisible in normal play. `CombatScene.concealEnemy`
+      is the single predicate: `!gs.ActiveDebug && s.planning()`.
+      - Concealment lifts once playback starts. An action that has already happened is not
+        a secret, and the Resolution pane still has to narrate the round.
+      - [?] **What it still leaks: the row count.** A concealed queue occupies its real
+            number of rows, so the opponent's AP spend is readable even when the actions
+            are not — and against `PlanGreedy` that is most of the tell. Deliberate:
+            collapsing the rows would hide the spend but destroy the Resolution pane's
+            account of who acts when, and that alternation is a rule the player is meant
+            to read and eventually manipulate. Settle this with the wider question below.
+      - [?] **The wider question, not yet answered:** which information is hidden and which
+            is random. Those are different levers — hidden-but-deterministic rewards
+            reading the opponent, random rewards hedging — and the interesting play is in
+            choosing per mechanic rather than applying one rule to everything. Note that
+            hidden information is listed under "is this seed winnable?" as a property that
+            would break solvability, so this decision has a cost recorded elsewhere.
+      - There is no runtime toggle for `ActiveDebug`; it is set once in `main.go`. A hotkey
+        would be the obvious convenience and collides with the no-keyboard rule in
+        `CLAUDE.md`, so it needs a decision rather than a keystroke.
+- [x] **Initiative on actions, contesting the paired slot.** Every `ActionKind` has an
+      `Initiative()` — Quick 1, Guard 2, Strike 3, Heavy 5 — and within an exchange the
+      faster action lands first, side A taking a tie. Alternation is unchanged; what
+      initiative decides is who leads each pairing.
+      - **Why contested slots and not a global initiative sort.** Sorting every action from
+        both sides into one pool is the purer reading of "how quickly you can act", and it
+        makes dragging a card to a different position *do nothing* — the sort would already
+        have decided. It also reproduces the speed-timeline model rejected above, where a
+        fast duelist takes several actions in a row. Contesting the paired slot keeps the
+        alternation guarantee and makes position the decision.
+      - `combat.ResolutionOrder(a, b) []Slot` is now the single authority on order.
+        `ResolveRound` plays it, the Resolution pane draws it, and
+        `TestResolutionOrderIsWhatResolveRoundPlays` pins that they agree. Any future
+        reordering effect changes that one function.
+      - Guard at 2 is deliberately faster than the Strike at 3 it answers, so guarding in
+        the same exchange beats the blow rather than arriving after it.
+      - `Spd` still buys action points and never priority. Two separate levers:
+        `TestSideAActsBeforeSideB` keeps a duelist 500x faster from leading an exchange.
+      - Cards show `init N` under the name. Without it the Resolution pane reorders for
+        reasons the player cannot see.
+      - [?] **Initiative values are a first guess, not balanced.** 1/2/3/5 across
+            Quick/Guard/Strike/Heavy is spaced to make every pairing decisive rather than
+            tuned against the AP costs of 1/2/2/4. Whether Heavy should be beatable by
+            *everything* is exactly the sort of thing the headless balance sim should
+            answer.
+- [?] **Ordering model — three candidates, one implemented, none settled.** Contested slots
+      is what ships today. Two alternatives came out of the 2026-08-02 discussion and both
+      are live options; `ResolutionOrder` is a single pure function, so swapping between
+      them is one function body plus its tests.
+      - **Contested slots (built).** Queues alternate; initiative decides who leads each
+        pairing. Every action of yours meets one of theirs — "every ask gets an answer".
+        The cost: a fast action placed late still resolves late, because initiative never
+        lets an action jump to an earlier exchange. Quick means "wins its exchange", not
+        "happens early".
+      - **Wind-up time.** Initiative is how long an action takes to come out, accumulating
+        down the queue; actions resolve in time order across both sides. Gives the "land
+        three fast hits before the slow enemy connects" feel, and reordering still bites
+        because your queue is consumed in order. Costs the pairing symmetry entirely.
+        Distinct from the rejected speed-timeline model: tempo is bought with card choice,
+        not accrued from `Spd`, and AP still caps the action count.
+      - **Initiate / respond.** The richest and the biggest change. An exchange is one
+        initiator's action plus the opponent's response *if they queued one*; whoever's
+        next card is faster initiates, and a card that cannot respond is not consumed —
+        it waits. That waiting is what lets a fast plan land several blows against a slow
+        one while keeping action-and-answer where both sides planned for it.
+        - Needs a taxonomy that does not exist: **role** (can it initiate, respond, or
+          both), **response timing** (does the answer land before or after the blow),
+          **consumption** (does answering spend the card), **effect** (modify, negate,
+          counter). Today's four sit as initiate-only except Guard, which is respond-only.
+        - The payoff falls out of response timing for free: let a response resolve first
+          only when its initiative is *lower*, and Guard at 2 blocks Strike (3) and Heavy
+          (5) but is too slow against Quick (1). **Quick becomes the guard-breaker** from
+          numbers already on the cards, and a defensive card's initiative becomes the
+          single number saying what it is for.
+        - It also dissolves the Guard-persistence oddity. A Guard consumed by the attack
+          it answers has no "lasts until its owner acts again" rule to reason about, and
+          `TestGuardHoldsWhileItsOwnerDoesNothing` stops describing anything.
+        - **Deadlock is a real hazard.** If cards are spent only by initiating or
+          responding, two sides holding nothing but responses have nobody to initiate and
+          nothing to resolve — an unbounded round. Needs an explicit rule (discard
+          unanswered responders at round end, or let a responder initiate as a no-op) and
+          a test, because it will not show up until the AI learns to guard.
+        - Open besides that: is a too-slow response wasted or does it carry to the next
+          attack; do unanswerable cards wait forever or get skipped; should responses cost
+          less AP than attacks.
+      - Build the palette/resolution layout before choosing. All three produce an
+        interleaved order, so the layout is not wasted on any of them, and dragging cards
+        around is a better way to feel the difference than reasoning about it.
+- [ ] **Graded reveal of the enemy's actions — the design this is heading toward.** A
+      concealed action currently shows `??? (i3)`: initiative always leaks, the name never
+      does. That is one cut, chosen because hiding initiative makes the Resolution pane
+      unreadable — the player could not tell why the rows sit in that order.
+      - The proposal worth building out: reveal *categories* rather than identities. Does
+        it damage? Does it apply a status? How fast is it? The player reads the shape of
+        the opponent's round and plans against it without knowing the specific card.
+      - This is the concrete form of the hidden-vs-random question above. Hidden but
+        graded is a third thing from either, and probably the most interesting: it rewards
+        reading without punishing with pure guesswork.
+      - Wants a reveal level per action rather than the current boolean, and something on
+        the enemy side that decides how much leaks — an affix, a ring, a floor property.
+- [ ] **Deckbuilder — the direction the action box is growing into.** Decided 2026-08-02.
+      Actions stop being four verbs and become a deck of card *instances*: play a card, it
+      goes to a discard pile, and thinning the deck is a reward the player can be offered.
+      Think dozens of cards rather than four, though not a full 52.
+      - **Decided — the screen.** Four columns: **fighter / palette / resolution / enemy**,
+        with the duelists as bookends and the round between them. The Chosen pane and the
+        Enemy pane both go away. Chosen because the palette can hold the ordered queue
+        itself; Enemy because an interleaved Resolution already shows their actions in a
+        better order than a separate column does. **The Resolution pane becomes the
+        centrepiece of the scene** and inherits the freed width, which it needs — with a
+        response model it has to draw exchange structure, not a flat list of rows.
+      - **Decided — the interaction.** Click a card in the palette to select it, drag to
+        order the selected ones, and the palette order falls through into the Resolution
+        pane. The action-point budget gates *selection*: a card the remaining points will
+        not cover cannot be selected, which is today's pick-up rule moved to the click.
+        - Splitting the gestures this way is what makes it safe. Dragging into an
+          interleaved list means the drop position is not where the card lands — your
+          index is measured against your own queue, and the opponent's actions
+          re-interleave around it. Dragging only ever *reorders* cards that already
+          exist, and adding is a click somewhere else entirely.
+        - The Resolution pane must re-interleave live under the cursor while dragging, or
+          the reorder is guesswork. `ResolutionOrder` is a pure function over two slices,
+          so this is a per-frame call with the hypothetical placement, not a cache.
+        - Removal becomes clicking a card off in the palette. Today's gesture is dragging
+          it outside the pane, which nothing on screen suggests.
+      - **Decided — selection clears every round, palette order may persist.** Persisting
+        the arrangement is fine and probably good; persisting the *selection* rebuilds the
+        "repeat last plan" shortcut that is explicitly rejected above.
+      - **Thinning and drawing are the same decision.** A reward for slimming the deck
+        means nothing if the whole deck is visible every round — that is just a longer
+        palette. Committing to thinning commits to a hand, a draw, a discard and a
+        reshuffle, and those arrive together rather than one at a time.
+      - **This puts randomness inside `internal/combat` for the first time.** A shuffle is
+        a fourth seeded stream alongside enemy selection, loot offers and floor offers.
+        Consistent with the determinism rules — it arrives as an injected source, never a
+        global — but `ResolveRound` grows a source parameter and
+        `TestRoundIsDeterministic` changes shape to seed it explicitly.
+      - **Open, and needed before any of this is buildable:**
+        - Hand size, deck size, cards drawn per round, and what happens when the deck runs
+          out mid-fight. All four interact with the AP budget.
+        - Whether `AP = 4 + Spd/10` survives unchanged once it is gating selection from a
+          hand rather than from a fixed palette of four.
+        - Whether the enemy has a deck too. If it does, affixes become cards shuffled into
+          it and "this is a cold floor" stops being a stat modifier and becomes a literal
+          deck edit — which fits the enemy model below far better than what is planned
+          there now.
+        - Whether the deck is per-run or per-fight, and whether the discard reshuffles
+          within a fight or only between them.
+      - **First slice landed 2026-08-02.** A 20-card starting deck — 10 Strike, 6 Guard,
+        4 Heavy — with a hand of five, a discard pile, and a reshuffle when the draw pile
+        runs dry. Click a card to select it, drag to reorder, and the queue is derived from
+        the hand by `syncQueue` rather than stored twice.
+        - The whole hand discards at the end of a round and five are drawn fresh. Keeping
+          cards back would let a plan be prepared once and repeated, which the "no repeat
+          last plan" decision above rules out. Worth revisiting if it plays badly — hand
+          retention is a real deckbuilder lever, just one that fights that decision.
+        - The discard happens when *playback* finishes, not when the round resolves.
+          `discardHand` rebuilds `fighterActions`, and the Resolution pane draws
+          `fighterActions` to narrate the round, so discarding early empties the pane
+          mid-round. The ordering in `advancePlayback` is load-bearing.
+        - `Quick` is defined in the rules but absent from the deck. Which of the actions
+          the rules permit actually appear is a deck-building question, and that split is
+          the point of having a deck at all.
+        - The 10/6/4 composition and the hand size of five are first guesses, unplayed.
+        - **Still missing before this is a deckbuilder rather than a card-shaped hand:**
+          nothing adds or removes cards, so there is no building and no thinning reward.
+          That needs the loot loop, which needs the tower.
 - [ ] **Real opponent AI.** `combat.PlanGreedy` buys the biggest attack it can afford and
       never guards. Deterministic and fine for testing, but not a fight.
 - [x] **Wire `Str` / `Spd` / `Con`.** `Con` feeds `MaxLife`, `Str` sets action damage,
@@ -249,8 +441,13 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         answers a weaker question: winnable *by this policy*.
       - What would kill it, and therefore what to weigh decisions against:
         - Hidden information the solver cannot see.
-        - Randomness resolved *during* a fight. `internal/combat` has none today, and
-          this is another reason to keep it that way.
+        - Randomness resolved *during* a fight from an unseeded source. Amended
+          2026-08-02: a *seeded* shuffle is not this. The deck order is fixed by the seed,
+          so a solver exploring a line of play knows its draws exactly and replay stays
+          exact — the branching factor grows but the question stays well-posed. The
+          deckbuilder direction therefore costs less here than this entry first implied.
+          What would genuinely kill it is randomness drawn from a global or a clock, which
+          the determinism rules already forbid.
         - Unbounded state — anything that makes a position not comparable to another.
         - Real-time or reflex elements.
       - None of those are on the roadmap, so the property is currently free. Re-read this

@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
@@ -36,6 +37,38 @@ func dwellFor(e combat.Event) int {
 	return beatTicks
 }
 
+// The starting deck: 20 cards, and a hand of five drawn from it each round. Quick is not
+// in it — the deck is what the player owns, and which of the actions the rules define
+// actually appear is a deck-building question rather than a rules one.
+//
+// The 10/6/4 split is a first guess at "mostly attacks, some defence, a few big swings"
+// and has not been played against anything. It is the obvious thing to tune once the
+// fights are worth measuring.
+const handSize = 5
+
+var startingDeck = []deckEntry{
+	{combat.Strike, 10},
+	{combat.Guard, 6},
+	{combat.Heavy, 4},
+}
+
+// deckEntry is one line of a deck list: a card and how many copies of it.
+type deckEntry struct {
+	action combat.ActionKind
+	count  int
+}
+
+// deckSeed fixes the shuffle so every launch deals the same cards, which is what makes a
+// layout problem reproducible while the screen is being built. It is a placeholder for the
+// per-run seed described in TODO.md — when Session state exists this reads from there, and
+// the rest of the deck code does not change.
+const deckSeed = 1
+
+// apBarColor is the action-point bar's blue. It is deliberately not the palette's green:
+// the bar reports the budget rather than belonging to the cards, and giving it its own
+// colour stops it reading as a summary of the list underneath it.
+var apBarColor = color.RGBA{R: 70, G: 130, B: 230, A: 255}
+
 // CombatScene runs one duel: the player plans a set of actions against an action
 // point budget, presses DUEL!, watches the round play out, and plans again.
 //
@@ -45,10 +78,25 @@ type CombatScene struct {
 	fighter *entities.Combatant
 	enemy   *entities.Combatant
 
-	// The queued sets for the coming round. fighterActions is what the action box
-	// will eventually write; enemyActions is re-planned by the opponent each round.
+	// The queued sets for the coming round. fighterActions is derived from the hand by
+	// syncQueue and never written directly; enemyActions is re-planned each round.
 	fighterActions []combat.ActionKind
 	enemyActions   []combat.ActionKind
+
+	// The player's deck, in three piles. hand is what the action box draws and the only
+	// one the player touches; deck is the draw pile and discard is what has been spent.
+	// A card played this round moves to discard when the round resolves.
+	deck    []combat.ActionKind
+	hand    []paletteCard
+	discard []combat.ActionKind
+
+	// The shuffle source. Explicit and carried on state rather than the math/rand
+	// package-level functions, which draw from a global shared with every other caller
+	// and would make a run unreproducible. Seeded once in Init.
+	rng *rand.Rand
+
+	// The card currently being dragged, if any. See combat_actionbox.go.
+	drag *dragState
 
 	// The resolved round and the playback cursor walking it. The screen never
 	// computes an outcome — it replays this.
@@ -84,8 +132,15 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.duelButton.ScreenX = gs.PctX(20)
 	s.duelButton.ScreenY = gs.PctY(85) // centred in the 80–90% band
 
-	// Placeholder queue until the action box is draggable. It must fit the AP budget.
-	s.fighterActions = defaultFighterPlan(s.fighter.Duelist)
+	// A fresh deck every visit, shuffled from the same seed, so re-entering the screen
+	// deals the same opening hand rather than continuing a run that has been abandoned.
+	s.rng = rand.New(rand.NewSource(deckSeed))
+	s.resetDeck()
+
+	// The queue starts empty every visit and is derived from what is selected in hand.
+	// DUEL! is disabled until something is in it.
+	s.fighterActions = nil
+	s.drag = nil
 
 	// Planned up front only so the enemy pane has something in it before the first
 	// DUEL!. startRound re-plans it every round regardless, so this is display, not a
@@ -103,7 +158,75 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.round = 0
 }
 
+// resetDeck builds the starting deck, shuffles it, empties the discard and deals an
+// opening hand.
+func (s *CombatScene) resetDeck() {
+	s.deck = s.deck[:0]
+	for _, e := range startingDeck {
+		for i := 0; i < e.count; i++ {
+			s.deck = append(s.deck, e.action)
+		}
+	}
+
+	s.discard = s.discard[:0]
+	s.hand = s.hand[:0]
+
+	s.shuffleDeck()
+	s.drawHand()
+}
+
+// shuffleDeck shuffles the draw pile using the scene's own source. Never rand.Shuffle,
+// which draws from the global source and would make the deal unreproducible.
+func (s *CombatScene) shuffleDeck() {
+	s.rng.Shuffle(len(s.deck), func(i, j int) {
+		s.deck[i], s.deck[j] = s.deck[j], s.deck[i]
+	})
+}
+
+// drawHand fills the hand up to handSize, reshuffling the discard back into the draw pile
+// when it runs dry. A hand can come up short only if every card the player owns is already
+// in it, which cannot happen with a deck larger than the hand.
+func (s *CombatScene) drawHand() {
+	for len(s.hand) < handSize {
+		if len(s.deck) == 0 {
+			if len(s.discard) == 0 {
+				return
+			}
+			s.deck = append(s.deck, s.discard...)
+			s.discard = s.discard[:0]
+			s.shuffleDeck()
+		}
+
+		last := len(s.deck) - 1
+		s.hand = append(s.hand, paletteCard{action: s.deck[last]})
+		s.deck = s.deck[:last]
+	}
+}
+
+// discardHand sends the whole hand to the discard pile, played or not, and deals a fresh
+// one. Nothing carries between rounds: a hand kept back would let a plan be prepared once
+// and repeated, and every round being a real decision is the point.
+func (s *CombatScene) discardHand() {
+	for _, c := range s.hand {
+		s.discard = append(s.discard, c.action)
+	}
+	s.hand = s.hand[:0]
+	s.drawHand()
+	s.syncQueue()
+}
+
 func (s *CombatScene) Update(gs *state.GlobalState) error {
+	s.updateActionBox(gs)
+
+	// DUEL! is only pressable with a plan to run and a round to run it in. An empty
+	// queue is mechanically legal — ResolveRound handles it — but it means standing
+	// still while being hit, which is not something to offer by accident.
+	if len(s.fighterActions) == 0 || !s.planning() {
+		s.duelButton.State = models.ButtonStateDisabled
+	} else if s.duelButton.State == models.ButtonStateDisabled {
+		s.duelButton.State = models.ButtonStateNormal
+	}
+
 	systems.UpdateButton(gs, s.duelButton)
 	s.advancePlayback()
 	return nil
@@ -159,9 +282,15 @@ func (s *CombatScene) advancePlayback() {
 
 	// Playback has caught up with the resolver. Adopt the authoritative end-of-round
 	// state and hand control back to the player to plan the next round.
+	//
+	// The hand is spent here rather than at resolve time, and the ordering matters:
+	// discardHand rebuilds fighterActions from the new hand, and the Resolution pane
+	// draws fighterActions to narrate the round. Discarding while playback was still
+	// running would empty the pane mid-round.
 	if s.cursor >= len(s.log) {
 		s.fighter.Duelist = s.fighterAfter
 		s.enemy.Duelist = s.enemyAfter
+		s.discardHand()
 	}
 }
 
@@ -233,19 +362,21 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	text.Draw(screen, s.caption(),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, captionOp)
 
-	s.drawActions(gs, screen)
-	s.drawActionBox(gs, screen)
+	s.drawPalette(gs, screen)
 	s.drawResolution(gs, screen)
-	s.drawEnemyActions(gs, screen)
-	s.drawCombatant(screen, s.fighter, float64(gs.PctX(10)), float64(gs.PctY(50)))
-	s.drawCombatant(screen, s.enemy, float64(gs.PctX(75)), float64(gs.PctY(50)))
+	s.drawCombatant(screen, s.fighter, float64(gs.PctX(9)), float64(gs.PctY(50)))
+	s.drawCombatant(screen, s.enemy, float64(gs.PctX(88)), float64(gs.PctY(50)))
 	systems.DrawButton(gs, screen, s.duelButton)
+
+	// Last, so the card in hand rides over the panes and the button it passes across.
+	s.drawDraggedCard(gs, screen)
 }
 
-// The three panes share one vertical band and differ only in their horizontal slot.
+// Both panes share one vertical band and differ only in their horizontal slot. The band is
+// taller than it was because the palette now stacks two zones of cards rather than one.
 const (
-	paneTopPct    = 20
-	paneBottomPct = 70
+	paneTopPct    = 18
+	paneBottomPct = 74
 
 	paneTitleInset = 10 // gap from the pane's top edge to its title
 	paneFirstRow   = 45 // gap from the top edge to the first action row
@@ -264,12 +395,22 @@ type panePlacement struct {
 	color             color.RGBA
 }
 
+// Two panes now, flanked by the duelists: fighter / palette / resolution / enemy. The
+// Chosen pane folded into the palette as a second zone under the available cards, and the
+// Enemy pane went entirely — the Resolution pane already shows the opponent's actions, in
+// a better order than a column of its own could. Resolution inherits the freed width
+// because it is the centrepiece: it is the only pane that has to grow when exchanges
+// acquire structure.
 var (
-	availableActionsPane = panePlacement{leftPct: 20, rightPct: 30, title: "Player", color: color.RGBA{R: 60, G: 200, B: 90, A: 255}}
-	chosenActionsPane    = panePlacement{leftPct: 35, rightPct: 45, title: "Chosen", color: color.RGBA{R: 70, G: 130, B: 230, A: 255}}
-	resolutionPane       = panePlacement{leftPct: 55, rightPct: 65, title: "Resolution", color: color.RGBA{R: 235, G: 105, B: 170, A: 255}}
-	enemyActionsPane     = panePlacement{leftPct: 85, rightPct: 95, title: "Enemy", color: color.RGBA{R: 225, G: 200, B: 60, A: 255}}
+	palettePane    = panePlacement{leftPct: 18, rightPct: 38, title: "Actions", color: color.RGBA{R: 60, G: 200, B: 90, A: 255}}
+	resolutionPane = panePlacement{leftPct: 45, rightPct: 78, title: "Resolution", color: color.RGBA{R: 235, G: 105, B: 170, A: 255}}
 )
+
+// enemySwatch marks the opponent's rows in the Resolution pane. There is no enemy pane to
+// take a colour from any more, but the round still has two sides and they have to be told
+// apart at a glance. The player's rows carry the palette's green, so the whole screen
+// reads as two colours: green is you, yellow is them.
+var enemySwatch = color.RGBA{R: 225, G: 200, B: 60, A: 255}
 
 // paneRow is one line in a pane: a label, optionally preceded by a colour swatch
 // saying whose action it is. A zero-alpha swatch means the row has none, in which case
@@ -283,46 +424,53 @@ type paneRow struct {
 	highlighted bool
 }
 
-func (s *CombatScene) drawActionBox(gs *state.GlobalState, screen *ebiten.Image) {
-	//This will be the box that contains all the selected actions
-	s.drawPane(gs, screen, chosenActionsPane, actionRows(s.fighterActions))
-}
-
-func (s *CombatScene) drawActions(gs *state.GlobalState, screen *ebiten.Image) {
-	//This will be the box of available actions that can be dragged into the Action Box
-	s.drawPane(gs, screen, availableActionsPane, paletteRows())
-}
-
-// drawEnemyActions shows what the opponent has queued. Read-only forever — nothing is
-// ever dragged into this one.
-func (s *CombatScene) drawEnemyActions(gs *state.GlobalState, screen *ebiten.Image) {
-	s.drawPane(gs, screen, enemyActionsPane, actionRows(s.enemyActions))
-}
-
 // drawResolution shows the two queues merged into play order.
 func (s *CombatScene) drawResolution(gs *state.GlobalState, screen *ebiten.Image) {
-	s.drawPane(gs, screen, resolutionPane, s.resolutionRows(s.fighterActions, s.enemyActions))
+	s.drawPane(gs, screen, resolutionPane,
+		s.resolutionRows(s.fighterActions, s.enemyActions, s.concealEnemy(gs)))
 }
 
-// drawPane draws one column: a dim fill in its identifying colour, a full-strength
-// border, a title and a row per action.
-func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, rows []paneRow) {
-	x := float32(gs.PctX(p.leftPct))
-	y := float32(gs.PctY(paneTopPct))
-	w := float32(gs.PctX(p.rightPct)) - x
-	h := float32(gs.PctY(paneBottomPct)) - y
+// concealEnemy reports whether the opponent's queued actions should be hidden from the
+// player. True while planning, false once the round is playing back — an action that has
+// happened is not a secret — and always false with ActiveDebug on.
+//
+// What concealment hides is *what* the enemy queued, not *how many* actions it queued:
+// a concealed queue still occupies its real number of rows in both panes. That leaks the
+// opponent's action-point spend, which against a greedy planner is most of the tell. It
+// is deliberate rather than overlooked: collapsing the rows would hide the spend but would
+// also destroy the Resolution pane's account of who acts when, and that alternation is a
+// rule the player is meant to read and eventually manipulate. Revisit alongside the wider
+// hidden-information decision — see TODO.md.
+func (s *CombatScene) concealEnemy(gs *state.GlobalState) bool {
+	return !gs.ActiveDebug && s.planning()
+}
+
+// drawPaneFrame draws a column's fill, border and title, and reports its rectangle.
+// Split out because the card panes fill themselves rather than drawing text rows.
+func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement) (x, y, w, h float32) {
+	x = float32(gs.PctX(p.leftPct))
+	y = float32(gs.PctY(paneTopPct))
+	w = float32(gs.PctX(p.rightPct)) - x
+	h = float32(gs.PctY(paneBottomPct)) - y
 
 	// Dim fill, full-strength border: the pane reads as green or blue or yellow at a
-	// glance without drowning the text drawn on top of it.
+	// glance without drowning what is drawn on top of it.
 	vector.DrawFilledRect(screen, x, y, w, h, systems.ColorAtStrength(p.color, 25), false)
 	vector.StrokeRect(screen, x, y, w, h, 2, p.color, false)
-
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
 
 	titleOp := &text.DrawOptions{}
 	titleOp.GeoM.Translate(float64(x+w/2), float64(y+paneTitleInset))
 	titleOp.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, p.title, face, titleOp)
+	text.Draw(screen, p.title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, titleOp)
+
+	return x, y, w, h
+}
+
+// drawPane draws a read-only column: the frame, then a row per action.
+func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, rows []paneRow) {
+	x, y, w, _ := s.drawPaneFrame(gs, screen, p)
+
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
 
 	for i, row := range rows {
 		rowY := y + paneFirstRow + float32(i*paneRowHeight)
@@ -356,29 +504,6 @@ func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p pa
 	}
 }
 
-// paletteRows lists every action a duelist can queue, with its cost, in the order the
-// combat package says the UI should offer them.
-func paletteRows() []paneRow {
-	rows := make([]paneRow, 0, len(combat.AllActions))
-	for _, a := range combat.AllActions {
-		rows = append(rows, paneRow{label: fmt.Sprintf("%s %d", a, a.Cost())})
-	}
-	return rows
-}
-
-// actionRows renders a queued set one action per row.
-func actionRows(actions []combat.ActionKind) []paneRow {
-	if len(actions) == 0 {
-		return []paneRow{{label: "(empty)"}}
-	}
-
-	rows := make([]paneRow, 0, len(actions))
-	for _, a := range actions {
-		rows = append(rows, paneRow{label: a.String()})
-	}
-	return rows
-}
-
 // resolutionRows interleaves the two queued sets one action each, and marks the row for
 // the action currently playing back. Each row is swatched in its side's pane colour, so
 // who-acts-when reads as a pattern of squares before any of the labels are read.
@@ -389,30 +514,45 @@ func actionRows(actions []combat.ActionKind) []paneRow {
 // This layout is the order combat.ResolveRound actually plays, so the highlight walks
 // straight down the pane. Keep the two in step: the pane is the player's model of the
 // round, and effects that reorder resolution will have to move both.
-func (s *CombatScene) resolutionRows(fighter, enemy []combat.ActionKind) []paneRow {
-	if len(fighter) == 0 && len(enemy) == 0 {
+// concealEnemy replaces the opponent's labels with placeholders while leaving their rows
+// in place, so the interleaving still reads correctly and only the content is withheld.
+func (s *CombatScene) resolutionRows(fighter, enemy []combat.ActionKind, concealEnemy bool) []paneRow {
+	order := combat.ResolutionOrder(fighter, enemy)
+	if len(order) == 0 {
 		return []paneRow{{label: "(empty)"}}
 	}
 
 	playingSide, playingOrdinal, playing := s.currentAction()
-	row := func(a combat.ActionKind, side combat.Side, ordinal int, swatch color.RGBA) paneRow {
-		return paneRow{
-			label:       a.String(),
-			swatch:      swatch,
-			highlighted: playing && side == playingSide && ordinal == playingOrdinal,
-		}
-	}
 
-	rows := make([]paneRow, 0, len(fighter)+len(enemy))
-	for i := 0; i < len(fighter) || i < len(enemy); i++ {
-		if i < len(fighter) {
-			rows = append(rows, row(fighter[i], combat.SideA, i, chosenActionsPane.color))
+	rows := make([]paneRow, 0, len(order))
+	for _, slot := range order {
+		label, swatch := slot.Action.String(), palettePane.color
+		if slot.Side == combat.SideB {
+			swatch = enemySwatch
+			if concealEnemy {
+				label = concealedLabel(slot.Action)
+			}
 		}
-		if i < len(enemy) {
-			rows = append(rows, row(enemy[i], combat.SideB, i, enemyActionsPane.color))
-		}
+
+		rows = append(rows, paneRow{
+			label:       label,
+			swatch:      swatch,
+			highlighted: playing && slot.Side == playingSide && slot.Index == playingOrdinal,
+		})
 	}
 	return rows
+}
+
+// concealedLabel is what a hidden action shows instead of its name. Initiative is
+// deliberately not hidden: it is what decides where the action sits in the order, so
+// withholding it would make the Resolution pane unreadable rather than merely uncertain
+// — the player could not tell why the rows are arranged as they are.
+//
+// This is the first cut at graded reveal rather than the finished scheme. What else
+// leaks per action — whether it damages, whether it applies a status — is still open;
+// see TODO.md.
+func concealedLabel(a combat.ActionKind) string {
+	return fmt.Sprintf("??? (i%d)", a.Initiative())
 }
 
 // currentAction reports which queued action the playback cursor is inside: its side and
@@ -462,19 +602,6 @@ func (s *CombatScene) drawCombatant(screen *ebiten.Image, c *entities.Combatant,
 	colorm.DrawImage(screen, c.Sprite, cm, op)
 
 	DrawHealthBar(screen, hPosition, vPosition, c.CurrentLife, c.MaxLife)
-}
-
-// defaultFighterPlan spends the budget on a Guard plus whatever attacks still fit.
-// It stands in for the player's choices until the action box exists.
-func defaultFighterPlan(d combat.Duelist) []combat.ActionKind {
-	plan := []combat.ActionKind{combat.Guard}
-	for combat.CostOf(append(plan, combat.Strike)) <= d.ActionPoints() {
-		plan = append(plan, combat.Strike)
-	}
-	for combat.CostOf(append(plan, combat.Quick)) <= d.ActionPoints() {
-		plan = append(plan, combat.Quick)
-	}
-	return plan
 }
 
 // planLabel renders a queued set as "Guard + Strike + Quick".

@@ -44,7 +44,10 @@ func sidesEqual(got, want []Side) bool {
 }
 
 func TestSideAActsBeforeSideB(t *testing.T) {
-	// The player maps to side A and always swings first, however fast the enemy is.
+	// A duelist's Spd buys action points, never priority: B is 500 times faster here and
+	// still does not lead the exchange. What decides who moves first inside an exchange
+	// is the initiative of the two actions, and these are both Strikes, so the tie goes
+	// to A. Keep these two levers separate — Spd for how much, initiative for how soon.
 	a := duelist(10, 1, 200)
 	b := duelist(10, 500, 200)
 
@@ -59,15 +62,80 @@ func TestActionsAlternateBetweenSides(t *testing.T) {
 	// The queues interleave one action each rather than resolving as two volleys. This
 	// is the ordering the resolution pane shows the player, and the thing later effects
 	// are meant to be able to rearrange.
+	//
+	// Equal initiative on both sides, so this pins the alternation itself and the rule
+	// that side A takes a tie. Initiative deciding an exchange is tested below.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, _, _ := ResolveRound(a, b,
+		[]ActionKind{Strike, Strike}, []ActionKind{Strike, Strike}, 1)
+
+	want := []Side{SideA, SideB, SideA, SideB}
+	if order := actionOrder(events); !sidesEqual(order, want) {
+		t.Errorf("action order = %v, want %v", order, want)
+	}
+}
+
+func TestFasterActionLeadsTheExchange(t *testing.T) {
+	// Initiative decides who moves first *within* an exchange, not how many actions
+	// anybody gets. B's Quicks are faster than A's Strikes, so B leads each pairing --
+	// but the round still alternates, and both sides still act twice.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
 	events, _, _ := ResolveRound(a, b,
 		[]ActionKind{Strike, Strike}, []ActionKind{Quick, Quick}, 1)
 
-	want := []Side{SideA, SideB, SideA, SideB}
+	want := []Side{SideB, SideA, SideB, SideA}
 	if order := actionOrder(events); !sidesEqual(order, want) {
 		t.Errorf("action order = %v, want %v", order, want)
+	}
+}
+
+func TestReorderingChangesWhichExchangeAnActionContests(t *testing.T) {
+	// The player lever this whole design exists for: the same cards, for the same cost,
+	// in a different order, resolve differently. A's Quick beats B's Strike wherever it
+	// is placed -- what moves is *which* of B's actions it gets in front of, and
+	// therefore which exchange A's slow Heavy loses.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+	bPlan := []ActionKind{Strike, Quick}
+
+	quickFirst, _, _ := ResolveRound(a, b, []ActionKind{Quick, Heavy}, bPlan, 1)
+	heavyFirst, _, _ := ResolveRound(a, b, []ActionKind{Heavy, Quick}, bPlan, 1)
+
+	// Quick(1) beats Strike(3); then Heavy(5) loses to Quick(1).
+	wantQuickFirst := []Side{SideA, SideB, SideB, SideA}
+	// Heavy(5) loses to Strike(3); then Quick(1) beats Quick(1) on the tie.
+	wantHeavyFirst := []Side{SideB, SideA, SideA, SideB}
+
+	if order := actionOrder(quickFirst); !sidesEqual(order, wantQuickFirst) {
+		t.Errorf("Quick first: order = %v, want %v", order, wantQuickFirst)
+	}
+	if order := actionOrder(heavyFirst); !sidesEqual(order, wantHeavyFirst) {
+		t.Errorf("Heavy first: order = %v, want %v", order, wantHeavyFirst)
+	}
+}
+
+func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
+	// The Resolution pane draws ResolutionOrder and the engine plays it. If these two
+	// ever disagree the pane is lying to the player about their own round, so pin that
+	// they are the same sequence rather than trusting the shared call.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+	aPlan := []ActionKind{Heavy, Quick, Guard}
+	bPlan := []ActionKind{Quick, Strike}
+
+	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
+
+	want := make([]Side, 0, len(aPlan)+len(bPlan))
+	for _, slot := range ResolutionOrder(aPlan, bPlan) {
+		want = append(want, slot.Side)
+	}
+
+	if order := actionOrder(events); !sidesEqual(order, want) {
+		t.Errorf("played order = %v, ResolutionOrder = %v", order, want)
 	}
 }
 

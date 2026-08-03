@@ -59,6 +59,17 @@ window, by design. Keep it that way: rules go in `combat`, not in screens.
   the squash creates a new commit, so the branch tip is never an ancestor of `main`.
   Confirm the content landed (`git diff main <branch>` returns nothing), then `-D`.
 - Branch off `main`; never commit directly to it.
+- **One feature branch at a time, and land it before starting the next.** Long-lived
+  branches accumulating unrelated work are the thing to avoid — not because merging is
+  hard, but because the owner cannot tell what is in flight.
+- **A branch name is a claim about scope.** When the work drifts outside it — a layout
+  change on a branch named for a data structure, a tooling directory on a branch named for
+  a feature — the answer is to land what is there and branch again, not to widen the branch
+  and keep going. `add-deck` was allowed to swallow the playback pacing, the button row, a
+  debug-flag split and a whole glyph generator, and by the end nobody could say what it
+  contained. Do not repeat that.
+- **Say so out loud before switching branches**, and never do it as a side effect of some
+  other task.
 - `git checkout main` **before** `git pull`. Pulling while on a feature branch drags
   `main`'s history onto that branch and causes confusion.
 - Commits use the GitHub noreply identity, not a personal address.
@@ -158,7 +169,70 @@ The action box is a *game* widget, not a UI widget: draggable action cards with 
 action-point validation. General-purpose toolkits are weakest at exactly that, so
 hand-rolling costs little and buys full control.
 
-### Colour: name one colour and scale it
+### Glyphs are generated, not drawn — and not scaled from one colour
+
+[internal/systems/glyphs.go](internal/systems/glyphs.go) generates the 64x64 pixel-art
+glyphs on the action cards, drawn at 1:1. **Generated art has no provenance question**, which is exactly
+the problem making the Tyrian set a release blocker, so this is the pattern to prefer for
+interface art.
+
+It is a **generator, not a bitmap**. A glyph is a filled silhouette described by horizontal
+spans; the rim is *derived* by asking which filled pixels touch empty space, and the
+interior shading is *computed* from where a pixel sits across its row and down the sprite.
+Nothing is hand-placed, so a shape can be nudged without repainting it.
+
+- **Nothing in a silhouette may be thinner than about five pixels.** The derived rim takes
+  one pixel off each side, so a three-pixel crossguard renders as two rows of outline
+  around one row of metal and reads as a scratch. This is the main constraint the technique
+  imposes and it drives every span in the file.
+- **Glyphs are the deliberate exception to the colour rule below.** They carry a five-value
+  `Palette` — outline, specular, highlight, mid, shade, accent — because a bevel cannot be
+  made from one colour scaled down. They are drawn untinted; a disabled card dims them by
+  *alpha*, so the shading survives and only the weight changes. Tinting one toward the card
+  colour would collapse it back to a flat silhouette.
+- **Colour is being kept unspent.** There is one palette, `white`, with no hue at all, and
+  all three glyphs use it. When an element or block type arrives it can land on colour and mean something
+  immediately; painting the glyphs three colours now would look better today and spend the
+  only channel left for saying "this Strike is fire".
+- `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
+  `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
+  wraps and caches it for the game.
+
+**`go run ./tools/glyphsheet` writes `tools/glyphsheet/glyphs.png`** — every glyph by every
+palette, so the art can be reviewed by opening a file rather than by launching the game and
+hunting for a card that uses it. **The sheet is committed on purpose**: GitHub renders image
+diffs side by side, so a change to a silhouette shows up in review as a picture. Regenerate
+it whenever the glyph code changes — a stale sheet is worse than none, because it is a
+picture that lies.
+
+The output sits beside the tool that makes it rather than in a shared directory, so the pair
+moves and is understood together. It is deliberately **not** in `assets/`: everything there
+is `//go:embed`ed and loaded at runtime, and the sheet is a picture *of* generated art, not
+an input to it. Filing it as an asset would imply the game reads it, which is the opposite
+of the property that makes generating glyphs worth doing.
+
+**The sheet draws each glyph twice: at `systems.CardGlyphScale` and enlarged.** The
+actual-size row is the one that answers "can I read this". The scale constant lives in
+`systems` precisely so the sheet reads the same number the card does and the preview cannot
+drift from the game — an earlier version showed only the enlarged row, and the glyphs duly
+looked acceptable in review and clunky in play.
+
+### Colour: name one colour and scale it — but the rule is narrower than it reads
+
+**This applies to widget *state*, not to widget *surfaces*.** A button naming crimson and
+brightening toward it on press is the rule working. A button that can never have a lit top
+edge and a shadowed bottom one is the rule overreaching, and it does currently overreach:
+glyphs had to be written down as an exception when the only real problem was that a bevel
+needs more than one value.
+
+The intended direction, stated 2026-08-03: **buttons, cards and the resolution panes all
+want bevelling eventually**, from palettes like the ones in
+[glyphs.go](internal/systems/glyphs.go). When that lands, the rule below should be rewritten
+as what it actually is — how a surface responds to hover, press and disable — with the
+surface's own light and shade coming from a palette. Until then it still governs everything
+that has not been given one.
+
+
 
 A widget names the colour it wants at **full strength**, and its other states are
 scaled down from that with `systems.ColorAtStrength`. `models.Button.BaseColor` is the
@@ -191,6 +265,23 @@ the AP text and bar acting as the divider, then the queued cards from `chosenTop
 `chosenZone` is the lower one, which is the drop target. A card released anywhere else,
 including on the available cards above, is discarded. Card geometry keys off a zone offset
 rather than a pane, which is what `cardSlot(gs, top, i)` takes.
+
+**The buttons are one strip across the 80–90% band.** Discard at 20% and DUEL! at 33% sit
+together *directly under the hand*, because they are the same choice — **you select a set,
+then decide what it was for** — and the choice belongs next to the cards it is made from.
+Deck is alone at 88%; it changes nothing and belongs nowhere near them. Discard and DUEL!
+share an enable rule via `setEnabled`, since both need a selection to act on.
+
+**Selection having two verbs is deliberate.** There is no discard mode and no second
+gesture. One selected set, two things you can do with it, which is why the two buttons are
+adjacent and why the action points come back when a card is discarded — the selection was
+proposed, not spent.
+
+**The deck overlay is a dialog, and the only one in the game.** It fills nearly the screen,
+everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
+overlay so the single live control is the only one that looks live. Pressing it closes it.
+There is no Escape key to fall back on and no right click, so a modal has to make its exit
+the brightest thing on screen or it is a trap.
 
 **The Resolution pane is the centrepiece and gets the width to prove it.** It is the only
 pane that has to grow: once exchanges have structure — an initiator and a response — it
@@ -225,11 +316,30 @@ reorder, drag out of the queue zone to discard.
   segment ahead of the fill, so the bar answers "does this fit" before the card lands —
   it has not joined the queue yet and would otherwise not move the bar at all.
 
-### Hidden information is gated on `ActiveDebug`
+### Two debug flags, and they are not interchangeable
+
+`ActiveDebug` split into `DebugPlacement` and `DebugGameplay` on 2026-08-02, because they
+answer different questions and are wanted at different times.
+
+- **`DebugPlacement`** — the grid, the rulers, the `Debug1`/`Debug2` scratch strings. About
+  *where things are drawn*. Safe to leave on while playing, and on by default because the
+  combat screen is still being laid out.
+- **`DebugGameplay`** — perfect information, starting with the opponent's queued actions.
+  About *what the player is allowed to know*. **Off by default**: with it on you are not
+  playing the game, you are inspecting it, and it is easy to tune balance against a view no
+  player will ever have.
+
+Neither may ever change an outcome. Both are views, the same constraint that applies to
+playback speed — `ResolveRound` never sees either flag.
+
+Both are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
+keyboard and the input vocabulary does not have one.
+
+### Hidden information is gated on `DebugGameplay`
 
 The opponent's queued actions are concealed in both the Enemy pane and the enemy rows of
-the Resolution pane, unless `ActiveDebug` is on. `CombatScene.concealEnemy` is the single
-predicate — `!gs.ActiveDebug && s.planning()` — and anything else that becomes secret
+the Resolution pane, unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single
+predicate — `!gs.DebugGameplay && s.planning()` — and anything else that becomes secret
 should join it rather than growing a second rule.
 
 - **Concealment lifts once playback starts.** An action that has already resolved is not a
@@ -248,7 +358,7 @@ should join it rather than growing a second rule.
 `main.go` builds the `game.Game`, loads assets/fonts/data once, then hands control to `ebiten.RunGame`. It does **not** wire up widgets — scenes build their own. Ebitengine then drives three methods on [game.go](internal/game/game.go):
 
 - `Update()` — 60 TPS logic tick. Advances counters, reads the mouse, runs the active scene's `Init` if `NewScreen` is set, then returns the scene's `Update`. Returning a non-nil error quits the game; `ShouldClose` becomes `game.ErrClosing`, which `main` treats as a clean exit (window close is intercepted via `SetWindowClosingHandled(true)`).
-- `Draw(screen)` — per-frame rendering. Returns early while `NewScreen` is set, so a scene is never drawn before its `Init` has run; then calls the scene's `Draw` and overlays debug info last if `ActiveDebug`.
+- `Draw(screen)` — per-frame rendering. Returns early while `NewScreen` is set, so a scene is never drawn before its `Init` has run; then calls the scene's `Draw` and overlays debug info last if `DebugPlacement`.
 - `Layout(w, h)` — returns the fixed 1280x960 internal resolution and records it on `GlobalState`, which is what `PctX`/`PctY` read to place things.
 
 ### Scenes own their own state
@@ -267,7 +377,7 @@ Scenes also build their own widgets in `Init` and wire them to their own methods
 
 Key conventions:
 - `ActiveScreen` (`Title`/`Ascend`/`Combat`/`Credits`) selects the scene. Adding a screen means adding an `ActiveScreen` constant and one entry in the `scenes` map.
-- **`NewGlobalState` boots into `Combat`, not `Title`, on purpose.** The combat screen is the one under construction and clicking through the title every run costs a step in a loop that runs often. `ActiveDebug` in `main.go` is on by default for the same reason. Leave both unless asked; put `ActiveScreen` back to `Title` once combat stops being the active work, and flag it when a change needs the title screen to be seen.
+- **`NewGlobalState` boots into `Combat`, not `Title`, on purpose.** The combat screen is the one under construction and clicking through the title every run costs a step in a loop that runs often. `DebugPlacement` in `main.go` is on by default for the same reason. Leave both unless asked; put `ActiveScreen` back to `Title` once combat stops being the active work, and flag it when a change needs the title screen to be seen.
 - `NewScreen bool` is the one-shot init flag, consumed centrally in `game.Update`. Actions that change screens set it back to `true`; scenes never touch it.
 - `gs.PctX(pct)` / `gs.PctY(pct)` are the intended way to place things — avoid hardcoded pixel coordinates. They replaced a dozen cached fields for halves, thirds and quarters, which could not express 40% and could not be extended to without inventing a field name per fraction. **Percentages anchor a group; offsets within a group stay in pixels** (see the title menu), and sizes are never percentages. The debug overlay rules the screen at the halves/thirds/quarters and ticks every 10% along the top and left edges, so a position can be read straight off the screen.
 - `Debug1`/`Debug2` are free-form strings printed by `DrawDebugInfo`; scratch tracing goes there.

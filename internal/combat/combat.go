@@ -160,8 +160,8 @@ func (d Duelist) CanAfford(actions []ActionKind) bool {
 // guardDivisor is how much a raised guard cuts incoming damage.
 const guardDivisor = 2
 
-// damage is what an action deals given the attacker's Strength. Guard deals none.
-func (a ActionKind) damage(str int) int {
+// Damage is what an action deals given the attacker's Strength. Guard deals none.
+func (a ActionKind) Damage(str int) int {
 	switch a {
 	case Guard:
 		return 0
@@ -314,7 +314,7 @@ func resolveAction(
 		return events, actor, target
 	}
 
-	dmg := action.damage(actor.Str)
+	dmg := action.Damage(actor.Str)
 	if target.Guarded {
 		dmg /= guardDivisor
 		events = append(events, Event{

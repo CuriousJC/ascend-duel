@@ -24,8 +24,18 @@ import (
 // rather than reaching for a toolkit. Left click and drag only; there is no right click
 // and no keyboard anywhere in this game.
 const (
-	cardWidth  = 130
-	cardHeight = 68
+	// The card is sized by its glyph row rather than the other way round. Three glyphs at
+	// double size, plus the gaps and insets, come to exactly cardWidth — and the glyphs
+	// are doubled because 32 pixels was too small to read once the whole 1280x960 frame is
+	// letterboxed into a smaller window and resampled at a fractional ratio.
+	//
+	// The scale itself lives in systems so the contact sheet can draw its actual-size row
+	// at exactly what the card uses. See systems.CardGlyphScale.
+	cardGlyphScale = systems.CardGlyphScale
+	cardGlyphSize  = systems.GlyphSize * cardGlyphScale
+
+	cardWidth  = 2*glyphInset + 3*cardGlyphSize + 2*glyphGap
+	cardHeight = 88
 	cardGap    = 6
 
 	dropIndicatorHeight = 3
@@ -33,7 +43,10 @@ const (
 	// selectedNudge is how far a selected card sticks out to the right. Selection is the
 	// only state a card carries, so it gets a whole axis to itself rather than a tint
 	// that would have to compete with the affordability dimming.
-	selectedNudge = cardWidth * 30 / 100
+	//
+	// A fixed distance rather than a fraction of the width: as a percentage it grew with
+	// the card and started shoving selected cards into the next pane.
+	selectedNudge = 28
 
 	// Offsets from the top of the pane's band. The budget is a header above the list
 	// rather than a divider inside it: with one list there is nothing left to divide.
@@ -44,6 +57,12 @@ const (
 
 	apBarHeight = 8
 	apBarInset  = 14
+
+	// The glyph row. cardWidth is derived from these rather than these being fitted to it,
+	// so widening the gap widens the card and nothing silently overlaps.
+	glyphInset  = 8
+	glyphGap    = 8
+	glyphRowTop = 20
 
 	// dragThreshold is how far the cursor has to travel with the button held before a
 	// press counts as a drag rather than a click. Without it every click would jitter
@@ -291,7 +310,7 @@ func (s *CombatScene) drawPalette(gs *state.GlobalState, screen *ebiten.Image) {
 		// An unselected card the budget will not cover reads as unavailable. A selected
 		// one never does — it is already paid for, and clicking it off has to stay open.
 		enabled := c.selected || (s.planning() && c.action.Cost() <= s.remainingPoints())
-		drawCard(gs, screen, s.cardSlot(gs, i), c.action, palettePane.color, enabled, c.selected)
+		drawCard(gs, screen, s.cardSlot(gs, i), c.action, palettePane.color, enabled, c.selected, s.fighter.Str)
 	}
 
 	if s.drag == nil || !s.drag.active || !image.Pt(gs.MouseX, gs.MouseY).In(cardsZone(gs)) {
@@ -336,16 +355,39 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 	x := gs.MouseX - s.drag.grabDX
 	y := gs.MouseY - s.drag.grabDY
 	drawCard(gs, screen, image.Rect(x, y, x+cardWidth, y+cardHeight),
-		s.drag.card.action, palettePane.color, true, s.drag.card.selected)
+		s.drag.card.action, palettePane.color, true, s.drag.card.selected, s.fighter.Str)
 }
 
-// drawCard draws one action card: its name, its initiative and its action-point cost.
+// cardBadge is one glyph on a card and the number written across it.
+type cardBadge struct {
+	kind  systems.GlyphKind
+	value int
+}
+
+// badgesFor is what a card says about itself: what it hits for, how soon it lands, what it
+// costs. Damage is omitted when there is none — a sword reading zero on a Guard is worse
+// than no sword at all — which is also why the row is laid out left to right rather than
+// into fixed slots.
+func badgesFor(action combat.ActionKind, str int) []cardBadge {
+	badges := make([]cardBadge, 0, 3)
+	if dmg := action.Damage(str); dmg > 0 {
+		badges = append(badges, cardBadge{systems.GlyphDamage, dmg})
+	}
+	return append(badges,
+		cardBadge{systems.GlyphInitiative, action.Initiative()},
+		cardBadge{systems.GlyphActionPoints, action.Cost()})
+}
+
+// drawCard draws one action card: its name, then a row of glyphs carrying its numbers.
 //
-// The lower half is deliberately empty. That is where the glyph row goes — initiative,
-// damage, and whatever else the taxonomy settles on — which is what the card is this tall
-// for. Until those exist it reads as a card with room in it.
+// The glyphs replaced the "init 3" line and the bare cost numeral rather than joining
+// them. Two of the three numbers were already text, and a card that says everything twice
+// is harder to read than one that says it once.
+//
+// str is the wielder's Strength, since damage is a property of the pairing rather than of
+// the card: the same Strike hits for more in stronger hands.
 func drawCard(gs *state.GlobalState, screen *ebiten.Image, slot image.Rectangle,
-	action combat.ActionKind, base color.RGBA, enabled, selected bool) {
+	action combat.ActionKind, base color.RGBA, enabled, selected bool, str int) {
 
 	fill, border := systems.ColorAtStrength(base, 45), base
 	switch {
@@ -359,24 +401,45 @@ func drawCard(gs *state.GlobalState, screen *ebiten.Image, slot image.Rectangle,
 	vector.DrawFilledRect(screen, x, y, cardWidth, cardHeight, fill, false)
 	vector.StrokeRect(screen, x, y, cardWidth, cardHeight, 2, border, false)
 
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
-
 	nameOp := &text.DrawOptions{}
-	nameOp.GeoM.Translate(float64(slot.Min.X+10), float64(slot.Min.Y+16))
+	nameOp.GeoM.Translate(float64(slot.Min.X+glyphInset), float64(slot.Min.Y+12))
 	nameOp.SecondaryAlign = text.AlignCenter
-	text.Draw(screen, action.String(), face, nameOp)
+	text.Draw(screen, action.String(),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}, nameOp)
 
-	initOp := &text.DrawOptions{}
-	initOp.GeoM.Translate(float64(slot.Min.X+10), float64(slot.Min.Y+36))
-	initOp.SecondaryAlign = text.AlignCenter
-	text.Draw(screen, fmt.Sprintf("init %d", action.Initiative()),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 11}, initOp)
+	numberFace := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 22}
+	pal := systems.PaletteOf(systems.PaletteWhite)
 
-	costOp := &text.DrawOptions{}
-	costOp.GeoM.Translate(float64(slot.Max.X-10), float64(slot.Min.Y+16))
-	costOp.PrimaryAlign = text.AlignEnd
-	costOp.SecondaryAlign = text.AlignCenter
-	text.Draw(screen, fmt.Sprintf("%d", action.Cost()), face, costOp)
+	for i, badge := range badgesFor(action, str) {
+		gx := slot.Min.X + glyphInset + i*(cardGlyphSize+glyphGap)
+		gy := slot.Min.Y + glyphRowTop
+
+		// Drawn in its own palette, deliberately untinted. Scaling a five-value palette
+		// toward the card's colour collapses the bevel back into a flat silhouette, which
+		// is the whole thing the palette exists to avoid. A disabled card dims the glyph
+		// by alpha instead, so the shading survives and only the weight changes.
+		//
+		// Scaled by a whole number and nothing else — see cardGlyphScale.
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(cardGlyphScale, cardGlyphScale)
+		op.GeoM.Translate(float64(gx), float64(gy))
+		if !enabled {
+			op.ColorScale.ScaleAlpha(0.4)
+		}
+		screen.DrawImage(systems.Glyph(badge.kind, systems.PaletteWhite), op)
+
+		// Written across the glyph in its specular, the lightest value in the palette, so
+		// the number reads against the midtone it sits on and still belongs to the art.
+		numOp := &text.DrawOptions{}
+		numOp.GeoM.Translate(float64(gx+cardGlyphSize/2), float64(gy+cardGlyphSize/2))
+		numOp.PrimaryAlign = text.AlignCenter
+		numOp.SecondaryAlign = text.AlignCenter
+		numOp.ColorScale.ScaleWithColor(pal.Specular)
+		if !enabled {
+			numOp.ColorScale.ScaleAlpha(0.4)
+		}
+		text.Draw(screen, fmt.Sprintf("%d", badge.value), numberFace, numOp)
+	}
 }
 
 func abs(n int) int {

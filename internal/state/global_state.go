@@ -16,7 +16,14 @@ import (
 // and none of them were anyone else's business.
 type GlobalState struct {
 	//Global Game Stuff
-	ActiveDebug    bool
+	// Two independent debug flags, because they answer different questions and are wanted
+	// at different times. DebugPlacement is about where things are drawn — the grid, the
+	// rulers, the scratch strings — and is safe to leave on while playing. DebugGameplay
+	// changes what the player is allowed to know, so leaving it on means not playing the
+	// real game. Neither may ever change an outcome; both are views.
+	DebugPlacement bool
+	DebugGameplay  bool
+
 	Debug1, Debug2 string
 	ActiveScreen   ActiveScreen
 	NewScreen      bool

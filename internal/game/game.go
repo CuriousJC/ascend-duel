@@ -102,7 +102,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.scene().Draw(g.GlobalState, screen)
 
 	// Debug Info will front-run everything and is drawn last on the screen
-	if g.GlobalState.ActiveDebug {
+	if g.GlobalState.DebugPlacement {
 		g.DrawDebugInfo(screen)
 	}
 }

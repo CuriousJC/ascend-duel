@@ -53,12 +53,134 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         it landed. The bar answers "does this still fit" while the card is in the air.
       - A card lifted *out* of the queue already leaves it on pick-up, so that direction
         needs no special case — the fill drops the moment it is grabbed.
-- [ ] **AP cost as dots on each action card — very soon.** The cost is currently a numeral
-      in the card's right edge. Dots make expense visible as quantity rather than read as a
-      digit, and line up against the bar above them so a 4-cost card visibly is most of a
-      6-point budget. Same treatment on both panes, palette and queue.
-      - Wants the bar to be segmented per point rather than continuous, so the dots on a
-        card and the segments in the bar are the same unit. Worth doing together.
+- [x] **Discard and Deck buttons, and the button row.** Discard at 20% and DUEL! at 33%
+      sit together directly under the hand, because they are the same choice and it belongs
+      next to the cards it is made from. Deck is alone at 88%. All three share the 80–90%
+      band so the row reads as one strip.
+      - **Deck** is a dialog. It fills almost the whole screen, everything else on the
+        screen goes dead behind a scrim, and the Deck button is redrawn on top of the
+        overlay so the one control that still works is the one that still looks like it
+        does. Pressing it again closes it. No other close affordance, because there is no
+        keyboard and no right click to reach for.
+        - Both piles, counted by kind. **Never in order**: the draw pile is shuffled, and
+          listing it in sequence would hand the player their next five cards and make the
+          shuffle pointless. The discard is shown beside it because a reshuffle folds it
+          back in, so "what is left" honestly means both. Every kind is listed even at
+          zero, which is how Quick's absence from the deck is visible rather than implied.
+      - **Discard** sends the selected cards to the discard pile and deals the hand back
+        up to five.
+      - [?] **Discard is free and effectively unlimited, which is a hole.** Selection is
+            AP-gated, so one press can only throw out a budget's worth — but discarding
+            returns those points, so pressing it repeatedly cycles the entire deck for
+            nothing. Filtering that hard should cost something: a once-per-round limit, an
+            AP charge, or drawing back one fewer than was thrown.
+      - **Selection doing two jobs is the design, decided 2026-08-02.** You select a set
+        and then choose what it was for: DUEL! plays it, Discard throws it away. There is
+        no discard mode and no second gesture, and there should not be — one selection with
+        two verbs is why the two buttons sit together, and it means every card you pick up
+        is a question you have to answer rather than a slot you have filled.
+      - That the action points come back when a card is discarded follows from this rather
+        than being a leak: the selection was never spent, only proposed.
+- [x] **Halve the playback dwell.** `actionDwellTicks` went from three seconds to one and
+      a half. At three seconds a round of six actions took twenty seconds to watch and the
+      gap between a move and its consequence read as the game hesitating. This is the
+      constant the game-speed setting below will scale.
+- [x] **Split the debug flag in two.** `ActiveDebug` became `DebugPlacement` (grid, rulers,
+      scratch strings — about where things are drawn) and `DebugGameplay` (perfect
+      information — about what the player is allowed to know).
+      - Placement defaults **on**, gameplay defaults **off**, so the game plays as intended
+        out of the box. Tuning balance against a view no player will ever have is the
+        specific mistake the split exists to prevent.
+      - Neither may change an outcome. `ResolveRound` never sees either flag.
+      - Still no runtime toggle for either; a hotkey needs the keyboard the input
+        vocabulary does not have.
+- [x] **Procedural pixel-art glyphs on the cards.** `internal/systems/glyphs.go` generates
+      three 64x64 glyphs — a sword for damage, a clock for initiative, a runner for
+      action-point cost — each with its number written across it.
+      - **Drawn in code rather than sourced**, which sidesteps the licensing problem that
+        makes the Tyrian art a release blocker. Pixels written here have no provenance
+        question at all, and that argues for doing more of the UI art this way.
+      - They **replaced** the `init 3` line and the bare cost numeral. Two of the three
+        numbers were already text and saying everything twice reads worse than once.
+      - Damage is omitted when it is zero, so a Guard shows two glyphs rather than a sword
+        reading 0. Needed `ActionKind.Damage` exported, since damage depends on the
+        wielder's `Str` and the card has to ask.
+      - **Rewritten as a generator on 2026-08-03**, after the first version — a hand-typed
+        16x16 character map with one colour and one alpha shade — turned out to be flat and
+        unresizable. Both limits were in the authoring, not in the idea:
+        - A glyph is now a filled silhouette described by horizontal spans. The rim is
+          *derived* from the silhouette and the shading is *computed* from position, so
+          nothing is hand-placed and a shape can be nudged without repainting it.
+        - Ported from the approach in the Python shield generator: shape table, derived
+          outline, position-driven shading, named palette roles.
+        - **Nothing may be thinner than about five pixels**, because the derived rim eats
+          one from each side. The first pass had a three-row crossguard, which rendered as
+          two rows of outline around one row of metal. This is the technique's real
+          constraint and it sets every span in the file.
+        - Five-value palettes, and glyphs are the deliberate exception to the colour rule —
+          a bevel cannot be made from one colour scaled down. Drawn untinted; disabled
+          cards dim by alpha so the shading survives.
+        - [?] **Colour is deliberately unspent.** One hueless `white` palette for all three, so
+              that an element or block type can land on colour later and mean something on
+              arrival. This is the decision to revisit first when elements are designed.
+      - [x] **`go run ./tools/glyphsheet`** writes `tools/glyphsheet/glyphs.png` — every
+            glyph by every palette, reviewable by opening a file instead of launching the
+            game. Committed on purpose so GitHub renders it as an image diff in review.
+            Regenerate whenever the glyph code changes; a stale sheet is a picture that lies.
+            - Output lives beside the tool rather than in a shared directory, so the pair
+              moves together. Not in `assets/`, which is for `//go:embed`ed files the game
+              loads — this is a picture *of* generated art, not an input to it.
+            - `tools/` rather than `cmd/`: the convention that `cmd/` holds a module's
+              shipped binaries does not fit a dev tool sitting beside a game whose own
+              `main.go` is at the root, and moving the game under `cmd/` to satisfy the
+              convention was explicitly rejected.
+            - **Draws every glyph twice, at `systems.CardGlyphScale` and enlarged.** The
+              scale constant lives in `systems` so the sheet reads the same number the card
+              does and cannot drift. The first version showed only the enlarged row, which
+              is how the glyphs came to look fine in review and clunky in play.
+      - [?] **The bevel barely registers at card size.** Seen honestly at 2x, the five-value
+            shading that the palette rewrite bought is almost invisible; the clock survives
+            best because it is a solid disc, and the sword and figure read as flat
+            silhouettes. The work pays off at inspection size and not much at the size that
+            matters.
+            - The cause is authoring at 32 and doubling: the game gets chunky 2x2 blocks,
+              not 64px art. Authoring the shapes at 64 and drawing them 1:1 would buy real
+              detail at the size actually used. `disc()` is parametric so the clock scales
+              for free; the sword and figure are span tables and would need redrawing.
+            - The alternative is to accept it and design *for* 64px — fewer, heavier forms
+              rather than detail that dissolves.
+      - The iteration that fixed the figure came from *rendering it and looking at it* —
+        detached head reads as a hat, head joined to shoulders reads as a blob, head on a
+        narrow neck reads as a head. Authoring pixel art without seeing the output is the
+        real limitation here, and the sheet tool is the fix.
+- [ ] **Bevel the widgets, not just the glyphs.** Stated 2026-08-03: buttons, cards and the
+      resolution panes all want the same treatment the glyphs got — a palette with an
+      outline, a lit edge and a shadowed one, rather than a single colour scaled up and
+      down. The "name one colour and scale it" rule is really about how a surface responds
+      to hover, press and disable, and it has been doing duty as a rule about what a surface
+      may look like, which is further than it needs to go.
+      - `systems.Palette` already exists and is the obvious thing to widen to.
+      - Do the buttons first: they have three states to show, so the payoff is visible
+        immediately and the state-versus-surface split gets tested by something real.
+      - The panes are the least urgent and the largest areas, so a heavy bevel there will
+        read as chrome. Worth doing last and lightly.
+- [x] **Bigger cards, and double-size glyphs.** Cards went from 130x68 to 224x88 and the
+      glyphs draw at 2x. `cardWidth` is now *derived* from the glyph row rather than the row
+      being fitted into it, so changing a gap widens the card instead of silently
+      overlapping. The palette column widened to 15–39% to hold them.
+      - **Integer scaling only.** 32px glyphs were being drawn 1:1 in internal coordinates,
+        but the whole 1280x960 frame is letterboxed into the window, so at anything other
+        than the native size every pixel was already being resampled at a fractional ratio.
+        Doubling first means the art survives that better. Never scale the glyphs by 1.5.
+      - `selectedNudge` became a fixed 28px rather than 30% of the card width, which grew
+        with the card and started pushing selected cards toward the next pane.
+- [ ] **AP cost as dots on each action card — superseded, revisit.** The plan was dots
+      rather than a numeral, lining up against a per-point segmented AP bar so a 4-cost
+      card visibly is most of a 6-point budget. The glyph row landed first and puts a
+      numeral on a runner instead.
+      - Dots and a glyph are not obviously compatible — three pips inside a 32px glyph is
+        cramped, and a glyph plus dots beside it is saying it twice again.
+      - The segmented-bar half of the idea survives regardless and is still worth having.
 - [ ] **Stop allocating in `Draw`.** `DrawButton` makes a new `ebiten.Image` per button
       per frame (180/sec); `DrawHealthBar` makes two per bar per frame (240/sec).
       `Button.Image` already exists and is only used for bounds — render into it on
@@ -138,12 +260,12 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         real decision is where the balance and design work lives, and a repeat button
         undercuts that. Revisit only if playtesting proves it tedious — do not add it
         pre-emptively.
-- [x] **Hide the enemy's plan, behind `ActiveDebug`.** The yellow pane and the enemy rows
+- [x] **Hide the enemy's plan, behind `DebugGameplay`.** The yellow pane and the enemy rows
       of the Resolution pane showed the opponent's queued actions while the player built
       theirs — perfect information, and only ever there so the pane had content. Both now
-      render `???` unless `ActiveDebug` is on, so the plan stays readable while debugging
+      render `???` unless `DebugGameplay` is on, so the plan stays readable while debugging
       alongside the layout guides and is invisible in normal play. `CombatScene.concealEnemy`
-      is the single predicate: `!gs.ActiveDebug && s.planning()`.
+      is the single predicate: `!gs.DebugGameplay && s.planning()`.
       - Concealment lifts once playback starts. An action that has already happened is not
         a secret, and the Resolution pane still has to narrate the round.
       - [?] **What it still leaks: the row count.** A concealed queue occupies its real
@@ -158,7 +280,7 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
             choosing per mechanic rather than applying one rule to everything. Note that
             hidden information is listed under "is this seed winnable?" as a property that
             would break solvability, so this decision has a cost recorded elsewhere.
-      - There is no runtime toggle for `ActiveDebug`; it is set once in `main.go`. A hotkey
+      - There is no runtime toggle for `DebugGameplay`; it is set once in `main.go`. A hotkey
         would be the obvious convenience and collides with the no-keyboard rule in
         `CLAUDE.md`, so it needs a decision rather than a keystroke.
 - [x] **Initiative on actions, contesting the paired slot.** Every `ActionKind` has an

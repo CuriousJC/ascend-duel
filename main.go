@@ -20,7 +20,13 @@ func main() {
 
 	//Create our Game instance
 	g := game.NewGame()
-	g.GlobalState.ActiveDebug = true
+
+	// Both off: the screen is far enough along that the grid is now in the way of judging
+	// how it actually looks. Turn placement back on when moving things, and gameplay on to
+	// watch the opponent plan — remembering that what you see with it on is not what a
+	// player sees.
+	g.GlobalState.DebugPlacement = false
+	g.GlobalState.DebugGameplay = false
 
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()

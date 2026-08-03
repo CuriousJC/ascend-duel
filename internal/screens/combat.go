@@ -20,12 +20,16 @@ import (
 // Playback pacing at 60 TPS. Destined to become the game-speed setting.
 //
 // The budget is spent per action rather than spread evenly over events: an action holds
-// the screen for three seconds, and the damage and guard events that belong to it pass
-// in a quick beat. Splitting three seconds across every event instead would make a
-// Guard — which emits nothing but its own event — take as long as a Heavy that lands.
+// the screen for a beat and a half, and the damage and guard events that belong to it pass
+// quickly. Splitting one dwell across every event instead would make a Guard — which emits
+// nothing but its own event — take as long as a Heavy that lands.
+//
+// Halved from three seconds on 2026-08-02: at three seconds a round of six actions took
+// twenty seconds to watch, and the pause between a move and its consequence read as the
+// game hesitating rather than as pacing.
 const (
 	ticksPerSecond   = 60
-	actionDwellTicks = 3 * ticksPerSecond
+	actionDwellTicks = 3 * ticksPerSecond / 2
 	beatTicks        = ticksPerSecond / 4
 )
 
@@ -98,6 +102,10 @@ type CombatScene struct {
 	// The card currently being dragged, if any. See combat_actionbox.go.
 	drag *dragState
 
+	// showDeck toggles the deck overlay. While it is up the cards underneath do not
+	// respond, so reading the deck cannot accidentally re-plan the round.
+	showDeck bool
+
 	// The resolved round and the playback cursor walking it. The screen never
 	// computes an outcome — it replays this.
 	log    []combat.Event
@@ -110,7 +118,9 @@ type CombatScene struct {
 	fighterAfter combat.Duelist
 	enemyAfter   combat.Duelist
 
-	duelButton *models.Button
+	duelButton    *models.Button
+	discardButton *models.Button
+	deckButton    *models.Button
 }
 
 // Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
@@ -123,14 +133,34 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		s.enemy = combatantFromRecord(gs, "Monster1")
 	}
 
-	// The scene builds its own widget and wires it to its own method, so no other
-	// package needs to know this screen has a button or what pressing it means.
+	// The scene builds its own widgets and wires them to its own methods, so no other
+	// package needs to know this screen has buttons or what pressing them means.
 	if s.duelButton == nil {
 		s.duelButton = models.NewButton(138, 50, "DUEL!", s.startRound)
 		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
 	}
-	s.duelButton.ScreenX = gs.PctX(20)
-	s.duelButton.ScreenY = gs.PctY(85) // centred in the 80–90% band
+	if s.discardButton == nil {
+		s.discardButton = models.NewButton(138, 50, "Discard", s.discardSelected)
+		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
+	}
+	if s.deckButton == nil {
+		s.deckButton = models.NewButton(138, 50, "Deck", s.toggleDeck)
+		s.deckButton.BaseColor = color.RGBA{R: 70, G: 130, B: 230, A: 255} // blue
+	}
+
+	// Discard and DUEL! sit together because they are the same choice: both act on the
+	// selection, and pressing one is deciding what that selection was for. They sit
+	// directly under the hand, next to the cards being selected, so the choice is made
+	// where it is expressed. Deck is off at the far end — it changes nothing and belongs
+	// nowhere near them. All three share the 80–90% band, so the row reads as one strip.
+	s.discardButton.ScreenX = gs.PctX(20)
+	s.discardButton.ScreenY = gs.PctY(85)
+	s.duelButton.ScreenX = gs.PctX(33)
+	s.duelButton.ScreenY = gs.PctY(85)
+	s.deckButton.ScreenX = gs.PctX(88)
+	s.deckButton.ScreenY = gs.PctY(85)
+
+	s.showDeck = false
 
 	// A fresh deck every visit, shuffled from the same seed, so re-entering the screen
 	// deals the same opening hand rather than continuing a run that has been abandoned.
@@ -156,6 +186,37 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.cursor = 0
 	s.ticks = 0
 	s.round = 0
+}
+
+// discardSelected throws the selected cards away: they leave the hand for the discard
+// pile, and the hand is dealt back up to size from the draw pile.
+//
+// Selection does double duty here — it is both "queue this for the round" and "this is
+// the one I mean" — so throwing a card out costs the action points it was holding until
+// the moment it leaves. That is a consequence of overloading selection rather than a
+// designed cost; see TODO.md.
+func (s *CombatScene) discardSelected() {
+	if !s.planning() {
+		return
+	}
+
+	kept := s.hand[:0]
+	for _, c := range s.hand {
+		if c.selected {
+			s.discard = append(s.discard, c.action)
+			continue
+		}
+		kept = append(kept, c)
+	}
+	s.hand = kept
+
+	s.drawHand()
+	s.syncQueue()
+}
+
+// toggleDeck shows or hides the deck overlay.
+func (s *CombatScene) toggleDeck() {
+	s.showDeck = !s.showDeck
 }
 
 // resetDeck builds the starting deck, shuffles it, empties the discard and deals an
@@ -216,20 +277,40 @@ func (s *CombatScene) discardHand() {
 }
 
 func (s *CombatScene) Update(gs *state.GlobalState) error {
-	s.updateActionBox(gs)
-
-	// DUEL! is only pressable with a plan to run and a round to run it in. An empty
-	// queue is mechanically legal — ResolveRound handles it — but it means standing
-	// still while being hit, which is not something to offer by accident.
-	if len(s.fighterActions) == 0 || !s.planning() {
-		s.duelButton.State = models.ButtonStateDisabled
-	} else if s.duelButton.State == models.ButtonStateDisabled {
-		s.duelButton.State = models.ButtonStateNormal
+	// The overlay swallows card interaction, so reading the deck cannot re-plan the round
+	// through the panel covering it. The buttons stay live — one of them is how it closes.
+	if !s.showDeck {
+		s.updateActionBox(gs)
 	}
 
+	// Both act on the selection, so both need one — pressing either is deciding what the
+	// selection was for. An empty queue is mechanically legal for DUEL! — ResolveRound
+	// handles it — but it means standing still while being hit, which is not something to
+	// offer by accident.
+	//
+	// Both go dead while the deck is open. It is a dialog: Deck is the only live control
+	// on the screen until it is pressed again.
+	live := s.planning() && len(s.fighterActions) > 0 && !s.showDeck
+	setEnabled(s.duelButton, live)
+	setEnabled(s.discardButton, live)
+
 	systems.UpdateButton(gs, s.duelButton)
+	systems.UpdateButton(gs, s.discardButton)
+	systems.UpdateButton(gs, s.deckButton)
 	s.advancePlayback()
 	return nil
+}
+
+// setEnabled flips a button between disabled and normal without clobbering a hover or
+// press it is in the middle of.
+func setEnabled(b *models.Button, enabled bool) {
+	if !enabled {
+		b.State = models.ButtonStateDisabled
+		return
+	}
+	if b.State == models.ButtonStateDisabled {
+		b.State = models.ButtonStateNormal
+	}
 }
 
 // startRound resolves a single round and hands playback an event log. It does not
@@ -367,9 +448,116 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawCombatant(screen, s.fighter, float64(gs.PctX(9)), float64(gs.PctY(50)))
 	s.drawCombatant(screen, s.enemy, float64(gs.PctX(88)), float64(gs.PctY(50)))
 	systems.DrawButton(gs, screen, s.duelButton)
+	systems.DrawButton(gs, screen, s.discardButton)
+	systems.DrawButton(gs, screen, s.deckButton)
 
 	// Last, so the card in hand rides over the panes and the button it passes across.
 	s.drawDraggedCard(gs, screen)
+
+	// The overlay covers everything, card in flight included — and then Deck is drawn
+	// again on top of it. While the deck is open it is the only control that still does
+	// anything, so it is the only one that still looks like it does.
+	if s.showDeck {
+		s.drawDeckOverlay(gs, screen)
+		systems.DrawButton(gs, screen, s.deckButton)
+	}
+}
+
+// Deck overlay geometry. The panel is nearly the whole screen and stops above the button
+// band, so the Deck button that closes it stays outside the panel as well as on top of it.
+const (
+	deckPanelLeftPct   = 4
+	deckPanelRightPct  = 96
+	deckPanelTopPct    = 4
+	deckPanelBottomPct = 78
+
+	deckRowHeight = 52
+)
+
+// drawDeckOverlay covers the screen with what is left to draw.
+//
+// Counts by kind, never the order. The draw pile is shuffled, and listing it in order
+// would hand the player their next five cards and make the shuffle pointless. The discard
+// is shown beside it because those cards are coming back — a reshuffle folds the pile in,
+// so "what is left" honestly means both piles.
+//
+// Every kind is listed even at zero, which is how the absence of Quick from the deck is
+// visible rather than merely implied.
+func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Image) {
+	if !s.showDeck {
+		return
+	}
+
+	// A scrim over everything, so the panel reads as covering the screen rather than
+	// floating on it, and so the cards underneath look as inert as they now are.
+	bounds := screen.Bounds()
+	vector.DrawFilledRect(screen, 0, 0,
+		float32(bounds.Dx()), float32(bounds.Dy()),
+		color.RGBA{A: 190}, false)
+
+	left, top := float32(gs.PctX(deckPanelLeftPct)), float32(gs.PctY(deckPanelTopPct))
+	width := float32(gs.PctX(deckPanelRightPct)) - left
+	height := float32(gs.PctY(deckPanelBottomPct)) - top
+
+	vector.DrawFilledRect(screen, left, top, width, height,
+		color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
+	vector.StrokeRect(screen, left, top, width, height, 2, apBarColor, false)
+
+	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 22}
+	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}
+
+	title := &text.DrawOptions{}
+	title.GeoM.Translate(float64(left+width/2), float64(top+44))
+	title.PrimaryAlign = text.AlignCenter
+	text.Draw(screen, "What is left", heading, title)
+
+	// Two columns: what can be drawn now, and what returns when the pile is reshuffled.
+	drawCol := left + width*0.12
+	discardCol := left + width*0.56
+
+	header := func(x float32, label string, total int) {
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(float64(x), float64(top+130))
+		text.Draw(screen, fmt.Sprintf("%s — %d cards", label, total), small, op)
+	}
+	header(drawCol, "DRAW PILE", len(s.deck))
+	header(discardCol, "DISCARD", len(s.discard))
+
+	deckCounts, discardCounts := pileCounts(s.deck), pileCounts(s.discard)
+
+	// AllActions rather than ranging the maps: Go randomises map order, and a list that
+	// reshuffled itself every frame would be unreadable.
+	for i, action := range combat.AllActions {
+		y := top + 190 + float32(i*deckRowHeight)
+
+		row := func(x float32, count int) {
+			name := &text.DrawOptions{}
+			name.GeoM.Translate(float64(x), float64(y))
+			text.Draw(screen, action.String(), face, name)
+
+			num := &text.DrawOptions{}
+			num.GeoM.Translate(float64(x+width*0.30), float64(y))
+			num.PrimaryAlign = text.AlignEnd
+			text.Draw(screen, fmt.Sprintf("%d", count), face, num)
+		}
+		row(drawCol, deckCounts[action])
+		row(discardCol, discardCounts[action])
+	}
+
+	hint := &text.DrawOptions{}
+	hint.GeoM.Translate(float64(left+width/2), float64(top+height-40))
+	hint.PrimaryAlign = text.AlignCenter
+	text.Draw(screen, "Deck again to close", small, hint)
+}
+
+// pileCounts totals a pile by action kind.
+func pileCounts(pile []combat.ActionKind) map[combat.ActionKind]int {
+	counts := make(map[combat.ActionKind]int, len(combat.AllActions))
+	for _, a := range pile {
+		counts[a]++
+	}
+	return counts
 }
 
 // Both panes share one vertical band and differ only in their horizontal slot. The band is
@@ -402,7 +590,7 @@ type panePlacement struct {
 // because it is the centrepiece: it is the only pane that has to grow when exchanges
 // acquire structure.
 var (
-	palettePane    = panePlacement{leftPct: 18, rightPct: 38, title: "Actions", color: color.RGBA{R: 60, G: 200, B: 90, A: 255}}
+	palettePane    = panePlacement{leftPct: 15, rightPct: 39, title: "Actions", color: color.RGBA{R: 60, G: 200, B: 90, A: 255}}
 	resolutionPane = panePlacement{leftPct: 45, rightPct: 78, title: "Resolution", color: color.RGBA{R: 235, G: 105, B: 170, A: 255}}
 )
 
@@ -432,7 +620,7 @@ func (s *CombatScene) drawResolution(gs *state.GlobalState, screen *ebiten.Image
 
 // concealEnemy reports whether the opponent's queued actions should be hidden from the
 // player. True while planning, false once the round is playing back — an action that has
-// happened is not a secret — and always false with ActiveDebug on.
+// happened is not a secret — and always false with DebugGameplay on.
 //
 // What concealment hides is *what* the enemy queued, not *how many* actions it queued:
 // a concealed queue still occupies its real number of rows in both panes. That leaks the
@@ -442,7 +630,7 @@ func (s *CombatScene) drawResolution(gs *state.GlobalState, screen *ebiten.Image
 // rule the player is meant to read and eventually manipulate. Revisit alongside the wider
 // hidden-information decision — see TODO.md.
 func (s *CombatScene) concealEnemy(gs *state.GlobalState) bool {
-	return !gs.ActiveDebug && s.planning()
+	return !gs.DebugGameplay && s.planning()
 }
 
 // drawPaneFrame draws a column's fill, border and title, and reports its rectangle.

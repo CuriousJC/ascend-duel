@@ -59,15 +59,24 @@ window, by design. Keep it that way: rules go in `combat`, not in screens.
   the squash creates a new commit, so the branch tip is never an ancestor of `main`.
   Confirm the content landed (`git diff main <branch>` returns nothing), then `-D`.
 - Branch off `main`; never commit directly to it.
-- **One feature branch at a time, and land it before starting the next.** Long-lived
-  branches accumulating unrelated work are the thing to avoid — not because merging is
-  hard, but because the owner cannot tell what is in flight.
-- **A branch name is a claim about scope.** When the work drifts outside it — a layout
-  change on a branch named for a data structure, a tooling directory on a branch named for
-  a feature — the answer is to land what is there and branch again, not to widen the branch
-  and keep going. `add-deck` was allowed to swallow the playback pacing, the button row, a
-  debug-flag split and a whole glyph generator, and by the end nobody could say what it
-  contained. Do not repeat that.
+- **Work on `game-updates`, not a branch per feature.** Decided 2026-08-03. This is a
+  one-author project, so branch names buy no coordination — and because every PR is squash
+  merged, **the branch name never reaches `main`'s history at all**. The PR title becomes
+  the commit. Naming ceremony is pure overhead; the PR description is the thing that lasts.
+- **A PR may cover several unrelated things, and that is fine.** What is not fine is a
+  branch that stays open across many sessions. `add-deck` became untrackable because of how
+  long it ran, not because of what it was called — by the end it held the deck, the playback
+  pacing, the button row, a debug-flag split and a glyph generator.
+- **The cadence rule that replaces naming: land when you can still describe it honestly.**
+  If the PR description will not fit one clear paragraph without turning into a list of
+  unrelated headings, the branch has been open too long. Land it and start the next.
+- **Recreating the branch after a merge**, since the squash leaves it behind:
+
+  ```powershell
+  git checkout main; git pull; git checkout -B game-updates
+  ```
+
+  `-B` resets it to the new `main` rather than leaving divergent history to trip over.
 - **Say so out loud before switching branches**, and never do it as a side effect of some
   other task.
 - `git checkout main` **before** `git pull`. Pulling while on a feature branch drags
@@ -190,10 +199,19 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   made from one colour scaled down. They are drawn untinted; a disabled card dims them by
   *alpha*, so the shading survives and only the weight changes. Tinting one toward the card
   colour would collapse it back to a flat silhouette.
-- **Colour is being kept unspent.** There is one palette, `white`, with no hue at all, and
-  all three glyphs use it. When an element or block type arrives it can land on colour and mean something
-  immediately; painting the glyphs three colours now would look better today and spend the
-  only channel left for saying "this Strike is fire".
+- **Colour was kept unspent, and elements spent it — on the card, not the glyph.** There is
+  still one palette, `white`, with no hue at all, and all three glyphs use it. What carries
+  the element is the card *surface*: fire orange, ice blue, lightning yellow, poison green,
+  and near-white for no element at all. Holding the glyphs hueless from 2026-08-03 is
+  exactly what made that possible a day later, and they should stay that way — a coloured
+  glyph on a coloured card says it twice and leaves nothing for the next distinction.
+- **A glyph cannot be made smaller, and that sets the floor on a card's size.** `GlyphSize`
+  is 64 and `CardGlyphScale` is 1: authored at the size it is shown, integer scales only, and
+  1 is already the floor. Three glyphs therefore need 3x64 plus gaps down and 64 plus a
+  numeral across, whatever else a card does. A "smaller" card is one with less padding and
+  smaller text around an identical column — which is why the deck overlay's card is 138x236
+  against the hand's 180x264. Do not reach for a fractional scale; it drops pixels out of a
+  rim that is one pixel thick.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.
@@ -247,35 +265,49 @@ reference case: the button rests at 65%, hovers at 82% and reaches the named col
 - Disabled deliberately ignores the widget's colour. A disabled control should read as
   unavailable first and as itself second.
 
-### Combat screen panes are scaffolding
+### Combat screen layout is scaffolding
 
-The combat screen reads **fighter / palette / resolution / enemy**: two panes with the
-duelists as bookends and the round between them. Colours identify the role and are
-placeholders, not a chosen palette.
+The screen reads top to bottom rather than left to right, decided 2026-08-04: **who you
+are and what the round is doing** above, **the cards you are doing it with** along the
+bottom. Colours identify the role and are placeholders, not a chosen palette.
 
 | Element | Slot | Colour | Role |
 |---|---|---|---|
-| Fighter sprite | 9% | — | the player |
-| Actions | 18–38% | green | available cards, the AP budget, then the queue |
-| Resolution | 45–78% | pink | both queues interleaved in play order |
-| Enemy sprite | 88% | — | the opponent |
+| Character block | 4% x, 12% y | green | life, discards, vitae |
+| Resolution | 45–78% x, 12–46% y | pink | both queues interleaved in play order |
+| Caption box | hand width, 48% y | pink | what the round is doing right now |
+| Hand | centred, 59% y | element | the cards, portrait, in one row |
+| AP figure and bar | hand width, under the row | blue | the budget |
+| Buttons | 95% y | — | Discard 20%, DUEL! 33%, Deck 88% |
+| Enemy sprite | 88% x, 34% y | — | the opponent |
 
-**The Actions pane stacks two zones in one column.** Available cards from `availableTop`,
-the AP text and bar acting as the divider, then the queued cards from `chosenTop` — and
-`chosenZone` is the lower one, which is the drop target. A card released anywhere else,
-including on the available cards above, is discarded. Card geometry keys off a zone offset
-rather than a pane, which is what `cardSlot(gs, top, i)` takes.
+**Cards are portrait and live along the bottom.** Landscape cards in a vertical column
+capped how many could be shown, and the hand is going to grow. `cardWidth`/`cardHeight` are
+**flat constants — 180x264 — and must stay flat**: they used to be derived from the glyph
+row, so adding a badge silently widened every card and the layout could not be reasoned
+about without doing the arithmetic. Contents fit the card, never the reverse.
 
-**The buttons are one strip across the 80–90% band.** Discard at 20% and DUEL! at 33% sit
-together *directly under the hand*, because they are the same choice — **you select a set,
-then decide what it was for** — and the choice belongs next to the cards it is made from.
-Deck is alone at 88%; it changes nothing and belongs nowhere near them. Discard and DUEL!
-share an enable rule via `setEnabled`, since both need a selection to act on.
+**`handBand()` is the single authority on the hand's horizontal extent.** The card slots
+are cut out of it, the AP bar spans it and the caption box matches it, so the three cannot
+drift apart when the hand size changes. A card in flight still owns its slot, which is what
+stops the row sliding half a card sideways when one is lifted.
+
+**The buttons are one strip at 95%, under the AP bar.** Discard at 20% and DUEL! at 33% sit
+together, because they are the same choice — **you select a set, then decide what it was
+for** — and the choice belongs next to the cards it is made from. Deck is alone at 88%; it
+changes nothing and belongs nowhere near them. Discard carries one condition DUEL! does
+not: a round's discards can run out.
 
 **Selection having two verbs is deliberate.** There is no discard mode and no second
 gesture. One selected set, two things you can do with it, which is why the two buttons are
 adjacent and why the action points come back when a card is discarded — the selection was
 proposed, not spent.
+
+**The character block replaced the fighter's sprite and health bar.** A bar says roughly
+how hurt you are, and a duel decided in whole points wants the exact number, so life is a
+red fraction. Discards refill each round; vitae is a fixed placeholder drawn anyway, so the
+box has its real shape before the rest of the character's state is designed. The enemy
+keeps its sprite and bar for now.
 
 **The deck overlay is a dialog, and the only one in the game.** It fills nearly the screen,
 everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
@@ -283,38 +315,57 @@ overlay so the single live control is the only one that looks live. Pressing it 
 There is no Escape key to fall back on and no right click, so a modal has to make its exit
 the brightest thing on screen or it is a trap.
 
+- **It draws the cards, not a table of counts.** A count cannot say which of six Strikes
+  are fire, and with elements on the cards that is most of what the panel is for.
+- **One grid holding both piles, discarded cards dimmed.** Sorting by kind and element
+  rather than by pile means **a card does not move when it is discarded, it only dims** —
+  the deck draining in place reads better than cards jumping between two lists.
+- **Sorted, never in pile order.** Drawing the shuffled draw pile in order would hand the
+  player their next five cards. The old counts-only version dodged this by construction; the
+  sort is what replaces that protection.
+- It draws a `+N more not shown` line rather than silently dropping overflow. It cannot fire
+  at twenty cards, but deckbuilding will grow the deck and a panel that quietly hid cards
+  would be a picture that lies about what you own.
+
 **The Resolution pane is the centrepiece and gets the width to prove it.** It is the only
 pane that has to grow: once exchanges have structure — an initiator and a response — it
 has to draw that rather than a flat list of rows.
 
-Two panes rather than four, decided 2026-08-02. Chosen folded into the palette because one
-column can hold both zones; Enemy went entirely because an interleaved Resolution already
-shows the opponent's actions in a better order than a column of its own. The player's rows
-carry the palette's green and the opponent's carry `enemySwatch` yellow, so the screen
-reads as two colours: green is you, yellow is them. Do not treat the widths or colours as
-settled.
+One pane now. Chosen folded into the palette on 2026-08-02, Enemy went the same day because
+an interleaved Resolution already shows the opponent's actions in a better order than a
+column of its own, and Actions went on 2026-08-04 with the move to the bottom — the hand has
+no frame, so there was nothing left for a placement to hold. The player's rows carry
+`playerSwatch` green and the opponent's carry `enemySwatch` yellow, so the screen reads as
+two colours: green is you, yellow is them. Do not treat any of it as settled — the 15–39%
+column the Actions pane vacated is deliberately still empty.
 
 ### The action box
 
-[combat_actionbox.go](internal/screens/combat_actionbox.go) is the drag-and-drop queue,
-and the reference for building a *game* widget: state on the scene, hand-rolled hit
-testing, no toolkit. Drag from the available zone to queue, drag within the queue zone to
-reorder, drag out of the queue zone to discard.
+[combat_actionbox.go](internal/screens/combat_actionbox.go) is the hand and its
+drag-to-reorder, and the reference for building a *game* widget: state on the scene,
+hand-rolled hit testing, no toolkit. Click a card to select it into the round's queue, click
+it again to take it out, drag sideways to move it along the row.
 
 - **`planning()` is the single predicate** for "the player may edit the queue" — derived
   from `cursor >= len(log)` plus both duelists alive, not stored. Drag and the DUEL!
   button both gate on it, so they can never disagree.
-- **The action-point budget is enforced at pick-up.** A card the remaining points will
-  not cover cannot be lifted and draws dimmed. Accepting a drag and then bouncing the
-  drop is a worse conversation than never letting the card leave.
-- **A card dragged out of the queue leaves it on pick-up**, not on drop, so the gap
-  closes under the cursor and the drop index is measured against the real list.
-  Dropping outside the pane is therefore how an action is removed.
-- The in-flight card is drawn last in `Draw`, so it rides over the panes it crosses.
+- **The action-point budget is enforced at selection.** A card the remaining points will
+  not cover cannot be selected and draws dimmed. Accepting the click and then refusing it is
+  a worse conversation than never letting it happen.
+- **A press is not a drag until the cursor moves past `dragThreshold`.** Without it every
+  click jitters into a one-pixel reorder and selecting a card is a coin toss. The card
+  leaves the row at that moment rather than on release, so the gap closes under the cursor
+  and the drop index is measured against the row the card lands in.
+- **Dropping outside the band puts the card back.** There is no discard gesture — clicking a
+  card off is how it leaves the queue, and that is visible on screen in a way that dragging
+  into empty space never was.
+- **Selection lifts a card *up* out of the row**, and reordering is horizontal. Both rotated
+  with the layout; selection is the only state a card carries, so it gets a whole axis to
+  itself rather than a tint competing with the affordability dimming.
+- The in-flight card is drawn last in `Draw`, so it rides over everything it crosses.
 - **The AP budget is drawn twice, on purpose.** A `3/6 AP` line for the exact figure and a
-  bar under it for the glanceable one. A card in flight from the palette adds a dimmer
-  segment ahead of the fill, so the bar answers "does this fit" before the card lands —
-  it has not joined the queue yet and would otherwise not move the bar at all.
+  bar under it for the glanceable one, both sitting between the cards and the two buttons
+  that spend them.
 
 ### Two debug flags, and they are not interchangeable
 

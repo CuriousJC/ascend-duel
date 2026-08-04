@@ -39,6 +39,15 @@ go run .            # build and launch the game window
 go build .          # produce ascend-duel.exe (gitignored)
 go vet ./...
 gofmt -l .          # list unformatted files
+
+go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.png
+```
+
+Vet and build **both** configurations when touching anything traced — the tag selects a
+different file in `internal/trace`, so one can compile while the other does not:
+
+```powershell
+go vet ./...; go vet -tags debugtrace ./...
 ```
 
 ```powershell
@@ -59,10 +68,18 @@ window, by design. Keep it that way: rules go in `combat`, not in screens.
   the squash creates a new commit, so the branch tip is never an ancestor of `main`.
   Confirm the content landed (`git diff main <branch>` returns nothing), then `-D`.
 - Branch off `main`; never commit directly to it.
-- **Work on `game-updates`, not a branch per feature.** Decided 2026-08-03. This is a
-  one-author project, so branch names buy no coordination — and because every PR is squash
-  merged, **the branch name never reaches `main`'s history at all**. The PR title becomes
-  the commit. Naming ceremony is pure overhead; the PR description is the thing that lasts.
+- **Work on `game-updates-N`, not a branch per feature.** Decided 2026-08-03, numbered from
+  2026-08-04. This is a one-author project, so branch names buy no coordination — and because
+  every PR is squash merged, **the branch name never reaches `main`'s history at all**. The
+  PR title becomes the commit. Naming ceremony is pure overhead; the PR description is the
+  thing that lasts.
+- **The number increments once per PR, and a name is never reused.** The squash rewrites the
+  commit, so a reused branch diverges from its own remote — one ahead, one behind, identical
+  content — and the next push is refused until it is force-pushed. A fresh number sidesteps
+  that entirely. `game-updates` ran through #19; `game-updates-2` starts after it.
+  - The alternative considered and not taken: GitHub's *Automatically delete head branches*
+    setting, which lets one name be reused forever with no per-PR step. Worth revisiting if
+    the numbering starts to grate.
 - **A PR may cover several unrelated things, and that is fine.** What is not fine is a
   branch that stays open across many sessions. `add-deck` became untrackable because of how
   long it ran, not because of what it was called — by the end it held the deck, the playback
@@ -70,13 +87,16 @@ window, by design. Keep it that way: rules go in `combat`, not in screens.
 - **The cadence rule that replaces naming: land when you can still describe it honestly.**
   If the PR description will not fit one clear paragraph without turning into a list of
   unrelated headings, the branch has been open too long. Land it and start the next.
-- **Recreating the branch after a merge**, since the squash leaves it behind:
+- **Starting the next branch after a merge:**
 
   ```powershell
-  git checkout main; git pull; git checkout -B game-updates
+  git checkout main; git pull; git checkout -b game-updates-3
   ```
 
-  `-B` resets it to the new `main` rather than leaving divergent history to trip over.
+  Then delete the merged branch locally, and its remote with
+  `git push origin --delete game-updates-2`. Confirm the content landed first — with a
+  squash, `git diff main <branch>` returning nothing is the check, not `git branch -d`
+  succeeding.
 - **Say so out loud before switching branches**, and never do it as a side effect of some
   other task.
 - `git checkout main` **before** `git pull`. Pulling while on a feature branch drags
@@ -384,7 +404,38 @@ Neither may ever change an outcome. Both are views, the same constraint that app
 playback speed — `ResolveRound` never sees either flag.
 
 Both are set once in `main.go`; there is no runtime toggle, because a hotkey would need the
-keyboard and the input vocabulary does not have one.
+keyboard and the input vocabulary does not have one. **Both default to off.**
+
+### `internal/trace` is a third thing, and it is compiled out
+
+[internal/trace](internal/trace) writes a running account of what the game did — layout
+rectangles, resolved rounds, clicks and drags — and periodically captures the screen to
+`trace/frame.png`. It exists so a problem can be diagnosed from output rather than from
+someone describing what they saw, or taking screenshots by hand.
+
+```powershell
+go run -tags debugtrace .     # traced
+go run .                      # nothing: every trace function is empty
+```
+
+- **A build tag, not a runtime flag, and that is the point.** The two debug flags above are
+  *views* a player could conceivably be given. This is instrumentation for whoever is
+  building the game and it must not be in a binary that ships. `go build .` carries none of
+  it — no strings, no PNG encoder, no file writes.
+- **It must stay deletable in one commit.** That property is what makes it acceptable in a
+  product that will be sold. If trace calls spread thinly through the screens, it is gone.
+- **`internal/combat` may never import it.** trace imports Ebitengine, and the rules package
+  not importing Ebitengine is exactly what makes it testable without a window. The *screen*
+  traces the event log `ResolveRound` hands back; combat itself stays clean.
+- **It may never change an outcome**, the same constraint as the debug flags and playback
+  speed. `ResolveRound` neither sees it nor calls it.
+- **Guard call sites that build their arguments** with `if trace.Enabled()`. The no-op
+  functions cost nothing, but Go still evaluates what is passed to them.
+- Lines carry the **simulation tick**, not a wall clock, so a trace lines up with a replay of
+  the same seed. Captures are throttled to one every two seconds: `ReadPixels` is a
+  GPU-to-CPU readback that stalls the frame it happens on.
+- The layout dump re-runs whenever the **hand size** changes, since the whole bottom band is
+  a function of that number. `tracedHand` watches it, so no call site has to remember.
 
 ### Hidden information is gated on `DebugGameplay`
 
@@ -428,7 +479,7 @@ Scenes also build their own widgets in `Init` and wire them to their own methods
 
 Key conventions:
 - `ActiveScreen` (`Title`/`Ascend`/`Combat`/`Credits`) selects the scene. Adding a screen means adding an `ActiveScreen` constant and one entry in the `scenes` map.
-- **`NewGlobalState` boots into `Combat`, not `Title`, on purpose.** The combat screen is the one under construction and clicking through the title every run costs a step in a loop that runs often. `DebugPlacement` in `main.go` is on by default for the same reason. Leave both unless asked; put `ActiveScreen` back to `Title` once combat stops being the active work, and flag it when a change needs the title screen to be seen.
+- **`NewGlobalState` boots into `Combat`, not `Title`, on purpose.** The combat screen is the one under construction and clicking through the title every run costs a step in a loop that runs often. Leave it unless asked; put `ActiveScreen` back to `Title` once combat stops being the active work, and flag it when a change needs the title screen to be seen. **Both debug flags are off by default in `main.go`** — `DebugPlacement` used to default on while the screen was being laid out and no longer does, so a change that needs the grid or the rulers has to turn it on deliberately.
 - `NewScreen bool` is the one-shot init flag, consumed centrally in `game.Update`. Actions that change screens set it back to `true`; scenes never touch it.
 - `gs.PctX(pct)` / `gs.PctY(pct)` are the intended way to place things — avoid hardcoded pixel coordinates. They replaced a dozen cached fields for halves, thirds and quarters, which could not express 40% and could not be extended to without inventing a field name per fraction. **Percentages anchor a group; offsets within a group stay in pixels** (see the title menu), and sizes are never percentages. The debug overlay rules the screen at the halves/thirds/quarters and ticks every 10% along the top and left edges, so a position can be read straight off the screen.
 - `Debug1`/`Debug2` are free-form strings printed by `DrawDebugInfo`; scratch tracing goes there.

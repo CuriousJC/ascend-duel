@@ -8,6 +8,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -73,6 +74,11 @@ func (g *Game) Update() error {
 		g.GlobalState.CountSecond++
 	}
 
+	// The tick every trace line is stamped with. Set once here rather than passed to each
+	// call, and it is the simulation counter rather than a clock, so a trace lines up with
+	// a replay of the same seed.
+	trace.Tick(g.GlobalState.Count)
+
 	scene := g.scene()
 
 	// One-shot init on entering a screen. Doing it here rather than inside each
@@ -105,6 +111,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	if g.GlobalState.DebugPlacement {
 		g.DrawDebugInfo(screen)
 	}
+
+	// Last of all, so a capture holds exactly what was on screen, debug overlay included.
+	trace.Frame(screen)
 }
 
 // Layout reports the fixed internal resolution. The window size is ignored — Ebiten

@@ -3,10 +3,12 @@ package screens
 import (
 	"fmt"
 	"image"
+	"image/color"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -53,6 +55,14 @@ const (
 	apTextBelow = 10
 	apBarBelow  = 36
 	apBarHeight = 8
+
+	// How far the budget tick stands out of the bar, top and bottom.
+	apBarTickOverhang = 4
+
+	// The row never grows past this, whatever the hand holds. Beyond the count that fits at
+	// full pitch the cards overlap and the band stays put — see handPitch.
+	handBandLeftPct  = 4
+	handBandRightPct = 96
 
 	// The glyph column, down the left edge of the card the way a playing card puts its rank
 	// and suit in a corner. These have to fit inside cardHeight now rather than setting it:
@@ -163,9 +173,21 @@ func (s *CombatScene) planning() bool {
 	return s.cursor >= len(s.log) && s.fighter.Alive() && s.enemy.Alive()
 }
 
-// remainingPoints is the budget left after everything already selected.
-func (s *CombatScene) remainingPoints() int {
-	return s.fighter.ActionPoints() - combat.CostOf(s.fighterActions)
+// selectedCount is how many cards are currently picked.
+func (s *CombatScene) selectedCount() int {
+	n := 0
+	for _, c := range s.hand {
+		if c.selected {
+			n++
+		}
+	}
+	return n
+}
+
+// overBudget reports whether the selection costs more than the fighter can spend. Legal to
+// be in — it is how cards are gathered for a discard — but DUEL! will not fire from it.
+func (s *CombatScene) overBudget() bool {
+	return combat.CostOf(s.fighterActions) > s.fighter.ActionPoints()
 }
 
 // syncQueue rebuilds the round's queue from the list: the selected cards, in list order.
@@ -205,10 +227,14 @@ func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
 }
 
 // beginPress records a press over a card without yet committing to what it means.
+//
+// Backwards through the hand, because overlapping cards are drawn front to back in index
+// order: the last card that covers a point is the one visibly on top of it, and that is the
+// one the click has to mean.
 func (s *CombatScene) beginPress(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
-	for i := range s.hand {
+	for i := len(s.hand) - 1; i >= 0; i-- {
 		slot := s.cardSlot(gs, i)
 		if !at.In(slot) {
 			continue
@@ -239,6 +265,9 @@ func (s *CombatScene) promoteToDrag(gs *state.GlobalState) {
 	s.hand = append(
 		append([]paletteCard{}, s.hand[:s.drag.originIndex]...),
 		s.hand[s.drag.originIndex+1:]...)
+
+	trace.Logf("drag", "lifted card[%d] %s at %d,%d",
+		s.drag.originIndex, cardLabel(s.drag.card.actionCard), gs.MouseX, gs.MouseY)
 }
 
 // endPress resolves the press: a drag lands the card at a new position, a click toggles
@@ -256,26 +285,55 @@ func (s *CombatScene) endPress(gs *state.GlobalState) {
 	// discard gesture any more — clicking a card off is how it leaves the queue, and that
 	// is visible on screen in a way that dragging into empty space never was.
 	at := drag.originIndex
-	if image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
+	inside := image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs))
+	if inside {
 		at = s.dropIndex(gs)
 	}
 	s.insertCard(at, drag.card)
+
+	trace.Logf("drag", "dropped %s at %d,%d inside=%v, index %d -> %d",
+		cardLabel(drag.card.actionCard), gs.MouseX, gs.MouseY, inside, drag.originIndex, at)
 }
 
-// toggle selects or deselects the card at i. Deselecting always works; selecting is
-// refused when the remaining budget will not cover the card, which is the same rule the
-// dimming on screen is already reporting.
+// toggle selects or deselects the card at i. Deselecting always works; selecting is refused
+// only when maxSelected cards are already picked, which is the same rule the dimming on
+// screen is reporting.
+//
+// Cost is deliberately not checked. A card the budget will not cover can still be selected,
+// because selection is also how a card is chosen for the discard pile — see maxSelected.
 func (s *CombatScene) toggle(i int) {
 	if i < 0 || i >= len(s.hand) {
 		return
 	}
 
-	if !s.hand[i].selected && s.hand[i].action.Cost() > s.remainingPoints() {
+	if !s.hand[i].selected && s.selectedCount() >= maxSelected {
+		trace.Logf("input", "select refused: %s, already %d of %d picked",
+			cardLabel(s.hand[i].actionCard), s.selectedCount(), maxSelected)
 		return
 	}
 
 	s.hand[i].selected = !s.hand[i].selected
 	s.syncQueue()
+
+	if trace.Enabled() {
+		verb := "deselected"
+		if s.hand[i].selected {
+			verb = "selected"
+		}
+		trace.Logf("input", "%s card[%d] %s -> %d/%d AP%s  hand %s",
+			verb, i, cardLabel(s.hand[i].actionCard),
+			combat.CostOf(s.fighterActions), s.fighter.ActionPoints(),
+			overSuffix(s), handLabel(s.hand))
+	}
+}
+
+// overSuffix marks a trace line when the selection has gone past the budget, since that is
+// the state DUEL! refuses to fire from and the one worth spotting in a log.
+func overSuffix(s *CombatScene) string {
+	if over := combat.CostOf(s.fighterActions) - s.fighter.ActionPoints(); over > 0 {
+		return fmt.Sprintf(" (+%d OVER)", over)
+	}
+	return ""
 }
 
 // cancelDrag puts any in-flight card back and forgets the press.
@@ -312,8 +370,33 @@ func (s *CombatScene) laidOutCount() int {
 	return n
 }
 
-// handBand is the rectangle a row of n cards occupies: centred on the screen rather than
-// pinned to a pane, because the hand is the width of whatever is in it and grows outward.
+// handPitch is the horizontal step from one card's left edge to the next's.
+//
+// A small hand sits side by side at cardWidth+cardGap. Once that would carry the row past
+// the band, the pitch shrinks so the row lands exactly on the band's width and the cards
+// overlap instead — each one covering the right-hand part of its neighbour, like a hand
+// held in one fist. Eight cards already need this: eight at full pitch is 1536 pixels
+// against a 1280 screen.
+//
+// **There is no floor.** The row always fits, so a very large hand compresses until the
+// cards are stripes of colour. That is the deliberate choice: a hand that has to be
+// scrolled or truncated is worse than one that has to be hovered, and the element colour
+// survives compression better than anything else on the card.
+func handPitch(gs *state.GlobalState, n int) int {
+	full := cardWidth + cardGap
+	if n < 2 {
+		return full
+	}
+
+	band := gs.PctX(handBandRightPct) - gs.PctX(handBandLeftPct)
+	if (n-1)*full+cardWidth <= band {
+		return full
+	}
+	return (band - cardWidth) / (n - 1)
+}
+
+// handBand is the rectangle a row of n cards occupies, centred on the screen rather than
+// pinned to a pane.
 //
 // This is the single authority on that width. The AP bar spans it, the caption box above
 // the hand matches it, and the card slots are cut out of it, so none of them can drift
@@ -322,7 +405,7 @@ func handBand(gs *state.GlobalState, n int) image.Rectangle {
 	if n < 1 {
 		n = 1
 	}
-	w := n*cardWidth + (n-1)*cardGap
+	w := (n-1)*handPitch(gs, n) + cardWidth
 	left := gs.PctX(50) - w/2
 	top := gs.PctY(handTopPct)
 	return image.Rect(left, top, left+w, top+cardHeight)
@@ -333,11 +416,13 @@ func (s *CombatScene) handRowLeft(gs *state.GlobalState) int {
 	return handBand(gs, s.laidOutCount()).Min.X
 }
 
-// dropIndex is the position the cursor is currently pointing between. Measuring from the
-// middle of a slot rather than its left edge means the card lands where the gap is.
+// dropIndex is the position the cursor is currently pointing between. Measured in pitches
+// rather than card widths, so it stays right once the cards overlap; and from the middle of
+// a step rather than its left edge, so the card lands where the gap is.
 func (s *CombatScene) dropIndex(gs *state.GlobalState) int {
 	left := s.handRowLeft(gs)
-	idx := (gs.MouseX - left + (cardWidth+cardGap)/2) / (cardWidth + cardGap)
+	pitch := handPitch(gs, s.laidOutCount())
+	idx := (gs.MouseX - left + pitch/2) / pitch
 
 	if idx < 0 {
 		idx = 0
@@ -361,8 +446,12 @@ func handZone(gs *state.GlobalState) image.Rectangle {
 // cardSlot is the rectangle the card at index i occupies. Selected cards are lifted up,
 // and hit testing reads the same function the drawing does, so the protruding part of a
 // card is clickable rather than merely visible.
+//
+// Slots overlap once the hand is large. Cards are drawn in index order, so a later card
+// covers an earlier one, and beginPress walks the hand backwards to match — otherwise a
+// click in the overlap would pick the card underneath the one it looks like it hit.
 func (s *CombatScene) cardSlot(gs *state.GlobalState, i int) image.Rectangle {
-	x := s.handRowLeft(gs) + i*(cardWidth+cardGap)
+	x := s.handRowLeft(gs) + i*handPitch(gs, s.laidOutCount())
 	y := gs.PctY(handTopPct)
 	if i < len(s.hand) && s.hand[i].selected {
 		y -= selectedNudge
@@ -383,11 +472,15 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	// The budget runs the width of the hand: the exact figure at one end, the piles at the
 	// other, and the bar between them. The piles have no cards on screen to count, which is
 	// why they are written out at all.
+	spent, budget := combat.CostOf(s.fighterActions), s.fighter.ActionPoints()
+	label := fmt.Sprintf("%d/%d AP", spent, budget)
 	budgetOp := &text.DrawOptions{}
 	budgetOp.GeoM.Translate(float64(left), float64(below+apTextBelow))
-	text.Draw(screen,
-		fmt.Sprintf("%d/%d AP", combat.CostOf(s.fighterActions), s.fighter.ActionPoints()),
-		face, budgetOp)
+	if spent > budget {
+		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
+		budgetOp.ColorScale.ScaleWithColor(apOverColor)
+	}
+	text.Draw(screen, label, face, budgetOp)
 
 	pilesOp := &text.DrawOptions{}
 	pilesOp.GeoM.Translate(float64(right), float64(below+apTextBelow))
@@ -398,9 +491,12 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawAPBar(screen, left, below+apBarBelow, right-left)
 
 	for i, c := range s.hand {
-		// An unselected card the budget will not cover reads as unavailable. A selected
-		// one never does — it is already paid for, and clicking it off has to stay open.
-		enabled := c.selected || (s.planning() && c.action.Cost() <= s.remainingPoints())
+		// Dimmed means "you cannot pick this", which now means the selection is full rather
+		// than that the card is unaffordable — an unaffordable card is pickable on purpose,
+		// and dimming something you can click would be a lie. What it costs you is reported
+		// by the bar going red, after the fact. A selected card never dims: clicking it off
+		// has to stay open, and it is the way out of an over-allocation.
+		enabled := c.selected || (s.planning() && s.selectedCount() < maxSelected)
 		drawCard(gs, screen, s.cardSlot(gs, i).Min, handCardStyle,
 			c.actionCard, enabled, c.selected, s.fighter.Str)
 	}
@@ -409,32 +505,62 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	// A bar standing in the gap the card will drop into, full card height so it reads as a
-	// slot rather than as a tick.
+	// A bar standing where the card will drop, full card height so it reads as a slot rather
+	// than as a tick. Straddling the slot's left edge rather than sitting a gap to its left,
+	// since once the cards overlap there is no gap to sit in.
 	slot := s.cardSlot(gs, s.dropIndex(gs))
 	vector.DrawFilledRect(screen,
-		float32(slot.Min.X-cardGap), top,
+		float32(slot.Min.X)-dropIndicatorWidth/2, top,
 		dropIndicatorWidth, cardHeight,
 		playerSwatch, false)
 }
 
-// drawAPBar draws the action-point budget as a bar: the track is the whole budget, the
-// filled part is what the selection currently spends. The numeric line above it stays —
-// the bar answers "how much room is left" at a glance, the number answers "exactly".
+// drawAPBar draws the action-point budget as a bar. The numeric line above it stays — the
+// bar answers "how much room is left" at a glance, the number answers "exactly".
+//
+// **The bar rescales rather than overflowing.** Its full width is the budget until the
+// selection exceeds it, and the whole spend after that, with a tick left standing where the
+// budget ends. So the fill never runs off the end and the tick shows how far past it you
+// are, in the same picture, at whatever the overspend happens to be. A fixed-scale bar can
+// only pin at 100% and say nothing about by how much.
 func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) {
 	budget := s.fighter.ActionPoints()
 	if budget <= 0 {
 		return
 	}
+	spent := combat.CostOf(s.fighterActions)
+
+	scale := budget
+	if spent > budget {
+		scale = spent
+	}
 
 	vector.DrawFilledRect(screen, left, top, width, apBarHeight,
 		systems.ColorAtStrength(apBarColor, 20), false)
 
-	spent := width * float32(combat.CostOf(s.fighterActions)) / float32(budget)
-	vector.DrawFilledRect(screen, left, top, spent, apBarHeight, apBarColor, false)
+	// The affordable part in blue, whatever is past the budget in red.
+	affordable := spent
+	if affordable > budget {
+		affordable = budget
+	}
+	blue := width * float32(affordable) / float32(scale)
+	vector.DrawFilledRect(screen, left, top, blue, apBarHeight, apBarColor, false)
 
-	vector.StrokeRect(screen, left, top, width, apBarHeight, 1,
-		systems.ColorAtStrength(apBarColor, 70), false)
+	border := systems.ColorAtStrength(apBarColor, 70)
+	if spent > budget {
+		over := width * float32(spent-budget) / float32(scale)
+		vector.DrawFilledRect(screen, left+blue, top, over, apBarHeight, apOverColor, false)
+
+		// The budget line, standing proud of the bar top and bottom so it reads against both
+		// fills rather than disappearing into whichever one it lands on.
+		vector.DrawFilledRect(screen, left+blue-1, top-apBarTickOverhang,
+			2, apBarHeight+2*apBarTickOverhang,
+			color.RGBA{R: 245, G: 245, B: 245, A: 255}, false)
+
+		border = apOverColor
+	}
+
+	vector.StrokeRect(screen, left, top, width, apBarHeight, 1, border, false)
 }
 
 // drawDraggedCard draws the card in flight. Called last so it rides over everything.

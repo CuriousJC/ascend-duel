@@ -25,3 +25,8 @@
 # Scratch notes and analysis, not part of the project
 analysis.md
 .scratch/
+
+# Screen captures written by internal/trace under -tags debugtrace.
+# Anchored with a leading slash: an unanchored "trace/" matches at any depth and would
+# swallow internal/trace/, the source package that writes these.
+/trace/

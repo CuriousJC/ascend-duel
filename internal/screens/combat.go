@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -21,26 +22,36 @@ import (
 
 // Playback pacing at 60 TPS. Destined to become the game-speed setting.
 //
-// The budget is spent per action rather than spread evenly over events: an action holds
-// the screen for a beat and a half, and the damage and guard events that belong to it pass
-// quickly. Splitting one dwell across every event instead would make a Guard — which emits
-// nothing but its own event — take as long as a Heavy that lands.
+// The budget is spent per event kind rather than spread evenly across a round: splitting
+// one dwell over every event would make a Guard — which emits nothing but its own action —
+// take as long as a Heavy that lands three events.
 //
 // Halved from three seconds on 2026-08-02: at three seconds a round of six actions took
 // twenty seconds to watch, and the pause between a move and its consequence read as the
 // game hesitating rather than as pacing.
+//
+// **Damage got its own dwell on 2026-08-04.** It used to share the quarter-second beat with
+// everything that was not an action, which meant the announcement held for a second and a
+// half and the number it produced flashed past in a quarter of one — the wrong way round.
+// The damage *is* the payoff; the announcement is just the setup for it. A kill lingers for
+// the same reason, since it is the last thing a round has to say.
 const (
 	ticksPerSecond   = 60
 	actionDwellTicks = 3 * ticksPerSecond / 2
+	damageDwellTicks = ticksPerSecond
 	beatTicks        = ticksPerSecond / 4
 )
 
 // dwellFor is how long one event holds the screen.
 func dwellFor(e combat.Event) int {
-	if e.Kind == combat.KindAction {
+	switch e.Kind {
+	case combat.KindAction:
 		return actionDwellTicks
+	case combat.KindDamage, combat.KindDefeated:
+		return damageDwellTicks
+	default:
+		return beatTicks
 	}
-	return beatTicks
 }
 
 // element is what a card is made of. Colour and nothing else for now — no rule reads it,
@@ -81,6 +92,23 @@ var elementColors = [...]color.RGBA{
 
 func (e element) color() color.RGBA { return elementColors[e] }
 
+// elementNames is for tracing and for anything that has to say an element out loud. An
+// array indexed by the constant rather than a map, for the same reason as elementColors.
+var elementNames = [...]string{
+	elementNone:      "plain",
+	elementFire:      "fire",
+	elementIce:       "ice",
+	elementLightning: "lightning",
+	elementPoison:    "poison",
+}
+
+func (e element) String() string {
+	if int(e) >= len(elementNames) {
+		return "?"
+	}
+	return elementNames[e]
+}
+
 // actionCard is one instance in the piles. A card used to *be* a combat.ActionKind, so two
 // Strikes were the same value and indistinguishable; an element makes them differ, so the
 // deck, hand and discard hold structs even while the element does nothing but paint.
@@ -96,7 +124,23 @@ type actionCard struct {
 // The 10/6/4 split across Strike/Guard/Heavy is a first guess at "mostly attacks, some
 // defence, a few big swings" and has not been played against anything. It is the obvious
 // thing to tune once the fights are worth measuring.
-const handSize = 5
+//
+// Eight from five on 2026-08-04. Eight cards do not fit the screen side by side, which is
+// what the overlap in handPitch is for — the hand is expected to go past eight sometimes.
+const handSize = 8
+
+// maxSelected caps the selection at five cards **regardless of what they cost**.
+//
+// The cap replaced the action-point budget as the gate on selection, and that is the whole
+// point: you may now select more than you can afford. Selection had been doing two jobs —
+// "queue this for the round" and "this is the one I mean" — and the AP gate made the second
+// job impossible, because a hand you could not afford was a hand you could not throw away.
+// Over-allocating is how you grab cards to discard.
+//
+// What stops it being a cheat is that DUEL! goes dead while the selection is over budget.
+// The AP rule is never actually broken; it is enforced one step later, at the point of
+// playing rather than the point of picking up. See overBudget.
+const maxSelected = 5
 
 // discardsPerRound caps how many times the hand can be thrown back in one round, and
 // refills with the fresh hand. One press costs one discard however many cards were
@@ -152,6 +196,11 @@ const deckSeed = 1
 // colour stops it reading as a summary of the list underneath it.
 var apBarColor = color.RGBA{R: 70, G: 130, B: 230, A: 255}
 
+// apOverColor paints the part of the selection the budget will not cover. Red rather than a
+// dimmer blue: over-allocation is a state you have to leave before you can duel, so it reads
+// as a warning rather than as more of the same bar.
+var apOverColor = color.RGBA{R: 225, G: 60, B: 60, A: 255}
+
 // CombatScene runs one duel: the player plans a set of actions against an action
 // point budget, presses DUEL!, watches the round play out, and plans again.
 //
@@ -189,6 +238,12 @@ type CombatScene struct {
 	// every round; vitae is a placeholder that never moves yet.
 	discardsLeft int
 	vitae        int
+
+	// tracedHand is the hand size the last layout dump described. The whole bottom band is
+	// a function of that number — the pitch, the row, the AP bar, the caption box — so a
+	// change to it is exactly when the dump is worth repeating. Watching the size rather
+	// than flagging every place that changes it means no call site has to remember.
+	tracedHand int
 
 	// The resolved round and the playback cursor walking it. The screen never
 	// computes an outcome — it replays this.
@@ -272,6 +327,11 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.cursor = 0
 	s.ticks = 0
 	s.round = 0
+
+	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seed %d",
+		len(s.deck), len(s.hand), len(s.discard), deckSeed)
+	s.tracedHand = len(s.hand)
+	s.traceLayout(gs)
 }
 
 // discardSelected throws the selected cards away: they leave the hand for the discard
@@ -299,11 +359,16 @@ func (s *CombatScene) discardSelected() {
 
 	s.drawHand()
 	s.syncQueue()
+
+	trace.Logf("input", "discard pressed, %d left this round, hand now %s",
+		s.discardsLeft, handLabel(s.hand))
 }
 
 // toggleDeck shows or hides the deck overlay.
 func (s *CombatScene) toggleDeck() {
 	s.showDeck = !s.showDeck
+	trace.Logf("input", "deck overlay %v (draw %d, discard %d)",
+		s.showDeck, len(s.deck), len(s.discard))
 }
 
 // resetDeck builds the starting deck, shuffles it, empties the discard and deals an
@@ -379,17 +444,26 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// Both go dead while the deck is open. It is a dialog: Deck is the only live control
 	// on the screen until it is pressed again.
 	//
-	// Discard carries one extra condition the two no longer share: a round's discards can
-	// run out, and DUEL! never can. The block is where that count is read, so a dead
-	// Discard button has a visible reason rather than being unexplained.
+	// The two no longer share a rule. Discard needs a discard left this round; DUEL! needs
+	// the selection to be inside the action-point budget. Each has its own reason to go dead
+	// and each reason is visible somewhere on screen — the count in the character block, the
+	// bar going red — so a dark button is never unexplained.
+	//
+	// This is what makes over-allocating safe to allow: the budget is enforced here, at the
+	// point of playing, rather than at the point of picking a card up.
 	live := s.planning() && len(s.fighterActions) > 0 && !s.showDeck
-	setEnabled(s.duelButton, live)
+	setEnabled(s.duelButton, live && !s.overBudget())
 	setEnabled(s.discardButton, live && s.discardsLeft > 0)
 
 	systems.UpdateButton(gs, s.duelButton)
 	systems.UpdateButton(gs, s.discardButton)
 	systems.UpdateButton(gs, s.deckButton)
 	s.advancePlayback()
+
+	if trace.Enabled() && len(s.hand) != s.tracedHand {
+		s.tracedHand = len(s.hand)
+		s.traceLayout(gs)
+	}
 	return nil
 }
 
@@ -415,6 +489,11 @@ func (s *CombatScene) startRound() {
 	if !s.fighter.Alive() || !s.enemy.Alive() {
 		return
 	}
+	// The button is already dead while over budget; this is the rule itself rather than the
+	// reporting of it, so a round can never resolve a queue the fighter cannot pay for.
+	if s.overBudget() {
+		return
+	}
 
 	s.round++
 	s.enemyActions = combat.PlanGreedy(s.enemy.Duelist)
@@ -431,9 +510,43 @@ func (s *CombatScene) startRound() {
 	s.cursor = 0
 	s.ticks = 0
 
-	fmt.Printf("Round %d: %d events (fighter %d AP, enemy %d AP)\n",
-		s.round, len(log),
-		s.fighter.ActionPoints(), s.enemy.ActionPoints())
+	// The whole round, not a count of it. ResolveRound already decided every one of these
+	// before a frame of playback ran, so this is the authoritative account of what is about
+	// to happen on screen — and if the screen ever disagrees with it, the screen is wrong.
+	if trace.Enabled() {
+		trace.Section(fmt.Sprintf("round %d", s.round))
+		trace.Logf("round", "fighter %d AP, plan %s", s.fighter.ActionPoints(), planLabel(s.fighterActions))
+		trace.Logf("round", "enemy   %d AP, plan %s", s.enemy.ActionPoints(), planLabel(s.enemyActions))
+		for i, e := range log {
+			trace.Logf("event", "%2d %s", i, eventLabel(e))
+		}
+	}
+}
+
+// eventLabel renders one event, **printing only the fields that kind actually sets**.
+//
+// combat.Event is one struct covering six kinds, so most of its fields are zero on any
+// given event: Action is set on KindAction alone, Amount and Target on the damage-ish ones.
+// Printing them all made every round-start read "side A Strike amount 0 life 0", which is
+// four facts of which none were true. A trace that invents detail is worse than one that
+// omits it — the whole reason for having it is to be believed.
+func eventLabel(e combat.Event) string {
+	switch e.Kind {
+	case combat.KindRoundStart:
+		return fmt.Sprintf("round-start round %d", e.Round)
+	case combat.KindRoundEnd:
+		return fmt.Sprintf("round-end   round %d", e.Round)
+	case combat.KindAction:
+		return fmt.Sprintf("action      %v plays %v", e.Side, e.Action)
+	case combat.KindGuarded:
+		return fmt.Sprintf("guarded     %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
+	case combat.KindDamage:
+		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
+	case combat.KindDefeated:
+		return fmt.Sprintf("defeated    %v falls to %v", e.Target, e.Side)
+	default:
+		return fmt.Sprintf("kind %d?", e.Kind)
+	}
 }
 
 // advancePlayback walks the round's event log one entry at a time, applying each to
@@ -491,13 +604,16 @@ func (s *CombatScene) caption() string {
 		return fmt.Sprintf("You fall in round %d. The monster wins.", s.round)
 	}
 
-	// Between rounds: show the plan and what it costs.
+	// Between rounds: show the plan and what it costs. Over budget it must not say "press
+	// DUEL!", because DUEL! is dead — it says what to do about it instead.
 	if s.cursor >= len(s.log) {
-		return fmt.Sprintf("Round %d - your plan: %s  (%d/%d AP)   press DUEL!",
-			s.round+1,
-			planLabel(s.fighterActions),
-			combat.CostOf(s.fighterActions),
-			s.fighter.ActionPoints())
+		spent, budget := combat.CostOf(s.fighterActions), s.fighter.ActionPoints()
+		tail := "press DUEL!"
+		if spent > budget {
+			tail = fmt.Sprintf("%d over - discard or deselect", spent-budget)
+		}
+		return fmt.Sprintf("Round %d - your plan: %s  (%d/%d AP)   %s",
+			s.round+1, planLabel(s.fighterActions), spent, budget, tail)
 	}
 
 	e := s.log[s.cursor]
@@ -533,7 +649,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// The fighter's sprite and health bar are gone — the block above carries its state as
 	// numbers instead. The enemy keeps both for now, moved up with the pane: at 50% its
 	// health bar, which hangs 100px below it, ran into the top of the card row.
-	s.drawCombatant(screen, s.enemy, float64(gs.PctX(88)), float64(gs.PctY(34)))
+	s.drawCombatant(gs, screen, s.enemy, float64(gs.PctX(88)), float64(gs.PctY(34)))
 	systems.DrawButton(gs, screen, s.duelButton)
 	systems.DrawButton(gs, screen, s.discardButton)
 	systems.DrawButton(gs, screen, s.deckButton)
@@ -1045,9 +1161,9 @@ func (s *CombatScene) currentAction() (combat.Side, int, bool) {
 	return combat.SideB, enemySeen, true
 }
 
-// drawCombatant draws one duelist and its health bar. The fighter and the monster
-// differed only in which coordinate they were placed at, so they share this.
-func (s *CombatScene) drawCombatant(screen *ebiten.Image, c *entities.Combatant, hPosition, vPosition float64) {
+// drawCombatant draws one duelist and its health bar. Only the enemy uses it now — the
+// fighter's sprite and bar became the character block — but it stays shaped for either.
+func (s *CombatScene) drawCombatant(gs *state.GlobalState, screen *ebiten.Image, c *entities.Combatant, hPosition, vPosition float64) {
 	var cm colorm.ColorM
 
 	op := &colorm.DrawImageOptions{}
@@ -1055,7 +1171,78 @@ func (s *CombatScene) drawCombatant(screen *ebiten.Image, c *entities.Combatant,
 	op.GeoM.Translate(hPosition, vPosition)                                                   //position
 	colorm.DrawImage(screen, c.Sprite, cm, op)
 
-	DrawHealthBar(screen, hPosition, vPosition, c.CurrentLife, c.MaxLife)
+	DrawHealthBar(gs, screen, hPosition, vPosition, c.CurrentLife, c.MaxLife)
+}
+
+// traceLayout dumps every rectangle the screen computes. Called from Init and again at the
+// start of each round, which is when the hand size — and therefore the whole bottom band —
+// can have changed.
+//
+// This exists because a layout bug is far more obvious as a number than as a picture: a
+// glyph column measuring 224 inside a card 132 tall states the problem outright, where the
+// same thing on screen just looks vaguely wrong.
+func (s *CombatScene) traceLayout(gs *state.GlobalState) {
+	if !trace.Enabled() {
+		return
+	}
+
+	trace.Section("combat layout")
+	trace.Logf("layout", "screen %dx%d  hand %d cards  pitch %d (full %d)",
+		gs.ScreenWidth, gs.ScreenHeight, len(s.hand),
+		handPitch(gs, s.laidOutCount()), cardWidth+cardGap)
+
+	band := handBand(gs, s.laidOutCount())
+	trace.Rect("handBand", band)
+	trace.Rect("resolutionPane", image.Rect(
+		gs.PctX(resolutionPane.leftPct), gs.PctY(paneTopPct),
+		gs.PctX(resolutionPane.rightPct), gs.PctY(paneBottomPct)))
+	trace.Rect("captionBox", image.Rect(
+		band.Min.X, gs.PctY(captionTopPct),
+		band.Max.X, gs.PctY(captionTopPct)+captionHeight))
+	trace.Rect("fighterBlock", image.Rect(
+		gs.PctX(blockLeftPct), gs.PctY(blockTopPct),
+		gs.PctX(blockLeftPct)+blockWidth, gs.PctY(blockTopPct)+blockHeight))
+	trace.Rect("apBar", image.Rect(
+		band.Min.X, band.Max.Y+apBarBelow,
+		band.Max.X, band.Max.Y+apBarBelow+apBarHeight))
+	trace.Rect("deckPanel", image.Rect(
+		gs.PctX(deckPanelLeftPct), gs.PctY(deckPanelTopPct),
+		gs.PctX(deckPanelRightPct), gs.PctY(deckPanelBottomPct)))
+
+	for i, c := range s.hand {
+		trace.Rect(fmt.Sprintf("card[%d] %s", i, cardLabel(c.actionCard)), s.cardSlot(gs, i))
+	}
+
+	for _, b := range []struct {
+		name string
+		b    *models.Button
+	}{{"discard", s.discardButton}, {"duel", s.duelButton}, {"deck", s.deckButton}} {
+		trace.Logf("layout", "%-18s centre %4d,%-4d", "button "+b.name, b.b.ScreenX, b.b.ScreenY)
+	}
+}
+
+// cardLabel names a card for a trace line: "Strike/fire", or just "Strike" when plain.
+func cardLabel(c actionCard) string {
+	if c.element == elementNone {
+		return c.action.String()
+	}
+	return c.action.String() + "/" + c.element.String()
+}
+
+// handLabel renders the whole hand for a trace line, marking the selected ones.
+func handLabel(hand []paletteCard) string {
+	out := ""
+	for i, c := range hand {
+		if i > 0 {
+			out += " "
+		}
+		if c.selected {
+			out += "[" + cardLabel(c.actionCard) + "]"
+			continue
+		}
+		out += cardLabel(c.actionCard)
+	}
+	return out
 }
 
 // planLabel renders a queued set as "Guard + Strike + Quick".
@@ -1078,7 +1265,7 @@ func combatantFromRecord(gs *state.GlobalState, record string) *entities.Combata
 	return entities.NewCombatantFrom(d, gs.Assets[d.SpriteSheet])
 }
 
-func DrawHealthBar(screen *ebiten.Image,
+func DrawHealthBar(gs *state.GlobalState, screen *ebiten.Image,
 	hPositionEntity float64, vPositionEntity float64,
 	currentLife int, maxLife int) {
 
@@ -1111,12 +1298,22 @@ func DrawHealthBar(screen *ebiten.Image,
 	mask.DrawImage(lifeRect, rectMaskOp) //blend source lifeRect into destination mask
 	healthBar := mask                    //mask is now filled with transparent maskFill and the maskColor was overwritten with lifeRect
 
-	//TODO: Add the current/max health on to the health bar
-
 	healthBarOp := &ebiten.DrawImageOptions{}
 	healthBarOp.GeoM.Translate(-float64(rectWidth)/2, -float64(rectHeight)/2) //center our origin
 	healthBarOp.GeoM.Translate(hPosition, vPosition)                          //position
 	screen.DrawImage(healthBar, healthBarOp)
+
+	// The figure, in the same "60 / 60" shape and the same red the fighter's block uses, so
+	// both duelists state their life the same way even though only one of them has a bar.
+	// Onto the screen after the bar rather than into the mask before it: the mask is
+	// composited with BlendSourceIn, which would eat anything drawn into it first.
+	lifeOp := &text.DrawOptions{}
+	lifeOp.GeoM.Translate(hPosition, vPosition)
+	lifeOp.PrimaryAlign = text.AlignCenter
+	lifeOp.SecondaryAlign = text.AlignCenter
+	lifeOp.ColorScale.ScaleWithColor(lifeColor)
+	text.Draw(screen, fmt.Sprintf("%d / %d", currentLife, maxLife),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, lifeOp)
 }
 
 func CreateRoundedRecMask(mask *ebiten.Image, x, y, width, height, radius float32, maskColor color.Color) {

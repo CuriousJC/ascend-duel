@@ -120,9 +120,11 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         - Five-value palettes, and glyphs are the deliberate exception to the colour rule —
           a bevel cannot be made from one colour scaled down. Drawn untinted; disabled
           cards dim by alpha so the shading survives.
-        - [?] **Colour is deliberately unspent.** One hueless `white` palette for all three, so
-              that an element or block type can land on colour later and mean something on
-              arrival. This is the decision to revisit first when elements are designed.
+        - [~] **Colour was deliberately unspent, and is now being spent.** One hueless
+              `white` palette for all three, so that an element or block type could land on
+              colour later and mean something on arrival. Elements arrived 2026-08-04 — see
+              the entry below. What is still open is whether the *glyph* takes an element
+              palette or only the card surface does.
       - [x] **`go run ./tools/glyphsheet`** writes `tools/glyphsheet/glyphs.png` — every
             glyph by every palette, reviewable by opening a file instead of launching the
             game. Committed on purpose so GitHub renders it as an image diff in review.
@@ -174,6 +176,84 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         Doubling first means the art survives that better. Never scale the glyphs by 1.5.
       - `selectedNudge` became a fixed 28px rather than 30% of the card width, which grew
         with the card and started pushing selected cards toward the next pane.
+- [x] **Portrait cards along the bottom, with the buttons underneath.** Decided and landed
+      2026-08-04. The action cards are playing-card rectangles — taller than wide — laid out
+      in a row across the bottom, with Discard / DUEL! / Deck below them. The reason is
+      capacity: a horizontal row of portrait cards shows more at once than a vertical column
+      of landscape ones, and the hand is going to grow.
+      - **The plan was to invert the derivation — key `cardHeight` off the glyph column —
+        and that was rejected on sight.** The card size is now two flat constants, 180x264.
+        "I need static card sizes to understand what's going on": a derived size means adding
+        a badge silently resizes every card in the game, and a layout you cannot read off the
+        source is a layout you cannot reason about. Contents fit the card, never the reverse.
+      - **The glyphs stack vertically down the left edge**, the way a real card puts its rank
+        and suit in a column at the corner, with each number beside its glyph rather than
+        across it. There is room now, and a numeral in open card beats one fighting a bevel.
+      - **`selectedNudge` rotated with the layout.** A selected card lifts *up* out of the
+        row rather than sliding right, and drag-to-reorder is horizontal.
+      - **`handBand()` became the single authority on the row's width** — card slots are cut
+        out of it, the AP bar spans it, the caption box matches it. A card in flight keeps its
+        slot so the row does not slide sideways when one is lifted.
+      - **This vacated the 15–39% column entirely** and it is still empty, deliberately. The
+        rest of the layout moved with it: Resolution to 12–46%, the caption into a box of its
+        own at 48%, the AP budget under the hand rather than over it, buttons to 95%.
+- [x] **The character block, replacing the fighter's sprite and health bar.** Landed
+      2026-08-04. Life as a red fraction, discards left this round, and vitae. A bar says
+      roughly how hurt you are; a duel decided in whole points of damage wants the number.
+      - **Discards are capped at 4 per round and refill with the hand.** One press costs one
+        however many cards were selected, which is what makes the size of the selection a
+        decision rather than a formality. It also closes the hole recorded under the Discard
+        button entry above — discarding is no longer free and unlimited.
+      - **Vitae reads a fixed 5 and has no rule behind it.** Drawn anyway so the block has its
+        real shape now rather than being retrofitted into a box already sized without it. It
+        moves to `Session` state when that exists.
+      - The enemy keeps its sprite and health bar. Only the player converted.
+      - [?] The block is the only thing in the vacated left column, and the screen leans
+            left-heavy above the hand. Unresolved along with what fills 15–39%.
+- [x] **Elements, as colour only to begin with.** Decided and landed 2026-08-04. A card
+      carries an element, and the element is what colours it: **fire orange, ice medium
+      blue, lightning yellow, poison dark green, everything else white.** Lightning and
+      poison were added to the original fire/ice pair the same day, before either had been
+      seen on screen — four colours turn over faster in a five-card hand than two, and
+      looking at them is the whole point of this pass.
+      - **Matched pairs, one Strike and one Guard per element.** 8 of the 20 cards are
+        coloured, so a hand averages two. The pairing is deliberate: a hand that comes up two
+        colours is offering a choice between them rather than an accident of the shuffle.
+      - **White is the absence of an element, not a fifth colour.** A plain card makes no
+        claim, which is what leaves the coloured ones free to catch the eye.
+      - **This is what the reserved colour was reserved for.** The glyphs were given one
+        hueless palette on 2026-08-03 specifically so that colour would still be free to mean
+        something when elements arrived. It has arrived.
+      - [?] **Yellow now means two things and green means two things.** Lightning is yellow
+            and `enemySwatch` is yellow; poison is dark green and `playerSwatch` — the
+            player's Resolution rows and the drop indicator — is green. The two never share a
+            region of the screen today, so nothing is currently ambiguous, but "green is you,
+            yellow is them" is written down as a screen-wide rule and this quietly breaks it.
+            Either the sides stop being colour-coded or the elements avoid those two hues.
+      - [?] **White-on-light text.** The card name and the glyph numerals are drawn near
+            white, which is fine on a 45%-strength surface and thin on a selected one at 65%
+            — worst on white and lightning. Wants either a per-element ink or a darker
+            selected fill.
+      - **Cosmetic this pass, mechanical soon** — stated explicitly, so this does not read
+        later as a placeholder nobody came back to. Painting them first is deliberate: the
+        point is to look at the screen and get a feel for it before the rule is designed.
+      - **It still forces cards to become instances.** A card today *is* a
+        `combat.ActionKind`, so two Strikes are the same value and are indistinguishable. An
+        element makes them differ, which means the deck, hand and discard all become slices
+        of a struct — `{Kind, Element}` — even while the element does nothing at all.
+        - Keep that struct **on the scene**, not in `internal/combat`, for as long as the
+          element is paint. The moment it changes damage or resolution order it has to cross
+          over, and then `ResolveRound` and `ResolutionOrder` both grow it and every test in
+          the package changes shape. That is the cost to weigh when the mechanic is designed;
+          it is cheap now and gets less so with everything built on top of the current
+          signatures.
+      - **`palettePane.color` green went away with this**, as planned. It was vestigial —
+        the colour of a pane deleted on 2026-08-02, still filling cards that no longer sat
+        inside anything. What survives of it is `playerSwatch`, which marks the player's side
+        in the Resolution pane and nothing else.
+      - [?] Whether the *glyph* takes the element palette too, or only the card surface. A
+            full five-value orange palette is not the flat tint the glyph rules forbid, so it
+            is available — but colouring both may be saying it twice.
 - [ ] **AP cost as dots on each action card — superseded, revisit.** The plan was dots
       rather than a numeral, lining up against a per-point segmented AP bar so a 4-cost
       card visibly is most of a 6-point budget. The glyph row landed first and puts a
@@ -308,6 +388,37 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
             tuned against the AP costs of 1/2/2/4. Whether Heavy should be beatable by
             *everything* is exactly the sort of thing the headless balance sim should
             answer.
+- [ ] **Unopposed stagger.** Decided 2026-08-04, and meant as the first of a family of
+      mechanics rather than a one-off. **Three hits in a row without the opponent answering
+      staggers them and costs them an action.** Being hit resets the attacker's streak, and
+      the count is per round — nothing carries across a round boundary.
+      - **Symmetric.** Either side can be staggered. Confirmed deliberately rather than
+        landing monster-only by default: a rule the player can suffer is one they have to
+        plan against, and a one-sided version would read as an oversight later.
+      - **Alternation is what makes this rare, and that is why it is worth having.**
+        `ResolutionOrder` interleaves the two queues one action each, so three of your
+        actions in a row can only happen when the opponent's queue has already run out — the
+        tail where a speed advantage gets spent — or when what they did in between was not a
+        hit. Stagger therefore pays off the two things the game already has: buying more
+        actions with `Spd`, and reading that the opponent is not going to answer.
+      - **It is a rule, so it lives in `internal/combat`** — a streak counter on `Duelist`,
+        cleared in `resolveAction`, and a `KindStaggered` event so the screen can narrate it.
+        The screen must not derive it; that is the same split that makes it structurally
+        impossible for the Resolution pane to lie about the round.
+      - **The lost action has to be chosen deterministically.** The next one in the queue is
+        the obvious pick and the only one needing no tie-break. Whether it still costs its
+        action points is open: refunding makes stagger pure tempo, keeping the cost makes it
+        tempo *and* economy.
+      - [?] **Does a Guard reset the streak?** Both phrasings of the rule were given and they
+            disagree. "Three hits before the opponent does anything" says yes — a Guard is
+            something. "If the enemy manages to hit us, it resets" says no — only a hit
+            counts. This is the entire balance of the mechanic. If a Guard breaks the streak,
+            guarding becomes the answer to stagger and the two interlock neatly. If it does
+            not, a fast queue staggers straight through a defensive one and stagger is much
+            stronger.
+      - [?] Whether the streak counts *hits* or *actions that dealt damage*. A blow against a
+            raised Guard is halved but still lands, and a hit for zero probably should not
+            count toward a stagger — nothing distinguishes the two today.
 - [?] **Ordering model — three candidates, one implemented, none settled.** Contested slots
       is what ships today. Two alternatives came out of the 2026-08-02 discussion and both
       are live options; `ResolutionOrder` is a single pure function, so swapping between
@@ -507,6 +618,30 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       read-only), `Layout`, and `Session` (run progress). Deferred: `Session` has nothing
       to hold until the tower loop exists, and the remaining fields are not crowding
       anything. The seed streams will live in `Session` when it lands.
+- [ ] **Profile — persistent unlocks across runs.** Wanted 2026-08-04, for the standard
+      roguelike shape where the tower is the run and the profile is what survives it.
+      - **A different lifetime from `Session`**, the per-run state in the split above.
+        `Session` holds the current floor and the rings collected this climb, and dies with
+        the run. A profile spans every run and is the only thing that does.
+      - **It is the first thing in the game that must be serialized as real state.** The save
+        format decided below is a seed plus a choice log, which works precisely because a run
+        is replayable from its inputs. Accumulated unlocks are not derivable from anything —
+        they are the residue of runs already thrown away — so a profile needs an actual file
+        format with a version stamp and does not get the replay trick for free.
+      - **One profile, implicit, for now.** No slot picker and no naming, because naming
+        needs a text field and the one text field in the game is spoken for by the seed.
+      - What actually unlocks is undecided: cards for the starting deck, enemies in the pool,
+        floors, whole alternate decks. Worth answering alongside the loot loop, since an
+        unlock and a reward are the same object with different lifetimes.
+- [ ] **Several profiles, and the second text screen.** Explicitly a later problem, split out
+      from the entry above on 2026-08-04 so that "one profile for now" does not quietly
+      become "one profile forever". Multiple profiles need naming, naming needs typing, and
+      typing makes the one-text-field rule in `CLAUDE.md` into two.
+      - That is a rule change rather than a feature. Revisit the hand-rolled-UI decision
+        under "Open decisions" at the same time — its `[?]` trigger is precisely "the seed
+        text field turns out to be painful", and a second field doubles the exposure.
+      - Numbered slots picked from a list would dodge the text field entirely, at the cost of
+        "Profile 2" meaning nothing to the player.
 - [ ] **Ascend / tower loop.** `ascend.go` is a bare `package screens`; `Ascend` and
       `Credits` are empty cases in both switches. Structure decided:
       - **8 floors, 3 fights each — 24 fights to the top.** The layout is fixed, not

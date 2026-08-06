@@ -371,6 +371,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.deckButton.ScreenY = gs.PctY(95)
 
 	s.showDeck = false
+	s.restart = false
 	s.discardsLeft = discardsPerRound
 	s.vitae = startingVitae
 

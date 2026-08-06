@@ -6,7 +6,38 @@
     "Strength": 10,
     "Speed": 15,
     "Constitution": 20,
+    "PlanStyle": "brute",
     "AvailableAffixes": ["ice", "fire", "lightning"]
+  },
+  {
+    "CombatantRecord": "Swarm1",
+    "SpriteSheet": "tyrian_monster_sprites_png",
+    "SpriteRect": [0, 168, 56, 224],
+    "Strength": 8,
+    "Speed": 20,
+    "Constitution": 12,
+    "PlanStyle": "swarm",
+    "AvailableAffixes": ["ice", "fire", "lightning"]
+  },
+  {
+    "CombatantRecord": "Warden1",
+    "SpriteSheet": "tyrian_monster_sprites_png",
+    "SpriteRect": [114, 168, 170, 224],
+    "Strength": 9,
+    "Speed": 10,
+    "Constitution": 14,
+    "PlanStyle": "warden",
+    "AvailableAffixes": ["ice", "fire"]
+  },
+  {
+    "CombatantRecord": "Tactician1",
+    "SpriteSheet": "tyrian_monster_sprites_png",
+    "SpriteRect": [171, 168, 227, 224],
+    "Strength": 8,
+    "Speed": 15,
+    "Constitution": 16,
+    "PlanStyle": "tactician",
+    "AvailableAffixes": ["lightning", "ice"]
   },
   {
     "CombatantRecord": "Fighter1",

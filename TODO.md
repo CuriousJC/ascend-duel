@@ -405,18 +405,69 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         targeting a free upgrade over the current pool.
       - Blocked on nothing, but worth doing *after* enemy variety: targeting an opponent
         that always throws the same two attacks is a decision with one right answer.
-- [ ] **Enemies that fight in genuinely different shapes.** `PlanGreedy` is the only
-      opponent and it does one thing — spend everything on the biggest attack affordable,
-      never defend, never prepare. Balance conclusions drawn against it are close to
-      worthless, and it is now the main thing blocking judgement of the new cards.
-      - Concretely: Dodge negates *one* attack and Guard halves *all* of them, so their
-        relative worth is decided entirely by how many attacks a round the enemy throws.
-        Against greedy — Heavy then Strike, two attacks — Dodge at 2 AP beats Guard at 3.
-        That is not evidence Guard is mispriced; it is evidence there is one enemy.
-      - Wanted: a sprayer (many cheap attacks, which is what makes Guard worth 3), a
-        defensive one (which is what makes Heavy worth 4), and one that prepares.
-      - Enemy decks and affixes are already sketched in `MECHANICS.md` and have no tasks.
-        This is the entry they hang off.
+- [~] **Enemies that fight in genuinely different shapes.** *(styles landed 2026-08-06; decks
+      still open)* `PlanGreedy` is gone, replaced by `combat.PlanStyle` and four planners
+      selected by a `PlanStyle` string on the data record — so enemy behaviour is data and the
+      roster is tunable without touching Go.
+      - **brute** biggest attack affordable · **swarm** as many attacks as the round allows ·
+        **warden** Guard then attacks · **tactician** banks with Prepare then unloads.
+      - Roster is Monster1, Swarm1, Warden1, Tactician1 in `combatants.json`. The combat screen
+        walks them in order, advancing on a win — **scaffolding for the tower, to be deleted
+        rather than extended.** It also fixed a genuine dead end: winning used to leave every
+        button dark with no way to play on short of restarting the process.
+      - **The immunity problem is fixed.** Dodging beat every fight before; it now loses to
+        swarm, which is the point — "negates one attack" is priced against how many attacks
+        arrive. Each enemy has a different right answer: brute wants dodging, swarm wants
+        racing, tactician wants reading the tell, warden wants overwhelming.
+      - The tactician's tell is the concealment scheme paying off by accident: a concealed row
+        still shows its category, so `??? (setup) ??? (setup)` warns of a spike without saying
+        what it is.
+      - **Still open, and the reason this is `[~]`:** `MECHANICS.md` decides enemies get a
+        *deck* and that an affix transforms it, which subjects them to the same "what did I
+        draw" pressure the player faces. That needs its own shuffle stream. A deck-driven
+        planner arrives as one more style beside these rather than replacing the idea.
+      - `[?]` Four sprites are placeholder crops off one Tyrian sheet and three of them are
+        near-identical. Fine for now, wrong for a release.
+- [x] **`tools/balance`** *(2026-08-06)*. Prints what every enemy does to the fighter across
+      three postures, playing whole duels through the real `ResolveRound`.
+      - **Written because an unwinnable enemy shipped and nobody could see it.** Warden1 halves
+        everything it takes, and at 120 life that was a 24-round grind against a fighter who
+        dies in 10. Retuned to 70 life and Str 9 on the strength of the table.
+      - The first version divided life by the last round's damage and lied twice — it read a
+        killing round as the steady state, and flattened the tactician's rhythm into whichever
+        half it sampled. Playing the duel out costs nothing and cannot be wrong about a rule.
+      - **Run it after touching any cost, stat line or planner.** What it cannot model is the
+        draw, so read it as the best case for each posture.
+- [x] **`internal/idle`, the unattended-run timer** *(2026-08-06)*. `go run -tags idleexit .`
+      closes the game after two minutes with nobody at the controls; `ASCEND_DUEL_IDLE_SECONDS`
+      overrides it. Bootstrapping so the game can be launched to check something and left.
+      - Build tag and the same `_on`/`_off` two-file shape as `internal/trace`, for the same
+        reason: a game that quits on a player who steps away is a bug, so not a byte of it may
+        reach a shipped binary.
+      - **Everything is gated on window focus, cursor movement included** — an unattended run
+        sits in the background, and a cursor crossing the desktop over an unfocused window
+        would otherwise read as someone playing. The one case it exists for would be the one
+        case it never fired in.
+- [ ] **Enemies get decks, and affixes transform them.** The half of the enemy model that
+      styles did not deliver. `MECHANICS.md` decides it: an enemy has a deck smaller than the
+      player's, and an affix *transforms* it rather than adding to it — a brute has basic
+      attacks, a fire brute on a fire floor has all fire attacks.
+      - A planner would draw a hand and plan from *that*, which subjects the opponent to the
+        same "what did I draw" pressure the player faces. Styles plan from a budget instead,
+        so today's enemies always play their best round.
+      - **Needs a shuffle stream of its own** — see the four-stream rule in `CLAUDE.md`. This
+        is the first thing since the player's deck to need randomness at all.
+      - `AvailableAffixes` is in `combatants.json` and read by nothing.
+      - `[?]` Earth has no affix; whether it can be a floor theme is still open.
+- [ ] **Guard versus Dodge, with data this time.** `tools/balance` says the *guarding* posture
+      (Guard + Strike, 5 of 6 AP) loses to three of the four enemies and only narrowly beats
+      the warden. Guard costing 3 eats most of a round's budget and leaves one Strike behind
+      it, so a broad halving does not pay for itself.
+      - This is the question deferred on 2026-08-06 when Guard was set at 3, now with numbers
+        rather than a single opponent behind it. Candidates: Guard to 2, or the budget grows,
+        or halving becomes something stronger.
+      - Do not tune it against these four alone — the whole lesson of the enemy work is that a
+        defensive card's worth is set by the shapes it faces, and four is still a small sample.
 - [x] **DUEL! button.** `DuelButtonAction` resolves **one round** and hands the screen a
       log to replay; control returns to the player to re-plan. It ignores presses during
       playback and once someone is down. A caption line reports what playback is showing,

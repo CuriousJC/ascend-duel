@@ -61,7 +61,7 @@ const (
 // over time, earth blunts their damage) and a matching ring discounts cards of that element.
 // See MECHANICS.md. When that lands the type has to cross into internal/combat — cost stops
 // being a property of the card and becomes a property of the pairing, the way Damage(str)
-// already is — and ResolveRound, ResolutionOrder, PlanGreedy and every test in that package
+// already is — and ResolveRound, ResolutionOrder, the planners and every test in that package
 // grow with it. Cheap to move now, less so later.
 //
 // Primary elements get cards; secondary ones (poison, force, hunger) do not, and where they
@@ -140,7 +140,27 @@ type actionCard struct {
 // Eight against the 30-card deck below is roughly the ratio it was sized for.
 const handSize = 8
 
-// maxSelected caps the selection at five cards **regardless of what they cost**.
+// The order enemies are fought in. There is no run structure yet — no tower, no Session,
+// no floors — so this is the smallest thing that lets the four fighting styles actually be
+// met rather than only existing in data. Beat one and the next steps up; lose and the same
+// one comes round again.
+//
+// **It is scaffolding and the tower replaces it wholesale.** MECHANICS.md already decides
+// 8 floors x 3 fights with doors between them, so nothing here is a design decision being
+// made early — it is a list, in a constant, standing in for a generator.
+//
+// What it does fix now is a genuine dead end: before this, winning left the screen with
+// every button dark and no way to play on short of restarting the process.
+var enemyRoster = []string{"Monster1", "Swarm1", "Warden1", "Tactician1"}
+
+// The selection is capped at `s.fighter.MaxActions()` cards **regardless of what they
+// cost** — the constant that used to live here moved into internal/combat on 2026-08-06.
+//
+// It moved because it is a **rule**: a round is bounded by cost and by count independently,
+// and the opponent's planner has to obey the count exactly as the player's selection does.
+// A cap enforced only by the screen was a cap the enemy could ignore. Being a method on
+// Duelist also gives a ring or a brand raising it somewhere to bite, which MECHANICS.md
+// asks for.
 //
 // The cap replaced the action-point budget as the gate on selection, and that is the whole
 // point: you may now select more than you can afford. Selection had been doing two jobs —
@@ -151,7 +171,6 @@ const handSize = 8
 // What stops it being a cheat is that DUEL! goes dead while the selection is over budget.
 // The AP rule is never actually broken; it is enforced one step later, at the point of
 // playing rather than the point of picking up. See overBudget.
-const maxSelected = 5
 
 // discardsPerRound caps how many times cards can be thrown back in one round, and refills
 // at the end of each round. One press costs one discard however many cards were selected,
@@ -279,6 +298,16 @@ type CombatScene struct {
 	discardsLeft int
 	vitae        int
 
+	// fightIndex is how far along enemyRoster the player has got. It survives Init because
+	// Init is also how the *next* fight starts — see nextFight, which advances it and then
+	// asks for a re-init rather than resetting the screen itself.
+	//
+	// restart is that request. It is a flag rather than a direct call because it is raised
+	// from a button's OnClick, which takes no arguments and so cannot reach the global state
+	// Init needs.
+	fightIndex int
+	restart    bool
+
 	// tracedHand is the hand size the last layout dump described. The whole bottom band is
 	// a function of that number — the pitch, the row, the AP bar, the caption box — so a
 	// change to it is exactly when the dump is worth repeating. Watching the size rather
@@ -308,9 +337,11 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	if s.fighter == nil {
 		s.fighter = combatantFromRecord(gs, "Fighter1")
 	}
-	if s.enemy == nil {
-		s.enemy = combatantFromRecord(gs, "Monster1")
-	}
+
+	// The enemy is rebuilt every visit rather than once, because fightIndex may have moved
+	// since the last one. Init is how the next fight starts, not only how the screen is
+	// entered — see nextFight.
+	s.enemy = combatantFromRecord(gs, enemyRoster[s.fightIndex%len(enemyRoster)])
 
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.
@@ -356,7 +387,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// Planned up front only so the enemy pane has something in it before the first
 	// DUEL!. startRound re-plans it every round regardless, so this is display, not a
 	// commitment the resolver ever reads.
-	s.enemyActions = combat.PlanGreedy(s.enemy.Duelist)
+	s.enemyActions = combat.PlanFor(s.enemy.Style, s.enemy.Duelist)
 
 	// A fresh duel: full life, no standing defenses, and no action points banked by a
 	// Prepare from a duel that has been walked away from.
@@ -370,6 +401,9 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.ticks = 0
 	s.round = 0
 
+	trace.Logf("scene", "fight %d: %s, style %v, %d life, %d AP",
+		s.fightIndex+1, enemyRoster[s.fightIndex%len(enemyRoster)], s.enemy.Style,
+		s.enemy.MaxLife, s.enemy.ActionPoints())
 	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seed %d",
 		len(s.deck), len(s.hand), len(s.discard), deckSeed)
 	s.tracedHand = len(s.hand)
@@ -504,12 +538,62 @@ func (s *CombatScene) endRoundHand() {
 	s.discardsLeft = discardsPerRound
 }
 
+// duelSettled reports that the fight is over *and* has finished being watched. Both halves
+// matter: life reaches zero partway through playback, and offering the way out before the
+// killing blow has been drawn would cut the round short at its most interesting moment.
+func (s *CombatScene) duelSettled() bool {
+	return s.cursor >= len(s.log) && (!s.fighter.Alive() || !s.enemy.Alive())
+}
+
+// nextFight arms the restart. It cannot re-init the screen itself — a button's OnClick takes
+// no arguments and Init needs the global state — so it raises a flag that Update acts on
+// with the pointer already in hand.
+//
+// Winning advances along the roster; losing puts the same opponent back up.
+func (s *CombatScene) nextFight() {
+	if !s.duelSettled() {
+		return
+	}
+	if !s.enemy.Alive() {
+		s.fightIndex++
+	}
+	s.restart = true
+}
+
 func (s *CombatScene) Update(gs *state.GlobalState) error {
+	// A restart re-enters this screen rather than changing to another one, so it calls Init
+	// directly instead of setting gs.NewScreen — that flag belongs to screen changes, and
+	// Init is documented as safe to re-enter.
+	if s.restart {
+		s.restart = false
+		s.Init(gs)
+		return nil
+	}
+
 	// The overlay swallows card interaction, so reading the deck cannot re-plan the round
 	// through the panel covering it. The buttons stay live — one of them is how it closes.
 	if !s.showDeck {
 		s.updateActionBox(gs)
 	}
+
+	// Once the duel is decided the DUEL! button becomes the way onward, in place. Reusing
+	// the same button rather than adding a fourth is the point: it is the same slot for
+	// "commit and move the game forward", and a control that appears only at the end of a
+	// fight would be a control nobody has learned.
+	if s.duelSettled() {
+		s.duelButton.Text, s.duelButton.OnClick = "Retry", s.nextFight
+		if !s.enemy.Alive() {
+			s.duelButton.Text = "Next"
+		}
+		setEnabled(s.duelButton, !s.showDeck)
+		setEnabled(s.discardButton, false)
+
+		systems.UpdateButton(gs, s.duelButton)
+		systems.UpdateButton(gs, s.discardButton)
+		systems.UpdateButton(gs, s.deckButton)
+		return nil
+	}
+	s.duelButton.Text, s.duelButton.OnClick = "DUEL!", s.startRound
 
 	// Both act on the selection, so both need one — pressing either is deciding what the
 	// selection was for. An empty queue is mechanically legal for DUEL! — ResolveRound
@@ -571,7 +655,7 @@ func (s *CombatScene) startRound() {
 	}
 
 	s.round++
-	s.enemyActions = combat.PlanGreedy(s.enemy.Duelist)
+	s.enemyActions = combat.PlanFor(s.enemy.Style, s.enemy.Duelist)
 
 	log, fighterAfter, enemyAfter := combat.ResolveRound(
 		s.fighter.Duelist, s.enemy.Duelist,
@@ -591,7 +675,8 @@ func (s *CombatScene) startRound() {
 	if trace.Enabled() {
 		trace.Section(fmt.Sprintf("round %d", s.round))
 		trace.Logf("round", "fighter %d AP, plan %s", s.fighter.ActionPoints(), planLabel(s.fighterActions))
-		trace.Logf("round", "enemy   %d AP, plan %s", s.enemy.ActionPoints(), planLabel(s.enemyActions))
+		trace.Logf("round", "enemy   %d AP, %v plan %s",
+			s.enemy.ActionPoints(), s.enemy.Style, planLabel(s.enemyActions))
 		for i, e := range log {
 			trace.Logf("event", "%2d %s", i, eventLabel(e))
 		}
@@ -678,11 +763,21 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 // caption describes where the round has got to, so the duel is legible before the
 // action box exists.
 func (s *CombatScene) caption() string {
+	// The end of a fight has to say what happens next, not just what happened. The button
+	// beside it changed its own label to match, and a caption that stopped at "you win!"
+	// left the only live control on screen unexplained.
 	if !s.enemy.Alive() {
-		return fmt.Sprintf("The monster falls in round %d - you win!", s.round)
+		if s.fightIndex+1 < len(enemyRoster) {
+			return fmt.Sprintf("The monster falls in round %d - press Next for %s",
+				s.round, enemyRoster[s.fightIndex+1])
+		}
+		// The roster wraps rather than ending, because there is no run structure for it to
+		// end into yet. Say so instead of implying a victory screen that does not exist.
+		return fmt.Sprintf("The monster falls in round %d - that is all of them, Next starts over",
+			s.round)
 	}
 	if !s.fighter.Alive() {
-		return fmt.Sprintf("You fall in round %d. The monster wins.", s.round)
+		return fmt.Sprintf("You fall in round %d. Press Retry.", s.round)
 	}
 
 	// Between rounds: show the plan and what it costs. Over budget it must not say "press

@@ -328,9 +328,9 @@ func (s *CombatScene) toggle(i int) {
 		return
 	}
 
-	if !s.hand[i].selected && s.selectedCount() >= maxSelected {
+	if !s.hand[i].selected && s.selectedCount() >= s.fighter.MaxActions() {
 		trace.Logf("input", "select refused: %s, already %d of %d picked",
-			cardLabel(s.hand[i].actionCard), s.selectedCount(), maxSelected)
+			cardLabel(s.hand[i].actionCard), s.selectedCount(), s.fighter.MaxActions())
 		return
 	}
 
@@ -518,7 +518,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// and dimming something you can click would be a lie. What it costs you is reported
 		// by the bar going red, after the fact. A selected card never dims: clicking it off
 		// has to stay open, and it is the way out of an over-allocation.
-		enabled := c.selected || (s.planning() && s.selectedCount() < maxSelected)
+		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
 		drawCard(gs, screen, s.cardSlot(gs, i).Min, handCardStyle,
 			c.actionCard, enabled, c.selected, s.fighter.Str)
 	}

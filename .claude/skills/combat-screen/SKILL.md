@@ -118,6 +118,16 @@ for** — and the choice belongs next to the cards it is made from. Deck is alon
 changes nothing and belongs nowhere near them. Discard carries one condition DUEL! does
 not: a round's discards can run out.
 
+**DUEL! becomes the way onward when the duel ends**, changing its own label to Next or Retry
+rather than a fourth button appearing. Same slot, same meaning — commit and move the game
+forward — and a control that only ever showed up at the end of a fight would be one nobody
+had learned. `duelSettled()` gates it on playback having *finished* as well as someone being
+dead, because life reaches zero partway through the log and offering the exit before the
+killing blow is drawn would cut the round short at its best moment.
+
+The caption changes with it, naming the next enemy. Before this, winning left every button
+dark with no way to play on short of restarting the process.
+
 **Selection having two verbs is deliberate.** There is no discard mode and no second
 gesture. One selected set, two things you can do with it, which is why the two buttons are
 adjacent and why the action points come back when a card is discarded — the selection was
@@ -190,9 +200,15 @@ it again to take it out, drag sideways to move it along the row.
 - **`planning()` is the single predicate** for "the player may edit the queue" — derived
   from `cursor >= len(log)` plus both duelists alive, not stored. Drag and the DUEL!
   button both gate on it, so they can never disagree.
-- **The action-point budget is enforced at selection.** A card the remaining points will
-  not cover cannot be selected and draws dimmed. Accepting the click and then refusing it is
-  a worse conversation than never letting it happen.
+- **What is enforced at selection is the *count*, not the budget.** Selection stops at
+  `s.fighter.MaxActions()` cards and a card past that draws dimmed; cost is deliberately not
+  checked, because selection is also how a card is picked for the discard pile and a hand you
+  could not afford would be a hand you could not throw away. The budget is enforced one step
+  later, at DUEL!, which goes dead while the selection is over it.
+- **The cap lives in `internal/combat`, not here.** It was `maxSelected` on this screen until
+  2026-08-06. It had to move: it is a rule, and **the opponent's planner obeys it exactly as
+  the player's selection does** — a cap enforced only by the screen was one the enemy ignored.
+  It is a method on `Duelist` so a ring raising it has somewhere to bite.
 - **A press is not a drag until the cursor moves past `dragThreshold`.** Without it every
   click jitters into a one-pixel reorder and selecting a card is a coin toss. The card
   leaves the row at that moment rather than on release, so the gap closes under the cursor

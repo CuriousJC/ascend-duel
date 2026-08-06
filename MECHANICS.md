@@ -321,9 +321,11 @@ status rather than applying or expiring one. Likely a family of its own.
 - **A hard cap on actions per round** gates how much can happen at all, and holds even when
   everything is free.
 
-The cap is five today (`maxSelected`, currently in the screen). It is a **rule**, not a UI
-detail, and belongs alongside `ActionPoints()` — and it should stop being a constant, since
-brands and rings raising it is an obvious reward.
+**Done 2026-08-06.** The cap is five, and it is `Duelist.MaxActions()` beside `ActionPoints()`
+rather than the screen's old `maxSelected` constant. It moved for a concrete reason as well as
+a tidy one: **the opponent's planner has to obey it exactly as the player's selection does**,
+and a cap enforced only by the screen was a cap the enemy ignored. It is a method rather than a
+constant so a brand or ring raising it has somewhere to bite without touching a call site.
 
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
 than incidental.
@@ -343,7 +345,7 @@ than incidental.
 
 **Discounting matching cards is why element must cross into `internal/combat`.** Cost stops
 being a property of the card and becomes a property of the pairing, so `Cost()`, `CostOf()`,
-the queue type, `ResolveRound`, `ResolutionOrder` and `PlanGreedy` all grow it — plus the
+the queue type, `ResolveRound`, `ResolutionOrder` and every planner all grow it — plus the
 screen's AP bar, over-budget check and caption. This cost was written down in advance in the
 elements entry and is now due.
 
@@ -430,6 +432,45 @@ brute on a fire floor has all fire attacks. The deck stays one list and the affi
 **`PlanGreedy` stops working as written.** It plans from a `Duelist` and a fixed set of four
 actions; with a deck it has to draw a hand and plan from that, which subjects the enemy to the
 same "what did I draw" pressure the player faces.
+
+### Styles — implemented 2026-08-06, and a step short of decks
+
+`PlanGreedy` is gone. `combat.PlanStyle` replaced it with four behaviours, each a pure
+function of a `Duelist`, chosen by a `PlanStyle` string on the data record:
+
+| Style | Plans | Answers it badly | Answers it well |
+|---|---|---|---|
+| **brute** | biggest attack affordable — few, heavy blows | guarding | dodging |
+| **swarm** | as many attacks as the round allows | dodging, guarding | racing it |
+| **warden** | Guard, then attacks — halves what it takes | — | overwhelming it |
+| **tactician** | banks with Prepare, then unloads a spike | guarding | reading the tell |
+
+**Why this exists.** With one enemy that spent its whole budget on two big swings, two
+defensive cards bought total immunity — a duel ran three rounds taking 0, 0 and 2 damage.
+That is not a fault in Dodge's cost. **"Negates one attack" is priced against how many
+attacks arrive**, so an opponent's *shape* is what the player is really buying answers to,
+and one shape means one answer.
+
+- **A style is not a deck.** It is the behaviour that will eventually plan *from* one, so it
+  can stay when decks arrive rather than being replaced by them. Baseline decks and affixes
+  above are still unbuilt.
+- **The tactician's tell is the concealment scheme working.** A concealed row still shows its
+  category, so a round of `??? (setup) ??? (setup)` says a spike is coming without saying
+  what. That was not designed for this and turned out to be exactly what it needed.
+- **`tools/balance` plays every posture against every enemy** through the real `ResolveRound`
+  and prints who wins. It was written because the first roster shipped an unwinnable enemy:
+  Warden1 halving all incoming damage at 120 life was a 24-round grind against a fighter who
+  dies in 10. **Run it after touching any cost, stat line or planner.**
+- `[?]` The roster is four enemies fought in a fixed order, with the screen advancing on a
+  win. That is scaffolding standing in for the tower and it should be deleted when the tower
+  arrives, not extended.
+
+### The count bound moved into the rules
+
+`maxSelected` left the screen and became `Duelist.MaxActions()`. It had to: **the opponent's
+planner obeys the action cap exactly as the player's selection does**, and a cap enforced only
+by the screen was a cap the enemy ignored. A method rather than a constant, so a ring raising
+it has somewhere to bite — which is what this file asked for.
 
 ---
 

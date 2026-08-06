@@ -54,11 +54,21 @@ func dwellFor(e combat.Event) int {
 	}
 }
 
-// element is what a card is made of. Colour and nothing else for now — no rule reads it,
-// ResolveRound never sees it — which is exactly why it lives here on the screen rather
-// than in internal/combat. The moment it changes damage or resolution order it has to
-// cross over, and then ResolveRound, ResolutionOrder and every test in that package grow
-// with it. Cheap now, less so with everything built on the current signatures.
+// element is what a card is made of.
+//
+// **Still colour and nothing else in the code** — no rule reads it and ResolveRound never
+// sees it, which is why it lives here on the screen rather than in internal/combat.
+//
+// That is no longer the design. Elements became mechanical on 2026-08-05: each applies a
+// status to the opponent (ice cuts their AP, lightning adds a miss chance, fire is a damage
+// over time, earth blunts their damage) and a matching ring discounts cards of that element.
+// See MECHANICS.md. When that lands the type has to cross into internal/combat — cost stops
+// being a property of the card and becomes a property of the pairing, the way Damage(str)
+// already is — and ResolveRound, ResolutionOrder, PlanGreedy and every test in that package
+// grow with it. Cheap to move now, less so later.
+//
+// Primary elements get cards; secondary ones (poison, force, hunger) do not, and where they
+// appear is still open. Poison is in the starting deck only because it predates the split.
 //
 // This is what the reserved colour was reserved for: the glyphs were given one hueless
 // palette on 2026-08-03 specifically so colour would still be free to mean something when
@@ -66,10 +76,15 @@ func dwellFor(e combat.Event) int {
 type element int
 
 const (
-	elementNone element = iota
+	elementBasic element = iota
+
+	// Primary. One card of each per concept, and a ring for each.
 	elementFire
 	elementIce
 	elementLightning
+	elementEarth
+
+	// Secondary. No cards yet.
 	elementPoison
 )
 
@@ -83,10 +98,11 @@ const (
 // An array rather than a map: nothing here iterates, but a map in this package is one
 // refactor away from something that does, and Go randomises that order.
 var elementColors = [...]color.RGBA{
-	elementNone:      {R: 235, G: 235, B: 235, A: 255},
+	elementBasic:     {R: 235, G: 235, B: 235, A: 255},
 	elementFire:      {R: 235, G: 120, B: 45, A: 255},
 	elementIce:       {R: 80, G: 155, B: 230, A: 255},
 	elementLightning: {R: 240, G: 205, B: 55, A: 255},
+	elementEarth:     {R: 150, G: 105, B: 60, A: 255},
 	elementPoison:    {R: 70, G: 140, B: 60, A: 255},
 }
 
@@ -95,10 +111,11 @@ func (e element) color() color.RGBA { return elementColors[e] }
 // elementNames is for tracing and for anything that has to say an element out loud. An
 // array indexed by the constant rather than a map, for the same reason as elementColors.
 var elementNames = [...]string{
-	elementNone:      "plain",
+	elementBasic:     "basic",
 	elementFire:      "fire",
 	elementIce:       "ice",
 	elementLightning: "lightning",
+	elementEarth:     "earth",
 	elementPoison:    "poison",
 }
 
@@ -156,27 +173,43 @@ const discardsPerRound = 4
 // screen and somewhere to be read from.
 const startingVitae = 5
 
-// One Strike and one Guard of every element, and everything else plain. Matched pairs
-// rather than a scatter, so a hand that comes up two colours is showing you a choice
-// between them rather than an accident of the shuffle.
+// primaries is the element set that gets cards, in the order a concept's five are built.
+// Secondary elements — poison, force, hunger — deliberately have none; where they appear is
+// still open. See MECHANICS.md.
+var primaries = []element{elementBasic, elementFire, elementIce, elementLightning, elementEarth}
+
+// conceptDeck is one card of a concept in every primary element — the unit the deck is built
+// from. Decided 2026-08-05: **a concept ships as five cards**, and that is the rule for
+// adding concepts rather than a description of this particular deck. A new concept arrives as
+// a set of five, never as a lone card.
+func conceptDeck(action combat.ActionKind) []deckEntry {
+	entries := make([]deckEntry, 0, len(primaries))
+	for _, e := range primaries {
+		entries = append(entries, deckEntry{actionCard{action, e}, 1})
+	}
+	return entries
+}
+
+// The starting deck: every concept, five cards each. The old 10/6/4 weighting is gone with
+// it — "mostly attacks, some defence, a few big swings" was a first guess, and a flat set per
+// concept is what the five-per-concept rule produces.
 //
-// Eight of the twenty cards are coloured, which is roughly two per five-card hand — enough
-// that discarding and redrawing turns the colours over quickly, which is what this split is
-// for. It is a number chosen to be looked at, not a balanced one.
-var startingDeck = []deckEntry{
-	{actionCard{combat.Strike, elementFire}, 1},
-	{actionCard{combat.Strike, elementIce}, 1},
-	{actionCard{combat.Strike, elementLightning}, 1},
-	{actionCard{combat.Strike, elementPoison}, 1},
-	{actionCard{combat.Strike, elementNone}, 6},
+// **This is 15 cards until the other four concepts exist.** Parry, Dodge, Riposte and Prepare
+// are decided but have no costs, initiatives or damage yet, so they are not here. At the full
+// seven concepts this is 35, which is what a hand of eight was sized against — until then the
+// draw is a much weaker decision than intended.
+var startingDeck = concat(
+	conceptDeck(combat.Strike),
+	conceptDeck(combat.Guard),
+	conceptDeck(combat.Heavy),
+)
 
-	{actionCard{combat.Guard, elementFire}, 1},
-	{actionCard{combat.Guard, elementIce}, 1},
-	{actionCard{combat.Guard, elementLightning}, 1},
-	{actionCard{combat.Guard, elementPoison}, 1},
-	{actionCard{combat.Guard, elementNone}, 2},
-
-	{actionCard{combat.Heavy, elementNone}, 4},
+func concat(groups ...[]deckEntry) []deckEntry {
+	var out []deckEntry
+	for _, g := range groups {
+		out = append(out, g...)
+	}
+	return out
 }
 
 // deckEntry is one line of a deck list: a card and how many copies of it.
@@ -1086,6 +1119,12 @@ func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p pa
 // round, and effects that reorder resolution will have to move both.
 // concealEnemy replaces the opponent's labels with placeholders while leaving their rows
 // in place, so the interleaving still reads correctly and only the content is withheld.
+//
+// This function needs no change when phase-based resolution lands — it draws whatever
+// ResolutionOrder returns and never works the order out for itself, which is the whole
+// point of that split. What it *will* need is a way to draw a combo spanning two or more
+// slots that need not be adjacent; one row per slot with a single walking highlight has no
+// way to say "these together did a thing". See MECHANICS.md.
 func (s *CombatScene) resolutionRows(fighter, enemy []combat.ActionKind, concealEnemy bool) []paneRow {
 	order := combat.ResolutionOrder(fighter, enemy)
 	if len(order) == 0 {
@@ -1223,7 +1262,7 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 
 // cardLabel names a card for a trace line: "Strike/fire", or just "Strike" when plain.
 func cardLabel(c actionCard) string {
-	if c.element == elementNone {
+	if c.element == elementBasic {
 		return c.action.String()
 	}
 	return c.action.String() + "/" + c.element.String()

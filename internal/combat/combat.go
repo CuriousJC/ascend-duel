@@ -10,6 +10,12 @@
 // on. Control returns to the player to re-plan. Nothing here runs a duel to completion
 // — that is the screen's loop, and the point is that the player re-evaluates between
 // rounds.
+//
+// Alternation is being replaced. Phase-based resolution — the player's preparations, then
+// attacks, then defenses, then the enemy — was chosen on 2026-08-05 as an experiment and as
+// the direction to head in, on the grounds that interleaving may not be graspable by
+// players. See MECHANICS.md. Everything here still describes alternation because that is
+// what ships; do not build new mechanics assuming it survives.
 package combat
 
 // Side identifies which duelist an event belongs to. The engine is deliberately
@@ -218,6 +224,11 @@ type Slot struct {
 // winning, and side A takes a tie. That is what makes the position a card is dragged to
 // a real decision — it chooses which of the opponent's actions that card contests, and
 // therefore whether it beats that action or answers it.
+//
+// This function is where the phase experiment lands when it is built: preparations, then
+// attacks, then defenses, then the enemy. Being one pure function that both ResolveRound and
+// the Resolution pane read is exactly what makes that a body swap plus its tests rather than
+// a change rippling through the screen. See MECHANICS.md before rewriting it.
 //
 // Whichever queue is longer keeps acting alone once the other runs out. That tail is
 // where a speed advantage shows, so it is the point rather than an edge case.

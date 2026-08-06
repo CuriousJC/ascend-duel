@@ -3,6 +3,16 @@
 Working notes for ascend-duel. Findings and reasoning live in `analysis.md`;
 this file is just the running list.
 
+**The design record moved to [MECHANICS.md](MECHANICS.md) on 2026-08-05.** That file is what
+the game *is*; this one is what to build. Entries below still carry the reasoning behind
+things already implemented, which is worth keeping — but **when the two disagree,
+`MECHANICS.md` is newer and wins.** Say so rather than guessing.
+
+A large batch of design was captured on 2026-08-05 and is *only* in `MECHANICS.md`: the
+element set and their statuses, the card types, combos, rings, brands, vitae, the tower's
+doors and stairwells, enemy decks and affixes, and the phase-based resolution experiment. None
+of it has tasks here yet.
+
 Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ---
@@ -210,7 +220,14 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - The enemy keeps its sprite and health bar. Only the player converted.
       - [?] The block is the only thing in the vacated left column, and the screen leans
             left-heavy above the hand. Unresolved along with what fills 15–39%.
-- [x] **Elements, as colour only to begin with.** Decided and landed 2026-08-04. A card
+- [x] **Elements, as colour only to begin with.** Landed 2026-08-04 — and **the "colour only"
+      half was superseded the next day.** Elements are mechanical: each applies a status, and a
+      matching ring discounts its cards. The set changed too — earth joined as a primary, poison
+      became secondary and leaves the deck. **See `MECHANICS.md` for the current design**; what
+      follows is the record of the cosmetic first pass, which is still accurate about what the
+      code does today.
+      - What the successor makes due: the type must cross into `internal/combat`, exactly as the
+        note further down predicted. That prediction is the useful part of this entry now.
       carries an element, and the element is what colours it: **fire orange, ice medium
       blue, lightning yellow, poison dark green, everything else white.** Lightning and
       poison were added to the original fire/ice pair the same day, before either had been
@@ -395,12 +412,18 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - **Symmetric.** Either side can be staggered. Confirmed deliberately rather than
         landing monster-only by default: a rule the player can suffer is one they have to
         plan against, and a one-sided version would read as an oversight later.
-      - **Alternation is what makes this rare, and that is why it is worth having.**
-        `ResolutionOrder` interleaves the two queues one action each, so three of your
-        actions in a row can only happen when the opponent's queue has already run out — the
-        tail where a speed advantage gets spent — or when what they did in between was not a
-        hit. Stagger therefore pays off the two things the game already has: buying more
-        actions with `Spd`, and reading that the opponent is not going to answer.
+      - ~~**Alternation is what makes this rare, and that is why it is worth having.**~~
+        **Superseded 2026-08-05 by phase-based resolution** — see `MECHANICS.md`. The original
+        rationale was that `ResolutionOrder` interleaves one action each, so three of your
+        actions in a row could only happen when the opponent's queue had run out. Under phases
+        all your attacks resolve together and that scarcity is gone.
+        - **What keeps it rare instead**, and these are now the reasons: five Strikes in a
+          35-card deck puts **P(3+ in a hand of eight) at roughly 7%**; three Strikes is
+          exactly 6 AP, Fighter1's whole budget; and **five Strikes is 10 AP — unreachable
+          without ring discounts.**
+        - That last point is the design working rather than a problem. The five-combo is
+          something you *build toward*, gated behind engine-building, which is the stated
+          thrust of the game. Later enemies are also expected to absorb mechanics like this.
       - **It is a rule, so it lives in `internal/combat`** — a streak counter on `Duelist`,
         cleared in `resolveAction`, and a `KindStaggered` event so the screen can narrate it.
         The screen must not derive it; that is the same split that makes it structurally
@@ -419,10 +442,16 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - [?] Whether the streak counts *hits* or *actions that dealt damage*. A blow against a
             raised Guard is halved but still lands, and a hit for zero probably should not
             count toward a stagger — nothing distinguishes the two today.
-- [?] **Ordering model — three candidates, one implemented, none settled.** Contested slots
-      is what ships today. Two alternatives came out of the 2026-08-02 discussion and both
-      are live options; `ResolutionOrder` is a single pure function, so swapping between
-      them is one function body plus its tests.
+- [?] **Ordering model — four candidates, one implemented, and a fourth now chosen to try.**
+      Contested slots is what ships today. `ResolutionOrder` is a single pure function, so
+      swapping between any of these is one function body plus its tests.
+      - **Phases — chosen 2026-08-05 as an experiment and as the direction.** Preparations,
+        then attacks, then defenses, then the enemy. Defenses front-load because the enemy
+        goes last. Chosen on legibility grounds: interleaving may not be graspable by players.
+        **See `MECHANICS.md` for the full entry and its costs** — cross-phase reordering stops
+        meaning anything, Guard persistence dissolves, and stagger's rarity has to come from
+        elsewhere. The three below are the alternatives it was chosen over, kept because the
+        experiment may not survive contact.
       - **Contested slots (built).** Queues alternate; initiative decides who leads each
         pairing. Every action of yours meets one of theirs — "every ask gets an answer".
         The cost: a fast action placed late still resolves late, because initiative never

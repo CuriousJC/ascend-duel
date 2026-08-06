@@ -1,19 +1,12 @@
-# All About Bosses
+# Ideas
 
-Bosses have a high armor and one strong attributes(found in all about attributes) they can't spawn enemys
+**This is the inbox.** Entries here are unfiltered and not decided. Once one is settled it is
+promoted into [MECHANICS.md](MECHANICS.md) if it is a rule, or [TODO.md](TODO.md) if it is a
+task, and struck from here.
 
-# All About Attributes
-
-attributes are speed and damage and armor damage is determined by level _ 10 speed is determined by level _ 5 and armor is too
-
-# All About floors
-
-floors are levels one enemy spawns per level each time completed the level variable increases by 1
-
-# All About Rings
-
-Rings are like relics but the max is Your amount of fingers starting at 5 there extra fingers that you can buy from a shop
-
-# Other Ideas
+Bosses, attributes, floors and rings lived here until 2026-08-05 and have all been promoted —
+bosses and floors into the tower section, attributes into its own section with the armour and
+scaling conflicts recorded, rings into the ring section. The originals are in git history if
+the wording is ever wanted.
 
 - we could do something for holidays

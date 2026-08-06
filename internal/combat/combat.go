@@ -6,21 +6,26 @@
 // let a headless balance sim run thousands of duels with no window.
 //
 // A duel is a sequence of rounds. Each round both sides spend an action-point budget
-// on a set of actions, and those resolve alternately — one of A's, one of B's, and so
-// on. Control returns to the player to re-plan. Nothing here runs a duel to completion
-// — that is the screen's loop, and the point is that the player re-evaluates between
-// rounds.
+// on a set of actions, and those resolve **in phases**: everything side A queued, in
+// category order, and then everything side B queued. Control returns to the player to
+// re-plan. Nothing here runs a duel to completion — that is the screen's loop, and the
+// point is that the player re-evaluates between rounds.
 //
-// Alternation is being replaced. Phase-based resolution — the player's preparations, then
-// attacks, then defenses, then the enemy — was chosen on 2026-08-05 as an experiment and as
-// the direction to head in, on the grounds that interleaving may not be graspable by
-// players. See MECHANICS.md. Everything here still describes alternation because that is
-// what ships; do not build new mechanics assuming it survives.
+// Phase resolution replaced alternation on 2026-08-06, on the grounds that interleaving is
+// not graspable by players. See MECHANICS.md. Two consequences run through this file:
+//
+//   - **Initiative is gone.** With one contiguous turn per side there is no exchange for a
+//     faster action to lead, so the whole lever was reporting a distinction the resolver no
+//     longer made. See the TODO in TODO.md before bringing it back.
+//   - **Defenses cover the opponent's next turn, not the rest of the round.** Side B acts
+//     last, so a defense that expired at the round boundary would never protect B from
+//     anything. They expire at the start of their owner's own next turn instead, which is
+//     the one rule that is symmetric under a resolution order that is not.
 package combat
 
 // Side identifies which duelist an event belongs to. The engine is deliberately
 // symmetric — it has no notion of "player" — so callers map A and B onto whatever
-// they like. Side A takes the first turn of every round.
+// they like. Side A takes its whole turn before side B takes any of it.
 type Side int
 
 const (
@@ -38,6 +43,10 @@ func (s Side) String() string {
 // Duelist is a combatant's stats plus the combat state that persists between rounds.
 // entities.Combatant embeds this and adds the sprite, which keeps graphics out of
 // the rules entirely.
+//
+// Every field is comparable on purpose: TestRoundIsDeterministic compares two resolved
+// duelists with ==, so nothing here may become a slice or a map. Two defenses that need
+// counting are two ints rather than a queue for exactly that reason.
 type Duelist struct {
 	Con         int
 	Str         int
@@ -45,89 +54,149 @@ type Duelist struct {
 	MaxLife     int
 	CurrentLife int
 
-	// Guarded is a raised guard. It protects from the moment it goes up until its
-	// owner's next action, which means it covers every opposing action that falls
-	// between the two — including across a round boundary, since a guard raised on the
-	// last action of a round is still up when the next one starts.
+	// Guarded halves every incoming attack. Raised by Guard, and standing until the start
+	// of its owner's next turn — long enough to cover the opponent's whole turn once,
+	// whichever side raised it. See expireDefenses.
 	Guarded bool
+
+	// Pending negations. Each one is spent stopping a single incoming attack dead, and
+	// Ripostes are spent before Dodges so their counter-damage lands as early in the
+	// opponent's turn as it can — early enough to cut the rest of that turn short if it
+	// kills. They expire alongside Guarded.
+	Ripostes int
+	Dodges   int
+
+	// The two halves of Prepare. PreparedAP is what has been banked *this* round; at the
+	// round boundary it becomes BonusAP, which ActionPoints adds to the budget for the
+	// round after. Splitting them is what makes the bonus arrive next round rather than
+	// funding the turn that bought it.
+	//
+	// BonusAP is overwritten rather than added to at the boundary, so preparing twice in
+	// one round is worth +4 next round while preparing once a round is worth a flat +2.
+	// Stacking within a round is deliberate and is what puts the five-attack combo in
+	// reach without a ring; carrying across rounds would compound without limit.
+	BonusAP    int
+	PreparedAP int
 }
 
 // Alive reports whether this duelist can still fight.
 func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 
-type ActionKind int
+// Category is which phase of a turn an action resolves in, and the axis the whole round
+// is now built on. It is a property of the action, not an independent choice: a fire Guard
+// and a plain Guard are both setup.
+type Category int
 
 const (
-	Strike ActionKind = iota
-	Guard
-	Heavy
-	Quick
+	CategorySetup Category = iota
+	CategoryAttack
+	CategoryDefend
 )
 
-// AllActions is every action a duelist can queue, in the order the UI should offer
-// them — cheapest first.
-var AllActions = []ActionKind{Quick, Strike, Guard, Heavy}
+// Categories is every phase in resolution order, and the order a turn is played in.
+// Defenses come last within a turn because the *opponent* acts afterwards — a defense
+// raised at the end of your turn is up when their blow arrives.
+func Categories() []Category {
+	return []Category{CategorySetup, CategoryAttack, CategoryDefend}
+}
+
+func (c Category) String() string {
+	switch c {
+	case CategorySetup:
+		return "setup"
+	case CategoryAttack:
+		return "attack"
+	case CategoryDefend:
+		return "defend"
+	default:
+		return "?"
+	}
+}
+
+type ActionKind int
+
+// Declared in category order, so anything that sorts by the raw value — the deck overlay
+// does — groups the piles the same way a turn resolves them.
+const (
+	// Setup.
+	Prepare ActionKind = iota
+	Guard
+
+	// Attack.
+	Quick
+	Strike
+	Heavy
+
+	// Defend.
+	Dodge
+	Riposte
+)
+
+// AllActions is every action a duelist can queue, in category order.
+var AllActions = []ActionKind{Prepare, Guard, Quick, Strike, Heavy, Dodge, Riposte}
 
 func (a ActionKind) String() string {
 	switch a {
-	case Strike:
-		return "Strike"
+	case Prepare:
+		return "Prepare"
 	case Guard:
 		return "Guard"
-	case Heavy:
-		return "Heavy"
 	case Quick:
 		return "Quick"
+	case Strike:
+		return "Strike"
+	case Heavy:
+		return "Heavy"
+	case Dodge:
+		return "Dodge"
+	case Riposte:
+		return "Riposte"
 	default:
 		return "Unknown"
 	}
 }
 
+// Category is which phase this action resolves in.
+func (a ActionKind) Category() Category {
+	switch a {
+	case Prepare, Guard:
+		return CategorySetup
+	case Dodge, Riposte:
+		return CategoryDefend
+	default:
+		return CategoryAttack
+	}
+}
+
 // Action point costs. The budget is the decision: a couple of big swings, or a
-// fistful of small ones, or damage traded away for a Guard.
+// fistful of small ones, or damage traded away for a defense.
 const (
-	costQuick  = 1
-	costStrike = 2
-	costGuard  = 2
-	costHeavy  = 4
+	costPrepare = 1
+	costGuard   = 3
+	costQuick   = 1
+	costStrike  = 2
+	costHeavy   = 4
+	costDodge   = 2
+	costRiposte = 3
 )
 
 // Cost is what this action takes out of the round's action-point budget.
 func (a ActionKind) Cost() int {
 	switch a {
-	case Quick:
-		return costQuick
+	case Prepare:
+		return costPrepare
 	case Guard:
 		return costGuard
+	case Quick:
+		return costQuick
 	case Heavy:
 		return costHeavy
+	case Dodge:
+		return costDodge
+	case Riposte:
+		return costRiposte
 	default:
 		return costStrike
-	}
-}
-
-// Initiative is how quickly an action lands, lower being faster. It is a lever entirely
-// separate from Cost: cost decides what a plan may contain, initiative decides when the
-// pieces of it happen. Guard is deliberately quicker than the Strike it is meant to
-// answer, so raising it in the same exchange actually beats the blow to the punch.
-const (
-	initQuick  = 1
-	initGuard  = 2
-	initStrike = 3
-	initHeavy  = 5
-)
-
-// Initiative is where in an exchange this action lands. Lower goes first.
-func (a ActionKind) Initiative() int {
-	switch a {
-	case Quick:
-		return initQuick
-	case Guard:
-		return initGuard
-	case Heavy:
-		return initHeavy
-	default:
-		return initStrike
 	}
 }
 
@@ -138,9 +207,15 @@ const (
 	speedPerPoint    = 10
 )
 
-// ActionPoints is how much this duelist has to spend in a round.
+// prepareBonusAP is what one Prepare banks for the following round. Two for one is a
+// deliberate profit — the cost of Prepare is the card slot and the action slot it takes
+// out of the round it is played in, not the point it costs.
+const prepareBonusAP = 2
+
+// ActionPoints is how much this duelist has to spend in a round, including anything
+// banked by a Prepare in the round before.
 func (d Duelist) ActionPoints() int {
-	ap := baseActionPoints + d.Spd/speedPerPoint
+	ap := baseActionPoints + d.Spd/speedPerPoint + d.BonusAP
 	if ap < 1 {
 		ap = 1
 	}
@@ -166,21 +241,25 @@ func (d Duelist) CanAfford(actions []ActionKind) bool {
 // guardDivisor is how much a raised guard cuts incoming damage.
 const guardDivisor = 2
 
-// Damage is what an action deals given the attacker's Strength. Guard deals none.
+// Damage is what an action deals given the attacker's Strength.
+//
+// Riposte is the odd one: it is a *defend*, and the number below is what it hits back for
+// when it stops an attack, not something it deals on its own. Reporting it here is what
+// lets the card draw a damage badge for it without the screen knowing the rule.
 func (a ActionKind) Damage(str int) int {
 	switch a {
-	case Guard:
-		return 0
 	case Heavy:
 		return str * 2
-	case Quick:
+	case Strike:
+		return str
+	case Quick, Riposte:
 		d := str / 2
 		if d < 1 {
 			d = 1
 		}
 		return d
 	default:
-		return str
+		return 0
 	}
 }
 
@@ -189,6 +268,8 @@ type EventKind int
 const (
 	KindRoundStart EventKind = iota
 	KindAction
+	KindPrepared
+	KindNegated
 	KindGuarded
 	KindDamage
 	KindDefeated
@@ -199,8 +280,8 @@ const (
 type Event struct {
 	Kind   EventKind
 	Side   Side       // who acted
-	Action ActionKind // set on KindAction
-	Amount int        // damage dealt, on KindDamage
+	Action ActionKind // set on KindAction, and on KindNegated for the defense that stopped it
+	Amount int        // damage dealt, or action points banked
 	Target Side       // who took the damage
 	Life   int        // target's life after the event
 	Round  int
@@ -219,53 +300,35 @@ type Slot struct {
 // draws it; neither works the order out for itself, so the pane and the engine cannot
 // drift apart.
 //
-// The queues alternate one action each, as they always have. What initiative adds is who
-// moves first *inside* one exchange: the faster action lands first, lower initiative
-// winning, and side A takes a tie. That is what makes the position a card is dragged to
-// a real decision — it chooses which of the opponent's actions that card contests, and
-// therefore whether it beats that action or answers it.
+// **A whole turn each, in category order.** Everything side A queued resolves — setups,
+// then attacks, then defenses — and only then does side B begin. Within a category the
+// queued order is kept, which is where drag-to-reorder still bites and where sequence
+// combos will match.
 //
-// This function is where the phase experiment lands when it is built: preparations, then
-// attacks, then defenses, then the enemy. Being one pure function that both ResolveRound and
-// the Resolution pane read is exactly what makes that a body swap plus its tests rather than
-// a change rippling through the screen. See MECHANICS.md before rewriting it.
-//
-// Whichever queue is longer keeps acting alone once the other runs out. That tail is
-// where a speed advantage shows, so it is the point rather than an edge case.
+// Index is the action's position in its own side's queue, which is *not* its position
+// here: reordering by category is the whole job. Consumers wanting "how far through the
+// round are we" should count slots rather than read Index.
 func ResolutionOrder(aActions, bActions []ActionKind) []Slot {
 	slots := make([]Slot, 0, len(aActions)+len(bActions))
+	slots = appendTurn(slots, SideA, aActions)
+	slots = appendTurn(slots, SideB, bActions)
+	return slots
+}
 
-	for i := 0; i < len(aActions) || i < len(bActions); i++ {
-		aHas, bHas := i < len(aActions), i < len(bActions)
-
-		// Side A leads unless B's action in this exchange is strictly faster. A tie going
-		// to A preserves the behaviour from before initiative existed and keeps the round
-		// reproducible — no comparison here may depend on anything but these two actions.
-		aFirst := true
-		if aHas && bHas {
-			aFirst = aActions[i].Initiative() <= bActions[i].Initiative()
-		}
-
-		if aHas && aFirst {
-			slots = append(slots, Slot{Side: SideA, Index: i, Action: aActions[i]})
-		}
-		if bHas {
-			slots = append(slots, Slot{Side: SideB, Index: i, Action: bActions[i]})
-		}
-		if aHas && !aFirst {
-			slots = append(slots, Slot{Side: SideA, Index: i, Action: aActions[i]})
+// appendTurn adds one side's whole turn, category by category.
+func appendTurn(slots []Slot, side Side, actions []ActionKind) []Slot {
+	for _, cat := range Categories() {
+		for i, a := range actions {
+			if a.Category() == cat {
+				slots = append(slots, Slot{Side: side, Index: i, Action: a})
+			}
 		}
 	}
-
 	return slots
 }
 
 // ResolveRound plays out one round and returns its event log along with the state
 // both sides end in. ResolutionOrder decides the order it plays them in.
-//
-// Alternating rather than resolving one side's whole set and then the other's is what
-// makes resolution order a thing the player can reason about and, later, manipulate:
-// the order is the visible plan, so speed and other effects have somewhere to bite.
 //
 // Inputs are taken by value and never mutated, so a caller can re-run a round from
 // the same starting state — the returned duelists are the authority on what changed.
@@ -273,23 +336,60 @@ func ResolveRound(a, b Duelist, aActions, bActions []ActionKind, round int) (eve
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
+	// A defense expires at the start of its owner's next turn, so it covers exactly one
+	// opposing turn whichever side raised it. Expiry is a rule about *turns* rather than
+	// about the action sequence, which is why it lives here and not in ResolutionOrder —
+	// a side that queues nothing still has a turn, and still loses its guard in it.
+	//
+	// Side A's turn starts now; side B's starts the moment A's slots run out.
+	a = expireDefenses(a)
+	bStarted := false
+
 	for _, slot := range ResolutionOrder(aActions, bActions) {
-		if slot.Side == SideA {
-			events, a, b = resolveAction(events, SideA, a, b, slot.Action, round)
-			if !b.Alive() {
-				break
-			}
-			continue
+		if slot.Side == SideB && !bStarted {
+			b = expireDefenses(b)
+			bStarted = true
 		}
 
-		events, b, a = resolveAction(events, SideB, b, a, slot.Action, round)
-		if !a.Alive() {
+		if slot.Side == SideA {
+			events, a, b = resolveAction(events, SideA, a, b, slot.Action, round)
+		} else {
+			events, b, a = resolveAction(events, SideB, b, a, slot.Action, round)
+		}
+
+		// Either side can fall here: a Riposte kills the attacker who walked into it.
+		if !a.Alive() || !b.Alive() {
 			break
 		}
 	}
 
+	if !bStarted {
+		b = expireDefenses(b)
+	}
+
+	a, b = endRound(a), endRound(b)
+
 	events = append(events, Event{Kind: KindRoundEnd, Round: round})
 	return events, a, b
+}
+
+// expireDefenses drops everything the previous turn put up. Called at the start of a
+// side's own turn, never at the round boundary — side B acts last, so a defense cleared
+// at the boundary would have protected B from nothing at all.
+func expireDefenses(d Duelist) Duelist {
+	d.Guarded = false
+	d.Ripostes = 0
+	d.Dodges = 0
+	return d
+}
+
+// endRound rolls what was banked this round into next round's budget. Assignment rather
+// than addition: two Prepares in one round are worth +4 next round, and preparing every
+// round is worth a flat +2 rather than compounding forever.
+func endRound(d Duelist) Duelist {
+	d.BonusAP = d.PreparedAP
+	d.PreparedAP = 0
+	return d
 }
 
 // resolveAction runs a single action by one side against the other. Returning the
@@ -302,16 +402,7 @@ func resolveAction(
 	action ActionKind,
 	round int,
 ) ([]Event, Duelist, Duelist) {
-	targetSide := SideB
-	if side == SideB {
-		targetSide = SideA
-	}
-
-	// A raised guard has served its purpose by the time its owner comes back around,
-	// so it drops here — at the start of the actor's turn, before this action gets the
-	// chance to re-raise it. A duelist who queues nothing therefore keeps a guard up:
-	// see TestGuardHoldsWhileItsOwnerDoesNothing, which pins that as intended.
-	actor.Guarded = false
+	targetSide := other(side)
 
 	events = append(events, Event{
 		Kind:   KindAction,
@@ -320,8 +411,88 @@ func resolveAction(
 		Round:  round,
 	})
 
-	if action == Guard {
+	switch action {
+	case Prepare:
+		actor.PreparedAP += prepareBonusAP
+		events = append(events, Event{
+			Kind:   KindPrepared,
+			Side:   side,
+			Amount: prepareBonusAP,
+			Round:  round,
+		})
+		return events, actor, target
+
+	case Guard:
 		actor.Guarded = true
+		return events, actor, target
+
+	case Dodge:
+		actor.Dodges++
+		return events, actor, target
+
+	case Riposte:
+		actor.Ripostes++
+		return events, actor, target
+	}
+
+	return resolveAttack(events, side, targetSide, actor, target, action, round)
+}
+
+// resolveAttack lands one attack, or fails to. A pending Riposte or Dodge on the target
+// stops it dead; a raised Guard merely halves it.
+func resolveAttack(
+	events []Event,
+	side, targetSide Side,
+	actor, target Duelist,
+	action ActionKind,
+	round int,
+) ([]Event, Duelist, Duelist) {
+	// Negation first, and Ripostes before Dodges. Both stop the blow completely, so
+	// spending the one that hits back first is free — and it gets the counter-damage into
+	// the log early enough to end the attacker's turn if it kills.
+	if target.Ripostes > 0 {
+		target.Ripostes--
+		events = append(events, Event{
+			Kind:   KindNegated,
+			Side:   targetSide,
+			Action: Riposte,
+			Target: side,
+			Round:  round,
+		})
+
+		// The counter runs the other way: the defender is the one dealing damage now, so
+		// the sides in this event are swapped relative to the attack that provoked it.
+		counter := Riposte.Damage(target.Str)
+		actor.CurrentLife = reduce(actor.CurrentLife, counter)
+
+		events = append(events, Event{
+			Kind:   KindDamage,
+			Side:   targetSide,
+			Target: side,
+			Amount: counter,
+			Life:   actor.CurrentLife,
+			Round:  round,
+		})
+		if !actor.Alive() {
+			events = append(events, Event{
+				Kind:   KindDefeated,
+				Side:   targetSide,
+				Target: side,
+				Round:  round,
+			})
+		}
+		return events, actor, target
+	}
+
+	if target.Dodges > 0 {
+		target.Dodges--
+		events = append(events, Event{
+			Kind:   KindNegated,
+			Side:   targetSide,
+			Action: Dodge,
+			Target: side,
+			Round:  round,
+		})
 		return events, actor, target
 	}
 
@@ -338,10 +509,7 @@ func resolveAction(
 		})
 	}
 
-	target.CurrentLife -= dmg
-	if target.CurrentLife < 0 {
-		target.CurrentLife = 0
-	}
+	target.CurrentLife = reduce(target.CurrentLife, dmg)
 
 	events = append(events, Event{
 		Kind:   KindDamage,
@@ -364,9 +532,27 @@ func resolveAction(
 	return events, actor, target
 }
 
+// reduce takes damage off a life total without letting it go negative.
+func reduce(life, dmg int) int {
+	life -= dmg
+	if life < 0 {
+		return 0
+	}
+	return life
+}
+
+// other is the side that is not this one.
+func other(s Side) Side {
+	if s == SideA {
+		return SideB
+	}
+	return SideA
+}
+
 // PlanGreedy is a placeholder opponent. It spends the whole budget on the biggest
-// attack it can still afford, so it is deterministic and easy to test against. It
-// never guards — a real AI is its own piece of work.
+// attack it can still afford, so it is deterministic and easy to test against. It never
+// defends and never prepares — a real AI is its own piece of work, and enemies that fight
+// in genuinely different shapes are the next design job. See TODO.md.
 func PlanGreedy(d Duelist) []ActionKind {
 	remaining := d.ActionPoints()
 	plan := make([]ActionKind, 0, remaining)

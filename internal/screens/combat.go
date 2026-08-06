@@ -20,39 +20,36 @@ import (
 	"image/color"
 )
 
-// Playback pacing at 60 TPS. Destined to become the game-speed setting.
+// Playback pacing at 60 TPS. Destined to become the game-speed setting, and the one number
+// that setting will scale.
 //
-// The budget is spent per event kind rather than spread evenly across a round: splitting
-// one dwell over every event would make a Guard — which emits nothing but its own action —
-// take as long as a Heavy that lands three events.
+// **Every event holds the screen for exactly this long.** There is deliberately no per-kind
+// table and no dwellFor function to add a case to — the previous version had three dwells
+// selected by a switch with a `default` arm, and the default was the shortest of them. Every
+// event kind added after that switch was written therefore inherited a quarter-second flash
+// without anyone choosing it: KindNegated landed there on 2026-08-06 and a Dodge stopping a
+// Heavy — one of the most consequential things that can happen in a round — went past faster
+// than the round-start beat. That is not a tuning mistake, it is a shape that produces
+// tuning mistakes, so the shape is gone.
 //
-// Halved from three seconds on 2026-08-02: at three seconds a round of six actions took
-// twenty seconds to watch, and the pause between a move and its consequence read as the
-// game hesitating rather than as pacing.
+// The cost is honest and worth stating: a round-start marker now holds as long as a killing
+// blow, and a round is longer to watch than it was. One constant is the price of never
+// having a new event kind quietly decide its own pacing.
 //
-// **Damage got its own dwell on 2026-08-04.** It used to share the quarter-second beat with
-// everything that was not an action, which meant the announcement held for a second and a
-// half and the number it produced flashed past in a quarter of one — the wrong way round.
-// The damage *is* the payoff; the announcement is just the setup for it. A kill lingers for
-// the same reason, since it is the last thing a round has to say.
+// History for whoever tunes this. Three seconds per action was the original; halved on
+// 2026-08-02 because a six-action round took twenty seconds and the pause between a move and
+// its consequence read as the game hesitating. Damage was split out on 2026-08-04 for the
+// opposite reason — the announcement held for a second and a half while the number it
+// produced flashed past in a quarter of one. Both of those were real observations about
+// *content*, and both are better answered by one readable dwell than by ranking events.
 const (
-	ticksPerSecond   = 60
-	actionDwellTicks = 3 * ticksPerSecond / 2
-	damageDwellTicks = ticksPerSecond
-	beatTicks        = ticksPerSecond / 4
-)
+	ticksPerSecond = 60
 
-// dwellFor is how long one event holds the screen.
-func dwellFor(e combat.Event) int {
-	switch e.Kind {
-	case combat.KindAction:
-		return actionDwellTicks
-	case combat.KindDamage, combat.KindDefeated:
-		return damageDwellTicks
-	default:
-		return beatTicks
-	}
-}
+	// eventDwellTicks is three quarters of a second: long enough that a negation or a
+	// banked point can be read, short enough that a full round is not a cutscene. It sits
+	// between the old action dwell and the old damage dwell on purpose.
+	eventDwellTicks = 3 * ticksPerSecond / 4
+)
 
 // element is what a card is made of.
 //
@@ -134,16 +131,13 @@ type actionCard struct {
 	element element
 }
 
-// The starting deck: 20 cards, and a hand of five drawn from it each round. Quick is not
-// in it — the deck is what the player owns, and which of the actions the rules define
-// actually appear is a deck-building question rather than a rules one.
-//
-// The 10/6/4 split across Strike/Guard/Heavy is a first guess at "mostly attacks, some
-// defence, a few big swings" and has not been played against anything. It is the obvious
-// thing to tune once the fights are worth measuring.
+// The hand drawn from the deck each round. Quick is not in the deck — the deck is what the
+// player owns, and which of the actions the rules define actually appear is a deck-building
+// question rather than a rules one.
 //
 // Eight from five on 2026-08-04. Eight cards do not fit the screen side by side, which is
 // what the overlap in handPitch is for — the hand is expected to go past eight sometimes.
+// Eight against the 30-card deck below is roughly the ratio it was sized for.
 const handSize = 8
 
 // maxSelected caps the selection at five cards **regardless of what they cost**.
@@ -159,13 +153,16 @@ const handSize = 8
 // playing rather than the point of picking up. See overBudget.
 const maxSelected = 5
 
-// discardsPerRound caps how many times the hand can be thrown back in one round, and
-// refills with the fresh hand. One press costs one discard however many cards were
-// selected, which is what makes the size of the selection a decision rather than a
-// formality: four presses of one card and one press of four cost the same.
+// discardsPerRound caps how many times cards can be thrown back in one round, and refills
+// at the end of each round. One press costs one discard however many cards were selected,
+// which is what makes the size of the selection a decision rather than a formality: four
+// presses of one card and one press of four cost the same.
 //
-// Four against a hand of five is deliberately generous for now. It is a number to play
-// against, not a balanced one.
+// It matters more since the hand stopped emptying every round. Discard used to be a way of
+// getting a fresh deal slightly early; it is now the *only* way an unwanted card leaves your
+// hand, so this number is the rate at which a hand can be steered rather than a convenience.
+// Four against a hand of eight is deliberately generous for now — a number to play against,
+// not a balanced one.
 const discardsPerRound = 4
 
 // startingVitae is a placeholder. Vitae is a run-level resource that will live on Session
@@ -190,18 +187,28 @@ func conceptDeck(action combat.ActionKind) []deckEntry {
 	return entries
 }
 
-// The starting deck: every concept, five cards each. The old 10/6/4 weighting is gone with
-// it — "mostly attacks, some defence, a few big swings" was a first guess, and a flat set per
-// concept is what the five-per-concept rule produces.
+// The starting deck: every concept, five cards each, grouped by the category it resolves in.
 //
-// **This is 15 cards until the other four concepts exist.** Parry, Dodge, Riposte and Prepare
-// are decided but have no costs, initiatives or damage yet, so they are not here. At the full
-// seven concepts this is 35, which is what a hand of eight was sized against — until then the
-// draw is a much weaker decision than intended.
+// **Six concepts, 30 cards**, split evenly 10 setup / 10 attack / 10 defend. That even split
+// is a consequence of the concept list rather than a target — Guard moved from defend to
+// setup on 2026-08-06 and Parry was dropped the same day, which is what turned the lopsided
+// 1/2/4 the design started from into 2/2/2. The 5-setup/10-attack/20-defend shape recorded
+// in MECHANICS.md is the thing that went; the two-thirds-defensive theory went with it.
+//
+// Quick is still homeless: it is an ActionKind with a cost and damage and no concept, so it
+// has no five cards to arrive as.
 var startingDeck = concat(
-	conceptDeck(combat.Strike),
+	// Setup.
+	conceptDeck(combat.Prepare),
 	conceptDeck(combat.Guard),
+
+	// Attack.
+	conceptDeck(combat.Strike),
 	conceptDeck(combat.Heavy),
+
+	// Defend.
+	conceptDeck(combat.Dodge),
+	conceptDeck(combat.Riposte),
 )
 
 func concat(groups ...[]deckEntry) []deckEntry {
@@ -351,10 +358,12 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// commitment the resolver ever reads.
 	s.enemyActions = combat.PlanGreedy(s.enemy.Duelist)
 
+	// A fresh duel: full life, no standing defenses, and no action points banked by a
+	// Prepare from a duel that has been walked away from.
 	s.fighter.CurrentLife = s.fighter.MaxLife
 	s.enemy.CurrentLife = s.enemy.MaxLife
-	s.fighter.Guarded = false
-	s.enemy.Guarded = false
+	s.fighter.Duelist = resetCombatState(s.fighter.Duelist)
+	s.enemy.Duelist = resetCombatState(s.enemy.Duelist)
 
 	s.log = nil
 	s.cursor = 0
@@ -365,6 +374,22 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		len(s.deck), len(s.hand), len(s.discard), deckSeed)
 	s.tracedHand = len(s.hand)
 	s.traceLayout(gs)
+}
+
+// resetCombatState clears everything a duel accumulates, leaving the stats a combatant was
+// hydrated with. Init re-enters a screen that may have been left mid-duel, so a standing
+// guard or a banked Prepare would otherwise be inherited by the next one.
+//
+// It sets the fields by name rather than rebuilding the struct: Con/Str/Spd/MaxLife come
+// from the data record and must survive, and a zero literal here would quietly wipe them
+// the first time someone re-entered the screen.
+func resetCombatState(d combat.Duelist) combat.Duelist {
+	d.Guarded = false
+	d.Ripostes = 0
+	d.Dodges = 0
+	d.BonusAP = 0
+	d.PreparedAP = 0
+	return d
 }
 
 // discardSelected throws the selected cards away: they leave the hand for the discard
@@ -379,7 +404,21 @@ func (s *CombatScene) discardSelected() {
 		return
 	}
 	s.discardsLeft--
+	s.spendSelected()
 
+	trace.Logf("input", "discard pressed, %d left this round, hand now %s",
+		s.discardsLeft, handLabel(s.hand))
+}
+
+// spendSelected moves every selected card to the discard pile, deals the hand back up to
+// size, and rebuilds the queue from what is left.
+//
+// **Selected is the only thing that leaves a hand.** Both ways a card can go — thrown away
+// by Discard, or played by DUEL! — are the same movement over the same predicate, so they
+// are one function rather than two that have to be kept in agreement.
+func (s *CombatScene) spendSelected() {
+	// Filtering in place over the hand's own array. Safe because kept never runs ahead of
+	// the read cursor, and it keeps the surviving cards in the order the player left them.
 	kept := s.hand[:0]
 	for _, c := range s.hand {
 		if c.selected {
@@ -392,9 +431,6 @@ func (s *CombatScene) discardSelected() {
 
 	s.drawHand()
 	s.syncQueue()
-
-	trace.Logf("input", "discard pressed, %d left this round, hand now %s",
-		s.discardsLeft, handLabel(s.hand))
 }
 
 // toggleDeck shows or hides the deck overlay.
@@ -449,16 +485,22 @@ func (s *CombatScene) drawHand() {
 	}
 }
 
-// discardHand sends the whole hand to the discard pile, played or not, and deals a fresh
-// one. Nothing carries between rounds: a hand kept back would let a plan be prepared once
-// and repeated, and every round being a real decision is the point.
-func (s *CombatScene) discardHand() {
-	for _, c := range s.hand {
-		s.discard = append(s.discard, c.actionCard)
-	}
-	s.hand = s.hand[:0]
-	s.drawHand()
-	s.syncQueue()
+// endRoundHand spends what was played and refills. **Only the cards that were actually
+// played leave** — anything still sitting unselected in the hand stays exactly where it is,
+// and the draw tops the hand back up to size.
+//
+// This reverses the decision recorded in TODO.md that the whole hand discarded every round,
+// played or not, on the grounds that a hand kept back would let a plan be prepared once and
+// repeated. What that actually produced was a hand you could not build on: cards you had
+// deliberately held were taken away for having been held, so the only way to keep anything
+// was to play it. Refilling only what was used is what makes a hand something you shape
+// across rounds rather than a fresh deal you react to.
+//
+// It also gives Discard a real job. A card you never want now sits in your hand until you
+// throw it out, so the discard button is how you clear it rather than a shortcut for
+// something the round boundary was going to do anyway.
+func (s *CombatScene) endRoundHand() {
+	s.spendSelected()
 	s.discardsLeft = discardsPerRound
 }
 
@@ -570,7 +612,11 @@ func eventLabel(e combat.Event) string {
 	case combat.KindRoundEnd:
 		return fmt.Sprintf("round-end   round %d", e.Round)
 	case combat.KindAction:
-		return fmt.Sprintf("action      %v plays %v", e.Side, e.Action)
+		return fmt.Sprintf("action      %v plays %v (%v)", e.Side, e.Action, e.Action.Category())
+	case combat.KindPrepared:
+		return fmt.Sprintf("prepared    %v banks %d AP for next round", e.Side, e.Amount)
+	case combat.KindNegated:
+		return fmt.Sprintf("negated     %v's %v stops %v cold", e.Side, e.Action, e.Target)
 	case combat.KindGuarded:
 		return fmt.Sprintf("guarded     %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
 	case combat.KindDamage:
@@ -590,8 +636,10 @@ func (s *CombatScene) advancePlayback() {
 		return
 	}
 
+	// One dwell, every event, no exceptions. See eventDwellTicks for why this is not a
+	// lookup on the event's kind.
 	s.ticks++
-	if s.ticks < dwellFor(s.log[s.cursor]) {
+	if s.ticks < eventDwellTicks {
 		return
 	}
 	s.ticks = 0
@@ -603,13 +651,13 @@ func (s *CombatScene) advancePlayback() {
 	// state and hand control back to the player to plan the next round.
 	//
 	// The hand is spent here rather than at resolve time, and the ordering matters:
-	// discardHand rebuilds fighterActions from the new hand, and the Resolution pane
-	// draws fighterActions to narrate the round. Discarding while playback was still
+	// endRoundHand rebuilds fighterActions from what is left, and the Resolution pane
+	// draws fighterActions to narrate the round. Spending it while playback was still
 	// running would empty the pane mid-round.
 	if s.cursor >= len(s.log) {
 		s.fighter.Duelist = s.fighterAfter
 		s.enemy.Duelist = s.enemyAfter
-		s.discardHand()
+		s.endRoundHand()
 	}
 }
 
@@ -660,6 +708,12 @@ func (s *CombatScene) caption() string {
 		return fmt.Sprintf("Round %d!", e.Round)
 	case combat.KindAction:
 		return fmt.Sprintf("%s uses %s", who, e.Action)
+	case combat.KindPrepared:
+		return fmt.Sprintf("%s banks %d AP for next round", who, e.Amount)
+	case combat.KindNegated:
+		// who is the *defender* here — the event belongs to whoever's defense fired, not
+		// to the attack it stopped.
+		return fmt.Sprintf("%s's %s stops it dead", who, e.Action)
 	case combat.KindGuarded:
 		return "Guarded! Damage halved"
 	case combat.KindDamage:
@@ -702,9 +756,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 // Deck overlay geometry. The panel is nearly the whole screen and stops above the button
 // band, so the Deck button that closes it stays outside the panel as well as on top of it.
 //
-// The grid is ten cards wide, which is exactly enough for a whole pile of twenty on two
-// rows — the largest either pile can be, since between them they never hold more than the
-// deck. Both sections are therefore a fixed two rows tall and nothing below them moves as
+// The grid holds every card that is not in hand, which is at most deck minus handSize —
+// 22 of the 30 today. Both piles are drawn into one fixed grid, so nothing below moves as
 // cards shift from one pile to the other.
 const (
 	deckPanelLeftPct  = 4
@@ -716,13 +769,16 @@ const (
 	// closes it outside the panel as well as drawn on top of it.
 	deckPanelBottomPct = 92
 
-	// Eight columns of 138 plus the gaps comes to 1160 inside the panel's 1177. Two rows of
-	// full-height cards is what the panel has room for, which is 16 slots against the 15
-	// cards that can be outside the hand — enough today, and drawPileGrid says so out loud
-	// rather than silently dropping the overflow once the deck grows.
+	// Eight columns of 138 plus the gaps comes to 1160 inside the panel's 1177. Three rows
+	// of 186-tall cards comes to 578 inside the ~713 the panel has below its heading, which
+	// is 24 slots against the 22 cards that can be outside the hand.
+	//
+	// The third row is paid for by the card losing its initiative glyph: a two-glyph column
+	// is 50 pixels shorter than a three-glyph one, and the deck doubled to 30 cards on the
+	// same day. Without that the overflow line would fire on every look.
 	deckGridColumns = 8
 	deckGridGap     = 8
-	deckGridRows    = 2
+	deckGridRows    = 3
 
 	// Offsets down from the panel's top edge.
 	deckTitleTop  = 40
@@ -851,7 +907,7 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 		drawCard(gs, screen, at, deckCardStyle, e.card, e.available, false, s.fighter.Str)
 	}
 
-	// The grid holds sixteen and the deck puts fifteen outside the hand, so this cannot fire
+	// The grid holds 24 and the deck puts at most 22 outside the hand, so this cannot fire
 	// today — but deckbuilding will grow the deck, and a panel that silently drops the
 	// overflow would be a picture that lies about what you own.
 	if over := len(entries) - slots; over > 0 {
@@ -1131,10 +1187,10 @@ func (s *CombatScene) resolutionRows(fighter, enemy []combat.ActionKind, conceal
 		return []paneRow{{label: "(empty)"}}
 	}
 
-	playingSide, playingOrdinal, playing := s.currentAction()
+	playingSlot, playing := s.currentSlot()
 
 	rows := make([]paneRow, 0, len(order))
-	for _, slot := range order {
+	for i, slot := range order {
 		label, swatch := slot.Action.String(), playerSwatch
 		if slot.Side == combat.SideB {
 			swatch = enemySwatch
@@ -1146,58 +1202,53 @@ func (s *CombatScene) resolutionRows(fighter, enemy []combat.ActionKind, conceal
 		rows = append(rows, paneRow{
 			label:       label,
 			swatch:      swatch,
-			highlighted: playing && slot.Side == playingSide && slot.Index == playingOrdinal,
+			highlighted: playing && i == playingSlot,
 		})
 	}
 	return rows
 }
 
-// concealedLabel is what a hidden action shows instead of its name. Initiative is
+// concealedLabel is what a hidden action shows instead of its name. The category is
 // deliberately not hidden: it is what decides where the action sits in the order, so
-// withholding it would make the Resolution pane unreadable rather than merely uncertain
-// — the player could not tell why the rows are arranged as they are.
+// withholding it would make the Resolution pane unreadable rather than merely uncertain —
+// the player could not tell why the rows are arranged as they are. It replaced the
+// initiative number in exactly that job when initiative was removed.
 //
 // This is the first cut at graded reveal rather than the finished scheme. What else
 // leaks per action — whether it damages, whether it applies a status — is still open;
 // see TODO.md.
 func concealedLabel(a combat.ActionKind) string {
-	return fmt.Sprintf("??? (i%d)", a.Initiative())
+	return fmt.Sprintf("??? (%s)", a.Category())
 }
 
-// currentAction reports which queued action the playback cursor is inside: its side and
-// its index within that side's queue. It is derived by counting the action events walked
-// so far rather than tracked in a field, so it cannot drift out of step with the cursor.
+// currentSlot reports how far into the round's resolution order playback has got: the
+// index of the slot on screen right now. It is derived by counting the action events
+// walked so far rather than tracked in a field, so it cannot drift out of step with the
+// cursor.
+//
+// It counts *slots* rather than a side and a queue position, which is what phase
+// resolution forced and what should have been here anyway. Slot.Index is where a card sits
+// in the player's queue, and reordering by category means that is no longer where it lands
+// in the round — matching on it would have lit the wrong row. Counting the order works
+// under any ordering rule, including whatever replaces this one.
 //
 // ok is false before the first action of a round and once playback has finished.
-func (s *CombatScene) currentAction() (combat.Side, int, bool) {
+func (s *CombatScene) currentSlot() (int, bool) {
 	if s.cursor >= len(s.log) {
-		return combat.SideA, 0, false
+		return 0, false
 	}
 
-	fighterSeen, enemySeen := -1, -1
-	side := combat.SideA
-	found := false
-
+	played := -1
 	for _, e := range s.log[:s.cursor+1] {
-		if e.Kind != combat.KindAction {
-			continue
+		if e.Kind == combat.KindAction {
+			played++
 		}
-		if e.Side == combat.SideA {
-			fighterSeen++
-		} else {
-			enemySeen++
-		}
-		side = e.Side
-		found = true
 	}
 
-	if !found {
-		return combat.SideA, 0, false
+	if played < 0 {
+		return 0, false
 	}
-	if side == combat.SideA {
-		return combat.SideA, fighterSeen, true
-	}
-	return combat.SideB, enemySeen, true
+	return played, true
 }
 
 // drawCombatant draws one duelist and its health bar. Only the enemy uses it now — the

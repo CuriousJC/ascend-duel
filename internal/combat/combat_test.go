@@ -19,6 +19,17 @@ func firstDamage(t *testing.T, events []Event, by Side) Event {
 	return Event{}
 }
 
+// damageCount is how many damage events the log holds.
+func damageCount(events []Event) int {
+	n := 0
+	for _, e := range events {
+		if e.Kind == KindDamage {
+			n++
+		}
+	}
+	return n
+}
+
 // actionOrder returns the sides in the order they acted.
 func actionOrder(events []Event) []Side {
 	var order []Side
@@ -28,6 +39,17 @@ func actionOrder(events []Event) []Side {
 		}
 	}
 	return order
+}
+
+// playedActions returns the actions in the order they resolved.
+func playedActions(events []Event) []ActionKind {
+	var played []ActionKind
+	for _, e := range events {
+		if e.Kind == KindAction {
+			played = append(played, e.Action)
+		}
+	}
+	return played
 }
 
 // sidesEqual compares two action orders.
@@ -43,78 +65,65 @@ func sidesEqual(got, want []Side) bool {
 	return true
 }
 
-func TestSideAActsBeforeSideB(t *testing.T) {
-	// A duelist's Spd buys action points, never priority: B is 500 times faster here and
-	// still does not lead the exchange. What decides who moves first inside an exchange
-	// is the initiative of the two actions, and these are both Strikes, so the tie goes
-	// to A. Keep these two levers separate — Spd for how much, initiative for how soon.
-	a := duelist(10, 1, 200)
-	b := duelist(10, 500, 200)
-
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike}, []ActionKind{Strike}, 1)
-
-	if order := actionOrder(events); !sidesEqual(order, []Side{SideA, SideB}) {
-		t.Errorf("action order = %v, want [A B] even with B far faster", order)
+// actionsEqual compares two played sequences.
+func actionsEqual(got, want []ActionKind) bool {
+	if len(got) != len(want) {
+		return false
 	}
+	for i := range got {
+		if got[i] != want[i] {
+			return false
+		}
+	}
+	return true
 }
 
-func TestActionsAlternateBetweenSides(t *testing.T) {
-	// The queues interleave one action each rather than resolving as two volleys. This
-	// is the ordering the resolution pane shows the player, and the thing later effects
-	// are meant to be able to rearrange.
-	//
-	// Equal initiative on both sides, so this pins the alternation itself and the rule
-	// that side A takes a tie. Initiative deciding an exchange is tested below.
-	a := duelist(10, 10, 500)
-	b := duelist(10, 10, 500)
+func TestSideATakesItsWholeTurnFirst(t *testing.T) {
+	// A duelist's Spd buys action points, never priority: B is 500 times faster here and
+	// still does not act until A has finished. Speed is how *much* you do, and nothing
+	// else — initiative was the lever that said otherwise and it no longer exists.
+	a := duelist(10, 1, 500)
+	b := duelist(10, 500, 500)
 
 	events, _, _ := ResolveRound(a, b,
 		[]ActionKind{Strike, Strike}, []ActionKind{Strike, Strike}, 1)
 
-	want := []Side{SideA, SideB, SideA, SideB}
+	want := []Side{SideA, SideA, SideB, SideB}
 	if order := actionOrder(events); !sidesEqual(order, want) {
-		t.Errorf("action order = %v, want %v", order, want)
+		t.Errorf("action order = %v, want %v even with B far faster", order, want)
 	}
 }
 
-func TestFasterActionLeadsTheExchange(t *testing.T) {
-	// Initiative decides who moves first *within* an exchange, not how many actions
-	// anybody gets. B's Quicks are faster than A's Strikes, so B leads each pairing --
-	// but the round still alternates, and both sides still act twice.
+func TestATurnResolvesInCategoryOrder(t *testing.T) {
+	// Setup, then attacks, then defenses, whatever order the cards were queued in. The
+	// defenses go last within a turn because the *opponent* moves next, so a defense
+	// raised at the end of a turn is up when the blow arrives.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Strike, Strike}, []ActionKind{Quick, Quick}, 1)
+	queued := []ActionKind{Dodge, Strike, Prepare, Guard, Heavy}
+	events, _, _ := ResolveRound(a, b, queued, nil, 1)
 
-	want := []Side{SideB, SideA, SideB, SideA}
-	if order := actionOrder(events); !sidesEqual(order, want) {
-		t.Errorf("action order = %v, want %v", order, want)
+	want := []ActionKind{Prepare, Guard, Strike, Heavy, Dodge}
+	if got := playedActions(events); !actionsEqual(got, want) {
+		t.Errorf("played %v, want %v", got, want)
 	}
 }
 
-func TestReorderingChangesWhichExchangeAnActionContests(t *testing.T) {
-	// The player lever this whole design exists for: the same cards, for the same cost,
-	// in a different order, resolve differently. A's Quick beats B's Strike wherever it
-	// is placed -- what moves is *which* of B's actions it gets in front of, and
-	// therefore which exchange A's slow Heavy loses.
+func TestQueuedOrderSurvivesInsideACategory(t *testing.T) {
+	// Reordering across categories does nothing, but reordering *within* one is the whole
+	// remaining point of dragging a card along the row — sequence combos will match on it.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
-	bPlan := []ActionKind{Strike, Quick}
 
-	quickFirst, _, _ := ResolveRound(a, b, []ActionKind{Quick, Heavy}, bPlan, 1)
-	heavyFirst, _, _ := ResolveRound(a, b, []ActionKind{Heavy, Quick}, bPlan, 1)
+	first, _, _ := ResolveRound(a, b, []ActionKind{Heavy, Quick}, nil, 1)
+	second, _, _ := ResolveRound(a, b, []ActionKind{Quick, Heavy}, nil, 1)
 
-	// Quick(1) beats Strike(3); then Heavy(5) loses to Quick(1).
-	wantQuickFirst := []Side{SideA, SideB, SideB, SideA}
-	// Heavy(5) loses to Strike(3); then Quick(1) beats Quick(1) on the tie.
-	wantHeavyFirst := []Side{SideB, SideA, SideA, SideB}
-
-	if order := actionOrder(quickFirst); !sidesEqual(order, wantQuickFirst) {
-		t.Errorf("Quick first: order = %v, want %v", order, wantQuickFirst)
+	if got := playedActions(first); !actionsEqual(got, []ActionKind{Heavy, Quick}) {
+		t.Errorf("played %v, want [Heavy Quick]", got)
 	}
-	if order := actionOrder(heavyFirst); !sidesEqual(order, wantHeavyFirst) {
-		t.Errorf("Heavy first: order = %v, want %v", order, wantHeavyFirst)
+	if got := playedActions(second); !actionsEqual(got, []ActionKind{Quick, Heavy}) {
+		t.Errorf("played %v, want [Quick Heavy]", got)
 	}
 }
 
@@ -124,33 +133,53 @@ func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
 	// they are the same sequence rather than trusting the shared call.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
-	aPlan := []ActionKind{Heavy, Quick, Guard}
-	bPlan := []ActionKind{Quick, Strike}
+	aPlan := []ActionKind{Heavy, Dodge, Prepare}
+	bPlan := []ActionKind{Quick, Guard}
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
 
-	want := make([]Side, 0, len(aPlan)+len(bPlan))
+	want := make([]ActionKind, 0, len(aPlan)+len(bPlan))
 	for _, slot := range ResolutionOrder(aPlan, bPlan) {
-		want = append(want, slot.Side)
+		want = append(want, slot.Action)
 	}
 
-	if order := actionOrder(events); !sidesEqual(order, want) {
-		t.Errorf("played order = %v, ResolutionOrder = %v", order, want)
+	if got := playedActions(events); !actionsEqual(got, want) {
+		t.Errorf("played order = %v, ResolutionOrder = %v", got, want)
 	}
 }
 
-func TestTheLongerQueueActsAloneOnceTheOtherRunsOut(t *testing.T) {
-	// A faster duelist buys more actions, and the tail of the round is where that
-	// advantage is actually spent.
-	a := duelist(10, 10, 500)
-	b := duelist(10, 10, 500)
+func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
+	// ResolveRound expires side B's defenses at the first B slot, which is only the start
+	// of B's turn if A's slots never follow it. Pin the block structure that relies on.
+	order := ResolutionOrder(
+		[]ActionKind{Dodge, Strike, Prepare},
+		[]ActionKind{Guard, Heavy, Riposte})
 
-	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Quick, Quick, Quick}, []ActionKind{Quick}, 1)
+	seenB := false
+	for _, slot := range order {
+		if slot.Side == SideB {
+			seenB = true
+			continue
+		}
+		if seenB {
+			t.Fatalf("side A acts after side B has started: %v", order)
+		}
+	}
+}
 
-	want := []Side{SideA, SideB, SideA, SideA}
-	if order := actionOrder(events); !sidesEqual(order, want) {
-		t.Errorf("action order = %v, want %v", order, want)
+func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
+	// Index is where the card sits in the player's queue, not where it lands in the round.
+	// Anything wanting "how far through the round are we" has to count slots instead.
+	order := ResolutionOrder([]ActionKind{Dodge, Prepare}, nil)
+
+	if len(order) != 2 {
+		t.Fatalf("got %d slots, want 2", len(order))
+	}
+	if order[0].Action != Prepare || order[0].Index != 1 {
+		t.Errorf("first slot = %v index %d, want Prepare index 1", order[0].Action, order[0].Index)
+	}
+	if order[1].Action != Dodge || order[1].Index != 0 {
+		t.Errorf("second slot = %v index %d, want Dodge index 0", order[1].Action, order[1].Index)
 	}
 }
 
@@ -194,77 +223,268 @@ func TestQuickHitsForHalfButNeverZero(t *testing.T) {
 	}
 }
 
-func TestPlayerGuardCoversTheEnemyReplyInTheSameRound(t *testing.T) {
-	// A acts first in the alternation, so a Guard placed now is up for the reply that
-	// immediately follows it.
-	a := duelist(10, 10, 200)
-	b := duelist(10, 10, 200)
+func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
+	// Riposte reports a damage figure so its card can draw one, but it only ever hits back
+	// at something. Played into an opponent who does nothing, it deals nothing.
+	for _, a := range []ActionKind{Prepare, Guard, Dodge, Riposte} {
+		events, _, bAfter := ResolveRound(duelist(10, 10, 100), duelist(10, 10, 100),
+			[]ActionKind{a}, nil, 1)
 
-	open, _, _ := ResolveRound(a, b, []ActionKind{Strike}, []ActionKind{Strike}, 1)
-	guarded, _, _ := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Strike}, 1)
-
-	openHit := firstDamage(t, open, SideB)
-	guardedHit := firstDamage(t, guarded, SideB)
-
-	if guardedHit.Amount != openHit.Amount/2 {
-		t.Errorf("damage through guard = %d, unguarded = %d; want half",
-			guardedHit.Amount, openHit.Amount)
+		if n := damageCount(events); n != 0 {
+			t.Errorf("%v dealt damage %d times unprompted", a, n)
+		}
+		if bAfter.CurrentLife != 100 {
+			t.Errorf("%v took the target to %d, want 100", a, bAfter.CurrentLife)
+		}
 	}
 }
 
-func TestEnemyGuardCarriesToTheNextRound(t *testing.T) {
-	// A guard raised on the last action of a round is still up when the next round
-	// starts — it lasts until its owner acts again, and round boundaries are not
-	// actions. Without that, a Guard queued last would be dead weight.
-	a := duelist(10, 10, 200)
-	b := duelist(10, 10, 200)
+func TestGuardHalvesEveryAttackInTheOpponentsTurn(t *testing.T) {
+	// Guard is a setup now, and it is broad: it covers the whole of the opposing turn
+	// rather than one blow. That breadth is what it costs 3 for.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Strike}, []ActionKind{Guard}, 1)
-	if !b1.Guarded {
-		t.Fatal("side B guard did not survive the round it was raised in")
+	open, _, _ := ResolveRound(a, b, nil, []ActionKind{Strike, Strike, Strike}, 1)
+	guarded, _, _ := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Strike, Strike, Strike}, 1)
+
+	if damageCount(open) != 3 || damageCount(guarded) != 3 {
+		t.Fatalf("expected three hits either way, got %d open and %d guarded",
+			damageCount(open), damageCount(guarded))
 	}
 
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Strike}, nil, 2)
-	hit := firstDamage(t, round2, SideA)
-
-	if hit.Amount != 5 {
-		t.Errorf("damage into a carried guard = %d, want 5 (half of Str 10)", hit.Amount)
+	for _, e := range guarded {
+		if e.Kind == KindDamage && e.Amount != 5 {
+			t.Errorf("hit through a guard = %d, want 5 (half of Str 10)", e.Amount)
+		}
 	}
 }
 
-func TestGuardDropsWhenItsOwnerActsAgain(t *testing.T) {
-	// A's guard covers B's reply in the same round, then drops the moment A next acts.
-	// The flag is still set in the returned state — it clears at the start of A's next
-	// action, not at the end of the round — so the behaviour is what this asserts, not
-	// the bookkeeping.
-	a := duelist(10, 10, 200)
-	b := duelist(10, 10, 200)
+func TestAGuardCoversExactlyOneOpposingTurn(t *testing.T) {
+	// Raised in round 1, still up for B's round-1 turn, gone by the time A's round-2 turn
+	// begins. A defense expires at the start of its owner's next turn — not at the round
+	// boundary, which would leave side B's defenses protecting it from nothing.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
 
 	round1, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Strike}, 1)
 	if hit := firstDamage(t, round1, SideB); hit.Amount != 5 {
-		t.Errorf("damage into a fresh guard = %d, want 5", hit.Amount)
+		t.Errorf("round 1 hit into a fresh guard = %d, want 5", hit.Amount)
+	}
+	if !a1.Guarded {
+		t.Fatal("A's guard should still be standing at the round boundary")
 	}
 
-	// A acts in round 2, which drops the guard before B's reply lands.
 	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Quick}, []ActionKind{Strike}, 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
-		t.Errorf("damage after guard expired = %d, want full 10", hit.Amount)
+		t.Errorf("round 2 hit after the guard expired = %d, want full 10", hit.Amount)
 	}
 }
 
-func TestGuardHoldsWhileItsOwnerDoesNothing(t *testing.T) {
-	// The flip side of "a guard lasts until you act again": queue nothing and it stays
-	// up. Deliberate rather than accidental — standing still behind a guard deals no
-	// damage, so it buys time and nothing else. If that ever proves too strong, the fix
-	// is an expiry rule here, not a special case at the call site.
-	a := duelist(10, 10, 200)
-	b := duelist(10, 10, 200)
+func TestSideBsGuardProtectsItInTheFollowingRound(t *testing.T) {
+	// The asymmetry the expiry rule exists for. B acts last, so its guard cannot cover
+	// anything in the round it was raised — it has to survive the boundary and cover A's
+	// next turn, or the card would be worthless in B's hands.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	_, a1, b1 := ResolveRound(a, b, nil, []ActionKind{Guard}, 1)
+	if !b1.Guarded {
+		t.Fatal("side B's guard did not survive the round it was raised in")
+	}
+
+	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Strike}, nil, 2)
+	if hit := firstDamage(t, round2, SideA); hit.Amount != 5 {
+		t.Errorf("A's hit into B's carried guard = %d, want 5", hit.Amount)
+	}
+}
+
+func TestAnIdleDuelistLosesItsGuard(t *testing.T) {
+	// A turn happens whether or not anything is queued into it, and a defense expires at
+	// the start of its owner's turn. Standing still therefore does not bank a guard —
+	// which the old until-you-act rule allowed, deliberately, and phases dissolve.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
 
 	_, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, nil, 1)
 
 	round2, _, _ := ResolveRound(a1, b1, nil, []ActionKind{Strike}, 2)
-	if hit := firstDamage(t, round2, SideB); hit.Amount != 5 {
-		t.Errorf("damage into a held guard = %d, want 5 — an idle duelist keeps its guard", hit.Amount)
+	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
+		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a guard", hit.Amount)
+	}
+}
+
+func TestDodgeNegatesOneAttackAndIsSpentDoingIt(t *testing.T) {
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, aAfter, _ := ResolveRound(a, b,
+		[]ActionKind{Dodge}, []ActionKind{Heavy, Strike}, 1)
+
+	if n := damageCount(events); n != 1 {
+		t.Fatalf("damage events = %d, want 1 — the first attack is negated, the second lands", n)
+	}
+	// The Heavy is negated, so the Strike is what gets through.
+	if hit := firstDamage(t, events, SideB); hit.Amount != 10 {
+		t.Errorf("the attack that got past the dodge dealt %d, want 10 (Strike)", hit.Amount)
+	}
+	if aAfter.CurrentLife != 490 {
+		t.Errorf("A ended on %d, want 490 — one Strike through one Dodge", aAfter.CurrentLife)
+	}
+}
+
+func TestTwoDodgesNegateTwoAttacks(t *testing.T) {
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, aAfter, _ := ResolveRound(a, b,
+		[]ActionKind{Dodge, Dodge}, []ActionKind{Heavy, Strike}, 1)
+
+	if n := damageCount(events); n != 0 {
+		t.Errorf("damage events = %d, want 0 — both attacks are dodged", n)
+	}
+	if aAfter.CurrentLife != 500 {
+		t.Errorf("A ended on %d, want 500", aAfter.CurrentLife)
+	}
+}
+
+func TestRiposteNegatesAnAttackAndHitsBack(t *testing.T) {
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, aAfter, bAfter := ResolveRound(a, b,
+		[]ActionKind{Riposte}, []ActionKind{Heavy}, 1)
+
+	if aAfter.CurrentLife != 500 {
+		t.Errorf("A took %d damage through a riposte, want none", 500-aAfter.CurrentLife)
+	}
+	if bAfter.CurrentLife != 495 {
+		t.Errorf("B ended on %d, want 495 — a riposte hits back for half a Strike", bAfter.CurrentLife)
+	}
+	// The counter is dealt by the defender, so its event belongs to side A.
+	if hit := firstDamage(t, events, SideA); hit.Amount != 5 {
+		t.Errorf("counter damage = %d, want 5", hit.Amount)
+	}
+}
+
+func TestRiposteIsSpentBeforeDodge(t *testing.T) {
+	// Both stop a blow completely, so spending the one that hits back first is free, and
+	// it puts the counter-damage as early in the opponent's turn as it can go.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	events, _, _ := ResolveRound(a, b,
+		[]ActionKind{Dodge, Riposte}, []ActionKind{Strike, Strike}, 1)
+
+	var negations []ActionKind
+	for _, e := range events {
+		if e.Kind == KindNegated {
+			negations = append(negations, e.Action)
+		}
+	}
+	if !actionsEqual(negations, []ActionKind{Riposte, Dodge}) {
+		t.Errorf("negations spent in order %v, want [Riposte Dodge]", negations)
+	}
+}
+
+func TestARiposteCanKillTheAttacker(t *testing.T) {
+	// Defenses converting into damage is the theory the category split rests on, so the
+	// counter has to be able to finish a duel — and to end the attacker's turn when it does.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 3)
+
+	events, _, bAfter := ResolveRound(a, b,
+		[]ActionKind{Riposte}, []ActionKind{Strike, Strike}, 1)
+
+	if bAfter.Alive() {
+		t.Fatalf("B survived its own attack into a riposte with %d life", bAfter.CurrentLife)
+	}
+	if order := actionOrder(events); !sidesEqual(order, []Side{SideA, SideB}) {
+		t.Errorf("actions = %v, want A's riposte and B's first strike only", order)
+	}
+}
+
+func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
+	// An unspent Dodge does not bank. It covers the opponent's next turn and then goes,
+	// the same rule Guard follows.
+	a := duelist(10, 10, 500)
+	b := duelist(10, 10, 500)
+
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Dodge}, nil, 1)
+	if a1.Dodges != 1 {
+		t.Fatalf("A ended round 1 with %d dodges, want 1 unspent", a1.Dodges)
+	}
+
+	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Quick}, []ActionKind{Strike}, 2)
+	if n := damageCount(round2); n != 2 {
+		t.Errorf("damage events in round 2 = %d, want 2 — the dodge expired at A's turn", n)
+	}
+}
+
+func TestPrepareFundsTheFollowingRound(t *testing.T) {
+	d := duelist(10, 11, 100) // 5 AP before any bonus
+
+	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Prepare}, nil, 1)
+
+	if aAfter.ActionPoints() != 7 {
+		t.Errorf("budget after one Prepare = %d, want 7 (5 + 2)", aAfter.ActionPoints())
+	}
+}
+
+func TestPrepareDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
+	// The whole shape of the card: you pay now and you are paid later, which is what makes
+	// it an investment rather than a discount.
+	d := duelist(10, 11, 100)
+
+	events, _, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Prepare}, nil, 1)
+
+	for _, e := range events {
+		if e.Kind == KindPrepared && e.Amount != prepareBonusAP {
+			t.Errorf("prepared %d AP, want %d", e.Amount, prepareBonusAP)
+		}
+	}
+	if d.ActionPoints() != 5 {
+		t.Errorf("the duelist's own budget moved to %d mid-round, want 5", d.ActionPoints())
+	}
+}
+
+func TestPreparesStackWithinARound(t *testing.T) {
+	// Two in one round are worth +4. Deliberate: it is what puts a five-attack round in
+	// reach without a ring discount, and that trade — a whole round spent setting up — is
+	// the price of getting there.
+	d := duelist(10, 11, 100) // 5 AP
+
+	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100),
+		[]ActionKind{Prepare, Prepare}, nil, 1)
+
+	if aAfter.ActionPoints() != 9 {
+		t.Errorf("budget after two Prepares = %d, want 9 (5 + 4)", aAfter.ActionPoints())
+	}
+}
+
+func TestPrepareDoesNotCompoundAcrossRounds(t *testing.T) {
+	// Preparing every round is worth a flat +2, not +2 then +4 then +6. The bonus is
+	// replaced at the boundary rather than added to, which is what bounds the ramp.
+	a := duelist(10, 11, 500) // 5 AP
+	b := duelist(10, 10, 500)
+
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Prepare}, nil, 1)
+	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Prepare}, nil, 2)
+
+	if a2.ActionPoints() != 7 {
+		t.Errorf("budget after preparing twice in a row = %d, want a flat 7", a2.ActionPoints())
+	}
+}
+
+func TestABonusLapsesIfItIsNotRenewed(t *testing.T) {
+	a := duelist(10, 11, 500)
+	b := duelist(10, 10, 500)
+
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Prepare}, nil, 1)
+	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Strike}, nil, 2)
+
+	if a2.ActionPoints() != 5 {
+		t.Errorf("budget after spending the bonus round = %d, want 5", a2.ActionPoints())
 	}
 }
 
@@ -273,8 +493,8 @@ func TestActionPointsFromSpeed(t *testing.T) {
 		spd, want int
 	}{
 		{0, 4},
-		{11, 5}, // the shipped Fighter1
-		{31, 7}, // the shipped Monster1
+		{15, 5}, // the shipped Monster1
+		{20, 6}, // the shipped Fighter1
 		{100, 14},
 	}
 
@@ -288,11 +508,34 @@ func TestActionPointsFromSpeed(t *testing.T) {
 func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP
 
-	if !d.CanAfford([]ActionKind{Heavy, Quick}) { // 4 + 1
-		t.Error("Heavy + Quick costs 5 and should fit a 5 AP budget")
+	if !d.CanAfford([]ActionKind{Heavy, Prepare}) { // 4 + 1
+		t.Error("Heavy + Prepare costs 5 and should fit a 5 AP budget")
 	}
-	if d.CanAfford([]ActionKind{Heavy, Strike}) { // 4 + 2
-		t.Error("Heavy + Strike costs 6 and should not fit a 5 AP budget")
+	if d.CanAfford([]ActionKind{Guard, Riposte}) { // 3 + 3
+		t.Error("Guard + Riposte costs 6 and should not fit a 5 AP budget")
+	}
+}
+
+func TestCategoriesCoverEveryAction(t *testing.T) {
+	// A new action with no category would silently fall into attack and resolve in the
+	// wrong phase. Pin the whole table instead.
+	want := map[ActionKind]Category{
+		Prepare: CategorySetup,
+		Guard:   CategorySetup,
+		Quick:   CategoryAttack,
+		Strike:  CategoryAttack,
+		Heavy:   CategoryAttack,
+		Dodge:   CategoryDefend,
+		Riposte: CategoryDefend,
+	}
+
+	if len(AllActions) != len(want) {
+		t.Fatalf("AllActions holds %d actions, the category table %d", len(AllActions), len(want))
+	}
+	for _, a := range AllActions {
+		if got := a.Category(); got != want[a] {
+			t.Errorf("%v is %v, want %v", a, got, want[a])
+		}
 	}
 }
 
@@ -308,17 +551,9 @@ func TestDefeatStopsTheRoundEarly(t *testing.T) {
 	if bAfter.Alive() {
 		t.Fatalf("side B survived with %d life, want defeated", bAfter.CurrentLife)
 	}
-
-	damageEvents := 0
-	for _, e := range events {
-		if e.Kind == KindDamage {
-			damageEvents++
-		}
+	if n := damageCount(events); n != 1 {
+		t.Errorf("damage events = %d, want 1 — the round should stop at the kill", n)
 	}
-	if damageEvents != 1 {
-		t.Errorf("damage events = %d, want 1 — the round should stop at the kill", damageEvents)
-	}
-
 	if order := actionOrder(events); !sidesEqual(order, []Side{SideA}) {
 		t.Errorf("actions = %v, want only A's — B is dead and cannot reply", order)
 	}
@@ -351,28 +586,22 @@ func TestResolveRoundDoesNotMutateItsInputs(t *testing.T) {
 	}
 }
 
-func TestBothSidesGuardingDoesNotAlias(t *testing.T) {
-	// resolveAction passes duelists by value; if that ever became pointer-based, a
-	// mutual Guard is where an aliasing bug would surface — one side's raised guard
-	// leaking onto the other.
+func TestBothSidesDefendingDoesNotAlias(t *testing.T) {
+	// resolveAction passes duelists by value; if that ever became pointer-based, a mutual
+	// defense is where an aliasing bug would surface — one side's raised guard leaking
+	// onto the other.
 	a := duelist(10, 10, 100)
 	b := duelist(10, 10, 100)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Guard}, 1)
-	if !a1.Guarded || !b1.Guarded {
-		t.Fatalf("both raised a guard; got a=%v b=%v", a1.Guarded, b1.Guarded)
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Dodge}, 1)
+	if !a1.Guarded {
+		t.Error("A raised a guard and did not end the round with one")
 	}
-
-	// Round 2, both strike. A acts first: its own guard clears as it does, so B's later
-	// hit lands in full — but B's guard is still up when A's strike arrives, so that
-	// one is halved.
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Strike}, []ActionKind{Strike}, 2)
-
-	if hit := firstDamage(t, round2, SideA); hit.Amount != 5 {
-		t.Errorf("A's hit into B's carried guard = %d, want 5", hit.Amount)
+	if b1.Guarded {
+		t.Error("B's dodge left it guarded; A's flag has leaked across")
 	}
-	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
-		t.Errorf("B's hit into A's expired guard = %d, want full 10", hit.Amount)
+	if a1.Dodges != 0 || b1.Dodges != 1 {
+		t.Errorf("dodges: a=%d b=%d, want 0 and 1", a1.Dodges, b1.Dodges)
 	}
 }
 
@@ -380,8 +609,11 @@ func TestRoundIsDeterministic(t *testing.T) {
 	a := duelist(7, 13, 300)
 	b := duelist(9, 17, 300)
 
-	first, a1, b1 := ResolveRound(a, b, []ActionKind{Strike, Guard}, []ActionKind{Quick, Quick}, 1)
-	second, a2, b2 := ResolveRound(a, b, []ActionKind{Strike, Guard}, []ActionKind{Quick, Quick}, 1)
+	aPlan := []ActionKind{Strike, Guard, Prepare}
+	bPlan := []ActionKind{Quick, Riposte}
+
+	first, a1, b1 := ResolveRound(a, b, aPlan, bPlan, 1)
+	second, a2, b2 := ResolveRound(a, b, aPlan, bPlan, 1)
 
 	if len(first) != len(second) {
 		t.Fatalf("log lengths differ: %d vs %d", len(first), len(second))
@@ -423,7 +655,7 @@ func TestPlanGreedyFitsTheBudget(t *testing.T) {
 }
 
 func TestPlanGreedySpendsNearlyEverything(t *testing.T) {
-	// Costs are 1/2/2/4, so a greedy fill should never leave anything behind.
+	// It fills with costs 4, 2 and 1, so a greedy fill should never leave anything behind.
 	for spd := 0; spd <= 100; spd += 3 {
 		d := duelist(10, spd, 100)
 		if left := d.ActionPoints() - CostOf(PlanGreedy(d)); left != 0 {

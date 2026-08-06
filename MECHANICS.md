@@ -6,7 +6,9 @@
 Everything here is decided unless marked `[?]`. Read this before proposing a design change,
 and before implementing anything that touches a rule.
 
-Captured 2026-08-05 in one session. Nothing below is implemented yet except where noted.
+Captured 2026-08-05 in one session; most of it is still unimplemented. **Cards, categories and
+phase resolution landed on 2026-08-06** and those sections describe running code — they say so.
+Everything else is still design.
 
 ---
 
@@ -65,22 +67,44 @@ on a stat that does not exist.
 
 ### Types
 
-Every card is exactly one of three types:
+**Implemented 2026-08-06 as `combat.Category`.** Every card is exactly one of three types, and
+the type decides which phase of a turn it resolves in — see *Resolution* below. This is the
+axis the whole round is built on.
 
-| Type | Concepts |
-|---|---|
-| **setup** | Prepare |
-| **attack** | Strike, Heavy |
-| **defend** | Guard, Parry, Dodge, Riposte |
+| Type | Concepts | AP | Effect |
+|---|---|---|---|
+| **setup** | Prepare | 1 | Banks +2 AP for the next round |
+| | Guard | 3 | Halves every attack in the opponent's next turn |
+| **attack** | Strike | 2 | `str` |
+| | Heavy | 4 | `str × 2` |
+| **defend** | Dodge | 2 | Negates the first incoming attack |
+| | Riposte | 3 | Negates the first incoming attack and hits back for `str/2` |
 
 Type is a property of the *concept*, not an independent axis — a fire Guard and a basic Guard
-are both defend.
+are both setup.
 
-Riposte is **defend**, despite being a counter-attack.
+**Guard is setup, not defend.** It moved on 2026-08-06 and went 2 → 3 AP with the change: it
+does not answer one blow, it dampens a whole turn, and that is a thing you put up before the
+exchange rather than a reaction inside it. Riposte is **defend** despite being a
+counter-attack.
 
-The split is deliberately lopsided: 1 setup, 2 attack, 4 defend, so a starting deck is
-5 setup / 10 attack / 20 defend. Two thirds defensive in a game won by reducing the opponent
-to zero, on the theory that defends convert into damage.
+**Parry was dropped** the same day, before it was built. Dodge, Riposte and Guard already
+cover cheap-precise, expensive-punishing and broad-dampening; a fourth defence had no job
+left. It can come back.
+
+The lopsided 1/2/4 split is gone with it, and so is the two-thirds-defensive theory it
+carried. Six concepts split evenly 2/2/2 — 10 setup / 10 attack / 10 defend — which is a
+consequence of the concept list rather than a target.
+
+**Ripostes are spent before Dodges** when both are up. Both negate completely, so spending
+the one that hits back first costs nothing, and it lands the counter early enough to kill the
+attacker mid-turn.
+
+`[?]` **Dodge and Riposte are a tier, not a choice.** Riposte is exactly Dodge plus a Quick,
+priced exactly as the two together (2 + 1 = 3), so it strictly dominates Dodge whenever it is
+affordable — Riposte is only *better* than Dodge, never *different*. What stops it being
+redundant is the cap on actions per round: one card doing two jobs beats two cards. Being
+played with deliberately before changing anything.
 
 ### Concepts and deck composition
 
@@ -88,11 +112,13 @@ to zero, on the theory that defends convert into damage.
 adding concepts, not just a description of the starting deck — a new concept arrives as a set
 of five.
 
-Seven concepts × five = **35 cards**. A hand of eight against that makes the draw a real
-decision.
+Six concepts × five = **30 cards**, implemented. A hand of eight against that makes the draw a
+real decision. Every concept named here now exists; the deck is complete rather than a
+fragment of a longer list.
 
-`Quick` exists in `internal/combat` as an `ActionKind`, is in no deck, and is not a concept.
-It remains homeless.
+`Quick` exists in `internal/combat` as an `ActionKind` costing 1 for `str/2`, is in no deck,
+and is not a concept. It remains homeless — but Riposte's counter-damage is deliberately
+defined as the same figure, so it is at least a named quantity now.
 
 ### Long press
 
@@ -170,41 +196,68 @@ and hunger have no statuses.
 
 ---
 
-## Resolution — the experiment
+## Resolution — phases
 
-**Decided 2026-08-05 as an experiment, and as the direction to head in.** Not a placeholder,
-not settled either: try it, then reconsider.
+**Implemented 2026-08-06.** Chosen as an experiment on 2026-08-05 and built the next day; it
+is what ships. Still open to reconsideration, but it is the model now, not a proposal.
 
-A round resolves in **phases**, not by interleaving:
+A round is **a whole turn each**. Everything one side queued resolves before the other side
+does anything, and within a turn the categories go in order:
 
-1. the player's **preparations**
-2. the player's **attacks**
-3. the player's **defenses**
-4. then the enemy, with their attacks
+1. that side's **setups**
+2. that side's **attacks**
+3. that side's **defenses**
+4. then the other side, the same way
 
-Defenses are front-loaded on the assumption that the enemy goes last, so a defense is up when
-the blow arrives.
+Defenses come last *within a turn* because the opponent moves next, so a defense raised at the
+end of your turn is up when their blow arrives.
 
 **Why:** the interleaving may not be possible for players to grok. That is the whole reason.
-It also simplifies — actions can be gathered into their categories inside resolution, and
-hidden information survives untouched, because `ResolutionOrder` is a single pure function
-that both `ResolveRound` and the Resolution pane read.
+It also simplifies — actions are gathered into their categories inside `ResolutionOrder`, and
+hidden information survives untouched, because that is a single pure function which both
+`ResolveRound` and the Resolution pane read.
 
-### What this costs, recorded honestly
+### Defense expiry — the rule this turns on
+
+**A defense expires at the start of its owner's next turn, not at the round boundary.**
+
+Side B acts last, so a defense cleared at the boundary would protect B from nothing it ever
+faces — its own guard would go up after every attack it could possibly answer. Expiring at the
+owner's next turn instead means every defense covers exactly one opposing turn whichever side
+raised it: for A that is later the same round, for B it is early the next one.
+
+The engine has no notion of "player" and must stay symmetric, so this is not a detail. It also
+means expiry is a fact about **turns**, not about the action sequence — it lives in
+`ResolveRound`, not in `ResolutionOrder`, because a side that queues nothing still has a turn
+and still loses its guard in it.
+
+### Initiative is gone
+
+Removed 2026-08-06, whole. With one contiguous turn per side there is no exchange for a faster
+action to lead, so initiative was a number on every card reporting a distinction the resolver
+had stopped making. `Spd` still buys action points and still never buys priority.
+
+Ordering *within* a category is queue order, which is what drag-to-reorder now moves and what
+sequence combos will match on. See `TODO.md` for what would have to be true to bring
+initiative back.
+
+### What this cost, recorded honestly
 
 - **It reverses a decision made 2026-07-31**, when volley-per-side was replaced by alternation
   on the grounds that *"two monolithic volleys gave the player nothing to manipulate."*
-  Phase-based is not the same as volley-per-side — it groups by category rather than by side —
-  but it is closer to the rejected thing than to what ships.
-- **Cross-phase reordering stops meaning anything.** A defense cannot be dragged ahead of an
-  attack. **Within-phase ordering still matters**, and matters more than before — see combos.
-- **Guard persistence dissolves.** *"A raised Guard lasts until its owner's next action"* stops
-  describing anything if every defense resolves before every enemy attack, and
-  `TestGuardHoldsWhileItsOwnerDoesNothing` stops testing anything.
+  Phase-based is not the same as volley-per-side — it groups by category within a turn — but
+  it is closer to the rejected thing than to what alternation was.
+- **Cross-phase reordering means nothing.** A defense cannot be dragged ahead of an attack.
+  **Within-phase ordering still matters**, and matters more than before — see combos. That is
+  the whole of what dragging a card along the row now does.
+- **Guard persistence dissolved**, as predicted. The old *"a raised Guard lasts until its
+  owner's next action"* and the deliberate quirk that an idle duelist kept its guard are both
+  gone, along with `TestGuardHoldsWhileItsOwnerDoesNothing`.
 - **It changes what makes stagger rare** — see below.
 
-`ResolutionOrder` being one pure function is what makes this cheap: one function body plus its
-tests. Three other candidate models are recorded in `TODO.md`; this is a fourth.
+`ResolutionOrder` being one pure function is what made this cheap, exactly as hoped: one
+function body plus its tests, and both consumers followed without being touched. Three other
+candidate models are recorded in `TODO.md`; this is a fourth.
 
 ---
 
@@ -222,13 +275,16 @@ without the opponent answering staggers them and costs them an action. Five knoc
 whole round.
 
 - The original rationale was that **alternation made this rare**. Under phase resolution it is
-  not rare for that reason — but it stays rare for others, and those are the reasons now:
-  **five Strikes in a 35-card deck means P(3+ in a hand of eight) ≈ 7%**; three Strikes is
-  exactly 6 AP, Fighter1's entire budget; and **five Strikes is 10 AP, unreachable without
-  ring discounts.**
-- That last point is the design working as intended: the five-combo is something you *build
-  toward*, not something you draw into. It is gated behind engine-building, which is the
-  thrust of the game.
+  not rare for that reason at all — every attack you queue is consecutive by construction, so
+  three attacks *is* three in a row. What is left keeping it rare is the deck and the budget:
+  **five Strikes in a 30-card deck means P(3+ in a hand of eight) ≈ 10%** (it was ~7% at the
+  35-card size this was first costed against), and three Strikes is exactly 6 AP, Fighter1's
+  entire budget.
+- **Five Strikes is 10 AP, and Prepare now reaches it.** Two Prepares in one round cost 2 AP
+  and return +4, so a 6 AP duelist has 10 the round after. This was previously recorded as
+  "unreachable without ring discounts"; that is no longer true, and it was **accepted
+  knowingly on 2026-08-06** — spending a whole round setting up is exactly the trade the
+  combo should cost, and it is still gated behind engine-building rather than drawn into.
 - Later enemies are expected to absorb mechanics like this.
 
 ### Sequence-based
@@ -301,7 +357,7 @@ whole bar. Same size as other cards, and **no glyphs**.
 - Dropping the glyphs is exactly what *would* free the height: the glyph column is the floor on
   card size. `[?]` Same width and shorter is the obvious escape, but "same size" was stated.
 - `drawCard` takes an `actionCard` and builds a glyph column from `badgesFor`. A ring has no
-  damage, initiative or cost, so either that generalises or rings get their own drawer sharing
+  damage, cost or category, so either that generalises or rings get their own drawer sharing
   the frame and colour logic.
 
 **Rings are the first thing that genuinely needs `Session`.** They survive fights;

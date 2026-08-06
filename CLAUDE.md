@@ -6,7 +6,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ascending Duel — a roguelike where you duel your way up a tower, collecting rings, brands of power, and pets. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
-`ideas.md` holds informal design notes (bosses, attributes, floors, rings) that are not yet implemented. `TODO.md` is the running work list and the record of decisions already made — read it before proposing design changes.
+## Where things are written down
+
+Five streams, each with one job. Reach for the right one rather than searching all of them.
+
+| Stream | File | Read it when |
+|---|---|---|
+| **How to work** | `CLAUDE.md` — this file | always; it is loaded every session |
+| **Procedure** | `.claude/skills/*/SKILL.md` | on trigger — git and GitHub work, the combat screen |
+| **What the game *is*** | [MECHANICS.md](MECHANICS.md) | designing or implementing any mechanic, before proposing a design change |
+| **What to build next** | [TODO.md](TODO.md) | picking up work |
+| **Unfiltered** | [ideas.md](ideas.md) | the inbox; entries get promoted into MECHANICS or TODO and struck from here |
+
+- **`MECHANICS.md` is the design record.** Decided unless marked `[?]`. It holds the element
+  set and their statuses, cards and types, combos, rings, brands, vitae, the tower, enemies,
+  and the phase-based resolution experiment.
+- **`TODO.md` is the work list**, and still holds the reasoning behind decisions already
+  implemented. It is long; prefer `MECHANICS.md` for "what should this do".
+- When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
 
 ## Licensing and IP — read before adding dependencies or assets
 
@@ -59,51 +76,27 @@ git commit -s                                   # sign-off, per CONTRIBUTING.md
 Tests live in `internal/combat` — the only package that can be tested without a
 window, by design. Keep it that way: rules go in `combat`, not in screens.
 
-## Git workflow
+## Git workflow — see the `github-workflow` skill
 
-- **Squash merge every PR.** One commit on `main` per PR, so the history reads as a
-  list of milestones. The number of commits on the branch does not matter — write
-  them freely and let the squash collapse them.
-- Because of squashing, `git branch -d` will *always* refuse a merged feature branch:
-  the squash creates a new commit, so the branch tip is never an ancestor of `main`.
-  Confirm the content landed (`git diff main <branch>` returns nothing), then `-D`.
-- Branch off `main`; never commit directly to it.
-- **Work on `game-updates-N`, not a branch per feature.** Decided 2026-08-03, numbered from
-  2026-08-04. This is a one-author project, so branch names buy no coordination — and because
-  every PR is squash merged, **the branch name never reaches `main`'s history at all**. The
-  PR title becomes the commit. Naming ceremony is pure overhead; the PR description is the
-  thing that lasts.
-- **The number increments once per PR, and a name is never reused.** The squash rewrites the
-  commit, so a reused branch diverges from its own remote — one ahead, one behind, identical
-  content — and the next push is refused until it is force-pushed. A fresh number sidesteps
-  that entirely. `game-updates` ran through #19; `game-updates-2` starts after it.
-  - The alternative considered and not taken: GitHub's *Automatically delete head branches*
-    setting, which lets one name be reused forever with no per-PR step. Worth revisiting if
-    the numbering starts to grate.
-- **A PR may cover several unrelated things, and that is fine.** What is not fine is a
-  branch that stays open across many sessions. `add-deck` became untrackable because of how
-  long it ran, not because of what it was called — by the end it held the deck, the playback
-  pacing, the button row, a debug-flag split and a glyph generator.
-- **The cadence rule that replaces naming: land when you can still describe it honestly.**
-  If the PR description will not fit one clear paragraph without turning into a list of
-  unrelated headings, the branch has been open too long. Land it and start the next.
-- **Starting the next branch after a merge:**
+The procedure lives in
+[.claude/skills/github-workflow/SKILL.md](.claude/skills/github-workflow/SKILL.md) rather
+than here. **Load it before running any `git` or `gh` command** — branching, committing,
+pushing, opening or merging a PR, cleaning up afterwards, or when a merge is refused.
 
-  ```powershell
-  git checkout main; git pull; git checkout -b game-updates-3
-  ```
+It is a skill and not a section of this file on purpose: it is long, it is procedural, and
+it only matters during the few minutes an actual git operation is happening. Most of what it
+says is a specific thing that went wrong once and should not have to be rediscovered — the
+review ruleset on `main` that makes `gh pr merge` fail while the protection API reports the
+branch unprotected, why `git branch -d` always refuses a squash-merged branch, and why a
+branch name is never reused.
 
-  Then delete the merged branch locally, and its remote with
-  `git push origin --delete game-updates-2`. Confirm the content landed first — with a
-  squash, `git diff main <branch>` returning nothing is the check, not `git branch -d`
-  succeeding.
-- **Say so out loud before switching branches**, and never do it as a side effect of some
-  other task.
-- `git checkout main` **before** `git pull`. Pulling while on a feature branch drags
-  `main`'s history onto that branch and causes confusion.
-- Commits use the GitHub noreply identity, not a personal address.
-- The owner reviews diffs in VS Code, so leave work **unstaged** unless asked to
-  commit. Do not push or open a PR without being asked for that step.
+The three decisions worth knowing without opening it:
+
+- **Squash merge every PR**, so `main` reads as a list of milestones. Commit freely on the
+  branch; the squash collapses them.
+- **Work on `game-updates-N`**, incrementing every PR. Branch off `main`, never commit to it.
+- **Leave work unstaged.** The owner reviews diffs in VS Code. Do not commit, push or open a
+  PR without being asked for that specific step.
 
 ## Determinism — a planned feature that constrains code written now
 
@@ -144,36 +137,29 @@ do not write code that forecloses it.
   before playback begins, so animation speed, the planned game-speed setting, and any
   skip button are free to alter pacing and must not alter results.
 
-## Resolution order is a player lever, not just an output
+## The combat screen — see the `combat-screen` skill
 
-A round resolves the two queues **alternately**, one action each, with the longer queue
-acting alone once the other empties. This replaced volley-per-side on 2026-07-31 — see the
-entry in `TODO.md` for the full reasoning.
+Its layout, its card and action-box widget, its hidden information, and the resolution-order
+rule the screen has to obey all live in
+[.claude/skills/combat-screen/SKILL.md](.claude/skills/combat-screen/SKILL.md). **Load it
+before touching `internal/screens/combat.go`, `combat_actionbox.go`, `internal/combat`, or
+anything about how a round is drawn or played back.**
 
-Within one exchange, **the faster action lands first**: lower `ActionKind.Initiative()`
-wins, and side A takes a tie. Initiative is a lever wholly separate from cost — cost
-decides what a plan may *contain*, initiative decides *when* its pieces happen — and it is
-separate from `Spd`, which buys action points and never priority.
+It is a skill because it is the screen under active construction — it was over half this
+file and it grows every session, while mattering only when that screen is the work. The
+general UI conventions below still apply to it and stay here.
 
-The intended loop is: **the player chooses their actions, then alters the resolution
-order.** That is why two monolithic volleys were wrong; they gave the player nothing to
-manipulate. Dragging a card to a different slot changes which of the opponent's actions it
-contests, and therefore whether it beats that action or answers it.
+Two things worth knowing without opening it:
 
-- **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
-  it returns and the Resolution pane draws what it returns. Neither derives the order
-  independently, which is what makes it structurally impossible for the pane to lie to the
-  player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
-- **Ordering is a rule.** It belongs in `internal/combat`, never in a screen. A new effect
-  that rearranges resolution changes `ResolutionOrder` and both consumers follow.
-- A raised Guard lasts until its owner's next action, so it covers every opposing action
-  in between, across a round boundary if it was queued last. A duelist who queues
-  nothing therefore keeps its guard — deliberate, pinned by
-  `TestGuardHoldsWhileItsOwnerDoesNothing`, and worth revisiting during balancing.
+- **`internal/combat` decides rounds; the screen only replays them.** Never change the rules
+  to make a screen look right — say so and let the owner decide which one is wrong.
+- **`combat.ResolutionOrder` is the single authority on play order**, and both `ResolveRound`
+  and the Resolution pane read it rather than deriving their own.
 
 ## UI: clicks and drag-and-drop only
 
-A firm design decision, not a current limitation. The entire input vocabulary is:
+A firm design decision, not a current limitation. These apply everywhere, the combat screen
+included. The entire input vocabulary is:
 
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
@@ -285,120 +271,20 @@ reference case: the button rests at 65%, hovers at 82% and reaches the named col
 - Disabled deliberately ignores the widget's colour. A disabled control should read as
   unavailable first and as itself second.
 
-### Combat screen layout is scaffolding
-
-The screen reads top to bottom rather than left to right, decided 2026-08-04: **who you
-are and what the round is doing** above, **the cards you are doing it with** along the
-bottom. Colours identify the role and are placeholders, not a chosen palette.
-
-| Element | Slot | Colour | Role |
-|---|---|---|---|
-| Character block | 4% x, 12% y | green | life, discards, vitae |
-| Resolution | 45–78% x, 12–46% y | pink | both queues interleaved in play order |
-| Caption box | hand width, 48% y | pink | what the round is doing right now |
-| Hand | centred, 59% y | element | the cards, portrait, in one row |
-| AP figure and bar | hand width, under the row | blue | the budget |
-| Buttons | 95% y | — | Discard 20%, DUEL! 33%, Deck 88% |
-| Enemy sprite | 88% x, 34% y | — | the opponent |
-
-**Cards are portrait and live along the bottom.** Landscape cards in a vertical column
-capped how many could be shown, and the hand is going to grow. `cardWidth`/`cardHeight` are
-**flat constants — 180x264 — and must stay flat**: they used to be derived from the glyph
-row, so adding a badge silently widened every card and the layout could not be reasoned
-about without doing the arithmetic. Contents fit the card, never the reverse.
-
-**`handBand()` is the single authority on the hand's horizontal extent.** The card slots
-are cut out of it, the AP bar spans it and the caption box matches it, so the three cannot
-drift apart when the hand size changes. A card in flight still owns its slot, which is what
-stops the row sliding half a card sideways when one is lifted.
-
-**The buttons are one strip at 95%, under the AP bar.** Discard at 20% and DUEL! at 33% sit
-together, because they are the same choice — **you select a set, then decide what it was
-for** — and the choice belongs next to the cards it is made from. Deck is alone at 88%; it
-changes nothing and belongs nowhere near them. Discard carries one condition DUEL! does
-not: a round's discards can run out.
-
-**Selection having two verbs is deliberate.** There is no discard mode and no second
-gesture. One selected set, two things you can do with it, which is why the two buttons are
-adjacent and why the action points come back when a card is discarded — the selection was
-proposed, not spent.
-
-**The character block replaced the fighter's sprite and health bar.** A bar says roughly
-how hurt you are, and a duel decided in whole points wants the exact number, so life is a
-red fraction. Discards refill each round; vitae is a fixed placeholder drawn anyway, so the
-box has its real shape before the rest of the character's state is designed. The enemy
-keeps its sprite and bar for now.
-
-**The deck overlay is a dialog, and the only one in the game.** It fills nearly the screen,
-everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
-overlay so the single live control is the only one that looks live. Pressing it closes it.
-There is no Escape key to fall back on and no right click, so a modal has to make its exit
-the brightest thing on screen or it is a trap.
-
-- **It draws the cards, not a table of counts.** A count cannot say which of six Strikes
-  are fire, and with elements on the cards that is most of what the panel is for.
-- **One grid holding both piles, discarded cards dimmed.** Sorting by kind and element
-  rather than by pile means **a card does not move when it is discarded, it only dims** —
-  the deck draining in place reads better than cards jumping between two lists.
-- **Sorted, never in pile order.** Drawing the shuffled draw pile in order would hand the
-  player their next five cards. The old counts-only version dodged this by construction; the
-  sort is what replaces that protection.
-- It draws a `+N more not shown` line rather than silently dropping overflow. It cannot fire
-  at twenty cards, but deckbuilding will grow the deck and a panel that quietly hid cards
-  would be a picture that lies about what you own.
-
-**The Resolution pane is the centrepiece and gets the width to prove it.** It is the only
-pane that has to grow: once exchanges have structure — an initiator and a response — it
-has to draw that rather than a flat list of rows.
-
-One pane now. Chosen folded into the palette on 2026-08-02, Enemy went the same day because
-an interleaved Resolution already shows the opponent's actions in a better order than a
-column of its own, and Actions went on 2026-08-04 with the move to the bottom — the hand has
-no frame, so there was nothing left for a placement to hold. The player's rows carry
-`playerSwatch` green and the opponent's carry `enemySwatch` yellow, so the screen reads as
-two colours: green is you, yellow is them. Do not treat any of it as settled — the 15–39%
-column the Actions pane vacated is deliberately still empty.
-
-### The action box
-
-[combat_actionbox.go](internal/screens/combat_actionbox.go) is the hand and its
-drag-to-reorder, and the reference for building a *game* widget: state on the scene,
-hand-rolled hit testing, no toolkit. Click a card to select it into the round's queue, click
-it again to take it out, drag sideways to move it along the row.
-
-- **`planning()` is the single predicate** for "the player may edit the queue" — derived
-  from `cursor >= len(log)` plus both duelists alive, not stored. Drag and the DUEL!
-  button both gate on it, so they can never disagree.
-- **The action-point budget is enforced at selection.** A card the remaining points will
-  not cover cannot be selected and draws dimmed. Accepting the click and then refusing it is
-  a worse conversation than never letting it happen.
-- **A press is not a drag until the cursor moves past `dragThreshold`.** Without it every
-  click jitters into a one-pixel reorder and selecting a card is a coin toss. The card
-  leaves the row at that moment rather than on release, so the gap closes under the cursor
-  and the drop index is measured against the row the card lands in.
-- **Dropping outside the band puts the card back.** There is no discard gesture — clicking a
-  card off is how it leaves the queue, and that is visible on screen in a way that dragging
-  into empty space never was.
-- **Selection lifts a card *up* out of the row**, and reordering is horizontal. Both rotated
-  with the layout; selection is the only state a card carries, so it gets a whole axis to
-  itself rather than a tint competing with the affordability dimming.
-- The in-flight card is drawn last in `Draw`, so it rides over everything it crosses.
-- **The AP budget is drawn twice, on purpose.** A `3/6 AP` line for the exact figure and a
-  bar under it for the glanceable one, both sitting between the cards and the two buttons
-  that spend them.
-
 ### Two debug flags, and they are not interchangeable
 
 `ActiveDebug` split into `DebugPlacement` and `DebugGameplay` on 2026-08-02, because they
 answer different questions and are wanted at different times.
 
 - **`DebugPlacement`** — the grid, the rulers, the `Debug1`/`Debug2` scratch strings. About
-  *where things are drawn*. Safe to leave on while playing, and on by default because the
-  combat screen is still being laid out.
+  *where things are drawn*. Safe to leave on while playing. It defaulted on while the combat
+  screen was being laid out; it no longer does, so a change that needs the guides has to turn
+  it on deliberately.
 - **`DebugGameplay`** — perfect information, starting with the opponent's queued actions.
   About *what the player is allowed to know*. **Off by default**: with it on you are not
   playing the game, you are inspecting it, and it is easy to tune balance against a view no
-  player will ever have.
+  player will ever have. What it currently reveals is the combat screen's, and lives in the
+  `combat-screen` skill.
 
 Neither may ever change an outcome. Both are views, the same constraint that applies to
 playback speed — `ResolveRound` never sees either flag.
@@ -436,22 +322,6 @@ go run .                      # nothing: every trace function is empty
   GPU-to-CPU readback that stalls the frame it happens on.
 - The layout dump re-runs whenever the **hand size** changes, since the whole bottom band is
   a function of that number. `tracedHand` watches it, so no call site has to remember.
-
-### Hidden information is gated on `DebugGameplay`
-
-The opponent's queued actions are concealed in both the Enemy pane and the enemy rows of
-the Resolution pane, unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single
-predicate — `!gs.DebugGameplay && s.planning()` — and anything else that becomes secret
-should join it rather than growing a second rule.
-
-- **Concealment lifts once playback starts.** An action that has already resolved is not a
-  secret, and the Resolution pane still has to narrate the round.
-- **Concealed rows keep their real count**, so the opponent's AP spend stays readable even
-  when the actions do not. Deliberate, and recorded as open in `TODO.md`: collapsing the
-  rows would hide the spend and destroy the pane's account of who acts when, which is the
-  one thing that pane exists to show.
-- Debug is a *view*, never a rule. `ResolveRound` never sees the flag, so turning debug on
-  or off cannot change an outcome — the same constraint that applies to playback speed.
 
 ## Architecture
 

@@ -6,7 +6,7 @@
     "Strength": 10,
     "Speed": 15,
     "Constitution": 20,
-    "AvailableAffixes": ["cold", "hot", "charged", "undying"]
+    "AvailableAffixes": ["ice", "fire", "lightning"]
   },
   {
     "CombatantRecord": "Fighter1",

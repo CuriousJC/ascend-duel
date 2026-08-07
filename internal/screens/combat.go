@@ -1451,12 +1451,39 @@ func combatantFromRecord(gs *state.GlobalState, record string) *entities.Combata
 	return entities.NewCombatantFrom(d, gs.Assets[d.SpriteSheet])
 }
 
+// The health bar's fixed size. Package constants rather than locals so the scratch images
+// below can be allocated against them.
+const (
+	rectWidth  = 150
+	rectHeight = 25
+)
+
+// The two scratch images DrawHealthBar composites through, allocated once and reused.
+//
+// **This used to be two `ebiten.NewImage` calls per bar per frame** — 120 new GPU textures a
+// second for a picture that changes only when someone takes damage. Both are fully
+// overwritten at the top of every call (`Fill` on each, then the mask redrawn), so reuse
+// cannot leak last frame's contents.
+//
+// Package-level mutable state is safe here specifically because Ebitengine calls Draw from
+// one goroutine, and because each call finishes compositing into the screen before it
+// returns — so two bars drawn in the same frame take turns rather than fighting.
+var healthBarMask, healthBarFill *ebiten.Image
+
+// healthBarScratch returns the pair, allocating them on first use. Not built at package
+// init: ebiten.NewImage before the game loop is running is a rule worth not testing.
+func healthBarScratch() (mask, fill *ebiten.Image) {
+	if healthBarMask == nil {
+		healthBarMask = ebiten.NewImage(rectWidth, rectHeight)
+		healthBarFill = ebiten.NewImage(rectWidth, rectHeight)
+	}
+	return healthBarMask, healthBarFill
+}
+
 func DrawHealthBar(gs *state.GlobalState, screen *ebiten.Image,
 	hPositionEntity float64, vPositionEntity float64,
 	currentLife int, maxLife int) {
 
-	rectWidth := 150
-	rectHeight := 25
 	hPosition := hPositionEntity
 	vPosition := vPositionEntity + 100                      //move down 100 px from the position
 	rectColor := color.RGBA{A: 255, R: 96, G: 37, B: 37}    // Crimson red
@@ -1464,13 +1491,13 @@ func DrawHealthBar(gs *state.GlobalState, screen *ebiten.Image,
 	maskColor := color.RGBA{A: 255, R: 255, G: 192, B: 203} // mask color
 	maskFill := color.RGBA{A: 0, R: 255, G: 255, B: 255}    //fill transparent
 
+	mask, lifeRect := healthBarScratch()
+
 	//Rounded corners mask Image
-	mask := ebiten.NewImage(rectWidth, rectHeight)
 	mask.Fill(maskFill)
 	CreateRoundedRecMask(mask, 0, 0, float32(rectWidth), float32(rectHeight), 10, maskColor)
 
 	//Track plus the red fill, scaled to the current life fraction
-	lifeRect := ebiten.NewImage(rectWidth, rectHeight)
 	lifeRect.Fill(trackColor)
 	if maxLife > 0 && currentLife > 0 {
 		fillWidth := float32(rectWidth) * float32(currentLife) / float32(maxLife)

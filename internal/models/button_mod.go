@@ -36,6 +36,21 @@ type Button struct {
 	// PressedInside records that the mouse went down while over this button, so
 	// the release can tell a real click from a drag that happened to end here.
 	PressedInside bool
+
+	// What Image currently holds, so DrawButton can repaint it only when something
+	// visible has changed rather than every frame.
+	//
+	// A button's face is a function of exactly these three things plus its size, so
+	// comparing them is a complete test for "is the cached picture still right". Painted
+	// starts false, which is what forces the first paint — a zero-valued Button has an
+	// Image full of nothing and no state worth trusting.
+	//
+	// These are data about the cached render, not behaviour, so they belong on the struct
+	// like everything else here. Only DrawButton writes them.
+	Painted      bool
+	PaintedState ButtonState
+	PaintedText  string
+	PaintedColor color.RGBA
 }
 
 // NewButton creates a new button with the given width, height, and text

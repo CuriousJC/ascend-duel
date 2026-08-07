@@ -100,10 +100,55 @@ func ColorAtStrength(c color.RGBA, pct int) color.RGBA {
 }
 
 // DrawButton uses
+// DrawButton blits the button's cached face onto the screen, repainting that face first if
+// anything about it changed.
+//
+// **It used to allocate an *ebiten.Image every call.** Three buttons at 60fps is 180 new GPU
+// textures a second to draw three rectangles that mostly do not change, and `Button.Image`
+// was already sitting there at exactly the right size being used only for hit-test bounds.
+// Now it is what gets painted, and a press repaints one button once instead of the screen
+// repainting all of them forever.
 func DrawButton(gs *state.GlobalState, screen *ebiten.Image, button *models.Button) {
+	if needsPaint(button) {
+		paintButton(gs, button)
+	}
 
-	img := ebiten.NewImage(button.Width, button.Height)
-	vector.DrawFilledRect(img, 0, 0, float32(button.Width), float32(button.Height), buttonStateColor(button), false)
+	//Locate our button according to screen coords and adjust to use the center point for translation
+	screenLocation := &ebiten.DrawImageOptions{}
+	centerX := float64(button.ScreenX) - float64(button.Width)/2
+	centerY := float64(button.ScreenY) - float64(button.Height)/2
+	screenLocation.GeoM.Translate(centerX, centerY)
+	screen.DrawImage(button.Image, screenLocation)
+}
+
+// needsPaint reports whether the cached face is stale.
+//
+// The size check is not paranoia: Image is allocated once in NewButton, so a caller that
+// changes Width or Height afterwards would otherwise get the old face stretched or clipped
+// with no clue why. Comparing bounds catches it and paintButton reallocates.
+func needsPaint(button *models.Button) bool {
+	return !button.Painted ||
+		button.PaintedState != button.State ||
+		button.PaintedText != button.Text ||
+		button.PaintedColor != button.BaseColor ||
+		button.Image == nil ||
+		button.Image.Bounds().Dx() != button.Width ||
+		button.Image.Bounds().Dy() != button.Height
+}
+
+// paintButton renders the face into Button.Image and records what it drew.
+func paintButton(gs *state.GlobalState, button *models.Button) {
+	if button.Image == nil ||
+		button.Image.Bounds().Dx() != button.Width ||
+		button.Image.Bounds().Dy() != button.Height {
+		button.Image = ebiten.NewImage(button.Width, button.Height)
+	}
+
+	// Clear before repainting. The fill below is opaque and covers the whole face, but a
+	// shorter label would otherwise leave the tail of a longer one behind it.
+	button.Image.Clear()
+	vector.DrawFilledRect(button.Image, 0, 0,
+		float32(button.Width), float32(button.Height), buttonStateColor(button), false)
 
 	// Text is centred by alignment against the button's midpoint rather than by a fixed
 	// offset. The old hardcoded Translate(50, 50) only landed correctly on a button of
@@ -112,13 +157,11 @@ func DrawButton(gs *state.GlobalState, screen *ebiten.Image, button *models.Butt
 	centerButtonTextOp.GeoM.Translate(float64(button.Width)/2, float64(button.Height)/2)
 	centerButtonTextOp.PrimaryAlign = text.AlignCenter
 	centerButtonTextOp.SecondaryAlign = text.AlignCenter
-	text.Draw(img, button.Text, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, centerButtonTextOp)
+	text.Draw(button.Image, button.Text,
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, centerButtonTextOp)
 
-	//Locate our button according to screen coords and adjust to use the center point for translation
-	screenLocation := &ebiten.DrawImageOptions{}
-	centerX := float64(button.ScreenX) - float64(button.Width)/2
-	centerY := float64(button.ScreenY) - float64(button.Height)/2
-	screenLocation.GeoM.Translate(centerX, centerY)
-	screen.DrawImage(img, screenLocation)
-
+	button.Painted = true
+	button.PaintedState = button.State
+	button.PaintedText = button.Text
+	button.PaintedColor = button.BaseColor
 }

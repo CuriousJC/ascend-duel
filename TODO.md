@@ -289,10 +289,24 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - Dots and a glyph are not obviously compatible — three pips inside a 32px glyph is
         cramped, and a glyph plus dots beside it is saying it twice again.
       - The segmented-bar half of the idea survives regardless and is still worth having.
-- [ ] **Stop allocating in `Draw`.** `DrawButton` makes a new `ebiten.Image` per button
-      per frame (180/sec); `DrawHealthBar` makes two per bar per frame (240/sec).
-      `Button.Image` already exists and is only used for bounds — render into it on
-      state change instead. *(analysis §4)*
+- [x] **Stop allocating in `Draw`** *(2026-08-06)*. `DrawButton` made a new `ebiten.Image`
+      per button per frame and `DrawHealthBar` made two per bar per frame — roughly 300 GPU
+      textures a second to draw pictures that change on a click or a hit. *(analysis §4)*
+      - **Buttons repaint on change, not per frame.** `Button.Image` was already allocated at
+        the right size and used only for hit-test bounds; it is now what gets painted.
+        `Painted`/`PaintedState`/`PaintedText`/`PaintedColor` record what the cached face
+        holds, and a button's face is a function of exactly those plus its size, so comparing
+        them is a complete staleness test.
+      - `needsPaint` also compares `Image.Bounds()` against `Width`/`Height`. Not paranoia:
+        the image is allocated once in `NewButton`, so changing the size afterwards would
+        otherwise stretch or clip the cached face with no clue why.
+      - **The health bar composites through two package-level scratch images** instead of
+        allocating a pair each frame. Safe because Ebitengine draws from one goroutine, both
+        images are fully overwritten at the top of every call, and each call finishes
+        compositing into the screen before it returns — so two bars in one frame take turns.
+      - Allocated lazily rather than at package init: `ebiten.NewImage` before the game loop
+        is running is a rule worth not testing.
+      - Verified by comparing captured frames before and after — pixel-identical.
 
 ## Next — where the game actually starts
 

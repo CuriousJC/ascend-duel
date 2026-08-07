@@ -212,6 +212,21 @@ const (
 // out of the round it is played in, not the point it costs.
 const prepareBonusAP = 2
 
+// baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
+const baseMaxActions = 5
+
+// MaxActions is the second of the two bounds on a round. **A round is bounded by cost and
+// by count, independently and on purpose**: the budget gates what can be afforded, and this
+// gates how much can happen at all — which still bites when discounts have taken cards to
+// free, and is what stops a swarm from becoming unbounded as its speed grows.
+//
+// It is a method rather than the bare constant it used to be, and it lives here rather than
+// on the screen where `maxSelected` used to. Both were deliberate: it is a **rule**, so the
+// opponent's planner has to obey it exactly as the player's selection does, and making it a
+// function of the duelist is what gives a ring or a brand raising the cap somewhere to bite
+// without touching a single call site. See MECHANICS.md.
+func (d Duelist) MaxActions() int { return baseMaxActions }
+
 // ActionPoints is how much this duelist has to spend in a round, including anything
 // banked by a Prepare in the round before.
 func (d Duelist) ActionPoints() int {
@@ -549,27 +564,165 @@ func other(s Side) Side {
 	return SideA
 }
 
-// PlanGreedy is a placeholder opponent. It spends the whole budget on the biggest
-// attack it can still afford, so it is deterministic and easy to test against. It never
-// defends and never prepares — a real AI is its own piece of work, and enemies that fight
-// in genuinely different shapes are the next design job. See TODO.md.
-func PlanGreedy(d Duelist) []ActionKind {
-	remaining := d.ActionPoints()
-	plan := make([]ActionKind, 0, remaining)
+// PlanStyle is how an opponent fights. It exists because "negates one attack" is priced
+// against how many attacks arrive, and for as long as every enemy spent its whole budget
+// on two big swings, two defensive cards bought total immunity — a duel that ran three
+// rounds taking 0, 0 and 2 damage. That is not a fault in Dodge's cost. It is one opponent
+// wearing one shape, and the shape is what the player is really buying answers to.
+//
+// Each style is a pure function of a Duelist, so an enemy's whole plan is reproducible from
+// its stats and what it banked last round. No randomness, no clock, no memory beyond the
+// Duelist itself.
+//
+// **These are behaviours, not the enemy model.** MECHANICS.md decides that enemies get a
+// deck and that an affix transforms it, which subjects the opponent to the same "what did I
+// draw" pressure the player faces. That is a bigger build needing its own shuffle stream; a
+// deck-driven planner will arrive as one more style beside these rather than replacing the
+// idea of a style.
+type PlanStyle int
 
-	for {
+const (
+	// StyleBrute spends everything on the biggest attack it can afford. Few, heavy blows —
+	// the shape every enemy used to have, kept because it is a fine *first* opponent and a
+	// useful baseline. Dodge is strong against it, which is the point of it not being alone.
+	StyleBrute PlanStyle = iota
+
+	// StyleSwarm attacks as many times as the round allows. This is the answer to the
+	// immunity problem: a negation stops one blow, so five cheap ones walk straight through
+	// a pair of them, and Guard's flat halving is suddenly worth its 3 points.
+	StyleSwarm
+
+	// StyleWarden opens with a Guard and attacks with the rest, so the player's damage is
+	// halved until they can punch through it. This is what makes Heavy worth 4.
+	StyleWarden
+
+	// StyleTactician banks action points and then unloads them. It alternates a light
+	// setup round against an oversized one, which is a rhythm the player can read and
+	// answer — guard the spike, punish the setup.
+	StyleTactician
+)
+
+func (p PlanStyle) String() string {
+	switch p {
+	case StyleSwarm:
+		return "swarm"
+	case StyleWarden:
+		return "warden"
+	case StyleTactician:
+		return "tactician"
+	default:
+		return "brute"
+	}
+}
+
+// PlanStyles is every style, in a fixed order, for anything that has to walk them.
+func PlanStyles() []PlanStyle {
+	return []PlanStyle{StyleBrute, StyleSwarm, StyleWarden, StyleTactician}
+}
+
+// ParsePlanStyle reads a style out of a data record, falling back to brute so a typo in
+// JSON produces a fightable enemy rather than a panic or a duelist that stands still.
+func ParsePlanStyle(s string) (PlanStyle, bool) {
+	for _, p := range PlanStyles() {
+		if p.String() == s {
+			return p, true
+		}
+	}
+	return StyleBrute, false
+}
+
+// PlanFor builds one round's plan in the given style. Every style is bounded by both the
+// action-point budget and MaxActions, and none may return a plan its duelist cannot pay
+// for — TestEveryStyleObeysBothBounds holds all of them to that.
+func PlanFor(style PlanStyle, d Duelist) []ActionKind {
+	budget, slots := d.ActionPoints(), d.MaxActions()
+
+	switch style {
+	case StyleSwarm:
+		return planSwarm(budget, slots)
+	case StyleWarden:
+		return planWarden(budget, slots)
+	case StyleTactician:
+		return planTactician(d, budget, slots)
+	default:
+		return planBrute(budget, slots)
+	}
+}
+
+// planBrute fills with the most expensive attack that still fits.
+func planBrute(budget, slots int) []ActionKind {
+	plan := make([]ActionKind, 0, slots)
+
+	for len(plan) < slots {
 		switch {
-		case remaining >= costHeavy:
-			plan = append(plan, Heavy)
-			remaining -= costHeavy
-		case remaining >= costStrike:
-			plan = append(plan, Strike)
-			remaining -= costStrike
-		case remaining >= costQuick:
-			plan = append(plan, Quick)
-			remaining -= costQuick
+		case budget >= costHeavy:
+			plan, budget = append(plan, Heavy), budget-costHeavy
+		case budget >= costStrike:
+			plan, budget = append(plan, Strike), budget-costStrike
+		case budget >= costQuick:
+			plan, budget = append(plan, Quick), budget-costQuick
 		default:
 			return plan
 		}
 	}
+	return plan
+}
+
+// planSwarm takes as many separate attacks as the round allows, then spends whatever is
+// left over making those attacks bigger rather than adding a sixth it has no slot for.
+//
+// Widening first and upgrading second is the whole character of the style: a swarm with
+// more points does not become a brute, it becomes a swarm that hurts. Without the upgrade
+// pass a fast swarm would simply waste the points its speed bought it.
+func planSwarm(budget, slots int) []ActionKind {
+	plan := make([]ActionKind, 0, slots)
+	for len(plan) < slots && budget >= costQuick {
+		plan, budget = append(plan, Quick), budget-costQuick
+	}
+
+	// Quick -> Strike costs 1 more, Strike -> Heavy costs 2 more. Upgrade along the plan
+	// rather than pouring everything into the first slot, so the round stays wide.
+	for _, step := range []struct {
+		from, to ActionKind
+	}{{Quick, Strike}, {Strike, Heavy}} {
+		gap := step.to.Cost() - step.from.Cost()
+		for i := range plan {
+			if budget < gap {
+				break
+			}
+			if plan[i] == step.from {
+				plan[i], budget = step.to, budget-gap
+			}
+		}
+	}
+	return plan
+}
+
+// planWarden puts a Guard up first and attacks with what is left. The Guard is a setup, so
+// resolution moves it to the front of the turn regardless of where it sits here — it is
+// first in the slice only because that is how the plan reads.
+func planWarden(budget, slots int) []ActionKind {
+	if budget < costGuard || slots < 1 {
+		return planBrute(budget, slots)
+	}
+	return append([]ActionKind{Guard}, planBrute(budget-costGuard, slots-1)...)
+}
+
+// planTactician alternates between banking and spending, reading which round it is in off
+// its own BonusAP: anything banked means last round was the setup, so this one is the
+// payoff. It needs no memory of its own because Prepare already leaves the evidence.
+func planTactician(d Duelist, budget, slots int) []ActionKind {
+	if d.BonusAP > 0 {
+		// The payoff round. Everything into the biggest attacks that fit.
+		return planBrute(budget, slots)
+	}
+
+	// The setup round: bank what a second Prepare is worth, keep enough back to stay
+	// dangerous, and never spend so much preparing that the round is a free hit for the
+	// player. Two Prepares is the whole point — it is what makes the next round oversized.
+	plan := make([]ActionKind, 0, slots)
+	for len(plan) < slots-1 && budget >= costPrepare*2 && len(plan) < 2 {
+		plan, budget = append(plan, Prepare), budget-costPrepare
+	}
+	return append(plan, planBrute(budget, slots-len(plan))...)
 }

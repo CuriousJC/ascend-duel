@@ -18,6 +18,12 @@ const LifePerCon = 5
 type Combatant struct {
 	combat.Duelist
 
+	// Style is how this combatant fights, for the ones the game plans for. It sits here
+	// rather than on Duelist because it is not a rule the resolver reads: ResolveRound is
+	// handed a queued set and never asks who chose it, which is exactly what keeps the
+	// engine symmetric and lets a balance sim drive both sides.
+	Style combat.PlanStyle
+
 	Sprite     *ebiten.Image // Sprite image
 	SpriteRect image.Rectangle
 }
@@ -28,12 +34,17 @@ type Combatant struct {
 func NewCombatantFrom(d data.CombatantData, sheet *ebiten.Image) *Combatant {
 	rect := image.Rect(d.SpriteRect[0], d.SpriteRect[1], d.SpriteRect[2], d.SpriteRect[3])
 
+	// An unknown or missing style falls back to brute rather than failing the load. A record
+	// that predates the field still has to produce a fightable enemy.
+	style, _ := combat.ParsePlanStyle(d.PlanStyle)
+
 	c := &Combatant{
 		Duelist: combat.Duelist{
 			Con: d.Constitution,
 			Str: d.Strength,
 			Spd: d.Speed,
 		},
+		Style:      style,
 		SpriteRect: rect,
 		Sprite:     sheet.SubImage(rect).(*ebiten.Image),
 	}

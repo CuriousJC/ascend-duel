@@ -27,6 +27,19 @@ type CombatantData struct {
 	// never an element, and it wants revisiting once enemies have decks at all. `earth` is
 	// absent because whether it can be a floor theme is still open.
 	AvailableAffixes []string `json:"AvailableAffixes"`
+
+	// PlanStyle is how this combatant fights: brute, swarm, warden or tactician. It is a
+	// string here and a combat.PlanStyle after hydration, so the roster is tunable without
+	// touching Go — which is the whole reason enemy shape is data and not code.
+	//
+	// Empty or unrecognised falls back to brute, so a record predating this field, or one
+	// with a typo, still produces a fightable enemy rather than one that stands still.
+	//
+	// It is deliberately **not** a deck. MECHANICS.md decides that enemies get one and that
+	// an affix transforms it; a style is the behaviour that will eventually plan *from* that
+	// deck, so having it separate now means the deck can arrive without redefining what an
+	// enemy is. Nothing reads AvailableAffixes yet, for the same reason.
+	PlanStyle string `json:"PlanStyle"`
 }
 
 // LoadCombatants parses the embedded JSON and returns a map keyed by CombatantRecord

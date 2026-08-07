@@ -81,6 +81,25 @@ So: open the PR, report that it needs one approval, and stop. Even when told to 
 without asking — that instruction authorizes *merging*, not *bypassing the review rule*.
 Say which one is blocking and let the owner click.
 
+### The one exception, and how narrow it is
+
+The owner does sometimes delegate exactly this — *"you are empowered to do everything you
+need to get that out there, even forcing through an update into main"* — and that is real
+authorization, not a figure of speech. `--admin` is allowed while it stands.
+
+**It is scoped to the window they said they would be away for, and it lapses the moment they
+are back.** Used once on 2026-08-06 to land #22 during an unattended overnight session, and
+revoked the next morning: *"we'll go back to me being aware of any pushes to main now that
+I'm back."*
+
+- **The default is always "open the PR and stop".** Assume no standing grant.
+- A grant requires the owner to be **explicit that they are unavailable**. "Go ahead and
+  merge it" from someone sitting at the keyboard is a request to *merge*, not to bypass
+  review — ask them to click it.
+- **A grant never carries into the next session**, and never past their return. Do not reason
+  from "this was allowed last time".
+- While a grant is live, say which control is being bypassed and why, as it happens.
+
 ## After a merge — the squash leaves a mess, and this is the cleanup
 
 **`git branch -d` will always refuse a merged feature branch.** The squash creates a new
@@ -111,13 +130,39 @@ git push origin --delete game-updates-2
 - **`git status --short` not listing an expected `??` entry means it is being ignored**, not
   that it does not exist. That is how the above was caught.
 - **Build tags select different files.** `internal/trace` has `trace_on.go` (`debugtrace`)
-  and `trace_off.go` (`!debugtrace`), so one configuration can compile while the other does
-  not. Vet and build **both** before committing anything that touches traced code:
+  and `trace_off.go` (`!debugtrace`); `internal/idle` has the same shape on `idleexit`. One
+  configuration can compile while another does not. Vet and build **all** of them before
+  committing anything that touches either:
 
   ```powershell
-  go vet ./...; go vet -tags debugtrace ./...
-  go build ./...; go build -tags debugtrace ./...
+  go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...
+  go build ./...; go build -tags debugtrace ./...; go build -tags idleexit ./...
   ```
+
+- **A stacked PR conflicts with `main` the moment the one below it is squashed.** Cost time
+  on 2026-08-07. Branch B was opened against branch A; A squash-merged into `main`; B
+  retargeted to `main` and immediately reported `CONFLICTING` on 22 files.
+
+  Nothing is actually wrong. The squash is a *new* commit that is not an ancestor of B, so
+  the merge base falls back to before A branched and git sees both sides editing the same
+  regions. **Do not resolve those conflicts by hand** — you would be re-resolving work that
+  already landed.
+
+  Drop the duplicated commit instead, after proving the content is identical:
+
+  ```powershell
+  git fetch origin
+  git diff <A's last commit> origin/main --stat     # MUST be empty
+  git rebase --onto origin/main <A's last commit> <B>
+  git push --force-with-lease origin <B>
+  ```
+
+  The empty diff is the proof that replaying only B's own commits loses nothing. Plain
+  `git rebase --onto` is fine here — it is `-i` that this environment cannot run.
+
+  **Retargeting is manual if the base branch still exists.** GitHub only auto-retargets a
+  stacked PR when the branch under it is deleted, so `gh pr merge --delete-branch=false`
+  leaves you to run `gh pr edit <B> --base main` yourself.
 
 ## Before committing anything
 

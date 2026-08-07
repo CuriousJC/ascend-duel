@@ -639,27 +639,177 @@ func TestEmptyQueueIsAHarmlessRound(t *testing.T) {
 	}
 }
 
-func TestPlanGreedyFitsTheBudget(t *testing.T) {
-	for spd := 0; spd <= 100; spd += 7 {
-		d := duelist(10, spd, 100)
-		plan := PlanGreedy(d)
+func TestEveryStyleObeysBothBounds(t *testing.T) {
+	// The two bounds on a round apply to the opponent exactly as they apply to the player.
+	// Swept across a wide speed range and across banked points, because both bounds move:
+	// AP grows with Spd and with BonusAP, while the action cap does not, which is the
+	// corner where an unbounded planner would overrun.
+	for _, style := range PlanStyles() {
+		for spd := 0; spd <= 120; spd += 3 {
+			for _, bonus := range []int{0, 2, 4, 10} {
+				d := duelist(10, spd, 100)
+				d.BonusAP = bonus
+				plan := PlanFor(style, d)
 
-		if !d.CanAfford(plan) {
-			t.Errorf("Spd %d: greedy plan costs %d, budget is %d",
-				spd, CostOf(plan), d.ActionPoints())
-		}
-		if len(plan) == 0 {
-			t.Errorf("Spd %d: greedy plan is empty", spd)
+				if !d.CanAfford(plan) {
+					t.Errorf("%v at Spd %d bonus %d: plan costs %d, budget is %d",
+						style, spd, bonus, CostOf(plan), d.ActionPoints())
+				}
+				if len(plan) > d.MaxActions() {
+					t.Errorf("%v at Spd %d bonus %d: %d actions, cap is %d",
+						style, spd, bonus, len(plan), d.MaxActions())
+				}
+				if len(plan) == 0 {
+					t.Errorf("%v at Spd %d bonus %d: plan is empty", style, spd, bonus)
+				}
+			}
 		}
 	}
 }
 
-func TestPlanGreedySpendsNearlyEverything(t *testing.T) {
-	// It fills with costs 4, 2 and 1, so a greedy fill should never leave anything behind.
-	for spd := 0; spd <= 100; spd += 3 {
-		d := duelist(10, spd, 100)
-		if left := d.ActionPoints() - CostOf(PlanGreedy(d)); left != 0 {
-			t.Errorf("Spd %d: greedy plan left %d points unspent", spd, left)
+func TestEveryStyleFightsInADifferentShape(t *testing.T) {
+	// The whole reason styles exist. If two of them produce the same round against the same
+	// duelist then one of them is not earning its place, and the player has nothing new to
+	// find an answer to.
+	d := duelist(10, 15, 100) // the shipped Monster1: 5 AP
+
+	seen := map[string]PlanStyle{}
+	for _, style := range PlanStyles() {
+		key := planKey(PlanFor(style, d))
+		if prev, clash := seen[key]; clash {
+			t.Errorf("%v and %v both plan %s", prev, style, key)
 		}
+		seen[key] = style
+	}
+}
+
+// planKey renders a plan so two of them can be compared as strings.
+func planKey(plan []ActionKind) string {
+	out := ""
+	for i, a := range plan {
+		if i > 0 {
+			out += "+"
+		}
+		out += a.String()
+	}
+	return out
+}
+
+func TestSwarmAttacksMoreOftenThanBrute(t *testing.T) {
+	// The specific thing styles were added to fix: a negation stops one blow, so an opponent
+	// that attacks five times walks through the pair of them that shut a brute out
+	// completely. Width is the mechanic, not damage.
+	d := duelist(10, 15, 100)
+
+	brute := PlanFor(StyleBrute, d)
+	swarm := PlanFor(StyleSwarm, d)
+
+	if len(swarm) <= len(brute) {
+		t.Errorf("swarm plans %d actions, brute %d; swarm must be the wider round",
+			len(swarm), len(brute))
+	}
+}
+
+func TestSwarmSpendsSpareBudgetOnBiggerAttacksNotMoreOfThem(t *testing.T) {
+	// A fast swarm has more points than it has slots. It must not waste them, and it must
+	// not stop being a swarm to use them.
+	d := duelist(10, 100, 100) // 14 AP against a cap of 5 actions
+	plan := PlanFor(StyleSwarm, d)
+
+	if len(plan) != d.MaxActions() {
+		t.Errorf("plan is %d actions, want the full %d", len(plan), d.MaxActions())
+	}
+	if left := d.ActionPoints() - CostOf(plan); left > 0 {
+		t.Errorf("left %d points unspent with upgrades still available", left)
+	}
+	for _, a := range plan {
+		if a.Category() != CategoryAttack {
+			t.Errorf("swarm queued %v, which is %v — every slot should be an attack", a, a.Category())
+		}
+	}
+}
+
+func TestWardenGuardsAndStillAttacks(t *testing.T) {
+	d := duelist(10, 15, 100) // 5 AP: Guard is 3, leaving a Strike
+	plan := PlanFor(StyleWarden, d)
+
+	guards, attacks := 0, 0
+	for _, a := range plan {
+		switch a.Category() {
+		case CategorySetup:
+			guards++
+		case CategoryAttack:
+			attacks++
+		}
+	}
+	if guards != 1 {
+		t.Errorf("warden queued %d setups, want exactly 1 Guard", guards)
+	}
+	if attacks == 0 {
+		t.Error("warden queued no attacks; a pure turtle cannot win and is not a fight")
+	}
+}
+
+func TestWardenFallsBackToAttackingWhenItCannotAffordAGuard(t *testing.T) {
+	// A duelist too slow to pay 3 for a Guard must still take a turn rather than stand there.
+	d := duelist(10, 0, 100)
+	d.BonusAP = -2 // floors ActionPoints at 1
+
+	if plan := PlanFor(StyleWarden, d); len(plan) == 0 {
+		t.Error("warden with a 1 AP budget planned nothing")
+	}
+}
+
+func TestTacticianBanksThenUnloads(t *testing.T) {
+	// The rhythm is the point: a light round the player can punish, then an oversized one
+	// they have to answer. It reads which round it is in off its own BonusAP, so it needs no
+	// memory beyond what Prepare already leaves behind.
+	d := duelist(10, 15, 100) // 5 AP
+
+	setup := PlanFor(StyleTactician, d)
+	prepares := 0
+	for _, a := range setup {
+		if a == Prepare {
+			prepares++
+		}
+	}
+	if prepares == 0 {
+		t.Fatalf("setup round planned no Prepare: %v", setup)
+	}
+
+	// Play the setup round through so the bank is real rather than assumed.
+	_, after, _ := ResolveRound(d, duelist(10, 10, 500), setup, nil, 1)
+	if after.BonusAP == 0 {
+		t.Fatal("the setup round banked nothing")
+	}
+
+	payoff := PlanFor(StyleTactician, after)
+	for _, a := range payoff {
+		if a == Prepare {
+			t.Errorf("payoff round is still preparing: %v", payoff)
+		}
+	}
+	if CostOf(payoff) <= CostOf(setup) {
+		t.Errorf("payoff round costs %d, setup round %d; the spike must be the bigger one",
+			CostOf(payoff), CostOf(setup))
+	}
+}
+
+func TestParsePlanStyleRoundTripsAndFallsBack(t *testing.T) {
+	// Styles arrive as strings out of combatants.json, so a typo must produce a fightable
+	// enemy rather than one that stands still.
+	for _, style := range PlanStyles() {
+		got, ok := ParsePlanStyle(style.String())
+		if !ok || got != style {
+			t.Errorf("%q parsed to %v (ok=%v), want %v", style.String(), got, ok, style)
+		}
+	}
+
+	got, ok := ParsePlanStyle("wardne")
+	if ok {
+		t.Error("a typo reported itself as a known style")
+	}
+	if got != StyleBrute {
+		t.Errorf("unknown style fell back to %v, want brute", got)
 	}
 }

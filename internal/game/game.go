@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"strconv"
 
+	"github.com/curiousjc/ascend-duel/internal/idle"
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -78,6 +79,21 @@ func (g *Game) Update() error {
 	// call, and it is the simulation counter rather than a clock, so a trace lines up with
 	// a replay of the same seed.
 	trace.Tick(g.GlobalState.Count)
+
+	// Close an unattended window that nobody is using. Compiled out entirely unless the
+	// idleexit tag is set, so this is a no-op returning false in any build that ships.
+	//
+	// Focus is passed in rather than assumed, because the case this exists for is a window
+	// sitting in the background — see internal/idle. It sets ShouldClose rather than
+	// returning ErrClosing directly, so the exit runs through exactly the same path as the
+	// window's close button and there is only one way the game ends.
+	if idle.Tick(
+		g.GlobalState.MouseX, g.GlobalState.MouseY,
+		ebiten.IsFocused(),
+		ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft),
+	) {
+		g.GlobalState.ShouldClose = true
+	}
 
 	scene := g.scene()
 

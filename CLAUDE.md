@@ -58,13 +58,18 @@ go vet ./...
 gofmt -l .          # list unformatted files
 
 go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.png
+go run -tags idleexit .     # closes itself after two minutes with nobody at the controls
+go run ./tools/balance      # what every enemy does to the fighter, as a table
+go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 ```
 
-Vet and build **both** configurations when touching anything traced — the tag selects a
-different file in `internal/trace`, so one can compile while the other does not:
+**Two build tags, and they compose.** Both select a different file in their package, so one
+configuration can compile while another does not. Vet and build every one you might have
+broken:
 
 ```powershell
-go vet ./...; go vet -tags debugtrace ./...
+go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...
+go run -tags "debugtrace idleexit" .    # traced and self-closing: the unattended run
 ```
 
 ```powershell
@@ -75,6 +80,13 @@ git commit -s                                   # sign-off, per CONTRIBUTING.md
 
 Tests live in `internal/combat` — the only package that can be tested without a
 window, by design. Keep it that way: rules go in `combat`, not in screens.
+
+**What cannot be unit-tested gets a tool instead.** `internal/screens` needs a window, so
+anything it decides is checked by launching the game; anything the *rules* decide about
+balance is checked by `tools/balance`, which plays whole duels through the real
+`ResolveRound` and prints who wins. It exists because an unwinnable enemy shipped and was
+invisible — losing slowly looks exactly like losing to bad draws. Run it after touching a
+cost, a stat line, or a planner.
 
 ## Git workflow — see the `github-workflow` skill
 
@@ -327,6 +339,30 @@ go run .                      # nothing: every trace function is empty
 - The layout dump re-runs whenever the **hand size** changes, since the whole bottom band is
   a function of that number. `tracedHand` watches it, so no call site has to remember.
 
+### `internal/idle` is a fourth thing, and it is compiled out too
+
+[internal/idle](internal/idle) closes the game after a stretch with nobody at the controls.
+
+```powershell
+go run -tags idleexit .                       # closes itself after two minutes idle
+ASCEND_DUEL_IDLE_SECONDS=30 go run -tags idleexit .
+go run .                                      # nothing: Tick is empty and always false
+```
+
+It exists so the game can be **launched unattended** — started to check a change, left to run,
+and gone by itself rather than holding a window open for the rest of a session.
+
+- **A build tag for the same reason as trace**, and the same two-file `_on`/`_off` shape. A
+  game that quits on a player who steps away to make tea is a bug, so this must not be in a
+  binary that ships. It has to stay deletable in one commit.
+- **Everything is gated on window focus, cursor movement included.** That is the whole trick,
+  not a nicety: an unattended run sits in the background while whoever launched it does
+  something else, and a cursor crossing the desktop over an unfocused window would otherwise
+  read as someone playing. The one case it exists for would be the one case it never fired in.
+- It sets `ShouldClose` rather than returning `ErrClosing`, so the exit runs through the same
+  path as the window's close button and there is only one way the game ends.
+- **It may never change an outcome.** It closes a window; it does not touch a duel.
+
 ## Architecture
 
 ### Ebitengine game loop
@@ -361,11 +397,12 @@ Key conventions:
 ### Package layout and its layering
 
 - `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["spritesheet_png"]`, `gs.Fonts["kubasta"]`).
-- `data/` — `//go:embed`s `combatants.json` and unmarshals it into `map[string]CombatantData` keyed by `CombatantRecord`. This is the pattern for all static game data: JSON next to a small Go loader. `SpriteSheet` in the JSON must match an `assets` map key, and `SpriteRect` is `[x0, y0, x1, y1]` used with `SubImage` to slice the sheet.
+- `data/` — `//go:embed`s `combatants.json` and unmarshals it into `map[string]CombatantData` keyed by `CombatantRecord`. This is the pattern for all static game data: JSON next to a small Go loader. `SpriteSheet` in the JSON must match an `assets` map key, and `SpriteRect` is `[x0, y0, x1, y1]` used with `SubImage` to slice the sheet. `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.**
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
-- `internal/combat/` — the duel rules. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/idle/` — the unattended-run timer, behind the `idleexit` build tag. Two files, `_on`/`_off`, exactly like `internal/trace`.
+- `internal/combat/` — the duel rules **and the opponent's planners**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 

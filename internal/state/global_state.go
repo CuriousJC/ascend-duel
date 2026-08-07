@@ -24,6 +24,14 @@ type GlobalState struct {
 	DebugPlacement bool
 	DebugGameplay  bool
 
+	// Version is what this build calls itself, set once by main from a linker-injected
+	// string. It is genuinely global — the window title and the title screen both want it
+	// and neither owns it — and it is a plain string, so state stays free of imports.
+	//
+	// **It exists so a bug report can name a build.** A screenshot or a "it crashed" from
+	// someone who downloaded an exe is unusable if every build looks alike.
+	Version string
+
 	Debug1, Debug2 string
 	ActiveScreen   ActiveScreen
 	NewScreen      bool

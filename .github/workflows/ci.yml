@@ -1,13 +1,17 @@
 # Runs on every push to main and every pull request.
 #
-# **Windows is the only runner, deliberately.** Ebitengine is cgo-free on Windows but needs
-# X11 development headers on Linux and a real toolchain on macOS, so a Linux runner would
-# either fail to build the game or need apt packages installed to prove something nobody
-# ships. Windows is the platform being released; it is the platform being checked.
+# **Both platforms that get released, because both can break on their own.** Ebitengine is
+# pure Go on Windows and cgo plus X11/GL/ALSA headers on Linux, so they fail in completely
+# different ways — a missing dev package or a cgo-only compile error is invisible from a
+# Windows runner. Checking Linux here rather than only at tag time is the difference between
+# a red PR and a release that dies halfway through.
 #
-# **Both build tags, every time.** internal/trace selects a different file on `debugtrace`,
-# so one configuration compiles while the other does not. That has broken before, and a CI
-# that only checks the default build would not have caught it.
+# macOS is deliberately absent: nothing is shipped for it, so there is nothing to protect.
+#
+# **Every build tag, every time.** internal/trace selects a different file on `debugtrace`
+# and internal/idle does the same on `idleexit`, so one configuration compiles while another
+# does not. That has broken before, and a CI that only checked the default build would not
+# have caught it.
 name: CI
 
 on:
@@ -25,9 +29,34 @@ concurrency:
 
 jobs:
   check:
-    runs-on: windows-latest
+    strategy:
+      # Let both platforms report. Cancelling the sibling on the first failure hides whether
+      # a break is platform-specific, which is the main thing having two runners tells you.
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+
+    runs-on: ${{ matrix.os }}
+    # bash on both, so every step below is written once rather than twice. It is the default
+    # on Linux and available on the Windows runners.
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - uses: actions/checkout@v4
+
+      # Ebitengine is pure Go on Windows and cgo on Linux, where it links against X11 for the
+      # window and input, GL for drawing and ALSA for audio. Matches the release workflow's
+      # list; if one changes the other has to.
+      - name: install ebitengine build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libc6-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev \
+            libasound2-dev pkg-config
 
       - uses: actions/setup-go@v5
         with:
@@ -35,9 +64,11 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # gofmt exits 0 whether or not it found anything, so the check is on its output.
+      # gofmt exits 0 whether or not it found anything, so the check is on its output. Run on
+      # one platform only — formatting is a property of the source, not of the runner, and
+      # two identical reports would just be noise.
       - name: gofmt
-        shell: bash
+        if: runner.os == 'Windows'
         run: |
           unformatted="$(gofmt -l .)"
           if [ -n "$unformatted" ]; then
@@ -50,13 +81,16 @@ jobs:
         run: |
           go vet ./...
           go vet -tags debugtrace ./...
+          go vet -tags idleexit ./...
 
       - name: build
         run: |
           go build ./...
           go build -tags debugtrace ./...
+          go build -tags idleexit ./...
 
       # internal/combat is the only package with tests, by design: it is the only one that
-      # needs no window. Keep it that way and this step needs no display server.
+      # needs no window. Keep it that way and this step needs no display server, which is
+      # what lets it run on a headless Linux runner at all.
       - name: test
         run: go test ./...

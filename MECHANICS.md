@@ -263,33 +263,112 @@ candidate models are recorded in `TODO.md`; this is a fourth.
 
 ## Combos
 
+**This is where the game is meant to be.** Throwing whatever you drew at the opponent works;
+*choosing a shape* and building a deck toward it is meant to work better. Combos are the
+mechanism that pays for that choice, and they are expected to grow to dozens of entries — so
+they are a **framework with one pattern**, not a pile of special cases.
+
 Combos are **discovered**, not given, and discovery persists on the **profile** — part of the
-roguelike unlock structure, not the run.
+roguelike unlock structure, not the run. No profile exists yet, so every combo is currently
+live; when one does, discovery gates the *table* and nothing else changes.
 
-They come in two shapes, which need different matching:
+### The pattern: cards in, one of three rewards out
 
-### Count-based
+*Framework implemented 2026-08-07 in `internal/combat/combo.go`.*
 
-**Unopposed stagger** *(decided 2026-08-04, recorded in `TODO.md`)*. Three attacks in a row
-without the opponent answering staggers them and costs them an action. Five knocks out their
-whole round.
+Every combo is the same shape. **A run of cards that must appear consecutively in your own
+turn**, and an `Effect` saying what forming it buys. A step matches either an exact card
+(`Card(Strike)`) or any card of a category (`AnyOf(CategoryAttack)`), which is what lets "three
+attacks" mean three attacks rather than three Strikes.
 
-- The original rationale was that **alternation made this rare**. Under phase resolution it is
-  not rare for that reason at all — every attack you queue is consecutive by construction, so
-  three attacks *is* three in a row. What is left keeping it rare is the deck and the budget:
-  **five Strikes in a 30-card deck means P(3+ in a hand of eight) ≈ 10%** (it was ~7% at the
-  35-card size this was first costed against), and three Strikes is exactly 6 AP, Fighter1's
-  entire budget.
-- **Five Strikes is 10 AP, and Prepare now reaches it.** Two Prepares in one round cost 2 AP
-  and return +4, so a 6 AP duelist has 10 the round after. This was previously recorded as
-  "unreachable without ring discounts"; that is no longer true, and it was **accepted
-  knowingly on 2026-08-06** — spending a whole round setting up is exactly the trade the
-  combo should cost, and it is still gated behind engine-building rather than drawn into.
-- Later enemies are expected to absorb mechanics like this.
+The reward vocabulary is **deliberately small and closed**:
+
+| Effect | Means | Arrives |
+|---|---|---|
+| `DamageNum`/`DamageDen` | a damage multiplier, as a fraction | rest of that turn |
+| `BankAP` | action points banked | the round after |
+| `Stagger` | the opponent loses actions | their next turn |
+
+Adding a combo is one entry in `comboTable`. Adding a new *kind* of reward is a field on
+`Effect` and one place that applies it — the cost the framework deliberately charges, because a
+reward vocabulary that grows without limit is one no player can hold in their head.
+
+Four rules that make it work, each of which had an alternative:
+
+- **Matching is on the resolved order, never the queue.** Phases regroup a queue by category,
+  so `Strike, Dodge, Strike, Strike` resolves as three consecutive attacks and *does* combo.
+  Matching the queue would let the Resolution pane show one thing and the engine score another.
+- **Matching is on cards used, never on what they achieved.** The combo is known before the
+  round is played, which is what lets a multiplier boost the cards that formed it rather than
+  arriving after they have landed. It also means the opponent's defenses cannot silently
+  invalidate a plan the player already committed to.
+- **Effects come into force at the combo's first card**, for the rest of that turn — and
+  `KindCombo` is emitted there, so the screen narrates cause before effect. Firing on the card
+  that *completes* the run was rejected: a multiplier could then only ever boost cards after
+  the combo.
+- **Longest run first, and a card forms at most one combo.** Otherwise three attacks would
+  score a Flurry at every position it fits, and five would never reach Onslaught.
+
+`MatchCombos` is exported and is what the screen calls while the player is still planning, so a
+previewed combo is the combo that fires by construction rather than by two pieces of code
+agreeing.
+
+### Count-based: the flurry/onslaught family
+
+**One pair per attack card, generated rather than written out.** A new attack card gets its own
+Flurry and Onslaught by existing — the family is a shape the game keeps, not a list somebody
+has to remember to extend.
+
+| Run | Name | Effect |
+|---|---|---|
+| 3 of one attack card | **`<Card>` Flurry** | opponent loses one action |
+| 5 of one attack card | **`<Card>` Onslaught** | opponent loses their whole turn |
+
+So today: Strike Flurry, Strike Onslaught, Heavy Flurry, Heavy Onslaught, Quick Flurry, Quick
+Onslaught. **Heavy Onslaught is five Heavies at 4 AP each — 20 points, and near enough
+impossible.** It is a rule anyway, deliberately, so that engine-building has something absurd
+to aim at.
+
+**Per card, not per category** *(decided 2026-08-07, after a category-wide version shipped
+first)*. `AnyOf(CategoryAttack)` made any three attacks combo, so a Quick counted the same as a
+Heavy and the reward went to whatever you happened to draw. Naming a combo for the card it is
+built on is what makes it worth *building toward*: three Strikes is a deck you assembled. It
+also leaves room for the effects to differ per card later — a Heavy Flurry has every reason to
+hit harder than a Quick one, and a category-wide combo could never say so.
+
+**IDs are derived from the card** (`FlurryID(a)`, `OnslaughtID(a)`), not from a position in a
+list. Discovery persists on the profile, so an ID that shifted when a card was inserted would
+silently re-lock combos the player had already found.
+
+**"Unopposed" is gone from the name and from the rule** *(2026-08-07)*. It was written under
+alternation, where the opponent could interleave and break a streak. Under phases every attack
+you queue is consecutive by construction, so three attacks *is* three in a row and there is no
+way for the opponent to interrupt. Both `[?]` questions this carried — whether a Guard resets
+the streak, whether a zero-damage hit counts — **can never fire and are struck** rather than
+left open.
+
+What keeps it rare is the deck and the budget: three Strikes is exactly 6 AP, Fighter1's entire
+budget, and **five Strikes is 10 AP**, reachable only by spending a whole round on Prepares.
+That trade is the combo working as intended.
+
+**Stagger takes actions off the front of the victim's next turn**, which under phases is their
+setup phase — so being staggered costs a Prepare before it costs an attack, and leaves you
+poorer next round as well as slower now. The action points are **not** refunded: stagger is
+tempo *and* economy.
+
+**It is symmetric, and one asymmetry falls out of phases.** Side A takes its whole turn first,
+so a combo A forms bites B in the same round; the identical combo formed by B lands when A has
+already acted and carries to the round after. That is why `Duelist.Staggered` persists across
+the boundary — it makes the rule one rule (*a staggered duelist loses actions from its next
+turn, whenever that is*) rather than two spelled differently per side.
+
+**A stagger deletes cards before combos are matched**, so a staggered duelist cannot combo back
+with a turn it never took.
 
 ### Sequence-based
 
-An ordered pair of elements, where **order changes the result**:
+An ordered pair of elements, where **order changes the result**. Not yet built; the framework
+above matches them without extension, since `Card()` steps already express an exact sequence.
 
 | Sequence | Name *(placeholder)* | Effect |
 |---|---|---|
@@ -300,16 +379,38 @@ An ordered pair of elements, where **order changes the result**:
 ordering away. Same two cards, opposite order, different mechanic.
 
 Extinguishing Strike **consumes a status to convert it** — the first mechanic that spends a
-status rather than applying or expiring one. Likely a family of its own.
+status rather than applying or expiring one. Likely a family of its own, and the first that
+needs an `Effect` field beyond the three above.
+
+### `[?]` Whether the enemy draws on this at all
+
+**Open, and deliberately left open on 2026-08-07 rather than settled early.** Combos are
+symmetric today: `Swarm1` forms a Quick Flurry off four Quicks every round and staggers the
+player for it. `tools/balance` says that makes it **unbeatable by all three postures** — see
+`TODO.md`, which is where the fix is tracked.
+
+It is left standing on purpose, to watch how it balances out. **It is not settled that enemies
+share the player's combo table, or even the player's cards.** An enemy built from a deck and an
+affix could plausibly have attacks the player never sees and combos of its own, in which case
+the symmetry here is a temporary convenience rather than a rule.
+
+The pricing note worth keeping either way: every costing in this document reasons from the
+player's budget — three Strikes is 6 AP, five is 10 — and `Swarm1` gets four Quicks for 4 AP
+because `Quick` costs 1. **A combo counting cards is priced by whoever has the cheapest cards.**
 
 ### Requirements
 
 - **Combos are rules and live in `internal/combat`**, matching on the resolved order. The
   screen must never derive one; that is what makes the Resolution pane structurally incapable
   of lying about the round.
-- **A `KindCombo` event** carrying which combo fired and which slots formed it.
+- **A `KindCombo` event** carrying which combo fired. *Done.* It carries the `ComboID` and the
+  screen looks the name up with `ComboByID`, so a combo renamed is renamed once.
+- **`KindStaggered` counts as a slot in playback** even though nothing happened, or the
+  Resolution pane's highlight runs a row short for the rest of the round.
 - **A place to browse discovered combos** — a reference the player can return to. Probably
-  belongs with the profile rather than inside a duel.
+  belongs with the profile rather than inside a duel. `Combos()` exists for it to read.
+- `[?]` The Resolution pane still cannot draw "these rows together did a thing", and it now
+  also cannot show that a row was staggered out.
 
 ---
 

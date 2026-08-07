@@ -707,6 +707,14 @@ func eventLabel(e combat.Event) string {
 		return fmt.Sprintf("guarded     %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
+	case combat.KindCombo:
+		name := "?"
+		if c, ok := combat.ComboByID(e.Combo); ok {
+			name = c.Name
+		}
+		return fmt.Sprintf("combo       %v forms %s", e.Side, name)
+	case combat.KindStaggered:
+		return fmt.Sprintf("staggered   %v loses its %v", e.Side, e.Action)
 	case combat.KindDefeated:
 		return fmt.Sprintf("defeated    %v falls to %v", e.Target, e.Side)
 	default:
@@ -812,6 +820,17 @@ func (s *CombatScene) caption() string {
 		return fmt.Sprintf("%s's %s stops it dead", who, e.Action)
 	case combat.KindGuarded:
 		return "Guarded! Damage halved"
+	case combat.KindCombo:
+		// Announced at the combo's first card rather than its last, because that is where
+		// its effects come into force — see internal/combat/combo.go. The caption is the
+		// whole of the presentation for now; MECHANICS.md wants a transient COMBO splash
+		// over a frozen screen, which the existing dwell already provides for free.
+		if c, ok := combat.ComboByID(e.Combo); ok {
+			return fmt.Sprintf("%s COMBO!  %s", who, c.Name)
+		}
+		return fmt.Sprintf("%s lands a combo", who)
+	case combat.KindStaggered:
+		return fmt.Sprintf("%s is staggered - %s is lost", who, e.Action)
 	case combat.KindDamage:
 		return fmt.Sprintf("%s hits for %d", who, e.Amount)
 	case combat.KindDefeated:
@@ -1334,9 +1353,13 @@ func (s *CombatScene) currentSlot() (int, bool) {
 		return 0, false
 	}
 
+	// **A staggered action counts as a slot even though it never happened.** The pane draws
+	// every slot ResolutionOrder produced, including ones a stagger deleted, so counting only
+	// the actions that resolved would leave the highlight one row short for the rest of the
+	// round and light the wrong card. One beat per slot, whether it was taken or lost.
 	played := -1
 	for _, e := range s.log[:s.cursor+1] {
-		if e.Kind == combat.KindAction {
+		if e.Kind == combat.KindAction || e.Kind == combat.KindStaggered {
 			played++
 		}
 	}

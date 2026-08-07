@@ -56,8 +56,11 @@ const (
 	apBarBelow  = 36
 	apBarHeight = 8
 
-	// How far the budget tick stands out of the bar, top and bottom.
-	apBarTickOverhang = 4
+	// The bar is one cell per action point. apBarGap separates them so the cells can be
+	// counted at a glance; apBarMinCell is the width below which counting stops working and
+	// the bar falls back to an unbroken fill.
+	apBarGap     = 4
+	apBarMinCell = 3
 
 	// The row never grows past this, whatever the hand holds. Beyond the count that fits at
 	// full pitch the cards overlap and the band stays put — see handPitch.
@@ -545,6 +548,14 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // budget ends. So the fill never runs off the end and the tick shows how far past it you
 // are, in the same picture, at whatever the overspend happens to be. A fixed-scale bar can
 // only pin at 100% and say nothing about by how much.
+// **One cell per action point.** Action points are whole numbers spent in ones and twos, and
+// a continuous fill made the player read the `3/6 AP` line to find out how many were left —
+// which is the small text the bar exists to save them from. Segmented, the count is
+// countable: three lit cells and three dark ones says "three left" without a number.
+//
+// The cells also make the budget boundary draw itself. Where blue meets red *is* the edge of
+// what can be afforded, so the white tick that used to mark it is gone — it was pointing at
+// something the colours now say on their own.
 func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) {
 	budget := s.fighter.ActionPoints()
 	if budget <= 0 {
@@ -552,37 +563,44 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 	}
 	spent := combat.CostOf(s.fighterActions)
 
-	scale := budget
-	if spent > budget {
-		scale = spent
+	// Over budget the bar grows extra cells rather than overflowing, so the overspend is
+	// shown at whatever size it happens to be instead of pinning at full.
+	cells := budget
+	if spent > cells {
+		cells = spent
 	}
 
-	vector.DrawFilledRect(screen, left, top, width, apBarHeight,
-		systems.ColorAtStrength(apBarColor, 20), false)
+	empty := systems.ColorAtStrength(apBarColor, 20)
+	cellWidth := (width - float32(cells-1)*apBarGap) / float32(cells)
 
-	// The affordable part in blue, whatever is past the budget in red.
-	affordable := spent
-	if affordable > budget {
-		affordable = budget
-	}
-	blue := width * float32(affordable) / float32(scale)
-	vector.DrawFilledRect(screen, left, top, blue, apBarHeight, apBarColor, false)
-
-	border := systems.ColorAtStrength(apBarColor, 70)
-	if spent > budget {
-		over := width * float32(spent-budget) / float32(scale)
-		vector.DrawFilledRect(screen, left+blue, top, over, apBarHeight, apOverColor, false)
-
-		// The budget line, standing proud of the bar top and bottom so it reads against both
-		// fills rather than disappearing into whichever one it lands on.
-		vector.DrawFilledRect(screen, left+blue-1, top-apBarTickOverhang,
-			2, apBarHeight+2*apBarTickOverhang,
-			color.RGBA{R: 245, G: 245, B: 245, A: 255}, false)
-
-		border = apOverColor
+	// A cell narrower than a couple of pixels is a smear rather than a count, which a big
+	// enough bonus could produce. Fall back to one unbroken bar at that point: it stops
+	// being countable either way, and stripes are the worse of the two.
+	if cellWidth < apBarMinCell {
+		vector.DrawFilledRect(screen, left, top, width, apBarHeight, empty, false)
+		filled := width * float32(min(spent, budget)) / float32(cells)
+		vector.DrawFilledRect(screen, left, top, filled, apBarHeight, apBarColor, false)
+		if spent > budget {
+			over := width * float32(spent-budget) / float32(cells)
+			vector.DrawFilledRect(screen, left+filled, top, over, apBarHeight, apOverColor, false)
+		}
+		return
 	}
 
-	vector.StrokeRect(screen, left, top, width, apBarHeight, 1, border, false)
+	for i := 0; i < cells; i++ {
+		fill := empty
+		switch {
+		case i >= spent: // still available
+		case i < budget:
+			fill = apBarColor
+		default:
+			fill = apOverColor
+		}
+
+		vector.DrawFilledRect(screen,
+			left+float32(i)*(cellWidth+apBarGap), top,
+			cellWidth, apBarHeight, fill, false)
+	}
 }
 
 // drawDraggedCard draws the card in flight. Called last so it rides over everything.

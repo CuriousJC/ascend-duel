@@ -66,7 +66,11 @@ const (
 
 	// The glyph column, down the left edge of the card the way a playing card puts its rank
 	// and suit in a corner. These have to fit inside cardHeight now rather than setting it:
-	// glyphColumnTop + 3*cardGlyphSize + 2*glyphGap = 256, with 8 pixels to spare.
+	// glyphColumnTop + 2*cardGlyphSize + glyphGap = 200, with 64 pixels to spare.
+	//
+	// The spare space is the initiative clock's, and it is deliberately not being filled.
+	// Two badges sit high on the card with open surface below them, which is where a
+	// long-press description or a status line goes when either exists.
 	//
 	// The scale lives in systems so the contact sheet draws its actual-size row at exactly
 	// what the card uses. See systems.CardGlyphScale.
@@ -75,10 +79,11 @@ const (
 
 	glyphInset     = 12
 	glyphGap       = 8
-	glyphColumnTop = 48
+	glyphColumnTop = 64
 	glyphNumberGap = 10
 
-	cardNameTop = 14
+	cardNameTop     = 14
+	cardCategoryTop = 40
 
 	// dragThreshold is how far the cursor has to travel with the button held before a
 	// press counts as a drag rather than a click. Without it every click would jitter
@@ -96,15 +101,20 @@ const (
 // number, and 1 is already the floor.
 //
 // That makes the glyph column the hard floor on a card's size, not a thing that scales with
-// it: three glyphs need 3*64 plus gaps down, and 64 plus a numeral across, whatever else the
+// it: two glyphs need 2*64 plus a gap down, and 64 plus a numeral across, whatever else the
 // card does. A "small" card is one with less padding and smaller text around the same
-// column — which is why deckCardStyle is only a little narrower than the hand's and barely
-// shorter at all.
+// column — which is why deckCardStyle is only a little narrower than the hand's.
 type cardStyle struct {
 	width, height int
 
 	nameTop  int
 	nameSize float64
+
+	// The category line, directly under the name. It is a word rather than a glyph
+	// because it is not a quantity — setup, attack and defend are three states, and a
+	// badge with no number beside it would read as a badge missing its number.
+	categoryTop  int
+	categorySize float64
 
 	glyphScale     int
 	glyphInset     int
@@ -122,23 +132,35 @@ var (
 	handCardStyle = cardStyle{
 		width: cardWidth, height: cardHeight,
 		nameTop: cardNameTop, nameSize: 20,
+		categoryTop: cardCategoryTop, categorySize: 13,
 		glyphScale: cardGlyphScale, glyphInset: glyphInset, glyphGap: glyphGap,
 		glyphColumnTop: glyphColumnTop, glyphNumberGap: glyphNumberGap, numberSize: 26,
 		border: 2,
 	}
 
-	// deckCardStyle is the card as the deck overlay draws it: the same three glyphs as the
-	// hand, in a tighter frame. 138x236 against the hand's 180x264 — all of the saving is
-	// padding and text size, because the glyph column underneath is identical and cannot
-	// give any back. Its column comes to 34 + 3*64 + 2*4 = 234 inside 236.
+	// deckCardStyle is the card as the deck overlay draws it: the same glyphs as the hand,
+	// in a tighter frame. 138x186 against the hand's 180x264 — most of the saving is padding
+	// and text size, because the glyph column underneath is identical and cannot give any
+	// back. Its column comes to 44 + 2*64 + 4 = 176 inside 186.
+	//
+	// It lost 50 pixels of height when the initiative clock went: two glyphs need a shorter
+	// column than three, and that is what buys the overlay a third grid row for a deck that
+	// doubled in size on the same day.
 	deckCardStyle = cardStyle{
-		width: 138, height: 236,
+		width: 138, height: 186,
 		nameTop: 8, nameSize: 16,
+		categoryTop: 26, categorySize: 11,
 		glyphScale: 1, glyphInset: 10, glyphGap: 4,
-		glyphColumnTop: 34, glyphNumberGap: 8, numberSize: 20,
+		glyphColumnTop: 44, glyphNumberGap: 8, numberSize: 20,
 		border: 1,
 	}
 )
+
+// cardCategoryColor is the category line's ink. Deliberately hueless: the card surface is
+// already carrying the element in colour, and a second coloured thing on the same face
+// would have the two competing to be read first. Grey lets the word be found without
+// claiming to be the loudest thing on the card.
+var cardCategoryColor = color.RGBA{R: 210, G: 214, B: 222, A: 255}
 
 // paletteCard is one card in the hand: the card itself, and whether it is queued this
 // round. Selection is the only thing the hand adds to a card that is not also true of it
@@ -580,18 +602,20 @@ type cardBadge struct {
 	value int
 }
 
-// badgesFor is what a card says about itself: what it hits for, how soon it lands, what it
+// badgesFor is what a card says about itself in numbers: what it hits for, and what it
 // costs. Damage is omitted when there is none — a sword reading zero on a Guard is worse
 // than no sword at all — which is also why the column packs from the top rather than
 // filling fixed slots. The card does not change size either way.
+//
+// Two badges, not three: the initiative clock went when initiative did. What replaced it is
+// not another number but the category line under the card's name — setup, attack or defend
+// is now the thing that decides when a card resolves, and it is a word rather than a figure.
 func badgesFor(action combat.ActionKind, str int) []cardBadge {
-	badges := make([]cardBadge, 0, 3)
+	badges := make([]cardBadge, 0, 2)
 	if dmg := action.Damage(str); dmg > 0 {
 		badges = append(badges, cardBadge{systems.GlyphDamage, dmg})
 	}
-	return append(badges,
-		cardBadge{systems.GlyphInitiative, action.Initiative()},
-		cardBadge{systems.GlyphActionPoints, action.Cost()})
+	return append(badges, cardBadge{systems.GlyphActionPoints, action.Cost()})
 }
 
 // drawCard draws one action card: its name across the top, then a column of glyphs down
@@ -636,6 +660,19 @@ func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st ca
 	nameOp.GeoM.Translate(float64(at.X+st.glyphInset), float64(at.Y+st.nameTop))
 	text.Draw(screen, action.String(),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: st.nameSize}, nameOp)
+
+	// The category, under the name. It is the card's most load-bearing fact now — it decides
+	// which phase the card resolves in, which is the whole of the round's structure — and it
+	// cannot be worked out from anything else on the face. Drawn dimmer than the name so the
+	// card still reads as its concept first and its phase second.
+	catOp := &text.DrawOptions{}
+	catOp.GeoM.Translate(float64(at.X+st.glyphInset), float64(at.Y+st.categoryTop))
+	catOp.ColorScale.ScaleWithColor(cardCategoryColor)
+	if !enabled {
+		catOp.ColorScale.ScaleAlpha(0.4)
+	}
+	text.Draw(screen, action.Category().String(),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: st.categorySize}, catOp)
 
 	numberFace := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: st.numberSize}
 	pal := systems.PaletteOf(systems.PaletteWhite)

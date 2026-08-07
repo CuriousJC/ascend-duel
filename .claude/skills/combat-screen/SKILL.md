@@ -30,54 +30,60 @@ top of, and they are not repeated below:
 
 ## Resolution order
 
-> **Being replaced.** Phase-based resolution was chosen on 2026-08-05 as **an experiment, and
-> the direction to head in** — see [MECHANICS.md](../../../MECHANICS.md). Alternation is what
-> ships today and everything below describes it accurately; it is not the design being aimed
-> at. Do not treat it as settled, and do not build new mechanics on the assumption that it
-> survives.
->
-> The intended model: a round resolves in phases — the player's **preparations**, then
-> **attacks**, then **defenses**, then the enemy. Defenses front-load because the enemy goes
-> last, so a defense is up when the blow arrives. The reason is legibility: interleaving may
-> simply not be graspable by players.
->
-> What that changes here: **cross-phase reordering stops meaning anything** (a defense cannot
-> be dragged ahead of an attack), while **within-phase ordering matters more**, because
-> sequence combos make an ice Strike before a fire Strike a different round from the reverse.
-> And **Guard persistence dissolves** — the last bullet below stops describing anything if
-> every defense resolves before every enemy attack.
+**Phases, implemented 2026-08-06.** A round is **a whole turn each**: everything side A
+queued resolves before side B does anything, and within a turn the categories go in order —
+**setup, attacks, defenses**. Defenses come last within a turn because the opponent moves
+next, so a defense raised at the end of your turn is up when their blow arrives.
 
-### What ships today
+This replaced alternation, which replaced volley-per-side on 2026-07-31. The reason is
+legibility: interleaving may simply not be graspable by players. See
+[MECHANICS.md](../../../MECHANICS.md).
 
-A round resolves the two queues **alternately**, one action each, with the longer queue
-acting alone once the other empties. This replaced volley-per-side on 2026-07-31.
+**Initiative is gone**, whole — the method, the constants, the tie-break, the clock glyph and
+the `i3` in the concealed enemy label. With one contiguous turn per side there is no exchange
+for a faster action to lead. `Spd` still buys action points and still never buys priority.
 
-Within one exchange, **the faster action lands first**: lower `ActionKind.Initiative()`
-wins, and side A takes a tie. Initiative is a lever wholly separate from cost — cost
-decides what a plan may *contain*, initiative decides *when* its pieces happen — and it is
-separate from `Spd`, which buys action points and never priority.
+### What this means for the screen
 
-The loop alternation was built for: **the player chooses their actions, then alters the
-resolution order.** Dragging a card to a different slot changes which of the opponent's
-actions it contests. Under phases that specific payoff goes away and combos replace it.
+- **Cross-category reordering does nothing.** A defense cannot be dragged ahead of an attack;
+  the drag lands the card in a queue that is then regrouped. **Within-category order is
+  preserved and is the whole of what dragging now changes** — sequence combos will match on
+  it, making an ice Strike before a fire Strike a different round from the reverse.
+- **`Slot.Index` is not a position in the round.** It is where the card sits in its own
+  side's queue, which regrouping breaks apart. Anything asking "how far through the round are
+  we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
+  depends on it.
+- **The category is deliberately not concealed** on enemy rows. It is what decides where a row
+  sits, so withholding it would make the pane unreadable rather than merely uncertain. It took
+  over that job from the initiative number — see `concealedLabel`.
+- **The card shows its category as a word**, under the name, where the initiative badge used
+  to be a number. Three states are not a quantity, so a badge with no number beside it would
+  read as a badge missing one.
 
-### What survives either model
+### What survives any model
 
 - **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
   it returns and the Resolution pane draws what it returns. Neither derives the order
   independently, which is what makes it structurally impossible for the pane to lie to the
   player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
-  **This is also what makes the phase change cheap** — one pure function body plus its tests,
-  and both consumers follow.
+  **This is what made the phase change cheap** — one pure function body plus its tests, and
+  both consumers followed untouched. It paid for itself exactly as predicted.
 - **Ordering is a rule.** It belongs in `internal/combat`, never in a screen. A new effect
   that rearranges resolution changes `ResolutionOrder` and both consumers follow.
 
-### Tied to alternation, and expected to go
+### Defense expiry is a rule about turns, not about order
 
-- A raised Guard lasts until its owner's next action, so it covers every opposing action
-  in between, across a round boundary if it was queued last. A duelist who queues
-  nothing therefore keeps its guard — pinned by `TestGuardHoldsWhileItsOwnerDoesNothing`.
-  Phases make this vacuous.
+**A defense expires at the start of its owner's next turn, not at the round boundary.** Side B
+acts last, so a defense cleared at the boundary would protect B from nothing it ever faces.
+Expiring at the owner's next turn means every defense covers exactly one opposing turn
+whichever side raised it.
+
+This lives in `ResolveRound`, **not** in `ResolutionOrder` — a side that queues nothing still
+has a turn and still loses its guard in it, so it cannot be derived from the slot list. It is
+the one place the engine's symmetry needed defending against an order that is not symmetric.
+
+The old rule — a Guard lasting until its owner's next *action*, so an idle duelist kept it
+forever — is gone, along with `TestGuardHoldsWhileItsOwnerDoesNothing`.
 
 ## Combat screen layout is scaffolding
 
@@ -88,7 +94,7 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 | Element | Slot | Colour | Role |
 |---|---|---|---|
 | Character block | 4% x, 12% y | green | life, discards, vitae |
-| Resolution | 45–78% x, 12–46% y | pink | both queues interleaved in play order |
+| Resolution | 45–78% x, 12–46% y | pink | both queues in play order: your whole turn, then theirs |
 | Caption box | hand width, 48% y | pink | what the round is doing right now |
 | Hand | centred, 59% y | element | the cards, portrait, in one row |
 | AP figure and bar | hand width, under the row | blue | the budget |
@@ -117,6 +123,21 @@ gesture. One selected set, two things you can do with it, which is why the two b
 adjacent and why the action points come back when a card is discarded — the selection was
 proposed, not spent.
 
+**Selected is the only thing that ever leaves the hand**, by either verb. `spendSelected` is
+the single movement — the selected cards go to the discard pile, the draw tops the hand back
+up to `handSize` — and both Discard and the end of a round call it. Two functions doing this
+would be two functions that have to agree.
+
+**The hand persists across rounds** *(changed 2026-08-06)*. It used to empty completely every
+round and deal a fresh eight, justified by "a hand kept back would let a plan be prepared once
+and repeated". That conflated the queue with the hand: the *queue* still empties every round,
+so no plan repeats by default, but taking away cards the player had deliberately held punished
+holding them and made playing a card the only way to keep it.
+
+The consequence to hold on to: **Discard is now the only way an unwanted card leaves your
+hand.** `discardsPerRound` stopped being a convenience and became the rate at which a hand can
+be steered.
+
 **The character block replaced the fighter's sprite and health bar.** A bar says roughly
 how hurt you are, and a duel decided in whole points wants the exact number, so life is a
 red fraction. Discards refill each round; vitae is a fixed placeholder drawn anyway, so the
@@ -142,11 +163,17 @@ the brightest thing on screen or it is a trap.
   would be a picture that lies about what you own.
 
 **The Resolution pane is the centrepiece and gets the width to prove it.** It is the only
-pane that has to grow: once exchanges have structure — an initiator and a response — it
-has to draw that rather than a flat list of rows.
+pane that has to grow: it has to draw a combo spanning slots that need not be adjacent, and
+one row per slot with a single walking highlight has no way to say "these together did a
+thing".
+
+**It has no phase headings, and that is a space constraint rather than a decision.** The pane
+holds nine rows between `paneFirstRow` and its bottom edge, and five player actions plus the
+enemy's already reach that. Under phases the grouping reads off the order anyway. If headings
+are wanted, the pane has to get taller or the rows shorter first.
 
 One pane now. Chosen folded into the palette on 2026-08-02, Enemy went the same day because
-an interleaved Resolution already shows the opponent's actions in a better order than a
+a merged Resolution already shows the opponent's actions in a better order than a
 column of its own, and Actions went on 2026-08-04 with the move to the bottom — the hand has
 no frame, so there was nothing left for a placement to hold. The player's rows carry
 `playerSwatch` green and the opponent's carry `enemySwatch` yellow, so the screen reads as

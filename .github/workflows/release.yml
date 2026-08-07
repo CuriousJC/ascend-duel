@@ -1,0 +1,78 @@
+# Builds a downloadable Windows binary and publishes it as a GitHub Release.
+#
+# Fires on a version tag and nothing else:
+#
+#     git tag -a v0.1.0 -m "..." && git push origin v0.1.0
+#
+# **The tag is the trigger, so tagging is releasing.** There is no manual approval between
+# the two — push a `v*` tag only when the commit it points at is the thing to ship.
+#
+# **No third-party actions.** Publishing runs through the `gh` CLI, which is preinstalled on
+# the runner, rather than a marketplace action. A release workflow holds a write token, so
+# it is the last place to hand execution to code nobody in this repo reviews.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# The only elevated permission in the repo, and it is scoped to this job: creating a release
+# and uploading an asset needs contents:write and nothing else.
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # The same gates CI runs. A tag can be pushed at any commit, including one that never
+      # went through a pull request, so the release path cannot assume CI has already passed
+      # on this code.
+      - name: vet
+        run: |
+          go vet ./...
+          go vet -tags debugtrace ./...
+
+      - name: test
+        run: go test ./...
+
+      # -H=windowsgui suppresses the console window that would otherwise open behind the
+      # game. -s -w drop the symbol table and DWARF, and -trimpath keeps build-machine paths
+      # out of the binary. The debugtrace tag is deliberately absent: instrumentation must
+      # never be in a binary that ships.
+      - name: build
+        shell: bash
+        run: |
+          go build -trimpath -ldflags "-H=windowsgui -s -w" \
+            -o "ascend-duel-${GITHUB_REF_NAME}-windows-amd64.exe" .
+          ls -l ascend-duel-*.exe
+
+      # Hand-written notes when the tag has them, generated ones when it does not. A tag that
+      # forgot its notes file should still produce a release rather than failing after a
+      # successful build — the binary is the point and the notes are the courtesy.
+      - name: publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes=".github/release-notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$notes" ]; then
+            echo "using $notes"
+            set -- --notes-file "$notes"
+          else
+            echo "no $notes, generating notes from commit history"
+            set -- --generate-notes
+          fi
+
+          gh release create "${GITHUB_REF_NAME}" \
+            "ascend-duel-${GITHUB_REF_NAME}-windows-amd64.exe" \
+            --title "${GITHUB_REF_NAME}" \
+            "$@"

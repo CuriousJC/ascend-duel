@@ -206,18 +206,22 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   *alpha*, so the shading survives and only the weight changes. Tinting one toward the card
   colour would collapse it back to a flat silhouette.
 - **Colour was kept unspent, and elements spent it — on the card, not the glyph.** There is
-  still one palette, `white`, with no hue at all, and all three glyphs use it. What carries
+  still one palette, `white`, with no hue at all, and both glyphs use it. What carries
   the element is the card *surface*: fire orange, ice blue, lightning yellow, poison green,
   and near-white for no element at all. Holding the glyphs hueless from 2026-08-03 is
   exactly what made that possible a day later, and they should stay that way — a coloured
   glyph on a coloured card says it twice and leaves nothing for the next distinction.
 - **A glyph cannot be made smaller, and that sets the floor on a card's size.** `GlyphSize`
   is 64 and `CardGlyphScale` is 1: authored at the size it is shown, integer scales only, and
-  1 is already the floor. Three glyphs therefore need 3x64 plus gaps down and 64 plus a
+  1 is already the floor. Two glyphs therefore need 2x64 plus a gap down and 64 plus a
   numeral across, whatever else a card does. A "smaller" card is one with less padding and
-  smaller text around an identical column — which is why the deck overlay's card is 138x236
+  smaller text around an identical column — which is why the deck overlay's card is 138x186
   against the hand's 180x264. Do not reach for a fractional scale; it drops pixels out of a
   rim that is one pixel thick.
+- **The badge count is the card's height budget, and it is spendable.** There were three
+  glyphs until the initiative clock went on 2026-08-06. That single deletion took 50px off
+  `deckCardStyle`, which is what bought the deck overlay a third grid row on the same day the
+  deck doubled to 30 cards. Adding a third badge back spends that row.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.

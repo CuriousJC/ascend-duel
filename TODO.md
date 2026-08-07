@@ -95,6 +95,17 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       a half. At three seconds a round of six actions took twenty seconds to watch and the
       gap between a move and its consequence read as the game hesitating. This is the
       constant the game-speed setting below will scale.
+- [x] **One dwell for every event** *(2026-08-06)*. `dwellFor` and its three-way switch are
+      gone; `eventDwellTicks` (0.75s) is the single number and `advancePlayback` reads it
+      directly, so there is no per-kind table to add a case to.
+      - **The switch had a `default` arm and the default was the shortest of the three.**
+        Every event kind added after it was written silently inherited a quarter-second
+        flash. `KindNegated` did exactly that on arrival: a Dodge cancelling a Heavy — about
+        the most consequential thing in a round — went past faster than the round-start
+        beat. The bug was the shape, not the numbers, so the shape went.
+      - Costs a longer round to watch, and a round-start marker now holds as long as a
+        killing blow. Accepted: one constant is the price of never having a new event kind
+        quietly pick its own pacing. It is still the constant game-speed will scale.
 - [x] **Split the debug flag in two.** `ActiveDebug` became `DebugPlacement` (grid, rulers,
       scratch strings — about where things are drawn) and `DebugGameplay` (perfect
       information — about what the player is allowed to know).
@@ -317,6 +328,95 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - Superseded an earlier speed-timeline model where a fast duelist took whole
         extra turns. That is wrong for a game you re-plan every round: extra turns are
         invisible when you only ever plan one.
+      - **Superseded on 2026-08-06 by phases.** Alternation, initiative and the
+        until-you-act guard rule are all gone; see the entry below.
+- [x] **Phase resolution, categories, and three new concepts** *(2026-08-06)*. The round is
+      now **a whole turn each**: everything side A queued resolves in category order —
+      setup, then attacks, then defenses — and only then does side B begin. `ResolutionOrder`
+      is still the single authority and both consumers followed for free, which is exactly
+      what that split was for. One function body plus its tests, as predicted.
+      - **`combat.Category`** is the new organising axis: `CategorySetup` /
+        `CategoryAttack` / `CategoryDefend`, a property of the action rather than an
+        independent choice. `Categories()` is both the phase order and the iteration order.
+      - **Costs are now** Prepare 1, Guard 3, Quick 1, Strike 2, Heavy 4, Dodge 2,
+        Riposte 3. `ActionKind` is declared in category order so the deck overlay's sort
+        groups the piles the way a turn resolves them.
+      - **Guard moved from defend to setup** and went 2 → 3 AP: it halves *all* incoming
+        damage for the opposing turn rather than blocking one blow. Parry was dropped
+        before it was built.
+      - **Prepare** costs 1 and banks +2 AP for the *next* round. It stacks within a round
+        (two Prepares are +4) and is replaced rather than added to at the boundary, so
+        preparing every round is a flat +2 and cannot compound. Stacking is deliberate:
+        it is what puts a five-attack round in reach without a ring discount, which
+        `MECHANICS.md` previously called unreachable. Accepted as a good trade.
+      - **Dodge** (2 AP) negates the first incoming attack. **Riposte** (3 AP) negates one
+        and hits back for half a Strike. Ripostes are spent before Dodges — both negate
+        completely, so spending the one that hits back first is free, and its counter can
+        kill the attacker mid-turn.
+      - **Defenses expire at the start of their owner's next turn, not at the round
+        boundary.** This is the rule the whole change turns on: side B acts last, so a
+        defense cleared at the boundary would protect B from nothing it ever faces. The
+        expiry point is a fact about *turns* and lives in `ResolveRound`, not in
+        `ResolutionOrder`. An idle duelist now loses its guard — the deliberate quirk
+        `TestGuardHoldsWhileItsOwnerDoesNothing` used to pin is gone with alternation.
+      - **Two new event kinds**, `KindPrepared` and `KindNegated`. Riposte's counter is a
+        plain `KindDamage` from the defender's side, so the health bars need no new case.
+      - The screen's `currentAction` became **`currentSlot`**, counting position in the
+        resolution order rather than a side plus a queue index. `Slot.Index` is where a
+        card sits in the player's queue and that is no longer where it lands in the round.
+- [ ] **Revisit whether an initiative system makes sense for resolution.** Removed wholesale
+      on 2026-08-06 — the `Initiative()` method, the four constants, the tie-break in
+      `ResolutionOrder`, the clock glyph and the `i3` in the concealed enemy label.
+      - **Why it went:** with one contiguous turn per side there is no exchange for a
+        faster action to lead. It was a number on every card reporting a distinction the
+        resolver had stopped making, and it was occupying the third glyph slot.
+      - **What it would need to come back:** somewhere for it to bite. The obvious
+        candidates are ordering *within* a phase (currently queue order, which is free and
+        legible), or a partial interleave where one designated fast action jumps a phase.
+        Both reintroduce the legibility problem phases were adopted to solve, so the bar is
+        that it buys something combos and category ordering do not.
+      - The card has room: the glyph column now holds two badges in a space sized for
+        three, and `deckCardStyle` shrank 50px on the strength of that. Bringing initiative
+        back costs the deck overlay its third grid row.
+- [ ] **Defenses target a specific incoming attack** *(design captured 2026-08-06)*. The
+      resolution order is right now; what is missing is that a defense is currently a pool
+      rather than a choice. **Guard stays untargeted** — it covers you entirely, which is
+      exactly why it is setup. **Dodge and Riposte should each name the enemy attack they
+      answer**: dodge the first and riposte the second, or riposte the first and dodge the
+      second, and those are different rounds.
+      - **This is what replaces initiative as the ordering lever**, and it is a better one.
+        Initiative decided *when* your action happened; this decides *what it happens to*,
+        which is a decision the player makes rather than a number they read off a card.
+      - Today `Ripostes` and `Dodges` are plain counters on `Duelist` and negation is spent
+        Riposte-first by a fixed rule. That rule exists only because nothing can express a
+        preference. Targeting replaces it — the fixed order becomes the fallback for an
+        untargeted defense, if untargeted defenses survive at all.
+      - **The hard part is the UI, not the rules.** Engine-side this is a target field on
+        the queued action and a lookup at negation time. Screen-side the player has to point
+        at an enemy attack that is **concealed while planning** — you know the enemy has two
+        actions and their categories, not what they are. Targeting "their second attack" is
+        therefore targeting a slot, not a card, which may actually be the cleaner design.
+      - Input vocabulary allows exactly click and drag. Dragging a Dodge onto an enemy row
+        in the Resolution pane is the obvious gesture and would give that pane its first
+        interactive job. No right click, no keyboard.
+      - **Open:** what happens when the targeted attack does not arrive — the enemy queued
+        fewer actions than you predicted, or died first. Wasted, or does it fall back to the
+        next attack? Wasted is more honest and makes prediction matter; falling back makes
+        targeting a free upgrade over the current pool.
+      - Blocked on nothing, but worth doing *after* enemy variety: targeting an opponent
+        that always throws the same two attacks is a decision with one right answer.
+- [ ] **Enemies that fight in genuinely different shapes.** `PlanGreedy` is the only
+      opponent and it does one thing — spend everything on the biggest attack affordable,
+      never defend, never prepare. Balance conclusions drawn against it are close to
+      worthless, and it is now the main thing blocking judgement of the new cards.
+      - Concretely: Dodge negates *one* attack and Guard halves *all* of them, so their
+        relative worth is decided entirely by how many attacks a round the enemy throws.
+        Against greedy — Heavy then Strike, two attacks — Dodge at 2 AP beats Guard at 3.
+        That is not evidence Guard is mispriced; it is evidence there is one enemy.
+      - Wanted: a sprayer (many cheap attacks, which is what makes Guard worth 3), a
+        defensive one (which is what makes Heavy worth 4), and one that prepares.
+      - Enemy decks and affixes are already sketched in `MECHANICS.md` and have no tasks.
+        This is the entry they hang off.
 - [x] **DUEL! button.** `DuelButtonAction` resolves **one round** and hands the screen a
       log to replay; control returns to the player to re-plan. It ignores presses during
       playback and once someone is down. A caption line reports what playback is showing,
@@ -334,9 +434,11 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       pane updates live, because it reads `s.fighterActions` directly.
       - Hand-rolled, no toolkit — decided, see "Open decisions". Drag state lives on
         `CombatScene` alongside everything else it owns.
-      - **Flow, decided:** build a plan → DUEL! → watch playback → build a *fresh* plan →
-        DUEL! again. The queue empties every round; nothing carries over. Makes each
-        round a real decision rather than a default nobody revisits.
+      - **Flow, decided:** build a plan → DUEL! → watch playback → plan again. The *queue*
+        empties every round, so no plan is ever repeated by default.
+      - **The hand no longer empties with it** *(2026-08-06)*. Only the cards actually played
+        go to the discard; whatever is left sits where the player left it and the draw tops
+        the hand back up. See the deck entry below for why the original rule was wrong.
       - `defaultFighterPlan` is deleted — it only ever stood in for the player.
       - The planning/playback phase stays derived from `cursor >= len(log)` rather than
         becoming its own field, so there is one source of truth. `planning()` is the one
@@ -555,13 +657,22 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         4 Heavy — with a hand of five, a discard pile, and a reshuffle when the draw pile
         runs dry. Click a card to select it, drag to reorder, and the queue is derived from
         the hand by `syncQueue` rather than stored twice.
-        - The whole hand discards at the end of a round and five are drawn fresh. Keeping
-          cards back would let a plan be prepared once and repeated, which the "no repeat
-          last plan" decision above rules out. Worth revisiting if it plays badly — hand
-          retention is a real deckbuilder lever, just one that fights that decision.
-        - The discard happens when *playback* finishes, not when the round resolves.
-          `discardHand` rebuilds `fighterActions`, and the Resolution pane draws
-          `fighterActions` to narrate the round, so discarding early empties the pane
+        - ~~The whole hand discards at the end of a round and five are drawn fresh.~~
+          **Reversed 2026-08-06: only what was played leaves.** The original rule was
+          justified by "keeping cards back would let a plan be prepared once and repeated",
+          which conflated the *queue* with the *hand*. The queue does still empty every
+          round, so no plan repeats by default — but taking away cards the player had
+          deliberately held punished holding them, and the only way to keep a card was to
+          spend it. Hand retention is the deckbuilder lever the entry already suspected it
+          was; it turned out not to fight the no-repeat decision at all.
+        - It also gave Discard a job it did not have. A card you never want now stays in
+          hand until you throw it out, where before the round boundary cleared it for free.
+        - `spendSelected` is the single movement, shared by Discard and by the end of a
+          round. Both are "the selected cards leave and the hand refills", so they are one
+          function rather than two that have to agree.
+        - The spend happens when *playback* finishes, not when the round resolves.
+          `endRoundHand` rebuilds `fighterActions`, and the Resolution pane draws
+          `fighterActions` to narrate the round, so spending early empties the pane
           mid-round. The ordering in `advancePlayback` is load-bearing.
         - `Quick` is defined in the rules but absent from the deck. Which of the actions
           the rules permit actually appear is a deck-building question, and that split is

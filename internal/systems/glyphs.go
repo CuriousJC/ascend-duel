@@ -8,7 +8,7 @@ import (
 )
 
 // Procedurally generated pixel-art glyphs for the numbers on an action card: what it hits
-// for, how soon it lands, what it costs.
+// for, and what it costs.
 //
 // Drawn in code rather than loaded from a file because generated art has no provenance
 // question at all, which is exactly the problem that makes the Tyrian set a release
@@ -42,11 +42,13 @@ const CardGlyphScale = 1
 // GlyphKind selects one of the generated glyphs.
 type GlyphKind int
 
+// The clock that used to sit between these two went with initiative on 2026-08-06 — it was
+// the card's glyph for a number that no longer exists. It was built parametrically, out of a
+// disc() helper that went with it; both are one `git show` away if a round shape is wanted
+// again. See TODO.md.
 const (
 	// GlyphDamage is a sword: what the action hits for.
 	GlyphDamage GlyphKind = iota
-	// GlyphInitiative is a clock: how soon in the exchange it lands.
-	GlyphInitiative
 	// GlyphActionPoints is a runner: what it costs to play.
 	GlyphActionPoints
 )
@@ -54,7 +56,7 @@ const (
 // GlyphKinds is every glyph, in a fixed order. The contact sheet walks this rather than
 // ranging a map, which Go deliberately randomises.
 func GlyphKinds() []GlyphKind {
-	return []GlyphKind{GlyphDamage, GlyphInitiative, GlyphActionPoints}
+	return []GlyphKind{GlyphDamage, GlyphActionPoints}
 }
 
 // Palette is the set of roles a glyph is painted with. Five values make the bevel — one
@@ -75,7 +77,7 @@ type Palette struct {
 //
 // **Colour is being kept unspent.** Every glyph is drawn in one hueless palette so that
 // when an element or a block type arrives it can land on colour and mean something on
-// arrival. Painting the three glyphs three colours now would look better today and would
+// arrival. Painting the glyphs different colours now would look better today and would
 // spend the only channel left for saying "this Strike is fire" — the reader would already
 // have learned that the sword is grey, and the element would read as an inconsistency.
 type PaletteName string
@@ -212,47 +214,9 @@ var runShape = shape{
 	},
 }
 
-// clockShape is built rather than typed: a disc, with hands painted over it. A circle
-// written out by hand is exactly the sort of thing that made the old file unmaintainable —
-// and being parametric, this was the one glyph that cost nothing to move from 32 to 64.
-var clockShape = shape{
-	fill: disc(32, 32, 27),
-	accent: map[int][]span{
-		// Hour hand straight up, minute hand down and to the right, so the dial reads as a
-		// clock at a glance instead of as a circle with a mark in it.
-		13: {{30, 34}}, 14: {{30, 34}}, 15: {{30, 34}}, 16: {{30, 34}},
-		17: {{30, 34}}, 18: {{30, 34}}, 19: {{30, 34}}, 20: {{30, 34}},
-		21: {{30, 34}}, 22: {{30, 34}}, 23: {{30, 34}}, 24: {{30, 34}},
-		25: {{30, 34}}, 26: {{30, 34}}, 27: {{30, 34}}, 28: {{30, 34}},
-		29: {{30, 34}}, 30: {{30, 34}}, 31: {{30, 34}},
-		32: {{30, 37}}, 33: {{32, 39}}, 34: {{34, 41}},
-		35: {{36, 43}}, 36: {{38, 45}}, 37: {{40, 46}}, 38: {{42, 47}},
-	},
-}
-
 var glyphShapes = map[GlyphKind]shape{
 	GlyphDamage:       swordShape,
-	GlyphInitiative:   clockShape,
 	GlyphActionPoints: runShape,
-}
-
-// disc returns the spans of a filled circle, one run per row.
-func disc(cx, cy, r int) map[int][]span {
-	rows := make(map[int][]span, 2*r)
-	for y := cy - r; y <= cy+r; y++ {
-		dy := y - cy
-		var widest int
-		for x := 0; x <= r; x++ {
-			if x*x+dy*dy <= r*r {
-				widest = x
-			}
-		}
-		if widest == 0 && dy*dy > r*r {
-			continue
-		}
-		rows[y] = []span{{cx - widest, cx + widest}}
-	}
-	return rows
 }
 
 // glyphCache holds rendered images, keyed by what was asked for. Building one walks a

@@ -10,12 +10,26 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// version is what this build calls itself, injected at link time by the release workflow:
+//
+//	go build -ldflags "-X main.version=v0.1.0" .
+//
+// It defaults to "dev" because an ordinary `go run .` injects nothing, and a build that
+// guessed at a version number would be worse than one that admits it does not have one.
+//
+// **The point is that a bug report can name a build.** Someone who downloaded an exe and
+// says "it crashed on the third fight" is only useful if the build they ran is identifiable,
+// and the filename stops travelling with the binary the moment it is renamed or a screenshot
+// is all you have. It is shown in the window title, which any screenshot of the window
+// carries, and on the title screen.
+var version = "dev"
+
 func main() {
 	// The window opens at the internal resolution; Layout keeps that resolution fixed
 	// whatever the window is resized to afterwards.
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetWindowTitle("Ascending Duel")
+	ebiten.SetWindowTitle("Ascending Duel " + version)
 	ebiten.SetWindowClosingHandled(true)
 
 	//Create our Game instance
@@ -27,6 +41,10 @@ func main() {
 	// player sees.
 	g.GlobalState.DebugPlacement = false
 	g.GlobalState.DebugGameplay = false
+
+	// Handed to the state rather than read from this package by the screens, so nothing
+	// below main has to import it — the dependency direction only ever points down.
+	g.GlobalState.Version = version
 
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()

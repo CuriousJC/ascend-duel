@@ -88,6 +88,37 @@ balance is checked by `tools/balance`, which plays whole duels through the real
 invisible — losing slowly looks exactly like losing to bad draws. Run it after touching a
 cost, a stat line, or a planner.
 
+## Releasing — `.github/workflows`
+
+**CI** runs on every PR, on **Windows and Linux**, under all three build-tag configurations.
+**Release** fires on a `v*` tag and nothing else, so *tagging is releasing*:
+
+```powershell
+git tag -a v0.1.0 -m "..."; git push origin v0.1.0
+```
+
+- **Windows ships an `.exe`, Linux a `.tar.gz`.** Release assets carry no file permissions,
+  so a bare Linux binary downloads without its execute bit and does not run. The tar keeps it.
+- **Ebitengine is pure Go on Windows and cgo on Linux**, where it links against X11, GL and
+  ALSA headers. Both workflows install the same apt list; if one changes the other has to.
+- **Linux builds on `ubuntu-22.04`, not `latest`.** A cgo binary links against the glibc of
+  the machine that built it and will not start on anything older, so the newest runner
+  quietly narrows the audience. Oldest supported image is the widest reach.
+- **Version is stamped at link time** — `-X main.version=<tag>` — and shown in the window
+  title and on the title screen. `main.version` defaults to `"dev"`, because a plain
+  `go run .` injects nothing and a build that guessed a version would be worse than one that
+  admits it has none. This is what lets a bug report name a build; a filename stops
+  travelling with the binary the moment it is renamed.
+- **Neither `debugtrace` nor `idleexit` is ever set in a release build.** Instrumentation
+  must not ship, and a game that closes itself on an idle player is a bug.
+- **Only first-party actions**, and publishing goes through the `gh` CLI rather than a
+  marketplace action. A job holding a write token is the last place to run unreviewed code.
+  Build jobs upload artifacts; one `publish` job creates the release, because two jobs both
+  calling `gh release create` is a race.
+
+Release notes live in `.github/release-notes/<tag>.md`. Missing ones fall back to generated
+notes rather than failing a build that already succeeded.
+
 ## Git workflow — see the `github-workflow` skill
 
 The procedure lives in
@@ -402,7 +433,7 @@ Key conventions:
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
 - `internal/idle/` — the unattended-run timer, behind the `idleexit` build tag. Two files, `_on`/`_off`, exactly like `internal/trace`.
-- `internal/combat/` — the duel rules **and the opponent's planners**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 

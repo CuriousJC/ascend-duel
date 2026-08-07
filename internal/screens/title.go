@@ -7,6 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 
 	"image/color"
 )
@@ -83,4 +84,24 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawButton(gs, screen, s.combatButton)
 	systems.DrawButton(gs, screen, s.settingsButton)
 	systems.DrawButton(gs, screen, s.exitButton)
+
+	// The build, bottom right. Small and dim on purpose — it is a thing to be *found* when
+	// someone is asked "which version are you on", not a thing to be read every time the
+	// title screen is looked at.
+	//
+	// The window title carries it too, and that is the one that matters most today: this
+	// screen is skipped on boot while combat is the screen under construction, so a
+	// screenshot of the game will show the title bar and never this.
+	versionOp := &text.DrawOptions{}
+	versionOp.GeoM.Translate(float64(gs.PctX(100)-versionInset), float64(gs.PctY(100)-versionInset))
+	versionOp.PrimaryAlign = text.AlignEnd
+	versionOp.SecondaryAlign = text.AlignEnd
+	versionOp.ColorScale.ScaleWithColor(versionColor)
+	text.Draw(screen, gs.Version,
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, versionOp)
 }
+
+// Where the build string sits on the title screen, and how loud it is.
+const versionInset = 14
+
+var versionColor = color.RGBA{R: 60, G: 80, B: 78, A: 255}

@@ -60,12 +60,31 @@ for a faster action to lead. `Spd` still buys action points and still never buys
   to be a number. Three states are not a quantity, so a badge with no number beside it would
   read as a badge missing one.
 
+### Combos, and the one thing they changed on this screen
+
+Landed 2026-08-07. The rules are in `internal/combat/combo.go` and the design is in
+`MECHANICS.md`; two things matter to the screen.
+
+- **`combat.MatchCombos` is what to call to preview a combo while the player plans.** It is
+  the same matcher the engine uses, so a previewed combo is the combo that fires — by
+  construction, not by two pieces of code agreeing. Nothing draws it yet.
+- **A staggered slot is a row that never resolves**, which is the first time the pane has had
+  one. `currentSlot` counts `KindStaggered` alongside `KindAction` for exactly this reason —
+  one beat per slot, taken or lost — and `TestEverySlotIsEitherTakenOrStaggered` pins it.
+  **The pane still draws that row as though it happened**, which is a known gap: it has no way
+  to show a card struck out of the round, just as it has no way to bracket a combo.
+
+`KindCombo` is emitted at the combo's *first* card, not its last, because that is where its
+effects come into force — narrating it later would show a boosted hit before saying why.
+
 ### What survives any model
 
 - **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
   it returns and the Resolution pane draws what it returns. Neither derives the order
   independently, which is what makes it structurally impossible for the pane to lie to the
   player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
+  **Stagger is the one thing that can remove a slot** rather than reorder it, and the
+  every-slot-accounted-for test above is what keeps that honest.
   **This is what made the phase change cheap** — one pure function body plus its tests, and
   both consumers followed untouched. It paid for itself exactly as predicted.
 - **Ordering is a rule.** It belongs in `internal/combat`, never in a screen. A new effect

@@ -1,4 +1,4 @@
-# Builds a downloadable Windows binary and publishes it as a GitHub Release.
+# Builds downloadable binaries and publishes them as a GitHub Release.
 #
 # Fires on a version tag and nothing else:
 #
@@ -7,9 +7,14 @@
 # **The tag is the trigger, so tagging is releasing.** There is no manual approval between
 # the two — push a `v*` tag only when the commit it points at is the thing to ship.
 #
-# **No third-party actions.** Publishing runs through the `gh` CLI, which is preinstalled on
-# the runner, rather than a marketplace action. A release workflow holds a write token, so
-# it is the last place to hand execution to code nobody in this repo reviews.
+# **Only first-party actions.** Everything here is from `actions/` — checkout, setup-go,
+# upload/download-artifact — and publishing runs through the `gh` CLI preinstalled on the
+# runner rather than a marketplace action. A release workflow holds a write token, so it is
+# the last place to hand execution to code nobody in this repo reviews.
+#
+# **Build jobs never publish.** They upload artifacts and a single `publish` job creates the
+# release once, because two jobs both calling `gh release create` is a race where one of them
+# loses.
 name: Release
 
 on:
@@ -17,10 +22,9 @@ on:
     tags:
       - "v*"
 
-# The only elevated permission in the repo, and it is scoped to this job: creating a release
-# and uploading an asset needs contents:write and nothing else.
+# Build jobs need nothing but the code. Only publish gets a write token.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   windows:
@@ -46,20 +50,101 @@ jobs:
 
       # -H=windowsgui suppresses the console window that would otherwise open behind the
       # game. -s -w drop the symbol table and DWARF, and -trimpath keeps build-machine paths
-      # out of the binary. The debugtrace tag is deliberately absent: instrumentation must
-      # never be in a binary that ships.
+      # out of the binary. Neither debugtrace nor idleexit is set: instrumentation must never
+      # be in a binary that ships, and a game that closes itself on an idle player is a bug.
+      #
+      # -X stamps the tag into the binary, which is what lets a bug report name a build. The
+      # filename carries it too, but a filename stops travelling with the exe the moment it
+      # is renamed or a screenshot is all you have.
       - name: build
         shell: bash
         run: |
-          go build -trimpath -ldflags "-H=windowsgui -s -w" \
+          go build -trimpath \
+            -ldflags "-H=windowsgui -s -w -X main.version=${GITHUB_REF_NAME}" \
             -o "ascend-duel-${GITHUB_REF_NAME}-windows-amd64.exe" .
           ls -l ascend-duel-*.exe
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: ascend-duel-*.exe
+          if-no-files-found: error
+
+  linux:
+    # **22.04 rather than latest, on purpose.** A cgo binary links against the glibc of the
+    # machine that built it and will not start on anything older, so building on the newest
+    # runner available quietly narrows who can run the result. The oldest supported image is
+    # the widest audience.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # **Ebitengine needs cgo on Linux**, unlike Windows where it is pure Go. These are the
+      # headers it links against: X11 for the window and input, GL for drawing, ALSA for
+      # audio. Without them the build fails at the linker with missing -lX11 and friends.
+      - name: install ebitengine build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libc6-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev \
+            libasound2-dev pkg-config
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: vet
+        run: |
+          go vet ./...
+          go vet -tags debugtrace ./...
+
+      - name: test
+        run: go test ./...
+
+      # No -H=windowsgui here: it is a Windows linker flag and Linux has no console to hide.
+      #
+      # **Shipped as a tar.gz rather than a bare binary.** GitHub release assets carry no file
+      # permissions, so a raw download arrives without its execute bit and does not run. A tar
+      # preserves it and is what a Linux user expects to find anyway.
+      - name: build
+        run: |
+          go build -trimpath \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" \
+            -o ascend-duel .
+          tar czf "ascend-duel-${GITHUB_REF_NAME}-linux-amd64.tar.gz" ascend-duel
+          ls -l ascend-duel-*.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: ascend-duel-*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+
+    # The only elevated permission in the repo, and it is scoped to this one job.
+    permissions:
+      contents: write
+
+    steps:
+      # Needed for the notes file; the binaries come from the artifacts below.
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - run: ls -lR dist
+
       # Hand-written notes when the tag has them, generated ones when it does not. A tag that
-      # forgot its notes file should still produce a release rather than failing after a
-      # successful build — the binary is the point and the notes are the courtesy.
+      # forgot its notes file should still produce a release rather than failing after two
+      # successful builds — the binaries are the point and the notes are the courtesy.
       - name: publish
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -73,6 +158,6 @@ jobs:
           fi
 
           gh release create "${GITHUB_REF_NAME}" \
-            "ascend-duel-${GITHUB_REF_NAME}-windows-amd64.exe" \
+            dist/* \
             --title "${GITHUB_REF_NAME}" \
             "$@"

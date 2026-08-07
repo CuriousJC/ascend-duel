@@ -176,6 +176,53 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         detached head reads as a hat, head joined to shoulders reads as a blob, head on a
         narrow neck reads as a head. Authoring pixel art without seeing the output is the
         real limitation here, and the sheet tool is the fix.
+- [x] **Segment the AP bar** *(2026-08-07)*. One cell per action point instead of a
+      continuous fill. Action points are whole numbers spent in ones and twos, and a smooth
+      bar made the player read the `3/6 AP` line to find the remainder — which is the small
+      text the bar exists to save them from. Three lit cells and three dark ones says "three
+      left" without a number.
+      - The cells make the budget boundary draw itself, so the white tick that used to mark
+        it is gone: where blue meets red *is* the edge of what can be afforded.
+      - Falls back to one unbroken bar below `apBarMinCell`. A big enough AP bonus would
+        make cells thinner than a couple of pixels, and stripes that fine are a smear rather
+        than a count.
+- [x] **Stamp the version into the binary** *(2026-08-07)*. `-X main.version=<tag>` at link
+      time, shown in the window title and on the title screen; defaults to `"dev"` because a
+      plain `go run .` injects nothing.
+      - **The point is that a bug report can name a build.** The filename carries the version
+        but stops travelling with the binary the moment it is renamed, or when a screenshot
+        is all you have. The window title is in any screenshot of the window.
+      - The title screen is skipped on boot while combat is the screen under construction, so
+        the window title is the one that actually gets seen today.
+- [x] **CI and a release pipeline, and v0.1.0 shipped** *(2026-08-06/07)*. The repo had
+      neither. `ci.yml` gates every PR; `release.yml` fires on a `v*` tag and publishes.
+      **v0.1.0 is live** with a Windows exe, verified by downloading the published asset back
+      and running it.
+      - See the *Releasing* section of `CLAUDE.md` for the shape and the reasoning.
+      - **Tag-triggered, not release-on-merge.** Considered and declined on 2026-08-07:
+        continuous delivery was the better default for a prototype whose players are friends,
+        but the owner chose to keep releases deliberate. The version stamp that CD would have
+        *required* was taken anyway, since it is worth having either way.
+- [ ] **Verify the Linux build actually works.** **Nothing has ever run it.** The workflows
+      assert Linux is supported and that claim is untested — the first CI run on a PR is the
+      real check, and the apt dependency list is the most likely thing to be wrong.
+      - It **cannot be checked locally from Windows**: `GOOS=linux go vet` fails inside
+        Ebitengine's OpenGL driver because cross-compiling disables cgo and the Linux driver
+        is cgo-gated. That is the same reason the runner needs the X11/GL/ALSA headers.
+      - Linux was added to *CI* rather than only to *release* precisely for this: better a
+        red PR than a release that dies halfway with the Windows half already published.
+      - **v0.1.0 will never gain a Linux binary** — it is already cut. A Linux download needs
+        a new tag, and that tag needs its own notes file (v0.1.0's says "Windows x64 only").
+      - Sherman has a GUI Linux box and is the intended tester; the owner's is headless.
+- [x] **Linux release builds** *(2026-08-07)*. Both CI and release now cover Windows and
+      Linux; `ubuntu-22.04` rather than `latest`, because a cgo binary links against its
+      build machine's glibc and will not start on anything older.
+      - Ebitengine is pure Go on Windows and **cgo on Linux**, linking X11, GL and ALSA. Both
+        workflows install the same apt list and have to be changed together.
+      - **Shipped as `.tar.gz`.** GitHub release assets carry no file permissions, so a bare
+        binary downloads without its execute bit and will not run.
+      - Release restructured into build jobs that upload artifacts plus one `publish` job, so
+        two jobs cannot race on `gh release create`.
 - [ ] **Bevel the widgets, not just the glyphs.** Stated 2026-08-03: buttons, cards and the
       resolution panes all want the same treatment the glyphs got — a palette with an
       outline, a lit edge and a shadowed one, rather than a single colour scaled up and
@@ -572,43 +619,89 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
             tuned against the AP costs of 1/2/2/4. Whether Heavy should be beatable by
             *everything* is exactly the sort of thing the headless balance sim should
             answer.
-- [ ] **Unopposed stagger.** Decided 2026-08-04, and meant as the first of a family of
-      mechanics rather than a one-off. **Three hits in a row without the opponent answering
-      staggers them and costs them an action.** Being hit resets the attacker's streak, and
-      the count is per round — nothing carries across a round boundary.
-      - **Symmetric.** Either side can be staggered. Confirmed deliberately rather than
-        landing monster-only by default: a rule the player can suffer is one they have to
-        plan against, and a one-sided version would read as an oversight later.
-      - ~~**Alternation is what makes this rare, and that is why it is worth having.**~~
-        **Superseded 2026-08-05 by phase-based resolution** — see `MECHANICS.md`. The original
-        rationale was that `ResolutionOrder` interleaves one action each, so three of your
-        actions in a row could only happen when the opponent's queue had run out. Under phases
-        all your attacks resolve together and that scarcity is gone.
-        - **What keeps it rare instead**, and these are now the reasons: five Strikes in a
-          35-card deck puts **P(3+ in a hand of eight) at roughly 7%**; three Strikes is
-          exactly 6 AP, Fighter1's whole budget; and **five Strikes is 10 AP — unreachable
-          without ring discounts.**
-        - That last point is the design working rather than a problem. The five-combo is
-          something you *build toward*, gated behind engine-building, which is the stated
-          thrust of the game. Later enemies are also expected to absorb mechanics like this.
-      - **It is a rule, so it lives in `internal/combat`** — a streak counter on `Duelist`,
-        cleared in `resolveAction`, and a `KindStaggered` event so the screen can narrate it.
-        The screen must not derive it; that is the same split that makes it structurally
-        impossible for the Resolution pane to lie about the round.
-      - **The lost action has to be chosen deterministically.** The next one in the queue is
-        the obvious pick and the only one needing no tie-break. Whether it still costs its
-        action points is open: refunding makes stagger pure tempo, keeping the cost makes it
-        tempo *and* economy.
-      - [?] **Does a Guard reset the streak?** Both phrasings of the rule were given and they
-            disagree. "Three hits before the opponent does anything" says yes — a Guard is
-            something. "If the enemy manages to hit us, it resets" says no — only a hit
-            counts. This is the entire balance of the mechanic. If a Guard breaks the streak,
-            guarding becomes the answer to stagger and the two interlock neatly. If it does
-            not, a fast queue staggers straight through a defensive one and stagger is much
-            stronger.
-      - [?] Whether the streak counts *hits* or *actions that dealt damage*. A blow against a
-            raised Guard is halved but still lands, and a hit for zero probably should not
-            count toward a stagger — nothing distinguishes the two today.
+- [x] **The combo framework, and stagger as its first combo** *(2026-08-07)*. Combos are
+      where the game is meant to be — throwing what you drew at the enemy works, choosing a
+      shape and building toward it should work better — so this landed as a **framework built
+      for dozens of entries**, not as one mechanic. `internal/combat/combo.go`, 22 tests.
+      **See `MECHANICS.md` for the design**; what follows is only what it cost to build.
+      - **One pattern: a run of cards in, one of three rewards out** — damage multiplier,
+        banked AP, or an alteration to the opponent. Adding a combo is one table entry;
+        adding a new *reward kind* is a field on `Effect` and one place applying it. That
+        second cost is charged deliberately, so the vocabulary stays small enough to learn.
+      - **The flurry/onslaught family is generated, one pair per attack card**: Strike Flurry,
+        Strike Onslaught, Heavy Flurry, Heavy Onslaught, Quick Flurry, Quick Onslaught. A new
+        attack card gets its own pair by existing, which is the point — deckbuilding will add
+        many, and a hand-written table is one that goes stale.
+      - **Per card rather than per category**, changed the same day after the category version
+        shipped first. `AnyOf(CategoryAttack)` meant any three attacks combo'd, so a Quick was
+        worth a Heavy and the reward went to whatever you drew. Three Strikes is a deck you
+        assembled. It also leaves room for a Heavy Flurry to hit harder than a Quick one later,
+        which a category-wide combo could never express.
+      - **Heavy Onslaught is 20 AP and near enough impossible.** Kept deliberately, so
+        engine-building has something absurd to aim at.
+      - Combo IDs derive from the card, not from a list position, so inserting a card cannot
+        renumber combos a profile has already unlocked.
+      - **"Unopposed" is struck from the name and the rule.** It was written under alternation.
+        Under phases every attack you queue is consecutive by construction, so nothing can
+        interrupt a streak — which also **kills both `[?]` questions this item carried**
+        (does a Guard reset it; does a zero-damage hit count). Neither can ever fire.
+      - **The two open questions were closed, and here is which way.** The lost action comes
+        off the *front* of the victim's next turn, which under phases is their setup — so a
+        stagger costs a Prepare before it costs an attack. Its action points are **not**
+        refunded, making stagger tempo *and* economy.
+      - **`Duelist.Staggered` persists across the round boundary**, and that is forced rather
+        than chosen: side B acts last, so a combo B forms has no turn left to bite in. Holding
+        it on the duelist is what keeps this one rule instead of two.
+      - **Combos match what survives a stagger, not the queue**, or a staggered duelist could
+        combo back with a turn it never took.
+      - `resolveRound` takes the table as a parameter so tests can drive a synthetic combo
+        through the whole engine — the multiplier and banked-AP paths would otherwise have
+        shipped without ever having been run, since both live combos use stagger.
+      - **Screen cost was one line and one bug.** `currentSlot` counted `KindAction`, and a
+        staggered slot produces none, so the Resolution highlight would have run a row short
+        for the rest of the round. It counts `KindStaggered` too now: one beat per slot,
+        taken or lost.
+- [ ] **Swarm1 is unbeatable.** *(Caused by combos, 2026-08-07. Left standing deliberately, to
+      watch how it balances out; this is the entry that says it is known and not forgotten.)*
+      `tools/balance` reports Swarm1 beating **all three postures**, which is the tool's own
+      "wall" condition. Before combos it lost to `all-out` in two rounds.
+      - **Why:** it queues `Strike + Quick + Quick + Quick + Quick`, and four Quicks in a row is
+        a Quick Flurry every single round. The player is staggered out of an action each round
+        and never gets ahead.
+      - **A combo counting cards is priced by whoever has the cheapest cards.** Every costing in
+        `MECHANICS.md` reasons from the player's budget — three Strikes is 6 AP — while Swarm1
+        buys four Quicks for 4. Nobody costed the combo against a cheap attacker.
+      - Per-card matching already softened this: under the category-wide version it formed a
+        full Onslaught and the fighter dealt **zero** damage from round two. Worth knowing that
+        the same change also un-broke Tactician1, which the category version had made
+        unbeatable too.
+      - Candidates, none chosen: price a run by AP rather than by card; give stagger a
+        cooldown; retune the swarm; or **give enemies their own cards and their own combos**,
+        which is the option `MECHANICS.md` now flags as genuinely open — it is not settled that
+        the opponent draws on the player's combo table at all.
+      - **The deeper cause is that enemies plan from a budget and always play their optimal
+        round** — see the enemy-decks entry. A deterministic optimiser forms the same combo
+        every round forever, which is the condition a combo system punishes hardest. Enemy
+        decks may fix this without touching a combo rule.
+- [ ] **Procedurally generated enemies.** *(Cut 2026-08-07.)* The roster is four hand-written
+      records in `combatants.json` and the combat screen walks them in order. That is
+      scaffolding. An enemy should be **generated** from the floor, so the tower can be endless
+      and a seed can reproduce it.
+      - **Assembled from parts, not rolled from scratch.** The pieces that already exist or are
+        already decided: a **stat line** scaled by floor depth; a **deck** (see enemy decks);
+        an **affix** that transforms that deck rather than adding to it; a **sprite**; and a
+        **personality** — what `PlanStyle` is the first crude version of.
+      - **Personality is the part that is furthest out**, and deliberately so. Today it is one
+        of four planner functions chosen by a string. What it wants to become is a set of
+        leanings — how readily it defends, whether it banks, whether it plays toward a combo —
+        that a generator can dial rather than pick from a list of four.
+      - **Needs its own randomness stream**, per the four-stream rule in `CLAUDE.md`. Enemy
+        selection is already named as one of the four; this is what will draw on it.
+      - **Blocked on nothing, but pointless before enemy decks**, which decide the shape of the
+        thing being generated. Generating stat lines alone would just be `combatants.json` with
+        extra steps.
+      - The four current records become **seeds for the generator or test fixtures**, not the
+        roster. `AvailableAffixes` in the JSON is read by nothing and is waiting for this.
 - [?] **Ordering model — four candidates, one implemented, and a fourth now chosen to try.**
       Contested slots is what ships today. `ResolutionOrder` is a single pure function, so
       swapping between any of these is one function body plus its tests.

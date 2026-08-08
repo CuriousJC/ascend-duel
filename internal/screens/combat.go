@@ -445,6 +445,10 @@ func eventLabel(e combat.Event) string {
 		return fmt.Sprintf("negated     %v's %v stops %v cold", e.Side, e.Action, e.Target)
 	case combat.KindGuarded:
 		return fmt.Sprintf("guarded     %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
+	case combat.KindBraced:
+		return fmt.Sprintf("braced      %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
+	case combat.KindStripped:
+		return fmt.Sprintf("stripped    %v's feint removes %v's %v", e.Side, e.Target, e.Action)
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindCombo:
@@ -700,7 +704,7 @@ func handLabel(hand []paletteCard) string {
 	return out
 }
 
-// planLabel renders a queued set as "Guard + Strike + Quick".
+// planLabel renders a queued set as "Guard + Strike + Jab".
 func planLabel(actions []combat.ActionKind) string {
 	if len(actions) == 0 {
 		return "(nothing)"

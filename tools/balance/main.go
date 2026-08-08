@@ -47,6 +47,10 @@ func main() {
 	fmt.Printf("Fighter1: %d life, %d AP, Str %d, %d actions/round\n",
 		fighter.MaxLife, fighter.ActionPoints(), fighter.Str, fighter.MaxActions())
 
+	// The postures bracket the real choice. The first three are the original set — all offence,
+	// broad defence, precise defence — and the rest were added on 2026-08-08 with the concepts
+	// they exercise. **A card no posture plays is a card this tool cannot see**, which is how
+	// four new concepts would otherwise have shipped with their balance unmeasured.
 	postures := []playerRound{
 		// 6 AP: everything into damage.
 		{"all-out", nil, []combat.ActionKind{combat.Heavy, combat.Strike}},
@@ -54,6 +58,22 @@ func main() {
 		{"guarding", []combat.ActionKind{combat.Guard}, []combat.ActionKind{combat.Strike}},
 		// Two Dodges are 4, leaving a Strike.
 		{"dodging", []combat.ActionKind{combat.Dodge, combat.Dodge}, []combat.ActionKind{combat.Strike}},
+
+		// Mirror is 4, leaving a Jab. **This is the posture to read first**: Mirror reflects
+		// every attack it stops, so its value is set entirely by how much the opponent commits.
+		// Against a swarm it should be devastating and against a warden nearly worthless, and if
+		// it is strong against everything then the reflect fraction is wrong.
+		{"mirroring", []combat.ActionKind{combat.Mirror}, []combat.ActionKind{combat.Jab}},
+		// Three Braces are 3, leaving a Strike — the cheap partial defence spread wide, against
+		// two Dodges' precise negation.
+		{"bracing", []combat.ActionKind{combat.Brace, combat.Brace, combat.Brace}, []combat.ActionKind{combat.Strike}},
+		// Feint is 3 and a Strike is 2. Only distinguishable from all-out against an opponent
+		// holding negations, which is what makes it the anti-Riposte reading.
+		{"feinting", nil, []combat.ActionKind{combat.Feint, combat.Strike}},
+		// Ritual is 4, leaving a Jab, and banks +5. Repeated every round it is a posture that
+		// pays 4 AP a round for a budget it never gets to spend — deliberately a bad plan, and
+		// the floor a real Ritual line has to beat.
+		{"ritual", []combat.ActionKind{combat.Ritual}, []combat.ActionKind{combat.Jab}},
 	}
 	fmt.Println("\npostures:")
 	for _, p := range postures {
@@ -82,7 +102,10 @@ func main() {
 		"\nand always draws it. A real player is at the mercy of the deck, so read these as the" +
 		"\nbest case for each posture — an enemy that beats a posture here beats it always." +
 		"\n\nWhat to look for: every enemy should lose to *something* and win against *something*." +
-		"\nAn enemy beaten by all three postures is free, and one that beats all three is a wall.")
+		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
+		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
+		"\nMirror is the one to watch — it reflects what it stops, so it should read as devastating" +
+		"\nagainst a swarm and near-useless against a warden. Strong everywhere means wrong.")
 }
 
 // stalemateRounds is where a duel is called a draw. A fight nobody can finish is as broken

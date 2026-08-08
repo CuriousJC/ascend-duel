@@ -63,10 +63,10 @@ func TestTwoAttacksFormNothing(t *testing.T) {
 func TestThreeDifferentAttacksFormNothing(t *testing.T) {
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Quick, Strike, Heavy}, nil, 1)
+	events, _, _ := ResolveRound(a, b, []ActionKind{Jab, Strike, Heavy}, nil, 1)
 
 	if got := combosFired(events, SideA); len(got) != 0 {
-		t.Fatalf("Quick+Strike+Heavy is not a run of one card, got %v", got)
+		t.Fatalf("Jab+Strike+Heavy is not a run of one card, got %v", got)
 	}
 }
 
@@ -124,7 +124,7 @@ func TestCombosAreNamedForTheCardTheyAreBuiltOn(t *testing.T) {
 		{OnslaughtID(Strike), "Strike Onslaught"},
 		{FlurryID(Heavy), "Heavy Flurry"},
 		{OnslaughtID(Heavy), "Heavy Onslaught"},
-		{FlurryID(Quick), "Quick Flurry"},
+		{FlurryID(Jab), "Jab Flurry"},
 	} {
 		c, ok := ComboByID(tc.id)
 		if !ok {
@@ -162,10 +162,10 @@ func TestFourAttacksFormOneFlurryNotTwo(t *testing.T) {
 func TestFiveAttacksFormOnslaughtRatherThanFlurry(t *testing.T) {
 	a, b := duelist(10, 0, 200), duelist(10, 0, 200)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Quick, Quick, Quick, Quick, Quick}, nil, 1)
+	events, _, _ := ResolveRound(a, b, []ActionKind{Jab, Jab, Jab, Jab, Jab}, nil, 1)
 
 	got := combosFired(events, SideA)
-	if len(got) != 1 || got[0] != OnslaughtID(Quick) {
+	if len(got) != 1 || got[0] != OnslaughtID(Jab) {
 		t.Fatalf("longest run should win, so five attacks is Onslaught; got %v", got)
 	}
 }
@@ -235,9 +235,9 @@ func TestAFlurryCostsTheOpponentTheirNextAction(t *testing.T) {
 
 	events, _, _ := ResolveRound(a, b,
 		[]ActionKind{Strike, Strike, Strike},
-		[]ActionKind{Quick, Strike}, 1)
+		[]ActionKind{Jab, Strike}, 1)
 
-	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Quick {
+	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Jab {
 		t.Fatalf("B should lose exactly its first action, got %v", lost)
 	}
 	if took := sideActions(events, SideB); len(took) != 1 || took[0] != Strike {
@@ -249,7 +249,7 @@ func TestOnslaughtTakesTheOpponentsWholeTurn(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Quick, Quick, Quick, Quick, Quick},
+		[]ActionKind{Jab, Jab, Jab, Jab, Jab},
 		[]ActionKind{Strike, Strike, Guard}, 1)
 
 	if lost := staggeredActions(events, SideB); len(lost) != 3 {
@@ -307,8 +307,8 @@ func TestSideBsFlurryLandsInTheFollowingRound(t *testing.T) {
 		t.Fatalf("the stagger should be held on A for next round, got %d", aAfter.Staggered)
 	}
 
-	events2, _, _ := ResolveRound(aAfter, bAfter, []ActionKind{Quick, Strike}, nil, 2)
-	if lost := staggeredActions(events2, SideA); len(lost) != 1 || lost[0] != Quick {
+	events2, _, _ := ResolveRound(aAfter, bAfter, []ActionKind{Jab, Strike}, nil, 2)
+	if lost := staggeredActions(events2, SideA); len(lost) != 1 || lost[0] != Jab {
 		t.Fatalf("A should lose its first action next round, got %v", lost)
 	}
 }
@@ -320,12 +320,12 @@ func TestAStaggerIsSpentOnceAndDoesNotLinger(t *testing.T) {
 		[]ActionKind{Gather},
 		[]ActionKind{Strike, Strike, Strike}, 1)
 
-	_, aAfter2, _ := ResolveRound(aAfter, bAfter, []ActionKind{Quick, Strike}, nil, 2)
+	_, aAfter2, _ := ResolveRound(aAfter, bAfter, []ActionKind{Jab, Strike}, nil, 2)
 	if aAfter2.Staggered != 0 {
 		t.Fatalf("the stagger should be consumed by the turn it hit, got %d", aAfter2.Staggered)
 	}
 
-	events3, _, _ := ResolveRound(aAfter2, bAfter, []ActionKind{Quick, Strike}, nil, 3)
+	events3, _, _ := ResolveRound(aAfter2, bAfter, []ActionKind{Jab, Strike}, nil, 3)
 	if lost := staggeredActions(events3, SideA); len(lost) != 0 {
 		t.Fatalf("round three should be unaffected, got %v", lost)
 	}
@@ -490,14 +490,14 @@ func TestComboBankedPointsArriveInTheFollowingRound(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(95),
 		Name:   "second wind",
-		Run:    []Step{Card(Quick), Card(Quick)},
+		Run:    []Step{Card(Jab), Card(Jab)},
 		Effect: Effect{BankAP: 3},
 	}}
 
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 	before := a.ActionPoints()
 
-	_, aAfter, _ := resolveRound(a, b, []ActionKind{Quick, Quick}, nil, 1, table)
+	_, aAfter, _ := resolveRound(a, b, []ActionKind{Jab, Jab}, nil, 1, table)
 
 	if aAfter.BonusAP != 3 {
 		t.Fatalf("want 3 points banked, got %d", aAfter.BonusAP)
@@ -534,7 +534,7 @@ func TestACombosEffectsDoNotLeakIntoTheOpponentsTurn(t *testing.T) {
 func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 	a, b := duelist(10, 0, 500), duelist(10, 0, 500)
 	aPlan := []ActionKind{Strike, Strike, Strike}
-	bPlan := []ActionKind{Gather, Quick, Strike, Dodge}
+	bPlan := []ActionKind{Gather, Jab, Strike, Dodge}
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
 
@@ -591,8 +591,8 @@ func TestCombosDoNotBreakDeterminism(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 	actions := []ActionKind{Strike, Strike, Strike}
 
-	e1, a1, b1 := ResolveRound(a, b, actions, []ActionKind{Quick, Strike}, 1)
-	e2, a2, b2 := ResolveRound(a, b, actions, []ActionKind{Quick, Strike}, 1)
+	e1, a1, b1 := ResolveRound(a, b, actions, []ActionKind{Jab, Strike}, 1)
+	e2, a2, b2 := ResolveRound(a, b, actions, []ActionKind{Jab, Strike}, 1)
 
 	if a1 != a2 || b1 != b2 {
 		t.Fatal("the same round resolved twice must end in the same state")

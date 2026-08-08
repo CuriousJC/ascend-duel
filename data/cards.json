@@ -1,0 +1,88 @@
+[
+  {
+    "Concept": "Gather",
+    "Category": "prepare",
+    "CostTier": 1,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Sift",
+    "Category": "prepare",
+    "CostTier": 2,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Guard",
+    "Category": "prepare",
+    "CostTier": 3,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Ritual",
+    "Category": "prepare",
+    "CostTier": 4,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+
+  {
+    "Concept": "Jab",
+    "Category": "attack",
+    "CostTier": 1,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Strike",
+    "Category": "attack",
+    "CostTier": 2,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Feint",
+    "Category": "attack",
+    "CostTier": 3,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Heavy",
+    "Category": "attack",
+    "CostTier": 4,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+
+  {
+    "Concept": "Brace",
+    "Category": "defend",
+    "CostTier": 1,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Dodge",
+    "Category": "defend",
+    "CostTier": 2,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Riposte",
+    "Category": "defend",
+    "CostTier": 3,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Mirror",
+    "Category": "defend",
+    "CostTier": 4,
+    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  }
+]

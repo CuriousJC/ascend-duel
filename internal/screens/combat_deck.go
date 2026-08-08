@@ -12,6 +12,7 @@ import (
 	"image"
 	"sort"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -102,62 +103,104 @@ type actionCard struct {
 	element element
 }
 
-// The hand drawn from the deck each round. Quick is not in the deck — the deck is what the
-// player owns, and which of the actions the rules define actually appear is a deck-building
-// question rather than a rules one.
+// The hand drawn from the deck each round.
 //
 // Eight from five on 2026-08-04. Eight cards do not fit the screen side by side, which is
 // what the overlap in handPitch is for — the hand is expected to go past eight sometimes.
-// Eight against the 30-card deck below is roughly the ratio it was sized for.
+//
+// **Eight was sized against a 30-card deck and the deck is now 60.** That is 13% of the deck
+// in hand where it used to be 27%, so consistency halved on 2026-08-08 without this number
+// moving. It is left at eight deliberately, for now: Sift and `discardsPerRound` are the two
+// levers meant to answer draw variance, and moving all three at once would leave no way to
+// tell which one did the work. A brand growing hand size is the recorded permanent version.
 const handSize = 8
 
-// primaries is the element set that gets cards, in the order a concept's five are built.
-// Secondary elements — poison, force, hunger — deliberately have none; where they appear is
-// still open. See MECHANICS.md.
-var primaries = []element{elementBasic, elementFire, elementIce, elementLightning, elementEarth}
-
-// conceptDeck is one card of a concept in every primary element — the unit the deck is built
-// from. Decided 2026-08-05: **a concept ships as five cards**, and that is the rule for
-// adding concepts rather than a description of this particular deck. A new concept arrives as
-// a set of five, never as a lone card.
-func conceptDeck(action combat.ActionKind) []deckEntry {
-	entries := make([]deckEntry, 0, len(primaries))
-	for _, e := range primaries {
-		entries = append(entries, deckEntry{actionCard{action, e}, 1})
+// elementsByName resolves the element names in cards.json. Not a map from `element` to string —
+// elementNames above already is that, and two tables for one relation is one refactor away from
+// disagreeing. This walks it instead, so a new element needs one edit rather than two.
+func elementByName(name string) (element, bool) {
+	for i, n := range elementNames {
+		if n == name {
+			return element(i), true
+		}
 	}
-	return entries
+	return elementBasic, false
 }
 
-// The starting deck: every concept, five cards each, grouped by the category it resolves in.
+// startingDeck is the deck the player opens a run with: **twelve concepts x five elements = 60
+// cards**, built from `data/cards.json` rather than written out here.
 //
-// **Six concepts, 30 cards**, split evenly 10 setup / 10 attack / 10 defend. That even split
-// is a consequence of the concept list rather than a target — Guard moved from defend to
-// setup on 2026-08-06 and Parry was dropped the same day, which is what turned the lopsided
-// 1/2/4 the design started from into 2/2/2. The 5-setup/10-attack/20-defend shape recorded
-// in MECHANICS.md is the thing that went; the two-thirds-defensive theory went with it.
+// It became data on 2026-08-08, at the same time the concept grid was filled. The shape it
+// replaced was a `concat` of `conceptDeck` calls — fine for six concepts, and a list nobody
+// could count at a glance for twelve. What the JSON buys is that the deck's *size* is now a
+// consequence of a file the designer can read and edit, rather than of a Go expression.
 //
-// Quick is still homeless: it is an ActionKind with a cost and damage and no concept, so it
-// has no five cards to arrive as.
-var startingDeck = concat(
-	// Setup.
-	conceptDeck(combat.Gather),
-	conceptDeck(combat.Guard),
+// **The rules did not move with it.** Cost, category and damage stay in `internal/combat`;
+// `cards.json` names concepts and elements and declares a cost tier that `buildStartingDeck`
+// checks against the engine. See data/card_data.go for why the tier is checked rather than
+// trusted.
+var startingDeck = buildStartingDeck()
 
-	// Attack.
-	conceptDeck(combat.Strike),
-	conceptDeck(combat.Heavy),
+// buildStartingDeck turns the data records into deck entries, in file order — which is grid
+// order, which is the order the deck overlay sorts into anyway.
+//
+// **It panics on a bad record, and that is the right severity.** An unknown concept name, a
+// cost tier that disagrees with the rules, or an element the screen does not know are all
+// things that would otherwise produce a deck quietly missing five cards. A missing concept is
+// a balance change nobody made on purpose, and a game that starts anyway is a game that hides
+// it. This runs at package init, so it fails on launch rather than mid-duel.
+func buildStartingDeck() []deckEntry {
+	cards := data.LoadCards()
 
-	// Defend.
-	conceptDeck(combat.Dodge),
-	conceptDeck(combat.Riposte),
-)
+	problems := data.CheckCostTiers(cards,
+		func(concept string) (int, bool) {
+			a, ok := combat.ParseAction(concept)
+			if !ok {
+				return 0, false
+			}
+			return a.Cost(), true
+		},
+		func(concept string) (string, bool) {
+			a, ok := combat.ParseAction(concept)
+			if !ok {
+				return "", false
+			}
+			return a.Category().String(), true
+		},
+	)
+	if len(problems) > 0 {
+		msg := "cards.json disagrees with the rules:"
+		for _, p := range problems {
+			msg += "\n  " + p.Error()
+		}
+		panic(msg)
+	}
 
-func concat(groups ...[]deckEntry) []deckEntry {
 	var out []deckEntry
-	for _, g := range groups {
-		out = append(out, g...)
+	for _, c := range cards {
+		action, ok := combat.ParseAction(c.Concept)
+		if !ok {
+			panic("cards.json: unknown concept " + c.Concept)
+		}
+		for _, name := range c.Elements {
+			e, ok := elementByName(name)
+			if !ok {
+				panic("cards.json: " + c.Concept + " names unknown element " + name)
+			}
+			out = append(out, deckEntry{actionCard{action, e}, c.Copies})
+		}
 	}
 	return out
+}
+
+// deckSize is how many cards the starting deck actually deals, counting copies. Used by the
+// trace dump and the deck overlay's heading, so neither has to recount.
+func deckSize() int {
+	n := 0
+	for _, e := range startingDeck {
+		n += e.count
+	}
+	return n
 }
 
 // deckEntry is one line of a deck list: a card and how many copies of it.
@@ -292,9 +335,70 @@ func (s *CombatScene) drawHand() {
 // It also gives Discard a real job. A card you never want now sits in your hand until you
 // throw it out, so the discard button is how you clear it rather than a shortcut for
 // something the round boundary was going to do anyway.
+// **Sift is applied here and nowhere else.** Each Sift played sends two more cards away at
+// random before the refill, so a round that played one Sift replaces seven of eight cards
+// rather than five: the four the player chose, the Sift itself, and two the game chose.
 func (s *CombatScene) endRoundHand() {
+	sifted := s.siftsResolved() * siftExtraDiscards
+
 	s.spendSelected()
+	s.siftHand(sifted)
 	s.discardsLeft = discardsPerRound
+}
+
+// siftExtraDiscards is how many extra cards one Sift sends away.
+//
+// **The extras go at random, and that is the whole difference between Sift and the Discard
+// button.** Discard is steering — you choose what leaves, four times a round. Sift is
+// throughput: more of the deck flows past you and you do not pick which cards pay for it, so it
+// can take a card you were holding on purpose. That is what it costs beyond its 2 AP, and it is
+// why the two are not the same mechanic at different prices.
+//
+// It is also the reason Sift's effect lives on the screen rather than in `internal/combat`: it
+// needs the deck and the hand, and both stay out of the rules package so the rules keep no
+// shuffle. See MECHANICS.md.
+const siftExtraDiscards = 2
+
+// siftsResolved counts the fighter's Sifts that actually happened, read off the resolved event
+// log rather than off the queue.
+//
+// **The log and the queue disagree, and the log is right.** A stagger takes actions off the
+// front of a turn, and under phases the front of a turn is its prepares — so a Sift is among
+// the first things a stagger eats. Counting the queue would sift for a card the engine deleted
+// before it resolved, which is the same class of bug as a combo scoring off cards that never
+// landed. `KindAction` is only emitted for actions that ran; a staggered one emits
+// `KindStaggered` instead.
+func (s *CombatScene) siftsResolved() int {
+	n := 0
+	for _, e := range s.log {
+		if e.Kind == combat.KindAction && e.Side == combat.SideA && e.Action == combat.Sift {
+			n++
+		}
+	}
+	return n
+}
+
+// siftHand sends n cards away at random and deals back up. Drawn from the scene's own rng, the
+// same source as the shuffle — never the package-level functions, which would make a run
+// unreproducible. See the determinism rules in CLAUDE.md.
+//
+// It takes from the *remaining* hand, after the played cards have already gone, so a Sift never
+// discards something the player just spent.
+func (s *CombatScene) siftHand(n int) {
+	if n <= 0 {
+		return
+	}
+
+	for i := 0; i < n && len(s.hand) > 0; i++ {
+		at := s.rng.Intn(len(s.hand))
+		s.discard = append(s.discard, s.hand[at].actionCard)
+		s.hand = append(s.hand[:at], s.hand[at+1:]...)
+	}
+
+	trace.Logf("deck", "sift sent %d card(s) away at random, hand now %s", n, handLabel(s.hand))
+
+	s.drawHand()
+	s.syncQueue()
 }
 
 // Deck overlay geometry. The panel is nearly the whole screen and stops above the button
@@ -379,8 +483,11 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 		op.PrimaryAlign = text.AlignCenter
 		text.Draw(screen, s, small, op)
 	}
-	line(deckCountsTop, fmt.Sprintf("draw %d  ·  discard %d  ·  %d in hand",
-		len(s.deck), len(s.discard), len(s.hand)))
+	// The deck total is stated as well as the three piles, because with 60 cards the piles no
+	// longer add up to a number anybody holds in their head — and because it is the one place
+	// the size of cards.json becomes visible while playing.
+	line(deckCountsTop, fmt.Sprintf("draw %d  ·  discard %d  ·  %d in hand  ·  %d owned",
+		len(s.deck), len(s.discard), len(s.hand), deckSize()))
 	line(deckLegendTop, "dimmed cards are in the discard - they return on the next reshuffle")
 
 	s.drawPileGrid(gs, screen, left+width/2, top+deckGridTop)
@@ -451,9 +558,18 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 		drawCard(gs, screen, at, deckCardStyle, e.card, e.available, false, s.fighter.Str)
 	}
 
-	// The grid holds 24 and the deck puts at most 22 outside the hand, so this cannot fire
-	// today — but deckbuilding will grow the deck, and a panel that silently drops the
-	// overflow would be a picture that lies about what you own.
+	// **This fires on every look now, and it is the honest failure rather than the right one.**
+	// The grid is 24 slots; a 60-card deck puts up to 52 cards outside an 8-card hand, so the
+	// panel shows fewer than half of them and says so. It was written when the deck was 30 and
+	// this line could not fire, precisely so that growing the deck would produce a visible
+	// shortfall instead of a picture that quietly lied about what you own — which is the part
+	// that worked.
+	//
+	// **The fix is a design decision and not a bigger grid.** A card cannot be made smaller:
+	// GlyphSize is 64, CardGlyphScale is already 1, integer scales only, and the two-glyph
+	// column is the floor on a card's height (see CLAUDE.md). Paging, grouping identical cards
+	// under a count, or a different representation entirely are all real answers and all change
+	// what the panel *is*. Left for the owner.
 	if over := len(entries) - slots; over > 0 {
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(float64(centerX), float64(int(top)+deckGridRows*pitchY))

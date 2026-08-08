@@ -1,6 +1,6 @@
 ---
 name: combat-screen
-description: The combat screen's layout, its card/action box widget, hidden information, and the resolution-order rule the screen must obey. Load before touching internal/screens/combat.go, combat_actionbox.go, internal/combat, the hand, the cards, the deck overlay, the Resolution or caption panes, the character block, or anything about how a round is drawn or played back.
+description: The combat screen's layout, its card/action box widget, hidden information, and the resolution-order rule the screen must obey. Load before touching any of internal/screens/combat.go, combat_deck.go, combat_panes.go, combat_hud.go, combat_actionbox.go, internal/combat, the hand, the cards, the deck overlay, the Resolution or caption panes, the character block, or anything about how a round is drawn or played back.
 ---
 
 # The combat screen
@@ -27,12 +27,16 @@ top of, and they are not repeated below:
 - **Colour: name one colour and scale it** with `systems.ColorAtStrength`, never add to it.
 - **Widgets are hand-rolled**, `models` struct plus `systems.Update*`/`Draw*`. No toolkit.
 - **Determinism**, which the deck's `rng` and the `deckSeed` placeholder live under.
+- **Which of the screen's six files holds what** — the map is in `CLAUDE.md`'s Package layout
+  section, and it lives there rather than here so there is only one of it. Everything below
+  describes the screen, not a file; they are one package, so a symbol named here may sit in
+  any of them and `Grep` over `internal/screens/` is the way to find it.
 
 ## Resolution order
 
 **Phases, implemented 2026-08-06.** A round is **a whole turn each**: everything side A
 queued resolves before side B does anything, and within a turn the categories go in order —
-**setup, attacks, defenses**. Defenses come last within a turn because the opponent moves
+**prepare, attacks, defenses**. Defenses come last within a turn because the opponent moves
 next, so a defense raised at the end of your turn is up when their blow arrives.
 
 This replaced alternation, which replaced volley-per-side on 2026-07-31. The reason is
@@ -74,13 +78,14 @@ Landed 2026-08-07. The rules are in `internal/combat/combo.go` and the design is
   **The pane still draws that row as though it happened**, which is a known gap: it has no way
   to show a card struck out of the round, just as it has no way to bracket a combo.
 
-`KindCombo` is emitted at the combo's *first* card, not its last, because that is where its
-effects come into force — narrating it later would show a boosted hit before saying why.
+`KindCombo` is emitted on the card that **completes** the run, so a combo line lands under the
+cards that earned it. It fired on the *first* card until 2026-08-07 and read backwards. The
+screen does nothing to arrange this — it replays the log in order, and the engine moved.
 
 ### What survives any model
 
 - **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
-  it returns and the Resolution pane draws what it returns. Neither derives the order
+  it returns and the Action Flow pane draws what it returns. Neither derives the order
   independently, which is what makes it structurally impossible for the pane to lie to the
   player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
   **Stagger is the one thing that can remove a slot** rather than reorder it, and the
@@ -112,9 +117,10 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 
 | Element | Slot | Colour | Role |
 |---|---|---|---|
-| Character block | 4% x, 12% y | green | life, discards, vitae |
-| Resolution | 45–78% x, 12–46% y | pink | both queues in play order: your whole turn, then theirs |
-| Caption box | hand width, 48% y | pink | what the round is doing right now |
+| Character strip | 4–39% x, 2% y | green | health, discards, vitae, side by side |
+| Resolution | 15–78% x, 12–46% y | pink | what the round actually did, accumulating as it plays |
+| Action Flow | *built, not drawn* | pink | both queues in play order — see below |
+| Caption box | hand width, 48% y | pink | your plan and its AP cost, and what to press |
 | Hand | centred, 59% y | element | the cards, portrait, in one row |
 | AP figure and bar | hand width, under the row | blue | the budget |
 | Buttons | 95% y | — | Discard 20%, DUEL! 33%, Deck 88% |
@@ -191,23 +197,127 @@ the brightest thing on screen or it is a trap.
   at twenty cards, but deckbuilding will grow the deck and a panel that quietly hid cards
   would be a picture that lies about what you own.
 
-**The Resolution pane is the centrepiece and gets the width to prove it.** It is the only
-pane that has to grow: it has to draw a combo spanning slots that need not be adjacent, and
-one row per slot with a single walking highlight has no way to say "these together did a
-thing".
+### Action Flow is built and currently not drawn
+
+*Split 2026-08-07, then narrowed the same day.* The old single Resolution pane was renamed
+**Action Flow** and a new **Resolution** took its slot. Flow was then **dropped from `Draw` as
+an experiment** and Resolution widened to 15–78% to take both columns. `drawActionFlow` and
+`actionFlowRows` are deliberately left in place and unwired, so restoring it is one line.
+
+**What is given up while it is off, and it is not nothing:** the enemy's queued shape during
+planning. Those `??? (attack)` rows are the tell — see the concealment section below — and
+Resolution is empty until DUEL! is pressed, so nothing on screen says what the opponent is
+about to do. It bites hardest against Tactician1, whose whole design is that you read
+`??? (prepare) ??? (prepare)` and brace.
+
+The rest of this section describes the split as designed, and still applies if Flow comes back.
+
+- **Action Flow** is what you **queued**, in play order — live while you plan, before anything
+  has happened. A prediction, and what drag-to-reorder edits.
+- **Resolution** is what actually **happened** — empty until DUEL! is pressed, filling as the
+  round plays back. A record.
+
+Showing the round twice is only worth the space because of that split, and it is what retired
+the open problem of how one pane could be both. **Action Flow never learned to bracket a combo
+across non-adjacent slots and no longer has to**, because Resolution says it in words. Same for
+a slot a stagger deleted: Flow still draws it as a row, Resolution reports it lost.
+
+**The narrow column and the wide one are not interchangeable.** Flow rows are short labels
+(`Strike`, `??? (attack)`) and fit the 15–39% column the Actions pane vacated. Resolution rows
+are sentences, so it keeps the wide middle slot — which is what the pane billed as the
+centrepiece should have anyway.
+
+- **One line per slot, not one per event.** A busy round is 25–30 events against a dozen rows.
+  Drawing the log verbatim would need a scrollback, and **there is no scroll gesture** — no
+  wheel convention, no keyboard, no right click. Merging an action with its outcome is
+  presentation of events the engine already decided; it computes nothing.
+- **Combos and staggers get lines of their own**, because they are not something a card did.
+  Folding a combo into the line of the card that happened to start it would bury the one thing
+  the pane was added to show.
+- **Built only from events playback has reached** (`s.log[:cursor+1]`), so the pane says exactly
+  as much as the player has been shown and never spoils the rest of the round.
+- **It clears every round**, because there is no way to scroll back to an earlier one.
+- Overflow draws `... N earlier` rather than dropping lines silently — the same rule as the deck
+  overlay's `+N more not shown`. A panel that quietly hides part of what it claims to show is a
+  picture that lies.
+- `resolutionCapacity` is **derived** from the band and the pitch, so changing either cannot
+  leave a constant behind claiming a capacity the pane does not have.
+
+**The caption stopped narrating.** It used to show one event at a time, which meant the whole
+account of a round existed only as a quarter-second flash — a combo forming was unreadable and
+a block that halved a Heavy went past before it could be noticed. It now returns `""` during
+playback and keeps its other job: the plan line, its AP cost, and what to press when a fight
+ends. **One job each — the pane records, the caption proposes.** Letting both narrate would put
+the newest line on screen twice, which is the thing the pane was added to fix.
+
+`panePlacement` carries its own `rowHeight` because the two panes hold different things:
+`paneRowHeight` (30) for card names, `paneTextRowHeight` (22) for sentences.
+
+### Resolution writes sentences, and the verb is marked in the text
+
+*2026-08-07, changed 2026-08-08.* A line is `<who> <verb> <phrase>` — **"Duelist attacks with a
+heavy strike"** — and the verb is **coloured, bold and underlined**: **red for attack, blue for
+defend, the row's own ink for prepare**. A round can then be scanned for what *kind* of thing
+happened before any of it is read.
+
+**The verb was a filled chip until 2026-08-08.** It was replaced because a saturated rectangle in
+a pane that already carries a swatch and a sentence drew the eye to the block rather than to the
+word inside it. **This is the same correction that retired the full-width highlight bar the day
+before, one scale smaller** — mark the words, do not sit them on a lit shape. If a third version
+is ever wanted, that is the argument to answer.
+
+- **`paneRow` is three runs**, `prefix`/`verb`/`suffix`, not one string. The verb has to be its
+  own run so it can be measured, tinted and underlined independently; slicing it back out of a
+  finished sentence would be worse. Rows that are not sentences put everything in `prefix`.
+- **All three marks, on every row, always.** One alone would be ambiguous — the pane already uses
+  colour for the side and for the live row, and bold alone for the live row — so the verb needs
+  the combination to be unmistakable. **The consequence: the underline is no longer what marks
+  the live row.** That row is now distinguished by `nowInk` plus faux-bold on `prefix`/`suffix`,
+  and the verb keeps its category colour there rather than going pink with the rest.
+- **Prepare has no hue and inherits the row's ink.** As a chip it needed a pale ground *and* a
+  near-black foreground, because white-on-white is invisible. With no ground there is nothing for
+  a pale colour to be legible against, so it takes `p.ink` — already the colour that reads on that
+  pane, dark on Resolution and light on Action Flow. Being the category with no colour is also its
+  right rank: it is the one that does nothing to the opponent. `verbInkFor` returns **zero alpha**
+  to mean this, the same "use the default" convention `Button.BaseColor` uses.
+- **The underline sits flush with the bottom of the measured line box**, never a constant above
+  it. It used to hang under a chip of fixed height; with no chip the only thing to position it
+  against is the text, and `text.Measure` reports the full line including descent — which is what
+  clears the `p` in "prepares". A rule placed a few pixels above the baseline struck through it.
+- **The prose lives in `internal/screens`, not `internal/combat`.** The rules package names
+  actions; it does not describe them. `actionPhrases` is a map keyed by `ActionKind`, with a
+  fallback so a new card reads awkwardly rather than producing a sentence with a hole in it.
+- **Outcomes append to `suffix`**, after the verb, so the mark never moves as a line grows.
+- **The name is said as well as coloured, deliberately.** The swatch already encodes the side,
+  but a line beginning "Strike" reads as an instruction rather than a report, and with both
+  sides in one list the reader would have to hold which colour is which.
+
+**Row highlights and swatches are centred on the measured line height**, not offset from the
+row top by a constant. The old `rowY-4` / `rowHeight-2` numbers were picked by eye against a
+single 30px pitch and clipped the text the moment a 22px pitch existed. `text.Measure` once per
+pane, centre everything on it, and any pitch works.
+
+**Labels in the character strip are title case, not caps.** `VITAE` rendered as `VITRE` —
+kubasta's uppercase A at 12px carries a diagonal that reads as an R with no lowercase around it
+to set the shape. Not worth a label the player reads as a different word.
 
 **It has no phase headings, and that is a space constraint rather than a decision.** The pane
 holds nine rows between `paneFirstRow` and its bottom edge, and five player actions plus the
 enemy's already reach that. Under phases the grouping reads off the order anyway. If headings
 are wanted, the pane has to get taller or the rows shorter first.
 
-One pane now. Chosen folded into the palette on 2026-08-02, Enemy went the same day because
-a merged Resolution already shows the opponent's actions in a better order than a
-column of its own, and Actions went on 2026-08-04 with the move to the bottom — the hand has
-no frame, so there was nothing left for a placement to hold. The player's rows carry
-`playerSwatch` green and the opponent's carry `enemySwatch` yellow, so the screen reads as
-two colours: green is you, yellow is them. Do not treat any of it as settled — the 15–39%
-column the Actions pane vacated is deliberately still empty.
+Two panes now, and the count went **down** before it went back up. Chosen folded into the
+palette on 2026-08-02; Enemy went the same day, because a merged Resolution already shows the
+opponent's actions in a better order than a column of its own; Actions went on 2026-08-04 with
+the move to the bottom, since the hand has no frame and there was nothing left for a placement
+to hold. That left the 15–39% column empty and deliberately unassigned for three days —
+**Action Flow is what finally claimed it**, on 2026-08-07.
+
+The player's rows carry `playerSwatch` green and the opponent's carry `enemySwatch` yellow, so
+the screen reads as two colours: green is you, yellow is them. `comboSwatch` amber is the third
+and marks a Resolution line that is not a card acting — it belongs to whoever formed the combo,
+but the line is an announcement, and giving it a side's colour would file it in the column of
+squares where every entry is a card that resolved.
 
 ## The action box
 
@@ -245,13 +355,17 @@ it again to take it out, drag sideways to move it along the row.
 
 ## Hidden information is gated on `DebugGameplay`
 
-The opponent's queued actions are concealed in both the Enemy pane and the enemy rows of
-the Resolution pane, unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single
-predicate — `!gs.DebugGameplay && s.planning()` — and anything else that becomes secret
-should join it rather than growing a second rule.
+The opponent's queued actions are concealed in the enemy rows of the **Action Flow** pane
+unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single predicate —
+`!gs.DebugGameplay && s.planning()` — and anything else that becomes secret should join it
+rather than growing a second rule.
 
-- **Concealment lifts once playback starts.** An action that has already resolved is not a
-  secret, and the Resolution pane still has to narrate the round.
+**Resolution needs no concealment rule at all**, and that falls out of its design rather than
+being a second decision: it is built from `s.log[:cursor+1]`, so it can only ever contain
+events playback has already reached, and an action that has resolved is not a secret. There is
+no way for it to leak the rest of the round because it has not been given the rest of the round.
+
+- **Concealment lifts once playback starts**, for the same reason.
 - **Concealed rows keep their real count**, so the opponent's AP spend stays readable even
   when the actions do not. Deliberate, and recorded as open in `TODO.md`: collapsing the
   rows would hide the spend and destroy the pane's account of who acts when, which is the

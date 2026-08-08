@@ -261,29 +261,29 @@ func TestOnslaughtTakesTheOpponentsWholeTurn(t *testing.T) {
 }
 
 // Stagger comes off the *front* of the turn, which under phases is the setup phase. Losing a
-// Prepare rather than an attack is a real consequence and worth pinning: it means a staggered
+// Gather rather than an attack is a real consequence and worth pinning: it means a staggered
 // duelist is poorer next round as well as slower this one.
 func TestStaggerTakesTheFrontOfTheTurnIncludingSetup(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, _, bAfter := ResolveRound(a, b,
 		[]ActionKind{Strike, Strike, Strike},
-		[]ActionKind{Prepare, Strike}, 1)
+		[]ActionKind{Gather, Strike}, 1)
 
-	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Prepare {
-		t.Fatalf("the Prepare resolves first and so is the action lost, got %v", lost)
+	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Gather {
+		t.Fatalf("the Gather resolves first and so is the action lost, got %v", lost)
 	}
 	if bAfter.BonusAP != 0 {
-		t.Fatalf("a staggered Prepare banks nothing, got BonusAP %d", bAfter.BonusAP)
+		t.Fatalf("a staggered Gather banks nothing, got BonusAP %d", bAfter.BonusAP)
 	}
 
-	// The same round without the Flurry, to show the Prepare would otherwise have paid.
+	// The same round without the Flurry, to show the Gather would otherwise have paid.
 	_, _, unstaggered := ResolveRound(a, b,
 		[]ActionKind{Strike, Strike},
-		[]ActionKind{Prepare, Strike}, 1)
-	if unstaggered.BonusAP != prepareBonusAP {
-		t.Fatalf("without the stagger the Prepare should bank %d, got %d",
-			prepareBonusAP, unstaggered.BonusAP)
+		[]ActionKind{Gather, Strike}, 1)
+	if unstaggered.BonusAP != gatherBonusAP {
+		t.Fatalf("without the stagger the Gather should bank %d, got %d",
+			gatherBonusAP, unstaggered.BonusAP)
 	}
 }
 
@@ -294,7 +294,7 @@ func TestSideBsFlurryLandsInTheFollowingRound(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, aAfter, bAfter := ResolveRound(a, b,
-		[]ActionKind{Prepare},
+		[]ActionKind{Gather},
 		[]ActionKind{Strike, Strike, Strike}, 1)
 
 	if got := combosFired(events, SideB); len(got) != 1 || got[0] != FlurryID(Strike) {
@@ -317,7 +317,7 @@ func TestAStaggerIsSpentOnceAndDoesNotLinger(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	_, aAfter, bAfter := ResolveRound(a, b,
-		[]ActionKind{Prepare},
+		[]ActionKind{Gather},
 		[]ActionKind{Strike, Strike, Strike}, 1)
 
 	_, aAfter2, _ := ResolveRound(aAfter, bAfter, []ActionKind{Quick, Strike}, nil, 2)
@@ -386,7 +386,10 @@ func TestStaggerIsSymmetric(t *testing.T) {
 
 // Neither shipping combo uses a damage multiplier, so this drives one through the whole
 // engine with an injected table rather than leaving that path unexercised.
-func TestADamageMultiplierBoostsTheComboThatFormedIt(t *testing.T) {
+//
+// **A multiplier boosts what comes after the run, not the run itself** — the consequence of
+// firing a combo on completion rather than on its first card. See playTurn.
+func TestADamageMultiplierBoostsWhatFollowsTheCombo(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(93),
 		Name:   "double up",
@@ -395,11 +398,11 @@ func TestADamageMultiplierBoostsTheComboThatFormedIt(t *testing.T) {
 	}}
 
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
-	_, _, bAfter := resolveRound(a, b, []ActionKind{Strike, Strike}, nil, 1, table)
+	_, _, bAfter := resolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1, table)
 
-	// Two Strikes at Str 10 is 20 unboosted. Doubled from the *first* card, it is 40.
+	// The first two Strikes form the combo and land for 10 each. The third is doubled to 20.
 	if got := 100 - bAfter.CurrentLife; got != 40 {
-		t.Fatalf("the multiplier should apply to both cards of the combo: want 40 damage, got %d", got)
+		t.Fatalf("want 10 + 10 + 20 = 40 damage, got %d", got)
 	}
 }
 
@@ -418,15 +421,71 @@ func TestAMultiplierAppliesBeforeAGuardHalvesIt(t *testing.T) {
 	b := duelist(3, 0, 100)
 	b.Guarded = true
 
-	_, _, bAfter := resolveRound(a, b, []ActionKind{Strike, Strike}, nil, 1, table)
+	_, _, bAfter := resolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1, table)
 
+	// Two unboosted Strikes at 3 are halved to 1 each. The third is boosted to 4 first and
+	// halved to 2 — where halving first would have given 1, and 1 + 1 + 1 = 3.
 	if got := 100 - bAfter.CurrentLife; got != 4 {
-		t.Fatalf("want 2 damage per boosted-then-guarded Strike (4 total), got %d", got)
+		t.Fatalf("want 1 + 1 + 2 = 4 damage, got %d", got)
+	}
+}
+
+// --- when a combo fires -------------------------------------------------------------------
+
+// The combo is announced *after* the cards that earned it, which is how it reads on screen:
+// three strikes land, and then the flurry is recognised.
+func TestAComboIsAnnouncedAfterTheCardsThatFormedIt(t *testing.T) {
+	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
+
+	events, _, _ := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1)
+
+	actionsBefore, comboAt := 0, -1
+	for i, e := range events {
+		switch e.Kind {
+		case KindAction:
+			if comboAt < 0 {
+				actionsBefore++
+			}
+		case KindCombo:
+			if comboAt < 0 {
+				comboAt = i
+			}
+		}
+	}
+
+	if comboAt < 0 {
+		t.Fatal("no combo fired")
+	}
+	if actionsBefore != 3 {
+		t.Fatalf("all three attacks should resolve before the combo is announced, got %d", actionsBefore)
+	}
+}
+
+// **A run that never finishes pays nothing.** Matching happens up front against the whole
+// turn, so a turn cut short used to fire a combo off cards that never resolved. Firing on
+// completion makes that impossible rather than needing a check.
+func TestAComboCutShortByDeathDoesNotFire(t *testing.T) {
+	// B is holding two Ripostes, each of which negates a Strike and hits back for Str/2 = 2.
+	// A has 4 life, so the second counter kills it partway through a three-Strike run.
+	a := duelist(10, 0, 4)
+	b := duelist(4, 0, 300)
+	b.Ripostes = 2
+
+	events, aAfter, bAfter := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1)
+
+	if aAfter.Alive() {
+		t.Fatal("this fixture is meant to kill side A partway through its run")
+	}
+	if got := combosFired(events, SideA); len(got) != 0 {
+		t.Fatalf("a run cut short should form nothing, got %v", got)
+	}
+	if bAfter.Staggered != 0 {
+		t.Fatalf("and it should certainly not stagger anyone, got %d", bAfter.Staggered)
 	}
 }
 
 // Points cannot be handed back into the round that committed them, so a combo that banks AP
-// rides the same path a Prepare does and arrives in the round after.
+// rides the same path a Gather does and arrives in the round after.
 func TestComboBankedPointsArriveInTheFollowingRound(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(95),
@@ -475,7 +534,7 @@ func TestACombosEffectsDoNotLeakIntoTheOpponentsTurn(t *testing.T) {
 func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 	a, b := duelist(10, 0, 500), duelist(10, 0, 500)
 	aPlan := []ActionKind{Strike, Strike, Strike}
-	bPlan := []ActionKind{Prepare, Quick, Strike, Dodge}
+	bPlan := []ActionKind{Gather, Quick, Strike, Dodge}
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
 

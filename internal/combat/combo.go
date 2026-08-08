@@ -70,7 +70,7 @@ func OnslaughtID(a ActionKind) ComboID { return comboOnslaughtBase + ComboID(a) 
 
 // Step is one position in a combo's pattern. It matches either an exact card or any card of
 // a category, and the two constructors below are the only correct way to build one — a
-// zero-valued Step reads as "exactly a Prepare", which is never what a caller means.
+// zero-valued Step reads as "exactly a Gather", which is never what a caller means.
 type Step struct {
 	action     ActionKind
 	category   Category
@@ -100,12 +100,21 @@ const StaggerAll = -1
 // Effect is what forming a combo buys. Every field is inert at its zero value, so a combo
 // only pays out what it names.
 //
-// **Effects come into force at the combo's first card and last for the rest of that side's
-// turn.** The alternative — firing on the card that completes the run — was rejected because
-// a damage multiplier could then only ever boost cards *after* the combo, never the three
-// strikes that formed it, which is precisely backwards from how it reads on the screen. The
-// round is fully decided before a frame of playback runs either way, so nothing is being
-// predicted here; the engine simply knows the shape of the turn before it plays it.
+// **A combo fires on the card that completes its run, and its effects last for the rest of
+// that side's turn** *(changed 2026-08-07; it fired on the first card until then)*. Two
+// reasons, and the second is the one that makes it correct rather than merely nicer:
+//
+//   - It reads in the order it happens. Three strikes land, and *then* the flurry is
+//     recognised — rather than "COMBO!" appearing above cards that have not resolved yet.
+//   - **A run that never finishes now pays nothing.** Matching happens up front against the
+//     whole turn, so a turn cut short — a Riposte killing the attacker on the second of three
+//     strikes — used to fire the combo off cards that never resolved. Firing on completion
+//     makes that impossible by construction instead of by a check somebody has to remember.
+//
+// The cost, recorded honestly: **a damage multiplier can only boost what comes after the
+// run**, never the cards that earned it. "Complete the combo, get a bonus for the rest of the
+// turn" is a coherent reading, but it is not the one the multiplier was designed against, and
+// neither shipping combo uses one — so nothing real exercises it yet.
 type Effect struct {
 	// DamageNum/DamageDen scale damage dealt for the rest of the turn, as a fraction so the
 	// package stays pure integer arithmetic. Zero values mean no change; 3/2 is half again.
@@ -113,7 +122,7 @@ type Effect struct {
 
 	// BankAP is added to the round's banked points, arriving as budget in the round after.
 	// It cannot apply to the round that formed the combo — those points were committed when
-	// the cards were queued — so it rides the same PreparedAP/BonusAP path a Prepare does.
+	// the cards were queued — so it rides the same GatheredAP/BonusAP path a Gather does.
 	BankAP int
 
 	// Stagger is how many actions the *opponent* loses from their next turn, or StaggerAll.

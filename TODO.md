@@ -393,20 +393,20 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         until-you-act guard rule are all gone; see the entry below.
 - [x] **Phase resolution, categories, and three new concepts** *(2026-08-06)*. The round is
       now **a whole turn each**: everything side A queued resolves in category order —
-      setup, then attacks, then defenses — and only then does side B begin. `ResolutionOrder`
+      prepares, then attacks, then defenses — and only then does side B begin. `ResolutionOrder`
       is still the single authority and both consumers followed for free, which is exactly
       what that split was for. One function body plus its tests, as predicted.
-      - **`combat.Category`** is the new organising axis: `CategorySetup` /
+      - **`combat.Category`** is the new organising axis: `CategoryPrepare` /
         `CategoryAttack` / `CategoryDefend`, a property of the action rather than an
         independent choice. `Categories()` is both the phase order and the iteration order.
-      - **Costs are now** Prepare 1, Guard 3, Quick 1, Strike 2, Heavy 4, Dodge 2,
+      - **Costs are now** Gather 1, Guard 3, Quick 1, Strike 2, Heavy 4, Dodge 2,
         Riposte 3. `ActionKind` is declared in category order so the deck overlay's sort
         groups the piles the way a turn resolves them.
-      - **Guard moved from defend to setup** and went 2 → 3 AP: it halves *all* incoming
+      - **Guard moved from defend to prepare** and went 2 → 3 AP: it halves *all* incoming
         damage for the opposing turn rather than blocking one blow. Parry was dropped
         before it was built.
-      - **Prepare** costs 1 and banks +2 AP for the *next* round. It stacks within a round
-        (two Prepares are +4) and is replaced rather than added to at the boundary, so
+      - **Gather** costs 1 and banks +2 AP for the *next* round. It stacks within a round
+        (two Gathers are +4) and is replaced rather than added to at the boundary, so
         preparing every round is a flat +2 and cannot compound. Stacking is deliberate:
         it is what puts a five-attack round in reach without a ring discount, which
         `MECHANICS.md` previously called unreachable. Accepted as a good trade.
@@ -420,7 +420,7 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         expiry point is a fact about *turns* and lives in `ResolveRound`, not in
         `ResolutionOrder`. An idle duelist now loses its guard — the deliberate quirk
         `TestGuardHoldsWhileItsOwnerDoesNothing` used to pin is gone with alternation.
-      - **Two new event kinds**, `KindPrepared` and `KindNegated`. Riposte's counter is a
+      - **Two new event kinds**, `KindGathered` and `KindNegated`. Riposte's counter is a
         plain `KindDamage` from the defender's side, so the health bars need no new case.
       - The screen's `currentAction` became **`currentSlot`**, counting position in the
         resolution order rather than a side plus a queue index. `Slot.Index` is where a
@@ -442,7 +442,7 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 - [ ] **Defenses target a specific incoming attack** *(design captured 2026-08-06)*. The
       resolution order is right now; what is missing is that a defense is currently a pool
       rather than a choice. **Guard stays untargeted** — it covers you entirely, which is
-      exactly why it is setup. **Dodge and Riposte should each name the enemy attack they
+      exactly why it is a prepare. **Dodge and Riposte should each name the enemy attack they
       answer**: dodge the first and riposte the second, or riposte the first and dodge the
       second, and those are different rounds.
       - **This is what replaces initiative as the ordering lever**, and it is a better one.
@@ -471,7 +471,7 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       selected by a `PlanStyle` string on the data record — so enemy behaviour is data and the
       roster is tunable without touching Go.
       - **brute** biggest attack affordable · **swarm** as many attacks as the round allows ·
-        **warden** Guard then attacks · **tactician** banks with Prepare then unloads.
+        **warden** Guard then attacks · **tactician** banks with Gather then unloads.
       - Roster is Monster1, Swarm1, Warden1, Tactician1 in `combatants.json`. The combat screen
         walks them in order, advancing on a win — **scaffolding for the tower, to be deleted
         rather than extended.** It also fixed a genuine dead end: winning used to leave every
@@ -481,7 +481,7 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         arrive. Each enemy has a different right answer: brute wants dodging, swarm wants
         racing, tactician wants reading the tell, warden wants overwhelming.
       - The tactician's tell is the concealment scheme paying off by accident: a concealed row
-        still shows its category, so `??? (setup) ??? (setup)` warns of a spike without saying
+        still shows its category, so `??? (prepare) ??? (prepare)` warns of a spike without saying
         what it is.
       - **Still open, and the reason this is `[~]`:** `MECHANICS.md` decides enemies get a
         *deck* and that an affix transforms it, which subjects them to the same "what did I
@@ -646,8 +646,8 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         interrupt a streak — which also **kills both `[?]` questions this item carried**
         (does a Guard reset it; does a zero-damage hit count). Neither can ever fire.
       - **The two open questions were closed, and here is which way.** The lost action comes
-        off the *front* of the victim's next turn, which under phases is their setup — so a
-        stagger costs a Prepare before it costs an attack. Its action points are **not**
+        off the *front* of the victim's next turn, which under phases is their prepare phase — so a
+        stagger costs a Gather before it costs an attack. Its action points are **not**
         refunded, making stagger tempo *and* economy.
       - **`Duelist.Staggered` persists across the round boundary**, and that is forced rather
         than chosen: side B acts last, so a combo B forms has no turn left to bite in. Holding
@@ -661,6 +661,55 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         staggered slot produces none, so the Resolution highlight would have run a row short
         for the rest of the round. It counts `KindStaggered` too now: one beat per slot,
         taken or lost.
+- [x] **The Resolution pane, and the caption stops narrating** *(2026-08-07)*. The old
+      Resolution pane became **Action Flow** (the plan) and a new **Resolution** took its slot
+      (the record, accumulating as the round plays). See the `combat-screen` skill.
+      - **This is how combos became visible at all.** Before it, the whole account of a round
+        existed only as a quarter-second caption flash — a combo forming was unreadable, and a
+        Guard halving a Heavy went past before it could be noticed.
+      - **It retired the `[?]` about drawing a combo across non-adjacent rows** by splitting
+        the pane rather than solving it. Worth keeping as a pattern: the pane was being asked
+        two questions at once and the answer was a second pane, not a cleverer drawing.
+      - **Action Flow is currently built and not drawn**, and Resolution has both columns. One
+        line to restore. What that costs while it is off: the enemy's queued shape during
+        planning, which is the tell.
+      - Lines are sentences with the verb coloured, bold and underlined in the text — red attack,
+        blue defend, no hue for prepare. It was a filled chip until 2026-08-08; the block drew
+        the eye instead of the word, the same reason the highlight bar went. Prose lives in
+        `screens`, never in `combat`.
+- [x] **Rename: the `setup` category is `prepare`, and the `Prepare` card is `Gather`**
+      *(2026-08-07)*. One word meaning both a category and a card in it was the confusion; now
+      `Gather` is a card of category `prepare`, beside `Guard`.
+- [x] **Named deck seeds and `tools/seeds`** *(2026-08-07)*. The shuffle is deterministic, so
+      **a seed is an opening hand**. `internal/screens/seeds.go` catalogues them by name and
+      `deckSeedName` picks which one a launch deals.
+      - **Written because the demo could not click a combo.** The old fixed deal held no
+        three-of-a-kind, so seeing a Flurry meant writing the queue directly — which tested the
+        pane but not the path to it. `strike-flurry` guarantees three Strikes and the demo now
+        selects them through `toggle` like a player.
+      - **The re-check is the half that matters.** A seed is a fact about one particular deck;
+        change `startingDeck` or `handSize` and every number silently deals something else. The
+        tool re-deals each catalogued seed and reports the ones that no longer match. It
+        rejected two guessed numbers on its first run.
+      - `[?]` Catalogued seeds are compile-time only. The planned run-seed text field is the
+        real version of this, and when `Session` lands the catalogue should feed *it* rather
+        than a package var.
+- [x] **`-tags demoplay`, the scripted demo** *(2026-08-07)*. The game plays a scripted round
+      or two with nobody at the controls and writes `demo/*.png`, then closes.
+      - **Written because the combat screen is the one thing nothing else can check.**
+        `go test` needs no window and `tools/balance` judges rules, not pixels; a combo line, a
+        verb chip and a highlight on the right row all have to be *seen*. It is
+        `tools/glyphsheet`'s idea applied to a live screen.
+      - Two files, `_on`/`_off`, behind a build tag, deletable in one commit — the same shape
+        and the same reasoning as `internal/trace` and `internal/idle`. A game that plays
+        itself must not ship.
+      - It presses the real buttons (`toggle`, `startRound`). The one place it reaches past
+        input is the queue: the fixed `deckSeed` deal holds no three-of-a-kind, so a combo
+        could never be made to fire by clicking, and a combo firing is what needs looking at.
+      - **It found two things immediately**: `VITAE` rendering as `VITRE` in caps, and the row
+        highlight clipping at the Resolution pane's tighter pitch.
+      - `[?]` It scripts one fixed pair of rounds. A flag for which plan, or a second script
+        for the losing case, is the obvious next step and is not built.
 - [ ] **Swarm1 is unbeatable.** *(Caused by combos, 2026-08-07. Left standing deliberately, to
       watch how it balances out; this is the entry that says it is known and not forgotten.)*
       `tools/balance` reports Swarm1 beating **all three postures**, which is the tool's own
@@ -683,6 +732,43 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         round** — see the enemy-decks entry. A deterministic optimiser forms the same combo
         every round forever, which is the condition a combo system punishes hardest. Enemy
         decks may fix this without touching a combo rule.
+      - **All four candidates were implemented and measured on 2026-08-08, and reverted. None is
+        chosen — this is evidence, not a decision.** Each was built in turn, `go run ./tools/balance`
+        recorded, then rolled back before the next. Baseline for comparison: Swarm1 loses no
+        posture (the wall); Monster1 1/3; Tactician1 2/3; Warden1 3/3.
+
+        | candidate | Swarm1 after | elsewhere | tests |
+        |---|---|---|---|
+        | price a run by AP | fixed, 1/3 | **Tactician1 2/3 → 1/3** | 3 edits needed |
+        | stagger cooldown | fixed, 1/3 | **nothing changes** | pass, unmodified |
+        | retune the swarm | fixed at ≤50 life | cause untouched | pass, unmodified |
+        | enemies keep their own combos | fixed, 1/3 | nothing changes | **2 fail** |
+
+        - **Pricing by AP makes expensive cards *easier* to combo, which is backwards.** A Heavy
+          Flurry becomes `ceil(6/4)` = **2 cards** instead of 3, so Tactician1's `Heavy+Heavy+Quick`
+          gains a combo it could never reach and beats `all-out`. It also silently falsifies the
+          `heavy-flurry` seed's stated rationale while `tools/seeds` keeps passing, because that
+          tool pins the *deal* and not the combo.
+        - **A stagger cooldown fixes Swarm1 and leaves every other enemy identical line for line**,
+          with no test churn. Cost: one more rule to learn, one more piece of hidden duelist state
+          the screen does not show, and the win is narrow at 12/60 life.
+        - **Retuning cannot fix the cause, and the sweep proves it.** Every budget from 5 to 10 AP
+          is still a wall: `planSwarm` fills with one card then upgrades along the plan, so it
+          always emits a homogeneous run of at least three — `Q×5`, `S+Q×4`, `S×2+Q×3`, `S×3+Q×2`,
+          `S×4+Q`, `S×5`. Only 4 AP breaks it, by being too weak to win, and that still forms a
+          Quick Flurry. Dropping Constitution to 10 (50 life) also breaks it while leaving the
+          every-round stagger completely intact. **This is the "deeper cause" above, demonstrated.**
+        - **Enemies keeping their own combos costs two pinned properties**, not a tuning number:
+          `TestSideBsFlurryLandsInTheFollowingRound` and `TestStaggerIsSymmetric` both fail and
+          can only be *deleted*, because what they pin is the symmetry this removes by design. It
+          cannot be judged on a balance table — the table likes it.
+        - **Stagger cooldown and a retune compose**, if the 12/60 win is too tight to accept alone.
+- [ ] **Warden1 is free, which is the wall condition's mirror image.** *(Noticed 2026-08-08.)*
+      `tools/balance` has it losing to **all three** postures — its own stated "free" condition —
+      in the baseline and under all four Swarm1 candidates above, so nothing proposed there
+      touches it. Recorded because the tool was written to catch exactly this and the opposite
+      case got an entry while this one did not. Warden1 appears above only as the enemy that was
+      once *unwinnable*; this is the other end of the same tuning problem.
 - [ ] **Procedurally generated enemies.** *(Cut 2026-08-07.)* The roster is four hand-written
       records in `combatants.json` and the combat screen walks them in order. That is
       scaffolding. An enemy should be **generated** from the floor, so the tower can be endless

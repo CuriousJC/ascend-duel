@@ -30,3 +30,9 @@ analysis.md
 # Anchored with a leading slash: an unanchored "trace/" matches at any depth and would
 # swallow internal/trace/, the source package that writes these.
 /trace/
+
+# Screen captures written by the scripted demo under -tags demoplay. Anchored for the same
+# reason as /trace/ above. These are a *view* of the game rather than art it loads, and a run
+# regenerates all of them, so committing them would only ever produce a diff of fifty
+# near-identical PNGs.
+/demo/

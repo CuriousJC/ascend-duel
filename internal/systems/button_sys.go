@@ -99,6 +99,31 @@ func ColorAtStrength(c color.RGBA, pct int) color.RGBA {
 	return color.RGBA{R: scale(c.R), G: scale(c.G), B: scale(c.B), A: c.A}
 }
 
+// ColorToward moves a colour pct of the way to `ground`, which is **what dimming means when
+// the background is light**.
+//
+// `ColorAtStrength` scales toward black, and that reads as "quieter" only because the screen
+// it was written for is dark. On the Resolution pane's off-white ground it does the opposite:
+// a swatch scaled to 55% comes out *darker* than the ground and so louder than the full-
+// strength one beside it, which put the idle rows in front of the lit one. That was visible in
+// a capture before it was understood, and it is the whole reason this exists.
+//
+// Neither scaling nor adding a fixed step can express this — the destination is not black and
+// not white, it is whatever the surface happens to be. So it is a third operation rather than
+// a tweak to the first, and `CLAUDE.md`'s "scale, never add" rule still governs widget *state*
+// against a known ground.
+func ColorToward(c, ground color.RGBA, pct int) color.RGBA {
+	mix := func(from, to uint8) uint8 {
+		return uint8(int(from) + (int(to)-int(from))*pct/100)
+	}
+	return color.RGBA{
+		R: mix(c.R, ground.R),
+		G: mix(c.G, ground.G),
+		B: mix(c.B, ground.B),
+		A: c.A,
+	}
+}
+
 // DrawButton uses
 // DrawButton blits the button's cached face onto the screen, repainting that face first if
 // anything about it changed.

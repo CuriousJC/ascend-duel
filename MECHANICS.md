@@ -73,7 +73,7 @@ axis the whole round is built on.
 
 | Type | Concepts | AP | Effect |
 |---|---|---|---|
-| **setup** | Prepare | 1 | Banks +2 AP for the next round |
+| **prepare** | Gather | 1 | Banks +2 AP for the next round |
 | | Guard | 3 | Halves every attack in the opponent's next turn |
 | **attack** | Strike | 2 | `str` |
 | | Heavy | 4 | `str × 2` |
@@ -81,9 +81,9 @@ axis the whole round is built on.
 | | Riposte | 3 | Negates the first incoming attack and hits back for `str/2` |
 
 Type is a property of the *concept*, not an independent axis — a fire Guard and a basic Guard
-are both setup.
+are both prepares.
 
-**Guard is setup, not defend.** It moved on 2026-08-06 and went 2 → 3 AP with the change: it
+**Guard is a prepare, not a defend.** It moved on 2026-08-06 and went 2 → 3 AP with the change: it
 does not answer one blow, it dampens a whole turn, and that is a thing you put up before the
 exchange rather than a reaction inside it. Riposte is **defend** despite being a
 counter-attack.
@@ -93,7 +93,7 @@ cover cheap-precise, expensive-punishing and broad-dampening; a fourth defence h
 left. It can come back.
 
 The lopsided 1/2/4 split is gone with it, and so is the two-thirds-defensive theory it
-carried. Six concepts split evenly 2/2/2 — 10 setup / 10 attack / 10 defend — which is a
+carried. Six concepts split evenly 2/2/2 — 10 prepare / 10 attack / 10 defend — which is a
 consequence of the concept list rather than a target.
 
 **Ripostes are spent before Dodges** when both are up. Both negate completely, so spending
@@ -204,7 +204,7 @@ is what ships. Still open to reconsideration, but it is the model now, not a pro
 A round is **a whole turn each**. Everything one side queued resolves before the other side
 does anything, and within a turn the categories go in order:
 
-1. that side's **setups**
+1. that side's **prepares**
 2. that side's **attacks**
 3. that side's **defenses**
 4. then the other side, the same way
@@ -302,10 +302,13 @@ Four rules that make it work, each of which had an alternative:
   round is played, which is what lets a multiplier boost the cards that formed it rather than
   arriving after they have landed. It also means the opponent's defenses cannot silently
   invalidate a plan the player already committed to.
-- **Effects come into force at the combo's first card**, for the rest of that turn — and
-  `KindCombo` is emitted there, so the screen narrates cause before effect. Firing on the card
-  that *completes* the run was rejected: a multiplier could then only ever boost cards after
-  the combo.
+- **A combo fires on the card that completes its run**, and its effects last for the rest of
+  that turn. It read backwards the other way round — "COMBO!" above three strikes that had not
+  happened yet — and, more importantly, **a run cut short still paid out**: matching happens up
+  front, so a Riposte killing the attacker on the second of three strikes fired the combo off
+  cards that never resolved. Completion-firing makes that impossible by construction.
+  The cost: **a damage multiplier can only boost what follows the run**, not the cards that
+  earned it. Nothing shipping uses one yet.
 - **Longest run first, and a card forms at most one combo.** Otherwise three attacks would
   score a Flurry at every position it fits, and five would never reach Onslaught.
 
@@ -348,11 +351,11 @@ the streak, whether a zero-damage hit counts — **can never fire and are struck
 left open.
 
 What keeps it rare is the deck and the budget: three Strikes is exactly 6 AP, Fighter1's entire
-budget, and **five Strikes is 10 AP**, reachable only by spending a whole round on Prepares.
+budget, and **five Strikes is 10 AP**, reachable only by spending a whole round on Gathers.
 That trade is the combo working as intended.
 
 **Stagger takes actions off the front of the victim's next turn**, which under phases is their
-setup phase — so being staggered costs a Prepare before it costs an attack, and leaves you
+prepare phase — so being staggered costs a Gather before it costs an attack, and leaves you
 poorer next round as well as slower now. The action points are **not** refunded: stagger is
 tempo *and* economy.
 
@@ -544,7 +547,7 @@ function of a `Duelist`, chosen by a `PlanStyle` string on the data record:
 | **brute** | biggest attack affordable — few, heavy blows | guarding | dodging |
 | **swarm** | as many attacks as the round allows | dodging, guarding | racing it |
 | **warden** | Guard, then attacks — halves what it takes | — | overwhelming it |
-| **tactician** | banks with Prepare, then unloads a spike | guarding | reading the tell |
+| **tactician** | banks with Gather, then unloads a spike | guarding | reading the tell |
 
 **Why this exists.** With one enemy that spent its whole budget on two big swings, two
 defensive cards bought total immunity — a duel ran three rounds taking 0, 0 and 2 damage.
@@ -556,7 +559,7 @@ and one shape means one answer.
   can stay when decks arrive rather than being replaced by them. Baseline decks and affixes
   above are still unbuilt.
 - **The tactician's tell is the concealment scheme working.** A concealed row still shows its
-  category, so a round of `??? (setup) ??? (setup)` says a spike is coming without saying
+  category, so a round of `??? (prepare) ??? (prepare)` says a spike is coming without saying
   what. That was not designed for this and turned out to be exactly what it needed.
 - **`tools/balance` plays every posture against every enemy** through the real `ResolveRound`
   and prints who wins. It was written because the first roster shipped an unwinnable enemy:
@@ -615,10 +618,19 @@ Two kinds, and the distinction matters because there is no Escape key and no rig
 while the playback cursor rests there. Presentation-only, so it cannot touch the outcome, and
 splash length joins the pacing constants destined to become the game-speed setting.
 
-`[?]` **The Resolution pane has no way to draw "these rows together did a thing."** It is one
-row per slot with a single highlight walking down. A sequence combo spans two or more slots
-that need not be adjacent. Bracket them, join them, or collapse them for the splash — undecided,
-and worth solving before the pane grows further.
+~~`[?]` **The Resolution pane has no way to draw "these rows together did a thing."**~~
+**Resolved 2026-08-07, by splitting the pane in two rather than by solving it.** The old
+Resolution pane was renamed **Action Flow** — one row per slot, a walking highlight, the plan —
+and a new **Resolution** pane took the wide slot and the job of saying what actually happened,
+in sentences, accumulating rather than flashing.
+
+A combo therefore never has to be drawn *across* rows: it gets a line of its own, in amber, at
+the moment it forms. So does a stagger. The bracket-or-join problem simply stopped existing,
+which is worth recording as the pattern — **the pane was being asked to answer two questions at
+once, and the fix was a second pane, not a cleverer drawing.**
+
+The **COMBO splash** above is still wanted and still unbuilt; the pane makes a combo *legible*,
+not *loud*. `dwellFor` freezing the screen for a splash-length `KindCombo` remains free.
 
 ---
 
@@ -635,7 +647,7 @@ Collected from above.
 - `[?]` How the Resolution pane draws a combo spanning non-adjacent rows.
 - `[?]` Element colours collide with the side colours (`playerSwatch` green, `enemySwatch`
   yellow). One of the two schemes has to give.
-- `[?]` Whether the setup/attack/defend types are the same axis as the *role* taxonomy the
+- `[?]` Whether the prepare/attack/defend types are the same axis as the *role* taxonomy the
   initiate/respond model in `TODO.md` asks for, or orthogonal to it.
 - `[?]` Whether armour exists, and whether it is a stat or is just what earth already does.
 - `[?]` How enemies scale up the tower.

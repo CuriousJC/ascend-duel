@@ -59,18 +59,39 @@ gofmt -l .          # list unformatted files
 
 go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.png
 go run -tags idleexit .     # closes itself after two minutes with nobody at the controls
+go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
 go run ./tools/balance      # what every enemy does to the fighter, as a table
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
+go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 ```
 
-**Two build tags, and they compose.** Both select a different file in their package, so one
+**A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
+holds a catalogue of named seeds — `strike-flurry`, `strike-onslaught`, `all-categories` — so a
+hand that demonstrates something can be asked for by name instead of found by relaunching.
+`deckSeedName` picks which one a launch deals.
+
+**Re-run `tools/seeds` after touching `startingDeck` or `handSize`.** A seed is a fact about one
+particular deck; change the deck and every catalogued number silently deals something else. The
+tool re-checks the catalogue before it searches and says which entries no longer match — it
+rejected two guessed numbers the first time it ran. A demo testing a Flurry against a hand with
+two Strikes in it is worse than no demo, because it passes.
+
+**Three build tags, and they compose.** Each selects a different file in its package, so one
 configuration can compile while another does not. Vet and build every one you might have
 broken:
 
 ```powershell
-go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...
+go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...; go vet -tags demoplay ./...
 go run -tags "debugtrace idleexit" .    # traced and self-closing: the unattended run
 ```
+
+**`demoplay` is how the combat screen gets looked at without anybody sitting at it.** It plays
+a scripted round or two — selection, DUEL!, playback — and writes the screen to `demo/*.png`,
+then closes. It exists because the screen is the one thing `go test` cannot check and
+`tools/balance` cannot either: a combo line, a marked verb, a highlight on the right row are all
+things you have to *see*. It is the `tools/glyphsheet` idea applied to a live screen, and the
+same rule applies — a stale picture is worse than none, so regenerate rather than trust an old
+capture. `demo/` is gitignored; fifty near-identical PNGs are not a diff anyone wants.
 
 ```powershell
 go test ./...                                   # all tests
@@ -185,8 +206,9 @@ do not write code that forecloses it.
 Its layout, its card and action-box widget, its hidden information, and the resolution-order
 rule the screen has to obey all live in
 [.claude/skills/combat-screen/SKILL.md](.claude/skills/combat-screen/SKILL.md). **Load it
-before touching `internal/screens/combat.go`, `combat_actionbox.go`, `internal/combat`, or
-anything about how a round is drawn or played back.**
+before touching any of the combat screen's files — `internal/screens/combat.go`,
+`combat_deck.go`, `combat_panes.go`, `combat_hud.go`, `combat_actionbox.go` — or
+`internal/combat`, or anything about how a round is drawn or played back.**
 
 It is a skill because it is the screen under active construction — it was over half this
 file and it grows every session, while mattering only when that screen is the work. The
@@ -433,8 +455,18 @@ Key conventions:
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
 - `internal/idle/` — the unattended-run timer, behind the `idleexit` build tag. Two files, `_on`/`_off`, exactly like `internal/trace`.
+- `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
 - `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
+- **The combat screen is six files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
+  - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
+  - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `startingDeck` and `conceptDeck`, the deck seed, the shuffle and draw, `spendSelected`, and the deck overlay.
+  - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
+  - `combat_hud.go` — everything around the round: the character strip, the caption box, `drawBox`, the enemy sprite, and both health bars.
+  - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.
+  - `seeds.go` — the named opening-hand catalogue.
+
+  **The split was a pure move**: every line went across unaltered and the `demoplay` text report was byte-identical before and after. Keep it that way — a file boundary is not a reason to change what a function does.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 
 Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions` → `models`/`state`/`combat`/`data`/`assets`. Nothing lower reaches back up. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.

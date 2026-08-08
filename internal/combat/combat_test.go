@@ -95,16 +95,16 @@ func TestSideATakesItsWholeTurnFirst(t *testing.T) {
 }
 
 func TestATurnResolvesInCategoryOrder(t *testing.T) {
-	// Setup, then attacks, then defenses, whatever order the cards were queued in. The
+	// Prepares, then attacks, then defenses, whatever order the cards were queued in. The
 	// defenses go last within a turn because the *opponent* moves next, so a defense
 	// raised at the end of a turn is up when the blow arrives.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	queued := []ActionKind{Dodge, Strike, Prepare, Guard, Heavy}
+	queued := []ActionKind{Dodge, Strike, Gather, Guard, Heavy}
 	events, _, _ := ResolveRound(a, b, queued, nil, 1)
 
-	want := []ActionKind{Prepare, Guard, Strike, Heavy, Dodge}
+	want := []ActionKind{Gather, Guard, Strike, Heavy, Dodge}
 	if got := playedActions(events); !actionsEqual(got, want) {
 		t.Errorf("played %v, want %v", got, want)
 	}
@@ -133,7 +133,7 @@ func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
 	// they are the same sequence rather than trusting the shared call.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
-	aPlan := []ActionKind{Heavy, Dodge, Prepare}
+	aPlan := []ActionKind{Heavy, Dodge, Gather}
 	bPlan := []ActionKind{Quick, Guard}
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
@@ -152,7 +152,7 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 	// ResolveRound expires side B's defenses at the first B slot, which is only the start
 	// of B's turn if A's slots never follow it. Pin the block structure that relies on.
 	order := ResolutionOrder(
-		[]ActionKind{Dodge, Strike, Prepare},
+		[]ActionKind{Dodge, Strike, Gather},
 		[]ActionKind{Guard, Heavy, Riposte})
 
 	seenB := false
@@ -170,13 +170,13 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	// Index is where the card sits in the player's queue, not where it lands in the round.
 	// Anything wanting "how far through the round are we" has to count slots instead.
-	order := ResolutionOrder([]ActionKind{Dodge, Prepare}, nil)
+	order := ResolutionOrder([]ActionKind{Dodge, Gather}, nil)
 
 	if len(order) != 2 {
 		t.Fatalf("got %d slots, want 2", len(order))
 	}
-	if order[0].Action != Prepare || order[0].Index != 1 {
-		t.Errorf("first slot = %v index %d, want Prepare index 1", order[0].Action, order[0].Index)
+	if order[0].Action != Gather || order[0].Index != 1 {
+		t.Errorf("first slot = %v index %d, want Gather index 1", order[0].Action, order[0].Index)
 	}
 	if order[1].Action != Dodge || order[1].Index != 0 {
 		t.Errorf("second slot = %v index %d, want Dodge index 0", order[1].Action, order[1].Index)
@@ -226,7 +226,7 @@ func TestQuickHitsForHalfButNeverZero(t *testing.T) {
 func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
 	// Riposte reports a damage figure so its card can draw one, but it only ever hits back
 	// at something. Played into an opponent who does nothing, it deals nothing.
-	for _, a := range []ActionKind{Prepare, Guard, Dodge, Riposte} {
+	for _, a := range []ActionKind{Gather, Guard, Dodge, Riposte} {
 		events, _, bAfter := ResolveRound(duelist(10, 10, 100), duelist(10, 10, 100),
 			[]ActionKind{a}, nil, 1)
 
@@ -240,7 +240,7 @@ func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
 }
 
 func TestGuardHalvesEveryAttackInTheOpponentsTurn(t *testing.T) {
-	// Guard is a setup now, and it is broad: it covers the whole of the opposing turn
+	// Guard is a prepare now, and it is broad: it covers the whole of the opposing turn
 	// rather than one blow. That breadth is what it costs 3 for.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
@@ -421,26 +421,26 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 	}
 }
 
-func TestPrepareFundsTheFollowingRound(t *testing.T) {
+func TestGatherFundsTheFollowingRound(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP before any bonus
 
-	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Prepare}, nil, 1)
+	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Gather}, nil, 1)
 
 	if aAfter.ActionPoints() != 7 {
-		t.Errorf("budget after one Prepare = %d, want 7 (5 + 2)", aAfter.ActionPoints())
+		t.Errorf("budget after one Gather = %d, want 7 (5 + 2)", aAfter.ActionPoints())
 	}
 }
 
-func TestPrepareDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
+func TestGatherDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
 	// The whole shape of the card: you pay now and you are paid later, which is what makes
 	// it an investment rather than a discount.
 	d := duelist(10, 11, 100)
 
-	events, _, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Prepare}, nil, 1)
+	events, _, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Gather}, nil, 1)
 
 	for _, e := range events {
-		if e.Kind == KindPrepared && e.Amount != prepareBonusAP {
-			t.Errorf("prepared %d AP, want %d", e.Amount, prepareBonusAP)
+		if e.Kind == KindGathered && e.Amount != gatherBonusAP {
+			t.Errorf("gathered %d AP, want %d", e.Amount, gatherBonusAP)
 		}
 	}
 	if d.ActionPoints() != 5 {
@@ -448,31 +448,31 @@ func TestPrepareDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
 	}
 }
 
-func TestPreparesStackWithinARound(t *testing.T) {
+func TestGathersStackWithinARound(t *testing.T) {
 	// Two in one round are worth +4. Deliberate: it is what puts a five-attack round in
 	// reach without a ring discount, and that trade — a whole round spent setting up — is
 	// the price of getting there.
 	d := duelist(10, 11, 100) // 5 AP
 
 	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100),
-		[]ActionKind{Prepare, Prepare}, nil, 1)
+		[]ActionKind{Gather, Gather}, nil, 1)
 
 	if aAfter.ActionPoints() != 9 {
-		t.Errorf("budget after two Prepares = %d, want 9 (5 + 4)", aAfter.ActionPoints())
+		t.Errorf("budget after two Gathers = %d, want 9 (5 + 4)", aAfter.ActionPoints())
 	}
 }
 
-func TestPrepareDoesNotCompoundAcrossRounds(t *testing.T) {
-	// Preparing every round is worth a flat +2, not +2 then +4 then +6. The bonus is
+func TestGatherDoesNotCompoundAcrossRounds(t *testing.T) {
+	// Gathering every round is worth a flat +2, not +2 then +4 then +6. The bonus is
 	// replaced at the boundary rather than added to, which is what bounds the ramp.
 	a := duelist(10, 11, 500) // 5 AP
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Prepare}, nil, 1)
-	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Prepare}, nil, 2)
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Gather}, nil, 1)
+	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Gather}, nil, 2)
 
 	if a2.ActionPoints() != 7 {
-		t.Errorf("budget after preparing twice in a row = %d, want a flat 7", a2.ActionPoints())
+		t.Errorf("budget after gathering twice in a row = %d, want a flat 7", a2.ActionPoints())
 	}
 }
 
@@ -480,7 +480,7 @@ func TestABonusLapsesIfItIsNotRenewed(t *testing.T) {
 	a := duelist(10, 11, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Prepare}, nil, 1)
+	_, a1, b1 := ResolveRound(a, b, []ActionKind{Gather}, nil, 1)
 	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Strike}, nil, 2)
 
 	if a2.ActionPoints() != 5 {
@@ -508,8 +508,8 @@ func TestActionPointsFromSpeed(t *testing.T) {
 func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP
 
-	if !d.CanAfford([]ActionKind{Heavy, Prepare}) { // 4 + 1
-		t.Error("Heavy + Prepare costs 5 and should fit a 5 AP budget")
+	if !d.CanAfford([]ActionKind{Heavy, Gather}) { // 4 + 1
+		t.Error("Heavy + Gather costs 5 and should fit a 5 AP budget")
 	}
 	if d.CanAfford([]ActionKind{Guard, Riposte}) { // 3 + 3
 		t.Error("Guard + Riposte costs 6 and should not fit a 5 AP budget")
@@ -520,8 +520,8 @@ func TestCategoriesCoverEveryAction(t *testing.T) {
 	// A new action with no category would silently fall into attack and resolve in the
 	// wrong phase. Pin the whole table instead.
 	want := map[ActionKind]Category{
-		Prepare: CategorySetup,
-		Guard:   CategorySetup,
+		Gather:  CategoryPrepare,
+		Guard:   CategoryPrepare,
 		Quick:   CategoryAttack,
 		Strike:  CategoryAttack,
 		Heavy:   CategoryAttack,
@@ -609,7 +609,7 @@ func TestRoundIsDeterministic(t *testing.T) {
 	a := duelist(7, 13, 300)
 	b := duelist(9, 17, 300)
 
-	aPlan := []ActionKind{Strike, Guard, Prepare}
+	aPlan := []ActionKind{Strike, Guard, Gather}
 	bPlan := []ActionKind{Quick, Riposte}
 
 	first, a1, b1 := ResolveRound(a, b, aPlan, bPlan, 1)
@@ -736,14 +736,14 @@ func TestWardenGuardsAndStillAttacks(t *testing.T) {
 	guards, attacks := 0, 0
 	for _, a := range plan {
 		switch a.Category() {
-		case CategorySetup:
+		case CategoryPrepare:
 			guards++
 		case CategoryAttack:
 			attacks++
 		}
 	}
 	if guards != 1 {
-		t.Errorf("warden queued %d setups, want exactly 1 Guard", guards)
+		t.Errorf("warden queued %d prepares, want exactly 1 Guard", guards)
 	}
 	if attacks == 0 {
 		t.Error("warden queued no attacks; a pure turtle cannot win and is not a fight")
@@ -763,18 +763,18 @@ func TestWardenFallsBackToAttackingWhenItCannotAffordAGuard(t *testing.T) {
 func TestTacticianBanksThenUnloads(t *testing.T) {
 	// The rhythm is the point: a light round the player can punish, then an oversized one
 	// they have to answer. It reads which round it is in off its own BonusAP, so it needs no
-	// memory beyond what Prepare already leaves behind.
+	// memory beyond what Gather already leaves behind.
 	d := duelist(10, 15, 100) // 5 AP
 
 	setup := PlanFor(StyleTactician, d)
 	prepares := 0
 	for _, a := range setup {
-		if a == Prepare {
+		if a == Gather {
 			prepares++
 		}
 	}
 	if prepares == 0 {
-		t.Fatalf("setup round planned no Prepare: %v", setup)
+		t.Fatalf("setup round planned no Gather: %v", setup)
 	}
 
 	// Play the setup round through so the bank is real rather than assumed.
@@ -785,8 +785,8 @@ func TestTacticianBanksThenUnloads(t *testing.T) {
 
 	payoff := PlanFor(StyleTactician, after)
 	for _, a := range payoff {
-		if a == Prepare {
-			t.Errorf("payoff round is still preparing: %v", payoff)
+		if a == Gather {
+			t.Errorf("payoff round is still gathering: %v", payoff)
 		}
 	}
 	if CostOf(payoff) <= CostOf(setup) {

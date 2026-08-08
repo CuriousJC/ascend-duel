@@ -66,17 +66,17 @@ type Duelist struct {
 	Ripostes int
 	Dodges   int
 
-	// The two halves of Prepare. PreparedAP is what has been banked *this* round; at the
+	// The two halves of Gather. GatheredAP is what has been banked *this* round; at the
 	// round boundary it becomes BonusAP, which ActionPoints adds to the budget for the
 	// round after. Splitting them is what makes the bonus arrive next round rather than
 	// funding the turn that bought it.
 	//
-	// BonusAP is overwritten rather than added to at the boundary, so preparing twice in
-	// one round is worth +4 next round while preparing once a round is worth a flat +2.
+	// BonusAP is overwritten rather than added to at the boundary, so gathering twice in
+	// one round is worth +4 next round while gathering once a round is worth a flat +2.
 	// Stacking within a round is deliberate and is what puts the five-attack combo in
 	// reach without a ring; carrying across rounds would compound without limit.
 	BonusAP    int
-	PreparedAP int
+	GatheredAP int
 
 	// Staggered is how many actions are taken off the front of this duelist's *next* turn,
 	// or StaggerAll for all of them. Set by an opponent's combo and consumed when that turn
@@ -96,11 +96,11 @@ func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 
 // Category is which phase of a turn an action resolves in, and the axis the whole round
 // is now built on. It is a property of the action, not an independent choice: a fire Guard
-// and a plain Guard are both setup.
+// and a plain Guard are both prepares.
 type Category int
 
 const (
-	CategorySetup Category = iota
+	CategoryPrepare Category = iota
 	CategoryAttack
 	CategoryDefend
 )
@@ -109,13 +109,13 @@ const (
 // Defenses come last within a turn because the *opponent* acts afterwards — a defense
 // raised at the end of your turn is up when their blow arrives.
 func Categories() []Category {
-	return []Category{CategorySetup, CategoryAttack, CategoryDefend}
+	return []Category{CategoryPrepare, CategoryAttack, CategoryDefend}
 }
 
 func (c Category) String() string {
 	switch c {
-	case CategorySetup:
-		return "setup"
+	case CategoryPrepare:
+		return "prepare"
 	case CategoryAttack:
 		return "attack"
 	case CategoryDefend:
@@ -130,8 +130,8 @@ type ActionKind int
 // Declared in category order, so anything that sorts by the raw value — the deck overlay
 // does — groups the piles the same way a turn resolves them.
 const (
-	// Setup.
-	Prepare ActionKind = iota
+	// Prepare.
+	Gather ActionKind = iota
 	Guard
 
 	// Attack.
@@ -145,12 +145,12 @@ const (
 )
 
 // AllActions is every action a duelist can queue, in category order.
-var AllActions = []ActionKind{Prepare, Guard, Quick, Strike, Heavy, Dodge, Riposte}
+var AllActions = []ActionKind{Gather, Guard, Quick, Strike, Heavy, Dodge, Riposte}
 
 func (a ActionKind) String() string {
 	switch a {
-	case Prepare:
-		return "Prepare"
+	case Gather:
+		return "Gather"
 	case Guard:
 		return "Guard"
 	case Quick:
@@ -171,8 +171,8 @@ func (a ActionKind) String() string {
 // Category is which phase this action resolves in.
 func (a ActionKind) Category() Category {
 	switch a {
-	case Prepare, Guard:
-		return CategorySetup
+	case Gather, Guard:
+		return CategoryPrepare
 	case Dodge, Riposte:
 		return CategoryDefend
 	default:
@@ -183,7 +183,7 @@ func (a ActionKind) Category() Category {
 // Action point costs. The budget is the decision: a couple of big swings, or a
 // fistful of small ones, or damage traded away for a defense.
 const (
-	costPrepare = 1
+	costGather  = 1
 	costGuard   = 3
 	costQuick   = 1
 	costStrike  = 2
@@ -195,8 +195,8 @@ const (
 // Cost is what this action takes out of the round's action-point budget.
 func (a ActionKind) Cost() int {
 	switch a {
-	case Prepare:
-		return costPrepare
+	case Gather:
+		return costGather
 	case Guard:
 		return costGuard
 	case Quick:
@@ -219,10 +219,10 @@ const (
 	speedPerPoint    = 10
 )
 
-// prepareBonusAP is what one Prepare banks for the following round. Two for one is a
-// deliberate profit — the cost of Prepare is the card slot and the action slot it takes
+// gatherBonusAP is what one Gather banks for the following round. Two for one is a
+// deliberate profit — the cost of Gather is the card slot and the action slot it takes
 // out of the round it is played in, not the point it costs.
-const prepareBonusAP = 2
+const gatherBonusAP = 2
 
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
@@ -240,7 +240,7 @@ const baseMaxActions = 5
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
 // ActionPoints is how much this duelist has to spend in a round, including anything
-// banked by a Prepare in the round before.
+// banked by a Gather in the round before.
 func (d Duelist) ActionPoints() int {
 	ap := baseActionPoints + d.Spd/speedPerPoint + d.BonusAP
 	if ap < 1 {
@@ -295,7 +295,7 @@ type EventKind int
 const (
 	KindRoundStart EventKind = iota
 	KindAction
-	KindPrepared
+	KindGathered
 	KindNegated
 	KindGuarded
 	KindDamage
@@ -341,7 +341,7 @@ type Slot struct {
 // draws it; neither works the order out for itself, so the pane and the engine cannot
 // drift apart.
 //
-// **A whole turn each, in category order.** Everything side A queued resolves — setups,
+// **A whole turn each, in category order.** Everything side A queued resolves — prepares,
 // then attacks, then defenses — and only then does side B begin. Within a category the
 // queued order is kept, which is where drag-to-reorder still bites and where sequence
 // combos will match.
@@ -430,8 +430,8 @@ func playTurn(
 	actor = expireDefenses(actor)
 
 	// Stagger comes off the front, which needs no tie-break and so is the only pick that is
-	// deterministic without inventing a rule. Under phases the front of a turn is its setups,
-	// so being staggered costs a Prepare before it costs an attack — a real consequence, and
+	// deterministic without inventing a rule. Under phases the front of a turn is its prepares,
+	// so being staggered costs a Gather before it costs an attack — a real consequence, and
 	// the one that makes stagger worth planning around rather than merely suffering.
 	//
 	// **The action points are not refunded.** They were committed when the cards were queued,
@@ -459,8 +459,34 @@ func playTurn(
 	hits := matchSlots(turn, table)
 
 	for i, slot := range turn {
+		// The action first, then any combo it *completes*. **A combo lands after the cards
+		// that formed it** — changed 2026-08-07, having first been built the other way round.
+		//
+		// Firing at the run's first card let a damage multiplier boost the very cards that
+		// earned it, which is why it was built that way. Two things beat that:
+		//
+		//   - **It read backwards.** "COMBO! Strike Flurry" arrived above three strikes that
+		//     had not happened yet, announcing a thing before its cause.
+		//   - **A run that never finished still paid out.** Matching happens up front, so a
+		//     turn cut short by a Riposte kill on the second of three strikes fired the combo
+		//     anyway. Firing on completion makes that impossible by construction rather than
+		//     by a check somebody has to remember.
+		//
+		// The cost, recorded honestly: a damage multiplier can now only boost what comes
+		// *after* the run. "Complete the combo, get a bonus for the rest of your turn" is a
+		// coherent reading, but it is not the one the multiplier was designed against, and
+		// neither shipping combo uses one — so this is untested by anything real yet.
+		events, actor, target = resolveAction(events, side, actor, target, slot.Action, round, num, den)
+
+		// Either side can fall here: a Riposte kills the attacker who walked into it. A combo
+		// completing on this slot is skipped along with the rest of the turn, which is the
+		// point above.
+		if !actor.Alive() || !target.Alive() {
+			break
+		}
+
 		for _, h := range hits {
-			if h.Start != i {
+			if i != h.Start+h.Length-1 {
 				continue
 			}
 			events = append(events, Event{
@@ -474,9 +500,9 @@ func playTurn(
 				num, den = num*h.Effect.DamageNum, den*h.Effect.DamageDen
 			}
 			if h.Effect.BankAP != 0 {
-				actor.PreparedAP += h.Effect.BankAP
+				actor.GatheredAP += h.Effect.BankAP
 				events = append(events, Event{
-					Kind:   KindPrepared,
+					Kind:   KindGathered,
 					Side:   side,
 					Amount: h.Effect.BankAP,
 					Round:  round,
@@ -485,13 +511,6 @@ func playTurn(
 			if h.Effect.Stagger != 0 {
 				target.Staggered = addStagger(target.Staggered, h.Effect.Stagger)
 			}
-		}
-
-		events, actor, target = resolveAction(events, side, actor, target, slot.Action, round, num, den)
-
-		// Either side can fall here: a Riposte kills the attacker who walked into it.
-		if !actor.Alive() || !target.Alive() {
-			break
 		}
 	}
 
@@ -518,11 +537,11 @@ func expireDefenses(d Duelist) Duelist {
 }
 
 // endRound rolls what was banked this round into next round's budget. Assignment rather
-// than addition: two Prepares in one round are worth +4 next round, and preparing every
+// than addition: two Gathers in one round are worth +4 next round, and gathering every
 // round is worth a flat +2 rather than compounding forever.
 func endRound(d Duelist) Duelist {
-	d.BonusAP = d.PreparedAP
-	d.PreparedAP = 0
+	d.BonusAP = d.GatheredAP
+	d.GatheredAP = 0
 	return d
 }
 
@@ -549,12 +568,12 @@ func resolveAction(
 	})
 
 	switch action {
-	case Prepare:
-		actor.PreparedAP += prepareBonusAP
+	case Gather:
+		actor.GatheredAP += gatherBonusAP
 		events = append(events, Event{
-			Kind:   KindPrepared,
+			Kind:   KindGathered,
 			Side:   side,
-			Amount: prepareBonusAP,
+			Amount: gatherBonusAP,
 			Round:  round,
 		})
 		return events, actor, target
@@ -827,7 +846,7 @@ func planSwarm(budget, slots int) []ActionKind {
 	return plan
 }
 
-// planWarden puts a Guard up first and attacks with what is left. The Guard is a setup, so
+// planWarden puts a Guard up first and attacks with what is left. The Guard is a prepare, so
 // resolution moves it to the front of the turn regardless of where it sits here — it is
 // first in the slice only because that is how the plan reads.
 func planWarden(budget, slots int) []ActionKind {
@@ -839,19 +858,19 @@ func planWarden(budget, slots int) []ActionKind {
 
 // planTactician alternates between banking and spending, reading which round it is in off
 // its own BonusAP: anything banked means last round was the setup, so this one is the
-// payoff. It needs no memory of its own because Prepare already leaves the evidence.
+// payoff. It needs no memory of its own because Gather already leaves the evidence.
 func planTactician(d Duelist, budget, slots int) []ActionKind {
 	if d.BonusAP > 0 {
 		// The payoff round. Everything into the biggest attacks that fit.
 		return planBrute(budget, slots)
 	}
 
-	// The setup round: bank what a second Prepare is worth, keep enough back to stay
-	// dangerous, and never spend so much preparing that the round is a free hit for the
-	// player. Two Prepares is the whole point — it is what makes the next round oversized.
+	// The setup round: bank what a second Gather is worth, keep enough back to stay
+	// dangerous, and never spend so much gathering that the round is a free hit for the
+	// player. Two Gathers is the whole point — it is what makes the next round oversized.
 	plan := make([]ActionKind, 0, slots)
-	for len(plan) < slots-1 && budget >= costPrepare*2 && len(plan) < 2 {
-		plan, budget = append(plan, Prepare), budget-costPrepare
+	for len(plan) < slots-1 && budget >= costGather*2 && len(plan) < 2 {
+		plan, budget = append(plan, Gather), budget-costGather
 	}
 	return append(plan, planBrute(budget, slots-len(plan))...)
 }

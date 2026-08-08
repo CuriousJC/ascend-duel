@@ -63,8 +63,28 @@ type Duelist struct {
 	// Ripostes are spent before Dodges so their counter-damage lands as early in the
 	// opponent's turn as it can — early enough to cut the rest of that turn short if it
 	// kills. They expire alongside Guarded.
+	//
+	// A Feint strips one of these without triggering its counter, which is the only way a
+	// negation leaves without stopping something.
 	Ripostes int
 	Dodges   int
+
+	// Braces halve a single incoming attack each and are spent doing it, where Guarded halves
+	// every attack and is not. That is the whole difference between the 1-AP defence and the
+	// 3-AP prepare: one card, one blow, versus one card, one turn.
+	//
+	// A brace and a guard both applying quarter the blow. Deliberate — they are different
+	// cards bought separately, and a rule that silently ignored one of them would make the
+	// cheaper card worthless exactly when the player had committed to both.
+	Braces int
+
+	// Mirrored negates every attack in the opponent's next turn and reflects each one back.
+	// A bool rather than a count because it is turn-wide like Guarded, not per-blow like a
+	// Dodge — and because "every attack" has no number to run out of.
+	//
+	// It is checked *before* the counted negations, so a Mirror never lets a Dodge or Riposte
+	// be spent on a blow it was going to stop for free.
+	Mirrored bool
 
 	// The two halves of Gather. GatheredAP is what has been banked *this* round; at the
 	// round boundary it becomes BonusAP, which ActionPoints adds to the budget for the
@@ -127,53 +147,96 @@ func (c Category) String() string {
 
 type ActionKind int
 
-// Declared in category order, so anything that sorts by the raw value — the deck overlay
-// does — groups the piles the same way a turn resolves them.
+// Declared in category order, and **within a category in ascending cost order**, so anything
+// that sorts by the raw value — the deck overlay does — groups the piles the same way a turn
+// resolves them and ladders them by price inside that.
+//
+// The twelve are a filled 3x4 grid: three categories by four cost tiers. See MECHANICS.md for
+// why twelve rather than however many somebody thought of, and why each tier is required to
+// differ in *kind* from the one below it rather than only in magnitude.
+//
+// **Inserting these five mid-enum shifted every combo ID**, because FlurryID is derived from
+// the card's raw value. That was safe exactly once — no profile exists yet, so no discovered
+// combo could be re-locked by the shift — and it stops being safe the moment one does. The
+// conflict between category ordering here and ID stability there is recorded as an open
+// question in MECHANICS.md.
 const (
 	// Prepare.
 	Gather ActionKind = iota
+	Sift
 	Guard
+	Ritual
 
 	// Attack.
-	Quick
+	Jab
 	Strike
+	Feint
 	Heavy
 
 	// Defend.
+	Brace
 	Dodge
 	Riposte
+	Mirror
 )
 
 // AllActions is every action a duelist can queue, in category order.
-var AllActions = []ActionKind{Gather, Guard, Quick, Strike, Heavy, Dodge, Riposte}
+var AllActions = []ActionKind{
+	Gather, Sift, Guard, Ritual,
+	Jab, Strike, Feint, Heavy,
+	Brace, Dodge, Riposte, Mirror,
+}
 
 func (a ActionKind) String() string {
 	switch a {
 	case Gather:
 		return "Gather"
+	case Sift:
+		return "Sift"
 	case Guard:
 		return "Guard"
-	case Quick:
-		return "Quick"
+	case Ritual:
+		return "Ritual"
+	case Jab:
+		return "Jab"
 	case Strike:
 		return "Strike"
+	case Feint:
+		return "Feint"
 	case Heavy:
 		return "Heavy"
+	case Brace:
+		return "Brace"
 	case Dodge:
 		return "Dodge"
 	case Riposte:
 		return "Riposte"
+	case Mirror:
+		return "Mirror"
 	default:
 		return "Unknown"
 	}
 }
 
+// ParseAction resolves an action from its name, which is how a data record names a concept.
+// The bool reports whether it was found rather than falling back to something playable —
+// unlike ParsePlanStyle, where a typo should still produce a fightable enemy. A deck quietly
+// short a concept is a balance change nobody made, so the caller is expected to fail loudly.
+func ParseAction(name string) (ActionKind, bool) {
+	for _, a := range AllActions {
+		if a.String() == name {
+			return a, true
+		}
+	}
+	return Gather, false
+}
+
 // Category is which phase this action resolves in.
 func (a ActionKind) Category() Category {
 	switch a {
-	case Gather, Guard:
+	case Gather, Sift, Guard, Ritual:
 		return CategoryPrepare
-	case Dodge, Riposte:
+	case Brace, Dodge, Riposte, Mirror:
 		return CategoryDefend
 	default:
 		return CategoryAttack
@@ -182,14 +245,23 @@ func (a ActionKind) Category() Category {
 
 // Action point costs. The budget is the decision: a couple of big swings, or a
 // fistful of small ones, or damage traded away for a defense.
+// The four tiers are 1/2/3/4 in every category, which is what makes the grid in MECHANICS.md a
+// grid rather than a table of coincidences.
 const (
-	costGather  = 1
-	costGuard   = 3
-	costQuick   = 1
-	costStrike  = 2
-	costHeavy   = 4
+	costGather = 1
+	costSift   = 2
+	costGuard  = 3
+	costRitual = 4
+
+	costJab    = 1
+	costStrike = 2
+	costFeint  = 3
+	costHeavy  = 4
+
+	costBrace   = 1
 	costDodge   = 2
 	costRiposte = 3
+	costMirror  = 4
 )
 
 // Cost is what this action takes out of the round's action-point budget.
@@ -197,16 +269,26 @@ func (a ActionKind) Cost() int {
 	switch a {
 	case Gather:
 		return costGather
+	case Sift:
+		return costSift
 	case Guard:
 		return costGuard
-	case Quick:
-		return costQuick
+	case Ritual:
+		return costRitual
+	case Jab:
+		return costJab
+	case Feint:
+		return costFeint
 	case Heavy:
 		return costHeavy
+	case Brace:
+		return costBrace
 	case Dodge:
 		return costDodge
 	case Riposte:
 		return costRiposte
+	case Mirror:
+		return costMirror
 	default:
 		return costStrike
 	}
@@ -223,6 +305,44 @@ const (
 // deliberate profit — the cost of Gather is the card slot and the action slot it takes
 // out of the round it is played in, not the point it costs.
 const gatherBonusAP = 2
+
+// ritualBonusAP is Ritual's bank. **Deliberately the same net rate as Gather** — 1 AP for +2 and
+// 4 AP for +5 are both net +1 per point spent — so Ritual is not a better Gather, it is a Gather
+// that does not eat the round. Four Gathers bank more (+8) but spend four of five action slots;
+// Ritual banks +5 and leaves four slots to fight with. The difference it sells is *slots*.
+//
+// An earlier draft granted +2 AP and +2 to the action cap instead, to reach six- and seven-card
+// combo runs. That was cut when the cap was frozen at five permanently: a growable cap dilutes
+// every named hand shape as it grows. See MECHANICS.md.
+const ritualBonusAP = 5
+
+// braceDivisor is how much a spent brace cuts one incoming attack. Its own constant rather than
+// a shared one with guardDivisor: the two are the same number today and are different rules, so
+// tuning one must not silently move the other.
+const braceDivisor = 2
+
+// mirrorReflectNum/Den is the fraction of a stopped blow a Mirror sends back, as a fraction so
+// this package stays integer arithmetic. **1/1 — full reflection, as designed.**
+//
+// **`tools/balance` says this is too strong, and the number is here so the fix is one line.**
+// With full reflection the `mirroring` posture beats all four shipped enemies and finishes every
+// one of them on 60/60 life, which is the "strong against everything" condition that means a
+// card is mispriced rather than good. It is also, accidentally, the only posture that beats
+// Swarm1 — an enemy MECHANICS.md records as unbeatable by all three original postures — so it
+// papers over a known balance hole by being overpowered instead of by being right.
+//
+// Left at 1/1 deliberately: full reflection is the card as specified, and quietly halving a
+// design decision to make a table look better is the wrong way round. The two candidate levers,
+// in the order worth trying:
+//
+//   - **Halve the reflection** (1/2 here). Keeps the card's character — it still scales with what
+//     the opponent committed — and stops it being a better Dodge in every matchup.
+//   - **Cap what it stops.** Negating a whole turn for 4 AP is the other half of the problem;
+//     "negates and reflects the first two attacks" is a different card but a priceable one.
+const (
+	mirrorReflectNum = 1
+	mirrorReflectDen = 1
+)
 
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
@@ -273,13 +393,15 @@ const guardDivisor = 2
 // Riposte is the odd one: it is a *defend*, and the number below is what it hits back for
 // when it stops an attack, not something it deals on its own. Reporting it here is what
 // lets the card draw a damage badge for it without the screen knowing the rule.
+// Feint deals a Strike's damage and pays its extra point for the negation it strips, not for a
+// bigger number — see resolveAttack.
 func (a ActionKind) Damage(str int) int {
 	switch a {
 	case Heavy:
 		return str * 2
-	case Strike:
+	case Strike, Feint:
 		return str
-	case Quick, Riposte:
+	case Jab, Riposte:
 		d := str / 2
 		if d < 1 {
 			d = 1
@@ -298,6 +420,19 @@ const (
 	KindGathered
 	KindNegated
 	KindGuarded
+
+	// KindBraced is one attack halved by a spent brace, and reports the reduced figure exactly
+	// as KindGuarded does. Separate from KindGuarded because they are different cards with
+	// different costs, and a log that called both "guarded" would make the 1-AP defence
+	// invisible in the one place the player looks to find out what happened.
+	KindBraced
+
+	// KindStripped is a negation removed by a Feint without being spent on anything. Action is
+	// the negation that went; Target is whose it was. It is not a KindNegated because nothing
+	// was negated — the whole point of the card is that the defence leaves without stopping a
+	// blow and without firing its counter.
+	KindStripped
+
 	KindDamage
 	KindDefeated
 
@@ -533,6 +668,8 @@ func expireDefenses(d Duelist) Duelist {
 	d.Guarded = false
 	d.Ripostes = 0
 	d.Dodges = 0
+	d.Braces = 0
+	d.Mirrored = false
 	return d
 }
 
@@ -568,18 +705,35 @@ func resolveAction(
 	})
 
 	switch action {
-	case Gather:
-		actor.GatheredAP += gatherBonusAP
+	case Gather, Ritual:
+		bank := gatherBonusAP
+		if action == Ritual {
+			bank = ritualBonusAP
+		}
+		actor.GatheredAP += bank
 		events = append(events, Event{
 			Kind:   KindGathered,
 			Side:   side,
-			Amount: gatherBonusAP,
+			Amount: bank,
 			Round:  round,
 		})
 		return events, actor, target
 
+	case Sift:
+		// **Sift has no effect in the rules, and that is the design rather than a gap.** It
+		// manipulates the hand, and the deck deliberately lives on the scene so this package
+		// stays free of a shuffle — see CLAUDE.md on determinism. The screen does the work at
+		// the round boundary; the engine's only job is to charge the action points and give the
+		// card a slot in the resolution order. It is also the one concept tools/balance is
+		// structurally unable to see.
+		return events, actor, target
+
 	case Guard:
 		actor.Guarded = true
+		return events, actor, target
+
+	case Brace:
+		actor.Braces++
 		return events, actor, target
 
 	case Dodge:
@@ -588,6 +742,10 @@ func resolveAction(
 
 	case Riposte:
 		actor.Ripostes++
+		return events, actor, target
+
+	case Mirror:
+		actor.Mirrored = true
 		return events, actor, target
 	}
 
@@ -610,6 +768,80 @@ func resolveAttack(
 	round int,
 	num, den int,
 ) ([]Event, Duelist, Duelist) {
+	// A Feint strips one counted negation before anything else resolves, and takes no counter
+	// for it. That is what the extra point over a Strike buys: attacking into a Riposte
+	// normally costs the attacker str/2, and this is the card that clears one safely.
+	//
+	// **Unconditional, and deliberately so.** It fires even when the blow is about to be
+	// stopped by a Mirror, because a strip that silently did nothing depending on a card the
+	// player cannot see would be a hidden interaction in a game whose whole point is reading
+	// the opponent. Ripostes before Dodges, matching the order they are spent in — the Riposte
+	// is the one worth removing.
+	//
+	// Guarded and Mirrored are turn-wide states, not pending negations, and a Feint does not
+	// touch either.
+	if action == Feint && (target.Ripostes > 0 || target.Dodges > 0) {
+		stripped := Riposte
+		if target.Ripostes > 0 {
+			target.Ripostes--
+		} else {
+			target.Dodges--
+			stripped = Dodge
+		}
+		events = append(events, Event{
+			Kind:   KindStripped,
+			Side:   side,
+			Action: stripped,
+			Target: targetSide,
+			Round:  round,
+		})
+	}
+
+	// A Mirror stops everything and sends it back, and it is checked before the counted
+	// negations so it never lets a Dodge or Riposte be spent on a blow that was going to be
+	// stopped for free.
+	//
+	// **The reflected figure is the damage after any combo multiplier and before any guard.**
+	// After the multiplier because what it reflects is what the attacker actually committed —
+	// which is what makes Mirror the answer to a telegraphed spike rather than a flat damage
+	// reduction. Before any guard because the blow never lands, so nothing of the defender's
+	// ever reduces it; and the defender's own Guard is irrelevant to what the attacker threw.
+	// This follows Riposte's counter, which is likewise raw.
+	if target.Mirrored {
+		reflected := scaleDamage(
+			scaleDamage(action.Damage(actor.Str), num, den),
+			mirrorReflectNum, mirrorReflectDen)
+
+		events = append(events, Event{
+			Kind:   KindNegated,
+			Side:   targetSide,
+			Action: Mirror,
+			Target: side,
+			Round:  round,
+		})
+
+		// The reflection runs the other way, so the sides here are swapped relative to the
+		// attack that provoked it — the same shape as a Riposte's counter.
+		actor.CurrentLife = reduce(actor.CurrentLife, reflected)
+		events = append(events, Event{
+			Kind:   KindDamage,
+			Side:   targetSide,
+			Target: side,
+			Amount: reflected,
+			Life:   actor.CurrentLife,
+			Round:  round,
+		})
+		if !actor.Alive() {
+			events = append(events, Event{
+				Kind:   KindDefeated,
+				Side:   targetSide,
+				Target: side,
+				Round:  round,
+			})
+		}
+		return events, actor, target
+	}
+
 	// Negation first, and Ripostes before Dodges. Both stop the blow completely, so
 	// spending the one that hits back first is free — and it gets the counter-damage into
 	// the log early enough to end the attacker's turn if it kills.
@@ -660,6 +892,24 @@ func resolveAttack(
 	}
 
 	dmg := scaleDamage(action.Damage(actor.Str), num, den)
+
+	// A brace is spent on this blow; a guard is not spent at all. Both can apply, quartering
+	// the hit — deliberate, since they are two cards bought separately and a rule that ignored
+	// one of them would make the cheaper card worthless exactly when the player committed to
+	// both. Brace goes first so the log reads cheap-then-broad, in cost order.
+	if target.Braces > 0 {
+		target.Braces--
+		dmg /= braceDivisor
+		events = append(events, Event{
+			Kind:   KindBraced,
+			Side:   side,
+			Target: targetSide,
+			Amount: dmg,
+			Life:   target.CurrentLife,
+			Round:  round,
+		})
+	}
+
 	if target.Guarded {
 		dmg /= guardDivisor
 		events = append(events, Event{
@@ -807,8 +1057,8 @@ func planBrute(budget, slots int) []ActionKind {
 			plan, budget = append(plan, Heavy), budget-costHeavy
 		case budget >= costStrike:
 			plan, budget = append(plan, Strike), budget-costStrike
-		case budget >= costQuick:
-			plan, budget = append(plan, Quick), budget-costQuick
+		case budget >= costJab:
+			plan, budget = append(plan, Jab), budget-costJab
 		default:
 			return plan
 		}
@@ -824,15 +1074,15 @@ func planBrute(budget, slots int) []ActionKind {
 // pass a fast swarm would simply waste the points its speed bought it.
 func planSwarm(budget, slots int) []ActionKind {
 	plan := make([]ActionKind, 0, slots)
-	for len(plan) < slots && budget >= costQuick {
-		plan, budget = append(plan, Quick), budget-costQuick
+	for len(plan) < slots && budget >= costJab {
+		plan, budget = append(plan, Jab), budget-costJab
 	}
 
-	// Quick -> Strike costs 1 more, Strike -> Heavy costs 2 more. Upgrade along the plan
+	// Jab -> Strike costs 1 more, Strike -> Heavy costs 2 more. Upgrade along the plan
 	// rather than pouring everything into the first slot, so the round stays wide.
 	for _, step := range []struct {
 		from, to ActionKind
-	}{{Quick, Strike}, {Strike, Heavy}} {
+	}{{Jab, Strike}, {Strike, Heavy}} {
 		gap := step.to.Cost() - step.from.Cost()
 		for i := range plan {
 			if budget < gap {

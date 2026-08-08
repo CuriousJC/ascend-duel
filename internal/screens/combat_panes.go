@@ -249,6 +249,11 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState) []paneRow {
 		cur = -1
 	}
 
+	// Which defence stopped the last blow, so the damage that follows can be narrated as a
+	// riposte's counter or a mirror's reflection. The engine already distinguishes them on the
+	// KindNegated event; this only remembers it for the line after.
+	lastNegation := combat.ActionKind(-1)
+
 	for _, e := range s.log[:end] {
 		switch e.Kind {
 		case combat.KindRoundStart, combat.KindRoundEnd:
@@ -275,15 +280,29 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState) []paneRow {
 		case combat.KindGuarded:
 			attach("guarded")
 
+		case combat.KindBraced:
+			attach("braced")
+
+		case combat.KindStripped:
+			// Nothing was stopped, so this must not read like a negation. It is the Feint
+			// doing something *to* the defence rather than the defence doing its job.
+			attach(fmt.Sprintf("strips their %v", lower(e.Action.String())))
+
 		case combat.KindNegated:
+			lastNegation = e.Action
 			attach(fmt.Sprintf("stopped by a %v", lower(e.Action.String())))
 
 		case combat.KindDamage:
-			// A Riposte's counter-damage belongs to the *defender*, so it lands on the
-			// attacker's line as something done back rather than as a hit of their own.
-			if cur >= 0 && rows[cur].swatch != swatchFor(e.Side) {
+			// A Riposte's counter and a Mirror's reflection both belong to the *defender*, so
+			// they land on the attacker's line as something done back rather than as a hit of
+			// their own. Which of the two it was decides the verb: a riposte hits back, a
+			// mirror returns the blow it just refused.
+			switch {
+			case cur >= 0 && rows[cur].swatch != swatchFor(e.Side) && lastNegation == combat.Mirror:
+				attach(fmt.Sprintf("reflects %d", e.Amount))
+			case cur >= 0 && rows[cur].swatch != swatchFor(e.Side):
 				attach(fmt.Sprintf("hits back for %d", e.Amount))
-			} else {
+			default:
 				attach(fmt.Sprintf("%d damage", e.Amount))
 			}
 
@@ -328,12 +347,17 @@ func swatchFor(side combat.Side) color.RGBA {
 // changes only this file.
 var actionPhrases = map[combat.ActionKind]string{
 	combat.Gather:  "and gathers their strength",
+	combat.Sift:    "and sifts through their options",
 	combat.Guard:   "with a guard",
-	combat.Quick:   "with a quick strike",
+	combat.Ritual:  "with a long ritual",
+	combat.Jab:     "with a jab",
 	combat.Strike:  "with a strike",
+	combat.Feint:   "with a feint",
 	combat.Heavy:   "with a heavy strike",
+	combat.Brace:   "and braces",
 	combat.Dodge:   "with a dodge",
 	combat.Riposte: "with a riposte",
+	combat.Mirror:  "behind a mirror",
 }
 
 // actionPhrase is what follows the verb. A card with no phrase falls back to naming itself

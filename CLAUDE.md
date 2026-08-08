@@ -70,11 +70,17 @@ holds a catalogue of named seeds — `strike-flurry`, `strike-onslaught`, `all-c
 hand that demonstrates something can be asked for by name instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
-**Re-run `tools/seeds` after touching `startingDeck` or `handSize`.** A seed is a fact about one
-particular deck; change the deck and every catalogued number silently deals something else. The
-tool re-checks the catalogue before it searches and says which entries no longer match — it
-rejected two guessed numbers the first time it ran. A demo testing a Flurry against a hand with
-two Strikes in it is worse than no demo, because it passes.
+**Re-run `tools/seeds` after touching `data/cards.json`, `startingDeck` or `handSize`.** A seed is
+a fact about one particular deck; change the deck and every catalogued number silently deals
+something else. The tool re-checks the catalogue before it searches and says which entries no
+longer match — it rejected two guessed numbers the first time it ran, and invalidated **all five
+entries at once** when the deck went 30 → 60 on 2026-08-08. A demo testing a Flurry against a hand
+with two Strikes in it is worse than no demo, because it passes.
+
+**A bigger deck needs a bigger search.** Five Strikes in a hand of eight is about 1 hand in 98,000
+from 60 cards, against 1 in 3,000 from 30, so `strike-onslaught` took `-n 600000` to find where
+the default 20,000 used to be plenty. A seed the tool reports as unfindable may only mean the
+search was too short — check the arithmetic before concluding the deck cannot deal it.
 
 **Three build tags, and they compose.** Each selects a different file in its package, so one
 configuration can compile while another does not. Vet and build every one you might have
@@ -287,6 +293,12 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   glyphs until the initiative clock went on 2026-08-06. That single deletion took 50px off
   `deckCardStyle`, which is what bought the deck overlay a third grid row on the same day the
   deck doubled to 30 cards. Adding a third badge back spends that row.
+  **Three rows is no longer enough.** The deck doubled again to 60 on 2026-08-08, so the 24-slot
+  grid now shows fewer than half the cards outside the hand and draws its "+N more not shown"
+  line on every look. That line firing is the design working — it was written so a grown deck
+  would produce a visible shortfall rather than a panel that lied — but the panel needs a real
+  answer (paging, or grouping identical cards under a count), and it cannot be a bigger grid,
+  because a card is already at its floor.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.
@@ -451,6 +463,7 @@ Key conventions:
 
 - `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["spritesheet_png"]`, `gs.Fonts["kubasta"]`).
 - `data/` — `//go:embed`s `combatants.json` and unmarshals it into `map[string]CombatantData` keyed by `CombatantRecord`. This is the pattern for all static game data: JSON next to a small Go loader. `SpriteSheet` in the JSON must match an `assets` map key, and `SpriteRect` is `[x0, y0, x1, y1]` used with `SubImage` to slice the sheet. `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.**
+  - **`cards.json` + `card_data.go` is the deck list** (added 2026-08-08): the twelve concepts, the elements each ships in, and how many copies. `startingDeck` is built from it, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. **Cost, category and damage are deliberately *not* here**; they are rules and live in `internal/combat`, which cannot import `data`. The JSON's `CostTier` is documentation *with a check*: `data.CheckCostTiers` asserts every declared tier and category against `ActionKind.Cost()`/`.Category()` and `buildStartingDeck` **panics at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
@@ -460,7 +473,7 @@ Key conventions:
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **The combat screen is six files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
-  - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `startingDeck` and `conceptDeck`, the deck seed, the shuffle and draw, `spendSelected`, and the deck overlay.
+  - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `buildStartingDeck` (which reads `data/cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay.
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
   - `combat_hud.go` — everything around the round: the character strip, the caption box, `drawBox`, the enemy sprite, and both health bars.
   - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.

@@ -46,11 +46,11 @@ const ComboNone ComboID = 0
 // point: the family is a shape the game keeps, not a list somebody has to remember to extend.
 //
 // **Per card, not per category**, decided 2026-08-07. An earlier version matched
-// `AnyOf(CategoryAttack)`, so any three attacks combo'd and a Quick was as good as a Heavy.
+// `AnyOf(CategoryAttack)`, so any three attacks combo'd and a Jab was as good as a Heavy.
 // Naming them for the card they are built on is what makes them worth *building toward*: three
 // Strikes is a deck you assembled, three attacks is whatever you happened to draw. It is also
 // what leaves room for the effects to differ per card later — a Heavy Flurry has every reason
-// to hit harder than a Quick one, and a category-wide combo could never say so.
+// to hit harder than a Jab one, and a category-wide combo could never say so.
 const (
 	flurryRun    = 3
 	onslaughtRun = 5

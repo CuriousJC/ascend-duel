@@ -918,10 +918,15 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
           `endRoundHand` rebuilds `fighterActions`, and the Resolution pane draws
           `fighterActions` to narrate the round, so spending early empties the pane
           mid-round. The ordering in `advancePlayback` is load-bearing.
-        - `Quick` is defined in the rules but absent from the deck. Which of the actions
-          the rules permit actually appear is a deck-building question, and that split is
-          the point of having a deck at all.
+        - ~~`Quick` is defined in the rules but absent from the deck.~~ **Resolved
+          2026-08-08:** `Quick` was renamed **Jab** and given its five cards when the
+          concept grid was filled. The split it illustrated is still real — which of the
+          rules' actions appear in a deck is a deck-building question — but `Sift` is the
+          card that carries it now, being the one concept whose effect is not a rule at all.
         - The 10/6/4 composition and the hand size of five are first guesses, unplayed.
+          **Both superseded:** the deck is 12 concepts x 5 elements = 60 built from
+          `data/cards.json`, and the hand is 8. The hand was sized against a 30-card deck
+          and deliberately left alone when the deck doubled — see the note on `handSize`.
         - **Still missing before this is a deckbuilder rather than a card-shaped hand:**
           nothing adds or removes cards, so there is no building and no thinning reward.
           That needs the loot loop, which needs the tower.
@@ -944,6 +949,151 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       - [?] Still open: should Guard subtract flat armour rather than halving? `ideas.md`
             lists armour as a core attribute alongside speed and damage, so halving may
             be the wrong long-term shape even though it now behaves.
+- [ ] **Price Mirror. `tools/balance` says it is broken.** Added 2026-08-08 as the 4-AP
+      defend: negates every attack in the opponent's next turn and reflects each blow's
+      damage back. The `mirroring` posture **beats all four shipped enemies and finishes
+      every one of them on 60/60 life** — the "strong against everything" condition that
+      means a card is mispriced rather than good.
+      - It is also the *only* posture that beats `Swarm1`, an enemy recorded as unbeatable
+        by all three original postures. So it papers over a known balance hole by being
+        overpowered instead of by being right, and fixing Mirror re-opens that hole.
+      - The lever is one constant: `mirrorReflectNum/mirrorReflectDen` in
+        [combat.go](internal/combat/combat.go), left at 1/1 because full reflection is the
+        card as designed. Two candidates, in order: **halve the reflection** (keeps its
+        character — it still scales with what the opponent committed), or **cap what it
+        stops** ("negates and reflects the first two attacks" is a different card but a
+        priceable one).
+      - [?] **Does giving enemies more attacks fix it instead?** Worth investigating, and
+        worth knowing the arithmetic points the other way first: **enemies already have the
+        same 5-action cap.** `MaxActions()` returns `baseMaxActions` for every duelist, so
+        what limits an enemy is its AP budget, not its action count — `Swarm1` at 6 AP
+        already throws five (`Strike+Jab+Jab+Jab+Jab`), while `Monster1` at 5 AP throws two.
+        And Mirror is *most* devastating against `Swarm1`: it wins there in 3 rounds, the
+        fastest of the four, because a reflection scales with how many blows arrive. More
+        enemy attacks therefore makes Mirror **stronger**, not weaker.
+        - The version of the intuition that might survive: raising enemy *AP* would make
+          Guard and Brace better too, since both scale with attack count in the same
+          direction, which could narrow Mirror's lead over them without touching Mirror.
+          That is a real experiment — add AP to the roster in `combatants.json` and re-run
+          `tools/balance`. Cheap, because it is a data change.
+        - What it cannot fix: Mirror is currently *unconditionally* better than Dodge and
+          Guard in every matchup. A change that makes all three better leaves the ordering
+          intact.
+- [ ] **Rethink the deck overlay — it now shows less than half the deck.** The grid is
+      8 columns x 3 rows = 24 slots; a 60-card deck puts up to 52 cards outside an 8-card
+      hand, so `drawPileGrid` draws 24 and prints "+28 more not shown" on every look.
+      - **The overflow line firing is the design working.** It was written when the deck was
+        30 and this could not happen, precisely so that a grown deck would produce a visible
+        shortfall rather than a panel that quietly lied about what you own. What it is not
+        is an answer.
+      - **It cannot be fixed with a bigger grid.** `GlyphSize` is 64, `CardGlyphScale` is
+        already 1, integer scales only, and the two-glyph column is the floor on a card's
+        height. `deckCardStyle` is 138x186 and most of what is left to cut is padding.
+      - Options, none chosen:
+        - **Group identical cards under a count.** Twelve concepts x five elements is 60
+          cards but only 60 *distinct* ones at Copies 1 — so this only helps once duplicates
+          exist. It would help a lot then.
+        - **One tile per concept, elements as five pips.** Twelve tiles fit trivially, and
+          the element breakdown is what a count could never say — the original reason the
+          overlay draws cards rather than a table. This is the strongest lead.
+        - **Paging.** Honest and cheap, but it stops being "the whole deck is one look",
+          which was the stated point of the panel.
+        - **A smaller non-card representation** — swatch grid, one row per concept. Loses the
+          glyphs, which may be fine here: the overlay is inventory, not a thing you play from.
+      - Whatever wins, keep the property that made the current panel good: **a card does not
+        move when it is discarded, it only dims.** Watching the deck drain in place is why
+        both piles share one grid.
+
+### Loose ends from the 2026-08-08 concept work
+
+Five decisions and gaps that came out of filling the concept grid and were not captured
+anywhere at the time. Listed because a rule that exists only in the code is a rule the next
+design conversation will contradict without noticing.
+
+- [?] **What a Feint does when a second negation sits behind the one it strips.** Reading the
+      path in `resolveAttack`: the strip decrements one, then falls through to the ordinary
+      Riposte and Dodge checks, so **two Dodges beat a Feint and one does not.** That is a
+      coherent rule and nobody chose it — it is a consequence of where the strip was placed.
+      - Decide it, then pin it with a test. The alternative reading is that a Feint's damage
+        bypasses the negation layer entirely once it has stripped something, which is stronger
+        and makes stacked defences worthless against it.
+      - Not currently tested either way, which is the actual defect here.
+- [?] **Does Sift stack?** It does today: `siftsResolved() * siftExtraDiscards`, so two Sifts
+      throw four extra cards away. Gather's within-round stacking is a documented deliberate
+      choice; Sift's is just what the loop does. Two Sifts is 4 AP of a 6 AP round to churn
+      six cards, which may be fine — but it should be a decision.
+- [ ] **Price Sift, and build something that can measure it.** 2 AP replacing seven of eight
+      cards largely erases the consistency cost of a 60-card deck, which is a lot for the
+      cheapest prepare after Gather.
+      - **`tools/balance` structurally cannot see it.** Sift's effect is on the hand, the hand
+        is on the scene, and the tool has no deck — so this is the one concept in the game
+        with no instrument pointed at it. Either the tool grows a deck (which means moving
+        draw into `combat`, see the deckbuilder entry) or something else measures draw
+        variance. The second is probably a small harness over `screens.OpeningHand`, which
+        already deals real hands headlessly.
+- [ ] **Move four interaction rules from code comments into `MECHANICS.md`.** All four are
+      decided, implemented and tested; all four are recorded in the wrong file, and MECHANICS
+      is supposed to be what the game *is*. A designer reading it today would not learn any
+      of them:
+      - Brace and Guard **both** apply, quartering a blow.
+      - Mirror is checked **before** Dodge and Riposte, so it never lets a cheaper negation be
+        spent on a blow it was going to stop for free.
+      - Mirror reflects **post-combo-multiplier and pre-guard** — it returns what the attacker
+        committed, which is what makes it a read rather than a damage reduction.
+      - Feint's strip is **unconditional** and fires even behind a Mirror, deliberately, so the
+        card has no hidden interaction with something the player cannot see.
+- [ ] **The demo has never shown a new card resolving.** `demoSeedName` is `strike-flurry` and
+      `demoClickRun` is `Strike`, so the scripted round plays Strikes and a Riposte. The
+      narration written for Feint, Mirror, Brace and Sift — the "reflects N" line, the "strips
+      their riposte" line, "braced" — has never appeared on screen, and the demo is the only
+      thing that looks at the screen without a person sitting there.
+      - Point it at a hand that plays a Mirror into a multi-attack enemy turn. `all-categories`
+        (seed 6) deals eight distinct concepts including Mirror and Brace; `Swarm1` throws five
+        attacks, which is the turn that makes a reflection worth watching.
+      - `demoClickRun` has to agree with the seed or the click phase silently selects fewer
+        cards and nothing forms. That pairing is what `tools/seeds` exists to keep honest.
+
+### Cards and piles — presentation
+
+- [ ] **Cards must explain themselves. Long press explains the mechanic.** Today a card shows
+      its name, category word, damage and cost, and everything else has to be inferred — that
+      Riposte hits back, that Guard covers a whole turn rather than one blow, that Mirror
+      reflects. Six of the twelve concepts cannot be understood from the card at all.
+      - **This is long press, not hover** — confirmed 2026-08-08 against the recorded
+        vocabulary. `MECHANICS.md` §Long press already assigns "explains" to long press and
+        records that hover was considered and rejected; CLAUDE.md's input vocabulary has no
+        hover in it. The split to preserve if hover ever does return is **hover un-occludes,
+        long press explains**, so this task is the second half of that sentence.
+      - The gesture already has a designed shape: a press is a three-way decision — past
+        `dragThreshold` is a drag, held past a tick count without moving is a long press,
+        released before either is a click that toggles selection. **The distance and time
+        thresholds must not fight each other.**
+      - Needs the effect text to live somewhere. `actionPhrases` in
+        [combat_panes.go](internal/screens/combat_panes.go) is prose for a *sentence about a
+        round*, not a rules description, so this is a second table — and the rule it describes
+        lives in `internal/combat`, which must not grow UI strings. Same shape as
+        `actionPhrases`: the screen describes, the rules name.
+- [ ] **Draw and discard animation, with both piles on screen.** Cards should visibly travel:
+      out of the draw pile into the hand, and out of the hand into the discard. Physical
+      movement, not a count changing.
+      - **Discard pile on the left, showing its cards.** Draw pile further right on the same
+        horizontal axis, drawn at **half a button — 69x25**, buttons being 138x50.
+      - **The draw pile cannot show faces.** It is shuffled and ordered, so drawing its
+        contents would hand the player their next cards and make the shuffle pointless — the
+        same reason `drawPileGrid` sorts rather than showing pile order. A stack
+        representation, not cards. The discard is public information and may show its cards.
+      - Layout is the hard part and is not solved: the bottom band already runs 566→937 and
+        holds eight overlapping 180x264 cards plus three 138x50 buttons, and rings are recorded
+        as wanting a row that *already* does not fit vertically. This competes with that.
+      - **It must not become a per-event dwell table.** Playback pacing is deliberately one
+        constant, `duelTicksPerEvent`, because a switch with a `default` arm silently gave every
+        new event kind the shortest timing — see the history note in
+        [combat.go](internal/screens/combat.go). Card movement is not an event and should be
+        animated on its own clock rather than by adding cases to that one.
+      - Presentation only: **it may never change an outcome.** Same constraint as trace, idle
+        and the debug flags.
+      - Deliberately under-specified beyond the pile placement above, per the owner: worth
+        doing properly when it is picked up rather than designed in advance here.
 
 ## Later
 
@@ -1128,6 +1278,33 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         is sold anywhere.**
       - Applies to everything under `assets/tyrian_graphics/` plus the two consolidated
         sheets actually embedded (`tyrian_monster_sprites.png`, `tyrian_ship_sprites.png`).
+- [ ] **Sign the Windows binary so Defender stops saying "Unknown publisher."** Raised
+      2026-08-08 after downloading the v0.1.1 `.exe`. Not urgent and **not cheap** — this
+      entry exists mainly so the cost is written down before someone assumes it is a
+      workflow tweak.
+      - **Signing changes the name in the dialog, not the dialog.** SmartScreen gates on
+        *reputation*, which a brand-new certificate does not have. A signed build shows
+        "Justin Crosby" instead of "Unknown publisher" and still warns until enough clean
+        downloads accrue. Only an EV certificate has historically carried instant
+        reputation, and even that is reported to reset on renewal.
+      - **A `.pfx` in GitHub secrets is not an option.** CA/Browser Forum rules since
+        June 2023 require the private key on FIPS 140-2 Level 2 hardware or a cloud HSM,
+        so CI signing means a hosted signing service, not a file.
+      - **Azure Artifact Signing** (renamed from Trusted Signing) is the cheap path at
+        ~$9.99/month and is built for CI. Eligibility is the catch: it was restricted to
+        US/Canada organisations with three years of verifiable history, with individual
+        signup coming and going through preview, and there are reports of the role
+        assignment needing a paid Entra ID tier on top. **Check current eligibility before
+        costing this** — the answer has moved repeatedly.
+      - **It would put signing credentials in the release workflow**, which is the one job
+        already holding `contents: write`. Weigh that against the repo's rule that the
+        publish job is the last place to widen access.
+      - `[?]` **This may be the wrong problem to spend money on.** The game is intended to
+        sell through Steam, which delivers its own signed client and does not put the
+        binary through this path. If the GitHub releases stay a developer-and-playtester
+        convenience, "Unknown publisher" may be acceptable indefinitely. Decide whether
+        the download page is ever a *player-facing* distribution channel first; that
+        answer, not the price, is what settles this.
 
 ## Housekeeping
 

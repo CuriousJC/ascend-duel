@@ -7,8 +7,14 @@ Everything here is decided unless marked `[?]`. Read this before proposing a des
 and before implementing anything that touches a rule.
 
 Captured 2026-08-05 in one session; most of it is still unimplemented. **Cards, categories and
-phase resolution landed on 2026-08-06** and those sections describe running code — they say so.
-Everything else is still design.
+phase resolution landed on 2026-08-06**, **combos on 2026-08-07**, and **the full 12-concept /
+60-card deck on 2026-08-08** — those sections describe running code and say so. Everything else
+is still design.
+
+**Elements are the next piece of work, and three things wait on it.** Ring discounts, flip rings
+and the five-of-a-colour combo all need `element` to cross from the screen into
+`internal/combat`; none of them can be built until it does. That is the single highest-leverage
+change left in this document.
 
 ---
 
@@ -71,17 +77,58 @@ on a stat that does not exist.
 the type decides which phase of a turn it resolves in — see *Resolution* below. This is the
 axis the whole round is built on.
 
-| Type | Concepts | AP | Effect |
+**The concept set is a 3x4 grid: three types by four cost tiers, filled** *(decided and built
+2026-08-08)*. Twelve concepts, and the grid is the reason there are twelve rather than however
+many somebody thought of.
+
+| Type | 1 AP | 2 AP | 3 AP | 4 AP |
+|---|---|---|---|---|
+| **prepare** | Gather | Sift | Guard | Ritual |
+| **attack** | Jab | Strike | Feint | Heavy |
+| **defend** | Brace | Dodge | Riposte | Mirror |
+
+| Type | Concept | AP | Effect |
 |---|---|---|---|
 | **prepare** | Gather | 1 | Banks +2 AP for the next round |
+| | Sift | 2 | Two extra cards leave the hand at random at the round boundary, before it refills |
 | | Guard | 3 | Halves every attack in the opponent's next turn |
-| **attack** | Strike | 2 | `str` |
+| | Ritual | 4 | Banks +5 AP for the next round |
+| **attack** | Jab | 1 | `str/2`, minimum 1 |
+| | Strike | 2 | `str` |
+| | Feint | 3 | `str`, and strips one pending Riposte or Dodge **without triggering its counter** |
 | | Heavy | 4 | `str × 2` |
-| **defend** | Dodge | 2 | Negates the first incoming attack |
+| **defend** | Brace | 1 | Halves the next single incoming attack, then is spent |
+| | Dodge | 2 | Negates the first incoming attack |
 | | Riposte | 3 | Negates the first incoming attack and hits back for `str/2` |
+| | Mirror | 4 | Negates **every** attack in the opponent's next turn and reflects each one's damage back at them |
 
 Type is a property of the *concept*, not an independent axis — a fire Guard and a basic Guard
 are both prepares.
+
+**The grid is a design brief, not just a count.** An empty cell states a spec before anything
+has a name — "a 3-cost attack" is something to solve. What it must not become is a cost ladder
+where each tier is the one below it with a bigger number: that is twelve cards and three
+decisions, and it is the trap `Dodge`/`Riposte` already half fell into. **Every tier differs in
+kind.** Feint attacks the defence layer rather than the health total; Mirror scales with what
+the opponent committed rather than with your own strength; Sift operates on the deck and not on
+the arithmetic at all; Brace is partial where Dodge is binary.
+
+**Ritual and Gather bank at the same rate on purpose** — 1 AP for +2 and 4 AP for +5 are both
+net +1 per point. Ritual is not a better Gather, it is a Gather that does not eat your round:
+four Gathers bank more (+8) but consume four of five action slots, while Ritual banks +5 and
+leaves four slots to fight with. The difference is *slots*, which is the same reason Riposte is
+not redundant against Dodge.
+
+**Sift is the one concept whose effect is not a rule.** It manipulates the deck, and the deck
+deliberately lives on the scene rather than in `internal/combat` — so `Sift` is an `ActionKind`
+with a cost, a category and no engine effect, and the screen does the work at the round
+boundary. That is a real division rather than an unimplemented card: the rules package owns
+what a round does, not what you are holding. It also makes Sift the only concept `tools/balance`
+cannot see.
+
+**Sift and the Discard button are not the same thing.** Discard is *steering* — four a round,
+you choose what leaves. Sift is *throughput* — more cards flow past you and you do not choose
+which. It can eat a card you wanted, which is what makes it cost something beyond its 2 AP.
 
 **Guard is a prepare, not a defend.** It moved on 2026-08-06 and went 2 → 3 AP with the change: it
 does not answer one blow, it dampens a whole turn, and that is a thing you put up before the
@@ -100,11 +147,18 @@ consequence of the concept list rather than a target.
 the one that hits back first costs nothing, and it lands the counter early enough to kill the
 attacker mid-turn.
 
-`[?]` **Dodge and Riposte are a tier, not a choice.** Riposte is exactly Dodge plus a Quick,
+`[?]` **Dodge and Riposte are a tier, not a choice.** Riposte is exactly Dodge plus a Jab,
 priced exactly as the two together (2 + 1 = 3), so it strictly dominates Dodge whenever it is
 affordable — Riposte is only *better* than Dodge, never *different*. What stops it being
 redundant is the cap on actions per round: one card doing two jobs beats two cards. Being
 played with deliberately before changing anything.
+
+**Feint narrows this without closing it** *(2026-08-08)*. Attacking into a Riposte normally
+costs the attacker `str/2` in counter-damage; a Feint strips the Riposte and takes no counter,
+so Riposte's punish clause is now something that can be defused and Dodge's cannot be — there
+is nothing on a Dodge to defuse. That makes the two differ in what an opponent can do *about*
+them, which is weaker than differing in what they do, so the `[?]` stands. Feint strips
+Ripostes before Dodges, matching the order they are spent in.
 
 ### Concepts and deck composition
 
@@ -112,13 +166,30 @@ played with deliberately before changing anything.
 adding concepts, not just a description of the starting deck — a new concept arrives as a set
 of five.
 
-Six concepts × five = **30 cards**, implemented. A hand of eight against that makes the draw a
-real decision. Every concept named here now exists; the deck is complete rather than a
-fragment of a longer list.
+Twelve concepts × five = **60 cards**, implemented 2026-08-08. A hand of eight against that is
+13% of the deck, against 27% when the deck was 30 — **doubling the deck halved consistency**,
+which is exactly why Sift exists and why `discardsPerRound` is now a number to watch rather
+than a generous placeholder.
 
-`Quick` exists in `internal/combat` as an `ActionKind` costing 1 for `str/2`, is in no deck,
-and is not a concept. It remains homeless — but Riposte's counter-damage is deliberately
-defined as the same figure, so it is at least a named quantity now.
+**The deck list is data.** `data/cards.json` holds the twelve concepts and the elements each
+ships in, loaded beside `combatants.json`; `startingDeck` is built from it. Cost, category and
+damage stay in `internal/combat` — the dependency direction forbids the rules package reading
+`data`, and cost is about to stop being a property of the card anyway (see *Rings*). The JSON
+carries the cost tier as **documentation with a check**: the loader asserts every declared tier
+against `ActionKind.Cost()` and fails loudly rather than letting two sources of truth drift.
+
+`Quick` was renamed **Jab** on 2026-08-08 and given its five cards. It had been an `ActionKind`
+with a cost and damage and no concept — "homeless" — because which of the rules' actions appear
+in a deck was treated as a deckbuilding question. Filling the 1-AP attack cell answered it.
+Riposte's counter-damage is still defined as the same figure, so "hits back for a Jab" is now a
+sentence rather than a coincidence.
+
+**52 was considered and rejected.** The playing-card instinct is real but it argues for 13 ranks
+x 4 suits, and the fifth "suit" here is `basic` — which this document calls the absence of an
+element, not a colour of its own. With `basic` a variant the deck lives on multiples of five and
+52 is unreachable; without it, 13 concepts x 4 elements hits 52 exactly but every card carries
+an element and nothing is plain. The grid decides it instead: 12 concepts is what three types by
+four tiers produces, and 60 is what that costs.
 
 ### Long press
 
@@ -149,6 +220,12 @@ cards — is `[?]` and not assumed.
 `basic` is the absence of an element, not a fifth colour. It replaced `none`/`plain` in the
 code's naming.
 
+**Poison has no cards and never did** — corrected 2026-08-08. Two places said otherwise (the
+colour table above, and a comment in `combat_deck.go` claiming poison was in the starting deck
+"because it predates the split"). `primaries` has only ever held basic, fire, ice, lightning and
+earth, so `conceptDeck` has never built a poison card. The constant and its green exist and are
+unused, which is fine; the claim that they were dealt was not.
+
 ### Colour
 
 | Element | Colour |
@@ -158,7 +235,7 @@ code's naming.
 | ice | medium blue |
 | lightning | yellow |
 | earth | brown |
-| poison | green *(currently in the deck; leaves when poison becomes secondary)* |
+| poison | green *(reserved; no poison card is dealt — see below)* |
 
 Two collisions are live and unresolved: **lightning yellow is also `enemySwatch`**, and
 **poison/earth green-brown sits near `playerSwatch`** — "green is you, yellow is them" is
@@ -327,17 +404,30 @@ has to remember to extend.
 | 3 of one attack card | **`<Card>` Flurry** | opponent loses one action |
 | 5 of one attack card | **`<Card>` Onslaught** | opponent loses their whole turn |
 
-So today: Strike Flurry, Strike Onslaught, Heavy Flurry, Heavy Onslaught, Quick Flurry, Quick
-Onslaught. **Heavy Onslaught is five Heavies at 4 AP each — 20 points, and near enough
-impossible.** It is a rule anyway, deliberately, so that engine-building has something absurd
-to aim at.
+So today, one pair per attack card: **Jab, Strike, Feint and Heavy** — eight combos. **Heavy
+Onslaught is five Heavies at 4 AP each — 20 points, and near enough impossible.** It is a rule
+anyway, deliberately, so that engine-building has something absurd to aim at.
+
+Two of those eight arrived by the family working as designed rather than by anyone adding them:
+**Feint got a pair by being an attack card**, and **Jab's pair became reachable** the moment Jab
+entered the deck, having been generated but undrawable while `Quick` was in no deck at all.
+
+**Combo IDs shifted on 2026-08-08 and this was the last cheap moment for that.** `FlurryID` is
+`comboFlurryBase + ComboID(a)`, derived from the card's raw enum value, and the five new concepts
+had to be inserted *in category order* — the deck overlay sorts on that raw value to group the
+piles the way a turn resolves. So Strike moved from 3 to 5 and its combos from 103/203 to
+105/205. Harmless only because **no profile exists yet**, which is the very thing the derived-ID
+scheme was designed to protect. Once discovery persists, inserting a concept mid-enum silently
+re-locks combos the player has found, and the enum's category ordering and the ID stability
+become a genuine conflict. `[?]` Resolve it before a profile ships — most likely by giving
+`ActionKind` an explicit stable ID for combo purposes and letting the enum order serve the sort.
 
 **Per card, not per category** *(decided 2026-08-07, after a category-wide version shipped
-first)*. `AnyOf(CategoryAttack)` made any three attacks combo, so a Quick counted the same as a
+first)*. `AnyOf(CategoryAttack)` made any three attacks combo, so a Jab counted the same as a
 Heavy and the reward went to whatever you happened to draw. Naming a combo for the card it is
 built on is what makes it worth *building toward*: three Strikes is a deck you assembled. It
 also leaves room for the effects to differ per card later — a Heavy Flurry has every reason to
-hit harder than a Quick one, and a category-wide combo could never say so.
+hit harder than a Jab one, and a category-wide combo could never say so.
 
 **IDs are derived from the card** (`FlurryID(a)`, `OnslaughtID(a)`), not from a position in a
 list. Discovery persists on the profile, so an ID that shifted when a card was inserted would
@@ -368,6 +458,31 @@ turn, whenever that is*) rather than two spelled differently per side.
 **A stagger deletes cards before combos are matched**, so a staggered duelist cannot combo back
 with a turn it never took.
 
+### `[?]` Count-based on element: the five-of-a-colour combo
+
+**Five cards of the same element doubles your action points next round** *(added 2026-08-08, not
+built)*. The first combo that counts an element rather than a card.
+
+**It is an all-in round by construction.** The action cap is five, permanently, so five
+same-element cards *is* your entire turn — there is no room for an off-colour card. And because
+matching runs on the resolved order rather than the queue, a single off-element card can land in
+the middle of the sequence after phases regroup it and break the run outright. Nothing else in
+the game asks for a whole turn of one colour, which is what makes it worth a doubling.
+
+Two things stand between this and existing, and the first is the more important:
+
+- **`internal/combat` cannot see elements at all.** `ResolveRound` takes `[]ActionKind`; element
+  lives on the screen's `actionCard`. A `Step` matches an exact card or a category and there is
+  no element predicate to add one to. This is the *same* prerequisite ring discounts need — see
+  *Rings* — so **one piece of work unblocks ring discounts, flip rings and this combo together**,
+  and that is the argument for doing it next.
+- **"Double your AP" is a new reward kind, not a table entry.** `BankAP` is flat and additive;
+  doubling is multiplicative. Adding it is a field on `Effect` plus one place applying it — the
+  cost the framework charges on purpose. `[?]` **Whether to pay it.** At the current 6 AP a
+  doubling *is* `BankAP: 6`, which is free and needs no framework change; the two only diverge
+  once `Spd` or a ring moves the base — and that divergence is arguably the reason to want the
+  real multiplier, since a reward that scales with investment rewards building toward it.
+
 ### Sequence-based
 
 An ordered pair of elements, where **order changes the result**. Not yet built; the framework
@@ -388,7 +503,7 @@ needs an `Effect` field beyond the three above.
 ### `[?]` Whether the enemy draws on this at all
 
 **Open, and deliberately left open on 2026-08-07 rather than settled early.** Combos are
-symmetric today: `Swarm1` forms a Quick Flurry off four Quicks every round and staggers the
+symmetric today: `Swarm1` forms a Jab Flurry off four Jabs every round and staggers the
 player for it. `tools/balance` says that makes it **unbeatable by all three postures** — see
 `TODO.md`, which is where the fix is tracked.
 
@@ -398,8 +513,8 @@ affix could plausibly have attacks the player never sees and combos of its own, 
 the symmetry here is a temporary convenience rather than a rule.
 
 The pricing note worth keeping either way: every costing in this document reasons from the
-player's budget — three Strikes is 6 AP, five is 10 — and `Swarm1` gets four Quicks for 4 AP
-because `Quick` costs 1. **A combo counting cards is priced by whoever has the cheapest cards.**
+player's budget — three Strikes is 6 AP, five is 10 — and `Swarm1` gets four Jabs for 4 AP
+because `Jab` costs 1. **A combo counting cards is priced by whoever has the cheapest cards.**
 
 ### Requirements
 
@@ -428,11 +543,32 @@ because `Quick` costs 1. **A combo counting cards is priced by whoever has the c
 **Done 2026-08-06.** The cap is five, and it is `Duelist.MaxActions()` beside `ActionPoints()`
 rather than the screen's old `maxSelected` constant. It moved for a concrete reason as well as
 a tidy one: **the opponent's planner has to obey it exactly as the player's selection does**,
-and a cap enforced only by the screen was a cap the enemy ignored. It is a method rather than a
-constant so a brand or ring raising it has somewhere to bite without touching a call site.
+and a cap enforced only by the screen was a cap the enemy ignored.
+
+**The cap is five permanently, and nothing may ever raise it** *(decided 2026-08-08)*. This
+reverses the reason it was made a method — "so a brand or ring raising it has somewhere to bite"
+— and the reversal is the point:
+
+- **A fixed five is what makes hand concepts possible.** Poker hands exist *because* you always
+  hold exactly five; that is what lets "a flush" be a permanent, learnable, nameable thing
+  rather than a coincidence of how big your hand happened to get. The game is building toward
+  named five-card shapes — three of one attack, five of one element — and every one of them
+  needs the five to be a constant the player can plan against for the life of the run.
+- **A growable cap would dilute every shape as it grew.** "Five of one element" is an all-in
+  commitment at a cap of five and routine at a cap of seven. The combos would quietly get
+  cheaper every time capacity went up, which is the opposite of a reward for building toward
+  them.
+- **It is still a method, and still should be.** Rings and brands need somewhere to bite for
+  everything *else* they do, and a method that reads the duelist costs nothing. What changed is
+  that this particular lever is off the table: **no ring, brand or combo raises `MaxActions`.**
+
+The consequence for prepare cards: a 4-AP prepare cannot buy action slots, so Ritual buys
+points instead (+5). An earlier draft of Ritual granted +2 AP and +2 slots specifically to reach
+six- and seven-card combo runs; that is exactly the dilution above and it was cut.
 
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
-than incidental.
+than incidental — and with the cap frozen, a discount ring's ceiling is five free cards rather
+than an ever-widening round.
 
 ---
 
@@ -446,6 +582,37 @@ than incidental.
   one less. Not a budget increase; a per-card discount. This is the expensive branch and it is
   the chosen one.
 - Rings also boost stats and bend other rules.
+- **No ring changes how many cards can be played.** `MaxActions` is frozen at five — see *A
+  round is bounded twice*. A ring may make five cards cheaper, never make it six.
+
+### Flip rings — the element-transform ring
+
+**A ring that maps one element onto another across the whole deck** *(added 2026-08-08)*. A
+"frozen lightning" ring turns every lightning card into an ice card, so a deck holding 12 of
+each now holds 24 ice and no lightning.
+
+**This is the ring the five-of-an-element combo needs to exist.** At 12 cards per element in a
+60-card deck, drawing five of one in a hand of eight is a fluke you cannot build toward. A flip
+doubles the pool and turns the combo into a deck you assembled — which is the whole stated
+purpose of combos.
+
+- **It is deliberately more powerful than a discount ring**, and that is accepted. The primary
+  engine-building of this game is the interaction of rings, brands and how the deck has been
+  altered; rings having very different magnitudes is what makes mixing them an act of judgement
+  rather than an ordering.
+- **It is the same primitive as an enemy affix.** An affix already maps `basic → fire` across an
+  enemy's deck (see *Enemies*). One transform mechanism, pointed at either side — build it once.
+- **It is cheaper to implement than the discount ring.** A flip is a pure transform on a card's
+  element and never touches `Cost()`, so it does not require the "cost becomes a property of the
+  pairing" rewrite. It still needs element to reach `internal/combat` for the combo to *match* on
+  it.
+- **Flips do not compose.** Every flip reads the card's *original* element, so lightning→ice and
+  fire→ice both land on their own sources and cannot chain. Without that rule two flips could
+  cascade a deck to a single colour and the order they were bought in would change the result.
+- `[?]` Whether a flip's source element can be one that another equipped flip targets — allowed
+  under the no-compose rule above, but it means two rings can both feed the same colour, which is
+  a 36-of-60 monochrome deck. Watch it before deciding whether the cap is the ring slots or a
+  rule.
 
 **Discounting matching cards is why element must cross into `internal/combat`.** Cost stops
 being a property of the card and becomes a property of the pairing, so `Cost()`, `CostOf()`,
@@ -476,8 +643,22 @@ unused. Earth has none.
 
 ## Brands
 
-Brands of power expand capacity and bend rules — more rings, more actions, cheaper or free
-cards, stat boosts. Otherwise undefined.
+**Brands alter the container; rings alter the contents** *(decided 2026-08-08)*. That is the
+axis, and it is what tells you which of the two a new power belongs to:
+
+| | Brands | Rings |
+|---|---|---|
+| What they touch | the chassis — hand size, total discards per round, ring slots | the cards — elements, costs, and the stats that feed them |
+| Removable | **never.** You brand yourself and you do not take it off | freely; five equipped, swap as you like |
+| Scope | **for the run** | for the run, but re-chosen after every fight |
+
+- **"Permanent" means for the run, not across runs** — confirmed 2026-08-08. A brand is a
+  commitment made *inside* a run that cannot be undone, which is a different thing from
+  meta-progression. Combo *discovery* is the profile-scoped mechanic; brands are not.
+- **More actions is struck from the list.** Brands were previously recorded as granting "more
+  actions"; the action cap is now permanently five and nothing raises it. A brand growing hand
+  size is the nearest legal thing and is a container change, so it fits the axis.
+- Otherwise still open — capacity and rule-bending, with the above as the test for what counts.
 
 Like rings, they have **concrete definitions that never really change**, which makes them a fit
 for the `data/` pattern: JSON beside a small Go loader.

@@ -116,14 +116,14 @@ func TestQueuedOrderSurvivesInsideACategory(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	first, _, _ := ResolveRound(a, b, []ActionKind{Heavy, Quick}, nil, 1)
-	second, _, _ := ResolveRound(a, b, []ActionKind{Quick, Heavy}, nil, 1)
+	first, _, _ := ResolveRound(a, b, []ActionKind{Heavy, Jab}, nil, 1)
+	second, _, _ := ResolveRound(a, b, []ActionKind{Jab, Heavy}, nil, 1)
 
-	if got := playedActions(first); !actionsEqual(got, []ActionKind{Heavy, Quick}) {
-		t.Errorf("played %v, want [Heavy Quick]", got)
+	if got := playedActions(first); !actionsEqual(got, []ActionKind{Heavy, Jab}) {
+		t.Errorf("played %v, want [Heavy Jab]", got)
 	}
-	if got := playedActions(second); !actionsEqual(got, []ActionKind{Quick, Heavy}) {
-		t.Errorf("played %v, want [Quick Heavy]", got)
+	if got := playedActions(second); !actionsEqual(got, []ActionKind{Jab, Heavy}) {
+		t.Errorf("played %v, want [Jab Heavy]", got)
 	}
 }
 
@@ -134,7 +134,7 @@ func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 	aPlan := []ActionKind{Heavy, Dodge, Gather}
-	bPlan := []ActionKind{Quick, Guard}
+	bPlan := []ActionKind{Jab, Guard}
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
 
@@ -213,13 +213,13 @@ func TestHeavyHitsTwiceAsHardAsStrike(t *testing.T) {
 	}
 }
 
-func TestQuickHitsForHalfButNeverZero(t *testing.T) {
+func TestJabHitsForHalfButNeverZero(t *testing.T) {
 	// Str 1 halves to 0 under integer division; a hit that does nothing would make
-	// low-Strength duels unresolvable, so Quick floors at 1.
-	events, _, _ := ResolveRound(duelist(1, 10, 100), duelist(1, 10, 100), []ActionKind{Quick}, nil, 1)
+	// low-Strength duels unresolvable, so Jab floors at 1.
+	events, _, _ := ResolveRound(duelist(1, 10, 100), duelist(1, 10, 100), []ActionKind{Jab}, nil, 1)
 
 	if got := firstDamage(t, events, SideA); got.Amount != 1 {
-		t.Errorf("Quick damage at Str 1 = %d, want 1", got.Amount)
+		t.Errorf("Jab damage at Str 1 = %d, want 1", got.Amount)
 	}
 }
 
@@ -275,7 +275,7 @@ func TestAGuardCoversExactlyOneOpposingTurn(t *testing.T) {
 		t.Fatal("A's guard should still be standing at the round boundary")
 	}
 
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Quick}, []ActionKind{Strike}, 2)
+	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Jab}, []ActionKind{Strike}, 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
 		t.Errorf("round 2 hit after the guard expired = %d, want full 10", hit.Amount)
 	}
@@ -415,7 +415,7 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 		t.Fatalf("A ended round 1 with %d dodges, want 1 unspent", a1.Dodges)
 	}
 
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Quick}, []ActionKind{Strike}, 2)
+	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Jab}, []ActionKind{Strike}, 2)
 	if n := damageCount(round2); n != 2 {
 		t.Errorf("damage events in round 2 = %d, want 2 — the dodge expired at A's turn", n)
 	}
@@ -520,13 +520,20 @@ func TestCategoriesCoverEveryAction(t *testing.T) {
 	// A new action with no category would silently fall into attack and resolve in the
 	// wrong phase. Pin the whole table instead.
 	want := map[ActionKind]Category{
-		Gather:  CategoryPrepare,
-		Guard:   CategoryPrepare,
-		Quick:   CategoryAttack,
-		Strike:  CategoryAttack,
-		Heavy:   CategoryAttack,
+		Gather: CategoryPrepare,
+		Sift:   CategoryPrepare,
+		Guard:  CategoryPrepare,
+		Ritual: CategoryPrepare,
+
+		Jab:    CategoryAttack,
+		Strike: CategoryAttack,
+		Feint:  CategoryAttack,
+		Heavy:  CategoryAttack,
+
+		Brace:   CategoryDefend,
 		Dodge:   CategoryDefend,
 		Riposte: CategoryDefend,
+		Mirror:  CategoryDefend,
 	}
 
 	if len(AllActions) != len(want) {
@@ -610,7 +617,7 @@ func TestRoundIsDeterministic(t *testing.T) {
 	b := duelist(9, 17, 300)
 
 	aPlan := []ActionKind{Strike, Guard, Gather}
-	bPlan := []ActionKind{Quick, Riposte}
+	bPlan := []ActionKind{Jab, Riposte}
 
 	first, a1, b1 := ResolveRound(a, b, aPlan, bPlan, 1)
 	second, a2, b2 := ResolveRound(a, b, aPlan, bPlan, 1)

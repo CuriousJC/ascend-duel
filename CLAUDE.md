@@ -43,9 +43,13 @@ The project is **source-available, not open source**, and is intended to be sold
 - **No GPL, ever.** Every dependency must be permissive (MIT / BSD / Apache-2.0) or it
   cannot go into a product licensed this way. Check the license before adding anything
   to `go.mod`, and flag it in the PR.
-- **Assets need provable licenses.** The Tyrian placeholder art is a known release
-  blocker — informal blog-post permission, not a license. Do not add assets with
-  unclear provenance; "found it online" is not sufficient for a paid release.
+- **Assets need provable licenses.** Do not add assets with unclear provenance; "found
+  it online" is not sufficient for a paid release.
+  **The Tyrian art was the known blocker and it is gone as of 2026-08-09** — every file
+  is deleted and nothing references one. What replaced the enemies is PVGames creature
+  art from the Humble *Isometric Assets Galore* bundle, whose licence permits shipping
+  inside a game; the pack and its terms are in `.scratch/flat-creatures` (gitignored).
+  Everything else in `assets/` is either first-party or generated at runtime.
 - The pre-relicense Apache 2.0 grant on already-published commits is irrevocable and
   the owners have accepted that. Do not propose rewriting history over it.
 
@@ -62,6 +66,7 @@ go run -tags idleexit .     # closes itself after two minutes with nobody at the
 go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
 go run ./tools/balance      # what every enemy does to the fighter, as a table
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
+go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 ```
 
@@ -257,9 +262,10 @@ hand-rolling costs little and buys full control.
 
 ### Glyphs are generated, not drawn — and not scaled from one colour
 
-[internal/systems/glyphs.go](internal/systems/glyphs.go) generates the 64x64 pixel-art
-glyphs on the action cards, drawn at 1:1. **Generated art has no provenance question**, which is exactly
-the problem making the Tyrian set a release blocker, so this is the pattern to prefer for
+[internal/systems/glyphs.go](internal/systems/glyphs.go) generates the pixel-art
+glyphs on the action cards, drawn at 1:1 — 64x64 for the damage sword and the runner, 22x22
+for the three category glyphs. **Generated art has no provenance question**, which is
+exactly the problem the Tyrian set used to be, so this is the pattern to prefer for
 interface art.
 
 It is a **generator, not a bitmap**. A glyph is a filled silhouette described by horizontal
@@ -277,28 +283,35 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   *alpha*, so the shading survives and only the weight changes. Tinting one toward the card
   colour would collapse it back to a flat silhouette.
 - **Colour was kept unspent, and elements spent it — on the card, not the glyph.** There is
-  still one palette, `white`, with no hue at all, and both glyphs use it. What carries
-  the element is the card *surface*: fire orange, ice blue, lightning yellow, poison green,
-  and near-white for no element at all. Holding the glyphs hueless from 2026-08-03 is
-  exactly what made that possible a day later, and they should stay that way — a coloured
-  glyph on a coloured card says it twice and leaves nothing for the next distinction.
-- **A glyph cannot be made smaller, and that sets the floor on a card's size.** `GlyphSize`
-  is 64 and `CardGlyphScale` is 1: authored at the size it is shown, integer scales only, and
-  1 is already the floor. Two glyphs therefore need 2x64 plus a gap down and 64 plus a
-  numeral across, whatever else a card does. A "smaller" card is one with less padding and
-  smaller text around an identical column — which is why the deck overlay's card is 138x186
-  against the hand's 180x264. Do not reach for a fractional scale; it drops pixels out of a
-  rim that is one pixel thick.
-- **The badge count is the card's height budget, and it is spendable.** There were three
-  glyphs until the initiative clock went on 2026-08-06. That single deletion took 50px off
-  `deckCardStyle`, which is what bought the deck overlay a third grid row on the same day the
-  deck doubled to 30 cards. Adding a third badge back spends that row.
-  **Three rows is no longer enough.** The deck doubled again to 60 on 2026-08-08, so the 24-slot
-  grid now shows fewer than half the cards outside the hand and draws its "+N more not shown"
-  line on every look. That line firing is the design working — it was written so a grown deck
-  would produce a visible shortfall rather than a panel that lied — but the panel needs a real
-  answer (paging, or grouping identical cards under a count), and it cannot be a bigger grid,
-  because a card is already at its floor.
+  still one palette, `white`, with no hue at all, and every glyph uses it. Holding them
+  hueless from 2026-08-03 is what left colour free to mean "element", and they should stay
+  that way — a coloured glyph on a coloured card says it twice and leaves nothing for the
+  next distinction. **What carries the element is now the card's *border*, not its surface**
+  (see the colour section below).
+- **A hueless glyph on an off-white card loses most of its bevel, and that is accepted.**
+  `Specular` is pure white and `Highlight` is `{232,236,242}`, so against the off-white
+  surface the lit side of a bevel largely disappears and a glyph reads as outline plus
+  shading. The near-black `Outline` carries legibility, so nothing is broken — but the
+  five-value palette is mostly spent, and `cards.Surface` is one constant if that ever
+  needs re-testing.
+- **Glyphs are not all one size, and `systems.SizeOf(kind)` is the authority.** The damage
+  sword and the runner are 64; the three category glyphs are **22**. Never assume
+  `GlyphSize` at a call site — a small glyph centred in a 64-pixel hole is the failure.
+- **A glyph cannot be resized, so a smaller one is a *different drawing*.** `CardGlyphScale`
+  is 1 and integer-only: the rim is derived one pixel thick, so a third-size copy of a 64px
+  shape is a third-size copy of its outline with nothing inside. The 22px category glyphs
+  were authored at 22, and at that size the detail budget is nearly nothing — a 5px feature
+  is two pixels of rim around three of fill. **They are told apart by proportion before any
+  detail is legible**: the sword narrow and vertical, the shield wide-shouldered, the book
+  wider than tall. That is the design constraint to work with, not around.
+- **`GlyphKind` is append-only.** The glyph cache keys on the ordinal, so inserting a kind
+  mid-enum silently re-points every existing entry — the same hazard `MECHANICS.md` records
+  for the concept enum and its combo IDs.
+- **The card's height budget is spent differently now, not enlarged.** It was two 64-pixel
+  badges (damage and cost). Cost became a stack of dash marks and the category *word*
+  became a 22-pixel glyph, so the column is one badge, one small glyph and some bars, and
+  the card is the same 180x264 with ~94px of deliberately empty surface at the bottom for a
+  long-press description. Adding a badge back spends that.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.
@@ -315,6 +328,10 @@ moves and is understood together. It is deliberately **not** in `assets/`: every
 is `//go:embed`ed and loaded at runtime, and the sheet is a picture *of* generated art, not
 an input to it. Filing it as an asset would imply the game reads it, which is the opposite
 of the property that makes generating glyphs worth doing.
+
+**The sheet measures each glyph rather than assuming 64**, since they are no longer all
+one size, and centres a small one on its own width so a row reads as different sizes rather
+than as misalignment.
 
 **The sheet draws each glyph twice: at `systems.CardGlyphScale` and enlarged.** The
 actual-size row is the one that answers "can I read this". The scale constant lives in
@@ -354,6 +371,30 @@ is no build step.**
 - **There is no way to mute it yet.** That wants an on-screen button, not a hotkey — the
   input vocabulary has no keyboard. See `TODO.md`.
 
+### Cards: the border carries the element, not the surface
+
+**Reversed on 2026-08-09.** A card used to be an element-coloured surface with an
+incidental border. It is now a **constant off-white surface** (`cards.Surface`) with a
+**thick coloured border** carrying the element, and the whole card is drawn by
+`internal/cards`. Three things fell out of that reversal and are easy to re-break:
+
+- **A near-white border on an off-white card is invisible.** The elementless card was
+  `{235,235,235}` as a *surface* and read fine; as a border it vanishes. `basic` is
+  therefore a mid grey in `cards.BorderOf`, and a test fails if it is "restored".
+- **`ColorAtStrength` is the wrong tool on a light card, and this has already caused one
+  bug.** It scales toward *black*, which reads as quieter only against a dark ground. On
+  an off-white card a border scaled down comes out darker than the surface and therefore
+  *louder* than the live card beside it — exactly what put the Resolution pane's idle rows
+  in front of its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a colour
+  toward whatever it actually sits on. Card state is expressed as distance to the surface.
+- **Cost is dash marks and the category is a glyph**, not text and not a numeral. Costs run
+  1..4; a fifth tier grows the dash stack into the damage badge and is a layout change, not
+  just a bigger number. `TestLeftColumnDoesNotCollide` fails rather than rendering it.
+
+Rings reuse the whole format with a pink border and artwork instead of glyphs, and no cost
+or category because a ring is neither played from a hand nor resolved in a round. Nothing
+in the game builds one yet — `tools/cardsheet` is the only place they exist.
+
 ### Colour: name one colour and scale it — but the rule is narrower than it reads
 
 **This applies to widget *state*, not to widget *surfaces*.** A button naming crimson and
@@ -370,6 +411,10 @@ surface's own light and shade coming from a palette. Until then it still governs
 that has not been given one.
 
 
+
+**And it applies against a dark ground.** `ColorAtStrength` scales toward black, so on a
+light surface it makes things louder rather than quieter — see the card section above.
+`systems.ColorToward` is the light-ground counterpart and the two are not interchangeable.
 
 A widget names the colour it wants at **full strength**, and its other states are
 scaled down from that with `systems.ColorAtStrength`. `models.Button.BaseColor` is the
@@ -493,20 +538,39 @@ Key conventions:
 
 ### Package layout and its layering
 
-- `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["spritesheet_png"]`, `gs.Fonts["kubasta"]`).
+- `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["giantrat_png"]`, `gs.Fonts["kubasta"]`), and it is **independent of where the file sits** — see the Art section. There are two extra loaders for callers that cannot take an Ebitengine type: `LoadFontData()` and `LoadImageData()` hand back raw bytes, because `internal/cards` and `tools/cardsheet` render without a graphics context. `gs.FontData` carries the fonts for exactly that reason.
 - `data/` — `//go:embed`s `combatants.json` and unmarshals it into `map[string]CombatantData` keyed by `CombatantRecord`. This is the pattern for all static game data: JSON next to a small Go loader. `SpriteSheet` in the JSON must match an `assets` map key, and `SpriteRect` is `[x0, y0, x1, y1]` used with `SubImage` to slice the sheet. `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.**
   - **`cards.json` + `card_data.go` is the deck list** (added 2026-08-08): the twelve concepts, the elements each ships in, and how many copies. `startingDeck` is built from it, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. **Cost, category and damage are deliberately *not* here**; they are rules and live in `internal/combat`, which cannot import `data`. The JSON's `CostTier` is documentation *with a check*: `data.CheckCostTiers` asserts every declared tier and category against `ActionKind.Cost()`/`.Category()` and `buildStartingDeck` **panics at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
 - `internal/idle/` — the unattended-run timer, behind the `idleexit` build tag. Two files, `_on`/`_off`, exactly like `internal/trace`.
+- `internal/cards/` — **draws an action card into a plain Go image, and creates no
+  Ebitengine images.** Same pattern and same reason as `systems.RenderGlyph`: it is what
+  lets `tools/cardsheet` render a card with no window. `Spec` is plain data (name,
+  category, cost, damage, element, optional artwork, state) rather than a
+  `combat.ActionKind`, so the sheet can draw combinations the rules cannot produce — a
+  border colour nothing uses, a ring. `Style` is the geometry: `Hand`, `Mini` (half size,
+  the deck overlay) and `RingStyle`. Text is set with `golang.org/x/image` because
+  Ebitengine's `text/v2` needs an `*ebiten.Image`; both the game and the tool go through
+  this, so the sheet cannot drift from what is drawn. `internal/screens/card_art.go` is the
+  bridge and holds the cache — rendering writes every pixel in Go and is far too slow to do
+  per frame.
 - `internal/music/` — the score, **synthesised at startup from a MIDI file** (added 2026-08-09). See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
-- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — the same property, and the same reason, as `internal/music`; those two are the only tested packages and the rule is windowlessness, not the package name. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` now has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **The combat screen is six files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
   - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `buildStartingDeck` (which reads `data/cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay.
+    **The overlay shows every card you own**, in five rows of one element each, at
+    `cards.Mini` overlapped so all but six pixels of each shows. Two rules govern it and
+    both have been broken once: *a card does not move when it is played, it only dims* — so
+    the hand is included rather than excluded, and availability is the **last** sort key,
+    never the first — and the pitch is a constant sized for a full row, never derived from
+    how many cards are currently in one. Rows sort attack, defend, prepare, cheapest first;
+    `categoryRank` is written out rather than read off the enum, because the enum's order is
+    *resolution* order and that is a rule.
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
   - `combat_hud.go` — everything around the round: the character strip, the caption box, `drawBox`, the enemy sprite, and both health bars.
   - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.
@@ -521,8 +585,36 @@ Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`
 
 - Sprites are drawn via `colorm.DrawImage` so a `colorm.ColorM` can tint/hue-shift them; buttons and shapes use `vector.DrawFilled*` into a scratch `ebiten.NewImage`.
 - Positioning convention: translate by `-w/2, -h/2` first to center the origin, then translate to the target coordinate. Buttons store `ScreenX`/`ScreenY` as their *center*, and both `UpdateButton` (hit testing) and `DrawButton` re-derive the top-left from it.
-- Rounded rectangles are done by drawing an opaque mask then compositing with `ebiten.BlendSourceIn` — see `DrawHealthBar` and `CreateRoundedRecMask` in [combat.go](internal/screens/combat.go).
+- **Rounded rectangles are done two ways, and that is a known inconsistency.** Health bars
+  draw an opaque mask and composite it with `ebiten.BlendSourceIn` — see `DrawHealthBar`
+  and `CreateRoundedRecMask` in [combat_hud.go](internal/screens/combat_hud.go). **Cards
+  cannot use that**: it takes an `*ebiten.Image`, its body is `vector.DrawFilledCircle`,
+  and `BlendSourceIn` is a GPU blend mode, none of which exist without a graphics context —
+  and `internal/cards` must render without one so the review tool can call it. Cards
+  therefore rasterise their corners in plain Go (`cards/shape.go`), hard-edged, because the
+  glyphs on them are 1:1 pixel art. Migrating health bars onto that path would collapse the
+  two; it has not been done.
 
 ## Art
 
-Sprites come from the free Tyrian graphics set (see README). `assets/tyrian_graphics/` holds the raw source sheets; only the consolidated sheets referenced by `embed.go` are actually compiled in.
+**`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `enemy/`,
+`ring/`, `effect/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
+refiling something is one line there and nothing anywhere else.
+
+**The map keys did not move with the files.** They are the lookup names used across the
+game, and `data/combatants.json` writes them down — tying a key to a path would mean a data
+migration every time a file was refiled. A new asset is still three edits: the file, an
+`//go:embed` var, and a map entry.
+
+**Enemy sprites are single frames, not sheets.** `assets/enemy/*.png` is one west-facing
+idle frame per creature, cut from a PVGames 21x21 animation sheet and trimmed to its opaque
+bounds. The sheets are 2-7 MB each and `LoadAssets` decodes every image at startup, so
+embedding four would cost roughly **250 MB of resident memory** to show four static
+sprites; the frames are 41 KB together. The full sheets stay in `.scratch/flat-creatures`
+(gitignored) for when these get animated — that folder's README documents the grid, the
+frame table and the facing order.
+
+**A combatant may legitimately have no sprite.** `Fighter1` has none: the character block
+replaced the fighter's sprite and health bar, so nothing draws one. `NewCombatantFrom`
+accepts a nil sheet and `drawCombatant` checks. That is the normal case, not a missing
+asset.

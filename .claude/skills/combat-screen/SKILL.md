@@ -20,11 +20,17 @@ top of, and they are not repeated below:
 
 - **The input vocabulary** — left click, drag and drop, long press. No right click, ever,
   and no keyboard outside the one seed field.
-- **Glyphs are generated, and a glyph cannot be scaled below 1.** `GlyphSize` is 64 and the
-  art is authored at the size it is shown, so the glyph column is the *floor* on a card's
-  size rather than something that scales with it. A smaller card gets less padding and
-  smaller text around an identical column.
-- **Colour: name one colour and scale it** with `systems.ColorAtStrength`, never add to it.
+- **Glyphs are generated and cannot be resized.** Authored at the size shown, integer
+  scales only, 1 is the floor. They are **not all one size** — the damage sword is 64, the
+  category glyphs are 22 — so ask `systems.SizeOf(kind)` and never assume `GlyphSize`.
+- **The card is drawn by `internal/cards`, not by this screen.** `drawCard` builds a
+  `cards.Spec`, pulls a cached image and blits it; it draws nothing itself. Change how a
+  card looks there, then `go run ./tools/cardsheet` and refresh the tab — the tool and the
+  screen run the same code, so the sheet cannot lie.
+- **Colour: name one colour and scale it** with `systems.ColorAtStrength` — but that scales
+  toward *black*, so on the off-white card surface it makes things louder, not quieter. Use
+  `systems.ColorToward` against a light ground. The card's element is its **border** now,
+  not its surface.
 - **Widgets are hand-rolled**, `models` struct plus `systems.Update*`/`Draw*`. No toolkit.
 - **Determinism**, which the deck's `rng` and the `deckSeed` placeholder live under.
 - **Which of the screen's six files holds what** — the map is in `CLAUDE.md`'s Package layout
@@ -60,9 +66,12 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 - **The category is deliberately not concealed** on enemy rows. It is what decides where a row
   sits, so withholding it would make the pane unreadable rather than merely uncertain. It took
   over that job from the initiative number — see `concealedLabel`.
-- **The card shows its category as a word**, under the name, where the initiative badge used
-  to be a number. Three states are not a quantity, so a badge with no number beside it would
-  read as a badge missing one.
+- **The card shows its category as a glyph** — a sword for attack, a kite shield for
+  defend, an open book for prepare — in the top-left corner above the cost. It was a word
+  under the name until 2026-08-09. Three states are not a quantity, which is why it was
+  never a numbered badge; a 22-pixel silhouette is read before any text is.
+- **Cost is a stack of dash marks**, under the category glyph, one per point. Not a numeral
+  and not a badge. Costs run 1..4 and a fifth tier is a layout change, not a bigger number.
 
 ### Combos, and the one thing they changed on this screen
 

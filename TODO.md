@@ -19,6 +19,26 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
+- [ ] **A mute button.** `internal/music` landed 2026-08-09 and the score loops across
+      every screen with **no way to turn it off**, which is not shippable. It cannot be a
+      hotkey — the input vocabulary has no keyboard — so it is an on-screen speaker
+      toggle, built the ordinary way: a struct in `models`, `UpdateMute`/`DrawMute` in
+      `systems`. Two open questions before building it:
+      - **Where does it live?** A corner of every screen means every scene owns one, or
+        it gets drawn centrally after the scene like the debug overlay is. The second is
+        less code and puts a widget outside the "scenes own their own widgets" rule; the
+        first is consistent and repeated four times.
+      - **Does it want to be a volume slider instead?** A slider is inside the input
+        vocabulary (drag), and settings values are "a row of buttons or a slider, never
+        a number you type". But there is no settings screen yet to put one on, and a
+        binary toggle is what an unmutable loop actually needs today.
+- [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
+      note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
+      of a drum tail past bar 13. That is inaudible and the tail is folded back over the
+      start anyway, but the rounding is a *guess at intent*. If a future score wants a
+      loop that is not its full length — an intro bar played once, say —
+      `audio.NewInfiniteLoopWithIntro` already supports it and the loop point would need
+      to come from the file (a marker meta-event) rather than from arithmetic.
 - [x] **Edge-triggered clicks.** `UpdateButton` used `ebiten.IsMouseButtonPressed`
       (level-triggered), firing `OnClick` every tick the mouse was held. Now uses
       `inpututil.IsMouseButtonJustPressed` / `JustReleased`, arming on press and firing

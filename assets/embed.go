@@ -47,6 +47,15 @@ var frozeneffect_png []byte
 //go:embed thunder-effect.png
 var thundereffect_png []byte
 
+// MUSIC
+//
+// Scores are Standard MIDI Files, not recorded audio: internal/music synthesises them
+// at startup. That is why a whole track is a kilobyte and why there is no soundfont
+// here whose licence would have to be cleared before the game could be sold.
+//
+//go:embed ascending.mid
+var ascending_mid []byte
+
 // FONTS
 //
 //go:embed FiraSans-Regular.ttf
@@ -75,6 +84,17 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["tyrian_monster_sprites_png"] = loadImage(tyrian_monster_sprites_png)
 
 	return assets
+}
+
+// LoadMusic returns the raw bytes of each embedded score, keyed the same way as the
+// image and font maps. They are handed back undecoded because the decoder lives in
+// internal/music, and assets sits below it — nothing here may reach up.
+func LoadMusic() map[string][]byte {
+	music := make(map[string][]byte)
+
+	music["ascending_mid"] = ascending_mid
+
+	return music
 }
 
 // LoadFonts returns a mapped set of fonts for the game

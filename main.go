@@ -7,6 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/game"
+	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -50,6 +51,17 @@ func main() {
 	g.GlobalState.Assets = assets.LoadAssets()
 	g.GlobalState.Fonts = assets.LoadFonts()
 	g.GlobalState.Combatants = data.LoadCombatants()
+
+	// The score is a MIDI file synthesised to PCM here at startup rather than a
+	// recorded track — see internal/music for why. It loops for the whole session
+	// across every screen, and there is no way to mute it yet, which wants an
+	// on-screen button rather than a hotkey: the input vocabulary has no keyboard.
+	//
+	// Not having a sound device is not a reason to refuse to run, so a failure here is
+	// reported and stepped over. Nothing below this line depends on it.
+	if err := music.Start(assets.LoadMusic()["ascending_mid"]); err != nil {
+		log.Println(err)
+	}
 
 	// Widgets are no longer wired up here. Each scene builds its own in Init, so main
 	// does not need to know which screens have buttons or what pressing them does.

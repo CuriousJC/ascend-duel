@@ -36,3 +36,13 @@ analysis.md
 # regenerates all of them, so committing them would only ever produce a diff of fifty
 # near-identical PNGs.
 /demo/
+
+# Card previews written by `go run ./tools/cardsheet`. Nearly forty PNGs plus a page, all
+# regenerated on every run — the same argument as /demo/ above, and the reason this does
+# *not* follow tools/glyphsheet, which commits its single glyphs.png so GitHub can render
+# an image diff in review. If a committed review artefact turns out to be wanted, the
+# answer is one composite PNG beside these rather than committing all of them.
+#
+# Anchored, so a future /internal/cardsheet/ or similar is not swallowed by accident.
+/tools/cardsheet/*.png
+/tools/cardsheet/index.html

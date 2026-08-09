@@ -3,8 +3,8 @@ package screens
 import (
 	"fmt"
 	"image"
-	"image/color"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -67,26 +67,16 @@ const (
 	handBandLeftPct  = 4
 	handBandRightPct = 96
 
-	// The glyph column, down the left edge of the card the way a playing card puts its rank
-	// and suit in a corner. These have to fit inside cardHeight now rather than setting it:
-	// glyphColumnTop + 2*cardGlyphSize + glyphGap = 200, with 64 pixels to spare.
+	// The card's *interior* — the glyph column, the name and category positions, the
+	// corner radius, the cost dashes — no longer lives here. It moved to
+	// internal/cards.Hand when card drawing was extracted so a command-line tool could
+	// render the same picture; see card_art.go and tools/cardsheet.
 	//
-	// The spare space is the initiative clock's, and it is deliberately not being filled.
-	// Two badges sit high on the card with open surface below them, which is where a
-	// long-press description or a status line goes when either exists.
-	//
-	// The scale lives in systems so the contact sheet draws its actual-size row at exactly
-	// what the card uses. See systems.CardGlyphScale.
-	cardGlyphScale = systems.CardGlyphScale
-	cardGlyphSize  = systems.GlyphSize * cardGlyphScale
-
-	glyphInset     = 12
-	glyphGap       = 8
-	glyphColumnTop = 64
-	glyphNumberGap = 10
-
-	cardNameTop     = 14
-	cardCategoryTop = 40
+	// cardWidth and cardHeight stay, because the *row* is laid out from them — the pitch,
+	// the band, the drop indicator and the hit rectangles are all functions of a card's
+	// footprint rather than of its contents. They are duplicated from cards.Hand rather
+	// than read from it because they are consts and it is a var, and
+	// TestCardFootprintMatchesTheRenderer fails the build if the two ever disagree.
 
 	// dragThreshold is how far the cursor has to travel with the button held before a
 	// press counts as a drag rather than a click. Without it every click would jitter
@@ -94,76 +84,15 @@ const (
 	dragThreshold = 4
 )
 
-// cardStyle is a card's geometry at one size. Two exist: the hand's, and a smaller one for
-// the deck overlay, where the point is to see the whole deck at once rather than to read
-// any one card closely.
+// The card's look — its geometry, colours, rounded corners and cost dashes — lives in
+// internal/cards, which draws a card into a plain Go image with no graphics context.
+// cards.Hand and cards.Deck are the two styles that used to be cards.Hand and
+// deckCardStyle here.
 //
-// **A glyph cannot be made smaller.** systems.GlyphSize is 64 and CardGlyphScale is 1: the
-// art is authored at exactly the size it is displayed, and a fractional scale would drop
-// pixels out of a rim that is one pixel thick. glyphScale must therefore stay a whole
-// number, and 1 is already the floor.
-//
-// That makes the glyph column the hard floor on a card's size, not a thing that scales with
-// it: two glyphs need 2*64 plus a gap down, and 64 plus a numeral across, whatever else the
-// card does. A "small" card is one with less padding and smaller text around the same
-// column — which is why deckCardStyle is only a little narrower than the hand's.
-type cardStyle struct {
-	width, height int
-
-	nameTop  int
-	nameSize float64
-
-	// The category line, directly under the name. It is a word rather than a glyph
-	// because it is not a quantity — setup, attack and defend are three states, and a
-	// badge with no number beside it would read as a badge missing its number.
-	categoryTop  int
-	categorySize float64
-
-	glyphScale     int
-	glyphInset     int
-	glyphGap       int
-	glyphColumnTop int
-	glyphNumberGap int
-	numberSize     float64
-
-	border float32
-}
-
-var (
-	// handCardStyle is the card as the hand draws it, and the size every layout constant
-	// above is written for.
-	handCardStyle = cardStyle{
-		width: cardWidth, height: cardHeight,
-		nameTop: cardNameTop, nameSize: 20,
-		categoryTop: cardCategoryTop, categorySize: 13,
-		glyphScale: cardGlyphScale, glyphInset: glyphInset, glyphGap: glyphGap,
-		glyphColumnTop: glyphColumnTop, glyphNumberGap: glyphNumberGap, numberSize: 26,
-		border: 2,
-	}
-
-	// deckCardStyle is the card as the deck overlay draws it: the same glyphs as the hand,
-	// in a tighter frame. 138x186 against the hand's 180x264 — most of the saving is padding
-	// and text size, because the glyph column underneath is identical and cannot give any
-	// back. Its column comes to 44 + 2*64 + 4 = 176 inside 186.
-	//
-	// It lost 50 pixels of height when the initiative clock went: two glyphs need a shorter
-	// column than three, and that is what buys the overlay a third grid row for a deck that
-	// doubled in size on the same day.
-	deckCardStyle = cardStyle{
-		width: 138, height: 186,
-		nameTop: 8, nameSize: 16,
-		categoryTop: 26, categorySize: 11,
-		glyphScale: 1, glyphInset: 10, glyphGap: 4,
-		glyphColumnTop: 44, glyphNumberGap: 8, numberSize: 20,
-		border: 1,
-	}
-)
-
-// cardCategoryColor is the category line's ink. Deliberately hueless: the card surface is
-// already carrying the element in colour, and a second coloured thing on the same face
-// would have the two competing to be read first. Grey lets the word be found without
-// claiming to be the loudest thing on the card.
-var cardCategoryColor = color.RGBA{R: 210, G: 214, B: 222, A: 255}
+// **That split is what lets `go run ./tools/cardsheet` review the art without launching
+// the game**, the same reason systems.RenderGlyph is free of Ebitengine. Both this screen
+// and that tool call cards.Render and blit the result, so the sheet cannot show something
+// the game does not draw. See card_art.go for the caching this screen adds on top.
 
 // paletteCard is one card in the hand: the card itself, and whether it is queued this
 // round. Selection is the only thing the hand adds to a card that is not also true of it
@@ -522,7 +451,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// by the bar going red, after the fact. A selected card never dims: clicking it off
 		// has to stay open, and it is the way out of an over-allocation.
 		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
-		drawCard(gs, screen, s.cardSlot(gs, i).Min, handCardStyle,
+		drawCard(gs, screen, s.cardSlot(gs, i).Min, cards.Hand,
 			c.actionCard, enabled, c.selected, s.fighter.Str)
 	}
 
@@ -610,125 +539,29 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 	}
 
 	at := image.Pt(gs.MouseX-s.drag.grabDX, gs.MouseY-s.drag.grabDY)
-	drawCard(gs, screen, at, handCardStyle,
+	drawCard(gs, screen, at, cards.Hand,
 		s.drag.card.actionCard, true, s.drag.card.selected, s.fighter.Str)
 }
 
-// cardBadge is one glyph on a card and the number written across it.
-type cardBadge struct {
-	kind  systems.GlyphKind
-	value int
-}
-
-// badgesFor is what a card says about itself in numbers: what it hits for, and what it
-// costs. Damage is omitted when there is none — a sword reading zero on a Guard is worse
-// than no sword at all — which is also why the column packs from the top rather than
-// filling fixed slots. The card does not change size either way.
+// drawCard draws one action card at `at`, in the given style.
 //
-// Two badges, not three: the initiative clock went when initiative did. What replaced it is
-// not another number but the category line under the card's name — setup, attack or defend
-// is now the thing that decides when a card resolves, and it is a word rather than a figure.
-func badgesFor(action combat.ActionKind, str int) []cardBadge {
-	badges := make([]cardBadge, 0, 2)
-	if dmg := action.Damage(str); dmg > 0 {
-		badges = append(badges, cardBadge{systems.GlyphDamage, dmg})
-	}
-	return append(badges, cardBadge{systems.GlyphActionPoints, action.Cost()})
-}
-
-// drawCard draws one action card: its name across the top, then a column of glyphs down
-// the left edge with each number written beside its glyph — the way a playing card puts
-// its rank and suit in a corner and leaves the rest of the face free.
+// **It no longer draws anything itself.** The picture comes from internal/cards, which
+// renders it into a plain Go image; this function's whole job is to turn the screen's
+// types into a cards.Spec, get the matching image out of the cache, and blit it.
 //
-// The glyphs replaced the "init 3" line and the bare cost numeral rather than joining
-// them. Two of the three numbers were already text, and a card that says everything twice
-// is harder to read than one that says it once.
-//
-// The surface is the card's element at full strength, scaled down for its state — so a
-// plain card is grey-white, a fire one burnt orange, and the state still reads the same way
-// on both. The pane green it used to be drawn in was vestigial: the colour of a pane
-// deleted on 2026-08-02, still filling cards that no longer sat inside anything.
-//
-// str is the wielder's Strength, since damage is a property of the pairing rather than of
-// the card: the same Strike hits for more in stronger hands.
-//
-// Everything is measured off the style rather than off the package constants, so drawing
-// the deck at half size is a struct literal instead of a second copy of this function.
-func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cardStyle,
+// str is the wielder's Strength, because damage is a property of the pairing rather than
+// of the card: the same Strike hits for more in stronger hands. It therefore forms part
+// of the cache key — see cardKey.
+func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
 	c actionCard, enabled, selected bool, str int) {
 
-	action, base := c.action, c.element.color()
-
-	fill, border := systems.ColorAtStrength(base, 45), base
-	switch {
-	case !enabled:
-		// 30 rather than the buttons' deeper dimming: white scaled to 20% lands on the same
-		// grey as the background and an unaffordable plain card simply vanished.
-		fill, border = systems.ColorAtStrength(base, 30), systems.ColorAtStrength(base, 45)
-	case selected:
-		fill = systems.ColorAtStrength(base, 65)
+	img := cardImage(gs, cardSpec(c, enabled, selected, str), st)
+	if img == nil {
+		return
 	}
-
-	x, y := float32(at.X), float32(at.Y)
-	w, h := float32(st.width), float32(st.height)
-	vector.DrawFilledRect(screen, x, y, w, h, fill, false)
-	vector.StrokeRect(screen, x, y, w, h, st.border, border, false)
-
-	nameOp := &text.DrawOptions{}
-	nameOp.GeoM.Translate(float64(at.X+st.glyphInset), float64(at.Y+st.nameTop))
-	text.Draw(screen, action.String(),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: st.nameSize}, nameOp)
-
-	// The category, under the name. It is the card's most load-bearing fact now — it decides
-	// which phase the card resolves in, which is the whole of the round's structure — and it
-	// cannot be worked out from anything else on the face. Drawn dimmer than the name so the
-	// card still reads as its concept first and its phase second.
-	catOp := &text.DrawOptions{}
-	catOp.GeoM.Translate(float64(at.X+st.glyphInset), float64(at.Y+st.categoryTop))
-	catOp.ColorScale.ScaleWithColor(cardCategoryColor)
-	if !enabled {
-		catOp.ColorScale.ScaleAlpha(0.4)
-	}
-	text.Draw(screen, action.Category().String(),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: st.categorySize}, catOp)
-
-	numberFace := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: st.numberSize}
-	pal := systems.PaletteOf(systems.PaletteWhite)
-	glyphSize := systems.GlyphSize * st.glyphScale
-
-	for i, badge := range badgesFor(action, str) {
-		gx := at.X + st.glyphInset
-		gy := at.Y + st.glyphColumnTop + i*(glyphSize+st.glyphGap)
-
-		// Drawn in its own palette, deliberately untinted. Scaling a five-value palette
-		// toward the card's colour collapses the bevel back into a flat silhouette, which
-		// is the whole thing the palette exists to avoid. A disabled card dims the glyph
-		// by alpha instead, so the shading survives and only the weight changes.
-		//
-		// Scaled by a whole number and nothing else — see cardStyle.glyphScale.
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(float64(st.glyphScale), float64(st.glyphScale))
-		op.GeoM.Translate(float64(gx), float64(gy))
-		if !enabled {
-			op.ColorScale.ScaleAlpha(0.4)
-		}
-		screen.DrawImage(systems.Glyph(badge.kind, systems.PaletteWhite), op)
-
-		// Beside the glyph rather than across it: the column has width to spare now, and a
-		// number sitting in open card is easier to read than one fighting the bevel it is
-		// printed on. Drawn in the palette's specular, the lightest value it has, so it
-		// still belongs to the art.
-		numOp := &text.DrawOptions{}
-		numOp.GeoM.Translate(
-			float64(gx+glyphSize+st.glyphNumberGap),
-			float64(gy+glyphSize/2))
-		numOp.SecondaryAlign = text.AlignCenter
-		numOp.ColorScale.ScaleWithColor(pal.Specular)
-		if !enabled {
-			numOp.ColorScale.ScaleAlpha(0.4)
-		}
-		text.Draw(screen, fmt.Sprintf("%d", badge.value), numberFace, numOp)
-	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(at.X), float64(at.Y))
+	screen.DrawImage(img, op)
 }
 
 func abs(n int) int {

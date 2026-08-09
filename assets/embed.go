@@ -12,39 +12,69 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
+// Files are grouped into directories by what they are for — `game/`, `enemy/`, `ring/`,
+// `effect/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
+// directory rename is a one-line edit per asset here and nothing anywhere else.
+//
+// **The map keys did not change with the move.** They are the lookup names used across the
+// game and, for the enemies, written into `data/combatants.json` — so tying them to a
+// filesystem path would mean a data migration every time a file was filed differently.
+// The three edits a new asset needs are still: the file, an //go:embed var, and a map
+// entry in the loader.
+
 // IMAGES
 //
-//go:embed title.png
+//go:embed game/title.png
 var title_png []byte
 
-//go:embed title-easter-egg.png
+//go:embed game/title-easter-egg.png
 var titleEaster_png []byte
 
-//go:embed tyrian_monster_sprites.png
-var tyrian_monster_sprites_png []byte
+// CREATURES
+//
+// One west-facing idle frame per enemy, cut out of the PVGames creature sheets in
+// `.scratch/flat-creatures` and trimmed to its opaque bounds.
+//
+// **Frames, not sheets, and the difference is not small.** Those sheets are a 21x21 grid
+// of every animation in every facing, 2.4 to 7.3 MB each — and LoadAssets decodes every
+// image at startup, so embedding four of them would cost ~250 MB of resident memory to
+// show four static sprites. The frames below are 41 KB together. The full sheets stay in
+// `.scratch/`, so animating these later is a matter of going back for them.
+//
+// Provenance: PVGames, bought in the Humble *Isometric Assets Galore* bundle. The licence
+// permits shipping them inside a game; see the README in that folder.
+//
+// The frame is 133 of 441 — idle, facing west — from `128 + 1*5`, the vendor's facing
+// order being South, West, East, North, ...
+//
+//go:embed enemy/giantrat.png
+var giantrat_png []byte
 
-//go:embed tyrian_ship_sprites.png
-var tyrian_ship_sprites_png []byte
+//go:embed enemy/dragonfly.png
+var dragonfly_png []byte
 
-//go:embed spritesheet.png
-var spritesheet_png []byte
+//go:embed enemy/frogman.png
+var frogman_png []byte
 
-//go:embed fire-ring.png
+//go:embed enemy/direwolf.png
+var direwolf_png []byte
+
+//go:embed ring/fire-ring.png
 var firering_png []byte
 
-//go:embed frozen-ring.png
+//go:embed ring/frozen-ring.png
 var frozenring_png []byte
 
-//go:embed thunder-ring.png
+//go:embed ring/thunder-ring.png
 var thunderring_png []byte
 
-//go:embed fire-effect.png
+//go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
-//go:embed frozen-effect.png
+//go:embed effect/frozen-effect.png
 var frozeneffect_png []byte
 
-//go:embed thunder-effect.png
+//go:embed effect/thunder-effect.png
 var thundereffect_png []byte
 
 // MUSIC
@@ -53,18 +83,18 @@ var thundereffect_png []byte
 // at startup. That is why a whole track is a kilobyte and why there is no soundfont
 // here whose licence would have to be cleared before the game could be sold.
 //
-//go:embed ascending.mid
+//go:embed sounds/ascending.mid
 var ascending_mid []byte
 
 // FONTS
 //
-//go:embed FiraSans-Regular.ttf
+//go:embed game/FiraSans-Regular.ttf
 var firaSansRegular []byte
 
-//go:embed RobotoFlex.ttf
+//go:embed game/RobotoFlex.ttf
 var robotoFlexRegular []byte
 
-//go:embed Kubasta.ttf
+//go:embed game/Kubasta.ttf
 var kubasta []byte
 
 // LoadAssets returns a mapped set of images for the game
@@ -73,15 +103,16 @@ func LoadAssets() map[string]*ebiten.Image {
 
 	assets["title_png"] = loadImage(title_png)
 	assets["titleEaster_png"] = loadImage(titleEaster_png)
-	assets["spritesheet_png"] = loadImage(spritesheet_png)
 	assets["firering_png"] = loadImage(firering_png)
 	assets["frozenring_png"] = loadImage(frozenring_png)
 	assets["thunderring_png"] = loadImage(thunderring_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
-	assets["tyrian_ship_sprites_png"] = loadImage(tyrian_ship_sprites_png)
-	assets["tyrian_monster_sprites_png"] = loadImage(tyrian_monster_sprites_png)
+	assets["giantrat_png"] = loadImage(giantrat_png)
+	assets["dragonfly_png"] = loadImage(dragonfly_png)
+	assets["frogman_png"] = loadImage(frogman_png)
+	assets["direwolf_png"] = loadImage(direwolf_png)
 
 	return assets
 }
@@ -107,6 +138,41 @@ func LoadFonts() map[string]*text.GoTextFaceSource {
 
 	return fonts
 
+}
+
+// LoadImageData returns the raw bytes of embedded images, keyed like the other maps.
+//
+// LoadAssets above decodes into *ebiten.Image, which needs a graphics context and so
+// cannot be called from a command-line tool. tools/cardsheet renders card artwork with
+// no window, so it takes the file and decodes it with image/png itself.
+//
+// Only the images something actually needs this way are listed. Adding one here does not
+// change what LoadAssets does — both read the same embedded bytes.
+func LoadImageData() map[string][]byte {
+	images := make(map[string][]byte)
+
+	images["firering_png"] = firering_png
+	images["frozenring_png"] = frozenring_png
+	images["thunderring_png"] = thunderring_png
+
+	return images
+}
+
+// LoadFontData returns the raw bytes of each embedded font, keyed like the other maps.
+//
+// LoadFonts above hands back Ebitengine's GoTextFaceSource, which is what the screens
+// draw with. internal/cards cannot use those: it renders to a plain Go image with no
+// graphics context, so it sets text through golang.org/x/image and needs the file
+// itself. Both read the same embedded bytes, so the game and the contact sheet cannot
+// end up in different fonts.
+func LoadFontData() map[string][]byte {
+	fonts := make(map[string][]byte)
+
+	fonts["firaSansRegular"] = firaSansRegular
+	fonts["robotoFlexRegular"] = robotoFlexRegular
+	fonts["kubasta"] = kubasta
+
+	return fonts
 }
 
 // loadFont Function flip embedded font into GoTextFaceSource

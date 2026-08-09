@@ -160,12 +160,17 @@ func (s *CombatScene) drawFighterBlock(gs *state.GlobalState, screen *ebiten.Ima
 // drawCombatant draws one duelist and its health bar. Only the enemy uses it now — the
 // fighter's sprite and bar became the character block — but it stays shaped for either.
 func (s *CombatScene) drawCombatant(gs *state.GlobalState, screen *ebiten.Image, c *entities.Combatant, hPosition, vPosition float64) {
-	var cm colorm.ColorM
+	// A combatant may have no sprite — the fighter does not, since the character block
+	// replaced it. The health bar below still draws, so this stays useful for a duelist
+	// that is all numbers.
+	if c.Sprite != nil {
+		var cm colorm.ColorM
 
-	op := &colorm.DrawImageOptions{}
-	op.GeoM.Translate(-float64(c.Sprite.Bounds().Dx())/2, -float64(c.Sprite.Bounds().Dy())/2) //center our origin
-	op.GeoM.Translate(hPosition, vPosition)                                                   //position
-	colorm.DrawImage(screen, c.Sprite, cm, op)
+		op := &colorm.DrawImageOptions{}
+		op.GeoM.Translate(-float64(c.Sprite.Bounds().Dx())/2, -float64(c.Sprite.Bounds().Dy())/2) //center our origin
+		op.GeoM.Translate(hPosition, vPosition)                                                   //position
+		colorm.DrawImage(screen, c.Sprite, cm, op)
+	}
 
 	DrawHealthBar(gs, screen, hPosition, vPosition, c.CurrentLife, c.MaxLife)
 }

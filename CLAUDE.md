@@ -113,6 +113,18 @@ git commit -s                                   # sign-off, per CONTRIBUTING.md
 Tests live in `internal/combat` — the only package that can be tested without a
 window, by design. Keep it that way: rules go in `combat`, not in screens.
 
+**"Needs no window" is not the same as "needs no display server", and CI found the
+difference the hard way.** On Linux, `ebiten/internal/ui` calls `glfw.Init()` from a package
+`init()`, so *linking* Ebitengine into a test binary is enough to panic on a missing
+`DISPLAY` — before a single test function runs. Three of the four tested packages link it:
+`internal/screens` directly, and `internal/cards` and `internal/music` because their tests
+import `assets`, which hands back `*ebiten.Image`. Only `internal/combat` is genuinely
+clean. Both workflows therefore run the Linux test step under `xvfb-run -a`, which supplies
+a throwaway X server nothing ever draws to. Windows is unaffected — Ebitengine is pure Go
+there. **If a package's tests start importing `assets`, they have joined that group**; the
+package's own no-Ebitengine rule still holds and is still worth holding, but it no longer
+buys a display-free test run.
+
 **What cannot be unit-tested gets a tool instead.** `internal/screens` needs a window, so
 anything it decides is checked by launching the game; anything the *rules* decide about
 balance is checked by `tools/balance`, which plays whole duels through the real

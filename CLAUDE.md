@@ -322,6 +322,38 @@ actual-size row is the one that answers "can I read this". The scale constant li
 drift from the game — an earlier version showed only the enlarged row, and the glyphs duly
 looked acceptable in review and clunky in play.
 
+### Audio is generated too, and for the same reason
+
+[internal/music](internal/music) plays the score. `assets/ascending.mid` is a **Standard
+MIDI File — a kilobyte of notes** — and `internal/music` synthesises it to PCM once at
+startup. `main.go` starts it after assets load; it loops for the whole session across
+every screen. Editing the tune means editing the MIDI file. **Nothing is baked and there
+is no build step.**
+
+- **Ebitengine cannot play MIDI.** Its audio package decodes MP3, Ogg Vorbis and WAV,
+  and that is all. The three ways past that were converting to Ogg offline, embedding a
+  SoundFont plus a synthesiser, or generating the audio in Go.
+- **The third was chosen for the glyph argument**: generated output has no provenance
+  question. A SoundFont is megabytes with a licence to clear, and a rendered Ogg carries
+  that same question inside it *invisibly* — which is worse, because the problem stops
+  being visible in the diff. `oto` (Apache-2.0, first-party to Ebitengine) is the only
+  dependency this added.
+- **What it costs is fidelity.** This is an oscillator, so the score sounds like a
+  chiptune. The current file is two synth basses and a drum part, so the distance is
+  short — **a score wanting strings or a piano would not survive the trip, and that is
+  the moment to revisit the decision rather than to keep bolting on oscillators.**
+- **`smf.go` and `synth.go` may not import Ebitengine**, exactly like `internal/combat`.
+  That is what makes them testable, and `music_test.go` pins the shape of the real file:
+  85 notes, three channels, a 13-bar loop, and a render that is byte-identical twice.
+  **Generated output fails quietly** — a synth handed a file it half-understands plays
+  something, and what it plays is wrong in a way nobody notices.
+- **No `math/rand`**, per the determinism rules. The drum noise is a 15-bit shift
+  register seeded from each note's start frame, so two renders cannot differ.
+- **Failing to open the audio device is logged, never fatal.** A machine with no sound
+  card still plays the game.
+- **There is no way to mute it yet.** That wants an on-screen button, not a hotkey — the
+  input vocabulary has no keyboard. See `TODO.md`.
+
 ### Colour: name one colour and scale it — but the rule is narrower than it reads
 
 **This applies to widget *state*, not to widget *surfaces*.** A button naming crimson and
@@ -468,8 +500,9 @@ Key conventions:
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
 - `internal/idle/` — the unattended-run timer, behind the `idleexit` build tag. Two files, `_on`/`_off`, exactly like `internal/trace`.
+- `internal/music/` — the score, **synthesised at startup from a MIDI file** (added 2026-08-09). See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
-- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. This is the only package with tests, because it is the only one that needs no window. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — the same property, and the same reason, as `internal/music`; those two are the only tested packages and the rule is windowlessness, not the package name. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **The combat screen is six files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.

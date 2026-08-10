@@ -56,11 +56,21 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if st.Width <= 0 || st.Height <= 0 {
 		return nil, fmt.Errorf("cards: style has no size (%dx%d)", st.Width, st.Height)
 	}
-	if f == nil && st.needsFont() {
+	if f == nil && st.needsFont() && !s.FaceDown {
 		return nil, fmt.Errorf("cards: no fonts")
 	}
 
 	img := image.NewRGBA(image.Rect(0, 0, st.Width, st.Height))
+
+	// The back is drawn before anything else is considered, and returns. Every other field
+	// on the Spec describes the face, so a face-down card that consulted them would be
+	// deciding things it does not draw — and the font check above is skipped for the same
+	// reason: a back has no text, so requiring a parsed font to draw one would let a
+	// missing font empty the draw pile.
+	if s.FaceDown {
+		drawBack(img, st)
+		return img, nil
+	}
 
 	border, surface, ink := s.colors()
 	roundedBorder(img, 0, 0, st.Width, st.Height, st.CornerRadius, st.BorderWidth, border, surface)
@@ -196,6 +206,45 @@ func drawDamage(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA
 	return drawTextVCentered(dst, f, st.NumberSize,
 		fmt.Sprintf("%d", s.Damage),
 		gx+size+st.GlyphNumberGap, gy+size/2, ink(NumberInk))
+}
+
+// backMarkWidthPct sizes the mark against the card it is centred on.
+//
+// **Derived rather than a Style field, unlike every other measurement here.** The face
+// cannot work that way — its glyphs are 1:1 pixel art with a one-pixel rim, so a Mini card
+// has to *drop* the damage badge rather than shrink it, and each size states its own
+// numbers. A triangle has no rim to lose and no detail to fall below, so one proportion
+// draws the same back at every size and cannot drift between them. If a size ever wants
+// its own mark, this is one line to promote into Style.
+const backMarkWidthPct = 40
+
+// backRimWidth is one pixel at every size, and does not come from Style.BorderWidth.
+//
+// The face's border is 6 pixels because it carries the element and has to be seen across a
+// table of cards; this is a hairline whose only job is to separate one back from the back
+// behind it. Scaling it with the card would make the pile's edges heavier exactly where the
+// cards are smallest and the separation matters most.
+const backRimWidth = 1
+
+// drawBack draws the back of a card: the same silhouette as a face, filled dark, with a
+// pale triangle centred on it.
+//
+// **The silhouette has to match the face exactly** — same footprint, same corner radius —
+// because these are the same object seen from the other side. A back with its own shape
+// would change outline halfway through a flip, and a stack of them would read as a
+// different kind of thing sitting next to the hand rather than as the cards in it.
+//
+// The edge is a thin neutral rim rather than the face's thick coloured border. The face's
+// border is where the element is said, so a back carrying one would name the card under it;
+// a hueless one-pixel edge says only "this is where the card stops", which the draw pile
+// needs — see BackRim.
+func drawBack(dst *image.RGBA, st Style) {
+	roundedBorder(dst, 0, 0, st.Width, st.Height, st.CornerRadius, backRimWidth,
+		BackRim, BackSurface)
+
+	w := st.Width * backMarkWidthPct / 100
+	h := w * 866 / 1000 // equilateral: sqrt(3)/2, in integers
+	fillTriangleUp(dst, st.Width/2, (st.Height-h)/2, w, h, BackMark)
 }
 
 // blitGlyph composites a generated glyph, untinted.

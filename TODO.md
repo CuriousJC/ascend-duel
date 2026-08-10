@@ -1092,27 +1092,86 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         round*, not a rules description, so this is a second table — and the rule it describes
         lives in `internal/combat`, which must not grow UI strings. Same shape as
         `actionPhrases`: the screen describes, the rules name.
-- [ ] **Draw and discard animation, with both piles on screen.** Cards should visibly travel:
-      out of the draw pile into the hand, and out of the hand into the discard. Physical
-      movement, not a count changing.
-      - **Discard pile on the left, showing its cards.** Draw pile further right on the same
-        horizontal axis, drawn at **half a button — 69x25**, buttons being 138x50.
-      - **The draw pile cannot show faces.** It is shuffled and ordered, so drawing its
-        contents would hand the player their next cards and make the shuffle pointless — the
-        same reason `drawPileGrid` sorts rather than showing pile order. A stack
-        representation, not cards. The discard is public information and may show its cards.
-      - Layout is the hard part and is not solved: the bottom band already runs 566→937 and
-        holds eight overlapping 180x264 cards plus three 138x50 buttons, and rings are recorded
-        as wanting a row that *already* does not fit vertically. This competes with that.
-      - **It must not become a per-event dwell table.** Playback pacing is deliberately one
-        constant, `duelTicksPerEvent`, because a switch with a `default` arm silently gave every
-        new event kind the shortest timing — see the history note in
-        [combat.go](internal/screens/combat.go). Card movement is not an event and should be
-        animated on its own clock rather than by adding cases to that one.
-      - Presentation only: **it may never change an outcome.** Same constraint as trace, idle
-        and the debug flags.
-      - Deliberately under-specified beyond the pile placement above, per the owner: worth
-        doing properly when it is picked up rather than designed in advance here.
+- [x] **Draw and discard animation.** *Landed 2026-08-10.* Cards visibly travel: out of the
+      hand and off to the left when they are spent, and back in from the draw pile, turning
+      face up as they come. `internal/screens/combat_flight.go` holds it.
+      - **The Deck button is gone and the draw pile itself is the control.** A stack of card
+        backs at the same 88%, clicked to open the deck overlay and clicked to close it. It
+        wears a **bright yellow ring while the overlay is open**, which is not decoration: the
+        overlay is the only dialog in the game and has no other exit — no Escape key, no right
+        click — so the single live control has to be the most obvious thing on screen. The
+        button used to get that for free by being lit on a dead screen.
+      - **`cards.Stack` is 44x64, smaller than `Mini`, and that is the layout forcing it.**
+        The strip below the AP bar is 86 pixels tall, so the 90x132 half-size card the plan
+        called for does not fit. A *back* survives that where a face would not, because there
+        is no detail to lose — it is a rounded rectangle with a triangle sized as a proportion
+        of the card. The stack's y is measured **down from the AP bar** rather than set as a
+        percentage; at 95% it sat three pixels through the bar, and
+        `TestDeckStackClearsTheAPBarAndTheScreen` now fails rather than letting that return.
+      - **No discard pile is drawn.** Cards accelerate off the left edge and are gone. The
+        earlier plan had a face-up pile on the left mirroring the deck; it was dropped as a
+        second new widget in a band that is already full. The counts beside the AP bar stay.
+      - **The cards move first and the animation catches up.** `spendSelected` does the whole
+        logical move — hand, piles, queue all correct before it returns — and *then* raises
+        flights, so every flight is a ghost of a card that has already gone. The alternative,
+        holding a card in place until its animation finished, would have put "is this card in
+        the hand or not" into `planning()`, the AP budget and the row's own layout.
+      - A flight stores an **index and a row size, not a coordinate** (`slotAt`), because the
+        hand re-lays out the instant a card leaves and the origin no longer exists by the time
+        anything is drawn.
+      - **The flip is a horizontal squash, not a rotation in depth.** Ebitengine's `GeoM` is a
+        2D affine transform and affine transforms cannot do perspective; real foreshortening
+        needs a Kage shader or per-vertex work. Scaling x to zero and back while swapping back
+        for face at the midpoint is the flat version, costs one multiplication, and reads
+        correctly at this speed. **This is the thing to revisit if the turn ever looks cheap.**
+      - Animation needed **nothing** from the card pipeline: `internal/cards` already renders
+        to a plain Go image and `card_art.go` already caches it, so a card in flight is the
+        same cached picture behind a different matrix — no new renders and not one extra cache
+        entry, since the transform happens after the lookup. Flights filter linearly and land
+        at scale 1, so the 1:1 pixel art is only ever resampled while it is moving.
+      - It is animated on **its own clock** (`flightTicks`), not through `eventDwellTicks`, per
+        the note that survived from the original entry: playback pacing is one constant with
+        one caller so a new event kind cannot inherit a timing nobody chose, and card movement
+        is not an event.
+      - Presentation only: **it never changes an outcome.** Same constraint as trace, idle and
+        the debug flags.
+- [x] **Cards resolve on screen, and a combo brackets the ones that formed it.**
+      *Landed 2026-08-10, same session.* This is what answered the entry above's open question
+      — playing a card now looks nothing like throwing one away.
+      - **A card that fires rises out of the hand, holds where it can be read, then stacks in
+        the bottom-left corner.** Full size throughout: no scaling, so nothing is resampled and
+        a resolved card is the same picture the hand drew.
+      - **The pile is the round's history in the order it happened**, and because
+        `ResolutionOrder` regroups a queue into prepare → attacks → defenses, it grows in phase
+        order *without anything on the screen knowing what a phase is*. That is the whole point
+        — the mechanic draws itself.
+      - **Full size means it overlaps the hand row, and that is the deliberate reading.**
+        During playback `planning()` is false and the hand is inert, so the row's space is free
+        at exactly the moment this needs it. What a firing card must *not* cover is the
+        Resolution pane, which is the written record being made at the same time, so it hangs
+        below the pane rather than being centred on the screen.
+      - **The combo ring is `attentionYellow`, the same colour as the deck stack's modal ring**,
+        and there is now exactly one "look here" colour with two users. It rings the *group* and
+        never touches a card, because a card's border is its element — which also makes it the
+        only thing on screen able to say "these three together", the gap the Resolution pane is
+        recorded as having.
+      - **`Event.ComboStart`/`ComboLength` carry the span from the engine.** `ComboHit` always
+        knew it; it just never reached the screen. Deriving it from the combo's pattern length
+        would be a second matcher, and matching is greedy and longest-first — five Strikes are
+        one Onslaught and no Flurries, so a screen counting backwards would bracket the wrong
+        three. `TestLongerComboReportsItsOwnSpan` is that case.
+      - `noteResolved` asks `ResolutionOrder` which card an event belongs to rather than
+        counting, because the third card to resolve is not the third card in the hand.
+      - **Known limitation of the demo, not of the screen:** `demoSendPlan` writes a scripted
+        plan straight into `fighterActions` with nothing selected in the hand — a state the
+        real game cannot reach — so a scripted round captures with an empty corner. Round one is
+        clicked through the real selection path and is the one to look at. Left alone on
+        purpose; see the comment on `demoSendPlan`.
+      - Still open: **the enemy has no cards**, so the pile tells the player's half of the round
+        and then stands still through the opponent's turn. Nothing is wrong, but the pause is
+        visible and may want something in it.
+      - Also open: the pile has no cap. Six actions is fine at a 46px pitch; a ring or a brand
+        raising `MaxActions` past about ten would run it into the middle of the row.
 
 ## Later
 

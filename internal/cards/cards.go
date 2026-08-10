@@ -203,6 +203,29 @@ func (c Category) glyph() (systems.GlyphKind, bool) {
 // the screen, and so a pure-white glyph Specular still has somewhere to go.
 var Surface = color.RGBA{R: 240, G: 239, B: 234, A: 255}
 
+// The back of a card: a dark face with a pale mark centred on it, and nothing else. It
+// says "a card, and you may not see which" — the draw pile is shuffled, so a back that
+// carried an element or a category would leak the very thing the shuffle protects.
+//
+// BackSurface is near-black rather than pure black for the same reason Surface is
+// off-white rather than white: a card has to read as an object on the screen and not as a
+// hole cut in it. BackMark is pure white, the one place on a card that colour is spent on
+// nothing but contrast.
+// BackRim is a thin neutral edge around the back.
+//
+// **It is what makes a pile read as a pile.** Three backs offset by a few pixels are three
+// near-black shapes on a dark screen, and without an edge they merge into one card with a
+// lopsided corner — which is exactly how the first version drew, and the reason this exists.
+//
+// Neutral rather than the element colour, which keeps the rule the back is built on: the
+// border is where a card says which card it is, so a back may have an edge but never a
+// *coloured* one.
+var (
+	BackSurface = color.RGBA{R: 14, G: 14, B: 18, A: 255}
+	BackMark    = color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	BackRim     = color.RGBA{R: 96, G: 98, B: 108, A: 255}
+)
+
 // Ink colours. Hueless on purpose — the border is carrying the only colour on the face.
 var (
 	// NameInk is the concept's name across the top, the thing read first.
@@ -251,4 +274,16 @@ type Spec struct {
 	// border on a light card. The hand's drag-to-reorder will want this; the ring on the
 	// contact sheet is the first thing to use it.
 	Dragging bool
+
+	// FaceDown draws the back instead of the face, and every other field is ignored.
+	//
+	// **A field rather than a separate RenderBack, so the cache does not need to learn
+	// about it.** internal/screens keys its cache on the Spec, so a face-down card is
+	// cached by exactly the machinery that caches every other card — one entry per style,
+	// since nothing else about the Spec reaches the drawing. A second entry point would
+	// have needed a second key, and the two could then disagree about what a card is.
+	//
+	// It is what the draw pile is a stack of, and what a card shows during the first half
+	// of a flip.
+	FaceDown bool
 }

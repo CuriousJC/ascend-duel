@@ -25,6 +25,32 @@ Five streams, each with one job. Reach for the right one rather than searching a
   implemented. It is long; prefer `MECHANICS.md` for "what should this do".
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
 
+## Caveman mode is on in this repo — a trial, and it expires
+
+**Load the `caveman` skill at the start of every session and stay in it.** Started
+2026-08-10, to be judged **on or after 2026-08-17**. It compresses replies in the terminal and
+nothing else.
+
+- **The trial has an end date on purpose.** On 2026-08-17, ask whether it stays. If the
+  answer is no, delete this section and `.claude/skills/caveman/` and everything is back to
+  normal. If it stays, delete these two sentences and leave the rest.
+- **It never touches anything persisted** — code, comments, commit messages, PR bodies,
+  `MECHANICS.md`, `TODO.md`, this file. The skill's own Boundaries section says so and it is
+  the reason the trial is safe: the design record keeps its longhand reasoning. Compression
+  applies to what is typed back into the terminal.
+- **It does not override the instructions that say to argue.** Raising a structural
+  objection, saying where a claim came from, and saying plainly when something is unverified
+  all still happen — in fewer words, not fewer times. **If terseness is eating the
+  reasoning rather than the padding, that is the trial failing**, and it is worth saying so
+  rather than quietly writing shorter.
+- **It drops out by itself for security warnings, irreversible actions and genuine
+  ambiguity**, and should also drop for design discussion, where the argument is the point.
+- Default level is **full**. Ask for `lite` or `ultra` in words; the `/caveman` switcher is
+  a hook that is deliberately not installed. See
+  [.claude/skills/caveman/README.md](.claude/skills/caveman/README.md) for what else was
+  left out and the honest token arithmetic.
+- **"stop caveman" or "normal mode" turns it off for a session** without editing anything.
+
 ## Licensing and IP — read before adding dependencies or assets
 
 The project is **source-available, not open source**, and is intended to be sold
@@ -602,6 +628,20 @@ Key conventions:
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
   - `combat_hud.go` — everything around the round: the character strip, the caption box, `drawBox`, the enemy sprite, and both health bars.
   - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.
+  - `combat_flight.go` — **every card that moves** *(added 2026-08-10)*. Three things, all
+    presentation-only, all on their own clock, and none of which may change an outcome:
+    - The **deck stack** that replaced the Deck button, and its yellow modal ring.
+    - **`cardFlight`** — the discard flying off left and the deal flying back in, turning
+      face up on the way. **A flight is raised only after `spendSelected` has already moved
+      the card**, so it is a ghost of something that has happened rather than a thing in
+      progress; that is what keeps `planning()`, the budget and the row's layout ignorant
+      of it.
+    - **`resolvedCard`** — a card firing during playback: up out of the hand, held below the
+      Resolution pane, then stacked in the bottom-left corner, at full size throughout. The
+      pile is the round's history, and because `ResolutionOrder` regroups into prepare →
+      attacks → defenses it grows in phase order **without this file knowing what a phase
+      is**. A combo brackets its own cards in `attentionYellow`, from the span the engine
+      puts on the event — never worked out here.
   - `seeds.go` — the named opening-hand catalogue.
 
   **The split was a pure move**: every line went across unaltered and the `demoplay` text report was byte-identical before and after. Keep it that way — a file boundary is not a reason to change what a function does.

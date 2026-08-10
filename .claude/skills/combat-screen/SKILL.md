@@ -81,6 +81,12 @@ Landed 2026-08-07. The rules are in `internal/combat/combo.go` and the design is
 - **`combat.MatchCombos` is what to call to preview a combo while the player plans.** It is
   the same matcher the engine uses, so a previewed combo is the combo that fires — by
   construction, not by two pieces of code agreeing. Nothing draws it yet.
+- **A fired combo brackets its own cards, and the span comes from the event** *(2026-08-10)*.
+  `Event.ComboStart`/`ComboLength` say which run of the turn formed it; `ComboHit` always knew
+  and it simply never reached the screen. **Never derive that span from the combo's pattern
+  length.** Matching is greedy and longest-first, so five Strikes are one Onslaught and no
+  Flurries — a screen counting three cards back from the event would confidently bracket the
+  wrong ones. `TestLongerComboReportsItsOwnSpan` pins the case.
 - **A staggered slot is a row that never resolves**, which is the first time the pane has had
   one. `currentSlot` counts `KindStaggered` alongside `KindAction` for exactly this reason —
   one beat per slot, taken or lost — and `TestEverySlotIsEitherTakenOrStaggered` pins it.
@@ -148,9 +154,20 @@ stops the row sliding half a card sideways when one is lifted.
 
 **The buttons are one strip at 95%, under the AP bar.** Discard at 20% and DUEL! at 33% sit
 together, because they are the same choice — **you select a set, then decide what it was
-for** — and the choice belongs next to the cards it is made from. Deck is alone at 88%; it
-changes nothing and belongs nowhere near them. Discard carries one condition DUEL! does
-not: a round's discards can run out.
+for** — and the choice belongs next to the cards it is made from. Discard carries one
+condition DUEL! does not: a round's discards can run out.
+
+**There is no Deck button any more** *(2026-08-10)*. The draw pile itself is the control: a
+stack of card backs at the same 88%, clicked to open the overlay and clicked to close it,
+wearing a **bright yellow ring while the overlay is up**. That ring is load-bearing, not
+decoration — see the overlay's "make its exit the brightest thing on screen" rule below,
+which the old button satisfied for free by being lit on a dead screen. It lives in
+`combat_flight.go` along with the cards that fly out of it.
+
+**Its y is measured down from the AP bar, never as a percentage.** The strip below the bar is
+86 pixels, `cards.Stack` is 44x64 to fit it, and 95% of the screen height put the pile three
+pixels *through* the bar. `TestDeckStackClearsTheAPBarAndTheScreen` fails rather than letting
+that come back.
 
 **DUEL! becomes the way onward when the duel ends**, changing its own label to Next or Retry
 rather than a fourth button appearing. Same slot, same meaning — commit and move the game
@@ -171,6 +188,30 @@ proposed, not spent.
 the single movement — the selected cards go to the discard pile, the draw tops the hand back
 up to `handSize` — and both Discard and the end of a round call it. Two functions doing this
 would be two functions that have to agree.
+
+**A card that fires during playback is drawn by the resolved pile, not by the row**
+*(2026-08-10)*. It rises out of its slot, holds below the Resolution pane, and stacks in the
+bottom-left corner at full size — and because `ResolutionOrder` regroups a queue into prepare
+→ attacks → defenses, **the pile grows in phase order without the screen knowing what a phase
+is.** Three things follow:
+
+- **It has not left the hand.** It leaves at the end of the round with everything else played,
+  which is what keeps the Resolution pane able to narrate from `fighterActions` while the round
+  is still running. `resolvedInHand` hides a *drawing*, exactly like `inboundTo`.
+- **Full size, overlapping the inert hand row, is the deliberate choice.** `planning()` is
+  false during playback, so nothing down there can be clicked and the space is free at exactly
+  the moment this needs it. The Resolution pane is what a firing card must never cover.
+- **`noteResolved` asks `ResolutionOrder` which card an event belongs to.** The third card to
+  resolve is not the third card in the hand, and a screen keeping its own tally lights the
+  wrong one the first time somebody queues a defense before an attack.
+
+**The animation does not own the card, and this is the rule to protect.** `spendSelected`
+completes the whole logical move before it raises a single flight, so a card in the air has
+already gone: the hand, the piles and the queue are correct the instant it returns. The
+tempting alternative — holding a card in its slot until the flight lands — would make
+"is this card in the hand" a question `planning()`, the AP budget and `handBand()` all have
+to answer. What the row does instead is skip *drawing* a slot a card is still flying into
+(`inboundTo`), which is a view concern and stays in `combat_flight.go`.
 
 **The hand persists across rounds** *(changed 2026-08-06)*. It used to empty completely every
 round and deal a fresh eight, justified by "a hand kept back would let a plan be prepared once

@@ -606,3 +606,71 @@ func TestCombosDoNotBreakDeterminism(t *testing.T) {
 		}
 	}
 }
+
+// TestComboEventNamesTheCardsThatFormedIt pins the two fields the combat screen brackets a
+// combo with. Deriving them from the pattern instead would be a second matcher, and matching
+// is greedy and longest-first — so the derived answer and the real one disagree exactly when
+// a longer combo swallowed a shorter one.
+func TestComboEventNamesTheCardsThatFormedIt(t *testing.T) {
+	// Three Strikes, then a Jab that is not part of the run.
+	log, _, _ := ResolveRound(
+		Duelist{MaxLife: 200, CurrentLife: 200, Str: 5, Spd: 20},
+		Duelist{MaxLife: 200, CurrentLife: 200, Str: 5, Spd: 20},
+		[]ActionKind{Strike, Strike, Strike, Jab},
+		nil,
+		1,
+	)
+
+	var combos []Event
+	for _, e := range log {
+		if e.Kind == KindCombo {
+			combos = append(combos, e)
+		}
+	}
+	if len(combos) != 1 {
+		t.Fatalf("%d combos fired, want the one Strike Flurry", len(combos))
+	}
+
+	c := combos[0]
+	if c.ComboStart != 0 || c.ComboLength != flurryRun {
+		t.Errorf("the flurry says it spans [%d,%d), want [0,%d)",
+			c.ComboStart, c.ComboStart+c.ComboLength, flurryRun)
+	}
+
+	// And the span has to name real actions: the run must sit inside the turn that played.
+	var played int
+	for _, e := range log {
+		if e.Kind == KindAction && e.Side == SideA {
+			played++
+		}
+	}
+	if c.ComboStart+c.ComboLength > played {
+		t.Errorf("the combo spans past the end of a turn that played %d actions", played)
+	}
+}
+
+// TestLongerComboReportsItsOwnSpan is the case a screen deriving the span would get wrong:
+// five Strikes are one Onslaught, not a Flurry plus leftovers.
+func TestLongerComboReportsItsOwnSpan(t *testing.T) {
+	log, _, _ := ResolveRound(
+		Duelist{MaxLife: 400, CurrentLife: 400, Str: 5, Spd: 40},
+		Duelist{MaxLife: 400, CurrentLife: 400, Str: 5, Spd: 40},
+		[]ActionKind{Strike, Strike, Strike, Strike, Strike},
+		nil,
+		1,
+	)
+
+	for _, e := range log {
+		if e.Kind != KindCombo {
+			continue
+		}
+		if e.Combo != OnslaughtID(Strike) {
+			t.Errorf("five strikes fired combo %d, want the Strike Onslaught", e.Combo)
+		}
+		if e.ComboLength != onslaughtRun {
+			t.Errorf("the onslaught claims %d cards, want %d", e.ComboLength, onslaughtRun)
+		}
+		return
+	}
+	t.Fatal("five strikes fired no combo at all")
+}

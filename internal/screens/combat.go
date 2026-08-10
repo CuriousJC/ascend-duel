@@ -142,6 +142,17 @@ type CombatScene struct {
 	// respond, so reading the deck cannot accidentally re-plan the round.
 	showDeck bool
 
+	// Cards currently travelling to or from the draw pile. Purely something to look at:
+	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
+	flights []cardFlight
+
+	// The player's cards that have resolved this round, in the order they fired: each one
+	// rises out of the hand, holds where it can be read, then stacks in the bottom-left
+	// corner. The pile is the round's own history, and it is what a combo brackets.
+	//
+	// Cleared when the hand is spent, which is the moment those cards actually leave.
+	resolved []resolvedCard
+
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round; vitae is a placeholder that never moves yet.
 	discardsLeft int
@@ -177,7 +188,6 @@ type CombatScene struct {
 
 	duelButton    *models.Button
 	discardButton *models.Button
-	deckButton    *models.Button
 }
 
 // Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
@@ -202,24 +212,21 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		s.discardButton = models.NewButton(138, 50, "Discard", s.discardSelected)
 		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
 	}
-	if s.deckButton == nil {
-		s.deckButton = models.NewButton(138, 50, "Deck", s.toggleDeck)
-		s.deckButton.BaseColor = color.RGBA{R: 70, G: 130, B: 230, A: 255} // blue
-	}
-
 	// Discard and DUEL! sit together because they are the same choice: both act on the
 	// selection, and pressing one is deciding what that selection was for. They sit
 	// directly under the hand, next to the cards being selected, so the choice is made
-	// where it is expressed. Deck is off at the far end — it changes nothing and belongs
-	// nowhere near them. All three share one band under the row, so it reads as one strip.
+	// where it is expressed.
+	//
+	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile
+	// itself, drawn at the same 88% it stood at — a deck you click rather than a button
+	// naming one. See combat_flight.go.
 	s.discardButton.ScreenX = gs.PctX(20)
 	s.discardButton.ScreenY = gs.PctY(95)
 	s.duelButton.ScreenX = gs.PctX(33)
 	s.duelButton.ScreenY = gs.PctY(95)
-	s.deckButton.ScreenX = gs.PctX(88)
-	s.deckButton.ScreenY = gs.PctY(95)
 
 	s.showDeck = false
+	s.flights = nil
 	s.restart = false
 	s.discardsLeft = discardsPerRound
 	s.vitae = startingVitae
@@ -311,6 +318,13 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
+	// Cards in the air, and the pile they come from. Both are outside every branch below on
+	// purpose: a flight that started before the killing blow should still land, and the deck
+	// stack is the only control that survives its own overlay — it is what closes it.
+	s.updateFlights()
+	s.updateResolved()
+	s.updateDeckStack(gs)
+
 	// The overlay swallows card interaction, so reading the deck cannot re-plan the round
 	// through the panel covering it. The buttons stay live — one of them is how it closes.
 	if !s.showDeck {
@@ -331,7 +345,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 		systems.UpdateButton(gs, s.duelButton)
 		systems.UpdateButton(gs, s.discardButton)
-		systems.UpdateButton(gs, s.deckButton)
 		return nil
 	}
 	s.duelButton.Text, s.duelButton.OnClick = "DUEL!", s.startRound
@@ -357,7 +370,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	systems.UpdateButton(gs, s.duelButton)
 	systems.UpdateButton(gs, s.discardButton)
-	systems.UpdateButton(gs, s.deckButton)
 	s.advancePlayback()
 
 	if trace.Enabled() && len(s.hand) != s.tracedHand {
@@ -500,8 +512,18 @@ func (s *CombatScene) advancePlayback() {
 }
 
 // applyEvent moves the visible state to match one event. Only damage moves the health
-// bars; the rest are for the caption and, later, animation cues.
+// bars; the other two arms are the animation cues this always anticipated.
+//
+// **None of this decides anything.** ResolveRound settled the whole round before playback
+// began, so these are three ways of showing the same log and the screen could stop calling
+// any of them without changing a result.
 func (s *CombatScene) applyEvent(e combat.Event) {
+	// A card of the player's has fired: lift it out of the hand and start it toward the pile.
+	s.noteResolved(e)
+
+	// A combo has formed: bracket the cards the engine says formed it.
+	s.noteCombo(e)
+
 	if e.Kind != combat.KindDamage {
 		return
 	}
@@ -579,17 +601,26 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawCombatant(gs, screen, s.enemy, float64(gs.PctX(88)), float64(gs.PctY(34)))
 	systems.DrawButton(gs, screen, s.duelButton)
 	systems.DrawButton(gs, screen, s.discardButton)
-	systems.DrawButton(gs, screen, s.deckButton)
+	s.drawDeckStack(gs, screen)
 
 	// Last, so the card in hand rides over the panes and the button it passes across.
 	s.drawDraggedCard(gs, screen)
+
+	// The round's own history: the cards that have fired, on their way to the corner or
+	// parked in it, and the ring round any that formed a combo. Over the hand, which is
+	// inert during playback, and under the overlay like everything else.
+	s.drawResolvedCards(gs, screen)
+
+	// Cards travelling to and from the pile, over everything the dragged card rides over and
+	// for the same reason. Under the overlay, which covers them along with the rest.
+	s.drawFlights(gs, screen)
 
 	// The overlay covers everything, card in flight included — and then Deck is drawn
 	// again on top of it. While the deck is open it is the only control that still does
 	// anything, so it is the only one that still looks like it does.
 	if s.showDeck {
 		s.drawDeckOverlay(gs, screen)
-		systems.DrawButton(gs, screen, s.deckButton)
+		s.drawDeckStack(gs, screen)
 	}
 
 	// Last of all, so a capture holds the finished frame rather than a half-drawn one.
@@ -675,9 +706,10 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	for _, b := range []struct {
 		name string
 		b    *models.Button
-	}{{"discard", s.discardButton}, {"duel", s.duelButton}, {"deck", s.deckButton}} {
+	}{{"discard", s.discardButton}, {"duel", s.duelButton}} {
 		trace.Logf("layout", "%-18s centre %4d,%-4d", "button "+b.name, b.b.ScreenX, b.b.ScreenY)
 	}
+	trace.Rect("deck stack", deckStackBounds(gs))
 }
 
 // cardLabel names a card for a trace line: "Strike/fire", or just "Strike" when plain.

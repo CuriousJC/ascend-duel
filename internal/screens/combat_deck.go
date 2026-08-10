@@ -255,20 +255,55 @@ func (s *CombatScene) discardSelected() {
 // **Selected is the only thing that leaves a hand.** Both ways a card can go — thrown away
 // by Discard, or played by DUEL! — are the same movement over the same predicate, so they
 // are one function rather than two that have to be kept in agreement.
+// **The cards move now and the animation catches up.** Every flight this raises is a ghost
+// of a card that has already gone — the hand, the piles and the queue are correct the moment
+// this returns, so planning(), the action-point budget and the row's own layout never have
+// to know about a card that is neither in the hand nor out of it. Holding a card in place
+// until its animation finished would have put that question into all three.
 func (s *CombatScene) spendSelected() {
+	// The row the discarded cards are leaving. Captured before the filter, because a flight
+	// starts from the slot a card had in the hand that existed when it was thrown — and that
+	// hand stops existing on the next line. See slotAt.
+	leaving := len(s.hand)
+
 	// Filtering in place over the hand's own array. Safe because kept never runs ahead of
 	// the read cursor, and it keeps the surviving cards in the order the player left them.
 	kept := s.hand[:0]
-	for _, c := range s.hand {
+	for i, c := range s.hand {
 		if c.selected {
 			s.discard = append(s.discard, c.actionCard)
+
+			// A card that resolved is sitting in the corner pile, not in its old hand slot,
+			// so that is where it has to set off from. Sending it out of a slot it visibly
+			// left ten seconds ago would make it jump back across the screen to be thrown.
+			flight := cardFlight{card: c.actionCard, outbound: true, index: i, count: leaving}
+			if p, ok := s.pileIndexOf(i); ok {
+				flight.index, flight.fromPile = p, true
+			}
+			s.addFlight(flight)
 			continue
 		}
 		kept = append(kept, c)
 	}
 	s.hand = kept
 
+	// The round's history goes with the cards it was made of. Cleared here rather than at the
+	// start of the next round because this is the moment those cards actually leave, and a
+	// pile outliving them would be a picture of a round that is over.
+	s.resolved = nil
+
+	// Everything appended past this point was dealt, which is what makes the drawn cards
+	// identifiable without drawHand having to report them.
+	dealt := len(s.hand)
 	s.drawHand()
+	for i := dealt; i < len(s.hand); i++ {
+		s.addFlight(cardFlight{
+			card:  s.hand[i].actionCard,
+			index: i, count: len(s.hand),
+			delay: (i - dealt) * flightStaggerPer,
+		})
+	}
+
 	s.syncQueue()
 }
 

@@ -161,7 +161,33 @@ func run(dir string) error {
 	}
 	page.Shapes = append(page.Shapes, shapeRow)
 
-	// Section five: the deck overlay. One row per element, cards at a third size and
+	// Section five: the back, at both sizes, with a face beside it. The face is the point of
+	// the row — the back has to share its silhouette exactly, or a flip would change outline
+	// halfway through and a stack of backs would read as a different object next to the hand.
+	// Two pictures side by side is the only way to check that.
+	backs := []struct {
+		name  string
+		label string
+		spec  cards.Spec
+		style cards.Style
+	}{
+		{"back-hand", "back — hand size", cards.Spec{FaceDown: true}, cards.Hand},
+		{"back-mini", "back — half size", cards.Spec{FaceDown: true}, cards.Mini},
+		{"back-face", "a face, for the silhouette",
+			cards.Spec{Name: "Strike", Category: cards.CategoryAttack, Damage: 7, Cost: 2,
+				Element: cards.Fire, Enabled: true}, cards.Hand},
+	}
+	backRow := row{Label: "card back"}
+	for _, b := range backs {
+		cell, err := write(dir, faces, b.spec, b.style, b.name+".png", b.label)
+		if err != nil {
+			return err
+		}
+		backRow.Cells = append(backRow.Cells, cell)
+	}
+	page.Backs = append(page.Backs, backRow)
+
+	// Section six: the deck overlay. One row per element, cards at a third size and
 	// overlapped so only the left half of each shows. Twelve concepts per element is what
 	// the real deck holds, so these rows are the length they will actually be in game.
 	for _, e := range cards.Elements() {
@@ -287,13 +313,14 @@ type page struct {
 	Categories []row
 	States     []row
 	Shapes     []row
+	Backs      []row
 	Deck       []stack
 	Rings      []row
 }
 
 func (p page) count() int {
 	n := 0
-	for _, rs := range [][]row{p.Borders, p.Categories, p.States, p.Shapes, p.Rings} {
+	for _, rs := range [][]row{p.Borders, p.Categories, p.States, p.Shapes, p.Backs, p.Rings} {
 		for _, r := range rs {
 			n += len(r.Cells)
 		}

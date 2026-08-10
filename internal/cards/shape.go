@@ -91,6 +91,22 @@ func clampRadius(w, h, radius int) int {
 	return radius
 }
 
+// fillTriangleUp fills an upward-pointing isosceles triangle, apex-centred on cx.
+//
+// Scanline, hard-edged, integer-only — the same idiom as roundedRect and for the same
+// reason: a pixel is either the mark or it is not, so a test can assert a colour rather
+// than a tolerance. The half-width grows linearly from nothing at the apex to w/2 at the
+// base, which is the whole of the shape.
+func fillTriangleUp(dst *image.RGBA, cx, top, w, h int, c color.RGBA) {
+	if w <= 0 || h < 2 {
+		return
+	}
+	for i := 0; i < h; i++ {
+		half := (w / 2) * i / (h - 1)
+		fillRect(dst, cx-half, top+i, 2*half+1, 1, c)
+	}
+}
+
 // fillRect is an unrounded block, used for the cost dashes.
 func fillRect(dst *image.RGBA, x, y, w, h int, c color.RGBA) {
 	for py := y; py < y+h; py++ {

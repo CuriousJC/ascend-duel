@@ -184,6 +184,18 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 // Over-budget plans are refused by startRound rather than resolved, which would leave the
 // script waiting on a round that never began — so it says so instead of hanging until the
 // give-up tick.
+//
+// **A scripted round selects nothing in the hand, and one thing on screen depends on that.**
+// The real game only ever reaches a queue through selection — syncQueue derives fighterActions
+// by walking the hand — so this shortcut produces a scene the game itself cannot be in:
+// actions queued with no card behind them. The resolved-card pile (combat_flight.go) lifts the
+// card out of its hand slot, finds none, and correctly draws nothing, so **a scripted round
+// captures with an empty corner while a clicked one does not.**
+//
+// It is left alone deliberately. The plans are chosen to cover every verb chip in one run and
+// the hand after round one cannot supply them, so making this select from the hand would
+// narrow what the demo covers to make a screenshot prettier. Round one is clicked and is the
+// one to look at for the pile.
 func (s *CombatScene) demoSendPlan() {
 	if demo.round >= len(demoPlans) {
 		return

@@ -161,6 +161,32 @@ var Mini = Style{
 	DashGap:    3,
 }
 
+// Stack is the draw pile's card: a back, and nothing else, at the size the screen has room
+// for rather than at any proportion of Hand.
+//
+// **It is smaller than Mini and that is forced by the layout, not chosen.** The strip below
+// the action-point bar is about 86 pixels tall, and a 132-pixel Mini card does not fit in it
+// — see the deck stack in internal/screens/combat_flight.go for the arithmetic.
+//
+// What makes that survivable is the thing that makes a back different from a face: **there
+// is no detail to lose.** A face at this size would be illegible, which is exactly why Mini
+// already drops the damage badge and why nothing smaller than Mini exists for one. A back is
+// a dark rounded rectangle with a triangle on it, and the triangle is sized as a proportion
+// of the card, so it is the same drawing here as at hand size.
+//
+// The proportions are Hand's — 44x64 against 180x264 — so the stack reads as the same object
+// as the cards in the row, seen smaller.
+var Stack = Style{
+	Width: 44, Height: 64,
+
+	CornerRadius: 4,
+	BorderWidth:  0,
+
+	ShowName:     false,
+	ShowCategory: false,
+	ShowDamage:   false,
+}
+
 // RingStyle is a ring, in the card format.
 //
 // Same footprint, corners and border treatment as Hand, so the two read as one game.

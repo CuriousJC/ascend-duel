@@ -405,12 +405,28 @@ func handZone(gs *state.GlobalState) image.Rectangle {
 // covers an earlier one, and beginPress walks the hand backwards to match — otherwise a
 // click in the overlap would pick the card underneath the one it looks like it hit.
 func (s *CombatScene) cardSlot(gs *state.GlobalState, i int) image.Rectangle {
-	x := s.handRowLeft(gs) + i*handPitch(gs, s.laidOutCount())
-	y := gs.PctY(handTopPct)
+	at := slotAt(gs, i, s.laidOutCount())
 	if i < len(s.hand) && s.hand[i].selected {
-		y -= selectedNudge
+		at.Y -= selectedNudge
 	}
-	return image.Rect(x, y, x+cardWidth, y+cardHeight)
+	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
+}
+
+// slotAt is where the card at index i sits in a row of n, as a pure function of the two.
+//
+// **Pulled out of cardSlot so a slot can be located after the row it belonged to is gone.**
+// A card flying out of the hand has to start from where it was, and by the time anything is
+// drawn the hand has already re-laid out around its absence — so the flight stores the index
+// and the count it left behind and asks for that rectangle back. Reading it off the current
+// hand would start every discard from wherever the row happens to sit now.
+//
+// It knows nothing about selection, which is a property of a card and not of a position;
+// cardSlot adds the lift.
+func slotAt(gs *state.GlobalState, i, n int) image.Point {
+	return image.Pt(
+		handBand(gs, n).Min.X+i*handPitch(gs, n),
+		gs.PctY(handTopPct),
+	)
 }
 
 // drawHandRow draws the budget header and the row of cards. There is no pane behind them:
@@ -445,6 +461,21 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawAPBar(screen, left, below+apBarBelow, right-left)
 
 	for i, c := range s.hand {
+		// A card being dealt is drawn by its flight, somewhere between the pile and here, so
+		// the slot it is heading for stays empty until it lands. The card is already *in* the
+		// hand — this hides a drawing, not a card, which is why nothing else has to know.
+		if s.inboundTo(i) {
+			continue
+		}
+
+		// A card that has fired this round is drawn by the resolved pile instead — rising,
+		// held, or parked in the corner. It has *not* left the hand; it leaves at the end of
+		// the round with everything else that was played, which is what keeps the Resolution
+		// pane able to narrate from fighterActions while the round runs.
+		if s.resolvedInHand(i) {
+			continue
+		}
+
 		// Dimmed means "you cannot pick this", which now means the selection is full rather
 		// than that the card is unaffordable — an unaffordable card is pickable on purpose,
 		// and dimming something you can click would be a lie. What it costs you is reported

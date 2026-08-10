@@ -461,6 +461,20 @@ type Event struct {
 	// Combo is set on KindCombo, and names which one fired. The screen looks it up with
 	// ComboByID rather than being told its name here, so a combo renamed is renamed once.
 	Combo ComboID
+
+	// ComboStart and ComboLength are set on KindCombo alongside Combo: which run of this
+	// side's turn formed it, as an offset and a count into the turn *as it was played*.
+	//
+	// **They are here so a screen never has to work out which cards earned a combo.** The
+	// matcher already knows — ComboHit carries exactly these two numbers — and re-deriving
+	// them from the combo's pattern length would be a second matcher, which is the drift
+	// ResolutionOrder exists to prevent. Matching is greedy and longest-first, so a run of
+	// five Strikes forms one Onslaught and no Flurries; a screen counting cards backwards
+	// from the event would confidently bracket the wrong three.
+	//
+	// The offset counts the actions that actually resolved, staggered ones already removed,
+	// which is the same sequence as this side's KindAction events.
+	ComboStart, ComboLength int
 }
 
 // Slot is one action's place in a round's resolution order: whose it is, where it sits
@@ -625,10 +639,12 @@ func playTurn(
 				continue
 			}
 			events = append(events, Event{
-				Kind:  KindCombo,
-				Side:  side,
-				Combo: h.ID,
-				Round: round,
+				Kind:        KindCombo,
+				Side:        side,
+				Combo:       h.ID,
+				ComboStart:  h.Start,
+				ComboLength: h.Length,
+				Round:       round,
 			})
 
 			if h.Effect.DamageNum > 0 && h.Effect.DamageDen > 0 {

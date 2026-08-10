@@ -162,6 +162,29 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   </div>
 {{end}}
 
+<h2>The back</h2>
+<p class="note">
+  What the draw pile is a stack of, and what a card shows through the first half of a flip.
+  <strong>The same silhouette as a face</strong> &mdash; same footprint, same corner radius
+  &mdash; because these are one object seen from two sides; the face on the right is there to
+  check that against. No border, because the border is where the element is said and a back
+  that carried one would be naming the card underneath it. The mark is sized as a proportion
+  of the card rather than from <code>Style</code>, so both sizes are the same drawing.
+</p>
+{{range .Backs}}
+  <div class="row">
+    <div class="row-label">{{.Label}}</div>
+    <div class="cells">
+      {{range .Cells}}
+        <figure>
+          <img src="{{.File}}" width="{{.Width}}" height="{{.Height}}" alt="{{.Label}}">
+          <figcaption>{{.Label}}</figcaption>
+        </figure>
+      {{end}}
+    </div>
+  </div>
+{{end}}
+
 <h2>Deck overlay — half size, stacked</h2>
 <p class="note">
   One row per element, twelve concepts each: the whole 60-card deck, which the old 8&times;3

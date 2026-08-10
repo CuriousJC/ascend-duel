@@ -648,3 +648,60 @@ func TestRingNameIsCentered(t *testing.T) {
 		t.Error("the hand card is not centring its name, which would put it under the glyph")
 	}
 }
+
+// The back is one drawing with one job, so there are only three things to pin: that it is
+// the same object as a face, that it says nothing about which card it is, and that it does
+// not need the things a face needs.
+
+func TestBackHasExactlyTheFaceSilhouette(t *testing.T) {
+	// The load-bearing property. A flip swaps one picture for the other mid-animation and a
+	// stack of backs sits beside the hand, so a back whose outline differed by even a corner
+	// pixel would read as a different kind of object.
+	for name, st := range map[string]Style{"hand": Hand, "mini": Mini} {
+		face := render(t, strike(Fire), st)
+		back := render(t, Spec{FaceDown: true}, st)
+
+		for y := 0; y < st.Height; y++ {
+			for x := 0; x < st.Width; x++ {
+				if (face.RGBAAt(x, y).A == 0) != (back.RGBAAt(x, y).A == 0) {
+					t.Fatalf("%s: silhouette differs at (%d,%d): face alpha %d, back alpha %d",
+						name, x, y, face.RGBAAt(x, y).A, back.RGBAAt(x, y).A)
+				}
+			}
+		}
+	}
+}
+
+func TestBackIsTheSamePictureWhateverTheCard(t *testing.T) {
+	// The draw pile is shuffled, so a back that varied with the card under it would hand the
+	// player the order. Every field but FaceDown has to reach the drawing as nothing.
+	want := render(t, Spec{FaceDown: true}, Hand)
+
+	loud := Spec{
+		Name: "Riposte", Category: CategoryDefend, Damage: 9, Cost: 4,
+		Element: Lightning, Enabled: true, Selected: true, FaceDown: true,
+	}
+	got := render(t, loud, Hand)
+
+	for y := 0; y < Hand.Height; y++ {
+		for x := 0; x < Hand.Width; x++ {
+			if got.RGBAAt(x, y) != want.RGBAAt(x, y) {
+				t.Fatalf("a filled-in Spec changed the back at (%d,%d): %v vs %v",
+					x, y, got.RGBAAt(x, y), want.RGBAAt(x, y))
+			}
+		}
+	}
+}
+
+func TestBackRendersWithNoFont(t *testing.T) {
+	// A back draws no text, and a missing font must not be able to empty the draw pile —
+	// which is what a returned error would do, since the caller draws nothing on nil.
+	img, err := Render(Spec{FaceDown: true}, Hand, nil)
+	if err != nil {
+		t.Fatalf("rendering a back without fonts: %v", err)
+	}
+	if img.RGBAAt(Hand.Width/2, Hand.Height/2) != BackMark {
+		t.Errorf("centre of the back is %v, want the mark %v",
+			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackMark)
+	}
+}

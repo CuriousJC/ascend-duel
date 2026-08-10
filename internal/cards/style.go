@@ -34,9 +34,10 @@ type Style struct {
 	// The category glyph, above the cost stack. It replaced the category *word*: a
 	// picture where a line of text used to be.
 	//
-	// **It is 22 pixels, not 64** — systems.SizeOf is the authority and the layout must
-	// ask rather than assume. A third-size glyph is a separate drawing authored small,
-	// because nothing here can be scaled; see systems/glyphs.go.
+	// **It is not 64, and it is not one number either** — the drawn sword and shield are
+	// 32 and the generated book is 22. systems.SizeOf is the authority and the layout must
+	// ask per glyph rather than assume; see systems/glyphs.go for why the two halves of
+	// the set are sized differently.
 	CategoryGlyphTop int
 
 	// The cost dashes, hamburger-style, below the category glyph.
@@ -72,11 +73,16 @@ type Style struct {
 // The face reads: the name centred across the top, and a left column starting in the
 // corner beside it — category glyph, cost dashes, damage badge.
 //
-//	 12  category glyph     12..34    (22px, top-left corner)
+//	 12  category glyph     12..44    (32px at the largest, top-left corner)
 //	 14  name               centred
-//	 42  cost dashes        42..89    (four at 8 on a 5 gap)
+//	 48  cost dashes        48..95    (four at 8 on a 5 gap)
 //	100  damage badge      100..164
 //	258  inside of the bottom border
+//
+// **The dashes moved down when the drawn glyphs arrived**, from 42 to 48: Sherman's sword
+// and shield are 32 pixels where the generated ones were 22, and the ten pixels had to come
+// from somewhere. The damage badge did not move — four dashes now end at y=95 against its
+// top at y=100, which is five pixels of slack rather than the fifteen there used to be.
 //
 // **The name is centred and the glyph is in the corner beside it, not under it.** Those
 // two go together: a left-aligned name would sit directly on top of the glyph now that
@@ -107,7 +113,7 @@ var Hand = Style{
 	CategoryGlyphTop: 12,
 
 	DashLeft:   12,
-	DashTop:    42,
+	DashTop:    48,
 	DashWidth:  13,
 	DashHeight: 8,
 	DashGap:    5,
@@ -154,8 +160,12 @@ var Mini = Style{
 	GlyphInset:       8,
 	CategoryGlyphTop: 36,
 
+	// 72 rather than 66, for the same reason Hand's moved: the drawn glyphs are 32 pixels
+	// and end at y=68. A mini card carries a 32px glyph without shrinking it, because
+	// GlyphScale is whole-number only and 1 is the floor — the overlay's cards are half
+	// size and their glyphs are not.
 	DashLeft:   8,
-	DashTop:    66,
+	DashTop:    72,
 	DashWidth:  7,
 	DashHeight: 4,
 	DashGap:    3,

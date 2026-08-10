@@ -557,22 +557,23 @@ func abs(n int) int {
 	return n
 }
 
-func TestCategoryGlyphsAreAboutAThirdSize(t *testing.T) {
-	// **Authored small, not scaled small.** The point of asserting a range rather than an
-	// exact number is that the size is a design choice, but the *relationship* to the
-	// damage sword is the thing that must not quietly drift back — if someone reuses the
-	// 64px shapes here the card layout silently overlaps again.
+func TestCategoryGlyphsAreSmallerThanTheDamageBadge(t *testing.T) {
+	// **The relationship is the invariant, not the number.** How big a category glyph is
+	// stays a design choice — 22 for the generated book, 32 for the drawn sword and shield
+	// — but a category glyph that reaches the damage badge's size means someone put a 64px
+	// shape in the corner slot, and the left column silently overlaps again.
+	//
+	// The floor matters as much as the ceiling: below about 16 pixels neither a painting
+	// nor a derived rim has anything left to read.
 	for _, c := range Categories() {
 		kind, ok := c.glyph()
 		if !ok {
 			t.Fatalf("%s has no glyph", c)
 		}
 		got := systems.SizeOf(kind)
-		if got < 16 || got > 30 {
-			t.Errorf("%s glyph is %dpx, want roughly a third of %d", c, got, systems.GlyphSize)
-		}
-		if got == systems.GlyphSize {
-			t.Errorf("%s glyph is full size — it is using a 64px shape, not a small one", c)
+		if got < 16 || got > systems.GlyphSize/2 {
+			t.Errorf("%s glyph is %dpx, want between 16 and half of %d",
+				c, got, systems.GlyphSize)
 		}
 	}
 

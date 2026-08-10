@@ -135,12 +135,28 @@ cost, a stat line, or a planner.
 ## Releasing — `.github/workflows`
 
 **CI** runs on every PR, on **Windows and Linux**, under all three build-tag configurations.
-**Release** fires on a `v*` tag and nothing else, so *tagging is releasing*:
+**Release** has two entrances and both produce the same release. Pushing a `v*` tag still
+fires it, so *tagging is releasing*:
 
 ```powershell
 git tag -a v0.1.0 -m "..."; git push origin v0.1.0
 ```
 
+- **Or run it by hand from the Actions tab** — *Release* → *Run workflow*, on `main`, with
+  the version typed in. **The workflow creates the tag itself**, at the commit it built, via
+  `gh release create --target`. That is the normal path now; a local tag-and-push is no
+  longer needed to cut a release.
+- **The manual path is guarded, because a typed version has no `v*` filter in front of it.**
+  A `version` job runs first and fails the whole run if the branch is not `main`, if the
+  string is not `vMAJOR.MINOR.PATCH`, or if that tag already exists — the last one because
+  `gh` would otherwise attach binaries to a tag naming a different commit. The input is read
+  through the environment and never interpolated into a shell script; this job is one
+  `needs:` away from the write token.
+- **The `version` job's output is the single source of the version**, and nothing downstream
+  may read `GITHUB_REF_NAME` — it is the tag on one path and the branch name on the other, so
+  the failure it prevents is a binary stamped `-X main.version=main`.
+- **A tag the workflow creates cannot re-trigger it.** Pushes made with `GITHUB_TOKEN` raise
+  no workflow events, so the manual run publishes once instead of looping.
 - **Windows ships an `.exe`, Linux a `.tar.gz`.** Release assets carry no file permissions,
   so a bare Linux binary downloads without its execute bit and does not run. The tar keeps it.
 - **Ebitengine is pure Go on Windows and cgo on Linux**, where it links against X11, GL and

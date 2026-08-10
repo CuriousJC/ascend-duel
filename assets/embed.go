@@ -30,6 +30,25 @@ var title_png []byte
 //go:embed game/title-easter-egg.png
 var titleEaster_png []byte
 
+// GLYPH ART
+//
+// The attack and defend category glyphs on an action card. These two are the exception to
+// "interface art is generated": everything else in internal/systems/glyphs.go is a
+// silhouette described in code, and these are hand-drawn pixel art.
+//
+// **The provenance question the generated glyphs exist to avoid does not apply here.**
+// Drawn by KingSherman1820, one of the two copyright holders, for this game — so there is
+// nothing to clear and nothing to attribute to a third party.
+//
+// Authored on a 64x64 canvas and drawn on the card at half that; see glyphArt in
+// internal/systems/glyphs.go for why the halving happens at render time rather than here.
+//
+//go:embed game/sherman-sword.png
+var shermansword_png []byte
+
+//go:embed game/sherman-shield.png
+var shermanshield_png []byte
+
 // CREATURES
 //
 // One west-facing idle frame per enemy, cut out of the PVGames creature sheets in
@@ -154,6 +173,12 @@ func LoadImageData() map[string][]byte {
 	images["firering_png"] = firering_png
 	images["frozenring_png"] = frozenring_png
 	images["thunderring_png"] = thunderring_png
+
+	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
+	// same reason the ring art does: RenderGlyph draws into a plain Go image so the contact
+	// sheets can be built with no window.
+	images["shermansword_png"] = shermansword_png
+	images["shermanshield_png"] = shermanshield_png
 
 	return images
 }

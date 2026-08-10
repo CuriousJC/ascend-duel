@@ -1,10 +1,16 @@
 package systems
 
 import (
+	"bytes"
 	"image"
 	"image/color"
+	"image/draw"
+	_ "image/png"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+
+	"github.com/curiousjc/ascend-duel/assets"
 )
 
 // Procedurally generated pixel-art glyphs for the numbers on an action card: what it hits
@@ -13,6 +19,12 @@ import (
 // Drawn in code rather than loaded from a file because generated art has no provenance
 // question at all, which is exactly the problem that makes the Tyrian set a release
 // blocker. That is the reason to keep doing interface art this way.
+//
+// **Two of them are files now, and the reason the rule survives is who drew them.** The
+// attack sword and the defend shield are hand-drawn pixel art by KingSherman1820, one of
+// the two copyright holders — so the provenance question the generator exists to dodge does
+// not arise. See glyphArt below. Art from anywhere else still needs a licence before it can
+// be in a game that will be sold, and generating it remains the cheaper answer.
 //
 // The important part is that this is a *generator*, not a bitmap. A glyph is a filled
 // silhouette described by horizontal spans; the outline is derived from the silhouette by
@@ -252,55 +264,24 @@ var runShape = shape{
 	},
 }
 
-// The three category glyphs, authored at 22 pixels — roughly a third of the others.
+// The category glyphs are small — a third of a damage badge — because they sit above the
+// cost dashes in a column a second full badge would fill.
 //
-// **They are separate drawings, not the big ones shrunk.** Nothing here can be scaled: the
-// rim is derived one pixel thick, so a third-size copy of a 64px shape is a third-size
-// copy of its outline and the interior disappears. At 22 pixels the detail budget is
-// almost nothing — a 5px feature is two pixels of rim around three of fill — so each of
-// these is a silhouette that has to work as pure outline, with at most one accent stroke.
+// **A generated one is a separate drawing, not a big one shrunk.** Nothing generated here
+// can be scaled: the rim is derived one pixel thick, so a third-size copy of a 64px shape
+// is a third-size copy of its outline and the interior disappears. At 22 pixels the detail
+// budget is almost nothing — a 5px feature is two pixels of rim around three of fill — so
+// the shape has to work as pure outline, with at most one accent stroke, and is told apart
+// by *proportion* before any detail is legible.
 //
-// The three are told apart by *proportion* before any detail is legible, which is the only
-// thing that reliably survives at this size: the sword is narrow and vertical, the shield
-// is wide at the top and comes to a point, the book is wider than it is tall.
+// Only the book is still generated. The sword and the shield are drawn art now and are
+// downsampled rather than authored small, which is a thing a *painting* survives and a
+// derived-rim silhouette does not — see glyphArt.
 const categoryGlyphSize = 22
 
-// A sword, upright: a six-pixel blade, a crossguard nearly three times its width, a
-// four-pixel grip and a wider pommel. The crossguard carries the whole read — without a
-// bar that wide this is a nail.
-var smallSwordShape = shape{
-	size: categoryGlyphSize,
-	fill: map[int][]span{
-		2: {{10, 11}},
-		3: {{9, 12}},
-		4: {{9, 12}},
-		5: {{8, 13}}, 6: {{8, 13}}, 7: {{8, 13}},
-		8: {{8, 13}}, 9: {{8, 13}}, 10: {{8, 13}},
-		11: {{3, 18}}, 12: {{3, 18}}, 13: {{4, 17}},
-		14: {{9, 12}}, 15: {{9, 12}}, 16: {{9, 12}},
-		17: {{7, 14}}, 18: {{7, 14}},
-	},
-}
-
-// A kite shield: a flat wide shoulder, straight sides, then a taper to a point. Left
-// deliberately undecorated — the chevron the 64px version carried is four pixels of
-// accent at this size and reads as damage rather than as a device.
-var smallShieldShape = shape{
-	size: categoryGlyphSize,
-	fill: map[int][]span{
-		3: {{5, 16}},
-		4: {{4, 17}},
-		5: {{3, 18}}, 6: {{3, 18}}, 7: {{3, 18}},
-		8: {{3, 18}}, 9: {{3, 18}},
-		10: {{4, 17}}, 11: {{4, 17}},
-		12: {{5, 16}},
-		13: {{6, 15}},
-		14: {{7, 14}},
-		15: {{8, 13}},
-		16: {{9, 12}},
-		17: {{10, 11}},
-	},
-}
+// The generated 22px sword and shield that used to sit here went when Sherman's art
+// arrived — see glyphArt below. Both are one `git show` away if the drawn versions are
+// ever wanted back.
 
 // An open book, seen end-on: **the two covers form a V**, splayed wide at the top and
 // meeting at the spine, with the page block filling the body below.
@@ -344,9 +325,45 @@ var smallBookShape = shape{
 var glyphShapes = map[GlyphKind]shape{
 	GlyphDamage:       swordShape,
 	GlyphActionPoints: runShape,
-	GlyphAttack:       smallSwordShape,
-	GlyphDefend:       smallShieldShape,
 	GlyphPrepare:      smallBookShape,
+}
+
+// glyphArt is the hand-drawn half of the set: a kind whose picture is a PNG rather than a
+// silhouette in code. A kind listed here has no entry in glyphShapes and never reaches the
+// generator.
+//
+// **The palette is ignored for these.** A generated glyph is painted from a five-value
+// Palette at draw time; a drawing already carries its own colours and is blitted as
+// authored. That is a deliberate spend of the colour channel the hueless palette was
+// holding — the card's border also carries the element, so an attack card now says
+// something in colour twice. It was the owner's call on 2026-08-10.
+//
+// **Authored at 64 and drawn at 32.** The art is a 64x64 canvas and the category slot is
+// nothing like that big, so it is downsampled by a whole factor of two. Halving is the one
+// resize hand-drawn art tolerates: a 2x2 block averages to one pixel and a black outline
+// survives as a darker pixel rather than vanishing. The generated glyphs cannot do this —
+// their rim is derived one pixel thick and averaging it away is exactly the failure the
+// "author it small instead" rule exists for.
+type glyphArtwork struct {
+	// key is the assets.LoadImageData key, not a path. Same indirection as everywhere
+	// else: a file can be refiled without touching this.
+	key string
+	// size is the glyph's size on screen. It must divide artCanvas exactly.
+	size int
+}
+
+// artCanvas is the size the drawn glyphs are authored at.
+const artCanvas = 64
+
+// categoryArtSize is the drawn category glyphs' size on a card: half of what they were
+// authored at, which is what the owner asked to look at first. Change this and the card's
+// left column moves — internal/cards/style.go measures with SizeOf and
+// TestLeftColumnDoesNotCollide fails rather than letting the stack overlap.
+const categoryArtSize = artCanvas / 2
+
+var glyphArt = map[GlyphKind]glyphArtwork{
+	GlyphAttack: {key: "shermansword_png", size: categoryArtSize},
+	GlyphDefend: {key: "shermanshield_png", size: categoryArtSize},
 }
 
 // glyphCache holds rendered images, keyed by what was asked for. Building one walks a
@@ -376,6 +393,10 @@ func Glyph(kind GlyphKind, name PaletteName) *ebiten.Image {
 // contact-sheet tool in cmd/glyphsheet has no window. Keeping the renderer pure is what
 // lets the art be inspected without launching the game.
 func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
+	if art, ok := glyphArt[kind]; ok {
+		return renderArt(kind, art)
+	}
+
 	pal := PaletteOf(name)
 	shp := glyphShapes[kind]
 	size := shp.canvas()
@@ -438,13 +459,98 @@ func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
 	return img
 }
 
-// SizeOf is the canvas a glyph is drawn on, which is not the same for every glyph.
+// artCache holds decoded and downsampled artwork. Decoding a PNG and averaging it down is
+// far more work than walking a silhouette, and neither depends on anything that changes.
+var artCache = map[GlyphKind]*image.RGBA{}
+
+// renderArt decodes a drawn glyph and halves it to the size the card wants.
 //
-// The damage sword and the runner are 64. The three category glyphs are 22, because they
-// sit above the cost dashes in a column that a second 64-pixel badge would fill. Callers
-// must measure with this rather than assuming GlyphSize, or a small glyph will be given a
-// large hole to sit in.
+// A decode failure is fatal rather than silent. The bytes are embedded in the binary, so
+// there is no runtime condition under which this can fail on one machine and not another —
+// it means the file is not a PNG, which is a build problem to fix and not a case to fall
+// back from with a blank corner on every attack card.
+func renderArt(kind GlyphKind, art glyphArtwork) *image.RGBA {
+	if img, ok := artCache[kind]; ok {
+		return img
+	}
+
+	data := assets.LoadImageData()[art.key]
+	if len(data) == 0 {
+		log.Fatalf("glyph art %q is not in assets.LoadImageData", art.key)
+	}
+	src, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		log.Fatalf("failed to decode glyph art %q: %v", art.key, err)
+	}
+
+	// Into an RGBA of its own first: PNGs with alpha decode to NRGBA, and the averaging
+	// below is only correct on premultiplied values, which image.RGBA is by definition.
+	b := src.Bounds()
+	full := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(full, full.Bounds(), src, b.Min, draw.Src)
+
+	if b.Dx() != artCanvas || b.Dy() != artCanvas {
+		log.Fatalf("glyph art %q is %dx%d, want %dx%d", art.key, b.Dx(), b.Dy(), artCanvas, artCanvas)
+	}
+	if art.size <= 0 || artCanvas%art.size != 0 {
+		log.Fatalf("glyph art %q asks for %dpx, which does not divide the %dpx canvas",
+			art.key, art.size, artCanvas)
+	}
+
+	img := downsample(full, artCanvas/art.size)
+	artCache[kind] = img
+	return img
+}
+
+// downsample averages each factor x factor block down to one pixel.
+//
+// **Averaged, not sampled.** Nearest-neighbour at half size keeps every other pixel and
+// throws the rest away, which deletes a one-pixel outline wherever it lands on an odd
+// column — a drawn shield loses half its rim and reads as torn. Averaging keeps it as a
+// darker pixel. This is the opposite of the rule for generated glyphs, and the difference
+// is that a painting has interior detail to average whereas a derived rim has nothing
+// behind it.
+//
+// image.RGBA is alpha-premultiplied, so the four channels average independently and a
+// transparent neighbour correctly darkens nothing.
+func downsample(src *image.RGBA, factor int) *image.RGBA {
+	if factor <= 1 {
+		return src
+	}
+	b := src.Bounds()
+	out := image.NewRGBA(image.Rect(0, 0, b.Dx()/factor, b.Dy()/factor))
+	n := factor * factor
+
+	for y := 0; y < out.Bounds().Dy(); y++ {
+		for x := 0; x < out.Bounds().Dx(); x++ {
+			var r, g, bl, a int
+			for dy := 0; dy < factor; dy++ {
+				for dx := 0; dx < factor; dx++ {
+					c := src.RGBAAt(b.Min.X+x*factor+dx, b.Min.Y+y*factor+dy)
+					r += int(c.R)
+					g += int(c.G)
+					bl += int(c.B)
+					a += int(c.A)
+				}
+			}
+			out.SetRGBA(x, y, color.RGBA{
+				R: uint8(r / n), G: uint8(g / n), B: uint8(bl / n), A: uint8(a / n),
+			})
+		}
+	}
+	return out
+}
+
+// SizeOf is the size a glyph is drawn at, which is not the same for every glyph.
+//
+// The damage sword and the runner are 64. The category glyphs are much smaller, because
+// they sit above the cost dashes in a column that a second 64-pixel badge would fill — 22
+// for the generated book, 32 for the drawn sword and shield. Callers must measure with this
+// rather than assuming GlyphSize, or a small glyph will be given a large hole to sit in.
 func SizeOf(kind GlyphKind) int {
+	if art, ok := glyphArt[kind]; ok {
+		return art.size
+	}
 	return glyphShapes[kind].canvas()
 }
 

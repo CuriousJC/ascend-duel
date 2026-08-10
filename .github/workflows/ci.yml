@@ -89,8 +89,26 @@ jobs:
           go build -tags debugtrace ./...
           go build -tags idleexit ./...
 
-      # internal/combat is the only package with tests, by design: it is the only one that
-      # needs no window. Keep it that way and this step needs no display server, which is
-      # what lets it run on a headless Linux runner at all.
+      # Four packages have tests now, and none of them opens a window — but three of them
+      # (cards, music, screens) *link* Ebitengine, and on Linux `ebiten/internal/ui` calls
+      # glfw.Init() from a package init(). A test binary therefore dies on `DISPLAY` before
+      # a single test runs, no matter how headless the tests themselves are. Only
+      # internal/combat is genuinely free of it.
+      #
+      # xvfb-run supplies a throwaway X server so that init() succeeds. Nothing here creates
+      # a window or a GL context, so the display is never drawn to; it exists purely to get
+      # past the constructor. `-a` picks a free display number rather than fighting over :99.
+      #
+      # Windows needs none of this — Ebitengine is pure Go there and its ui init does not
+      # reach for a display server.
+      - name: install a virtual display for the tests
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y --no-install-recommends xvfb
+
       - name: test
-        run: go test ./...
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run -a go test ./...
+          else
+            go test ./...
+          fi

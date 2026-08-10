@@ -50,6 +50,7 @@ func main() {
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()
 	g.GlobalState.Fonts = assets.LoadFonts()
+	g.GlobalState.FontData = assets.LoadFontData()
 	g.GlobalState.Combatants = data.LoadCombatants()
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a

@@ -46,17 +46,40 @@ type GlyphKind int
 // the card's glyph for a number that no longer exists. It was built parametrically, out of a
 // disc() helper that went with it; both are one `git show` away if a round shape is wanted
 // again. See TODO.md.
+// **Append, never insert.** These are ordinals and the glyph cache keys on them, so
+// adding a kind in the middle silently re-points every existing entry — the same hazard
+// MECHANICS.md records for the concept enum and its combo IDs.
 const (
 	// GlyphDamage is a sword: what the action hits for.
 	GlyphDamage GlyphKind = iota
 	// GlyphActionPoints is a runner: what it costs to play.
+	//
+	// **No longer drawn on a card.** Cost became a stack of dash marks in the corner
+	// when the card was redesigned, which is what freed the height the category glyph
+	// now uses. The runner is kept because it is still on the contact sheet and is the
+	// obvious art for an action-point figure elsewhere — a budget readout, a ring.
 	GlyphActionPoints
+
+	// The three category glyphs: what phase a card resolves in. These replaced the
+	// category *word* under the card's name — a picture in the corner where a line of
+	// text used to be, which is the same trade the damage and cost badges made when they
+	// replaced "init 3".
+	//
+	// GlyphAttack deliberately shares the sword with GlyphDamage rather than getting a
+	// second weapon. They say related things and a card only ever shows one of them in
+	// the category slot; two different swords on one face would imply a distinction that
+	// is not there.
+	GlyphAttack
+	// GlyphDefend is a kite shield.
+	GlyphDefend
+	// GlyphPrepare is an open book.
+	GlyphPrepare
 )
 
 // GlyphKinds is every glyph, in a fixed order. The contact sheet walks this rather than
 // ranging a map, which Go deliberately randomises.
 func GlyphKinds() []GlyphKind {
-	return []GlyphKind{GlyphDamage, GlyphActionPoints}
+	return []GlyphKind{GlyphDamage, GlyphActionPoints, GlyphAttack, GlyphDefend, GlyphPrepare}
 }
 
 // Palette is the set of roles a glyph is painted with. Five values make the bevel — one
@@ -118,9 +141,24 @@ func PaletteOf(name PaletteName) Palette {
 type span struct{ x0, x1 int }
 
 // shape is a glyph's silhouette plus any detail painted over it.
+//
+// size is the canvas it was authored on, defaulting to GlyphSize. **A shape may not be
+// drawn at any size but its own** — the rim is derived one pixel thick and the shading
+// is computed per row, so resampling either destroys the rim or smears the bevel. A
+// glyph wanted smaller is therefore a *different shape authored smaller*, not the same
+// spans scaled, which is why the category glyphs below are their own drawings rather
+// than the 64px ones divided by three.
 type shape struct {
+	size   int
 	fill   map[int][]span
 	accent map[int][]span
+}
+
+func (s shape) canvas() int {
+	if s.size > 0 {
+		return s.size
+	}
+	return GlyphSize
 }
 
 // Nothing in a silhouette may be thinner than about five pixels. The rim is derived, so it
@@ -214,9 +252,101 @@ var runShape = shape{
 	},
 }
 
+// The three category glyphs, authored at 22 pixels — roughly a third of the others.
+//
+// **They are separate drawings, not the big ones shrunk.** Nothing here can be scaled: the
+// rim is derived one pixel thick, so a third-size copy of a 64px shape is a third-size
+// copy of its outline and the interior disappears. At 22 pixels the detail budget is
+// almost nothing — a 5px feature is two pixels of rim around three of fill — so each of
+// these is a silhouette that has to work as pure outline, with at most one accent stroke.
+//
+// The three are told apart by *proportion* before any detail is legible, which is the only
+// thing that reliably survives at this size: the sword is narrow and vertical, the shield
+// is wide at the top and comes to a point, the book is wider than it is tall.
+const categoryGlyphSize = 22
+
+// A sword, upright: a six-pixel blade, a crossguard nearly three times its width, a
+// four-pixel grip and a wider pommel. The crossguard carries the whole read — without a
+// bar that wide this is a nail.
+var smallSwordShape = shape{
+	size: categoryGlyphSize,
+	fill: map[int][]span{
+		2: {{10, 11}},
+		3: {{9, 12}},
+		4: {{9, 12}},
+		5: {{8, 13}}, 6: {{8, 13}}, 7: {{8, 13}},
+		8: {{8, 13}}, 9: {{8, 13}}, 10: {{8, 13}},
+		11: {{3, 18}}, 12: {{3, 18}}, 13: {{4, 17}},
+		14: {{9, 12}}, 15: {{9, 12}}, 16: {{9, 12}},
+		17: {{7, 14}}, 18: {{7, 14}},
+	},
+}
+
+// A kite shield: a flat wide shoulder, straight sides, then a taper to a point. Left
+// deliberately undecorated — the chevron the 64px version carried is four pixels of
+// accent at this size and reads as damage rather than as a device.
+var smallShieldShape = shape{
+	size: categoryGlyphSize,
+	fill: map[int][]span{
+		3: {{5, 16}},
+		4: {{4, 17}},
+		5: {{3, 18}}, 6: {{3, 18}}, 7: {{3, 18}},
+		8: {{3, 18}}, 9: {{3, 18}},
+		10: {{4, 17}}, 11: {{4, 17}},
+		12: {{5, 16}},
+		13: {{6, 15}},
+		14: {{7, 14}},
+		15: {{8, 13}},
+		16: {{9, 12}},
+		17: {{10, 11}},
+	},
+}
+
+// An open book, seen end-on: **the two covers form a V**, splayed wide at the top and
+// meeting at the spine, with the page block filling the body below.
+//
+// The first attempt drew it face-on — a wide slab with a gutter line down it — and it read
+// as a envelope or a folded card, because face-on the only thing saying "book" is a detail
+// too fine to survive 22 pixels. End-on, the V *is* the silhouette, and a silhouette is
+// what survives.
+//
+// The notch between the covers runs ten pixels wide at the top down to two at the spine,
+// which is as deep a V as fits without the two halves becoming separate objects.
+var smallBookShape = shape{
+	size: categoryGlyphSize,
+	fill: map[int][]span{
+		// The covers, splaying apart upward. Each thickens toward the spine, the way a
+		// page block does.
+		4:  {{2, 5}, {16, 19}},
+		5:  {{2, 6}, {15, 19}},
+		6:  {{2, 7}, {14, 19}},
+		7:  {{2, 8}, {13, 19}},
+		8:  {{2, 8}, {13, 19}},
+		9:  {{2, 9}, {12, 19}},
+		10: {{2, 9}, {12, 19}},
+
+		// Below the spine the two halves are one mass: the closed part of the book.
+		11: {{2, 19}}, 12: {{2, 19}}, 13: {{2, 19}},
+		14: {{3, 18}},
+		15: {{5, 16}},
+	},
+	accent: map[int][]span{
+		// A page inside each cover, drawn parallel to the splay. Two strokes is all there
+		// is room for, and it is what turns a V into a V *with something between it*.
+		6:  {{4, 5}, {16, 17}},
+		7:  {{4, 6}, {15, 17}},
+		8:  {{4, 6}, {15, 17}},
+		9:  {{5, 7}, {14, 16}},
+		10: {{5, 7}, {14, 16}},
+	},
+}
+
 var glyphShapes = map[GlyphKind]shape{
 	GlyphDamage:       swordShape,
 	GlyphActionPoints: runShape,
+	GlyphAttack:       smallSwordShape,
+	GlyphDefend:       smallShieldShape,
+	GlyphPrepare:      smallBookShape,
 }
 
 // glyphCache holds rendered images, keyed by what was asked for. Building one walks a
@@ -248,7 +378,8 @@ func Glyph(kind GlyphKind, name PaletteName) *ebiten.Image {
 func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
 	pal := PaletteOf(name)
 	shp := glyphShapes[kind]
-	img := image.NewRGBA(image.Rect(0, 0, GlyphSize, GlyphSize))
+	size := shp.canvas()
+	img := image.NewRGBA(image.Rect(0, 0, size, size))
 
 	mask := map[image.Point]bool{}
 	for y, spans := range shp.fill {
@@ -305,6 +436,16 @@ func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
 	}
 
 	return img
+}
+
+// SizeOf is the canvas a glyph is drawn on, which is not the same for every glyph.
+//
+// The damage sword and the runner are 64. The three category glyphs are 22, because they
+// sit above the cost dashes in a column that a second 64-pixel badge would fill. Callers
+// must measure with this rather than assuming GlyphSize, or a small glyph will be given a
+// large hole to sit in.
+func SizeOf(kind GlyphKind) int {
+	return glyphShapes[kind].canvas()
 }
 
 // isEdge reports whether a filled pixel touches empty space on any side.

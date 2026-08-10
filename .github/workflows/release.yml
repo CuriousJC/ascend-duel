@@ -100,8 +100,18 @@ jobs:
           go vet ./...
           go vet -tags debugtrace ./...
 
+      # Three of the four tested packages link Ebitengine, and on Linux its ui package calls
+      # glfw.Init() from an init() — so a test binary panics on a missing DISPLAY before any
+      # test runs, however headless the tests are. xvfb-run supplies a throwaway X server to
+      # get past that constructor; nothing here ever draws to it. Same reasoning as CI, and
+      # this job matters more: without it a tag dies at the test step and the release never
+      # publishes. Kept out of the build-dependency list above because it is not one — that
+      # list is shared with CI and stays identical to it.
+      - name: install a virtual display for the tests
+        run: sudo apt-get install -y --no-install-recommends xvfb
+
       - name: test
-        run: go test ./...
+        run: xvfb-run -a go test ./...
 
       # No -H=windowsgui here: it is a Windows linker flag and Linux has no console to hide.
       #

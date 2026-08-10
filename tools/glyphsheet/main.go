@@ -77,9 +77,21 @@ func buildSheet(inspect int) image.Image {
 	kinds := systems.GlyphKinds()
 	names := systems.PaletteNames()
 
+	// **Glyphs are no longer all one size.** The damage sword and the runner are 64; the
+	// three category glyphs are 22, authored small rather than scaled down. The sheet
+	// therefore measures each one instead of assuming, and the column is sized by the
+	// largest — otherwise the small glyphs would sit in 64-pixel holes and look like
+	// mistakes rather than like the size they are.
+	largest := 0
+	for _, k := range kinds {
+		if n := systems.SizeOf(k); n > largest {
+			largest = n
+		}
+	}
+
 	// The inspection row is the wider of the two, so it sets the column.
-	colWidth := systems.GlyphSize * inspect
-	actualSize := systems.GlyphSize * systems.CardGlyphScale
+	colWidth := largest * inspect
+	actualSize := largest * systems.CardGlyphScale
 	bandHeight := actualSize + pad + colWidth
 
 	sheet := image.NewRGBA(image.Rect(0, 0,
@@ -98,9 +110,12 @@ func buildSheet(inspect int) image.Image {
 			glyph := systems.RenderGlyph(kind, name)
 			colLeft := pad + col*(colWidth+pad)
 
-			// Actual size, centred over the column it shares with the big one below.
-			blit(sheet, glyph, colLeft+(colWidth-actualSize)/2, bandTop, systems.CardGlyphScale)
-			blit(sheet, glyph, colLeft, bandTop+actualSize+pad, inspect)
+			// Actual size, centred over the column it shares with the big one below. A
+			// small glyph is centred on its own width, so the row reads as glyphs of
+			// different sizes rather than as glyphs mis-aligned.
+			size := systems.SizeOf(kind)
+			blit(sheet, glyph, colLeft+(colWidth-size*systems.CardGlyphScale)/2, bandTop, systems.CardGlyphScale)
+			blit(sheet, glyph, colLeft+(colWidth-size*inspect)/2, bandTop+actualSize+pad, inspect)
 		}
 	}
 
@@ -112,8 +127,9 @@ func buildSheet(inspect int) image.Image {
 // Nearest-neighbour by hand: any smoothing would defeat the purpose, since the point is to
 // see the pixels exactly as the game draws them.
 func blit(dst *image.RGBA, src *image.RGBA, originX, originY, scale int) {
-	for y := 0; y < systems.GlyphSize; y++ {
-		for x := 0; x < systems.GlyphSize; x++ {
+	b := src.Bounds()
+	for y := 0; y < b.Dy(); y++ {
+		for x := 0; x < b.Dx(); x++ {
 			c := src.RGBAAt(x, y)
 			if c.A == 0 {
 				continue

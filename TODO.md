@@ -32,6 +32,17 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         vocabulary (drag), and settings values are "a row of buttons or a slider, never
         a number you type". But there is no settings screen yet to put one on, and a
         binary toggle is what an unmutable loop actually needs today.
+- [ ] **Two rounded-rectangle implementations now exist.** Cards rasterise their corners in
+      plain Go (`internal/cards/shape.go`) because `internal/cards` must render without a
+      graphics context; health bars still use `CreateRoundedRecMask` + `ebiten.BlendSourceIn`.
+      Migrating health bars onto the plain-Go path would collapse the two, and is the only
+      way to get back to one — the reverse is impossible, since the mask path needs a window.
+      Low priority, but it is a real inconsistency and CLAUDE.md now says so.
+- [ ] **Rings exist only on the contact sheet.** `cards.RingStyle` and `cards.Ring` draw one
+      — same format, pink border, artwork instead of glyphs, no cost or category — but
+      nothing in the game builds one. Whatever equips a ring will need `Spec.Art` wired to a
+      real asset and a home on a screen. `Spec.Dragging` was added for the ring preview and
+      is unused by the hand, which does have drag-and-drop and no visual for it.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the
@@ -456,9 +467,9 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         legible), or a partial interleave where one designated fast action jumps a phase.
         Both reintroduce the legibility problem phases were adopted to solve, so the bar is
         that it buys something combos and category ordering do not.
-      - The card has room: the glyph column now holds two badges in a space sized for
-        three, and `deckCardStyle` shrank 50px on the strength of that. Bringing initiative
-        back costs the deck overlay its third grid row.
+      - The card no longer has room the way it did. The 2026-08-09 redesign spent the
+        column on a category glyph and moved cost to dash marks, so an initiative badge
+        would be a third element in a stack that already runs name, glyph, dashes, damage.
 - [ ] **Defenses target a specific incoming attack** *(design captured 2026-08-06)*. The
       resolution order is right now; what is missing is that a defense is currently a pool
       rather than a choice. **Guard stays untargeted** — it covers you entirely, which is
@@ -507,8 +518,9 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         *deck* and that an affix transforms it, which subjects them to the same "what did I
         draw" pressure the player faces. That needs its own shuffle stream. A deck-driven
         planner arrives as one more style beside these rather than replacing the idea.
-      - `[?]` Four sprites are placeholder crops off one Tyrian sheet and three of them are
-        near-identical. Fine for now, wrong for a release.
+      - ~~`[?]` Four sprites are placeholder crops off one Tyrian sheet and three of them
+        are near-identical.~~ Fixed 2026-08-09: four distinct PVGames creatures, licensed
+        for commercial use.
 - [x] **`tools/balance`** *(2026-08-06)*. Prints what every enemy does to the fighter across
       three postures, playing whole duels through the real `ResolveRound`.
       - **Written because an unwinnable enemy shipped and nobody could see it.** Warden1 halves
@@ -999,37 +1011,24 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
         - What it cannot fix: Mirror is currently *unconditionally* better than Dodge and
           Guard in every matchup. A change that makes all three better leaves the ordering
           intact.
-- [ ] **Rethink the deck overlay — it now shows less than half the deck.** The grid is
-      8 columns x 3 rows = 24 slots; a 60-card deck puts up to 52 cards outside an 8-card
-      hand, so `drawPileGrid` draws 24 and prints "+28 more not shown" on every look.
-      - **The overflow line firing is the design working.** It was written when the deck was
-        30 and this could not happen, precisely so that a grown deck would produce a visible
-        shortfall rather than a panel that quietly lied about what you own. What it is not
-        is an answer.
-      - **It cannot be fixed with a bigger grid.** `GlyphSize` is 64, `CardGlyphScale` is
-        already 1, integer scales only, and the two-glyph column is the floor on a card's
-        height. `deckCardStyle` is 138x186 and most of what is left to cut is padding.
-      - Options, none chosen:
-        - **Group identical cards under a count.** Twelve concepts x five elements is 60
-          cards but only 60 *distinct* ones at Copies 1 — so this only helps once duplicates
-          exist. It would help a lot then.
-        - **One tile per concept, elements as five pips.** Twelve tiles fit trivially, and
-          the element breakdown is what a count could never say — the original reason the
-          overlay draws cards rather than a table. This is the strongest lead.
-        - **Paging.** Honest and cheap, but it stops being "the whole deck is one look",
-          which was the stated point of the panel.
-        - **A smaller non-card representation** — swatch grid, one row per concept. Loses the
-          glyphs, which may be fine here: the overlay is inventory, not a thing you play from.
-      - Whatever wins, keep the property that made the current panel good: **a card does not
-        move when it is discarded, it only dims.** Watching the deck drain in place is why
-        both piles share one grid.
-
-### Loose ends from the 2026-08-08 concept work
-
-Five decisions and gaps that came out of filling the concept grid and were not captured
-anywhere at the time. Listed because a rule that exists only in the code is a rule the next
-design conversation will contradict without noticing.
-
+- [x] **Rethink the deck overlay — it showed less than half the deck.** *(Done 2026-08-09.)*
+      The 8x3 grid of 24 slots printed "+28 more not shown" on every look. It is now five
+      rows, one per element, of `cards.Mini` (half size, 90x132) overlapped at a pitch of 84
+      so all but six pixels of each card shows — the whole 60-card deck, with name, category
+      glyph and cost dashes on every card.
+      - **What made it possible was the card losing a badge.** Cost became dash marks and
+        the category word became a 22px glyph, so a half-size card can carry a legible name.
+        At a third size it could not, and a row was a line of coloured slivers.
+      - **It shows the hand now too.** Excluding it made eight cards vanish and reappear
+        every round, which broke the panel's own rule that a card does not move when it is
+        played, it only dims. Dimming carries the state instead: full is still-to-draw,
+        washed out is in-hand-or-discarded.
+      - Rows sort attack, defend, prepare, cheapest first, so the same three runs sit in the
+        same places in every row and a gap reads as a card you have spent.
+      - **Still not shown: damage.** A 64px sword under a name, a glyph and four dashes does
+        not fit 132px of height. Damage follows from the concept, so a named card implies it.
+      - The overflow line survives and is now capped by `deckMaxPerRow`, so a thirteenth
+        concept produces an honest shortfall rather than a card half off the panel.
 - [?] **What a Feint does when a second negation sits behind the one it strips.** Reading the
       path in `resolveAttack`: the strip decrements one, then falls through to the ordinary
       Riposte and Dodge checks, so **two Dodges beat a Feint and one does not.** That is a
@@ -1288,16 +1287,22 @@ design conversation will contradict without noticing.
         downstream of the two items above — but it is the reason to keep combat pure.
 - [ ] **Affixes.** `cold` / `hot` / `charged` / `undying` are in `combatants.json` and
       never read. Ring and effect art is partly present.
-- [ ] **Replace Tyrian placeholder art — now a release blocker, not a cosmetic swap.**
-      Technically still easy: the `SpriteSheet` + `SpriteRect` indirection means it's a
-      data change. Keep it that way — no identifiers or packages named for it, no
-      assumptions baked in about its palette or rect conventions.
-      - The reason it got promoted: the Tyrian set has no formal license, only "use and
-        abuse them as desired" on a 2007 Lost Garden blog post. That is fine for a public
-        hobby repo and thin for a paid release. **This has to be resolved before the game
-        is sold anywhere.**
-      - Applies to everything under `assets/tyrian_graphics/` plus the two consolidated
-        sheets actually embedded (`tyrian_monster_sprites.png`, `tyrian_ship_sprites.png`).
+- [x] **Replace Tyrian placeholder art — the release blocker.** *(Done 2026-08-09. No
+      Tyrian file remains in the repository.)*
+      - The `SpriteSheet` + `SpriteRect` indirection did its job: the swap was a data
+        change plus embed lines, exactly as this entry hoped. Keep it that way.
+      - The four enemies are PVGames creatures — giant rat, dragonfly, frogman, dire wolf —
+        from the Humble *Isometric Assets Galore* bundle, whose licence permits shipping
+        inside a game and forbids redistributing them *as assets*. Terms are preserved in
+        `.scratch/flat-creatures/README.md`.
+      - **Two of the three deletions cost nothing at all.** `spritesheet.png` was embedded
+        and read by nothing. `tyrian_ship_sprites.png` had one user, `Fighter1`, whose
+        sprite is never drawn — the character block replaced it — so the fighter now has no
+        sprite rather than a placeholder, and `Combatant.Sprite` is legitimately nillable.
+      - **Frames, not sheets.** See the Art section of `CLAUDE.md`: the source sheets are
+        2-7 MB each and `LoadAssets` decodes at startup, so embedding four would have cost
+        ~250 MB resident to show four static sprites. What ships is one trimmed
+        west-facing idle frame each, 41 KB together.
 - [ ] **Sign the Windows binary so Defender stops saying "Unknown publisher."** Raised
       2026-08-08 after downloading the v0.1.1 `.exe`. Not urgent and **not cheap** — this
       entry exists mainly so the cost is written down before someone assumes it is a
@@ -1427,8 +1432,14 @@ have a signed agreement covering the relicense.
       is what makes the relicense possible at all.
 - [x] `Kubasta.ttf` — CC0, per the author's own FontStruct page.
 - [ ] Confirm FiraSans and RobotoFlex (expected OFL / Apache — low risk).
-- [ ] Tyrian art — see the release blocker under "Later". No formal licence, and that
-      must be resolved before the game is sold.
+- [x] ~~Tyrian art — no formal licence.~~ Removed entirely 2026-08-09; nothing in the
+      repository comes from that set.
+- [x] Enemy sprites — PVGames, Humble *Isometric Assets Galore*. Licence permits shipping
+      inside a game, forbids redistributing them as assets. Terms preserved in
+      `.scratch/flat-creatures/README.md`.
+- [x] `golang.org/x/image` — BSD-3-Clause. Promoted indirect to direct 2026-08-09 for its
+      font rasteriser and image scaler; it was already in the tree via Ebitengine.
+- [x] `github.com/ebitengine/oto/v3` — Apache-2.0, first-party to Ebitengine.
 
 Note: the Apache 2.0 grant on everything published before this change is irrevocable.
 Anyone who already had the code keeps commercial rights to those snapshots. Accepted

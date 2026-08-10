@@ -52,6 +52,14 @@ type GlobalState struct {
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
 	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
 
+	// FontData is the same fonts as raw file bytes.
+	//
+	// Fonts above is Ebitengine's type, which can only draw into an *ebiten.Image.
+	// internal/cards renders into a plain Go image so a command-line tool can call it
+	// with no window, so it sets text through golang.org/x/image and needs the file
+	// itself. Both come from the same embedded bytes, so the game and the contact sheet
+	// cannot end up in different fonts.
+	FontData map[string][]byte
 }
 
 // NewGlobalState used at the start of the game to start us off

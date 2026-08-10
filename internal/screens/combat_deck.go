@@ -13,6 +13,7 @@ import (
 	"sort"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -150,9 +151,11 @@ var startingDeck = buildStartingDeck()
 // a balance change nobody made on purpose, and a game that starts anyway is a game that hides
 // it. This runs at package init, so it fails on launch rather than mid-duel.
 func buildStartingDeck() []deckEntry {
-	cards := data.LoadCards()
+	// Not named `cards`: that is the drawing package, imported above, and shadowing a
+	// package name inside the one function that builds the deck is a trap.
+	records := data.LoadCards()
 
-	problems := data.CheckCostTiers(cards,
+	problems := data.CheckCostTiers(records,
 		func(concept string) (int, bool) {
 			a, ok := combat.ParseAction(concept)
 			if !ok {
@@ -177,7 +180,7 @@ func buildStartingDeck() []deckEntry {
 	}
 
 	var out []deckEntry
-	for _, c := range cards {
+	for _, c := range records {
 		action, ok := combat.ParseAction(c.Concept)
 		if !ok {
 			panic("cards.json: unknown concept " + c.Concept)
@@ -404,9 +407,8 @@ func (s *CombatScene) siftHand(n int) {
 // Deck overlay geometry. The panel is nearly the whole screen and stops above the button
 // band, so the Deck button that closes it stays outside the panel as well as on top of it.
 //
-// The grid holds every card that is not in hand, which is at most deck minus handSize —
-// 22 of the 30 today. Both piles are drawn into one fixed grid, so nothing below moves as
-// cards shift from one pile to the other.
+// The panel holds **every card you own**, in five rows of twelve, and nothing in it moves
+// as cards shift between piles — a played card dims where it stands rather than leaving.
 const (
 	deckPanelLeftPct  = 4
 	deckPanelRightPct = 96
@@ -417,22 +419,66 @@ const (
 	// closes it outside the panel as well as drawn on top of it.
 	deckPanelBottomPct = 92
 
-	// Eight columns of 138 plus the gaps comes to 1160 inside the panel's 1177. Three rows
-	// of 186-tall cards comes to 578 inside the ~713 the panel has below its heading, which
-	// is 24 slots against the 22 cards that can be outside the hand.
+	// **The grid became five overlapping rows, one per element, on 2026-08-09.**
 	//
-	// The third row is paid for by the card losing its initiative glyph: a two-glyph column
-	// is 50 pixels shorter than a three-glyph one, and the deck doubled to 30 cards on the
-	// same day. Without that the overflow line would fire on every look.
-	deckGridColumns = 8
-	deckGridGap     = 8
-	deckGridRows    = 3
+	// It was an 8x3 grid of half-size cards, which held 24 of the up-to-52 cards that can
+	// sit outside the hand — so "+N more not shown" fired on every single look. That line
+	// was written when the deck was 30 and could not fire, deliberately, so that growing
+	// the deck would produce a visible shortfall rather than a panel that quietly lied.
+	// It did its job and then kept firing.
+	//
+	// A half-size card (cards.Mini) overlapped to show only its left half needs 45 pixels
+	// of width instead of 146. Twelve concepts per element is 585 pixels a row, five rows
+	// is 684 tall, and **the whole deck now fits** — the overflow line is still there and
+	// can no longer fire.
+	//
+	// Half rather than a third: a third-size card was 59 pixels wide and could carry
+	// neither a glyph nor text, so a row was a line of coloured slivers. At 90 the
+	// 22-pixel category glyph fits, and the visible left 45 pixels are exactly the glyph
+	// and the cost dashes under it. A row now says what phase each card resolves in and
+	// what it costs. What it still cannot say is which *concept* each card is.
+	//
+	// **Five rows of 132 is a tight fit and the gap is what absorbs it.** The panel gives
+	// about 691 pixels between the legend and the closing hint; five rows plus four
+	// 8-pixel gaps is 692, so deckGridTop moved up to 120 to buy the clearance back. A
+	// sixth element would not fit and would need a different arrangement, not a smaller
+	// gap.
+	deckRowGap = 8
+
+	// deckStackPitch is how far apart the cards in a row sit. **It is a constant sized for
+	// a full row, never derived from how many cards are actually in one** — the overlay's
+	// governing idea is that a card does not move when it is discarded, it only dims, and
+	// a pitch that adapted to the count would shuffle the whole row on every draw.
+	//
+	// Twelve concepts at 84 is 1014 pixels plus the 104-pixel label gutter, inside the
+	// panel's 1177 with margin. At 90 the cards would not overlap at all and twelve of
+	// them would not fit, so the six pixels of overlap are what buys the last card its
+	// place — the stacking is load-bearing arithmetic, not a look.
+	//
+	// It was Mini.Width/2, which showed 45 pixels of each card and left no room for a
+	// name. Widening it to 84 is what let the name go on at all.
+	deckStackPitch = 84
+
+	// deckMaxPerRow caps a row so it cannot run off the panel. Twelve is what the deck
+	// holds per element — 12 concepts x 1 copy — and what deckStackPitch is sized against.
+	//
+	// **The cap is what gives the overflow line something to report.** Without it a row
+	// simply drew every card it had and ran off the edge, and the "+N more not shown"
+	// message below could never fire because nothing was ever not shown. A thirteenth
+	// concept should produce a visible, honest shortfall rather than a card halfway off
+	// the panel.
+	deckMaxPerRow = 12
+
+	// deckRowLabelWidth is the gutter the element name sits in, to the left of each row.
+	// The cards no longer carry any text, so without this a row would be an anonymous
+	// line of coloured slivers.
+	deckRowLabelWidth = 104
 
 	// Offsets down from the panel's top edge.
 	deckTitleTop  = 40
 	deckCountsTop = 78
 	deckLegendTop = 100
-	deckGridTop   = 132
+	deckGridTop   = 120
 	deckHintUp    = 22 // hint's distance up from the panel's bottom edge
 )
 
@@ -473,7 +519,7 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 	title := &text.DrawOptions{}
 	title.GeoM.Translate(float64(left+width/2), float64(top+deckTitleTop))
 	title.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, "What is left", heading, title)
+	text.Draw(screen, "Your deck", heading, title)
 
 	// Hyphens, not em dashes. The kubasta font has no U+2014 and draws a missing-glyph box
 	// for it — the middle dot is in the font, the dash is not.
@@ -488,7 +534,7 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 	// the size of cards.json becomes visible while playing.
 	line(deckCountsTop, fmt.Sprintf("draw %d  ·  discard %d  ·  %d in hand  ·  %d owned",
 		len(s.deck), len(s.discard), len(s.hand), deckSize()))
-	line(deckLegendTop, "dimmed cards are in the discard - they return on the next reshuffle")
+	line(deckLegendTop, "dimmed cards are in your hand or the discard - the rest are still to draw")
 
 	s.drawPileGrid(gs, screen, left+width/2, top+deckGridTop)
 
@@ -498,37 +544,27 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 	text.Draw(screen, "Deck again to close", small, hint)
 }
 
-// pileEntry is one card in the overlay and whether it can be drawn right now.
-type pileEntry struct {
-	card      actionCard
-	available bool
-}
-
-// drawPileGrid lays every card outside the hand into one grid, centred on centerX.
+// **Attacks, then defends, then prepares; within each, cheapest first.** The rows are
+// already one element each, so this is the order along a row — and it is what turns a
+// row from a list into a shape: the same three runs in the same places in every row,
+// so a gap is a card you have spent rather than a card you never had.
 //
-// One grid rather than a section per pile. Two sections of full-height cards do not fit the
-// panel, and the single grid turns out to be the better picture anyway: sorting by kind and
-// element rather than by which pile a card is in means **a card does not move when it is
-// discarded, it only dims**. Watching your deck drain in place reads far better than
-// watching cards jump between two lists.
+// Availability is the last key rather than the first, so a card's position does not
+// depend on which pile it is in. That is the whole governing idea of the panel — a
+// card does not move when it is played, it only dims — and sorting by pile would undo
+// it. It only breaks ties between genuinely identical cards, which are interchangeable.
 //
-// Sorted, never in pile order. The draw pile is shuffled, and drawing it in order would hand
-// the player their next five cards and make the shuffle pointless. This is a picture of what
-// the piles hold, not of their sequence.
-func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, top float32) {
-	entries := make([]pileEntry, 0, len(s.deck)+len(s.discard))
-	for _, c := range s.deck {
-		entries = append(entries, pileEntry{c, true})
-	}
-	for _, c := range s.discard {
-		entries = append(entries, pileEntry{c, false})
-	}
-
-	// Availability is the last key rather than the first, so identical cards sit together
-	// and the drawable one of a pair comes first. That is what keeps a card's position
-	// steady as it moves from the draw pile to the discard.
+// Pulled out of drawPileGrid so it can be tested: the drawing needs a window and this does
+// not, and the order along a row is a user-visible decision worth pinning.
+func sortPileEntries(entries []pileEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		a, b := entries[i], entries[j]
+		if ra, rb := categoryRank(a.card.action.Category()), categoryRank(b.card.action.Category()); ra != rb {
+			return ra < rb
+		}
+		if ca, cb := a.card.action.Cost(), b.card.action.Cost(); ca != cb {
+			return ca < cb
+		}
 		if a.card.action != b.card.action {
 			return a.card.action < b.card.action
 		}
@@ -537,42 +573,126 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 		}
 		return a.available && !b.available
 	})
+}
 
-	pitchX := deckCardStyle.width + deckGridGap
-	pitchY := deckCardStyle.height + deckGridGap
-	rowLeft := int(centerX) - (deckGridColumns*pitchX-deckGridGap)/2
-	slots := deckGridColumns * deckGridRows
+// categoryRank is the order categories run in along a deck row: attack, defend, prepare.
+//
+// A function rather than the enum's own order, because that order is the *resolution*
+// order — which phase a card acts in — and it is a rule. Reading it here would tie how the
+// deck panel is arranged to how a round plays out, so that changing one silently changed
+// the other.
+func categoryRank(c combat.Category) int {
+	switch c {
+	case combat.CategoryAttack:
+		return 0
+	case combat.CategoryDefend:
+		return 1
+	case combat.CategoryPrepare:
+		return 2
+	default:
+		return 3
+	}
+}
 
-	for i, e := range entries {
-		if i >= slots {
-			break
-		}
+// pileEntry is one card in the overlay and whether it can still be drawn.
+type pileEntry struct {
+	card      actionCard
+	available bool
+}
 
-		at := image.Pt(
-			rowLeft+(i%deckGridColumns)*pitchX,
-			int(top)+(i/deckGridColumns)*pitchY)
-
-		// enabled carries "can be drawn", not "can be afforded". Never selected: this is an
-		// inventory, not a choice, and dimming by the round's remaining AP would say
-		// something about a budget that has nothing to do with a pile you cannot play from.
-		drawCard(gs, screen, at, deckCardStyle, e.card, e.available, false, s.fighter.Str)
+// drawPileGrid lays **every card you own** into rows by element, centred on centerX.
+//
+// It used to show only what was outside the hand, under the heading "What is left". That
+// made the panel change *shape* as a round went on: eight cards vanished at the start of
+// every round and came back at the end of it, so the rows shortened and lengthened and
+// nothing sat still. The point of sorting rather than showing pile order was always that
+// **a card does not move when it is played, it only dims** — and leaving the hand out
+// broke exactly that.
+//
+// So all sixty are here, always, and the dimming carries the state instead: full strength
+// means still in the draw pile, washed out means in your hand or already discarded. The
+// rows are now a fixed twelve long, which is what the layout was sized for anyway.
+//
+// Sorted, never in pile order. The draw pile is shuffled, and drawing it in order would
+// hand the player their next few cards and make the shuffle pointless. This is a picture
+// of what you own, not of the sequence it will arrive in.
+func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, top float32) {
+	entries := make([]pileEntry, 0, len(s.deck)+len(s.discard)+len(s.hand))
+	for _, c := range s.deck {
+		entries = append(entries, pileEntry{c, true})
+	}
+	for _, c := range s.discard {
+		entries = append(entries, pileEntry{c, false})
+	}
+	// The hand dims the same way the discard does. They are different piles but the same
+	// fact from this panel's point of view — this card is not one you can still draw.
+	for _, c := range s.hand {
+		entries = append(entries, pileEntry{c.actionCard, false})
 	}
 
-	// **This fires on every look now, and it is the honest failure rather than the right one.**
-	// The grid is 24 slots; a 60-card deck puts up to 52 cards outside an 8-card hand, so the
-	// panel shows fewer than half of them and says so. It was written when the deck was 30 and
-	// this line could not fire, precisely so that growing the deck would produce a visible
-	// shortfall instead of a picture that quietly lied about what you own — which is the part
-	// that worked.
-	//
-	// **The fix is a design decision and not a bigger grid.** A card cannot be made smaller:
-	// GlyphSize is 64, CardGlyphScale is already 1, integer scales only, and the two-glyph
-	// column is the floor on a card's height (see CLAUDE.md). Paging, grouping identical cards
-	// under a count, or a different representation entirely are all real answers and all change
-	// what the panel *is*. Left for the owner.
-	if over := len(entries) - slots; over > 0 {
+	sortPileEntries(entries)
+
+	// One row per element, in the fixed order internal/cards declares. Never a map range:
+	// Go randomises that, and a panel whose rows swapped places between looks would be
+	// unreadable.
+	byElement := map[cards.Element][]pileEntry{}
+	for _, e := range entries {
+		art := e.card.element.art()
+		byElement[art] = append(byElement[art], e)
+	}
+
+	pitch := deckStackPitch
+	rowPitch := cards.Mini.Height + deckRowGap
+
+	// Widest row sets the left edge, so the rows share one origin and the columns line up
+	// down the panel rather than each row centring on its own count.
+	widest := 0
+	for _, group := range byElement {
+		n := min(len(group), deckMaxPerRow)
+		if w := (n-1)*pitch + cards.Mini.Width; w > widest {
+			widest = w
+		}
+	}
+	left := int(centerX) - (deckRowLabelWidth+widest)/2
+	cardsLeft := left + deckRowLabelWidth
+
+	shown := 0
+	for i, el := range cards.Elements() {
+		rowTop := int(top) + i*rowPitch
+
+		// The element's name in the gutter, vertically centred on the row. The cards in
+		// this row carry no text at all, so this is the only thing naming them.
+		labelOp := &text.DrawOptions{}
+		labelOp.GeoM.Translate(float64(cardsLeft-12), float64(rowTop+cards.Mini.Height/2))
+		labelOp.PrimaryAlign = text.AlignEnd
+		labelOp.SecondaryAlign = text.AlignCenter
+		labelOp.ColorScale.ScaleWithColor(cards.BorderOf(el))
+		text.Draw(screen, el.String(),
+			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, labelOp)
+
+		// **Left to right, so each card is covered on its *right* edge by the next one.**
+		// This was backwards and the screenshot showed it: drawing right to left puts
+		// card 0 on top of card 1, and card 1's left edge is exactly where its glyph and
+		// dashes are — so every row rendered as one complete card followed by eleven
+		// blank slivers.
+		group := byElement[el]
+		for j, e := range group {
+			if j >= deckMaxPerRow {
+				break
+			}
+			at := image.Pt(cardsLeft+j*pitch, rowTop)
+			// enabled carries "can be drawn", not "can be afforded". Never selected: this
+			// is an inventory, not a choice, and dimming by the round's remaining AP would
+			// say something about a budget that has nothing to do with a pile you cannot
+			// play from.
+			drawCard(gs, screen, at, cards.Mini, e.card, e.available, false, s.fighter.Str)
+		}
+		shown += min(len(group), deckMaxPerRow)
+	}
+
+	if over := len(entries) - shown; over > 0 {
 		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(centerX), float64(int(top)+deckGridRows*pitchY))
+		op.GeoM.Translate(float64(centerX), float64(int(top)+len(cards.Elements())*rowPitch))
 		op.PrimaryAlign = text.AlignCenter
 		text.Draw(screen, fmt.Sprintf("+%d more not shown", over),
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, op)

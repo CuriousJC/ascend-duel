@@ -1,11 +1,18 @@
 # Builds downloadable binaries and publishes them as a GitHub Release.
 #
-# Fires on a version tag and nothing else:
+# **Two ways in, and they produce the same release.** Either push a version tag:
 #
 #     git tag -a v0.1.0 -m "..." && git push origin v0.1.0
 #
-# **The tag is the trigger, so tagging is releasing.** There is no manual approval between
-# the two — push a `v*` tag only when the commit it points at is the thing to ship.
+# or run the workflow by hand from the Actions tab against `main`, giving it the version to
+# cut. The manual path creates the tag itself, at the commit it built, so releasing does not
+# require a local tag-and-push. **Pushing a `v*` tag is still releasing** — there is no
+# approval between the two, so push one only when the commit it points at is the thing to
+# ship.
+#
+# **The version is resolved once, in the `version` job, and everything downstream reads it.**
+# `GITHUB_REF_NAME` is the tag on one path and the branch name on the other, so nothing below
+# may use it — a build stamped `-X main.version=main` is the failure this avoids.
 #
 # **Only first-party actions.** Everything here is from `actions/` — checkout, setup-go,
 # upload/download-artifact — and publishing runs through the `gh` CLI preinstalled on the
@@ -22,13 +29,80 @@ on:
     tags:
       - "v*"
 
+  # The manual path. `version` is typed into the Actions tab; the run must be started against
+  # `main`, which the version job enforces rather than trusting the dropdown.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. v0.1.2. The tag is created for you."
+        required: true
+        type: string
+
 # Build jobs need nothing but the code. Only publish gets a write token.
 permissions:
   contents: read
 
+# One release at a time. Two runs cutting different versions would race in `publish`, and
+# cancelling a half-finished release is worse than making the second one wait.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  # Resolves the version string and refuses the run if it is not one. Everything else
+  # `needs:` this, so a bad input costs one cheap job rather than two full builds.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The input is read through the environment and never interpolated into the script.
+      # `${{ inputs.version }}` pasted inline would be executed by the shell, and this job
+      # is one `needs:` away from a job that holds a write token.
+      - id: resolve
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          # Tag push: the ref already is the version, and the tag pattern vetted it.
+          if [ "$EVENT" != "workflow_dispatch" ]; then
+            echo "releasing tag $REF_NAME"
+            echo "version=$REF_NAME" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A manual run can be pointed at any branch from the Actions tab. Releases come
+          # off main, so anything else is a mistake rather than an intention.
+          if [ "$REF_NAME" != "main" ]; then
+            echo "::error::manual releases run from main; this run was started on $REF_NAME"
+            exit 1
+          fi
+
+          if ! printf '%s' "$INPUT_VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::'$INPUT_VERSION' is not a version: expected vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
+          # gh would happily create a release against an existing tag, quietly shipping
+          # binaries built from a different commit than the one that tag names.
+          if git ls-remote --exit-code --tags origin "refs/tags/$INPUT_VERSION" >/dev/null 2>&1; then
+            echo "::error::tag $INPUT_VERSION already exists"
+            exit 1
+          fi
+
+          echo "releasing $INPUT_VERSION from $GITHUB_SHA"
+          echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+
   windows:
+    needs: version
     runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -60,8 +134,8 @@ jobs:
         shell: bash
         run: |
           go build -trimpath \
-            -ldflags "-H=windowsgui -s -w -X main.version=${GITHUB_REF_NAME}" \
-            -o "ascend-duel-${GITHUB_REF_NAME}-windows-amd64.exe" .
+            -ldflags "-H=windowsgui -s -w -X main.version=${VERSION}" \
+            -o "ascend-duel-${VERSION}-windows-amd64.exe" .
           ls -l ascend-duel-*.exe
 
       - uses: actions/upload-artifact@v4
@@ -76,6 +150,9 @@ jobs:
     # runner available quietly narrows who can run the result. The oldest supported image is
     # the widest audience.
     runs-on: ubuntu-22.04
+    needs: version
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -121,9 +198,9 @@ jobs:
       - name: build
         run: |
           go build -trimpath \
-            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" \
+            -ldflags "-s -w -X main.version=${VERSION}" \
             -o ascend-duel .
-          tar czf "ascend-duel-${GITHUB_REF_NAME}-linux-amd64.tar.gz" ascend-duel
+          tar czf "ascend-duel-${VERSION}-linux-amd64.tar.gz" ascend-duel
           ls -l ascend-duel-*.tar.gz
 
       - uses: actions/upload-artifact@v4
@@ -133,8 +210,10 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: [windows, linux]
+    needs: [version, windows, linux]
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
 
     # The only elevated permission in the repo, and it is scoped to this one job.
     permissions:
@@ -151,14 +230,21 @@ jobs:
 
       - run: ls -lR dist
 
-      # Hand-written notes when the tag has them, generated ones when it does not. A tag that
-      # forgot its notes file should still produce a release rather than failing after two
+      # Hand-written notes when the version has them, generated ones when it does not. A
+      # release that forgot its notes file should still publish rather than failing after two
       # successful builds — the binaries are the point and the notes are the courtesy.
+      #
+      # `--target` is what makes the manual path work: gh creates the tag at that commit when
+      # it does not already exist, and GitHub ignores the target for a tag that does. So the
+      # tag-push path is unchanged and the manual path tags exactly the commit it just built.
+      #
+      # A tag created here cannot re-trigger this workflow — GITHUB_TOKEN pushes do not raise
+      # workflow events — so the manual run publishes once rather than looping.
       - name: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes=".github/release-notes/${GITHUB_REF_NAME}.md"
+          notes=".github/release-notes/${VERSION}.md"
           if [ -f "$notes" ]; then
             echo "using $notes"
             set -- --notes-file "$notes"
@@ -167,7 +253,8 @@ jobs:
             set -- --generate-notes
           fi
 
-          gh release create "${GITHUB_REF_NAME}" \
+          gh release create "${VERSION}" \
             dist/* \
-            --title "${GITHUB_REF_NAME}" \
+            --title "${VERSION}" \
+            --target "${GITHUB_SHA}" \
             "$@"

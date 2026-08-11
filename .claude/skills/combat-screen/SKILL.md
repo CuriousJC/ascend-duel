@@ -143,7 +143,8 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 
 **Cards are portrait and live along the bottom.** Landscape cards in a vertical column
 capped how many could be shown, and the hand is going to grow. `cardWidth`/`cardHeight` are
-**flat constants — 180x264 — and must stay flat**: they used to be derived from the glyph
+**flat constants — 162x224 since 2026-08-11, 180x264 before it — and must stay flat**: they
+used to be derived from the glyph
 row, so adding a badge silently widened every card and the layout could not be reasoned
 about without doing the arithmetic. Contents fit the card, never the reverse.
 

@@ -1,0 +1,23 @@
+[
+  {
+    "RingRecord": "fire-ring",
+    "Name": "Fire Ring",
+    "Art": "firering_png",
+    "Element": "fire",
+    "Text": "Fire cards cost one less."
+  },
+  {
+    "RingRecord": "frozen-ring",
+    "Name": "Frozen Ring",
+    "Art": "frozenring_png",
+    "Element": "ice",
+    "Text": "Ice cards cost one less."
+  },
+  {
+    "RingRecord": "thunder-ring",
+    "Name": "Thunder Ring",
+    "Art": "thunderring_png",
+    "Element": "lightning",
+    "Text": "Lightning cards cost one less."
+  }
+]

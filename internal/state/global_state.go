@@ -70,6 +70,12 @@ type GlobalState struct {
 	Enemies  map[string]data.EnemyData
 	Duelists map[string]data.DuelistData
 
+	// Rings is what the player can equip. **Genuinely global for the same reason the rosters
+	// are** — it is loaded once from data/rings.json and no screen owns it. What is *equipped*
+	// is not here: that is run state and belongs on Session when Session exists, and on the
+	// combat scene until then. See MECHANICS.md — rings are the first thing that needs it.
+	Rings map[string]data.RingData
+
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
 	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct

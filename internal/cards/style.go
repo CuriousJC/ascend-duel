@@ -76,7 +76,14 @@ type Style struct {
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
-// for. 180x264 is roughly a playing card's proportions.
+// for. 162x224 — roughly a playing card's proportions, a little squarer than one.
+//
+// **It was 180x264 until 2026-08-11**, when every size came down by a tenth across and by
+// 15% down the face to give the screen back some room. The y offsets below did *not* scale
+// with it and deliberately so: the column is a stack of fixed-size art — a 32-pixel category
+// glyph, four dashes, a 64-pixel damage badge — and none of those can be scaled, so what the
+// height loses is the empty strip under the badge and nothing else. That strip was ~94px and
+// is now ~54, which is still room for the long-press description it is being kept for.
 //
 // The face reads: the name centred across the top, and a left column starting in the
 // corner beside it — category glyph, cost dashes, damage badge.
@@ -104,7 +111,7 @@ type Style struct {
 // of bars and one badge, all finished by y=164. The ~94 pixels below are deliberately
 // unfilled — that is where a long-press description or a status line goes.
 var Hand = Style{
-	Width: 180, Height: 264,
+	Width: 162, Height: 224,
 
 	CornerRadius: 12,
 	BorderWidth:  6,
@@ -135,22 +142,26 @@ var Hand = Style{
 
 // Mini is the deck overlay's card: half the hand's size, kept to the same proportions.
 //
+// **Half of the new Hand since 2026-08-11** — 81x112, down from 90x132. `deckStackPitch` in
+// internal/screens came down with it, because the pitch is the width less the overlap and a
+// pitch wider than the card is a row with gaps in it.
+//
 // **It shows the name now, and that was the last thing missing.** The overlay's rows
 // group by element and the glyph and dashes give phase and cost, so the only fact a card
 // was not stating was which concept it is. At 14pt the longest name in the deck —
-// "Riposte" — measures 35 pixels against 78 usable, so it was never a question of room;
-// it was a question of the cards being overlapped so tightly that only 29 pixels showed.
-// Widening the row (see deckStackPitch) is what made the space real.
+// "Riposte" — measures 35 pixels against the usable width, so it was never a question of
+// room; it was a question of the cards being overlapped so tightly that only 29 pixels
+// showed. Widening the row (see deckStackPitch) is what made the space real.
 //
 // The one thing still absent is the damage badge, and that is forced: a 64-pixel sword
-// under a name, a glyph and four dashes does not fit in 132 pixels of height. Damage is a
+// under a name, a glyph and four dashes does not fit in this height. Damage is a
 // function of the concept, so a named card implies it.
 //
 // The reading order matches Hand deliberately — name centred across the top, then the
 // glyph, then the dashes under it — so the two sizes are the same card and not two
 // designs.
 var Mini = Style{
-	Width: 90, Height: 132,
+	Width: 81, Height: 112,
 
 	CornerRadius: 6,
 	BorderWidth:  3,
@@ -192,10 +203,11 @@ var Mini = Style{
 // a dark rounded rectangle with a triangle on it, and the triangle is sized as a proportion
 // of the card, so it is the same drawing here as at hand size.
 //
-// The proportions are Hand's — 44x64 against 180x264 — so the stack reads as the same object
-// as the cards in the row, seen smaller.
+// The proportions are Hand's — 40x54 against 162x224 — so the stack reads as the same object
+// as the cards in the row, seen smaller. It came down with the rest on 2026-08-11; the strip
+// it has to fit did not change, so this one had room to spare either way.
 var Stack = Style{
-	Width: 44, Height: 64,
+	Width: 40, Height: 54,
 
 	CornerRadius: 4,
 	BorderWidth:  0,
@@ -214,11 +226,15 @@ var Stack = Style{
 //
 // The face reads top to bottom: portrait, name, bar, numbers.
 //
-//	 12  portrait          12..144   (Spec.Art, scaled to fit and centred)
-//	154  name              centred
-//	190  health bar        190..204
-//	212  hit points        "42/60", centred
-//	258  inside of the bottom border
+//	 12  portrait          12..124   (Spec.Art, scaled to fit and centred)
+//	131  name              centred
+//	161  health bar        161..175
+//	180  hit points        "42/60", centred
+//	218  inside of the bottom border
+//
+// **Every offset here scaled with the card on 2026-08-11**, unlike Hand's — nothing on this
+// face is fixed-size art. The portrait is scaled to fit its box and the bar is drawn to the
+// width it is given, so the whole layout is a proportion of the card and stays one.
 //
 // **The portrait gets the top half and the rest shares the bottom**, which is the layout the
 // owner asked for and also the one the art wants: the vendor portraits are wider than they
@@ -230,7 +246,7 @@ var Stack = Style{
 // is. `Element` is Basic, so the border is the neutral mid grey rather than claiming the
 // opponent is made of fire.
 var EnemyStyle = Style{
-	Width: 180, Height: 264,
+	Width: 162, Height: 224,
 
 	CornerRadius: 12,
 	BorderWidth:  6,
@@ -240,17 +256,17 @@ var EnemyStyle = Style{
 	ShowDamage:   false,
 
 	TextLeft:     12,
-	NameTop:      154,
+	NameTop:      131,
 	NameSize:     20,
 	NameCentered: true,
 
 	ArtTop:   12,
 	ArtInset: 12,
-	ArtMaxH:  132,
+	ArtMaxH:  112,
 
-	HealthBarTop:    190,
+	HealthBarTop:    161,
 	HealthBarHeight: 14,
-	HealthTextTop:   212,
+	HealthTextTop:   180,
 	HealthTextSize:  18,
 }
 
@@ -264,7 +280,7 @@ var EnemyStyle = Style{
 // **Not wired into the game.** Nothing builds one of these yet — it exists so the design
 // can be looked at on the contact sheet before rings become real.
 var RingStyle = Style{
-	Width: 180, Height: 264,
+	Width: 162, Height: 224,
 
 	CornerRadius: 12,
 	BorderWidth:  6,
@@ -278,7 +294,9 @@ var RingStyle = Style{
 	NameSize:     20,
 	NameCentered: true,
 
-	ArtTop:   52,
+	// Scaled with the card, like the enemy's: the artwork is fitted to this box rather than
+	// drawn at its own size, so there is nothing here that a smaller card breaks.
+	ArtTop:   46,
 	ArtInset: 16,
-	ArtMaxH:  190,
+	ArtMaxH:  160,
 }

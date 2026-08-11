@@ -79,6 +79,7 @@ func main() {
 	g.GlobalState.ImageData = assets.LoadImageData()
 	g.GlobalState.Enemies = data.LoadEnemies()
 	g.GlobalState.Duelists = data.LoadDuelists()
+	g.GlobalState.Rings = data.LoadRings()
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session

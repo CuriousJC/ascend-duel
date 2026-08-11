@@ -27,12 +27,17 @@ import (
 // and no keyboard anywhere in this game.
 const (
 	// The card is a fixed portrait rectangle and nothing inside it may change that.
-	// 180x264 is roughly a playing card's proportions, and it is written here as two plain
+	// 162x224 is roughly a playing card's proportions, and it is written here as two plain
 	// numbers on purpose: cardWidth used to be *derived* from the glyph row, so adding a
 	// badge silently widened every card in the game and the layout could not be reasoned
 	// about without doing the arithmetic. The contents now fit the card, never the reverse.
-	cardWidth  = 180
-	cardHeight = 264
+	//
+	// **Down a tenth across and 15% down the face on 2026-08-11**, from 180x264, to give the
+	// screen back some room. It has to stay equal to cards.Hand's footprint — that package
+	// draws the picture and this one places it — and TestCardFootprintMatchesTheRenderer is
+	// what says so.
+	cardWidth  = 162
+	cardHeight = 224
 	cardGap    = 12
 
 	// The row sits low, with the budget bar and then the button strip beneath it. handTopPct

@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
@@ -651,6 +652,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	s.drawFighterBlock(gs, screen)
 
+	// **The ring pane is a sketch** *(2026-08-11)* — it draws what `data/rings.json` defines
+	// and nothing equips, buys or reads one. It sits in the band the full-height panes left
+	// behind, which is what makes room for full-size ring cards. See combat_rings.go.
+	s.drawRingPane(gs, screen)
+
 	// **The enemy is a card now** *(2026-08-11)*, centred where its sprite stood. It was the
 	// last thing on this screen drawn as a loose picture on the background, with a health bar
 	// hanging under it — and everything else the duel is made of is a card, including the one
@@ -776,9 +782,15 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("resolutionFeed expanded", image.Rect(
 		band.Min.X, gs.PctY(feedExpandTopPct),
 		band.Max.X, gs.PctY(handTopPct)-feedGapAboveCards))
-	trace.Rect("fighterBlock", image.Rect(
-		gs.PctX(blockLeftPct), gs.PctY(blockTopPct),
-		gs.PctX(blockRightPct), gs.PctY(blockTopPct)+blockHeight))
+	trace.Rect("fighterBlock", s.fighterBlockRect(gs))
+	trace.Rect("ringPane", s.ringPaneRect(gs))
+	// The slots as they currently stand, not as they would at the cap: the pitch is a function
+	// of how many rings are worn, so a dump of five would describe a row that is not on screen.
+	for i := 0; i < len(equippedRings(gs)); i++ {
+		at := ringSlotAt(s.ringPaneRect(gs), i, len(equippedRings(gs)))
+		trace.Rect(fmt.Sprintf("ringSlot[%d]", i), image.Rect(
+			at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height))
+	}
 	trace.Rect("apBar", image.Rect(
 		band.Min.X, band.Max.Y+apBarBelow,
 		band.Max.X, band.Max.Y+apBarBelow+apBarHeight))

@@ -401,8 +401,12 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **The card's height budget is spent differently now, not enlarged.** It was two 64-pixel
   badges (damage and cost). Cost became a stack of dash marks and the category *word*
   became a 22-pixel glyph, so the column is one badge, one small glyph and some bars, and
-  the card is the same 180x264 with ~94px of deliberately empty surface at the bottom for a
-  long-press description. Adding a badge back spends that.
+  the card kept its footprint with ~94px of deliberately empty surface at the bottom for a
+  long-press description. Adding a badge back spends that. **The card came down to 162x224 on
+  2026-08-11** — a tenth off the width, 15% off the height — and the *column's* offsets did
+  not move, because none of that art can be scaled. What the height lost was the empty strip,
+  which is ~54px now. That is still room for the description and it is no longer room for much
+  else.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.
@@ -630,7 +634,7 @@ Key conventions:
 ### Package layout and its layering
 
 - `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["giantrat_png"]`, `gs.Fonts["kubasta"]`), and it is **independent of where the file sits** — see the Art section. There are two extra loaders for callers that cannot take an Ebitengine type: `LoadFontData()` and `LoadImageData()` hand back raw bytes, because `internal/cards` and `tools/cardsheet` render without a graphics context. `gs.FontData` carries the fonts for exactly that reason.
-- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. **Four files since 2026-08-11**, where there were two:
+- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. **Five files since 2026-08-11**, where there were two:
 
   | File | Loader | Holds |
   |---|---|---|
@@ -638,6 +642,15 @@ Key conventions:
   | `enemies.json` | `LoadEnemies` | 96 opponents: stats, style, portrait, valid floors |
   | `duelist_cards.json` | `LoadDuelistCards` | the player's deck list |
   | `enemy_cards.json` | `LoadEnemyCards` | what an opponent draws from |
+  | `rings.json` | `LoadRings` | the rings that exist: name, art key, element, one line of text |
+
+  **`rings.json` runs ahead of its rules on purpose** *(2026-08-11)*. Nothing reads `Element`
+  and nothing equips a ring — the combat screen's ring pane draws the list and that is all. It
+  is a file first so the set can be seen and extended while the mechanic is still being
+  decided, the same order the enemy roster arrived in. **Do not grow a rules vocabulary in it
+  ahead of the rules**: the discount and the flip both need `element` to cross into
+  `internal/combat` first, and a JSON field naming a rule that does not exist is a field
+  nothing can check. `data.RingOrder` is the sorted walk, per the determinism rules.
 
   **The player and the enemies split because their fields stopped overlapping** — an enemy has a plan style, a portrait and an affix pool; a duelist has a card back and, eventually, a deck. One struct meant every field was optional and none of them meant anything.
 
@@ -665,7 +678,7 @@ Key conventions:
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
 - `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **A planner takes the hand it was dealt** since 2026-08-11 — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` now has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
-- **The combat screen is six files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
+- **The combat screen is eight files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
   - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay.
     **The overlay shows every card you own**, in five rows of one element each, at
@@ -677,7 +690,8 @@ Key conventions:
     `categoryRank` is written out rather than read off the enum, because the enum's order is
     *resolution* order and that is a rule.
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
-  - `combat_hud.go` — everything around the round: the character strip, the caption box, `drawBox`, the enemy sprite, and both health bars.
+  - `combat_hud.go` — everything around the round: the character block, `drawBox`, the discards badge, and the enemy card. **The block is a narrow corner column again since 2026-08-11** — the duelist's name, Health and Vitae stacked — and its height is derived from `blockFigures()` so adding a figure grows the box rather than clipping it. `fighterBlockRect` is the one place its geometry is written, and the ring pane starts from its right edge.
+  - `combat_rings.go` — **the ring row** *(added 2026-08-11)*: full-size `cards.RingStyle` cards from `data/rings.json`, a rule under them running the row's width, and the cap written as `worn/5` on that rule's right end. **A layout sketch, not a mechanic** — nothing buys, equips or reads a ring. It claims the 12–46% band the full-height panes vacated, which is what pays for full-size ring cards. Two things it does deliberately: **there is no box** — it was framed and titled for an hour and read as cards trapped in a panel, so the cards are the pane and the row aligns flush with the top of the character block beside it; and **the pitch is a function of how many rings are worn**, first card flush left and last flush right, so three stand apart and five close up and overlap by ~26px. Overlap rather than shrink, because a card cannot be scaled and there is no ring style below this one.
   - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.
   - `combat_flight.go` — **every card that moves** *(added 2026-08-10)*. Three things, all
     presentation-only, all on their own clock, and none of which may change an outcome:

@@ -6,6 +6,7 @@ import (
 	_ "image/png"
 	"log"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
@@ -110,7 +111,8 @@ func cardImage(gs *state.GlobalState, spec cards.Spec, st cards.Style) *ebiten.I
 	return img
 }
 
-// portraitCache holds the decoded enemy portraits, keyed by their assets name.
+// artworkCache holds the decoded pictures that go *on* a card — enemy portraits, ring art —
+// keyed by their assets name.
 //
 // **Decoded once and held**, for the same reason the cards themselves are cached: these are
 // 320-pixel PNGs and `image.Decode` is not a per-frame operation. They are handed to
@@ -118,30 +120,35 @@ func cardImage(gs *state.GlobalState, spec cards.Spec, st cards.Style) *ebiten.I
 // bytes rather than out of `LoadAssets` as *ebiten.Image — a card is drawn with no graphics
 // context.
 //
+// **One cache for both, rather than one per kind of art.** It was `portraitCache` until the
+// ring pane arrived on 2026-08-11; a second map would have been the same six lines keyed the
+// same way, and the thing they have in common — a file that has to be decoded before it can
+// be drawn into a card — is the whole of what either needs.
+//
 // A failure is cached as nil so a bad file logs once rather than sixty times a second, and
-// the card then draws with no portrait rather than not at all.
-var portraitCache = map[string]image.Image{}
+// the card then draws with no picture rather than not at all.
+var artworkCache = map[string]image.Image{}
 
-func portrait(gs *state.GlobalState, key string) image.Image {
+func artwork(gs *state.GlobalState, key string) image.Image {
 	if key == "" {
 		return nil
 	}
-	if img, ok := portraitCache[key]; ok {
+	if img, ok := artworkCache[key]; ok {
 		return img
 	}
 
 	data := gs.ImageData[key]
 	if len(data) == 0 {
-		log.Printf("cards: no portrait named %q", key)
-		portraitCache[key] = nil
+		log.Printf("cards: no artwork named %q", key)
+		artworkCache[key] = nil
 		return nil
 	}
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		log.Printf("cards: decoding portrait %q: %v", key, err)
+		log.Printf("cards: decoding artwork %q: %v", key, err)
 		img = nil
 	}
-	portraitCache[key] = img
+	artworkCache[key] = img
 	return img
 }
 
@@ -154,9 +161,27 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.
 	return cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
-		Art:     portrait(gs, c.Portrait),
+		Art:     artwork(gs, c.Portrait),
 		Life:    c.CurrentLife,
 		MaxLife: c.MaxLife,
+		Enabled: true,
+	}
+}
+
+// ringSpec is an equipped ring as a card: its name and its artwork, and nothing else.
+//
+// **The element on the record does not reach the Spec**, deliberately. `cards.Ring` is the
+// element a ring card carries, which paints the border pink whatever the ring is about — the
+// one thing that must never happen is reaching for a ring thinking it is a card you can play.
+// `RingData.Element` says which element the ring will eventually *discount*; it is a rule, not
+// a colour, and it has nowhere to be read yet.
+//
+// No cost, no category, no damage: a ring is not played from a hand and has no phase.
+func ringSpec(gs *state.GlobalState, r data.RingData) cards.Spec {
+	return cards.Spec{
+		Name:    r.Name,
+		Element: cards.Ring,
+		Art:     artwork(gs, r.Art),
 		Enabled: true,
 	}
 }

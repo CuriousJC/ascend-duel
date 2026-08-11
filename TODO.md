@@ -38,11 +38,19 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
       Migrating health bars onto the plain-Go path would collapse the two, and is the only
       way to get back to one — the reverse is impossible, since the mask path needs a window.
       Low priority, but it is a real inconsistency and CLAUDE.md now says so.
-- [ ] **Rings exist only on the contact sheet.** `cards.RingStyle` and `cards.Ring` draw one
-      — same format, pink border, artwork instead of glyphs, no cost or category — but
-      nothing in the game builds one. Whatever equips a ring will need `Spec.Art` wired to a
-      real asset and a home on a screen. `Spec.Dragging` was added for the ring preview and
-      is unused by the hand, which does have drag-and-drop and no visual for it.
+- [~] **Rings are drawn and nothing else.** `cards.RingStyle` and `cards.Ring` draw one —
+      same format, pink border, artwork instead of glyphs, no cost or category — and since
+      2026-08-11 the combat screen has a **ring pane** drawing the three in
+      `data/rings.json` at full size, with `worn/5` under its corner. That is the layout
+      only: no buying, no equipping, no unequipping, no rule reads a ring, and
+      `RingData.Element` is documentation.
+      - What is still open, in the order it blocks: **elements into `internal/combat`**
+        (which the discount needs and the flip needs to match on), **`Session`** (a ring
+        survives a fight and `CombatScene` does not), then **vitae actually spent**.
+      - The sketch equips everything defined up to the cap on every `Init`, which is what
+        stands in for equipment until `Session` exists.
+      - `Spec.Dragging` was added for the ring preview and is still unused by both the pane
+        and the hand, which does have drag-and-drop and no visual for it.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the

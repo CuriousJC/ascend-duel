@@ -50,86 +50,116 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 // takes its width from the hand for the same reason this did — the same band the AP bar
 // spans, so the two line up on both edges however many cards are held. See combat_panes.go.
 
-// The character block, **a strip across the top** *(moved there 2026-08-07)*.
+// The character block, **back in the top-left corner and stacked vertically**
+// *(2026-08-11)*.
 //
-// It was a tall box at 4%,12% for as long as the 15–39% column beside it was empty. Action
-// Flow claimed that column, and 268px of box starting at 51px ran straight through a pane
-// starting at 192px — the block was drawn on top, eating the pane's title and its first rows.
+// It has been three shapes now and each move was forced by what claimed the space beside it.
+// It was a tall box at 4%,12% while the 15–39% column was empty; it became a wide strip on
+// 2026-08-07 when Action Flow claimed that column and 268px of box ran straight through the
+// pane's title. **Action Flow is not drawn and Resolution has left the band entirely** — it is
+// a three-line feed above the hand since 2026-08-11 — so the whole 12–46% band is free, and
+// what wants it is the ring pane. A strip 35% of the screen wide sitting on top of that band
+// was spending the width the rings need.
 //
-// **The band above the panes was dead space and this is what it is for.** Laid out
-// horizontally rather than squeezed narrower: three labelled figures side by side, which reads
-// at a glance in a way a stack of rows in a thin column would not. It still replaces the
-// fighter's sprite and health bar for the same reason as before — a bar says roughly how hurt
-// you are, and a duel decided in whole points wants the exact number.
+// So: **a narrow column in the corner holding exactly what it holds**, and no more. Three
+// things stacked — the duelist's name on the box's own top edge, then Health, then Vitae —
+// each a small caption over its figure. The height is derived from the row count rather than
+// written down, so adding a fourth figure grows the box instead of overflowing it.
 //
-// The right edge lines up with Action Flow's, so the strip caps the left column rather than
-// floating over the middle of the screen.
+// It still replaces the fighter's sprite and health bar for the same reason as before: a bar
+// says roughly how hurt you are, and a duel decided in whole points wants the exact number.
 const (
-	blockLeftPct  = 4
-	blockRightPct = 39
-	blockTopPct   = 2
+	blockLeftPct = 1
+	blockTopPct  = 2
 
-	blockHeight = 88
+	// **A fixed width, not a percentage.** The block is sized by the widest figure it holds —
+	// "180 / 180" at 24px — and the ring pane starts where it ends, so a width that moved with
+	// the screen would move the rings for no reason anyone could name.
+	blockWidth = 158
 
-	blockLabelTop = 38 // small caption above each figure
-	blockValueTop = 56 // the figure itself
+	blockFirstRow  = 34 // gap from the top edge to the first caption, clearing the title
+	blockRowPitch  = 46 // one caption-and-figure pair
+	blockValueTop  = 18 // the figure, below its own caption
+	blockBottomPad = 10
 )
+
+// blockFigure is one labelled number in the block.
+//
+// A nil tint means the row takes the default ink. Life is the only one that takes a colour:
+// it is the number the whole duel is about, and what is beside it is a budget rather than a
+// stake.
+type blockFigure struct {
+	label string
+	value string
+	tint  *color.RGBA
+}
+
+// blockFigures is what the block holds, and **the single thing its height is derived from**.
+// A box sized by a constant while this list grew would clip the last figure, which looks like
+// a spacing bug rather than a missing row.
+//
+// **Title case, not caps.** The block started out shouting HEALTH / DISCARDS / VITAE and
+// `VITAE` rendered as `VITRE` — kubasta's uppercase A at 12px carries a diagonal that reads as
+// an R when there is no lowercase around it to set the shape. Caps are not worth a label the
+// player reads as a different word.
+//
+// **Discards left was the middle figure until 2026-08-11**, and moved onto the Discard button
+// itself — see drawDiscardsLeft. It was the one figure here answering a question asked *while
+// looking somewhere else*: it ticks down as the button is pressed, at the bottom of the
+// screen, and this block is at the top. Life and vitae are read between rounds and stay.
+//
+// Vitae is a placeholder reading a fixed 5 — it has no rule behind it yet. It is drawn anyway
+// so the block has its real shape while the rest of the character's state is decided, rather
+// than being retrofitted into a box already sized without it.
+func (s *CombatScene) blockFigures() []blockFigure {
+	return []blockFigure{
+		{"Health", fmt.Sprintf("%d / %d", s.fighter.CurrentLife, s.fighter.MaxLife), &lifeColor},
+		{"Vitae", fmt.Sprintf("%d", s.vitae), nil},
+	}
+}
+
+// blockHeight is the box: its title, one pitch per figure, and a margin under the last.
+// Derived so the box cannot claim a height its contents have outgrown.
+func blockHeight(rows int) int {
+	return blockFirstRow + rows*blockRowPitch + blockBottomPad
+}
+
+// fighterBlockRect is where the block sits. **The ring pane starts from its right edge**, so
+// this is the one place the block's geometry is written and both read it — see ringPaneRect.
+func (s *CombatScene) fighterBlockRect(gs *state.GlobalState) image.Rectangle {
+	left, top := gs.PctX(blockLeftPct), gs.PctY(blockTopPct)
+	return image.Rect(left, top, left+blockWidth, top+blockHeight(len(s.blockFigures())))
+}
 
 // lifeColor is the red the life fraction is written in. It is the one place on the screen
 // that has to be found without being looked for, so it gets a colour nothing else uses.
 var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
 
-// drawFighterBlock draws what the player is: life and vitae.
-//
-// **Discards left was the middle figure until 2026-08-11**, and moved onto the Discard button
-// itself — see drawDiscardsLeft. It was the one figure in the strip that answers a question
-// asked *while looking somewhere else*: it ticks down as the button is pressed, at the bottom
-// of the screen, and the strip is at the top. Life and vitae are read between rounds and stay.
-//
-// Vitae is a placeholder reading a fixed 5 — it has no rule behind it yet. It is drawn
-// anyway so the block has its real shape while the rest of the character's state is
-// decided, rather than being retrofitted into a box already sized without it.
+// drawFighterBlock draws what the player is: the duelist's name on the box's top edge, then
+// life and vitae stacked under it, each a small caption over its figure.
 func (s *CombatScene) drawFighterBlock(gs *state.GlobalState, screen *ebiten.Image) {
-	left, right := gs.PctX(blockLeftPct), gs.PctX(blockRightPct)
-	top := gs.PctY(blockTopPct)
-	r := image.Rect(left, top, right, top+blockHeight)
+	r := s.fighterBlockRect(gs)
 
 	drawBox(gs, screen, r, playerSwatch, duelistName)
 
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 12}
 	value := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 24}
 
-	// Evenly spaced columns, each a small caption over its figure. Life is the only one that
-	// takes a colour: it is the number the whole duel is about, and what is beside it is a
-	// budget rather than a stake. The spacing is derived from len(cells), so dropping Discards
-	// re-centred the remaining two rather than leaving a hole where it stood.
-	cells := []struct {
-		label string
-		value string
-		tint  *color.RGBA
-	}{
-		// **Title case, not caps.** The strip started out shouting HEALTH / DISCARDS / VITAE
-		// and `VITAE` rendered as `VITRE` — kubasta's uppercase A at 12px carries a diagonal
-		// that reads as an R when there is no lowercase around it to set the shape. The old
-		// tall block used title case and never had the problem. Caps are not worth a label
-		// the player reads as a different word.
-		{"Health", fmt.Sprintf("%d / %d", s.fighter.CurrentLife, s.fighter.MaxLife), &lifeColor},
-		{"Vitae", fmt.Sprintf("%d", s.vitae), nil},
-	}
+	// Centred on the box's own midline. The column is narrow enough that left-aligning the
+	// captions and right-aligning the figures would read as two ragged edges rather than as
+	// one block.
+	x := float64(r.Min.X+r.Max.X) / 2
 
-	width := right - left
-	for i, c := range cells {
-		// Centres at one sixth, one half and five sixths, so the columns sit in their own
-		// thirds rather than being packed against the left edge.
-		x := float64(left) + float64(width)*(float64(2*i+1)/float64(2*len(cells)))
+	for i, c := range s.blockFigures() {
+		rowTop := r.Min.Y + blockFirstRow + i*blockRowPitch
 
 		labelOp := &text.DrawOptions{}
-		labelOp.GeoM.Translate(x, float64(top+blockLabelTop))
+		labelOp.GeoM.Translate(x, float64(rowTop))
 		labelOp.PrimaryAlign = text.AlignCenter
 		text.Draw(screen, c.label, small, labelOp)
 
 		valueOp := &text.DrawOptions{}
-		valueOp.GeoM.Translate(x, float64(top+blockValueTop))
+		valueOp.GeoM.Translate(x, float64(rowTop+blockValueTop))
 		valueOp.PrimaryAlign = text.AlignCenter
 		if c.tint != nil {
 			valueOp.ColorScale.ScaleWithColor(*c.tint)

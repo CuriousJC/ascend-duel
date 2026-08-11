@@ -623,21 +623,45 @@ elements entry and is now due.
 **Rings are drawn as cards**, in a horizontal row across the top, not necessarily spanning the
 whole bar. Same size as other cards, and **no glyphs**.
 
-- Five at 180px wide is 948 including gaps — fits horizontally.
-- **It does not fit vertically.** A hand-size card is 264 tall, the bottom band already runs
-  566→937, and that leaves ~270px for the character block, Resolution pane, caption and enemy —
-  where the Resolution pane alone is currently 326.
+**The row is on the screen as of 2026-08-11, at full card size, and it is a sketch** — nothing
+buys, equips or reads a ring, and `data/rings.json` holds the three that have art. What made it
+possible is that **the vertical problem below solved itself**: the full-height Resolution pane
+left the 12–46% band for a three-line feed above the hand, so the band the row needed was
+already empty. The character block shrank into the top-left corner to give it the width.
+
+- **The row spreads to fill its width and closes up as it fills**: first card flush left, last
+  flush right, so three rings stand well apart and five sit shoulder to shoulder. The row runs
+  to 79% because the enemy card is past 81%, which leaves about 825px — and five cards is 810
+  since **the whole card set came down to 162x224 on 2026-08-11** (a tenth off the width, 15%
+  off the height, at the owner's request). At the old 180 it overlapped by 26px each, and it
+  will again if the row ever narrows. Overlap rather than shrink is the accepted answer, the
+  same idiom as the deck overlay — a card cannot be scaled, so a smaller ring is a different
+  drawing and there is no smaller ring style.
+- **The row is not a box** *(2026-08-11)*. No fill, no frame, no title: a pink panel around five
+  pink-bordered cards read as cards trapped in a container. What marks it is a **rule under the
+  cards**, the width of the row, with the fraction on its right end — and the cards align flush
+  with the top of the character block rather than each sitting inset in a frame.
+- ~~**It does not fit vertically.**~~ It does now, for the reason above. The old arithmetic —
+  264 tall against ~270px of free band while the Resolution pane took 326 — is what the pane's
+  departure removed.
 - Dropping the glyphs is exactly what *would* free the height: the glyph column is the floor on
-  card size. `[?]` Same width and shorter is the obvious escape, but "same size" was stated.
-- `drawCard` takes an `actionCard` and builds a glyph column from `badgesFor`. A ring has no
-  damage, cost or category, so either that generalises or rings get their own drawer sharing
-  the frame and colour logic.
+  card size. `[?]` Same width and shorter is the escape if the band is ever wanted back.
+- `internal/cards` draws a ring already — `RingStyle`, pink border, artwork instead of glyphs —
+  so the drawer question is answered: rings share the frame and colour logic and skip the glyph
+  column. The screen builds it through `ringSpec`.
+
+**The cap is written down after all, as a fraction** *(decided 2026-08-11)*. `worn/5` sits on the
+right-hand end of the rule under the row, the same shape as the deck pile's `left/owned` and the
+AP figure. That **softens "the cap is never displayed"** above, deliberately: a number in a corner
+is read without being looked for, where five slots of which two are empty frames would spend the
+loudest thing in the pane on what you have not got.
 
 **Rings are the first thing that genuinely needs `Session`.** They survive fights;
-`CombatScene` state does not.
+`CombatScene` state does not. The sketch dodges this by equipping everything defined, up to the
+cap, every time the screen initialises.
 
-Art note: `fire-ring.png`, `frozen-ring.png` and `thunder-ring.png` are already embedded and
-unused. Earth has none.
+Art note: `fire-ring.png`, `frozen-ring.png` and `thunder-ring.png` are embedded and now drawn.
+Earth has none, so a fourth ring is art before it is data.
 
 ---
 

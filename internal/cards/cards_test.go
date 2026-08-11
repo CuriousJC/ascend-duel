@@ -33,7 +33,7 @@ func faces(t *testing.T) *Faces {
 // pitch it lays rows out at. Duplicated from internal/screens rather than imported —
 // screens imports cards, never the reverse — and TestDeckPitchMatchesTheCard in that
 // package fails if the two drift.
-const deckVisibleWidth = 84
+const deckVisibleWidth = 75
 
 // deckNames is every concept in the deck, for the layout tests that have to check the
 // worst case rather than a representative one.

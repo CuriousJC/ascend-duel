@@ -485,14 +485,18 @@ const (
 	// governing idea is that a card does not move when it is discarded, it only dims, and
 	// a pitch that adapted to the count would shuffle the whole row on every draw.
 	//
-	// Twelve concepts at 84 is 1014 pixels plus the 104-pixel label gutter, inside the
-	// panel's 1177 with margin. At 90 the cards would not overlap at all and twelve of
-	// them would not fit, so the six pixels of overlap are what buys the last card its
-	// place — the stacking is load-bearing arithmetic, not a look.
+	// Twelve concepts at 75 is 906 pixels plus the 104-pixel label gutter, inside the
+	// panel's 1177 with margin. At Mini's full 81 the cards would not overlap at all, so the
+	// six pixels of overlap are what buys the row its slack — the stacking is load-bearing
+	// arithmetic, not a look.
 	//
 	// It was Mini.Width/2, which showed 45 pixels of each card and left no room for a
-	// name. Widening it to 84 is what let the name go on at all.
-	deckStackPitch = 84
+	// name. Widening it to width-less-six is what let the name go on at all.
+	//
+	// **75 since 2026-08-11**, down from 84 with the card itself — the overlap is what is
+	// held constant, not the pitch, so a pitch left behind at 84 would have opened gaps
+	// between cards in an 81-pixel row. TestDeckRowFitsThePanel is what catches that.
+	deckStackPitch = 75
 
 	// deckMaxPerRow caps a row so it cannot run off the panel. Twelve is what the deck
 	// holds per element — 12 concepts x 1 copy — and what deckStackPitch is sized against.

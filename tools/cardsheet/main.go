@@ -53,7 +53,7 @@ const maxCost = 4
 // the deck overlay lays its cards, and so how much of each one shows. The sheet has to use
 // the game's number or its deck section would be previewing an overlap the game does not
 // draw — the same failure the old glyph sheet had when it previewed at the wrong scale.
-const deckStackPitch = 84
+const deckStackPitch = 75
 
 // ground is the combat screen's background, so a card is judged against what it actually
 // sits on rather than against a white browser page. It is the literal value from

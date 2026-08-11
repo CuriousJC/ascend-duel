@@ -1,0 +1,1658 @@
+[
+  {
+    "EnemyRecord": "ClearPod1",
+    "Name": "Clear Pod",
+    "Portrait": "clearpod1-portrait",
+    "Strength": 5,
+    "Speed": 4,
+    "Constitution": 12,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "ClearSlime1",
+    "Name": "Clear Slime",
+    "Portrait": "clearslime1-portrait",
+    "Strength": 5,
+    "Speed": 6,
+    "Constitution": 10,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "ClearSlime2",
+    "Name": "Clear Slime II",
+    "Portrait": "clearslime2-portrait",
+    "Strength": 6,
+    "Speed": 8,
+    "Constitution": 12,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Drone1",
+    "Name": "Scout Drone",
+    "Portrait": "drone1-portrait",
+    "Strength": 6,
+    "Speed": 26,
+    "Constitution": 9,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "GiantBat",
+    "Name": "Giant Bat",
+    "Portrait": "giantbat-portrait",
+    "Strength": 5,
+    "Speed": 25,
+    "Constitution": 8,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "GiantRat",
+    "Name": "Giant Rat",
+    "Portrait": "giantrat-portrait",
+    "Strength": 6,
+    "Speed": 15,
+    "Constitution": 10,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Goblin",
+    "Name": "Goblin",
+    "Portrait": "goblin-portrait",
+    "Strength": 6,
+    "Speed": 22,
+    "Constitution": 9,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      1,
+      2
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "BlueSlime1",
+    "Name": "Blue Slime",
+    "Portrait": "blueslime1-portrait",
+    "Strength": 6,
+    "Speed": 8,
+    "Constitution": 12,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "ClearCube1",
+    "Name": "Clear Cube",
+    "Portrait": "clearcube1-portrait",
+    "Strength": 6,
+    "Speed": 4,
+    "Constitution": 14,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Dragonfly",
+    "Name": "Dragonfly",
+    "Portrait": "dragonfly-portrait",
+    "Strength": 8,
+    "Speed": 20,
+    "Constitution": 12,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      1,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Frogman",
+    "Name": "Frogman",
+    "Portrait": "frogman-portrait",
+    "Strength": 9,
+    "Speed": 10,
+    "Constitution": 14,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "GreenSlime1",
+    "Name": "Green Slime",
+    "Portrait": "greenslime1-portrait",
+    "Strength": 6,
+    "Speed": 8,
+    "Constitution": 13,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      1,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "BlueSlime2",
+    "Name": "Blue Slime II",
+    "Portrait": "blueslime2-portrait",
+    "Strength": 7,
+    "Speed": 10,
+    "Constitution": 14,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Drone2",
+    "Name": "Hunter Drone",
+    "Portrait": "drone2-portrait",
+    "Strength": 8,
+    "Speed": 28,
+    "Constitution": 11,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      2,
+      3
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "GreenPod1",
+    "Name": "Green Pod",
+    "Portrait": "greenpod1-portrait",
+    "Strength": 7,
+    "Speed": 6,
+    "Constitution": 15,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      3
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "AmberSlime1",
+    "Name": "Amber Slime",
+    "Portrait": "amberslime1-portrait",
+    "Strength": 8,
+    "Speed": 10,
+    "Constitution": 16,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Android1",
+    "Name": "Android Mk I",
+    "Portrait": "android1-portrait",
+    "Strength": 9,
+    "Speed": 20,
+    "Constitution": 15,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "BlueCube1",
+    "Name": "Blue Cube",
+    "Portrait": "bluecube1-portrait",
+    "Strength": 7,
+    "Speed": 6,
+    "Constitution": 16,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "ClearHumanoid1",
+    "Name": "Clear Humanoid",
+    "Portrait": "clearhumanoid1-portrait",
+    "Strength": 8,
+    "Speed": 12,
+    "Constitution": 16,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "DireWolf",
+    "Name": "Dire Wolf",
+    "Portrait": "direwolf-portrait",
+    "Strength": 8,
+    "Speed": 15,
+    "Constitution": 16,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "GiantSpider",
+    "Name": "Giant Spider",
+    "Portrait": "giantspider-portrait",
+    "Strength": 9,
+    "Speed": 24,
+    "Constitution": 14,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "GoreBat",
+    "Name": "Gore Bat",
+    "Portrait": "gorebat-portrait",
+    "Strength": 8,
+    "Speed": 28,
+    "Constitution": 11,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "GreenCube1",
+    "Name": "Green Cube",
+    "Portrait": "greencube1-portrait",
+    "Strength": 8,
+    "Speed": 6,
+    "Constitution": 18,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "GreenSlime2",
+    "Name": "Green Slime II",
+    "Portrait": "greenslime2-portrait",
+    "Strength": 8,
+    "Speed": 10,
+    "Constitution": 15,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Hound1",
+    "Name": "Rot Hound",
+    "Portrait": "hound1-portrait",
+    "Strength": 9,
+    "Speed": 24,
+    "Constitution": 13,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "HungryPlant",
+    "Name": "Hungry Plant",
+    "Portrait": "hungryplant-portrait",
+    "Strength": 9,
+    "Speed": 6,
+    "Constitution": 22,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Mutant1",
+    "Name": "Mutant",
+    "Portrait": "mutant1-portrait",
+    "Strength": 9,
+    "Speed": 12,
+    "Constitution": 16,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "RedSlime1",
+    "Name": "Red Slime",
+    "Portrait": "redslime1-portrait",
+    "Strength": 9,
+    "Speed": 8,
+    "Constitution": 14,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Sken",
+    "Name": "Sken",
+    "Portrait": "sken-portrait",
+    "Strength": 8,
+    "Speed": 20,
+    "Constitution": 13,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Specimen1",
+    "Name": "Specimen A",
+    "Portrait": "specimen1-portrait",
+    "Strength": 8,
+    "Speed": 18,
+    "Constitution": 14,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "YellowPod1",
+    "Name": "Yellow Pod",
+    "Portrait": "yellowpod1-portrait",
+    "Strength": 8,
+    "Speed": 18,
+    "Constitution": 14,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      2,
+      4
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "AmberCube1",
+    "Name": "Amber Cube",
+    "Portrait": "ambercube1-portrait",
+    "Strength": 9,
+    "Speed": 8,
+    "Constitution": 20,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "AmberSlime2",
+    "Name": "Amber Slime II",
+    "Portrait": "amberslime2-portrait",
+    "Strength": 10,
+    "Speed": 12,
+    "Constitution": 19,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Android2",
+    "Name": "Android Mk II",
+    "Portrait": "android2-portrait",
+    "Strength": 11,
+    "Speed": 22,
+    "Constitution": 18,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "BloodEye",
+    "Name": "Blood Eye",
+    "Portrait": "bloodeye-portrait",
+    "Strength": 10,
+    "Speed": 18,
+    "Constitution": 16,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "BlueHumanoid1",
+    "Name": "Blue Humanoid",
+    "Portrait": "bluehumanoid1-portrait",
+    "Strength": 10,
+    "Speed": 14,
+    "Constitution": 19,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Bugbear",
+    "Name": "Bugbear",
+    "Portrait": "bugbear-portrait",
+    "Strength": 12,
+    "Speed": 14,
+    "Constitution": 20,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "ClotSlime1",
+    "Name": "Clot Slime",
+    "Portrait": "clotslime1-portrait",
+    "Strength": 9,
+    "Speed": 6,
+    "Constitution": 18,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "FrogmanVeteran",
+    "Name": "Frogman Veteran",
+    "Portrait": "frogmanveteran-portrait",
+    "Strength": 11,
+    "Speed": 14,
+    "Constitution": 18,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Hound2",
+    "Name": "Bone Hound",
+    "Portrait": "hound2-portrait",
+    "Strength": 10,
+    "Speed": 26,
+    "Constitution": 15,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "Mutant2",
+    "Name": "Warped Mutant",
+    "Portrait": "mutant2-portrait",
+    "Strength": 11,
+    "Speed": 14,
+    "Constitution": 19,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "PurplePod1",
+    "Name": "Purple Pod",
+    "Portrait": "purplepod1-portrait",
+    "Strength": 9,
+    "Speed": 16,
+    "Constitution": 16,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "RedPod1",
+    "Name": "Red Pod",
+    "Portrait": "redpod1-portrait",
+    "Strength": 10,
+    "Speed": 8,
+    "Constitution": 17,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "RedSlime2",
+    "Name": "Red Slime II",
+    "Portrait": "redslime2-portrait",
+    "Strength": 11,
+    "Speed": 10,
+    "Constitution": 17,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Specimen2",
+    "Name": "Specimen B",
+    "Portrait": "specimen2-portrait",
+    "Strength": 10,
+    "Speed": 20,
+    "Constitution": 17,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "Woodwose",
+    "Name": "Woodwose",
+    "Portrait": "woodwose-portrait",
+    "Strength": 10,
+    "Speed": 12,
+    "Constitution": 20,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      3,
+      5
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "WingedEye",
+    "Name": "Winged Eye",
+    "Portrait": "wingedeye-portrait",
+    "Strength": 9,
+    "Speed": 26,
+    "Constitution": 14,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      3,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Android3",
+    "Name": "Android Mk III",
+    "Portrait": "android3-portrait",
+    "Strength": 13,
+    "Speed": 24,
+    "Constitution": 21,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "Basilisk",
+    "Name": "Basilisk",
+    "Portrait": "basilisk-portrait",
+    "Strength": 13,
+    "Speed": 12,
+    "Constitution": 26,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Beast1",
+    "Name": "Doomsday Beast",
+    "Portrait": "beast1-portrait",
+    "Strength": 14,
+    "Speed": 14,
+    "Constitution": 26,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "ClotSlime2",
+    "Name": "Clot Slime II",
+    "Portrait": "clotslime2-portrait",
+    "Strength": 11,
+    "Speed": 8,
+    "Constitution": 21,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "FleshPod1",
+    "Name": "Flesh Pod",
+    "Portrait": "fleshpod1-portrait",
+    "Strength": 11,
+    "Speed": 6,
+    "Constitution": 22,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "GreenHumanoid1",
+    "Name": "Green Humanoid",
+    "Portrait": "greenhumanoid1-portrait",
+    "Strength": 11,
+    "Speed": 14,
+    "Constitution": 21,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "MeatSpider1",
+    "Name": "Meat Spider",
+    "Portrait": "meatspider1-portrait",
+    "Strength": 11,
+    "Speed": 24,
+    "Constitution": 18,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant1",
+    "Name": "Mega Mutant",
+    "Portrait": "megamutant1-portrait",
+    "Strength": 13,
+    "Speed": 12,
+    "Constitution": 24,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MineralSlime1",
+    "Name": "Mineral Slime",
+    "Portrait": "mineralslime1-portrait",
+    "Strength": 10,
+    "Speed": 6,
+    "Constitution": 24,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "OgreGrunt",
+    "Name": "Ogre Grunt",
+    "Portrait": "ogregrunt-portrait",
+    "Strength": 13,
+    "Speed": 12,
+    "Constitution": 24,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "RedCube1",
+    "Name": "Red Cube",
+    "Portrait": "redcube1-portrait",
+    "Strength": 12,
+    "Speed": 8,
+    "Constitution": 22,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Specimen3",
+    "Name": "Specimen C",
+    "Portrait": "specimen3-portrait",
+    "Strength": 12,
+    "Speed": 22,
+    "Constitution": 20,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      4,
+      6
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "Abomination1",
+    "Name": "Abomination",
+    "Portrait": "abomination1-portrait",
+    "Strength": 15,
+    "Speed": 12,
+    "Constitution": 28,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "AmberHumanoid1",
+    "Name": "Amber Humanoid",
+    "Portrait": "amberhumanoid1-portrait",
+    "Strength": 13,
+    "Speed": 16,
+    "Constitution": 24,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Android4",
+    "Name": "Android Mk IV",
+    "Portrait": "android4-portrait",
+    "Strength": 15,
+    "Speed": 26,
+    "Constitution": 24,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "Dracolisk",
+    "Name": "Dracolisk",
+    "Portrait": "dracolisk-portrait",
+    "Strength": 14,
+    "Speed": 18,
+    "Constitution": 26,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "FleshPod2",
+    "Name": "Flesh Pod II",
+    "Portrait": "fleshpod2-portrait",
+    "Strength": 13,
+    "Speed": 8,
+    "Constitution": 25,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "IridescentSlime1",
+    "Name": "Iridescent Slime",
+    "Portrait": "iridescentslime1-portrait",
+    "Strength": 12,
+    "Speed": 18,
+    "Constitution": 20,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "MeatCube1",
+    "Name": "Meat Cube",
+    "Portrait": "meatcube1-portrait",
+    "Strength": 13,
+    "Speed": 6,
+    "Constitution": 26,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant1Flamethrower",
+    "Name": "Mega Mutant Torch",
+    "Portrait": "megamutant1-flamethrower-portrait",
+    "Strength": 13,
+    "Speed": 14,
+    "Constitution": 25,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant1Melee",
+    "Name": "Mega Mutant Fist",
+    "Portrait": "megamutant1-melee-portrait",
+    "Strength": 15,
+    "Speed": 12,
+    "Constitution": 26,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant1MiniGun",
+    "Name": "Mega Mutant Gun",
+    "Portrait": "megamutant1-minigun-portrait",
+    "Strength": 11,
+    "Speed": 22,
+    "Constitution": 22,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant2",
+    "Name": "Mega Mutant II",
+    "Portrait": "megamutant2-portrait",
+    "Strength": 14,
+    "Speed": 13,
+    "Constitution": 26,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant2Flamethrower",
+    "Name": "Mega Mutant II Torch",
+    "Portrait": "megamutant2-flamethrower-portrait",
+    "Strength": 14,
+    "Speed": 15,
+    "Constitution": 27,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant2Melee",
+    "Name": "Mega Mutant II Fist",
+    "Portrait": "megamutant2-melee-portrait",
+    "Strength": 16,
+    "Speed": 13,
+    "Constitution": 28,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant2Minigun",
+    "Name": "Mega Mutant II Gun",
+    "Portrait": "megamutant2-minigun-portrait",
+    "Strength": 12,
+    "Speed": 23,
+    "Constitution": 24,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "OgreWarrior",
+    "Name": "Ogre Warrior",
+    "Portrait": "ogrewarrior-portrait",
+    "Strength": 15,
+    "Speed": 14,
+    "Constitution": 27,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      5,
+      7
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "Abomination2",
+    "Name": "Greater Abomination",
+    "Portrait": "abomination2-portrait",
+    "Strength": 17,
+    "Speed": 14,
+    "Constitution": 31,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "EntropicCube1",
+    "Name": "Entropic Cube",
+    "Portrait": "entropiccube1-portrait",
+    "Strength": 14,
+    "Speed": 10,
+    "Constitution": 30,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "EntropicSlime1",
+    "Name": "Entropic Slime",
+    "Portrait": "entropicslime1-portrait",
+    "Strength": 15,
+    "Speed": 20,
+    "Constitution": 26,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "EntropicSpider1",
+    "Name": "Entropic Spider",
+    "Portrait": "entropicspider1-portrait",
+    "Strength": 14,
+    "Speed": 28,
+    "Constitution": 22,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "Ettin",
+    "Name": "Ettin",
+    "Portrait": "ettin-portrait",
+    "Strength": 16,
+    "Speed": 10,
+    "Constitution": 34,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant3",
+    "Name": "Mega Mutant III",
+    "Portrait": "megamutant3-portrait",
+    "Strength": 16,
+    "Speed": 14,
+    "Constitution": 29,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant3Flamethrower",
+    "Name": "Mega Mutant III Torch",
+    "Portrait": "megamutant3-flamethrower-portrait",
+    "Strength": 16,
+    "Speed": 16,
+    "Constitution": 30,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant3Melee",
+    "Name": "Mega Mutant III Fist",
+    "Portrait": "megamutant3-melee-portrait",
+    "Strength": 18,
+    "Speed": 14,
+    "Constitution": 31,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutant3Minigun",
+    "Name": "Mega Mutant III Gun",
+    "Portrait": "megamutant3-minigun-portrait",
+    "Strength": 13,
+    "Speed": 25,
+    "Constitution": 26,
+    "PlanStyle": "swarm",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "OgreWarlord",
+    "Name": "Ogre Warlord",
+    "Portrait": "ogrewarlord-portrait",
+    "Strength": 18,
+    "Speed": 16,
+    "Constitution": 32,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "PrismaticPod1",
+    "Name": "Prismatic Pod",
+    "Portrait": "prismaticpod1-portrait",
+    "Strength": 14,
+    "Speed": 20,
+    "Constitution": 24,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "RedHumanoid1",
+    "Name": "Red Humanoid",
+    "Portrait": "redhumanoid1-portrait",
+    "Strength": 15,
+    "Speed": 16,
+    "Constitution": 27,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      6,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "BioTitanPlagueborn",
+    "Name": "Bio-Titan Plagueborn",
+    "Portrait": "biotitan-plagueborn-portrait",
+    "Strength": 18,
+    "Speed": 18,
+    "Constitution": 33,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "BioTitanToxoid",
+    "Name": "Bio-Titan Toxoid",
+    "Portrait": "biotitan-toxoid-portrait",
+    "Strength": 17,
+    "Speed": 14,
+    "Constitution": 34,
+    "PlanStyle": "warden",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "Dragon",
+    "Name": "Dragon",
+    "Portrait": "dragon-portrait",
+    "Strength": 19,
+    "Speed": 20,
+    "Constitution": 36,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "DragonBlue",
+    "Name": "Blue Dragon",
+    "Portrait": "dragonblue-portrait",
+    "Strength": 18,
+    "Speed": 24,
+    "Constitution": 34,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "DragonRed",
+    "Name": "Red Dragon",
+    "Portrait": "dragonred-portrait",
+    "Strength": 21,
+    "Speed": 18,
+    "Constitution": 38,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "fire",
+      "lightning"
+    ]
+  },
+  {
+    "EnemyRecord": "EntropicHumanoid1",
+    "Name": "Entropic Humanoid",
+    "Portrait": "entropichumanoid1-portrait",
+    "Strength": 18,
+    "Speed": 18,
+    "Constitution": 32,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "EntropicPod1",
+    "Name": "Entropic Pod",
+    "Portrait": "entropicpod1-portrait",
+    "Strength": 16,
+    "Speed": 18,
+    "Constitution": 28,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "GalaxySlime1",
+    "Name": "Galaxy Slime",
+    "Portrait": "galaxyslime1-portrait",
+    "Strength": 16,
+    "Speed": 22,
+    "Constitution": 28,
+    "PlanStyle": "tactician",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ]
+  },
+  {
+    "EnemyRecord": "MegaMutantBrute",
+    "Name": "Mega Brute",
+    "Portrait": "megamutantbrute-portrait",
+    "Strength": 20,
+    "Speed": 12,
+    "Constitution": 36,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      7,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  },
+  {
+    "EnemyRecord": "BioTitanOmega",
+    "Name": "Bio-Titan Omega",
+    "Portrait": "biotitan-omega-portrait",
+    "Strength": 22,
+    "Speed": 20,
+    "Constitution": 40,
+    "PlanStyle": "brute",
+    "ValidFloors": [
+      8,
+      8
+    ],
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ]
+  }
+]

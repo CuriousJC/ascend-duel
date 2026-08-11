@@ -1,10 +1,14 @@
 package screens
 
 import (
+	"bytes"
+	"image"
+	_ "image/png"
 	"log"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -105,6 +109,80 @@ func cardImage(gs *state.GlobalState, spec cards.Spec, st cards.Style) *ebiten.I
 	cardCache[key] = img
 	return img
 }
+
+// portraitCache holds the decoded enemy portraits, keyed by their assets name.
+//
+// **Decoded once and held**, for the same reason the cards themselves are cached: these are
+// 320-pixel PNGs and `image.Decode` is not a per-frame operation. They are handed to
+// internal/cards as plain `image.Image`, which is why they come out of `LoadImageData` as
+// bytes rather than out of `LoadAssets` as *ebiten.Image — a card is drawn with no graphics
+// context.
+//
+// A failure is cached as nil so a bad file logs once rather than sixty times a second, and
+// the card then draws with no portrait rather than not at all.
+var portraitCache = map[string]image.Image{}
+
+func portrait(gs *state.GlobalState, key string) image.Image {
+	if key == "" {
+		return nil
+	}
+	if img, ok := portraitCache[key]; ok {
+		return img
+	}
+
+	data := gs.ImageData[key]
+	if len(data) == 0 {
+		log.Printf("cards: no portrait named %q", key)
+		portraitCache[key] = nil
+		return nil
+	}
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		log.Printf("cards: decoding portrait %q: %v", key, err)
+		img = nil
+	}
+	portraitCache[key] = img
+	return img
+}
+
+// enemySpec is the opponent as a card: its portrait, its name, and the life it has left.
+//
+// Life is on the Spec, so a point of damage produces a different cache entry — see the
+// field's comment in internal/cards. Bounded by how many distinct life totals a fight passes
+// through, which is a handful.
+func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.Spec {
+	return cards.Spec{
+		Name:    name,
+		Element: cards.Basic,
+		Art:     portrait(gs, c.Portrait),
+		Life:    c.CurrentLife,
+		MaxLife: c.MaxLife,
+		Enabled: true,
+	}
+}
+
+// backSpec is a face-down card of this duelist's deck.
+//
+// **A duelist and a card back go together** *(2026-08-11)*: the plan is to offer different
+// duelists as different decks, and the mark on the back is how you tell at a glance whose
+// deck is on the table. The name comes from `data/duelists.json` and is parsed here rather
+// than at load, because `internal/entities` must not import the drawing package — the same
+// separation the element mapping below exists for.
+//
+// An unrecognised name falls back to the triangle and says so once. A back is cosmetic;
+// refusing to draw the draw pile over one would be a worse outcome than the wrong shape.
+func (s *CombatScene) backSpec() cards.Spec {
+	mark, ok := cards.ParseBackMark(s.fighter.CardBack)
+	if !ok && s.fighter.CardBack != "" && !warnedBack {
+		warnedBack = true
+		log.Printf("cards: duelist card back %q is not a mark; using %v",
+			s.fighter.CardBack, mark)
+	}
+	return cards.Spec{FaceDown: true, Back: mark}
+}
+
+// warnedBack keeps a bad name in duelists.json to one log line rather than one per frame.
+var warnedBack bool
 
 // art maps this screen's element onto the drawing package's.
 //

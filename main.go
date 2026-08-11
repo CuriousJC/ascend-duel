@@ -51,7 +51,9 @@ func main() {
 	g.GlobalState.Assets = assets.LoadAssets()
 	g.GlobalState.Fonts = assets.LoadFonts()
 	g.GlobalState.FontData = assets.LoadFontData()
-	g.GlobalState.Combatants = data.LoadCombatants()
+	g.GlobalState.ImageData = assets.LoadImageData()
+	g.GlobalState.Enemies = data.LoadEnemies()
+	g.GlobalState.Duelists = data.LoadDuelists()
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session

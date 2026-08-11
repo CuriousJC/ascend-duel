@@ -1,11 +1,8 @@
 package entities
 
 import (
-	"image"
-
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
-	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // LifePerCon converts Constitution into maximum life. Placeholder value — this is
@@ -24,27 +21,39 @@ type Combatant struct {
 	// engine symmetric and lets a balance sim drive both sides.
 	Style combat.PlanStyle
 
-	// Sprite is **nil for the fighter**, and that is the normal case rather than a
-	// missing asset. The fighter's sprite and health bar were replaced by the character
-	// block on the combat screen, so nothing draws one — and once the last third-party
-	// sheet went, giving it a placeholder would have meant shipping art to satisfy a
-	// field nobody reads.
+	// **There is no sprite here any more** *(2026-08-11)*. The fighter's went when the
+	// character block replaced it, and the enemy's went when the enemy became a card — so
+	// the field, the sheet slicing and the *ebiten.Image import all went with them. This
+	// struct now holds nothing Ebitengine defines, which is worth keeping: it is one of the
+	// two things standing between `entities` and needing a window.
 	//
-	// Anything that draws a combatant has to check. See drawCombatant.
-	Sprite     *ebiten.Image
-	SpriteRect image.Rectangle
+	// Portrait is the assets key for the picture on this combatant's card, carried through
+	// from the data record rather than resolved here — entities cannot reach the asset map,
+	// and the card is drawn by internal/cards from raw bytes rather than from an
+	// *ebiten.Image anyway.
+	//
+	// Empty for the fighter, like Sprite is nil for it.
+	Portrait string
+
+	// Name is what this combatant is called on screen. Set for a duelist, whose record
+	// carries one; an enemy's name comes from the roster in internal/screens rather than
+	// from its record, and moving that is a separate change.
+	Name string
+
+	// CardBack is the mark on the back of this duelist's cards, by name. A string rather
+	// than a cards.BackMark because entities must not import the drawing package — the
+	// screen parses it with cards.ParseBackMark, exactly as it parses an element.
+	//
+	// Empty for an enemy: enemies do not have a deck the player ever sees the back of.
+	CardBack string
 }
 
-// NewCombatantFrom builds a combatant from a data record, slicing its sprite out of
-// the given sheet. The caller resolves the sheet from the asset map because entities
-// cannot import state — state imports entities.
+// NewEnemyFrom builds an opponent from an enemy record.
 //
-// **A nil sheet is legal and produces a combatant with no sprite.** A record with an
-// empty SpriteSheet is one nothing draws, which is true of the fighter; the alternative
-// was carrying a picture purely so this line had something to slice.
-func NewCombatantFrom(d data.CombatantData, sheet *ebiten.Image) *Combatant {
-	rect := image.Rect(d.SpriteRect[0], d.SpriteRect[1], d.SpriteRect[2], d.SpriteRect[3])
-
+// **It takes no sprite sheet since 2026-08-11.** It used to slice a west-facing idle frame
+// out of one, which is why the caller had to resolve an asset out of global state and pass
+// it in; the enemy is a card now, so all that is left is the portrait's key.
+func NewEnemyFrom(d data.EnemyData) *Combatant {
 	// An unknown or missing style falls back to brute rather than failing the load. A record
 	// that predates the field still has to produce a fightable enemy.
 	style, _ := combat.ParsePlanStyle(d.PlanStyle)
@@ -55,11 +64,31 @@ func NewCombatantFrom(d data.CombatantData, sheet *ebiten.Image) *Combatant {
 			Str: d.Strength,
 			Spd: d.Speed,
 		},
-		Style:      style,
-		SpriteRect: rect,
+		Style:    style,
+		Name:     d.Name,
+		Portrait: d.Portrait,
 	}
-	if sheet != nil && !rect.Empty() {
-		c.Sprite = sheet.SubImage(rect).(*ebiten.Image)
+
+	c.MaxLife = c.Con * LifePerCon
+	c.CurrentLife = c.MaxLife
+
+	return c
+}
+
+// NewDuelistFrom builds the player from a duelist record.
+//
+// **No sprite, no plan style, and neither is a gap.** The character block replaced the
+// fighter's sprite on the combat screen, and a duelist is planned by whoever is holding the
+// mouse — which is exactly why the two records split.
+func NewDuelistFrom(d data.DuelistData) *Combatant {
+	c := &Combatant{
+		Duelist: combat.Duelist{
+			Con: d.Constitution,
+			Str: d.Strength,
+			Spd: d.Speed,
+		},
+		Name:     d.Name,
+		CardBack: d.CardBack,
 	}
 
 	c.MaxLife = c.Con * LifePerCon

@@ -646,6 +646,76 @@ func TestEmptyQueueIsAHarmlessRound(t *testing.T) {
 	}
 }
 
+// stockHand holds enough of everything a style could want, so the tests below stay tests of
+// *preference* rather than of the draw.
+//
+// **Planners took no hand until 2026-08-11** — every style conjured its cards — and these
+// assertions were written against that. Handing them a hand nothing can run short of keeps
+// them asking the question they were written to ask: given the choice, what does a brute do
+// differently from a swarm. What the deck actually does to a style is
+// TestNoStylePlaysACardItWasNotDealt and the balance tool.
+func stockHand() []ActionKind {
+	var hand []ActionKind
+	for i := 0; i < 6; i++ {
+		hand = append(hand, Gather, Guard, Jab, Strike, Heavy)
+	}
+	return hand
+}
+
+func TestNoStylePlaysACardItWasNotDealt(t *testing.T) {
+	// **The whole point of enemies having a deck.** A style is how a hand is played, not what
+	// is played, so a planner handed three Jabs may only ever queue Jabs — and a planner
+	// handed nothing may only queue nothing. Before decks landed a brute produced Heavies out
+	// of thin air, which made `enemy_cards.json` a file that could never matter.
+	hands := [][]ActionKind{
+		nil,
+		{Jab},
+		{Jab, Jab, Jab},
+		{Brace, Dodge, Mirror}, // no attacks at all
+		{Guard, Gather},
+		{Heavy, Heavy, Jab, Brace},
+	}
+
+	for _, style := range PlanStyles() {
+		for _, hand := range hands {
+			d := duelist(10, 60, 100) // deliberately rich: the budget must not be the limit
+			plan := PlanFor(style, d, hand)
+
+			left := append([]ActionKind(nil), hand...)
+			for _, a := range plan {
+				found := -1
+				for i, c := range left {
+					if c == a {
+						found = i
+						break
+					}
+				}
+				if found < 0 {
+					t.Fatalf("%v played %v from a hand of %v", style, a, hand)
+				}
+				left = append(left[:found], left[found+1:]...)
+			}
+		}
+	}
+}
+
+func TestPlanningIsReproducible(t *testing.T) {
+	// The determinism rule, at the planner. Nothing here may consult a map's iteration order
+	// or a clock, so the same style and the same hand must plan the same round every time —
+	// which is what lets a seeded run be replayed and what the balance tool depends on.
+	hand := []ActionKind{Heavy, Jab, Strike, Guard, Jab, Gather, Strike, Heavy}
+
+	for _, style := range PlanStyles() {
+		d := duelist(10, 30, 100)
+		want := planKey(PlanFor(style, d, hand))
+		for i := 0; i < 50; i++ {
+			if got := planKey(PlanFor(style, d, hand)); got != want {
+				t.Fatalf("%v planned %s then %s from the same hand", style, want, got)
+			}
+		}
+	}
+}
+
 func TestEveryStyleObeysBothBounds(t *testing.T) {
 	// The two bounds on a round apply to the opponent exactly as they apply to the player.
 	// Swept across a wide speed range and across banked points, because both bounds move:
@@ -656,7 +726,7 @@ func TestEveryStyleObeysBothBounds(t *testing.T) {
 			for _, bonus := range []int{0, 2, 4, 10} {
 				d := duelist(10, spd, 100)
 				d.BonusAP = bonus
-				plan := PlanFor(style, d)
+				plan := PlanFor(style, d, stockHand())
 
 				if !d.CanAfford(plan) {
 					t.Errorf("%v at Spd %d bonus %d: plan costs %d, budget is %d",
@@ -682,7 +752,7 @@ func TestEveryStyleFightsInADifferentShape(t *testing.T) {
 
 	seen := map[string]PlanStyle{}
 	for _, style := range PlanStyles() {
-		key := planKey(PlanFor(style, d))
+		key := planKey(PlanFor(style, d, stockHand()))
 		if prev, clash := seen[key]; clash {
 			t.Errorf("%v and %v both plan %s", prev, style, key)
 		}
@@ -708,8 +778,8 @@ func TestSwarmAttacksMoreOftenThanBrute(t *testing.T) {
 	// completely. Width is the mechanic, not damage.
 	d := duelist(10, 15, 100)
 
-	brute := PlanFor(StyleBrute, d)
-	swarm := PlanFor(StyleSwarm, d)
+	brute := PlanFor(StyleBrute, d, stockHand())
+	swarm := PlanFor(StyleSwarm, d, stockHand())
 
 	if len(swarm) <= len(brute) {
 		t.Errorf("swarm plans %d actions, brute %d; swarm must be the wider round",
@@ -721,7 +791,7 @@ func TestSwarmSpendsSpareBudgetOnBiggerAttacksNotMoreOfThem(t *testing.T) {
 	// A fast swarm has more points than it has slots. It must not waste them, and it must
 	// not stop being a swarm to use them.
 	d := duelist(10, 100, 100) // 14 AP against a cap of 5 actions
-	plan := PlanFor(StyleSwarm, d)
+	plan := PlanFor(StyleSwarm, d, stockHand())
 
 	if len(plan) != d.MaxActions() {
 		t.Errorf("plan is %d actions, want the full %d", len(plan), d.MaxActions())
@@ -738,7 +808,7 @@ func TestSwarmSpendsSpareBudgetOnBiggerAttacksNotMoreOfThem(t *testing.T) {
 
 func TestWardenGuardsAndStillAttacks(t *testing.T) {
 	d := duelist(10, 15, 100) // 5 AP: Guard is 3, leaving a Strike
-	plan := PlanFor(StyleWarden, d)
+	plan := PlanFor(StyleWarden, d, stockHand())
 
 	guards, attacks := 0, 0
 	for _, a := range plan {
@@ -762,7 +832,7 @@ func TestWardenFallsBackToAttackingWhenItCannotAffordAGuard(t *testing.T) {
 	d := duelist(10, 0, 100)
 	d.BonusAP = -2 // floors ActionPoints at 1
 
-	if plan := PlanFor(StyleWarden, d); len(plan) == 0 {
+	if plan := PlanFor(StyleWarden, d, stockHand()); len(plan) == 0 {
 		t.Error("warden with a 1 AP budget planned nothing")
 	}
 }
@@ -773,7 +843,7 @@ func TestTacticianBanksThenUnloads(t *testing.T) {
 	// memory beyond what Gather already leaves behind.
 	d := duelist(10, 15, 100) // 5 AP
 
-	setup := PlanFor(StyleTactician, d)
+	setup := PlanFor(StyleTactician, d, stockHand())
 	prepares := 0
 	for _, a := range setup {
 		if a == Gather {
@@ -790,7 +860,7 @@ func TestTacticianBanksThenUnloads(t *testing.T) {
 		t.Fatal("the setup round banked nothing")
 	}
 
-	payoff := PlanFor(StyleTactician, after)
+	payoff := PlanFor(StyleTactician, after, stockHand())
 	for _, a := range payoff {
 		if a == Gather {
 			t.Errorf("payoff round is still gathering: %v", payoff)

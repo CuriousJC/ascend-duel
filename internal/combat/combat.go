@@ -1045,39 +1045,119 @@ func ParsePlanStyle(s string) (PlanStyle, bool) {
 	return StyleBrute, false
 }
 
-// PlanFor builds one round's plan in the given style. Every style is bounded by both the
-// action-point budget and MaxActions, and none may return a plan its duelist cannot pay
-// for — TestEveryStyleObeysBothBounds holds all of them to that.
-func PlanFor(style PlanStyle, d Duelist) []ActionKind {
+// PlanFor builds one round's plan in the given style, **chosen from the hand the opponent
+// was dealt**. Every style is bounded by the action-point budget and by MaxActions, and none
+// may return a plan its duelist cannot pay for or a card it was not holding —
+// TestEveryStyleObeysBothBounds holds all of them to that.
+//
+// **A style used to conjure its cards** *(changed 2026-08-11)*. A brute produced Heavies
+// whether or not a Heavy existed anywhere in the game, which made an enemy deck a thing that
+// could be authored and never read — and made MECHANICS.md's affixes, which *transform* an
+// enemy's deck, unable to change anything. A style is now how a hand is played rather than
+// what is played, and an enemy that draws no attacks does nothing that round.
+//
+// **The shuffle stays outside this package.** What arrives is a hand, already dealt, exactly
+// as the player's hand reaches the screen — `internal/combat` keeps no randomness and no
+// clock, which is what `TestRoundIsDeterministic` pins and what lets the balance tool run
+// whole duels headlessly.
+func PlanFor(style PlanStyle, d Duelist, hand []ActionKind) []ActionKind {
 	budget, slots := d.ActionPoints(), d.MaxActions()
+	p := newPool(hand)
 
 	switch style {
 	case StyleSwarm:
-		return planSwarm(budget, slots)
+		return planSwarm(p, budget, slots)
 	case StyleWarden:
-		return planWarden(budget, slots)
+		return planWarden(p, budget, slots)
 	case StyleTactician:
-		return planTactician(d, budget, slots)
+		return planTactician(d, p, budget, slots)
 	default:
-		return planBrute(budget, slots)
+		return planBrute(p, budget, slots)
 	}
 }
 
-// planBrute fills with the most expensive attack that still fits.
-func planBrute(budget, slots int) []ActionKind {
+// pool is a hand being spent: the cards dealt, and which of them a plan has taken.
+//
+// **A slice with used flags rather than a count per kind.** A map of counts would be the
+// obvious shape and would make every choice below depend on Go's randomised map iteration —
+// which the determinism rules forbid outright, and which would show up as an enemy that
+// planned differently on identical input. Order here is the order the cards were dealt in,
+// and every scan below runs front to back so ties resolve the same way twice.
+type pool struct {
+	cards []ActionKind
+	used  []bool
+}
+
+func newPool(hand []ActionKind) *pool {
+	return &pool{cards: hand, used: make([]bool, len(hand))}
+}
+
+// take removes one copy of a kind, reporting whether the hand held one.
+func (p *pool) take(k ActionKind) bool {
+	for i, c := range p.cards {
+		if !p.used[i] && c == k {
+			p.used[i] = true
+			return true
+		}
+	}
+	return false
+}
+
+// put returns a card to the hand. Used by the swarm's upgrade pass, which swaps a small
+// attack out for a bigger one and has to make the small one available again.
+func (p *pool) put(k ActionKind) {
+	for i, c := range p.cards {
+		if p.used[i] && c == k {
+			p.used[i] = false
+			return
+		}
+	}
+}
+
+// takeAttack removes the attack this style wants and reports it: the most expensive one
+// inside the budget, or the cheapest, depending on which way the style leans. Ties go to the
+// card dealt first, which is what makes the choice reproducible.
+//
+// `above` is a floor the cost has to beat, so the swarm's upgrade pass can ask for something
+// strictly better than what it already has.
+func (p *pool) takeAttack(budget int, dearest bool, above int) (ActionKind, bool) {
+	best, bestAt, found := ActionKind(0), -1, false
+
+	for i, c := range p.cards {
+		if p.used[i] || c.Category() != CategoryAttack {
+			continue
+		}
+		cost := c.Cost()
+		if cost > budget || cost <= above {
+			continue
+		}
+		switch {
+		case !found:
+			best, bestAt, found = c, i, true
+		case dearest && cost > best.Cost():
+			best, bestAt = c, i
+		case !dearest && cost < best.Cost():
+			best, bestAt = c, i
+		}
+	}
+
+	if !found {
+		return 0, false
+	}
+	p.used[bestAt] = true
+	return best, true
+}
+
+// planBrute fills with the most expensive attack in hand that still fits.
+func planBrute(p *pool, budget, slots int) []ActionKind {
 	plan := make([]ActionKind, 0, slots)
 
 	for len(plan) < slots {
-		switch {
-		case budget >= costHeavy:
-			plan, budget = append(plan, Heavy), budget-costHeavy
-		case budget >= costStrike:
-			plan, budget = append(plan, Strike), budget-costStrike
-		case budget >= costJab:
-			plan, budget = append(plan, Jab), budget-costJab
-		default:
+		a, ok := p.takeAttack(budget, true, 0)
+		if !ok {
 			return plan
 		}
+		plan, budget = append(plan, a), budget-a.Cost()
 	}
 	return plan
 }
@@ -1088,26 +1168,32 @@ func planBrute(budget, slots int) []ActionKind {
 // Widening first and upgrading second is the whole character of the style: a swarm with
 // more points does not become a brute, it becomes a swarm that hurts. Without the upgrade
 // pass a fast swarm would simply waste the points its speed bought it.
-func planSwarm(budget, slots int) []ActionKind {
+//
+// **The upgrade is now limited by the hand as well as the budget.** It swaps a planned
+// attack for a dearer one still in the pool and puts the small one back, so a swarm holding
+// six Jabs and nothing else stays six Jabs however many points it has spare — which is the
+// deck doing its job rather than the planner failing.
+func planSwarm(p *pool, budget, slots int) []ActionKind {
 	plan := make([]ActionKind, 0, slots)
-	for len(plan) < slots && budget >= costJab {
-		plan, budget = append(plan, Jab), budget-costJab
+	for len(plan) < slots {
+		a, ok := p.takeAttack(budget, false, 0)
+		if !ok {
+			break
+		}
+		plan, budget = append(plan, a), budget-a.Cost()
 	}
 
-	// Jab -> Strike costs 1 more, Strike -> Heavy costs 2 more. Upgrade along the plan
-	// rather than pouring everything into the first slot, so the round stays wide.
-	for _, step := range []struct {
-		from, to ActionKind
-	}{{Jab, Strike}, {Strike, Heavy}} {
-		gap := step.to.Cost() - step.from.Cost()
-		for i := range plan {
-			if budget < gap {
-				break
-			}
-			if plan[i] == step.from {
-				plan[i], budget = step.to, budget-gap
-			}
+	// Upgrade along the plan rather than pouring everything into the first slot, so the
+	// round stays wide.
+	for i := range plan {
+		have := plan[i].Cost()
+		better, ok := p.takeAttack(budget+have, true, have)
+		if !ok {
+			continue
 		}
+		p.put(plan[i])
+		budget -= better.Cost() - have
+		plan[i] = better
 	}
 	return plan
 }
@@ -1115,28 +1201,35 @@ func planSwarm(budget, slots int) []ActionKind {
 // planWarden puts a Guard up first and attacks with what is left. The Guard is a prepare, so
 // resolution moves it to the front of the turn regardless of where it sits here — it is
 // first in the slice only because that is how the plan reads.
-func planWarden(budget, slots int) []ActionKind {
-	if budget < costGuard || slots < 1 {
-		return planBrute(budget, slots)
+//
+// **No Guard in hand and it fights like a brute**, which is the deck showing through the
+// style: a warden is a duelist that guards when it can, not one that always has a shield.
+func planWarden(p *pool, budget, slots int) []ActionKind {
+	if budget < costGuard || slots < 1 || !p.take(Guard) {
+		return planBrute(p, budget, slots)
 	}
-	return append([]ActionKind{Guard}, planBrute(budget-costGuard, slots-1)...)
+	return append([]ActionKind{Guard}, planBrute(p, budget-costGuard, slots-1)...)
 }
 
 // planTactician alternates between banking and spending, reading which round it is in off
 // its own BonusAP: anything banked means last round was the setup, so this one is the
 // payoff. It needs no memory of its own because Gather already leaves the evidence.
-func planTactician(d Duelist, budget, slots int) []ActionKind {
+func planTactician(d Duelist, p *pool, budget, slots int) []ActionKind {
 	if d.BonusAP > 0 {
 		// The payoff round. Everything into the biggest attacks that fit.
-		return planBrute(budget, slots)
+		return planBrute(p, budget, slots)
 	}
 
 	// The setup round: bank what a second Gather is worth, keep enough back to stay
 	// dangerous, and never spend so much gathering that the round is a free hit for the
-	// player. Two Gathers is the whole point — it is what makes the next round oversized.
+	// player. Two Gathers is the whole point — it is what makes the next round oversized,
+	// and a hand holding one Gather is a setup round that only half works.
 	plan := make([]ActionKind, 0, slots)
 	for len(plan) < slots-1 && budget >= costGather*2 && len(plan) < 2 {
+		if !p.take(Gather) {
+			break
+		}
 		plan, budget = append(plan, Gather), budget-costGather
 	}
-	return append(plan, planBrute(budget, slots-len(plan))...)
+	return append(plan, planBrute(p, budget, slots-len(plan))...)
 }

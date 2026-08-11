@@ -701,8 +701,8 @@ func TestBackRendersWithNoFont(t *testing.T) {
 	if err != nil {
 		t.Fatalf("rendering a back without fonts: %v", err)
 	}
-	if img.RGBAAt(Hand.Width/2, Hand.Height/2) != BackMark {
+	if img.RGBAAt(Hand.Width/2, Hand.Height/2) != BackInk {
 		t.Errorf("centre of the back is %v, want the mark %v",
-			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackMark)
+			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackInk)
 	}
 }

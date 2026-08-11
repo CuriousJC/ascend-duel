@@ -90,7 +90,8 @@ gofmt -l .          # list unformatted files
 go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.png
 go run -tags idleexit .     # closes itself after two minutes with nobody at the controls
 go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
-go run ./tools/balance      # what every enemy does to the fighter, as a table
+go run ./tools/balance      # what all 96 enemies do to the fighter, one line each
+go run ./tools/balance -v OgreWarlord   # one enemy, round by round
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
@@ -101,7 +102,7 @@ holds a catalogue of named seeds — `strike-flurry`, `strike-onslaught`, `all-c
 hand that demonstrates something can be asked for by name instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
-**Re-run `tools/seeds` after touching `data/cards.json`, `startingDeck` or `handSize`.** A seed is
+**Re-run `tools/seeds` after touching `data/duelist_cards.json`, `startingDeck` or `handSize`.** A seed is
 a fact about one particular deck; change the deck and every catalogued number silently deals
 something else. The tool re-checks the catalogue before it searches and says which entries no
 longer match — it rejected two guessed numbers the first time it ran, and invalidated **all five
@@ -238,15 +239,23 @@ do not write code that forecloses it.
   `rand.Shuffle`, …). They draw from a global source shared with every other caller,
   which makes a run unreproducible. Randomness comes from an explicit `*rand.Rand`
   carried on state and seeded once per run.
-- **Four separate streams: enemy selection, loot offers, floor offers, card shuffles.**
-  Never share one source between them, or a change to loot generation silently rerolls
-  every enemy in the tower. A stream is only ever advanced by its own concern. Tower
-  layout is fixed (8 floors × 3 fights, endless later) and draws no randomness.
-- **The card shuffle is the only stream that exists yet**, and it lives on `CombatScene`
-  as `rng`, seeded in `Init` from the `deckSeed` constant. That constant is a placeholder
-  for the per-run seed: every launch deals the same opening hand, which is what makes a
-  layout problem reproducible while the screen is being built. When `Session` state lands,
-  the seed reads from there and nothing else about the deck code changes.
+- **Five separate streams: enemy selection, loot offers, floor offers, and *two* card
+  shuffles — the player's and the opponent's.** Never share one source between them, or a
+  change to loot generation silently rerolls every enemy in the tower. A stream is only
+  ever advanced by its own concern. Tower layout is fixed (8 floors × 3 fights, endless
+  later) and draws no randomness.
+- **The two shuffles were one stream in the plan and had to become two** *(2026-08-11)*,
+  when enemies got a deck. Sharing would make the player's opening hand a function of how
+  many cards the opponent happened to draw, so **every entry in `seeds.go` would break the
+  first time an enemy deck was retuned** — and a named hand has to stay a fact about the
+  player's deck alone. That is the shape of argument to apply if a sixth stream is
+  proposed: ask what it would silently reroll.
+- **Both shuffles exist now.** The player's lives on `CombatScene` as `rng`, seeded in
+  `Init` from `deckSeed`; the opponent's lives on `decks.EnemyPile`, seeded from
+  `decks.EnemySeed`. Both constants are placeholders for the per-run seed — every launch
+  deals the same hands, which is what makes a problem reproducible while the screen is
+  being built. When `Session` state lands, both read from there and nothing else about the
+  deck code changes.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of
   the rules package is what preserves its purity, its tests and the headless balance sim.
   Moving draw into `combat` is a real option later, but it has to arrive as an injected
@@ -593,8 +602,22 @@ Key conventions:
 ### Package layout and its layering
 
 - `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["giantrat_png"]`, `gs.Fonts["kubasta"]`), and it is **independent of where the file sits** — see the Art section. There are two extra loaders for callers that cannot take an Ebitengine type: `LoadFontData()` and `LoadImageData()` hand back raw bytes, because `internal/cards` and `tools/cardsheet` render without a graphics context. `gs.FontData` carries the fonts for exactly that reason.
-- `data/` — `//go:embed`s `combatants.json` and unmarshals it into `map[string]CombatantData` keyed by `CombatantRecord`. This is the pattern for all static game data: JSON next to a small Go loader. `SpriteSheet` in the JSON must match an `assets` map key, and `SpriteRect` is `[x0, y0, x1, y1]` used with `SubImage` to slice the sheet. `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.**
-  - **`cards.json` + `card_data.go` is the deck list** (added 2026-08-08): the twelve concepts, the elements each ships in, and how many copies. `startingDeck` is built from it, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. **Cost, category and damage are deliberately *not* here**; they are rules and live in `internal/combat`, which cannot import `data`. The JSON's `CostTier` is documentation *with a check*: `data.CheckCostTiers` asserts every declared tier and category against `ActionKind.Cost()`/`.Category()` and `buildStartingDeck` **panics at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
+- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. **Four files since 2026-08-11**, where there were two:
+
+  | File | Loader | Holds |
+  |---|---|---|
+  | `duelists.json` | `LoadDuelists` | who the player can be, and their card back |
+  | `enemies.json` | `LoadEnemies` | 96 opponents: stats, style, portrait, valid floors |
+  | `duelist_cards.json` | `LoadDuelistCards` | the player's deck list |
+  | `enemy_cards.json` | `LoadEnemyCards` | what an opponent draws from |
+
+  **The player and the enemies split because their fields stopped overlapping** — an enemy has a plan style, a portrait and an affix pool; a duelist has a card back and, eventually, a deck. One struct meant every field was optional and none of them meant anything.
+
+  `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.** `ValidFloors` is `[lowest, highest]` against the planned 8-floor tower, so a Dragon is not on floor one; nothing generates floors yet, so today it only sorts the fight order. `data.EnemyOrder` is the sorted walk — never range the map, per the determinism rules.
+
+  - **The two card lists are one shape, tuned separately.** Concepts, the elements each ships in, and how many copies. `startingDeck` is built from the duelist list, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. Enemy cards are all `basic`, because an enemy card is never drawn on screen and MECHANICS.md has affixes *transforming* a basic deck into an element.
+  - **Cost, category and damage are deliberately *not* in either**; they are rules and live in `internal/combat`, which cannot import `data`. **So a separate enemy file cannot yet give an enemy Strike a different cost** — that is a rules change, not a data one. The JSON's `CostTier` is documentation *with a check*: `data.CheckCostTiers` asserts every declared tier and category against `ActionKind.Cost()`/`.Category()` and both deck builders **panic at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
+- `internal/decks/` — **the opponent's deck, and the only package between `data` and `internal/combat`** (added 2026-08-11). It exists so the combat screen and `tools/balance` share one enemy deck: the balance tool plays whole duels headlessly and cannot import `internal/screens`, which links Ebitengine. **No Ebitengine here, ever**, for that reason. `EnemyPile` is the three piles plus a shuffle; **the enemy's hand does not persist between rounds**, unlike the player's, because a style only takes attacks plus a Guard or Gather and everything else would accumulate until the hand locked up — which it did. The player's hand may persist because Discard exists, and that is the lever an enemy has not got.
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
@@ -612,11 +635,11 @@ Key conventions:
   per frame.
 - `internal/music/` — the score, **synthesised at startup from a MIDI file** (added 2026-08-09). See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
-- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` now has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **A planner takes the hand it was dealt** since 2026-08-11 — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` now has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **The combat screen is six files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
-  - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `buildStartingDeck` (which reads `data/cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay.
+  - `combat_deck.go` — the cards and the piles: `element`, `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay.
     **The overlay shows every card you own**, in five rows of one element each, at
     `cards.Mini` overlapped so all but six pixels of each shows. Two rules govern it and
     both have been broken once: *a card does not move when it is played, it only dims* — so
@@ -647,7 +670,7 @@ Key conventions:
   **The split was a pure move**: every line went across unaltered and the `demoplay` text report was byte-identical before and after. Keep it that way — a file boundary is not a reason to change what a function does.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 
-Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions` → `models`/`state`/`combat`/`data`/`assets`. Nothing lower reaches back up. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.
+Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions`/`decks` → `models`/`state`/`combat`/`data`/`assets`. Nothing lower reaches back up. `decks` sits above `combat` and `data` and below `screens`, which is the whole reason it is a package: it is the one place allowed to turn a JSON card list into rules types, and `tools/balance` imports it without importing a screen. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.
 
 ### Drawing idioms
 
@@ -670,19 +693,32 @@ Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`
 refiling something is one line there and nothing anywhere else.
 
 **The map keys did not move with the files.** They are the lookup names used across the
-game, and `data/combatants.json` writes them down — tying a key to a path would mean a data
-migration every time a file was refiled. A new asset is still three edits: the file, an
+game, and `data/*.json` writes them down — tying a key to a path would mean a data
+migration every time a file was refiled. A named asset is still three edits: the file, an
 `//go:embed` var, and a map entry.
 
-**Enemy sprites are single frames, not sheets.** `assets/enemy/*.png` is one west-facing
-idle frame per creature, cut from a PVGames 21x21 animation sheet and trimmed to its opaque
-bounds. The sheets are 2-7 MB each and `LoadAssets` decodes every image at startup, so
-embedding four would cost roughly **250 MB of resident memory** to show four static
-sprites; the frames are 41 KB together. The full sheets stay in `.scratch/flat-creatures`
-(gitignored) for when these get animated — that folder's README documents the grid, the
-frame table and the facing order.
+**The enemy portraits are the exception, and they are a *family* rather than named
+assets** *(2026-08-11)*. There are 96 of them, so `//go:embed enemy/*-portrait.png` pulls
+the directory in as an `embed.FS` and `LoadImageData` walks it, keying each by filename
+stem — `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what
+`data/enemies.json` writes in its `Portrait` field. **The consequence is exactly what the
+three-edit rule protects against: a portrait's key is tied to its filename**, so renaming
+one means editing the JSON. That is the price of not hand-maintaining 192 lines nobody
+could review. Reach for the glob only when a *set* of files is being added; a one-off asset
+still gets its own var.
 
-**A combatant may legitimately have no sprite.** `Fighter1` has none: the character block
-replaced the fighter's sprite and health bar, so nothing draws one. `NewCombatantFrom`
-accepts a nil sheet and `drawCombatant` checks. That is the normal case, not a missing
-asset.
+They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a card by
+`internal/cards`, which has no graphics context, and decoding 96 at startup would cost
+~20 MB of resident memory for pictures most runs never show.
+
+**Enemy sprites are gone** *(2026-08-11)*. `assets/enemy/*.png` was one west-facing idle
+frame per creature; the enemy is drawn as a card now, so nothing used them, and cutting 96
+more frames to keep the pattern would have been the expensive half of that change. Git has
+the four that existed. The full animation sheets stay in `.scratch/flat-creatures`
+(gitignored) — that folder's README documents the grid, the frame table and the facing
+order — so animating enemies later means going back for them rather than starting over.
+
+**Nothing in the game draws a loose sprite any more.** `Combatant` has no `Sprite` field,
+`entities` imports no Ebitengine at all, and `drawCombatant`/`DrawHealthBar` went with the
+sprites. Both duelists state their life as a number: the player in the character block, the
+enemy on its card.

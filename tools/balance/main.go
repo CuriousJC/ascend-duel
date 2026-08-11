@@ -19,11 +19,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"sort"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 )
 
@@ -40,10 +42,18 @@ type playerRound struct {
 	attack  []combat.ActionKind
 }
 
-func main() {
-	recs := data.LoadCombatants()
+// detail names one record to print round by round, under the summary table. The table is
+// what a 96-enemy roster wants; this is what a single suspect entry wants.
+var detail = flag.String("v", "",
+	"an EnemyRecord to print round by round, e.g. -v OgreWarlord")
 
-	fighter := duelistOf(recs["Fighter1"])
+func main() {
+	flag.Parse()
+
+	duelists := data.LoadDuelists()
+	recs := data.LoadEnemies()
+
+	fighter := duelistOfDuelist(duelists["Fighter1"])
 	fmt.Printf("Fighter1: %d life, %d AP, Str %d, %d actions/round\n",
 		fighter.MaxLife, fighter.ActionPoints(), fighter.Str, fighter.MaxActions())
 
@@ -80,20 +90,63 @@ func main() {
 		fmt.Printf("  %-9s %s\n", p.label, label(append(append([]combat.ActionKind{}, p.defence...), p.attack...)))
 	}
 
-	for _, name := range enemyNames(recs) {
+	// **A summary line per enemy, not seven rows each** *(2026-08-11)*. The roster went from
+	// four records to ninety-six, and seven postures each is 672 duels — a transcript nobody
+	// reads. What is worth reading at that size is the number this tool exists to surface:
+	// how many of the seven postures beat this enemy. `-v <EnemyRecord>` still prints the
+	// round-by-round detail, for one record at a time.
+	fmt.Printf("\n%-24s %-10s %-6s %5s %4s %4s   %s\n",
+		"enemy", "style", "floors", "life", "AP", "Str", "beaten by")
+	fmt.Println(strings.Repeat("-", 96))
+
+	band := 0
+	for _, name := range data.EnemyOrder(recs) {
 		rec := recs[name]
 		enemy := duelistOf(rec)
 		style, known := combat.ParsePlanStyle(rec.PlanStyle)
 
-		warn := ""
-		if !known {
-			warn = fmt.Sprintf("  ** PlanStyle %q not recognised, defaulted **", rec.PlanStyle)
+		// A blank line each time the lowest valid floor moves, so the table reads as the
+		// tower it describes rather than as ninety-six rows.
+		if rec.ValidFloors[0] != band {
+			band = rec.ValidFloors[0]
+			fmt.Println()
 		}
-		fmt.Printf("\n== %s  %v  %d life, %d AP, Str %d%s\n",
-			name, style, enemy.MaxLife, enemy.ActionPoints(), enemy.Str, warn)
 
+		var beat []string
 		for _, p := range postures {
-			report(fighter, enemy, style, p)
+			if playerWins(fighter, enemy, style, p) {
+				beat = append(beat, p.label)
+			}
+		}
+
+		verdict := strings.Join(beat, " ")
+		switch len(beat) {
+		case 0:
+			verdict = "NOTHING - a wall"
+		case len(postures):
+			verdict = "everything - free"
+		}
+		if !known {
+			verdict += fmt.Sprintf("   ** PlanStyle %q not recognised **", rec.PlanStyle)
+		}
+
+		fmt.Printf("%-24s %-10v %d-%d    %5d %4d %4d   %s\n",
+			rec.Name, style, rec.ValidFloors[0], rec.ValidFloors[1],
+			enemy.MaxLife, enemy.ActionPoints(), enemy.Str, verdict)
+	}
+
+	if *detail != "" {
+		rec, ok := recs[*detail]
+		if !ok {
+			fmt.Printf("\nno enemy record called %q\n", *detail)
+		} else {
+			enemy := duelistOf(rec)
+			style, _ := combat.ParsePlanStyle(rec.PlanStyle)
+			fmt.Printf("\n== %s  %v  %d life, %d AP, Str %d\n",
+				rec.Name, style, enemy.MaxLife, enemy.ActionPoints(), enemy.Str)
+			for _, p := range postures {
+				report(fighter, enemy, style, p)
+			}
 		}
 	}
 
@@ -124,26 +177,58 @@ const stalemateRounds = 40
 // The first two rounds are still printed because a tactician's character is that its second
 // round is not its first, and a verdict alone would not show that.
 func report(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound) {
+	// The first two rounds are printed because a tactician's character is that its second
+	// round is not its first, and a verdict alone would not show that.
+	sample := func(round int, enemyPlan []combat.ActionKind, dealt, taken int) {
+		if round <= 2 {
+			fmt.Printf("   r%d %-9s vs %-30s deal %2d  take %2d\n",
+				round, p.label, label(enemyPlan), dealt, taken)
+		}
+	}
+
+	f, e, round := play(fighter, enemy, style, p, sample)
+	fmt.Printf("      %-9s -> %s\n", p.label, outcome(f, e, round))
+}
+
+// play runs one posture against one enemy for a whole duel and hands back how it ended.
+//
+// Split out of report on 2026-08-11 so the summary table can ask for a verdict without
+// printing a transcript. **One loop, two callers**: a summary that played the duel its own
+// way could disagree with the detail view of the same matchup, which is exactly the kind of
+// quiet lie this tool exists to catch elsewhere.
+//
+// `each` may be nil, and is called with the round number, what the opponent queued, and what
+// each side lost in that round.
+func play(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound,
+	each func(round int, enemyPlan []combat.ActionKind, dealt, taken int)) (combat.Duelist, combat.Duelist, int) {
+
 	plan := append(append([]combat.ActionKind{}, p.defence...), p.attack...)
 
 	f, e := fighter, enemy
 	round := 0
 
+	// **The opponent draws from the real deck** *(2026-08-11)*, through the same
+	// internal/decks pile the game uses, seeded the same way. Before enemies had decks a
+	// style conjured its cards and this loop needed nothing but the style; now a brute that
+	// draws no Heavy does not swing one, and a report that skipped the deck would be a
+	// report about an enemy nobody fights.
+	//
+	// A fresh pile per posture, so each row starts from the same shuffle and the seven of
+	// them can be compared with each other.
+	pile := decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+
 	for f.Alive() && e.Alive() && round < stalemateRounds {
 		round++
-		enemyPlan := combat.PlanFor(style, e)
+		enemyPlan := pile.Plan(style, e)
 
 		beforeF, beforeE := f.CurrentLife, e.CurrentLife
 		_, f, e = combat.ResolveRound(f, e, plan, enemyPlan, round)
 
-		if round <= 2 {
-			fmt.Printf("   r%d %-9s vs %-30s deal %2d  take %2d\n",
-				round, p.label, label(enemyPlan),
-				beforeE-e.CurrentLife, beforeF-f.CurrentLife)
+		if each != nil {
+			each(round, enemyPlan, beforeE-e.CurrentLife, beforeF-f.CurrentLife)
 		}
 	}
-
-	fmt.Printf("      %-9s -> %s\n", p.label, outcome(f, e, round))
+	return f, e, round
 }
 
 // outcome describes how the duel actually finished.
@@ -164,27 +249,34 @@ func outcome(f, e combat.Duelist, rounds int) string {
 }
 
 // duelistOf hydrates the stats half of a record. It deliberately does not go through
-// entities.NewCombatantFrom, which needs an *ebiten.Image and therefore a graphics context
+// entities.NewEnemyFrom, which needs an *ebiten.Image and therefore a graphics context
 // this tool has no reason to open — but it reads LifePerCon from entities so the conversion
 // cannot drift from the game's.
-func duelistOf(d data.CombatantData) combat.Duelist {
+func duelistOf(d data.EnemyData) combat.Duelist {
 	du := combat.Duelist{Con: d.Constitution, Str: d.Strength, Spd: d.Speed}
 	du.MaxLife = du.Con * entities.LifePerCon
 	du.CurrentLife = du.MaxLife
 	return du
 }
 
-// enemyNames is every record that is not the player, sorted. Sorted because LoadCombatants
-// returns a map and Go randomises that order — the same rule the game itself follows.
-func enemyNames(recs map[string]data.CombatantData) []string {
-	names := make([]string, 0, len(recs))
-	for n := range recs {
-		if n != "Fighter1" {
-			names = append(names, n)
-		}
-	}
-	sort.Strings(names)
-	return names
+// duelistOfDuelist is the same for the player's record, which is a different struct since
+// the roster split on 2026-08-11. Two near-identical functions rather than one generic one:
+// the two records genuinely have different fields, and the day they stop sharing even these
+// three is the day a shared helper would have been quietly wrong.
+func duelistOfDuelist(d data.DuelistData) combat.Duelist {
+	du := combat.Duelist{Con: d.Constitution, Str: d.Strength, Spd: d.Speed}
+	du.MaxLife = du.Con * entities.LifePerCon
+	du.CurrentLife = du.MaxLife
+	return du
+}
+
+// playerWins plays the posture out and reports only the verdict, for the summary table.
+//
+// It shares report's loop rather than duplicating it — see there for why the duel is played
+// rather than a damage rate divided into a life total.
+func playerWins(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound) bool {
+	f, e, _ := play(fighter, enemy, style, p, nil)
+	return !e.Alive() && f.Alive()
 }
 
 func label(plan []combat.ActionKind) string {

@@ -153,9 +153,9 @@ var startingDeck = buildStartingDeck()
 func buildStartingDeck() []deckEntry {
 	// Not named `cards`: that is the drawing package, imported above, and shadowing a
 	// package name inside the one function that builds the deck is a trap.
-	records := data.LoadCards()
+	records := data.LoadDuelistCards()
 
-	problems := data.CheckCostTiers(records,
+	problems := data.CheckCostTiers("duelist_cards.json", records,
 		func(concept string) (int, bool) {
 			a, ok := combat.ParseAction(concept)
 			if !ok {
@@ -172,7 +172,7 @@ func buildStartingDeck() []deckEntry {
 		},
 	)
 	if len(problems) > 0 {
-		msg := "cards.json disagrees with the rules:"
+		msg := "duelist_cards.json disagrees with the rules:"
 		for _, p := range problems {
 			msg += "\n  " + p.Error()
 		}
@@ -183,12 +183,12 @@ func buildStartingDeck() []deckEntry {
 	for _, c := range records {
 		action, ok := combat.ParseAction(c.Concept)
 		if !ok {
-			panic("cards.json: unknown concept " + c.Concept)
+			panic("duelist_cards.json: unknown concept " + c.Concept)
 		}
 		for _, name := range c.Elements {
 			e, ok := elementByName(name)
 			if !ok {
-				panic("cards.json: " + c.Concept + " names unknown element " + name)
+				panic("duelist_cards.json: " + c.Concept + " names unknown element " + name)
 			}
 			out = append(out, deckEntry{actionCard{action, e}, c.Copies})
 		}

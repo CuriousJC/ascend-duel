@@ -226,8 +226,21 @@ be steered.
 **The character block replaced the fighter's sprite and health bar.** A bar says roughly
 how hurt you are, and a duel decided in whole points wants the exact number, so life is a
 red fraction. Discards refill each round; vitae is a fixed placeholder drawn anyway, so the
-box has its real shape before the rest of the character's state is designed. The enemy
-keeps its sprite and bar for now.
+box has its real shape before the rest of the character's state is designed.
+
+**The enemy is a card** *(2026-08-11)*, centred where its sprite stood: portrait on the top
+half, then its name, a health bar and its life as a fraction. It was the last thing on this
+screen drawn as a loose picture on the background, and everything else the duel is made of
+is a card — including the one you are fighting.
+
+- **All of it is one cached image from `internal/cards`**, health bar included, so
+  `tools/cardsheet` draws a wounded enemy without reimplementing a bar. `Life`/`MaxLife` are
+  on the `Spec`, so a point of damage is a new cache entry — affordable because life changes
+  on damage events, not per frame.
+- **Red is what is left, not what is lost.** A bar where the red grows as the enemy weakens
+  says the opposite of what it means.
+- **There is no loose sprite anywhere any more.** `drawCombatant`, `DrawHealthBar` and
+  `Combatant.Sprite` are gone with it, and `entities` imports no Ebitengine at all.
 
 **The deck overlay is a dialog, and the only one in the game.** It fills nearly the screen,
 everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
@@ -257,7 +270,7 @@ an experiment** and Resolution widened to 15–78% to take both columns. `drawAc
 **What is given up while it is off, and it is not nothing:** the enemy's queued shape during
 planning. Those `??? (attack)` rows are the tell — see the concealment section below — and
 Resolution is empty until DUEL! is pressed, so nothing on screen says what the opponent is
-about to do. It bites hardest against Tactician1, whose whole design is that you read
+about to do. It bites hardest against a tactician, whose whole design is that you read
 `??? (prepare) ??? (prepare)` and brace.
 
 The rest of this section describes the split as designed, and still applies if Flow comes back.

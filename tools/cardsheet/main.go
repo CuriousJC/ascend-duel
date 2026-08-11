@@ -171,8 +171,15 @@ func run(dir string) error {
 		spec  cards.Spec
 		style cards.Style
 	}{
-		{"back-hand", "back — hand size", cards.Spec{FaceDown: true}, cards.Hand},
-		{"back-mini", "back — half size", cards.Spec{FaceDown: true}, cards.Mini},
+		// Every mark, at both sizes that show one. **A duelist and a card back go together**
+		// — `data/duelists.json` names one of these — so the row is a picture of the choice
+		// that file offers, which is otherwise only visible by editing it and relaunching.
+		{"back-triangle-hand", "triangle — hand size", cards.Spec{FaceDown: true, Back: cards.MarkTriangle}, cards.Hand},
+		{"back-diamond-hand", "diamond — hand size", cards.Spec{FaceDown: true, Back: cards.MarkDiamond}, cards.Hand},
+		{"back-chevron-hand", "chevron — hand size", cards.Spec{FaceDown: true, Back: cards.MarkChevron}, cards.Hand},
+		{"back-triangle-stack", "triangle — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkTriangle}, cards.Stack},
+		{"back-diamond-stack", "diamond — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkDiamond}, cards.Stack},
+		{"back-chevron-stack", "chevron — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkChevron}, cards.Stack},
 		{"back-face", "a face, for the silhouette",
 			cards.Spec{Name: "Strike", Category: cards.CategoryAttack, Damage: 7, Cost: 2,
 				Element: cards.Fire, Enabled: true}, cards.Hand},
@@ -224,6 +231,24 @@ func run(dir string) error {
 		ringRow.Cells = append(ringRow.Cells, cell)
 	}
 	page.Rings = append(page.Rings, ringRow)
+
+	// Section seven: the enemy. Same format again, a portrait instead of glyphs, and a health
+	// bar and a life fraction where an action card puts its cost and damage.
+	enemies, err := enemySpecs()
+	if err != nil {
+		return err
+	}
+	enemyRow := row{Label: "enemies — portrait, name, health"}
+	for _, spec := range enemies {
+		cell, err := write(dir, faces, spec, cards.EnemyStyle,
+			fmt.Sprintf("enemy-%s.png", spec.Name),
+			fmt.Sprintf("%s — %d/%d", spec.Name, spec.Life, spec.MaxLife))
+		if err != nil {
+			return err
+		}
+		enemyRow.Cells = append(enemyRow.Cells, cell)
+	}
+	page.Rings = append(page.Rings, enemyRow)
 
 	out := filepath.Join(dir, "index.html")
 	f, err := os.Create(out)

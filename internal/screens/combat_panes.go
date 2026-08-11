@@ -23,10 +23,10 @@ import (
 	"image/color"
 )
 
-// The Resolution pane's vertical band. It reaches higher than it did — the heading text
-// that used to sit at the top of the screen is gone — and stops well short of the bottom,
-// because the hand took the lower third when the cards turned portrait and the caption box
-// sits between the two.
+// The band a full-height pane occupies. **Resolution left it on 2026-08-11** and moved down
+// to the strip above the hand — see the feed constants below — so today this describes only
+// Action Flow, which is not drawn. The space between 12% and 46% is deliberately empty and
+// spoken for.
 const (
 	paneTopPct    = 12
 	paneBottomPct = 46
@@ -38,11 +38,57 @@ const (
 	swatchSize     = 16
 	swatchGap      = 6 // gap between a swatch and its label
 
-	// The Resolution pane's rows are sentences rather than card names, and there are more of
-	// them — a busy round merges to a dozen lines where the flow pane draws at most ten. A
-	// tighter pitch is what fits them in the same band without the pane having to grow into
-	// the caption's slot.
+	// The Resolution rows are sentences rather than card names, and there are more of them —
+	// a busy round merges to a dozen lines where the flow pane draws at most ten.
 	paneTextRowHeight = 22
+)
+
+// **Resolution is a three-line feed above the hand now** *(2026-08-11)*, in the slot the
+// caption box used to hold, and it grows upward while it is long-pressed.
+//
+// The pane it replaced was 15–78% wide and a third of the screen tall, which bought a whole
+// round on screen at once at a cost the screen could not keep paying — it was the largest
+// thing on it, and what it mostly held was blank rows. The feed is the opposite trade: the
+// last few things that happened, where the eye already is, and the rest one press away.
+//
+// **Older lines scroll off silently, which suspends a rule this pane wrote.** "Never hide
+// part of what you claim to show" is why the deck overlay draws `+N more not shown` and why
+// this pane drew `... N earlier`. Three rows cannot afford a line of bookkeeping out of
+// three, and the long press is what makes the omission honest — the full account is a press
+// away rather than gone. **The expanded view keeps the marker**, because there it is a line
+// out of nineteen and it is the only place the count can still be told.
+const (
+	// feedRowInset is the gap from the box's edge to the first row, and again below the
+	// last. It stands in for paneFirstRow, which reserves room for a title the feed has
+	// no space for.
+	feedRowInset = 8
+
+	// feedRows is how many lines the box shows when it is not being held. Everything about
+	// the box's height is derived from it.
+	feedRows = 3
+
+	// feedGapAboveCards is how far the box's bottom edge sits above the resting hand row.
+	//
+	// **A selected card lifts by selectedNudge and does overlap it**, by 21 pixels, and that
+	// is accepted rather than overlooked: the box is measured against where the cards live,
+	// not against where one of them goes when it is picked. What it costs is that the box's
+	// bottom strip cannot take a long press — see updateFeed, which ignores a press inside
+	// handZone so a lifted card is still the thing under the cursor there.
+	feedGapAboveCards = 5
+
+	// feedExpandTopPct is how far up a held box grows: the top of the band the full-height
+	// pane used to occupy. It expands into the space that pane vacated, which is what makes
+	// the room free.
+	feedExpandTopPct = paneTopPct
+
+	// longPressTicks is how long the button has to be held before it counts as a long press.
+	// A third of a second at 60 TPS.
+	//
+	// **This is the game's first long press.** `CLAUDE.md` has had it in the input vocabulary
+	// since the vocabulary was written — left click, drag and drop, long press — and nothing
+	// had used it. If a second one arrives this constant and the counter beside it are what
+	// should be lifted into a shared widget rather than copied.
+	longPressTicks = 20
 )
 
 // panePlacement is one pane's horizontal slot, label and identifying colour. The
@@ -70,6 +116,11 @@ type panePlacement struct {
 	// than being one constant because the two panes hold different things: card names, and
 	// sentences about what those cards did.
 	rowHeight int
+
+	// firstRow is the gap from the top edge to the first row. A titled pane has to clear its
+	// title; the feed has no title and cannot afford to pretend it does — 45 pixels of
+	// reserved heading out of an 82-pixel box is most of the box.
+	firstRow int
 }
 
 // **Two panes, and they answer different questions at different times** *(2026-08-07)*.
@@ -100,15 +151,27 @@ var (
 		ink:       color.RGBA{R: 245, G: 245, B: 245, A: 255},
 		nowInk:    color.RGBA{R: 255, G: 158, B: 205, A: 255},
 		rowHeight: paneRowHeight,
+		firstRow:  paneFirstRow,
 	}
+
+	// **Resolution keeps its colours and loses its column** *(2026-08-11)*. The left and
+	// right percentages are unused — the feed takes its width from the hand, like the AP bar
+	// and the box it replaced — and the title is dropped, because a heading in a three-line
+	// box costs a line and the box is under the cards it is reporting on, which says what it
+	// is more directly than a word would.
+	//
+	// **The off-white ground survives the move deliberately**, even though the box it took
+	// over from was a dim pink one. The verbs are coloured, and a light ground is what makes
+	// three saturated inks legible — that was the whole reason this pane went off-white on
+	// 2026-08-07. `paneEdge` still names it, so the pink identity is in the border.
 	resolutionPane = panePlacement{
-		leftPct: 15, rightPct: 78,
-		title:     "Resolution",
+		title:     "",
 		color:     paneEdge,
 		fill:      color.RGBA{R: 234, G: 230, B: 224, A: 255},
 		ink:       color.RGBA{R: 34, G: 32, B: 38, A: 255},
 		nowInk:    color.RGBA{R: 178, G: 22, B: 106, A: 255},
 		rowHeight: paneTextRowHeight,
+		firstRow:  feedRowInset,
 	}
 )
 
@@ -165,25 +228,136 @@ type paneRow struct {
 
 // drawActionFlow shows the two queues merged into play order: the plan, not the outcome.
 func (s *CombatScene) drawActionFlow(gs *state.GlobalState, screen *ebiten.Image) {
-	s.drawPane(gs, screen, actionFlowPane,
+	s.drawPane(gs, screen, actionFlowPane, panePlacementRect(gs, actionFlowPane),
 		s.actionFlowRows(s.fighterActions, s.enemyActions, s.concealEnemy(gs)))
 }
 
 // drawResolution shows what the round actually did, accumulating as it plays back.
 func (s *CombatScene) drawResolution(gs *state.GlobalState, screen *ebiten.Image) {
-	s.drawPane(gs, screen, resolutionPane, s.resolutionLines(gs))
+	r := s.feedRect(gs)
+	expanded := s.feedExpanded()
+
+	rows, hidden := s.resolutionLines(gs, feedCapacity(r), expanded)
+	s.drawPane(gs, screen, resolutionPane, r, rows)
+
+	if !expanded && hidden > 0 {
+		drawMoreAbove(screen, r)
+	}
 }
 
-// resolutionCapacity is how many lines fit between the pane's first row and its bottom edge.
-// Derived rather than written down, so changing the band or the pitch cannot leave a constant
-// behind claiming a capacity the pane does not have.
-func resolutionCapacity(gs *state.GlobalState) int {
-	h := gs.PctY(paneBottomPct) - gs.PctY(paneTopPct)
-	n := (h - paneFirstRow) / paneTextRowHeight
+// The little upward arrow in the box's top-right corner: **there are lines above this one**.
+//
+// It is drawn only when something is actually scrolled off, so it is a report and not a
+// decoration. That has a cost worth stating: on a short round nothing advertises the long
+// press, and the long press is the only way to reach what the arrow points at. The
+// alternative — always drawing it — makes the gesture discoverable and makes the arrow lie
+// on every round that fits, which is the trade the deck overlay's `+N more not shown` and
+// this pane's own `... N earlier` both already decided the same way.
+//
+// `attentionYellow` is the screen's one "look here" colour, which is exactly what this is.
+// **It is drawn twice, black then yellow.** The box's ground is off-white and the arrow is
+// a small saturated yellow, which is the one pairing `attentionYellow` is weak at — the deck
+// stack wears the same colour against a dark screen and reads instantly. An outline is what
+// buys it back without introducing a second "look here" colour.
+const (
+	moreArrowWidth  = 14
+	moreArrowHeight = 8
+	moreArrowInset  = 12 // from the box's top and right edges
+	moreArrowBorder = 2
+)
+
+func drawMoreAbove(screen *ebiten.Image, box image.Rectangle) {
+	cx := float32(box.Max.X-moreArrowInset) - moreArrowWidth/2
+	top := float32(box.Min.Y + moreArrowInset)
+
+	// The outline is the same triangle grown by the border on every side: wider at the base
+	// by twice the border, taller by it, and started that much higher so the point keeps its
+	// margin. Growing it rather than stroking it means there is only one shape to be wrong.
+	fillArrowUp(screen, cx, top-moreArrowBorder,
+		moreArrowWidth+2*moreArrowBorder, moreArrowHeight+moreArrowBorder,
+		color.RGBA{A: 255})
+	fillArrowUp(screen, cx, top, moreArrowWidth, moreArrowHeight, attentionYellow)
+}
+
+// fillArrowUp draws an upward triangle centred on cx, in scanlines rather than a path — the
+// same hand-rolled idiom as everything else on this screen. The point is at the top because
+// that is the direction the hidden lines are in.
+func fillArrowUp(screen *ebiten.Image, cx, top, w, h float32, c color.RGBA) {
+	for i := float32(0); i < h; i++ {
+		rowW := w * (i + 1) / h
+		vector.DrawFilledRect(screen, cx-rowW/2, top+i, rowW, 1, c, false)
+	}
+}
+
+// feedRect is the box Resolution is drawn in: hand width, bottom edge a few pixels above the
+// cards, and either three rows tall or grown up to the vacated pane band while held.
+//
+// **The bottom edge is the fixed one.** It is anchored to the hand — the thing the box is
+// reporting on — so expanding moves the top and nothing the eye is already resting on
+// shifts. A box that grew downward would push into the cards; one that grew both ways would
+// move every line already on screen.
+func (s *CombatScene) feedRect(gs *state.GlobalState) image.Rectangle {
+	band := handBand(gs, s.laidOutCount())
+	bottom := gs.PctY(handTopPct) - feedGapAboveCards
+
+	top := bottom - feedHeight()
+	if s.feedExpanded() {
+		top = gs.PctY(feedExpandTopPct)
+	}
+	return image.Rect(band.Min.X, top, band.Max.X, bottom)
+}
+
+// feedHeight is the collapsed box: the rows it holds, plus a margin above the first and
+// below the last. Derived from feedRows so the two cannot disagree.
+func feedHeight() int {
+	return 2*feedRowInset + feedRows*paneTextRowHeight
+}
+
+// feedCapacity is how many lines fit in a box of this size. Derived rather than written down,
+// so neither the collapsed height nor the expanded one can leave a constant behind claiming a
+// capacity the box does not have.
+func feedCapacity(r image.Rectangle) int {
+	n := (r.Dy() - 2*feedRowInset) / paneTextRowHeight
 	if n < 1 {
 		return 1
 	}
 	return n
+}
+
+// feedExpanded reports whether the box is currently grown. It is derived from how long the
+// button has been held rather than stored as a mode, for the same reason planning() is
+// derived: two things that can disagree about whether the box is open is a bug waiting to be
+// written.
+func (s *CombatScene) feedExpanded() bool {
+	return s.feedPressTicks >= longPressTicks
+}
+
+// updateFeed runs the long press: hold the mouse down on the box and it grows, release and it
+// snaps back.
+//
+// **Held rather than latched, deliberately.** A latched panel is a second dialog, and the one
+// dialog in the game needs a bright yellow ring around its only exit to stop being a trap. A
+// press that ends when the button comes up has nothing to escape from.
+//
+// It ignores a press inside handZone. A selected card lifts into the box's bottom 21 pixels,
+// and the card is what the player means there — see feedGapAboveCards. The action box reads
+// that press on the same tick, so without this both would fire.
+func (s *CombatScene) updateFeed(gs *state.GlobalState) {
+	at := image.Pt(gs.MouseX, gs.MouseY)
+
+	// The overlay is a dialog: nothing behind it responds, and that includes this.
+	held := !s.showDeck &&
+		ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) &&
+		!at.In(handZone(gs))
+
+	// Once it is open the press keeps it open wherever the cursor has wandered to — the box
+	// grew out from under it. Starting one still requires the cursor to be on the collapsed
+	// box.
+	if held && (s.feedExpanded() || at.In(s.feedRect(gs))) {
+		s.feedPressTicks++
+		return
+	}
+	s.feedPressTicks = 0
 }
 
 // resolutionLines turns the event log into one line per slot, an action and what it did,
@@ -200,13 +374,16 @@ func resolutionCapacity(gs *state.GlobalState) int {
 // Combos and staggers get lines of their own. They are not something a card did, they are
 // something that happened *to* the round, and folding a combo into the line of the card that
 // happened to start it would bury the one thing this pane was added to show.
-func (s *CombatScene) resolutionLines(gs *state.GlobalState) []paneRow {
+// It reports how many lines it dropped off the top as well as the rows themselves, so the
+// caller can say so — with a marker line when there is room for one, and with the arrow in
+// the corner when there is not.
+func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markOverflow bool) ([]paneRow, int) {
 	end := s.cursor + 1
 	if end > len(s.log) {
 		end = len(s.log)
 	}
 	if end <= 0 {
-		return []paneRow{{prefix: "(press DUEL!)"}}
+		return []paneRow{{prefix: "(press DUEL!)"}}, 0
 	}
 
 	var rows []paneRow
@@ -311,12 +488,26 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState) []paneRow {
 		}
 	}
 
-	// Never silently drop lines. The deck overlay draws "+N more not shown" for the same
-	// reason: a panel that quietly hides part of what it claims to show is a picture that
-	// lies, and here it would be lying about the round the player just watched.
-	if cap := resolutionCapacity(gs); len(rows) > cap {
-		cut := len(rows) - cap + 1
-		rows = append([]paneRow{{prefix: fmt.Sprintf("... %d earlier", cut)}}, rows[cut:]...)
+	// **Two ways to overflow, and which one applies is the box's size** *(2026-08-11)*.
+	//
+	// Expanded, the old rule holds: never silently drop lines, the same reason the deck
+	// overlay draws "+N more not shown". A panel that quietly hides part of what it claims to
+	// show is a picture that lies.
+	//
+	// Collapsed, the box takes the newest lines and the rest simply scroll off. Three rows
+	// cannot spend one of themselves on a count, and the claim is different at that size —
+	// the feed says "here is what just happened", not "here is the round". What keeps it
+	// honest is the long press: the full account is one hold away, which is where the count
+	// is drawn.
+	hidden := 0
+	if len(rows) > capacity {
+		if markOverflow {
+			hidden = len(rows) - capacity + 1
+			rows = append([]paneRow{{prefix: fmt.Sprintf("... %d earlier", hidden)}}, rows[hidden:]...)
+		} else {
+			hidden = len(rows) - capacity
+			rows = rows[hidden:]
+		}
 	}
 
 	// The newest line is the one playback is on, which ties this pane to the lit row in
@@ -324,7 +515,7 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState) []paneRow {
 	if s.cursor < len(s.log) && len(rows) > 0 {
 		rows[len(rows)-1].highlighted = true
 	}
-	return rows
+	return rows, hidden
 }
 
 // swatchFor is a side's colour: green is you, yellow is them.
@@ -414,9 +605,10 @@ func verbInkFor(c combat.Category) color.RGBA {
 // of a sentence.
 func lower(s string) string { return strings.ToLower(s) }
 
-// duelistName is what the player's combatant is called on screen. The data record is still
-// keyed `Fighter1` in combatants.json — this is the label, not the identifier, and renaming
-// the key would mean renaming it in the roster, the balance tool and the tests for no gain.
+// duelistName is the fallback for a duelist record that names nobody. The record is still
+// keyed `Fighter1` in duelists.json — a key is not a label, and renaming it would mean
+// renaming it in the balance tool and the tests for no gain — but the record now carries a
+// Name and that is what is normally shown.
 const duelistName = "Duelist"
 
 // sideName is who a Resolution line belongs to, written out beside the swatch that already
@@ -424,9 +616,19 @@ const duelistName = "Duelist"
 // glance, but a line that begins "Strike" reads as an instruction rather than a report, and
 // with both sides' actions in one list the reader has to hold which colour is which. The name
 // makes each line stand on its own.
+//
+// **It reads the combatant rather than the roster** *(2026-08-11)*. It used to index the
+// fight order and print the record key, which is why the four records were named
+// Monster1..Tactician1 — style names standing in for creature names because there was
+// nowhere else to put one. Records carry a Name now, so a line says "Ogre Warlord attacks"
+// rather than "OgreWarlord attacks".
 func (s *CombatScene) sideName(side combat.Side) string {
+	c := s.fighter
 	if side == combat.SideB {
-		return enemyRoster[s.fightIndex%len(enemyRoster)]
+		c = s.enemy
+	}
+	if c != nil && c.Name != "" {
+		return c.Name
 	}
 	return duelistName
 }
@@ -446,14 +648,20 @@ func (s *CombatScene) concealEnemy(gs *state.GlobalState) bool {
 	return !gs.DebugGameplay && s.planning()
 }
 
-// drawPaneFrame draws a column's fill, border and title, and reports its rectangle.
-// Split out because the card panes fill themselves rather than drawing text rows.
-func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement) (x, y, w, h float32) {
-	r := image.Rect(
+// panePlacementRect is the column a full-height pane occupies, from its percentages and the
+// shared band. **Only Action Flow is placed this way now** — Resolution takes its rectangle
+// from the hand instead, so the rect is a parameter rather than something drawPane works out.
+func panePlacementRect(gs *state.GlobalState, p panePlacement) image.Rectangle {
+	return image.Rect(
 		gs.PctX(p.leftPct), gs.PctY(paneTopPct),
 		gs.PctX(p.rightPct), gs.PctY(paneBottomPct),
 	)
+}
 
+// drawPaneFrame draws a pane's fill, border and title in the rectangle given, and reports it
+// back as floats. Split out because the card panes fill themselves rather than drawing text
+// rows.
+func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle) (x, y, w, h float32) {
 	// Not drawBox: a pane names its own ground and its own ink, where drawBox derives a dim
 	// fill from one colour. drawBox still serves the caption and the character strip, which
 	// have no text on a light ground to worry about.
@@ -474,9 +682,9 @@ func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image,
 	return x, y, w, h
 }
 
-// drawPane draws a read-only column: the frame, then a row per action.
-func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, rows []paneRow) {
-	x, y, w, _ := s.drawPaneFrame(gs, screen, p)
+// drawPane draws a read-only pane: the frame, then a row per action.
+func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle, rows []paneRow) {
+	x, y, w, _ := s.drawPaneFrame(gs, screen, p, r)
 
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
 
@@ -489,7 +697,7 @@ func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p pa
 	_, lineHeight := text.Measure("Ag", face, 0)
 
 	for i, row := range rows {
-		rowY := y + paneFirstRow + float32(i*p.rowHeight)
+		rowY := y + float32(p.firstRow) + float32(i*p.rowHeight)
 		rowOp := &text.DrawOptions{}
 
 		// **The row playback is on is set in the text itself — coloured, bold and underlined —

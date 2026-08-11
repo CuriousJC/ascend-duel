@@ -12,7 +12,7 @@ import (
 
 // What the sheet renders, kept apart from how it renders it.
 //
-// **These are written out rather than read from data/cards.json and internal/combat.**
+// **These are written out rather than read from data/duelist_cards.json and internal/combat.**
 // The tool could import both and build the real deck, and it deliberately does not: a
 // review sheet that derives its contents from the rules can only show what the rules
 // currently produce, and the whole point is to look at cards the game cannot deal yet —
@@ -126,6 +126,43 @@ func ringSpecs() ([]cards.Spec, error) {
 		// besides sitting still.
 		{Name: "Fire Ring", Element: cards.Ring, Art: art, Enabled: true, Dragging: true},
 	}, nil
+}
+
+// enemySpecs is the opponent in the card format, at four states of health.
+//
+// **Four, because the health bar is the only thing on this card that moves**, and a bar is
+// exactly the widget where full and empty both look fine and the middle is where the
+// arithmetic is wrong — so full, most, a third and nearly dead. The names are drawn from
+// `data/enemies.json`, but the life totals here are illustrative: the sheet draws what a
+// card *can* look like, not what any particular fight has reached.
+//
+// The keys are portrait filenames rather than hand-written asset names, because the 96
+// portraits are embedded as a glob. A renamed file breaks this list, and that is the
+// documented cost of not maintaining 192 lines of embed directives.
+func enemySpecs() ([]cards.Spec, error) {
+	each := []struct {
+		name     string
+		key      string
+		life, of int
+	}{
+		{"Giant Rat", "giantrat-portrait", 50, 50},
+		{"Dragonfly", "dragonfly-portrait", 33, 60},
+		{"Ogre Warlord", "ogrewarlord-portrait", 4, 160},
+		{"Bio-Titan Omega", "biotitan-omega-portrait", 137, 200},
+	}
+
+	var specs []cards.Spec
+	for _, e := range each {
+		art, err := loadPNG(e.key)
+		if err != nil {
+			return nil, err
+		}
+		specs = append(specs, cards.Spec{
+			Name: e.name, Element: cards.Basic, Art: art,
+			Life: e.life, MaxLife: e.of, Enabled: true,
+		})
+	}
+	return specs, nil
 }
 
 func loadPNG(key string) (image.Image, error) {

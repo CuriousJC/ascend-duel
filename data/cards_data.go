@@ -20,8 +20,23 @@ import (
 	"fmt"
 )
 
-//go:embed cards.json
-var cardsJSON []byte
+// **Two lists, one shape** *(2026-08-11)*. `duelist_cards.json` is the player's starting
+// deck and `enemy_cards.json` is what an opponent draws from. They are separate files
+// because they want tuning against each other rather than together — the player's deck is
+// twelve concepts in five colours and an enemy's is a handful of basics — and one file with
+// a "side" column would have made every future edit a filter.
+//
+// **What a separate file cannot currently change is a number.** Cost, category and damage
+// come from `internal/combat` for both sides, so an enemy Strike costs and hits exactly what
+// yours does. Making those side-aware is a rules change rather than a data one; the shape
+// below is ready for it, in that a per-side cost would be a field here checked the same way
+// CostTier already is.
+//
+//go:embed duelist_cards.json
+var duelistCardsJSON []byte
+
+//go:embed enemy_cards.json
+var enemyCardsJSON []byte
 
 // CardData is one concept: its name, which phase it resolves in, its cost tier, the elements it
 // ships in, and how many copies of each of those the starting deck holds.
@@ -59,14 +74,32 @@ type CardData struct {
 	Copies int `json:"Copies"`
 }
 
-// LoadCards parses the embedded deck list, in file order. A slice rather than a map keyed by
-// concept: the deck is built by walking this in order, and Go randomises map iteration — see
-// the determinism rules in CLAUDE.md. File order is also grid order, so the JSON reads as the
-// table in MECHANICS.md.
-func LoadCards() []CardData {
+// LoadDuelistCards parses the player's deck list, in file order. A slice rather than a map
+// keyed by concept: the deck is built by walking this in order, and Go randomises map
+// iteration — see the determinism rules in CLAUDE.md. File order is also grid order, so the
+// JSON reads as the table in MECHANICS.md.
+func LoadDuelistCards() []CardData {
+	return loadCards(duelistCardsJSON, "duelist_cards.json")
+}
+
+// LoadEnemyCards parses what an opponent draws from.
+//
+// **It is one list for every enemy**, not one per record. Which of them a Warden actually
+// plays is decided by its style rather than by its deck, which is the smallest thing that
+// makes an enemy deck real; per-enemy lists are the obvious next step and want a field on
+// EnemyData rather than a change here.
+//
+// Every card is `basic`. Enemy cards are never drawn on screen, so an element would be a
+// colour nobody sees — and MECHANICS.md has affixes *transforming* an enemy deck into an
+// element, which is a thing to do to a basic deck rather than a property to author into one.
+func LoadEnemyCards() []CardData {
+	return loadCards(enemyCardsJSON, "enemy_cards.json")
+}
+
+func loadCards(raw []byte, name string) []CardData {
 	var cards []CardData
-	if err := json.Unmarshal(cardsJSON, &cards); err != nil {
-		panic("Failed to unmarshal our CardData: " + err.Error())
+	if err := json.Unmarshal(raw, &cards); err != nil {
+		panic("Failed to unmarshal " + name + ": " + err.Error())
 	}
 	return cards
 }
@@ -78,30 +111,30 @@ func LoadCards() []CardData {
 //
 // It returns every disagreement rather than the first, so a designer who has retuned several
 // costs sees the whole list in one run instead of finding them one relaunch at a time.
-func CheckCostTiers(cards []CardData, costOf func(concept string) (int, bool), categoryOf func(concept string) (string, bool)) []error {
+func CheckCostTiers(name string, cards []CardData, costOf func(concept string) (int, bool), categoryOf func(concept string) (string, bool)) []error {
 	var problems []error
 
 	for _, c := range cards {
 		cost, ok := costOf(c.Concept)
 		if !ok {
-			problems = append(problems, fmt.Errorf("cards.json: concept %q is not an action the rules define", c.Concept))
+			problems = append(problems, fmt.Errorf("%s: concept %q is not an action the rules define", name, c.Concept))
 			continue
 		}
 		if cost != c.CostTier {
 			problems = append(problems, fmt.Errorf(
-				"cards.json: %s declares CostTier %d but the rules cost it %d", c.Concept, c.CostTier, cost))
+				"%s: %s declares CostTier %d but the rules cost it %d", name, c.Concept, c.CostTier, cost))
 		}
 
 		if cat, ok := categoryOf(c.Concept); ok && cat != c.Category {
 			problems = append(problems, fmt.Errorf(
-				"cards.json: %s declares category %q but the rules resolve it in %q", c.Concept, c.Category, cat))
+				"%s: %s declares category %q but the rules resolve it in %q", name, c.Concept, c.Category, cat))
 		}
 
 		if c.Copies < 1 {
-			problems = append(problems, fmt.Errorf("cards.json: %s has Copies %d, which puts no card in the deck", c.Concept, c.Copies))
+			problems = append(problems, fmt.Errorf("%s: %s has Copies %d, which puts no card in the deck", name, c.Concept, c.Copies))
 		}
 		if len(c.Elements) == 0 {
-			problems = append(problems, fmt.Errorf("cards.json: %s lists no elements, so it ships as no cards", c.Concept))
+			problems = append(problems, fmt.Errorf("%s: %s lists no elements, so it ships as no cards", name, c.Concept))
 		}
 	}
 

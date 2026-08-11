@@ -5,7 +5,9 @@ import (
 	"image"
 	"math/rand"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -50,18 +52,29 @@ const (
 	eventDwellTicks = 5 * ticksPerSecond / 4
 )
 
-// The order enemies are fought in. There is no run structure yet — no tower, no Session,
-// no floors — so this is the smallest thing that lets the four fighting styles actually be
-// met rather than only existing in data. Beat one and the next steps up; lose and the same
-// one comes round again.
+// The order enemies are fought in: **every record in the roster** *(2026-08-11)*, shallowest
+// floor first, where it was a hand-written list of four. Beat one and the next steps up; lose
+// and the same one comes round again.
 //
 // **It is scaffolding and the tower replaces it wholesale.** MECHANICS.md already decides
 // 8 floors x 3 fights with doors between them, so nothing here is a design decision being
-// made early — it is a list, in a constant, standing in for a generator.
+// made early — it is a list standing in for a generator. Sorting by `ValidFloors` is what
+// makes walking it feel like climbing: a floor-one Goblin comes before a floor-eight
+// Bio-Titan because the data says where each belongs, not because someone typed them in that
+// order.
 //
-// What it does fix now is a genuine dead end: before this, winning left the screen with
-// every button dark and no way to play on short of restarting the process.
-var enemyRoster = []string{"Monster1", "Swarm1", "Warden1", "Tactician1"}
+// **It is not the randomiser and does not pretend to be.** Floor generation picks from the
+// records a floor allows, off its own determinism stream; this walks all 96 in order so every
+// one of them can be reached by playing.
+//
+// Built in Init rather than at package scope: it reads the loaded roster out of global state,
+// which does not exist until main has run.
+func (s *CombatScene) roster(gs *state.GlobalState) []string {
+	if s.enemyRoster == nil {
+		s.enemyRoster = data.EnemyOrder(gs.Enemies)
+	}
+	return s.enemyRoster
+}
 
 // The selection is capped at `s.fighter.MaxActions()` cards **regardless of what they
 // cost** — the constant that used to live here moved into internal/combat on 2026-08-06.
@@ -135,12 +148,30 @@ type CombatScene struct {
 	// and would make a run unreproducible. Seeded once in Init.
 	rng *rand.Rand
 
+	// The opponent's deck, in the same three piles. It lives in internal/decks rather than
+	// here because tools/balance plays whole duels headlessly and cannot import this
+	// package — see that package's header.
+	//
+	// **It carries its own shuffle source, separate from s.rng above**, and the reason is
+	// the seed catalogue. CLAUDE.md names "card shuffles" as one determinism stream; sharing
+	// it between the two sides would make the player's opening hand a function of how many
+	// cards the enemy happened to draw, and every entry in seeds.go would break the first
+	// time an enemy deck was retuned. A named hand has to stay a fact about the player's
+	// deck alone.
+	enemyPile *decks.EnemyPile
+
 	// The card currently being dragged, if any. See combat_actionbox.go.
 	drag *dragState
 
 	// showDeck toggles the deck overlay. While it is up the cards underneath do not
 	// respond, so reading the deck cannot accidentally re-plan the round.
 	showDeck bool
+
+	// How many ticks the mouse has been held down on the Resolution feed. The box is
+	// expanded while this is past longPressTicks — a count rather than a bool, because
+	// "expanded" is then derived and there is no second state to fall out of step. See
+	// updateFeed.
+	feedPressTicks int
 
 	// Cards currently travelling to or from the draw pile. Purely something to look at:
 	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
@@ -168,6 +199,11 @@ type CombatScene struct {
 	fightIndex int
 	restart    bool
 
+	// enemyRoster is the fight order, built once from the loaded records. On the scene
+	// rather than at package scope because it reads global state, which does not exist
+	// until main has run. See roster.
+	enemyRoster []string
+
 	// tracedHand is the hand size the last layout dump described. The whole bottom band is
 	// a function of that number — the pitch, the row, the AP bar, the caption box — so a
 	// change to it is exactly when the dump is worth repeating. Watching the size rather
@@ -194,13 +230,13 @@ type CombatScene struct {
 // built once, everything else resets every visit.
 func (s *CombatScene) Init(gs *state.GlobalState) {
 	if s.fighter == nil {
-		s.fighter = combatantFromRecord(gs, "Fighter1")
+		s.fighter = duelistFromRecord(gs, "Fighter1")
 	}
 
 	// The enemy is rebuilt every visit rather than once, because fightIndex may have moved
 	// since the last one. Init is how the next fight starts, not only how the screen is
 	// entered — see nextFight.
-	s.enemy = combatantFromRecord(gs, enemyRoster[s.fightIndex%len(enemyRoster)])
+	s.enemy = enemyFromRecord(gs, s.roster(gs)[s.fightIndex%len(s.roster(gs))])
 
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.
@@ -226,6 +262,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.duelButton.ScreenY = gs.PctY(95)
 
 	s.showDeck = false
+	s.feedPressTicks = 0
 	s.flights = nil
 	s.restart = false
 	s.discardsLeft = discardsPerRound
@@ -241,10 +278,16 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.fighterActions = nil
 	s.drag = nil
 
+	// A fresh shuffled deck for the opponent too, dealt before it plans.
+	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+
 	// Planned up front only so the enemy pane has something in it before the first
 	// DUEL!. startRound re-plans it every round regardless, so this is display, not a
 	// commitment the resolver ever reads.
-	s.enemyActions = combat.PlanFor(s.enemy.Style, s.enemy.Duelist)
+	//
+	// **It spends cards from the opponent's hand**, which is why Init has to deal that hand
+	// first. A plan is a commitment on either side.
+	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
 
 	// A fresh duel: full life, no standing defenses, and no action points banked by a
 	// Gather from a duel that has been walked away from.
@@ -259,7 +302,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.round = 0
 
 	trace.Logf("scene", "fight %d: %s, style %v, %d life, %d AP",
-		s.fightIndex+1, enemyRoster[s.fightIndex%len(enemyRoster)], s.enemy.Style,
+		s.fightIndex+1, s.enemy.Name, s.enemy.Style,
 		s.enemy.MaxLife, s.enemy.ActionPoints())
 	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seed %d",
 		len(s.deck), len(s.hand), len(s.discard), deckSeed)
@@ -324,6 +367,11 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.updateFlights()
 	s.updateResolved()
 	s.updateDeckStack(gs)
+
+	// The long press on the Resolution feed. Outside every branch below for the same reason
+	// the flights are: reading back what just happened is not an action, and it has to work
+	// while a round plays and after one side is down.
+	s.updateFeed(gs)
 
 	// The overlay swallows card interaction, so reading the deck cannot re-plan the round
 	// through the panel covering it. The buttons stay live — one of them is how it closes.
@@ -408,7 +456,7 @@ func (s *CombatScene) startRound() {
 	}
 
 	s.round++
-	s.enemyActions = combat.PlanFor(s.enemy.Style, s.enemy.Duelist)
+	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
 
 	log, fighterAfter, enemyAfter := combat.ResolveRound(
 		s.fighter.Duelist, s.enemy.Duelist,
@@ -535,54 +583,51 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	}
 }
 
-// caption describes where the round has got to, so the duel is legible before the
-// action box exists.
-func (s *CombatScene) caption() string {
-	// The end of a fight has to say what happens next, not just what happened. The button
-	// beside it changed its own label to match, and a caption that stopped at "you win!"
-	// left the only live control on screen unexplained.
-	if !s.enemy.Alive() {
-		if s.fightIndex+1 < len(enemyRoster) {
-			return fmt.Sprintf("The monster falls in round %d - press Next for %s",
-				s.round, enemyRoster[s.fightIndex+1])
-		}
-		// The roster wraps rather than ending, because there is no run structure for it to
-		// end into yet. Say so instead of implying a victory screen that does not exist.
-		return fmt.Sprintf("The monster falls in round %d - that is all of them, Next starts over",
-			s.round)
-	}
-	if !s.fighter.Alive() {
-		return fmt.Sprintf("You fall in round %d. Press Retry.", s.round)
-	}
-
-	// Between rounds: show the plan and what it costs. Over budget it must not say "press
-	// DUEL!", because DUEL! is dead — it says what to do about it instead.
-	if s.cursor >= len(s.log) {
-		spent, budget := combat.CostOf(s.fighterActions), s.fighter.ActionPoints()
-		tail := "press DUEL!"
-		if spent > budget {
-			tail = fmt.Sprintf("%d over - discard or deselect", spent-budget)
-		}
-		return fmt.Sprintf("Round %d - your plan: %s  (%d/%d AP)   %s",
-			s.round+1, planLabel(s.fighterActions), spent, budget, tail)
-	}
-
-	// **During playback the caption says nothing, on purpose** *(2026-08-07)*. It used to
-	// narrate one event at a time, which meant the whole account of a round existed only as a
-	// quarter-second flash — a combo forming was unreadable, and the block that halved a Heavy
-	// went past before it could be noticed. That job belongs to the Resolution pane now, which
-	// keeps every line instead of replacing it.
-	//
-	// Leaving the caption to also narrate would put the newest line on screen twice, in two
-	// places, which is the thing the pane was added to fix. So the two have one job each: the
-	// pane records what happened, the caption proposes what to do next.
-	return ""
-}
+// **The caption box is gone** *(2026-08-11)*, and the slot above the hand is the Resolution
+// feed instead. It held the plan line, its action-point cost and the tail that said what to
+// press; `caption()` and `drawCaptionBox` went with it.
+//
+// What that gives up, stated rather than discovered later: the sentence explaining a dark
+// DUEL! button. "2 over - discard or deselect" was the only place on screen that said *why*
+// the button had gone dead — the AP bar turning red says that something is wrong, not what to
+// do about it. The end-of-fight prompt naming the next enemy went the same way; DUEL!
+// relabelling itself Next or Retry is what is left of it.
+//
+// Both were the owner's call, made knowing the cost. If either is wanted back it is a line
+// somewhere else, not a box — see TODO.md.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255})
 
-	s.drawHandRow(gs, screen)
+	s.drawFighterBlock(gs, screen)
+
+	// **The enemy is a card now** *(2026-08-11)*, centred where its sprite stood. It was the
+	// last thing on this screen drawn as a loose picture on the background, with a health bar
+	// hanging under it — and everything else the duel is made of is a card, including the one
+	// you are fighting. Its portrait, name, bar and life-as-a-fraction are all one cached
+	// image from internal/cards; see drawEnemyCard.
+	s.drawEnemyCard(gs, screen, image.Pt(gs.PctX(88), gs.PctY(34)))
+	systems.DrawButton(gs, screen, s.duelButton)
+	systems.DrawButton(gs, screen, s.discardButton)
+	s.drawDeckStack(gs, screen)
+
+	// **Order below is contested, and the ranking is written down because it will be
+	// re-broken otherwise** *(2026-08-11)*. Three things want to be on top of each other and
+	// they cannot all win:
+	//
+	//  1. The feed over the enemy and its health bar. An expanded feed reaches 12% and the
+	//     opponent sits at 34%, so a box the player is holding open to read would otherwise
+	//     have a monster drawn through it. Hence Resolution after drawCombatant.
+	//  2. A selected card over the feed. Selection lifts a card 26px into the box's bottom
+	//     21 — see feedGapAboveCards — and the card is the thing being acted on. Hence the
+	//     hand row after Resolution.
+	//  3. A firing card over the inert hand row, at full size. Unchanged, and why the
+	//     resolved pile is still drawn after the row.
+	//
+	// **What loses is a firing card passing over an expanded feed**, and it is the right one
+	// to give up: 1 and 2 are on screen constantly, that is only during playback with the box
+	// held open, and the card holds above y=467 so the newest lines stay clear of it.
+	//
 	// EXPERIMENT 2026-08-07: Action Flow is not drawn, and Resolution has taken its column as
 	// well as its own. drawActionFlow and actionFlowRows are deliberately left in place and
 	// unwired so this is one line to put back.
@@ -592,18 +637,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// skill — and Resolution is empty until DUEL! is pressed, so nothing on screen says what
 	// the opponent is about to do.
 	s.drawResolution(gs, screen)
-	s.drawCaptionBox(gs, screen)
-	s.drawFighterBlock(gs, screen)
+	s.drawHandRow(gs, screen)
 
-	// The fighter's sprite and health bar are gone — the block above carries its state as
-	// numbers instead. The enemy keeps both for now, moved up with the pane: at 50% its
-	// health bar, which hangs 100px below it, ran into the top of the card row.
-	s.drawCombatant(gs, screen, s.enemy, float64(gs.PctX(88)), float64(gs.PctY(34)))
-	systems.DrawButton(gs, screen, s.duelButton)
-	systems.DrawButton(gs, screen, s.discardButton)
-	s.drawDeckStack(gs, screen)
-
-	// Last, so the card in hand rides over the panes and the button it passes across.
+	// Over the panes and the button it passes across.
 	s.drawDraggedCard(gs, screen)
 
 	// The round's own history: the cards that have fired, on their way to the corner or
@@ -680,15 +716,15 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 
 	band := handBand(gs, s.laidOutCount())
 	trace.Rect("handBand", band)
-	trace.Rect("actionFlowPane", image.Rect(
-		gs.PctX(actionFlowPane.leftPct), gs.PctY(paneTopPct),
-		gs.PctX(actionFlowPane.rightPct), gs.PctY(paneBottomPct)))
-	trace.Rect("resolutionPane", image.Rect(
-		gs.PctX(resolutionPane.leftPct), gs.PctY(paneTopPct),
-		gs.PctX(resolutionPane.rightPct), gs.PctY(paneBottomPct)))
-	trace.Rect("captionBox", image.Rect(
-		band.Min.X, gs.PctY(captionTopPct),
-		band.Max.X, gs.PctY(captionTopPct)+captionHeight))
+	trace.Rect("actionFlowPane", panePlacementRect(gs, actionFlowPane))
+
+	// Both states, because the collapsed one is what is on screen and the expanded one is
+	// the thing a long press has to land inside. A dump of only the box as it currently
+	// stands would say nothing about where it goes.
+	trace.Rect("resolutionFeed", s.feedRect(gs))
+	trace.Rect("resolutionFeed expanded", image.Rect(
+		band.Min.X, gs.PctY(feedExpandTopPct),
+		band.Max.X, gs.PctY(handTopPct)-feedGapAboveCards))
 	trace.Rect("fighterBlock", image.Rect(
 		gs.PctX(blockLeftPct), gs.PctY(blockTopPct),
 		gs.PctX(blockRightPct), gs.PctY(blockTopPct)+blockHeight))
@@ -749,9 +785,16 @@ func planLabel(actions []combat.ActionKind) string {
 	return label
 }
 
-// combatantFromRecord resolves a combatant record and its sprite sheet out of global
-// state, then hands both to the entity constructor.
-func combatantFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
-	d := gs.Combatants[record]
-	return entities.NewCombatantFrom(d, gs.Assets[d.SpriteSheet])
+// enemyFromRecord hydrates an enemy out of global state.
+//
+// **No sheet to look up any more** — the enemy is a card, so its picture is a portrait key
+// that internal/cards decodes when it draws one.
+func enemyFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
+	return entities.NewEnemyFrom(gs.Enemies[record])
+}
+
+// duelistFromRecord resolves a playable duelist. **No sheet to look up** — the character
+// block replaced the fighter's sprite, so a duelist record has no picture in it.
+func duelistFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
+	return entities.NewDuelistFrom(gs.Duelists[record])
 }

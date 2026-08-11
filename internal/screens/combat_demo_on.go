@@ -273,7 +273,13 @@ func (s *CombatScene) demoDraw(gs *state.GlobalState, screen *ebiten.Image) {
 // which is most of them.
 func (s *CombatScene) demoReport(gs *state.GlobalState, label string) {
 	fmt.Printf("\n--- %s ---\n", label)
-	for _, row := range s.resolutionLines(gs) {
+
+	// **The whole round, not the three lines the box is showing** *(2026-08-11)*. Resolution
+	// became a short feed that scrolls, and a report that only printed what currently fits
+	// would answer "what is on screen" when the question this is asked is "what did the round
+	// say". One row per slot at most, so the event count is an upper bound that cannot trim.
+	rows, _ := s.resolutionLines(gs, len(s.log)+1, false)
+	for _, row := range rows {
 		line := row.prefix + row.verb + row.suffix
 		if line == "" {
 			continue

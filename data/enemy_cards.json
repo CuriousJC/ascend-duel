@@ -1,0 +1,65 @@
+[
+  {
+    "Concept": "Gather",
+    "Category": "prepare",
+    "CostTier": 1,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 4
+  },
+  {
+    "Concept": "Guard",
+    "Category": "prepare",
+    "CostTier": 3,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 6
+  },
+  {
+    "Concept": "Jab",
+    "Category": "attack",
+    "CostTier": 1,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 5
+  },
+  {
+    "Concept": "Strike",
+    "Category": "attack",
+    "CostTier": 2,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 6
+  },
+  {
+    "Concept": "Heavy",
+    "Category": "attack",
+    "CostTier": 4,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 7
+  },
+  {
+    "Concept": "Brace",
+    "Category": "defend",
+    "CostTier": 1,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 2
+  },
+  {
+    "Concept": "Dodge",
+    "Category": "defend",
+    "CostTier": 2,
+    "Elements": [
+      "basic"
+    ],
+    "Copies": 2
+  }
+]

@@ -209,7 +209,7 @@ var Surface = color.RGBA{R: 240, G: 239, B: 234, A: 255}
 //
 // BackSurface is near-black rather than pure black for the same reason Surface is
 // off-white rather than white: a card has to read as an object on the screen and not as a
-// hole cut in it. BackMark is pure white, the one place on a card that colour is spent on
+// hole cut in it. BackInk is pure white, the one place on a card that colour is spent on
 // nothing but contrast.
 // BackRim is a thin neutral edge around the back.
 //
@@ -222,9 +222,65 @@ var Surface = color.RGBA{R: 240, G: 239, B: 234, A: 255}
 // *coloured* one.
 var (
 	BackSurface = color.RGBA{R: 14, G: 14, B: 18, A: 255}
-	BackMark    = color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	BackInk     = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 	BackRim     = color.RGBA{R: 96, G: 98, B: 108, A: 255}
 )
+
+// BackMark is which shape a card back carries: **whose deck this is**, not what the card is.
+//
+// **Named designs drawn in code rather than a recolour or a picture** *(2026-08-11)*. A
+// recolour would have been one data field and nearly invisible on a near-black card at the
+// draw pile's 44 pixels; a picture per duelist would put the provenance question back on the
+// one part of the game that had escaped it. A silhouette is what reads at that size and what
+// can be generated, which is the same argument the glyphs are built on.
+//
+// The cost is deliberate and worth stating: **adding a back is a code change**, not a data
+// one. `data/duelists.json` can only choose among what is drawn here.
+//
+// **Append, never insert.** The screen's card cache keys on the Spec, so these ordinals are
+// part of a cache key — the same hazard GlyphKind carries.
+type BackMark int
+
+const (
+	// MarkTriangle is the zero value and what every card had before backs were named, so a
+	// Spec that says nothing about its back draws what the game shipped with.
+	MarkTriangle BackMark = iota
+	MarkDiamond
+	MarkChevron
+)
+
+var backMarkNames = [...]string{
+	MarkTriangle: "triangle",
+	MarkDiamond:  "diamond",
+	MarkChevron:  "chevron",
+}
+
+func (m BackMark) String() string {
+	if int(m) >= len(backMarkNames) {
+		return "?"
+	}
+	return backMarkNames[m]
+}
+
+// BackMarks is every mark, in a fixed order, for the contact sheet. A slice rather than a
+// map: Go randomises map order and a sheet whose rows moved between runs is useless as a
+// diff.
+func BackMarks() []BackMark { return []BackMark{MarkTriangle, MarkDiamond, MarkChevron} }
+
+// ParseBackMark resolves the name in `data/duelists.json`.
+//
+// **It falls back to the triangle rather than failing**, and reports that it did. A back is
+// cosmetic — the wrong shape on a pile is a bug worth a log line, and refusing to start a
+// duel over one would be a worse outcome than the bug. Same reasoning as
+// combat.ParsePlanStyle falling back to brute.
+func ParseBackMark(name string) (BackMark, bool) {
+	for i, n := range backMarkNames {
+		if n == name {
+			return BackMark(i), true
+		}
+	}
+	return MarkTriangle, false
+}
 
 // Ink colours. Hueless on purpose — the border is carrying the only colour on the face.
 var (
@@ -258,6 +314,16 @@ type Spec struct {
 	// release — see CLAUDE.md on the Tyrian set.
 	Art image.Image
 
+	// Life and MaxLife draw a health bar and a "42/60" line under the name, on the styles
+	// that ask for it. Only the enemy card does — see EnemyStyle.
+	//
+	// **They are on the Spec rather than drawn over the card by the screen**, which means a
+	// point of damage is a different Spec and therefore a different cache entry. That is
+	// affordable because life only changes on a damage event — a handful of times a round,
+	// not per frame — and it is what keeps the whole card in one place: the contact sheet
+	// draws a wounded enemy without the tool having to reimplement a bar.
+	Life, MaxLife int
+
 	// Enabled is whether the fighter can currently afford it. Disabled reads as
 	// unavailable first and as itself second.
 	Enabled bool
@@ -275,7 +341,18 @@ type Spec struct {
 	// contact sheet is the first thing to use it.
 	Dragging bool
 
-	// FaceDown draws the back instead of the face, and every other field is ignored.
+	// Back is which mark this card's back carries, when FaceDown is set.
+	//
+	// **A duelist and a card back go together** *(2026-08-11)*: the plan is to offer
+	// different duelists as different decks, and the back is how you tell at a glance whose
+	// deck is on the table. It is named in `data/duelists.json` and parsed by ParseBackMark.
+	//
+	// The zero value is the triangle, which is what every card had before this existed — so
+	// a Spec that says nothing about its back still draws the back the game shipped with.
+	Back BackMark
+
+	// FaceDown draws the back instead of the face, and every other field is ignored except
+	// Back.
 	//
 	// **A field rather than a separate RenderBack, so the cache does not need to learn
 	// about it.** internal/screens keys its cache on the Spec, so a face-down card is

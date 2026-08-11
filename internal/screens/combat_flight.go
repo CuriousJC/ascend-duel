@@ -32,11 +32,21 @@ import (
 // event.
 
 const (
-	// Where the stack sits: the slot the Deck button used to hold, at the far end of the
-	// button strip, away from Discard and DUEL! because it changes nothing about the round.
-	deckStackPct   = 88
-	deckStackDepth = 3 // backs drawn behind the front one, to read as a pile
-	deckStackStep  = 3 // pixels each one is offset up and left
+	// Where the stack sits: the far end of the button strip, away from Discard and DUEL!
+	// because it changes nothing about the round.
+	//
+	// **Measured in from the right edge, not as a percentage** *(2026-08-11)*, which makes it
+	// the horizontal counterpart of the top being measured down from the AP bar. It was 88%,
+	// which put 132 pixels of empty screen to its right for no reason anybody chose — a
+	// percentage says where a thing sits relative to the whole, and what this actually wants
+	// to say is "against the edge, with a margin".
+	//
+	// The margin is to the card's own edge. The highlight ring reaches
+	// deckHighlightInset + deckHighlightWidth/2 = 8 further, which still clears the screen,
+	// and TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting it not.
+	deckStackRightMargin = 10
+	deckStackDepth       = 3 // backs drawn behind the front one, to read as a pile
+	deckStackStep        = 3 // pixels each one is offset up and left
 
 	// deckStackTopGap clears the action-point bar. The stack's y is measured *down from the
 	// bar* rather than set as a percentage, because the bar is the thing that constrains it —
@@ -73,14 +83,17 @@ const (
 	holdTicks = 24
 	fallTicks = 16
 
-	// firingGap is how far under the Resolution pane a card holds while it fires.
+	// firingGap is how far clear of the Resolution feed a card holds while it fires.
 	//
-	// **Cards resolve at full size, which means they overlap the hand row**, and that is the
-	// deliberate reading of "leave them whole sized": during playback the hand is inert —
-	// planning() is false, nothing there can be clicked or dragged — so the row's space is
-	// free at exactly the moment this needs it. What it must *not* cover is the Resolution
-	// pane, which is the written record being made at the same time, so the card hangs below
-	// it rather than being centred on the screen.
+	// **Cards resolve at full size, and what they must not cover is Resolution** — the
+	// written record being made at the same moment. That has not changed; which side of it
+	// they hang on has. Resolution used to be a pane across the top half and a card hung
+	// *below* it, over the inert hand row. Resolution is a feed above the cards now, so a
+	// card holds *above* the feed instead, in the band the pane vacated.
+	//
+	// The hand row is still what gets covered, and that is still the deliberate reading of
+	// "leave them whole sized": during playback planning() is false, nothing down there can
+	// be clicked or dragged, so the space is free at exactly the moment this needs it.
 	firingGap = 12
 
 	// The pile in the bottom-left corner. Overlapped hard, like the deck overlay's rows: the
@@ -221,7 +234,7 @@ func deckStackRect(gs *state.GlobalState) image.Rectangle {
 
 	barBottom := gs.PctY(handTopPct) + cardHeight + apBarBelow + apBarHeight
 	top := barBottom + deckStackTopGap + (deckStackDepth-1)*deckStackStep
-	left := gs.PctX(deckStackPct) - w/2
+	left := gs.PctX(100) - deckStackRightMargin - w
 
 	return image.Rect(left, top, left+w, top+h)
 }
@@ -268,7 +281,7 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 	// Back to front, so the front card is the one on top and the one the click tests.
 	for i := deckStackDepth - 1; i >= 0; i-- {
 		off := i * deckStackStep
-		drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Stack)
+		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Stack)
 	}
 }
 
@@ -278,8 +291,8 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 // has no card behind it to build from — asking it for one would mean inventing a Strike
 // nobody holds just to throw every field away. Separate from drawFlyingCard because a
 // resting card must not be filtered.
-func drawCardBack(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style) {
-	img := cardImage(gs, cards.Spec{FaceDown: true}, st)
+func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style) {
+	img := cardImage(gs, s.backSpec(), st)
 	if img == nil {
 		return
 	}
@@ -359,7 +372,7 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 
 	style, spec := cards.Hand, cardSpec(f.card, true, false, s.fighter.Str)
 	if faceDown {
-		spec = cards.Spec{FaceDown: true}
+		spec = s.backSpec()
 	}
 
 	var geo ebiten.GeoM
@@ -438,12 +451,19 @@ func pileAt(gs *state.GlobalState, n int) image.Point {
 	return image.Pt(pileLeftInset+n*pilePitch, gs.PctY(handTopPct))
 }
 
-// firingAt is where a card holds while it is resolving: centred across the screen, hanging
-// just below the Resolution pane.
+// firingAt is where a card holds while it is resolving: centred across the screen, sitting
+// just above the Resolution feed.
+//
+// **Measured off the feed's collapsed top, not the expanded one.** A card that jumped
+// whenever the box was held would be an animation reacting to an input it has nothing to do
+// with. An expanded feed reaches up past this, so a firing card is drawn over its older
+// lines — see the draw-order ranking in combat.go, where that is the one thing deliberately
+// given up. It clears y=467, so the newest lines are never covered.
 func firingAt(gs *state.GlobalState) image.Point {
+	top := gs.PctY(handTopPct) - feedGapAboveCards - feedHeight()
 	return image.Pt(
 		gs.PctX(50)-cardWidth/2,
-		gs.PctY(paneBottomPct)+firingGap,
+		top-firingGap-cardHeight,
 	)
 }
 

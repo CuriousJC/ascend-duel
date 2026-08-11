@@ -1,0 +1,10 @@
+[
+  {
+    "DuelistRecord": "Fighter1",
+    "Name": "Duelist",
+    "CardBack": "triangle",
+    "Strength": 10,
+    "Speed": 20,
+    "Constitution": 12
+  }
+]

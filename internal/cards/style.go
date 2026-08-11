@@ -65,6 +65,14 @@ type Style struct {
 	ArtTop   int
 	ArtInset int
 	ArtMaxH  int
+
+	// The health bar and the fraction under it, drawn from Spec.Life and Spec.MaxLife.
+	// Zero HealthBarHeight means the style has no health and neither is drawn, which is
+	// every style but EnemyStyle.
+	HealthBarTop    int
+	HealthBarHeight int
+	HealthTextTop   int
+	HealthTextSize  float64
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
@@ -195,6 +203,55 @@ var Stack = Style{
 	ShowName:     false,
 	ShowCategory: false,
 	ShowDamage:   false,
+}
+
+// EnemyStyle is the opponent, in the card format *(2026-08-11)*.
+//
+// **The enemy was a bare sprite with a health bar hanging under it** until this landed —
+// the last thing on the combat screen still drawn as a loose picture floating on the
+// background. Putting it in the card format says the obvious thing: everything the duel is
+// made of is a card, and the one you are fighting is one too.
+//
+// The face reads top to bottom: portrait, name, bar, numbers.
+//
+//	 12  portrait          12..144   (Spec.Art, scaled to fit and centred)
+//	154  name              centred
+//	190  health bar        190..204
+//	212  hit points        "42/60", centred
+//	258  inside of the bottom border
+//
+// **The portrait gets the top half and the rest shares the bottom**, which is the layout the
+// owner asked for and also the one the art wants: the vendor portraits are wider than they
+// are tall once cropped, so a box 156 wide by 132 gives them their width rather than letting
+// height decide the scale.
+//
+// What it drops is everything describing a *play* — no category glyph, no cost dashes, no
+// damage badge — for the same reason RingStyle does: none of them are things an enemy card
+// is. `Element` is Basic, so the border is the neutral mid grey rather than claiming the
+// opponent is made of fire.
+var EnemyStyle = Style{
+	Width: 180, Height: 264,
+
+	CornerRadius: 12,
+	BorderWidth:  6,
+
+	ShowName:     true,
+	ShowCategory: false,
+	ShowDamage:   false,
+
+	TextLeft:     12,
+	NameTop:      154,
+	NameSize:     20,
+	NameCentered: true,
+
+	ArtTop:   12,
+	ArtInset: 12,
+	ArtMaxH:  132,
+
+	HealthBarTop:    190,
+	HealthBarHeight: 14,
+	HealthTextTop:   212,
+	HealthTextSize:  18,
 }
 
 // RingStyle is a ring, in the card format.

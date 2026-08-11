@@ -3,10 +3,11 @@ package assets
 
 import (
 	"bytes"
-	_ "embed"
+	"embed"
 	"image"
 	_ "image/png"
 	"log"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -51,32 +52,31 @@ var shermanshield_png []byte
 
 // CREATURES
 //
-// One west-facing idle frame per enemy, cut out of the PVGames creature sheets in
-// `.scratch/flat-creatures` and trimmed to its opaque bounds.
+// One portrait per enemy: the vendor's 2048x2048 facing portrait, cropped to its subject and
+// scaled to fit the enemy card's art box. 96 of them, 2.1 MB together.
 //
-// **Frames, not sheets, and the difference is not small.** Those sheets are a 21x21 grid
-// of every animation in every facing, 2.4 to 7.3 MB each — and LoadAssets decodes every
-// image at startup, so embedding four of them would cost ~250 MB of resident memory to
-// show four static sprites. The frames below are 41 KB together. The full sheets stay in
-// `.scratch/`, so animating these later is a matter of going back for them.
+// **The west-facing idle sprite frames went on 2026-08-11.** The enemy is drawn as a card
+// now, so nothing used them — and cutting 96 more frames for a drawing that does not exist
+// would have been the expensive half of this change. They are in git, and the full animation
+// sheets are still in `.scratch/flat-creatures` if enemies are ever animated.
+//
+// **Embedded as a directory rather than one var each, which is a deliberate exception to the
+// three-edit rule** at the top of this file. That rule — the file, an //go:embed var, a map
+// entry — is right for a handful of named assets and absurd for ninety-six: it would be 192
+// lines that no reviewer could check and that would drift the first time a creature was
+// renamed. So the portraits are a *family*, globbed in and keyed by filename stem.
+//
+// The consequence, stated because it is the thing the rule was protecting: **a portrait's
+// key is now tied to its filename**, so renaming `ogrewarlord-portrait.png` renames its key
+// and `data/enemies.json` has to follow. That is the price of not hand-maintaining 96
+// entries, and it is checked — an enemy whose Portrait names no file draws a card with a
+// hole in it and logs once.
 //
 // Provenance: PVGames, bought in the Humble *Isometric Assets Galore* bundle. The licence
 // permits shipping them inside a game; see the README in that folder.
 //
-// The frame is 133 of 441 — idle, facing west — from `128 + 1*5`, the vendor's facing
-// order being South, West, East, North, ...
-//
-//go:embed enemy/giantrat.png
-var giantrat_png []byte
-
-//go:embed enemy/dragonfly.png
-var dragonfly_png []byte
-
-//go:embed enemy/frogman.png
-var frogman_png []byte
-
-//go:embed enemy/direwolf.png
-var direwolf_png []byte
+//go:embed enemy/*-portrait.png
+var portraits embed.FS
 
 //go:embed ring/fire-ring.png
 var firering_png []byte
@@ -128,11 +128,10 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
-	assets["giantrat_png"] = loadImage(giantrat_png)
-	assets["dragonfly_png"] = loadImage(dragonfly_png)
-	assets["frogman_png"] = loadImage(frogman_png)
-	assets["direwolf_png"] = loadImage(direwolf_png)
-
+	// The enemy portraits are deliberately absent. They are drawn *into* a card by
+	// internal/cards, which has no graphics context, so they are handed out as bytes by
+	// LoadImageData instead — and decoding 96 of them here at startup would cost about
+	// 20 MB of resident memory for pictures most of which no run ever shows.
 	return assets
 }
 
@@ -179,6 +178,25 @@ func LoadImageData() map[string][]byte {
 	// sheets can be built with no window.
 	images["shermansword_png"] = shermansword_png
 	images["shermanshield_png"] = shermanshield_png
+
+	// The enemy portraits, keyed by filename stem: `enemy/ogrewarlord-portrait.png` is
+	// `ogrewarlord-portrait`, which is what `data/enemies.json` writes in its Portrait
+	// field. Read out of the embedded directory rather than listed, for the reason above the
+	// //go:embed.
+	//
+	// A read failure here is impossible in a built binary — the files are compiled in — so a
+	// panic is the honest response to one rather than a silent short roster.
+	entries, err := portraits.ReadDir("enemy")
+	if err != nil {
+		log.Fatal("failed to read the embedded portraits: ", err)
+	}
+	for _, e := range entries {
+		raw, err := portraits.ReadFile("enemy/" + e.Name())
+		if err != nil {
+			log.Fatal("failed to read embedded portrait: ", err)
+		}
+		images[strings.TrimSuffix(e.Name(), ".png")] = raw
+	}
 
 	return images
 }

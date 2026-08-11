@@ -68,7 +68,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// reason: a back has no text, so requiring a parsed font to draw one would let a
 	// missing font empty the draw pile.
 	if s.FaceDown {
-		drawBack(img, st)
+		drawBack(img, s, st)
 		return img, nil
 	}
 
@@ -103,13 +103,20 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 			return nil, err
 		}
 	}
+	if st.HealthBarHeight > 0 {
+		if err := drawHealth(img, s, st, f); err != nil {
+			return nil, err
+		}
+	}
 	return img, nil
 }
 
 // needsFont reports whether this style draws any text at all. A Mini card does not, and
 // requiring a parsed font to render one would make the deck overlay depend on something
 // it never uses.
-func (st Style) needsFont() bool { return st.ShowName || st.ShowDamage }
+func (st Style) needsFont() bool {
+	return st.ShowName || st.ShowDamage || st.HealthBarHeight > 0
+}
 
 // colors resolves the card's state into the three things that vary with it: the border,
 // the surface, and a function that adjusts any ink for the state.
@@ -192,6 +199,52 @@ func drawDashes(dst *image.RGBA, s Spec, st Style, c color.RGBA) {
 	}
 }
 
+// The health bar's two colours, and the fraction under it.
+//
+// **Red for what is left, not for what is lost.** The bar is a quantity the reader is
+// tracking downward, so the saturated colour has to be the part that shrinks — a bar where
+// the red grows as the enemy weakens says the opposite of what it means. The empty part is
+// a dim version of the same hue rather than a neutral grey, so the two read as one bar
+// partly filled instead of as two bars.
+var (
+	HealthFull  = color.RGBA{R: 198, G: 46, B: 46, A: 255}
+	HealthEmpty = color.RGBA{R: 92, G: 66, B: 66, A: 255}
+)
+
+// drawHealth draws the bar and the "42/60" line beneath it.
+//
+// **The bar is square-cornered where the screen's other one is rounded**, which is a real
+// inconsistency and the same one the package header already records: rounding on the screen
+// goes through an Ebitengine mask and a GPU blend mode, neither of which exists here. A
+// hard-edged bar matches the cost dashes and the card's own corner rasterisation, so it is
+// at least consistent within the card.
+//
+// A zero or negative MaxLife draws the empty bar and no fraction rather than dividing by it.
+func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
+	left, width := st.ArtInset, st.Width-2*st.ArtInset
+
+	fillRect(dst, left, st.HealthBarTop, width, st.HealthBarHeight, HealthEmpty)
+	if s.MaxLife <= 0 {
+		return nil
+	}
+
+	life := s.Life
+	if life < 0 {
+		life = 0
+	}
+	if life > s.MaxLife {
+		life = s.MaxLife
+	}
+	fillRect(dst, left, st.HealthBarTop, width*life/s.MaxLife, st.HealthBarHeight, HealthFull)
+
+	// **The exact number as well as the bar, deliberately** — the same argument the character
+	// block settled for the player on 2026-08-07. A bar says roughly how hurt something is,
+	// and a duel decided in whole points wants the figure. The block writes the player's as a
+	// fraction, so the enemy's is written the same way rather than inventing a second form.
+	return drawTextHCentered(dst, f, st.HealthTextSize,
+		fmt.Sprintf("%d/%d", life, s.MaxLife), st.Width, st.HealthTextTop, NumberInk)
+}
+
 // drawDamage draws the sword glyph and the figure beside it, at the bottom of the column.
 func drawDamage(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
 	size := systems.GlyphSize * st.GlyphScale
@@ -208,7 +261,7 @@ func drawDamage(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA
 		gx+size+st.GlyphNumberGap, gy+size/2, ink(NumberInk))
 }
 
-// backMarkWidthPct sizes the mark against the card it is centred on.
+// The mark is as wide as the card allows, and centred on it.
 //
 // **Derived rather than a Style field, unlike every other measurement here.** The face
 // cannot work that way — its glyphs are 1:1 pixel art with a one-pixel rim, so a Mini card
@@ -216,7 +269,49 @@ func drawDamage(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA
 // numbers. A triangle has no rim to lose and no detail to fall below, so one proportion
 // draws the same back at every size and cannot drift between them. If a size ever wants
 // its own mark, this is one line to promote into Style.
-const backMarkWidthPct = 40
+//
+// **It was 40% of the width until 2026-08-11.** At the draw pile's 44x64 that came out as a
+// 17-pixel mark floating in the middle of a dark card, which read as a speck rather than as
+// a back. It now spans the card between its rims, so the pile reads as a stack of the same
+// object at any size — which is the whole reason the back is one proportion rather than a
+// per-Style number.
+//
+// It stays vertically centred. Hanging the apex from the top row was tried the same day and
+// left the whole mark sitting high with a band of empty card under it; an equilateral
+// triangle is wider than it is tall in a portrait rectangle, so the space it leaves has to
+// be split rather than pushed to one end. Heights, for the three sizes that exist:
+// **154 on a hand card, 76 on a mini, 36 on the draw pile's.**
+//
+// backMarkAspect is sqrt(3)/2 in integer thousandths — the height of an equilateral
+// triangle against its base.
+//
+// backMarkPct trims it back off the rims by a further 5%, so the base does not run the whole
+// width of the card and the mark reads as sitting on the back rather than as the back's own
+// shape.
+const (
+	backMarkAspect = 866
+	backMarkPct    = 95
+
+	// chevronThicknessPct is how much of the triangle's base each arm of the chevron keeps.
+	// The rest is cut away as a smaller triangle sharing the base, so the outer silhouette
+	// is identical to MarkTriangle's and only the middle is missing.
+	chevronThicknessPct = 22
+)
+
+// backMarkWidth is the mark's base: the card less its rims, scaled, and then nudged to the
+// card's own parity.
+//
+// **The parity step is what makes "centred" exact rather than nearly.** A row is placed at
+// `(Width-span)/2`, so a base whose width differs in parity from the card leaves the extra
+// pixel on one side and the whole triangle leans. Rounding the width by one is invisible;
+// the lean is not, at the draw pile's 44 pixels.
+func backMarkWidth(st Style) int {
+	w := (st.Width - 2*backRimWidth) * backMarkPct / 100
+	if (st.Width-w)%2 != 0 {
+		w--
+	}
+	return w
+}
 
 // backRimWidth is one pixel at every size, and does not come from Style.BorderWidth.
 //
@@ -238,13 +333,40 @@ const backRimWidth = 1
 // border is where the element is said, so a back carrying one would name the card under it;
 // a hueless one-pixel edge says only "this is where the card stops", which the draw pile
 // needs — see BackRim.
-func drawBack(dst *image.RGBA, st Style) {
+func drawBack(dst *image.RGBA, s Spec, st Style) {
 	roundedBorder(dst, 0, 0, st.Width, st.Height, st.CornerRadius, backRimWidth,
 		BackRim, BackSurface)
 
-	w := st.Width * backMarkWidthPct / 100
-	h := w * 866 / 1000 // equilateral: sqrt(3)/2, in integers
-	fillTriangleUp(dst, st.Width/2, (st.Height-h)/2, w, h, BackMark)
+	w := backMarkWidth(st)
+	h := w * backMarkAspect / 1000
+	left, top := (st.Width-w)/2, (st.Height-h)/2
+
+	// **Every mark is built from the same box**, so they are the same weight on the card and
+	// swapping one for another cannot change how heavy a pile looks. Only the shape inside it
+	// differs.
+	switch s.Back {
+	case MarkDiamond:
+		// Two triangles base to base, each half the height, so the diamond fills the same
+		// box rather than being a triangle with something added under it.
+		half := h / 2
+		fillTriangleUp(dst, left, top, w, half, BackInk)
+		fillTriangleDown(dst, left, top+half, w, h-half, BackInk)
+	case MarkChevron:
+		// The triangle with a triangle taken out of it: a solid one, then the surface
+		// painted back over a smaller one sharing its base. Cutting rather than drawing two
+		// arms is what keeps the outer edge identical to MarkTriangle's.
+		fillTriangleUp(dst, left, top, w, h, BackInk)
+
+		inset := w * chevronThicknessPct / 100
+		cutW := w - 2*inset
+		if (w-cutW)%2 != 0 {
+			cutW--
+		}
+		cutH := cutW * backMarkAspect / 1000
+		fillTriangleUp(dst, left+(w-cutW)/2, top+h-cutH, cutW, cutH, BackSurface)
+	default:
+		fillTriangleUp(dst, left, top, w, h, BackInk)
+	}
 }
 
 // blitGlyph composites a generated glyph, untinted.

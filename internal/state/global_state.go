@@ -32,6 +32,23 @@ type GlobalState struct {
 	// someone who downloaded an exe is unusable if every build looks alike.
 	Version string
 
+	// RunSeed is the number every random choice in a run derives from, set once by main and
+	// never re-rolled while the process lives.
+	//
+	// **It is the per-run seed the determinism rules have been writing against**, arriving
+	// early because the enemy order wanted it (2026-08-11). The rules say a run will one day
+	// be replayable from a seed typed into a field; this is that number, generated from the
+	// clock for now because there is no field to type it into and no Session to hold it.
+	//
+	// **Reading the clock here does not break "no time.Now() in game rules".** That rule is
+	// about decisions taken *during* a run — a rule that consults the wall clock cannot be
+	// replayed. Choosing the seed is the one place a run is allowed to be unpredictable,
+	// which is exactly why it is done once, in main, and written to the log.
+	//
+	// It is a plain int64, so state stays free of imports. Every consumer seeds its **own**
+	// source from it — never a shared one — per the five-streams rule in CLAUDE.md.
+	RunSeed int64
+
 	Debug1, Debug2 string
 	ActiveScreen   ActiveScreen
 	NewScreen      bool

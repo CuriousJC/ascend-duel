@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"time"
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
@@ -25,6 +26,11 @@ import (
 // carries, and on the title screen.
 var version = "dev"
 
+// fixedRunSeed pins the run seed for a debugging session, where the same enemies in the same
+// order is the point. **Zero means roll a new one from the clock every launch**, which is the
+// shipping behaviour and the default.
+const fixedRunSeed int64 = 0
+
 func main() {
 	// The window opens at the internal resolution; Layout keeps that resolution fixed
 	// whatever the window is resized to afterwards.
@@ -46,6 +52,25 @@ func main() {
 	// Handed to the state rather than read from this package by the screens, so nothing
 	// below main has to import it — the dependency direction only ever points down.
 	g.GlobalState.Version = version
+
+	// **The run's seed, chosen once, here, and printed.** Everything random in a run derives
+	// from it, each consumer seeding its own source — see GlobalState.RunSeed and the
+	// five-streams rule in CLAUDE.md.
+	//
+	// **`fixedRunSeed` is the toggle: zero rolls a new one, anything else pins it.** Pinning
+	// is for a debugging session, where the same enemies in the same order is the whole point
+	// — the counterpart of `deckSeed` pinning the shuffle, and the same trade. It is one
+	// number in one place rather than a flag, because there is no keyboard to toggle it with
+	// and a runtime switch would be a control the player can reach.
+	//
+	// The clock is read exactly once, at the one moment a run is allowed to be unpredictable.
+	// The seed is logged either way, because there will eventually be a field to type one
+	// back into and a seed nobody can see is a run nobody can ask about.
+	g.GlobalState.RunSeed = fixedRunSeed
+	if g.GlobalState.RunSeed == 0 {
+		g.GlobalState.RunSeed = time.Now().UnixNano()
+	}
+	log.Printf("run seed %d", g.GlobalState.RunSeed)
 
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()

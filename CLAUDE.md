@@ -273,6 +273,17 @@ do not write code that forecloses it.
   deals the same hands, which is what makes a problem reproducible while the screen is
   being built. When `Session` state lands, both read from there and nothing else about the
   deck code changes.
+- **The per-run seed arrived early, as `GlobalState.RunSeed`** *(2026-08-11)*, because the
+  enemy order wanted it. `main` sets it once — from `fixedRunSeed` if that constant is
+  non-zero, otherwise from the clock — and logs it. **Reading the clock there is not a
+  breach of "no `time.Now()` in game rules"**: choosing a seed is the one place a run is
+  allowed to be unpredictable, and it happens once, outside the rules, in main.
+  `fixedRunSeed` is the debugging toggle, the counterpart of `deckSeed`. **Enemy selection is
+  the first live stream off it** — the combat screen shuffles the roster *within each floor
+  band* from `RunSeed ^ enemySelectSalt`, so a run opens on a different opponent without a
+  floor-eight enemy ever being fight one. The two card shuffles still read their own fixed
+  constants and are unaffected; a consumer that starts reading `RunSeed` must salt its own
+  source, never share one.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of
   the rules package is what preserves its purity, its tests and the headless balance sim.
   Moving draw into `combat` is a real option later, but it has to arrive as an injected

@@ -12,6 +12,10 @@
 # and internal/idle does the same on `idleexit`, so one configuration compiles while another
 # does not. That has broken before, and a CI that only checked the default build would not
 # have caught it.
+#
+# **Action majors are pinned to the ones that run on Node 24**, which is why they look
+# out of step with each other — see the longer note in `release.yml`, which pins the same
+# set. If one workflow moves, the other has to.
 name: CI
 
 on:
@@ -44,7 +48,7 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Ebitengine is pure Go on Windows and cgo on Linux, where it links against X11 for the
       # window and input, GL for drawing and ALSA for audio. Matches the release workflow's
@@ -58,7 +62,7 @@ jobs:
             libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev \
             libasound2-dev pkg-config
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           # Reads the version from go.mod, so the toolchain cannot drift from the module.
           go-version-file: go.mod

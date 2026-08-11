@@ -132,13 +132,13 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 
 | Element | Slot | Colour | Role |
 |---|---|---|---|
-| Character strip | 4–39% x, 2% y | green | health, discards, vitae, side by side |
+| Character strip | 4–39% x, 2% y | green | health and vitae, side by side |
 | Resolution | 15–78% x, 12–46% y | pink | what the round actually did, accumulating as it plays |
 | Action Flow | *built, not drawn* | pink | both queues in play order — see below |
 | Caption box | hand width, 48% y | pink | your plan and its AP cost, and what to press |
-| Hand | centred, 59% y | element | the cards, portrait, in one row |
-| AP figure and bar | hand width, under the row | blue | the budget |
-| Buttons | 95% y | — | Discard 20%, DUEL! 33%, Deck 88% |
+| Hand | centred, 61% y | element | the cards, portrait, in one row |
+| AP bar | hand width, directly under the row | blue | the budget |
+| Bottom strip | 95% y | — | AP figure, Discard, DUEL!, deck pile — evenly spread |
 | Enemy sprite | 88% x, 34% y | — | the opponent |
 
 **Cards are portrait and live along the bottom.** Landscape cards in a vertical column
@@ -152,22 +152,55 @@ are cut out of it, the AP bar spans it and the caption box matches it, so the th
 drift apart when the hand size changes. A card in flight still owns its slot, which is what
 stops the row sliding half a card sideways when one is lifted.
 
-**The buttons are one strip at 95%, under the AP bar.** Discard at 20% and DUEL! at 33% sit
-together, because they are the same choice — **you select a set, then decide what it was
-for** — and the choice belongs next to the cards it is made from. Discard carries one
-condition DUEL! does not: a round's discards can run out.
+**The strip at 95% is one row of four things, spaced rather than placed** *(2026-08-11)*: the
+AP figure at the hand's left edge, Discard, DUEL!, and the deck pile at the right. The two
+buttons used to sit at 20% and 33%, side by side because they were the same choice made two
+ways. **They are separate choices now and the spacing says so** — `buttonStripSlots` divides
+what is left between the figure's column and the pile into three equal gaps and puts a button
+in each of the two spaces, so the strip stays evenly spread if any of the three fixed things
+moves. `TestTheButtonStripSharesItsSpaceEvenly` checks the gaps against each other rather than
+against numbers, because the property wanted is the relationship, not a coordinate. Discard
+still carries one condition DUEL! does not: a round's discards can run out.
+
+**`apFigureReserve` is a fixed column width, not the figure's measured width.** Measuring
+would move both buttons the moment the text went from `9/12 AP` to `10/12 AP`. The reserve
+holds the normal figure and the `+N over` tail runs past it, into a gap hundreds of pixels
+wide. The buttons read `handSize` through `handBand`, never the live hand, for the same
+family of reason: `handBand` is centred, so a shorter row starts further right.
+
+**The discards left this round are a badge on that button** — a filled disc **centred on its
+bottom-right corner**, count inside, drawn by `drawDiscardsLeft` after `systems.DrawButton`
+because the button blits an opaque cached face. It was the character strip's middle figure
+until 2026-08-11: a number you watch tick belongs on the control that ticks it, not at the
+other end of the screen. Three things about it:
+
+- **Centred on the corner, not inset inside it**, so it hangs off both edges and reads as
+  attached to the button rather than printed on it. Nothing sits under that corner — the hand
+  row ends well above the button strip — so the overhang costs nothing.
+- **The scene draws it, not the widget.** `models.Button` is shared by every screen and holds
+  one centred string; a corner-badge field would put a rule about this screen into all of them.
+- **Two fill/ink pairs, not one dimmed.** The face underneath does not dim, it changes colour
+  entirely — `disabledButtonColor` is flat grey and ignores `BaseColor` — so a badge tuned for
+  the yellow face has nothing to say about the grey one.
 
 **There is no Deck button any more** *(2026-08-10)*. The draw pile itself is the control: a
-stack of card backs at the same 88%, clicked to open the overlay and clicked to close it,
-wearing a **bright yellow ring while the overlay is up**. That ring is load-bearing, not
-decoration — see the overlay's "make its exit the brightest thing on screen" rule below,
-which the old button satisfied for free by being lit on a dead screen. It lives in
+stack of card backs at the right-hand end of the strip, clicked to open the overlay and
+clicked to close it, wearing a **bright yellow ring while the overlay is up**. That ring is
+load-bearing, not decoration — see the overlay's "make its exit the brightest thing on screen"
+rule below, which the old button satisfied for free by being lit on a dead screen. It lives in
 `combat_flight.go` along with the cards that fly out of it.
 
 **Its y is measured down from the AP bar, never as a percentage.** The strip below the bar is
 86 pixels, `cards.Stack` is 44x64 to fit it, and 95% of the screen height put the pile three
 pixels *through* the bar. `TestDeckStackClearsTheAPBarAndTheScreen` fails rather than letting
 that come back.
+
+**Its x is measured in from the right edge, and the margin is where its count is written**
+*(2026-08-11)*. `deckStackRightMargin` went 10 → 96 so the fraction sits beside the pile rather
+than floating in the corner. **The count is `left / owned`** — `len(s.deck)` over `deckSize()` —
+and the denominator deliberately never moves: the numerator alone says how far through the deck
+the round is, and the discard is the subtraction (owned, less what is left to draw, less the
+hand). It replaced `deck 45 · discard 7` on the line under the hand, which is gone.
 
 **DUEL! becomes the way onward when the duel ends**, changing its own label to Next or Retry
 rather than a fourth button appearing. Same slot, same meaning — commit and move the game
@@ -225,8 +258,10 @@ be steered.
 
 **The character block replaced the fighter's sprite and health bar.** A bar says roughly
 how hurt you are, and a duel decided in whole points wants the exact number, so life is a
-red fraction. Discards refill each round; vitae is a fixed placeholder drawn anyway, so the
-box has its real shape before the rest of the character's state is designed.
+red fraction. Vitae is a fixed placeholder drawn anyway, so the box has its real shape before
+the rest of the character's state is designed. **Discards left was the middle figure and left
+for the Discard button on 2026-08-11** — the strip holds what is read between rounds, not what
+is watched during one.
 
 **The enemy is a card** *(2026-08-11)*, centred where its sprite stood: portrait on the top
 half, then its name, a health bar and its life as a fraction. It was the last thing on this
@@ -412,9 +447,16 @@ it again to take it out, drag sideways to move it along the row.
   with the layout; selection is the only state a card carries, so it gets a whole axis to
   itself rather than a tint competing with the affordability dimming.
 - The in-flight card is drawn last in `Draw`, so it rides over everything it crosses.
-- **The AP budget is drawn twice, on purpose.** A `3/6 AP` line for the exact figure and a
-  bar under it for the glanceable one, both sitting between the cards and the two buttons
-  that spend them.
+- **The AP budget is still drawn twice, but not stacked** *(2026-08-11)*. The `3/6 AP` figure
+  and the pile counts used to share a line of small text wedged between the cards and the bar.
+  That line is gone; **the figure moved down onto the button line**, left-aligned under the
+  left end of the bar, and the pile counts moved to the pile. What was wrong with the figure
+  was where it sat, not that it was written down — the bar answers "how much room is left"
+  without being read, and the figure answers "exactly".
+- **The row sits directly on the bar.** Losing the text line freed 22 pixels and the *cards*
+  took them, moving down from 59% to 61% rather than the bar moving up — the strip below the
+  bar holds the deck stack, whose top is measured from it, and whose ring is already flush
+  with the bottom of the screen.
 
 ## Hidden information is gated on `DebugGameplay`
 

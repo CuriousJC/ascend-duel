@@ -88,10 +88,43 @@ func TestTheComboRingFitsOnScreen(t *testing.T) {
 		t.Errorf("the combo ring starts at x=%d, off the left of the screen", left)
 	}
 
-	// And its bottom must clear the action-point figure printed under the hand row.
+	// And its bottom must clear the action-point bar under the hand row. That used to be the
+	// `3/6 AP` line printed ten pixels below the cards; the line went on 2026-08-11 and the
+	// bar came up into roughly its place, so the ring has the same amount of room and the
+	// same reason to be checked for it.
 	bottom := first.Y + cardHeight + comboRingInset + comboRingWidth/2
-	apText := gs.PctY(handTopPct) + cardHeight + apTextBelow
-	if bottom > apText {
-		t.Errorf("the combo ring reaches y=%d, through the AP figure at y=%d", bottom, apText)
+	apBar := gs.PctY(handTopPct) + cardHeight + apBarBelow
+	if bottom > apBar {
+		t.Errorf("the combo ring reaches y=%d, through the AP bar at y=%d", bottom, apBar)
+	}
+}
+
+// The bottom strip is four things on one line — the AP figure, Discard, DUEL! and the deck
+// pile — and what is wanted of the two buttons is a *relationship*: the space between the
+// figure and the pile shared equally, rather than two percentages that happened to look right
+// once. That is what this checks, in the only terms it can be stated in: the three gaps.
+func TestTheButtonStripSharesItsSpaceEvenly(t *testing.T) {
+	gs := testState()
+
+	const discardWidth, duelWidth = 138, 138
+	discardX, duelX := buttonStripSlots(gs, discardWidth, duelWidth)
+
+	figure, pile := apFigureRight(gs), deckStackBounds(gs).Min.X
+	before := discardX - discardWidth/2 - figure
+	between := duelX - duelWidth/2 - (discardX + discardWidth/2)
+	after := pile - (duelX + duelWidth/2)
+
+	if before <= 0 || between <= 0 || after <= 0 {
+		t.Fatalf("the buttons do not fit between the AP figure at x=%d and the pile at x=%d: gaps %d, %d, %d",
+			figure, pile, before, between, after)
+	}
+
+	// Integer division puts the remainder in the last gap, so the tolerance is the two pixels
+	// three-way rounding can lose. Anything larger is a placement, not a division.
+	if d := before - between; d > 2 || d < -2 {
+		t.Errorf("gap before Discard is %d and the gap between the buttons is %d", before, between)
+	}
+	if d := before - after; d > 2 || d < -2 {
+		t.Errorf("gap before Discard is %d and the gap after DUEL! is %d", before, after)
 	}
 }

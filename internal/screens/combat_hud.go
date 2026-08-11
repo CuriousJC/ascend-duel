@@ -13,6 +13,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -78,7 +79,12 @@ const (
 // that has to be found without being looked for, so it gets a colour nothing else uses.
 var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
 
-// drawFighterBlock draws what the player is: life, discards left this round, and vitae.
+// drawFighterBlock draws what the player is: life and vitae.
+//
+// **Discards left was the middle figure until 2026-08-11**, and moved onto the Discard button
+// itself — see drawDiscardsLeft. It was the one figure in the strip that answers a question
+// asked *while looking somewhere else*: it ticks down as the button is pressed, at the bottom
+// of the screen, and the strip is at the top. Life and vitae are read between rounds and stay.
 //
 // Vitae is a placeholder reading a fixed 5 — it has no rule behind it yet. It is drawn
 // anyway so the block has its real shape while the rest of the character's state is
@@ -93,9 +99,10 @@ func (s *CombatScene) drawFighterBlock(gs *state.GlobalState, screen *ebiten.Ima
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 12}
 	value := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 24}
 
-	// Three evenly spaced columns, each a small caption over its figure. Life is the only one
-	// that takes a colour: it is the number the whole duel is about, and the other two are
-	// budgets rather than stakes.
+	// Evenly spaced columns, each a small caption over its figure. Life is the only one that
+	// takes a colour: it is the number the whole duel is about, and what is beside it is a
+	// budget rather than a stake. The spacing is derived from len(cells), so dropping Discards
+	// re-centred the remaining two rather than leaving a hole where it stood.
 	cells := []struct {
 		label string
 		value string
@@ -107,7 +114,6 @@ func (s *CombatScene) drawFighterBlock(gs *state.GlobalState, screen *ebiten.Ima
 		// tall block used title case and never had the problem. Caps are not worth a label
 		// the player reads as a different word.
 		{"Health", fmt.Sprintf("%d / %d", s.fighter.CurrentLife, s.fighter.MaxLife), &lifeColor},
-		{"Discards", fmt.Sprintf("%d", s.discardsLeft), nil},
 		{"Vitae", fmt.Sprintf("%d", s.vitae), nil},
 	}
 
@@ -130,6 +136,74 @@ func (s *CombatScene) drawFighterBlock(gs *state.GlobalState, screen *ebiten.Ima
 		}
 		text.Draw(screen, c.value, value, valueOp)
 	}
+}
+
+// The discards-left badge: a filled disc centred exactly on the Discard button's bottom-right
+// corner, with the count in it.
+//
+// **Centred on the corner rather than inset from it**, so a quarter of the disc hangs off each
+// of the two edges and it reads as a counter attached to the button instead of a second thing
+// printed inside it. Nothing sits under that corner — the hand row ends well above the button
+// strip — so the overhang costs no legibility anywhere else.
+//
+// **Large on purpose.** It is a number watched rather than read: the point is seeing it tick as
+// the button is pressed, and at the character strip's 24px it was a figure you had to go and
+// look for, at the far end of the screen from the control that changes it.
+// Both were a quarter larger — 34 and 23 — for the first look at it *(2026-08-11)*. A disc
+// that size read as a second control stuck to the button rather than as a counter on it.
+const (
+	discardBadgeSize   = 26
+	discardBadgeRadius = 17
+)
+
+// The badge's disc and its ink.
+//
+// **Two pairs rather than one dimmed by state**, because the button underneath does not dim —
+// it changes colour entirely. `disabledButtonColor` is flat dark grey and deliberately ignores
+// BaseColor, so a badge tuned to sit on yellow has nothing to say about grey. Disabled takes a
+// mid grey disc: still a disc, plainly not a live one.
+var (
+	discardBadgeFill         = color.RGBA{R: 245, G: 245, B: 245, A: 255}
+	discardBadgeInk          = color.RGBA{R: 25, G: 25, B: 25, A: 255}
+	discardBadgeDisabledFill = color.RGBA{R: 110, G: 110, B: 110, A: 255}
+	discardBadgeDisabledInk  = color.RGBA{R: 55, G: 55, B: 55, A: 255}
+)
+
+// drawDiscardsLeft draws the badge holding the discards remaining this round.
+//
+// **It is drawn by the scene, over the button, rather than being a second label on the
+// widget.** models.Button is a plain struct with one centred string and the count is game
+// state that refills at the end of a round; giving the widget a corner-badge field would put
+// a rule about this screen into something every screen shares.
+//
+// It has to be drawn after systems.DrawButton, which blits an opaque cached face.
+func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Image) {
+	b := s.discardButton
+	if b == nil {
+		return
+	}
+
+	// ScreenX/ScreenY are the button's centre; both DrawButton and the hit test re-derive the
+	// corners from them the same way.
+	cx := float64(b.ScreenX) + float64(b.Width)/2
+	cy := float64(b.ScreenY) + float64(b.Height)/2
+
+	fill, ink := discardBadgeFill, discardBadgeInk
+	if b.State == models.ButtonStateDisabled {
+		fill, ink = discardBadgeDisabledFill, discardBadgeDisabledInk
+	}
+
+	// Antialiased: this is the only circle on the screen that is not a health-bar corner, and a
+	// stepped edge on a disc this size is the first thing the eye finds.
+	vector.DrawFilledCircle(screen, float32(cx), float32(cy), discardBadgeRadius, fill, true)
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(cx, cy)
+	op.PrimaryAlign = text.AlignCenter
+	op.SecondaryAlign = text.AlignCenter
+	op.ColorScale.ScaleWithColor(ink)
+	text.Draw(screen, fmt.Sprintf("%d", s.discardsLeft),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: discardBadgeSize}, op)
 }
 
 // drawEnemyCard draws the opponent in the card format: portrait, name, health bar, and the

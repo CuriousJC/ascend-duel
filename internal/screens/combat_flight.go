@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -10,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -44,9 +46,29 @@ const (
 	// The margin is to the card's own edge. The highlight ring reaches
 	// deckHighlightInset + deckHighlightWidth/2 = 8 further, which still clears the screen,
 	// and TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting it not.
-	deckStackRightMargin = 10
-	deckStackDepth       = 3 // backs drawn behind the front one, to read as a pile
-	deckStackStep        = 3 // pixels each one is offset up and left
+	//
+	// **It was 10 until 2026-08-11**, when the pile took over stating its own count. The
+	// margin is now the strip that count is written in, and it is *derived* from the three
+	// things in that strip rather than being a number that happens to fit: the text's margin
+	// from the screen edge, the width reserved for the text, and the gap between the pile and
+	// it. Nudging the pile is therefore a change to whichever of the three is actually wrong.
+	deckStackRightMargin = deckCountRightMargin + deckCountReserve + deckStackToCountGap
+
+	// Where the count sits in that strip: right-aligned this far in from the screen's edge,
+	// with its baseline on the pile's bottom edge.
+	//
+	// **The reserve is measured, not guessed** — `60/60` is 41.2 pixels of kubasta at 22 — and
+	// it is a fixed width for the same reason apFigureReserve is: the pile's placement must
+	// not shift as the numerator loses a digit.
+	deckCountRightMargin = 14
+	deckCountReserve     = 42
+	deckCountSize        = 22
+
+	// How far the pile stands off its own count. Halved from the 41 pixels the first version
+	// left, which read as two things near each other rather than one labelled thing.
+	deckStackToCountGap = 20
+	deckStackDepth      = 3 // backs drawn behind the front one, to read as a pile
+	deckStackStep       = 3 // pixels each one is offset up and left
 
 	// deckStackTopGap clears the action-point bar. The stack's y is measured *down from the
 	// bar* rather than set as a percentage, because the bar is the thing that constrains it —
@@ -261,13 +283,22 @@ func (s *CombatScene) updateDeckStack(gs *state.GlobalState) {
 	}
 }
 
-// drawDeckStack draws the pile, and the ring round it when the overlay is open.
+// drawDeckStack draws the pile, the count beside it, and the ring round it when the overlay
+// is open.
 //
 // The depth is fixed rather than proportional to how many cards are left. A pile that
 // visibly thinned would be a nice touch and a lie: the discard is folded back in and
 // reshuffled the moment the draw pile empties, so "how deep is the deck" is not a fact the
-// player can act on and not one worth drawing. The count beside the AP bar is the honest
-// version of that number.
+// player can act on and not one worth drawing. **The written count is the honest version of
+// that number, and it now lives here** *(2026-08-11)* — it used to be `deck 45 · discard 7`
+// on a line under the hand, which is gone.
+//
+// **It is a fraction over everything you own, not over the draw pile's starting size.** The
+// denominator is `deckSize()` and never moves, so the numerator alone says how far through
+// the deck the round is, and the rest — what is in the discard — is the subtraction the
+// player can do at a glance: owned, less what is left to draw, less the eight in hand.
+// A denominator that changed as cards were spent would make the fraction unreadable at
+// exactly the moment it is worth reading.
 func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image) {
 	front := deckStackRect(gs)
 
@@ -283,6 +314,15 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 		off := i * deckStackStep
 		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Stack)
 	}
+
+	// Sitting on the pile's bottom edge rather than centred on its face: the count and the
+	// cards then share a line, and the pile reads as the thing the number is about.
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(gs.PctX(100)-deckCountRightMargin), float64(front.Max.Y))
+	op.PrimaryAlign = text.AlignEnd
+	op.SecondaryAlign = text.AlignEnd
+	text.Draw(screen, fmt.Sprintf("%d/%d", len(s.deck), deckSize()),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }
 
 // drawCardBack blits a face-down card at rest.

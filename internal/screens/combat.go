@@ -63,17 +63,61 @@ const (
 // Bio-Titan because the data says where each belongs, not because someone typed them in that
 // order.
 //
-// **It is not the randomiser and does not pretend to be.** Floor generation picks from the
-// records a floor allows, off its own determinism stream; this walks all 96 in order so every
-// one of them can be reached by playing.
+// **Shuffled inside each floor band since 2026-08-11, so a run opens on a different opponent
+// every launch.** The floor ordering is kept and the order *within* a floor is rolled from the
+// run seed: fight one is some floor-one enemy rather than always the alphabetically first one,
+// and playing over time reaches all 96 by a different route each run.
 //
-// Built in Init rather than at package scope: it reads the loaded roster out of global state,
-// which does not exist until main has run.
+// **It shuffles within the bands rather than shuffling the list**, and that is the whole
+// design. A flat shuffle would put a floor-eight Bio-Titan up as the opening fight, which is
+// not a hard first fight but an unwinnable one — the failure `tools/balance` exists because of,
+// and one that looks exactly like losing to bad draws. Sorted-then-shuffled keeps the climb and
+// still varies the group.
+//
+// **It is still not the tower's randomiser.** Floor generation will pick from the records a
+// floor allows off this same stream; this is one shuffle of a stand-in list, and it goes when
+// the generator arrives.
+//
+// Built in Init rather than at package scope: it reads the loaded roster and the run seed out
+// of global state, neither of which exists until main has run. Rolled once per launch — a
+// death and a retry walk the same order, because there is no Session yet to re-roll a seed.
 func (s *CombatScene) roster(gs *state.GlobalState) []string {
 	if s.enemyRoster == nil {
-		s.enemyRoster = data.EnemyOrder(gs.Enemies)
+		s.enemyRoster = shuffleWithinFloors(data.EnemyOrder(gs.Enemies), gs.Enemies,
+			rand.New(rand.NewSource(gs.RunSeed^enemySelectSalt)))
 	}
 	return s.enemyRoster
+}
+
+// enemySelectSalt separates the enemy-selection stream from every other consumer of the run
+// seed. **A stream is only ever advanced by its own concern** — the deck shuffles, the loot and
+// the floor offers each get their own source seeded the same way, so that retuning one cannot
+// silently reroll another. Seeding two of them from the bare RunSeed would make them identical
+// sequences, which is the same bug wearing a disguise.
+const enemySelectSalt = 0x5EED_E9E3
+
+// shuffleWithinFloors reorders a floor-sorted roster inside each run of equal ValidFloors,
+// leaving the bands themselves where they are.
+//
+// It takes the source rather than reaching for one, so the caller owns which stream is being
+// advanced, and it is a plain function of its arguments so a test can hand it a fake roster
+// and a fixed seed. Never `rand.Shuffle` — the package-level one draws from a global source
+// shared with every other caller and would make a run unreproducible.
+func shuffleWithinFloors(names []string, recs map[string]data.EnemyData, rng *rand.Rand) []string {
+	out := append([]string(nil), names...)
+
+	for start := 0; start < len(out); {
+		end := start + 1
+		for end < len(out) && recs[out[end]].ValidFloors == recs[out[start]].ValidFloors {
+			end++
+		}
+
+		band := out[start:end]
+		rng.Shuffle(len(band), func(i, j int) { band[i], band[j] = band[j], band[i] })
+
+		start = end
+	}
+	return out
 }
 
 // The selection is capped at `s.fighter.MaxActions()` cards **regardless of what they
@@ -248,18 +292,24 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		s.discardButton = models.NewButton(138, 50, "Discard", s.discardSelected)
 		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
 	}
-	// Discard and DUEL! sit together because they are the same choice: both act on the
-	// selection, and pressing one is deciding what that selection was for. They sit
-	// directly under the hand, next to the cards being selected, so the choice is made
-	// where it is expressed.
+	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
+	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.
+	// The buttons no longer sit at percentages of the screen — `buttonStripSlots` divides
+	// what is left between the figure and the pile into three equal gaps, so the strip stays
+	// evenly spread if any of the three fixed things moves.
 	//
-	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile
-	// itself, drawn at the same 88% it stood at — a deck you click rather than a button
-	// naming one. See combat_flight.go.
-	s.discardButton.ScreenX = gs.PctX(20)
-	s.discardButton.ScreenY = gs.PctY(95)
-	s.duelButton.ScreenX = gs.PctX(33)
-	s.duelButton.ScreenY = gs.PctY(95)
+	// **They are deliberately not adjacent any more.** Discard and DUEL! were side by side
+	// because they are the same choice made two ways; they are separate choices now, and the
+	// spacing says so. Discard briefly sat on the hand's left edge, which is the AP figure's
+	// column — the figure came back on 2026-08-11 and wanted it.
+	//
+	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile itself.
+	// See combat_flight.go.
+	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
+	s.discardButton.ScreenX = discardX
+	s.discardButton.ScreenY = gs.PctY(buttonStripPct)
+	s.duelButton.ScreenX = duelX
+	s.duelButton.ScreenY = gs.PctY(buttonStripPct)
 
 	s.showDeck = false
 	s.feedPressTicks = 0
@@ -609,6 +659,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawEnemyCard(gs, screen, image.Pt(gs.PctX(88), gs.PctY(34)))
 	systems.DrawButton(gs, screen, s.duelButton)
 	systems.DrawButton(gs, screen, s.discardButton)
+	s.drawDiscardsLeft(gs, screen)
 	s.drawDeckStack(gs, screen)
 
 	// **Order below is contested, and the ranking is written down because it will be

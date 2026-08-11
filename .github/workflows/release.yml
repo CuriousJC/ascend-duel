@@ -4,11 +4,12 @@
 #
 #     git tag -a v0.1.0 -m "..." && git push origin v0.1.0
 #
-# or run the workflow by hand from the Actions tab against `main`, giving it the version to
-# cut. The manual path creates the tag itself, at the commit it built, so releasing does not
-# require a local tag-and-push. **Pushing a `v*` tag is still releasing** — there is no
-# approval between the two, so push one only when the commit it points at is the thing to
-# ship.
+# or run the workflow by hand from the Actions tab against `main`. The manual path creates
+# the tag itself, at the commit it built, so releasing does not require a local tag-and-push,
+# and **its version input is optional** — left blank, the version job bumps the highest
+# existing tag by whichever part `bump` names. **Pushing a `v*` tag is still releasing** —
+# there is no approval between the two, so push one only when the commit it points at is the
+# thing to ship.
 #
 # **The version is resolved once, in the `version` job, and everything downstream reads it.**
 # `GITHUB_REF_NAME` is the tag on one path and the branch name on the other, so nothing below
@@ -18,6 +19,12 @@
 # upload/download-artifact — and publishing runs through the `gh` CLI preinstalled on the
 # runner rather than a marketplace action. A release workflow holds a write token, so it is
 # the last place to hand execution to code nobody in this repo reviews.
+#
+# **Their majors are the ones that run on Node 24**, which is why they are not the round
+# numbers they look like they should be: checkout@v5, setup-go@v6, upload-artifact@v6,
+# download-artifact@v7. The artifact actions each shipped a major with only preliminary Node
+# 24 support and still defaulting to Node 20 — v5 and v6 respectively — so upgrading by one
+# leaves the deprecation warning in place. CI pins the same set; if one moves the other has to.
 #
 # **Build jobs never publish.** They upload artifacts and a single `publish` job creates the
 # release once, because two jobs both calling `gh release create` is a race where one of them
@@ -29,14 +36,26 @@ on:
     tags:
       - "v*"
 
-  # The manual path. `version` is typed into the Actions tab; the run must be started against
-  # `main`, which the version job enforces rather than trusting the dropdown.
+  # The manual path. The run must be started against `main`, which the version job enforces
+  # rather than trusting the dropdown.
+  #
+  # **Both inputs are optional and they are alternatives.** Leave `version` blank and the
+  # version job reads the highest existing `vX.Y.Z` tag and applies `bump` to it, so cutting
+  # a release does not require remembering what the last one was. Type a `version` and it
+  # wins outright — `bump` is then ignored — which is the escape hatch for a version the
+  # arithmetic would not produce, such as a prerelease.
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, e.g. v0.1.2. The tag is created for you."
-        required: true
+        description: "Optional. Exact version, e.g. v0.1.2. Leave blank to bump the latest tag. The tag is created for you."
+        required: false
         type: string
+      bump:
+        description: "Which part to increment when version is left blank. Ignored if version is filled in."
+        required: false
+        type: choice
+        default: patch
+        options: [patch, minor, major]
 
 # Build jobs need nothing but the code. Only publish gets a write token.
 permissions:
@@ -56,7 +75,7 @@ jobs:
     outputs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # The input is read through the environment and never interpolated into the script.
       # `${{ inputs.version }}` pasted inline would be executed by the shell, and this job
@@ -66,6 +85,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
           INPUT_VERSION: ${{ inputs.version }}
+          INPUT_BUMP: ${{ inputs.bump }}
         run: |
           set -euo pipefail
 
@@ -83,20 +103,63 @@ jobs:
             exit 1
           fi
 
-          if ! printf '%s' "$INPUT_VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
-            echo "::error::'$INPUT_VERSION' is not a version: expected vMAJOR.MINOR.PATCH"
-            exit 1
+          if [ -n "$INPUT_VERSION" ]; then
+            # A typed version wins outright, and is checked exactly as it always was.
+            if ! printf '%s' "$INPUT_VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+              echo "::error::'$INPUT_VERSION' is not a version: expected vMAJOR.MINOR.PATCH"
+              exit 1
+            fi
+            version="$INPUT_VERSION"
+          else
+            # Blank version: derive the next one from what has already been released.
+            #
+            # `git ls-remote` rather than the local tags, because the checkout above is
+            # shallow and fetches none. `--refs` drops the `^{}` dereference lines an
+            # annotated tag adds, which would otherwise be sorted as duplicates.
+            #
+            # **Prereleases are deliberately excluded from the scan.** `sort -V` orders
+            # v1.2.0-rc1 after v1.2.0, so an rc tag left lying around would become the base
+            # and bump to v1.2.1, silently skipping the release it was a candidate for.
+            # Filtering to bare vX.Y.Z bases the arithmetic on shipped versions only; a
+            # prerelease is still reachable by typing it into `version`.
+            latest=$(git ls-remote --tags --refs origin 'v*' \
+              | awk '{print $2}' \
+              | sed 's#^refs/tags/##' \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+              | sort -V \
+              | tail -n 1) || true
+
+            # No releases yet, so bump from zero: patch gives v0.0.1, minor v0.1.0, major
+            # v1.0.0. Guessing a first version would be worse than making the arithmetic
+            # say the same thing everywhere.
+            base="${latest:-v0.0.0}"
+            IFS=. read -r major minor patch <<<"${base#v}"
+
+            case "$INPUT_BUMP" in
+              major) major=$((major + 1)); minor=0; patch=0 ;;
+              minor) minor=$((minor + 1)); patch=0 ;;
+              patch|"") patch=$((patch + 1)) ;;
+              *)
+                echo "::error::'$INPUT_BUMP' is not a bump: expected patch, minor or major"
+                exit 1
+                ;;
+            esac
+
+            version="v${major}.${minor}.${patch}"
+            echo "latest release tag is ${latest:-none}; ${INPUT_BUMP:-patch} bump gives $version"
           fi
 
           # gh would happily create a release against an existing tag, quietly shipping
-          # binaries built from a different commit than the one that tag names.
-          if git ls-remote --exit-code --tags origin "refs/tags/$INPUT_VERSION" >/dev/null 2>&1; then
-            echo "::error::tag $INPUT_VERSION already exists"
+          # binaries built from a different commit than the one that tag names. This checks
+          # the computed version too — the scan above ignores prereleases and any tag that
+          # is not a bare vX.Y.Z, so arithmetic can still land on one that exists.
+          if git ls-remote --exit-code --tags origin "refs/tags/$version" >/dev/null 2>&1; then
+            echo "::error::tag $version already exists"
             exit 1
           fi
 
-          echo "releasing $INPUT_VERSION from $GITHUB_SHA"
-          echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "releasing $version from $GITHUB_SHA"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
   windows:
     needs: version
@@ -104,9 +167,9 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -138,7 +201,7 @@ jobs:
             -o "ascend-duel-${VERSION}-windows-amd64.exe" .
           ls -l ascend-duel-*.exe
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows
           path: ascend-duel-*.exe
@@ -154,7 +217,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # **Ebitengine needs cgo on Linux**, unlike Windows where it is pure Go. These are the
       # headers it links against: X11 for the window and input, GL for drawing, ALSA for
@@ -167,7 +230,7 @@ jobs:
             libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev \
             libasound2-dev pkg-config
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -203,7 +266,7 @@ jobs:
           tar czf "ascend-duel-${VERSION}-linux-amd64.tar.gz" ascend-duel
           ls -l ascend-duel-*.tar.gz
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: linux
           path: ascend-duel-*.tar.gz
@@ -221,9 +284,9 @@ jobs:
 
     steps:
       # Needed for the notes file; the binaries come from the artifacts below.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true

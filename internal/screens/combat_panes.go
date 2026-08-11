@@ -270,12 +270,23 @@ func drawMoreAbove(screen *ebiten.Image, box image.Rectangle) {
 	cx := float32(box.Max.X-moreArrowInset) - moreArrowWidth/2
 	top := float32(box.Min.Y + moreArrowInset)
 
+	outline := color.RGBA{A: 255}
+
 	// The outline is the same triangle grown by the border on every side: wider at the base
 	// by twice the border, taller by it, and started that much higher so the point keeps its
 	// margin. Growing it rather than stroking it means there is only one shape to be wrong.
 	fillArrowUp(screen, cx, top-moreArrowBorder,
-		moreArrowWidth+2*moreArrowBorder, moreArrowHeight+moreArrowBorder,
-		color.RGBA{A: 255})
+		moreArrowWidth+2*moreArrowBorder, moreArrowHeight+moreArrowBorder, outline)
+
+	// **The base needs its own bar** *(2026-08-11)*. Growing the triangle cannot supply one:
+	// a taller triangle is also a wider one, so its bottom row lands on the same scanline as
+	// the yellow base rather than under it, and the arrow drew as two black slopes with an
+	// open bottom — a caret, not a triangle. This is the third side, at the grown width so it
+	// ends flush with them.
+	vector.DrawFilledRect(screen,
+		cx-(moreArrowWidth+2*moreArrowBorder)/2, top+moreArrowHeight,
+		moreArrowWidth+2*moreArrowBorder, moreArrowBorder, outline, false)
+
 	fillArrowUp(screen, cx, top, moreArrowWidth, moreArrowHeight, attentionYellow)
 }
 

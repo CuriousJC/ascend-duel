@@ -35,9 +35,15 @@ const (
 	cardHeight = 264
 	cardGap    = 12
 
-	// The row sits low, with the budget and then the button strip beneath it. handTopPct is
-	// the top of an *unselected* card; a selected one rises above it by selectedNudge.
-	handTopPct = 59
+	// The row sits low, with the budget bar and then the button strip beneath it. handTopPct
+	// is the top of an *unselected* card; a selected one rises above it by selectedNudge.
+	//
+	// **59% until 2026-08-11.** It came down when the AP text line went, so the cards sit
+	// directly on top of the bar that fills as they are selected. The bar's own y is measured
+	// from the row, and the deck stack's from the bar, so moving the row is how that whole
+	// stack of things moves together — and it is bounded at the bottom by the stack's ring,
+	// which TestDeckStackClearsTheAPBarAndTheScreen holds against the screen edge.
+	handTopPct = 61
 
 	// selectedNudge is how far a selected card lifts out of the row. Selection is the only
 	// state a card carries, so it gets a whole axis to itself rather than a tint that would
@@ -47,14 +53,42 @@ const (
 
 	dropIndicatorWidth = 4
 
-	// The budget, as offsets *below* the bottom of the row: the AP figure at the row's left
-	// edge, the pile counts at its right, and the bar spanning the width between them. The
-	// bar is exactly as wide as the hand, so it reads as belonging to the cards rather than
-	// floating near them, and it sits under the selection it is reporting on — between the
-	// cards and the two buttons that spend them.
-	apTextBelow = 10
-	apBarBelow  = 36
+	// The budget bar, as an offset *below* the bottom of the row. It is exactly as wide as the
+	// hand, so it reads as belonging to the cards rather than floating near them, and it sits
+	// under the selection it is reporting on — between the cards and the buttons that spend it.
+	//
+	// **There was a line of text between the two until 2026-08-11**, `3/6 AP` at the left end
+	// and `deck 45 · discard 7` at the right, with `apTextBelow = 10` placing it and
+	// `apBarBelow = 36` leaving room for it. Both figures found better homes — the bar is
+	// segmented and therefore countable, and the draw pile now states its own count — so the
+	// line went and the bar came up under the cards. The row moved *down* by the difference
+	// rather than the bar moving up: the strip below it holds the deck stack, and its top is
+	// measured from the bar.
+	apBarBelow  = 14
 	apBarHeight = 8
+
+	// The strip under the bar: the AP figure, the two buttons and the deck pile, all on one
+	// line. buttonStripPct is that line's centre and every one of them is placed against it.
+	buttonStripPct = 95
+
+	// **The figure came back on 2026-08-11**, having been dropped that same day along with the
+	// pile counts it shared a line with. What was wrong with it was where it was — a line of
+	// small text wedged between the cards and the bar — not that it was written down. It is
+	// now left-aligned under the left end of the bar, on the button line, and the bar is
+	// directly under the cards where it belongs.
+	//
+	// **apFigureReserve is a fixed column width, not the text's measured width**, because the
+	// buttons are spaced off its right edge and the text is not a constant length. Measuring
+	// would move both buttons the moment the figure went from `9/12 AP` to `10/12 AP`. The
+	// reserve holds the normal figure — `12/12 AP` measures 53 pixels at this size — and the
+	// `+N over` tail deliberately runs past it, into a gap hundreds of pixels wide.
+	//
+	// apFigureBelowBar hangs it off the *bar*, not off the button line it started on. The
+	// figure is a caption on the bar and belongs against it; the buttons beside it are placed
+	// on their own line and the two only have to agree horizontally.
+	apFigureSize     = 18
+	apFigureReserve  = 110
+	apFigureBelowBar = 8
 
 	// The bar is one cell per action point. apBarGap separates them so the cells can be
 	// counted at a glance; apBarMinCell is the width below which counting stops working and
@@ -429,36 +463,16 @@ func slotAt(gs *state.GlobalState, i, n int) image.Point {
 	)
 }
 
-// drawHandRow draws the budget header and the row of cards. There is no pane behind them:
-// with one row, and selection shown by position, a frame was outlining empty space.
+// drawHandRow draws the row of cards and the budget bar under it. There is no pane behind
+// them: with one row, and selection shown by position, a frame was outlining empty space.
 func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	band := handBand(gs, s.laidOutCount())
 	left, right := float32(band.Min.X), float32(band.Max.X)
 	top := float32(gs.PctY(handTopPct))
 	below := top + cardHeight
 
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}
-
-	// The budget runs the width of the hand: the exact figure at one end, the piles at the
-	// other, and the bar between them. The piles have no cards on screen to count, which is
-	// why they are written out at all.
-	spent, budget := combat.CostOf(s.fighterActions), s.fighter.ActionPoints()
-	label := fmt.Sprintf("%d/%d AP", spent, budget)
-	budgetOp := &text.DrawOptions{}
-	budgetOp.GeoM.Translate(float64(left), float64(below+apTextBelow))
-	if spent > budget {
-		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
-		budgetOp.ColorScale.ScaleWithColor(apOverColor)
-	}
-	text.Draw(screen, label, face, budgetOp)
-
-	pilesOp := &text.DrawOptions{}
-	pilesOp.GeoM.Translate(float64(right), float64(below+apTextBelow))
-	pilesOp.PrimaryAlign = text.AlignEnd
-	text.Draw(screen, fmt.Sprintf("deck %d  ·  discard %d", len(s.deck), len(s.discard)),
-		face, pilesOp)
-
 	s.drawAPBar(screen, left, below+apBarBelow, right-left)
+	s.drawAPFigure(gs, screen, band.Min.X, int(below)+apBarBelow+apBarHeight)
 
 	for i, c := range s.hand {
 		// A card being dealt is drawn by its flight, somewhere between the pile and here, so
@@ -500,8 +514,58 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		playerSwatch, false)
 }
 
-// drawAPBar draws the action-point budget as a bar. The numeric line above it stays — the
-// bar answers "how much room is left" at a glance, the number answers "exactly".
+// drawAPFigure writes the budget as `3/6 AP`, tucked under the left end of the bar — same left
+// edge, apFigureBelowBar under its bottom. It reads as a caption on the bar rather than as a
+// fourth thing on the button line, which is where it sat for its first hour on 2026-08-11.
+//
+// It takes the bar's left edge and its bottom rather than deriving them, since its caller has
+// just drawn the bar from those two numbers and a second derivation is a second thing to be
+// wrong.
+//
+// **An overspend is said twice on purpose**, here in words and by the bar's red cells. It is
+// the one state that stops DUEL! working.
+func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, left, barBottom int) {
+	spent, budget := combat.CostOf(s.fighterActions), s.fighter.ActionPoints()
+
+	label := fmt.Sprintf("%d/%d AP", spent, budget)
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(left), float64(barBottom+apFigureBelowBar))
+	if spent > budget {
+		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
+		op.ColorScale.ScaleWithColor(apOverColor)
+	}
+	text.Draw(screen, label,
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: apFigureSize}, op)
+}
+
+// apFigureRight is where the figure's reserved column ends, and the left edge of the space the
+// buttons are spread across.
+func apFigureRight(gs *state.GlobalState) int {
+	return handBand(gs, handSize).Min.X + apFigureReserve
+}
+
+// buttonStripSlots is where the two buttons sit: three equal gaps between the AP figure's
+// column and the deck pile, with a button in the two spaces between them. Returns centres,
+// which is what models.Button stores.
+//
+// **Written as one function of the strip rather than two placements**, because the property
+// wanted is a relationship — evenly shared space — and two hand-picked percentages cannot
+// hold it when the pile or the figure moves. `TestTheButtonStripSharesItsSpaceEvenly` checks
+// the gaps against each other rather than against numbers.
+//
+// It reads the pile's *bounds*, not its front card: the backs are drawn up and to the left, so
+// the front card's edge is not the pile's edge.
+func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, int) {
+	left, right := apFigureRight(gs), deckStackBounds(gs).Min.X
+	gap := (right - left - discardWidth - duelWidth) / 3
+
+	discardLeft := left + gap
+	duelLeft := discardLeft + discardWidth + gap
+	return discardLeft + discardWidth/2, duelLeft + duelWidth/2
+}
+
+// drawAPBar draws the action-point budget as a bar. The figure beside it answers "exactly";
+// the bar answers "how much room is left" without being read.
 //
 // **The bar rescales rather than overflowing.** Its full width is the budget until the
 // selection exceeds it, and the whole spend after that, with a tick left standing where the

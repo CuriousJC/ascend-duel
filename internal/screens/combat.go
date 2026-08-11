@@ -248,18 +248,24 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		s.discardButton = models.NewButton(138, 50, "Discard", s.discardSelected)
 		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
 	}
-	// Discard and DUEL! sit together because they are the same choice: both act on the
-	// selection, and pressing one is deciding what that selection was for. They sit
-	// directly under the hand, next to the cards being selected, so the choice is made
-	// where it is expressed.
+	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
+	// the AP figure at the hand's left edge, the two buttons, and the deck pile at the right.
+	// The buttons no longer sit at percentages of the screen — `buttonStripSlots` divides
+	// what is left between the figure and the pile into three equal gaps, so the strip stays
+	// evenly spread if any of the three fixed things moves.
 	//
-	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile
-	// itself, drawn at the same 88% it stood at — a deck you click rather than a button
-	// naming one. See combat_flight.go.
-	s.discardButton.ScreenX = gs.PctX(20)
-	s.discardButton.ScreenY = gs.PctY(95)
-	s.duelButton.ScreenX = gs.PctX(33)
-	s.duelButton.ScreenY = gs.PctY(95)
+	// **They are deliberately not adjacent any more.** Discard and DUEL! were side by side
+	// because they are the same choice made two ways; they are separate choices now, and the
+	// spacing says so. Discard briefly sat on the hand's left edge, which is the AP figure's
+	// column — the figure came back on 2026-08-11 and wanted it.
+	//
+	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile itself.
+	// See combat_flight.go.
+	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
+	s.discardButton.ScreenX = discardX
+	s.discardButton.ScreenY = gs.PctY(buttonStripPct)
+	s.duelButton.ScreenX = duelX
+	s.duelButton.ScreenY = gs.PctY(buttonStripPct)
 
 	s.showDeck = false
 	s.feedPressTicks = 0
@@ -609,6 +615,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawEnemyCard(gs, screen, image.Pt(gs.PctX(88), gs.PctY(34)))
 	systems.DrawButton(gs, screen, s.duelButton)
 	systems.DrawButton(gs, screen, s.discardButton)
+	s.drawDiscardsLeft(gs, screen)
 	s.drawDeckStack(gs, screen)
 
 	// **Order below is contested, and the ranking is written down because it will be

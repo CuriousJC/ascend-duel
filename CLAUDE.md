@@ -169,14 +169,25 @@ fires it, so *tagging is releasing*:
 git tag -a v0.1.0 -m "..."; git push origin v0.1.0
 ```
 
-- **Or run it by hand from the Actions tab** — *Release* → *Run workflow*, on `main`, with
-  the version typed in. **The workflow creates the tag itself**, at the commit it built, via
+- **Or run it by hand from the Actions tab** — *Release* → *Run workflow*, on `main`.
+  **The workflow creates the tag itself**, at the commit it built, via
   `gh release create --target`. That is the normal path now; a local tag-and-push is no
   longer needed to cut a release.
+- **The manual run's `version` input is optional, and the usual way to use it is to leave it
+  blank** *(2026-08-11)*. The `version` job then reads the highest existing `vX.Y.Z` tag off
+  the remote and increments whichever part the `bump` dropdown names — `patch` by default,
+  `minor` or `major` on request — so cutting a release does not mean remembering what the
+  last one was. Typing a version still wins outright and ignores `bump`, which is how a
+  prerelease or any other version the arithmetic would not produce gets cut. With no tags at
+  all the base is `v0.0.0`, so a first `minor` release is `v0.1.0`.
+  **Prereleases are excluded when scanning for the latest tag**, because `sort -V` puts
+  `v1.2.0-rc1` after `v1.2.0` and bumping from an rc would skip the release it was a
+  candidate for.
 - **The manual path is guarded, because a typed version has no `v*` filter in front of it.**
-  A `version` job runs first and fails the whole run if the branch is not `main`, if the
-  string is not `vMAJOR.MINOR.PATCH`, or if that tag already exists — the last one because
-  `gh` would otherwise attach binaries to a tag naming a different commit. The input is read
+  A `version` job runs first and fails the whole run if the branch is not `main`, if a
+  supplied string is not `vMAJOR.MINOR.PATCH`, or if the resolved tag already exists — the
+  last one because `gh` would otherwise attach binaries to a tag naming a different commit,
+  and it is checked for a computed version as well as a typed one. The input is read
   through the environment and never interpolated into a shell script; this job is one
   `needs:` away from the write token.
 - **The `version` job's output is the single source of the version**, and nothing downstream
@@ -202,6 +213,12 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   marketplace action. A job holding a write token is the last place to run unreviewed code.
   Build jobs upload artifacts; one `publish` job creates the release, because two jobs both
   calling `gh release create` is a race.
+- **Action majors are pinned to whichever one actually runs on Node 24**, which is why the
+  numbers look out of step: `checkout@v5`, `setup-go@v6`, `upload-artifact@v6`,
+  `download-artifact@v7` *(2026-08-11)*. Both artifact actions shipped a major with only
+  preliminary Node 24 support that still defaulted to Node 20 — v5 and v6 — so bumping by one
+  leaves the deprecation warning on every run. Both workflows pin the same set; if one moves
+  the other has to. Node 24 needs runner 2.327.1 or newer, which the hosted runners are.
 
 Release notes live in `.github/release-notes/<tag>.md`. Missing ones fall back to generated
 notes rather than failing a build that already succeeded.

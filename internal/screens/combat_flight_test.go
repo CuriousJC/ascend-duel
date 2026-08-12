@@ -132,16 +132,44 @@ func TestFlightsLandAndStopBeingDrawn(t *testing.T) {
 	}
 }
 
-func TestFlightProgressRunsFromZeroToOne(t *testing.T) {
-	f := cardFlight{}
-	if got := f.progress(); got != 0 {
-		t.Errorf("a flight starts at %v, want 0", got)
+func TestTravelRunsFromZeroToOneAndHoldsForItsDelay(t *testing.T) {
+	// The clock every moving card shares, since 2026-08-12. **age counts from zero including
+	// the delay**, which is what makes it one counter rather than two that have to be kept in
+	// step — the shape the old cardFlight and resolvedCard each had a different version of.
+	tr := newTravel(3, 10)
+
+	if !tr.waiting() {
+		t.Error("a travel with a delay does not start on the launch pad")
 	}
-	f.age = flightTicks
-	if got := f.progress(); got != 1 {
-		t.Errorf("a finished flight is at %v, want 1", got)
+	if got := tr.progress(); got != 0 {
+		t.Errorf("a waiting travel is at %v, want 0", got)
 	}
-	if f.live() {
-		t.Error("a flight at full age still reports itself live")
+
+	for i := 0; i < 3; i++ {
+		tr.tick()
+	}
+	if tr.waiting() {
+		t.Error("the travel is still waiting after its delay is spent")
+	}
+	if got := tr.progress(); got != 0 {
+		t.Errorf("a travel just off the pad is at %v, want 0", got)
+	}
+
+	for i := 0; i < 10; i++ {
+		tr.tick()
+	}
+	if got := tr.progress(); got != 1 {
+		t.Errorf("a finished travel is at %v, want 1", got)
+	}
+	if !tr.done() {
+		t.Error("a travel at full age does not report itself done")
+	}
+
+	// It stops rather than counting forever, so a card sitting in its seat costs one
+	// comparison a frame.
+	age := tr.age
+	tr.tick()
+	if tr.age != age {
+		t.Errorf("a landed travel kept counting, %d to %d", age, tr.age)
 	}
 }

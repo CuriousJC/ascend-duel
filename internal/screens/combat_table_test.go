@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/decks"
+	"github.com/curiousjc/ascend-duel/internal/entities"
 )
 
 // The table's geometry, which is arithmetic and needs no window — the same narrow exception
@@ -215,7 +217,7 @@ func TestOnlyOneCardOnTheTableIsLitAtATime(t *testing.T) {
 func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 	gs := testState()
 
-	r := resolvedCard{handIndex: 2, handCount: handSize}
+	r := resolvedCard{travel: newTravel(0, riseTicks), handIndex: 2, handCount: handSize}
 	from := slotAt(gs, 2, handSize)
 	to := playedSeatAt(gs, 1, 3)
 
@@ -236,5 +238,137 @@ func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 	r.age = 0
 	if got := r.at(gs, 1, 3, true); got != from {
 		t.Errorf("a card that has not set off was lifted: %v, want %v", got, from)
+	}
+}
+
+// The opponent's row arriving during planning, 2026-08-12.
+
+func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
+	// seatEnemyCards has to lay the row out in resolution order for the same reason
+	// enemyQueueOrder does: a row in the planner's order would be a picture of a round that
+	// does not happen. It is the same walk, and this pins that seating uses it rather than
+	// taking the queue as planned.
+	s := &CombatScene{
+		enemyActions: combat.PlainCards(combat.Strike, combat.Gather, combat.Brace),
+	}
+	s.seatEnemyCards()
+
+	want := combat.PlainCards(combat.Gather, combat.Strike, combat.Brace)
+	if len(s.enemyDealt) != len(want) {
+		t.Fatalf("%d cards were seated, want %d", len(s.enemyDealt), len(want))
+	}
+	for i, c := range want {
+		if got := s.enemyDealt[i].card; got != c {
+			t.Errorf("seat %d holds %v, want %v", i, got, c)
+		}
+	}
+}
+
+func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
+	// **They come out of the opponent itself**, which is the mirror of the player's cards
+	// coming out of their hand. There is no enemy draw pile on screen and inventing one would
+	// be a second thing to explain.
+	gs := testState()
+	s := &CombatScene{}
+
+	d := dealtCard{travel: newTravel(0, riseTicks)}
+	from := s.enemyCardRect(gs).Min
+	to := enemySeatAt(gs, 1, 3)
+
+	if got := s.enemyCardAt(gs, d, 1, 3, false); got != from {
+		t.Errorf("a card that has not set off is at %v, want the enemy card at %v", got, from)
+	}
+
+	d.age = riseTicks
+	if got := s.enemyCardAt(gs, d, 1, 3, false); got != to {
+		t.Errorf("a landed card is at %v, want its seat %v", got, to)
+	}
+
+	// Lifted only once it has landed, exactly as the player's row does it.
+	if got := s.enemyCardAt(gs, d, 1, 3, true); got.Y != to.Y-tableFireLift {
+		t.Errorf("a firing card sits at y=%d, want %d", got.Y, to.Y-tableFireLift)
+	}
+	d.age = 0
+	if got := s.enemyCardAt(gs, d, 1, 3, false); got != from {
+		t.Errorf("a card back on the pad is at %v, want %v", got, from)
+	}
+}
+
+func TestBothRowsUseTheSameArrivalClock(t *testing.T) {
+	// The two sides deal at the same speed and stagger the same way, or the table reads as one
+	// row arriving and one row appearing. Both take riseTicks and flightStaggerPer from the
+	// same constants, and both count with the same travel — this is what stops a later change
+	// to one of them being made twice.
+	s := &CombatScene{
+		hand: []paletteCard{
+			{actionCard: combat.Plain(combat.Strike), selected: true},
+			{actionCard: combat.Plain(combat.Jab), selected: true},
+		},
+		fighterActions: combat.PlainCards(combat.Strike, combat.Jab),
+		enemyActions:   combat.PlainCards(combat.Strike, combat.Jab),
+	}
+	s.seatPlayedCards()
+	s.seatEnemyCards()
+
+	if len(s.resolved) != len(s.enemyDealt) {
+		t.Fatalf("%d player seats against %d enemy seats", len(s.resolved), len(s.enemyDealt))
+	}
+	for i := range s.resolved {
+		if got, want := s.enemyDealt[i].travel, s.resolved[i].travel; got != want {
+			t.Errorf("seat %d: enemy clock %+v, player clock %+v", i, got, want)
+		}
+	}
+}
+
+func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
+	// **The row has to be the round that will actually resolve.** It was a picture of last
+	// round's plan until 2026-08-12, which is why it was hidden during planning; the fix is that
+	// the opponent commits at the start of the planning phase instead. If startRound ever
+	// re-planned, the cards the player chose against would not be the cards they faced.
+	s := &CombatScene{}
+	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	s.enemy = &entities.Combatant{
+		Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+		Style:   combat.StyleBrute,
+	}
+	s.fighter = &entities.Combatant{
+		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+	}
+
+	s.planEnemyRound()
+
+	planned := append([]combat.Card(nil), s.enemyActions...)
+	if len(planned) == 0 {
+		t.Fatal("the opponent planned nothing to look at")
+	}
+
+	// What is on the table is what was planned, in resolution order.
+	if len(s.enemyDealt) != len(planned) {
+		t.Fatalf("%d cards on the table against a plan of %d", len(s.enemyDealt), len(planned))
+	}
+	for i, c := range s.enemyQueueOrder() {
+		if got := s.enemyDealt[i].card; got != c {
+			t.Errorf("seat %d holds %v, want %v", i, got, c)
+		}
+	}
+}
+
+func TestADeadDuelistIsNotDealtAnotherRound(t *testing.T) {
+	// The row stays on the table when a duel ends — it is the round the player is looking at
+	// the result of — and nothing is drawn from a pile for a fight that is over.
+	s := &CombatScene{}
+	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	s.enemy = &entities.Combatant{
+		Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 0},
+		Style:   combat.StyleBrute,
+	}
+	s.fighter = &entities.Combatant{
+		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+	}
+
+	s.planEnemyRound()
+
+	if len(s.enemyActions) != 0 || len(s.enemyDealt) != 0 {
+		t.Errorf("a dead opponent planned %v and seated %d cards", s.enemyActions, len(s.enemyDealt))
 	}
 }

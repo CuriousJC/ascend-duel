@@ -59,8 +59,12 @@ import (
 // cannot be added to the combo round, and the combo round cannot come first without the
 // Gather having nowhere to go.
 // Round one is clicked, not listed — see demoClickRun. Round two is the scripted one.
-var demoPlans = [][]combat.ActionKind{
-	{combat.Gather, combat.Riposte, combat.Strike},
+//
+// **Elementless, deliberately.** A scripted plan is about which verbs land on screen, and a
+// coloured card would add a status to the round for reasons the script does not care about —
+// making the capture harder to read rather than richer.
+var demoPlans = [][]combat.Card{
+	combat.PlainCards(combat.Gather, combat.Riposte, combat.Strike),
 }
 
 // demoSeedName is the opening hand the demo asks for, overriding whatever a plain launch uses.
@@ -144,7 +148,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 			if picked >= flurryRunCards {
 				break
 			}
-			if s.hand[i].actionCard.action == demoClickRun {
+			if s.hand[i].actionCard.Action == demoClickRun {
 				s.toggle(i)
 				picked++
 			}
@@ -203,7 +207,7 @@ func (s *CombatScene) demoSendPlan() {
 	plan := demoPlans[demo.round]
 	demo.round++
 
-	s.fighterActions = append([]combat.ActionKind(nil), plan...)
+	s.fighterActions = append([]combat.Card(nil), plan...)
 	if s.overBudget() {
 		fmt.Printf("demo: plan %d costs %d against a budget of %d and will not resolve\n",
 			demo.round, combat.CostOf(plan), s.fighter.ActionPoints())

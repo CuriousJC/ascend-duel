@@ -178,8 +178,8 @@ type CombatScene struct {
 
 	// The queued sets for the coming round. fighterActions is derived from the hand by
 	// syncQueue and never written directly; enemyActions is re-planned each round.
-	fighterActions []combat.ActionKind
-	enemyActions   []combat.ActionKind
+	fighterActions []combat.Card
+	enemyActions   []combat.Card
 
 	// The player's deck, in three piles. hand is what the action box draws and the only
 	// one the player touches; deck is the draw pile and discard is what has been spent.
@@ -572,7 +572,13 @@ func eventLabel(e combat.Event) string {
 	case combat.KindRoundEnd:
 		return fmt.Sprintf("round-end   round %d", e.Round)
 	case combat.KindAction:
-		return fmt.Sprintf("action      %v plays %v (%v)", e.Side, e.Action, e.Action.Category())
+		return fmt.Sprintf("action      %v plays %v %v (%v)", e.Side, e.Element, e.Action, e.Action.Category())
+	case combat.KindStatus:
+		return fmt.Sprintf("status      %v puts %d %v on %v", e.Side, e.Amount, e.Element, e.Target)
+	case combat.KindMissed:
+		return fmt.Sprintf("missed      %v's %v never lands - shocked", e.Side, e.Action)
+	case combat.KindBurned:
+		return fmt.Sprintf("burned      %v takes %d, leaving %d", e.Target, e.Amount, e.Life)
 	case combat.KindGathered:
 		return fmt.Sprintf("prepared    %v banks %d AP for next round", e.Side, e.Amount)
 	case combat.KindNegated:
@@ -646,7 +652,11 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// A combo has formed: bracket the cards the engine says formed it.
 	s.noteCombo(e)
 
-	if e.Kind != combat.KindDamage {
+	// **A burn changes a life total without anybody acting**, so it has to be applied here
+	// alongside damage rather than being a consequence of a card. Missing it would leave the two
+	// fighter cards showing a life the engine has already spent — and a duelist who dies to a
+	// fire tick would fall with a health bar that never moved.
+	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned {
 		return
 	}
 
@@ -842,10 +852,10 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 
 // cardLabel names a card for a trace line: "Strike/fire", or just "Strike" when plain.
 func cardLabel(c actionCard) string {
-	if c.element == elementBasic {
-		return c.action.String()
+	if c.Element == combat.Basic {
+		return c.Action.String()
 	}
-	return c.action.String() + "/" + c.element.String()
+	return c.Action.String() + "/" + c.Element.String()
 }
 
 // handLabel renders the whole hand for a trace line, marking the selected ones.
@@ -865,14 +875,14 @@ func handLabel(hand []paletteCard) string {
 }
 
 // planLabel renders a queued set as "Guard + Strike + Jab".
-func planLabel(actions []combat.ActionKind) string {
-	if len(actions) == 0 {
+func planLabel(cards []combat.Card) string {
+	if len(cards) == 0 {
 		return "(nothing)"
 	}
 
-	label := actions[0].String()
-	for _, a := range actions[1:] {
-		label += " + " + a.String()
+	label := cardLabel(cards[0])
+	for _, c := range cards[1:] {
+		label += " + " + cardLabel(c)
 	}
 	return label
 }

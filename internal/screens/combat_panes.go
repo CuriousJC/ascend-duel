@@ -419,13 +419,13 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 	}
 
 	// act opens a line in the form "<who> <verb> <what>", with the verb carrying its
-	// category's colour. See actionPhrase.
-	act := func(side combat.Side, a combat.ActionKind) {
+	// category's colour. See cardPhrase.
+	act := func(side combat.Side, c combat.Card) {
 		rows = append(rows, paneRow{
 			prefix:  s.sideName(side) + " ",
-			verb:    verbFor(a.Category()),
-			suffix:  " " + actionPhrase(a),
-			verbInk: verbInkFor(a.Category()),
+			verb:    verbFor(c.Action.Category()),
+			suffix:  " " + cardPhrase(c),
+			verbInk: verbInkFor(c.Action.Category()),
 			swatch:  swatchFor(side),
 		})
 		cur = len(rows) - 1
@@ -449,11 +449,28 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// something the caption and the character block both already carry.
 
 		case combat.KindAction:
-			act(e.Side, e.Action)
+			act(e.Side, combat.Card{Action: e.Action, Element: e.Element})
 
 		case combat.KindStaggered:
 			announce(fmt.Sprintf("%s is staggered - %v is lost", s.sideName(e.Side), e.Action),
 				swatchFor(e.Side))
+
+		case combat.KindMissed:
+			// It attaches to the attacker's own line rather than announcing, because the card
+			// *was* played — the line above it is real and this is what became of it. Naming
+			// the shock is the whole point: a blow that simply missed would look like a bug in
+			// a game with no dice in it.
+			attach("misses - shocked")
+
+		case combat.KindStatus:
+			attach(statusPhrase(e.Element))
+
+		case combat.KindBurned:
+			// A tick belongs to nobody's card, so it opens its own line. It carries the
+			// victim's swatch because it is a thing happening *to* them, which is also the
+			// only side the event names.
+			announce(fmt.Sprintf("%s burns for %d", s.sideName(e.Target), e.Amount),
+				swatchFor(e.Target))
 
 		case combat.KindCombo:
 			name := "combo"
@@ -570,6 +587,58 @@ func actionPhrase(a combat.ActionKind) string {
 		return p
 	}
 	return "with " + lower(a.String())
+}
+
+// cardPhrase is actionPhrase with the element worked into it: "with a fire strike".
+//
+// **The element goes after the article rather than in front of the phrase**, which is what
+// makes it a sentence instead of a label. Every phrase that can carry a status has an article —
+// the four attacks are all "with a …" — so the insertion lands correctly on exactly the cards
+// where it matters most.
+//
+// A phrase with no article gets the element in brackets: "and gathers their strength (fire)".
+// That is deliberately the plainer half of the rule. An elemental prepare is a real card and
+// currently does nothing mechanical, so a line that reads slightly like a note is honest about
+// what it is — and it is better than a sentence bent around a word that does not fit it.
+func cardPhrase(c combat.Card) string {
+	phrase := actionPhrase(c.Action)
+	if c.Element == combat.Basic {
+		return phrase
+	}
+
+	name := lower(c.Element.String())
+	if i := strings.Index(phrase, "a "); i >= 0 {
+		// **The article has to be corrected, not just followed.** Two of the five elements begin
+		// with a vowel, so "a earth strike" is a third of the lines this function writes.
+		article := "a "
+		if strings.ContainsRune("aeiou", rune(name[0])) {
+			article = "an "
+		}
+		return phrase[:i] + article + name + " " + phrase[i+2:]
+	}
+	return phrase + " (" + name + ")"
+}
+
+// statusPhrase is what a landed element says it did, as an outcome attached to the attacker's
+// line. Each names the *effect* rather than the element, because "chills them" says what
+// happens next and "applies ice" says only that a rule fired.
+//
+// Basic and Poison have no phrase because they apply no status and no KindStatus event is ever
+// raised for them; the fallback exists so a fifth element narrates as something rather than as
+// an empty tail.
+func statusPhrase(e combat.Element) string {
+	switch e {
+	case combat.Fire:
+		return "sets them burning"
+	case combat.Ice:
+		return "chills them"
+	case combat.Lightning:
+		return "shocks them"
+	case combat.Earth:
+		return "weighs them down"
+	default:
+		return "leaves " + lower(e.String()) + " on them"
+	}
 }
 
 // verbFor is the verb a category is spoken with.
@@ -843,7 +912,7 @@ const (
 // no way to say "these together did a thing". The Resolution pane says it in words instead.
 // The same goes for a slot a stagger deleted — this pane still draws it as a row, and the
 // other one is where it is reported as lost.
-func (s *CombatScene) actionFlowRows(fighter, enemy []combat.ActionKind, concealEnemy bool) []paneRow {
+func (s *CombatScene) actionFlowRows(fighter, enemy []combat.Card, concealEnemy bool) []paneRow {
 	order := combat.ResolutionOrder(fighter, enemy)
 	if len(order) == 0 {
 		return []paneRow{{prefix: "(empty)"}}
@@ -853,11 +922,11 @@ func (s *CombatScene) actionFlowRows(fighter, enemy []combat.ActionKind, conceal
 
 	rows := make([]paneRow, 0, len(order))
 	for i, slot := range order {
-		label, swatch := slot.Action.String(), playerSwatch
+		label, swatch := slot.Card.Action.String(), playerSwatch
 		if slot.Side == combat.SideB {
 			swatch = enemySwatch
 			if concealEnemy {
-				label = concealedLabel(slot.Action)
+				label = concealedLabel(slot.Card.Action)
 			}
 		}
 

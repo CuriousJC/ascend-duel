@@ -109,6 +109,20 @@ type Duelist struct {
 	// one rule — *a staggered duelist loses actions from its next turn, whenever that is* —
 	// instead of two rules that happen to be spelled differently for the two sides.
 	Staggered int
+
+	// Statuses is what elements have done to this duelist, indexed by the element that did it.
+	// See status.go for the lifecycle, which is one rule for all four.
+	//
+	// **An array indexed by Element rather than four named fields**, and that is the load-bearing
+	// choice. It means a fifth element does not grow this struct, and — the reason it is worth
+	// doing at all — it makes *"consume the status this element applies"* expressible, which is
+	// what MECHANICS.md's Extinguishing Strike needs and what turns four ad-hoc fields into a
+	// system. The price is that Element is now append-only: inserting one mid-enum re-points
+	// every status a duelist is carrying.
+	//
+	// The defences above deliberately stay where they are. Guard and Brace are card effects, not
+	// element statuses, and filing them in a table indexed by colour would say they were.
+	Statuses [ElementCount]Status
 }
 
 // Alive reports whether this duelist can still fight.
@@ -360,9 +374,13 @@ const baseMaxActions = 5
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
 // ActionPoints is how much this duelist has to spend in a round, including anything
-// banked by a Gather in the round before.
+// banked by a Gather in the round before and less anything an ice hit has taken off.
+//
+// **A chill is read here rather than subtracted when it lands**, which is what makes ice bite
+// the round after the blow rather than the round it was struck in — the budget for the round in
+// progress has already been committed by the time an attack resolves.
 func (d Duelist) ActionPoints() int {
-	ap := baseActionPoints + d.Spd/speedPerPoint + d.BonusAP
+	ap := baseActionPoints + d.Spd/speedPerPoint + d.BonusAP - d.chill()
 	if ap < 1 {
 		ap = 1
 	}
@@ -370,10 +388,10 @@ func (d Duelist) ActionPoints() int {
 }
 
 // CostOf totals the action-point cost of a queued set.
-func CostOf(actions []ActionKind) int {
+func CostOf(cards []Card) int {
 	total := 0
-	for _, a := range actions {
-		total += a.Cost()
+	for _, c := range cards {
+		total += c.Cost()
 	}
 	return total
 }
@@ -381,8 +399,8 @@ func CostOf(actions []ActionKind) int {
 // CanAfford reports whether a queued set fits inside this duelist's budget. The UI
 // enforces this while the player builds a set; ResolveRound trusts what it is given
 // so that a balance sim can deliberately probe outside the rules.
-func (d Duelist) CanAfford(actions []ActionKind) bool {
-	return CostOf(actions) <= d.ActionPoints()
+func (d Duelist) CanAfford(cards []Card) bool {
+	return CostOf(cards) <= d.ActionPoints()
 }
 
 // guardDivisor is how much a raised guard cuts incoming damage.
@@ -445,6 +463,30 @@ const (
 	// takes a whole round narrates as the several things it actually is.
 	KindStaggered
 
+	// The three element events, added 2026-08-12 with the statuses.
+
+	// KindStatus is one element status landing on a duelist. Element says which, Amount says how
+	// much was added by this hit, Target is who is carrying it.
+	//
+	// It is a separate event rather than a field on KindDamage because a status is not the blow:
+	// a chill that lands is felt a round later and against a completely different card, and a
+	// Resolution feed that folded it into the damage line would announce it at the one moment it
+	// does nothing.
+	KindStatus
+
+	// KindMissed is an attack that never happened because its owner was shocked. Action is the
+	// attack that was lost and Side is whose it was, which makes it the lightning counterpart of
+	// KindStaggered — a slot that resolves into nothing.
+	//
+	// It is deliberately not a KindNegated: nothing of the defender's stopped it, and a log
+	// saying a blow was "stopped cold" by a defence that was never raised would send the player
+	// looking for a card that is not there.
+	KindMissed
+
+	// KindBurned is a fire tick at the end of a round. Target is who burned; Side is the same,
+	// because nobody acted.
+	KindBurned
+
 	KindRoundEnd
 )
 
@@ -452,11 +494,16 @@ const (
 type Event struct {
 	Kind   EventKind
 	Side   Side       // who acted
-	Action ActionKind // set on KindAction, on KindNegated for the defense that stopped it, and on KindStaggered for the action lost
-	Amount int        // damage dealt, or action points banked
+	Action ActionKind // set on KindAction, on KindNegated for the defense that stopped it, on KindStaggered for the action lost, and on KindMissed for the attack that never landed
+	Amount int        // damage dealt, action points banked, or status applied
 	Target Side       // who took the damage
 	Life   int        // target's life after the event
 	Round  int
+
+	// Element is the card's element on KindAction and KindMissed, and which status is meant on
+	// KindStatus and KindBurned. Basic everywhere else, which is also the zero value — an event
+	// with nothing to say about colour says `basic`, exactly as a plain card does.
+	Element Element
 
 	// Combo is set on KindCombo, and names which one fired. The screen looks it up with
 	// ComboByID rather than being told its name here, so a combo renamed is renamed once.
@@ -477,12 +524,16 @@ type Event struct {
 	ComboStart, ComboLength int
 }
 
-// Slot is one action's place in a round's resolution order: whose it is, where it sits
+// Slot is one card's place in a round's resolution order: whose it is, where it sits
 // in that side's queue, and what it is.
+//
+// **It holds a whole Card rather than a bare ActionKind** since 2026-08-12. A slot is what both
+// the engine and the screen walk, so anything that has to know a card's element while a round is
+// being ordered — a combo matching on colour, a row drawing a border — reads it here.
 type Slot struct {
-	Side   Side
-	Index  int
-	Action ActionKind
+	Side  Side
+	Index int
+	Card  Card
 }
 
 // ResolutionOrder is the sequence in which two queued sets resolve, and the single
@@ -498,19 +549,19 @@ type Slot struct {
 // Index is the action's position in its own side's queue, which is *not* its position
 // here: reordering by category is the whole job. Consumers wanting "how far through the
 // round are we" should count slots rather than read Index.
-func ResolutionOrder(aActions, bActions []ActionKind) []Slot {
-	slots := make([]Slot, 0, len(aActions)+len(bActions))
-	slots = appendTurn(slots, SideA, aActions)
-	slots = appendTurn(slots, SideB, bActions)
+func ResolutionOrder(aCards, bCards []Card) []Slot {
+	slots := make([]Slot, 0, len(aCards)+len(bCards))
+	slots = appendTurn(slots, SideA, aCards)
+	slots = appendTurn(slots, SideB, bCards)
 	return slots
 }
 
 // appendTurn adds one side's whole turn, category by category.
-func appendTurn(slots []Slot, side Side, actions []ActionKind) []Slot {
+func appendTurn(slots []Slot, side Side, cards []Card) []Slot {
 	for _, cat := range Categories() {
-		for i, a := range actions {
-			if a.Category() == cat {
-				slots = append(slots, Slot{Side: side, Index: i, Action: a})
+		for i, c := range cards {
+			if c.Category() == cat {
+				slots = append(slots, Slot{Side: side, Index: i, Card: c})
 			}
 		}
 	}
@@ -522,15 +573,15 @@ func appendTurn(slots []Slot, side Side, actions []ActionKind) []Slot {
 //
 // Inputs are taken by value and never mutated, so a caller can re-run a round from
 // the same starting state — the returned duelists are the authority on what changed.
-func ResolveRound(a, b Duelist, aActions, bActions []ActionKind, round int) (events []Event, aAfter, bAfter Duelist) {
-	return resolveRound(a, b, aActions, bActions, round, comboTable)
+func ResolveRound(a, b Duelist, aCards, bCards []Card, round int) (events []Event, aAfter, bAfter Duelist) {
+	return resolveRound(a, b, aCards, bCards, round, comboTable)
 }
 
 // resolveRound is ResolveRound with the combo table injected. It exists so a test can drive
 // a synthetic combo through the whole engine rather than only through the matcher — the
 // damage multiplier and the banked points would otherwise be code paths that shipped without
 // ever having been run, since the two combos the game currently has both use stagger.
-func resolveRound(a, b Duelist, aActions, bActions []ActionKind, round int, table []Combo) (events []Event, aAfter, bAfter Duelist) {
+func resolveRound(a, b Duelist, aCards, bCards []Card, round int, table []Combo) (events []Event, aAfter, bAfter Duelist) {
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
@@ -544,18 +595,23 @@ func resolveRound(a, b Duelist, aActions, bActions []ActionKind, round int, tabl
 	// stagger is spent at it, and a combo's position is an index *within* it — so the turn
 	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
 	// exactly the slots it produced for that side.
-	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aActions), round, table)
+	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, table)
 
 	// B still loses its standing defenses even in a round it never gets to act in, which is
 	// why this is not inside playTurn's early return: expiry is a property of the turn
 	// arriving, not of anything happening in it.
 	if a.Alive() && b.Alive() {
-		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bActions), round, table)
+		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, table)
 	} else {
 		b = expireDefenses(b)
 	}
 
-	a, b = endRound(a), endRound(b)
+	// **A always burns before B**, which is the same order the turns were played in and needs no
+	// tie-break. Both sides tick even when one is already dead — a burn that killed its victim in
+	// the same round is the fire finishing what an attack started, and skipping the tick on a
+	// corpse would make the order of two deaths matter.
+	events, a = endRound(events, SideA, a, round)
+	events, b = endRound(events, SideB, b, round)
 
 	events = append(events, Event{Kind: KindRoundEnd, Round: round})
 	return events, a, b
@@ -594,10 +650,11 @@ func playTurn(
 	}
 	for i := 0; i < lost; i++ {
 		events = append(events, Event{
-			Kind:   KindStaggered,
-			Side:   side,
-			Action: turn[i].Action,
-			Round:  round,
+			Kind:    KindStaggered,
+			Side:    side,
+			Action:  turn[i].Card.Action,
+			Element: turn[i].Card.Element,
+			Round:   round,
 		})
 	}
 	turn = turn[lost:]
@@ -625,7 +682,7 @@ func playTurn(
 		// *after* the run. "Complete the combo, get a bonus for the rest of your turn" is a
 		// coherent reading, but it is not the one the multiplier was designed against, and
 		// neither shipping combo uses one — so this is untested by anything real yet.
-		events, actor, target = resolveAction(events, side, actor, target, slot.Action, round, num, den)
+		events, actor, target = resolveAction(events, side, actor, target, slot.Card, round, num, den)
 
 		// Either side can fall here: a Riposte kills the attacker who walked into it. A combo
 		// completing on this slot is skipped along with the rest of the turn, which is the
@@ -689,13 +746,46 @@ func expireDefenses(d Duelist) Duelist {
 	return d
 }
 
-// endRound rolls what was banked this round into next round's budget. Assignment rather
-// than addition: two Gathers in one round are worth +4 next round, and gathering every
-// round is worth a flat +2 rather than compounding forever.
-func endRound(d Duelist) Duelist {
+// endRound rolls what was banked this round into next round's budget, ticks a burn, and counts
+// every status down one. Assignment rather than addition for the bank: two Gathers in one round
+// are worth +4 next round, and gathering every round is worth a flat +2 rather than compounding
+// forever.
+//
+// **The burn ticks before the countdown**, so a fire hit lands damage at the end of the round it
+// was struck in as well as the round after. MECHANICS.md says a DoT "lands at end of round" and
+// this is the end of the round it was applied in; making it wait would mean a fire attack did
+// nothing at all in a duel that ended on the round it was played.
+func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist) {
+	if burn := d.Statuses[Fire]; burn.Active() {
+		d.CurrentLife = reduce(d.CurrentLife, burn.Amount)
+
+		// Side and Target are both this duelist, because nobody acted. The fire was applied by an
+		// attack rounds ago and the duelist that lit it may not even be the one alive to see this.
+		events = append(events, Event{
+			Kind:    KindBurned,
+			Side:    side,
+			Target:  side,
+			Element: Fire,
+			Amount:  burn.Amount,
+			Life:    d.CurrentLife,
+			Round:   round,
+		})
+
+		if !d.Alive() {
+			events = append(events, Event{
+				Kind:   KindDefeated,
+				Side:   side,
+				Target: side,
+				Round:  round,
+			})
+		}
+	}
+
+	d = tickStatuses(d)
+
 	d.BonusAP = d.GatheredAP
 	d.GatheredAP = 0
-	return d
+	return events, d
 }
 
 // resolveAction runs a single action by one side against the other. Returning the
@@ -707,17 +797,19 @@ func resolveAction(
 	events []Event,
 	side Side,
 	actor, target Duelist,
-	action ActionKind,
+	card Card,
 	round int,
 	num, den int,
 ) ([]Event, Duelist, Duelist) {
 	targetSide := other(side)
+	action := card.Action
 
 	events = append(events, Event{
-		Kind:   KindAction,
-		Side:   side,
-		Action: action,
-		Round:  round,
+		Kind:    KindAction,
+		Side:    side,
+		Action:  action,
+		Element: card.Element,
+		Round:   round,
 	})
 
 	switch action {
@@ -765,7 +857,7 @@ func resolveAction(
 		return events, actor, target
 	}
 
-	return resolveAttack(events, side, targetSide, actor, target, action, round, num, den)
+	return resolveAttack(events, side, targetSide, actor, target, card, round, num, den)
 }
 
 // resolveAttack lands one attack, or fails to. A pending Riposte or Dodge on the target
@@ -776,14 +868,40 @@ func resolveAction(
 // multiplying would make Guard progressively worse the bigger the hit, which is the opposite
 // of what a defensive card is for. The counter-damage from a Riposte is deliberately outside
 // this: it is the *defender* hitting back, and it is not part of the attacker's combo.
+//
+// **The order of the whole calculation is: concept damage, combo multiplier, the attacker's own
+// earth weight, then the defender's brace and guard.** Weight sits where it does because it is a
+// property of the *attacker* — it says how hard they can still swing — so everything the
+// defender does happens to a blow that has already been blunted. That is also why the reflection
+// a Mirror sends back is the blunted figure: it is what the attacker actually committed.
 func resolveAttack(
 	events []Event,
 	side, targetSide Side,
 	actor, target Duelist,
-	action ActionKind,
+	card Card,
 	round int,
 	num, den int,
 ) ([]Event, Duelist, Duelist) {
+	action := card.Action
+
+	// A shocked attacker misses outright, and misses before anything else happens — no Feint
+	// strip, no negation spent, no status applied. The attack did not occur.
+	//
+	// **It is certain rather than a roll.** See shockPerHit for why this package has no
+	// randomness in it and is not about to acquire any.
+	if shocked, missed := spendShock(actor); missed {
+		actor = shocked
+		events = append(events, Event{
+			Kind:    KindMissed,
+			Side:    side,
+			Action:  action,
+			Element: card.Element,
+			Target:  targetSide,
+			Round:   round,
+		})
+		return events, actor, target
+	}
+
 	// A Feint strips one counted negation before anything else resolves, and takes no counter
 	// for it. That is what the extra point over a Strike buys: attacking into a Riposte
 	// normally costs the attacker str/2, and this is the card that clears one safely.
@@ -825,7 +943,7 @@ func resolveAttack(
 	// This follows Riposte's counter, which is likewise raw.
 	if target.Mirrored {
 		reflected := scaleDamage(
-			scaleDamage(action.Damage(actor.Str), num, den),
+			blunt(scaleDamage(card.Damage(actor.Str), num, den), actor.weightPct()),
 			mirrorReflectNum, mirrorReflectDen)
 
 		events = append(events, Event{
@@ -907,7 +1025,10 @@ func resolveAttack(
 		return events, actor, target
 	}
 
-	dmg := scaleDamage(action.Damage(actor.Str), num, den)
+	// The attacker's own earth weight blunts the blow before any of the defender's cards touch
+	// it. A Riposte's counter is deliberately outside this, exactly as it is outside the combo
+	// multiplier: it is the defender hitting back, not a card the weighted duelist played.
+	dmg := blunt(scaleDamage(card.Damage(actor.Str), num, den), actor.weightPct())
 
 	// A brace is spent on this blow; a guard is not spent at all. Both can apply, quartering
 	// the hit — deliberate, since they are two cards bought separately and a rule that ignored
@@ -948,6 +1069,26 @@ func resolveAttack(
 		Life:   target.CurrentLife,
 		Round:  round,
 	})
+
+	// **The status lands because the blow did, not because it hurt.** A Jab guarded down to zero
+	// still connected, and making the status conditional on the final figure would mean a
+	// defensive card silently un-applied an element the attacker had already paid for — the same
+	// shape of hidden interaction the unconditional Feint strip above exists to avoid.
+	//
+	// After the damage event so the log reads blow-then-consequence, and after the death check
+	// below would be wrong: a duelist who dies to the hit is not left carrying a chill.
+	if applied, amount, ok := applyStatus(target, card.Element); ok {
+		target = applied
+		events = append(events, Event{
+			Kind:    KindStatus,
+			Side:    side,
+			Target:  targetSide,
+			Element: card.Element,
+			Amount:  amount,
+			Life:    target.CurrentLife,
+			Round:   round,
+		})
+	}
 
 	if !target.Alive() {
 		events = append(events, Event{
@@ -1060,7 +1201,12 @@ func ParsePlanStyle(s string) (PlanStyle, bool) {
 // as the player's hand reaches the screen — `internal/combat` keeps no randomness and no
 // clock, which is what `TestRoundIsDeterministic` pins and what lets the balance tool run
 // whole duels headlessly.
-func PlanFor(style PlanStyle, d Duelist, hand []ActionKind) []ActionKind {
+// **A planner reasons about concepts and carries elements along.** Every choice below is made
+// on cost and category; the element rides on the card it was dealt on and reaches the round
+// untouched. That is deliberate and it is currently free — `data/enemy_cards.json` is all basic,
+// per MECHANICS.md's plan that an affix transforms an enemy's deck rather than the file naming
+// colours. A style that *preferred* an element would be a fifth style, not a change here.
+func PlanFor(style PlanStyle, d Duelist, hand []Card) []Card {
 	budget, slots := d.ActionPoints(), d.MaxActions()
 	p := newPool(hand)
 
@@ -1084,30 +1230,35 @@ func PlanFor(style PlanStyle, d Duelist, hand []ActionKind) []ActionKind {
 // planned differently on identical input. Order here is the order the cards were dealt in,
 // and every scan below runs front to back so ties resolve the same way twice.
 type pool struct {
-	cards []ActionKind
+	cards []Card
 	used  []bool
 }
 
-func newPool(hand []ActionKind) *pool {
+func newPool(hand []Card) *pool {
 	return &pool{cards: hand, used: make([]bool, len(hand))}
 }
 
-// take removes one copy of a kind, reporting whether the hand held one.
-func (p *pool) take(k ActionKind) bool {
+// take removes one card of a concept and hands it back whole, element included, reporting
+// whether the hand held one. It matches on the concept alone: no style asks for a colour.
+func (p *pool) take(k ActionKind) (Card, bool) {
 	for i, c := range p.cards {
-		if !p.used[i] && c == k {
+		if !p.used[i] && c.Action == k {
 			p.used[i] = true
-			return true
+			return c, true
 		}
 	}
-	return false
+	return Card{}, false
 }
 
 // put returns a card to the hand. Used by the swarm's upgrade pass, which swaps a small
 // attack out for a bigger one and has to make the small one available again.
-func (p *pool) put(k ActionKind) {
+//
+// It matches the whole card, so a fire Jab put back frees a fire Jab. Two identical cards are
+// interchangeable and it does not matter which of them is marked unused; two Jabs of different
+// elements are not, and matching on the concept alone would quietly recolour a hand.
+func (p *pool) put(card Card) {
 	for i, c := range p.cards {
-		if p.used[i] && c == k {
+		if p.used[i] && c == card {
 			p.used[i] = false
 			return
 		}
@@ -1120,8 +1271,8 @@ func (p *pool) put(k ActionKind) {
 //
 // `above` is a floor the cost has to beat, so the swarm's upgrade pass can ask for something
 // strictly better than what it already has.
-func (p *pool) takeAttack(budget int, dearest bool, above int) (ActionKind, bool) {
-	best, bestAt, found := ActionKind(0), -1, false
+func (p *pool) takeAttack(budget int, dearest bool, above int) (Card, bool) {
+	best, bestAt, found := Card{}, -1, false
 
 	for i, c := range p.cards {
 		if p.used[i] || c.Category() != CategoryAttack {
@@ -1142,15 +1293,15 @@ func (p *pool) takeAttack(budget int, dearest bool, above int) (ActionKind, bool
 	}
 
 	if !found {
-		return 0, false
+		return Card{}, false
 	}
 	p.used[bestAt] = true
 	return best, true
 }
 
 // planBrute fills with the most expensive attack in hand that still fits.
-func planBrute(p *pool, budget, slots int) []ActionKind {
-	plan := make([]ActionKind, 0, slots)
+func planBrute(p *pool, budget, slots int) []Card {
+	plan := make([]Card, 0, slots)
 
 	for len(plan) < slots {
 		a, ok := p.takeAttack(budget, true, 0)
@@ -1173,8 +1324,8 @@ func planBrute(p *pool, budget, slots int) []ActionKind {
 // attack for a dearer one still in the pool and puts the small one back, so a swarm holding
 // six Jabs and nothing else stays six Jabs however many points it has spare — which is the
 // deck doing its job rather than the planner failing.
-func planSwarm(p *pool, budget, slots int) []ActionKind {
-	plan := make([]ActionKind, 0, slots)
+func planSwarm(p *pool, budget, slots int) []Card {
+	plan := make([]Card, 0, slots)
 	for len(plan) < slots {
 		a, ok := p.takeAttack(budget, false, 0)
 		if !ok {
@@ -1204,17 +1355,21 @@ func planSwarm(p *pool, budget, slots int) []ActionKind {
 //
 // **No Guard in hand and it fights like a brute**, which is the deck showing through the
 // style: a warden is a duelist that guards when it can, not one that always has a shield.
-func planWarden(p *pool, budget, slots int) []ActionKind {
-	if budget < costGuard || slots < 1 || !p.take(Guard) {
+func planWarden(p *pool, budget, slots int) []Card {
+	if budget < costGuard || slots < 1 {
 		return planBrute(p, budget, slots)
 	}
-	return append([]ActionKind{Guard}, planBrute(p, budget-costGuard, slots-1)...)
+	guard, ok := p.take(Guard)
+	if !ok {
+		return planBrute(p, budget, slots)
+	}
+	return append([]Card{guard}, planBrute(p, budget-costGuard, slots-1)...)
 }
 
 // planTactician alternates between banking and spending, reading which round it is in off
 // its own BonusAP: anything banked means last round was the setup, so this one is the
 // payoff. It needs no memory of its own because Gather already leaves the evidence.
-func planTactician(d Duelist, p *pool, budget, slots int) []ActionKind {
+func planTactician(d Duelist, p *pool, budget, slots int) []Card {
 	if d.BonusAP > 0 {
 		// The payoff round. Everything into the biggest attacks that fit.
 		return planBrute(p, budget, slots)
@@ -1224,12 +1379,13 @@ func planTactician(d Duelist, p *pool, budget, slots int) []ActionKind {
 	// dangerous, and never spend so much gathering that the round is a free hit for the
 	// player. Two Gathers is the whole point — it is what makes the next round oversized,
 	// and a hand holding one Gather is a setup round that only half works.
-	plan := make([]ActionKind, 0, slots)
+	plan := make([]Card, 0, slots)
 	for len(plan) < slots-1 && budget >= costGather*2 && len(plan) < 2 {
-		if !p.take(Gather) {
+		gather, ok := p.take(Gather)
+		if !ok {
 			break
 		}
-		plan, budget = append(plan, Gather), budget-costGather
+		plan, budget = append(plan, gather), budget-costGather
 	}
 	return append(plan, planBrute(p, budget, slots-len(plan))...)
 }

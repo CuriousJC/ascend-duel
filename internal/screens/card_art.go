@@ -75,11 +75,11 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // read straight off the action.
 func cardSpec(c actionCard, enabled, selected bool, str int) cards.Spec {
 	return cards.Spec{
-		Name:     c.action.String(),
-		Category: category(c.action.Category()),
-		Damage:   c.action.Damage(str),
-		Cost:     c.action.Cost(),
-		Element:  c.element.art(),
+		Name:     c.Action.String(),
+		Category: category(c.Action.Category()),
+		Damage:   c.Action.Damage(str),
+		Cost:     c.Action.Cost(),
+		Element:  artFor(c.Element),
 		Enabled:  enabled,
 		Selected: selected,
 	}
@@ -238,27 +238,32 @@ func (s *CombatScene) backSpec() cards.Spec {
 // warnedBack keeps a bad name in duelists.json to one log line rather than one per frame.
 var warnedBack bool
 
-// art maps this screen's element onto the drawing package's.
+// artFor maps the rules' element onto the drawing package's.
 //
-// The two enums are deliberately separate. `element` is expected to move into
-// internal/combat once elements stop being decoration and start applying statuses (see
-// combat_deck.go), and a drawing package should not be standing in the way of that move.
-// The cost is this switch; TestEveryElementHasArt in the tests keeps it honest.
+// **The two enums stay separate**, and the reason changed on 2026-08-12 rather than expiring.
+// It used to be that `element` was a screen type on its way into `internal/combat` and a drawing
+// package should not stand in the way of the move. The move has happened, and the separation is
+// now the ordinary one `category` below has: `internal/cards` knows how to paint a border and
+// nothing about what an element does to a duelist. The cost is this switch;
+// TestEveryElementHasItsOwnArt keeps it honest.
+//
+// A free function rather than a method, because a method cannot be hung on another package's
+// type — which is the one thing the collapse to `combat.Element` cost.
 //
 // The default is Basic rather than a panic. An unmapped element is a card in the wrong
 // colour, which is a visual bug; crashing mid-duel over one would be worse.
-func (e element) art() cards.Element {
+func artFor(e combat.Element) cards.Element {
 	switch e {
-	case elementFire:
+	case combat.Fire:
 		return cards.Fire
-	case elementIce:
+	case combat.Ice:
 		return cards.Ice
-	case elementLightning:
+	case combat.Lightning:
 		return cards.Lightning
-	case elementEarth:
+	case combat.Earth:
 		return cards.Earth
 	default:
-		// Includes elementPoison, which has no border colour of its own any more.
+		// Includes combat.Poison, which has no border colour of its own any more.
 		// **Nothing deals a poison card** — cards.json contains none, and the enum member
 		// survives only because MECHANICS.md lists poison as a secondary element that may
 		// get cards later. If it ever does, it needs a colour in internal/cards and an arm

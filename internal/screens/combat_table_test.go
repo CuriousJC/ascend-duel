@@ -77,11 +77,11 @@ func TestTheOpponentsRowIsInResolutionOrder(t *testing.T) {
 	// turn into prepare, then attacks, then defenses, so a queue planned attack-first comes out
 	// of the planner in one order and resolves in another.
 	s := &CombatScene{
-		enemyActions: []combat.ActionKind{combat.Strike, combat.Gather, combat.Brace},
+		enemyActions: combat.PlainCards(combat.Strike, combat.Gather, combat.Brace),
 	}
 
 	got := s.enemyQueueOrder()
-	want := []combat.ActionKind{combat.Gather, combat.Strike, combat.Brace}
+	want := combat.PlainCards(combat.Gather, combat.Strike, combat.Brace)
 
 	if len(got) != len(want) {
 		t.Fatalf("the row holds %d cards, want %d", len(got), len(want))
@@ -115,23 +115,33 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// have — so this is what replaces that safety.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{action: combat.Strike, element: elementFire}, selected: true},
-			{actionCard: actionCard{action: combat.Gather, element: elementIce}, selected: true},
-			{actionCard: actionCard{action: combat.Brace, element: elementEarth}, selected: true},
+			{actionCard: actionCard{Action: combat.Strike, Element: combat.Fire}, selected: true},
+			{actionCard: actionCard{Action: combat.Gather, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Action: combat.Brace, Element: combat.Earth}, selected: true},
 		},
-		fighterActions: []combat.ActionKind{combat.Strike, combat.Gather, combat.Brace},
+		fighterActions: []combat.Card{
+			combat.Of(combat.Strike, combat.Fire),
+			combat.Of(combat.Gather, combat.Ice),
+			combat.Of(combat.Brace, combat.Earth),
+		},
 	}
 	s.seatPlayedCards()
 
 	// Prepare first, then the attack, then the defense — and each seat holds the card the
 	// player actually selected for it, not the one in the same position in the hand.
-	want := []combat.ActionKind{combat.Gather, combat.Strike, combat.Brace}
+	// The elements come along, so a seat holding the right concept in the wrong colour fails
+	// too — which is the whole reason the hand and the queue are one type now.
+	want := []combat.Card{
+		combat.Of(combat.Gather, combat.Ice),
+		combat.Of(combat.Strike, combat.Fire),
+		combat.Of(combat.Brace, combat.Earth),
+	}
 	if len(s.resolved) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.resolved), len(want))
 	}
-	for i, a := range want {
-		if got := s.resolved[i].card.action; got != a {
-			t.Errorf("seat %d holds %v, want %v", i, got, a)
+	for i, c := range want {
+		if got := s.resolved[i].card; got != c {
+			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
 
@@ -175,8 +185,8 @@ func TestOnlyOneCardOnTheTableIsLitAtATime(t *testing.T) {
 	// one. The event that lights one seat is the event that unlights the other, which is why
 	// neither row has to know the other exists.
 	s := &CombatScene{
-		fighterActions:  []combat.ActionKind{combat.Strike},
-		enemyActions:    []combat.ActionKind{combat.Jab},
+		fighterActions:  combat.PlainCards(combat.Strike),
+		enemyActions:    combat.PlainCards(combat.Jab),
 		firingSeat:      -1,
 		enemyFiringSeat: -1,
 		log: []combat.Event{

@@ -39,27 +39,27 @@ func TestCardFootprintMatchesTheRenderer(t *testing.T) {
 }
 
 func TestEveryElementHasItsOwnArt(t *testing.T) {
-	// element and cards.Element are separate enums on purpose: element is expected to
-	// move into internal/combat when elements stop being decoration, and the drawing
-	// package should not be in the way of that. The cost is a hand-written switch, which
-	// the compiler cannot check for completeness.
+	// combat.Element and cards.Element are separate enums on purpose: the rules say what an
+	// element *does* and the drawing package says what colour it is, and neither wants the
+	// other's vocabulary. The cost is a hand-written switch, which the compiler cannot check
+	// for completeness.
 	//
 	// A missing case falls through to Basic, so the failure mode is two elements sharing
 	// a border colour — a fire card that looks plain. Distinctness is what is asserted.
 	//
-	// **elementPoison is exempt, deliberately.** Poison lost its border colour when the
+	// **combat.Poison is exempt, deliberately.** Poison lost its border colour when the
 	// sheet dropped to four primaries plus basic; `cards.json` contains no poison card,
 	// so nothing can be dealt one. The enum member survives because MECHANICS.md lists
 	// poison as a secondary element that may get cards later — and if it does, it needs
-	// a colour in internal/cards and an arm in art(), which is what this exemption is
+	// a colour in internal/cards and an arm in artFor(), which is what this exemption is
 	// here to make someone notice.
-	dealable := []element{elementBasic, elementFire, elementIce, elementLightning, elementEarth}
+	dealable := []combat.Element{combat.Basic, combat.Fire, combat.Ice, combat.Lightning, combat.Earth}
 
-	seen := map[cards.Element]element{}
+	seen := map[cards.Element]combat.Element{}
 	for _, e := range dealable {
-		got := e.art()
+		got := artFor(e)
 		if prev, dup := seen[got]; dup {
-			t.Errorf("%s and %s both map to cards.%v — one of them is missing from the switch in art()",
+			t.Errorf("%s and %s both map to cards.%v — one of them is missing from the switch in artFor()",
 				prev, e, got)
 		}
 		seen[got] = e
@@ -71,7 +71,7 @@ func TestEveryElementHasItsOwnArt(t *testing.T) {
 	}
 
 	// Poison must land somewhere real rather than panicking or drawing nothing.
-	if got := elementPoison.art(); got != cards.Basic {
+	if got := artFor(combat.Poison); got != cards.Basic {
 		t.Errorf("poison maps to cards.%v, want the Basic fallback", got)
 	}
 }
@@ -82,8 +82,8 @@ func TestElementNamesAgreeAcrossThePackages(t *testing.T) {
 	// "lightning" could be showing the colour the game calls something else.
 	//
 	// Poison is excluded for the reason above: it has no art of its own to agree with.
-	for _, e := range []element{elementBasic, elementFire, elementIce, elementLightning, elementEarth} {
-		if got, want := e.art().String(), e.String(); got != want {
+	for _, e := range []combat.Element{combat.Basic, combat.Fire, combat.Ice, combat.Lightning, combat.Earth} {
+		if got, want := artFor(e).String(), e.String(); got != want {
 			t.Errorf("screen calls it %q, internal/cards calls it %q", want, got)
 		}
 	}

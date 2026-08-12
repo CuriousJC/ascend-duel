@@ -44,7 +44,7 @@ func TestRitualBanksMoreThanGatherAtTheSameNetRate(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, aAfter, _ := ResolveRound(a, b, []ActionKind{Ritual}, nil, 1)
+	_, aAfter, _ := ResolveRound(a, b, PlainCards(Ritual), nil, 1)
 
 	if aAfter.BonusAP != ritualBonusAP {
 		t.Errorf("BonusAP after a Ritual = %d, want %d", aAfter.BonusAP, ritualBonusAP)
@@ -61,8 +61,8 @@ func TestBraceHalvesOneAttackAndIsSpent(t *testing.T) {
 	b := duelist(10, 0, 100)
 
 	// B braces first. B acts second, so its brace is standing when A's next turn arrives.
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Brace}, 1)
-	events, _, bAfter := ResolveRound(a, b, []ActionKind{Strike, Strike}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Brace), 1)
+	events, _, bAfter := ResolveRound(a, b, PlainCards(Strike, Strike), nil, 2)
 
 	if !hasKind(events, KindBraced) {
 		t.Fatal("no KindBraced event — the brace did not apply")
@@ -86,8 +86,8 @@ func TestBraceAndGuardBothApply(t *testing.T) {
 	a := duelist(20, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Brace, Guard}, 1)
-	_, _, bAfter := ResolveRound(a, b, []ActionKind{Strike}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Brace, Guard), 1)
+	_, _, bAfter := ResolveRound(a, b, PlainCards(Strike), nil, 2)
 
 	if want := 100 - 20/braceDivisor/guardDivisor; bAfter.CurrentLife != want {
 		t.Errorf("life after a Strike into brace+guard = %d, want %d (quartered)", bAfter.CurrentLife, want)
@@ -100,8 +100,8 @@ func TestFeintStripsARiposteWithoutTakingTheCounter(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Riposte}, 1)
-	events, aAfter, bAfter := ResolveRound(a, b, []ActionKind{Feint}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Riposte), 1)
+	events, aAfter, bAfter := ResolveRound(a, b, PlainCards(Feint), nil, 2)
 
 	if !hasKind(events, KindStripped) {
 		t.Fatal("no KindStripped event — the feint did not remove the riposte")
@@ -123,8 +123,8 @@ func TestFeintStripsRipostesBeforeDodges(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Dodge, Riposte}, 1)
-	events, _, _ := ResolveRound(a, b, []ActionKind{Feint}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Dodge, Riposte), 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Feint), nil, 2)
 
 	for _, e := range events {
 		if e.Kind == KindStripped {
@@ -142,7 +142,7 @@ func TestFeintWithNothingToStripIsStillAnAttack(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	events, _, bAfter := ResolveRound(a, b, []ActionKind{Feint}, nil, 1)
+	events, _, bAfter := ResolveRound(a, b, PlainCards(Feint), nil, 1)
 
 	if hasKind(events, KindStripped) {
 		t.Error("stripped something that was not there")
@@ -158,8 +158,8 @@ func TestFeintStripsEvenWhenTheBlowIsMirrored(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Mirror, Dodge}, 1)
-	events, _, _ := ResolveRound(a, b, []ActionKind{Feint}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror, Dodge), 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Feint), nil, 2)
 
 	if !hasKind(events, KindStripped) {
 		t.Error("the feint's strip did not fire behind a mirror — it is meant to be unconditional")
@@ -173,8 +173,8 @@ func TestMirrorNegatesEveryAttackAndReflectsEachOne(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Mirror}, 1)
-	events, aAfter, bAfter := ResolveRound(a, b, []ActionKind{Jab, Jab, Strike}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror), 1)
+	events, aAfter, bAfter := ResolveRound(a, b, PlainCards(Jab, Jab, Strike), nil, 2)
 
 	if n := kindCount(events, KindNegated); n != 3 {
 		t.Errorf("negated %d attacks, want 3 — a mirror stops every one", n)
@@ -195,8 +195,8 @@ func TestMirrorIsCheckedBeforeCountedNegations(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Mirror, Dodge}, 1)
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror, Dodge), 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Strike), nil, 2)
 
 	for _, e := range events {
 		if e.Kind == KindNegated && e.Action != Mirror {
@@ -211,8 +211,8 @@ func TestMirrorReflectionCanKillMidTurn(t *testing.T) {
 	a := duelist(10, 0, 8)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, []ActionKind{Mirror}, 1)
-	events, aAfter, _ := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror), 1)
+	events, aAfter, _ := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 2)
 
 	if aAfter.Alive() {
 		t.Fatalf("attacker survived on %d life, want killed by its own reflected Strike", aAfter.CurrentLife)

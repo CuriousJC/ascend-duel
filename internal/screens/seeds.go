@@ -101,7 +101,7 @@ func OpeningHand(seed int64) []combat.ActionKind {
 
 	out := make([]combat.ActionKind, 0, len(s.hand))
 	for _, c := range s.hand {
-		out = append(out, c.actionCard.action)
+		out = append(out, c.actionCard.Action)
 	}
 	return out
 }

@@ -291,7 +291,33 @@ var (
 	// Specular (pure white), which was legible on a coloured surface and is not on this
 	// one.
 	NumberInk = color.RGBA{R: 40, G: 43, B: 52, A: 255}
+
+	// LabelInk is the word half of a stat row — "DMG", "AP", "Vitae". Quieter than the
+	// figure beside it, because the figure is what is read and the label is what says
+	// which figure it is. Colour is what carries that hierarchy here; the two halves share
+	// a baseline, so they cannot differ in size without reading as a mistake.
+	LabelInk = color.RGBA{R: 108, G: 112, B: 124, A: 255}
 )
+
+// StatLine is one labelled figure on a card face: a word on the left, a number on the
+// right, both on the same baseline.
+//
+// Both halves are strings, so this package never has to know that "12 / 40" is a fraction
+// and "6" is a budget. Formatting a figure is the caller's business, exactly as the card's
+// name is.
+type StatLine struct {
+	Label string
+	Value string
+}
+
+// MaxStatLines is how many stat rows a card can carry.
+//
+// **It is what the layout fits, not headroom over it.** DuelistStyle's three rows run from
+// y=56 to y=137 against a health bar at y=161, and a fourth at that pitch lands on the bar —
+// TestStatRowsClearTheHealthBar fails rather than drawing it. So a fourth figure is a layout
+// change and the cost of that is charged here on purpose, exactly as a fifth cost tier is by
+// TestLeftColumnDoesNotCollide.
+const MaxStatLines = 3
 
 // Spec is everything about one card that changes what it looks like.
 //
@@ -314,8 +340,20 @@ type Spec struct {
 	// release — see CLAUDE.md on the Tyrian set.
 	Art image.Image
 
-	// Life and MaxLife draw a health bar and a "42/60" line under the name, on the styles
-	// that ask for it. Only the enemy card does — see EnemyStyle.
+	// Stats are the labelled figures the duelist card carries — DMG, AP, Vitae — drawn one
+	// per row by the styles that ask for them. An entry with neither a label nor a value
+	// leaves its row blank rather than closing the gap, so a row is always at the height
+	// the style says it is.
+	//
+	// **A fixed array rather than a slice, and that is load-bearing.** internal/screens
+	// keys its card cache on the whole Spec, so a Spec has to stay comparable; a slice
+	// here would not compile at the map lookup, and the fix at that point would be a
+	// hand-written key that could disagree with what is actually drawn. See MaxStatLines
+	// for why the size is what the card fits rather than a round number.
+	Stats [MaxStatLines]StatLine
+
+	// Life and MaxLife draw a health bar and a "42/60" line, on the styles that ask for
+	// it. The enemy and duelist cards do — see EnemyStyle and DuelistStyle.
 	//
 	// **They are on the Spec rather than drawn over the card by the screen**, which means a
 	// point of damage is a different Spec and therefore a different cache entry. That is

@@ -70,11 +70,28 @@ const (
 	deckStackDepth      = 3 // backs drawn behind the front one, to read as a pile
 	deckStackStep       = 3 // pixels each one is offset up and left
 
-	// deckStackTopGap clears the action-point bar. The stack's y is measured *down from the
-	// bar* rather than set as a percentage, because the bar is the thing that constrains it —
-	// a percentage that happened to clear it today would silently start overlapping the
-	// moment the hand's geometry moved, and at 95% it already did by three pixels.
-	deckStackTopGap = 8
+	// deckStackBottomInset hangs the pile off the **bottom of the screen** *(2026-08-12)*,
+	// where it used to be measured down from the action-point bar.
+	//
+	// **The anchor moved because what constrains it moved.** The bar was the constraint while
+	// the strip below it was 86 pixels and a 54-pixel pile only just fitted; the bar has since
+	// come down with the hand and there is slack under it, so measuring from above left the
+	// pile floating in the middle of that slack with a band of empty screen beneath it. What
+	// the pile actually wants to say now is "against the bottom edge, with a margin" — the
+	// vertical counterpart of deckStackRightMargin, and the same correction that constant made.
+	//
+	// **Ten, because that is where the mute button's bottom edge is** — see
+	// internal/game/chrome.go, which is chrome and cannot be read from here, so the number is
+	// shared by being the same number rather than by being derived. The discard badge's bottom
+	// lands four pixels lower at 954, since it hangs off a button strip placed as a percentage;
+	// four pixels reads as one line and chasing it exactly would mean taking the strip off
+	// percentages for no other reason.
+	//
+	// It also has to leave room for the highlight ring, which reaches
+	// deckHighlightInset + deckHighlightWidth/2 = 8 further down — so ten is two pixels of
+	// slack, and TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting the ring
+	// run off the bottom.
+	deckStackBottomInset = 10
 
 	// deckHighlightWidth is the ring drawn round the stack while the overlay is open, in
 	// attentionYellow.
@@ -98,36 +115,22 @@ const (
 	outboundSpin    = -0.42 // radians at the end of the flight
 	outboundShrink  = 0.72  // scale it reaches as it goes
 
-	// A resolving card's three beats: up out of the hand, held where it can be read, then
-	// down into the pile. They have to add up to less than eventDwellTicks or a card would
-	// still be moving when the next one sets off.
+	// riseTicks is how long a card takes to fly from the hand to its seat on the table.
+	//
+	// **The hold and fall beats went with the pile** *(2026-08-12)*. A card used to rise out of
+	// the hand, hold in the middle of the screen to be read, then drop into a corner — three
+	// beats, because the destination was not somewhere you could read a card. The table *is*
+	// the readable place, so there is one beat now: out of the hand and into its seat, where it
+	// stays for the rest of the round. What the hold used to say — "this is the one resolving"
+	// — is said by tableFireLift instead.
 	riseTicks = 16
-	holdTicks = 24
-	fallTicks = 16
 
-	// firingGap is how far clear of the Resolution feed a card holds while it fires.
+	// firingGap is how far clear of the Resolution feed the table sits.
 	//
-	// **Cards resolve at full size, and what they must not cover is Resolution** — the
-	// written record being made at the same moment. That has not changed; which side of it
-	// they hang on has. Resolution used to be a pane across the top half and a card hung
-	// *below* it, over the inert hand row. Resolution is a feed above the cards now, so a
-	// card holds *above* the feed instead, in the band the pane vacated.
-	//
-	// The hand row is still what gets covered, and that is still the deliberate reading of
-	// "leave them whole sized": during playback planning() is false, nothing down there can
-	// be clicked or dragged, so the space is free at exactly the moment this needs it.
+	// **Cards are played at full size, and what they must not cover is Resolution** — the
+	// written record being made at the same moment. That has not changed through three
+	// arrangements of this screen; see tableRowTop, which is the one place it is applied now.
 	firingGap = 12
-
-	// The pile in the bottom-left corner. Overlapped hard, like the deck overlay's rows: the
-	// left edge of a card carries its border colour and its cost dashes, which is enough to
-	// read the shape of a round at a glance.
-	//
-	// **The inset has to clear the combo ring, not just the screen edge.** The ring is drawn
-	// *around* the pile, so a card sitting flush against the left margin puts its bracket off
-	// the screen — which is what the first version did, and it read as the combo highlight
-	// having a missing side rather than as a card being too far left.
-	pileLeftInset = 20
-	pilePitch     = 46
 )
 
 // attentionYellow is the screen's one "look here" colour, and it has exactly two users: the
@@ -170,10 +173,10 @@ type cardFlight struct {
 	// the row it left, for an inbound card the one it is arriving at and the row it joins.
 	index, count int
 
-	// fromPile says index is a position in the resolved pile rather than in the hand. A card
-	// that fired this round spends the rest of it in the corner, so at the end of the round
-	// it is thrown from there — not from the hand slot it left long before.
-	fromPile bool
+	// fromTable says the pair locates a seat on the table rather than a slot in the hand. A
+	// card played this round spends the rest of it face up on the left of the table, so at the
+	// end of the round it is thrown from there — not from the hand slot it left long before.
+	fromTable bool
 
 	// delay holds a card on the launch pad so a handful dealt at once set off in sequence
 	// rather than as a single sheet. age runs to flightTicks once the delay is spent.
@@ -241,21 +244,19 @@ func (s *CombatScene) inboundTo(i int) bool {
 // deckStackRect is the front card of the pile: the one that is drawn on top and the one a
 // click is tested against.
 //
-// **Sized and placed against the strip below the action-point bar, which is what forced
-// cards.Stack to be smaller than Mini.** The hand row ends at handTopPct plus a card, the AP
-// figure and bar hang below that, and what is left before the bottom edge is 86 pixels — so
-// a 132-pixel half-size card does not fit here however much one would read better. See the
-// Stack style for why a *back* survives that where a face would not.
+// **Sized against the strip below the action-point bar, which is what forced cards.Stack to
+// be smaller than Mini.** When the pile arrived that strip was 86 pixels, so a 132-pixel
+// half-size card did not fit here however much one would read better. See the Stack style for
+// why a *back* survives that where a face would not.
 //
-// The top is measured down from the bar rather than set as a percentage of the screen. The
-// bar is the constraint, so it should be the anchor: 95% of the height put the pile three
-// pixels *through* the bar, and would have gone on doing so silently every time the hand
-// geometry moved.
+// **Hung off the bottom edge since 2026-08-12**, where it used to be measured down from the
+// bar. Both corners are now margins from the screen's own edges, which is what the pile
+// actually wants to say; see deckStackBottomInset for why the anchor moved and why the
+// constraint it has to satisfy is checked by a test rather than by arithmetic here.
 func deckStackRect(gs *state.GlobalState) image.Rectangle {
 	w, h := cards.Stack.Width, cards.Stack.Height
 
-	barBottom := gs.PctY(handTopPct) + cardHeight + apBarBelow + apBarHeight
-	top := barBottom + deckStackTopGap + (deckStackDepth-1)*deckStackStep
+	top := gs.ScreenHeight - deckStackBottomInset - h
 	left := gs.PctX(100) - deckStackRightMargin - w
 
 	return image.Rect(left, top, left+w, top+h)
@@ -362,8 +363,8 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 	t := easeIn(f.progress())
 
 	from := slotAt(gs, f.index, f.count)
-	if f.fromPile {
-		from = pileAt(gs, f.index)
+	if f.fromTable {
+		from = playedSeatAt(gs, f.index, f.count)
 	}
 	// Off the left edge by a whole card, so it is gone rather than clipped.
 	toX := -cardWidth
@@ -457,65 +458,90 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 	screen.DrawImage(img, op)
 }
 
-// resolvedCard is one of the player's cards that has fired this round, and where it is on
-// its way from the hand to the pile.
+// resolvedCard is one of the player's cards for this round, on its way from the hand to its
+// seat on the table.
 //
-// **The pile is the round's own history, laid out in the order it happened.** Resolution
-// regroups a queue into prepare, then attacks, then defenses, so the pile grows in phase
-// order without anything here knowing what a phase is — it appends in the order the engine
-// played, and the order does the rest. That is the whole reason this reads as the mechanic
-// rather than as an animation.
+// **The row is the round in the order it will happen.** Resolution regroups a queue into
+// prepare, then attacks, then defenses, so the row is laid out in phase order without anything
+// here knowing what a phase is — it is built by walking what the engine returned, and the order
+// does the rest. That is the whole reason this reads as the mechanic rather than as an
+// animation.
 type resolvedCard struct {
 	card actionCard
 
-	// Where it came from: the hand slot it occupied and the row it belonged to, so the rise
+	// Where it came from: the hand slot it occupied and the row it belonged to, so the flight
 	// starts from the card's own place. Same reason cardFlight stores the pair — the hand is
 	// still holding this card, but a later discard could re-lay the row out around it.
 	handIndex, handCount int
 
-	// age drives rise, hold and fall. It stops climbing once the card has landed, so a card
-	// parked in the pile costs one comparison a frame rather than growing forever.
-	age int
+	// age drives the flight to the table and stops once the card has landed, so a card sitting
+	// in its seat costs one comparison a frame rather than growing forever. delay holds it on
+	// the launch pad, so a hand dealt to the table sets off in sequence rather than as a sheet.
+	age, delay int
 
 	// combo marks a card a combo bracketed. Set when the KindCombo event plays back, from
 	// the span the engine put on the event — never worked out here.
 	combo bool
 }
 
-// pileAt is where the nth resolved card sits in the bottom-left corner.
+// landed reports whether this card has reached its seat.
+func (r resolvedCard) landed() bool { return r.age >= r.delay+riseTicks }
+
+// seatPlayedCards deals the player's whole queue to the table, in resolution order.
 //
-// It shares the hand row's top edge rather than picking its own, so the pile and the hand
-// read as one band with cards moving between them, and a card that has landed is the same
-// size and on the same line as the cards it came from.
-func pileAt(gs *state.GlobalState, n int) image.Point {
-	return image.Pt(pileLeftInset+n*pilePitch, gs.PctY(handTopPct))
+// **Called once, when the round starts, rather than a card at a time as each fires**
+// *(2026-08-12)*. The two hands are laid out facing each other and the opponent's is known in
+// full at that moment, so a player's row that assembled itself over the following seconds would
+// be one hand against half of another. What playback drives now is which card is *lit*, not
+// which cards exist — see firingSeat.
+//
+// **It asks combat.ResolutionOrder for the order rather than taking the queue as planned.** The
+// order regroups by category, so the third card to resolve is not the third card selected, and
+// a row in selection order would be a confident picture of a round that does not happen.
+func (s *CombatScene) seatPlayedCards() {
+	s.resolved = nil
+
+	for _, slot := range combat.ResolutionOrder(s.fighterActions, s.enemyActions) {
+		if slot.Side != combat.SideA {
+			continue
+		}
+
+		// No card behind the queued action. The real game cannot reach this — syncQueue derives
+		// the queue from the hand — but the scripted demo writes a plan straight into
+		// fighterActions, and a screen that panicked or drew an arbitrary card because a harness
+		// took a shortcut would be worse than one that draws nothing.
+		hand, ok := s.handIndexForQueue(slot.Index)
+		if !ok {
+			continue
+		}
+
+		s.resolved = append(s.resolved, resolvedCard{
+			card:      s.hand[hand].actionCard,
+			handIndex: hand,
+			handCount: len(s.hand),
+			delay:     len(s.resolved) * flightStaggerPer,
+		})
+	}
 }
 
-// firingAt is where a card holds while it is resolving: centred across the screen, sitting
-// just above the Resolution feed.
-//
-// **Measured off the feed's collapsed top, not the expanded one.** A card that jumped
-// whenever the box was held would be an animation reacting to an input it has nothing to do
-// with. An expanded feed reaches up past this, so a firing card is drawn over its older
-// lines — see the draw-order ranking in combat.go, where that is the one thing deliberately
-// given up. It clears y=467, so the newest lines are never covered.
-func firingAt(gs *state.GlobalState) image.Point {
-	top := gs.PctY(handTopPct) - feedGapAboveCards - feedHeight()
-	return image.Pt(
-		gs.PctX(50)-cardWidth/2,
-		top-firingGap-cardHeight,
-	)
-}
-
-// noteResolved records that one of the player's cards has just fired, and starts it moving.
+// noteResolved lights the card that has just fired, on whichever side played it.
 //
 // **It asks combat.ResolutionOrder which card this event belongs to rather than counting.**
 // The order regroups a queue by category, so the third card to resolve is not the third card
 // in the hand, and a screen keeping its own tally would light the wrong one the first time
 // somebody queued a defense before an attack. currentSlot is already the authority on how
 // far through that order playback has reached.
+//
+// The seat is *counted along the same walk the rows were laid out by* — seatPlayedCards for
+// the player, enemyQueueOrder for the opponent — so a lit seat and a drawn card cannot
+// disagree about which card is which. Both sides take their positions from the one ordering,
+// which is why one function covers both rather than two that would have to be kept in step.
+//
+// **Only one card is lit at a time, and it is whichever fired last.** A turn is contiguous per
+// side, so the lit card walks the left row and then the right one; nothing has to clear the
+// other side's seat because the event that lights one is the event that unlights the other.
 func (s *CombatScene) noteResolved(e combat.Event) {
-	if e.Kind != combat.KindAction || e.Side != combat.SideA {
+	if e.Kind != combat.KindAction {
 		return
 	}
 
@@ -525,25 +551,19 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		return
 	}
 
-	slot := order[i]
-	if slot.Side != combat.SideA {
-		return
+	side := order[i].Side
+	seat := 0
+	for _, slot := range order[:i] {
+		if slot.Side == side {
+			seat++
+		}
 	}
 
-	// No card behind the queued action. The real game cannot reach this — syncQueue derives
-	// the queue from the hand — but the scripted demo writes a plan straight into
-	// fighterActions, and a screen that panicked or drew an arbitrary card because a harness
-	// took a shortcut would be worse than one that draws nothing.
-	hand, ok := s.handIndexForQueue(slot.Index)
-	if !ok {
+	if side == combat.SideA {
+		s.firingSeat, s.enemyFiringSeat = seat, -1
 		return
 	}
-
-	s.resolved = append(s.resolved, resolvedCard{
-		card:      s.hand[hand].actionCard,
-		handIndex: hand,
-		handCount: len(s.hand),
-	})
+	s.firingSeat, s.enemyFiringSeat = -1, seat
 }
 
 // noteCombo brackets the cards a combo was formed from.
@@ -583,7 +603,7 @@ func (s *CombatScene) handIndexForQueue(n int) (int, bool) {
 // updateResolved advances the cards that have fired. Its own clock, like the flights.
 func (s *CombatScene) updateResolved() {
 	for i := range s.resolved {
-		if s.resolved[i].age < riseTicks+holdTicks+fallTicks {
+		if !s.resolved[i].landed() {
 			s.resolved[i].age++
 		}
 	}
@@ -605,9 +625,9 @@ func (s *CombatScene) resolvedInHand(i int) bool {
 	return false
 }
 
-// pileIndexOf finds the pile position of the card that came from hand slot i, so a card
-// leaving at the end of the round sets off from where it actually is.
-func (s *CombatScene) pileIndexOf(handIndex int) (int, bool) {
+// playedSeatOf finds the table seat of the card that came from hand slot i, so a card leaving
+// at the end of the round sets off from where it actually is.
+func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
 	for i, r := range s.resolved {
 		if r.handIndex == handIndex {
 			return i, true
@@ -616,39 +636,35 @@ func (s *CombatScene) pileIndexOf(handIndex int) (int, bool) {
 	return 0, false
 }
 
-// at is where a resolved card is drawn right now: rising, holding, falling, or parked.
-func (r resolvedCard) at(gs *state.GlobalState, pileIndex int) image.Point {
+// at is where a played card is drawn right now: waiting its turn to set off, flying to its
+// seat, sitting in it, or lifted out of it because it is the card currently resolving.
+func (r resolvedCard) at(gs *state.GlobalState, seat, total int, firing bool) image.Point {
 	from := slotAt(gs, r.handIndex, r.handCount)
-	fire := firingAt(gs)
-	pile := pileAt(gs, pileIndex)
+	to := playedSeatAt(gs, seat, total)
 
 	switch {
-	case r.age < riseTicks:
-		return lerpPoint(from, fire, easeOut(float64(r.age)/riseTicks))
-	case r.age < riseTicks+holdTicks:
-		return fire
-	case r.age < riseTicks+holdTicks+fallTicks:
-		t := float64(r.age-riseTicks-holdTicks) / fallTicks
-		return lerpPoint(fire, pile, easeIn(t))
-	default:
-		return pile
+	case r.age <= r.delay:
+		return from
+	case !r.landed():
+		return lerpPoint(from, to, easeOut(float64(r.age-r.delay)/riseTicks))
 	}
+
+	// **The lift is applied after the card has landed, never during the flight.** A card still
+	// arriving is already the most moving thing on screen, and lifting it as well would make
+	// the two beats — dealt to the table, then played — impossible to tell apart. The
+	// opponent's cards do not fly, so their row applies the same lift unconditionally.
+	return lift(to, firing)
 }
 
-// firing reports whether this card is the one currently being read, which is the moment its
-// combo bracket is worth drawing around it.
-func (r resolvedCard) firing() bool {
-	return r.age >= riseTicks && r.age < riseTicks+holdTicks
-}
-
-// drawResolvedCards draws the pile and whatever is on its way into it.
+// drawPlayedCards draws the player's side of the table and whatever is still flying into it.
 //
-// Oldest first, so a newer card overlaps the one before it and the pile reads left to right
-// in the order the round happened — and so the card currently rising is drawn over the
-// cards already parked rather than sliding underneath them.
-func (s *CombatScene) drawResolvedCards(gs *state.GlobalState, screen *ebiten.Image) {
+// Left to right in resolution order, so a later card overlaps the one before it and the row
+// reads in the order the round happens — and so a card still arriving is drawn over the ones
+// already seated rather than sliding underneath them.
+func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
 	for i, r := range s.resolved {
-		drawCard(gs, screen, r.at(gs, i), cards.Hand, r.card, true, false, s.fighter.Str)
+		at := r.at(gs, i, len(s.resolved), i == s.firingSeat)
+		drawCard(gs, screen, at, cards.Hand, r.card, true, false, s.fighter.Str)
 	}
 
 	s.drawComboBracket(gs, screen)
@@ -666,7 +682,7 @@ func (s *CombatScene) drawComboBracket(gs *state.GlobalState, screen *ebiten.Ima
 		if !r.combo {
 			continue
 		}
-		at := r.at(gs, i)
+		at := r.at(gs, i, len(s.resolved), i == s.firingSeat)
 		card := image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
 		if box.Empty() {
 			box = card

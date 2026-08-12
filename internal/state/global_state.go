@@ -58,6 +58,22 @@ type GlobalState struct {
 	MouseY         int
 	ShouldClose    bool
 
+	// ModalOpen is a scene declaring that it has a dialog up, so the game's own chrome —
+	// today just the mute button — stands down rather than sitting live on top of it.
+	//
+	// **It is genuinely shared and that is why it is here**: it is the one thing a scene and
+	// the frame around it have to agree on. The deck overlay's rule is that everything behind
+	// it goes dead and the single control that closes it is the only one that still looks
+	// live, because there is no Escape key and no right click to fall back on — a modal has to
+	// make its exit the brightest thing on screen or it is a trap. Chrome drawn after the
+	// scene would break that by construction.
+	//
+	// **The frame clears it every tick and a scene that has a dialog re-asserts it**, rather
+	// than each scene being trusted to turn it off. A screen left while its overlay was open
+	// would otherwise leave this stuck on and the chrome invisible for the rest of the
+	// session, on screens that have never heard of a modal.
+	ModalOpen bool
+
 	//Layout
 	ScreenWidth  int
 	ScreenHeight int

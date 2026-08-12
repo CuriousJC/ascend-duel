@@ -37,12 +37,25 @@ import (
 const maxRings = 5
 
 const (
-	// The pane starts where the character block ends, and runs to a right edge that clears the
-	// enemy card. **79% is not arbitrary**: the enemy card is centred at 88% and is a card
-	// wide, so its left edge is around 1045 on a 1280 screen and anything past ~81% is drawn
-	// under it. The margin grew when the cards shrank on 2026-08-11 and 79% was left alone.
-	ringPaneGap      = 16
-	ringPaneRightPct = 79
+	// The gap on either side of the row: it starts where the duelist card ends and stops
+	// where the enemy card begins.
+	//
+	// **Both edges are read off the cards themselves** *(2026-08-12)*. The right edge was a
+	// hardcoded 79%, chosen to clear an enemy card centred at 88% — a percentage standing in
+	// for a position it could not see, and one that would have quietly overlapped the moment
+	// either card moved. It moved the next day.
+	ringPaneGap = 16
+
+	// **The row sits ten pixels below the cards on either side of it** *(2026-08-12)*, where
+	// it was flush with their tops for a day.
+	//
+	// Flush alignment and a backing panel do not both work: the backing's top edge would land
+	// exactly on the two cards' top edges, and three things sharing one line reads as a single
+	// wide object with two cards embedded in it — which is the "cards trapped in a panel"
+	// failure the framed version was retired for, made worse by the frame now being wider than
+	// the row. Dropping the row breaks that line, and the offset is what makes the backing
+	// legible as a thing *behind* the rings rather than a border *around* everything.
+	ringPaneTopDrop = 10
 
 	// How far the rule sits below the cards, and how thick it is.
 	ringRuleGap   = 12
@@ -53,6 +66,15 @@ const (
 	ringCountSize     = 22
 	ringCountTopGap   = 6
 	ringCountRightPad = 2
+
+	// ringPaneBackPad is how far the backing extends past the row on every side. The pitch
+	// puts the first card flush left and the last flush right, so with no padding the two end
+	// cards would sit on the backing's edge and it would read as a border drawn around them
+	// rather than as a surface they stand on.
+	//
+	// **It has to stay under ringPaneGap**, or the backing runs into the fighter card beside
+	// it — 8 against 16 leaves half the gap still showing on each side.
+	ringPaneBackPad = 8
 )
 
 // ringRuleColor is the line under the rings.
@@ -64,21 +86,53 @@ const (
 // structure rather than as a colour meaning something.
 var ringRuleColor = color.RGBA{R: 120, G: 122, B: 132, A: 255}
 
-// ringPaneRect is the row's extent: the cards' own band, from the character block's right edge
-// to the enemy card's left, aligned with the top of the block.
+// ringPaneBackColor is the surface the rings stand on: a lighter grey than the screen's own
+// {50,50,50}, and nothing else.
 //
-// **It is not a box any more.** Nothing is filled or framed — the bottom edge is where the rule
-// is drawn and where the fraction hangs, and the rectangle exists so those two and the slots
-// all read one geometry.
-func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
-	block := s.fighterBlockRect(gs)
+// **A fill, not a frame** *(2026-08-12)*, and the distinction is the whole history of this
+// pane. The first version was a full pink box — filled, bordered and titled — and it was the
+// loudest thing in the band, competing with five saturated pink borders standing inside it. It
+// came out the same hour, leaving the cards to be the pane. What that lost is the thing being
+// put back now: with the row spanning most of the screen's width and a fighter card at either
+// end, nothing said where the middle *began*.
+//
+// So it is the quietest possible answer to that: one step lighter than the background, no
+// border, no title, no hue. A colour that meant something would put it back in competition
+// with the borders it sits behind.
+var ringPaneBackColor = color.RGBA{R: 72, G: 74, B: 80, A: 255}
 
-	left := block.Max.X + ringPaneGap
-	top := block.Min.Y
-	right := gs.PctX(ringPaneRightPct)
+// ringPaneRect is the row's extent: the cards' own band, running between the two corner cards
+// and dropped ringPaneTopDrop below them.
+//
+// **It is the middle of a three-part row** — duelist card, rings, enemy card — so it takes its
+// edges from its neighbours rather than from percentages of the screen. Whichever card moves,
+// the row follows, and the one thing that cannot happen is a ring drawn underneath one of them.
+//
+// **The rectangle is the cards and the rule, not the backing.** It is what the slots are cut
+// out of and what the rule and the fraction hang off; the backing is derived from it — see
+// ringPaneBackRect — so growing the padding cannot silently move a ring.
+func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
+	duelist, enemy := s.duelistCardRect(gs), s.enemyCardRect(gs)
+
+	left := duelist.Max.X + ringPaneGap
+	top := duelist.Min.Y + ringPaneTopDrop
+	right := enemy.Min.X - ringPaneGap
 	bottom := top + cards.RingStyle.Height + ringRuleGap
 
 	return image.Rect(left, top, right, bottom)
+}
+
+// ringPaneBackRect is the surface drawn behind the row: the row padded on every side, and
+// **deep enough to hold the rule and the fraction under it**.
+//
+// The fraction hanging off the bottom edge onto the dark background would say the rule is the
+// panel's floor and the number is loose underneath it, which is backwards — the count belongs
+// to the row it counts.
+func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
+	r := s.ringPaneRect(gs).Inset(-ringPaneBackPad)
+	r.Max.Y = s.ringPaneRect(gs).Max.Y +
+		ringRuleWidth + ringCountTopGap + ringCountSize + ringPaneBackPad
+	return r
 }
 
 // ringSlotPitch is how far apart two ring cards start, **for the number actually worn**.
@@ -128,13 +182,15 @@ func equippedRings(gs *state.GlobalState) []data.RingData {
 	return out
 }
 
-// drawRingPane draws the rings, a rule under them, and the cap as a fraction on its right end.
+// drawRingPane draws the backing, the rings, a rule under them, and the cap as a fraction on
+// its right end.
 //
-// **There is no box** *(2026-08-11)*. The first version framed the row the way the character
-// block is framed — dim pink fill, pink border, a "Rings" title — and it read as a panel with
-// cards trapped in it rather than as the cards themselves. What is left is the row, aligned
-// directly with the top of the block beside it, and a line saying where it ends. **The cards
-// are the pane.**
+// **There is still no box** *(2026-08-12)*. The backing that arrived today is a fill and not a
+// frame — one step lighter than the screen, no border, no title, no hue — which is a different
+// thing from the pink panel this pane started as and was stripped of on 2026-08-11. What that
+// stripping went too far on is legibility of the *edges*: with a fighter card at either end of
+// a row spanning most of the screen, nothing said where the middle began. See
+// ringPaneBackColor.
 //
 // **Empty slots are not drawn.** They were the first sketch and the fraction replaced them:
 // five frames of which two are dashed outlines spends the loudest thing in the row on saying
@@ -144,6 +200,12 @@ func equippedRings(gs *state.GlobalState) []data.RingData {
 // idea, where a count of a fixed total is read without being looked for.
 func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) {
 	r := s.ringPaneRect(gs)
+
+	// The surface first, so everything else stands on it.
+	back := s.ringPaneBackRect(gs)
+	vector.DrawFilledRect(screen,
+		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
+		ringPaneBackColor, false)
 
 	worn := equippedRings(gs)
 	for i, ring := range worn {

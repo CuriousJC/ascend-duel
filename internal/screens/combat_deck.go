@@ -273,12 +273,14 @@ func (s *CombatScene) spendSelected() {
 		if c.selected {
 			s.discard = append(s.discard, c.actionCard)
 
-			// A card that resolved is sitting in the corner pile, not in its old hand slot,
-			// so that is where it has to set off from. Sending it out of a slot it visibly
-			// left ten seconds ago would make it jump back across the screen to be thrown.
+			// A card that was played is sitting in its seat on the table, not in its old hand
+			// slot, so that is where it has to set off from. Sending it out of a slot it
+			// visibly left ten seconds ago would make it jump back across the screen to be
+			// thrown. The count goes with it: a seat's x is a function of how many cards the
+			// row holds, and the row is cleared three lines below this.
 			flight := cardFlight{card: c.actionCard, outbound: true, index: i, count: leaving}
-			if p, ok := s.pileIndexOf(i); ok {
-				flight.index, flight.fromPile = p, true
+			if p, ok := s.playedSeatOf(i); ok {
+				flight.index, flight.count, flight.fromTable = p, len(s.resolved), true
 			}
 			s.addFlight(flight)
 			continue

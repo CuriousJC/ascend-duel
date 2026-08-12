@@ -98,6 +98,20 @@ func drawTextHCentered(dst *image.RGBA, f *Faces, size float64, s string, width,
 	return drawText(dst, f, size, s, (width-w)/2, y, c)
 }
 
+// drawTextRightAligned draws a string ending at x, top-aligned at y.
+//
+// The stat rows use it: a label against the left margin and a figure against the right, so
+// the figures line up down the card as a column whatever their width. Left-aligning them
+// under the labels would make "6" and "12 / 40" start together and end anywhere.
+func drawTextRightAligned(dst *image.RGBA, f *Faces, size float64, s string, right, y int, c color.RGBA) error {
+	face, err := f.at(size)
+	if err != nil {
+		return err
+	}
+	w := font.MeasureString(face, s).Ceil()
+	return drawText(dst, f, size, s, right-w, y, c)
+}
+
 // drawTextVCentered draws a string centred on the horizontal line y, starting at x.
 //
 // This is the damage figure beside its glyph. The original used text/v2's

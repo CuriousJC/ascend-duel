@@ -70,3 +70,40 @@ func Start(midi []byte) error {
 	player = p
 	return nil
 }
+
+// muted is whether the score is currently silenced. Package state alongside the player,
+// because it is a property of the one thing this package owns.
+var muted bool
+
+// Available reports whether there is anything to mute.
+//
+// **Opening the audio device is allowed to fail** — a machine with no sound card still plays
+// the game — and when it does, `player` is nil and every call below is a no-op. A mute
+// control that silently did nothing would be worse than none, so the caller asks this and
+// disables it instead.
+func Available() bool { return player != nil }
+
+// Muted reports whether the score is silenced.
+func Muted() bool { return muted }
+
+// SetMuted silences the score or restores it.
+//
+// **Volume, not Pause, and the difference is what a mute button means.** Pausing would hold
+// the score at the bar it was on and resume from there, so unmuting halfway through a duel
+// would drop the player back into a phrase they had already heard. Muting a track that keeps
+// running puts them wherever the music would have got to, which is the behaviour every other
+// mute control in the world has.
+//
+// The flag is set whether or not there is a player, so the state survives a machine with no
+// audio device — see Available.
+func SetMuted(m bool) {
+	muted = m
+	if player == nil {
+		return
+	}
+	if m {
+		player.SetVolume(0)
+		return
+	}
+	player.SetVolume(volume)
+}

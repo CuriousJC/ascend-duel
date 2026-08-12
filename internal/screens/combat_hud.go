@@ -50,122 +50,68 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 // takes its width from the hand for the same reason this did — the same band the AP bar
 // spans, so the two line up on both edges however many cards are held. See combat_panes.go.
 
-// The character block, **back in the top-left corner and stacked vertically**
-// *(2026-08-11)*.
+// **The character block is gone and the player is a card** *(2026-08-12)*.
 //
-// It has been three shapes now and each move was forced by what claimed the space beside it.
-// It was a tall box at 4%,12% while the 15–39% column was empty; it became a wide strip on
-// 2026-08-07 when Action Flow claimed that column and 268px of box ran straight through the
-// pane's title. **Action Flow is not drawn and Resolution has left the band entirely** — it is
-// a three-line feed above the hand since 2026-08-11 — so the whole 12–46% band is free, and
-// what wants it is the ring pane. A strip 35% of the screen wide sitting on top of that band
-// was spending the width the rings need.
+// It had been three shapes — a tall box at 4%,12%, a wide strip on 2026-08-07, a narrow
+// corner column on 2026-08-11 — and each move was forced by whatever claimed the space beside
+// it. What ended it is not space: it is that the enemy became a card the day before, and the
+// player was then the last thing on this screen drawn as furniture rather than as an object
+// in the game. Both corners now hold the same format, which is what makes them read as two
+// sides of one fight.
 //
-// So: **a narrow column in the corner holding exactly what it holds**, and no more. Three
-// things stacked — the duelist's name on the box's own top edge, then Health, then Vitae —
-// each a small caption over its figure. The height is derived from the row count rather than
-// written down, so adding a fourth figure grows the box instead of overflowing it.
+// What the box held is what the card holds, in the same order: the duelist's name, then the
+// figures, then life. What it *gains* is the two figures the block had nowhere to put — the
+// damage a Strike does in these hands, and the action points the round is bought with — and a
+// health bar above the fraction, matching the enemy's at the same offsets so the two can be
+// compared across the screen without measuring.
 //
-// It still replaces the fighter's sprite and health bar for the same reason as before: a bar
-// says roughly how hurt you are, and a duel decided in whole points wants the exact number.
+// The card's own layout lives in cards.DuelistStyle; what is here is where it sits and what
+// goes on it.
 const (
-	blockLeftPct = 1
-	blockTopPct  = 2
+	duelistCardLeftPct = 1
 
-	// **A fixed width, not a percentage.** The block is sized by the widest figure it holds —
-	// "180 / 180" at 24px — and the ring pane starts where it ends, so a width that moved with
-	// the screen would move the rings for no reason anyone could name.
-	blockWidth = 158
-
-	blockFirstRow  = 34 // gap from the top edge to the first caption, clearing the title
-	blockRowPitch  = 46 // one caption-and-figure pair
-	blockValueTop  = 18 // the figure, below its own caption
-	blockBottomPad = 10
+	// **Both cards share this top**, and the ring row between them aligns to it as well —
+	// see ringPaneRect. One percentage rather than three, because what is wanted is that the
+	// whole band starts on one line, not that each thing happens to be near the top.
+	topRowTopPct = 2
 )
 
-// blockFigure is one labelled number in the block.
+// lifeColor is the red the life fraction used to be written in.
 //
-// A nil tint means the row takes the default ink. Life is the only one that takes a colour:
-// it is the number the whole duel is about, and what is beside it is a budget rather than a
-// stake.
-type blockFigure struct {
-	label string
-	value string
-	tint  *color.RGBA
-}
-
-// blockFigures is what the block holds, and **the single thing its height is derived from**.
-// A box sized by a constant while this list grew would clip the last figure, which looks like
-// a spacing bug rather than a missing row.
-//
-// **Title case, not caps.** The block started out shouting HEALTH / DISCARDS / VITAE and
-// `VITAE` rendered as `VITRE` — kubasta's uppercase A at 12px carries a diagonal that reads as
-// an R when there is no lowercase around it to set the shape. Caps are not worth a label the
-// player reads as a different word.
-//
-// **Discards left was the middle figure until 2026-08-11**, and moved onto the Discard button
-// itself — see drawDiscardsLeft. It was the one figure here answering a question asked *while
-// looking somewhere else*: it ticks down as the button is pressed, at the bottom of the
-// screen, and this block is at the top. Life and vitae are read between rounds and stay.
-//
-// Vitae is a placeholder reading a fixed 5 — it has no rule behind it yet. It is drawn anyway
-// so the block has its real shape while the rest of the character's state is decided, rather
-// than being retrofitted into a box already sized without it.
-func (s *CombatScene) blockFigures() []blockFigure {
-	return []blockFigure{
-		{"Health", fmt.Sprintf("%d / %d", s.fighter.CurrentLife, s.fighter.MaxLife), &lifeColor},
-		{"Vitae", fmt.Sprintf("%d", s.vitae), nil},
-	}
-}
-
-// blockHeight is the box: its title, one pitch per figure, and a margin under the last.
-// Derived so the box cannot claim a height its contents have outgrown.
-func blockHeight(rows int) int {
-	return blockFirstRow + rows*blockRowPitch + blockBottomPad
-}
-
-// fighterBlockRect is where the block sits. **The ring pane starts from its right edge**, so
-// this is the one place the block's geometry is written and both read it — see ringPaneRect.
-func (s *CombatScene) fighterBlockRect(gs *state.GlobalState) image.Rectangle {
-	left, top := gs.PctX(blockLeftPct), gs.PctY(blockTopPct)
-	return image.Rect(left, top, left+blockWidth, top+blockHeight(len(s.blockFigures())))
-}
-
-// lifeColor is the red the life fraction is written in. It is the one place on the screen
-// that has to be found without being looked for, so it gets a colour nothing else uses.
+// **Nothing draws it since the character block became a card** — the card's own bar and
+// fraction come from cards.HealthFull and cards.NumberInk, which is the point of drawing the
+// player the same way as everything else. It is kept because the deck overlay and the flight
+// code still describe state in the screen's own colours and this is the one red among them;
+// delete it if a second thing has to be said about that.
 var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
 
-// drawFighterBlock draws what the player is: the duelist's name on the box's top edge, then
-// life and vitae stacked under it, each a small caption over its figure.
-func (s *CombatScene) drawFighterBlock(gs *state.GlobalState, screen *ebiten.Image) {
-	r := s.fighterBlockRect(gs)
+// duelistCardRect is where the player's card sits. **The ring row starts from its right
+// edge**, so this is the one place its geometry is written and both read it — see
+// ringPaneRect.
+func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
+	left, top := gs.PctX(duelistCardLeftPct), gs.PctY(topRowTopPct)
+	return image.Rect(left, top,
+		left+cards.DuelistStyle.Width, top+cards.DuelistStyle.Height)
+}
 
-	drawBox(gs, screen, r, playerSwatch, duelistName)
-
-	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 12}
-	value := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 24}
-
-	// Centred on the box's own midline. The column is narrow enough that left-aligning the
-	// captions and right-aligning the figures would read as two ragged edges rather than as
-	// one block.
-	x := float64(r.Min.X+r.Max.X) / 2
-
-	for i, c := range s.blockFigures() {
-		rowTop := r.Min.Y + blockFirstRow + i*blockRowPitch
-
-		labelOp := &text.DrawOptions{}
-		labelOp.GeoM.Translate(x, float64(rowTop))
-		labelOp.PrimaryAlign = text.AlignCenter
-		text.Draw(screen, c.label, small, labelOp)
-
-		valueOp := &text.DrawOptions{}
-		valueOp.GeoM.Translate(x, float64(rowTop+blockValueTop))
-		valueOp.PrimaryAlign = text.AlignCenter
-		if c.tint != nil {
-			valueOp.ColorScale.ScaleWithColor(*c.tint)
-		}
-		text.Draw(screen, c.value, value, valueOp)
+// drawDuelistCard draws what the player is: name, DMG, AP, Vitae, and life as a bar over a
+// fraction.
+//
+// One cached image from internal/cards, like the enemy's, so the contact sheet draws the same
+// card the screen does. Nothing is drawn if it cannot be built — a missing font, most likely —
+// for the same reason drawCard does nothing.
+func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Image) {
+	img := cardImage(gs,
+		duelistSpec(s.fighter, s.sideName(combat.SideA), s.vitae),
+		cards.DuelistStyle)
+	if img == nil {
+		return
 	}
+
+	r := s.duelistCardRect(gs)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
+	screen.DrawImage(img, op)
 }
 
 // The discards-left badge: a filled disc centred exactly on the Discard button's bottom-right
@@ -236,8 +182,28 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: discardBadgeSize}, op)
 }
 
-// drawEnemyCard draws the opponent in the card format: portrait, name, health bar, and the
-// life left as a fraction. Centred on the point it is given, like the sprite it replaced.
+// enemyCardRightPct is the opponent's right edge, and it mirrors duelistCardLeftPct rather
+// than being chosen: the two cards are the same object on opposite sides of the screen, so
+// equal margins are the whole of what "in the corners" means.
+const enemyCardRightPct = 99
+
+// enemyCardRect is where the opponent's card sits. **The ring row ends at its left edge**,
+// the same way it starts at the duelist card's right — see ringPaneRect. That replaced a
+// hardcoded 79%, which was a percentage picked to clear a card whose position it could not
+// see and would have gone stale the moment either moved.
+func (s *CombatScene) enemyCardRect(gs *state.GlobalState) image.Rectangle {
+	right, top := gs.PctX(enemyCardRightPct), gs.PctY(topRowTopPct)
+	return image.Rect(right-cards.EnemyStyle.Width, top,
+		right, top+cards.EnemyStyle.Height)
+}
+
+// drawEnemyCard draws the opponent in the card format: name, portrait, health bar, and the
+// life left as a fraction.
+//
+// **It is in the top-right corner** *(2026-08-12)*, where it was centred at 88%,34% before —
+// floating in the middle of the band the rings want, at a height nothing else on the screen
+// shared. The corner puts it opposite the player's card and hands the whole band between them
+// to the ring row.
 //
 // **All of it is one cached image from internal/cards**, health bar included, so there is no
 // second drawing path for the contact sheet to disagree with. The cost is a re-render on
@@ -246,16 +212,14 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 // Nothing is drawn if the card cannot be built — a missing font, most likely — for the same
 // reason drawCard does nothing: a card-shaped hole gets reported, a card in a fallback font
 // does not.
-func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point) {
+func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image) {
 	img := cardImage(gs, enemySpec(gs, s.enemy, s.sideName(combat.SideB)), cards.EnemyStyle)
 	if img == nil {
 		return
 	}
 
+	r := s.enemyCardRect(gs)
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(
-		float64(at.X-cards.EnemyStyle.Width/2),
-		float64(at.Y-cards.EnemyStyle.Height/2),
-	)
+	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
 }

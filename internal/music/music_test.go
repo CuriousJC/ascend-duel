@@ -201,3 +201,27 @@ func TestRejectsWhatItCannotPlay(t *testing.T) {
 		t.Errorf("the real score no longer parses: %v", err)
 	}
 }
+
+func TestMutingSurvivesHavingNoAudioDevice(t *testing.T) {
+	// **Start is allowed to fail** — a machine with no sound card still plays the game — and
+	// then `player` is nil. The mute state has to be recorded anyway rather than dropped on
+	// the floor, or a control that comes back with the device would disagree with what it
+	// shows. Tests never call Start, so this is that case exactly.
+	if Available() {
+		t.Skip("an audio device was opened; this covers the case where none was")
+	}
+
+	defer SetMuted(false)
+
+	if Muted() {
+		t.Fatal("the score starts muted")
+	}
+	SetMuted(true)
+	if !Muted() {
+		t.Error("muting with no player did not record the state")
+	}
+	SetMuted(false)
+	if Muted() {
+		t.Error("unmuting with no player did not record the state")
+	}
+}

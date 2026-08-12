@@ -89,6 +89,9 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 			return nil, err
 		}
 	}
+	if err := drawStats(img, s, st, f, ink); err != nil {
+		return nil, err
+	}
 	if s.Art != nil {
 		drawArt(img, s, st)
 	}
@@ -115,7 +118,36 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // requiring a parsed font to render one would make the deck overlay depend on something
 // it never uses.
 func (st Style) needsFont() bool {
-	return st.ShowName || st.ShowDamage || st.HealthBarHeight > 0
+	return st.ShowName || st.ShowDamage || st.HealthBarHeight > 0 || st.StatRowPitch > 0
+}
+
+// drawStats writes the labelled figures down the face: label against the left margin,
+// figure against the right, one per row at the style's pitch.
+//
+// **A blank entry leaves its row empty rather than closing up.** The rows are a fixed
+// ladder the health bar is placed under, so a card with two figures has to put them where a
+// card with three puts its first two — otherwise the same card at two moments in a run
+// would have its numbers at different heights.
+func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
+	if st.StatRowPitch <= 0 {
+		return nil
+	}
+	right := st.Width - st.TextLeft
+
+	for i, line := range s.Stats {
+		if line.Label == "" && line.Value == "" {
+			continue
+		}
+		y := st.StatsTop + i*st.StatRowPitch
+
+		if err := drawText(dst, f, st.StatSize, line.Label, st.TextLeft, y, ink(LabelInk)); err != nil {
+			return err
+		}
+		if err := drawTextRightAligned(dst, f, st.StatSize, line.Value, right, y, ink(NumberInk)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // colors resolves the card's state into the three things that vary with it: the border,
@@ -221,7 +253,7 @@ var (
 //
 // A zero or negative MaxLife draws the empty bar and no fraction rather than dividing by it.
 func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
-	left, width := st.ArtInset, st.Width-2*st.ArtInset
+	left, width := st.HealthBarInset, st.Width-2*st.HealthBarInset
 
 	fillRect(dst, left, st.HealthBarTop, width, st.HealthBarHeight, HealthEmpty)
 	if s.MaxLife <= 0 {

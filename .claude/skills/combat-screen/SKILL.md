@@ -132,14 +132,36 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 
 | Element | Slot | Colour | Role |
 |---|---|---|---|
-| Character strip | 4–39% x, 2% y | green | health and vitae, side by side |
+| Duelist card | 1% x, 2% y | — | who you are: name, DMG, AP, Vitae, health |
+| Ring row | between the two cards, 10px below their top | pink borders on grey | what you are wearing |
+| Enemy card | right edge at 99% x, 2% y | — | the opponent |
+| The table | full width, under the top row | element | both queues as cards, player left, enemy right |
 | Resolution | 15–78% x, 12–46% y | pink | what the round actually did, accumulating as it plays |
 | Action Flow | *built, not drawn* | pink | both queues in play order — see below |
 | Caption box | hand width, 48% y | pink | your plan and its AP cost, and what to press |
-| Hand | centred, 61% y | element | the cards, portrait, in one row |
+| Hand | centred, 66% y | element | the cards, portrait, in one row |
 | AP bar | hand width, directly under the row | blue | the budget |
 | Bottom strip | 95% y | — | AP figure, Discard, DUEL!, deck pile — evenly spread |
-| Enemy sprite | 88% x, 34% y | — | the opponent |
+
+**The top of the screen is one row of three things** *(2026-08-12)*: the duelist card in the
+left corner, the enemy card in the right, the rings filling everything between.
+
+- **The ring row takes both its edges from the two cards** rather than from percentages —
+  `ringPaneRect` reads `duelistCardRect` and `enemyCardRect`. That replaced a hardcoded 79%, a
+  percentage standing in for the position of a card it could not see, which went stale the day
+  after it was written when the enemy moved to the corner.
+  `TestTheTopRowIsThreeThingsThatDoNotOverlap` is what keeps it honest.
+- **The rings sit on a plain grey backing and drop 10px below the two cards.** The two go
+  together: with the row spanning most of the screen and a card at either end, nothing said
+  where the middle began — but a backing whose top edge lands on both cards' top edges makes
+  the three read as one wide object with two cards embedded in it, which is the *same* failure
+  the framed pink version was retired for. The drop breaks that line.
+- **A fill, never a frame.** One step lighter than the screen's `{50,50,50}`, no border, no
+  title, no hue — a colour that meant something would compete with the five saturated pink
+  borders standing on it. `ringPaneBackRect` is derived from the row and pads it by 8 against
+  a 16px gap, so **the backing can never touch either fighter card**;
+  `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards` pins that and the fact that it
+  is deep enough to hold the `3/5` fraction, which belongs to the row it counts.
 
 **Cards are portrait and live along the bottom.** Landscape cards in a vertical column
 capped how many could be shown, and the hand is going to grow. `cardWidth`/`cardHeight` are
@@ -162,6 +184,31 @@ in each of the two spaces, so the strip stays evenly spread if any of the three 
 moves. `TestTheButtonStripSharesItsSpaceEvenly` checks the gaps against each other rather than
 against numbers, because the property wanted is the relationship, not a coordinate. Discard
 still carries one condition DUEL! does not: a round's discards can run out.
+
+**The bottom of the screen is one line** *(2026-08-12)*, and two of the three things on it are
+now hung off the bottom edge rather than off the hand's geometry:
+
+- **The deck pile's anchor moved** from "down from the AP bar" to "up from the bottom edge",
+  `deckStackBottomInset = 10`. The bar was the constraint while the strip below it was 86
+  pixels and a 54-pixel pile only just fitted; the hand came down and left slack, so measuring
+  from above left the pile floating in the middle of it. Both of its corners are margins from
+  the screen's own edges now, which is what it wanted to say all along.
+- **The mute button uses the same inset**, so the two share a bottom edge exactly. It is chrome
+  in `internal/game`, which imports this package and cannot be imported back, so the number is
+  shared by *being the same number* — checked from both ends, by
+  `TestTheBottomOfTheScreenIsOneLine` here and `TestTheMuteButtonSitsInTheBottomLeftCornerOnScreen` there.
+- **The discard badge is four pixels lower**, because it hangs off a button strip placed as a
+  percentage. Four pixels reads as one line; making it exact would mean taking the strip off
+  percentages for no other reason, and the test allows the slack rather than pretending.
+
+**The hand sits at 66% because that is what lines the AP figure up with the buttons**
+*(2026-08-12)*. Dropping the pile freed the band it used to float in, and the row came down
+into it until the action-point figure's top landed on the Discard button's top. It is a
+coincidence of five constants — `handTopPct`, `cardHeight`, `apBarBelow`, `apBarHeight`,
+`apFigureBelowBar` against the strip — and nothing in the code enforces it, so
+`TestTheAPFigureLinesUpWithTheButtonStrip` does. **What the drop buys is height at the top**:
+the bar, the figure, the cards and the Resolution feed all measure off this row, so moving it
+moves the whole lower half together and opens the band between the fighter cards and the feed.
 
 **`apFigureReserve` is a fixed column width, not the figure's measured width.** Measuring
 would move both buttons the moment the text went from `9/12 AP` to `10/12 AP`. The reserve
@@ -191,10 +238,13 @@ load-bearing, not decoration — see the overlay's "make its exit the brightest 
 rule below, which the old button satisfied for free by being lit on a dead screen. It lives in
 `combat_flight.go` along with the cards that fly out of it.
 
-**Its y is measured down from the AP bar, never as a percentage.** The strip below the bar is
-86 pixels, `cards.Stack` is 44x64 to fit it, and 95% of the screen height put the pile three
-pixels *through* the bar. `TestDeckStackClearsTheAPBarAndTheScreen` fails rather than letting
-that come back.
+**Its y is measured up from the bottom edge** *(2026-08-12)*, and never as a percentage. It was
+measured *down from the AP bar* until then, and both anchors were chosen the same way — name
+the thing that actually constrains it. The bar was that thing while the strip below it was 86
+pixels and 95% of the screen height put the pile three pixels *through* the bar; the hand has
+since come down and left slack there, so the bottom edge is. `cards.Stack` is small because of
+the original squeeze and stayed small. `TestDeckStackClearsTheAPBarAndTheScreen` still holds
+the ring against both the bar and the screen, so neither anchor can quietly stop working.
 
 **Its x is measured in from the right edge, and the margin is where its count is written**
 *(2026-08-11)*. `deckStackRightMargin` went 10 → 96 so the fraction sits beside the pile rather
@@ -223,21 +273,54 @@ the single movement — the selected cards go to the discard pile, the draw tops
 up to `handSize` — and both Discard and the end of a round call it. Two functions doing this
 would be two functions that have to agree.
 
-**A card that fires during playback is drawn by the resolved pile, not by the row**
-*(2026-08-10)*. It rises out of its slot, holds below the Resolution pane, and stacks in the
-bottom-left corner at full size — and because `ResolutionOrder` regroups a queue into prepare
-→ attacks → defenses, **the pile grows in phase order without the screen knowing what a phase
-is.** Three things follow:
+### The table: two hands facing each other
 
-- **It has not left the hand.** It leaves at the end of the round with everything else played,
-  which is what keeps the Resolution pane able to narrate from `fighterActions` while the round
-  is still running. `resolvedInHand` hides a *drawing*, exactly like `inboundTo`.
-- **Full size, overlapping the inert hand row, is the deliberate choice.** `planning()` is
-  false during playback, so nothing down there can be clicked and the space is free at exactly
-  the moment this needs it. The Resolution pane is what a firing card must never cover.
-- **`noteResolved` asks `ResolutionOrder` which card an event belongs to.** The third card to
-  resolve is not the third card in the hand, and a screen keeping its own tally lights the
-  wrong one the first time somebody queues a defense before an attack.
+*2026-08-12, `combat_table.go`.* Pressing DUEL! lays both queues out across the middle of the
+screen at full size — **the player's played cards left-aligned, the opponent's queued cards
+right-aligned** — and clears them when the round ends. It is the first thing on this screen
+that shows a round as a confrontation rather than as a list.
+
+It replaced a pile of played cards in the bottom-left corner *(2026-08-10)*, where a card rose
+out of its slot, held below the Resolution pane to be read, and stacked in the corner. That
+pile was legible and it was history *only*: it grew with nothing opposite it, so the one thing
+a duel is about — my cards against yours — was something the player had to assemble from a pane
+of sentences.
+
+- **Both rows come from `combat.ResolutionOrder`**, so both say what *will* happen rather than
+  what was planned — a queue planned attack-first resolves prepare-first, and a row in
+  selection order would be a confident picture of a round that never happens.
+- **The whole queue is dealt at round start, not a card at a time.** The opponent's hand is
+  known in full at that moment, so a player's row assembling itself over the next few seconds
+  would be one hand against half of another. **Playback drives which card is lit, not which
+  cards exist** — `firingSeat`, set by `noteResolved`.
+- **`noteResolved` and `seatPlayedCards` count along the same walk.** The third card to resolve
+  is not the third card in the hand, and two independent tallies would light the wrong one the
+  first time somebody queued a defense before an attack.
+  `TestSeatingWalksTheSameOrderAsPlayback` is what replaced the safety the old per-event pile
+  had for free.
+- **A resolving card lifts in place** (`tableFireLift`) rather than flying to the middle to be
+  read. The middle is where the opponent's hand is now, so the old hold beat would send a card
+  across the cards it is being played against. The lift borrows selection's gesture from the
+  hand row.
+- **The two rows never touch.** Five full-size cards a side do not fit a screen, so each row
+  overlaps *within itself* and the pitch is derived exactly as `handPitch` is — the action cap
+  is a rule a ring is expected to raise, so a pitch that only worked for five would hide a
+  rendering bug behind a balance change. `TestTheTwoHandsNeverReachEachOther`.
+- **The opponent's cards are face up, and that is temporary.** `concealEnemy` is still the
+  screen's single concealment predicate and the Action Flow pane still obeys it; this row
+  deliberately does not, on the owner's call — see the cards first, decide what to hide after.
+  **The lever is already built**: `cards.Spec.FaceDown` draws a back and the draw pile is a
+  stack of them, so concealing one is a field rather than a second drawing path.
+- **Nothing is drawn while planning.** `enemyActions` holds *last* round's plan until DUEL!
+  re-plans it, so a row drawn during planning would be a picture of the wrong round. That is
+  also what makes the two rows appear and disappear together.
+- **Every opponent card is elementless**, because `data/enemy_cards.json` is. That was a fact
+  nobody could see when an enemy card was never drawn; it is visible now, and the neutral grey
+  border is the truth rather than a placeholder.
+- **A played card has not left the hand.** It leaves at the end of the round with everything
+  else played, which is what keeps the Resolution pane able to narrate from `fighterActions`
+  while the round is still running. `resolvedInHand` hides a *drawing*, exactly like
+  `inboundTo`.
 
 **The animation does not own the card, and this is the rule to protect.** `spendSelected`
 completes the whole logical move before it raises a single flight, so a card in the air has
@@ -257,26 +340,44 @@ The consequence to hold on to: **Discard is now the only way an unwanted card le
 hand.** `discardsPerRound` stopped being a convenience and became the rate at which a hand can
 be steered.
 
-**The character block replaced the fighter's sprite and health bar.** A bar says roughly
-how hurt you are, and a duel decided in whole points wants the exact number, so life is a
-red fraction. Vitae is a fixed placeholder drawn anyway, so the box has its real shape before
-the rest of the character's state is designed. **Discards left was the middle figure and left
-for the Discard button on 2026-08-11** — the strip holds what is read between rounds, not what
-is watched during one.
+**Both fighters are cards, in opposite corners.** The enemy became one on 2026-08-11,
+centred where its sprite stood; the player followed on 2026-08-12 and the two moved into the
+corners together. The player had been a framed block of stacked captions — the last thing on
+this screen drawn as furniture rather than as an object in the game — and the argument for
+ending that is the enemy's own: everything the duel is made of is a card, including both the
+people playing it.
 
-**The enemy is a card** *(2026-08-11)*, centred where its sprite stood: portrait on the top
-half, then its name, a health bar and its life as a fraction. It was the last thing on this
-screen drawn as a loose picture on the background, and everything else the duel is made of
-is a card — including the one you are fighting.
-
+- **`cards.DuelistStyle` and `cards.EnemyStyle` are twins and must stay so.** Same footprint,
+  and **the health bar and the fraction under it are at identical offsets on both** — the two
+  cards face each other across the screen, and a bar at a different height on each would turn
+  comparing them into an act of measurement. `TestTheTwoFighterCardsShareTheirHealthGeometry`
+  pins it. Above the bar they differ, because that is where they say different things: a
+  portrait on one, three stat rows on the other.
+- **The duelist card holds name, DMG, AP, Vitae, bar, fraction.** DMG is `Strike.Damage(Str)`
+  asked of the rules rather than `Str` copied out, so it stays right if strength stops being a
+  1:1 multiplier. AP is the live budget including a banked `Gather`. Vitae is still a fixed
+  placeholder with no rule behind it.
+- **`Spec.Stats` is a fixed array, not a slice, and that is load-bearing** — the screen's card
+  cache keys on the whole `Spec`, so it has to stay comparable. `cards.MaxStatLines` is what
+  the layout fits rather than headroom over it: a fourth figure lands on the health bar and
+  `TestStatRowsClearTheHealthBar` fails rather than drawing it.
+- **The enemy names itself above its portrait** *(2026-08-12)*. The name sat between the
+  portrait and the bar until then; every other card in the game carries its name across the
+  top, and a card with its own reading order reads as a different kind of object.
 - **All of it is one cached image from `internal/cards`**, health bar included, so
-  `tools/cardsheet` draws a wounded enemy without reimplementing a bar. `Life`/`MaxLife` are
+  `tools/cardsheet` draws a wounded fighter without reimplementing a bar. `Life`/`MaxLife` are
   on the `Spec`, so a point of damage is a new cache entry — affordable because life changes
-  on damage events, not per frame.
+  on damage events, not per frame. The duelist's figures work the same way.
 - **Red is what is left, not what is lost.** A bar where the red grows as the enemy weakens
   says the opposite of what it means.
+- **Neither card carries an element**, so both borders are the neutral mid grey. If the two
+  corners ever need telling apart by colour that is one entry in `cards.Element`, not a
+  change to either style.
 - **There is no loose sprite anywhere any more.** `drawCombatant`, `DrawHealthBar` and
-  `Combatant.Sprite` are gone with it, and `entities` imports no Ebitengine at all.
+  `Combatant.Sprite` are gone, and `entities` imports no Ebitengine at all.
+- **Discards left was the block's middle figure and left for the Discard button on
+  2026-08-11** — see `drawDiscardsLeft`. It never came back when the block became a card: the
+  card holds what is read between rounds, not what is watched during one.
 
 **The deck overlay is a dialog, and the only one in the game.** It fills nearly the screen,
 everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
@@ -396,9 +497,11 @@ row top by a constant. The old `rowY-4` / `rowHeight-2` numbers were picked by e
 single 30px pitch and clipped the text the moment a 22px pitch existed. `text.Measure` once per
 pane, centre everything on it, and any pitch works.
 
-**Labels in the character strip are title case, not caps.** `VITAE` rendered as `VITRE` —
-kubasta's uppercase A at 12px carries a diagonal that reads as an R with no lowercase around it
-to set the shape. Not worth a label the player reads as a different word.
+**Caps in kubasta are a size question, not a ban.** The character strip shouted HEALTH /
+DISCARDS / VITAE at 12px and `VITAE` rendered as `VITRE` — the uppercase A carries a diagonal
+that reads as an R with no lowercase around it to set the shape. **The duelist card's `DMG`
+and `AP` are caps at 17px and read correctly**, checked on the contact sheet rather than
+assumed. So: title case below about 14px, and look at anything set in caps before shipping it.
 
 **It has no phase headings, and that is a space constraint rather than a decision.** The pane
 holds nine rows between `paneFirstRow` and its bottom edge, and five player actions plus the
@@ -456,8 +559,12 @@ it again to take it out, drag sideways to move it along the row.
   without being read, and the figure answers "exactly".
 - **The row sits directly on the bar.** Losing the text line freed 22 pixels and the *cards*
   took them, moving down from 59% to 61% rather than the bar moving up — the strip below the
-  bar holds the deck stack, whose top is measured from it, and whose ring is already flush
-  with the bottom of the screen.
+  bar held the deck stack, whose top was measured from it.
+- **And down again to 66% on 2026-08-12**, once the pile stopped being measured from the bar
+  at all. The row now falls exactly where the AP figure's top meets the Discard button's top;
+  see the bottom-strip section above and `TestTheAPFigureLinesUpWithTheButtonStrip`. The
+  bar, the figure, the cards and the Resolution feed all measure off `handTopPct`, which is
+  why one constant moves the whole lower half of the screen.
 
 ## Hidden information is gated on `DebugGameplay`
 

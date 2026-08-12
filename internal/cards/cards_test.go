@@ -650,6 +650,170 @@ func TestRingNameIsCentered(t *testing.T) {
 	}
 }
 
+// The duelist card and the enemy card are the two halves of one idea — the same object in
+// opposite corners — so what has to be pinned is the things that make them a pair, plus the
+// ladder of stat rows the duelist adds.
+
+func duelist(life, of int) Spec {
+	s := Spec{Name: "Duelist", Element: Basic, Life: life, MaxLife: of, Enabled: true}
+	s.Stats[0] = StatLine{Label: "DMG", Value: "10"}
+	s.Stats[1] = StatLine{Label: "AP", Value: "6"}
+	s.Stats[2] = StatLine{Label: "Vitae", Value: "5"}
+	return s
+}
+
+func TestTheTwoFighterCardsShareTheirHealthGeometry(t *testing.T) {
+	// **They face each other across the screen.** A bar at a different height on each would
+	// turn comparing them into an act of measurement, which is the one thing a bar exists to
+	// avoid.
+	for _, c := range []struct {
+		what             string
+		duelist, enemyAt int
+	}{
+		{"bar top", DuelistStyle.HealthBarTop, EnemyStyle.HealthBarTop},
+		{"bar height", DuelistStyle.HealthBarHeight, EnemyStyle.HealthBarHeight},
+		{"bar inset", DuelistStyle.HealthBarInset, EnemyStyle.HealthBarInset},
+		{"fraction top", DuelistStyle.HealthTextTop, EnemyStyle.HealthTextTop},
+		{"width", DuelistStyle.Width, EnemyStyle.Width},
+		{"height", DuelistStyle.Height, EnemyStyle.Height},
+	} {
+		if c.duelist != c.enemyAt {
+			t.Errorf("%s is %d on the duelist card and %d on the enemy's", c.what, c.duelist, c.enemyAt)
+		}
+	}
+	if DuelistStyle.HealthTextSize != EnemyStyle.HealthTextSize {
+		t.Errorf("the fraction is %gpt on the duelist card and %gpt on the enemy's",
+			DuelistStyle.HealthTextSize, EnemyStyle.HealthTextSize)
+	}
+}
+
+func TestStatRowsClearTheHealthBar(t *testing.T) {
+	// MaxStatLines is a *layout* cap, so this is what makes it one: the full ladder has to
+	// finish above the bar. Raising the constant without moving the bar fails here rather
+	// than printing "Vitae" through the player's health.
+	st := DuelistStyle
+	f := faces(t)
+	face, err := f.at(st.StatSize)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := face.Metrics()
+	rowHeight := m.Ascent.Ceil() + m.Descent.Ceil()
+
+	bottom := st.StatsTop + (MaxStatLines-1)*st.StatRowPitch + rowHeight
+	if bottom > st.HealthBarTop {
+		t.Errorf("%d stat rows end at y=%d, %dpx into the health bar at y=%d",
+			MaxStatLines, bottom, bottom-st.HealthBarTop, st.HealthBarTop)
+	}
+
+	// And they start below the name rather than on it.
+	nameFace, err := f.at(st.NameSize)
+	if err != nil {
+		t.Fatal(err)
+	}
+	nm := nameFace.Metrics()
+	nameBottom := st.NameTop + nm.Ascent.Ceil() + nm.Descent.Ceil()
+	if nameBottom > st.StatsTop {
+		t.Errorf("the name ends at y=%d, below the first stat row at y=%d", nameBottom, st.StatsTop)
+	}
+}
+
+func TestStatRowsAreDrawnAsALabelLeftAndAFigureRight(t *testing.T) {
+	// The figures line up as a column whatever their width, which is what right-aligning
+	// them buys and the reason they are not simply drawn after the label.
+	st := DuelistStyle
+	img := render(t, duelist(74, 120), st)
+
+	for i := 0; i < 3; i++ {
+		top := st.StatsTop + i*st.StatRowPitch
+		left, right := st.Width, 0
+		for y := top; y < top+st.StatRowPitch-4; y++ {
+			for x := st.BorderWidth; x < st.Width-st.BorderWidth; x++ {
+				if img.RGBAAt(x, y) != Surface {
+					if x < left {
+						left = x
+					}
+					if x > right {
+						right = x
+					}
+				}
+			}
+		}
+		if right <= left {
+			t.Fatalf("stat row %d drew nothing", i)
+		}
+		if left != st.TextLeft {
+			t.Errorf("stat row %d starts at x=%d, want the left margin at x=%d", i, left, st.TextLeft)
+		}
+		// Within a pixel of the right margin: the glyph's own bearing can leave one column
+		// clear, and demanding an exact hit would be measuring the font rather than the layout.
+		if want := st.Width - st.TextLeft; want-right > 2 {
+			t.Errorf("stat row %d ends at x=%d, %dpx short of the right margin at x=%d",
+				i, right, want-right, want)
+		}
+	}
+}
+
+func TestAStyleWithNoStatsDrawsNone(t *testing.T) {
+	// Every other style leaves StatRowPitch at zero, and a Spec carrying stats must not put
+	// them on one. The hand card is the case that matters: its left column is exactly where
+	// the rows would land.
+	s := strike(Fire)
+	s.Stats[0] = StatLine{Label: "DMG", Value: "10"}
+
+	plain, withStats := render(t, strike(Fire), Hand), render(t, s, Hand)
+	for i := range plain.Pix {
+		if plain.Pix[i] != withStats.Pix[i] {
+			t.Fatalf("stats on a Spec changed a hand card, which draws none (byte %d)", i)
+		}
+	}
+}
+
+func TestABlankStatRowLeavesItsRowEmpty(t *testing.T) {
+	// The rows are a fixed ladder with a health bar placed under them, so a card with a gap
+	// in its figures must not close up — otherwise the same card at two moments in a run has
+	// its numbers at different heights.
+	st := DuelistStyle
+
+	full := duelist(74, 120)
+	gapped := full
+	gapped.Stats[1] = StatLine{}
+
+	fullImg, gappedImg := render(t, full, st), render(t, gapped, st)
+
+	// The third row is identical in both, which is only true if the blank row held its place.
+	top := st.StatsTop + 2*st.StatRowPitch
+	for y := top; y < top+st.StatRowPitch; y++ {
+		for x := st.BorderWidth; x < st.Width-st.BorderWidth; x++ {
+			if fullImg.RGBAAt(x, y) != gappedImg.RGBAAt(x, y) {
+				t.Fatalf("the last stat row moved when the one above it was blanked, at (%d,%d)", x, y)
+			}
+		}
+	}
+}
+
+func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
+	// **Every card in the game carries its name across the top** — Hand, Mini and RingStyle
+	// all do, and the enemy did not until 2026-08-12. This is the invariant, not the offset:
+	// a card whose name sits somewhere else reads as a different kind of object.
+	for name, st := range map[string]Style{
+		"enemy": EnemyStyle, "ring": RingStyle, "duelist": DuelistStyle, "hand": Hand,
+	} {
+		if !st.ShowName || !st.NameCentered {
+			t.Errorf("%s does not centre a name across its top", name)
+		}
+	}
+	if EnemyStyle.NameTop >= EnemyStyle.ArtTop {
+		t.Errorf("the enemy's name is at y=%d, at or below its portrait at y=%d",
+			EnemyStyle.NameTop, EnemyStyle.ArtTop)
+	}
+	// And the portrait still clears the bar under it.
+	if bottom := EnemyStyle.ArtTop + EnemyStyle.ArtMaxH; bottom > EnemyStyle.HealthBarTop {
+		t.Errorf("the portrait box ends at y=%d, %dpx into the health bar at y=%d",
+			bottom, bottom-EnemyStyle.HealthBarTop, EnemyStyle.HealthBarTop)
+	}
+}
+
 // The back is one drawing with one job, so there are only three things to pin: that it is
 // the same object as a face, that it says nothing about which card it is, and that it does
 // not need the things a face needs.

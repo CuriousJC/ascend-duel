@@ -43,12 +43,22 @@ const (
 	// The row sits low, with the budget bar and then the button strip beneath it. handTopPct
 	// is the top of an *unselected* card; a selected one rises above it by selectedNudge.
 	//
-	// **59% until 2026-08-11.** It came down when the AP text line went, so the cards sit
-	// directly on top of the bar that fills as they are selected. The bar's own y is measured
-	// from the row, and the deck stack's from the bar, so moving the row is how that whole
-	// stack of things moves together — and it is bounded at the bottom by the stack's ring,
-	// which TestDeckStackClearsTheAPBarAndTheScreen holds against the screen edge.
-	handTopPct = 61
+	// **59% until 2026-08-11, 61% until 2026-08-12.** It came down the first time when the AP
+	// text line went, so the cards sit directly on top of the bar that fills as they are
+	// selected. It came down again when the deck pile was re-hung off the bottom of the screen:
+	// that freed the band the pile used to float in, and **66% is the value that puts the
+	// action-point figure's top exactly on the Discard button's top**, which is what the owner
+	// asked for and also the tightest the strip goes.
+	//
+	// The arithmetic, because it is a coincidence of five constants and not a round number:
+	// PctY(66) is 633, plus a 224px card, plus apBarBelow, apBarHeight and apFigureBelowBar
+	// is 887 — and the button strip's centre at PctY(95) less half a 50px button is 887 too.
+	// **Nothing enforces that**, so TestTheAPFigureLinesUpWithTheButtonStrip does.
+	//
+	// The bar's own y is measured from this row and the Resolution feed's bottom edge from it
+	// as well, so moving the row moves the whole lower half of the screen together — which is
+	// the point: what the drop buys is height between the top row and the cards.
+	handTopPct = 66
 
 	// selectedNudge is how far a selected card lifts out of the row. Selection is the only
 	// state a card carries, so it gets a whole axis to itself rather than a tint that would
@@ -75,6 +85,14 @@ const (
 	// The strip under the bar: the AP figure, the two buttons and the deck pile, all on one
 	// line. buttonStripPct is that line's centre and every one of them is placed against it.
 	buttonStripPct = 95
+
+	// Both buttons on that strip are the same size, and it is named here rather than written
+	// at the two NewButton calls because **three other things are placed against it**: the
+	// discard badge hangs off a corner, buttonStripSlots divides the space around the pair,
+	// and the AP figure's line is checked against their top edge. Those were reading a
+	// literal 138 copied into a test, which is the shape of thing that drifts.
+	stripButtonWidth  = 138
+	stripButtonHeight = 50
 
 	// **The figure came back on 2026-08-11**, having been dropped that same day along with the
 	// pile counts it shared a line with. What was wrong with it was where it was — a line of

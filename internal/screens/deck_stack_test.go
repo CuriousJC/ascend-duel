@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
@@ -46,6 +47,49 @@ func TestDeckStackClearsTheAPBarAndTheScreen(t *testing.T) {
 	}
 }
 
+func TestTheBottomOfTheScreenIsOneLine(t *testing.T) {
+	gs := testState()
+
+	// **Three things hang off the bottom of the screen and they read as one line.** The deck
+	// pile and the mute button share an inset exactly; the discard badge lands four pixels
+	// lower because it hangs off a button strip placed as a percentage, and chasing that would
+	// mean taking the strip off percentages for no other reason.
+	//
+	// The mute button is chrome and lives in internal/game, which imports this package and so
+	// cannot be imported back. Its inset is therefore written down rather than read, and
+	// TestTheMuteButtonSitsInTheBottomLeftCornerOnScreen holds the other end of it.
+	const muteButtonInset = 10
+
+	pile := gs.ScreenHeight - deckStackRect(gs).Max.Y
+	if pile != muteButtonInset {
+		t.Errorf("the deck pile sits %dpx off the bottom edge and the mute button %dpx",
+			pile, muteButtonInset)
+	}
+
+	// The badge is a disc centred on the Discard button's bottom-right corner, so its lowest
+	// point is a radius below that corner.
+	badgeBottom := gs.PctY(buttonStripPct) + stripButtonHeight/2 + discardBadgeRadius
+	if d := badgeBottom - deckStackRect(gs).Max.Y; d < 0 || d > 6 {
+		t.Errorf("the discard badge ends at y=%d and the deck pile at y=%d — %dpx apart, which no longer reads as one line",
+			badgeBottom, deckStackRect(gs).Max.Y, d)
+	}
+}
+
+func TestTheAPFigureLinesUpWithTheButtonStrip(t *testing.T) {
+	gs := testState()
+
+	// **The thing the owner asked for on 2026-08-12**, and a coincidence of five constants
+	// rather than anything the code enforces: the action-point figure's top on the same line
+	// as the Discard button's top. handTopPct is the only one of the five that was chosen to
+	// make it true, so this is what says so.
+	figureTop := gs.PctY(handTopPct) + cardHeight + apBarBelow + apBarHeight + apFigureBelowBar
+	buttonTop := gs.PctY(buttonStripPct) - stripButtonHeight/2
+
+	if figureTop != buttonTop {
+		t.Errorf("the AP figure's top is y=%d and the button strip's top is y=%d", figureTop, buttonTop)
+	}
+}
+
 func TestDeckStackIsTheSizeItIsDrawnAt(t *testing.T) {
 	gs := testState()
 
@@ -79,23 +123,29 @@ func TestStackStyleKeepsTheCardsProportions(t *testing.T) {
 func TestTheComboRingFitsOnScreen(t *testing.T) {
 	gs := testState()
 
-	// The ring is drawn around the pile, so the first card's inset has to leave room for it.
+	// The ring is drawn around the played cards, so the row's inset has to leave room for it.
 	// Flush against the margin puts the bracket off the screen, which reads as a highlight
 	// with a side missing rather than as a card being too far left.
-	first := pileAt(gs, 0)
-	left := first.X - comboRingInset - comboRingWidth/2
-	if left < 0 {
+	//
+	// **A card lifted by tableFireLift is the top of the ring**, so the check is against that
+	// rather than against the row's resting y — the one moment a combo fires is also the one
+	// moment a card is highest.
+	// The widest row the rules can produce, asked of the rules rather than written down: a
+	// ring raising the cap must not be able to push the ring off the screen quietly.
+	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions())
+	if left := first.X - comboRingInset - comboRingWidth/2; left < 0 {
 		t.Errorf("the combo ring starts at x=%d, off the left of the screen", left)
 	}
+	if top := first.Y - tableFireLift - comboRingInset - comboRingWidth/2; top < 0 {
+		t.Errorf("the combo ring starts at y=%d, off the top of the screen", top)
+	}
 
-	// And its bottom must clear the action-point bar under the hand row. That used to be the
-	// `3/6 AP` line printed ten pixels below the cards; the line went on 2026-08-11 and the
-	// bar came up into roughly its place, so the ring has the same amount of room and the
-	// same reason to be checked for it.
+	// And its bottom must clear the Resolution feed, which is the one thing a played card may
+	// never cover — see tableRowTop.
 	bottom := first.Y + cardHeight + comboRingInset + comboRingWidth/2
-	apBar := gs.PctY(handTopPct) + cardHeight + apBarBelow
-	if bottom > apBar {
-		t.Errorf("the combo ring reaches y=%d, through the AP bar at y=%d", bottom, apBar)
+	feedTop := gs.PctY(handTopPct) - feedGapAboveCards - feedHeight()
+	if bottom > feedTop {
+		t.Errorf("the combo ring reaches y=%d, through the Resolution feed at y=%d", bottom, feedTop)
 	}
 }
 
@@ -106,7 +156,7 @@ func TestTheComboRingFitsOnScreen(t *testing.T) {
 func TestTheButtonStripSharesItsSpaceEvenly(t *testing.T) {
 	gs := testState()
 
-	const discardWidth, duelWidth = 138, 138
+	const discardWidth, duelWidth = stripButtonWidth, stripButtonWidth
 	discardX, duelX := buttonStripSlots(gs, discardWidth, duelWidth)
 
 	figure, pile := apFigureRight(gs), deckStackBounds(gs).Min.X

@@ -331,3 +331,26 @@ func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 		}
 	}
 }
+
+func TestADeadDuelistDoesNotBurn(t *testing.T) {
+	// **A corpse does not tick, and the reason is the log rather than the arithmetic.** The
+	// first version burned regardless: a duelist killed by a Riposte took a fire tick
+	// afterwards and the Resolution feed read "falls / burns for 2 / falls". Whether a duelist
+	// is dead is settled before either side's round-end runs, so skipping the tick introduces
+	// no order dependence.
+	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+
+	// Light B, then kill B with the same turn.
+	b.CurrentLife = Jab.Damage(a.Str) + Strike.Damage(a.Str)
+	events, _, bAfter := ResolveRound(a, b, []Card{Of(Jab, Fire), Plain(Strike)}, nil, 1)
+
+	if bAfter.Alive() {
+		t.Fatalf("the target survived on %d life; this test needs it dead", bAfter.CurrentLife)
+	}
+	if n := countKind(events, KindBurned); n != 0 {
+		t.Errorf("a dead duelist burned %d times", n)
+	}
+	if n := countKind(events, KindDefeated); n != 1 {
+		t.Errorf("%d KindDefeated events, want exactly 1 — a duelist falls once", n)
+	}
+}

@@ -38,8 +38,8 @@ import (
 // shape of a fight rather than its transcript.
 type playerRound struct {
 	label   string
-	defence []combat.ActionKind
-	attack  []combat.ActionKind
+	defence []combat.Card
+	attack  []combat.Card
 }
 
 // detail names one record to print round by round, under the summary table. The table is
@@ -63,31 +63,44 @@ func main() {
 	// four new concepts would otherwise have shipped with their balance unmeasured.
 	postures := []playerRound{
 		// 6 AP: everything into damage.
-		{"all-out", nil, []combat.ActionKind{combat.Heavy, combat.Strike}},
+		{"all-out", nil, combat.PlainCards(combat.Heavy, combat.Strike)},
 		// Guard is 3, leaving a Strike.
-		{"guarding", []combat.ActionKind{combat.Guard}, []combat.ActionKind{combat.Strike}},
+		{"guarding", combat.PlainCards(combat.Guard), combat.PlainCards(combat.Strike)},
 		// Two Dodges are 4, leaving a Strike.
-		{"dodging", []combat.ActionKind{combat.Dodge, combat.Dodge}, []combat.ActionKind{combat.Strike}},
+		{"dodging", combat.PlainCards(combat.Dodge, combat.Dodge), combat.PlainCards(combat.Strike)},
 
 		// Mirror is 4, leaving a Jab. **This is the posture to read first**: Mirror reflects
 		// every attack it stops, so its value is set entirely by how much the opponent commits.
 		// Against a swarm it should be devastating and against a warden nearly worthless, and if
 		// it is strong against everything then the reflect fraction is wrong.
-		{"mirroring", []combat.ActionKind{combat.Mirror}, []combat.ActionKind{combat.Jab}},
+		{"mirroring", combat.PlainCards(combat.Mirror), combat.PlainCards(combat.Jab)},
 		// Three Braces are 3, leaving a Strike — the cheap partial defence spread wide, against
 		// two Dodges' precise negation.
-		{"bracing", []combat.ActionKind{combat.Brace, combat.Brace, combat.Brace}, []combat.ActionKind{combat.Strike}},
+		{"bracing", combat.PlainCards(combat.Brace, combat.Brace, combat.Brace), combat.PlainCards(combat.Strike)},
 		// Feint is 3 and a Strike is 2. Only distinguishable from all-out against an opponent
 		// holding negations, which is what makes it the anti-Riposte reading.
-		{"feinting", nil, []combat.ActionKind{combat.Feint, combat.Strike}},
+		{"feinting", nil, combat.PlainCards(combat.Feint, combat.Strike)},
 		// Ritual is 4, leaving a Jab, and banks +5. Repeated every round it is a posture that
 		// pays 4 AP a round for a budget it never gets to spend — deliberately a bad plan, and
 		// the floor a real Ritual line has to beat.
-		{"ritual", []combat.ActionKind{combat.Ritual}, []combat.ActionKind{combat.Jab}},
+		{"ritual", combat.PlainCards(combat.Ritual), combat.PlainCards(combat.Jab)},
+
+		// **The four element postures are all-out in a colour** *(2026-08-12)*, and they are meant
+		// to be read against that row rather than against each other: same concepts, same 6 AP,
+		// the same damage — so whatever a coloured row does differently is what the element is
+		// worth.
+		//
+		// They exist because statuses landed the same day, and **a status no posture applies is a
+		// status this tool cannot see** — the same rule the seven above were extended under when
+		// four concepts arrived with their balance unmeasured.
+		{"burning", nil, elemental(combat.Fire, combat.Heavy, combat.Strike)},
+		{"chilling", nil, elemental(combat.Ice, combat.Heavy, combat.Strike)},
+		{"shocking", nil, elemental(combat.Lightning, combat.Heavy, combat.Strike)},
+		{"weighting", nil, elemental(combat.Earth, combat.Heavy, combat.Strike)},
 	}
 	fmt.Println("\npostures:")
 	for _, p := range postures {
-		fmt.Printf("  %-9s %s\n", p.label, label(append(append([]combat.ActionKind{}, p.defence...), p.attack...)))
+		fmt.Printf("  %-9s %s\n", p.label, label(append(append([]combat.Card{}, p.defence...), p.attack...)))
 	}
 
 	// **A summary line per enemy, not seven rows each** *(2026-08-11)*. The roster went from
@@ -179,7 +192,7 @@ const stalemateRounds = 40
 func report(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound) {
 	// The first two rounds are printed because a tactician's character is that its second
 	// round is not its first, and a verdict alone would not show that.
-	sample := func(round int, enemyPlan []combat.ActionKind, dealt, taken int) {
+	sample := func(round int, enemyPlan []combat.Card, dealt, taken int) {
 		if round <= 2 {
 			fmt.Printf("   r%d %-9s vs %-30s deal %2d  take %2d\n",
 				round, p.label, label(enemyPlan), dealt, taken)
@@ -200,9 +213,9 @@ func report(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound
 // `each` may be nil, and is called with the round number, what the opponent queued, and what
 // each side lost in that round.
 func play(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound,
-	each func(round int, enemyPlan []combat.ActionKind, dealt, taken int)) (combat.Duelist, combat.Duelist, int) {
+	each func(round int, enemyPlan []combat.Card, dealt, taken int)) (combat.Duelist, combat.Duelist, int) {
 
-	plan := append(append([]combat.ActionKind{}, p.defence...), p.attack...)
+	plan := append(append([]combat.Card{}, p.defence...), p.attack...)
 
 	f, e := fighter, enemy
 	round := 0
@@ -279,16 +292,26 @@ func playerWins(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerR
 	return !e.Alive() && f.Alive()
 }
 
-func label(plan []combat.ActionKind) string {
+// elemental builds a posture's attacks all in one element. Only the four element rows use it,
+// and they are deliberately the same concepts as all-out so the comparison stays clean.
+func elemental(e combat.Element, actions ...combat.ActionKind) []combat.Card {
+	out := make([]combat.Card, len(actions))
+	for i, a := range actions {
+		out[i] = combat.Of(a, e)
+	}
+	return out
+}
+
+func label(plan []combat.Card) string {
 	if len(plan) == 0 {
 		return "(nothing)"
 	}
 	out := ""
-	for i, a := range plan {
+	for i, c := range plan {
 		if i > 0 {
 			out += "+"
 		}
-		out += a.String()
+		out += c.String()
 	}
 	return out
 }

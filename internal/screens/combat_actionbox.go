@@ -154,7 +154,7 @@ const (
 // paletteCard is one card in the hand: the card itself, and whether it is queued this
 // round. Selection is the only thing the hand adds to a card that is not also true of it
 // sitting in a pile, which is why the instance is embedded rather than copied out field by
-// field — c.action still reads the same everywhere it did before.
+// field — c.Action still reads the same everywhere it did before.
 type paletteCard struct {
 	actionCard
 	selected bool
@@ -208,7 +208,7 @@ func (s *CombatScene) syncQueue() {
 	s.fighterActions = s.fighterActions[:0]
 	for _, c := range s.hand {
 		if c.selected {
-			s.fighterActions = append(s.fighterActions, c.action)
+			s.fighterActions = append(s.fighterActions, c.actionCard)
 		}
 	}
 }

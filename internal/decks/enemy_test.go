@@ -40,9 +40,9 @@ func TestAnEnemyKeepsActingForAWholeDuel(t *testing.T) {
 func TestAPlanOnlyEverSpendsCardsFromTheDeck(t *testing.T) {
 	// A style may not conjure a card the deck does not contain — which is the whole point of
 	// enemies having one, and what makes enemy_cards.json a file worth editing.
-	held := map[combat.ActionKind]bool{}
-	for _, a := range EnemyCards() {
-		held[a] = true
+	held := map[combat.Card]bool{}
+	for _, c := range EnemyCards() {
+		held[c] = true
 	}
 
 	for _, style := range combat.PlanStyles() {
@@ -50,9 +50,9 @@ func TestAPlanOnlyEverSpendsCardsFromTheDeck(t *testing.T) {
 		d := testEnemy()
 
 		for round := 1; round <= 20; round++ {
-			for _, a := range p.Plan(style, d) {
-				if !held[a] {
-					t.Fatalf("%v played %v, which is not in the enemy deck", style, a)
+			for _, c := range p.Plan(style, d) {
+				if !held[c] {
+					t.Fatalf("%v played %v, which is not in the enemy deck", style, c)
 				}
 			}
 		}
@@ -106,7 +106,7 @@ func TestEnemyCardsCannotBeEditedByACaller(t *testing.T) {
 	// Overwritten with a card the enemy deck does not contain, rather than by swapping two
 	// entries. The list opens with four Gathers, so a swap of the first two is a no-op in
 	// value terms and the test passed whether or not the copy was real.
-	const notInDeck = combat.Mirror
+	notInDeck := combat.Plain(combat.Mirror)
 
 	first := EnemyCards()
 	if len(first) == 0 {

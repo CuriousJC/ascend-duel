@@ -11,10 +11,13 @@
 // **No Ebitengine here, ever**, for that reason. It sits between `data` and
 // `internal/combat`, importing both, which neither of them may do.
 //
-// The player's deck deliberately stays in `internal/screens`. Its cards carry an element,
-// are drawn on screen, and move through a hand that can be reordered — none of which is true
-// of an enemy's, and pulling it down here would mean giving this package a screen's
-// vocabulary to reuse a loop.
+// The player's deck deliberately stays in `internal/screens`. Its cards are drawn on screen and
+// move through a hand that can be reordered, neither of which is true of an enemy's, and pulling
+// it down here would mean giving this package a screen's vocabulary to reuse a loop.
+//
+// **The element used to be the other half of that argument and is not any more** *(2026-08-12)*.
+// It was a screen concept; it is a rule now, `combat.Element`, so both decks deal
+// `combat.Card` and this package reads the colour out of its JSON like any other field.
 package decks
 
 import (
@@ -34,8 +37,8 @@ var enemyCards = buildEnemyCards()
 
 // EnemyCards is the list, copied, for anything that wants to look at it without being able
 // to change what every future duel is dealt.
-func EnemyCards() []combat.ActionKind {
-	return append([]combat.ActionKind(nil), enemyCards...)
+func EnemyCards() []combat.Card {
+	return append([]combat.Card(nil), enemyCards...)
 }
 
 // buildEnemyCards turns the data records into a flat list, in file order.
@@ -45,10 +48,14 @@ func EnemyCards() []combat.ActionKind {
 // deck quietly missing cards — and an enemy silently short its Heavies is a balance change
 // nobody made.
 //
-// **Elements multiply the copies but are not carried.** An enemy card is never drawn on
-// screen, so its colour would be a fact nobody could see; what the Elements list does here is
-// let one file shape serve both sides.
-func buildEnemyCards() []combat.ActionKind {
+// **Elements are carried now, and today they are all basic** *(2026-08-12)*. The list used to
+// multiply the copies and throw the colour away, on the grounds that an enemy card was never
+// drawn on screen. It is drawn now — the table lays both queues out — and the element is a rule
+// rather than a border, so the file is read as written. Every entry says `basic`, which is
+// MECHANICS.md's plan working rather than a gap: an affix *transforms* an enemy's basic deck
+// into an element, so a colour typed into this file would pre-empt a mechanic that does not
+// exist. Nothing stops one being added the day affixes land.
+func buildEnemyCards() []combat.Card {
 	records := data.LoadEnemyCards()
 
 	problems := data.CheckCostTiers("enemy_cards.json", records,
@@ -75,15 +82,19 @@ func buildEnemyCards() []combat.ActionKind {
 		panic(msg)
 	}
 
-	var out []combat.ActionKind
+	var out []combat.Card
 	for _, c := range records {
 		action, ok := combat.ParseAction(c.Concept)
 		if !ok {
 			panic("enemy_cards.json: unknown concept " + c.Concept)
 		}
-		for range c.Elements {
+		for _, name := range c.Elements {
+			element, ok := combat.ParseElement(name)
+			if !ok {
+				panic("enemy_cards.json: " + c.Concept + " names unknown element " + name)
+			}
 			for i := 0; i < c.Copies; i++ {
-				out = append(out, action)
+				out = append(out, combat.Of(action, element))
 			}
 		}
 	}
@@ -126,9 +137,9 @@ const EnemySeed int64 = 20260811
 // Persistence without it is not a harder deck, it is a lock. If enemies ever get a discard
 // of their own, this is the decision to revisit.
 type EnemyPile struct {
-	draw    []combat.ActionKind
-	hand    []combat.ActionKind
-	discard []combat.ActionKind
+	draw    []combat.Card
+	hand    []combat.Card
+	discard []combat.Card
 
 	handSize int
 
@@ -156,12 +167,12 @@ func NewEnemyPile(seed int64, handSize int) *EnemyPile {
 // **The cards leave the hand here, before the round resolves.** That mirrors the player's
 // queue: what is committed is spent, whether or not a stagger later deletes it from the
 // round. A card the engine refuses to play is still a card that was thrown.
-func (p *EnemyPile) Plan(style combat.PlanStyle, d combat.Duelist) []combat.ActionKind {
+func (p *EnemyPile) Plan(style combat.PlanStyle, d combat.Duelist) []combat.Card {
 	p.fill()
 
 	plan := combat.PlanFor(style, d, p.hand)
-	for _, a := range plan {
-		p.spend(a)
+	for _, c := range plan {
+		p.spend(c)
 	}
 
 	// What was not played goes back too. See the type's comment: without a discard of its
@@ -178,11 +189,13 @@ func (p *EnemyPile) Counts() (draw, hand, discard int) {
 	return len(p.draw), len(p.hand), len(p.discard)
 }
 
-func (p *EnemyPile) spend(a combat.ActionKind) {
+// spend moves one played card out of the hand and into the discard. It matches the whole card,
+// element included, so a plan that took a fire Jab does not discard the basic one beside it.
+func (p *EnemyPile) spend(card combat.Card) {
 	for i, c := range p.hand {
-		if c == a {
+		if c == card {
 			p.hand = append(p.hand[:i], p.hand[i+1:]...)
-			p.discard = append(p.discard, a)
+			p.discard = append(p.discard, card)
 			return
 		}
 	}

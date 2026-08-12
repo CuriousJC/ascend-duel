@@ -11,10 +11,11 @@ phase resolution landed on 2026-08-06**, **combos on 2026-08-07**, and **the ful
 60-card deck on 2026-08-08** — those sections describe running code and say so. Everything else
 is still design.
 
-**Elements are the next piece of work, and three things wait on it.** Ring discounts, flip rings
-and the five-of-a-colour combo all need `element` to cross from the screen into
-`internal/combat`; none of them can be built until it does. That is the single highest-leverage
-change left in this document.
+**Elements crossed into `internal/combat` on 2026-08-12**, along with the four statuses they
+apply. That was the change three others were waiting on, and it unblocked all three: ring
+discounts, flip rings and the five-of-a-colour combo can now all be written. **The next piece of
+work is combos as data** — a `combos.json` catalogue reaching the rules through a bridge
+package, so the set can be seen and grown in one file.
 
 ---
 
@@ -244,32 +245,112 @@ colour-coded or the elements avoid those hues.
 
 ### Statuses
 
-Elements are **mechanical**, as always intended. Each applies a status **to the opponent**:
+*Implemented 2026-08-12, in `internal/combat/status.go`.* Elements are **mechanical**, as
+always intended. Each applies a status **to whoever took the blow**:
 
-| Element | Status |
-|---|---|
-| **ice** | reduces the enemy's AP |
-| **lightning** | introduces a chance to miss |
-| **fire** | damage over time — persists a set duration, lands **at end of round** |
-| **earth** | blunts the damage the opponent deals, by a percentage |
+| Element | Status | What it does |
+|---|---|---|
+| **ice** | chill | −1 AP per stack off the victim's next budget |
+| **lightning** | shock | the victim's next attack misses outright, one per stack |
+| **fire** | burn | 2 damage per stack at the end of each round it survives |
+| **earth** | weight | the victim deals 10% less damage per stack, capped at 50% |
 
-Duration, stacking and refresh are `[?]` for all four.
+**Element crossed into `internal/combat` the same day**, which is what this section had been
+waiting on since 2026-08-05 and what unblocked ring discounts and the flip ring with it.
+`combat.Element` is a rules type, `combat.Card` is a concept plus an element, and `[]Card`
+replaced `[]ActionKind` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor`, `CostOf`
+and every planner. The screen's own `element` type and its `actionCard` struct are gone —
+`actionCard` is an alias for `combat.Card`, so the hand, the queue and the round are one type
+and a card is never converted between them.
 
-Notes on each:
+**Cost is now a method on the card** (`Card.Cost()`), delegating to the concept. Nothing
+discounts anything yet; that is the seat the ring discount sits in, cut while everything else
+was moving.
+
+#### The trigger: a landed attack, and nothing else
+
+**Decided 2026-08-12.** A prepare or a defend carries its element for combos and for the ring
+discount and applies no status. The alternative — every card applying its status — makes a 1-AP
+Gather as good a delivery as a 1-AP Jab and turns the prepare phase into the status engine.
+
+The cost, stated: **element is mechanically inert on eight of the twelve concepts** until rings
+land. And **the status lands because the blow connected, not because it hurt** — a Guard halves
+a hit and the hit still landed, so it still chills. A Dodge, Riposte or Mirror stops the blow
+dead and nothing is applied.
+
+**Magnitude is per hit, not per card.** A fire Jab and a fire Heavy apply the same burn, so the
+cheapest attack in the deck is the cheapest status delivery. The concept ladder prices damage;
+the element ladder does not exist. Making status scale with the card is a second axis and a
+design change.
+
+#### One lifecycle, learned once
+
+**Amount stacks, duration refreshes, everything clears at the end of the round after the one
+that applied it.** `statusDuration` is 2 round-ends and it is one number for all four
+deliberately. It cannot be 1: side B acts second, so a status B applied would expire before it
+ever bit anything.
+
+Per-element tuning is one constant each away. Run `tools/balance` before moving one.
+
+#### Lightning is deterministic, and that is a change to this document
+
+**"A chance to miss" is gone; a shock makes the next attack miss outright** *(2026-08-12)*. A
+roll would need an injected `*rand.Rand` on `ResolveRound` — a sixth determinism stream,
+advanced per attack, so any change to round one reshuffles every roll after it — and it would
+end `internal/combat` being pure integer arithmetic, which is what makes it testable and what
+makes `tools/balance` exact rather than a distribution. A certain miss also matches the rule
+combos already follow: **what you committed to cannot be silently undone.**
+
+What it gives up is the tension of a swing that might not land. Recorded rather than hidden.
+
+#### The rest, and what each cost
 
 - **Ice is the AP element in both directions.** The ice *ring* discounts your ice cards; the
-  ice *status* cuts the enemy's budget. Same element, opposite targets, deliberate.
-- **Fire needs state that outlives an action.** `ResolveRound` today only produces damage as a
-  consequence of an action; a DoT ticks at a point in the round owned by nobody's action and
-  persists across the boundary. New event kind, and `advancePlayback` grows a case.
-- **Earth is the first percentage** in a package documented as pure integer arithmetic.
-  Workable — `guardDivisor` already halves with integer division — but the rounding rule has
-  to be stated, not left to `/`.
-- **Statuses need a home.** `Duelist` has exactly one today, `Guarded bool`. Four statuses
-  with amounts and durations is a status *system*, and combos both read and consume them.
+  ice *status* cuts the enemy's budget. Same element, opposite targets, deliberate. It is read
+  in `ActionPoints()` rather than subtracted when it lands, which is what makes it bite the
+  round *after* the blow — the budget for the round in progress was committed before the attack
+  resolved. The existing floor of 1 AP still holds however cold it gets.
+- **Fire needed state that outlives an action**, and got it. `KindBurned` fires from `endRound`,
+  side A then side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a
+  burn changes a life total with nobody acting. **A burn can kill**, and produces a
+  `KindDefeated` when it does.
+- **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
+  so the order is: concept damage, combo multiplier, the attacker's weight, then the defender's
+  brace and guard. A Mirror reflects the blunted figure, because that is what the attacker
+  actually committed. A Riposte's counter is outside it, exactly as it is outside the combo
+  multiplier — that is the defender hitting back, not a card the weighted duelist played.
+  **Rounding is toward zero**, matching `guardDivisor` and `scaleDamage`, so it is predictable
+  from the reductions already in the game.
+- **Statuses got a home**, and it is `Duelist.Statuses [ElementCount]Status` — an array indexed
+  by element, not four named fields. That is what makes *"consume the status this element
+  applies"* expressible, which Extinguishing Strike needs and which is the difference between a
+  system and four ad-hoc fields. The price: **`Element` is append-only**, like `ActionKind` and
+  `GlyphKind`. `Guarded` and the counted negations stay where they are — they are card effects,
+  and filing them in a table indexed by colour would say they were not.
 
 **Poison has lost its obvious job.** Fire is the damage-over-time element now. Poison, force
 and hunger have no statuses.
+
+#### What the balance tool says, and it is not comfortable
+
+`tools/balance` gained four element postures on 2026-08-12 — all-out in a colour, same concepts
+and same 6 AP, so a coloured row read against `all-out` is what the element is worth. Enemies
+beaten, out of 96:
+
+| mirroring | shocking | dodging | chilling | weighting | burning | all-out | feinting | guarding | bracing | ritual |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 94 | 94 | 91 | 77 | 64 | 55 | 48 | 37 | 26 | 26 | 0 |
+
+- **`[?]` Shock is priced wrong and the number is one constant.** It ties Mirror, which this
+  document already records as too strong — and it does so while dealing full damage, where
+  Mirror gives up its turn. Two lightning attacks a round is a free negation of most enemy
+  turns on top of a full offence. `shockPerHit` is the lever; a shock that needed two hits to
+  spend, or that only stopped the victim's *first* attack, are the two candidates.
+- **`[?]` Every element beats plain.** A fire Strike costs what a Strike costs and does strictly
+  more, so the 12 basic cards in a 60-card deck are strictly the worst 12. That is a
+  consequence of cost being per concept, which is deliberate and is what the ring discount is
+  designed around — but it means `basic` currently has no reason to be in a deck at all.
+  Worth deciding whether basic is a *cheaper* card or simply the thing an affix transforms.
 
 ---
 
@@ -354,9 +435,20 @@ live; when one does, discovery gates the *table* and nothing else changes.
 *Framework implemented 2026-08-07 in `internal/combat/combo.go`.*
 
 Every combo is the same shape. **A run of cards that must appear consecutively in your own
-turn**, and an `Effect` saying what forming it buys. A step matches either an exact card
-(`Card(Strike)`) or any card of a category (`AnyOf(CategoryAttack)`), which is what lets "three
-attacks" mean three attacks rather than three Strikes.
+turn**, and an `Effect` saying what forming it buys. A step matches an exact concept
+(`Exactly(Strike)`), any concept of a category (`AnyOf(CategoryAttack)`) — which is what lets
+"three attacks" mean three attacks rather than three Strikes — or **any card of one element**
+(`OfElement(Ice)`). Any of the three can be pinned to a colour as well:
+`Exactly(Strike).WithElement(Ice)` is an ice Strike and nothing else.
+
+**The element axis landed 2026-08-12** with elements themselves, and `Exactly` is what `Card`
+was called before the `Card` *type* took the name. `basic` is a colour a step may name — the
+constraint is a separate flag rather than "element unset", because an all-plain run is a
+legitimate pattern that `element: 0` could not distinguish from not asking.
+
+**The flurry family stays colour-blind**, deliberately: three Strikes is a Strike Flurry however
+they are painted. Requiring one colour would silently make every flurry in the game an element
+combo, against a deck holding five Strikes of each.
 
 The reward vocabulary is **deliberately small and closed**:
 
@@ -469,13 +561,13 @@ matching runs on the resolved order rather than the queue, a single off-element 
 the middle of the sequence after phases regroup it and break the run outright. Nothing else in
 the game asks for a whole turn of one colour, which is what makes it worth a doubling.
 
-Two things stand between this and existing, and the first is the more important:
+Two things stood between this and existing. **The first is done as of 2026-08-12** — elements
+are in `internal/combat`, `OfElement(e)` is a `Step`, and five of them in a row is the whole
+pattern. What is left is the second:
 
-- **`internal/combat` cannot see elements at all.** `ResolveRound` takes `[]ActionKind`; element
-  lives on the screen's `actionCard`. A `Step` matches an exact card or a category and there is
-  no element predicate to add one to. This is the *same* prerequisite ring discounts need — see
-  *Rings* — so **one piece of work unblocks ring discounts, flip rings and this combo together**,
-  and that is the argument for doing it next.
+- ~~**`internal/combat` cannot see elements at all.**~~ It can. `ResolveRound` takes `[]Card`,
+  and `TestOfElementMatchesAnyConceptOfOneColour` already drives the exact five-in-a-row shape
+  through the matcher against a table of its own.
 - **"Double your AP" is a new reward kind, not a table entry.** `BankAP` is flat and additive;
   doubling is multiplicative. Adding it is a field on `Effect` plus one place applying it — the
   cost the framework charges on purpose. `[?]` **Whether to pay it.** At the current 6 AP a
@@ -485,8 +577,11 @@ Two things stand between this and existing, and the first is the more important:
 
 ### Sequence-based
 
-An ordered pair of elements, where **order changes the result**. Not yet built; the framework
-above matches them without extension, since `Card()` steps already express an exact sequence.
+An ordered pair of elements, where **order changes the result**. Not yet built, and **nothing
+stands in the way of building them as of 2026-08-12**: `Exactly(Strike).WithElement(Ice)`
+followed by the same with `Fire` is Burnt Icecube's whole pattern, and
+`TestASequenceComboReadsTheOrderTheCardsWereQueuedIn` already pins that the reverse order does
+not match it. What each *does* is still a reward kind the `Effect` vocabulary has not got.
 
 | Sequence | Name *(placeholder)* | Effect |
 |---|---|---|
@@ -614,11 +709,14 @@ purpose of combos.
   a 36-of-60 monochrome deck. Watch it before deciding whether the cap is the ring slots or a
   rule.
 
-**Discounting matching cards is why element must cross into `internal/combat`.** Cost stops
-being a property of the card and becomes a property of the pairing, so `Cost()`, `CostOf()`,
-the queue type, `ResolveRound`, `ResolutionOrder` and every planner all grow it — plus the
-screen's AP bar, over-budget check and caption. This cost was written down in advance in the
-elements entry and is now due.
+**Discounting matching cards is why element had to cross into `internal/combat`, and it has**
+*(2026-08-12)*. Cost stops being a property of the concept and becomes a property of the
+pairing, and the seat is already cut: `Card.Cost()` is a method on the card, `CostOf` takes
+`[]Card`, and the queue type, `ResolveRound`, `ResolutionOrder` and every planner already carry
+the element. Nothing discounts anything yet — a discount needs an equipped ring, which needs
+`Session` — but the rewrite this entry warned about was paid for with the elements work and is
+not owed twice. What is left is the screen's AP bar and over-budget check reading a discounted
+cost rather than a bare one.
 
 **Rings are drawn as cards**, in a horizontal row across the top, not necessarily spanning the
 whole bar. Same size as other cards, and **no glyphs**.

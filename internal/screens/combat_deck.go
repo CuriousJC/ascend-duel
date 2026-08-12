@@ -24,85 +24,24 @@ import (
 	"image/color"
 )
 
-// element is what a card is made of.
+// actionCard is one instance in the piles: a concept and the element it is made of.
 //
-// **Still colour and nothing else in the code** — no rule reads it and ResolveRound never
-// sees it, which is why it lives here on the screen rather than in internal/combat.
+// **It is an alias for `combat.Card` as of 2026-08-12, not a struct of its own.** The screen
+// used to own this *and* an unexported `element` type, on the honest grounds that neither meant
+// anything to the rules — a card's colour painted a border and `ResolveRound` never saw it.
+// Elements are mechanical now, so the rules own the type and the piles hold exactly what the
+// engine resolves.
 //
-// That is no longer the design. Elements became mechanical on 2026-08-05: each applies a
-// status to the opponent (ice cuts their AP, lightning adds a miss chance, fire is a damage
-// over time, earth blunts their damage) and a matching ring discounts cards of that element.
-// See MECHANICS.md. When that lands the type has to cross into internal/combat — cost stops
-// being a property of the card and becomes a property of the pairing, the way Damage(str)
-// already is — and ResolveRound, ResolutionOrder, the planners and every test in that package
-// grow with it. Cheap to move now, less so later.
+// That is what an alias is for here: the hand, the queue and the round are one type, so a card
+// cannot be converted wrongly on the way between them because it is never converted at all. The
+// name stays because the screen is full of it, and `actionCard` still says what a pile holds
+// better than `Card` does next to `paletteCard`, `pileEntry` and `cardFlight`.
 //
-// Primary elements get cards; secondary ones (poison, force, hunger) do not, and where they
-// appear is still open. Poison is in the starting deck only because it predates the split.
-//
-// This is what the reserved colour was reserved for: the glyphs were given one hueless
-// palette on 2026-08-03 specifically so colour would still be free to mean something when
-// elements arrived.
-type element int
-
-const (
-	elementBasic element = iota
-
-	// Primary. One card of each per concept, and a ring for each.
-	elementFire
-	elementIce
-	elementLightning
-	elementEarth
-
-	// Secondary. No cards yet.
-	elementPoison
-)
-
-// elementColors is the surface colour of a card, at full strength — drawCard scales it
-// down for the resting, selected and unaffordable states.
-//
-// White is the *absence* of an element rather than a colour of its own. A plain card makes
-// no claim, so the coloured ones are the ones that catch the eye, which is the whole point
-// of painting them before the mechanic exists.
-//
-// An array rather than a map: nothing here iterates, but a map in this package is one
-// refactor away from something that does, and Go randomises that order.
-var elementColors = [...]color.RGBA{
-	elementBasic:     {R: 235, G: 235, B: 235, A: 255},
-	elementFire:      {R: 235, G: 120, B: 45, A: 255},
-	elementIce:       {R: 80, G: 155, B: 230, A: 255},
-	elementLightning: {R: 240, G: 205, B: 55, A: 255},
-	elementEarth:     {R: 150, G: 105, B: 60, A: 255},
-	elementPoison:    {R: 70, G: 140, B: 60, A: 255},
-}
-
-func (e element) color() color.RGBA { return elementColors[e] }
-
-// elementNames is for tracing and for anything that has to say an element out loud. An
-// array indexed by the constant rather than a map, for the same reason as elementColors.
-var elementNames = [...]string{
-	elementBasic:     "basic",
-	elementFire:      "fire",
-	elementIce:       "ice",
-	elementLightning: "lightning",
-	elementEarth:     "earth",
-	elementPoison:    "poison",
-}
-
-func (e element) String() string {
-	if int(e) >= len(elementNames) {
-		return "?"
-	}
-	return elementNames[e]
-}
-
-// actionCard is one instance in the piles. A card used to *be* a combat.ActionKind, so two
-// Strikes were the same value and indistinguishable; an element makes them differ, so the
-// deck, hand and discard hold structs even while the element does nothing but paint.
-type actionCard struct {
-	action  combat.ActionKind
-	element element
-}
+// **What went with the old type: `elementColors` and `element.color()`.** They were the surface
+// colours from when a card *was* a coloured rectangle, and nothing had called either since the
+// border took over the element on 2026-08-09 and `internal/cards` took over the drawing. The
+// live colour table is `cards.BorderOf`.
+type actionCard = combat.Card
 
 // The hand drawn from the deck each round.
 //
@@ -115,18 +54,6 @@ type actionCard struct {
 // levers meant to answer draw variance, and moving all three at once would leave no way to
 // tell which one did the work. A brand growing hand size is the recorded permanent version.
 const handSize = 8
-
-// elementsByName resolves the element names in cards.json. Not a map from `element` to string —
-// elementNames above already is that, and two tables for one relation is one refactor away from
-// disagreeing. This walks it instead, so a new element needs one edit rather than two.
-func elementByName(name string) (element, bool) {
-	for i, n := range elementNames {
-		if n == name {
-			return element(i), true
-		}
-	}
-	return elementBasic, false
-}
 
 // startingDeck is the deck the player opens a run with: **twelve concepts x five elements = 60
 // cards**, built from `data/cards.json` rather than written out here.
@@ -186,11 +113,11 @@ func buildStartingDeck() []deckEntry {
 			panic("duelist_cards.json: unknown concept " + c.Concept)
 		}
 		for _, name := range c.Elements {
-			e, ok := elementByName(name)
+			e, ok := combat.ParseElement(name)
 			if !ok {
 				panic("duelist_cards.json: " + c.Concept + " names unknown element " + name)
 			}
-			out = append(out, deckEntry{actionCard{action, e}, c.Copies})
+			out = append(out, deckEntry{actionCard{Action: action, Element: e}, c.Copies})
 		}
 	}
 	return out
@@ -600,17 +527,17 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 func sortPileEntries(entries []pileEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		a, b := entries[i], entries[j]
-		if ra, rb := categoryRank(a.card.action.Category()), categoryRank(b.card.action.Category()); ra != rb {
+		if ra, rb := categoryRank(a.card.Action.Category()), categoryRank(b.card.Action.Category()); ra != rb {
 			return ra < rb
 		}
-		if ca, cb := a.card.action.Cost(), b.card.action.Cost(); ca != cb {
+		if ca, cb := a.card.Action.Cost(), b.card.Action.Cost(); ca != cb {
 			return ca < cb
 		}
-		if a.card.action != b.card.action {
-			return a.card.action < b.card.action
+		if a.card.Action != b.card.Action {
+			return a.card.Action < b.card.Action
 		}
-		if a.card.element != b.card.element {
-			return a.card.element < b.card.element
+		if a.card.Element != b.card.Element {
+			return a.card.Element < b.card.Element
 		}
 		return a.available && !b.available
 	})
@@ -678,7 +605,7 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 	// unreadable.
 	byElement := map[cards.Element][]pileEntry{}
 	for _, e := range entries {
-		art := e.card.element.art()
+		art := artFor(e.card.Element)
 		byElement[art] = append(byElement[art], e)
 	}
 

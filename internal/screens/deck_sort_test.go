@@ -14,7 +14,7 @@ func TestDeckRowRunsAttacksThenDefendsThenPrepares(t *testing.T) {
 	// first so the test is exercising the sort and not the input.
 	var row []pileEntry
 	for _, e := range startingDeck {
-		if e.card.element == elementFire {
+		if e.card.Element == combat.Fire {
 			row = append(row, pileEntry{e.card, true})
 		}
 	}
@@ -29,16 +29,16 @@ func TestDeckRowRunsAttacksThenDefendsThenPrepares(t *testing.T) {
 
 	lastRank, lastCost := -1, -1
 	for _, e := range row {
-		rank := categoryRank(e.card.action.Category())
-		cost := e.card.action.Cost()
+		rank := categoryRank(e.card.Action.Category())
+		cost := e.card.Action.Cost()
 
 		if rank < lastRank {
 			t.Fatalf("%s (%s) came after a %s card — categories are out of order",
-				e.card.action, e.card.action.Category(), combat.Category(lastRank))
+				e.card.Action, e.card.Action.Category(), combat.Category(lastRank))
 		}
 		if rank == lastRank && cost < lastCost {
 			t.Errorf("%s costs %d and follows a %d-cost card in the same category",
-				e.card.action, cost, lastCost)
+				e.card.Action, cost, lastCost)
 		}
 		if rank != lastRank {
 			lastCost = -1
@@ -50,7 +50,7 @@ func TestDeckRowRunsAttacksThenDefendsThenPrepares(t *testing.T) {
 	// vacuously on a row that happens to hold one category.
 	seen := map[int]bool{}
 	for _, e := range row {
-		seen[categoryRank(e.card.action.Category())] = true
+		seen[categoryRank(e.card.Action.Category())] = true
 	}
 	if len(seen) != 3 {
 		t.Errorf("the row holds %d categories, want all 3", len(seen))

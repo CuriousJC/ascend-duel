@@ -138,10 +138,10 @@ func lift(at image.Point, firing bool) image.Point {
 // the single authority on that — so this asks it rather than sorting a copy, exactly as the
 // Resolution pane and `ResolveRound` do. A row that showed the planner's order would be a
 // picture of something that never happens.
-func (s *CombatScene) enemyQueueOrder() []combat.ActionKind {
+func (s *CombatScene) enemyQueueOrder() []combat.Card {
 	order := combat.ResolutionOrder(s.fighterActions, s.enemyActions)
 
-	out := make([]combat.ActionKind, 0, len(s.enemyActions))
+	out := make([]combat.Card, 0, len(s.enemyActions))
 	for _, slot := range order {
 		if slot.Side != combat.SideB || slot.Index >= len(s.enemyActions) {
 			continue
@@ -174,10 +174,8 @@ func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image
 	}
 
 	queue := s.enemyQueueOrder()
-	for i, a := range queue {
+	for i, c := range queue {
 		at := lift(enemySeatAt(gs, i, len(queue)), i == s.enemyFiringSeat)
-		drawCard(gs, screen, at, cards.Hand,
-			actionCard{action: a, element: elementBasic},
-			true, false, s.enemy.Str)
+		drawCard(gs, screen, at, cards.Hand, c, true, false, s.enemy.Str)
 	}
 }

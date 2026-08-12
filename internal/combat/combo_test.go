@@ -40,7 +40,7 @@ func sideActions(events []Event, by Side) []ActionKind {
 func TestThreeAttacksFormAFlurry(t *testing.T) {
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
 
 	got := combosFired(events, SideA)
 	if len(got) != 1 || got[0] != FlurryID(Strike) {
@@ -51,7 +51,7 @@ func TestThreeAttacksFormAFlurry(t *testing.T) {
 func TestTwoAttacksFormNothing(t *testing.T) {
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike, Heavy}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Strike, Heavy), nil, 1)
 
 	if got := combosFired(events, SideA); len(got) != 0 {
 		t.Fatalf("two attacks should form nothing, got %v", got)
@@ -63,7 +63,7 @@ func TestTwoAttacksFormNothing(t *testing.T) {
 func TestThreeDifferentAttacksFormNothing(t *testing.T) {
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Jab, Strike, Heavy}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Jab, Strike, Heavy), nil, 1)
 
 	if got := combosFired(events, SideA); len(got) != 0 {
 		t.Fatalf("Jab+Strike+Heavy is not a run of one card, got %v", got)
@@ -100,9 +100,9 @@ func TestEveryAttackCardHasAFlurryAndAnOnslaught(t *testing.T) {
 			}
 
 			a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
-			queue := make([]ActionKind, tc.n)
+			queue := make([]Card, tc.n)
 			for i := range queue {
-				queue[i] = card
+				queue[i] = Plain(card)
 			}
 
 			events, _, _ := ResolveRound(a, b, queue, nil, 1)
@@ -152,7 +152,7 @@ func TestComboIDsDoNotCollide(t *testing.T) {
 func TestFourAttacksFormOneFlurryNotTwo(t *testing.T) {
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike, Strike}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Strike, Strike, Strike, Strike), nil, 1)
 
 	if got := combosFired(events, SideA); len(got) != 1 {
 		t.Fatalf("a card may form at most one combo, so four attacks is one Flurry; got %v", got)
@@ -162,7 +162,7 @@ func TestFourAttacksFormOneFlurryNotTwo(t *testing.T) {
 func TestFiveAttacksFormOnslaughtRatherThanFlurry(t *testing.T) {
 	a, b := duelist(10, 0, 200), duelist(10, 0, 200)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Jab, Jab, Jab, Jab, Jab}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Jab, Jab, Jab, Jab, Jab), nil, 1)
 
 	got := combosFired(events, SideA)
 	if len(got) != 1 || got[0] != OnslaughtID(Jab) {
@@ -177,7 +177,7 @@ func TestFiveAttacksFormOnslaughtRatherThanFlurry(t *testing.T) {
 func TestCombosMatchTheResolvedOrderNotTheQueuedOne(t *testing.T) {
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike, Dodge, Strike, Strike}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Strike, Dodge, Strike, Strike), nil, 1)
 
 	if got := combosFired(events, SideA); len(got) != 1 || got[0] != FlurryID(Strike) {
 		t.Fatalf("the Dodge regroups to the end, leaving three consecutive attacks; got %v", got)
@@ -187,7 +187,7 @@ func TestCombosMatchTheResolvedOrderNotTheQueuedOne(t *testing.T) {
 // MatchCombos is what the screen calls while the player is still planning, and it has to
 // agree with the engine or the preview lies.
 func TestMatchCombosAgreesWithWhatTheEnginePlays(t *testing.T) {
-	queue := []ActionKind{Strike, Dodge, Strike, Strike}
+	queue := PlainCards(Strike, Dodge, Strike, Strike)
 
 	preview := MatchCombos(SideA, queue)
 	if len(preview) != 1 || preview[0].ID != FlurryID(Strike) {
@@ -207,11 +207,11 @@ func TestMatchCombosAgreesWithWhatTheEnginePlays(t *testing.T) {
 }
 
 func TestLongestRunWinsAtTheSamePosition(t *testing.T) {
-	short := Combo{ID: ComboID(90), Name: "short", Run: []Step{Card(Strike), Card(Strike)}}
-	long := Combo{ID: ComboID(91), Name: "long", Run: []Step{Card(Strike), Card(Strike), Card(Strike)}}
+	short := Combo{ID: ComboID(90), Name: "short", Run: []Step{Exactly(Strike), Exactly(Strike)}}
+	long := Combo{ID: ComboID(91), Name: "long", Run: []Step{Exactly(Strike), Exactly(Strike), Exactly(Strike)}}
 
 	// Declared shortest-first, so a matcher that simply took the first hit would be wrong.
-	turn := appendTurn(nil, SideA, []ActionKind{Strike, Strike, Strike})
+	turn := appendTurn(nil, SideA, PlainCards(Strike, Strike, Strike))
 	hits := matchSlots(turn, []Combo{short, long})
 
 	if len(hits) != 1 || hits[0].ID != long.ID {
@@ -220,11 +220,11 @@ func TestLongestRunWinsAtTheSamePosition(t *testing.T) {
 }
 
 func TestAnExactCardPatternDoesNotMatchItsCategory(t *testing.T) {
-	only := Combo{ID: ComboID(92), Name: "two strikes", Run: []Step{Card(Strike), Card(Strike)}}
+	only := Combo{ID: ComboID(92), Name: "two strikes", Run: []Step{Exactly(Strike), Exactly(Strike)}}
 
-	turn := appendTurn(nil, SideA, []ActionKind{Strike, Heavy})
+	turn := appendTurn(nil, SideA, PlainCards(Strike, Heavy))
 	if hits := matchSlots(turn, []Combo{only}); len(hits) != 0 {
-		t.Fatalf("Card(Strike) should not match a Heavy, got %v", hits)
+		t.Fatalf("Exactly(Strike) should not match a Heavy, got %v", hits)
 	}
 }
 
@@ -234,8 +234,8 @@ func TestAFlurryCostsTheOpponentTheirNextAction(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Strike, Strike, Strike},
-		[]ActionKind{Jab, Strike}, 1)
+		PlainCards(Strike, Strike, Strike),
+		PlainCards(Jab, Strike), 1)
 
 	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Jab {
 		t.Fatalf("B should lose exactly its first action, got %v", lost)
@@ -249,8 +249,8 @@ func TestOnslaughtTakesTheOpponentsWholeTurn(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Jab, Jab, Jab, Jab, Jab},
-		[]ActionKind{Strike, Strike, Guard}, 1)
+		PlainCards(Jab, Jab, Jab, Jab, Jab),
+		PlainCards(Strike, Strike, Guard), 1)
 
 	if lost := staggeredActions(events, SideB); len(lost) != 3 {
 		t.Fatalf("Onslaught should take all three of B's actions, got %v", lost)
@@ -267,8 +267,8 @@ func TestStaggerTakesTheFrontOfTheTurnIncludingSetup(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, _, bAfter := ResolveRound(a, b,
-		[]ActionKind{Strike, Strike, Strike},
-		[]ActionKind{Gather, Strike}, 1)
+		PlainCards(Strike, Strike, Strike),
+		PlainCards(Gather, Strike), 1)
 
 	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Gather {
 		t.Fatalf("the Gather resolves first and so is the action lost, got %v", lost)
@@ -279,8 +279,8 @@ func TestStaggerTakesTheFrontOfTheTurnIncludingSetup(t *testing.T) {
 
 	// The same round without the Flurry, to show the Gather would otherwise have paid.
 	_, _, unstaggered := ResolveRound(a, b,
-		[]ActionKind{Strike, Strike},
-		[]ActionKind{Gather, Strike}, 1)
+		PlainCards(Strike, Strike),
+		PlainCards(Gather, Strike), 1)
 	if unstaggered.BonusAP != gatherBonusAP {
 		t.Fatalf("without the stagger the Gather should bank %d, got %d",
 			gatherBonusAP, unstaggered.BonusAP)
@@ -294,8 +294,8 @@ func TestSideBsFlurryLandsInTheFollowingRound(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	events, aAfter, bAfter := ResolveRound(a, b,
-		[]ActionKind{Gather},
-		[]ActionKind{Strike, Strike, Strike}, 1)
+		PlainCards(Gather),
+		PlainCards(Strike, Strike, Strike), 1)
 
 	if got := combosFired(events, SideB); len(got) != 1 || got[0] != FlurryID(Strike) {
 		t.Fatalf("B should form a Flurry, got %v", got)
@@ -307,7 +307,7 @@ func TestSideBsFlurryLandsInTheFollowingRound(t *testing.T) {
 		t.Fatalf("the stagger should be held on A for next round, got %d", aAfter.Staggered)
 	}
 
-	events2, _, _ := ResolveRound(aAfter, bAfter, []ActionKind{Jab, Strike}, nil, 2)
+	events2, _, _ := ResolveRound(aAfter, bAfter, PlainCards(Jab, Strike), nil, 2)
 	if lost := staggeredActions(events2, SideA); len(lost) != 1 || lost[0] != Jab {
 		t.Fatalf("A should lose its first action next round, got %v", lost)
 	}
@@ -317,15 +317,15 @@ func TestAStaggerIsSpentOnceAndDoesNotLinger(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
 	_, aAfter, bAfter := ResolveRound(a, b,
-		[]ActionKind{Gather},
-		[]ActionKind{Strike, Strike, Strike}, 1)
+		PlainCards(Gather),
+		PlainCards(Strike, Strike, Strike), 1)
 
-	_, aAfter2, _ := ResolveRound(aAfter, bAfter, []ActionKind{Jab, Strike}, nil, 2)
+	_, aAfter2, _ := ResolveRound(aAfter, bAfter, PlainCards(Jab, Strike), nil, 2)
 	if aAfter2.Staggered != 0 {
 		t.Fatalf("the stagger should be consumed by the turn it hit, got %d", aAfter2.Staggered)
 	}
 
-	events3, _, _ := ResolveRound(aAfter2, bAfter, []ActionKind{Jab, Strike}, nil, 3)
+	events3, _, _ := ResolveRound(aAfter2, bAfter, PlainCards(Jab, Strike), nil, 3)
 	if lost := staggeredActions(events3, SideA); len(lost) != 0 {
 		t.Fatalf("round three should be unaffected, got %v", lost)
 	}
@@ -340,7 +340,7 @@ func TestStaggeredActionsCannotFormACombo(t *testing.T) {
 
 	events, _, _ := ResolveRound(a, b,
 		nil,
-		[]ActionKind{Strike, Strike, Strike, Strike, Strike}, 1)
+		PlainCards(Strike, Strike, Strike, Strike, Strike), 1)
 
 	if got := combosFired(events, SideB); len(got) != 0 {
 		t.Fatalf("only two of B's five attacks happened, so nothing should form; got %v", got)
@@ -355,7 +355,7 @@ func TestStaggerNeverTakesMoreThanTheTurnHolds(t *testing.T) {
 	b := duelist(10, 0, 300)
 	b.Staggered = StaggerAll
 
-	events, _, bAfter := ResolveRound(a, b, nil, []ActionKind{Strike}, 1)
+	events, _, bAfter := ResolveRound(a, b, nil, PlainCards(Strike), 1)
 
 	if lost := staggeredActions(events, SideB); len(lost) != 1 {
 		t.Fatalf("a one-action turn can only lose one action, got %v", lost)
@@ -369,8 +369,8 @@ func TestStaggerIsSymmetric(t *testing.T) {
 	// The same three attacks, formed by each side in turn, must produce the same stagger.
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
-	_, _, bAfterA := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1)
-	_, aAfterB, _ := ResolveRound(a, b, nil, []ActionKind{Strike, Strike, Strike}, 1)
+	_, _, bAfterA := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
+	_, aAfterB, _ := ResolveRound(a, b, nil, PlainCards(Strike, Strike, Strike), 1)
 
 	// B was hit inside the round and spent it there; A holds it for the next one. Both lose
 	// exactly one action to it, which is the symmetry that matters.
@@ -393,12 +393,12 @@ func TestADamageMultiplierBoostsWhatFollowsTheCombo(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(93),
 		Name:   "double up",
-		Run:    []Step{Card(Strike), Card(Strike)},
+		Run:    []Step{Exactly(Strike), Exactly(Strike)},
 		Effect: Effect{DamageNum: 2, DamageDen: 1},
 	}}
 
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
-	_, _, bAfter := resolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1, table)
+	_, _, bAfter := resolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1, table)
 
 	// The first two Strikes form the combo and land for 10 each. The third is doubled to 20.
 	if got := 100 - bAfter.CurrentLife; got != 40 {
@@ -413,7 +413,7 @@ func TestAMultiplierAppliesBeforeAGuardHalvesIt(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(94),
 		Name:   "half again",
-		Run:    []Step{Card(Strike), Card(Strike)},
+		Run:    []Step{Exactly(Strike), Exactly(Strike)},
 		Effect: Effect{DamageNum: 3, DamageDen: 2},
 	}}
 
@@ -421,7 +421,7 @@ func TestAMultiplierAppliesBeforeAGuardHalvesIt(t *testing.T) {
 	b := duelist(3, 0, 100)
 	b.Guarded = true
 
-	_, _, bAfter := resolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1, table)
+	_, _, bAfter := resolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1, table)
 
 	// Two unboosted Strikes at 3 are halved to 1 each. The third is boosted to 4 first and
 	// halved to 2 — where halving first would have given 1, and 1 + 1 + 1 = 3.
@@ -437,7 +437,7 @@ func TestAMultiplierAppliesBeforeAGuardHalvesIt(t *testing.T) {
 func TestAComboIsAnnouncedAfterTheCardsThatFormedIt(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
 
-	events, _, _ := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1)
+	events, _, _ := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
 
 	actionsBefore, comboAt := 0, -1
 	for i, e := range events {
@@ -471,7 +471,7 @@ func TestAComboCutShortByDeathDoesNotFire(t *testing.T) {
 	b := duelist(4, 0, 300)
 	b.Ripostes = 2
 
-	events, aAfter, bAfter := ResolveRound(a, b, []ActionKind{Strike, Strike, Strike}, nil, 1)
+	events, aAfter, bAfter := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
 
 	if aAfter.Alive() {
 		t.Fatal("this fixture is meant to kill side A partway through its run")
@@ -490,14 +490,14 @@ func TestComboBankedPointsArriveInTheFollowingRound(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(95),
 		Name:   "second wind",
-		Run:    []Step{Card(Jab), Card(Jab)},
+		Run:    []Step{Exactly(Jab), Exactly(Jab)},
 		Effect: Effect{BankAP: 3},
 	}}
 
 	a, b := duelist(10, 0, 100), duelist(10, 0, 100)
 	before := a.ActionPoints()
 
-	_, aAfter, _ := resolveRound(a, b, []ActionKind{Jab, Jab}, nil, 1, table)
+	_, aAfter, _ := resolveRound(a, b, PlainCards(Jab, Jab), nil, 1, table)
 
 	if aAfter.BonusAP != 3 {
 		t.Fatalf("want 3 points banked, got %d", aAfter.BonusAP)
@@ -511,12 +511,12 @@ func TestACombosEffectsDoNotLeakIntoTheOpponentsTurn(t *testing.T) {
 	table := []Combo{{
 		ID:     ComboID(96),
 		Name:   "double up",
-		Run:    []Step{Card(Strike), Card(Strike)},
+		Run:    []Step{Exactly(Strike), Exactly(Strike)},
 		Effect: Effect{DamageNum: 2, DamageDen: 1},
 	}}
 
 	a, b := duelist(10, 0, 200), duelist(10, 0, 200)
-	_, aAfter, _ := resolveRound(a, b, []ActionKind{Strike, Strike}, []ActionKind{Strike}, 1, table)
+	_, aAfter, _ := resolveRound(a, b, PlainCards(Strike, Strike), PlainCards(Strike), 1, table)
 
 	// B's single Strike is not part of A's combo and must land for its plain 10.
 	if got := 200 - aAfter.CurrentLife; got != 10 {
@@ -533,8 +533,8 @@ func TestACombosEffectsDoNotLeakIntoTheOpponentsTurn(t *testing.T) {
 // round if a slot went unaccounted for.
 func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 	a, b := duelist(10, 0, 500), duelist(10, 0, 500)
-	aPlan := []ActionKind{Strike, Strike, Strike}
-	bPlan := []ActionKind{Gather, Jab, Strike, Dodge}
+	aPlan := PlainCards(Strike, Strike, Strike)
+	bPlan := PlainCards(Gather, Jab, Strike, Dodge)
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
 
@@ -551,8 +551,8 @@ func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 		t.Fatalf("every slot needs exactly one beat: %d slots, %d beats", len(order), len(beats))
 	}
 	for i, slot := range order {
-		if beats[i] != slot.Action {
-			t.Fatalf("beat %d is %v, but slot %d is %v", i, beats[i], i, slot.Action)
+		if beats[i] != slot.Card.Action {
+			t.Fatalf("beat %d is %v, but slot %d is %v", i, beats[i], i, slot.Card.Action)
 		}
 	}
 
@@ -589,10 +589,10 @@ func TestComboByIDReportsAnUnknownIDRatherThanInventingOne(t *testing.T) {
 
 func TestCombosDoNotBreakDeterminism(t *testing.T) {
 	a, b := duelist(10, 0, 300), duelist(10, 0, 300)
-	actions := []ActionKind{Strike, Strike, Strike}
+	actions := PlainCards(Strike, Strike, Strike)
 
-	e1, a1, b1 := ResolveRound(a, b, actions, []ActionKind{Jab, Strike}, 1)
-	e2, a2, b2 := ResolveRound(a, b, actions, []ActionKind{Jab, Strike}, 1)
+	e1, a1, b1 := ResolveRound(a, b, actions, PlainCards(Jab, Strike), 1)
+	e2, a2, b2 := ResolveRound(a, b, actions, PlainCards(Jab, Strike), 1)
 
 	if a1 != a2 || b1 != b2 {
 		t.Fatal("the same round resolved twice must end in the same state")
@@ -616,7 +616,7 @@ func TestComboEventNamesTheCardsThatFormedIt(t *testing.T) {
 	log, _, _ := ResolveRound(
 		Duelist{MaxLife: 200, CurrentLife: 200, Str: 5, Spd: 20},
 		Duelist{MaxLife: 200, CurrentLife: 200, Str: 5, Spd: 20},
-		[]ActionKind{Strike, Strike, Strike, Jab},
+		PlainCards(Strike, Strike, Strike, Jab),
 		nil,
 		1,
 	)
@@ -655,7 +655,7 @@ func TestLongerComboReportsItsOwnSpan(t *testing.T) {
 	log, _, _ := ResolveRound(
 		Duelist{MaxLife: 400, CurrentLife: 400, Str: 5, Spd: 40},
 		Duelist{MaxLife: 400, CurrentLife: 400, Str: 5, Spd: 40},
-		[]ActionKind{Strike, Strike, Strike, Strike, Strike},
+		PlainCards(Strike, Strike, Strike, Strike, Strike),
 		nil,
 		1,
 	)
@@ -673,4 +673,120 @@ func TestLongerComboReportsItsOwnSpan(t *testing.T) {
 		return
 	}
 	t.Fatal("five strikes fired no combo at all")
+}
+
+// The element axis on a Step, added 2026-08-12 with elements themselves. Nothing in the
+// shipping table uses it yet — the flurry family matches concepts and ignores colour — so
+// these drive it through matchSlots with tables of their own, which is exactly what the table
+// parameter on matchSlots exists for.
+
+func TestAFlurryDoesNotCareWhatColourItIs(t *testing.T) {
+	// **The default has to stay colour-blind.** A Strike Flurry is three Strikes however they
+	// are painted; requiring one element would silently turn every flurry in the game into an
+	// element combo, and a 60-card deck holds only 5 Strikes of each colour.
+	a, b := duelist(10, 60, 5000), duelist(10, 60, 5000)
+
+	events, _, _ := ResolveRound(a, b, []Card{
+		Of(Strike, Fire), Of(Strike, Ice), Of(Strike, Earth),
+	}, nil, 1)
+
+	got := combosFired(events, SideA)
+	if len(got) != 1 || got[0] != FlurryID(Strike) {
+		t.Errorf("three differently coloured Strikes fired %v, want one Strike Flurry", got)
+	}
+}
+
+func TestOfElementMatchesAnyConceptOfOneColour(t *testing.T) {
+	// The shape the five-of-a-colour combo is made of: five steps that name a colour and
+	// nothing else.
+	table := []Combo{{
+		ID:   ComboID(300),
+		Name: "monochrome",
+		Run:  []Step{OfElement(Ice), OfElement(Ice), OfElement(Ice)},
+	}}
+
+	hits := matchSlots(appendTurn(nil, SideA, []Card{
+		Of(Gather, Ice), Of(Strike, Ice), Of(Brace, Ice),
+	}), table)
+	if len(hits) != 1 {
+		t.Fatalf("three ice cards of three concepts fired %d combos, want 1", len(hits))
+	}
+
+	// One off-colour card breaks the run outright, which is the property that makes the
+	// five-of-a-colour combo an all-in round rather than a near-miss.
+	hits = matchSlots(appendTurn(nil, SideA, []Card{
+		Of(Gather, Ice), Of(Strike, Fire), Of(Brace, Ice),
+	}), table)
+	if len(hits) != 0 {
+		t.Errorf("a run broken by one fire card still fired %v", hits)
+	}
+}
+
+func TestWithElementPinsAStepToOneColour(t *testing.T) {
+	// `Exactly(Strike).WithElement(Ice)` is an ice Strike and nothing else. Both halves have to
+	// bite: a fire Strike fails the colour, an ice Jab fails the concept.
+	table := []Combo{{
+		ID:   ComboID(301),
+		Name: "cold pair",
+		Run:  []Step{Exactly(Strike).WithElement(Ice), Exactly(Strike).WithElement(Ice)},
+	}}
+
+	for _, tc := range []struct {
+		what string
+		turn []Card
+		want int
+	}{
+		{"two ice Strikes", []Card{Of(Strike, Ice), Of(Strike, Ice)}, 1},
+		{"two fire Strikes", []Card{Of(Strike, Fire), Of(Strike, Fire)}, 0},
+		{"two ice Jabs", []Card{Of(Jab, Ice), Of(Jab, Ice)}, 0},
+		{"one of each", []Card{Of(Strike, Ice), Of(Strike, Fire)}, 0},
+		{"two plain Strikes", PlainCards(Strike, Strike), 0},
+	} {
+		if got := len(matchSlots(appendTurn(nil, SideA, tc.turn), table)); got != tc.want {
+			t.Errorf("%s fired %d combos, want %d", tc.what, got, tc.want)
+		}
+	}
+}
+
+func TestASequenceComboReadsTheOrderTheCardsWereQueuedIn(t *testing.T) {
+	// **This is what earns drag-to-reorder its place back.** Phases regroup a turn by category,
+	// but within a category the queued order survives — so an ice Strike before a fire Strike is
+	// a different round from the reverse, off the same two cards.
+	table := []Combo{{
+		ID:   ComboID(302),
+		Name: "burnt icecube",
+		Run:  []Step{Exactly(Strike).WithElement(Ice), Exactly(Strike).WithElement(Fire)},
+	}}
+
+	forwards := matchSlots(appendTurn(nil, SideA,
+		[]Card{Of(Strike, Ice), Of(Strike, Fire)}), table)
+	if len(forwards) != 1 {
+		t.Fatalf("ice then fire fired %d combos, want 1", len(forwards))
+	}
+
+	backwards := matchSlots(appendTurn(nil, SideA,
+		[]Card{Of(Strike, Fire), Of(Strike, Ice)}), table)
+	if len(backwards) != 0 {
+		t.Errorf("fire then ice fired %v; the same two cards in the other order is a different round",
+			backwards)
+	}
+}
+
+func TestBasicIsAColourAStepCanName(t *testing.T) {
+	// `hasElement` is a separate flag rather than Basic meaning "unset", because an all-plain
+	// run is a pattern somebody may legitimately want and `element: 0` could not say whether it
+	// had been asked for.
+	table := []Combo{{
+		ID:   ComboID(303),
+		Name: "plain pair",
+		Run:  []Step{Exactly(Jab).WithElement(Basic), Exactly(Jab).WithElement(Basic)},
+	}}
+
+	if got := len(matchSlots(appendTurn(nil, SideA, PlainCards(Jab, Jab)), table)); got != 1 {
+		t.Errorf("two plain Jabs fired %d combos, want 1", got)
+	}
+	if got := len(matchSlots(appendTurn(nil, SideA,
+		[]Card{Of(Jab, Fire), Of(Jab, Fire)}), table)); got != 0 {
+		t.Errorf("two fire Jabs matched a pattern that named basic")
+	}
 }

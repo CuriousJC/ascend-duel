@@ -41,12 +41,14 @@ func actionOrder(events []Event) []Side {
 	return order
 }
 
-// playedActions returns the actions in the order they resolved.
-func playedActions(events []Event) []ActionKind {
-	var played []ActionKind
+// playedCards returns the cards in the order they resolved, element included — so a test can
+// compare a played round against the PlainCards or Of() list it queued, without either side
+// having to strip a colour off.
+func playedCards(events []Event) []Card {
+	var played []Card
 	for _, e := range events {
 		if e.Kind == KindAction {
-			played = append(played, e.Action)
+			played = append(played, Card{Action: e.Action, Element: e.Element})
 		}
 	}
 	return played
@@ -65,8 +67,8 @@ func sidesEqual(got, want []Side) bool {
 	return true
 }
 
-// actionsEqual compares two played sequences.
-func actionsEqual(got, want []ActionKind) bool {
+// cardsEqual compares two played sequences.
+func cardsEqual(got, want []Card) bool {
 	if len(got) != len(want) {
 		return false
 	}
@@ -86,7 +88,7 @@ func TestSideATakesItsWholeTurnFirst(t *testing.T) {
 	b := duelist(10, 500, 500)
 
 	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Strike, Strike}, []ActionKind{Strike, Strike}, 1)
+		PlainCards(Strike, Strike), PlainCards(Strike, Strike), 1)
 
 	want := []Side{SideA, SideA, SideB, SideB}
 	if order := actionOrder(events); !sidesEqual(order, want) {
@@ -101,11 +103,11 @@ func TestATurnResolvesInCategoryOrder(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	queued := []ActionKind{Dodge, Strike, Gather, Guard, Heavy}
+	queued := PlainCards(Dodge, Strike, Gather, Guard, Heavy)
 	events, _, _ := ResolveRound(a, b, queued, nil, 1)
 
-	want := []ActionKind{Gather, Guard, Strike, Heavy, Dodge}
-	if got := playedActions(events); !actionsEqual(got, want) {
+	want := PlainCards(Gather, Guard, Strike, Heavy, Dodge)
+	if got := playedCards(events); !cardsEqual(got, want) {
 		t.Errorf("played %v, want %v", got, want)
 	}
 }
@@ -116,13 +118,13 @@ func TestQueuedOrderSurvivesInsideACategory(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	first, _, _ := ResolveRound(a, b, []ActionKind{Heavy, Jab}, nil, 1)
-	second, _, _ := ResolveRound(a, b, []ActionKind{Jab, Heavy}, nil, 1)
+	first, _, _ := ResolveRound(a, b, PlainCards(Heavy, Jab), nil, 1)
+	second, _, _ := ResolveRound(a, b, PlainCards(Jab, Heavy), nil, 1)
 
-	if got := playedActions(first); !actionsEqual(got, []ActionKind{Heavy, Jab}) {
+	if got := playedCards(first); !cardsEqual(got, PlainCards(Heavy, Jab)) {
 		t.Errorf("played %v, want [Heavy Jab]", got)
 	}
-	if got := playedActions(second); !actionsEqual(got, []ActionKind{Jab, Heavy}) {
+	if got := playedCards(second); !cardsEqual(got, PlainCards(Jab, Heavy)) {
 		t.Errorf("played %v, want [Jab Heavy]", got)
 	}
 }
@@ -133,17 +135,17 @@ func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
 	// they are the same sequence rather than trusting the shared call.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
-	aPlan := []ActionKind{Heavy, Dodge, Gather}
-	bPlan := []ActionKind{Jab, Guard}
+	aPlan := PlainCards(Heavy, Dodge, Gather)
+	bPlan := PlainCards(Jab, Guard)
 
 	events, _, _ := ResolveRound(a, b, aPlan, bPlan, 1)
 
-	want := make([]ActionKind, 0, len(aPlan)+len(bPlan))
+	want := make([]Card, 0, len(aPlan)+len(bPlan))
 	for _, slot := range ResolutionOrder(aPlan, bPlan) {
-		want = append(want, slot.Action)
+		want = append(want, slot.Card)
 	}
 
-	if got := playedActions(events); !actionsEqual(got, want) {
+	if got := playedCards(events); !cardsEqual(got, want) {
 		t.Errorf("played order = %v, ResolutionOrder = %v", got, want)
 	}
 }
@@ -152,8 +154,8 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 	// ResolveRound expires side B's defenses at the first B slot, which is only the start
 	// of B's turn if A's slots never follow it. Pin the block structure that relies on.
 	order := ResolutionOrder(
-		[]ActionKind{Dodge, Strike, Gather},
-		[]ActionKind{Guard, Heavy, Riposte})
+		PlainCards(Dodge, Strike, Gather),
+		PlainCards(Guard, Heavy, Riposte))
 
 	seenB := false
 	for _, slot := range order {
@@ -170,16 +172,16 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	// Index is where the card sits in the player's queue, not where it lands in the round.
 	// Anything wanting "how far through the round are we" has to count slots instead.
-	order := ResolutionOrder([]ActionKind{Dodge, Gather}, nil)
+	order := ResolutionOrder(PlainCards(Dodge, Gather), nil)
 
 	if len(order) != 2 {
 		t.Fatalf("got %d slots, want 2", len(order))
 	}
-	if order[0].Action != Gather || order[0].Index != 1 {
-		t.Errorf("first slot = %v index %d, want Gather index 1", order[0].Action, order[0].Index)
+	if order[0].Card.Action != Gather || order[0].Index != 1 {
+		t.Errorf("first slot = %v index %d, want Gather index 1", order[0].Card.Action, order[0].Index)
 	}
-	if order[1].Action != Dodge || order[1].Index != 0 {
-		t.Errorf("second slot = %v index %d, want Dodge index 0", order[1].Action, order[1].Index)
+	if order[1].Card.Action != Dodge || order[1].Index != 0 {
+		t.Errorf("second slot = %v index %d, want Dodge index 0", order[1].Card.Action, order[1].Index)
 	}
 }
 
@@ -187,7 +189,7 @@ func TestStrikeDealsStrengthAsDamage(t *testing.T) {
 	a := duelist(10, 10, 100)
 	b := duelist(10, 10, 100)
 
-	events, _, bAfter := ResolveRound(a, b, []ActionKind{Strike}, nil, 1)
+	events, _, bAfter := ResolveRound(a, b, PlainCards(Strike), nil, 1)
 
 	got := firstDamage(t, events, SideA)
 	if got.Amount != 10 {
@@ -202,8 +204,8 @@ func TestHeavyHitsTwiceAsHardAsStrike(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(1, 10, 500)
 
-	strikeLog, _, _ := ResolveRound(a, b, []ActionKind{Strike}, nil, 1)
-	heavyLog, _, _ := ResolveRound(a, b, []ActionKind{Heavy}, nil, 1)
+	strikeLog, _, _ := ResolveRound(a, b, PlainCards(Strike), nil, 1)
+	heavyLog, _, _ := ResolveRound(a, b, PlainCards(Heavy), nil, 1)
 
 	strike := firstDamage(t, strikeLog, SideA)
 	heavy := firstDamage(t, heavyLog, SideA)
@@ -216,7 +218,7 @@ func TestHeavyHitsTwiceAsHardAsStrike(t *testing.T) {
 func TestJabHitsForHalfButNeverZero(t *testing.T) {
 	// Str 1 halves to 0 under integer division; a hit that does nothing would make
 	// low-Strength duels unresolvable, so Jab floors at 1.
-	events, _, _ := ResolveRound(duelist(1, 10, 100), duelist(1, 10, 100), []ActionKind{Jab}, nil, 1)
+	events, _, _ := ResolveRound(duelist(1, 10, 100), duelist(1, 10, 100), PlainCards(Jab), nil, 1)
 
 	if got := firstDamage(t, events, SideA); got.Amount != 1 {
 		t.Errorf("Jab damage at Str 1 = %d, want 1", got.Amount)
@@ -228,7 +230,7 @@ func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
 	// at something. Played into an opponent who does nothing, it deals nothing.
 	for _, a := range []ActionKind{Gather, Guard, Dodge, Riposte} {
 		events, _, bAfter := ResolveRound(duelist(10, 10, 100), duelist(10, 10, 100),
-			[]ActionKind{a}, nil, 1)
+			PlainCards(a), nil, 1)
 
 		if n := damageCount(events); n != 0 {
 			t.Errorf("%v dealt damage %d times unprompted", a, n)
@@ -245,8 +247,8 @@ func TestGuardHalvesEveryAttackInTheOpponentsTurn(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	open, _, _ := ResolveRound(a, b, nil, []ActionKind{Strike, Strike, Strike}, 1)
-	guarded, _, _ := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Strike, Strike, Strike}, 1)
+	open, _, _ := ResolveRound(a, b, nil, PlainCards(Strike, Strike, Strike), 1)
+	guarded, _, _ := ResolveRound(a, b, PlainCards(Guard), PlainCards(Strike, Strike, Strike), 1)
 
 	if damageCount(open) != 3 || damageCount(guarded) != 3 {
 		t.Fatalf("expected three hits either way, got %d open and %d guarded",
@@ -267,7 +269,7 @@ func TestAGuardCoversExactlyOneOpposingTurn(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	round1, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Strike}, 1)
+	round1, a1, b1 := ResolveRound(a, b, PlainCards(Guard), PlainCards(Strike), 1)
 	if hit := firstDamage(t, round1, SideB); hit.Amount != 5 {
 		t.Errorf("round 1 hit into a fresh guard = %d, want 5", hit.Amount)
 	}
@@ -275,7 +277,7 @@ func TestAGuardCoversExactlyOneOpposingTurn(t *testing.T) {
 		t.Fatal("A's guard should still be standing at the round boundary")
 	}
 
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Jab}, []ActionKind{Strike}, 2)
+	round2, _, _ := ResolveRound(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
 		t.Errorf("round 2 hit after the guard expired = %d, want full 10", hit.Amount)
 	}
@@ -288,12 +290,12 @@ func TestSideBsGuardProtectsItInTheFollowingRound(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, nil, []ActionKind{Guard}, 1)
+	_, a1, b1 := ResolveRound(a, b, nil, PlainCards(Guard), 1)
 	if !b1.Guarded {
 		t.Fatal("side B's guard did not survive the round it was raised in")
 	}
 
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Strike}, nil, 2)
+	round2, _, _ := ResolveRound(a1, b1, PlainCards(Strike), nil, 2)
 	if hit := firstDamage(t, round2, SideA); hit.Amount != 5 {
 		t.Errorf("A's hit into B's carried guard = %d, want 5", hit.Amount)
 	}
@@ -306,9 +308,9 @@ func TestAnIdleDuelistLosesItsGuard(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, nil, 1)
+	_, a1, b1 := ResolveRound(a, b, PlainCards(Guard), nil, 1)
 
-	round2, _, _ := ResolveRound(a1, b1, nil, []ActionKind{Strike}, 2)
+	round2, _, _ := ResolveRound(a1, b1, nil, PlainCards(Strike), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
 		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a guard", hit.Amount)
 	}
@@ -319,7 +321,7 @@ func TestDodgeNegatesOneAttackAndIsSpentDoingIt(t *testing.T) {
 	b := duelist(10, 10, 500)
 
 	events, aAfter, _ := ResolveRound(a, b,
-		[]ActionKind{Dodge}, []ActionKind{Heavy, Strike}, 1)
+		PlainCards(Dodge), PlainCards(Heavy, Strike), 1)
 
 	if n := damageCount(events); n != 1 {
 		t.Fatalf("damage events = %d, want 1 — the first attack is negated, the second lands", n)
@@ -338,7 +340,7 @@ func TestTwoDodgesNegateTwoAttacks(t *testing.T) {
 	b := duelist(10, 10, 500)
 
 	events, aAfter, _ := ResolveRound(a, b,
-		[]ActionKind{Dodge, Dodge}, []ActionKind{Heavy, Strike}, 1)
+		PlainCards(Dodge, Dodge), PlainCards(Heavy, Strike), 1)
 
 	if n := damageCount(events); n != 0 {
 		t.Errorf("damage events = %d, want 0 — both attacks are dodged", n)
@@ -353,7 +355,7 @@ func TestRiposteNegatesAnAttackAndHitsBack(t *testing.T) {
 	b := duelist(10, 10, 500)
 
 	events, aAfter, bAfter := ResolveRound(a, b,
-		[]ActionKind{Riposte}, []ActionKind{Heavy}, 1)
+		PlainCards(Riposte), PlainCards(Heavy), 1)
 
 	if aAfter.CurrentLife != 500 {
 		t.Errorf("A took %d damage through a riposte, want none", 500-aAfter.CurrentLife)
@@ -374,15 +376,15 @@ func TestRiposteIsSpentBeforeDodge(t *testing.T) {
 	b := duelist(10, 10, 500)
 
 	events, _, _ := ResolveRound(a, b,
-		[]ActionKind{Dodge, Riposte}, []ActionKind{Strike, Strike}, 1)
+		PlainCards(Dodge, Riposte), PlainCards(Strike, Strike), 1)
 
-	var negations []ActionKind
+	var negations []Card
 	for _, e := range events {
 		if e.Kind == KindNegated {
-			negations = append(negations, e.Action)
+			negations = append(negations, Plain(e.Action))
 		}
 	}
-	if !actionsEqual(negations, []ActionKind{Riposte, Dodge}) {
+	if !cardsEqual(negations, PlainCards(Riposte, Dodge)) {
 		t.Errorf("negations spent in order %v, want [Riposte Dodge]", negations)
 	}
 }
@@ -394,7 +396,7 @@ func TestARiposteCanKillTheAttacker(t *testing.T) {
 	b := duelist(10, 10, 3)
 
 	events, _, bAfter := ResolveRound(a, b,
-		[]ActionKind{Riposte}, []ActionKind{Strike, Strike}, 1)
+		PlainCards(Riposte), PlainCards(Strike, Strike), 1)
 
 	if bAfter.Alive() {
 		t.Fatalf("B survived its own attack into a riposte with %d life", bAfter.CurrentLife)
@@ -410,12 +412,12 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Dodge}, nil, 1)
+	_, a1, b1 := ResolveRound(a, b, PlainCards(Dodge), nil, 1)
 	if a1.Dodges != 1 {
 		t.Fatalf("A ended round 1 with %d dodges, want 1 unspent", a1.Dodges)
 	}
 
-	round2, _, _ := ResolveRound(a1, b1, []ActionKind{Jab}, []ActionKind{Strike}, 2)
+	round2, _, _ := ResolveRound(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
 	if n := damageCount(round2); n != 2 {
 		t.Errorf("damage events in round 2 = %d, want 2 — the dodge expired at A's turn", n)
 	}
@@ -424,7 +426,7 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 func TestGatherFundsTheFollowingRound(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP before any bonus
 
-	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Gather}, nil, 1)
+	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100), PlainCards(Gather), nil, 1)
 
 	if aAfter.ActionPoints() != 7 {
 		t.Errorf("budget after one Gather = %d, want 7 (5 + 2)", aAfter.ActionPoints())
@@ -436,7 +438,7 @@ func TestGatherDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
 	// it an investment rather than a discount.
 	d := duelist(10, 11, 100)
 
-	events, _, _ := ResolveRound(d, duelist(10, 10, 100), []ActionKind{Gather}, nil, 1)
+	events, _, _ := ResolveRound(d, duelist(10, 10, 100), PlainCards(Gather), nil, 1)
 
 	for _, e := range events {
 		if e.Kind == KindGathered && e.Amount != gatherBonusAP {
@@ -455,7 +457,7 @@ func TestGathersStackWithinARound(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP
 
 	_, aAfter, _ := ResolveRound(d, duelist(10, 10, 100),
-		[]ActionKind{Gather, Gather}, nil, 1)
+		PlainCards(Gather, Gather), nil, 1)
 
 	if aAfter.ActionPoints() != 9 {
 		t.Errorf("budget after two Gathers = %d, want 9 (5 + 4)", aAfter.ActionPoints())
@@ -468,8 +470,8 @@ func TestGatherDoesNotCompoundAcrossRounds(t *testing.T) {
 	a := duelist(10, 11, 500) // 5 AP
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Gather}, nil, 1)
-	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Gather}, nil, 2)
+	_, a1, b1 := ResolveRound(a, b, PlainCards(Gather), nil, 1)
+	_, a2, _ := ResolveRound(a1, b1, PlainCards(Gather), nil, 2)
 
 	if a2.ActionPoints() != 7 {
 		t.Errorf("budget after gathering twice in a row = %d, want a flat 7", a2.ActionPoints())
@@ -480,8 +482,8 @@ func TestABonusLapsesIfItIsNotRenewed(t *testing.T) {
 	a := duelist(10, 11, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Gather}, nil, 1)
-	_, a2, _ := ResolveRound(a1, b1, []ActionKind{Strike}, nil, 2)
+	_, a1, b1 := ResolveRound(a, b, PlainCards(Gather), nil, 1)
+	_, a2, _ := ResolveRound(a1, b1, PlainCards(Strike), nil, 2)
 
 	if a2.ActionPoints() != 5 {
 		t.Errorf("budget after spending the bonus round = %d, want 5", a2.ActionPoints())
@@ -508,10 +510,10 @@ func TestActionPointsFromSpeed(t *testing.T) {
 func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP
 
-	if !d.CanAfford([]ActionKind{Heavy, Gather}) { // 4 + 1
+	if !d.CanAfford(PlainCards(Heavy, Gather)) { // 4 + 1
 		t.Error("Heavy + Gather costs 5 and should fit a 5 AP budget")
 	}
-	if d.CanAfford([]ActionKind{Guard, Riposte}) { // 3 + 3
+	if d.CanAfford(PlainCards(Guard, Riposte)) { // 3 + 3
 		t.Error("Guard + Riposte costs 6 and should not fit a 5 AP budget")
 	}
 }
@@ -553,7 +555,7 @@ func TestDefeatStopsTheRoundEarly(t *testing.T) {
 	b := duelist(10, 10, 10)
 
 	events, _, bAfter := ResolveRound(a, b,
-		[]ActionKind{Strike, Strike, Strike}, []ActionKind{Strike}, 1)
+		PlainCards(Strike, Strike, Strike), PlainCards(Strike), 1)
 
 	if bAfter.Alive() {
 		t.Fatalf("side B survived with %d life, want defeated", bAfter.CurrentLife)
@@ -568,7 +570,7 @@ func TestDefeatStopsTheRoundEarly(t *testing.T) {
 
 func TestLifeNeverGoesNegative(t *testing.T) {
 	events, _, bAfter := ResolveRound(duelist(1000, 10, 100), duelist(1, 10, 5),
-		[]ActionKind{Strike}, nil, 1)
+		PlainCards(Strike), nil, 1)
 
 	for _, e := range events {
 		if e.Life < 0 {
@@ -586,7 +588,7 @@ func TestResolveRoundDoesNotMutateItsInputs(t *testing.T) {
 	a := duelist(10, 10, 100)
 	b := duelist(10, 10, 100)
 
-	ResolveRound(a, b, []ActionKind{Strike}, []ActionKind{Strike}, 1)
+	ResolveRound(a, b, PlainCards(Strike), PlainCards(Strike), 1)
 
 	if a.CurrentLife != 100 || b.CurrentLife != 100 {
 		t.Errorf("inputs mutated: a=%d b=%d, want both 100", a.CurrentLife, b.CurrentLife)
@@ -600,7 +602,7 @@ func TestBothSidesDefendingDoesNotAlias(t *testing.T) {
 	a := duelist(10, 10, 100)
 	b := duelist(10, 10, 100)
 
-	_, a1, b1 := ResolveRound(a, b, []ActionKind{Guard}, []ActionKind{Dodge}, 1)
+	_, a1, b1 := ResolveRound(a, b, PlainCards(Guard), PlainCards(Dodge), 1)
 	if !a1.Guarded {
 		t.Error("A raised a guard and did not end the round with one")
 	}
@@ -616,8 +618,8 @@ func TestRoundIsDeterministic(t *testing.T) {
 	a := duelist(7, 13, 300)
 	b := duelist(9, 17, 300)
 
-	aPlan := []ActionKind{Strike, Guard, Gather}
-	bPlan := []ActionKind{Jab, Riposte}
+	aPlan := PlainCards(Strike, Guard, Gather)
+	bPlan := PlainCards(Jab, Riposte)
 
 	first, a1, b1 := ResolveRound(a, b, aPlan, bPlan, 1)
 	second, a2, b2 := ResolveRound(a, b, aPlan, bPlan, 1)
@@ -654,10 +656,10 @@ func TestEmptyQueueIsAHarmlessRound(t *testing.T) {
 // them asking the question they were written to ask: given the choice, what does a brute do
 // differently from a swarm. What the deck actually does to a style is
 // TestNoStylePlaysACardItWasNotDealt and the balance tool.
-func stockHand() []ActionKind {
-	var hand []ActionKind
+func stockHand() []Card {
+	var hand []Card
 	for i := 0; i < 6; i++ {
-		hand = append(hand, Gather, Guard, Jab, Strike, Heavy)
+		hand = append(hand, PlainCards(Gather, Guard, Jab, Strike, Heavy)...)
 	}
 	return hand
 }
@@ -667,13 +669,13 @@ func TestNoStylePlaysACardItWasNotDealt(t *testing.T) {
 	// is played, so a planner handed three Jabs may only ever queue Jabs — and a planner
 	// handed nothing may only queue nothing. Before decks landed a brute produced Heavies out
 	// of thin air, which made `enemy_cards.json` a file that could never matter.
-	hands := [][]ActionKind{
+	hands := [][]Card{
 		nil,
-		{Jab},
-		{Jab, Jab, Jab},
-		{Brace, Dodge, Mirror}, // no attacks at all
-		{Guard, Gather},
-		{Heavy, Heavy, Jab, Brace},
+		PlainCards(Jab),
+		PlainCards(Jab, Jab, Jab),
+		PlainCards(Brace, Dodge, Mirror), // no attacks at all
+		PlainCards(Guard, Gather),
+		PlainCards(Heavy, Heavy, Jab, Brace),
 	}
 
 	for _, style := range PlanStyles() {
@@ -681,7 +683,7 @@ func TestNoStylePlaysACardItWasNotDealt(t *testing.T) {
 			d := duelist(10, 60, 100) // deliberately rich: the budget must not be the limit
 			plan := PlanFor(style, d, hand)
 
-			left := append([]ActionKind(nil), hand...)
+			left := append([]Card(nil), hand...)
 			for _, a := range plan {
 				found := -1
 				for i, c := range left {
@@ -703,7 +705,7 @@ func TestPlanningIsReproducible(t *testing.T) {
 	// The determinism rule, at the planner. Nothing here may consult a map's iteration order
 	// or a clock, so the same style and the same hand must plan the same round every time —
 	// which is what lets a seeded run be replayed and what the balance tool depends on.
-	hand := []ActionKind{Heavy, Jab, Strike, Guard, Jab, Gather, Strike, Heavy}
+	hand := PlainCards(Heavy, Jab, Strike, Guard, Jab, Gather, Strike, Heavy)
 
 	for _, style := range PlanStyles() {
 		d := duelist(10, 30, 100)
@@ -761,13 +763,13 @@ func TestEveryStyleFightsInADifferentShape(t *testing.T) {
 }
 
 // planKey renders a plan so two of them can be compared as strings.
-func planKey(plan []ActionKind) string {
+func planKey(plan []Card) string {
 	out := ""
-	for i, a := range plan {
+	for i, c := range plan {
 		if i > 0 {
 			out += "+"
 		}
-		out += a.String()
+		out += c.String()
 	}
 	return out
 }
@@ -845,8 +847,8 @@ func TestTacticianBanksThenUnloads(t *testing.T) {
 
 	setup := PlanFor(StyleTactician, d, stockHand())
 	prepares := 0
-	for _, a := range setup {
-		if a == Gather {
+	for _, c := range setup {
+		if c.Action == Gather {
 			prepares++
 		}
 	}
@@ -861,8 +863,8 @@ func TestTacticianBanksThenUnloads(t *testing.T) {
 	}
 
 	payoff := PlanFor(StyleTactician, after, stockHand())
-	for _, a := range payoff {
-		if a == Gather {
+	for _, c := range payoff {
+		if c.Action == Gather {
 			t.Errorf("payoff round is still gathering: %v", payoff)
 		}
 	}

@@ -68,27 +68,75 @@ const (
 func FlurryID(a ActionKind) ComboID    { return comboFlurryBase + ComboID(a) }
 func OnslaughtID(a ActionKind) ComboID { return comboOnslaughtBase + ComboID(a) }
 
-// Step is one position in a combo's pattern. It matches either an exact card or any card of
-// a category, and the two constructors below are the only correct way to build one — a
+// stepMatch is what a Step tests a card's *concept* against. The element is a separate
+// constraint that any of the three can carry — see Step.WithElement.
+type stepMatch int
+
+const (
+	matchAction stepMatch = iota
+	matchCategory
+	matchElement
+)
+
+// Step is one position in a combo's pattern. It matches an exact concept, any concept of a
+// category, or any concept at all of a given element — and any of those can additionally be
+// pinned to an element. The constructors below are the only correct way to build one: a
 // zero-valued Step reads as "exactly a Gather", which is never what a caller means.
+//
+// **The element axis arrived 2026-08-12**, with elements themselves. It is what MECHANICS.md's
+// two sequence combos need — `ice Strike → fire Strike` is `Exactly(Strike).WithElement(Ice)`
+// followed by the same with Fire — and what the five-of-a-colour combo needs, which is five
+// `OfElement` steps and nothing else.
 type Step struct {
-	action     ActionKind
-	category   Category
-	byCategory bool
+	match    stepMatch
+	action   ActionKind
+	category Category
+
+	// element and hasElement are the constraint the three match kinds share. A separate flag
+	// rather than treating Basic as "unset", because Basic is a real element a combo may want to
+	// name — an all-plain run is a legitimate pattern and `element: 0` cannot say whether it was
+	// asked for.
+	element    Element
+	hasElement bool
 }
 
-// Card matches one specific action.
-func Card(a ActionKind) Step { return Step{action: a} }
+// Exactly matches one specific concept, of any element.
+//
+// **It was called `Card` until 2026-08-12** and gave the name up to the `Card` type, which is
+// the thing a combo now matches against. `Exactly(Strike)` also says what it does rather better
+// than `Card(Strike)` did, next to `AnyOf` and `OfElement`.
+func Exactly(a ActionKind) Step { return Step{match: matchAction, action: a} }
 
-// AnyOf matches any action resolving in the given category. `AnyOf(CategoryAttack)` is what
+// AnyOf matches any concept resolving in the given category. `AnyOf(CategoryAttack)` is what
 // makes "three attacks" mean three attacks rather than three Strikes.
-func AnyOf(c Category) Step { return Step{category: c, byCategory: true} }
+func AnyOf(c Category) Step { return Step{match: matchCategory, category: c} }
 
-func (s Step) matches(a ActionKind) bool {
-	if s.byCategory {
-		return a.Category() == s.category
+// OfElement matches any card of one element, whatever concept it is. Five of these in a row is
+// the five-of-a-colour combo.
+func OfElement(e Element) Step {
+	return Step{match: matchElement, element: e, hasElement: true}
+}
+
+// WithElement pins an existing step to an element as well. `Exactly(Strike).WithElement(Ice)` is
+// an ice Strike and nothing else.
+func (s Step) WithElement(e Element) Step {
+	s.element, s.hasElement = e, true
+	return s
+}
+
+func (s Step) matches(c Card) bool {
+	if s.hasElement && c.Element != s.element {
+		return false
 	}
-	return s.action == a
+	switch s.match {
+	case matchCategory:
+		return c.Action.Category() == s.category
+	case matchElement:
+		// The element was the whole test and it has already been made above.
+		return true
+	default:
+		return c.Action == s.action
+	}
 }
 
 // StaggerAll is the Stagger value meaning "every action of the opponent's next turn". A
@@ -176,11 +224,13 @@ func buildComboTable() []Combo {
 	return out
 }
 
-// runOf is n of the same card in a row.
+// runOf is n of the same concept in a row, of any element. **Any element deliberately** — a
+// Strike Flurry is three Strikes however they are coloured, and requiring one colour would
+// silently make every flurry in the game an element combo.
 func runOf(a ActionKind, n int) []Step {
 	run := make([]Step, n)
 	for i := range run {
-		run[i] = Card(a)
+		run[i] = Exactly(a)
 	}
 	return run
 }
@@ -228,8 +278,8 @@ type ComboHit struct {
 //
 // It matches the *whole* queue. ResolveRound matches what survives a stagger instead, which
 // is why that path goes through matchSlots directly and why this one cannot be used there.
-func MatchCombos(side Side, actions []ActionKind) []ComboHit {
-	return matchSlots(appendTurn(nil, side, actions), comboTable)
+func MatchCombos(side Side, cards []Card) []ComboHit {
+	return matchSlots(appendTurn(nil, side, cards), comboTable)
 }
 
 // matchSlots is the matcher proper, over one side's turn as it will actually be played. The
@@ -252,7 +302,7 @@ func matchSlots(turn []Slot, table []Combo) []ComboHit {
 			}
 			ok := true
 			for k, step := range run {
-				if !step.matches(turn[i+k].Action) {
+				if !step.matches(turn[i+k].Card) {
 					ok = false
 					break
 				}

@@ -151,31 +151,80 @@ func (s *CombatScene) enemyQueueOrder() []combat.Card {
 	return out
 }
 
-// drawEnemyQueue draws the opponent's hand for this round, right-aligned in the table band.
+// dealtCard is one of the opponent's cards on its way to, or sitting in, its seat.
 //
-// **It is drawn face up and that is temporary** *(2026-08-12)*. `concealEnemy` is still the
-// screen's single predicate for hiding the opponent's intentions and the Action Flow pane still
-// obeys it; this row deliberately does not, because the owner asked to see the cards first and
-// decide what to hide afterwards. **The lever is already built when that day comes**:
-// `cards.Spec.FaceDown` draws a back instead of a face and the draw pile is a stack of them, so
-// concealing a card here is one field rather than a second drawing path.
+// **The row got state on 2026-08-12** when it started being laid out during planning. It was
+// drawn straight from `enemyQueueOrder` every frame, which was enough while it only ever
+// appeared fully formed at DUEL!; a row that arrives has to remember how far along each card is.
+type dealtCard struct {
+	travel
+
+	card combat.Card
+}
+
+// seatEnemyCards lays the opponent's whole queue out and sets it flying in.
 //
-// **Nothing is drawn while the player is planning.** `enemyActions` holds *last* round's plan
-// until DUEL! is pressed and re-plans it, so a row drawn during planning would be a confident
-// picture of the wrong round — which is worse than an empty band. This is also what makes the
-// two rows appear and disappear together.
+// **Called when the opponent plans, which is now the start of the planning phase** rather than
+// the moment DUEL! is pressed — see startRound and Init. That is the whole point of the change:
+// the player picks their round against a hand they can see.
+func (s *CombatScene) seatEnemyCards() {
+	queue := s.enemyQueueOrder()
+
+	s.enemyDealt = make([]dealtCard, 0, len(queue))
+	for i, c := range queue {
+		s.enemyDealt = append(s.enemyDealt, dealtCard{
+			travel: newTravel(i*flightStaggerPer, riseTicks),
+			card:   c,
+		})
+	}
+}
+
+// at is where one of the opponent's cards is drawn right now: waiting to set off, flying in
+// from the enemy's own card, sitting in its seat, or lifted out of it because it is resolving.
 //
-// **Every card is elementless**, because `data/enemy_cards.json` is: MECHANICS.md has affixes
-// transforming a basic deck into an element and none of that exists yet. So they draw with the
-// neutral mid-grey border, which is the truth rather than a placeholder.
-func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
-	if s.planning() {
-		return
+// **They fly in from the enemy card in the top-right corner**, which is the opponent itself —
+// the mirror of the player's cards coming out of their hand. There is no enemy draw pile on
+// screen to deal from and inventing one would be a second thing to explain; the fighter card is
+// already the thing on screen that *is* the opponent, so cards coming out of it read as theirs
+// without a caption.
+func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, total int, firing bool) image.Point {
+	from := s.enemyCardRect(gs).Min
+	to := enemySeatAt(gs, seat, total)
+
+	switch {
+	case d.waiting():
+		return from
+	case !d.done():
+		return lerpPoint(from, to, easeOut(d.progress()))
 	}
 
-	queue := s.enemyQueueOrder()
-	for i, c := range queue {
-		at := lift(enemySeatAt(gs, i, len(queue)), i == s.enemyFiringSeat)
-		drawCard(gs, screen, at, cards.Hand, c, true, false, s.enemy.Str)
+	// The lift only after landing, exactly as the player's row does it — a card still arriving
+	// is already the most moving thing on screen and lifting it too would blur the two beats.
+	return lift(to, firing)
+}
+
+// drawEnemyQueue draws the opponent's hand for this round, right-aligned in the table band.
+//
+// **It is drawn during planning, and that is the point of the row** *(2026-08-12)*. It used to
+// appear only once DUEL! was pressed, because `enemyActions` held *last* round's plan until then
+// and a row drawn during planning would have been a confident picture of the wrong round. The
+// opponent now plans at the start of the planning phase instead, so the row is this round's and
+// the player chooses their own cards against it.
+//
+// **What that gives up: the opponent's intentions are no longer hidden.** `concealEnemy` is
+// still the screen's single concealment predicate and the Action Flow pane still obeys it, but
+// with the cards face up on the table there is nothing left for it to hide — this is an
+// open-information duel now, on the owner's call. **The lever is still built**:
+// `cards.Spec.FaceDown` draws a back instead of a face, so hiding this row again is one field
+// rather than a second drawing path.
+//
+// **Elements come through from the deck**, and every card is basic because
+// `data/enemy_cards.json` is: MECHANICS.md has affixes transforming a basic deck into an element
+// and none of that exists yet. So they draw with the neutral mid-grey border, which is the truth
+// rather than a placeholder.
+func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
+	for i, d := range s.enemyDealt {
+		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), i == s.enemyFiringSeat)
+		drawCard(gs, screen, at, cards.Hand, d.card, true, false, s.enemy.Str)
 	}
 }

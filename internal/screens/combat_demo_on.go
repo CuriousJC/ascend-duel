@@ -41,31 +41,27 @@ import (
 // way to see a combo was to write the queue directly, which tested the pane but not the path
 // to it.
 //
-// Round two is still written straight into `fighterActions`, because what it is for is putting
-// all three verb chips on screen at once and the hand it is dealt after round one's discard is
-// not something the seed pins.
+// **Round two is clicked too, as of 2026-08-12.** It used to be written straight into
+// `fighterActions`, which produced a screen state the game itself cannot be in: a queue with no
+// cards behind it. That was survivable while a played card went to a pile in the corner — the
+// pile was simply empty — and it stopped being survivable when the table arrived. Half the
+// table sat blank while the Resolution feed narrated the Duelist gathering and striking, which
+// is the demo lying about the one thing it now exists to show.
+//
+// The rule it broke is the one worth keeping: **the demo drives this screen the way a player
+// does, through `toggle`.** A harness that can reach states the game cannot is a harness whose
+// captures cannot be trusted, and it had already been documented as producing "an empty corner"
+// rather than being fixed.
+//
+// What it cost is the fixed script. Round two asked for a specific Gather, Riposte and Strike,
+// and the hand dealt after round one's discard is not something the seed pins — so it picks
+// **one card of each category** out of whatever it is holding instead. That still covers all
+// three verbs, which is what round two is for, and covers them by construction rather than by a
+// list that can go stale. An eight-card hand off a twelve-concept deck nearly always holds one
+// of each; when it does not, demoPickRound says so rather than quietly showing two.
 
-// demoPlans is one scripted round each, played in order. **Between them they have to cover
-// every verb chip**, because the chips are the thing hardest to check any other way and the
-// enemy will not supply them: Monster1 is a brute and only ever attacks.
-//
-//   - Round 1 spends 6 AP on a Gather, a Riposte and a Strike, which puts a white *prepares*,
-//     a blue *defends* and a red *attacks* on screen in one pane.
-//   - Round 2 is three Strikes, which forms a Strike Flurry — the combo line, the amber
-//     swatch, and a stagger on the opponent's turn. It is affordable because the Gather in
-//     round 1 banked +2, so the budget is 8.
-//
-// The order matters and is not arbitrary: three Strikes is exactly a 6 AP budget, so a Gather
-// cannot be added to the combo round, and the combo round cannot come first without the
-// Gather having nowhere to go.
-// Round one is clicked, not listed — see demoClickRun. Round two is the scripted one.
-//
-// **Elementless, deliberately.** A scripted plan is about which verbs land on screen, and a
-// coloured card would add a status to the round for reasons the script does not care about —
-// making the capture harder to read rather than richer.
-var demoPlans = [][]combat.Card{
-	combat.PlainCards(combat.Gather, combat.Riposte, combat.Strike),
-}
+// demoScriptedRounds is how many rounds follow the clicked opening one.
+const demoScriptedRounds = 1
 
 // demoSeedName is the opening hand the demo asks for, overriding whatever a plain launch uses.
 // `strike-flurry` puts three Strikes in hand, which is what round one clicks.
@@ -88,6 +84,10 @@ var demo struct {
 	mode      demoShotMode
 	shotEvery int // ticks between captures, wider in keys mode than in all
 	done      bool
+
+	// settledAt is the tick a round's playback finished, or 0 while one is running. It is what
+	// demoBetweenRounds is measured from — see the hold in demoUpdate.
+	settledAt int
 }
 
 const (
@@ -104,7 +104,20 @@ const (
 
 	// How long to hold after a round settles before sending the next plan, so the settled
 	// screen is on show long enough to be captured rather than passed straight through.
-	demoBetweenRounds = 40
+	//
+	// **It was measured against an absolute tick and therefore did nothing** until 2026-08-12.
+	// The condition was `demo.tick > demoDuelAt+demoBetweenRounds`, which round one's playback
+	// clears by a mile — so from round two on, the next plan was sent on the very tick the
+	// previous round settled, with no hold at all.
+	//
+	// That was invisible while the opponent's row appeared instantly at DUEL!. It stopped being
+	// invisible the moment that row started *arriving*: the enemy's cards for the next round
+	// begin flying in as playback ends, so a zero hold pressed DUEL! while they were still in
+	// the air, and the sequence the table exists to show — their cards land, you choose, both
+	// sides resolve — could not be seen in the one harness that shows it.
+	//
+	// It has to clear the arrival: riseTicks plus a full row's stagger is 16 + 4x4 = 32.
+	demoBetweenRounds = 60
 
 	// How many of one card round one clicks. Named against the combo it is trying to form
 	// rather than written as a 3, so it stays honest if the flurry run length ever changes.
@@ -162,14 +175,22 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 		s.startRound()
 	}
 
-	// Playback finished. Either send the next scripted round or close the window, the same
-	// way the close button does.
-	settled := demo.tick > demoDuelAt+demoBetweenRounds && s.cursor >= len(s.log)
-	if settled {
+	// Playback finished. Hold for demoBetweenRounds from *that moment* — not from an absolute
+	// tick, which is what this used to do and what made the hold a no-op — then either send the
+	// next scripted round or close the window, the same way the close button does.
+	//
+	// The hold is what lets the opponent's next hand be seen arriving on the table before the
+	// script answers it, which is the sequence the whole row is for.
+	playedARound := len(s.log) > 0 && s.cursor >= len(s.log)
+	if playedARound && demo.settledAt == 0 {
+		demo.settledAt = demo.tick
+	}
+
+	if playedARound && demo.tick >= demo.settledAt+demoBetweenRounds {
 		// s.round rather than demo.round: the first round is clicked rather than scripted, so
 		// the two do not line up and the scene's own count is the one that is true.
 		s.demoReport(gs, fmt.Sprintf("round %d resolution", s.round))
-		if demo.round < len(demoPlans) {
+		if demo.round < demoScriptedRounds {
 			s.demoSendPlan()
 			return
 		}
@@ -201,18 +222,51 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 // narrow what the demo covers to make a screenshot prettier. Round one is clicked and is the
 // one to look at for the pile.
 func (s *CombatScene) demoSendPlan() {
-	if demo.round >= len(demoPlans) {
+	if demo.round >= demoScriptedRounds {
 		return
 	}
-	plan := demoPlans[demo.round]
 	demo.round++
+	demo.settledAt = 0
 
-	s.fighterActions = append([]combat.Card(nil), plan...)
+	s.demoPickRound()
+
 	if s.overBudget() {
 		fmt.Printf("demo: plan %d costs %d against a budget of %d and will not resolve\n",
-			demo.round, combat.CostOf(plan), s.fighter.ActionPoints())
+			demo.round, combat.CostOf(s.fighterActions), s.fighter.ActionPoints())
 	}
 	s.startRound()
+}
+
+// demoPickRound selects one card of each category out of the hand, cheapest first, through the
+// same toggle a click goes through — so `fighterActions` is derived by syncQueue and every
+// queued card has a hand slot behind it to fly to the table from.
+//
+// Cheapest first because the budget has to cover all three and the point is coverage rather
+// than a big round: one of each at the top tier is 12 AP against a budget of 8.
+func (s *CombatScene) demoPickRound() {
+	for _, cat := range combat.Categories() {
+		pick, cost := -1, 0
+		for i, c := range s.hand {
+			if c.selected || c.Action.Category() != cat {
+				continue
+			}
+			if pick < 0 || c.Cost() < cost {
+				pick, cost = i, c.Cost()
+			}
+		}
+
+		if pick < 0 {
+			fmt.Printf("demo: no %v card in hand for round %d; that verb will not be shown\n",
+				cat, demo.round+1)
+			continue
+		}
+		if combat.CostOf(s.fighterActions)+cost > s.fighter.ActionPoints() {
+			fmt.Printf("demo: cannot afford a %v card in round %d on %d AP\n",
+				cat, demo.round+1, s.fighter.ActionPoints())
+			continue
+		}
+		s.toggle(pick)
+	}
 }
 
 // **Captures are off unless asked for**, because a 1280x960 PNG is expensive for whoever ends

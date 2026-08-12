@@ -205,7 +205,12 @@ func (s *CombatScene) spendSelected() {
 			// visibly left ten seconds ago would make it jump back across the screen to be
 			// thrown. The count goes with it: a seat's x is a function of how many cards the
 			// row holds, and the row is cleared three lines below this.
-			flight := cardFlight{card: c.actionCard, outbound: true, index: i, count: leaving}
+			flight := cardFlight{
+				travel:   newTravel(0, flightTicks),
+				card:     c.actionCard,
+				outbound: true,
+				index:    i, count: leaving,
+			}
 			if p, ok := s.playedSeatOf(i); ok {
 				flight.index, flight.count, flight.fromTable = p, len(s.resolved), true
 			}
@@ -227,9 +232,9 @@ func (s *CombatScene) spendSelected() {
 	s.drawHand()
 	for i := dealt; i < len(s.hand); i++ {
 		s.addFlight(cardFlight{
-			card:  s.hand[i].actionCard,
-			index: i, count: len(s.hand),
-			delay: (i - dealt) * flightStaggerPer,
+			travel: newTravel((i-dealt)*flightStaggerPer, flightTicks),
+			card:   s.hand[i].actionCard,
+			index:  i, count: len(s.hand),
 		})
 	}
 

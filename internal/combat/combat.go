@@ -607,9 +607,7 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, table []Combo)
 	}
 
 	// **A always burns before B**, which is the same order the turns were played in and needs no
-	// tie-break. Both sides tick even when one is already dead — a burn that killed its victim in
-	// the same round is the fire finishing what an attack started, and skipping the tick on a
-	// corpse would make the order of two deaths matter.
+	// tie-break.
 	events, a = endRound(events, SideA, a, round)
 	events, b = endRound(events, SideB, b, round)
 
@@ -755,8 +753,15 @@ func expireDefenses(d Duelist) Duelist {
 // was struck in as well as the round after. MECHANICS.md says a DoT "lands at end of round" and
 // this is the end of the round it was applied in; making it wait would mean a fire attack did
 // nothing at all in a duel that ended on the round it was played.
+//
+// **A dead duelist does not burn.** The first version ticked regardless, on the grounds that
+// skipping a corpse would make the order of two deaths matter — it does not, because whether a
+// duelist is dead is settled before either side's round-end runs. What it did instead was
+// announce a second `KindDefeated` over a body, and the Resolution feed duly read
+// "Goblin falls / Goblin burns for 2 / Goblin falls". Statuses still tick down, so a duelist
+// somehow revived does not wake up carrying an expired burn.
 func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist) {
-	if burn := d.Statuses[Fire]; burn.Active() {
+	if burn := d.Statuses[Fire]; burn.Active() && d.Alive() {
 		d.CurrentLife = reduce(d.CurrentLife, burn.Amount)
 
 		// Side and Target are both this duelist, because nobody acted. The fire was applied by an

@@ -229,6 +229,14 @@ type CombatScene struct {
 	// Cleared when the hand is spent, which is the moment those cards actually leave.
 	resolved []resolvedCard
 
+	// The opponent's side of the table: their whole queue for the coming round, flying in from
+	// their own card in the top-right corner and settling into a row on the right.
+	//
+	// **It is laid out when the opponent plans, which is the start of the planning phase**, so
+	// the player picks their round against a hand they can see. Re-seated once per round; see
+	// planEnemyRound.
+	enemyDealt []dealtCard
+
 	// firingSeat and enemyFiringSeat are which card on each side of the table is resolving
 	// right now, or -1 for none. **Playback drives which card is lit, not which cards exist**:
 	// both hands are on the table from the moment DUEL! is pressed.
@@ -343,14 +351,6 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// A fresh shuffled deck for the opponent too, dealt before it plans.
 	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
 
-	// Planned up front only so the enemy pane has something in it before the first
-	// DUEL!. startRound re-plans it every round regardless, so this is display, not a
-	// commitment the resolver ever reads.
-	//
-	// **It spends cards from the opponent's hand**, which is why Init has to deal that hand
-	// first. A plan is a commitment on either side.
-	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
-
 	// A fresh duel: full life, no standing defenses, and no action points banked by a
 	// Gather from a duel that has been walked away from.
 	s.fighter.CurrentLife = s.fighter.MaxLife
@@ -362,6 +362,20 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.cursor = 0
 	s.ticks = 0
 	s.round = 0
+
+	// **The opponent plans for round one here, and this is a commitment now** *(2026-08-12)*.
+	// It used to be display only — startRound re-planned every round regardless — and it is the
+	// plan that will actually resolve. See planEnemyRound.
+	//
+	// **It has to come after the reset above, and both halves of that matter.** planEnemyRound
+	// refuses to plan for a dead duelist, and a screen re-entered after a defeat still has a
+	// corpse on it until the line above brings it back — so planning first would deal the new
+	// fight an opponent with no cards. The budget the planner reads has to be the fresh one too,
+	// or round one is planned against a Gather banked in a duel that is over.
+	//
+	// **It spends cards from the opponent's hand**, which is why Init deals that hand first.
+	// A plan is a commitment on either side.
+	s.planEnemyRound()
 
 	trace.Logf("scene", "fight %d: %s, style %v, %d life, %d AP",
 		s.fightIndex+1, s.enemy.Name, s.enemy.Style,
@@ -523,8 +537,13 @@ func (s *CombatScene) startRound() {
 	}
 
 	s.round++
-	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
 
+	// **The opponent is not planned here any more** *(2026-08-12)*. It planned at the start of
+	// this planning phase, its cards have been face up on the table the whole time the player
+	// was choosing, and re-planning at the press would make the row a picture of a round that
+	// never happened. Nothing about the plan changes by waiting — PlanFor never sees the
+	// player's queue, and the opponent's own state has not moved since the last round ended —
+	// so this is purely a change to *when* the player is told.
 	log, fighterAfter, enemyAfter := combat.ResolveRound(
 		s.fighter.Duelist, s.enemy.Duelist,
 		s.fighterActions, s.enemyActions,
@@ -636,7 +655,38 @@ func (s *CombatScene) advancePlayback() {
 		s.fighter.Duelist = s.fighterAfter
 		s.enemy.Duelist = s.enemyAfter
 		s.endRoundHand()
+
+		// **The opponent plans the next round the instant this one is over**, so its cards are
+		// on the table while the player chooses their answer. It has to happen *after* the two
+		// duelists above adopt their end-of-round state, or the plan is made against a budget
+		// that no longer exists — a chill landing this round has to be in the AP the planner
+		// reads.
+		s.planEnemyRound()
 	}
+}
+
+// planEnemyRound asks the opponent for its round and lays the cards on the table.
+//
+// **The plan is a commitment made at the start of the planning phase, not at DUEL!**
+// *(2026-08-12)*. Two things follow and both are the point:
+//
+//   - The player picks their round against a hand they can see, which is what the table was
+//     built to make possible and what the opponent's row was missing.
+//   - The opponent's intentions stop being hidden information. `concealEnemy` still governs the
+//     Action Flow pane, but with the cards face up there is nothing left for it to hide.
+//
+// **Nothing about the plan itself changed.** `PlanFor` never sees the player's queue and the
+// opponent's own state does not move between the end of one round and the press of DUEL!, so
+// the same cards are chosen either way — what moved is when the player is shown them.
+//
+// A dead duelist plans nothing: the last round's row stays on the table, which is the round the
+// player is looking at the result of.
+func (s *CombatScene) planEnemyRound() {
+	if !s.fighter.Alive() || !s.enemy.Alive() {
+		return
+	}
+	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
+	s.seatEnemyCards()
 }
 
 // applyEvent moves the visible state to match one event. Only damage moves the health

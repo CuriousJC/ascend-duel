@@ -306,14 +306,28 @@ of sentences.
   overlaps *within itself* and the pitch is derived exactly as `handPitch` is — the action cap
   is a rule a ring is expected to raise, so a pitch that only worked for five would hide a
   rendering bug behind a balance change. `TestTheTwoHandsNeverReachEachOther`.
-- **The opponent's cards are face up, and that is temporary.** `concealEnemy` is still the
-  screen's single concealment predicate and the Action Flow pane still obeys it; this row
-  deliberately does not, on the owner's call — see the cards first, decide what to hide after.
-  **The lever is already built**: `cards.Spec.FaceDown` draws a back and the draw pile is a
-  stack of them, so concealing one is a field rather than a second drawing path.
-- **Nothing is drawn while planning.** `enemyActions` holds *last* round's plan until DUEL!
-  re-plans it, so a row drawn during planning would be a picture of the wrong round. That is
-  also what makes the two rows appear and disappear together.
+- **The opponent's row is up during planning, and that is what the row is for** *(2026-08-12)*.
+  It appeared only at DUEL! for one day, because `enemyActions` held *last* round's plan until
+  then. **The fix was to move when the opponent commits**: `planEnemyRound` runs at the start of
+  the planning phase — from `Init` for round one and from the end of playback after that — so
+  the player picks their round against a hand they can see.
+  **Nothing about the plan changed, only when it is shown.** `PlanFor` never sees the player's
+  queue and the opponent's state does not move between one round ending and DUEL! being pressed,
+  so the same cards are chosen either way. `startRound` must never re-plan; if it did, the cards
+  the player chose against would not be the cards they faced.
+  **Ordering that bit once**: in `Init` the plan has to come *after* the life reset — the
+  function refuses to plan for a dead duelist, and a screen re-entered after a defeat still has
+  a corpse on it until then, so planning first dealt the next fight an opponent with no cards.
+- **The duel is open-information now, on the owner's call.** `concealEnemy` still governs the
+  Action Flow pane, but with the opponent's cards face up on the table there is nothing left for
+  it to hide. **The lever is still built**: `cards.Spec.FaceDown` draws a back and the draw pile
+  is a stack of them, so hiding this row again is a field rather than a second drawing path.
+- **The opponent's cards fly in from the enemy fighter card** in the top-right corner — the
+  opponent itself, and the mirror of the player's cards coming out of their hand. There is no
+  enemy draw pile on screen; inventing one would be a second thing to explain, where a card
+  coming out of the thing that *is* the opponent needs no caption. Same `riseTicks` and same
+  `flightStaggerPer` as the player's row, and `TestBothRowsUseTheSameArrivalClock` is what stops
+  a later change to one being made twice.
 - **Every opponent card is elementless**, because `data/enemy_cards.json` is. That was a fact
   nobody could see when an enemy card was never drawn; it is visible now, and the neutral grey
   border is the truth rather than a placeholder.
@@ -321,6 +335,17 @@ of sentences.
   else played, which is what keeps the Resolution pane able to narrate from `fighterActions`
   while the round is still running. `resolvedInHand` hides a *drawing*, exactly like
   `inboundTo`.
+
+**Four things move, and they share a clock and nothing else** *(`travel`, extracted
+2026-08-12)*. A card to or from the draw pile, one of the player's to its seat, one of the
+opponent's to theirs. The obvious unification — one struct holding a start and an end point —
+was **rejected**: no mover stores its endpoints. Every one recomputes both every frame from
+`slotAt`, `playedSeatAt`, `enemySeatAt` or `deckStackRect`, which is what makes a flight survive
+the row re-laying out underneath it and survive a resize. What they genuinely share is a delay,
+an age, a duration and an eased progress, so that is all `travel` is. The *gestures* stay
+separate, because they are genuinely different drawings: the discard accelerates away lifting,
+turning and shrinking; the deal scales up out of the pile and flips face up; the two table rows
+travel flat.
 
 **The animation does not own the card, and this is the rule to protect.** `spendSelected`
 completes the whole logical move before it raises a single flight, so a card in the air has

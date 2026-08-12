@@ -156,13 +156,71 @@ const (
 	comboRingInset = 6
 )
 
-// cardFlight is one card in the air. Purely something to look at.
+// travel is the clock every moving card on this screen shares: hold for `delay`, then run for
+// `ticks`. Three things embed it — a card flying to or from the draw pile, one of the player's
+// cards going to its seat on the table, and one of the opponent's arriving at theirs.
+//
+// **This is deliberately the clock and not the journey** *(extracted 2026-08-12, when the
+// opponent's row became the fourth mover)*. The obvious unification is a struct holding a start
+// and an end point, and it would be a regression here: **no mover stores its endpoints**. Every
+// one of them recomputes both every frame from a layout function — `slotAt`, `playedSeatAt`,
+// `enemySeatAt`, `deckStackRect` — which is what makes a flight survive the row re-laying out
+// underneath it and survive the window being resized. Caching two coordinates to share a struct
+// would trade that away for nothing.
+//
+// What the four genuinely have in common is a delay, an age, a duration and an eased progress,
+// and that is exactly what is here. What they do *not* share is the gesture: the discard
+// accelerates away while lifting, turning and shrinking; the deal scales up out of the pile and
+// flips face up on the way; the two table rows travel flat. Those are three different drawings
+// and folding them into one parameterised one would be a bigger function than the three.
+type travel struct {
+	// delay holds a card on the launch pad so a handful set off in sequence rather than as a
+	// single sheet. age counts from zero *including* the delay, so one counter is the whole
+	// clock and there is no second field to keep in step.
+	age, delay, ticks int
+}
+
+func newTravel(delay, ticks int) travel { return travel{delay: delay, ticks: ticks} }
+
+// waiting reports whether this card is still on the launch pad.
+func (t travel) waiting() bool { return t.age < t.delay }
+
+// done reports whether it has arrived.
+func (t travel) done() bool { return t.age >= t.delay+t.ticks }
+
+// progress is 0 at the start of the journey and 1 at the end, before easing.
+func (t travel) progress() float64 {
+	if t.ticks <= 0 {
+		return 1
+	}
+	p := float64(t.age-t.delay) / float64(t.ticks)
+	switch {
+	case p < 0:
+		return 0
+	case p > 1:
+		return 1
+	}
+	return p
+}
+
+// tick advances the clock, and stops once the card has landed so a seated card costs one
+// comparison a frame rather than growing a counter forever.
+func (t *travel) tick() {
+	if !t.done() {
+		t.age++
+	}
+}
+
+// cardFlight is one card in the air between the hand and the draw pile. Purely something to
+// look at.
 //
 // **It stores an index and a row size, not a coordinate.** The hand re-lays out the instant
 // a card leaves it, so a discarded card's origin no longer exists by the time it is drawn —
 // slotAt takes the pair back and returns the rectangle that used to be there. It also means
 // a flight survives the window being resized, which a cached pixel position would not.
 type cardFlight struct {
+	travel
+
 	card actionCard
 
 	// outbound is a card leaving the hand for the discard; the other direction is a card
@@ -177,21 +235,6 @@ type cardFlight struct {
 	// card played this round spends the rest of it face up on the left of the table, so at the
 	// end of the round it is thrown from there — not from the hand slot it left long before.
 	fromTable bool
-
-	// delay holds a card on the launch pad so a handful dealt at once set off in sequence
-	// rather than as a single sheet. age runs to flightTicks once the delay is spent.
-	age, delay int
-}
-
-// live reports whether a flight still has anything to draw.
-func (f cardFlight) live() bool { return f.age < flightTicks }
-
-// progress is 0 at the start of the journey and 1 at the end, before easing.
-func (f cardFlight) progress() float64 {
-	if f.age <= 0 {
-		return 0
-	}
-	return float64(f.age) / float64(flightTicks)
 }
 
 // addFlight queues one. Kept as a method so the two call sites in spendSelected read as
@@ -212,13 +255,8 @@ func (s *CombatScene) updateFlights() {
 	}
 	kept := s.flights[:0]
 	for _, f := range s.flights {
-		if f.delay > 0 {
-			f.delay--
-			kept = append(kept, f)
-			continue
-		}
-		f.age++
-		if f.live() {
+		f.tick()
+		if !f.done() {
 			kept = append(kept, f)
 		}
 	}
@@ -345,7 +383,7 @@ func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, 
 // drawFlights draws every card in the air, over the row and the panes and under the overlay.
 func (s *CombatScene) drawFlights(gs *state.GlobalState, screen *ebiten.Image) {
 	for _, f := range s.flights {
-		if f.delay > 0 {
+		if f.waiting() {
 			continue
 		}
 		if f.outbound {
@@ -467,6 +505,8 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 // does the rest. That is the whole reason this reads as the mechanic rather than as an
 // animation.
 type resolvedCard struct {
+	travel
+
 	card actionCard
 
 	// Where it came from: the hand slot it occupied and the row it belonged to, so the flight
@@ -474,18 +514,10 @@ type resolvedCard struct {
 	// still holding this card, but a later discard could re-lay the row out around it.
 	handIndex, handCount int
 
-	// age drives the flight to the table and stops once the card has landed, so a card sitting
-	// in its seat costs one comparison a frame rather than growing forever. delay holds it on
-	// the launch pad, so a hand dealt to the table sets off in sequence rather than as a sheet.
-	age, delay int
-
 	// combo marks a card a combo bracketed. Set when the KindCombo event plays back, from
 	// the span the engine put on the event — never worked out here.
 	combo bool
 }
-
-// landed reports whether this card has reached its seat.
-func (r resolvedCard) landed() bool { return r.age >= r.delay+riseTicks }
 
 // seatPlayedCards deals the player's whole queue to the table, in resolution order.
 //
@@ -506,20 +538,25 @@ func (s *CombatScene) seatPlayedCards() {
 			continue
 		}
 
-		// No card behind the queued action. The real game cannot reach this — syncQueue derives
-		// the queue from the hand — but the scripted demo writes a plan straight into
-		// fighterActions, and a screen that panicked or drew an arbitrary card because a harness
-		// took a shortcut would be worse than one that draws nothing.
+		// No card behind the queued action, which nothing should now be able to produce:
+		// syncQueue derives the queue by walking the hand, and as of 2026-08-12 the scripted demo
+		// selects through `toggle` like a player rather than writing `fighterActions` directly.
+		//
+		// **The shortcut it used to take is exactly what this guard was hiding.** A queue with no
+		// cards behind it drew an empty half of the table while the Resolution feed narrated the
+		// Duelist attacking — the guard did its job and the demo lied anyway. It is kept because
+		// drawing nothing is still the right answer if something reaches here, and taken out of
+		// the load-bearing position it was in.
 		hand, ok := s.handIndexForQueue(slot.Index)
 		if !ok {
 			continue
 		}
 
 		s.resolved = append(s.resolved, resolvedCard{
+			travel:    newTravel(len(s.resolved)*flightStaggerPer, riseTicks),
 			card:      s.hand[hand].actionCard,
 			handIndex: hand,
 			handCount: len(s.hand),
-			delay:     len(s.resolved) * flightStaggerPer,
 		})
 	}
 }
@@ -603,9 +640,10 @@ func (s *CombatScene) handIndexForQueue(n int) (int, bool) {
 // updateResolved advances the cards that have fired. Its own clock, like the flights.
 func (s *CombatScene) updateResolved() {
 	for i := range s.resolved {
-		if !s.resolved[i].landed() {
-			s.resolved[i].age++
-		}
+		s.resolved[i].tick()
+	}
+	for i := range s.enemyDealt {
+		s.enemyDealt[i].tick()
 	}
 }
 
@@ -643,10 +681,10 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total int, firing bool) im
 	to := playedSeatAt(gs, seat, total)
 
 	switch {
-	case r.age <= r.delay:
+	case r.waiting():
 		return from
-	case !r.landed():
-		return lerpPoint(from, to, easeOut(float64(r.age-r.delay)/riseTicks))
+	case !r.done():
+		return lerpPoint(from, to, easeOut(r.progress()))
 	}
 
 	// **The lift is applied after the card has landed, never during the flight.** A card still

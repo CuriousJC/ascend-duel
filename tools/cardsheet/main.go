@@ -250,6 +250,21 @@ func run(dir string) error {
 	}
 	page.Rings = append(page.Rings, enemyRow)
 
+	// Section eight: the player. The enemy card's twin — same format, same health bar at the
+	// same offsets, three stat rows where the opponent has a portrait. Four states, because
+	// the figures are the only thing on it that moves.
+	duelistRow := row{Label: "duelists — name, figures, health"}
+	for _, spec := range duelistSpecs() {
+		cell, err := write(dir, faces, spec, cards.DuelistStyle,
+			fmt.Sprintf("duelist-%s-%d.png", spec.Name, spec.Life),
+			fmt.Sprintf("%s — %d/%d", spec.Name, spec.Life, spec.MaxLife))
+		if err != nil {
+			return err
+		}
+		duelistRow.Cells = append(duelistRow.Cells, cell)
+	}
+	page.Rings = append(page.Rings, duelistRow)
+
 	out := filepath.Join(dir, "index.html")
 	f, err := os.Create(out)
 	if err != nil {

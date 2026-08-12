@@ -462,9 +462,38 @@ is no build step.**
 - **No `math/rand`**, per the determinism rules. The drum noise is a 15-bit shift
   register seeded from each note's start frame, so two renders cannot differ.
 - **Failing to open the audio device is logged, never fatal.** A machine with no sound
-  card still plays the game.
-- **There is no way to mute it yet.** That wants an on-screen button, not a hotkey — the
-  input vocabulary has no keyboard. See `TODO.md`.
+  card still plays the game — and `music.Available()` reports it, so the mute button
+  disables itself rather than silently doing nothing.
+- **Mute is a button, never a hotkey** — the input vocabulary has no keyboard. It landed
+  2026-08-12 as the game's chrome; see the section below. `SetMuted` takes the volume to
+  zero rather than pausing, so the score keeps running underneath and unmuting lands where
+  it would have got to rather than resuming a phrase already heard.
+
+### The frame: one control that belongs to no screen
+
+[internal/game/chrome.go](internal/game/chrome.go) draws the **mute button** — a 44px
+square in the bottom-left corner of every screen, carrying a generated speaker glyph.
+
+- **It is deliberately outside "scenes own their own widgets" rather than an exception to
+  it.** The score is started once in `main` and loops for the whole session across every
+  screen, so the control that silences it belongs at the same level. The alternative was
+  the same button on four scenes: four placements to keep in step and four callbacks into
+  one package.
+- **The bar for joining the frame is high, and the file says so.** Something true for the
+  whole session, on every screen, owned by no scene. A frame is easy to grow by accident.
+- **`state.ModalOpen` is what it cost.** A scene sets it while it has a dialog up and the
+  chrome neither updates nor draws — otherwise the button would sit live on top of the deck
+  overlay, whose whole design is that the control closing it is the only lit thing on
+  screen. **The frame clears the flag each tick and the scene re-asserts it**, so leaving a
+  screen with its overlay open cannot hide the chrome for the rest of the session.
+- **Square and iconic because the corner is 52 pixels wide** on the combat screen — the hand
+  band starts at x=52 and the action-point figure sits on its left edge, so a labelled
+  button does not fit beside them.
+- **`GlyphSound` and `GlyphMuted` are the first glyphs that are not about a card**, at a
+  third size, 32px. They are generated for the same reason everything else is — no
+  provenance question — and the muted one's bar is an `accent` rather than part of the
+  silhouette, because a bar merged into a solid shape is only visible where it leaves it.
+  The glyph says the **state**, not the action: a crossed speaker means the score is off.
 
 ### Cards: the border carries the element, not the surface
 
@@ -604,7 +633,7 @@ and gone by itself rather than holding a window open for the rest of a session.
 
 ### Ebitengine game loop
 
-`main.go` builds the `game.Game`, loads assets/fonts/data once, then hands control to `ebiten.RunGame`. It does **not** wire up widgets — scenes build their own. Ebitengine then drives three methods on [game.go](internal/game/game.go):
+`main.go` builds the `game.Game`, loads assets/fonts/data once, then hands control to `ebiten.RunGame`. It does **not** wire up widgets — scenes build their own, and the one control that belongs to no scene is built by `game` itself (see the frame, below). Ebitengine then drives three methods on [game.go](internal/game/game.go):
 
 - `Update()` — 60 TPS logic tick. Advances counters, reads the mouse, runs the active scene's `Init` if `NewScreen` is set, then returns the scene's `Update`. Returning a non-nil error quits the game; `ShouldClose` becomes `game.ErrClosing`, which `main` treats as a clean exit (window close is intercepted via `SetWindowClosingHandled(true)`).
 - `Draw(screen)` — per-frame rendering. Returns early while `NewScreen` is set, so a scene is never drawn before its `Init` has run; then calls the scene's `Draw` and overlays debug info last if `DebugPlacement`.
@@ -669,7 +698,10 @@ Key conventions:
   category, cost, damage, element, optional artwork, state) rather than a
   `combat.ActionKind`, so the sheet can draw combinations the rules cannot produce — a
   border colour nothing uses, a ring. `Style` is the geometry: `Hand`, `Mini` (half size,
-  the deck overlay) and `RingStyle`. Text is set with `golang.org/x/image` because
+  the deck overlay), `Stack` (the draw pile's back), `RingStyle`, and the two fighter cards
+  `EnemyStyle` and `DuelistStyle` — twins, and the health bar has to stay at the same offsets
+  on both. **`Spec` must stay comparable**, because the screen's cache keys on the whole
+  struct; that is why `Stats` is a fixed array. Text is set with `golang.org/x/image` because
   Ebitengine's `text/v2` needs an `*ebiten.Image`; both the game and the tool go through
   this, so the sheet cannot drift from what is drawn. `internal/screens/card_art.go` is the
   bridge and holds the cache — rendering writes every pixel in Go and is far too slow to do
@@ -690,8 +722,8 @@ Key conventions:
     `categoryRank` is written out rather than read off the enum, because the enum's order is
     *resolution* order and that is a rule.
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
-  - `combat_hud.go` — everything around the round: the character block, `drawBox`, the discards badge, and the enemy card. **The block is a narrow corner column again since 2026-08-11** — the duelist's name, Health and Vitae stacked — and its height is derived from `blockFigures()` so adding a figure grows the box rather than clipping it. `fighterBlockRect` is the one place its geometry is written, and the ring pane starts from its right edge.
-  - `combat_rings.go` — **the ring row** *(added 2026-08-11)*: full-size `cards.RingStyle` cards from `data/rings.json`, a rule under them running the row's width, and the cap written as `worn/5` on that rule's right end. **A layout sketch, not a mechanic** — nothing buys, equips or reads a ring. It claims the 12–46% band the full-height panes vacated, which is what pays for full-size ring cards. Two things it does deliberately: **there is no box** — it was framed and titled for an hour and read as cards trapped in a panel, so the cards are the pane and the row aligns flush with the top of the character block beside it; and **the pitch is a function of how many rings are worn**, first card flush left and last flush right, so three stand apart and five close up and overlap by ~26px. Overlap rather than shrink, because a card cannot be scaled and there is no ring style below this one.
+  - `combat_hud.go` — everything around the round: the two fighter cards, `drawBox`, and the discards badge. **The player is a card since 2026-08-12**, in the top-left corner, holding name / DMG / AP / Vitae over a health bar and a fraction — the character block it replaced was a framed column of captions and was the last thing on the screen drawn as furniture. **The enemy card moved to the top-right corner** the same day, from a floating 88%,34%. `duelistCardRect` and `enemyCardRect` are the one place each geometry is written, and the ring row takes both of its edges from them.
+  - `combat_rings.go` — **the ring row** *(added 2026-08-11)*: full-size `cards.RingStyle` cards from `data/rings.json`, a rule under them running the row's width, and the cap written as `worn/5` on that rule's right end. **A layout sketch, not a mechanic** — nothing buys, equips or reads a ring. It claims the 12–46% band the full-height panes vacated, which is what pays for full-size ring cards. **Its width is what the two fighter cards leave** *(2026-08-12)* — `ringPaneRect` reads `duelistCardRect` and `enemyCardRect` rather than a percentage, which is what stopped the right edge going stale the moment the enemy moved. Two things it does deliberately: **a fill, never a frame** — it was framed and titled for an hour on 2026-08-11 and read as cards trapped in a panel, so that came out; a plain grey backing one step lighter than the screen went back in on 2026-08-12, because with a fighter card at either end of the row nothing said where the middle began. No border, no title, no hue, and **the row drops 10px below the two cards** so the three do not share a top line and read as one wide object. The backing must never reach either card — `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards`. And **the pitch is a function of how many rings are worn**, first card flush left and last flush right, so three stand apart and five close up and overlap by ~26px. Overlap rather than shrink, because a card cannot be scaled and there is no ring style below this one.
   - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.
   - `combat_flight.go` — **every card that moves** *(added 2026-08-10)*. Three things, all
     presentation-only, all on their own clock, and none of which may change an outcome:
@@ -701,12 +733,21 @@ Key conventions:
       the card**, so it is a ghost of something that has happened rather than a thing in
       progress; that is what keeps `planning()`, the budget and the row's layout ignorant
       of it.
-    - **`resolvedCard`** — a card firing during playback: up out of the hand, held below the
-      Resolution pane, then stacked in the bottom-left corner, at full size throughout. The
-      pile is the round's history, and because `ResolutionOrder` regroups into prepare →
-      attacks → defenses it grows in phase order **without this file knowing what a phase
-      is**. A combo brackets its own cards in `attentionYellow`, from the span the engine
-      puts on the event — never worked out here.
+    - **`resolvedCard`** — one of the player's cards flying out of the hand to its seat on
+      the table. **The whole queue is dealt there when the round starts** *(2026-08-12)*, not
+      a card at a time as each fires; playback drives which card is *lit*, not which cards
+      exist. Because `ResolutionOrder` decides the row, it is laid out in phase order
+      **without this file knowing what a phase is**. A combo brackets its own cards in
+      `attentionYellow`, from the span the engine puts on the event — never worked out here.
+  - `combat_table.go` — **the two hands facing each other** *(added 2026-08-12)*: the
+    player's played cards left-aligned, the opponent's queued cards right-aligned, both full
+    size in the band between the ring row and the Resolution feed. It is the first thing on
+    this screen that shows a round as a confrontation rather than as a list, and it replaced a
+    pile of played cards in the bottom-left corner that had nothing opposite it. Both rows come
+    from `combat.ResolutionOrder`, so both say what *will* happen rather than what was planned.
+    **The opponent's cards are drawn face up and that is temporary** — `concealEnemy` is still
+    the screen's concealment predicate and this row deliberately ignores it, on the owner's
+    call, with `cards.Spec.FaceDown` already built as the lever for putting it back.
   - `seeds.go` — the named opening-hand catalogue.
 
   **The split was a pure move**: every line went across unaltered and the `demoplay` text report was byte-identical before and after. Keep it that way — a file boundary is not a reason to change what a function does.
@@ -762,5 +803,6 @@ order — so animating enemies later means going back for them rather than start
 
 **Nothing in the game draws a loose sprite any more.** `Combatant` has no `Sprite` field,
 `entities` imports no Ebitengine at all, and `drawCombatant`/`DrawHealthBar` went with the
-sprites. Both duelists state their life as a number: the player in the character block, the
-enemy on its card.
+sprites. **Both duelists are cards since 2026-08-12**, in opposite corners, and both state
+their life the same way — a bar over a fraction, at identical offsets on the two styles so
+the pair can be compared across the screen without measuring.

@@ -66,9 +66,26 @@ type Style struct {
 	ArtInset int
 	ArtMaxH  int
 
+	// The stat rows: Spec.Stats drawn one per row, label against the left margin and
+	// figure against the right. Zero StatRowPitch means the style has none, which is
+	// every style but DuelistStyle.
+	//
+	// **One size for both halves of a row.** A quieter label and a louder figure was the
+	// character block's shape and it worked there because the two were stacked; on one
+	// baseline, two sizes read as a typo rather than as a hierarchy. The label is set in
+	// LabelInk instead, which is the same distinction made with colour.
+	StatsTop     int
+	StatRowPitch int
+	StatSize     float64
+
 	// The health bar and the fraction under it, drawn from Spec.Life and Spec.MaxLife.
-	// Zero HealthBarHeight means the style has no health and neither is drawn, which is
-	// every style but EnemyStyle.
+	// Zero HealthBarHeight means the style has no health and neither is drawn.
+	//
+	// HealthBarInset is the bar's side margin. **It is its own field rather than a reuse
+	// of ArtInset**, which is what it was until the duelist card arrived: that card has a
+	// health bar and no art at all, so borrowing the art box's margin would have made a
+	// style state a measurement for something it does not draw.
+	HealthBarInset  int
 	HealthBarTop    int
 	HealthBarHeight int
 	HealthTextTop   int
@@ -224,21 +241,27 @@ var Stack = Style{
 // background. Putting it in the card format says the obvious thing: everything the duel is
 // made of is a card, and the one you are fighting is one too.
 //
-// The face reads top to bottom: portrait, name, bar, numbers.
+// The face reads top to bottom: name, portrait, bar, numbers.
 //
-//	 12  portrait          12..124   (Spec.Art, scaled to fit and centred)
-//	131  name              centred
+//	 12  name              centred   (12..36 at 20pt)
+//	 44  portrait          44..156   (Spec.Art, scaled to fit and centred)
 //	161  health bar        161..175
 //	180  hit points        "42/60", centred
 //	218  inside of the bottom border
+//
+// **The name moved above the portrait on 2026-08-12**, having sat between the portrait and
+// the bar since the card was built. It puts the name where every other card in the game
+// carries it — Hand, Mini and RingStyle all name themselves across the top — so the enemy
+// reads as one of the set rather than as a card with its own reading order. What it costs is
+// the portrait's proximity to its name; they are still adjacent, only the other way round.
 //
 // **Every offset here scaled with the card on 2026-08-11**, unlike Hand's — nothing on this
 // face is fixed-size art. The portrait is scaled to fit its box and the bar is drawn to the
 // width it is given, so the whole layout is a proportion of the card and stays one.
 //
-// **The portrait gets the top half and the rest shares the bottom**, which is the layout the
+// **The portrait gets the middle and the rest shares the bottom**, which is the layout the
 // owner asked for and also the one the art wants: the vendor portraits are wider than they
-// are tall once cropped, so a box 156 wide by 132 gives them their width rather than letting
+// are tall once cropped, so a box 138 wide by 112 gives them their width rather than letting
 // height decide the scale.
 //
 // What it drops is everything describing a *play* — no category glyph, no cost dashes, no
@@ -256,14 +279,71 @@ var EnemyStyle = Style{
 	ShowDamage:   false,
 
 	TextLeft:     12,
-	NameTop:      131,
+	NameTop:      12,
 	NameSize:     20,
 	NameCentered: true,
 
-	ArtTop:   12,
+	ArtTop:   44,
 	ArtInset: 12,
 	ArtMaxH:  112,
 
+	HealthBarInset:  12,
+	HealthBarTop:    161,
+	HealthBarHeight: 14,
+	HealthTextTop:   180,
+	HealthTextSize:  18,
+}
+
+// DuelistStyle is the player, in the card format *(2026-08-12)*.
+//
+// **It replaced the character block**, which was a framed box of stacked captions and figures
+// in the top-left corner. The argument is the enemy card's, one seat further round the table:
+// everything the duel is made of is a card, the opponent became one on 2026-08-11, and the
+// player was the last thing on the screen still drawn as furniture. The two now sit in
+// opposite corners in the same format, which is what makes them read as the two sides of one
+// fight rather than as a HUD and a monster.
+//
+// The face reads top to bottom: name, stat rows, bar, numbers.
+//
+//	 14  name              centred   (14..38 at 20pt)
+//	 56  DMG               56..77     label left, figure right
+//	 86  AP                86..107
+//	116  Vitae            116..137
+//	161  health bar        161..175
+//	180  hit points        "42/60", centred
+//	218  inside of the bottom border
+//
+// **The bar and the fraction are at exactly the enemy card's offsets**, deliberately: the two
+// cards face each other across the screen and a health bar that sat at a different height on
+// each would make comparing them an act of measurement. Everything above the bar is free to
+// differ, because that is where the two cards say different things — a portrait against three
+// numbers.
+//
+// What it drops is everything describing a *play*, like EnemyStyle and RingStyle: a duelist
+// is not something you put down from a hand. `Element` is Basic, so the border is the neutral
+// mid grey — the same as the enemy's, since neither card is made of an element. If the two
+// corners ever need telling apart by colour, that is one entry in the Element enum and not a
+// change here.
+var DuelistStyle = Style{
+	Width: 162, Height: 224,
+
+	CornerRadius: 12,
+	BorderWidth:  6,
+
+	ShowName:     true,
+	ShowCategory: false,
+	ShowDamage:   false,
+
+	TextLeft:     12,
+	NameTop:      14,
+	NameSize:     20,
+	NameCentered: true,
+
+	StatsTop:     56,
+	StatRowPitch: 30,
+	StatSize:     17,
+
+	HealthBarInset:  12,
 	HealthBarTop:    161,
 	HealthBarHeight: 14,
 	HealthTextTop:   180,

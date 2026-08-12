@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/curiousjc/ascend-duel/internal/idle"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -37,6 +38,19 @@ type Game struct {
 	// carry. Those could drift out of sync — a screen added to one and forgotten in
 	// the other silently did nothing — and now cannot.
 	scenes map[state.ActiveScreen]screens.Scene
+
+	// muteButton is the game's chrome, and the only widget not owned by a scene.
+	//
+	// **CLAUDE.md's rule is that scenes build their own widgets, and this is deliberately
+	// outside it rather than an exception to it.** The score is started once in main and
+	// loops across every screen for the whole session, so the control that silences it
+	// belongs at the same level. The alternative was the same button on four scenes, four
+	// placements to keep in step and four callbacks into one package — which is a worse
+	// answer to "who owns this" than admitting the game has a frame.
+	//
+	// Built lazily in Update, because it needs nothing from a scene and nothing from a
+	// window, and NewGame runs before assets and fonts are loaded.
+	muteButton *models.Button
 }
 
 func NewGame() *Game {
@@ -104,10 +118,22 @@ func (g *Game) Update() error {
 		g.GlobalState.NewScreen = false
 	}
 
+	// Cleared here and re-asserted by whichever scene actually has a dialog up, so a screen
+	// left with its overlay open cannot leave the chrome hidden for the rest of the session.
+	// See state.ModalOpen.
+	g.GlobalState.ModalOpen = false
+
 	// Scene errors propagate rather than being discarded. Ebitengine stops the loop
 	// on any non-nil error from Update, so a scene returning one is fatal by design —
 	// which is the only sensible reading of an error a scene cannot handle itself.
-	return scene.Update(g.GlobalState)
+	if err := scene.Update(g.GlobalState); err != nil {
+		return err
+	}
+
+	// The frame's own controls, after the scene, so they read the modal flag the scene has
+	// just written. See chrome.go.
+	g.updateChrome(g.GlobalState)
+	return nil
 }
 
 // Draw runs as needed to update the screen at each frame
@@ -122,6 +148,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	g.scene().Draw(g.GlobalState, screen)
+
+	// The frame, over the screen it frames. See chrome.go for why the mute button lives here
+	// rather than on four scenes, and why it stands down over a dialog.
+	g.drawChrome(g.GlobalState, screen)
 
 	// Debug Info will front-run everything and is drawn last on the screen
 	if g.GlobalState.DebugPlacement {

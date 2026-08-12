@@ -5,6 +5,7 @@ import (
 	"image"
 	_ "image/png"
 	"log"
+	"strconv"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -166,6 +167,34 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}
+}
+
+// duelistSpec is the player as a card: their name, three figures, and the life they have
+// left.
+//
+// **DMG is asked of the rules rather than written here.** `combat.Strike.Damage(Str)` is what
+// one plain attack does in these hands, which is the "1x base damage" the figure means — so a
+// change to how strength becomes damage moves this number without anyone remembering that a
+// card shows it. Writing `c.Str` would have been the same integer today and a lie tomorrow.
+//
+// AP is the live budget, `BonusAP` included, so a Gather banked last round shows up on the
+// card before it is spent. Vitae is passed in rather than read off the combatant because it is
+// run-level state that does not live on a duelist yet — see startingVitae.
+//
+// Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
+// values a fight passes through, which is a handful.
+func duelistSpec(c *entities.Combatant, name string, vitae int) cards.Spec {
+	spec := cards.Spec{
+		Name:    name,
+		Element: cards.Basic,
+		Life:    c.CurrentLife,
+		MaxLife: c.MaxLife,
+		Enabled: true,
+	}
+	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(combat.Strike.Damage(c.Str))}
+	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(c.ActionPoints())}
+	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae)}
+	return spec
 }
 
 // ringSpec is an equipped ring as a card: its name and its artwork, and nothing else.

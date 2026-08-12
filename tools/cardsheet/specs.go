@@ -44,7 +44,13 @@ type concept struct {
 var concepts = []concept{
 	{"Gather", cards.CategoryPrepare, 1, 0},
 	{"Sift", cards.CategoryPrepare, 2, 0},
-	{"Guard", cards.CategoryDefend, 3, 0},
+	// **Guard is a prepare, not a defend** — combat.ActionKind.Category() groups it with
+	// Gather, Sift and Ritual. This list said Defend from the day it was written and the sheet
+	// duly drew it with a kite shield where the game draws an open book. The drift this file
+	// accepts is a card the rules cannot *deal*; a card drawn with the wrong glyph is a
+	// picture that lies, which is the one thing a contact sheet may never be. Corrected
+	// 2026-08-12.
+	{"Guard", cards.CategoryPrepare, 3, 0},
 	{"Ritual", cards.CategoryPrepare, 4, 0},
 	{"Jab", cards.CategoryAttack, 1, 4},
 	{"Strike", cards.CategoryAttack, 2, 7},
@@ -163,6 +169,41 @@ func enemySpecs() ([]cards.Spec, error) {
 		})
 	}
 	return specs, nil
+}
+
+// duelistSpecs is the player in the card format, at four points in a run.
+//
+// **The figures are the only thing on this card that moves**, so the spread is chosen to
+// stretch them rather than to be typical: the starting duelist, one that has taken damage and
+// banked a Gather, a long name against a two-digit column, and a nearly-dead one to put the
+// health bar near empty beside a full one. The last is where a bar's arithmetic goes wrong.
+//
+// Same caveat as the concepts above: these numbers are illustrative and not read from
+// data/duelists.json. The sheet draws what a card *can* look like.
+func duelistSpecs() []cards.Spec {
+	each := []struct {
+		name           string
+		dmg, ap, vitae int
+		life, of       int
+	}{
+		{"Duelist", 10, 6, 5, 120, 120},
+		{"Duelist", 10, 8, 3, 74, 120},
+		{"Stormcaller", 24, 11, 12, 96, 180},
+		{"Duelist", 7, 4, 0, 6, 120},
+	}
+
+	out := make([]cards.Spec, 0, len(each))
+	for _, d := range each {
+		spec := cards.Spec{
+			Name: d.name, Element: cards.Basic,
+			Life: d.life, MaxLife: d.of, Enabled: true,
+		}
+		spec.Stats[0] = cards.StatLine{Label: "DMG", Value: fmt.Sprintf("%d", d.dmg)}
+		spec.Stats[1] = cards.StatLine{Label: "AP", Value: fmt.Sprintf("%d", d.ap)}
+		spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: fmt.Sprintf("%d", d.vitae)}
+		out = append(out, spec)
+	}
+	return out
 }
 
 func loadPNG(key string) (image.Image, error) {

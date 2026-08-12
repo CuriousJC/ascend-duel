@@ -86,12 +86,26 @@ const (
 	GlyphDefend
 	// GlyphPrepare is an open book.
 	GlyphPrepare
+
+	// The two states of the mute control: a speaker, and the same speaker struck through.
+	//
+	// **The first glyphs that are not about a card** *(2026-08-12)*. Everything above says
+	// something about an action; these say something about the program. They are here anyway
+	// rather than in a chrome package of their own, because the argument for generating art
+	// is about provenance and applies to a speaker exactly as it applies to a sword — and a
+	// second silhouette renderer would be the thing worth avoiding.
+	GlyphSound
+	GlyphMuted
 )
 
 // GlyphKinds is every glyph, in a fixed order. The contact sheet walks this rather than
 // ranging a map, which Go deliberately randomises.
 func GlyphKinds() []GlyphKind {
-	return []GlyphKind{GlyphDamage, GlyphActionPoints, GlyphAttack, GlyphDefend, GlyphPrepare}
+	return []GlyphKind{
+		GlyphDamage, GlyphActionPoints,
+		GlyphAttack, GlyphDefend, GlyphPrepare,
+		GlyphSound, GlyphMuted,
+	}
 }
 
 // Palette is the set of roles a glyph is painted with. Five values make the bevel — one
@@ -322,10 +336,74 @@ var smallBookShape = shape{
 	},
 }
 
+// chromeGlyphSize is what the mute control's glyphs are authored at: big enough for a
+// silhouette with a derived rim to hold together, small enough for a 44-pixel button.
+//
+// **Between the two sizes that already exist, and that is not a compromise.** A 22px
+// category glyph is authored for a slot in a card's left column and has almost no detail
+// budget; the 64px damage badge is the card's loudest thing. A chrome control is neither, and
+// a glyph cannot be resized, so a third size is a third drawing. See the shapes below.
+const chromeGlyphSize = 32
+
+// A speaker facing right: a rectangular neck on the left and a horn flaring out of it.
+//
+// **No sound waves, deliberately.** The obvious drawing is a speaker with two or three arcs
+// coming off it, and at 32 pixels an arc is two pixels thick — under the five-pixel floor the
+// derived rim imposes, so it would render as a scratch or vanish entirely. The horn alone is
+// the silhouette, and what says "muted" is the bar across it rather than the absence of waves
+// nobody could see in the first place.
+//
+// The flare is stepped in three-row bands rather than drawn as a true diagonal, because every
+// step has to stay at least five pixels wide for the rim to leave something inside it.
+var speakerShape = shape{
+	size: chromeGlyphSize,
+	fill: map[int][]span{
+		// The horn's outer lip, narrowing back toward the neck.
+		5: {{23, 27}}, 6: {{23, 27}},
+		7: {{20, 27}}, 8: {{20, 27}}, 9: {{20, 27}},
+		10: {{17, 27}}, 11: {{17, 27}}, 12: {{17, 27}},
+
+		// The waist: the neck and the horn are one run through the middle.
+		13: {{6, 27}}, 14: {{6, 27}}, 15: {{6, 27}},
+		16: {{6, 27}}, 17: {{6, 27}}, 18: {{6, 27}},
+
+		19: {{17, 27}}, 20: {{17, 27}}, 21: {{17, 27}},
+		22: {{20, 27}}, 23: {{20, 27}}, 24: {{20, 27}},
+		25: {{23, 27}}, 26: {{23, 27}},
+	},
+}
+
+// The same speaker with a bar struck through it, top-right to bottom-left.
+//
+// **The bar is an accent, not part of the silhouette, and that is forced.** Merged into the
+// fill it would be invisible: the middle of the speaker is already solid, so a bar drawn there
+// would only appear where it *left* the shape — two spurs off a speaker rather than a line
+// through one. `RenderGlyph` clips accent to the inside of the fill and paints it near-black,
+// which is exactly a dark line across a light object.
+//
+// What that costs is the ends: the bar stops at the speaker's rim instead of overhanging it.
+// At this size the horn is 22 pixels tall and the bar crosses all of it, so the reading holds.
+var mutedSpeakerShape = shape{
+	size: chromeGlyphSize,
+	fill: speakerShape.fill,
+	accent: map[int][]span{
+		5: {{23, 27}}, 6: {{23, 27}},
+		7: {{22, 26}}, 8: {{21, 25}}, 9: {{20, 24}},
+		10: {{19, 23}}, 11: {{19, 23}}, 12: {{18, 22}},
+		13: {{17, 21}}, 14: {{16, 20}}, 15: {{15, 19}},
+		16: {{15, 19}}, 17: {{14, 18}}, 18: {{13, 17}},
+		19: {{12, 16}}, 20: {{11, 15}}, 21: {{11, 15}},
+		22: {{10, 14}}, 23: {{9, 13}}, 24: {{8, 12}},
+		25: {{7, 11}}, 26: {{7, 11}},
+	},
+}
+
 var glyphShapes = map[GlyphKind]shape{
 	GlyphDamage:       swordShape,
 	GlyphActionPoints: runShape,
 	GlyphPrepare:      smallBookShape,
+	GlyphSound:        speakerShape,
+	GlyphMuted:        mutedSpeakerShape,
 }
 
 // glyphArt is the hand-drawn half of the set: a kind whose picture is a PNG rather than a

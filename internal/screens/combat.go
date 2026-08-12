@@ -222,12 +222,22 @@ type CombatScene struct {
 	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
 	flights []cardFlight
 
-	// The player's cards that have resolved this round, in the order they fired: each one
-	// rises out of the hand, holds where it can be read, then stacks in the bottom-left
-	// corner. The pile is the round's own history, and it is what a combo brackets.
+	// The player's side of the table: the cards played this round, in resolution order, flying
+	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
+	// moment the round starts — see seatPlayedCards — and what a combo brackets.
 	//
 	// Cleared when the hand is spent, which is the moment those cards actually leave.
 	resolved []resolvedCard
+
+	// firingSeat and enemyFiringSeat are which card on each side of the table is resolving
+	// right now, or -1 for none. **Playback drives which card is lit, not which cards exist**:
+	// both hands are on the table from the moment DUEL! is pressed.
+	//
+	// Two fields rather than a side-plus-seat pair, because both rows are drawn independently
+	// and each only ever asks about itself. `noteResolved` writes both on every action, so
+	// there is exactly one lit card on the table at a time.
+	firingSeat      int
+	enemyFiringSeat int
 
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round; vitae is a placeholder that never moves yet.
@@ -286,11 +296,11 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.
 	if s.duelButton == nil {
-		s.duelButton = models.NewButton(138, 50, "DUEL!", s.startRound)
+		s.duelButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DUEL!", s.startRound)
 		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
 	}
 	if s.discardButton == nil {
-		s.discardButton = models.NewButton(138, 50, "Discard", s.discardSelected)
+		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "Discard", s.discardSelected)
 		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
 	}
 	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:
@@ -315,6 +325,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.showDeck = false
 	s.feedPressTicks = 0
 	s.flights = nil
+	s.firingSeat, s.enemyFiringSeat = -1, -1
 	s.restart = false
 	s.discardsLeft = discardsPerRound
 	s.vitae = startingVitae
@@ -419,6 +430,11 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.updateResolved()
 	s.updateDeckStack(gs)
 
+	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
+	// live on top of it. Written unconditionally from what the screen already knows, never
+	// toggled — see state.ModalOpen. The deck overlay is the only dialog in the game.
+	gs.ModalOpen = s.showDeck
+
 	// The long press on the Resolution feed. Outside every branch below for the same reason
 	// the flights are: reading back what just happened is not an action, and it has to work
 	// while a round plays and after one side is down.
@@ -520,6 +536,13 @@ func (s *CombatScene) startRound() {
 	s.log = log
 	s.cursor = 0
 	s.ticks = 0
+
+	// Both hands go to the table now, not as the round plays out. The opponent's is known in
+	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of
+	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
+	// above is already resolved. See combat_table.go.
+	s.firingSeat, s.enemyFiringSeat = -1, -1
+	s.seatPlayedCards()
 
 	// The whole round, not a count of it. ResolveRound already decided every one of these
 	// before a frame of playback ran, so this is the authoritative account of what is about
@@ -650,19 +673,21 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255})
 
-	s.drawFighterBlock(gs, screen)
+	// **The top of the screen is one row of three things** *(2026-08-12)*: the player's card
+	// in the left corner, the enemy's in the right, and the rings filling everything between
+	// them. All three share a top edge and the two cards are the same format, so the row reads
+	// as the two sides of the fight with what you are wearing laid out between them.
+	//
+	// The player was a framed block of captions until this landed and the enemy was floating
+	// at 88%,34%; see drawDuelistCard and drawEnemyCard for why each moved.
+	s.drawDuelistCard(gs, screen)
 
 	// **The ring pane is a sketch** *(2026-08-11)* — it draws what `data/rings.json` defines
-	// and nothing equips, buys or reads one. It sits in the band the full-height panes left
-	// behind, which is what makes room for full-size ring cards. See combat_rings.go.
+	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
+	// combat_rings.go.
 	s.drawRingPane(gs, screen)
 
-	// **The enemy is a card now** *(2026-08-11)*, centred where its sprite stood. It was the
-	// last thing on this screen drawn as a loose picture on the background, with a health bar
-	// hanging under it — and everything else the duel is made of is a card, including the one
-	// you are fighting. Its portrait, name, bar and life-as-a-fraction are all one cached
-	// image from internal/cards; see drawEnemyCard.
-	s.drawEnemyCard(gs, screen, image.Pt(gs.PctX(88), gs.PctY(34)))
+	s.drawEnemyCard(gs, screen)
 	systems.DrawButton(gs, screen, s.duelButton)
 	systems.DrawButton(gs, screen, s.discardButton)
 	s.drawDiscardsLeft(gs, screen)
@@ -699,10 +724,12 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// Over the panes and the button it passes across.
 	s.drawDraggedCard(gs, screen)
 
-	// The round's own history: the cards that have fired, on their way to the corner or
-	// parked in it, and the ring round any that formed a combo. Over the hand, which is
-	// inert during playback, and under the overlay like everything else.
-	s.drawResolvedCards(gs, screen)
+	// The table: the round as a confrontation. The opponent's queued cards right-aligned, the
+	// player's played cards left-aligned facing them, and the ring round any that formed a
+	// combo. Over the hand, which is inert during playback, and under the overlay like
+	// everything else. See combat_table.go.
+	s.drawEnemyQueue(gs, screen)
+	s.drawPlayedCards(gs, screen)
 
 	// Cards travelling to and from the pile, over everything the dragged card rides over and
 	// for the same reason. Under the overlay, which covers them along with the rest.
@@ -782,8 +809,10 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("resolutionFeed expanded", image.Rect(
 		band.Min.X, gs.PctY(feedExpandTopPct),
 		band.Max.X, gs.PctY(handTopPct)-feedGapAboveCards))
-	trace.Rect("fighterBlock", s.fighterBlockRect(gs))
+	trace.Rect("duelistCard", s.duelistCardRect(gs))
+	trace.Rect("enemyCard", s.enemyCardRect(gs))
 	trace.Rect("ringPane", s.ringPaneRect(gs))
+	trace.Rect("ringPane backing", s.ringPaneBackRect(gs))
 	// The slots as they currently stand, not as they would at the cap: the pitch is a function
 	// of how many rings are worn, so a dump of five would describe a row that is not on screen.
 	for i := 0; i < len(equippedRings(gs)); i++ {

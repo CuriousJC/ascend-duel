@@ -19,19 +19,24 @@ Status: `[ ]` open · `[x]` done · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
-- [ ] **A mute button.** `internal/music` landed 2026-08-09 and the score loops across
-      every screen with **no way to turn it off**, which is not shippable. It cannot be a
-      hotkey — the input vocabulary has no keyboard — so it is an on-screen speaker
-      toggle, built the ordinary way: a struct in `models`, `UpdateMute`/`DrawMute` in
-      `systems`. Two open questions before building it:
-      - **Where does it live?** A corner of every screen means every scene owns one, or
-        it gets drawn centrally after the scene like the debug overlay is. The second is
-        less code and puts a widget outside the "scenes own their own widgets" rule; the
-        first is consistent and repeated four times.
-      - **Does it want to be a volume slider instead?** A slider is inside the input
-        vocabulary (drag), and settings values are "a row of buttons or a slider, never
-        a number you type". But there is no settings screen yet to put one on, and a
-        binary toggle is what an unmutable loop actually needs today.
+- [x] **A mute button** *(done 2026-08-12)*. A 44px square in the bottom-left corner of
+      every screen, carrying a generated speaker glyph — `GlyphSound` / `GlyphMuted`, the
+      first glyphs in the set that are not about a card. `music.SetMuted` drops the
+      player's volume to zero rather than pausing it, so unmuting lands wherever the score
+      would have got to. Both open questions were answered:
+      - **Where it lives:** drawn centrally after the scene, as `game.Game`'s chrome, not
+        four times over. The score is started once in `main` and loops for the whole
+        session, so the control that silences it belongs at the same level; owning it four
+        times would be four placements to keep in step. That is deliberately outside the
+        "scenes own their own widgets" rule rather than an exception to it — see
+        `internal/game/chrome.go`, which also carries the bar for anything else joining
+        the frame.
+      - **Toggle, not a slider.** Still no settings screen to put a slider on, and a
+        binary toggle is what an unmutable loop needed. A slider stays the right answer
+        whenever that screen exists, and the button becomes its zero end.
+      - **What it cost:** `state.ModalOpen`, a flag a scene sets when it has a dialog up
+        so the chrome stands down over it. Without it the button would sit live on top of
+        the deck overlay, which is the one thing that overlay's design forbids.
 - [ ] **Two rounded-rectangle implementations now exist.** Cards rasterise their corners in
       plain Go (`internal/cards/shape.go`) because `internal/cards` must render without a
       graphics context; health bars still use `CreateRoundedRecMask` + `ebiten.BlendSourceIn`.

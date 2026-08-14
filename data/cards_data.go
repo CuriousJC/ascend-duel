@@ -4,11 +4,16 @@ package data
 // copies of each card the starting deck holds.
 //
 // **What is deliberately not here: cost, category and damage.** Those are rules, they live in
-// `internal/combat`, and the dependency direction forbids that package importing this one — so
-// a cost written here could only ever be a second copy of a number defined elsewhere. What this
-// file carries instead is `CostTier`, checked against the rules rather than trusted: see
-// CheckCostTiers. That gives a readable grid in a file the designer can open without giving the
-// grid the authority to disagree with the engine.
+// `internal/combat`, and a cost written here could only ever be a second copy of a number
+// defined elsewhere. What this file carries instead is `CostTier`, checked against the rules
+// rather than trusted: see CheckCostTiers. That gives a readable grid in a file the designer can
+// open without giving the grid the authority to disagree with the engine.
+//
+// **CheckCostTiers takes its lookups as parameters even though `internal/combat` does import
+// this package** — see `combos_data.go`. It could call `ActionKind.Cost()` directly now. It does
+// not, because the check belongs to whoever is *loading a deck*, and the two deck loaders live in
+// `screens` and `decks`; handing them the lookup keeps this file free of any opinion about what a
+// concept means, which is the property that makes it documentation rather than a second engine.
 //
 // Cost is also about to stop being a property of the card at all. Ring discounts make it a
 // property of the card/element *pairing* — see MECHANICS.md — at which point a flat cost column

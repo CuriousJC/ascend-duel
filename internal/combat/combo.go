@@ -1,343 +1,417 @@
 package combat
 
+import "sort"
+
 // Combos are the layer where a round stops being a pile of cards and starts being a plan.
-// Throwing whatever you drew at the opponent works; *choosing* a shape and building toward
-// it is meant to work better, and this file is the machinery that pays for that choice.
+// Throwing whatever you drew at the opponent works; *choosing* a shape and building toward it is
+// meant to work better, and this file is the machinery that pays for that choice.
 //
-// **One pattern, three kinds of reward.** Every combo is the same shape — a run of cards
-// that must appear consecutively in your own turn, and an Effect that says what forming it
-// buys. The reward vocabulary is deliberately small and fixed:
+// **A turn produces exactly one attack** *(2026-08-14)*. The attack phase reads every attack card
+// queued, forms the best hand it can, and resolves a single blow — so five Strikes are not five
+// hits, they are one Strike Onslaught. Attack cards that do not contribute are ignored outright:
+// `Strike, Jab, Strike` is a Strike Pair and the Jab is not in it.
 //
-//   - a **damage multiplier**, applied to the rest of the turn,
-//   - **action points banked** for the round after, and
-//   - an **alteration to the opponent**, of which stagger is the first.
+// **Two independent axes, multiplied at load rather than enumerated.**
 //
-// Adding a combo is adding one entry to the table at the bottom of this file. Adding a new
-// *kind* of reward is a new field on Effect and one place that applies it in ResolveRound —
-// which is the cost the framework is deliberately paying, because a reward vocabulary that
-// grows without limit is one no player can hold in their head.
+//   - The **hand** counts copies of a card — pair, two pair, flurry, full house, barrage,
+//     onslaught. It is what poker counts, and it wears poker's names honestly.
+//   - The **mix** counts distinct non-basic *colours* in whatever hand formed — drab, mono, duo,
+//     trio, rainbow. Basic is not a colour and never counts in either direction, so two basic
+//     Strikes and an ice Strike is mono.
 //
-// **Matching is on the resolved order, never on the queue.** ResolutionOrder regroups a
-// queue by category, so the cards you dragged into place are not the cards in the order they
-// happen. Matching the queue would let the Resolution pane show one thing and the engine score
-// another, which is the exact failure the pane's design exists to make impossible.
+// Six hands by five mixes is 27 combos, of which the sizes that cannot hold four colours strike
+// a few. Authoring that as a grid would be 27 sets of numbers nobody could keep consistent;
+// authoring it as two axes is 11.
 //
-// **Matching is on cards used, never on what they achieved.** A combo is known before the
-// round is played, which is what lets a damage multiplier apply to the cards that formed it
-// rather than arriving after they have landed. Matching on damage dealt would make that
-// impossible, and would mean a plan could be silently invalidated by the opponent's defenses
-// after the player had committed to it.
+// **Exactly one hand and exactly one mix apply**, which is what retired the family/tier
+// machinery this file used to carry. A hand wins on its multiplier — five Strikes are an
+// Onslaught rather than also the pair and flurry inside it — and the mixes partition every hand
+// by an *exact* colour count, so no two can both be true.
 //
-// Combos are eventually **discovered rather than given**, persisting on the profile as part
-// of the unlock structure — see MECHANICS.md. No profile exists yet, so every combo in the
-// table is always live. When one does, discovery gates the *table*, not the matcher: an
-// undiscovered combo is one that is not passed to matchCombos, and nothing else changes.
+// **Matching is on the resolved order, never on the queue.** ResolutionOrder regroups a queue by
+// category, so the cards you dragged into place are not the cards in the order they happen. It
+// matters less than it did now that hands are counted rather than ordered, but scope is still
+// read off the resolved card.
+//
+// **Matching is on cards used, never on what they achieved.** A hand is known before the blow is
+// worked out, which is what lets its multiplier apply to the cards that formed it. Matching on
+// damage dealt would mean a plan could be silently invalidated by the opponent's defenses after
+// the player had committed to it.
+//
+// Combos are eventually **discovered rather than given**, persisting on the profile as part of
+// the unlock structure — see MECHANICS.md. No profile exists yet, so everything in the catalogue
+// is always live. When one does, discovery gates the *catalogue*, not the matcher.
 
-// ComboID identifies a combo. It travels on the KindCombo event so the screen can name what
-// fired without knowing the rule that fired it.
-type ComboID int
+// HandID identifies a hand, and MixID an element makeup. Both travel on the KindCombo event so
+// the screen can name what fired without knowing the rule that fired it.
+type HandID int
+type MixID int
 
-// ComboNone is the zero value and means no combo. Every real ID is derived from the card it
-// is built on — see FlurryID and OnslaughtID.
-const ComboNone ComboID = 0
-
-// The flurry/onslaught family is **generated, one pair per attack card**, rather than written
-// out. A new attack card gets its own Flurry and Onslaught by existing, which is the whole
-// point: the family is a shape the game keeps, not a list somebody has to remember to extend.
-//
-// **Per card, not per category**, decided 2026-08-07. An earlier version matched
-// `AnyOf(CategoryAttack)`, so any three attacks combo'd and a Jab was as good as a Heavy.
-// Naming them for the card they are built on is what makes them worth *building toward*: three
-// Strikes is a deck you assembled, three attacks is whatever you happened to draw. It is also
-// what leaves room for the effects to differ per card later — a Heavy Flurry has every reason
-// to hit harder than a Jab one, and a category-wide combo could never say so.
+// HandNone and MixNone are the zero values and mean "no hand" and "no makeup". Every real ID is
+// written in combos.json; an expanded hand adds the card's enum value to the ID declared there.
 const (
-	flurryRun    = 3
-	onslaughtRun = 5
+	HandNone HandID = 0
+	MixNone  MixID  = 0
 )
 
-// The two bases keep a combo's ID stable as cards are added, since each is offset by the card
-// rather than by its position in a list. Discovery will persist on the profile, so an ID that
-// shifted when a card was inserted would silently re-lock combos the player had already found.
-const (
-	comboFlurryBase    ComboID = 100
-	comboOnslaughtBase ComboID = 200
-)
-
-// FlurryID and OnslaughtID name the combo built on a given attack card.
-func FlurryID(a ActionKind) ComboID    { return comboFlurryBase + ComboID(a) }
-func OnslaughtID(a ActionKind) ComboID { return comboOnslaughtBase + ComboID(a) }
-
-// stepMatch is what a Step tests a card's *concept* against. The element is a separate
-// constraint that any of the three can carry — see Step.WithElement.
-type stepMatch int
-
-const (
-	matchAction stepMatch = iota
-	matchCategory
-	matchElement
-)
-
-// Step is one position in a combo's pattern. It matches an exact concept, any concept of a
-// category, or any concept at all of a given element — and any of those can additionally be
-// pinned to an element. The constructors below are the only correct way to build one: a
-// zero-valued Step reads as "exactly a Gather", which is never what a caller means.
-//
-// **The element axis arrived 2026-08-12**, with elements themselves. It is what MECHANICS.md's
-// two sequence combos need — `ice Strike → fire Strike` is `Exactly(Strike).WithElement(Ice)`
-// followed by the same with Fire — and what the five-of-a-colour combo needs, which is five
-// `OfElement` steps and nothing else.
-type Step struct {
-	match    stepMatch
-	action   ActionKind
-	category Category
-
-	// element and hasElement are the constraint the three match kinds share. A separate flag
-	// rather than treating Basic as "unset", because Basic is a real element a combo may want to
-	// name — an all-plain run is a legitimate pattern and `element: 0` cannot say whether it was
-	// asked for.
-	element    Element
-	hasElement bool
-}
-
-// Exactly matches one specific concept, of any element.
-//
-// **It was called `Card` until 2026-08-12** and gave the name up to the `Card` type, which is
-// the thing a combo now matches against. `Exactly(Strike)` also says what it does rather better
-// than `Card(Strike)` did, next to `AnyOf` and `OfElement`.
-func Exactly(a ActionKind) Step { return Step{match: matchAction, action: a} }
-
-// AnyOf matches any concept resolving in the given category. `AnyOf(CategoryAttack)` is what
-// makes "three attacks" mean three attacks rather than three Strikes.
-func AnyOf(c Category) Step { return Step{match: matchCategory, category: c} }
-
-// OfElement matches any card of one element, whatever concept it is. Five of these in a row is
-// the five-of-a-colour combo.
-func OfElement(e Element) Step {
-	return Step{match: matchElement, element: e, hasElement: true}
-}
-
-// WithElement pins an existing step to an element as well. `Exactly(Strike).WithElement(Ice)` is
-// an ice Strike and nothing else.
-func (s Step) WithElement(e Element) Step {
-	s.element, s.hasElement = e, true
-	return s
-}
-
-func (s Step) matches(c Card) bool {
-	if s.hasElement && c.Element != s.element {
-		return false
-	}
-	switch s.match {
-	case matchCategory:
-		return c.Action.Category() == s.category
-	case matchElement:
-		// The element was the whole test and it has already been made above.
-		return true
-	default:
-		return c.Action == s.action
-	}
-}
-
-// StaggerAll is the Stagger value meaning "every action of the opponent's next turn". A
-// count would have to guess at a cap that MaxActions is already allowed to raise, and a
-// combo describing itself as taking the whole round should not quietly stop doing so the
-// first time a ring hands somebody a sixth action.
+// StaggerAll is the Stagger value meaning "every action of the opponent's next turn". A count
+// would have to guess at a cap that MaxActions is already allowed to raise, and a combo
+// describing itself as taking the whole round should not quietly stop doing so the first time a
+// ring hands somebody a sixth action.
 const StaggerAll = -1
 
-// Effect is what forming a combo buys. Every field is inert at its zero value, so a combo
-// only pays out what it names.
-//
-// **A combo fires on the card that completes its run, and its effects last for the rest of
-// that side's turn** *(changed 2026-08-07; it fired on the first card until then)*. Two
-// reasons, and the second is the one that makes it correct rather than merely nicer:
-//
-//   - It reads in the order it happens. Three strikes land, and *then* the flurry is
-//     recognised — rather than "COMBO!" appearing above cards that have not resolved yet.
-//   - **A run that never finishes now pays nothing.** Matching happens up front against the
-//     whole turn, so a turn cut short — a Riposte killing the attacker on the second of three
-//     strikes — used to fire the combo off cards that never resolved. Firing on completion
-//     makes that impossible by construction instead of by a check somebody has to remember.
-//
-// The cost, recorded honestly: **a damage multiplier can only boost what comes after the
-// run**, never the cards that earned it. "Complete the combo, get a bonus for the rest of the
-// turn" is a coherent reading, but it is not the one the multiplier was designed against, and
-// neither shipping combo uses one — so nothing real exercises it yet.
-type Effect struct {
-	// DamageNum/DamageDen scale damage dealt for the rest of the turn, as a fraction so the
-	// package stays pure integer arithmetic. Zero values mean no change; 3/2 is half again.
-	DamageNum, DamageDen int
+// multiplierScale is the denominator the percent multipliers in combos.json are held over. They
+// are integers because this package is integer arithmetic throughout, and a float in the file
+// would be the one number in the game that rounds differently from every other.
+const multiplierScale = 100
 
-	// BankAP is added to the round's banked points, arriving as budget in the round after.
-	// It cannot apply to the round that formed the combo — those points were committed when
-	// the cards were queued — so it rides the same GatheredAP/BonusAP path a Gather does.
+// Effect is what forming a hand buys *besides* damage. Damage is the multiplier on Hand and Mix;
+// this is everything else, and every field is inert at its zero value.
+type Effect struct {
+	// BankAP is added to the round's banked points, arriving as budget in the round after. It
+	// cannot apply to the round that formed the hand — those points were committed when the
+	// cards were queued — so it rides the same GatheredAP/BonusAP path a Gather does.
 	BankAP int
 
 	// Stagger is how many actions the *opponent* loses from their next turn, or StaggerAll.
 	Stagger int
 }
 
-// Combo is one entry in the table: a name, a pattern, and what forming it buys.
-type Combo struct {
-	ID     ComboID
-	Name   string
-	Run    []Step
+// Hand is one rung of the ladder, after combos.json has been read and expanded.
+type Hand struct {
+	ID   HandID
+	Key  string // the catalogue key, shared by every expansion of one file entry
+	Name string
+
+	// Groups is how many cards of each *distinct* concept the hand wants. `[3,2]` is a full
+	// house; the groups naming distinct values is why five of one card can never be one.
+	Groups []int
+
+	// Scope is which categories this hand counts. Empty means every card in the turn.
+	Scope []Category
+
+	// Pin fixes the hand to one concept: the Strike Flurry is the flurry entry pinned to Strike.
+	// Set by expansion, so a generic entry like Two Pair carries none.
+	Pin    ActionKind
+	HasPin bool
+
+	// Multiplier is this hand's contribution to the turn's damage, in percent.
+	Multiplier int
+
 	Effect Effect
 }
 
-// comboTable is every combo in the game. Order matters only as a tie-break — matching takes
-// the longest run that starts at a position, so five Strikes form a Strike Onslaught rather
-// than a Strike Flurry plus two spare cards.
-//
-// **Built rather than written out**, so the flurry/onslaught family covers whatever attack
-// cards exist. Deckbuilding is expected to add many; a table listing them by hand would be a
-// list that goes stale the first time somebody adds a card and forgets this file.
-//
-// The staggers themselves are recorded decisions, not invention: MECHANICS.md decides three
-// staggers one action and five takes the whole round.
-var comboTable = buildComboTable()
+// Cards is how many cards this hand is formed from.
+func (h Hand) Cards() int {
+	n := 0
+	for _, g := range h.Groups {
+		n += g
+	}
+	return n
+}
 
-func buildComboTable() []Combo {
-	// AllActions is a slice, not a map, so this is a fixed order. Determinism matters even
-	// here: matching walks the table and a shuffled one could pick a different combo for the
-	// same turn. See the determinism rules in CLAUDE.md.
-	var out []Combo
-	for _, a := range AllActions {
-		if a.Category() != CategoryAttack {
+// inScope reports whether a card of this category is counted by this hand.
+func (h Hand) inScope(cat Category) bool {
+	if len(h.Scope) == 0 {
+		return true
+	}
+	for _, s := range h.Scope {
+		if s == cat {
+			return true
+		}
+	}
+	return false
+}
+
+// Mix is one element makeup: how many distinct non-basic colours the formed hand showed.
+type Mix struct {
+	ID         MixID
+	Key        string
+	Name       string
+	Colours    int
+	Multiplier int
+}
+
+// catalogue is every hand and mix in the game, read from data/combos.json at package init.
+var handTable, mixTable = loadCatalogue()
+
+// Hands and Mixes are the live catalogue. They exist so a reference screen can list them without
+// reaching into the tables, and so the discovery gate has one place to land.
+func Hands() []Hand {
+	out := make([]Hand, len(handTable))
+	copy(out, handTable)
+	return out
+}
+
+func Mixes() []Mix {
+	out := make([]Mix, len(mixTable))
+	copy(out, mixTable)
+	return out
+}
+
+// HandByID and MixByID look one up for narration. The bool reports whether it was found rather
+// than returning a zero value that would silently narrate as an unnamed effect.
+func HandByID(id HandID) (Hand, bool) {
+	for _, h := range handTable {
+		if h.ID == id {
+			return h, true
+		}
+	}
+	return Hand{}, false
+}
+
+func MixByID(id MixID) (Mix, bool) {
+	for _, m := range mixTable {
+		if m.ID == id {
+			return m, true
+		}
+	}
+	return Mix{}, false
+}
+
+// HandByName and MixByName find one by the name it carries on screen. For tests and for a
+// reference screen; nothing in the rules looks one up this way.
+func HandByName(name string) (Hand, bool) {
+	for _, h := range handTable {
+		if h.Name == name {
+			return h, true
+		}
+	}
+	return Hand{}, false
+}
+
+func MixByName(name string) (Mix, bool) {
+	for _, m := range mixTable {
+		if m.Name == name {
+			return m, true
+		}
+	}
+	return Mix{}, false
+}
+
+// HandIDFor names the hand an expanded entry produced for one card — the `flurry` entry pinned to
+// Strike. It reads the catalogue rather than recomputing `base + value`, so the file stays the
+// single source of the number.
+func HandIDFor(key string, card ActionKind) (HandID, bool) {
+	for _, h := range handTable {
+		if h.Key == key && h.HasPin && h.Pin == card {
+			return h.ID, true
+		}
+	}
+	return HandNone, false
+}
+
+// Attack is what one side's attack phase amounts to: which cards were spent on it, what hand and
+// mix they formed, and the multiplier that follows.
+//
+// **A turn has at most one of these.** It is the whole of the attack phase — there is no second
+// blow behind it, however many attack cards were queued.
+type Attack struct {
+	// Cards are indices into the side's own resolved turn, naming the cards that formed the
+	// hand. Attack cards that contributed nothing are not here.
+	//
+	// **A list rather than a start and a length**, because a counted hand is not contiguous: Two
+	// Pair can be two cards, a card that earned nothing, and two more.
+	Cards []int
+
+	// Hand and Mix are what formed. A lone attack that forms no hand carries HandNone and still
+	// carries a Mix, because one card is still one colour.
+	Hand Hand
+	Mix  Mix
+
+	// Multiplier is `Hand.Multiplier + Mix.Multiplier`, in percent. **Additive, not
+	// multiplicative** — a pair (150) that is duo (200) is 350, not 300. That is what keeps the
+	// top of the ladder at a few hundred damage instead of several thousand.
+	Multiplier int
+
+	// Elements is every distinct non-basic colour in the hand, in element order. The mix is its
+	// count; this is the list, and it is what decides which statuses land.
+	Elements []Element
+}
+
+// Formed reports whether a real hand was made, as opposed to a lone attack falling through.
+func (a Attack) Formed() bool { return a.Hand.ID != HandNone }
+
+// AttackFor works out one side's attack phase from the cards it resolved.
+//
+// **The best hand wins, and best means the biggest multiplier.** Five Strikes hold a pair, a
+// flurry and a barrage as well as an onslaught; the onslaught is worth the most, so it is the
+// hand, and nothing else pays. That replaced a family/tier ranking, which was machinery for
+// choosing between combos that could all fire at once — and none can any more.
+//
+// **When no hand forms, the single biggest attack is the blow.** Ties go to the card queued
+// first, which needs no tie-break rule beyond the order the turn is already in.
+func AttackFor(turn []Slot) Attack {
+	return attackFor(turn, handTable, mixTable)
+}
+
+func attackFor(turn []Slot, hands []Hand, mixes []Mix) Attack {
+	cards, hand, formed := matchHand(turn, hands)
+	if !formed {
+		cards = biggestAttack(turn)
+	}
+	if len(cards) == 0 {
+		return Attack{}
+	}
+
+	elems := elementsOf(turn, cards)
+	mix := mixFor(len(elems), mixes)
+
+	return Attack{
+		Cards:      cards,
+		Hand:       hand,
+		Mix:        mix,
+		Multiplier: hand.Multiplier + mix.Multiplier,
+		Elements:   elems,
+	}
+}
+
+// matchHand finds the best-paying hand the turn can form.
+func matchHand(turn []Slot, hands []Hand) ([]int, Hand, bool) {
+	var (
+		best      Hand
+		bestCards []int
+		found     bool
+	)
+
+	for _, h := range hands {
+		cards, ok := matchCountOf(turn, h)
+		if !ok {
 			continue
 		}
-		out = append(out,
-			Combo{
-				ID:     FlurryID(a),
-				Name:   a.String() + " Flurry",
-				Run:    runOf(a, flurryRun),
-				Effect: Effect{Stagger: 1},
-			},
-			Combo{
-				ID:     OnslaughtID(a),
-				Name:   a.String() + " Onslaught",
-				Run:    runOf(a, onslaughtRun),
-				Effect: Effect{Stagger: StaggerAll},
-			},
-		)
-	}
-	return out
-}
-
-// runOf is n of the same concept in a row, of any element. **Any element deliberately** — a
-// Strike Flurry is three Strikes however they are coloured, and requiring one colour would
-// silently make every flurry in the game an element combo.
-func runOf(a ActionKind, n int) []Step {
-	run := make([]Step, n)
-	for i := range run {
-		run[i] = Exactly(a)
-	}
-	return run
-}
-
-// Combos is every combo currently live. It exists so a reference screen can list them
-// without reaching into the table, and so the discovery gate has one place to land.
-func Combos() []Combo {
-	out := make([]Combo, len(comboTable))
-	copy(out, comboTable)
-	return out
-}
-
-// ComboByID looks up a combo for narration. The bool reports whether it was found rather
-// than returning a zero Combo that would silently narrate as an unnamed effect.
-func ComboByID(id ComboID) (Combo, bool) {
-	for _, c := range comboTable {
-		if c.ID == id {
-			return c, true
+		if !found || h.Multiplier > best.Multiplier {
+			best, bestCards, found = h, cards, true
 		}
 	}
-	return Combo{}, false
+	return bestCards, best, found
 }
 
-// ComboHit is one combo formed by one side's turn: which combo, whose turn, and where in
-// that turn it begins.
+// matchCountOf reads the turn as a set: how many cards carry each concept, and whether that
+// satisfies the hand's groups.
 //
-// Start is an index into the side's *own* resolved turn, not into the round. A round has two
-// turns and the second one starts wherever the first runs out, so a hit that carried a
-// round-wide index would have to be recomputed the moment either queue changed length.
-type ComboHit struct {
-	ID     ComboID
-	Side   Side
-	Start  int
-	Length int
-	Effect Effect
-}
+// **Groups are filled largest-count-first**, and a tie goes to the lower enum value. A full house
+// asked for `[3,2]` against three Jabs and two Strikes has only one reading, but the rule has to
+// be written down for the cases that do not — and it has to be a rule rather than a map walk, per
+// the determinism note in CLAUDE.md.
+func matchCountOf(turn []Slot, h Hand) ([]int, bool) {
+	width := len(AllActions)
+	members := make([][]int, width)
+	for i, s := range turn {
+		if !h.inScope(s.Card.Category()) {
+			continue
+		}
+		v := int(s.Card.Action)
+		if v < 0 || v >= width {
+			continue
+		}
+		members[v] = append(members[v], i)
+	}
 
-// MatchCombos finds every combo formed by one side's queued actions.
-//
-// The actions are regrouped into resolution order first, so a caller passes the queue and
-// gets hits against the order the round will actually be played in. **This is what the combat
-// screen calls while the player is still planning** — it is the same function the engine uses,
-// so a combo previewed on the hand is the combo that will fire, by construction rather than by
-// two pieces of code agreeing.
-//
-// It matches the *whole* queue. ResolveRound matches what survives a stagger instead, which
-// is why that path goes through matchSlots directly and why this one cannot be used there.
-func MatchCombos(side Side, cards []Card) []ComboHit {
-	return matchSlots(appendTurn(nil, side, cards), comboTable)
-}
-
-// matchSlots is the matcher proper, over one side's turn as it will actually be played. The
-// table is a parameter so a test can pin the matching rules against a pattern of its own
-// rather than against whatever the game currently ships.
-//
-// **Left to right, longest first, and a card forms at most one combo.** Without the last of
-// those, three attacks would form Flurry starting at every position it fits and pay out
-// three times for one decision. Without longest-first, five attacks would score as a Flurry
-// and two leftovers, and Onslaught could never fire at all.
-func matchSlots(turn []Slot, table []Combo) []ComboHit {
-	var hits []ComboHit
-	for i := 0; i < len(turn); {
-		best := -1
-		bestLen := 0
-		for c := range table {
-			run := table[c].Run
-			if len(run) <= bestLen || i+len(run) > len(turn) {
+	var out []int
+	spent := make([]bool, width)
+	for _, g := range h.Groups {
+		best, bestCount := -1, 0
+		for v := 0; v < width; v++ {
+			if spent[v] || len(members[v]) < g {
 				continue
 			}
-			ok := true
-			for k, step := range run {
-				if !step.matches(turn[i+k].Card) {
-					ok = false
-					break
-				}
+			// A pinned hand is the one entry in its rung that names a concept: the Strike Flurry
+			// counts Strikes and nothing else.
+			if h.HasPin && v != int(h.Pin) {
+				continue
 			}
-			if ok {
-				best, bestLen = c, len(run)
+			if len(members[v]) > bestCount {
+				best, bestCount = v, len(members[v])
 			}
 		}
-
 		if best < 0 {
-			i++
-			continue
+			return nil, false
 		}
-
-		hits = append(hits, ComboHit{
-			ID:     table[best].ID,
-			Side:   turn[i].Side,
-			Start:  i,
-			Length: bestLen,
-			Effect: table[best].Effect,
-		})
-		i += bestLen
+		spent[best] = true
+		out = append(out, members[best][:g]...)
 	}
-	return hits
+
+	// The cards are collected group by group, so a full house arrives as its three and then its
+	// two. Sorting puts them back into the order they resolve, which is what a bracket wants.
+	sort.Ints(out)
+	return out, true
 }
 
-// scaleDamage applies a combo's damage multiplier. A zero or negative denominator means the
-// combo named no multiplier, which is the common case and must not divide by zero.
+// biggestAttack is the fallback when no hand formed: the single attack that hits hardest, or
+// nothing if the turn queued no attacks at all.
 //
-// Rounding is deliberately toward zero, matching guardDivisor: the package is integer
-// arithmetic throughout and every other reduction already truncates, so a multiplier that
-// rounded the other way would be the one rule a player could not predict from the others.
-func scaleDamage(dmg, num, den int) int {
-	if num <= 0 || den <= 0 {
-		return dmg
+// **It is compared on the concept's damage rather than its cost**, because damage is what the
+// blow is. Strike and Feint both deal `str`, so the tie is real and goes to the card queued
+// first — the earliest slot wins, which is deterministic without inventing a rule.
+func biggestAttack(turn []Slot) []int {
+	best, bestDamage := -1, 0
+	for i, s := range turn {
+		if s.Card.Category() != CategoryAttack {
+			continue
+		}
+		// A fixed reference strength: this is a comparison between concepts, and every concept
+		// scales from the same Str, so any positive value ranks them identically.
+		if d := s.Card.Action.Damage(damageRankStr); d > bestDamage {
+			best, bestDamage = i, d
+		}
 	}
-	return dmg * num / den
+	if best < 0 {
+		return nil
+	}
+	return []int{best}
+}
+
+// damageRankStr is the strength `biggestAttack` ranks concepts at. It never reaches a life total
+// — it exists only so Heavy sorts above Strike sorts above Jab — and it is deliberately large
+// enough that Jab's `str/2` floor of 1 cannot flatten the ladder.
+const damageRankStr = 100
+
+// elementsOf is every distinct non-basic colour among the cards that formed the hand, in element
+// order.
+//
+// **Basic is skipped in both directions.** It is the absence of an element, so a basic card
+// neither adds a colour nor spoils one — two basic Strikes and an ice Strike show one colour and
+// are mono. That is what makes a plain draw neutral rather than a punishment.
+func elementsOf(turn []Slot, cards []int) []Element {
+	var seen [ElementCount]bool
+	for _, i := range cards {
+		if i < 0 || i >= len(turn) {
+			continue
+		}
+		if e := turn[i].Card.Element; e != Basic {
+			seen[e] = true
+		}
+	}
+
+	var out []Element
+	for _, e := range AllElements {
+		if e != Basic && seen[e] {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+// mixFor is the makeup for a given number of distinct colours. The mixes name an *exact* count
+// and partition every hand, so exactly one matches — which is what lets a turn produce one combo
+// with no ranking at all.
+func mixFor(colours int, mixes []Mix) Mix {
+	for _, m := range mixes {
+		if m.Colours == colours {
+			return m
+		}
+	}
+	return Mix{}
+}
+
+// scaleDamage applies a turn's multiplier to a base figure.
+//
+// Rounding is deliberately toward zero, matching guardDivisor and the defend reductions: the
+// package is integer arithmetic throughout, so a multiplier that rounded the other way would be
+// the one rule a player could not predict from the others.
+func scaleDamage(base, pct int) int {
+	if pct <= 0 {
+		return 0
+	}
+	return base * pct / multiplierScale
 }

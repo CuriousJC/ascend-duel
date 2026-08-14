@@ -97,6 +97,11 @@ func (s *CombatScene) roster(gs *state.GlobalState) []string {
 // sequences, which is the same bug wearing a disguise.
 const enemySelectSalt = 0x5EED_E9E3
 
+// combatSalt separates the rules' own stream — the shock roll — from every other consumer of the
+// run seed, for exactly the reason above. It is the sixth stream and the first one that lives
+// inside `internal/combat` rather than around it.
+const combatSalt = 0x5EED_5C0F
+
 // shuffleWithinFloors reorders a floor-sorted roster inside each run of equal ValidFloors,
 // leaving the bands themselves where they are.
 //
@@ -217,6 +222,14 @@ type CombatScene struct {
 	// package-level functions, which draw from a global shared with every other caller
 	// and would make a run unreproducible. Seeded once in Init.
 	rng *rand.Rand
+
+	// The rules' own source, handed to ResolveRound. **A sixth stream, and separate from every
+	// other one on purpose** — it is advanced per attack phase by the shock roll, so sharing it
+	// with either shuffle would make a hand a function of how many attacks had been rolled
+	// against, and every entry in seeds.go would break the first time lightning landed.
+	//
+	// Seeded from the run seed with its own salt, so a replayed run rolls the same shocks.
+	combatRNG *rand.Rand
 
 	// The opponent's deck, in the same three piles. It lives in internal/decks rather than
 	// here because tools/balance plays whole duels headlessly and cannot import this
@@ -366,6 +379,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// A fresh deck every visit, shuffled from the same seed, so re-entering the screen
 	// deals the same opening hand rather than continuing a run that has been abandoned.
 	s.rng = rand.New(rand.NewSource(deckSeed))
+	s.combatRNG = rand.New(rand.NewSource(gs.RunSeed ^ combatSalt))
 	s.resetDeck()
 
 	// The queue starts empty every visit and is derived from what is selected in hand.
@@ -576,6 +590,7 @@ func (s *CombatScene) startRound() {
 		s.fighter.Duelist, s.enemy.Duelist,
 		s.fighterActions, s.enemyActions,
 		s.round,
+		s.combatRNG,
 	)
 
 	s.fighterAfter = fighterAfter
@@ -639,11 +654,8 @@ func eventLabel(e combat.Event) string {
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindCombo:
-		name := "?"
-		if c, ok := combat.ComboByID(e.Combo); ok {
-			name = c.Name
-		}
-		return fmt.Sprintf("combo       %v forms %s", e.Side, name)
+		return fmt.Sprintf("attack      %v forms %s (x%d.%02d)",
+			e.Side, comboName(e), e.Multiplier/100, e.Multiplier%100)
 	case combat.KindStaggered:
 		return fmt.Sprintf("staggered   %v loses its %v", e.Side, e.Action)
 	case combat.KindDefeated:

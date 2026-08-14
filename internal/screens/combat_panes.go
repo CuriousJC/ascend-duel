@@ -469,11 +469,13 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 				swatchFor(e.Target))
 
 		case combat.KindCombo:
-			name := "combo"
-			if c, ok := combat.ComboByID(e.Combo); ok {
-				name = c.Name
+			// **A lone attack that formed no hand is not a combo and gets no line.** The card
+			// that swung already has one, and announcing "COMBO! Duelist lands an attack" over
+			// every single Strike would make the word mean nothing.
+			if e.Hand == combat.HandNone {
+				break
 			}
-			announce(fmt.Sprintf("COMBO!  %s lands a %s", s.sideName(e.Side), name), comboSwatch)
+			announce(fmt.Sprintf("COMBO!  %s lands a %s", s.sideName(e.Side), comboName(e)), comboSwatch)
 
 		case combat.KindGathered:
 			attach(fmt.Sprintf("+%d AP", e.Amount))
@@ -973,4 +975,24 @@ func (s *CombatScene) actionFlowRows(fighter, enemy []combat.Card, concealEnemy 
 // see TODO.md.
 func concealedLabel(a combat.ActionKind) string {
 	return fmt.Sprintf("??? (%s)", a.Category())
+}
+
+// comboName is what the attack phase formed, said in words: the element makeup in front of the
+// hand, as "Duo Strike Flurry".
+//
+// **The mix is dropped when the hand showed no colour**, because "Drab Strike Flurry" is a word
+// spent saying nothing. And a blow that formed no hand at all is named only as an attack — the
+// pane does not announce those, but the trace does.
+//
+// The names come from the catalogue rather than being written here, so a hand renamed in
+// `data/combos.json` is renamed once.
+func comboName(e combat.Event) string {
+	hand, ok := combat.HandByID(e.Hand)
+	if !ok {
+		return "attack"
+	}
+	if mix, ok := combat.MixByID(e.Mix); ok && mix.Colours > 0 {
+		return mix.Name + " " + hand.Name
+	}
+	return hand.Name
 }

@@ -21,6 +21,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -230,12 +231,17 @@ func play(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound,
 	// them can be compared with each other.
 	pile := decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
 
+	// **The rules take a source now, and this tool stopped being exact when they did.** A shock
+	// roll decides whether a turn's whole attack lands, so one run of one matchup is a sample
+	// rather than an answer — see `duelSamples` and `balanceSeed`.
+	rng := rand.New(rand.NewSource(balanceSeed))
+
 	for f.Alive() && e.Alive() && round < stalemateRounds {
 		round++
 		enemyPlan := pile.Plan(style, e)
 
 		beforeF, beforeE := f.CurrentLife, e.CurrentLife
-		_, f, e = combat.ResolveRound(f, e, plan, enemyPlan, round)
+		_, f, e = combat.ResolveRound(f, e, plan, enemyPlan, round, rng)
 
 		if each != nil {
 			each(round, enemyPlan, beforeE-e.CurrentLife, beforeF-f.CurrentLife)
@@ -315,3 +321,15 @@ func label(plan []combat.Card) string {
 	}
 	return out
 }
+
+// balanceSeed is the fixed source every duel in a run is played from.
+//
+// **The rules acquired randomness on 2026-08-14** — a shock roll decides whether a turn's whole
+// attack lands — so this tool stopped being an exact answer and became a sample. A fixed seed is
+// what keeps it *reproducible* in the meantime: the same command prints the same table, so a
+// change to a cost or a stat line still shows up as a diff rather than as noise.
+//
+// **That is not the same as being right, and the gap is recorded rather than papered over.** One
+// sample per matchup can be an unlucky duel, and the honest version plays each matchup many times
+// and reports how often the fighter wins. That is the next thing this tool wants.
+const balanceSeed = 0x8A1A_9CE0

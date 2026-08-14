@@ -1,5 +1,7 @@
 package combat
 
+import "math/rand"
+
 // Statuses are what elements *do*, and they are the first thing in this package that outlives
 // the action that caused it. `Guarded` and the counted negations all expire at the start of
 // their owner's next turn; a burn ticks at a moment no action owns, and a chill is read when a
@@ -49,14 +51,29 @@ const (
 	// both directions — the ring discounts your ice cards, the status cuts their budget.
 	chillPerHit = 1
 
-	// shockPerHit is how many of the target's attacks will miss outright.
+	// shockPerHit is how many *chances to miss* a landed lightning hit puts on the target.
 	//
-	// **Deterministic, and MECHANICS.md said "a chance to miss" until 2026-08-12.** A roll would
-	// put randomness into a package whose purity is what makes it testable and what makes
-	// `tools/balance` exact, and it would need a sixth determinism stream advanced per attack —
-	// so any change to round one would reshuffle every roll after it. Certain misses also match
-	// the rule combos already follow: what you committed to cannot be silently undone.
+	// **It is a roll again as of 2026-08-14**, reversing the deterministic version taken on
+	// 2026-08-12. The reason it had to change: a turn now resolves one attack, so a certain miss
+	// deleted a whole turn — up to a 250-damage Onslaught — for the price of one 1 AP fire Jab.
+	// The reason a roll was chosen over the deterministic alternatives (breaking the hand,
+	// cutting the multiplier) is that lightning should feel unreliable.
+	//
+	// **This is the first randomness in `internal/combat` and it arrives the way CLAUDE.md
+	// requires**: an injected `*rand.Rand` on `ResolveRound`, never a package-level source. The
+	// costs are real and were accepted: `tools/balance` becomes a distribution rather than an
+	// exact answer, and this is a stream advanced per attack phase, so a change early in a duel
+	// reshuffles every roll after it.
 	shockPerHit = 1
+
+	// shockMissPct is how likely one stack of shock is to make the turn's attack miss, and
+	// shockMissCapPct is the most any number of stacks can reach.
+	//
+	// **The cap exists so shock can never be a certainty.** Without it four lightning hits would
+	// be the deterministic rule this replaced, arrived at by a different route — and a defence
+	// that always works is the thing one blow per turn makes intolerable.
+	shockMissPct    = 25
+	shockMissCapPct = 75
 
 	// burnPerHit is damage dealt at the end of each round the burn survives. It ticks at the end
 	// of the round it landed in as well as the one after, so one fire hit is 2 ticks.
@@ -132,7 +149,7 @@ func (d Duelist) weightPct() int {
 
 // blunt applies a weight to one outgoing blow.
 //
-// **Rounding is toward zero**, matching guardDivisor, braceDivisor and scaleDamage. Earth is the
+// **Rounding is toward zero**, matching guardDivisor, the defend reductions and scaleDamage. Earth is the
 // first percentage in a package documented as pure integer arithmetic, and the rule being the
 // same as every other reduction is what keeps it predictable from the others rather than being
 // the one number a player cannot work out.
@@ -143,19 +160,47 @@ func blunt(dmg, pct int) int {
 	return dmg * (100 - pct) / 100
 }
 
-// spendShock consumes one stack of a shock, reporting whether the attack it was checked against
-// misses. A shock with stacks left always fires — there is no roll.
-func spendShock(d Duelist) (Duelist, bool) {
-	if !d.Statuses[Lightning].Active() {
+// shockChancePct is how likely a shocked duelist's attack is to miss, given the stacks it is
+// carrying. Stacks add and the total is capped, so more lightning is better without ever being
+// certain.
+func (d Duelist) shockChancePct() int {
+	s := d.Statuses[Lightning]
+	if !s.Active() {
+		return 0
+	}
+	if pct := s.Amount * shockMissPct; pct < shockMissCapPct {
+		return pct
+	}
+	return shockMissCapPct
+}
+
+// spendShock consumes one stack of a shock and rolls it, reporting whether the attack it was
+// checked against misses.
+//
+// **One stack is spent whether or not the roll lands.** A shock that only burned itself on a
+// success would make the status last until it worked, which is a guarantee wearing a
+// probability's clothes.
+//
+// The source is passed in rather than drawn from a package global — see the determinism rules in
+// CLAUDE.md. A nil source means "no rolls", which is what keeps a caller that has no business
+// being random (a preview, a test pinning the deterministic parts) from silently getting one.
+func spendShock(d Duelist, rng *rand.Rand) (Duelist, bool) {
+	chance := d.shockChancePct()
+	if chance <= 0 {
 		return d, false
 	}
+
 	s := d.Statuses[Lightning]
 	s.Amount--
 	if s.Amount <= 0 {
 		s = Status{}
 	}
 	d.Statuses[Lightning] = s
-	return d, true
+
+	if rng == nil {
+		return d, false
+	}
+	return d, rng.Intn(100) < chance
 }
 
 // tickStatuses counts every status down one round end and clears the ones that run out. The burn

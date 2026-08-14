@@ -157,6 +157,12 @@ balance is checked by `tools/balance`, which plays whole duels through the real
 invisible — losing slowly looks exactly like losing to bad draws. Run it after touching a
 cost, a stat line, or a planner.
 
+**It is a sample rather than an exact answer as of 2026-08-14**, because combat rolls for
+lightning. It seeds one fixed source (`balanceSeed`) per run so a result is reproducible, but a
+posture that wins half its duels and one that wins all of them currently print the same line.
+**Read a single run as one draw**, and treat multi-sample reporting as the next thing the tool
+needs before its numbers can be tuned against.
+
 ## Releasing — `.github/workflows`
 
 **CI** runs on every PR, on **Windows and Linux**, under all three build-tag configurations.
@@ -245,16 +251,16 @@ The three decisions worth knowing without opening it:
 ## Determinism — a planned feature that constrains code written now
 
 Runs will eventually be **replayable from a seed**: the same tower, enemies and rolls,
-so the player can retry and make different choices. Nothing is stochastic yet, which is
-exactly why these rules are cheap to follow — retrofitting determinism is expensive, so
-do not write code that forecloses it.
+so the player can retry and make different choices. **Combat is stochastic as of 2026-08-14** —
+lightning rolls — which is exactly the case these rules were written to survive, so follow them
+rather than treating the first roll as permission for the second.
 
 - **Never call the `math/rand` package-level functions** (`rand.Intn`, `rand.Float64`,
   `rand.Shuffle`, …). They draw from a global source shared with every other caller,
   which makes a run unreproducible. Randomness comes from an explicit `*rand.Rand`
   carried on state and seeded once per run.
-- **Five separate streams: enemy selection, loot offers, floor offers, and *two* card
-  shuffles — the player's and the opponent's.** Never share one source between them, or a
+- **Six separate streams: enemy selection, loot offers, floor offers, the combat roll, and
+  *two* card shuffles — the player's and the opponent's.** Never share one source between them, or a
   change to loot generation silently rerolls every enemy in the tower. A stream is only
   ever advanced by its own concern. Tower layout is fixed (8 floors × 3 fights, endless
   later) and draws no randomness.
@@ -262,7 +268,7 @@ do not write code that forecloses it.
   player's opening hand a function of how many cards the opponent happened to draw, so
   **every entry in `seeds.go` would break the first time an enemy deck was retuned** — and a
   named hand has to stay a fact about the player's deck alone. That is the shape of argument
-  to apply if a sixth stream is proposed: ask what it would silently reroll.
+  to apply if a seventh stream is proposed: ask what it would silently reroll.
 - **Both shuffles exist.** The player's lives on `CombatScene` as `rng`, seeded in `Init`
   from `deckSeed`; the opponent's lives on `decks.EnemyPile`, seeded from `decks.EnemySeed`.
   Both constants are placeholders for the per-run seed — every launch deals the same hands,
@@ -289,16 +295,22 @@ do not write code that forecloses it.
   `gs.Combatants` is a map — iterate a sorted key slice if a choice depends on order.
 - **No `time.Now()` in game rules.** Wall-clock decisions cannot be replayed. Tick
   counters are fine; they are part of the simulation.
-- **`internal/combat` is pure integer arithmetic with no randomness and no clock.**
-  `TestRoundIsDeterministic` pins this. If randomness ever enters combat it arrives as
-  an injected source parameter, never a global.
-- **Rewrite a random-sounding rule rather than let it in.** Lightning is *the next attack
-  misses outright*, not "a chance to miss". A roll would have been a sixth stream advanced per
-  attack — so any change to round one reshuffles every roll after it — and it would have turned
-  `tools/balance` from an exact answer into a distribution. **That is the trade to weigh when
-  the next random-sounding rule arrives**: certainty is often the better game as well as the
-  cheaper code, and it matches the rule combos already follow, that what you committed to
-  cannot be silently undone.
+- **`internal/combat` has no clock and exactly one roll.** It is otherwise integer arithmetic,
+  and `TestRoundIsDeterministic` pins that a nil source resolves identically every time.
+- **The one roll is lightning, and it arrived the way this section requires.** A shock is a 25%
+  chance per stack that the turn's attack misses, capped at 75%; the source is a `*rand.Rand`
+  parameter on `ResolveRound` and a nil one means no rolls. **This reverses the deterministic
+  version taken two days earlier**, because one blow per turn turned a certain miss into a 1 AP
+  card deleting a 10 AP hand. `MECHANICS.md` holds the argument.
+- **What it cost is exactly what this file predicted it would**, and both are now paid:
+  `tools/balance` is a distribution rather than an exact answer, and the stream advances per
+  attack phase, so a change early in a duel reshuffles every roll after it.
+- **Still rewrite a random-sounding rule rather than let it in.** Lightning is the deliberate
+  exception, not the precedent — it was taken because unreliability is what lightning *is*, and
+  the alternatives (breaking the hand, cutting the multiplier) were weighed and written down.
+  **Certainty is often the better game as well as the cheaper code**, and it matches the rule
+  combos otherwise follow, that what you committed to cannot be silently undone. A second roll
+  needs the same argument made again from scratch.
 - **Presentation may never change outcomes.** `ResolveRound` decides a whole round
   before playback begins, so animation speed, the planned game-speed setting, and any
   skip button are free to alter pacing and must not alter results.
@@ -674,7 +686,7 @@ Key conventions:
 ### Package layout and its layering
 
 - `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["giantrat_png"]`, `gs.Fonts["kubasta"]`), and it is **independent of where the file sits** — see the Art section. There are two extra loaders for callers that cannot take an Ebitengine type: `LoadFontData()` and `LoadImageData()` hand back raw bytes, because `internal/cards` and `tools/cardsheet` render without a graphics context. `gs.FontData` carries the fonts for exactly that reason.
-- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. Five files:
+- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. Six files:
 
   | File | Loader | Holds |
   |---|---|---|
@@ -683,6 +695,9 @@ Key conventions:
   | `duelist_cards.json` | `LoadDuelistCards` | the player's deck list |
   | `enemy_cards.json` | `LoadEnemyCards` | what an opponent draws from |
   | `rings.json` | `LoadRings` | the rings that exist: name, art key, element, one line of text |
+  | `combos.json` | `LoadCombos` | the two combo axes: six hands, five element mixes |
+
+  **`combos.json` is the only one the rules read.** `internal/combat` imports `data` for it and for nothing else; the other five are consumed by `screens`, `decks` or `entities`. `data` holds the shape and `combat` holds the meaning — the file names a category as a string and the rules resolve it with `ParseCategory`, the same division `CheckCostTiers` draws for the deck lists. A catalogue naming something the rules do not have panics at init rather than loading a combo that can never fire.
 
   **`rings.json` runs ahead of its rules on purpose.** Nothing equips a ring — the combat
   screen's ring row draws the list and that is all. It is a file first so the set can be seen
@@ -720,7 +735,7 @@ Key conventions:
   per frame.
 - `internal/music/` — the score, **synthesised at startup from a MIDI file**. See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
-- `internal/combat/` — the duel rules, **the elements and their statuses, the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **`combat.Card` is a concept plus an element and is the unit the whole package deals in** — `[]Card` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor` and `CostOf`, which is what let the screen's own `element` type and card struct be deleted rather than mapped. `status.go` holds the four statuses; they share one lifecycle on purpose and `Duelist.Statuses` is an array indexed by element, which makes **`Element` append-only** the same way `ActionKind` and `GlyphKind` are. **A planner takes the hand it was dealt** — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the elements and their statuses, the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **`combat.Card` is a concept plus an element and is the unit the whole package deals in** — `[]Card` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor` and `CostOf`, which is what let the screen's own `element` type and card struct be deleted rather than mapped. `status.go` holds the four statuses; they share one lifecycle on purpose and `Duelist.Statuses` is an array indexed by element, which makes **`Element` append-only** the same way `ActionKind` and `GlyphKind` are. **A planner takes the hand it was dealt** — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **A turn resolves exactly one attack, and combos are how it is scored** *(2026-08-14)*. `resolveAttackPhase` announces every attack card, then `AttackFor` reads them as a *set* and returns one blow: `Σ Damage(cards in the hand) + Strike.Damage(Str) × (hand + mix)`, where the two multipliers **add**. Attack cards that build no hand are announced and contribute nothing. **The catalogue is two axes, not a list**: `data/combos.json` holds six *hands* (copies of a concept — pair through onslaught) and five *mixes* (distinct non-basic colours — drab through rainbow), `combo_table.go` turns them into rules, and `combo.go` holds the vocabulary and the matcher. Exactly one hand and exactly one mix apply, which is what retired the family/tier machinery: a hand wins on its multiplier, and the mixes name exact colour counts that partition every hand. **Matching is counted only** — the `run` match kind was dropped, so nothing in the game reads card order any more. One closed reward vocabulary (damage multiplier, banked AP, stagger). **Adding a combo is one entry in the JSON**; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. **This is the one file in `data/` that the rules themselves read**, and the only reason `internal/combat` imports that package — see the layering note below. A malformed catalogue panics at init, exactly as a mis-declared cost tier does — including a gap in the mixes' colour counts, since a hand the engine cannot name is the one failure this model can produce. **Defends reduce rather than negate** and compose multiplicatively, order unread; **lightning is a roll**. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **The combat screen is eight files.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit does not start by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
@@ -764,7 +779,9 @@ Key conventions:
   **A file boundary is not a reason to change what a function does.** Moving something between these files is a move, not a rewrite.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 
-Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions`/`decks` → `models`/`state`/`combat`/`data`/`assets`. Nothing lower reaches back up. `decks` sits above `combat` and `data` and below `screens`, which is the whole reason it is a package: it is the one place allowed to turn a JSON card list into rules types, and `tools/balance` imports it without importing a screen. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.
+Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions`/`decks` → `models`/`state`/`combat`/`assets` → `data`. Nothing lower reaches back up. `decks` sits above `combat` and `data` and below `screens`, which is the whole reason it is a package: it is the one place allowed to turn a JSON card list into rules types, and `tools/balance` imports it without importing a screen. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.
+
+**`data` is the bottom of the graph and imports nothing but the standard library**, which is what lets any layer read it. `internal/combat` does, for `data/combos.json` alone — the one list the *rules* consume rather than a layer above them. **Whether a new file in `data/` may be read by `combat` is decided by who consumes it, not by whether it is data**: enemy rosters, deck lists and rings are read by `screens`, `decks` and `entities`, and a rule reaching for one of those would mean the rules had grown an opinion about portraits or art keys. `data` must never import upward; `CheckCostTiers` takes its cost and category lookups as parameters for that reason and should keep doing so even though the edge now exists, because the check belongs to whoever is loading a deck.
 
 ### Drawing idioms
 

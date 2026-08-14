@@ -60,44 +60,39 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Next — where the game actually starts
 
+- [ ] **Nothing reads card order any more, so drag-to-reorder decides nothing.** The one-blow
+      rewrite on 2026-08-14 took the last two consumers of within-phase order at once: counted
+      hands read a turn as a *set*, and every raised defend answers the single blow regardless of
+      when it went up. Cross-phase ordering has meant nothing since phases landed. **The gesture
+      is still there, still costs the player attention, and now buys them nothing.**
+      - **This is the design hole to fill, not a bug to fix.** Either the row stops presenting
+        itself as orderable, or something starts reading order again.
+      - **Sequence combos are the obvious candidate** and the schema's `run` match kind was
+        dropped in the same rewrite, so they would have to be rebuilt — and rebuilt differently,
+        because a sequence is now a shape *within* the one hand rather than a second blow.
+        `MECHANICS.md` §Sequences holds what was lost.
+      - The initiative entry below and the defence-targeting idea are both really this question
+        arriving from other directions. Answer it once.
 - [ ] **Revisit whether an initiative system makes sense for resolution.** There is no
       initiative in the rules: with one contiguous turn per side there is no exchange for a
       faster action to lead, so a number on every card was reporting a distinction the
       resolver had stopped making.
-      - **What it would need to come back:** somewhere for it to bite. The obvious
-        candidates are ordering *within* a phase (currently queue order, which is free and
-        legible), or a partial interleave where one designated fast action jumps a phase.
-        Both reintroduce the legibility problem phases were adopted to solve, so the bar is
-        that it buys something combos and category ordering do not.
+      - **What it would need to come back:** somewhere for it to bite. Ordering *within* a phase
+        used to be the free candidate and is no longer — nothing reads it, so initiative would
+        have to bring its own consumer. The other candidate is a partial interleave where one
+        designated fast action jumps a phase, which reintroduces the legibility problem phases
+        were adopted to solve.
       - **The card has no room.** The left column is a category glyph over a stack of cost
         dashes, and everything right of it is the effect text; an initiative badge has nowhere
         to go that does not take space from one of the two.
-- [ ] **Defenses target a specific incoming attack.** The resolution order is right; what is
-      missing is that a defense is a pool rather than a choice. **Guard stays untargeted** — it
-      covers you entirely, which is exactly why it is a prepare. **Dodge and Riposte should each
-      name the enemy attack they answer**: dodge the first and riposte the second, or riposte the
-      first and dodge the second, and those are different rounds.
-      - **This is the ordering lever initiative was meant to be, and a better one.** Initiative
-        decided *when* your action happened; this decides *what it happens to*, which is a
-        decision the player makes rather than a number they read off a card.
-      - **Half of this landed on 2026-08-14.** `Duelist.Defends` is an ordered queue and the
-        front of it answers the next attack, so *which of your defences meets which blow* is
-        already the player's decision, made by dragging within the defend phase. What is still
-        missing is naming a **specific enemy action** rather than a position in the sequence —
-        which is what makes it robust to the opponent queueing more or fewer attacks than you
-        expected.
-      - **The hard part is the UI, not the rules.** Engine-side this is a target field on
-        the queued action and a lookup at negation time. Screen-side the player has to point
-        at an enemy attack that is **concealed while planning** — you know the enemy has two
-        actions and their categories, not what they are. Targeting "their second attack" is
-        therefore targeting a slot, not a card, which may actually be the cleaner design.
-      - Input vocabulary allows exactly click and drag. Dragging a Dodge onto an enemy row
-        in the Resolution pane is the obvious gesture and would give that pane its first
-        interactive job. No right click, no keyboard.
-      - **Open:** what happens when the targeted attack does not arrive — the enemy queued
-        fewer actions than you predicted, or died first. Wasted, or does it fall back to the
-        next attack? Wasted is more honest and makes prediction matter; falling back makes
-        targeting a free upgrade over the current pool.
+- [?] **Defence targeting has lost most of its content.** The entry used to be "a defense is a
+      pool rather than a choice — Dodge the first attack and Riposte the second". **There is only
+      one attack now**, so there is nothing to distribute defences across and every raised card
+      answers the same blow.
+      - What survives is a weaker question: whether a defence should be able to name something
+        about the incoming hand — its element, whether it forms a combo — rather than a slot.
+      - What is definitely gone is the ordering half. See the drag entry above; this is the same
+        hole.
 - [ ] **Enemies plan from a hand but not from a personality.** `combat.PlanFor(style, duelist,
       hand)` picks between four planners named by a string on the data record, so behaviour is
       data and the 96-enemy roster in `data/enemies.json` is tunable without touching Go.
@@ -108,39 +103,58 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         four functions chosen by a string. That is the piece procedural enemies need.
       - `AvailableAffixes` is in `data/enemies.json` and read by nothing.
       - `[?]` Earth has no affix; whether it can be a floor theme is still open.
-- [ ] **Shocking beats the whole roster, and dodging nearly does.** `tools/balance` over all 96
-      enemies, 2026-08-14: **shocking 96, dodging 93, retreating 86** against `all-out`'s 50. A
-      posture strong against everything is a pricing bug, not a good card.
-      - **Shock is the clearest case and the lever is one constant.** `shockPerHit` in
-        [status.go](internal/combat/status.go): a lightning attack deals full damage *and*
-        cancels an enemy attack, so two of them a round negate most enemy turns for free. A
-        shock that took two hits to apply, or that only stopped the victim's first attack, are
-        the two candidates.
-      - **Negation is priced against how many blows arrive**, so widening enemy budgets makes
-        dodging and retreating *better*, not worse. Raising enemy AP would lift Guard and Brace
-        with them, though, which could narrow the gap without touching the negations — a data
-        change in `data/enemies.json` plus a re-run.
-      - Read the balance table as a **best case**: the fighter repeats one posture every round
-        and always draws it. An enemy that beats a posture there beats it always; the reverse
-        does not hold.
-- [ ] **`[?]` Retreat is a bigger Dodge, and the concept grid says every tier should differ in
-      kind.** Three negations for four points is priceable — which is why it replaced a 4-cost
-      defend that negated a whole turn and reflected it — but it is the one cell in the grid
-      that is only a number.
-      - What would earn the cell: a rider that makes *volume* mean something. Clearing a status
-        as you give ground, or the third charge doing something the first two do not.
-      - `retreatCharges` is the lever if it only needs tuning.
-- [ ] **Guard versus Dodge.** The *guarding* posture (Guard + Strike, 5 of 6 AP) loses across
-      the roster where *dodging* wins everywhere. Guard costing 3 eats most of a round's budget
-      and leaves one Strike behind it, so a broad halving does not pay for itself.
-      - Candidates: Guard to 2, or the budget grows, or halving becomes something stronger.
-      - A defensive card's worth is set by the shapes it faces, so tune it against the whole
-        roster rather than against a handful of enemies.
-- [ ] **Two floor-1 enemies are free.** `tools/balance` has **Clear Pod** and **Clear Slime**
-      losing to every posture — its own "free" condition. Both are wardens on floors 1-2, so a
-      pushover opener may be intentional; decide that rather than leaving it as an accident of
-      the stat line. The tool was written to catch this, and it is currently the only thing it
-      is flagging.
+      - **`[?]` None of the four planners was rewritten for one blow per turn, and the change
+        inverts them.** A swarm queueing four Jabs now assembles a Jab Barrage — 5× damage and
+        two staggers — where it used to land four small hits. A brute's single Heavy forms no
+        hand at all and pays no multiplier. So the shape the roster treats as the weak one is
+        now the strong one, entirely by accident. Planners should build *toward* a hand
+        deliberately, and which styles are allowed to is a design decision, not a tuning one.
+- [ ] **Retune enemy life totals against the new damage curve.** One blow per turn plus additive
+      multipliers made the player's ceiling far higher: two Strikes at Str 10 deal 35 where they
+      used to deal 20, and a rainbow Onslaught is 200 on top of its own cards. `data/enemies.json`
+      has not moved. The owner has said the HP numbers are the intended lever; this is that work.
+      - **Do not tune anything until `tools/balance` reports a distribution** — see below. Right
+        now every figure it prints is one draw.
+- [ ] **`tools/balance` is a single sample and needs to be a distribution.** Combat rolls for
+      lightning as of 2026-08-14, so a posture winning half its duels and one winning all of them
+      print the same line. The tool seeds one fixed `balanceSeed` per run, which keeps a result
+      reproducible and hides the variance entirely.
+      - What it wants: N duels per matchup off successive seeds, and a win *rate* rather than a
+        verdict. The enemy count is 96 and a duel resolves in microseconds, so cost is not the
+        obstacle — the output format is.
+      - **Every balance figure this repo has ever recorded was measured against the multi-blow
+        model and is deleted rather than annotated.** `MECHANICS.md` says what has to be
+        re-measured; nothing should be tuned off memory of the old table.
+- [ ] **`[?]` The defend column is a cost ladder now, which the concept grid exists to prevent.**
+      Brace 50, Dodge 75, Riposte 75, Retreat 100. Two problems fall out:
+      - **Brace is purely a smaller Dodge.** It used to be partial against something binary,
+        which was a real distinction; the repricing spent it.
+      - **Dodge and Riposte carry the same percentage**, so Riposte is exactly Dodge plus a Jab
+        at exactly the price of the two — and a Feint stripping "the strongest" picks between
+        them on a tie-break rather than on anything the player decided.
+      - What would earn the cells back is **riders rather than percentages**: clearing a status
+        as you give ground, a Brace that pays something for taking the hit. Reach for that shape
+        before moving a number.
+- [ ] **`[?]` Guard versus Dodge, re-opened.** Guard costs 3 of a 6 AP budget to halve a turn,
+      where a 2 AP Dodge now takes 75% off it. Under one blow per turn that comparison is even
+      more lopsided than it was, since Guard's "every attack" clause meets exactly one attack.
+      - Candidates: Guard to 2, or the budget grows, or `guardDivisor` becomes a percentage in
+        line with the defends so all four reductions read the same way.
+- [ ] **`[?]` Pair fires on most turns, which makes the bottom rung a global buff to the AI.**
+      Any two copies of one attack forms it, and the enemy planners repeat a card far more
+      readily than a player assembling a mixed hand does. Measured as a real regression on the
+      old model — the player's postures *lost* ground when Pair landed — and the rewrite changed
+      the number without addressing the shape.
+      - Options: drop Pair's multiplier and start the ladder at Two Pair, or give it a reward
+        that does not scale with strength.
+- [ ] **`[?]` 13 of the 27 hand/mix cells cannot be dealt from the starting deck.** A concept
+      ships one card per colour, so every same-concept hand is forced to all-distinct elements: a
+      pair is always duo, a flurry always trio, an Onslaught always rainbow, and **drab and mono
+      are unreachable above one card**. Half the grid is currently decoration.
+      - **Expected to resolve when the deck changes over a run** — the owner's call, and the
+        deckbuilder entry below is where that lands. Recorded so nobody tunes the grid against a
+        deck that cannot show most of it.
+      - It also means the mix multiplier is not really optional today: every hand pays one.
 - [ ] **Procedurally generated enemies.** 96 hand-written records in `data/enemies.json` with
       the combat screen walking a shuffled band per floor is scaffolding. An enemy should be
       **generated** from the floor, so the tower can be endless and a seed can reproduce it.
@@ -155,12 +169,17 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         test fixtures**, not the roster.
 - [?] **Ordering model — phases ship, three alternatives are kept.** `ResolutionOrder` is a
       single pure function, so swapping between any of these is one function body plus its tests.
-      - **Phases, chosen and built.** Preparations, then attacks, then defenses, then the enemy.
-        Defenses front-load because the enemy goes last. Chosen on legibility grounds:
+      - **Phases, chosen and built.** Preparations, then *one* attack, then defenses, then the
+        enemy. Defenses front-load because the enemy goes last. Chosen on legibility grounds:
         interleaving may not be graspable by players. **See `MECHANICS.md` for the full entry and
         its costs** — cross-phase reordering stops meaning anything, Guard persistence dissolves,
         and stagger's rarity has to come from elsewhere. The three below are what it was chosen
         over, kept because the experiment may not survive contact.
+      - **All three alternatives assume a turn is several separate blows**, which stopped being
+        true on 2026-08-14. Contested slots and wind-up time both pair *actions* against actions;
+        with one blow per side there is nothing to pair. Reviving any of them now means reviving
+        multi-blow attacks with it, which is a bigger change than swapping `ResolutionOrder`'s
+        body — **the "one function and its tests" cost quoted above no longer holds for these.**
       - **Contested slots.** Queues alternate; initiative decides who leads each pairing. Every
         action of yours meets one of theirs — "every ask gets an answer". The cost: a fast action
         placed late still resolves late, because initiative never lets an action jump to an
@@ -213,23 +232,25 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       no acquisition. That needs the loot loop, which needs the tower.
       - **Open:** whether the deck is per-run or per-fight, and whether the discard reshuffles
         within a fight or only between them.
-      - **Moving draw into `internal/combat` is the change to weigh carefully.** It would let
-        `tools/balance` measure anything that touches the hand — Sift especially. The cost is
-        that `ResolveRound` grows an injected source parameter and `TestRoundIsDeterministic`
-        changes shape to seed it explicitly. Never a global; see the determinism rules.
+      - **Moving draw into `internal/combat` got cheaper.** `ResolveRound` already takes an
+        injected `*rand.Rand` for the lightning roll, so the parameter this entry warned about
+        is paid for. **It must not share that source** — a shuffle and a miss-roll are different
+        concerns, and the stream rules say a stream is only ever advanced by its own. Doing this
+        would let `tools/balance` measure anything that touches the hand, Sift especially.
       - Hand size is 8 and was sized against a 30-card deck, deliberately left alone when the
-        deck doubled to 60. Worth re-deciding once thinning exists, since a thinned deck changes
-        what a hand of 8 means.
-- [?] **What a Feint does when a second defence sits behind the one it strips.** The strip takes
-      one charge off the front of the defend queue and the blow then meets whatever is now at
-      the front, so **two Dodges beat a Feint and one does not** — and a Retreat, at three
-      charges, beats it twice over. That is coherent and nobody chose it; it is a consequence of
-      where the strip sits.
+        deck doubled to 60. Worth re-deciding once thinning exists — and now also because the
+        deck's one-copy-per-colour shape is what makes half the combo grid undealable.
+- [?] **What a Feint does when more than one defence is up.** The strip takes the **strongest**
+      raised card and the blow then meets whatever is left, composed multiplicatively. So a Feint
+      into a Retreat plus a Brace still meets the Brace and lands half, where against a lone
+      Retreat it lands everything.
+      - That is coherent and nobody chose it; it is a consequence of where the strip sits.
       - The alternative reading is that a Feint's damage bypasses the defend layer entirely once
         it has stripped something, which is stronger and makes stacked defences worthless
         against it.
-      - `TestFeintStripIsUnconditional` pins the current behaviour against a Retreat, so the
-        rule is at least written down now. What is still open is whether it is the right one.
+      - **It strips once however many Feints are in the hand**, deliberately: a Feint Pair
+        clearing two cards would make the cheapest answer to a defensive round a hand the player
+        was already building.
 - [?] **Does Sift stack?** It does today: `siftsResolved() * siftExtraDiscards`, so two Sifts
       throw four extra cards away. Gather's within-round stacking is a documented deliberate
       choice; Sift's is just what the loop does. Two Sifts is 4 AP of a 6 AP round to churn
@@ -242,25 +263,30 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         with no instrument pointed at it. Either the tool grows a deck (see the deckbuilder
         entry) or something else measures draw variance. The second is probably a small harness
         over `screens.OpeningHand`, which already deals real hands headlessly.
-- [ ] **Move two interaction rules from code comments into `MECHANICS.md`.** Both are decided,
-      implemented and tested; both are recorded in the wrong file, and MECHANICS is supposed to
-      be what the game *is*. A designer reading it today would not learn either:
-      - Brace and Guard **both** apply, quartering a blow — a Brace answers the attack as the
-        front of the defend queue, and the Guard behind it halves what is left.
-      - Feint's strip is **unconditional** and fires even when the blow is about to be stopped
-        anyway, deliberately, so the card has no hidden interaction with something the player
-        cannot see.
 - [ ] **The demo has never shown a new card resolving.** `demoSeedName` is `strike-flurry` and
       `demoClickRun` is `Strike`, so the scripted round plays Strikes and a Riposte. The
-      narration written for Feint, Retreat, Brace and Sift — the "stopped by a retreat" line,
-      the "strips their riposte" line, "braced" — has never appeared on screen, and the demo is
-      the only thing that looks at the screen without a person sitting there.
-      - Point it at a hand that plays a Retreat into a multi-attack enemy turn.
-        `all-categories` (seed 6) deals eight distinct concepts including Retreat and Brace, and
-        a swarm throws five attacks — enough to spend all three charges and show the fourth blow
-        landing, which is the whole card in one round.
+      narration written for Feint, Retreat, Brace and Sift has never appeared on screen, and the
+      demo is the only thing that looks at the screen without a person sitting there.
+      - **The one-blow rewrite made this more urgent, not less.** Nobody has yet *looked* at a
+        round where five attack cards are announced and one figure lands, or at a combo line
+        naming a hand and a mix together, or at an attack card that resolved and contributed
+        nothing. Those are all screen questions and `go test` cannot answer any of them.
+      - Point it at a hand that plays a Retreat into a heavy enemy turn. `all-categories`
+        (seed 6) deals eight distinct concepts including Retreat and Brace.
       - `demoClickRun` has to agree with the seed or the click phase silently selects fewer
         cards and nothing forms. That pairing is what `tools/seeds` exists to keep honest.
+- [ ] **The Resolution pane cannot show three things the engine now produces.** All three are
+      presentation gaps rather than rules problems, and they arrived together on 2026-08-14:
+      - **An attack card that was announced and contributed nothing.** `Strike, Jab, Strike`
+        reads as three actions with no sign that the Jab was outside the hand.
+      - **Which cards formed the hand.** The event carries the list — a counted hand is not
+        contiguous, so it is a list rather than a span — and nothing draws the bracket.
+      - **A slot deleted by a stagger**, which the pane still draws as though it happened.
+- [ ] **Preview the hand while the player is still planning.** `combat.AttackFor` is exported and
+      is the same function the resolver calls, so a previewed combo would be the combo that fires
+      by construction rather than by two pieces of code agreeing. Nothing calls it from the
+      screen. This is what makes *building toward a shape* legible before DUEL! is pressed rather
+      than after.
 
 ### Cards and piles — presentation
 
@@ -380,10 +406,16 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         `iota`-based and append-only, so inserting a new one anywhere but the end silently
         reinterprets every existing log — a saved `Guard` becomes whatever now sits at 1, with
         no error. Same applies to any other enum that reaches the save file.
+      - **`[?]` The combat roll has to be settled before this ships.** `MECHANICS.md` requires
+        rolling on every attack phase and discarding the irrelevant result, precisely so a
+        balance tweak does not shift every later roll in a run. `spendShock` short-circuits when
+        the attacker carries no shock, so the stream only advances when lightning is in play —
+        which is exactly the drift the rule forbids. Nothing depends on stored seeds yet, so it
+        is cheap to fix now and expensive to fix after a save format exists.
       - Serializing live state instead means a migration every time state changes — the
         refactor this whole set of decisions exists to avoid.
       - Cost: loading replays the run to reach the current point. Trivial here, since
-        combat is pure integer arithmetic and a whole duel resolves in microseconds.
+        a whole duel resolves in microseconds.
       - Caveat: this only holds while the rules are stable. A balance change invalidates
         old saves, so the format needs a rules-version stamp and a plan for what happens
         when it does not match.
@@ -407,8 +439,14 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
           drawn from a global or a clock, which the determinism rules already forbid.
         - Unbounded state — anything that makes a position not comparable to another.
         - Real-time or reflex elements.
-      - None of those are on the roadmap, so the property is currently free. Re-read this
-        before adding anything that breaks one.
+      - **The lightning roll is the first thing to test this against, and it survives.** It is
+        seeded and injected rather than global, so a solver exploring a line still knows the
+        outcome exactly — the branching factor is unchanged because the roll is a function of
+        the seed and the position, not a fresh coin. What it *does* cost is that the conditional
+        advance above makes two positions with the same visible state consume different amounts
+        of stream, so fixing that is worth something here too.
+      - None of the rest are on the roadmap, so the property is currently mostly free. Re-read
+        this before adding anything that breaks one.
 - [ ] **Endless tower (after the 8-floor version works).** Keep climbing until the curve
       stops you, rather than a fixed summit. Scaling probably exponential.
       - Design the floor loop so 8 is a *configured stop*, not a baked-in constant, or

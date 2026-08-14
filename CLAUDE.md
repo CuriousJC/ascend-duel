@@ -21,28 +21,30 @@ Five streams, each with one job. Reach for the right one rather than searching a
 - **`MECHANICS.md` is the design record.** Decided unless marked `[?]`. It holds the element
   set and their statuses, cards and types, combos, rings, brands, vitae, the tower, enemies,
   and the phase-based resolution experiment.
-- **`TODO.md` is the work list**, and still holds the reasoning behind decisions already
-  implemented. It is long; prefer `MECHANICS.md` for "what should this do".
+- **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
+  says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
+- **Cut means deleted, not tombstoned.** When something is taken out of the design, remove
+  every trace of it rather than leaving a note saying it was removed and why. These files are
+  loaded into context; a record of things that do not exist is a running cost paid on every
+  session, and it grows without bound because nothing ever retires a tombstone. Git history is
+  the record of what used to be true. **If a removal genuinely needs to stay visible — because
+  the code still has a shape only the dead mechanic explains, or the same idea keeps being
+  re-proposed — ask before writing it down**, rather than deciding alone that it earns a line.
 
-## Caveman mode is on in this repo — a trial, and it expires
+## Caveman mode is on in this repo
 
-**Load the `caveman` skill at the start of every session and stay in it.** Started
-2026-08-10, to be judged **on or after 2026-08-17**. It compresses replies in the terminal and
-nothing else.
+**Load the `caveman` skill at the start of every session and stay in it.** It compresses
+replies in the terminal and nothing else.
 
-- **The trial has an end date on purpose.** On 2026-08-17, ask whether it stays. If the
-  answer is no, delete this section and `.claude/skills/caveman/` and everything is back to
-  normal. If it stays, delete these two sentences and leave the rest.
 - **It never touches anything persisted** — code, comments, commit messages, PR bodies,
   `MECHANICS.md`, `TODO.md`, this file. The skill's own Boundaries section says so and it is
-  the reason the trial is safe: the design record keeps its longhand reasoning. Compression
+  the reason this is safe: the design record keeps its longhand reasoning. Compression
   applies to what is typed back into the terminal.
 - **It does not override the instructions that say to argue.** Raising a structural
   objection, saying where a claim came from, and saying plainly when something is unverified
   all still happen — in fewer words, not fewer times. **If terseness is eating the
-  reasoning rather than the padding, that is the trial failing**, and it is worth saying so
-  rather than quietly writing shorter.
+  reasoning rather than the padding, say so** rather than quietly writing shorter.
 - **It drops out by itself for security warnings, irreversible actions and genuine
   ambiguity**, and should also drop for design discussion, where the argument is the point.
 - Default level is **full**. Ask for `lite` or `ultra` in words; the `/caveman` switcher is
@@ -56,10 +58,9 @@ nothing else.
 The project is **source-available, not open source**, and is intended to be sold
 (Steam) by its two copyright holders while the source stays public.
 
-- **License: PolyForm Noncommercial 1.0.0** (`LICENSE`), relicensed from Apache 2.0 on
-  2026-07-31. Anyone may read/build/modify/share noncommercially; selling is reserved
-  to the copyright holders. Additional Permissions at the top of `LICENSE` explicitly
-  allow monetized streaming and video of gameplay.
+- **License: PolyForm Noncommercial 1.0.0** (`LICENSE`). Anyone may read/build/modify/share
+  noncommercially; selling is reserved to the copyright holders. Additional Permissions at
+  the top of `LICENSE` explicitly allow monetized streaming and video of gameplay.
 - **Copyright holders: Justin Crosby (CuriousJC) and KingSherman1820.** They have a
   written partnership agreement; Justin can speak for both on licensing and IP, so
   there is no need to ask whether Sherman agrees.
@@ -70,14 +71,12 @@ The project is **source-available, not open source**, and is intended to be sold
   cannot go into a product licensed this way. Check the license before adding anything
   to `go.mod`, and flag it in the PR.
 - **Assets need provable licenses.** Do not add assets with unclear provenance; "found
-  it online" is not sufficient for a paid release.
-  **The Tyrian art was the known blocker and it is gone as of 2026-08-09** — every file
-  is deleted and nothing references one. What replaced the enemies is PVGames creature
+  it online" is not sufficient for a paid release. The enemy portraits are PVGames creature
   art from the Humble *Isometric Assets Galore* bundle, whose licence permits shipping
   inside a game; the pack and its terms are in `.scratch/flat-creatures` (gitignored).
   Everything else in `assets/` is either first-party or generated at runtime.
-- The pre-relicense Apache 2.0 grant on already-published commits is irrevocable and
-  the owners have accepted that. Do not propose rewriting history over it.
+- **Do not propose rewriting git history over the relicense.** The Apache 2.0 grant on
+  commits published before it is irrevocable, and the owners have accepted that.
 
 ## Commands
 
@@ -105,9 +104,8 @@ hand that demonstrates something can be asked for by name instead of found by re
 **Re-run `tools/seeds` after touching `data/duelist_cards.json`, `startingDeck` or `handSize`.** A seed is
 a fact about one particular deck; change the deck and every catalogued number silently deals
 something else. The tool re-checks the catalogue before it searches and says which entries no
-longer match — it rejected two guessed numbers the first time it ran, and invalidated **all five
-entries at once** when the deck went 30 → 60 on 2026-08-08. A demo testing a Flurry against a hand
-with two Strikes in it is worse than no demo, because it passes.
+longer match — a change to the deck size has invalidated every entry at once before. A demo
+testing a Flurry against a hand with two Strikes in it is worse than no demo, because it passes.
 
 **A bigger deck needs a bigger search.** Five Strikes in a hand of eight is about 1 hand in 98,000
 from 60 cards, against 1 in 3,000 from 30, so `strike-onslaught` took `-n 600000` to find where
@@ -169,12 +167,11 @@ fires it, so *tagging is releasing*:
 git tag -a v0.1.0 -m "..."; git push origin v0.1.0
 ```
 
-- **Or run it by hand from the Actions tab** — *Release* → *Run workflow*, on `main`.
-  **The workflow creates the tag itself**, at the commit it built, via
-  `gh release create --target`. That is the normal path now; a local tag-and-push is no
-  longer needed to cut a release.
+- **Or run it by hand from the Actions tab** — *Release* → *Run workflow*, on `main`. This is
+  the normal path. **The workflow creates the tag itself**, at the commit it built, via
+  `gh release create --target`, so a local tag-and-push is not needed to cut a release.
 - **The manual run's `version` input is optional, and the usual way to use it is to leave it
-  blank** *(2026-08-11)*. The `version` job then reads the highest existing `vX.Y.Z` tag off
+  blank.** The `version` job then reads the highest existing `vX.Y.Z` tag off
   the remote and increments whichever part the `bump` dropdown names — `patch` by default,
   `minor` or `major` on request — so cutting a release does not mean remembering what the
   last one was. Typing a version still wins outright and ignores `bump`, which is how a
@@ -215,7 +212,7 @@ git tag -a v0.1.0 -m "..."; git push origin v0.1.0
   calling `gh release create` is a race.
 - **Action majors are pinned to whichever one actually runs on Node 24**, which is why the
   numbers look out of step: `checkout@v5`, `setup-go@v6`, `upload-artifact@v6`,
-  `download-artifact@v7` *(2026-08-11)*. Both artifact actions shipped a major with only
+  `download-artifact@v7`. Both artifact actions shipped a major with only
   preliminary Node 24 support that still defaulted to Node 20 — v5 and v6 — so bumping by one
   leaves the deprecation warning on every run. Both workflows pin the same set; if one moves
   the other has to. Node 24 needs runner 2.327.1 or newer, which the hosted runners are.
@@ -261,29 +258,25 @@ do not write code that forecloses it.
   change to loot generation silently rerolls every enemy in the tower. A stream is only
   ever advanced by its own concern. Tower layout is fixed (8 floors × 3 fights, endless
   later) and draws no randomness.
-- **The two shuffles were one stream in the plan and had to become two** *(2026-08-11)*,
-  when enemies got a deck. Sharing would make the player's opening hand a function of how
-  many cards the opponent happened to draw, so **every entry in `seeds.go` would break the
-  first time an enemy deck was retuned** — and a named hand has to stay a fact about the
-  player's deck alone. That is the shape of argument to apply if a sixth stream is
-  proposed: ask what it would silently reroll.
-- **Both shuffles exist now.** The player's lives on `CombatScene` as `rng`, seeded in
-  `Init` from `deckSeed`; the opponent's lives on `decks.EnemyPile`, seeded from
-  `decks.EnemySeed`. Both constants are placeholders for the per-run seed — every launch
-  deals the same hands, which is what makes a problem reproducible while the screen is
-  being built. When `Session` state lands, both read from there and nothing else about the
-  deck code changes.
-- **The per-run seed arrived early, as `GlobalState.RunSeed`** *(2026-08-11)*, because the
-  enemy order wanted it. `main` sets it once — from `fixedRunSeed` if that constant is
-  non-zero, otherwise from the clock — and logs it. **Reading the clock there is not a
-  breach of "no `time.Now()` in game rules"**: choosing a seed is the one place a run is
-  allowed to be unpredictable, and it happens once, outside the rules, in main.
+- **The two card shuffles are separate, and must stay separate.** Sharing would make the
+  player's opening hand a function of how many cards the opponent happened to draw, so
+  **every entry in `seeds.go` would break the first time an enemy deck was retuned** — and a
+  named hand has to stay a fact about the player's deck alone. That is the shape of argument
+  to apply if a sixth stream is proposed: ask what it would silently reroll.
+- **Both shuffles exist.** The player's lives on `CombatScene` as `rng`, seeded in `Init`
+  from `deckSeed`; the opponent's lives on `decks.EnemyPile`, seeded from `decks.EnemySeed`.
+  Both constants are placeholders for the per-run seed — every launch deals the same hands,
+  which is what makes a problem reproducible while the screen is being built. When `Session`
+  state lands, both read from there and nothing else about the deck code changes.
+- **The per-run seed is `GlobalState.RunSeed`.** `main` sets it once — from `fixedRunSeed` if
+  that constant is non-zero, otherwise from the clock — and logs it. **Reading the clock there
+  is not a breach of "no `time.Now()` in game rules"**: choosing a seed is the one place a run
+  is allowed to be unpredictable, and it happens once, outside the rules, in main.
   `fixedRunSeed` is the debugging toggle, the counterpart of `deckSeed`. **Enemy selection is
-  the first live stream off it** — the combat screen shuffles the roster *within each floor
+  the one live stream off it** — the combat screen shuffles the roster *within each floor
   band* from `RunSeed ^ enemySelectSalt`, so a run opens on a different opponent without a
   floor-eight enemy ever being fight one. The two card shuffles still read their own fixed
-  constants and are unaffected; a consumer that starts reading `RunSeed` must salt its own
-  source, never share one.
+  constants; a consumer that starts reading `RunSeed` must salt its own source, never share one.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of
   the rules package is what preserves its purity, its tests and the headless balance sim.
   Moving draw into `combat` is a real option later, but it has to arrive as an injected
@@ -299,13 +292,13 @@ do not write code that forecloses it.
 - **`internal/combat` is pure integer arithmetic with no randomness and no clock.**
   `TestRoundIsDeterministic` pins this. If randomness ever enters combat it arrives as
   an injected source parameter, never a global.
-- **A mechanic specified as random was rewritten rather than allowed in** *(2026-08-12)*.
-  MECHANICS.md had lightning as "a chance to miss"; it ships as *the next attack misses
-  outright*. A roll would have been a sixth stream advanced per attack — so any change to round
-  one reshuffles every roll after it — and it would have turned `tools/balance` from an exact
-  answer into a distribution. **That is the trade to weigh when the next random-sounding rule
-  arrives**: certainty is often the better game as well as the cheaper code, and it matches the
-  rule combos already follow, that what you committed to cannot be silently undone.
+- **Rewrite a random-sounding rule rather than let it in.** Lightning is *the next attack
+  misses outright*, not "a chance to miss". A roll would have been a sixth stream advanced per
+  attack — so any change to round one reshuffles every roll after it — and it would have turned
+  `tools/balance` from an exact answer into a distribution. **That is the trade to weigh when
+  the next random-sounding rule arrives**: certainty is often the better game as well as the
+  cheaper code, and it matches the rule combos already follow, that what you committed to
+  cannot be silently undone.
 - **Presentation may never change outcomes.** `ResolveRound` decides a whole round
   before playback begins, so animation speed, the planned game-speed setting, and any
   skip button are free to alter pacing and must not alter results.
@@ -319,9 +312,9 @@ before touching any of the combat screen's files — `internal/screens/combat.go
 `combat_deck.go`, `combat_panes.go`, `combat_hud.go`, `combat_actionbox.go` — or
 `internal/combat`, or anything about how a round is drawn or played back.**
 
-It is a skill because it is the screen under active construction — it was over half this
-file and it grows every session, while mattering only when that screen is the work. The
-general UI conventions below still apply to it and stay here.
+It is a skill because it is the screen under active construction: it grows every session
+while mattering only when that screen is the work. The general UI conventions below still
+apply to it and stay here.
 
 Two things worth knowing without opening it:
 
@@ -351,8 +344,11 @@ that feels like it wants one needs a different design.
   `models.Button` + `systems.UpdateButton`/`DrawButton` split. Add new widgets the same
   way: a plain struct in `models`, behaviour in `systems`, owned by the scene that uses
   it.
-- ebitenui was evaluated and declined — see the entry in `TODO.md` for the reasoning and
-  the repo data behind it. Do not reach for it without revisiting that.
+- **ebitenui was evaluated and declined.** Everything the game needs is a *game* widget,
+  which is where general-purpose toolkits are weakest, and a toolkit is one more dependency
+  to licence-check against a product that will be sold. **The one trigger for revisiting is
+  the seed text field** — a text input with a caret, selection and clipboard is the single
+  widget genuinely cheaper to take than to build.
 
 The action box is a *game* widget, not a UI widget: draggable action cards with live
 action-point validation. General-purpose toolkits are weakest at exactly that, so
@@ -362,9 +358,8 @@ hand-rolling costs little and buys full control.
 
 [internal/systems/glyphs.go](internal/systems/glyphs.go) generates the pixel-art
 glyphs on the action cards, drawn at 1:1 — 64x64 for the damage sword and the runner, 22x22
-for the three category glyphs. **Generated art has no provenance question**, which is
-exactly the problem the Tyrian set used to be, so this is the pattern to prefer for
-interface art.
+for the three category glyphs. **Generated art has no provenance question**, which is the
+whole reason to prefer this pattern for interface art in a game that will be sold.
 
 It is a **generator, not a bitmap**. A glyph is a filled silhouette described by horizontal
 spans; the rim is *derived* by asking which filled pixels touch empty space, and the
@@ -380,12 +375,10 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   made from one colour scaled down. They are drawn untinted; a disabled card dims them by
   *alpha*, so the shading survives and only the weight changes. Tinting one toward the card
   colour would collapse it back to a flat silhouette.
-- **Colour was kept unspent, and elements spent it — on the card, not the glyph.** There is
-  still one palette, `white`, with no hue at all, and every glyph uses it. Holding them
-  hueless from 2026-08-03 is what left colour free to mean "element", and they should stay
-  that way — a coloured glyph on a coloured card says it twice and leaves nothing for the
-  next distinction. **What carries the element is now the card's *border*, not its surface**
-  (see the colour section below).
+- **Every glyph uses one hueless palette, `white`, and they should stay that way.** Colour
+  means "element", and the element is carried by the card's *border* (see the colour section
+  below). A coloured glyph on a coloured card says it twice and leaves nothing for the next
+  distinction.
 - **A hueless glyph on an off-white card loses most of its bevel, and that is accepted.**
   `Specular` is pure white and `Highlight` is `{232,236,242}`, so against the off-white
   surface the lit side of a bevel largely disappears and a glyph reads as outline plus
@@ -405,15 +398,11 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **`GlyphKind` is append-only.** The glyph cache keys on the ordinal, so inserting a kind
   mid-enum silently re-points every existing entry — the same hazard `MECHANICS.md` records
   for the concept enum and its combo IDs.
-- **The card's height budget is spent differently now, not enlarged.** It was two 64-pixel
-  badges (damage and cost). Cost became a stack of dash marks and the category *word*
-  became a 22-pixel glyph, so the column is one badge, one small glyph and some bars, and
-  the card kept its footprint with ~94px of deliberately empty surface at the bottom for a
-  long-press description. Adding a badge back spends that. **The card came down to 162x224 on
-  2026-08-11** — a tenth off the width, 15% off the height — and the *column's* offsets did
-  not move, because none of that art can be scaled. What the height lost was the empty strip,
-  which is ~54px now. That is still room for the description and it is no longer room for much
-  else.
+- **The card is 162x224 and its left column is full.** One 64px damage badge, one 22px
+  category glyph, and a stack of cost dash marks. What is left is **~54px of deliberately
+  empty surface at the bottom**, reserved for the long-press description — enough for that
+  and not much else. Adding anything to the column spends it, and none of that art can be
+  scaled to make room.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.
@@ -431,15 +420,15 @@ is `//go:embed`ed and loaded at runtime, and the sheet is a picture *of* generat
 an input to it. Filing it as an asset would imply the game reads it, which is the opposite
 of the property that makes generating glyphs worth doing.
 
-**The sheet measures each glyph rather than assuming 64**, since they are no longer all
-one size, and centres a small one on its own width so a row reads as different sizes rather
-than as misalignment.
+**The sheet measures each glyph rather than assuming 64**, since they are not all one size,
+and centres a small one on its own width so a row reads as different sizes rather than as
+misalignment.
 
 **The sheet draws each glyph twice: at `systems.CardGlyphScale` and enlarged.** The
-actual-size row is the one that answers "can I read this". The scale constant lives in
-`systems` precisely so the sheet reads the same number the card does and the preview cannot
-drift from the game — an earlier version showed only the enlarged row, and the glyphs duly
-looked acceptable in review and clunky in play.
+actual-size row is the one that answers "can I read this" — reviewing only the enlarged row
+is how a glyph comes to look acceptable in review and clunky in play. The scale constant
+lives in `systems` precisely so the sheet reads the same number the card does and the preview
+cannot drift from the game.
 
 ### Audio is generated too, and for the same reason
 
@@ -471,10 +460,10 @@ is no build step.**
 - **Failing to open the audio device is logged, never fatal.** A machine with no sound
   card still plays the game — and `music.Available()` reports it, so the mute button
   disables itself rather than silently doing nothing.
-- **Mute is a button, never a hotkey** — the input vocabulary has no keyboard. It landed
-  2026-08-12 as the game's chrome; see the section below. `SetMuted` takes the volume to
-  zero rather than pausing, so the score keeps running underneath and unmuting lands where
-  it would have got to rather than resuming a phrase already heard.
+- **Mute is a button, never a hotkey** — the input vocabulary has no keyboard. It lives in
+  the game's chrome; see the section below. `SetMuted` takes the volume to zero rather than
+  pausing, so the score keeps running underneath and unmuting lands where it would have got
+  to rather than resuming a phrase already heard.
 
 ### The frame: one control that belongs to no screen
 
@@ -496,7 +485,7 @@ square in the bottom-left corner of every screen, carrying a generated speaker g
 - **Square and iconic because the corner is 52 pixels wide** on the combat screen — the hand
   band starts at x=52 and the action-point figure sits on its left edge, so a labelled
   button does not fit beside them.
-- **`GlyphSound` and `GlyphMuted` are the first glyphs that are not about a card**, at a
+- **`GlyphSound` and `GlyphMuted` are the only glyphs that are not about a card**, at a
   third size, 32px. They are generated for the same reason everything else is — no
   provenance question — and the muted one's bar is an `accent` rather than part of the
   silhouette, because a bar merged into a solid shape is only visible where it leaves it.
@@ -504,19 +493,17 @@ square in the bottom-left corner of every screen, carrying a generated speaker g
 
 ### Cards: the border carries the element, not the surface
 
-**Reversed on 2026-08-09.** A card used to be an element-coloured surface with an
-incidental border. It is now a **constant off-white surface** (`cards.Surface`) with a
-**thick coloured border** carrying the element, and the whole card is drawn by
-`internal/cards`. Three things fell out of that reversal and are easy to re-break:
+A card is a **constant off-white surface** (`cards.Surface`) with a **thick coloured border**
+carrying the element, and the whole card is drawn by `internal/cards`. Three things follow
+and are easy to re-break:
 
-- **A near-white border on an off-white card is invisible.** The elementless card was
-  `{235,235,235}` as a *surface* and read fine; as a border it vanishes. `basic` is
-  therefore a mid grey in `cards.BorderOf`, and a test fails if it is "restored".
-- **`ColorAtStrength` is the wrong tool on a light card, and this has already caused one
-  bug.** It scales toward *black*, which reads as quieter only against a dark ground. On
+- **A near-white border on an off-white card is invisible.** `basic` is therefore a mid grey
+  in `cards.BorderOf`, and a test fails if it is set to a near-white.
+- **`ColorAtStrength` is the wrong tool on a light card.** It scales toward *black*, which
+  reads as quieter only against a dark ground. On
   an off-white card a border scaled down comes out darker than the surface and therefore
-  *louder* than the live card beside it — exactly what put the Resolution pane's idle rows
-  in front of its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a colour
+  *louder* than the live card beside it, which is how a pane's idle rows end up in front of
+  its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a colour
   toward whatever it actually sits on. Card state is expressed as distance to the surface.
 - **Cost is dash marks and the category is a glyph**, not text and not a numeral. Costs run
   1..4; a fifth tier grows the dash stack into the damage badge and is a layout change, not
@@ -531,17 +518,14 @@ in the game builds one yet — `tools/cardsheet` is the only place they exist.
 **This applies to widget *state*, not to widget *surfaces*.** A button naming crimson and
 brightening toward it on press is the rule working. A button that can never have a lit top
 edge and a shadowed bottom one is the rule overreaching, and it does currently overreach:
-glyphs had to be written down as an exception when the only real problem was that a bevel
-needs more than one value.
+glyphs are written down as an exception when the only real problem is that a bevel needs more
+than one value.
 
-The intended direction, stated 2026-08-03: **buttons, cards and the resolution panes all
-want bevelling eventually**, from palettes like the ones in
-[glyphs.go](internal/systems/glyphs.go). When that lands, the rule below should be rewritten
-as what it actually is — how a surface responds to hover, press and disable — with the
-surface's own light and shade coming from a palette. Until then it still governs everything
-that has not been given one.
-
-
+The intended direction: **buttons, cards and the resolution panes all want bevelling**, from
+palettes like the ones in [glyphs.go](internal/systems/glyphs.go). When that lands, the rule
+below should be rewritten as what it actually is — how a surface responds to hover, press and
+disable — with the surface's own light and shade coming from a palette. Until then it governs
+everything that has not been given one.
 
 **And it applies against a dark ground.** `ColorAtStrength` scales toward black, so on a
 light surface it makes things louder rather than quieter — see the card section above.
@@ -562,13 +546,12 @@ reference case: the button rests at 65%, hovers at 82% and reaches the named col
 
 ### Two debug flags, and they are not interchangeable
 
-`ActiveDebug` split into `DebugPlacement` and `DebugGameplay` on 2026-08-02, because they
-answer different questions and are wanted at different times.
+`DebugPlacement` and `DebugGameplay` answer different questions and are wanted at different
+times. Keep them separate.
 
 - **`DebugPlacement`** — the grid, the rulers, the `Debug1`/`Debug2` scratch strings. About
-  *where things are drawn*. Safe to leave on while playing. It defaulted on while the combat
-  screen was being laid out; it no longer does, so a change that needs the guides has to turn
-  it on deliberately.
+  *where things are drawn*. Safe to leave on while playing, but off by default, so a change
+  that needs the guides has to turn it on deliberately.
 - **`DebugGameplay`** — perfect information, starting with the opponent's queued actions.
   About *what the player is allowed to know*. **Off by default**: with it on you are not
   playing the game, you are inspecting it, and it is easy to tune balance against a view no
@@ -670,7 +653,7 @@ Key conventions:
 ### Package layout and its layering
 
 - `assets/` — `//go:embed`s every image and font into the binary and exposes `LoadAssets()` / `LoadFonts()`, returning `map[string]*ebiten.Image` and `map[string]*text.GoTextFaceSource`. **A new asset needs three edits: the file, an `//go:embed` var, and a map entry in the loader.** The map key is the lookup name used everywhere else (e.g. `gs.Assets["giantrat_png"]`, `gs.Fonts["kubasta"]`), and it is **independent of where the file sits** — see the Art section. There are two extra loaders for callers that cannot take an Ebitengine type: `LoadFontData()` and `LoadImageData()` hand back raw bytes, because `internal/cards` and `tools/cardsheet` render without a graphics context. `gs.FontData` carries the fonts for exactly that reason.
-- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. **Five files since 2026-08-11**, where there were two:
+- `data/` — JSON next to a small Go loader, which is the pattern for all static game data. Five files:
 
   | File | Loader | Holds |
   |---|---|---|
@@ -680,23 +663,22 @@ Key conventions:
   | `enemy_cards.json` | `LoadEnemyCards` | what an opponent draws from |
   | `rings.json` | `LoadRings` | the rings that exist: name, art key, element, one line of text |
 
-  **`rings.json` runs ahead of its rules on purpose** *(2026-08-11)*. Nothing reads `Element`
-  and nothing equips a ring — the combat screen's ring pane draws the list and that is all. It
-  is a file first so the set can be seen and extended while the mechanic is still being
-  decided, the same order the enemy roster arrived in. **Do not grow a rules vocabulary in it
-  ahead of the rules** — a JSON field naming a rule that does not exist is a field nothing can
-  check. **The `element` prerequisite is met as of 2026-08-12**: `combat.Element` exists and
-  `Card.Cost()` is the seat a discount sits in, so the discount and the flip are writable now
-  and what they still wait on is `Session` to equip a ring at all. `data.RingOrder` is the
-  sorted walk, per the determinism rules.
+  **`rings.json` runs ahead of its rules on purpose.** Nothing equips a ring — the combat
+  screen's ring row draws the list and that is all. It is a file first so the set can be seen
+  and extended while the mechanic is still being decided. **Do not grow a rules vocabulary in
+  it ahead of the rules** — a JSON field naming a rule that does not exist is a field nothing
+  can check. Its `element` prerequisite is met: `combat.Element` exists and `Card.Cost()` is
+  the seat a discount sits in, so the discount and the flip are writable and what they wait on
+  is `Session` to equip a ring at all. `data.RingOrder` is the sorted walk, per the
+  determinism rules.
 
-  **The player and the enemies split because their fields stopped overlapping** — an enemy has a plan style, a portrait and an affix pool; a duelist has a card back and, eventually, a deck. One struct meant every field was optional and none of them meant anything.
+  **The duelists and the enemies are separate files because their fields do not overlap** — an enemy has a plan style, a portrait and an affix pool; a duelist has a card back and, eventually, a deck. One struct would make every field optional and none of them mean anything.
 
   `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.** `ValidFloors` is `[lowest, highest]` against the planned 8-floor tower, so a Dragon is not on floor one; nothing generates floors yet, so today it only sorts the fight order. `data.EnemyOrder` is the sorted walk — never range the map, per the determinism rules.
 
-  - **The two card lists are one shape, tuned separately.** Concepts, the elements each ships in, and how many copies. `startingDeck` is built from the duelist list, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. Enemy cards are all `basic` — not because the colour is thrown away (it is read and carried since 2026-08-12) but because MECHANICS.md has affixes *transforming* a basic deck into an element, so a colour typed into that file would pre-empt a mechanic that does not exist.
+  - **The two card lists are one shape, tuned separately.** Concepts, the elements each ships in, and how many copies. `startingDeck` is built from the duelist list, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. Enemy cards are all `basic` — not because the colour is thrown away (it is read and carried) but because MECHANICS.md has affixes *transforming* a basic deck into an element, so a colour typed into that file would pre-empt a mechanic that does not exist.
   - **Cost, category and damage are deliberately *not* in either**; they are rules and live in `internal/combat`, which cannot import `data`. **So a separate enemy file cannot yet give an enemy Strike a different cost** — that is a rules change, not a data one. The JSON's `CostTier` is documentation *with a check*: `data.CheckCostTiers` asserts every declared tier and category against `ActionKind.Cost()`/`.Category()` and both deck builders **panic at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
-- `internal/decks/` — **the opponent's deck, and the only package between `data` and `internal/combat`** (added 2026-08-11). It exists so the combat screen and `tools/balance` share one enemy deck: the balance tool plays whole duels headlessly and cannot import `internal/screens`, which links Ebitengine. **No Ebitengine here, ever**, for that reason. `EnemyPile` is the three piles plus a shuffle; **the enemy's hand does not persist between rounds**, unlike the player's, because a style only takes attacks plus a Guard or Gather and everything else would accumulate until the hand locked up — which it did. The player's hand may persist because Discard exists, and that is the lever an enemy has not got.
+- `internal/decks/` — **the opponent's deck, and the only package between `data` and `internal/combat`**. It exists so the combat screen and `tools/balance` share one enemy deck: the balance tool plays whole duels headlessly and cannot import `internal/screens`, which links Ebitengine. **No Ebitengine here, ever**, for that reason. `EnemyPile` is the three piles plus a shuffle; **the enemy's hand does not persist between rounds**, unlike the player's, because a style only takes attacks plus a Guard or Gather and everything else would accumulate until the hand locked up — which it did. The player's hand may persist because Discard exists, and that is the lever an enemy has not got.
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
@@ -715,13 +697,13 @@ Key conventions:
   this, so the sheet cannot drift from what is drawn. `internal/screens/card_art.go` is the
   bridge and holds the cache — rendering writes every pixel in Go and is far too slow to do
   per frame.
-- `internal/music/` — the score, **synthesised at startup from a MIDI file** (added 2026-08-09). See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
+- `internal/music/` — the score, **synthesised at startup from a MIDI file**. See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
-- `internal/combat/` — the duel rules, **the elements and their statuses, the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **`combat.Card` is a concept plus an element and is the unit the whole package deals in** since 2026-08-12 — `[]Card` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor` and `CostOf`, which is what let the screen's own `element` type and card struct be deleted rather than mapped. `status.go` holds the four statuses; they share one lifecycle on purpose and `Duelist.Statuses` is an array indexed by element, which makes **`Element` append-only** the same way `ActionKind` and `GlyphKind` are. **A planner takes the hand it was dealt** since 2026-08-11 — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` now has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the elements and their statuses, the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **`combat.Card` is a concept plus an element and is the unit the whole package deals in** — `[]Card` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor` and `CostOf`, which is what let the screen's own `element` type and card struct be deleted rather than mapped. `status.go` holds the four statuses; they share one lifecycle on purpose and `Duelist.Statuses` is an array indexed by element, which makes **`Element` append-only** the same way `ActionKind` and `GlyphKind` are. **A planner takes the hand it was dealt** — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Combos are a framework, not a pile of cases** — `combo.go` is one pattern (a run of cards) and one closed reward vocabulary (damage multiplier, banked AP, opponent alteration). Adding a combo is one table entry; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
-- **The combat screen is eight files, split 2026-08-07 when `combat.go` reached 87 KB.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit no longer starts by finding your place in 2,000 lines. Grouped by what a change is usually about:
+- **The combat screen is eight files.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit does not start by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
-  - `combat_deck.go` — the cards and the piles: `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay. **`actionCard` is an alias for `combat.Card` since 2026-08-12** and the screen's own `element` type is gone — elements are rules now, so the hand, the queue and the round are one type and a card is never converted between them.
+  - `combat_deck.go` — the cards and the piles: `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay. **`actionCard` is an alias for `combat.Card`** — elements are rules, so the hand, the queue and the round are one type and a card is never converted between them.
     **The overlay shows every card you own**, in five rows of one element each, at
     `cards.Mini` overlapped so all but six pixels of each shows. Two rules govern it and
     both have been broken once: *a card does not move when it is played, it only dims* — so
@@ -731,35 +713,34 @@ Key conventions:
     `categoryRank` is written out rather than read off the enum, because the enum's order is
     *resolution* order and that is a rule.
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
-  - `combat_hud.go` — everything around the round: the two fighter cards, `drawBox`, and the discards badge. **The player is a card since 2026-08-12**, in the top-left corner, holding name / DMG / AP / Vitae over a health bar and a fraction — the character block it replaced was a framed column of captions and was the last thing on the screen drawn as furniture. **The enemy card moved to the top-right corner** the same day, from a floating 88%,34%. `duelistCardRect` and `enemyCardRect` are the one place each geometry is written, and the ring row takes both of its edges from them.
-  - `combat_rings.go` — **the ring row** *(added 2026-08-11)*: full-size `cards.RingStyle` cards from `data/rings.json`, a rule under them running the row's width, and the cap written as `worn/5` on that rule's right end. **A layout sketch, not a mechanic** — nothing buys, equips or reads a ring. It claims the 12–46% band the full-height panes vacated, which is what pays for full-size ring cards. **Its width is what the two fighter cards leave** *(2026-08-12)* — `ringPaneRect` reads `duelistCardRect` and `enemyCardRect` rather than a percentage, which is what stopped the right edge going stale the moment the enemy moved. Two things it does deliberately: **a fill, never a frame** — it was framed and titled for an hour on 2026-08-11 and read as cards trapped in a panel, so that came out; a plain grey backing one step lighter than the screen went back in on 2026-08-12, because with a fighter card at either end of the row nothing said where the middle began. No border, no title, no hue, and **the row drops 10px below the two cards** so the three do not share a top line and read as one wide object. The backing must never reach either card — `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards`. And **the pitch is a function of how many rings are worn**, first card flush left and last flush right, so three stand apart and five close up and overlap by ~26px. Overlap rather than shrink, because a card cannot be scaled and there is no ring style below this one.
-  - `combat_actionbox.go` — the hand and its drag-to-reorder, unchanged by the split.
-  - `combat_flight.go` — **every card that moves** *(added 2026-08-10)*. Three things, all
+  - `combat_hud.go` — everything around the round: the two fighter cards, `drawBox`, and the discards badge. **Both duelists are cards**, in opposite top corners, each holding name / DMG / AP / Vitae over a health bar and a fraction. `duelistCardRect` and `enemyCardRect` are the one place each geometry is written, and the ring row takes both of its edges from them.
+  - `combat_rings.go` — **the ring row**: full-size `cards.RingStyle` cards from `data/rings.json`, a rule under them running the row's width, and the cap written as `worn/5` on that rule's right end. **A layout sketch, not a mechanic** — nothing buys, equips or reads a ring. It holds the 12–46% band, which is what pays for full-size ring cards. **Its width is what the two fighter cards leave** — `ringPaneRect` reads `duelistCardRect` and `enemyCardRect` rather than a percentage, so the right edge cannot go stale when a card moves. Two things it does deliberately: **a fill, never a frame** — a plain grey backing one step lighter than the screen, no border, no title, no hue, because a framed row reads as cards trapped in a panel while a bare row leaves nothing saying where the middle begins; and **the row drops 10px below the two cards** so the three do not share a top line and read as one wide object. The backing must never reach either card — `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards`. And **the pitch is a function of how many rings are worn**, first card flush left and last flush right, so three stand apart and five close up and overlap by ~26px. Overlap rather than shrink, because a card cannot be scaled and there is no ring style below this one.
+  - `combat_actionbox.go` — the hand and its drag-to-reorder.
+  - `combat_flight.go` — **every card that moves**. Three things, all
     presentation-only, all on their own clock, and none of which may change an outcome:
-    - The **deck stack** that replaced the Deck button, and its yellow modal ring.
+    - The **deck stack**, and its yellow modal ring.
     - **`cardFlight`** — the discard flying off left and the deal flying back in, turning
       face up on the way. **A flight is raised only after `spendSelected` has already moved
       the card**, so it is a ghost of something that has happened rather than a thing in
       progress; that is what keeps `planning()`, the budget and the row's layout ignorant
       of it.
     - **`resolvedCard`** — one of the player's cards flying out of the hand to its seat on
-      the table. **The whole queue is dealt there when the round starts** *(2026-08-12)*, not
+      the table. **The whole queue is dealt there when the round starts**, not
       a card at a time as each fires; playback drives which card is *lit*, not which cards
       exist. Because `ResolutionOrder` decides the row, it is laid out in phase order
       **without this file knowing what a phase is**. A combo brackets its own cards in
       `attentionYellow`, from the span the engine puts on the event — never worked out here.
-  - `combat_table.go` — **the two hands facing each other** *(added 2026-08-12)*: the
+  - `combat_table.go` — **the two hands facing each other**: the
     player's played cards left-aligned, the opponent's queued cards right-aligned, both full
-    size in the band between the ring row and the Resolution feed. It is the first thing on
-    this screen that shows a round as a confrontation rather than as a list, and it replaced a
-    pile of played cards in the bottom-left corner that had nothing opposite it. Both rows come
+    size in the band between the ring row and the Resolution feed. It is what shows a round as
+    a confrontation rather than as a list. Both rows come
     from `combat.ResolutionOrder`, so both say what *will* happen rather than what was planned.
-    **The opponent's cards are drawn face up and that is temporary** — `concealEnemy` is still
+    **The opponent's cards are drawn face up and that is temporary** — `concealEnemy` is
     the screen's concealment predicate and this row deliberately ignores it, on the owner's
     call, with `cards.Spec.FaceDown` already built as the lever for putting it back.
   - `seeds.go` — the named opening-hand catalogue.
 
-  **The split was a pure move**: every line went across unaltered and the `demoplay` text report was byte-identical before and after. Keep it that way — a file boundary is not a reason to change what a function does.
+  **A file boundary is not a reason to change what a function does.** Moving something between these files is a move, not a rewrite.
 - `internal/actions/` — callbacks that act on the game as a whole: change screen, quit. They take `gs` and mutate it; they never draw. **Callbacks touching only one screen's state do not go here** — those are methods on the scene that owns the state.
 
 Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`actions`/`decks` → `models`/`state`/`combat`/`data`/`assets`. Nothing lower reaches back up. `decks` sits above `combat` and `data` and below `screens`, which is the whole reason it is a package: it is the one place allowed to turn a JSON card list into rules types, and `tools/balance` imports it without importing a screen. `state` sits near the bottom and must stay there — if it starts importing `entities` or `models` again, screen state has leaked back into it.
@@ -784,13 +765,12 @@ Dependency direction: `main` → `game` → `screens` → `systems`/`entities`/`
 `ring/`, `effect/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
 
-**The map keys did not move with the files.** They are the lookup names used across the
-game, and `data/*.json` writes them down — tying a key to a path would mean a data
-migration every time a file was refiled. A named asset is still three edits: the file, an
-`//go:embed` var, and a map entry.
+**A map key is not tied to a file path.** Keys are the lookup names used across the game and
+`data/*.json` writes them down; tying one to a path would mean a data migration every time a
+file was refiled. A named asset is three edits: the file, an `//go:embed` var, and a map entry.
 
 **The enemy portraits are the exception, and they are a *family* rather than named
-assets** *(2026-08-11)*. There are 96 of them, so `//go:embed enemy/*-portrait.png` pulls
+assets.** There are 96 of them, so `//go:embed enemy/*-portrait.png` pulls
 the directory in as an `embed.FS` and `LoadImageData` walks it, keying each by filename
 stem — `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what
 `data/enemies.json` writes in its `Portrait` field. **The consequence is exactly what the
@@ -803,15 +783,12 @@ They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a 
 `internal/cards`, which has no graphics context, and decoding 96 at startup would cost
 ~20 MB of resident memory for pictures most runs never show.
 
-**Enemy sprites are gone** *(2026-08-11)*. `assets/enemy/*.png` was one west-facing idle
-frame per creature; the enemy is drawn as a card now, so nothing used them, and cutting 96
-more frames to keep the pattern would have been the expensive half of that change. Git has
-the four that existed. The full animation sheets stay in `.scratch/flat-creatures`
-(gitignored) — that folder's README documents the grid, the frame table and the facing
-order — so animating enemies later means going back for them rather than starting over.
+**Nothing in the game draws a loose sprite.** There are no creature sprites in `assets/`;
+`Combatant` has no `Sprite` field and `entities` imports no Ebitengine at all. **Both duelists
+are cards**, in opposite corners, and both state their life the same way — a bar over a
+fraction, at identical offsets on the two styles so the pair can be compared across the
+screen without measuring.
 
-**Nothing in the game draws a loose sprite any more.** `Combatant` has no `Sprite` field,
-`entities` imports no Ebitengine at all, and `drawCombatant`/`DrawHealthBar` went with the
-sprites. **Both duelists are cards since 2026-08-12**, in opposite corners, and both state
-their life the same way — a bar over a fraction, at identical offsets on the two styles so
-the pair can be compared across the screen without measuring.
+**The full animation sheets stay in `.scratch/flat-creatures`** (gitignored) — that folder's
+README documents the grid, the frame table and the facing order — so animating enemies later
+means going back for them rather than starting over.

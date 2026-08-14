@@ -4,14 +4,9 @@
 promoted into [MECHANICS.md](MECHANICS.md) if it is a rule, or [TODO.md](TODO.md) if it is a
 task, and struck from here.
 
-Bosses, attributes, floors and rings lived here until 2026-08-05 and have all been promoted —
-bosses and floors into the tower section, attributes into its own section with the armour and
-scaling conflicts recorded, rings into the ring section. The originals are in git history if
-the wording is ever wanted.
-
 - we could do something for holidays
 - **Show the enemy's queued actions during selection, and play the round as cards flying up
-  rather than as sentences.** Raised 2026-08-08. Two separate things that arrived together:
+  rather than as sentences.** Two separate things:
   - **Reveal.** The opponent's queued actions are concealed in the Action Flow pane unless
     `DebugGameplay` is on — `CombatScene.concealEnemy` is the one predicate. Turning that off
     for real makes the duel perfect information, so the choice stops being "guess what they

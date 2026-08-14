@@ -717,18 +717,15 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	}
 }
 
-// **The caption box is gone** *(2026-08-11)*, and the slot above the hand is the Resolution
-// feed instead. It held the plan line, its action-point cost and the tail that said what to
-// press; `caption()` and `drawCaptionBox` went with it.
+// **There is no caption box**, and the slot above the hand is the Resolution feed instead.
 //
-// What that gives up, stated rather than discovered later: the sentence explaining a dark
-// DUEL! button. "2 over - discard or deselect" was the only place on screen that said *why*
-// the button had gone dead — the AP bar turning red says that something is wrong, not what to
-// do about it. The end-of-fight prompt naming the next enemy went the same way; DUEL!
-// relabelling itself Next or Retry is what is left of it.
+// What that costs, stated rather than discovered later: nothing on screen says *why* a dark
+// DUEL! button is dark. The AP bar turning red says that something is wrong, not what to do
+// about it, and there is no prompt naming the next enemy — DUEL! relabelling itself Next or
+// Retry is what carries that.
 //
 // Both were the owner's call, made knowing the cost. If either is wanted back it is a line
-// somewhere else, not a box — see TODO.md.
+// somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255})

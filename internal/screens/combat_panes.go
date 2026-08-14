@@ -11,6 +11,7 @@ package screens
 import (
 	"fmt"
 	"image"
+	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -386,6 +387,14 @@ func (s *CombatScene) updateFeed(gs *state.GlobalState) {
 // Combos and staggers get lines of their own. They are not something a card did, they are
 // something that happened *to* the round, and folding a combo into the line of the card that
 // happened to start it would bury the one thing this pane was added to show.
+//
+// **The attack phase is one line, and it is the combo's** *(2026-08-14)*. Prepares and defends
+// still write a line each; the attack cards write none. A turn lands one blow, so five sentences
+// saying "Duelist attacks with an earth strike" described a round that does not happen — and the
+// line that matters, what the five cards came to, was the sixth. The combo line says who, what
+// they formed and the arithmetic, and the damage attaches to it. **A blow that formed no hand
+// still gets its sentence**, from the card it led with, because a lone Strike is not a combo and
+// announcing one over every attack would make the word mean nothing.
 // It reports how many lines it dropped off the top as well as the rows themselves, so the
 // caller can say so — with a marker line when there is room for one, and with the arrow in
 // the corner when there is not.
@@ -401,8 +410,13 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 	var rows []paneRow
 
 	// cur is the line the next outcome attaches to, or -1 when the last thing appended was
-	// an announcement rather than an action.
+	// an announcement rather than an action. curSide is whose line it is.
+	//
+	// **The side is tracked rather than read back off the row's swatch**, because the combo line
+	// wears amber and takes outcomes: a damage event compared against that swatch would read
+	// every hit as a Riposte's counter.
 	cur := -1
+	curSide := combat.SideA
 	outcomes := 0
 
 	// Outcomes are appended to the tail of the sentence, after the verb, so the coloured verb
@@ -429,13 +443,28 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			verbInk: verbInkFor(c.Action.Category()),
 			swatch:  swatchFor(side),
 		})
-		cur = len(rows) - 1
+		cur, curSide = len(rows)-1, side
 		outcomes = 0
 	}
 
 	announce := func(label string, swatch color.RGBA) {
 		rows = append(rows, paneRow{prefix: label, swatch: swatch})
 		cur = -1
+	}
+
+	// blow opens the attack phase's one line: what the hand formed and what it adds up to.
+	//
+	// **It is an announcement that takes outcomes**, which no other line here is. The blow's
+	// damage, a shocked miss and any status it lands all belong to it, because the cards that
+	// would otherwise have carried them no longer write lines of their own.
+	blow := func(e combat.Event) {
+		rows = append(rows, paneRow{
+			prefix: fmt.Sprintf("COMBO!  %s lands a %s", s.sideName(e.Side), comboName(e)),
+			suffix: "  " + comboMath(e),
+			swatch: comboSwatch,
+		})
+		cur, curSide = len(rows)-1, e.Side
+		outcomes = 1 // the sum is already on the line, so the first outcome reads as a list
 	}
 
 	for _, e := range s.log[:end] {
@@ -445,6 +474,12 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// something the caption and the character block both already carry.
 
 		case combat.KindAction:
+			// **An attack card writes no line.** Its beat still passes — the engine announces
+			// every card so the table can light it and playback can count slots — but the
+			// sentence for the whole phase is the KindCombo below.
+			if e.Action.Category() == combat.CategoryAttack {
+				break
+			}
 			act(e.Side, combat.Card{Action: e.Action, Element: e.Element})
 
 		case combat.KindStaggered:
@@ -469,13 +504,16 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 				swatchFor(e.Target))
 
 		case combat.KindCombo:
-			// **A lone attack that formed no hand is not a combo and gets no line.** The card
-			// that swung already has one, and announcing "COMBO! Duelist lands an attack" over
-			// every single Strike would make the word mean nothing.
+			// **This is the attack phase's line, whether or not a hand formed.** A blow that
+			// formed nothing is not a combo and must not be announced as one — announcing
+			// "COMBO!" over every single Strike would make the word mean nothing — so it writes
+			// the ordinary sentence for the card it led with, which the engine names on the
+			// event for exactly this.
 			if e.Hand == combat.HandNone {
+				act(e.Side, combat.Card{Action: e.Action, Element: e.Element})
 				break
 			}
-			announce(fmt.Sprintf("COMBO!  %s lands a %s", s.sideName(e.Side), comboName(e)), comboSwatch)
+			blow(e)
 
 		case combat.KindGathered:
 			attach(fmt.Sprintf("+%d AP", e.Amount))
@@ -499,7 +537,7 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// as something done back rather than as a hit of its own. It is the only damage in
 			// the game that runs the other way, so the side mismatch is the whole test.
 			switch {
-			case cur >= 0 && rows[cur].swatch != swatchFor(e.Side):
+			case cur >= 0 && curSide != e.Side:
 				attach(fmt.Sprintf("hits back for %d", e.Amount))
 			default:
 				attach(fmt.Sprintf("%d damage", e.Amount))
@@ -995,4 +1033,29 @@ func comboName(e combat.Event) string {
 		return mix.Name + " " + hand.Name
 	}
 	return hand.Name
+}
+
+// comboMath is the blow written out as the sum it is: `20 + 10 x 3.5 = 55`.
+//
+// **Every figure in it comes off the event.** Base, Swing, Multiplier and the total are all
+// worked out by the resolver, so the line cannot claim a sum the round did not use — which is
+// the whole reason those fields are on the event rather than being recomputed here.
+//
+// **The cards' damage is one term, not one term each.** MECHANICS.md writes the formula out
+// per card — `10 + 10 + 10x1.5` — and that is the right form for a design document; the feed is
+// three rows of a sentence, and an Onslaught spelled out card by card is half a line spent on
+// five identical numbers.
+//
+// It is the swing before the attacker's weight and before anything the defender raised, so the
+// damage that follows on the same line is often smaller. That gap is what a defence is worth,
+// and it is only legible because both figures are shown.
+func comboMath(e combat.Event) string {
+	return fmt.Sprintf("(%d + %d x %s = %d)", e.Base, e.Swing, multiplierText(e.Multiplier), e.Amount)
+}
+
+// multiplierText writes a percentage multiplier the way the design does: 350 as `3.5`, 200 as
+// `2`, 1000 as `10`. Trailing zeros are dropped rather than padded to two places, because
+// `x 10.00` reads as a precision the game does not have.
+func multiplierText(pct int) string {
+	return strconv.FormatFloat(float64(pct)/100, 'f', -1, 64)
 }

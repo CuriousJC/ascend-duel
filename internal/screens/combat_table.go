@@ -160,6 +160,10 @@ type dealtCard struct {
 	travel
 
 	card combat.Card
+
+	// combo marks a card the opponent's own combo bracketed, exactly as resolvedCard carries it
+	// for the player's row. Set from the span the engine put on the event; never worked out here.
+	combo bool
 }
 
 // seatEnemyCards lays the opponent's whole queue out and sets it flying in.
@@ -223,8 +227,14 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 // and none of that exists yet. So they draw with the neutral mid-grey border, which is the truth
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
+	var bracketed []image.Point
 	for i, d := range s.enemyDealt {
-		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), i == s.enemyFiringSeat)
+		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), lit(s.enemyFiringSeats, i))
 		drawCard(gs, screen, at, cards.Hand, d.card, true, false)
+		if d.combo {
+			bracketed = append(bracketed, at)
+		}
 	}
+
+	drawComboBracket(screen, bracketed)
 }

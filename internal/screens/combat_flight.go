@@ -581,9 +581,15 @@ func (s *CombatScene) seatPlayedCards() {
 // disagree about which card is which. Both sides take their positions from the one ordering,
 // which is why one function covers both rather than two that would have to be kept in step.
 //
-// **Only one card is lit at a time, and it is whichever fired last.** A turn is contiguous per
-// side, so the lit card walks the left row and then the right one; nothing has to clear the
-// other side's seat because the event that lights one is the event that unlights the other.
+// **One side is lit at a time, and it is whichever fired last.** A turn is contiguous per side,
+// so the lit cards walk the left row and then the right one; nothing has to clear the other
+// side's seats because the event that lights one side is the event that unlights the other.
+//
+// **Attack cards accumulate; everything else replaces** *(2026-08-14)*. A turn lands one blow, so
+// its attack cards are announced one after another and stay raised as they go — by the time the
+// combo lands, the whole hand is up, which is the thing the feed's single line is talking about.
+// noteCombo then drops whichever of them earned nothing. A prepare or a defend is its own beat
+// and takes the row on its own.
 func (s *CombatScene) noteResolved(e combat.Event) {
 	if e.Kind != combat.KindAction {
 		return
@@ -603,11 +609,27 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		}
 	}
 
-	if side == combat.SideA {
-		s.firingSeat, s.enemyFiringSeat = seat, -1
-		return
+	mine, theirs := &s.firingSeats, &s.enemyFiringSeats
+	if side == combat.SideB {
+		mine, theirs = &s.enemyFiringSeats, &s.firingSeats
 	}
-	s.firingSeat, s.enemyFiringSeat = -1, seat
+
+	if e.Action.Category() != combat.CategoryAttack {
+		*mine = []int{seat}
+	} else {
+		*mine = append(*mine, seat)
+	}
+	*theirs = nil
+}
+
+// lit reports whether a seat is one of the ones currently raised.
+func lit(seats []int, seat int) bool {
+	for _, s := range seats {
+		if s == seat {
+			return true
+		}
+	}
+	return false
 }
 
 // noteCombo brackets the cards a combo was formed from.
@@ -619,11 +641,29 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 // **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
 // earned nothing, and two more, so this marks the seats it is given rather than a span between
 // the first and the last.
+// **It also narrows what is raised to the cards it names.** Every attack card of the turn is
+// lifted by the time this arrives; the ones that built no hand drop back into the row here, so
+// what stays up is the hand the line beneath it is about.
 func (s *CombatScene) noteCombo(e combat.Event) {
-	if e.Kind != combat.KindCombo || e.Side != combat.SideA {
+	if e.Kind != combat.KindCombo {
 		return
 	}
-	for _, i := range e.ComboCards[:e.ComboCardCount] {
+
+	seats := make([]int, 0, e.ComboCardCount)
+	seats = append(seats, e.ComboCards[:e.ComboCardCount]...)
+
+	if e.Side == combat.SideB {
+		s.enemyFiringSeats = seats
+		for _, i := range seats {
+			if i >= 0 && i < len(s.enemyDealt) {
+				s.enemyDealt[i].combo = true
+			}
+		}
+		return
+	}
+
+	s.firingSeats = seats
+	for _, i := range seats {
 		if i >= 0 && i < len(s.resolved) {
 			s.resolved[i].combo = true
 		}
@@ -713,28 +753,31 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total int, firing bool) im
 // reads in the order the round happens — and so a card still arriving is drawn over the ones
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
+	var bracketed []image.Point
 	for i, r := range s.resolved {
-		at := r.at(gs, i, len(s.resolved), i == s.firingSeat)
+		at := r.at(gs, i, len(s.resolved), lit(s.firingSeats, i))
 		drawCard(gs, screen, at, cards.Hand, r.card, true, false)
+		if r.combo {
+			bracketed = append(bracketed, at)
+		}
 	}
 
-	s.drawComboBracket(gs, screen)
+	drawComboBracket(screen, bracketed)
 }
 
 // drawComboBracket rings the cards a combo was formed from.
 //
 // **A ring around the group, not a colour on the cards.** A card's border is its element and
 // nothing else may claim it, so a combo says its piece in the space around the cards — which
-// is also the only way to say "these three together", something the Resolution pane has
-// never been able to show and is recorded as a known gap.
-func (s *CombatScene) drawComboBracket(gs *state.GlobalState, screen *ebiten.Image) {
+// is also the only way to say "these three together".
+//
+// **It takes positions rather than a row**, so the opponent's hand is ringed by the same code
+// that rings the player's. The lift is shared for that reason too — see lift — and a combo drawn
+// only on one side would say "yours" where it means "this one".
+func drawComboBracket(screen *ebiten.Image, at []image.Point) {
 	var box image.Rectangle
-	for i, r := range s.resolved {
-		if !r.combo {
-			continue
-		}
-		at := r.at(gs, i, len(s.resolved), i == s.firingSeat)
-		card := image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
+	for _, p := range at {
+		card := image.Rect(p.X, p.Y, p.X+cardWidth, p.Y+cardHeight)
 		if box.Empty() {
 			box = card
 			continue

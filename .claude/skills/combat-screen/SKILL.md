@@ -51,9 +51,16 @@ next, so a defense raised at the end of your turn is up when their blow arrives.
 
 **The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
 `KindAction`, then one `KindCombo` names the hand and mix they formed, then a single `KindDamage`
-lands. Five Strikes are not five hits. **Attack cards that build no hand are announced and
-contribute nothing** — the screen shows them resolving and the engine ignores them, which is a
-gap the pane cannot currently express.
+lands. Five Strikes are not five hits.
+
+**The phase is also one line in the feed, and it is the combo's.** The `KindAction`s still play —
+each is a beat, and each raises its card on the table — but the pane draws no sentence for them.
+`KindCombo` carries `Base`, `Swing`, `Multiplier` and `Amount`, so the line reads *"COMBO! Duelist
+lands a Duo Strike Pair (20 + 10 x 3.5 = 55)"* and the damage attaches to it. **A blow that formed
+no hand writes an ordinary attack sentence instead**, from the card the engine names on the event —
+"COMBO!" over a lone Strike would empty the word. **Attack cards that build no hand contribute
+nothing**, and what says so is the table: every attack card is raised as it is announced, and the
+combo lowers the ones it did not name.
 
 Phases replaced alternation, which replaced volley-per-side. The reason is
 legibility: interleaving may simply not be graspable by players. See
@@ -99,12 +106,21 @@ in `MECHANICS.md`; these are what matter to the screen.
   — dropping the mix when it has no colours. **Exactly one of each fires per turn**, so there is
   no stacking to draw and no ranking to explain.
 - **`Event.Hand == combat.HandNone` means a lone attack that formed nothing**, which the pane
-  skips rather than narrating as a combo. It still carries a mix, because one card is one colour.
+  writes as an ordinary attack sentence rather than as a combo. It still carries a mix, because
+  one card is one colour, and it carries the card it led with in `Action`/`Element` so the pane
+  has something to name.
+- **The event carries the arithmetic, and the engine takes its damage from the same field.**
+  `Base` is what the hand's own cards deal, `Swing` is one Strike at this attacker's strength, and
+  `Amount` is what they come to under the multiplier — the blow *before* the attacker's weight and
+  before any defence. `resolveAttackPhase` blunts `Amount` rather than re-adding the sum, so the
+  figure printed and the figure landed cannot be two different numbers. The gap between that and
+  the `KindDamage` after it is exactly what the defence was worth.
 - **A fired combo brackets its own cards, and the list comes from the event**.
   `Event.ComboCards[:ComboCardCount]` names which cards of the turn formed it. **Never derive
   that from the hand's group sizes, and never assume the cards are adjacent.** A counted hand is
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
-  the event carries a list rather than a start and a length.
+  the event carries a list rather than a start and a length. Both rows bracket, through one
+  `drawComboBracket` taking positions, so the opponent's hand is ringed by the same code.
 - **`combat.AttackFor` is what to call to preview the hand while the player plans.** It is the
   same function the resolver uses, so a previewed combo is the combo that fires by construction
   rather than by two pieces of code agreeing. Nothing calls it yet.
@@ -117,11 +133,13 @@ in `MECHANICS.md`; these are what matter to the screen.
 damage, then the defends.** The screen does nothing to arrange this; it replays the log in order,
 and the engine decides.
 
-Two consequences for playback. **The combo line lands after its cards are announced but before
+Three consequences for playback. **The combo line lands after its cards are announced but before
 the damage**, so a boosted figure never arrives before the reason for it, and `noteCombo` has
-real rows to mark because the whole queue is seated at DUEL! rather than a card at a time. And
-**a hand pays its stagger even if the blow then misses** — the shock roll happens after the combo
-event, because the hand is scored off the queue and the queue was committed at DUEL!.
+real rows to mark because the whole queue is seated at DUEL! rather than a card at a time. **The
+cards raised by those announcements accumulate** — `firingSeats` is a list, not one seat — so the
+whole hand is standing when the combo names it, and `noteCombo` narrows the list to what earned
+it. And **a hand pays its stagger even if the blow then misses** — the shock roll happens after
+the combo event, because the hand is scored off the queue and the queue was committed at DUEL!.
 
 ### What survives any model
 
@@ -316,8 +334,11 @@ of sentences.
   selection order would be a confident picture of a round that never happens.
 - **The whole queue is dealt at round start, not a card at a time.** The opponent's hand is
   known in full at that moment, so a player's row assembling itself over the next few seconds
-  would be one hand against half of another. **Playback drives which card is lit, not which
-  cards exist** — `firingSeat`, set by `noteResolved`.
+  would be one hand against half of another. **Playback drives which cards are lit, not which
+  cards exist** — `firingSeats` and `enemyFiringSeats`, written by `noteResolved`.
+- **A prepare or a defend lights its own seat; attack cards accumulate.** A turn lands one blow,
+  so its attack cards go up one after another and stay up, and `noteCombo` then drops whichever of
+  them earned nothing. Only one *side* is ever lit: the event that lights one clears the other.
 - **`noteResolved` and `seatPlayedCards` count along the same walk.** The third card to resolve
   is not the third card in the hand, and two independent tallies would light the wrong one the
   first time somebody queued a defense before an attack.
@@ -505,6 +526,12 @@ the newest line on screen twice, which is the thing the pane was added to fix.
 heavy strike"** — and the verb is **coloured, bold and underlined**: **red for attack, blue for
 defend, the row's own ink for prepare**. A round can then be scanned for what *kind* of thing
 happened before any of it is read.
+
+**The combo line is the exception and has no verb.** It is an announcement — amber swatch,
+`COMBO!` in front — and it is the one announcement that takes outcomes, because the attack cards
+that would otherwise have carried them write no lines. Which side owns the current line is tracked
+in `curSide` rather than read back off the row's swatch, or the amber would make every hit look
+like a Riposte's counter.
 
 **The verb is marked, never chipped or barred.** A saturated rectangle in a pane that already
 carries a swatch and a sentence draws the eye to the block rather than to the word inside it —

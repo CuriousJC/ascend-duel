@@ -553,10 +553,14 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 	label := fmt.Sprintf("%d/%d AP", spent, budget)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(left), float64(barBottom+apFigureBelowBar))
+	// One ScaleWithColor, never two — the scale multiplies, so setting the ink and then the
+	// warning colour would give a near-black red rather than the red.
+	ink := groundInk
 	if spent > budget {
 		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
-		op.ColorScale.ScaleWithColor(apOverColor)
+		ink = apOverColor
 	}
+	op.ColorScale.ScaleWithColor(ink)
 	text.Draw(screen, label,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: apFigureSize}, op)
 }
@@ -617,7 +621,11 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 		cells = spent
 	}
 
-	empty := systems.ColorAtStrength(apBarColor, 20)
+	// **Toward the ground, not toward black.** ColorAtStrength would scale the blue down to
+	// {14,26,46}, which on a cream screen is the darkest thing in the bar and reads as the
+	// *filled* part — the empty cells stepping in front of the spent ones. See
+	// systems.ColorToward.
+	empty := systems.ColorToward(apBarColor, screenGround, 80)
 	cellWidth := (width - float32(cells-1)*apBarGap) / float32(cells)
 
 	// A cell narrower than a couple of pixels is a smear rather than a count, which a big

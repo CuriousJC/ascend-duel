@@ -234,35 +234,34 @@ toggles selection. The distance and time thresholds must not fight each other.
 | Tier | Elements |
 |---|---|
 | **primary** | ice, fire, lightning, earth |
-| **secondary** | poison, force, hunger |
 
-Only primaries get cards. Where the secondaries appear — rings, enemies, brands, higher-tier
-cards — is `[?]` and not assumed.
+**There are four elements and no more** *(decided 2026-08-14)*. Every one of them has cards, a
+colour and a status, so an element is a complete thing rather than a name waiting for rules.
+Anything wanting a fifth has to arrive with all three.
 
 `basic` is the absence of an element, not a fifth colour. It replaced `none`/`plain` in the
 code's naming.
-
-**Poison has no cards and never did**. Two places said otherwise (the
-colour table above, and a comment in `combat_deck.go` claiming poison was in the starting deck
-"because it predates the split"). `primaries` has only ever held basic, fire, ice, lightning and
-earth, so `conceptDeck` has never built a poison card. The constant and its green exist and are
-unused, which is fine; the claim that they were dealt was not.
 
 ### Colour
 
 | Element | Colour |
 |---|---|
-| basic | near-white |
+| basic | mid grey |
 | fire | orange |
 | ice | medium blue |
 | lightning | yellow |
-| earth | brown |
-| poison | green *(reserved; no poison card is dealt — see below)* |
+| earth | green |
 
-Two collisions are live and unresolved: **lightning yellow is also `enemySwatch`**, and
-**poison/earth green-brown sits near `playerSwatch`** — "green is you, yellow is them" is
-written down as a screen-wide rule and elements break it. Either the sides stop being
-colour-coded or the elements avoid those hues.
+`cards.BorderOf` is the live table; this one says what the colours are *for*. Basic is a mid
+grey rather than the near-white it used to be, because the surface went off-white and a
+near-white border on it is invisible.
+
+One collision is live: **the player's green swatch sits near earth's green**, which earth's
+move off brown on 2026-08-14 made sharper rather than created. "Green is you, grey is them" is
+a screen-wide rule and an element breaks it. What holds it together for now is that the two are
+never seen side by side — a swatch is a square in a pane row, a border is the edge of a card —
+so the fix is deferred rather than done. Either the sides stop being colour-coded or earth
+takes a green far enough from `playerSwatch` to read as a different idea.
 
 ### Statuses
 
@@ -347,9 +346,6 @@ What it gives up is the tension of a swing that might not land. Recorded rather 
   system and four ad-hoc fields. The price: **`Element` is append-only**, like `ActionKind` and
   `GlyphKind`. `Guarded` and the defend queue stay where they are — they are card effects, and
   filing them in a table indexed by colour would say they were not.
-
-**Poison has lost its obvious job.** Fire is the damage-over-time element now. Poison, force
-and hunger have no statuses.
 
 #### What the balance tool says, and it is not comfortable
 
@@ -961,15 +957,14 @@ not *loud*. `dwellFor` freezing the screen for a splash-length `KindCombo` remai
 
 Collected from above.
 
-- `[?]` Where secondary elements (poison, force, hunger) appear at all.
 - `[?]` Duration, stacking and refresh for every status.
 - `[?]` Whether ring cards may be shorter than action cards, given they have no glyphs.
 - `[?]` What distinguishes one stairwell from another.
 - `[?]` Whether the shop and door choice are one screen or two.
 - `[?]` Whether earth becomes a floor affix.
 - `[?]` How the Resolution pane draws a combo spanning non-adjacent rows.
-- `[?]` Element colours collide with the side colours (`playerSwatch` green, `enemySwatch`
-  yellow). One of the two schemes has to give.
+- `[?]` Earth's green collides with `playerSwatch`. One of the two schemes has to give, and
+  what is holding it off is that a border and a swatch are never seen side by side.
 - `[?]` Whether the prepare/attack/defend types are the same axis as the *role* taxonomy the
   initiate/respond model in `TODO.md` asks for, or orthogonal to it.
 - `[?]` How enemies scale up the tower.

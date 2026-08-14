@@ -68,12 +68,6 @@ const (
 
 	// The four primaries, which is all of them. `data/cards.json` deals
 	// 12 concepts x 5 borders (these four plus Basic) = the 60-card deck.
-	//
-	// **Poison was here and is gone.** It was a secondary element that had never had a
-	// card — `cards.json` contains no poison at all — so it only ever appeared as a
-	// sixth row on the contact sheet showing a colour nothing could deal. The screen's
-	// own `element` enum still has it, because that is game design recorded in
-	// MECHANICS.md rather than art; it maps to Basic here.
 	Fire
 	Ice
 	Lightning
@@ -125,7 +119,7 @@ var borderColors = [...]color.RGBA{
 	Fire:      {R: 235, G: 120, B: 45, A: 255},
 	Ice:       {R: 80, G: 155, B: 230, A: 255},
 	Lightning: {R: 240, G: 205, B: 55, A: 255},
-	Earth:     {R: 150, G: 105, B: 60, A: 255},
+	Earth:     {R: 76, G: 140, B: 52, A: 255},
 
 	// Pink, and deliberately unlike any of the four above — a ring has to be
 	// unmistakable at a glance, because the one thing that must never happen is reaching

@@ -146,7 +146,13 @@ const (
 // nothing else may claim it; a combo says its piece in the space *around* the cards, which
 // is also the only way to mark three of them as one thing — something the Resolution pane
 // cannot do and is recorded as a known gap.
-var attentionYellow = color.RGBA{R: 255, G: 214, B: 0, A: 255}
+//
+// **Darkened on 2026-08-14 when the ground went cream.** It was {255,214,0}, which is a fine
+// ring on {50,50,50} and nearly invisible on {226,208,176} — a yellow and a cream are close in
+// brightness whatever the hue does. The amber below reads on both, which it has to: this ring
+// is drawn on the bare ground around the table cards *and* on the dimmed screen behind the
+// deck overlay.
+var attentionYellow = color.RGBA{R: 214, G: 152, B: 12, A: 255}
 
 // The ring's weight and how far it stands off the cards. The inset is tight because the pile
 // shares the hand row's bottom edge and the action-point figure is printed ten pixels under
@@ -360,6 +366,7 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 	op.GeoM.Translate(float64(gs.PctX(100)-deckCountRightMargin), float64(front.Max.Y))
 	op.PrimaryAlign = text.AlignEnd
 	op.SecondaryAlign = text.AlignEnd
+	op.ColorScale.ScaleWithColor(groundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", len(s.deck), deckSize()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }

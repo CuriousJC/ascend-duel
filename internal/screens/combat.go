@@ -157,6 +157,31 @@ const discardsPerRound = 4
 // screen and somewhere to be read from.
 const startingVitae = 5
 
+// screenGround is what the whole combat screen is painted on, and **it went cream on
+// 2026-08-14**, from the {50,50,50} dark grey it had been since the screen existed.
+//
+// **Everything drawn straight onto it had assumed a dark ground**, which is the cost of the
+// change and the reason it is a named constant now rather than a literal in Draw. Three
+// figures were white and are now `groundInk`; the action-point bar's empty cells were
+// `ColorAtStrength(apBarColor, 20)`, which scales toward black and therefore came out *louder*
+// than the filled cells on a light ground — exactly the failure `systems.ColorToward` was
+// written for; and the ring row's backing had to stop being one step *lighter* than the ground
+// and become one step darker.
+//
+// **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} and the
+// Resolution pane's fill is {234,230,224} — because a card, a pane and the table cannot all be
+// the same off-white or the objects stop having edges. The warmth is where the separation
+// comes from: the ground is the yellowest of the three.
+var screenGround = color.RGBA{R: 226, G: 208, B: 176, A: 255}
+
+// groundInk is for text written straight onto the ground rather than onto a card, a pane or a
+// button — the action-point figure, the draw pile's count and the ring row's fraction. Near
+// black and slightly warm, so it belongs to the cream rather than sitting on it.
+//
+// Anything drawn on a surface of its own takes that surface's ink instead; this is only for
+// the three figures with nothing behind them.
+var groundInk = color.RGBA{R: 44, G: 40, B: 34, A: 255}
+
 // apBarColor is the action-point bar's blue. It is deliberately not the palette's green:
 // the bar reports the budget rather than belonging to the cards, and giving it its own
 // colour stops it reading as a summary of the list underneath it.
@@ -731,7 +756,7 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 // somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(color.RGBA{R: 50, G: 50, B: 50, A: 255})
+	screen.Fill(screenGround)
 
 	// **The top of the screen is one row of three things** *(2026-08-12)*: the player's card
 	// in the left corner, the enemy's in the right, and the rings filling everything between

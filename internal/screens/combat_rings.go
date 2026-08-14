@@ -86,8 +86,8 @@ const (
 // structure rather than as a colour meaning something.
 var ringRuleColor = color.RGBA{R: 120, G: 122, B: 132, A: 255}
 
-// ringPaneBackColor is the surface the rings stand on: a lighter grey than the screen's own
-// {50,50,50}, and nothing else.
+// ringPaneBackColor is the surface the rings stand on: one step off `screenGround`, and
+// nothing else.
 //
 // **A fill, not a frame** *(2026-08-12)*, and the distinction is the whole history of this
 // pane. The first version was a full pink box — filled, bordered and titled — and it was the
@@ -96,10 +96,15 @@ var ringRuleColor = color.RGBA{R: 120, G: 122, B: 132, A: 255}
 // put back now: with the row spanning most of the screen's width and a fighter card at either
 // end, nothing said where the middle *began*.
 //
-// So it is the quietest possible answer to that: one step lighter than the background, no
-// border, no title, no hue. A colour that meant something would put it back in competition
-// with the borders it sits behind.
-var ringPaneBackColor = color.RGBA{R: 72, G: 74, B: 80, A: 255}
+// So it is the quietest possible answer to that: one step off the background, no border, no
+// title, no hue. A colour that meant something would put it back in competition with the
+// borders it sits behind.
+//
+// **The step goes down now that the ground is cream** *(2026-08-14)*. It was one step
+// *lighter* than {50,50,50} for as long as the screen was dark, and kept that way it would be
+// a near-white slab — the loudest thing in the band, which is the exact failure this pane was
+// cut back to a fill to avoid. Which direction "one step" means is a function of the ground.
+var ringPaneBackColor = color.RGBA{R: 207, G: 189, B: 156, A: 255}
 
 // ringPaneRect is the row's extent: the cards' own band, running between the two corner cards
 // and dropped ringPaneTopDrop below them.
@@ -125,7 +130,7 @@ func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
 // ringPaneBackRect is the surface drawn behind the row: the row padded on every side, and
 // **deep enough to hold the rule and the fraction under it**.
 //
-// The fraction hanging off the bottom edge onto the dark background would say the rule is the
+// The fraction hanging off the bottom edge onto the bare ground would say the rule is the
 // panel's floor and the number is loose underneath it, which is backwards — the count belongs
 // to the row it counts.
 func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
@@ -234,6 +239,7 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 	op.GeoM.Translate(float64(r.Max.X-ringCountRightPad),
 		float64(r.Max.Y+ringRuleWidth+ringCountTopGap))
 	op.PrimaryAlign = text.AlignEnd
+	op.ColorScale.ScaleWithColor(groundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", len(worn), maxRings),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
 }

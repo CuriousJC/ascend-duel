@@ -31,21 +31,16 @@ const (
 	Ice
 	Lightning
 	Earth
-
-	// Poison is a secondary element. It has no cards, has never had one, and has no status —
-	// MECHANICS.md records that fire took the damage-over-time job it used to look like it
-	// wanted. It exists because the screen's palette has always held it.
-	Poison
 )
 
 // ElementCount is how many elements exist, and the width of the status array. Deriving it from
 // the last constant is what stops the two drifting when an element is appended.
-const ElementCount = int(Poison) + 1
+const ElementCount = int(Earth) + 1
 
 // AllElements is every element in declaration order. A slice rather than a range over the
 // constants so callers walking it get a fixed order — the determinism rules apply here exactly
 // as they do to AllActions.
-var AllElements = []Element{Basic, Fire, Ice, Lightning, Earth, Poison}
+var AllElements = []Element{Basic, Fire, Ice, Lightning, Earth}
 
 var elementNames = [...]string{
 	Basic:     "basic",
@@ -53,7 +48,6 @@ var elementNames = [...]string{
 	Ice:       "ice",
 	Lightning: "lightning",
 	Earth:     "earth",
-	Poison:    "poison",
 }
 
 func (e Element) String() string {

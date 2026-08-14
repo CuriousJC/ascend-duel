@@ -72,9 +72,8 @@ const (
 	weightCapPct = 50
 )
 
-// statusFor is the element a landed attack applies, and how much of it. Basic and Poison apply
-// nothing — Basic because it is the absence of an element, Poison because it has no cards and no
-// status, which MECHANICS.md records rather than leaves open.
+// statusFor is the element a landed attack applies, and how much of it. Basic applies nothing,
+// because it is the absence of an element rather than a fifth colour.
 //
 // The bool reports whether anything is applied at all, so a caller does not have to know that a
 // zero amount means "no status" as well as meaning "none of this status".

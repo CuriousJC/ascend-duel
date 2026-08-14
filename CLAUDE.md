@@ -540,9 +540,17 @@ below should be rewritten as what it actually is — how a surface responds to h
 disable — with the surface's own light and shade coming from a palette. Until then it governs
 everything that has not been given one.
 
-**And it applies against a dark ground.** `ColorAtStrength` scales toward black, so on a
-light surface it makes things louder rather than quieter — see the card section above.
-`systems.ColorToward` is the light-ground counterpart and the two are not interchangeable.
+**And it assumes the thing being dimmed sits on a dark ground.** `ColorAtStrength` scales
+toward black, so on a light surface it makes things louder rather than quieter — see the card
+section above. `systems.ColorToward` is the light-ground counterpart and the two are not
+interchangeable.
+
+**The combat screen's ground is cream as of 2026-08-14** (`screens.screenGround`), so on that
+screen `ColorAtStrength` is now the exception rather than the default, and reaching for it to
+dim something drawn straight onto the table is a bug waiting to be seen. It still governs
+buttons, because a button paints its own dark face and its label is white — that face is the
+ground its states are scaled against, not the screen. Text written directly on the table takes
+`screens.groundInk`.
 
 A widget names the colour it wants at **full strength**, and its other states are
 scaled down from that with `systems.ColorAtStrength`. `models.Button.BaseColor` is the

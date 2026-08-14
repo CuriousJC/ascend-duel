@@ -22,7 +22,9 @@ top of, and they are not repeated below:
   and no keyboard outside the one seed field.
 - **Glyphs are generated and cannot be resized.** Authored at the size shown, integer
   scales only, 1 is the floor. They are **not all one size** — the damage sword is 64, the
-  category glyphs are 22 — so ask `systems.SizeOf(kind)` and never assume `GlyphSize`.
+  category glyphs are 32 — so ask `systems.SizeOf(kind)` and never assume `GlyphSize`. **A
+  glyph is placed by its inked bounds, not its canvas**, since none of them fills the square
+  it is drawn on.
 - **The card is drawn by `internal/cards`, not by this screen.** `drawCard` builds a
   `cards.Spec`, pulls a cached image and blits it; it draws nothing itself. Change how a
   card looks there, then `go run ./tools/cardsheet` and refresh the tab — the tool and the
@@ -59,6 +61,11 @@ for a faster action to lead. `Spd` still buys action points and still never buys
   the drag lands the card in a queue that is then regrouped. **Within-category order is
   preserved and is the whole of what dragging now changes** — sequence combos will match on
   it, making an ice Strike before a fire Strike a different round from the reverse.
+- **Within the defend phase, order decides which of your defences meets which blow.**
+  `Duelist.Defends` is a queue and the front of it answers the next incoming attack, so a Brace
+  dragged in front of a Dodge halves the first blow and stops the second — and a Feint strips
+  whatever is at the front. Dragging a defend card is a real decision now, and nothing on the
+  screen says so yet.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row

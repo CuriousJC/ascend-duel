@@ -520,7 +520,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// has to stay open, and it is the way out of an over-allocation.
 		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
 		drawCard(gs, screen, s.cardSlot(gs, i).Min, cards.Hand,
-			c.actionCard, enabled, c.selected, s.fighter.Str)
+			c.actionCard, enabled, c.selected)
 	}
 
 	if s.drag == nil || !s.drag.active || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
@@ -658,7 +658,7 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 
 	at := image.Pt(gs.MouseX-s.drag.grabDX, gs.MouseY-s.drag.grabDY)
 	drawCard(gs, screen, at, cards.Hand,
-		s.drag.card.actionCard, true, s.drag.card.selected, s.fighter.Str)
+		s.drag.card.actionCard, true, s.drag.card.selected)
 }
 
 // drawCard draws one action card at `at`, in the given style.
@@ -667,13 +667,14 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 // renders it into a plain Go image; this function's whole job is to turn the screen's
 // types into a cards.Spec, get the matching image out of the cache, and blit it.
 //
-// str is the wielder's Strength, because damage is a property of the pairing rather than
-// of the card: the same Strike hits for more in stronger hands. It therefore forms part
-// of the cache key — see cardKey.
+// **It takes no Strength any more** *(2026-08-14)*. It used to, because the damage figure on
+// the face was `Damage(str)` — the same Strike hits for more in stronger hands, so the wielder
+// was part of the cache key. The face carries effect text instead of a figure now, and a
+// card's picture is a function of the card alone.
 func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
-	c actionCard, enabled, selected bool, str int) {
+	c actionCard, enabled, selected bool) {
 
-	img := cardImage(gs, cardSpec(c, enabled, selected, str), st)
+	img := cardImage(gs, cardSpec(c, enabled, selected), st)
 	if img == nil {
 		return
 	}

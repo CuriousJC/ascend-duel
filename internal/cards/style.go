@@ -20,7 +20,6 @@ type Style struct {
 	// hold a 64-pixel glyph or legible text at any size, so it shows neither — see Mini.
 	ShowName     bool
 	ShowCategory bool
-	ShowDamage   bool
 
 	TextLeft int
 	NameTop  int
@@ -42,23 +41,49 @@ type Style struct {
 
 	// The cost dashes, hamburger-style, below the category glyph.
 	//
-	// **The left column is a stack now, and everything in it is load-bearing.** Category
-	// glyph, then dashes, then the damage badge, one under the other down the same 64
-	// pixels of width. A cost above four grows the stack downward into the damage badge;
-	// costs run 1..4 today, and TestLeftColumnDoesNotCollide fails rather than letting
-	// them overlap.
+	// **They are the whole of the cost column now.** A card used to stack a category glyph, the
+	// dashes and a damage badge down the same 64 pixels; the badge is gone and the glyph has
+	// moved into the corner above the column, so what is left is one stack of bars whose width
+	// sets how much of the card the effect text gets. A cost above four grows the stack
+	// downward, and TestLeftColumnDoesNotCollide fails rather than letting it off the card.
 	DashLeft   int
 	DashTop    int
 	DashWidth  int
 	DashHeight int
 	DashGap    int
 
-	// The damage badge: the sword and the figure beside it, at the bottom of the column.
-	GlyphScale     int
-	GlyphInset     int
-	GlyphColumnTop int
-	GlyphNumberGap int
-	NumberSize     float64
+	// The category glyph's placement and scale.
+	//
+	// **There is no damage badge at all any more** *(2026-08-14)*. It went in two steps: the
+	// 64-pixel generated sword first, because it said what the category glyph already says
+	// while taking the room the effect text needed, and then the figure beside it — because
+	// the text says what the card does, and "Deal 2x DMG" is the same fact stated once instead
+	// of twice. `systems.GlyphDamage` still exists and is still on the glyph sheet; nothing on
+	// a card draws it.
+	GlyphScale int
+	GlyphInset int
+
+	// Spec.Text, wrapped and set as a block **centred in the space the left column leaves**.
+	// A zero TextLineHeight means the style has none, which is every style but Hand — the
+	// block exists only on a card big enough to read.
+	//
+	// **The left column is treated as a column and the text gets the rest** *(2026-08-14)*.
+	// TextColumnLeft is where the text may start; everything left of it belongs to the category
+	// glyph, the cost dashes and the damage figure. Inside that column the block is centred
+	// horizontally, and vertically it is centred in TextBandTop..TextBandBottom — under the
+	// name, down to the inside of the bottom border. Short text sits in the middle of the card
+	// rather than clinging to the bottom edge.
+	//
+	// **TextLines() is what the card fits, not a limit on the writing.** Render draws every line
+	// it wraps to, so text too long for the band runs off the card rather than being silently
+	// cut; TestEveryCardTextFitsItsBand is what fails first. Same rule as MaxStatLines and the
+	// cost dashes.
+	TextColumnLeft int
+	TextInset      int
+	TextBandTop    int
+	TextBandBottom int
+	TextSize       float64
+	TextLineHeight int
 
 	// ArtTop and ArtInset frame Spec.Art, used by rings. The art is scaled to fit the
 	// box they describe and centred in it.
@@ -97,36 +122,49 @@ type Style struct {
 //
 // **It was 180x264 until 2026-08-11**, when every size came down by a tenth across and by
 // 15% down the face to give the screen back some room. The y offsets below did *not* scale
-// with it and deliberately so: the column is a stack of fixed-size art — a 32-pixel category
-// glyph, four dashes, a 64-pixel damage badge — and none of those can be scaled, so what the
-// height loses is the empty strip under the badge and nothing else. That strip was ~94px and
-// is now ~54, which is still room for the long-press description it is being kept for.
+// with it and deliberately so: what the column holds is fixed-size art that cannot be scaled,
+// so the height came off the empty strip and nothing else. That strip is what the effect text
+// occupies now.
 //
-// The face reads: the name centred across the top, and a left column starting in the
-// corner beside it — category glyph, cost dashes, damage badge.
+// The face reads: the name centred across the top, the category glyph in the corner, a stack
+// of cost dashes down the left edge, and the effect text filling everything else.
 //
-//	 12  category glyph     12..44    (32px at the largest, top-left corner)
+//	  0  category glyph      0..32    (32px at the largest, in the corner, cropped by the curve)
 //	 14  name               centred
 //	 48  cost dashes        48..95    (four at 8 on a 5 gap)
-//	100  damage badge      100..164
-//	258  inside of the bottom border
+//	 44  effect text        44..214   (x=26..154, block centred both ways)
+//	218  inside of the bottom border
+//
+// **The cost column is 26px and the glyph is not in it.** The glyph is 32 wide and would set
+// the column's width single-handed, so it sits in the corner *above* the text band, cropped by
+// the card's own curve. Below it the column holds one thing — the 13px dash marks — which is
+// what a "cost column" ought to mean and is why 26 is nearly the floor.
 //
 // **The dashes moved down when the drawn glyphs arrived**, from 42 to 48: Sherman's sword
 // and shield are 32 pixels where the generated ones were 22, and the ten pixels had to come
-// from somewhere. The damage badge did not move — four dashes now end at y=95 against its
-// top at y=100, which is five pixels of slack rather than the fifteen there used to be.
+// from somewhere. They are still at 48 with the glyph hard in the corner, which leaves 16
+// pixels of air between the two rather than a join.
 //
 // **The name is centred and the glyph is in the corner beside it, not under it.** Those
-// two go together: a left-aligned name would sit directly on top of the glyph now that
-// the glyph has moved up into the corner, and centring it is what clears the space. The
-// name is centred on the *card*, not on the room left over beside the glyph, so a long
-// enough name would still reach back into it — TestNameClearsTheCategoryGlyph checks
-// every concept in the deck against that.
+// two go together: a left-aligned name would sit directly on top of the glyph, and centring it
+// is what clears the space. The name is centred on the *card*, not on the room left over
+// beside the glyph, so a long enough name would still reach back into it —
+// TestNameClearsTheCategoryGlyph checks every concept in the deck against that.
 //
-// **Only one 64-pixel badge is left.** Cost became dashes and the category became a
-// 22-pixel glyph, so a column that was two full badges deep is now a small glyph, a stack
-// of bars and one badge, all finished by y=164. The ~94 pixels below are deliberately
-// unfilled — that is where a long-press description or a status line goes.
+// **The card is a column and a paragraph** *(2026-08-14)*. There is no damage badge at all any
+// more — not the 64-pixel sword and not the figure that briefly replaced it — because the text
+// says what the card deals and a number beside it was the same fact multiplied out. The column
+// is the cost dashes; the text takes everything right of them and is centred in it, both ways,
+// in the band running from under the name to the inside of the bottom border.
+//
+// **Centred rather than top-left because the block is the card's whole right-hand side.** A
+// two-line effect pinned to the top of a 170-pixel band reads as a caption that has come
+// unstuck; centred, a short card and a long one look like the same design.
+//
+// What that buys is size: 18pt against the 13 the text was set in when it ran the full width
+// under a badge. What it costs is measure — 128 pixels, and the wording has to be short words.
+// `TestEveryCardTextFitsItsBand` holds the line count against the band and
+// `TestNoEffectTextWordIsWiderThanItsColumn` holds each word against the measure.
 var Hand = Style{
 	Width: 162, Height: 224,
 
@@ -135,26 +173,41 @@ var Hand = Style{
 
 	ShowName:     true,
 	ShowCategory: true,
-	ShowDamage:   true,
 
 	TextLeft:     12,
 	NameTop:      14,
 	NameSize:     20,
 	NameCentered: true,
 
-	CategoryGlyphTop: 12,
+	CategoryGlyphTop: 0,
 
-	DashLeft:   12,
+	DashLeft:   8,
 	DashTop:    48,
 	DashWidth:  13,
 	DashHeight: 8,
 	DashGap:    5,
 
-	GlyphScale:     1,
-	GlyphInset:     12,
-	GlyphColumnTop: 100,
-	GlyphNumberGap: 10,
-	NumberSize:     26,
+	GlyphScale: 1,
+	GlyphInset: 0,
+
+	TextColumnLeft: 26,
+	TextInset:      8,
+	TextBandTop:    44,
+	TextBandBottom: 214,
+	TextSize:       18,
+	TextLineHeight: 22,
+}
+
+// TextLines is how many lines of effect text the band holds at this style's line height.
+//
+// **Derived rather than a field**, so a band that moves cannot leave a constant behind
+// claiming a capacity the card does not have — the same rule `resolutionCapacity` follows on
+// the combat screen.
+func (st Style) TextLines() int {
+	if st.TextLineHeight <= 0 {
+		return 0
+	}
+	return (st.TextBandBottom - st.TextBandTop) / st.TextLineHeight
 }
 
 // Mini is the deck overlay's card: half the hand's size, kept to the same proportions.
@@ -170,9 +223,10 @@ var Hand = Style{
 // room; it was a question of the cards being overlapped so tightly that only 29 pixels
 // showed. Widening the row (see deckStackPitch) is what made the space real.
 //
-// The one thing still absent is the damage badge, and that is forced: a 64-pixel sword
-// under a name, a glyph and four dashes does not fit in this height. Damage is a
-// function of the concept, so a named card implies it.
+// The one thing still absent is the effect text, and that is forced: an 81-pixel card less a
+// cost column leaves about 55 pixels of measure, which is four or five characters a line at
+// any size legible here. What a card does is a function of the concept, so a named card
+// implies it — and the overlay is a list of what you own, not a place you play from.
 //
 // The reading order matches Hand deliberately — name centred across the top, then the
 // glyph, then the dashes under it — so the two sizes are the same card and not two
@@ -185,7 +239,6 @@ var Mini = Style{
 
 	ShowName:     true,
 	ShowCategory: true,
-	ShowDamage:   false,
 
 	TextLeft:     8,
 	NameTop:      8,
@@ -231,7 +284,6 @@ var Stack = Style{
 
 	ShowName:     false,
 	ShowCategory: false,
-	ShowDamage:   false,
 }
 
 // EnemyStyle is the opponent, in the card format *(2026-08-11)*.
@@ -276,7 +328,6 @@ var EnemyStyle = Style{
 
 	ShowName:     true,
 	ShowCategory: false,
-	ShowDamage:   false,
 
 	TextLeft:     12,
 	NameTop:      12,
@@ -332,7 +383,6 @@ var DuelistStyle = Style{
 
 	ShowName:     true,
 	ShowCategory: false,
-	ShowDamage:   false,
 
 	TextLeft:     12,
 	NameTop:      14,
@@ -367,7 +417,6 @@ var RingStyle = Style{
 
 	ShowName:     true,
 	ShowCategory: false,
-	ShowDamage:   false,
 
 	TextLeft:     12,
 	NameTop:      14,

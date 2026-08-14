@@ -179,9 +179,10 @@ func Categories() []Category {
 
 // glyph is the art for this category.
 //
-// Attack shares the sword with the damage badge rather than getting a second weapon:
-// they say related things, a card shows only one of them in the category slot, and two
-// different swords on one face would imply a distinction that does not exist.
+// Attack reuses the same sword `systems.GlyphDamage` is drawn from rather than getting a
+// weapon of its own: they say related things, and two different swords in one game would imply
+// a distinction that does not exist. Nothing draws GlyphDamage on a card any more, so on a
+// card this is now the only sword there is.
 func (c Category) glyph() (systems.GlyphKind, bool) {
 	switch c {
 	case CategoryPrepare:
@@ -287,9 +288,9 @@ var (
 	// NameInk is the concept's name across the top, the thing read first.
 	NameInk = color.RGBA{R: 28, G: 30, B: 36, A: 255}
 
-	// NumberInk is the damage figure beside its glyph. It used to be the glyph palette's
-	// Specular (pure white), which was legible on a coloured surface and is not on this
-	// one.
+	// NumberInk is a figure: a stat row's value, the health fraction. It used to be the glyph
+	// palette's Specular (pure white), which was legible on a coloured surface and is not on
+	// this one.
 	NumberInk = color.RGBA{R: 40, G: 43, B: 52, A: 255}
 
 	// LabelInk is the word half of a stat row — "DMG", "AP", "Vitae". Quieter than the
@@ -328,9 +329,23 @@ const MaxStatLines = 3
 type Spec struct {
 	Name     string
 	Category Category
-	Damage   int // omitted entirely when zero: a sword reading 0 is worse than no sword
 	Cost     int // action points, drawn as dash marks
 	Element  Element
+
+	// Text is what the card does, in words, wrapped across the band under the left column.
+	//
+	// **Every action card carries one** *(2026-08-14)*. Six of the twelve concepts could not be
+	// understood from a card that showed only a name, a cost and a damage figure — that Riposte
+	// hits back, that Guard covers a whole turn rather than one blow, that a Retreat has three
+	// negations in it. The band it goes in was being held for a long-press description; the
+	// text is now printed and long press becomes the gesture that *pulls a card forward* so an
+	// overlapped one can be read.
+	//
+	// **The wording lives with the screen, not here.** internal/cards knows how to set a line
+	// of text on a card and nothing about what a card does; the table is in internal/screens
+	// beside actionPhrases, and tools/cardsheet keeps its own snapshot exactly as it does for
+	// names and costs.
+	Text string
 
 	// Art is optional artwork drawn on the face, scaled to fit and centred. Rings use
 	// it; action cards do not, and their art is the generated glyphs instead.

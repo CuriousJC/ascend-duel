@@ -69,18 +69,18 @@ func main() {
 		// Two Dodges are 4, leaving a Strike.
 		{"dodging", combat.PlainCards(combat.Dodge, combat.Dodge), combat.PlainCards(combat.Strike)},
 
-		// Mirror is 4, leaving a Jab. **This is the posture to read first**: Mirror reflects
-		// every attack it stops, so its value is set entirely by how much the opponent commits.
-		// Against a swarm it should be devastating and against a warden nearly worthless, and if
-		// it is strong against everything then the reflect fraction is wrong.
-		{"mirroring", combat.PlainCards(combat.Mirror), combat.PlainCards(combat.Jab)},
+		// Retreat is 4, leaving a Jab. **This is the posture to read first**: it stops three
+		// attacks and reflects nothing, so its value is set entirely by how many blows arrive.
+		// Against a swarm it should be excellent and against a brute it should be a Dodge that
+		// cost two points too many. Strong against both means the charge count is wrong.
+		{"retreating", combat.PlainCards(combat.Retreat), combat.PlainCards(combat.Jab)},
 		// Three Braces are 3, leaving a Strike — the cheap partial defence spread wide, against
 		// two Dodges' precise negation.
 		{"bracing", combat.PlainCards(combat.Brace, combat.Brace, combat.Brace), combat.PlainCards(combat.Strike)},
 		// Feint is 3 and a Strike is 2. Only distinguishable from all-out against an opponent
 		// holding negations, which is what makes it the anti-Riposte reading.
 		{"feinting", nil, combat.PlainCards(combat.Feint, combat.Strike)},
-		// Ritual is 4, leaving a Jab, and banks +5. Repeated every round it is a posture that
+		// Ritual is 4, leaving a Jab, and banks +6. Repeated every round it is a posture that
 		// pays 4 AP a round for a budget it never gets to spend — deliberately a bad plan, and
 		// the floor a real Ritual line has to beat.
 		{"ritual", combat.PlainCards(combat.Ritual), combat.PlainCards(combat.Jab)},
@@ -170,8 +170,8 @@ func main() {
 		"\n\nWhat to look for: every enemy should lose to *something* and win against *something*." +
 		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
 		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
-		"\nMirror is the one to watch — it reflects what it stops, so it should read as devastating" +
-		"\nagainst a swarm and near-useless against a warden. Strong everywhere means wrong.")
+		"\nRetreat is the one to watch — three negations for four points, so it should read as" +
+		"\nexcellent against a swarm and overpriced against a brute. Strong everywhere means wrong.")
 }
 
 // stalemateRounds is where a duel is called a draw. A fight nobody can finish is as broken

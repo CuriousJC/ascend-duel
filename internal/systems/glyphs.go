@@ -278,20 +278,24 @@ var runShape = shape{
 	},
 }
 
-// The category glyphs are small — a third of a damage badge — because they sit above the
-// cost dashes in a column a second full badge would fill.
+// The category glyphs are small — half a damage badge — because they sit in a card's corner
+// above the cost dashes, in a column a full badge would fill.
+//
+// **All three are one size, and that is the point of tying this to categoryArtSize.** The book
+// was authored at 22 while the drawn sword and shield were 32, and the card placed all three by
+// the same top-left — so the book sat higher, further left and read as a smaller class of
+// object beside the other two. A set that is told apart by *proportion* cannot afford one
+// member drawn at two-thirds the scale of its siblings.
 //
 // **A generated one is a separate drawing, not a big one shrunk.** Nothing generated here
-// can be scaled: the rim is derived one pixel thick, so a third-size copy of a 64px shape
-// is a third-size copy of its outline and the interior disappears. At 22 pixels the detail
-// budget is almost nothing — a 5px feature is two pixels of rim around three of fill — so
-// the shape has to work as pure outline, with at most one accent stroke, and is told apart
-// by *proportion* before any detail is legible.
+// can be scaled: the rim is derived one pixel thick, so a smaller copy of a shape is a smaller
+// copy of its outline and the interior disappears. Going from 22 to 32 was therefore a
+// redrawing of every span, not a constant.
 //
 // Only the book is still generated. The sword and the shield are drawn art now and are
 // downsampled rather than authored small, which is a thing a *painting* survives and a
 // derived-rim silhouette does not — see glyphArt.
-const categoryGlyphSize = 22
+const categoryGlyphSize = categoryArtSize
 
 // The generated 22px sword and shield that used to sit here went when Sherman's art
 // arrived — see glyphArt below. Both are one `git show` away if the drawn versions are
@@ -301,38 +305,53 @@ const categoryGlyphSize = 22
 // meeting at the spine, with the page block filling the body below.
 //
 // The first attempt drew it face-on — a wide slab with a gutter line down it — and it read
-// as a envelope or a folded card, because face-on the only thing saying "book" is a detail
-// too fine to survive 22 pixels. End-on, the V *is* the silhouette, and a silhouette is
+// as an envelope or a folded card, because face-on the only thing saying "book" is a detail
+// too fine to survive at this size. End-on, the V *is* the silhouette, and a silhouette is
 // what survives.
 //
+// **Redrawn at 32 on 2026-08-14**, span by span, because a glyph cannot be scaled. What the
+// ten extra pixels buy is not detail — it is still outline plus one stroke a side — but
+// *presence*: at 22 it was 12 pixels of ink tall against the kite shield's 21 and read as a
+// smaller kind of thing rather than as the third member of a set.
+//
 // The notch between the covers runs ten pixels wide at the top down to two at the spine,
-// which is as deep a V as fits without the two halves becoming separate objects.
+// which is as deep a V as fits without the two halves becoming separate objects. Each arm
+// stays six pixels or wider, so the derived rim leaves something inside it.
 var smallBookShape = shape{
 	size: categoryGlyphSize,
 	fill: map[int][]span{
 		// The covers, splaying apart upward. Each thickens toward the spine, the way a
 		// page block does.
-		4:  {{2, 5}, {16, 19}},
-		5:  {{2, 6}, {15, 19}},
-		6:  {{2, 7}, {14, 19}},
-		7:  {{2, 8}, {13, 19}},
-		8:  {{2, 8}, {13, 19}},
-		9:  {{2, 9}, {12, 19}},
-		10: {{2, 9}, {12, 19}},
+		6:  {{5, 10}, {21, 26}},
+		7:  {{5, 10}, {21, 26}},
+		8:  {{5, 11}, {20, 26}},
+		9:  {{5, 11}, {20, 26}},
+		10: {{5, 12}, {19, 26}},
+		11: {{5, 12}, {19, 26}},
+		12: {{5, 13}, {18, 26}},
+		13: {{5, 13}, {18, 26}},
+		14: {{5, 14}, {17, 26}},
+		15: {{5, 14}, {17, 26}},
 
 		// Below the spine the two halves are one mass: the closed part of the book.
-		11: {{2, 19}}, 12: {{2, 19}}, 13: {{2, 19}},
-		14: {{3, 18}},
-		15: {{5, 16}},
+		16: {{5, 26}}, 17: {{5, 26}}, 18: {{5, 26}},
+		19: {{5, 26}}, 20: {{5, 26}}, 21: {{5, 26}},
+
+		// A short taper off the bottom, so the block reads as a page stack rather than as a
+		// brick with a V cut into it.
+		22: {{6, 25}},
+		23: {{7, 24}},
+		24: {{9, 22}},
 	},
 	accent: map[int][]span{
-		// A page inside each cover, drawn parallel to the splay. Two strokes is all there
-		// is room for, and it is what turns a V into a V *with something between it*.
-		6:  {{4, 5}, {16, 17}},
-		7:  {{4, 6}, {15, 17}},
-		8:  {{4, 6}, {15, 17}},
-		9:  {{5, 7}, {14, 16}},
-		10: {{5, 7}, {14, 16}},
+		// A page inside each cover, drawn parallel to the splay. One stroke a side is all
+		// there is room for, and it is what turns a V into a V *with something between it*.
+		9:  {{7, 9}, {22, 24}},
+		10: {{7, 10}, {21, 24}},
+		11: {{8, 10}, {21, 23}},
+		12: {{8, 11}, {20, 23}},
+		13: {{9, 11}, {20, 22}},
+		14: {{9, 12}, {19, 22}},
 	},
 }
 
@@ -621,10 +640,10 @@ func downsample(src *image.RGBA, factor int) *image.RGBA {
 
 // SizeOf is the size a glyph is drawn at, which is not the same for every glyph.
 //
-// The damage sword and the runner are 64. The category glyphs are much smaller, because
-// they sit above the cost dashes in a column that a second 64-pixel badge would fill — 22
-// for the generated book, 32 for the drawn sword and shield. Callers must measure with this
-// rather than assuming GlyphSize, or a small glyph will be given a large hole to sit in.
+// The damage sword and the runner are 64. The category glyphs are half that, because they sit
+// in a card's corner where a full-size badge would not fit — 32 for all three since the book
+// was redrawn to match the drawn sword and shield. Callers must measure with this rather than
+// assuming GlyphSize, or a small glyph will be given a large hole to sit in.
 func SizeOf(kind GlyphKind) int {
 	if art, ok := glyphArt[kind]; ok {
 		return art.size

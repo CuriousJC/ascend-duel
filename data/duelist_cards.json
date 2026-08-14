@@ -79,7 +79,7 @@
     "Copies": 1
   },
   {
-    "Concept": "Mirror",
+    "Concept": "Retreat",
     "Category": "defend",
     "CostTier": 4,
     "Elements": ["basic", "fire", "ice", "lightning", "earth"],

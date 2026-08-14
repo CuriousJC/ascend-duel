@@ -357,7 +357,7 @@ hand-rolling costs little and buys full control.
 ### Glyphs are generated, not drawn — and not scaled from one colour
 
 [internal/systems/glyphs.go](internal/systems/glyphs.go) generates the pixel-art
-glyphs on the action cards, drawn at 1:1 — 64x64 for the damage sword and the runner, 22x22
+glyphs on the action cards, drawn at 1:1 — 64x64 for the damage sword and the runner, 32x32
 for the three category glyphs. **Generated art has no provenance question**, which is the
 whole reason to prefer this pattern for interface art in a game that will be sold.
 
@@ -398,11 +398,24 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **`GlyphKind` is append-only.** The glyph cache keys on the ordinal, so inserting a kind
   mid-enum silently re-points every existing entry — the same hazard `MECHANICS.md` records
   for the concept enum and its combo IDs.
-- **The card is 162x224 and its left column is full.** One 64px damage badge, one 22px
-  category glyph, and a stack of cost dash marks. What is left is **~54px of deliberately
-  empty surface at the bottom**, reserved for the long-press description — enough for that
-  and not much else. Adding anything to the column spends it, and none of that art can be
-  scaled to make room.
+- **The card is 162x224, and it is a column and a paragraph.** The category glyph sits at 0,0
+  and is cropped by the card's own curve; under it the cost dashes make a **26px column**; and
+  **the effect text takes everything right of that**, centred in it both ways, at 18pt.
+- **There is no damage badge at all.** The 64px generated sword went first — it said what the
+  corner glyph already says — and then the bare figure, because the text states what the card
+  deals and a number beside it was the same fact multiplied out by the wielder's Strength.
+  `cards.Spec` has no `Damage` field and `drawCard` takes no Strength, so **a card's picture is
+  a function of the card alone**. `systems.GlyphDamage` still exists and is still on the glyph
+  sheet; nothing draws it.
+- **The wording is the constraint now, not the space.** The text column is ~128px — a dozen or
+  so characters a line — so effect text has to be short words, and `DMG` rather than `damage`.
+  `TestNoEffectTextWordIsWiderThanItsColumn` fails on a word that will not fit and
+  `TestEveryCardTextFitsItsBand` on a string that wraps past the band;
+  `TestLeftColumnDoesNotCollide` and `TestTheCostColumnStaysOutOfTheTextColumn` hold the column
+  against its neighbours.
+- **A glyph may be placed at a negative offset** to hang off an edge. `blitGlyph` clips it to
+  the rounded silhouette via `insideRounded`, and `fadeRegion` skips transparent pixels — both
+  so a corner glyph cannot fill in the transparent corner and square the card off.
 - `RenderGlyph` returns a plain Go image and is free of Ebitengine on purpose — creating an
   `*ebiten.Image` needs a graphics context, and the review tool has no window. `Glyph`
   wraps and caches it for the game.
@@ -506,7 +519,7 @@ and are easy to re-break:
   its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a colour
   toward whatever it actually sits on. Card state is expressed as distance to the surface.
 - **Cost is dash marks and the category is a glyph**, not text and not a numeral. Costs run
-  1..4; a fifth tier grows the dash stack into the damage badge and is a layout change, not
+  1..4; a fifth tier grows the dash stack further down the card and is a layout change, not
   just a bigger number. `TestLeftColumnDoesNotCollide` fails rather than rendering it.
 
 Rings reuse the whole format with a pink border and artwork instead of glyphs, and no cost

@@ -225,6 +225,6 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
 	for i, d := range s.enemyDealt {
 		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), i == s.enemyFiringSeat)
-		drawCard(gs, screen, at, cards.Hand, d.card, true, false, s.enemy.Str)
+		drawCard(gs, screen, at, cards.Hand, d.card, true, false)
 	}
 }

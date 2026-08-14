@@ -1,8 +1,10 @@
 package screens
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
@@ -108,6 +110,84 @@ func TestEveryCategoryHasAGlyph(t *testing.T) {
 
 		if got.String() != c.String() {
 			t.Errorf("rules call it %q, internal/cards calls it %q", c.String(), got.String())
+		}
+	}
+}
+
+func TestEveryConceptHasEffectText(t *testing.T) {
+	// A card with no entry draws a name, a cost, a glyph and nothing that says what it does —
+	// which is the state six of the twelve concepts were in before this table existed. There is
+	// no fallback on purpose: a missing line is silence on the card, so it has to fail here.
+	for _, a := range combat.AllActions {
+		if cardEffects[a] == "" {
+			t.Errorf("%v has no effect text — its card would say nothing about what it does", a)
+		}
+	}
+	if len(cardEffects) != len(combat.AllActions) {
+		t.Errorf("cardEffects holds %d entries for %d concepts — one of them names a card that is gone",
+			len(cardEffects), len(combat.AllActions))
+	}
+}
+
+func TestEveryCardTextFitsItsBand(t *testing.T) {
+	// **The wording is here and the band is in internal/cards, so neither package can check
+	// this alone.** Render draws every line it wraps to rather than clamping, so an overlong
+	// string runs off the bottom of the card — this is what fails first.
+	//
+	// It needs the real font because wrapping is measured, which is also why it is worth
+	// having: "Negate 1 attack, deal 0.5x damage back" fits in three lines or four depending on
+	// a comma, and nobody can tell by looking at the string.
+	ttf := assets.LoadFontData()["kubasta"]
+	if len(ttf) == 0 {
+		t.Fatal("no kubasta font data embedded")
+	}
+	f, err := cards.NewFaces(ttf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := cards.Hand
+	width := st.Width - st.TextColumnLeft - st.TextInset
+
+	for _, a := range combat.AllActions {
+		lines, err := cards.WrapText(f, st.TextSize, cardEffects[a], width)
+		if err != nil {
+			t.Fatalf("%v: %v", a, err)
+		}
+		if len(lines) > st.TextLines() {
+			t.Errorf("%v's text wraps to %d lines and the band holds %d: %q",
+				a, len(lines), st.TextLines(), cardEffects[a])
+		}
+	}
+}
+
+func TestNoEffectTextWordIsWiderThanItsColumn(t *testing.T) {
+	// **Wrapping breaks on spaces only**, so a single word wider than the column is not
+	// wrapped, it overruns — silently, and only on the one card that has it. The column is
+	// ~100px at 18pt, which is around a dozen characters, so this is a real constraint on the
+	// wording rather than a theoretical one.
+	ttf := assets.LoadFontData()["kubasta"]
+	if len(ttf) == 0 {
+		t.Fatal("no kubasta font data embedded")
+	}
+	f, err := cards.NewFaces(ttf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := cards.Hand
+	width := st.Width - st.TextColumnLeft - st.TextInset
+
+	for _, a := range combat.AllActions {
+		for _, word := range strings.Fields(cardEffects[a]) {
+			w, err := cards.TextWidth(f, st.TextSize, word)
+			if err != nil {
+				t.Fatalf("%v: %v", a, err)
+			}
+			if w > width {
+				t.Errorf("%v: %q is %dpx, wider than the %dpx column — it will run off the card",
+					a, word, w, width)
+			}
 		}
 	}
 }

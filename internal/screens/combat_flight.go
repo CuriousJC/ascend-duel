@@ -417,7 +417,7 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 	geo.Rotate(outboundSpin * t)
 	geo.Translate(x+cardWidth/2, y+cardHeight/2)
 
-	drawFlyingCard(gs, screen, cardSpec(f.card, true, false, s.fighter.Str), cards.Hand, geo)
+	drawFlyingCard(gs, screen, cardSpec(f.card, true, false), cards.Hand, geo)
 }
 
 // drawInbound deals a card from the stack into its slot, turning it face up on the way.
@@ -449,7 +449,7 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 	faceDown := raw < 0.5
 	flip := math.Abs(1 - 2*raw)
 
-	style, spec := cards.Hand, cardSpec(f.card, true, false, s.fighter.Str)
+	style, spec := cards.Hand, cardSpec(f.card, true, false)
 	if faceDown {
 		spec = s.backSpec()
 	}
@@ -702,7 +702,7 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total int, firing bool) im
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
 	for i, r := range s.resolved {
 		at := r.at(gs, i, len(s.resolved), i == s.firingSeat)
-		drawCard(gs, screen, at, cards.Hand, r.card, true, false, s.fighter.Str)
+		drawCard(gs, screen, at, cards.Hand, r.card, true, false)
 	}
 
 	s.drawComboBracket(gs, screen)

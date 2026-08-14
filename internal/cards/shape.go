@@ -29,32 +29,49 @@ func roundedRect(dst *image.RGBA, x, y, w, h, radius int, c color.RGBA) {
 		return
 	}
 	radius = clampRadius(w, h, radius)
-	rr := radius * radius
 
 	for py := 0; py < h; py++ {
 		for px := 0; px < w; px++ {
-			// Distance from the nearest corner centre, but only when the pixel is
-			// actually in a corner square. dx and dy are zero along the straight edges,
-			// which makes the test below pass for the whole cross of the shape.
-			dx, dy := 0, 0
-			switch {
-			case px < radius:
-				dx = radius - 1 - px
-			case px >= w-radius:
-				dx = px - (w - radius)
-			}
-			switch {
-			case py < radius:
-				dy = radius - 1 - py
-			case py >= h-radius:
-				dy = py - (h - radius)
-			}
-			if dx*dx+dy*dy > rr {
+			if !insideRounded(w, h, radius, px, py) {
 				continue
 			}
 			dst.SetRGBA(x+px, y+py, c)
 		}
 	}
+}
+
+// insideRounded reports whether (px, py) is part of a w x h rounded rectangle whose top-left
+// corner is the origin.
+//
+// **Its own function because the glyph clips against it too.** The corner glyph is allowed to
+// hang off the top-left corner of the card, and anything drawn past the curve would fill in the
+// transparent corner and square it off — so the shape test has to be askable from outside the
+// fill loop. One copy, so the silhouette a glyph is clipped to cannot drift from the silhouette
+// that was drawn.
+//
+// The test is the ordinary one: inside a corner's radius square, a pixel belongs to the shape
+// only if it falls within `radius` of that corner's centre. dx and dy are zero along the
+// straight edges, which passes the whole cross of the shape. Squared distances keep it in
+// integers and avoid a square root per pixel.
+func insideRounded(w, h, radius, px, py int) bool {
+	if px < 0 || py < 0 || px >= w || py >= h {
+		return false
+	}
+
+	dx, dy := 0, 0
+	switch {
+	case px < radius:
+		dx = radius - 1 - px
+	case px >= w-radius:
+		dx = px - (w - radius)
+	}
+	switch {
+	case py < radius:
+		dy = radius - 1 - py
+	case py >= h-radius:
+		dy = py - (h - radius)
+	}
+	return dx*dx+dy*dy <= radius*radius
 }
 
 // roundedBorder draws a rounded rectangle of `border` with a `fill` one inset inside it,

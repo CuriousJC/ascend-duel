@@ -73,22 +73,51 @@ and the grid is the reason there are twelve rather than however many somebody th
 |---|---|---|---|---|
 | **prepare** | Gather | Sift | Guard | Ritual |
 | **attack** | Jab | Strike | Feint | Heavy |
-| **defend** | Brace | Dodge | Riposte | Mirror |
+| **defend** | Brace | Dodge | Riposte | Retreat |
 
 | Type | Concept | AP | Effect |
 |---|---|---|---|
 | **prepare** | Gather | 1 | Banks +2 AP for the next round |
 | | Sift | 2 | Two extra cards leave the hand at random at the round boundary, before it refills |
 | | Guard | 3 | Halves every attack in the opponent's next turn |
-| | Ritual | 4 | Banks +5 AP for the next round |
+| | Ritual | 4 | Banks +6 AP for the next round |
 | **attack** | Jab | 1 | `str/2`, minimum 1 |
 | | Strike | 2 | `str` |
-| | Feint | 3 | `str`, and strips one pending Riposte or Dodge **without triggering its counter** |
+| | Feint | 3 | `str`, and strips the target's **first pending defend card** without triggering it |
 | | Heavy | 4 | `str × 2` |
 | **defend** | Brace | 1 | Halves the next single incoming attack, then is spent |
-| | Dodge | 2 | Negates the first incoming attack |
-| | Riposte | 3 | Negates the first incoming attack and hits back for `str/2` |
-| | Mirror | 4 | Negates **every** attack in the opponent's next turn and reflects each one's damage back at them |
+| | Dodge | 2 | Negates the next incoming attack |
+| | Riposte | 3 | Negates the next incoming attack and hits back for `str/2` |
+| | Retreat | 4 | Negates the next **three** incoming attacks |
+
+**Every card carries its effect in words on its face**, verb first, filling the card beside the
+cost column. Six of the twelve could not be understood from a name, a cost and a damage figure.
+The wording is `cardEffects` in `internal/screens`, beside the prose the Resolution feed uses:
+the rules package names actions and never describes them. **Short words are a hard constraint** —
+the column is about a dozen characters wide — and two tests hold the wording to it.
+
+### Defends answer in the order they were raised
+
+**The defend cards a duelist has up are a queue, not a pool.** The first one raised answers the
+next incoming attack, whatever it is — Dodge and Retreat stop it dead, Riposte stops it and hits
+back, Brace halves it and lets the rest through to any Guard. They all expire together at the
+start of their owner's next turn.
+
+This replaced a fixed precedence (Ripostes spent before Dodges, Braces only once nothing had
+negated), which existed because four independent counters had no order to read. Three things
+follow:
+
+- **Order within the defend phase is a real decision**, and drag-to-reorder is how it is made.
+  Leading with a Brace against a swarm spends the cheap card on the first blow and keeps the
+  Dodge for the one that matters.
+- **Feint has something well-defined to strip**: whichever card is at the front. Leading with a
+  Brace baits a 3-point attack into stripping a 1-point card.
+- **A Riposte queued last answers late**, so its counter-damage no longer lands as early in the
+  opponent's turn as possible and can miss a kill it would once have made. That is the price of
+  the queue, and it is paid deliberately.
+
+**Retreat is the ordering rule's stress case.** Three negations on one card, and a Feint takes
+one *charge* rather than the card — otherwise a 3 AP attack would beat a 4 AP defence outright.
 
 Type is a property of the *concept*, not an independent axis — a fire Guard and a basic Guard
 are both prepares.
@@ -97,15 +126,22 @@ are both prepares.
 has a name — "a 3-cost attack" is something to solve. What it must not become is a cost ladder
 where each tier is the one below it with a bigger number: that is twelve cards and three
 decisions, and it is the trap `Dodge`/`Riposte` already half fell into. **Every tier differs in
-kind.** Feint attacks the defence layer rather than the health total; Mirror scales with what
-the opponent committed rather than with your own strength; Sift operates on the deck and not on
-the arithmetic at all; Brace is partial where Dodge is binary.
+kind.** Feint attacks the defence layer rather than the health total; Sift operates on the deck
+and not on the arithmetic at all; Brace is partial where Dodge is binary.
 
-**Ritual and Gather bank at the same rate on purpose** — 1 AP for +2 and 4 AP for +5 are both
-net +1 per point. Ritual is not a better Gather, it is a Gather that does not eat your round:
-four Gathers bank more (+8) but consume four of five action slots, while Ritual banks +5 and
-leaves four slots to fight with. The difference is *slots*, which is the same reason Riposte is
-not redundant against Dodge.
+**`[?]` Retreat is the weakest cell against that rule.** Three negations for four points is
+Dodge with a bigger number, where every other tier changes what the card *is*. It was chosen
+knowingly, on the grounds that the 4-cost defend it replaced — a card that negated a whole turn
+and reflected every blow — was strong against everything and therefore mispriced rather than
+interesting. Retreat is priceable; whether it earns the cell is open, and the answer is probably
+a rider that makes volume mean something (retreating out of a status, giving ground) rather than
+a fourth number.
+
+**Ritual banks at a better rate than Gather** — 1 AP for +2 against 4 AP for +6, net +1 per
+point against net +2. It sells rate *and* slots: four Gathers bank more (+8) but consume four of
+five action slots, while one Ritual banks +6 and leaves four slots to fight with. It was +5 —
+exactly Gather's rate — until 2026-08-14, on the theory that a 4-cost prepare should sell only
+slots; at that price it was a card nobody had a reason to open with.
 
 **Sift is the one concept whose effect is not a rule.** It manipulates the deck, and the deck
 deliberately lives on the scene rather than in `internal/combat` — so `Sift` is an `ActionKind`
@@ -260,7 +296,7 @@ Gather as good a delivery as a 1-AP Jab and turns the prepare phase into the sta
 
 The cost, stated: **element is mechanically inert on eight of the twelve concepts** until rings
 land. And **the status lands because the blow connected, not because it hurt** — a Guard halves
-a hit and the hit still landed, so it still chills. A Dodge, Riposte or Mirror stops the blow
+a hit and the hit still landed, so it still chills. A Dodge, Riposte or Retreat stops the blow
 dead and nothing is applied.
 
 **Magnitude is per hit, not per card.** A fire Jab and a fire Heavy apply the same burn, so the
@@ -301,8 +337,7 @@ What it gives up is the tension of a swing that might not land. Recorded rather 
   `KindDefeated` when it does.
 - **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
   so the order is: concept damage, combo multiplier, the attacker's weight, then the defender's
-  brace and guard. A Mirror reflects the blunted figure, because that is what the attacker
-  actually committed. A Riposte's counter is outside it, exactly as it is outside the combo
+  brace and guard. A Riposte's counter is outside it, exactly as it is outside the combo
   multiplier — that is the defender hitting back, not a card the weighted duelist played.
   **Rounding is toward zero**, matching `guardDivisor` and `scaleDamage`, so it is predictable
   from the reductions already in the game.
@@ -310,8 +345,8 @@ What it gives up is the tension of a swing that might not land. Recorded rather 
   by element, not four named fields. That is what makes *"consume the status this element
   applies"* expressible, which Extinguishing Strike needs and which is the difference between a
   system and four ad-hoc fields. The price: **`Element` is append-only**, like `ActionKind` and
-  `GlyphKind`. `Guarded` and the counted negations stay where they are — they are card effects,
-  and filing them in a table indexed by colour would say they were not.
+  `GlyphKind`. `Guarded` and the defend queue stay where they are — they are card effects, and
+  filing them in a table indexed by colour would say they were not.
 
 **Poison has lost its obvious job.** Fire is the damage-over-time element now. Poison, force
 and hunger have no statuses.
@@ -322,15 +357,18 @@ and hunger have no statuses.
 and same 6 AP, so a coloured row read against `all-out` is what the element is worth. Enemies
 beaten, out of 96:
 
-| mirroring | shocking | dodging | chilling | weighting | burning | all-out | feinting | guarding | bracing | ritual |
+| shocking | dodging | retreating | chilling | weighting | burning | all-out | feinting | guarding | bracing | ritual |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 94 | 94 | 91 | 77 | 64 | 55 | 48 | 37 | 26 | 26 | 0 |
+| 96 | 93 | 86 | 79 | 66 | 57 | 50 | 39 | 28 | 28 | 2 |
 
-- **`[?]` Shock is priced wrong and the number is one constant.** It ties Mirror, which this
-  document already records as too strong — and it does so while dealing full damage, where
-  Mirror gives up its turn. Two lightning attacks a round is a free negation of most enemy
-  turns on top of a full offence. `shockPerHit` is the lever; a shock that needed two hits to
-  spend, or that only stopped the victim's *first* attack, are the two candidates.
+*(Measured 2026-08-14, after Retreat replaced the 4-cost reflecting defend and Ritual went to
++6. Two enemies — Clear Pod and Clear Slime — lose to everything; nothing is a wall.)*
+
+- **`[?]` Shock is priced wrong and the number is one constant.** It now beats the entire
+  roster, and it does so while dealing full damage, where a defensive posture gives up its turn
+  to do less. Two lightning attacks a round is a free negation of most enemy turns on top of a
+  full offence. `shockPerHit` is the lever; a shock that needed two hits to spend, or that only
+  stopped the victim's *first* attack, are the two candidates.
 - **`[?]` Every element beats plain.** A fire Strike costs what a Strike costs and does strictly
   more, so the 12 basic cards in a 60-card deck are strictly the worst 12. That is a
   consequence of cost being per concept, which is deliberate and is what the ring discount is

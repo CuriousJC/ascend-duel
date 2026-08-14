@@ -469,7 +469,7 @@ func TestAComboCutShortByDeathDoesNotFire(t *testing.T) {
 	// A has 4 life, so the second counter kills it partway through a three-Strike run.
 	a := duelist(10, 0, 4)
 	b := duelist(4, 0, 300)
-	b.Ripostes = 2
+	b = b.raiseDefend(Riposte).raiseDefend(Riposte)
 
 	events, aAfter, bAfter := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 1)
 

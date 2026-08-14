@@ -437,11 +437,6 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 		cur = -1
 	}
 
-	// Which defence stopped the last blow, so the damage that follows can be narrated as a
-	// riposte's counter or a mirror's reflection. The engine already distinguishes them on the
-	// KindNegated event; this only remembers it for the line after.
-	lastNegation := combat.ActionKind(-1)
-
 	for _, e := range s.log[:end] {
 		switch e.Kind {
 		case combat.KindRoundStart, combat.KindRoundEnd:
@@ -494,17 +489,13 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			attach(fmt.Sprintf("strips their %v", lower(e.Action.String())))
 
 		case combat.KindNegated:
-			lastNegation = e.Action
 			attach(fmt.Sprintf("stopped by a %v", lower(e.Action.String())))
 
 		case combat.KindDamage:
-			// A Riposte's counter and a Mirror's reflection both belong to the *defender*, so
-			// they land on the attacker's line as something done back rather than as a hit of
-			// their own. Which of the two it was decides the verb: a riposte hits back, a
-			// mirror returns the blow it just refused.
+			// A Riposte's counter belongs to the *defender*, so it lands on the attacker's line
+			// as something done back rather than as a hit of its own. It is the only damage in
+			// the game that runs the other way, so the side mismatch is the whole test.
 			switch {
-			case cur >= 0 && rows[cur].swatch != swatchFor(e.Side) && lastNegation == combat.Mirror:
-				attach(fmt.Sprintf("reflects %d", e.Amount))
 			case cur >= 0 && rows[cur].swatch != swatchFor(e.Side):
 				attach(fmt.Sprintf("hits back for %d", e.Amount))
 			default:
@@ -576,7 +567,39 @@ var actionPhrases = map[combat.ActionKind]string{
 	combat.Brace:   "and braces",
 	combat.Dodge:   "with a dodge",
 	combat.Riposte: "with a riposte",
-	combat.Mirror:  "behind a mirror",
+	combat.Retreat: "behind a retreat",
+}
+
+// **What each card does, in words, printed on its face.** A second table beside the one above
+// and deliberately not the same strings: `actionPhrases` is prose for a *sentence about a
+// round* — "attacks with a heavy strike" — and this is a rules description read while
+// deciding whether to play the thing.
+//
+// **The rule it describes lives in `internal/combat` and the wording lives here**, the same
+// split actionPhrases is built on: the rules package names actions and must not grow UI
+// strings. `internal/cards` knows how to set the text on a card and not what any card does.
+//
+// **Verb first, on every card.** They are read in a row while the player is counting action
+// points — the first word saying what the card *does to the round* is what makes eight of them
+// scannable. "0.5x" and "1x" rather than "half" and "full" because a multiplier is what the
+// rule actually is, and **"DMG" rather than "damage"** because the column is about a dozen
+// characters wide and the duelist card already labels the figure that way.
+//
+// A concept with no entry draws nothing rather than a placeholder; TestEveryConceptHasEffectText
+// is what stops that being how a card ships.
+var cardEffects = map[combat.ActionKind]string{
+	combat.Gather:  "Bank 2 AP for next round",
+	combat.Sift:    "Throw away 2 more cards, then refill",
+	combat.Guard:   "Halve every attack next turn",
+	combat.Ritual:  "Bank 6 AP for next round",
+	combat.Jab:     "Deal 0.5x DMG",
+	combat.Strike:  "Deal 1x DMG",
+	combat.Feint:   "Strip a defend card, deal 1x DMG",
+	combat.Heavy:   "Deal 2x DMG",
+	combat.Brace:   "Halve 1 incoming attack",
+	combat.Dodge:   "Negate 1 incoming attack",
+	combat.Riposte: "Negate 1 attack, deal 0.5x DMG back",
+	combat.Retreat: "Negate 3 incoming attacks",
 }
 
 // actionPhrase is what follows the verb. A card with no phrase falls back to naming itself

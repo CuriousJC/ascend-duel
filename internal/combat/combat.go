@@ -45,8 +45,8 @@ func (s Side) String() string {
 // the rules entirely.
 //
 // Every field is comparable on purpose: TestRoundIsDeterministic compares two resolved
-// duelists with ==, so nothing here may become a slice or a map. Two defenses that need
-// counting are two ints rather than a queue for exactly that reason.
+// duelists with ==, so nothing here may become a slice or a map. The defend queue is a fixed
+// array plus a count rather than a slice for exactly that reason.
 type Duelist struct {
 	Con         int
 	Str         int
@@ -56,35 +56,32 @@ type Duelist struct {
 
 	// Guarded halves every incoming attack. Raised by Guard, and standing until the start
 	// of its owner's next turn — long enough to cover the opponent's whole turn once,
-	// whichever side raised it. See expireDefenses.
+	// whichever side raised it. See ClearDefenses.
+	//
+	// **It is a flag rather than an entry in the ordered list below because Guard is a
+	// prepare, not a defend.** That is also why a Feint cannot strip it: the strip takes a
+	// defend card, and Guard is not one.
 	Guarded bool
 
-	// Pending negations. Each one is spent stopping a single incoming attack dead, and
-	// Ripostes are spent before Dodges so their counter-damage lands as early in the
-	// opponent's turn as it can — early enough to cut the rest of that turn short if it
-	// kills. They expire alongside Guarded.
+	// Defends is the defend cards this duelist has raised and not yet spent, **in the order
+	// they were played**, and DefendCount is how many of the array is in use.
 	//
-	// A Feint strips one of these without triggering its counter, which is the only way a
-	// negation leaves without stopping something.
-	Ripostes int
-	Dodges   int
-
-	// Braces halve a single incoming attack each and are spent doing it, where Guarded halves
-	// every attack and is not. That is the whole difference between the 1-AP defence and the
-	// 3-AP prepare: one card, one blow, versus one card, one turn.
+	// The first entry answers the next incoming attack, whatever it is — a Dodge or a Retreat
+	// stops it dead, a Riposte stops it and hits back, a Brace halves it. They expire alongside
+	// Guarded.
 	//
-	// A brace and a guard both applying quarter the blow. Deliberate — they are different
-	// cards bought separately, and a rule that silently ignored one of them would make the
-	// cheaper card worthless exactly when the player had committed to both.
-	Braces int
-
-	// Mirrored negates every attack in the opponent's next turn and reflects each one back.
-	// A bool rather than a count because it is turn-wide like Guarded, not per-blow like a
-	// Dodge — and because "every attack" has no number to run out of.
+	// **Raise order is the rule, and it replaced a fixed precedence** *(2026-08-14)*. Ripostes
+	// used to be spent before Dodges and Braces only applied once nothing had negated, because
+	// four independent counters had no way to say which card came first. Ordering them makes
+	// drag-within-the-defend-phase a real decision and gives Feint something well-defined to
+	// strip. What it costs is the old guarantee that a Riposte's counter-damage lands as early
+	// in the opponent's turn as possible: a Riposte queued last now answers late and can miss a
+	// kill it would once have made.
 	//
-	// It is checked *before* the counted negations, so a Mirror never lets a Dodge or Riposte
-	// be spent on a blow it was going to stop for free.
-	Mirrored bool
+	// **A fixed array, not a slice**, because TestRoundIsDeterministic compares two resolved
+	// duelists with == and nothing on this struct may stop being comparable.
+	Defends     [maxPendingDefends]PendingDefend
+	DefendCount int
 
 	// The two halves of Gather. GatheredAP is what has been banked *this* round; at the
 	// round boundary it becomes BonusAP, which ActionPoints adds to the budget for the
@@ -127,6 +124,94 @@ type Duelist struct {
 
 // Alive reports whether this duelist can still fight.
 func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
+
+// PendingDefend is one raised defend card waiting for an attack to answer: which card it was,
+// and how many attacks it still has in it. Everything but Retreat answers exactly one.
+//
+// **Charges rather than three separate entries for a Retreat**, so that a Feint taking one of
+// them leaves a Retreat that is visibly two-thirds of a card rather than deleting a third of
+// something the player queued once.
+type PendingDefend struct {
+	Card    ActionKind
+	Charges int
+}
+
+// maxPendingDefends bounds the ordered defend list. A turn is capped at MaxActions cards and
+// every one of them could be a defend, so this is everything a legal turn can raise.
+const maxPendingDefends = baseMaxActions
+
+// retreatCharges is how many attacks one Retreat answers before it is spent. Three for four
+// points, against Dodge's one for two — the tier buys *volume* of negation, and it is the whole
+// card, so a Feint that took the card outright rather than one charge would make a 3-point
+// attack beat it for free.
+const retreatCharges = 3
+
+// defendCharges is how many attacks one card of this kind answers.
+func defendCharges(a ActionKind) int {
+	if a == Retreat {
+		return retreatCharges
+	}
+	return 1
+}
+
+// raiseDefend puts a defend card on the back of the pending list, where it waits behind
+// anything raised before it.
+//
+// **An overflow is dropped rather than growing the list or panicking.** MaxActions caps a legal
+// turn at five actions, so the array holds everything a legal turn can raise; ResolveRound
+// deliberately trusts what it is handed so a balance sim can probe outside the rules, and a sim
+// that queues six defends should get five of them rather than a crash.
+func (d Duelist) raiseDefend(a ActionKind) Duelist {
+	if d.DefendCount >= len(d.Defends) {
+		return d
+	}
+	d.Defends[d.DefendCount] = PendingDefend{Card: a, Charges: defendCharges(a)}
+	d.DefendCount++
+	return d
+}
+
+// nextDefend is the card that answers the next incoming attack, without spending anything.
+func (d Duelist) nextDefend() (ActionKind, bool) {
+	if d.DefendCount == 0 {
+		return 0, false
+	}
+	return d.Defends[0].Card, true
+}
+
+// spendDefend takes one charge off the front of the list, dropping the entry when its last
+// charge goes, and reports which card paid.
+//
+// **One function for both ways a charge leaves** — answering an attack and being stripped by a
+// Feint — so the two can never come to disagree about which card is first.
+func (d Duelist) spendDefend() (ActionKind, Duelist, bool) {
+	if d.DefendCount == 0 {
+		return 0, d, false
+	}
+
+	front := d.Defends[0]
+	front.Charges--
+	if front.Charges > 0 {
+		d.Defends[0] = front
+		return front.Card, d, true
+	}
+
+	copy(d.Defends[:d.DefendCount-1], d.Defends[1:d.DefendCount])
+	d.Defends[d.DefendCount-1] = PendingDefend{}
+	d.DefendCount--
+	return front.Card, d, true
+}
+
+// ClearDefenses drops everything a turn put up: the guard and every pending defend card.
+//
+// Exported because the combat screen resets a duelist between fights and has to be able to
+// clear this without knowing what is in it — a screen that listed the fields by hand is how a
+// Brace once survived into the next duel.
+func ClearDefenses(d Duelist) Duelist {
+	d.Guarded = false
+	d.Defends = [maxPendingDefends]PendingDefend{}
+	d.DefendCount = 0
+	return d
+}
 
 // Category is which phase of a turn an action resolves in, and the axis the whole round
 // is now built on. It is a property of the action, not an independent choice: a fire Guard
@@ -191,14 +276,14 @@ const (
 	Brace
 	Dodge
 	Riposte
-	Mirror
+	Retreat
 )
 
 // AllActions is every action a duelist can queue, in category order.
 var AllActions = []ActionKind{
 	Gather, Sift, Guard, Ritual,
 	Jab, Strike, Feint, Heavy,
-	Brace, Dodge, Riposte, Mirror,
+	Brace, Dodge, Riposte, Retreat,
 }
 
 func (a ActionKind) String() string {
@@ -225,8 +310,8 @@ func (a ActionKind) String() string {
 		return "Dodge"
 	case Riposte:
 		return "Riposte"
-	case Mirror:
-		return "Mirror"
+	case Retreat:
+		return "Retreat"
 	default:
 		return "Unknown"
 	}
@@ -250,7 +335,7 @@ func (a ActionKind) Category() Category {
 	switch a {
 	case Gather, Sift, Guard, Ritual:
 		return CategoryPrepare
-	case Brace, Dodge, Riposte, Mirror:
+	case Brace, Dodge, Riposte, Retreat:
 		return CategoryDefend
 	default:
 		return CategoryAttack
@@ -275,7 +360,7 @@ const (
 	costBrace   = 1
 	costDodge   = 2
 	costRiposte = 3
-	costMirror  = 4
+	costRetreat = 4
 )
 
 // Cost is what this action takes out of the round's action-point budget.
@@ -301,8 +386,8 @@ func (a ActionKind) Cost() int {
 		return costDodge
 	case Riposte:
 		return costRiposte
-	case Mirror:
-		return costMirror
+	case Retreat:
+		return costRetreat
 	default:
 		return costStrike
 	}
@@ -320,43 +405,24 @@ const (
 // out of the round it is played in, not the point it costs.
 const gatherBonusAP = 2
 
-// ritualBonusAP is Ritual's bank. **Deliberately the same net rate as Gather** — 1 AP for +2 and
-// 4 AP for +5 are both net +1 per point spent — so Ritual is not a better Gather, it is a Gather
-// that does not eat the round. Four Gathers bank more (+8) but spend four of five action slots;
-// Ritual banks +5 and leaves four slots to fight with. The difference it sells is *slots*.
+// ritualBonusAP is Ritual's bank: four points now for six next round.
+//
+// **It sells rate as well as slots** *(2026-08-14)*. It was +5 until then, deliberately matching
+// Gather's net rate — 1 AP for +2 and 4 AP for +5 are both net +1 per point — so that Ritual was
+// not a better Gather but a Gather that does not eat the round: four Gathers bank more (+8) and
+// spend four of five action slots, where Ritual banks once and leaves four slots to fight with.
+// At +6 it is net +2 per point and is now the better bank outright, which makes the 4-cost
+// prepare a genuine commitment card rather than a convenience.
 //
 // An earlier draft granted +2 AP and +2 to the action cap instead, to reach six- and seven-card
 // combo runs. That was cut when the cap was frozen at five permanently: a growable cap dilutes
 // every named hand shape as it grows. See MECHANICS.md.
-const ritualBonusAP = 5
+const ritualBonusAP = 6
 
 // braceDivisor is how much a spent brace cuts one incoming attack. Its own constant rather than
 // a shared one with guardDivisor: the two are the same number today and are different rules, so
 // tuning one must not silently move the other.
 const braceDivisor = 2
-
-// mirrorReflectNum/Den is the fraction of a stopped blow a Mirror sends back, as a fraction so
-// this package stays integer arithmetic. **1/1 — full reflection, as designed.**
-//
-// **`tools/balance` says this is too strong, and the number is here so the fix is one line.**
-// With full reflection the `mirroring` posture beats all four shipped enemies and finishes every
-// one of them on 60/60 life, which is the "strong against everything" condition that means a
-// card is mispriced rather than good. It is also, accidentally, the only posture that beats
-// Swarm1 — an enemy MECHANICS.md records as unbeatable by all three original postures — so it
-// papers over a known balance hole by being overpowered instead of by being right.
-//
-// Left at 1/1 deliberately: full reflection is the card as specified, and quietly halving a
-// design decision to make a table look better is the wrong way round. The two candidate levers,
-// in the order worth trying:
-//
-//   - **Halve the reflection** (1/2 here). Keeps the card's character — it still scales with what
-//     the opponent committed — and stops it being a better Dodge in every matchup.
-//   - **Cap what it stops.** Negating a whole turn for 4 AP is the other half of the problem;
-//     "negates and reflects the first two attacks" is a different card but a priceable one.
-const (
-	mirrorReflectNum = 1
-	mirrorReflectDen = 1
-)
 
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
@@ -409,8 +475,7 @@ const guardDivisor = 2
 // Damage is what an action deals given the attacker's Strength.
 //
 // Riposte is the odd one: it is a *defend*, and the number below is what it hits back for
-// when it stops an attack, not something it deals on its own. Reporting it here is what
-// lets the card draw a damage badge for it without the screen knowing the rule.
+// when it stops an attack, not something it deals on its own.
 // Feint deals a Strike's damage and pays its extra point for the negation it strips, not for a
 // bigger number — see resolveAttack.
 func (a ActionKind) Damage(str int) int {
@@ -445,10 +510,11 @@ const (
 	// invisible in the one place the player looks to find out what happened.
 	KindBraced
 
-	// KindStripped is a negation removed by a Feint without being spent on anything. Action is
-	// the negation that went; Target is whose it was. It is not a KindNegated because nothing
+	// KindStripped is a defend card removed by a Feint without being spent on anything. Action
+	// is the card that went; Target is whose it was. It is not a KindNegated because nothing
 	// was negated — the whole point of the card is that the defence leaves without stopping a
-	// blow and without firing its counter.
+	// blow and without firing its counter. A stripped Retreat loses one of its three charges
+	// and stays, so this event can name the same card twice in a turn.
 	KindStripped
 
 	KindDamage
@@ -735,14 +801,10 @@ func addStagger(existing, add int) int {
 // expireDefenses drops everything the previous turn put up. Called at the start of a
 // side's own turn, never at the round boundary — side B acts last, so a defense cleared
 // at the boundary would have protected B from nothing at all.
-func expireDefenses(d Duelist) Duelist {
-	d.Guarded = false
-	d.Ripostes = 0
-	d.Dodges = 0
-	d.Braces = 0
-	d.Mirrored = false
-	return d
-}
+//
+// The clearing itself is ClearDefenses, which the combat screen also calls between fights; the
+// timing rule is what lives here.
+func expireDefenses(d Duelist) Duelist { return ClearDefenses(d) }
 
 // endRound rolls what was banked this round into next round's budget, ticks a burn, and counts
 // every status down one. Assignment rather than addition for the bank: two Gathers in one round
@@ -845,28 +907,20 @@ func resolveAction(
 		actor.Guarded = true
 		return events, actor, target
 
-	case Brace:
-		actor.Braces++
-		return events, actor, target
-
-	case Dodge:
-		actor.Dodges++
-		return events, actor, target
-
-	case Riposte:
-		actor.Ripostes++
-		return events, actor, target
-
-	case Mirror:
-		actor.Mirrored = true
+	case Brace, Dodge, Riposte, Retreat:
+		// **One arm for all four**, since raise order is the whole of what tells them apart
+		// while they wait. What each does when its turn to answer comes is decided in
+		// resolveAttack, which is the only place that knows what it is answering.
+		actor = actor.raiseDefend(action)
 		return events, actor, target
 	}
 
 	return resolveAttack(events, side, targetSide, actor, target, card, round, num, den)
 }
 
-// resolveAttack lands one attack, or fails to. A pending Riposte or Dodge on the target
-// stops it dead; a raised Guard merely halves it.
+// resolveAttack lands one attack, or fails to. **The first defend card the target has raised
+// and not spent answers it** — a Dodge or a Retreat stops it dead, a Riposte stops it and hits
+// back, a Brace halves it — and a raised Guard halves whatever is left.
 //
 // **A combo multiplier scales the blow before the Guard halves it**, so a guard is worth the
 // same fraction against a boosted attack as against a plain one. Halving first and then
@@ -877,8 +931,7 @@ func resolveAction(
 // **The order of the whole calculation is: concept damage, combo multiplier, the attacker's own
 // earth weight, then the defender's brace and guard.** Weight sits where it does because it is a
 // property of the *attacker* — it says how hard they can still swing — so everything the
-// defender does happens to a blow that has already been blunted. That is also why the reflection
-// a Mirror sends back is the blunted figure: it is what the attacker actually committed.
+// defender does happens to a blow that has already been blunted.
 func resolveAttack(
 	events []Event,
 	side, targetSide Side,
@@ -907,149 +960,112 @@ func resolveAttack(
 		return events, actor, target
 	}
 
-	// A Feint strips one counted negation before anything else resolves, and takes no counter
-	// for it. That is what the extra point over a Strike buys: attacking into a Riposte
+	// A Feint strips the first defend card the target raised, whatever it is, and takes no
+	// counter for it. That is what the extra point over a Strike buys: attacking into a Riposte
 	// normally costs the attacker str/2, and this is the card that clears one safely.
 	//
-	// **Unconditional, and deliberately so.** It fires even when the blow is about to be
-	// stopped by a Mirror, because a strip that silently did nothing depending on a card the
-	// player cannot see would be a hidden interaction in a game whose whole point is reading
-	// the opponent. Ripostes before Dodges, matching the order they are spent in — the Riposte
-	// is the one worth removing.
+	// **It strips whatever is at the front rather than hunting for the Riposte.** The old rule
+	// picked Ripostes before Dodges, because four independent counters had no order to read; now
+	// that the defend list has one, the card the player put first is the card the Feint meets.
+	// That makes the strip something the *defender* can plan against — leading with a Brace
+	// spends the Feint on a 1-point card — instead of a fixed precedence nobody chose.
 	//
-	// Guarded and Mirrored are turn-wide states, not pending negations, and a Feint does not
-	// touch either.
-	if action == Feint && (target.Ripostes > 0 || target.Dodges > 0) {
-		stripped := Riposte
-		if target.Ripostes > 0 {
-			target.Ripostes--
-		} else {
-			target.Dodges--
-			stripped = Dodge
-		}
-		events = append(events, Event{
-			Kind:   KindStripped,
-			Side:   side,
-			Action: stripped,
-			Target: targetSide,
-			Round:  round,
-		})
-	}
-
-	// A Mirror stops everything and sends it back, and it is checked before the counted
-	// negations so it never lets a Dodge or Riposte be spent on a blow that was going to be
-	// stopped for free.
+	// **Against a Retreat it takes one charge, not the card.** Three negations for four points
+	// would otherwise be beaten outright by one three-point attack.
 	//
-	// **The reflected figure is the damage after any combo multiplier and before any guard.**
-	// After the multiplier because what it reflects is what the attacker actually committed —
-	// which is what makes Mirror the answer to a telegraphed spike rather than a flat damage
-	// reduction. Before any guard because the blow never lands, so nothing of the defender's
-	// ever reduces it; and the defender's own Guard is irrelevant to what the attacker threw.
-	// This follows Riposte's counter, which is likewise raw.
-	if target.Mirrored {
-		reflected := scaleDamage(
-			blunt(scaleDamage(card.Damage(actor.Str), num, den), actor.weightPct()),
-			mirrorReflectNum, mirrorReflectDen)
-
-		events = append(events, Event{
-			Kind:   KindNegated,
-			Side:   targetSide,
-			Action: Mirror,
-			Target: side,
-			Round:  round,
-		})
-
-		// The reflection runs the other way, so the sides here are swapped relative to the
-		// attack that provoked it — the same shape as a Riposte's counter.
-		actor.CurrentLife = reduce(actor.CurrentLife, reflected)
-		events = append(events, Event{
-			Kind:   KindDamage,
-			Side:   targetSide,
-			Target: side,
-			Amount: reflected,
-			Life:   actor.CurrentLife,
-			Round:  round,
-		})
-		if !actor.Alive() {
+	// **Unconditional, and deliberately so.** It fires whatever is about to happen to the blow,
+	// because a strip that silently did nothing depending on a card the player cannot see would
+	// be a hidden interaction in a game whose whole point is reading the opponent.
+	//
+	// Guarded is a turn-wide state raised by a *prepare*, not a defend card, and a Feint does
+	// not touch it.
+	if action == Feint {
+		if stripped, after, ok := target.spendDefend(); ok {
+			target = after
 			events = append(events, Event{
-				Kind:   KindDefeated,
-				Side:   targetSide,
-				Target: side,
+				Kind:   KindStripped,
+				Side:   side,
+				Action: stripped,
+				Target: targetSide,
 				Round:  round,
 			})
 		}
-		return events, actor, target
-	}
-
-	// Negation first, and Ripostes before Dodges. Both stop the blow completely, so
-	// spending the one that hits back first is free — and it gets the counter-damage into
-	// the log early enough to end the attacker's turn if it kills.
-	if target.Ripostes > 0 {
-		target.Ripostes--
-		events = append(events, Event{
-			Kind:   KindNegated,
-			Side:   targetSide,
-			Action: Riposte,
-			Target: side,
-			Round:  round,
-		})
-
-		// The counter runs the other way: the defender is the one dealing damage now, so
-		// the sides in this event are swapped relative to the attack that provoked it.
-		counter := Riposte.Damage(target.Str)
-		actor.CurrentLife = reduce(actor.CurrentLife, counter)
-
-		events = append(events, Event{
-			Kind:   KindDamage,
-			Side:   targetSide,
-			Target: side,
-			Amount: counter,
-			Life:   actor.CurrentLife,
-			Round:  round,
-		})
-		if !actor.Alive() {
-			events = append(events, Event{
-				Kind:   KindDefeated,
-				Side:   targetSide,
-				Target: side,
-				Round:  round,
-			})
-		}
-		return events, actor, target
-	}
-
-	if target.Dodges > 0 {
-		target.Dodges--
-		events = append(events, Event{
-			Kind:   KindNegated,
-			Side:   targetSide,
-			Action: Dodge,
-			Target: side,
-			Round:  round,
-		})
-		return events, actor, target
 	}
 
 	// The attacker's own earth weight blunts the blow before any of the defender's cards touch
 	// it. A Riposte's counter is deliberately outside this, exactly as it is outside the combo
 	// multiplier: it is the defender hitting back, not a card the weighted duelist played.
+	//
+	// Computed before the defend list is consulted because a Brace needs a figure to halve.
+	// Nothing here has an effect until it is written to a life total.
 	dmg := blunt(scaleDamage(card.Damage(actor.Str), num, den), actor.weightPct())
 
-	// A brace is spent on this blow; a guard is not spent at all. Both can apply, quartering
-	// the hit — deliberate, since they are two cards bought separately and a rule that ignored
-	// one of them would make the cheaper card worthless exactly when the player committed to
-	// both. Brace goes first so the log reads cheap-then-broad, in cost order.
-	if target.Braces > 0 {
-		target.Braces--
-		dmg /= braceDivisor
-		events = append(events, Event{
-			Kind:   KindBraced,
-			Side:   side,
-			Target: targetSide,
-			Amount: dmg,
-			Life:   target.CurrentLife,
-			Round:  round,
-		})
+	// **The first defend card the target raised answers this attack, whatever it is.** One
+	// charge is spent either way; what that charge does is the card's business.
+	if kind, ok := target.nextDefend(); ok {
+		_, spent, _ := target.spendDefend()
+		target = spent
+
+		switch kind {
+		case Riposte:
+			events = append(events, Event{
+				Kind:   KindNegated,
+				Side:   targetSide,
+				Action: Riposte,
+				Target: side,
+				Round:  round,
+			})
+
+			// The counter runs the other way: the defender is the one dealing damage now, so
+			// the sides in this event are swapped relative to the attack that provoked it.
+			counter := Riposte.Damage(target.Str)
+			actor.CurrentLife = reduce(actor.CurrentLife, counter)
+
+			events = append(events, Event{
+				Kind:   KindDamage,
+				Side:   targetSide,
+				Target: side,
+				Amount: counter,
+				Life:   actor.CurrentLife,
+				Round:  round,
+			})
+			if !actor.Alive() {
+				events = append(events, Event{
+					Kind:   KindDefeated,
+					Side:   targetSide,
+					Target: side,
+					Round:  round,
+				})
+			}
+			return events, actor, target
+
+		case Brace:
+			// A brace is spent on this blow; a guard is not spent at all. Both can apply,
+			// quartering the hit — deliberate, since they are two cards bought separately and a
+			// rule that ignored one of them would make the cheaper card worthless exactly when
+			// the player committed to both.
+			dmg /= braceDivisor
+			events = append(events, Event{
+				Kind:   KindBraced,
+				Side:   side,
+				Target: targetSide,
+				Amount: dmg,
+				Life:   target.CurrentLife,
+				Round:  round,
+			})
+
+		default:
+			// Dodge and Retreat: the two that simply stop it dead. A defend card that does
+			// anything else needs its own arm above rather than falling in with them.
+			events = append(events, Event{
+				Kind:   KindNegated,
+				Side:   targetSide,
+				Action: kind,
+				Target: side,
+				Round:  round,
+			})
+			return events, actor, target
+		}
 	}
 
 	if target.Guarded {

@@ -39,11 +39,11 @@ const deckVisibleWidth = 75
 // worst case rather than a representative one.
 var deckNames = []string{
 	"Gather", "Sift", "Guard", "Ritual", "Jab", "Strike",
-	"Feint", "Heavy", "Brace", "Dodge", "Riposte", "Mirror",
+	"Feint", "Heavy", "Brace", "Dodge", "Riposte", "Retreat",
 }
 
 func strike(e Element) Spec {
-	return Spec{Name: "Strike", Category: CategoryAttack, Damage: 7, Cost: 2, Element: e, Enabled: true}
+	return Spec{Name: "Strike", Category: CategoryAttack, Cost: 2, Element: e, Enabled: true}
 }
 
 func render(t *testing.T, s Spec, st Style) *image.RGBA {
@@ -175,20 +175,19 @@ func TestCostDrawsOneDashPerPoint(t *testing.T) {
 }
 
 func TestLeftColumnDoesNotCollide(t *testing.T) {
-	// **The left column is a stack of three things now**: category glyph, cost dashes,
-	// damage badge, one under the other. Adding the category glyph is what made this
-	// worth a test — before it there was one badge and a corner, and nothing could
-	// overlap anything.
+	// **The left column is a glyph over a stack of dashes**, and it used to have a damage badge
+	// under that. Adding the category glyph is what made this worth a test — before it there
+	// was one badge and a corner, and nothing could overlap anything.
 	//
-	// Four dashes is the most the rules can produce today. A fifth cost tier grows the
-	// stack into the damage badge, which is a layout change and not just a bigger number.
-	// This fails when that happens rather than rendering the collision.
+	// Four dashes is the most the rules can produce today. A fifth cost tier grows the stack
+	// past the bottom of the card, which is a layout change and not just a bigger number. This
+	// fails when that happens rather than rendering it.
 	const maxCost = 4
 
 	st := Hand
 
-	// Measured per glyph, never assumed: the category glyphs are 22 pixels and the damage
-	// sword is 64. The tallest category glyph is the one that has to fit.
+	// Measured per glyph, never assumed. They are one size today and SizeOf is still the
+	// authority; the tallest is the one that has to fit.
 	categoryGlyph := 0
 	for _, c := range Categories() {
 		kind, ok := c.glyph()
@@ -202,23 +201,78 @@ func TestLeftColumnDoesNotCollide(t *testing.T) {
 
 	categoryBottom := st.CategoryGlyphTop + categoryGlyph
 	dashBottom := st.DashTop + (maxCost-1)*(st.DashHeight+st.DashGap) + st.DashHeight
-	damageBottom := st.GlyphColumnTop + systems.GlyphSize*st.GlyphScale
 
 	if categoryBottom > st.DashTop {
 		t.Errorf("category glyph ends at y=%d, %dpx into the dash stack at y=%d",
 			categoryBottom, categoryBottom-st.DashTop, st.DashTop)
 	}
-	if dashBottom > st.GlyphColumnTop {
-		t.Errorf("%d dashes end at y=%d, %dpx into the damage badge at y=%d",
-			maxCost, dashBottom, dashBottom-st.GlyphColumnTop, st.GlyphColumnTop)
-	}
-	if inside := st.Height - st.BorderWidth; damageBottom > inside {
-		t.Errorf("damage badge ends at y=%d, past the inside of the bottom border at y=%d",
-			damageBottom, inside)
+	if inside := st.Height - st.BorderWidth; dashBottom > inside {
+		t.Errorf("%d dashes end at y=%d, past the inside of the bottom border at y=%d",
+			maxCost, dashBottom, inside)
 	}
 }
 
-func TestMiniShowsEverythingButDamage(t *testing.T) {
+func TestTheCostColumnStaysOutOfTheTextColumn(t *testing.T) {
+	// **The text is centred in what the cost column leaves**, so the column's *width* is now
+	// load-bearing in a way it never was while the text ran the full width of the card. One
+	// thing shares a horizontal with the text and therefore sets that width: the dash marks.
+	// That is what a cost column ought to mean, and it is why the column is as narrow as it is.
+	st := Hand
+
+	if right := st.DashLeft + st.DashWidth; right > st.TextColumnLeft {
+		t.Errorf("the cost dashes reach x=%d, into the text column at x=%d",
+			right, st.TextColumnLeft)
+	}
+}
+
+func TestTheCategoryGlyphClearsTheTextBand(t *testing.T) {
+	// **The glyph is deliberately wider than the column it sits above**, so what keeps it off
+	// the text is height rather than width: it hangs off the top-left corner, and the text band
+	// starts below it. If either moves far enough to overlap, the glyph is drawn first and the
+	// first line of text lands on top of it.
+	st := Hand
+
+	glyph := 0
+	for _, c := range Categories() {
+		kind, ok := c.glyph()
+		if !ok {
+			t.Fatalf("%s has no glyph", c)
+		}
+		if n := systems.SizeOf(kind) * st.GlyphScale; n > glyph {
+			glyph = n
+		}
+	}
+
+	if bottom := st.CategoryGlyphTop + glyph; bottom > st.TextBandTop {
+		t.Errorf("the category glyph ends at y=%d, %dpx into the text band at y=%d",
+			bottom, bottom-st.TextBandTop, st.TextBandTop)
+	}
+}
+
+func TestAGlyphOffTheCornerDoesNotSquareTheCorner(t *testing.T) {
+	// The glyph is placed at a negative offset so it runs off the top-left edge. Cropping it at
+	// the image's bounding box rather than at the card's own curve would fill the transparent
+	// rounded corner with glyph pixels and the card would read as having one square corner.
+	st := Hand
+	if st.GlyphInset >= 0 && st.CategoryGlyphTop >= 0 {
+		t.Skip("the hand glyph no longer hangs off the corner")
+	}
+
+	// A defend card, because the kite shield is the widest glyph and reaches furthest into the
+	// corner. Disabled as well as enabled: the fade pass walks the same rectangle.
+	for _, enabled := range []bool{true, false} {
+		s := Spec{Name: "Dodge", Category: CategoryDefend, Cost: 2, Element: Ice, Enabled: enabled}
+		img := render(t, s, st)
+
+		// The outermost corner pixel of the bounding box is outside a 12px radius and must stay
+		// transparent whatever is drawn over it.
+		if got := img.RGBAAt(0, 0); got.A != 0 {
+			t.Errorf("enabled=%v: the top-left corner pixel is %v, want transparent", enabled, got)
+		}
+	}
+}
+
+func TestMiniShowsEverythingButTheText(t *testing.T) {
 	// **What the overlay can say is set by what fits in the visible strip.** At a third
 	// size, 29 pixels showed and only dashes fit; at half with the row widened, 84 of the
 	// 90 show and the name, glyph and dashes all fit. This pins that, because the tempting
@@ -239,13 +293,12 @@ func TestMiniShowsEverythingButDamage(t *testing.T) {
 		t.Errorf("the dashes end at x=%d but only %d pixels show", dashRight, visible)
 	}
 
-	// The damage badge is the one thing that does not fit, and it is height rather than
-	// width that stops it: a name, a glyph, four dashes and a 64-pixel sword do not go
-	// into 132 pixels.
-	if Mini.ShowDamage {
-		used := Mini.DashTop + 4*(Mini.DashHeight+Mini.DashGap) + systems.GlyphSize
-		t.Errorf("Mini claims to show a damage badge; the column would run to y=%d in a %dpx card",
-			used, Mini.Height)
+	// The effect text is the one thing that does not fit. A mini card is 81 wide, and taking a
+	// cost column out of that leaves about 55 pixels of measure — four or five characters a
+	// line at any size legible on a card half this one's height.
+	if Mini.TextLineHeight > 0 {
+		t.Errorf("Mini claims to draw effect text; it has %dpx of measure to do it in",
+			Mini.Width-Mini.TextColumnLeft-Mini.TextInset)
 	}
 
 	// Every name in the deck has to fit the card at the size Mini asks for.
@@ -407,8 +460,8 @@ func TestRingDrawsArtAndNoCardFurniture(t *testing.T) {
 
 	// And none of the card's own furniture is on it: a ring has no cost and no phase, so
 	// a stray dash or glyph would be claiming something untrue about it.
-	if st.ShowCategory || st.ShowDamage {
-		t.Error("the ring style claims to draw a category glyph or damage badge")
+	if st.ShowCategory || st.TextLineHeight > 0 {
+		t.Error("the ring style claims to draw a category glyph or effect text")
 	}
 	noCost := Spec{Name: "Fire Ring", Element: Ring, Art: art, Enabled: true, Cost: 0}
 	plain := render(t, noCost, st)
@@ -425,7 +478,7 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 	// pixels, on the longest name in the deck at the widest cost — the case where a
 	// mistake would actually show.
 	st := Hand
-	s := Spec{Name: "Riposte", Category: CategoryDefend, Damage: 6, Cost: 4, Element: Lightning, Enabled: true}
+	s := Spec{Name: "Riposte", Category: CategoryDefend, Cost: 4, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
 	border := systems.ColorToward(BorderOf(Lightning), Surface, borderRestToward)
@@ -442,17 +495,21 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 	}
 }
 
-func TestNoDamageBadgeWhenThereIsNoDamage(t *testing.T) {
-	// A sword reading zero is worse than no sword. The column should be untouched
-	// surface where the glyph would have been.
+func TestTheCostColumnHoldsNothingButDashes(t *testing.T) {
+	// **The card carries no damage figure** — what it deals is in the effect text — so below the
+	// last dash the column is bare surface. This is the pixel half of the geometry test above:
+	// it catches anything drawn into the column that the layout constants do not describe.
 	st := Hand
-	s := Spec{Name: "Guard", Category: CategoryDefend, Damage: 0, Cost: 3, Element: Ice, Enabled: true}
+	s := Spec{Name: "Guard", Category: CategoryDefend, Cost: 3, Element: Ice, Enabled: true}
 	img := render(t, s, st)
 
-	x := st.GlyphInset + systems.GlyphSize/2
-	y := st.GlyphColumnTop + systems.GlyphSize/2
-	if got := img.RGBAAt(x, y); got != Surface {
-		t.Errorf("middle of the glyph column is %v on a card with no damage, want the surface %v", got, Surface)
+	firstFree := st.DashTop + s.Cost*(st.DashHeight+st.DashGap)
+	for y := firstFree; y < st.Height-st.BorderWidth; y++ {
+		for x := st.DashLeft; x < st.TextColumnLeft; x++ {
+			if got := img.RGBAAt(x, y); got != Surface {
+				t.Fatalf("(%d,%d) is %v, want bare surface %v below the cost dashes", x, y, got, Surface)
+			}
+		}
 	}
 }
 
@@ -557,14 +614,14 @@ func abs(n int) int {
 	return n
 }
 
-func TestCategoryGlyphsAreSmallerThanTheDamageBadge(t *testing.T) {
-	// **The relationship is the invariant, not the number.** How big a category glyph is
-	// stays a design choice — 22 for the generated book, 32 for the drawn sword and shield
-	// — but a category glyph that reaches the damage badge's size means someone put a 64px
-	// shape in the corner slot, and the left column silently overlaps again.
+func TestCategoryGlyphsStayCornerSized(t *testing.T) {
+	// **The bound is the invariant, not the number.** How big a category glyph is stays a
+	// design choice — 32 for all three today, and they have not always matched — but one
+	// that grows past half of GlyphSize is a full-size shape in a corner slot, and it walks
+	// into both the dash stack under it and the text column beside it.
 	//
-	// The floor matters as much as the ceiling: below about 16 pixels neither a painting
-	// nor a derived rim has anything left to read.
+	// The floor matters as much as the ceiling: below about 16 pixels neither a painting nor a
+	// derived rim has anything left to read.
 	for _, c := range Categories() {
 		kind, ok := c.glyph()
 		if !ok {
@@ -575,11 +632,6 @@ func TestCategoryGlyphsAreSmallerThanTheDamageBadge(t *testing.T) {
 			t.Errorf("%s glyph is %dpx, want between 16 and half of %d",
 				c, got, systems.GlyphSize)
 		}
-	}
-
-	// The damage sword stays big. It is not a category glyph and was not asked to shrink.
-	if got := systems.SizeOf(systems.GlyphDamage); got != systems.GlyphSize {
-		t.Errorf("the damage sword is %dpx, want %d", got, systems.GlyphSize)
 	}
 }
 
@@ -843,7 +895,7 @@ func TestBackIsTheSamePictureWhateverTheCard(t *testing.T) {
 	want := render(t, Spec{FaceDown: true}, Hand)
 
 	loud := Spec{
-		Name: "Riposte", Category: CategoryDefend, Damage: 9, Cost: 4,
+		Name: "Riposte", Category: CategoryDefend, Cost: 4, Text: "Negate 1 attack",
 		Element: Lightning, Enabled: true, Selected: true, FaceDown: true,
 	}
 	got := render(t, loud, Hand)

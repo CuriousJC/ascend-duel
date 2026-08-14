@@ -78,7 +78,7 @@ func buildSheet(inspect int) image.Image {
 	names := systems.PaletteNames()
 
 	// **Glyphs are no longer all one size.** The damage sword and the runner are 64; the
-	// three category glyphs are 22, authored small rather than scaled down. The sheet
+	// three category glyphs are 32, authored small rather than scaled down. The sheet
 	// therefore measures each one instead of assuming, and the column is sized by the
 	// largest — otherwise the small glyphs would sit in 64-pixel holes and look like
 	// mistakes rather than like the size they are.

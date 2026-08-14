@@ -120,7 +120,7 @@ func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	// Centred on the face. Measured rather than assumed — the glyphs are 32 where the card's
-	// category glyphs are 22 and its damage sword is 64, and SizeOf is the authority.
+	// category glyphs are 32 and its damage sword is 64, and SizeOf is the authority.
 	size := systems.SizeOf(kind)
 	r := muteButtonRect(gs)
 

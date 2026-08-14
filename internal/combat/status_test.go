@@ -50,7 +50,7 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	// **Decided 2026-08-12**: a prepare or a defend carries its element for combos and for the
 	// ring discount and applies nothing. Otherwise a 1-AP Gather would be as good a status
 	// delivery as a 1-AP Jab, and the prepare phase would quietly become the status engine.
-	for _, a := range []ActionKind{Gather, Sift, Guard, Ritual, Brace, Dodge, Riposte, Mirror} {
+	for _, a := range []ActionKind{Gather, Sift, Guard, Ritual, Brace, Dodge, Riposte, Retreat} {
 		attacker, target := duelist(10, 40, 500), duelist(10, 10, 500)
 		events, _, bAfter := ResolveRound(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
@@ -64,10 +64,10 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 }
 
 func TestAStoppedAttackAppliesNoStatus(t *testing.T) {
-	// A Dodge, a Riposte and a Mirror all stop the blow dead, so there is nothing to carry the
+	// A Dodge, a Riposte and a Retreat all stop the blow dead, so there is nothing to carry the
 	// element in on. The Feint strip is deliberately unconditional and this is deliberately
 	// not: a status is a consequence of connecting.
-	for _, defence := range []ActionKind{Dodge, Riposte, Mirror} {
+	for _, defence := range []ActionKind{Dodge, Riposte, Retreat} {
 		a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
 		// B raises the defence in round one, A swings into it in round two.
@@ -180,7 +180,7 @@ func TestLightningMakesTheNextAttackMissOutright(t *testing.T) {
 
 func TestAShockIsSpentByTheAttackItStops(t *testing.T) {
 	// One stack, one miss. A shock that stopped every attack in a turn would be a whole-turn
-	// negation for the price of a Jab, which is what Mirror costs 4 points to do.
+	// negation for the price of a Jab, where Retreat pays 4 points to stop three.
 	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
 	_, a1, b1 := ResolveRound(a, b, []Card{Of(Jab, Lightning)}, nil, 1)

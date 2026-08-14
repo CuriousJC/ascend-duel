@@ -226,8 +226,8 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 }
 
 func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
-	// Riposte reports a damage figure so its card can draw one, but it only ever hits back
-	// at something. Played into an opponent who does nothing, it deals nothing.
+	// Riposte reports a damage figure — it is what the counter hits for — but it only ever hits
+	// back at something. Played into an opponent who does nothing, it deals nothing.
 	for _, a := range []ActionKind{Gather, Guard, Dodge, Riposte} {
 		events, _, bAfter := ResolveRound(duelist(10, 10, 100), duelist(10, 10, 100),
 			PlainCards(a), nil, 1)
@@ -369,23 +369,31 @@ func TestRiposteNegatesAnAttackAndHitsBack(t *testing.T) {
 	}
 }
 
-func TestRiposteIsSpentBeforeDodge(t *testing.T) {
-	// Both stop a blow completely, so spending the one that hits back first is free, and
-	// it puts the counter-damage as early in the opponent's turn as it can go.
-	a := duelist(10, 10, 500)
-	b := duelist(10, 10, 500)
+func TestNegationsAreSpentInTheOrderTheyWereRaised(t *testing.T) {
+	// **The queue is the rule** *(2026-08-14)*. Ripostes used to be spent before Dodges by a
+	// fixed precedence, because four independent counters had nothing to read an order off; the
+	// defends queue now, so the card the player put first is the card that answers first. Both
+	// orderings are checked — a test that queued only one of them would pass against a rule that
+	// still ignored the queue.
+	for _, raised := range [][]Card{
+		PlainCards(Dodge, Riposte),
+		PlainCards(Riposte, Dodge),
+	} {
+		a := duelist(10, 10, 500)
+		b := duelist(10, 10, 500)
 
-	events, _, _ := ResolveRound(a, b,
-		PlainCards(Dodge, Riposte), PlainCards(Strike, Strike), 1)
+		events, _, _ := ResolveRound(a, b, raised, PlainCards(Strike, Strike), 1)
 
-	var negations []Card
-	for _, e := range events {
-		if e.Kind == KindNegated {
-			negations = append(negations, Plain(e.Action))
+		var negations []Card
+		for _, e := range events {
+			if e.Kind == KindNegated {
+				negations = append(negations, Plain(e.Action))
+			}
 		}
-	}
-	if !cardsEqual(negations, PlainCards(Riposte, Dodge)) {
-		t.Errorf("negations spent in order %v, want [Riposte Dodge]", negations)
+		if !cardsEqual(negations, raised) {
+			t.Errorf("raised %v, spent %v — they must answer in the order they were queued",
+				raised, negations)
+		}
 	}
 }
 
@@ -413,8 +421,9 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 	b := duelist(10, 10, 500)
 
 	_, a1, b1 := ResolveRound(a, b, PlainCards(Dodge), nil, 1)
-	if a1.Dodges != 1 {
-		t.Fatalf("A ended round 1 with %d dodges, want 1 unspent", a1.Dodges)
+	if a1.DefendCount != 1 || a1.Defends[0].Card != Dodge {
+		t.Fatalf("A ended round 1 holding %d defends (%v), want one unspent Dodge",
+			a1.DefendCount, a1.Defends[0].Card)
 	}
 
 	round2, _, _ := ResolveRound(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
@@ -535,7 +544,7 @@ func TestCategoriesCoverEveryAction(t *testing.T) {
 		Brace:   CategoryDefend,
 		Dodge:   CategoryDefend,
 		Riposte: CategoryDefend,
-		Mirror:  CategoryDefend,
+		Retreat: CategoryDefend,
 	}
 
 	if len(AllActions) != len(want) {
@@ -609,8 +618,9 @@ func TestBothSidesDefendingDoesNotAlias(t *testing.T) {
 	if b1.Guarded {
 		t.Error("B's dodge left it guarded; A's flag has leaked across")
 	}
-	if a1.Dodges != 0 || b1.Dodges != 1 {
-		t.Errorf("dodges: a=%d b=%d, want 0 and 1", a1.Dodges, b1.Dodges)
+	if a1.DefendCount != 0 || b1.DefendCount != 1 || b1.Defends[0].Card != Dodge {
+		t.Errorf("pending defends: a=%d b=%d (%v), want none and one Dodge",
+			a1.DefendCount, b1.DefendCount, b1.Defends[0].Card)
 	}
 }
 
@@ -673,7 +683,7 @@ func TestNoStylePlaysACardItWasNotDealt(t *testing.T) {
 		nil,
 		PlainCards(Jab),
 		PlainCards(Jab, Jab, Jab),
-		PlainCards(Brace, Dodge, Mirror), // no attacks at all
+		PlainCards(Brace, Dodge, Retreat), // no attacks at all
 		PlainCards(Guard, Gather),
 		PlainCards(Heavy, Heavy, Jab, Brace),
 	}

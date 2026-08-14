@@ -84,13 +84,15 @@ func run(dir string) error {
 
 	// Section one, as specified: every border colour against every AP count. The card
 	// underneath is held constant so the only things varying are the two axes.
+	//
+	// **The constant card is a real one**, built from the concept table rather than written out
+	// here, so it carries its effect text like every other card on the sheet. A row of cards
+	// with an empty right-hand side would be showing a layout the game never draws.
 	for _, e := range cards.Elements() {
 		row := row{Label: e.String()}
 		for cost := 1; cost <= maxCost; cost++ {
-			spec := cards.Spec{
-				Name: "Strike", Category: cards.CategoryAttack,
-				Damage: 7, Cost: cost, Element: e, Enabled: true,
-			}
+			spec := specFor("Strike", e)
+			spec.Cost = cost
 			cell, err := write(dir, faces, spec, cards.Hand,
 				fmt.Sprintf("card-%s-ap%d.png", e, cost),
 				fmt.Sprintf("%s · %d AP", e, cost))
@@ -106,10 +108,8 @@ func run(dir string) error {
 	// what varies rather than a colour or a count.
 	catRow := row{Label: "category glyph"}
 	for _, c := range cards.Categories() {
-		spec := cards.Spec{
-			Name: "Strike", Category: c, Damage: 7, Cost: 2,
-			Element: cards.Fire, Enabled: true,
-		}
+		spec := specFor("Strike", cards.Fire)
+		spec.Category = c
 		cell, err := write(dir, faces, spec, cards.Hand,
 			fmt.Sprintf("category-%s.png", c),
 			fmt.Sprintf("%s — %s", c, glyphNames[c]))
@@ -129,12 +129,13 @@ func run(dir string) error {
 		label string
 		spec  cards.Spec
 	}{
-		{"enabled", "enabled — affordable, not queued",
-			cards.Spec{Name: "Strike", Category: cards.CategoryAttack, Damage: 7, Cost: 2, Element: cards.Fire, Enabled: true}},
-		{"selected", "selected — queued this round",
-			cards.Spec{Name: "Strike", Category: cards.CategoryAttack, Damage: 7, Cost: 2, Element: cards.Fire, Enabled: true, Selected: true}},
-		{"disabled", "disabled — cannot afford it",
-			cards.Spec{Name: "Strike", Category: cards.CategoryAttack, Damage: 7, Cost: 2, Element: cards.Fire}},
+		// **Built from the concept table rather than written out**, unlike the two sections
+		// above: those vary one axis on a card that is deliberately not real, and this one has
+		// to be a real card because the effect text is part of what a state has to do —
+		// disabled dims the ink and there is now a paragraph of it to get wrong.
+		{"enabled", "enabled — affordable, not queued", specFor("Strike", cards.Fire)},
+		{"selected", "selected — queued this round", selected(specFor("Strike", cards.Fire))},
+		{"disabled", "disabled — cannot afford it", disabled(specFor("Strike", cards.Fire))},
 	}
 	stateRow := row{Label: "card state"}
 	for _, st := range states {
@@ -146,9 +147,9 @@ func run(dir string) error {
 	}
 	page.States = append(page.States, stateRow)
 
-	// Section four: the shapes a real deck actually contains. The grids above hold the
-	// card constant, which is exactly what hides a name that overruns its width or a card
-	// with no damage badge leaving a hole in the column.
+	// Section four: the shapes a real deck actually contains. The grids above hold the card
+	// constant, which is exactly what hides a name that overruns its width or an effect text
+	// that wraps a line too far.
 	shapeRow := row{Label: "real cards"}
 	for _, spec := range realCards() {
 		cell, err := write(dir, faces, spec, cards.Hand,
@@ -180,9 +181,7 @@ func run(dir string) error {
 		{"back-triangle-stack", "triangle — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkTriangle}, cards.Stack},
 		{"back-diamond-stack", "diamond — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkDiamond}, cards.Stack},
 		{"back-chevron-stack", "chevron — draw pile", cards.Spec{FaceDown: true, Back: cards.MarkChevron}, cards.Stack},
-		{"back-face", "a face, for the silhouette",
-			cards.Spec{Name: "Strike", Category: cards.CategoryAttack, Damage: 7, Cost: 2,
-				Element: cards.Fire, Enabled: true}, cards.Hand},
+		{"back-face", "a face, for the silhouette", specFor("Strike", cards.Fire), cards.Hand},
 	}
 	backRow := row{Label: "card back"}
 	for _, b := range backs {

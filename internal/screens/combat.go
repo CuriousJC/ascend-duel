@@ -393,10 +393,13 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 // It sets the fields by name rather than rebuilding the struct: Con/Str/Spd/MaxLife come
 // from the data record and must survive, and a zero literal here would quietly wipe them
 // the first time someone re-entered the screen.
+//
+// **The defences are cleared by `combat.ClearDefenses` rather than field by field.** This
+// function listed them by hand until 2026-08-14 and had fallen behind the rules package, so a
+// Brace survived into the next fight — which is exactly the failure a screen enumerating
+// another package's state invites.
 func resetCombatState(d combat.Duelist) combat.Duelist {
-	d.Guarded = false
-	d.Ripostes = 0
-	d.Dodges = 0
+	d = combat.ClearDefenses(d)
 	d.BonusAP = 0
 	d.GatheredAP = 0
 	return d

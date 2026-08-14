@@ -52,10 +52,10 @@ var seedCatalog = []namedSeed{
 	// tuning the combo itself. *(was seed 1569)*
 	{"strike-onslaught", 54198, "five Strikes: a Strike Onslaught, which takes a whole turn"},
 
-	// 1xGather 1xSift 2xJab 3xHeavy 1xMirror. *(was seed 5)*
+	// 1xGather 1xSift 2xJab 3xHeavy 1xRetreat. *(was seed 5)*
 	{"heavy-flurry", 1, "three or more Heavys: 12 AP, unaffordable, but the cards are there"},
 
-	// 1xGather 1xRitual 1xJab 1xHeavy 1xBrace 1xDodge 1xRiposte 1xMirror — eight distinct
+	// 1xGather 1xRitual 1xJab 1xHeavy 1xBrace 1xDodge 1xRiposte 1xRetreat — eight distinct
 	// concepts, which is the widest hand in the catalogue and the best look at the new cards.
 	// Gather + Jab + Dodge is 4 AP, so a white, a red and a blue verb chip fit in one round with
 	// room to spare. *(was seed 1)*

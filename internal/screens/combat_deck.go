@@ -658,7 +658,7 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 			// is an inventory, not a choice, and dimming by the round's remaining AP would
 			// say something about a budget that has nothing to do with a pile you cannot
 			// play from.
-			drawCard(gs, screen, at, cards.Mini, e.card, e.available, false, s.fighter.Str)
+			drawCard(gs, screen, at, cards.Mini, e.card, e.available, false)
 		}
 		shown += min(len(group), deckMaxPerRow)
 	}

@@ -2,7 +2,7 @@ package combat
 
 import "testing"
 
-// The 2026-08-08 concepts: Ritual, Brace, Feint and Mirror. Each gets the case that says what
+// The 2026-08-08 concepts: Ritual, Brace, Feint and Retreat. Each gets the case that says what
 // makes it differ in *kind* from the tier below it rather than merely in size — that being the
 // rule the concept grid in MECHANICS.md is held to, and the rule a cost ladder quietly breaks.
 //
@@ -31,14 +31,19 @@ func kindCount(events []Event, kind EventKind) int {
 	return n
 }
 
-func TestRitualBanksMoreThanGatherAtTheSameNetRate(t *testing.T) {
-	// The design claim is that Ritual is not a better Gather, it is a Gather that does not eat
-	// the round: both net +1 AP per point spent, and what Ritual sells is action slots. If that
-	// stops being true the card has become a strict upgrade and the 4-AP prepare tier has no
-	// reason to exist.
-	if gatherNet, ritualNet := gatherBonusAP-costGather, ritualBonusAP-costRitual; gatherNet != ritualNet {
-		t.Errorf("Gather nets %+d AP and Ritual nets %+d — they are meant to match, so Ritual sells slots not rate",
+func TestRitualBanksMoreThanGatherAndAtABetterRate(t *testing.T) {
+	// Ritual sells two things: **slots** — four Gathers bank +8 but spend four of five action
+	// slots, where one Ritual banks +6 and leaves four slots to fight with — and, since
+	// 2026-08-14, **rate**. It nets +2 AP per point spent against Gather's +1. If the rate ever
+	// falls back to Gather's the card is only selling slots again, which is a different card and
+	// a decision somebody should make deliberately rather than by editing a constant.
+	gatherNet, ritualNet := gatherBonusAP-costGather, ritualBonusAP-costRitual
+	if ritualNet <= gatherNet {
+		t.Errorf("Gather nets %+d AP and Ritual nets %+d — Ritual is meant to be the better bank",
 			gatherNet, ritualNet)
+	}
+	if ritualBonusAP <= gatherBonusAP {
+		t.Errorf("Ritual banks %d against Gather's %d", ritualBonusAP, gatherBonusAP)
 	}
 
 	a := duelist(10, 0, 100)
@@ -75,8 +80,8 @@ func TestBraceHalvesOneAttackAndIsSpent(t *testing.T) {
 	if want := 100 - 5 - 10; bAfter.CurrentLife != want {
 		t.Errorf("life after a braced Strike then a clean one = %d, want %d", bAfter.CurrentLife, want)
 	}
-	if bAfter.Braces != 0 {
-		t.Errorf("Braces left = %d, want 0", bAfter.Braces)
+	if bAfter.DefendCount != 0 {
+		t.Errorf("defends left = %d, want 0 — the brace was spent on the first blow", bAfter.DefendCount)
 	}
 }
 
@@ -117,24 +122,44 @@ func TestFeintStripsARiposteWithoutTakingTheCounter(t *testing.T) {
 	}
 }
 
-func TestFeintStripsRipostesBeforeDodges(t *testing.T) {
-	// Matching the order they are spent in. The riposte is the one worth removing, because it is
-	// the one that would otherwise have cost the attacker something.
-	a := duelist(10, 0, 100)
-	b := duelist(10, 0, 100)
+func TestFeintStripsWhicheverDefendWasRaisedFirst(t *testing.T) {
+	// **The strip follows raise order, not a precedence table.** It picked Ripostes over Dodges
+	// while the defences were four independent counters with nothing to say which came first;
+	// now that they queue, the card the defender put in front is the card that pays. Both
+	// orderings are checked, because a test that only queued one of them would pass against a
+	// hard-coded answer.
+	for _, tc := range []struct {
+		raised []Card
+		want   ActionKind
+	}{
+		{PlainCards(Dodge, Riposte), Dodge},
+		{PlainCards(Riposte, Dodge), Riposte},
+		{PlainCards(Brace, Riposte), Brace},
+	} {
+		a := duelist(10, 0, 100)
+		b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Dodge, Riposte), 1)
-	events, _, _ := ResolveRound(a, b, PlainCards(Feint), nil, 2)
+		_, a, b = ResolveRound(a, b, nil, tc.raised, 1)
+		events, _, _ := ResolveRound(a, b, PlainCards(Feint), nil, 2)
 
-	for _, e := range events {
-		if e.Kind == KindStripped {
-			if e.Action != Riposte {
-				t.Errorf("feint stripped a %v, want a Riposte first", e.Action)
-			}
-			return
+		stripped, ok := firstStripped(events)
+		if !ok {
+			t.Fatalf("%v: no KindStripped event", tc.raised)
+		}
+		if stripped != tc.want {
+			t.Errorf("%v: feint stripped a %v, want the %v raised first", tc.raised, stripped, tc.want)
 		}
 	}
-	t.Fatal("no KindStripped event")
+}
+
+// firstStripped is the defend card the first KindStripped event names.
+func firstStripped(events []Event) (ActionKind, bool) {
+	for _, e := range events {
+		if e.Kind == KindStripped {
+			return e.Action, true
+		}
+	}
+	return 0, false
 }
 
 func TestFeintWithNothingToStripIsStillAnAttack(t *testing.T) {
@@ -152,89 +177,127 @@ func TestFeintWithNothingToStripIsStillAnAttack(t *testing.T) {
 	}
 }
 
-func TestFeintStripsEvenWhenTheBlowIsMirrored(t *testing.T) {
-	// The strip is unconditional on purpose. Making it depend on a card the player cannot see
-	// would put a hidden interaction into a game whose whole point is reading the opponent.
+func TestFeintStripIsUnconditional(t *testing.T) {
+	// The strip fires whatever is about to happen to the blow. Making it depend on a card the
+	// player cannot see would put a hidden interaction into a game whose whole point is reading
+	// the opponent — so a Retreat with charges to spare still loses one to a Feint that it then
+	// goes on to negate.
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror, Dodge), 1)
-	events, _, _ := ResolveRound(a, b, PlainCards(Feint), nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Retreat), 1)
+	events, _, bAfter := ResolveRound(a, b, PlainCards(Feint, Jab, Jab, Jab), nil, 2)
 
 	if !hasKind(events, KindStripped) {
-		t.Error("the feint's strip did not fire behind a mirror — it is meant to be unconditional")
+		t.Error("the feint's strip did not fire against a Retreat — it is meant to be unconditional")
+	}
+
+	// **The count is the assertion, because the charges cannot be read afterwards**: B's own turn
+	// comes next and expires whatever is left. Three charges, one spent by the strip, so two
+	// attacks are stopped and two land — where an unstripped Retreat would have stopped three.
+	if n := kindCount(events, KindNegated); n != retreatCharges-1 {
+		t.Errorf("negated %d attacks, want %d — the strip should have cost a charge",
+			n, retreatCharges-1)
+	}
+	if want := 100 - 2*Jab.Damage(10); bAfter.CurrentLife != want {
+		t.Errorf("defender life = %d, want %d", bAfter.CurrentLife, want)
 	}
 }
 
-func TestMirrorNegatesEveryAttackAndReflectsEachOne(t *testing.T) {
-	// Guard halves a turn and Dodge stops one blow; Mirror stops all of them and sends each
-	// back. It is the card that scales with what the opponent committed rather than with the
-	// holder's own strength, which is what makes it a read and not a damage reduction.
+func TestRetreatStopsThreeAttacksAndThenIsSpent(t *testing.T) {
+	// Dodge stops one blow for two points; Retreat stops three for four. That is the tier: it
+	// buys volume of negation, which is what makes it the answer to a swarm where a Dodge is the
+	// answer to one big swing.
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror), 1)
-	events, aAfter, bAfter := ResolveRound(a, b, PlainCards(Jab, Jab, Strike), nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Retreat), 1)
+	events, _, bAfter := ResolveRound(a, b, PlainCards(Jab, Jab, Jab, Jab), nil, 2)
 
-	if n := kindCount(events, KindNegated); n != 3 {
-		t.Errorf("negated %d attacks, want 3 — a mirror stops every one", n)
+	if n := kindCount(events, KindNegated); n != retreatCharges {
+		t.Errorf("negated %d attacks, want %d", n, retreatCharges)
 	}
-	if bAfter.CurrentLife != 100 {
-		t.Errorf("mirror holder took %d damage, want 0", 100-bAfter.CurrentLife)
+	if want := 100 - Jab.Damage(10); bAfter.CurrentLife != want {
+		t.Errorf("life after four Jabs into a Retreat = %d, want %d — the fourth lands",
+			bAfter.CurrentLife, want)
 	}
-
-	want := 100 - (Jab.Damage(10) + Jab.Damage(10) + Strike.Damage(10))
-	if aAfter.CurrentLife != want {
-		t.Errorf("attacker life after reflection = %d, want %d", aAfter.CurrentLife, want)
+	if bAfter.DefendCount != 0 {
+		t.Errorf("%d defends left, want 0 — the retreat is spent after three", bAfter.DefendCount)
 	}
 }
 
-func TestMirrorIsCheckedBeforeCountedNegations(t *testing.T) {
-	// A mirror must not let a Dodge be spent on a blow it was going to stop for free, or the
-	// expensive card wastes the cheap one that is standing beside it.
+func TestRetreatCostsTheAttackerNothing(t *testing.T) {
+	// **A Retreat is a wall, not a counter.** Riposte is the defend card that hits back and it
+	// pays a point less for the privilege of stopping only one blow; a Retreat that also
+	// punished the attacker would leave Riposte with nothing to sell.
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror, Dodge), 1)
-	events, _, _ := ResolveRound(a, b, PlainCards(Strike), nil, 2)
+	_, a, b = ResolveRound(a, b, nil, PlainCards(Retreat), 1)
+	_, aAfter, _ := ResolveRound(a, b, PlainCards(Strike, Strike), nil, 2)
 
-	for _, e := range events {
-		if e.Kind == KindNegated && e.Action != Mirror {
-			t.Errorf("a %v was spent while a mirror was up", e.Action)
+	if aAfter.CurrentLife != 100 {
+		t.Errorf("attacker took %d damage into a Retreat, want 0", 100-aAfter.CurrentLife)
+	}
+}
+
+func TestDefensesAnswerInTheOrderTheyWereRaised(t *testing.T) {
+	// The rule the whole ordered list exists for. A Brace queued in front of a Dodge answers the
+	// first attack — halving it — and the Dodge stops the second; reversing the queue reverses
+	// which blow is stopped dead. Under the old fixed precedence the Dodge always went first and
+	// the order the player chose meant nothing.
+	str := 10
+	for _, tc := range []struct {
+		raised []Card
+		want   int // damage taken across two Strikes
+	}{
+		{PlainCards(Brace, Dodge), Strike.Damage(str) / braceDivisor},
+		{PlainCards(Dodge, Brace), Strike.Damage(str) / braceDivisor},
+	} {
+		a := duelist(str, 0, 100)
+		b := duelist(str, 0, 100)
+
+		_, a, b = ResolveRound(a, b, nil, tc.raised, 1)
+		events, _, bAfter := ResolveRound(a, b, PlainCards(Strike, Strike), nil, 2)
+
+		if got := 100 - bAfter.CurrentLife; got != tc.want {
+			t.Errorf("%v: took %d damage, want %d", tc.raised, got, tc.want)
+		}
+
+		// Which blow each card answered is the part that actually differs, and it is what a
+		// player reading the Resolution feed sees.
+		braced, negated := -1, -1
+		for i, e := range events {
+			if e.Kind == KindBraced && braced < 0 {
+				braced = i
+			}
+			if e.Kind == KindNegated && negated < 0 {
+				negated = i
+			}
+		}
+		if braced < 0 || negated < 0 {
+			t.Fatalf("%v: both defences should have fired, got braced=%d negated=%d",
+				tc.raised, braced, negated)
+		}
+		if first := tc.raised[0].Action; (first == Brace) != (braced < negated) {
+			t.Errorf("%v: %v was raised first but did not answer the first attack", tc.raised, first)
 		}
 	}
 }
 
-func TestMirrorReflectionCanKillMidTurn(t *testing.T) {
-	// The reflection follows a Riposte's counter, so it has to be able to end the attacker's
-	// turn the same way — otherwise the rest of a lethal turn still resolves.
-	a := duelist(10, 0, 8)
-	b := duelist(10, 0, 100)
-
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Mirror), 1)
-	events, aAfter, _ := ResolveRound(a, b, PlainCards(Strike, Strike, Strike), nil, 2)
-
-	if aAfter.Alive() {
-		t.Fatalf("attacker survived on %d life, want killed by its own reflected Strike", aAfter.CurrentLife)
+func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
+	// ClearDefenses is the one place that has to know about every defensive field, and a new one
+	// left out of it would stand forever — the worst failure mode available here, and a silent
+	// one. Pin the whole set rather than only the fields this session added.
+	d := Duelist{Guarded: true}
+	for _, k := range []ActionKind{Brace, Dodge, Riposte, Retreat} {
+		d = d.raiseDefend(k)
 	}
-	if n := damageCount(events); n != 1 {
-		t.Errorf("damage events = %d, want 1 — the turn should stop at the kill", n)
-	}
-	if !hasKind(events, KindDefeated) {
-		t.Error("no KindDefeated event for the reflected kill")
-	}
-}
 
-func TestExpireDefensesClearsEveryDefensiveField(t *testing.T) {
-	// expireDefenses is the one place that has to know about every defensive field, and a new
-	// one left out of it would stand forever — the worst failure mode available here, and a
-	// silent one. Pin the whole set rather than only the fields this session added.
-	d := Duelist{Guarded: true, Ripostes: 2, Dodges: 2, Braces: 2, Mirrored: true}
+	got := ClearDefenses(d)
 
-	got := expireDefenses(d)
-
-	if got.Guarded || got.Ripostes != 0 || got.Dodges != 0 || got.Braces != 0 || got.Mirrored {
-		t.Errorf("expireDefenses left something standing: %+v", got)
+	if got.Guarded || got.DefendCount != 0 || got.Defends != ([maxPendingDefends]PendingDefend{}) {
+		t.Errorf("ClearDefenses left something standing: %+v", got)
 	}
 }
 

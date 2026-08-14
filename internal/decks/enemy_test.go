@@ -106,7 +106,7 @@ func TestEnemyCardsCannotBeEditedByACaller(t *testing.T) {
 	// Overwritten with a card the enemy deck does not contain, rather than by swapping two
 	// entries. The list opens with four Gathers, so a swap of the first two is a no-op in
 	// value terms and the test passed whether or not the copy was real.
-	notInDeck := combat.Plain(combat.Mirror)
+	notInDeck := combat.Plain(combat.Retreat)
 
 	first := EnemyCards()
 	if len(first) == 0 {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
 
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	xdraw "golang.org/x/image/draw"
@@ -101,10 +100,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 
 	drawDashes(img, s, st, border)
 
-	if st.ShowDamage && s.Damage > 0 {
-		if err := drawDamage(img, s, st, f, ink); err != nil {
-			return nil, err
-		}
+	if err := drawEffectText(img, s, st, f, ink); err != nil {
+		return nil, err
 	}
 	if st.HealthBarHeight > 0 {
 		if err := drawHealth(img, s, st, f); err != nil {
@@ -118,7 +115,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // requiring a parsed font to render one would make the deck overlay depend on something
 // it never uses.
 func (st Style) needsFont() bool {
-	return st.ShowName || st.ShowDamage || st.HealthBarHeight > 0 || st.StatRowPitch > 0
+	return st.ShowName || st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0
 }
 
 // drawStats writes the labelled figures down the face: label against the left margin,
@@ -189,22 +186,88 @@ func identity(c color.RGBA) color.RGBA { return c }
 //
 // **It replaced the category word.** The word was the card's most load-bearing fact and
 // also the least visible thing on it — small, grey, and set in the same typeface as the
-// name directly above it. A silhouette at 64 pixels is read before any text is.
+// name directly above it. A silhouette is read before any text is.
+//
+// **Placed by its ink, not by its canvas** *(2026-08-14)*. Every glyph is drawn on a square
+// canvas and none of them fills it: the sword's ink starts 7 across and 9 down, the shield's 7
+// and 5, and each is a different size inside it. Anchoring the canvas therefore put three
+// different shapes in three different places from one pair of constants, which is why the
+// three read as badly aligned when they are all at 0,0.
+//
+// This centres each glyph's *inked bounds* in the box the style names, so what lines up is
+// what you can see. The cost is one bounds scan per rendered card, on a 32-pixel image, behind
+// the screen's card cache.
+//
+// **Its offsets may be negative, and blitGlyph crops to the card's curve** so a glyph placed
+// hard into the corner cannot square it off.
 func drawCategory(dst *image.RGBA, s Spec, st Style) {
 	kind, ok := s.Category.glyph()
 	if !ok {
 		return
 	}
-	// Measured, never assumed: the category glyphs are 22 pixels where the damage sword
-	// is 64. Assuming GlyphSize here would centre a small glyph in a large hole.
+	// Measured, never assumed. The three category glyphs are one size today, and SizeOf is
+	// still the authority — assuming a size here is how a small glyph gets a large hole.
 	size := systems.SizeOf(kind) * st.GlyphScale
-	at := image.Rect(st.GlyphInset, st.CategoryGlyphTop,
+	glyph := systems.RenderGlyph(kind, systems.PaletteWhite)
+
+	box := image.Rect(st.GlyphInset, st.CategoryGlyphTop,
 		st.GlyphInset+size, st.CategoryGlyphTop+size)
 
-	blitGlyph(dst, at, systems.RenderGlyph(kind, systems.PaletteWhite), st.GlyphScale)
+	ink := inkBounds(glyph)
+	if ink.Empty() {
+		return
+	}
+	ink = image.Rectangle{
+		Min: ink.Min.Mul(st.GlyphScale),
+		Max: ink.Max.Mul(st.GlyphScale),
+	}
+
+	// Where the canvas has to sit for the ink to come out centred in the box.
+	at := box.Sub(ink.Min).Add(image.Pt(
+		(box.Dx()-ink.Dx())/2,
+		(box.Dy()-ink.Dy())/2,
+	))
+	at.Max = at.Min.Add(image.Pt(size, size))
+
+	blitGlyph(dst, at, glyph, st.GlyphScale, st)
 	if !s.Enabled {
 		fadeRegion(dst, at, glyphDisabledToward)
 	}
+}
+
+// inkBounds is the smallest rectangle holding every non-transparent pixel of a glyph.
+//
+// It exists because a glyph's canvas says nothing about where its picture is: the generated
+// shapes leave whatever margin their spans happen to leave, and the drawn art carries its
+// own. Aligning canvases aligns nothing.
+func inkBounds(g *image.RGBA) image.Rectangle {
+	b := g.Bounds()
+	minX, minY, maxX, maxY := b.Max.X, b.Max.Y, b.Min.X-1, b.Min.Y-1
+
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if g.RGBAAt(x, y).A == 0 {
+				continue
+			}
+			if x < minX {
+				minX = x
+			}
+			if y < minY {
+				minY = y
+			}
+			if x > maxX {
+				maxX = x
+			}
+			if y > maxY {
+				maxY = y
+			}
+		}
+	}
+
+	if maxX < minX || maxY < minY {
+		return image.Rectangle{}
+	}
+	return image.Rect(minX, minY, maxX+1, maxY+1)
 }
 
 // drawDashes writes the action-point cost as a stack of short horizontal bars,
@@ -213,8 +276,8 @@ func drawCategory(dst *image.RGBA, s Spec, st Style) {
 // Costs run 1 to 4 today (combat.go), so the stack is short by construction. Nothing here
 // caps it — a five-point card simply draws five dashes and grows downward — because
 // silently clamping a number the rules produced would be a card that lies about its cost.
-// **That growth now runs into the damage badge** rather than into empty card, so a fifth
-// cost tier is a layout change here and not just a bigger number.
+// The stack has the rest of the card's height to grow into now that the damage badge is gone,
+// and TestLeftColumnDoesNotCollide fails at the point it would run off the bottom.
 //
 // They are drawn in the border colour, so the two things the card says about itself in
 // colour say it in the same colour.
@@ -277,27 +340,56 @@ func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 		fmt.Sprintf("%d/%d", life, s.MaxLife), st.Width, st.HealthTextTop, NumberInk)
 }
 
-// drawDamage draws the sword glyph and the figure beside it, at the bottom of the column.
-func drawDamage(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
-	size := systems.GlyphSize * st.GlyphScale
-	gx, gy := st.GlyphInset, st.GlyphColumnTop
-	at := image.Rect(gx, gy, gx+size, gy+size)
-
-	blitGlyph(dst, at, systems.RenderGlyph(systems.GlyphDamage, systems.PaletteWhite), st.GlyphScale)
-	if !s.Enabled {
-		fadeRegion(dst, at, glyphDisabledToward)
+// drawEffectText writes what the card does, as a block centred in the space the left column
+// leaves.
+//
+// **Centred both ways, against the name being centred on the whole card.** The name spans the
+// card and the text does not — it owns everything right of the cost column — so centring it on
+// the card would push every line left, under the dashes. It is centred on its own column
+// instead, and vertically inside the band, so a one-line card and a five-line card are the
+// same design rather than two.
+//
+// It is set in LabelInk rather than NameInk, the same distinction the stat rows make with
+// colour: the name stays the loudest thing on a card that is now mostly words.
+//
+// **Every wrapped line is drawn, including one past the band.** Clamping to TextLines() would
+// hide an overlong string, and a card that quietly drops half its rules text is the picture
+// that lies this repo keeps refusing to draw. TestEveryCardTextFitsItsBand is what catches it
+// first, and the sheet shows the overrun if it ever gets past that.
+func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
+	if st.TextLineHeight <= 0 || s.Text == "" {
+		return nil
 	}
 
-	return drawTextVCentered(dst, f, st.NumberSize,
-		fmt.Sprintf("%d", s.Damage),
-		gx+size+st.GlyphNumberGap, gy+size/2, ink(NumberInk))
+	width := st.Width - st.TextColumnLeft - st.TextInset
+	lines, err := WrapText(f, st.TextSize, s.Text, width)
+	if err != nil {
+		return err
+	}
+
+	// Centred in the band, and never above it: text that overruns grows downward off the card
+	// where it is visible, rather than upward into the name where it would look like a
+	// different bug.
+	top := st.TextBandTop + (st.TextBandBottom-st.TextBandTop-len(lines)*st.TextLineHeight)/2
+	if top < st.TextBandTop {
+		top = st.TextBandTop
+	}
+
+	for i, line := range lines {
+		y := top + i*st.TextLineHeight
+		if err := drawTextCenteredIn(dst, f, st.TextSize, line,
+			st.TextColumnLeft, width, y, ink(LabelInk)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // The mark is as wide as the card allows, and centred on it.
 //
 // **Derived rather than a Style field, unlike every other measurement here.** The face
-// cannot work that way — its glyphs are 1:1 pixel art with a one-pixel rim, so a Mini card
-// has to *drop* the damage badge rather than shrink it, and each size states its own
+// cannot work that way — its glyphs are 1:1 pixel art with a one-pixel rim, so a smaller card
+// has to *drop* what will not fit rather than shrink it, and each size states its own
 // numbers. A triangle has no rim to lose and no detail to fall below, so one proportion
 // draws the same back at every size and cannot drift between them. If a size ever wants
 // its own mark, this is one line to promote into Style.
@@ -401,25 +493,35 @@ func drawBack(dst *image.RGBA, s Spec, st Style) {
 	}
 }
 
-// blitGlyph composites a generated glyph, untinted.
+// blitGlyph composites a generated glyph, untinted, clipped to the card's own silhouette.
 //
 // Scaling its five-value palette toward anything collapses the bevel into a flat
 // silhouette, which is the whole thing the palette exists to avoid; a disabled card fades
 // it in place instead, so the shading survives and only the weight changes.
-func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int) {
-	if scale == 1 {
-		draw.Draw(dst, at, glyph, image.Point{}, draw.Over)
-		return
-	}
-	// Nearest-neighbour, and only ever by a whole number. See Style.GlyphScale.
+//
+// **The clip is what lets a glyph hang off the corner.** The category glyph is placed at a
+// negative offset so it runs off the top-left edge, and the card image is exactly the card, so
+// the overhang is cropped either way — but cropping at the *bounding box* would paint the
+// transparent rounded corner solid and square the card off. Clipping to the rounded shape
+// crops it along the curve instead, which is the whole point of hanging it there.
+//
+// One loop rather than a draw.Draw fast path at scale 1: the clip has to be tested per pixel,
+// and a 32x32 glyph once per distinct card is not worth two code paths.
+func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int, st Style) {
 	b := glyph.Bounds()
+	radius := clampRadius(st.Width, st.Height, st.CornerRadius)
+
 	for y := 0; y < b.Dy()*scale; y++ {
 		for x := 0; x < b.Dx()*scale; x++ {
 			c := glyph.RGBAAt(b.Min.X+x/scale, b.Min.Y+y/scale)
 			if c.A == 0 {
 				continue
 			}
-			dst.SetRGBA(at.Min.X+x, at.Min.Y+y, c)
+			px, py := at.Min.X+x, at.Min.Y+y
+			if !insideRounded(st.Width, st.Height, radius, px, py) {
+				continue
+			}
+			dst.SetRGBA(px, py, c)
 		}
 	}
 }
@@ -464,10 +566,18 @@ func drawArt(dst *image.RGBA, s Spec, st Style) {
 // Used on the glyphs, which are drawn from their own five-value palette and so cannot be
 // dimmed by choosing a duller ink the way the text can. Fading in place preserves the
 // relative steps of the bevel and only reduces its weight.
+//
+// **Transparent pixels are left alone**, which matters now that a glyph's rectangle can hang
+// off the corner of the card: fading a transparent pixel would give it an alpha and fill in
+// the rounded corner the clip in blitGlyph just protected.
 func fadeRegion(dst *image.RGBA, r image.Rectangle, pct int) {
 	for y := r.Min.Y; y < r.Max.Y; y++ {
 		for x := r.Min.X; x < r.Max.X; x++ {
-			dst.SetRGBA(x, y, systems.ColorToward(dst.RGBAAt(x, y), SurfaceDisabled, pct))
+			c := dst.RGBAAt(x, y)
+			if c.A == 0 {
+				continue
+			}
+			dst.SetRGBA(x, y, systems.ColorToward(c, SurfaceDisabled, pct))
 		}
 	}
 }

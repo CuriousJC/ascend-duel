@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -98,6 +99,21 @@ func drawTextHCentered(dst *image.RGBA, f *Faces, size float64, s string, width,
 	return drawText(dst, f, size, s, (width-w)/2, y, c)
 }
 
+// drawTextCenteredIn draws a string centred inside a box that starts at left and is width
+// wide, top-aligned at y.
+//
+// The effect text uses it. drawTextHCentered centres on the whole card, which is right for a
+// name spanning the card and wrong for a block that only owns the space beside the cost
+// column — every line would sit a little left of where it belongs.
+func drawTextCenteredIn(dst *image.RGBA, f *Faces, size float64, s string, left, width, y int, c color.RGBA) error {
+	face, err := f.at(size)
+	if err != nil {
+		return err
+	}
+	w := font.MeasureString(face, s).Ceil()
+	return drawText(dst, f, size, s, left+(width-w)/2, y, c)
+}
+
 // drawTextRightAligned draws a string ending at x, top-aligned at y.
 //
 // The stat rows use it: a label against the left margin and a figure against the right, so
@@ -112,27 +128,51 @@ func drawTextRightAligned(dst *image.RGBA, f *Faces, size float64, s string, rig
 	return drawText(dst, f, size, s, right-w, y, c)
 }
 
-// drawTextVCentered draws a string centred on the horizontal line y, starting at x.
+// TextWidth is how wide a string is at this size, in pixels.
 //
-// This is the damage figure beside its glyph. The original used text/v2's
-// SecondaryAlign: AlignCenter against the glyph's midpoint, and centring on the cap
-// height rather than on the full line box is what makes a numeral look centred next to a
-// 64-pixel sprite — the line box includes descender room that "4" does not use.
-func drawTextVCentered(dst *image.RGBA, f *Faces, size float64, s string, x, y int, c color.RGBA) error {
+// **Exported for the same reason WrapText is**: the wording lives in internal/screens and the
+// column it has to fit lives here, so a test that holds one against the other needs both. It
+// is what catches the case WrapText cannot report — a single word wider than the line, which
+// wraps to one line and then overruns it.
+func TextWidth(f *Faces, size float64, s string) (int, error) {
 	face, err := f.at(size)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	m := face.Metrics()
-	ascent := m.Ascent.Ceil()
-	height := ascent + m.Descent.Ceil()
+	return font.MeasureString(face, s).Ceil(), nil
+}
 
-	d := font.Drawer{
-		Dst:  dst,
-		Src:  image.NewUniform(c),
-		Face: face,
-		Dot:  fixed.P(x, y-height/2+ascent),
+// WrapText breaks a string into lines that each fit inside width pixels at this size.
+//
+// **Exported so a test can ask the question the card asks**: whether a piece of effect text
+// fits the band it is drawn in. The wording lives in internal/screens and the geometry lives
+// here, so neither package can answer that alone — see TestEveryCardTextFitsItsBand.
+//
+// It breaks on spaces only. A single word longer than the line is left whole and overruns,
+// rather than being hyphenated at an arbitrary point: the strings on the cards are written
+// here in the repo, so an overrun is an authoring mistake to fix and not a case to handle.
+func WrapText(f *Faces, size float64, s string, width int) ([]string, error) {
+	face, err := f.at(size)
+	if err != nil {
+		return nil, err
 	}
-	d.DrawString(s)
-	return nil
+
+	var lines []string
+	line := ""
+	for _, word := range strings.Fields(s) {
+		try := word
+		if line != "" {
+			try = line + " " + word
+		}
+		if line != "" && font.MeasureString(face, try).Ceil() > width {
+			lines = append(lines, line)
+			line = word
+			continue
+		}
+		line = try
+	}
+	if line != "" {
+		lines = append(lines, line)
+	}
+	return lines, nil
 }

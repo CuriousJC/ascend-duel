@@ -32,53 +32,58 @@ var glyphNames = map[cards.Category]string{
 	cards.CategoryDefend:  "a kite shield",
 }
 
-// concept is one of the twelve, with the cost and category the rules give it.
+// concept is one of the twelve, with the cost, category and effect text the rules give it.
+//
+// **No damage figure**: a card does not carry one any more, and what it deals is in the text.
 type concept struct {
 	name     string
 	category cards.Category
 	cost     int
-	damage   int // zero draws no damage badge
+	text     string
 }
 
 // The twelve concepts, in cards.json's order, which is grid order.
+//
+// **The effect text is a snapshot of `cardEffects` in internal/screens**, under the same rule
+// as the names and costs above it: the tool does not import the game so it can draw cards the
+// rules cannot deal. It is the longest strings here that matter — the sheet is where an
+// overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
-	{"Gather", cards.CategoryPrepare, 1, 0},
-	{"Sift", cards.CategoryPrepare, 2, 0},
+	{"Gather", cards.CategoryPrepare, 1, "Bank 2 AP for next round"},
+	{"Sift", cards.CategoryPrepare, 2, "Throw away 2 more cards, then refill"},
 	// **Guard is a prepare, not a defend** — combat.ActionKind.Category() groups it with
 	// Gather, Sift and Ritual. This list said Defend from the day it was written and the sheet
 	// duly drew it with a kite shield where the game draws an open book. The drift this file
 	// accepts is a card the rules cannot *deal*; a card drawn with the wrong glyph is a
 	// picture that lies, which is the one thing a contact sheet may never be. Corrected
 	// 2026-08-12.
-	{"Guard", cards.CategoryPrepare, 3, 0},
-	{"Ritual", cards.CategoryPrepare, 4, 0},
-	{"Jab", cards.CategoryAttack, 1, 4},
-	{"Strike", cards.CategoryAttack, 2, 7},
-	{"Feint", cards.CategoryAttack, 3, 5},
-	{"Heavy", cards.CategoryAttack, 4, 14},
-	{"Brace", cards.CategoryDefend, 1, 0},
-	{"Dodge", cards.CategoryDefend, 2, 0},
-	{"Riposte", cards.CategoryDefend, 3, 6},
-	{"Mirror", cards.CategoryDefend, 4, 0},
+	{"Guard", cards.CategoryPrepare, 3, "Halve every attack next turn"},
+	{"Ritual", cards.CategoryPrepare, 4, "Bank 6 AP for next round"},
+	{"Jab", cards.CategoryAttack, 1, "Deal 0.5x DMG"},
+	{"Strike", cards.CategoryAttack, 2, "Deal 1x DMG"},
+	{"Feint", cards.CategoryAttack, 3, "Strip a defend card, deal 1x DMG"},
+	{"Heavy", cards.CategoryAttack, 4, "Deal 2x DMG"},
+	{"Brace", cards.CategoryDefend, 1, "Halve 1 incoming attack"},
+	{"Dodge", cards.CategoryDefend, 2, "Negate 1 incoming attack"},
+	{"Riposte", cards.CategoryDefend, 3, "Negate 1 attack, deal 0.5x DMG back"},
+	{"Retreat", cards.CategoryDefend, 4, "Negate 3 incoming attacks"},
 }
 
-// realCards is a spread chosen to break things: the longest name, the biggest damage
-// figure, both cost extremes, and cards with no damage badge at all.
+// realCards is **all twelve concepts at hand size**, one element after another so the row
+// also walks the border colours.
+//
+// **It was a spread of six until 2026-08-14**, chosen to break the layout: the longest name,
+// the biggest damage badge, both cost extremes. That was the right row while the only thing
+// varying between concepts was furniture the grid rows above already covered. It is the wrong
+// row now that every card carries its own paragraph — the wording is the thing being reviewed,
+// and six of twelve meant half of it could only be read in the source. Sift and Feint, the two
+// longest strings in the game, were among the six that never appeared.
 func realCards() []cards.Spec {
-	pick := []struct {
-		name string
-		el   cards.Element
-	}{
-		{"Jab", cards.Basic},
-		{"Heavy", cards.Fire},
-		{"Guard", cards.Ice},
-		{"Riposte", cards.Lightning},
-		{"Gather", cards.Earth},
-		{"Ritual", cards.Basic},
-	}
-	out := make([]cards.Spec, 0, len(pick))
-	for _, p := range pick {
-		out = append(out, specFor(p.name, p.el))
+	elements := cards.Elements()
+
+	out := make([]cards.Spec, 0, len(concepts))
+	for i, c := range concepts {
+		out = append(out, specFor(c.name, elements[i%len(elements)]))
 	}
 	return out
 }
@@ -89,8 +94,8 @@ func realDeckRow(e cards.Element) []cards.Spec {
 	out := make([]cards.Spec, 0, len(concepts))
 	for _, c := range concepts {
 		out = append(out, cards.Spec{
-			Name: c.name, Category: c.category,
-			Damage: c.damage, Cost: c.cost, Element: e, Enabled: true,
+			Name: c.name, Category: c.category, Text: c.text,
+			Cost: c.cost, Element: e, Enabled: true,
 		})
 	}
 	return out
@@ -100,13 +105,20 @@ func specFor(name string, e cards.Element) cards.Spec {
 	for _, c := range concepts {
 		if c.name == name {
 			return cards.Spec{
-				Name: c.name, Category: c.category,
-				Damage: c.damage, Cost: c.cost, Element: e, Enabled: true,
+				Name: c.name, Category: c.category, Text: c.text,
+				Cost: c.cost, Element: e, Enabled: true,
 			}
 		}
 	}
 	return cards.Spec{Name: name, Element: e, Enabled: true}
 }
+
+// selected and disabled are the two states the sheet draws a real card in. Written as
+// modifiers rather than as three separate literals so the card underneath is provably the
+// same one in all three cells — which is the whole point of a state row.
+func selected(s cards.Spec) cards.Spec { s.Selected = true; return s }
+
+func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 
 // ringSpecs is the first pass at a ring, in the card format.
 //

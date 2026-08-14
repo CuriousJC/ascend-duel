@@ -70,16 +70,19 @@ func faces(gs *state.GlobalState) *cards.Faces {
 
 // cardSpec turns the screen's own types into the plain data internal/cards draws from.
 //
-// Damage is resolved here rather than passed through, because it is a property of the
-// pairing: Damage(str) is what this card does in *these* hands. Cost is not, so it is
-// read straight off the action.
-func cardSpec(c actionCard, enabled, selected bool, str int) cards.Spec {
+// **The card carries no damage figure** *(2026-08-14)*. It used to resolve `Damage(str)` here,
+// because the number a card deals is a property of the pairing rather than of the concept —
+// and that is exactly what made it worth removing once the effect text arrived: "Deal 2x DMG"
+// is the rule, where "14" was the rule already multiplied out by this duelist's strength and
+// was the same fact said twice. `combat.ActionKind.Damage` is still what the engine resolves
+// with, and the duelist card still shows a DMG stat.
+func cardSpec(c actionCard, enabled, selected bool) cards.Spec {
 	return cards.Spec{
 		Name:     c.Action.String(),
 		Category: category(c.Action.Category()),
-		Damage:   c.Action.Damage(str),
 		Cost:     c.Action.Cost(),
 		Element:  artFor(c.Element),
+		Text:     cardEffects[c.Action],
 		Enabled:  enabled,
 		Selected: selected,
 	}

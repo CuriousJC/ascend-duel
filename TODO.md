@@ -69,8 +69,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         legible), or a partial interleave where one designated fast action jumps a phase.
         Both reintroduce the legibility problem phases were adopted to solve, so the bar is
         that it buys something combos and category ordering do not.
-      - **The card has no room.** The left column is a category glyph, cost dash marks and a
-        damage badge; an initiative badge would be a fourth element in that stack.
+      - **The card has no room.** The left column is a category glyph over a stack of cost
+        dashes, and everything right of it is the effect text; an initiative badge has nowhere
+        to go that does not take space from one of the two.
 - [ ] **Defenses target a specific incoming attack.** The resolution order is right; what is
       missing is that a defense is a pool rather than a choice. **Guard stays untargeted** — it
       covers you entirely, which is exactly why it is a prepare. **Dodge and Riposte should each
@@ -79,10 +80,12 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **This is the ordering lever initiative was meant to be, and a better one.** Initiative
         decided *when* your action happened; this decides *what it happens to*, which is a
         decision the player makes rather than a number they read off a card.
-      - Today `Ripostes` and `Dodges` are plain counters on `Duelist` and negation is spent
-        Riposte-first by a fixed rule. That rule exists only because nothing can express a
-        preference. Targeting replaces it — the fixed order becomes the fallback for an
-        untargeted defense, if untargeted defenses survive at all.
+      - **Half of this landed on 2026-08-14.** `Duelist.Defends` is an ordered queue and the
+        front of it answers the next attack, so *which of your defences meets which blow* is
+        already the player's decision, made by dragging within the defend phase. What is still
+        missing is naming a **specific enemy action** rather than a position in the sequence —
+        which is what makes it robust to the opponent queueing more or fewer attacks than you
+        expected.
       - **The hard part is the UI, not the rules.** Engine-side this is a target field on
         the queued action and a lookup at negation time. Screen-side the player has to point
         at an enemy attack that is **concealed while planning** — you know the enemy has two
@@ -105,25 +108,28 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         four functions chosen by a string. That is the piece procedural enemies need.
       - `AvailableAffixes` is in `data/enemies.json` and read by nothing.
       - `[?]` Earth has no affix; whether it can be a floor theme is still open.
-- [ ] **Three postures beat the entire roster, and Mirror leads them.** `tools/balance` over
-      all 96 enemies: **dodging, mirroring and shocking** win every fight on the board including
-      the floor-8 Bio-Titan Omega. A posture strong against everything is a pricing bug, not a
-      good card, and Mirror is the clearest case — it is meant to read as devastating against a
-      swarm and near-useless against a warden.
-      - Mirror's lever is one constant: `mirrorReflectNum/mirrorReflectDen` in
-        [combat.go](internal/combat/combat.go), left at 1/1 because full reflection is the card
-        as designed. Two candidates, in order: **halve the reflection** (keeps its character — it
-        still scales with what the opponent committed), or **cap what it stops** ("negates and
-        reflects the first two attacks" is a different card but a priceable one).
-      - **More enemy attacks makes Mirror stronger, not weaker**, so widening enemy budgets is
-        not the fix. A reflection scales with how many blows arrive.
-      - The version of that intuition that might survive: raising enemy *AP* would make Guard
-        and Brace better too, since both scale with attack count the same way, which could
-        narrow Mirror's lead without touching Mirror. Cheap to test — it is a data change in
-        `data/enemies.json` plus a `tools/balance` re-run.
+- [ ] **Shocking beats the whole roster, and dodging nearly does.** `tools/balance` over all 96
+      enemies, 2026-08-14: **shocking 96, dodging 93, retreating 86** against `all-out`'s 50. A
+      posture strong against everything is a pricing bug, not a good card.
+      - **Shock is the clearest case and the lever is one constant.** `shockPerHit` in
+        [status.go](internal/combat/status.go): a lightning attack deals full damage *and*
+        cancels an enemy attack, so two of them a round negate most enemy turns for free. A
+        shock that took two hits to apply, or that only stopped the victim's first attack, are
+        the two candidates.
+      - **Negation is priced against how many blows arrive**, so widening enemy budgets makes
+        dodging and retreating *better*, not worse. Raising enemy AP would lift Guard and Brace
+        with them, though, which could narrow the gap without touching the negations — a data
+        change in `data/enemies.json` plus a re-run.
       - Read the balance table as a **best case**: the fighter repeats one posture every round
         and always draws it. An enemy that beats a posture there beats it always; the reverse
         does not hold.
+- [ ] **`[?]` Retreat is a bigger Dodge, and the concept grid says every tier should differ in
+      kind.** Three negations for four points is priceable — which is why it replaced a 4-cost
+      defend that negated a whole turn and reflected it — but it is the one cell in the grid
+      that is only a number.
+      - What would earn the cell: a rider that makes *volume* mean something. Clearing a status
+        as you give ground, or the third charge doing something the first two do not.
+      - `retreatCharges` is the lever if it only needs tuning.
 - [ ] **Guard versus Dodge.** The *guarding* posture (Guard + Strike, 5 of 6 AP) loses across
       the roster where *dodging* wins everywhere. Guard costing 3 eats most of a round's budget
       and leaves one Strike behind it, so a broad halving does not pay for itself.
@@ -214,14 +220,16 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - Hand size is 8 and was sized against a 30-card deck, deliberately left alone when the
         deck doubled to 60. Worth re-deciding once thinning exists, since a thinned deck changes
         what a hand of 8 means.
-- [?] **What a Feint does when a second negation sits behind the one it strips.** Reading the
-      path in `resolveAttack`: the strip decrements one, then falls through to the ordinary
-      Riposte and Dodge checks, so **two Dodges beat a Feint and one does not.** That is a
-      coherent rule and nobody chose it — it is a consequence of where the strip was placed.
-      - Decide it, then pin it with a test. The alternative reading is that a Feint's damage
-        bypasses the negation layer entirely once it has stripped something, which is stronger
-        and makes stacked defences worthless against it.
-      - Not currently tested either way, which is the actual defect here.
+- [?] **What a Feint does when a second defence sits behind the one it strips.** The strip takes
+      one charge off the front of the defend queue and the blow then meets whatever is now at
+      the front, so **two Dodges beat a Feint and one does not** — and a Retreat, at three
+      charges, beats it twice over. That is coherent and nobody chose it; it is a consequence of
+      where the strip sits.
+      - The alternative reading is that a Feint's damage bypasses the defend layer entirely once
+        it has stripped something, which is stronger and makes stacked defences worthless
+        against it.
+      - `TestFeintStripIsUnconditional` pins the current behaviour against a Retreat, so the
+        rule is at least written down now. What is still open is whether it is the right one.
 - [?] **Does Sift stack?** It does today: `siftsResolved() * siftExtraDiscards`, so two Sifts
       throw four extra cards away. Gather's within-round stacking is a documented deliberate
       choice; Sift's is just what the loop does. Two Sifts is 4 AP of a 6 AP round to churn
@@ -234,49 +242,44 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         with no instrument pointed at it. Either the tool grows a deck (see the deckbuilder
         entry) or something else measures draw variance. The second is probably a small harness
         over `screens.OpeningHand`, which already deals real hands headlessly.
-- [ ] **Move four interaction rules from code comments into `MECHANICS.md`.** All four are
-      decided, implemented and tested; all four are recorded in the wrong file, and MECHANICS
-      is supposed to be what the game *is*. A designer reading it today would not learn any
-      of them:
-      - Brace and Guard **both** apply, quartering a blow.
-      - Mirror is checked **before** Dodge and Riposte, so it never lets a cheaper negation be
-        spent on a blow it was going to stop for free.
-      - Mirror reflects **post-combo-multiplier and pre-guard** — it returns what the attacker
-        committed, which is what makes it a read rather than a damage reduction.
-      - Feint's strip is **unconditional** and fires even behind a Mirror, deliberately, so the
-        card has no hidden interaction with something the player cannot see.
+- [ ] **Move two interaction rules from code comments into `MECHANICS.md`.** Both are decided,
+      implemented and tested; both are recorded in the wrong file, and MECHANICS is supposed to
+      be what the game *is*. A designer reading it today would not learn either:
+      - Brace and Guard **both** apply, quartering a blow — a Brace answers the attack as the
+        front of the defend queue, and the Guard behind it halves what is left.
+      - Feint's strip is **unconditional** and fires even when the blow is about to be stopped
+        anyway, deliberately, so the card has no hidden interaction with something the player
+        cannot see.
 - [ ] **The demo has never shown a new card resolving.** `demoSeedName` is `strike-flurry` and
       `demoClickRun` is `Strike`, so the scripted round plays Strikes and a Riposte. The
-      narration written for Feint, Mirror, Brace and Sift — the "reflects N" line, the "strips
-      their riposte" line, "braced" — has never appeared on screen, and the demo is the only
-      thing that looks at the screen without a person sitting there.
-      - Point it at a hand that plays a Mirror into a multi-attack enemy turn. `all-categories`
-        (seed 6) deals eight distinct concepts including Mirror and Brace, and a swarm throws
-        five attacks, which is the turn that makes a reflection worth watching.
+      narration written for Feint, Retreat, Brace and Sift — the "stopped by a retreat" line,
+      the "strips their riposte" line, "braced" — has never appeared on screen, and the demo is
+      the only thing that looks at the screen without a person sitting there.
+      - Point it at a hand that plays a Retreat into a multi-attack enemy turn.
+        `all-categories` (seed 6) deals eight distinct concepts including Retreat and Brace, and
+        a swarm throws five attacks — enough to spend all three charges and show the fourth blow
+        landing, which is the whole card in one round.
       - `demoClickRun` has to agree with the seed or the click phase silently selects fewer
         cards and nothing forms. That pairing is what `tools/seeds` exists to keep honest.
 
 ### Cards and piles — presentation
 
-- [ ] **Cards must explain themselves. Long press explains the mechanic.** Today a card shows
-      its name, category glyph, damage and cost, and everything else has to be inferred — that
-      Riposte hits back, that Guard covers a whole turn rather than one blow, that Mirror
-      reflects. Six of the twelve concepts cannot be understood from the card at all.
+- [ ] **Long press pulls a card forward.** Every card now carries its effect text — see
+      `cardEffects` in [combat_panes.go](internal/screens/combat_panes.go) — filling the card
+      beside the cost column. The hand overlaps, so most of a card can be covered by the one in
+      front of it, and long press is the gesture that lifts one clear to be read.
       - **This is long press, not hover.** `MECHANICS.md` §Long press assigns "explains" to long
         press and records that hover was considered and rejected; CLAUDE.md's input vocabulary
         has no hover in it. The split to preserve if hover ever returns is **hover un-occludes,
-        long press explains**, so this task is the second half of that sentence.
+        long press explains** — printing the text on the face has merged the two, and this task
+        is what is left of both.
       - The gesture has a designed shape: a press is a three-way decision — past
         `dragThreshold` is a drag, held past a tick count without moving is a long press,
         released before either is a click that toggles selection. **The distance and time
         thresholds must not fight each other.**
-      - **The card has ~54px of deliberately empty surface at the bottom for exactly this**, and
-        that is all there is. Anything else added to the card spends it.
-      - Needs the effect text to live somewhere. `actionPhrases` in
-        [combat_panes.go](internal/screens/combat_panes.go) is prose for a *sentence about a
-        round*, not a rules description, so this is a second table — and the rule it describes
-        lives in `internal/combat`, which must not grow UI strings. Same shape as
-        `actionPhrases`: the screen describes, the rules name.
+      - The text is 18pt in a ~100px column, centred in the space the cost column leaves, and
+        `TestEveryCardTextFitsItsBand` fails rather than letting a line off the bottom.
+        Anything else the card wants to say needs a bigger card.
 
 ## Later
 

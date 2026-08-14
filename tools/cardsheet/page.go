@@ -123,10 +123,10 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
 
 <h2>Category glyph</h2>
 <p class="note">
-  The glyph sits above the cost stack and <em>replaced the category word</em> that used to
-  run under the name. Attack reuses the damage sword rather than getting a second weapon:
-  a card only ever shows one of them in this slot, and two different swords would imply a
-  distinction that is not there.
+  The glyph sits in the top-left corner, cropped by the card's own curve, and
+  <em>replaced the category word</em> that used to run under the name. Attack reuses the same
+  sword the damage badge was drawn from — the badge is gone, so on a card this is now the only
+  sword there is.
 </p>
 {{range .Categories}}
   <div class="row">
@@ -210,7 +210,7 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
 <h2>Rings — the same format, pink border</h2>
 <p class="note">
   Same footprint, corners and border treatment as a card, so the two read as one game. No
-  cost dashes, no category glyph, no damage badge: a ring is not played from a hand and has
+  cost dashes, no category glyph, no effect text: a ring is not played from a hand and has
   no phase. <strong>Not wired into the game</strong> &mdash; nothing builds one of these yet.
 </p>
 <p class="note">

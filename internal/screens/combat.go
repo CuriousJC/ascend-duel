@@ -275,15 +275,21 @@ type CombatScene struct {
 	// planEnemyRound.
 	enemyDealt []dealtCard
 
-	// firingSeat and enemyFiringSeat are which card on each side of the table is resolving
-	// right now, or -1 for none. **Playback drives which card is lit, not which cards exist**:
+	// firingSeats and enemyFiringSeats are which cards on each side of the table are resolving
+	// right now, empty for none. **Playback drives which cards are lit, not which cards exist**:
 	// both hands are on the table from the moment DUEL! is pressed.
 	//
 	// Two fields rather than a side-plus-seat pair, because both rows are drawn independently
-	// and each only ever asks about itself. `noteResolved` writes both on every action, so
-	// there is exactly one lit card on the table at a time.
-	firingSeat      int
-	enemyFiringSeat int
+	// and each only ever asks about itself. `noteResolved` writes both on every action, so only
+	// one side is ever lit at a time.
+	//
+	// **A list rather than one seat, because the attack phase is one blow** *(2026-08-14)*. The
+	// cards announce one after another and stay up as they do, so the whole hand is raised by the
+	// time the combo lands on it — and the combo then drops whichever of them earned nothing. A
+	// single lit seat could only ever say "this card", which is the reading the one-blow rule
+	// exists to stop.
+	firingSeats      []int
+	enemyFiringSeats []int
 
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round; vitae is a placeholder that never moves yet.
@@ -371,7 +377,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.showDeck = false
 	s.feedPressTicks = 0
 	s.flights = nil
-	s.firingSeat, s.enemyFiringSeat = -1, -1
+	s.firingSeats, s.enemyFiringSeats = nil, nil
 	s.restart = false
 	s.discardsLeft = discardsPerRound
 	s.vitae = startingVitae
@@ -603,7 +609,7 @@ func (s *CombatScene) startRound() {
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of
 	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
 	// above is already resolved. See combat_table.go.
-	s.firingSeat, s.enemyFiringSeat = -1, -1
+	s.firingSeats, s.enemyFiringSeats = nil, nil
 	s.seatPlayedCards()
 
 	// The whole round, not a count of it. ResolveRound already decided every one of these

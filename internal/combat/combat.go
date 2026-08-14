@@ -581,8 +581,8 @@ const (
 type Event struct {
 	Kind   EventKind
 	Side   Side       // who acted
-	Action ActionKind // set on KindAction, on KindNegated for the defense that stopped it, on KindStaggered for the action lost, and on KindMissed for the attack that never landed
-	Amount int        // damage dealt, action points banked, or status applied
+	Action ActionKind // set on KindAction, on KindNegated for the defense that stopped it, on KindStaggered for the action lost, on KindMissed for the attack that never landed, and on KindCombo for the card the blow led with
+	Amount int        // damage dealt, action points banked, status applied, or on KindCombo what the hand adds up to
 	Target Side       // who took the damage
 	Life   int        // target's life after the event
 	Round  int
@@ -605,6 +605,19 @@ type Event struct {
 	// so 350 is the 3.5x a duo pair earns. It is on the event because the screen has no business
 	// re-deriving a number the resolver already worked out.
 	Multiplier int
+
+	// Base and Swing are the other two terms of the blow's arithmetic on KindCombo, and they are
+	// here for the same reason Multiplier is: the Resolution feed prints the sum — `20 + 10 x 3.5
+	// = 55` — and a screen working a damage figure out for itself would be a second resolver.
+	//
+	// Base is what the hand's own cards carry; Swing is what one Strike deals at this attacker's
+	// strength, which is the DMG on their fighter card. `Amount` is what the three come to.
+	//
+	// **Amount is the blow before the attacker's weight and before anything the defender raised**,
+	// so it is what the hand was worth rather than what landed. What landed is the KindDamage
+	// after it, and the gap between the two figures is exactly what the defence was worth.
+	Base  int
+	Swing int
 
 	// ComboCards and ComboCardCount are set on KindCombo alongside Combo: **which cards of this
 	// side's turn formed it**, as indices into the turn *as it was played*.
@@ -977,7 +990,10 @@ func resolveAttackPhase(
 
 	// The hand is announced before the blow lands, so a boosted figure never arrives before the
 	// reason for it. A lone attack that formed nothing carries HandNone and says only its colour.
-	events = append(events, comboEvent(side, blow, round))
+	//
+	// **It also carries the sum**, which is what the damage below is taken from — see comboEvent.
+	swung := comboEvent(side, blow, turn, actor.Str, round)
+	events = append(events, swung)
 
 	// **What the hand buys besides damage is paid on forming it, not on connecting.** A shock
 	// that makes the blow miss does not undo a stagger the player assembled five cards to earn —
@@ -1040,12 +1056,10 @@ func resolveAttackPhase(
 	// **Base damage is the cards in the hand, and the multiplier is DMG on top.** DMG is what one
 	// Strike deals at this duelist's strength, which is the figure the duelist card shows — so
 	// `20 + 10 x 1.5 = 35` for a pair of Strikes at Str 10, exactly as the design states it.
-	dmg := 0
-	for _, i := range blow.Cards {
-		dmg += turn[i].Card.Damage(actor.Str)
-	}
-	dmg += scaleDamage(Strike.Damage(actor.Str), blow.Multiplier)
-	dmg = blunt(dmg, actor.weightPct())
+	//
+	// That sum is the announcement's `Amount`, taken rather than repeated: the feed prints the
+	// arithmetic, and a second copy of it here is the one way the printed sum could be wrong.
+	dmg := blunt(swung.Amount, actor.weightPct())
 
 	// **Every raised defence answers the blow, and they compose multiplicatively.** Order is not
 	// read: a turn has one attack, so "which card meets which blow" has no content. Multiplying
@@ -1183,14 +1197,35 @@ func resolveAttackPhase(
 }
 
 // comboEvent packages what the attack phase formed for the screen: which hand, which mix, the
-// multiplier, and which cards of the turn earned it.
-func comboEvent(side Side, blow Attack, round int) Event {
+// multiplier, which cards of the turn earned it, and the arithmetic they come to.
+//
+// **It is the attack phase's one line in the feed** *(2026-08-14)*, so it carries everything that
+// line has to say. The individual attack cards are still announced — a slot that resolved has to
+// produce a beat — but the screen draws no sentence for them: five cards making one blow read as
+// five blows, which is the thing one-blow-per-turn was meant to stop saying.
+func comboEvent(side Side, blow Attack, turn []Slot, str, round int) Event {
+	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
+	// this event rather than recomputing it, so the sentence the feed prints and the damage that
+	// lands cannot be two different sums.
+	base := 0
+	for _, i := range blow.Cards {
+		base += turn[i].Card.Damage(str)
+	}
+	swing := Strike.Damage(str)
+
+	lead := turn[blow.Cards[0]].Card
+
 	e := Event{
 		Kind:       KindCombo,
 		Side:       side,
+		Action:     lead.Action,
+		Element:    lead.Element,
+		Amount:     base + scaleDamage(swing, blow.Multiplier),
 		Hand:       blow.Hand.ID,
 		Mix:        blow.Mix.ID,
 		Multiplier: blow.Multiplier,
+		Base:       base,
+		Swing:      swing,
 		Round:      round,
 	}
 	for _, i := range blow.Cards {

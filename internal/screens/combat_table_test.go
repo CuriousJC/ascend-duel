@@ -182,18 +182,16 @@ func TestBothRowsRaiseTheCardThatIsResolving(t *testing.T) {
 	}
 }
 
-func TestOnlyOneCardOnTheTableIsLitAtATime(t *testing.T) {
-	// A turn is contiguous per side, so the lit card walks the left row and then the right
-	// one. The event that lights one seat is the event that unlights the other, which is why
+func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
+	// A turn is contiguous per side, so the lit cards walk the left row and then the right
+	// one. The event that lights one side is the event that unlights the other, which is why
 	// neither row has to know the other exists.
 	s := &CombatScene{
-		fighterActions:  combat.PlainCards(combat.Strike),
-		enemyActions:    combat.PlainCards(combat.Jab),
-		firingSeat:      -1,
-		enemyFiringSeat: -1,
+		fighterActions: combat.PlainCards(combat.Strike),
+		enemyActions:   combat.PlainCards(combat.Jab),
 		log: []combat.Event{
-			{Kind: combat.KindAction, Side: combat.SideA},
-			{Kind: combat.KindAction, Side: combat.SideB},
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+			{Kind: combat.KindAction, Side: combat.SideB, Action: combat.Jab},
 		},
 	}
 
@@ -201,17 +199,76 @@ func TestOnlyOneCardOnTheTableIsLitAtATime(t *testing.T) {
 	// applyEvent before it increments. currentSlot counts inclusively for that reason.
 	s.cursor = 0
 	s.noteResolved(s.log[0])
-	if s.firingSeat != 0 || s.enemyFiringSeat != -1 {
-		t.Errorf("after the player's card: player seat %d, enemy seat %d — want 0 and -1",
-			s.firingSeat, s.enemyFiringSeat)
+	if !sameSeats(s.firingSeats, []int{0}) || len(s.enemyFiringSeats) != 0 {
+		t.Errorf("after the player's card: player %v, enemy %v — want [0] and none",
+			s.firingSeats, s.enemyFiringSeats)
 	}
 
 	s.cursor = 1
 	s.noteResolved(s.log[1])
-	if s.firingSeat != -1 || s.enemyFiringSeat != 0 {
-		t.Errorf("after the opponent's card: player seat %d, enemy seat %d — want -1 and 0",
-			s.firingSeat, s.enemyFiringSeat)
+	if len(s.firingSeats) != 0 || !sameSeats(s.enemyFiringSeats, []int{0}) {
+		t.Errorf("after the opponent's card: player %v, enemy %v — want none and [0]",
+			s.firingSeats, s.enemyFiringSeats)
 	}
+}
+
+func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
+	// **A turn lands one blow, so the whole hand is up when the combo names it.** The cards are
+	// announced one at a time and stay raised; the combo then drops the ones that earned nothing,
+	// so what is left standing is what the feed's single line is about.
+	s := &CombatScene{
+		hand: []paletteCard{
+			{actionCard: actionCard{Action: combat.Strike, Element: combat.Fire}, selected: true},
+			{actionCard: actionCard{Action: combat.Strike, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Action: combat.Jab, Element: combat.Basic}, selected: true},
+		},
+		fighterActions: []combat.Card{
+			combat.Of(combat.Strike, combat.Fire),
+			combat.Of(combat.Strike, combat.Ice),
+			combat.Of(combat.Jab, combat.Basic),
+		},
+		log: []combat.Event{
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+			{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Jab},
+		},
+	}
+	s.seatPlayedCards()
+
+	for i := range s.log {
+		s.cursor = i
+		s.noteResolved(s.log[i])
+	}
+	if !sameSeats(s.firingSeats, []int{0, 1, 2}) {
+		t.Errorf("the attack phase raised %v, want all three cards up", s.firingSeats)
+	}
+
+	// The Jab built no hand, so the combo takes it back down — and brackets only the pair.
+	combo := combat.Event{Kind: combat.KindCombo, Side: combat.SideA, ComboCardCount: 2}
+	combo.ComboCards[0], combo.ComboCards[1] = 0, 1
+	s.noteCombo(combo)
+
+	if !sameSeats(s.firingSeats, []int{0, 1}) {
+		t.Errorf("the combo left %v raised, want only the two cards that formed it", s.firingSeats)
+	}
+	if !s.resolved[0].combo || !s.resolved[1].combo || s.resolved[2].combo {
+		t.Errorf("bracketed %v, want the first two only",
+			[]bool{s.resolved[0].combo, s.resolved[1].combo, s.resolved[2].combo})
+	}
+}
+
+// sameSeats compares two seat lists as lists — order included, since the seats are appended in
+// the order the cards resolved.
+func sameSeats(got, want []int) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {

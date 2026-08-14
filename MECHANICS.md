@@ -458,6 +458,13 @@ queued is announced, the hand they form is announced, and then one figure of dam
 prepares are now the only cards that still resolve one at a time, because each does something to
 its own duelist rather than contributing to a shared blow.
 
+**And the phase says one thing, not one thing per card.** The announcements still happen — each is
+a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "COMBO!
+Duelist lands a Duo Strike Pair (20 + 10 x 3.5 = 55), 55 damage". Five lines saying a Strike was
+swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
+forms no hand still gets its own ordinary sentence**, because a lone Strike is not a combo and
+announcing one over every attack would empty the word.
+
 **Prepares run before the hand is worked out.** Nothing a prepare does reaches the attack today —
 Gather and Ritual bank for next round, Guard answers the *opponent's* blow, Sift is the screen's
 business — so this is a legibility choice rather than a mechanical one. It is the order the
@@ -757,11 +764,11 @@ and a multiplier on top of that counting makes the gap wider than it was.
   Resolution pane's highlight runs a row short for the rest of the round.
 - **A place to browse combos** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` and `Mixes()` exist for it to read.
-- `[?]` **Every attack card is announced and then most of them do nothing**, which the Resolution
-  pane has no way to show. A turn of five Strikes reads as five actions and one figure; a turn of
-  `Strike, Jab, Strike` reads as three, with the Jab silently contributing nothing. The pane
-  still cannot draw "these rows together did a thing", and it still cannot show that a row was
-  staggered out — and it now also cannot show that a row was *ignored*.
+- **The attack phase writes one line, and it is the combo's.** *Done.* Attack cards no longer draw
+  a row each — a turn of five Strikes read as five actions and one figure, which is the model the
+  pane was contradicting. The line carries the arithmetic (`20 + 10 x 3.5 = 55`) off the event, so
+  the sum shown is the sum used, and the damage attaches to it. **What is still not drawn** is a
+  row that a stagger deleted; that one stands.
 - **A preview of the hand while planning is wanted and does not exist.** `AttackFor` is exported
   and is the same function the engine uses, so a previewed combo would be the combo that fires by
   construction. Nothing calls it from the screen yet.
@@ -1115,8 +1122,10 @@ Collected from above.
 - `[?]` What distinguishes one stairwell from another.
 - `[?]` Whether the shop and door choice are one screen or two.
 - `[?]` Whether earth becomes a floor affix.
-- `[?]` How the Resolution pane draws a combo whose cards are not adjacent, and how it shows an
-  attack card that was announced and then contributed nothing.
+- `[?]` How a player is shown that an attack card contributed nothing. The pane no longer draws a
+  line per attack card, so a card outside the hand is silent there; the table says it, by raising
+  every attack card and then lowering the ones the combo did not name. Whether that is legible at
+  playback speed is unanswered.
 - `[?]` Earth's green collides with `playerSwatch`. One of the two schemes has to give, and
   what is holding it off is that a border and a swatch are never seen side by side.
 - `[?]` Whether the prepare/attack/defend types are the same axis as the *role* taxonomy the

@@ -49,16 +49,10 @@ func TestEveryElementHasItsOwnArt(t *testing.T) {
 	// A missing case falls through to Basic, so the failure mode is two elements sharing
 	// a border colour — a fire card that looks plain. Distinctness is what is asserted.
 	//
-	// **combat.Poison is exempt, deliberately.** Poison lost its border colour when the
-	// sheet dropped to four primaries plus basic; `cards.json` contains no poison card,
-	// so nothing can be dealt one. The enum member survives because MECHANICS.md lists
-	// poison as a secondary element that may get cards later — and if it does, it needs
-	// a colour in internal/cards and an arm in artFor(), which is what this exemption is
-	// here to make someone notice.
-	dealable := []combat.Element{combat.Basic, combat.Fire, combat.Ice, combat.Lightning, combat.Earth}
-
+	// It walks combat.AllElements rather than a list written out here, so an element
+	// appended to the rules fails this test until it has been given a colour.
 	seen := map[cards.Element]combat.Element{}
-	for _, e := range dealable {
+	for _, e := range combat.AllElements {
 		got := artFor(e)
 		if prev, dup := seen[got]; dup {
 			t.Errorf("%s and %s both map to cards.%v — one of them is missing from the switch in artFor()",
@@ -68,13 +62,8 @@ func TestEveryElementHasItsOwnArt(t *testing.T) {
 	}
 
 	if len(seen) != len(cards.Elements()) {
-		t.Errorf("the screen maps %d distinct dealable elements but internal/cards knows %d",
+		t.Errorf("the screen maps %d distinct elements but internal/cards knows %d",
 			len(seen), len(cards.Elements()))
-	}
-
-	// Poison must land somewhere real rather than panicking or drawing nothing.
-	if got := artFor(combat.Poison); got != cards.Basic {
-		t.Errorf("poison maps to cards.%v, want the Basic fallback", got)
 	}
 }
 
@@ -82,9 +71,7 @@ func TestElementNamesAgreeAcrossThePackages(t *testing.T) {
 	// The two enums also carry names, and the deck reads element names out of
 	// cards.json. If the drawing package spells one differently, a sheet labelled
 	// "lightning" could be showing the colour the game calls something else.
-	//
-	// Poison is excluded for the reason above: it has no art of its own to agree with.
-	for _, e := range []combat.Element{combat.Basic, combat.Fire, combat.Ice, combat.Lightning, combat.Earth} {
+	for _, e := range combat.AllElements {
 		if got, want := artFor(e).String(), e.String(); got != want {
 			t.Errorf("screen calls it %q, internal/cards calls it %q", want, got)
 		}

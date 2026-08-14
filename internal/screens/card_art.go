@@ -266,11 +266,6 @@ func artFor(e combat.Element) cards.Element {
 	case combat.Earth:
 		return cards.Earth
 	default:
-		// Includes combat.Poison, which has no border colour of its own any more.
-		// **Nothing deals a poison card** — cards.json contains none, and the enum member
-		// survives only because MECHANICS.md lists poison as a secondary element that may
-		// get cards later. If it ever does, it needs a colour in internal/cards and an arm
-		// here, and TestEveryElementHasItsOwnArt will say so.
 		return cards.Basic
 	}
 }

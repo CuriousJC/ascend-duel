@@ -195,8 +195,9 @@ var comboSwatch = color.RGBA{R: 198, G: 142, B: 16, A: 255}
 // context for yours, and a saturated colour was claiming more attention than they earn.
 //
 // **It settles a collision recorded as open in `MECHANICS.md`**, where lightning's yellow card
-// surface ran into `enemySwatch`. Green and the player still collide with poison/earth, so the
-// element scheme is only half-untangled.
+// surface ran into `enemySwatch`. The player's green still collides with earth, which went green
+// on 2026-08-14, so the element scheme is only half-untangled — and a card border and a row
+// swatch are never seen side by side, which is why that half has been allowed to stand.
 var (
 	playerSwatch = color.RGBA{R: 46, G: 150, B: 70, A: 255}
 	enemySwatch  = color.RGBA{R: 108, G: 110, B: 122, A: 255}
@@ -646,9 +647,8 @@ func cardPhrase(c combat.Card) string {
 // line. Each names the *effect* rather than the element, because "chills them" says what
 // happens next and "applies ice" says only that a rule fired.
 //
-// Basic and Poison have no phrase because they apply no status and no KindStatus event is ever
-// raised for them; the fallback exists so a fifth element narrates as something rather than as
-// an empty tail.
+// Basic has no phrase because it applies no status and no KindStatus event is ever raised for
+// it; the fallback exists so a fifth element narrates as something rather than as an empty tail.
 func statusPhrase(e combat.Element) string {
 	switch e {
 	case combat.Fire:

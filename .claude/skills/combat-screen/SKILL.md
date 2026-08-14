@@ -163,8 +163,8 @@ left corner, the enemy card in the right, the rings filling everything between.
   where the middle began — but a backing whose top edge lands on both cards' top edges makes
   the three read as one wide object with two cards embedded in it, which is the *same* failure
   the framed pink version was retired for. The drop breaks that line.
-- **A fill, never a frame.** One step lighter than the screen's `{50,50,50}`, no border, no
-  title, no hue — a colour that meant something would compete with the five saturated pink
+- **A fill, never a frame.** One step darker than the screen's cream `screenGround`, no border,
+  no title, no hue — a colour that meant something would compete with the five saturated pink
   borders standing on it. `ringPaneBackRect` is derived from the row and pads it by 8 against
   a 16px gap, so **the backing can never touch either fighter card**;
   `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards` pins that and the fact that it

@@ -49,7 +49,7 @@ func TestRitualBanksMoreThanGatherAndAtABetterRate(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, aAfter, _ := ResolveRound(a, b, PlainCards(Ritual), nil, 1)
+	_, aAfter, _ := resolve(a, b, PlainCards(Ritual), nil, 1)
 
 	if aAfter.BonusAP != ritualBonusAP {
 		t.Errorf("BonusAP after a Ritual = %d, want %d", aAfter.BonusAP, ritualBonusAP)
@@ -59,43 +59,41 @@ func TestRitualBanksMoreThanGatherAndAtABetterRate(t *testing.T) {
 	}
 }
 
+// Brace is partial where Dodge is binary, and cheap where Retreat is total. Under one blow per
+// turn it takes half of what arrives and is then spent.
 func TestBraceHalvesOneAttackAndIsSpent(t *testing.T) {
-	// Brace is partial where Dodge is binary, and single where Guard is turn-wide. Two attacks
-	// into one brace land as half, then full.
-	a := duelist(10, 0, 100)
-	b := duelist(10, 0, 100)
+	a := duelist(10, 0, 500)
+	b := duelist(10, 0, 500)
 
 	// B braces first. B acts second, so its brace is standing when A's next turn arrives.
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Brace), 1)
-	events, _, bAfter := ResolveRound(a, b, PlainCards(Strike, Strike), nil, 2)
+	// A Heavy and a Strike form no hand, so the blow is the Heavy alone and the arithmetic is
+	// about the brace rather than about a multiplier.
+	_, a, b = resolve(a, b, nil, PlainCards(Brace), 1)
+	events, _, bAfter := resolve(a, b, PlainCards(Heavy, Strike), nil, 2)
 
 	if !hasKind(events, KindBraced) {
-		t.Fatal("no KindBraced event — the brace did not apply")
+		t.Fatal("no KindBraced event - the brace did not apply")
 	}
-	if n := kindCount(events, KindBraced); n != 1 {
-		t.Errorf("KindBraced fired %d times, want 1 — a brace is spent on one blow", n)
-	}
-
-	// Str 10: half a Strike is 5, then a full one is 10.
-	if want := 100 - 5 - 10; bAfter.CurrentLife != want {
-		t.Errorf("life after a braced Strike then a clean one = %d, want %d", bAfter.CurrentLife, want)
+	if want := 500 - Heavy.Damage(10)*(100-braceReductionPct)/100; bAfter.CurrentLife != want {
+		t.Errorf("life after a braced Heavy = %d, want %d", bAfter.CurrentLife, want)
 	}
 	if bAfter.DefendCount != 0 {
-		t.Errorf("defends left = %d, want 0 — the brace was spent on the first blow", bAfter.DefendCount)
+		t.Errorf("defends left = %d, want 0 - every defence is spent on the blow it answered", bAfter.DefendCount)
 	}
 }
 
+// Two cards bought separately, so both bite. A rule that ignored one would make the cheaper card
+// worthless exactly when the player had committed to both.
 func TestBraceAndGuardBothApply(t *testing.T) {
-	// Two cards bought separately, so both bite: a quarter, not a half. A rule that ignored one
-	// would make the cheaper card worthless exactly when the player had committed to both.
-	a := duelist(20, 0, 100)
-	b := duelist(10, 0, 100)
+	a := duelist(20, 0, 500)
+	b := duelist(10, 0, 500)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Brace, Guard), 1)
-	_, _, bAfter := ResolveRound(a, b, PlainCards(Strike), nil, 2)
+	_, a, b = resolve(a, b, nil, PlainCards(Brace, Guard), 1)
+	_, _, bAfter := resolve(a, b, PlainCards(Strike), nil, 2)
 
-	if want := 100 - 20/braceDivisor/guardDivisor; bAfter.CurrentLife != want {
-		t.Errorf("life after a Strike into brace+guard = %d, want %d (quartered)", bAfter.CurrentLife, want)
+	braced := Strike.Damage(20) * (100 - braceReductionPct) / 100
+	if want := 500 - braced/guardDivisor; bAfter.CurrentLife != want {
+		t.Errorf("life after a Strike into brace+guard = %d, want %d", bAfter.CurrentLife, want)
 	}
 }
 
@@ -105,8 +103,8 @@ func TestFeintStripsARiposteWithoutTakingTheCounter(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Riposte), 1)
-	events, aAfter, bAfter := ResolveRound(a, b, PlainCards(Feint), nil, 2)
+	_, a, b = resolve(a, b, nil, PlainCards(Riposte), 1)
+	events, aAfter, bAfter := resolve(a, b, PlainCards(Feint), nil, 2)
 
 	if !hasKind(events, KindStripped) {
 		t.Fatal("no KindStripped event — the feint did not remove the riposte")
@@ -122,32 +120,33 @@ func TestFeintStripsARiposteWithoutTakingTheCounter(t *testing.T) {
 	}
 }
 
-func TestFeintStripsWhicheverDefendWasRaisedFirst(t *testing.T) {
-	// **The strip follows raise order, not a precedence table.** It picked Ripostes over Dodges
-	// while the defences were four independent counters with nothing to say which came first;
-	// now that they queue, the card the defender put in front is the card that pays. Both
-	// orderings are checked, because a test that only queued one of them would pass against a
-	// hard-coded answer.
+// **The strip takes the biggest reduction, not the first card raised.** Raise order was retired
+// when a turn stopped having more than one blow for the order to matter to; taking the strongest
+// is what keeps Feint worth its 3 AP instead of spending it on whichever 1-point Brace happened
+// to be queued first. Both orderings are checked, because a test that only queued one of them
+// would pass against a hard-coded answer.
+func TestFeintStripsTheStrongestDefend(t *testing.T) {
 	for _, tc := range []struct {
 		raised []Card
 		want   ActionKind
 	}{
-		{PlainCards(Dodge, Riposte), Dodge},
-		{PlainCards(Riposte, Dodge), Riposte},
-		{PlainCards(Brace, Riposte), Brace},
+		{PlainCards(Dodge, Retreat), Retreat},
+		{PlainCards(Retreat, Dodge), Retreat},
+		{PlainCards(Brace, Dodge), Dodge},
+		{PlainCards(Dodge, Brace), Dodge},
 	} {
-		a := duelist(10, 0, 100)
-		b := duelist(10, 0, 100)
+		a := duelist(10, 0, 500)
+		b := duelist(10, 0, 500)
 
-		_, a, b = ResolveRound(a, b, nil, tc.raised, 1)
-		events, _, _ := ResolveRound(a, b, PlainCards(Feint), nil, 2)
+		_, a, b = resolve(a, b, nil, tc.raised, 1)
+		events, _, _ := resolve(a, b, PlainCards(Feint), nil, 2)
 
 		stripped, ok := firstStripped(events)
 		if !ok {
 			t.Fatalf("%v: no KindStripped event", tc.raised)
 		}
 		if stripped != tc.want {
-			t.Errorf("%v: feint stripped a %v, want the %v raised first", tc.raised, stripped, tc.want)
+			t.Errorf("%v: feint stripped a %v, want the %v", tc.raised, stripped, tc.want)
 		}
 	}
 }
@@ -167,7 +166,7 @@ func TestFeintWithNothingToStripIsStillAnAttack(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	events, _, bAfter := ResolveRound(a, b, PlainCards(Feint), nil, 1)
+	events, _, bAfter := resolve(a, b, PlainCards(Feint), nil, 1)
 
 	if hasKind(events, KindStripped) {
 		t.Error("stripped something that was not there")
@@ -177,52 +176,41 @@ func TestFeintWithNothingToStripIsStillAnAttack(t *testing.T) {
 	}
 }
 
+// The strip fires whatever is about to happen to the blow. Making it depend on a card the player
+// cannot see would put a hidden interaction into a game whose whole point is reading the
+// opponent, so a Retreat that would have stopped the blow outright still loses to it.
 func TestFeintStripIsUnconditional(t *testing.T) {
-	// The strip fires whatever is about to happen to the blow. Making it depend on a card the
-	// player cannot see would put a hidden interaction into a game whose whole point is reading
-	// the opponent — so a Retreat with charges to spare still loses one to a Feint that it then
-	// goes on to negate.
-	a := duelist(10, 0, 100)
-	b := duelist(10, 0, 100)
+	a := duelist(10, 0, 500)
+	b := duelist(10, 0, 500)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Retreat), 1)
-	events, _, bAfter := ResolveRound(a, b, PlainCards(Feint, Jab, Jab, Jab), nil, 2)
+	_, a, b = resolve(a, b, nil, PlainCards(Retreat), 1)
+	events, _, bAfter := resolve(a, b, PlainCards(Feint), nil, 2)
 
 	if !hasKind(events, KindStripped) {
-		t.Error("the feint's strip did not fire against a Retreat — it is meant to be unconditional")
+		t.Error("the feint's strip did not fire against a Retreat - it is meant to be unconditional")
 	}
-
-	// **The count is the assertion, because the charges cannot be read afterwards**: B's own turn
-	// comes next and expires whatever is left. Three charges, one spent by the strip, so two
-	// attacks are stopped and two land — where an unstripped Retreat would have stopped three.
-	if n := kindCount(events, KindNegated); n != retreatCharges-1 {
-		t.Errorf("negated %d attacks, want %d — the strip should have cost a charge",
-			n, retreatCharges-1)
-	}
-	if want := 100 - 2*Jab.Damage(10); bAfter.CurrentLife != want {
-		t.Errorf("defender life = %d, want %d", bAfter.CurrentLife, want)
+	if bAfter.CurrentLife == 500 {
+		t.Error("the Retreat was stripped, so the feint should have landed")
 	}
 }
 
-func TestRetreatStopsThreeAttacksAndThenIsSpent(t *testing.T) {
-	// Dodge stops one blow for two points; Retreat stops three for four. That is the tier: it
-	// buys volume of negation, which is what makes it the answer to a swarm where a Dodge is the
-	// answer to one big swing.
-	a := duelist(10, 0, 100)
-	b := duelist(10, 0, 100)
+// **Retreat is the one defence that still reaches zero.** Dodge takes three quarters for two
+// points; Retreat takes all of it for four, which is most of a round spent doing nothing else.
+// That is the tier, and it replaced the three-charge version when a turn stopped having three
+// attacks to spend charges on.
+func TestRetreatStopsTheBlowOutright(t *testing.T) {
+	a := duelist(10, 0, 500)
+	b := duelist(10, 0, 500)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Retreat), 1)
-	events, _, bAfter := ResolveRound(a, b, PlainCards(Jab, Jab, Jab, Jab), nil, 2)
+	_, a, b = resolve(a, b, nil, PlainCards(Retreat), 1)
+	_, _, bAfter := resolve(a, b, PlainCards(Jab, Jab, Jab, Jab), nil, 2)
 
-	if n := kindCount(events, KindNegated); n != retreatCharges {
-		t.Errorf("negated %d attacks, want %d", n, retreatCharges)
-	}
-	if want := 100 - Jab.Damage(10); bAfter.CurrentLife != want {
-		t.Errorf("life after four Jabs into a Retreat = %d, want %d — the fourth lands",
-			bAfter.CurrentLife, want)
+	if bAfter.CurrentLife != 500 {
+		t.Errorf("life after a Jab Barrage into a Retreat = %d, want 500 - it stops the blow outright",
+			bAfter.CurrentLife)
 	}
 	if bAfter.DefendCount != 0 {
-		t.Errorf("%d defends left, want 0 — the retreat is spent after three", bAfter.DefendCount)
+		t.Errorf("%d defends left, want 0 - the retreat is spent on the blow it answered", bAfter.DefendCount)
 	}
 }
 
@@ -233,55 +221,61 @@ func TestRetreatCostsTheAttackerNothing(t *testing.T) {
 	a := duelist(10, 0, 100)
 	b := duelist(10, 0, 100)
 
-	_, a, b = ResolveRound(a, b, nil, PlainCards(Retreat), 1)
-	_, aAfter, _ := ResolveRound(a, b, PlainCards(Strike, Strike), nil, 2)
+	_, a, b = resolve(a, b, nil, PlainCards(Retreat), 1)
+	_, aAfter, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 2)
 
 	if aAfter.CurrentLife != 100 {
 		t.Errorf("attacker took %d damage into a Retreat, want 0", 100-aAfter.CurrentLife)
 	}
 }
 
-func TestDefensesAnswerInTheOrderTheyWereRaised(t *testing.T) {
-	// The rule the whole ordered list exists for. A Brace queued in front of a Dodge answers the
-	// first attack — halving it — and the Dodge stops the second; reversing the queue reverses
-	// which blow is stopped dead. Under the old fixed precedence the Dodge always went first and
-	// the order the player chose meant nothing.
+func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
+	// **Every card fires, not just the front one** *(2026-08-14)*. The defends were an ordered
+	// queue for a day, on the theory that a player would choose which card met which blow; a turn
+	// now lands one blow, so the choice had nothing to choose between and the whole set answers
+	// it. Each card also emits its own event, which is what the Resolution feed narrates.
 	str := 10
-	for _, tc := range []struct {
-		raised []Card
-		want   int // damage taken across two Strikes
-	}{
-		{PlainCards(Brace, Dodge), Strike.Damage(str) / braceDivisor},
-		{PlainCards(Dodge, Brace), Strike.Damage(str) / braceDivisor},
-	} {
-		a := duelist(str, 0, 100)
-		b := duelist(str, 0, 100)
+	a := duelist(str, 0, 100)
+	b := duelist(str, 0, 100)
 
-		_, a, b = ResolveRound(a, b, nil, tc.raised, 1)
-		events, _, bAfter := ResolveRound(a, b, PlainCards(Strike, Strike), nil, 2)
+	_, a, b = resolve(a, b, nil, PlainCards(Brace, Dodge), 1)
+	events, _, _ := resolve(a, b, PlainCards(Heavy, Strike), nil, 2)
 
-		if got := 100 - bAfter.CurrentLife; got != tc.want {
-			t.Errorf("%v: took %d damage, want %d", tc.raised, got, tc.want)
+	var braced, negated int
+	for _, e := range events {
+		switch e.Kind {
+		case KindBraced:
+			braced++
+		case KindNegated:
+			negated++
 		}
+	}
+	if braced != 1 {
+		t.Errorf("the Brace fired %d times, want 1", braced)
+	}
+	if negated != 1 {
+		t.Errorf("the Dodge fired %d times, want 1", negated)
+	}
+}
 
-		// Which blow each card answered is the part that actually differs, and it is what a
-		// player reading the Resolution feed sees.
-		braced, negated := -1, -1
-		for i, e := range events {
-			if e.Kind == KindBraced && braced < 0 {
-				braced = i
-			}
-			if e.Kind == KindNegated && negated < 0 {
-				negated = i
-			}
-		}
-		if braced < 0 || negated < 0 {
-			t.Fatalf("%v: both defences should have fired, got braced=%d negated=%d",
-				tc.raised, braced, negated)
-		}
-		if first := tc.raised[0].Action; (first == Brace) != (braced < negated) {
-			t.Errorf("%v: %v was raised first but did not answer the first attack", tc.raised, first)
-		}
+func TestDefencesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
+	// A defend answers the opponent's turn and then goes, spent or not. It cannot be banked
+	// against a turn that queued no attack at all — the same rule Guard follows.
+	a := duelist(10, 0, 100)
+	b := duelist(10, 0, 100)
+
+	// A raises two defends into a turn with nothing to answer.
+	_, a1, b1 := resolve(a, b, PlainCards(Dodge, Brace), nil, 1)
+	if a1.DefendCount != 2 {
+		t.Fatalf("A ended round 1 holding %d defends, want 2 unspent", a1.DefendCount)
+	}
+
+	// Round two: A queues nothing, so its own turn expires them before B swings.
+	events, _, _ := resolve(a1, b1, nil, PlainCards(Strike, Strike), 2)
+
+	open, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike), 1)
+	if got, want := firstDamage(t, events, SideB).Amount, firstDamage(t, open, SideB).Amount; got != want {
+		t.Errorf("a blow into expired defends dealt %d, want the full %d", got, want)
 	}
 }
 

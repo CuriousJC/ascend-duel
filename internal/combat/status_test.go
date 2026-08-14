@@ -1,6 +1,9 @@
 package combat
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+)
 
 // The four element statuses, and the lifecycle all of them share.
 //
@@ -35,7 +38,7 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 	// The trigger rule: an attack that connects applies its element, and nothing else does.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
 		a, b := duelist(10, 10, 500), duelist(10, 10, 500)
-		events, _, bAfter := ResolveRound(a, b, []Card{Of(Strike, e)}, nil, 1)
+		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
 
 		if got := statusEvents(events, e); len(got) != 1 {
 			t.Errorf("a %v Strike raised %d status events, want 1", e, len(got))
@@ -52,7 +55,7 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	// delivery as a 1-AP Jab, and the prepare phase would quietly become the status engine.
 	for _, a := range []ActionKind{Gather, Sift, Guard, Ritual, Brace, Dodge, Riposte, Retreat} {
 		attacker, target := duelist(10, 40, 500), duelist(10, 10, 500)
-		events, _, bAfter := ResolveRound(attacker, target, []Card{Of(a, Fire)}, nil, 1)
+		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
 		if n := len(statusEvents(events, Fire)); n != 0 {
 			t.Errorf("a fire %v applied a status %d times", a, n)
@@ -63,23 +66,74 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	}
 }
 
-func TestAStoppedAttackAppliesNoStatus(t *testing.T) {
-	// A Dodge, a Riposte and a Retreat all stop the blow dead, so there is nothing to carry the
-	// element in on. The Feint strip is deliberately unconditional and this is deliberately
-	// not: a status is a consequence of connecting.
+func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
+	// **The status lands because the hand formed, not because the blow hurt** *(2026-08-14)*.
+	// This reverses the rule that stood while defends *negated*: back then a stopped attack
+	// carried nothing in, because nothing arrived. Defends reduce now, and a Retreat takes 100%
+	// off — so making the status conditional on the final figure would let a defensive card
+	// silently un-apply an element the attacker had already paid for, and under one blow per turn
+	// that would be every defensive card in the game.
 	for _, defence := range []ActionKind{Dodge, Riposte, Retreat} {
 		a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
 		// B raises the defence in round one, A swings into it in round two.
-		_, a1, b1 := ResolveRound(a, b, nil, []Card{Plain(defence)}, 1)
-		events, _, bAfter := ResolveRound(a1, b1, []Card{Of(Strike, Fire)}, nil, 2)
+		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defence)}, 1)
+		events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Fire)}, nil, 2)
 
-		if n := len(statusEvents(events, Fire)); n != 0 {
-			t.Errorf("a Strike stopped by a %v still applied a burn (%d events)", defence, n)
+		if n := len(statusEvents(events, Fire)); n != 1 {
+			t.Errorf("a Strike met by a %v applied its burn %d times, want 1", defence, n)
 		}
-		if bAfter.Statuses[Fire].Active() {
-			t.Errorf("a Strike stopped by a %v left a burn behind", defence)
+		if !bAfter.Statuses[Fire].Active() {
+			t.Errorf("a Strike met by a %v left no burn", defence)
 		}
+	}
+}
+
+func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
+	// The mix counts **distinct** colours, not coloured cards, so this is the rule that decides
+	// status volume now. Two fire Jabs are a mono fire Pair and land one burn — where under the
+	// per-card model they landed two.
+	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+
+	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
+
+	if n := len(statusEvents(events, Fire)); n != 1 {
+		t.Errorf("two fire cards in one hand applied %d burns, want 1", n)
+	}
+	if got, want := bAfter.Statuses[Fire].Amount, burnPerHit; got != want {
+		t.Errorf("a mono fire hand stacked to %d, want %d", got, want)
+	}
+}
+
+func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
+	// The other end of the same rule: a duo hand lands both, which is what the mix multiplier is
+	// paying for besides damage.
+	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+
+	_, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Ice)}, nil, 1)
+
+	if !bAfter.Statuses[Fire].Active() {
+		t.Error("a duo fire/ice hand left no burn")
+	}
+	if !bAfter.Statuses[Ice].Active() {
+		t.Error("a duo fire/ice hand left no chill")
+	}
+}
+
+func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
+	// Attack cards that build no hand are announced and contribute nothing — not damage and not
+	// an element. `Strike, Jab, Strike` is a Strike Pair and the Jab is not in it, so a fire Jab
+	// alongside two plain Strikes burns nobody.
+	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+
+	events, _, bAfter := resolve(a, b,
+		[]Card{Plain(Strike), Of(Jab, Fire), Plain(Strike)}, nil, 1)
+
+	if n := len(statusEvents(events, Fire)); n != 0 {
+		t.Errorf("a fire Jab outside the hand applied %d burns, want 0", n)
+	}
+	if bAfter.Statuses[Fire].Active() {
+		t.Error("a card that earned nothing still left its element behind")
 	}
 }
 
@@ -89,8 +143,8 @@ func TestAGuardedAttackStillAppliesItsStatus(t *testing.T) {
 	// let a defensive card silently un-apply an element the attacker had already paid for.
 	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
-	_, a1, b1 := ResolveRound(a, b, nil, []Card{Plain(Guard)}, 1)
-	events, _, bAfter := ResolveRound(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
+	_, a1, b1 := resolve(a, b, nil, []Card{Plain(Guard)}, 1)
+	events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
 
 	if n := len(statusEvents(events, Ice)); n != 1 {
 		t.Errorf("a guarded Strike applied its chill %d times, want 1", n)
@@ -101,14 +155,19 @@ func TestAGuardedAttackStillAppliesItsStatus(t *testing.T) {
 }
 
 func TestAStatusStacksInAmountAndRefreshesInDuration(t *testing.T) {
+	// **Two rounds, not two cards** *(2026-08-14)*. A turn lands one blow and its mix applies one
+	// status per distinct colour, so stacking is now something that happens *across* turns —
+	// see TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt for the other half.
 	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
-	_, _, bAfter := ResolveRound(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
 
-	if got, want := bAfter.Statuses[Fire].Amount, burnPerHit*2; got != want {
+	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
+	_, _, b2 := resolve(a1, b1, []Card{Of(Jab, Fire)}, nil, 2)
+
+	if got, want := b2.Statuses[Fire].Amount, burnPerHit*2; got != want {
 		t.Errorf("two fire hits stacked to %d, want %d", got, want)
 	}
 	// Refreshed rather than added: statusDuration, less the one round-end that has passed.
-	if got, want := bAfter.Statuses[Fire].Rounds, statusDuration-1; got != want {
+	if got, want := b2.Statuses[Fire].Rounds, statusDuration-1; got != want {
 		t.Errorf("two fire hits left %d rounds, want %d — duration refreshes, it does not add",
 			got, want)
 	}
@@ -120,12 +179,12 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 	// second, would never bite anything at all — and it must not survive the next one.
 	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []Card{Of(Strike, Ice)}, nil, 1)
+	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
 	if !b1.Statuses[Ice].Active() {
 		t.Fatal("the chill did not survive the round it was applied in")
 	}
 
-	_, _, b2 := ResolveRound(a1, b1, nil, nil, 2)
+	_, _, b2 := resolve(a1, b1, nil, nil, 2)
 	if b2.Statuses[Ice].Active() {
 		t.Error("the chill outlived the round after the one that applied it")
 	}
@@ -138,7 +197,7 @@ func TestIceCutsTheTargetsBudget(t *testing.T) {
 	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
 	before := b.ActionPoints()
 
-	_, _, bAfter := ResolveRound(a, b, []Card{Of(Strike, Ice)}, nil, 1)
+	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
 
 	if got, want := bAfter.ActionPoints(), before-chillPerHit; got != want {
 		t.Errorf("a chilled duelist has %d AP, want %d (was %d)", got, want, before)
@@ -156,56 +215,127 @@ func TestABudgetNeverFallsBelowOneHoweverColdItGets(t *testing.T) {
 	}
 }
 
-func TestLightningMakesTheNextAttackMissOutright(t *testing.T) {
-	// **Deterministic, decided 2026-08-12.** A roll would need an injected source and a sixth
-	// determinism stream; a certain miss keeps the package pure and matches the rule combos
-	// already follow — what you committed to cannot be silently undone.
+func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
+	// **A roll again as of 2026-08-14**, reversing the deterministic version taken two days
+	// earlier. One blow per turn is what forced it: a certain miss used to delete one attack out
+	// of several and now deletes the whole turn, so a 1 AP lightning Jab could erase a 10 AP
+	// Onslaught outright.
+	//
+	// The same shocked duelist and the same turn, twice, with the two rolls decided rather than
+	// seeded — see fixedSource.
 	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
+	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
 	if !b1.Statuses[Lightning].Active() {
 		t.Fatal("the lightning Strike left no shock")
 	}
 
-	before := a1.CurrentLife
-	events, a2, _ := ResolveRound(a1, b1, nil, []Card{Plain(Strike)}, 2)
+	missed, aMissed, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Strike)}, 2)
+	landed, aLanded, _ := resolveWith(neverMisses(), a1, b1, nil, []Card{Plain(Strike)}, 2)
 
-	if n := countKind(events, KindMissed); n != 1 {
-		t.Errorf("a shocked duelist's attack missed %d times, want 1", n)
+	if n := countKind(missed, KindMissed); n != 1 {
+		t.Errorf("a losing roll missed %d times, want 1", n)
 	}
-	if a2.CurrentLife != before {
-		t.Errorf("a missed attack still dealt %d damage", before-a2.CurrentLife)
+	if aMissed.CurrentLife != a1.CurrentLife {
+		t.Errorf("a missed attack still dealt %d damage", a1.CurrentLife-aMissed.CurrentLife)
+	}
+
+	if n := countKind(landed, KindMissed); n != 0 {
+		t.Errorf("a winning roll missed %d times, want 0", n)
+	}
+	if aLanded.CurrentLife >= a1.CurrentLife {
+		t.Error("a shocked attack that passed its roll dealt no damage")
 	}
 }
 
-func TestAShockIsSpentByTheAttackItStops(t *testing.T) {
-	// One stack, one miss. A shock that stopped every attack in a turn would be a whole-turn
-	// negation for the price of a Jab, where Retreat pays 4 points to stop three.
+func TestMoreShockIsMoreLikelyButNeverCertain(t *testing.T) {
+	// **The cap is what stops the roll becoming the old rule by another route.** Without it,
+	// enough lightning is a certain miss again — and a defence that always works is exactly what
+	// one blow per turn makes intolerable.
+	d := duelist(10, 10, 500)
+	if got := d.shockChancePct(); got != 0 {
+		t.Errorf("an unshocked duelist has a %d%% chance to miss, want 0", got)
+	}
+
+	d.Statuses[Lightning] = Status{Amount: 1, Rounds: 1}
+	one := d.shockChancePct()
+	d.Statuses[Lightning] = Status{Amount: 2, Rounds: 1}
+	two := d.shockChancePct()
+	if two <= one {
+		t.Errorf("two stacks gave %d%% against one stack's %d%% — stacks have to add", two, one)
+	}
+
+	d.Statuses[Lightning] = Status{Amount: 99, Rounds: 1}
+	if got := d.shockChancePct(); got != shockMissCapPct {
+		t.Errorf("99 stacks gave %d%%, want the cap of %d%%", got, shockMissCapPct)
+	}
+	if shockMissCapPct >= 100 {
+		t.Errorf("the cap is %d%%, which allows a certain miss — the rule this replaced",
+			shockMissCapPct)
+	}
+}
+
+func TestAShockStackIsSpentWhetherOrNotTheRollLands(t *testing.T) {
+	// **One stack per attack phase, win or lose.** A shock that only burned itself on a success
+	// would last until it worked, which is a guarantee wearing a probability's clothes.
+	for _, roll := range []struct {
+		name string
+		rng  *rand.Rand
+		miss bool
+	}{
+		{"a losing roll", alwaysMisses(), true},
+		{"a winning roll", neverMisses(), false},
+	} {
+		d := duelist(10, 10, 500)
+		d.Statuses[Lightning] = Status{Amount: 2, Rounds: statusDuration}
+
+		after, missed := spendShock(d, roll.rng)
+
+		if missed != roll.miss {
+			t.Errorf("%s reported missed=%v, want %v", roll.name, missed, roll.miss)
+		}
+		if got := after.Statuses[Lightning].Amount; got != 1 {
+			t.Errorf("%s left %d stacks, want 1 — one is spent whatever happens", roll.name, got)
+		}
+	}
+}
+
+func TestAShockDeletesTheWholeTurnBecauseATurnIsOneBlow(t *testing.T) {
+	// Under the multi-blow model a shock cancelled one attack out of several. A turn now resolves
+	// a single blow, so a landed roll deletes all of it — which is the whole reason the certain
+	// miss had to become a roll. See MECHANICS.md.
 	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
-	events, _, _ := ResolveRound(a1, b1, nil, []Card{Plain(Jab), Plain(Jab)}, 2)
+	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
+	events, aAfter, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Jab), Plain(Jab)}, 2)
 
 	if n := countKind(events, KindMissed); n != 1 {
-		t.Errorf("%d attacks missed, want exactly 1 — a shock stack stops one blow", n)
+		t.Errorf("%d misses, want exactly 1 — a turn has one attack to miss", n)
 	}
-	if n := countKind(events, KindDamage); n != 1 {
-		t.Errorf("%d attacks landed, want 1 — the second Jab is not shocked", n)
+	if n := countKind(events, KindDamage); n != 0 {
+		t.Errorf("%d damage events, want 0 — the blow that missed was the whole turn", n)
+	}
+	if aAfter.CurrentLife != a1.CurrentLife {
+		t.Errorf("a missed turn still dealt %d damage", a1.CurrentLife-aAfter.CurrentLife)
 	}
 }
 
 func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
-	// The miss happens before the Feint strip, before any negation is spent and before a
-	// status is applied. The attack did not occur.
+	// The miss happens before the Feint strip and before any status is applied. The attack did
+	// not occur.
+	//
+	// **What it does not undo is the hand's own reward** — a stagger is paid on forming the hand,
+	// not on connecting. That is deliberate and is pinned in combo_test.go.
 	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
-	_, a1, b1 := ResolveRound(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
+	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
-	// B is shocked, holds a Feint, and A is holding a Riposte for it.
-	events, _, bAfter := ResolveRound(a1, b1, []Card{Plain(Riposte)}, []Card{Of(Feint, Fire)}, 2)
+	// B is shocked and holds a Feint; A is holding a Riposte for it.
+	events, _, bAfter := resolveWith(alwaysMisses(), a1, b1,
+		[]Card{Plain(Riposte)}, []Card{Of(Feint, Fire)}, 2)
 
 	if n := countKind(events, KindStripped); n != 0 {
-		t.Error("a missed Feint still stripped a negation")
+		t.Error("a missed Feint still stripped a defence")
 	}
 	if n := len(statusEvents(events, Fire)); n != 0 {
 		t.Error("a missed Feint still applied its burn")
@@ -220,17 +350,17 @@ func TestFireTicksAtTheEndOfEveryRoundItSurvives(t *testing.T) {
 	// it persists across the boundary. Two ticks from one hit at the current duration.
 	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
 
-	r1, a1, b1 := ResolveRound(a, b, []Card{Of(Jab, Fire)}, nil, 1)
+	r1, a1, b1 := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
 	if n := countKind(r1, KindBurned); n != 1 {
 		t.Errorf("round 1 burned %d times, want 1 — a DoT ticks at the end of the round it lands in", n)
 	}
 
-	r2, _, b2 := ResolveRound(a1, b1, nil, nil, 2)
+	r2, _, b2 := resolve(a1, b1, nil, nil, 2)
 	if n := countKind(r2, KindBurned); n != 1 {
 		t.Errorf("round 2 burned %d times, want 1 — the burn persists across the boundary", n)
 	}
 
-	r3, _, _ := ResolveRound(a1, b2, nil, nil, 3)
+	r3, _, _ := resolve(a1, b2, nil, nil, 3)
 	if n := countKind(r3, KindBurned); n != 0 {
 		t.Errorf("round 3 burned %d times, want 0 — the burn has expired", n)
 	}
@@ -247,7 +377,7 @@ func TestABurnCanKill(t *testing.T) {
 	// finished it rather than the blow that lit it.
 	b.CurrentLife = Jab.Damage(a.Str) + 1
 
-	events, _, bAfter := ResolveRound(a, b, []Card{Of(Jab, Fire)}, nil, 1)
+	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
 
 	if bAfter.Alive() {
 		t.Fatalf("the burn left the target on %d life", bAfter.CurrentLife)
@@ -262,11 +392,11 @@ func TestEarthBluntsWhatItsVictimDeals(t *testing.T) {
 	// attacker-side, before any of the defender's cards touch the blow.
 	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
 
-	plain, _, _ := ResolveRound(a, b, nil, []Card{Plain(Strike)}, 1)
+	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike)}, 1)
 	base := firstDamage(t, plain, SideB).Amount
 
-	_, a1, b1 := ResolveRound(a, b, []Card{Of(Strike, Earth)}, nil, 1)
-	weighted, _, _ := ResolveRound(a1, b1, nil, []Card{Plain(Strike)}, 2)
+	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Earth)}, nil, 1)
+	weighted, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike)}, 2)
 
 	got := firstDamage(t, weighted, SideB).Amount
 	want := blunt(base, weightPerHit)
@@ -315,9 +445,9 @@ func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 	aPlan := []Card{Of(Strike, Fire), Of(Jab, Ice)}
 	bPlan := []Card{Of(Jab, Lightning), Of(Jab, Earth)}
 
-	first, a1, b1 := ResolveRound(a, b, aPlan, bPlan, 1)
+	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
 	for i := 0; i < 20; i++ {
-		got, a2, b2 := ResolveRound(a, b, aPlan, bPlan, 1)
+		got, a2, b2 := resolve(a, b, aPlan, bPlan, 1)
 		if len(got) != len(first) {
 			t.Fatalf("run %d produced %d events, first run produced %d", i, len(got), len(first))
 		}
@@ -340,12 +470,25 @@ func TestADeadDuelistDoesNotBurn(t *testing.T) {
 	// no order dependence.
 	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
 
-	// Light B, then kill B with the same turn.
-	b.CurrentLife = Jab.Damage(a.Str) + Strike.Damage(a.Str)
-	events, _, bAfter := ResolveRound(a, b, []Card{Of(Jab, Fire), Plain(Strike)}, nil, 1)
+	// A fire Pair rather than a fire Jab beside a plain Strike: the pair is a *hand*, so both
+	// cards count and the mix is fire. A mixed pile would resolve as its single biggest attack —
+	// the plain Strike — and light nothing at all.
+	turn := []Card{Of(Jab, Fire), Of(Jab, Fire)}
+
+	// Learn what the hand deals rather than writing the arithmetic down a second time; the
+	// multipliers are expected to be retuned and this test is not about them.
+	probe, _, _ := resolve(a, b, turn, nil, 1)
+	blow := firstDamage(t, probe, SideA).Amount
+
+	// Light B and kill B with the same turn.
+	b.CurrentLife = blow
+	events, _, bAfter := resolve(a, b, turn, nil, 1)
 
 	if bAfter.Alive() {
 		t.Fatalf("the target survived on %d life; this test needs it dead", bAfter.CurrentLife)
+	}
+	if !bAfter.Statuses[Fire].Active() {
+		t.Fatal("the fire hand left no burn, so this test proves nothing")
 	}
 	if n := countKind(events, KindBurned); n != 0 {
 		t.Errorf("a dead duelist burned %d times", n)

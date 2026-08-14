@@ -612,15 +612,21 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 
 // noteCombo brackets the cards a combo was formed from.
 //
-// The engine says which run formed it — see Event.ComboStart — so this is a slice, not a
-// search. Nothing here knows what a Flurry is or how long one runs, which is what stops the
-// bracket disagreeing with the combo that actually fired.
+// The engine names them — see Event.ComboCards — so this is a lookup, not a search. Nothing
+// here knows what a Flurry is or how many cards one takes, which is what stops the bracket
+// disagreeing with the combo that actually fired.
+//
+// **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
+// earned nothing, and two more, so this marks the seats it is given rather than a span between
+// the first and the last.
 func (s *CombatScene) noteCombo(e combat.Event) {
 	if e.Kind != combat.KindCombo || e.Side != combat.SideA {
 		return
 	}
-	for i := e.ComboStart; i < e.ComboStart+e.ComboLength && i < len(s.resolved); i++ {
-		s.resolved[i].combo = true
+	for _, i := range e.ComboCards[:e.ComboCardCount] {
+		if i >= 0 && i < len(s.resolved) {
+			s.resolved[i].combo = true
+		}
 	}
 }
 

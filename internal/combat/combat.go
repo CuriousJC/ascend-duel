@@ -23,6 +23,8 @@
 //     the one rule that is symmetric under a resolution order that is not.
 package combat
 
+import "math/rand"
+
 // Side identifies which duelist an event belongs to. The engine is deliberately
 // symmetric — it has no notion of "player" — so callers map A and B onto whatever
 // they like. Side A takes its whole turn before side B takes any of it.
@@ -63,23 +65,22 @@ type Duelist struct {
 	// defend card, and Guard is not one.
 	Guarded bool
 
-	// Defends is the defend cards this duelist has raised and not yet spent, **in the order
-	// they were played**, and DefendCount is how many of the array is in use.
+	// Defends is the defend cards this duelist has raised and not yet spent, and DefendCount is
+	// how many of the array is in use.
 	//
-	// The first entry answers the next incoming attack, whatever it is — a Dodge or a Retreat
-	// stops it dead, a Riposte stops it and hits back, a Brace halves it. They expire alongside
-	// Guarded.
+	// **Every raised defend answers the opponent's one blow, and they compose multiplicatively**
+	// *(2026-08-14)*. A turn now resolves a single attack, so "which card meets which blow" is a
+	// question with no content: a Brace takes half of what is left after a Dodge has taken three
+	// quarters, and the order they were raised in changes nothing. `defendReductionPct` is what
+	// each is worth.
 	//
-	// **Raise order is the rule, and it replaced a fixed precedence** *(2026-08-14)*. Ripostes
-	// used to be spent before Dodges and Braces only applied once nothing had negated, because
-	// four independent counters had no way to say which card came first. Ordering them makes
-	// drag-within-the-defend-phase a real decision and gives Feint something well-defined to
-	// strip. What it costs is the old guarantee that a Riposte's counter-damage lands as early
-	// in the opponent's turn as possible: a Riposte queued last now answers late and can miss a
-	// kill it would once have made.
+	// **This retired the raise-order rule that had stood for a day**, and with it the last
+	// mechanical reason to drag cards around inside a phase. It also retired Retreat's three
+	// charges, which counted incoming attacks in a model that no longer has more than one.
 	//
 	// **A fixed array, not a slice**, because TestRoundIsDeterministic compares two resolved
-	// duelists with == and nothing on this struct may stop being comparable.
+	// duelists with == and nothing on this struct may stop being comparable. It is a set rather
+	// than a queue now; the array is simply how a comparable set of at most five things is held.
 	Defends     [maxPendingDefends]PendingDefend
 	DefendCount int
 
@@ -125,39 +126,55 @@ type Duelist struct {
 // Alive reports whether this duelist can still fight.
 func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 
-// PendingDefend is one raised defend card waiting for an attack to answer: which card it was,
-// and how many attacks it still has in it. Everything but Retreat answers exactly one.
+// PendingDefend is one raised defend card waiting for the opponent's blow.
 //
-// **Charges rather than three separate entries for a Retreat**, so that a Feint taking one of
-// them leaves a Retreat that is visibly two-thirds of a card rather than deleting a third of
-// something the player queued once.
+// **It is just the card now.** It carried a charge count until 2026-08-14, when a turn stopped
+// resolving more than one attack — counting incoming blows is meaningless when there is only
+// ever one, and Retreat's three charges became three ways of saying the same thing.
 type PendingDefend struct {
-	Card    ActionKind
-	Charges int
+	Card ActionKind
 }
 
-// maxPendingDefends bounds the ordered defend list. A turn is capped at MaxActions cards and
-// every one of them could be a defend, so this is everything a legal turn can raise.
+// maxPendingDefends bounds the defend set. A turn is capped at MaxActions cards and every one of
+// them could be a defend, so this is everything a legal turn can raise.
 const maxPendingDefends = baseMaxActions
 
-// retreatCharges is how many attacks one Retreat answers before it is spent. Three for four
-// points, against Dodge's one for two — the tier buys *volume* of negation, and it is the whole
-// card, so a Feint that took the card outright rather than one charge would make a 3-point
-// attack beat it for free.
-const retreatCharges = 3
+// What each defend card takes off the one blow it answers, in percent.
+//
+// **Reductions rather than negations** *(2026-08-14)*. Under one attack per turn an all-or-
+// nothing Dodge erased a whole hand — a 2 AP card cancelling a 10 AP Onslaught — and Brace and
+// Retreat lost their reason to exist, since "halve the first of five" and "stop three of five"
+// both collapse to "the blow". As percentages the four stay distinct and stay priced by tier.
+//
+// **Retreat still reaches 100**, deliberately: the most expensive defend in the game should be
+// able to stop a turn dead, and at 4 of a 6-point budget it is most of a round spent doing
+// nothing else.
+const (
+	braceReductionPct   = 50
+	dodgeReductionPct   = 75
+	riposteReductionPct = 75
+	retreatReductionPct = 100
+)
 
-// defendCharges is how many attacks one card of this kind answers.
-func defendCharges(a ActionKind) int {
-	if a == Retreat {
-		return retreatCharges
+// defendReductionPct is what one raised card takes off the blow.
+func defendReductionPct(a ActionKind) int {
+	switch a {
+	case Brace:
+		return braceReductionPct
+	case Dodge:
+		return dodgeReductionPct
+	case Riposte:
+		return riposteReductionPct
+	case Retreat:
+		return retreatReductionPct
+	default:
+		return 0
 	}
-	return 1
 }
 
-// raiseDefend puts a defend card on the back of the pending list, where it waits behind
-// anything raised before it.
+// raiseDefend adds a defend card to the set.
 //
-// **An overflow is dropped rather than growing the list or panicking.** MaxActions caps a legal
+// **An overflow is dropped rather than growing the set or panicking.** MaxActions caps a legal
 // turn at five actions, so the array holds everything a legal turn can raise; ResolveRound
 // deliberately trusts what it is handed so a balance sim can probe outside the rules, and a sim
 // that queues six defends should get five of them rather than a crash.
@@ -165,40 +182,36 @@ func (d Duelist) raiseDefend(a ActionKind) Duelist {
 	if d.DefendCount >= len(d.Defends) {
 		return d
 	}
-	d.Defends[d.DefendCount] = PendingDefend{Card: a, Charges: defendCharges(a)}
+	d.Defends[d.DefendCount] = PendingDefend{Card: a}
 	d.DefendCount++
 	return d
 }
 
-// nextDefend is the card that answers the next incoming attack, without spending anything.
-func (d Duelist) nextDefend() (ActionKind, bool) {
-	if d.DefendCount == 0 {
-		return 0, false
+// dropDefend removes one card from the set by index, which is how a Feint takes one.
+func (d Duelist) dropDefend(at int) Duelist {
+	if at < 0 || at >= d.DefendCount {
+		return d
 	}
-	return d.Defends[0].Card, true
-}
-
-// spendDefend takes one charge off the front of the list, dropping the entry when its last
-// charge goes, and reports which card paid.
-//
-// **One function for both ways a charge leaves** — answering an attack and being stripped by a
-// Feint — so the two can never come to disagree about which card is first.
-func (d Duelist) spendDefend() (ActionKind, Duelist, bool) {
-	if d.DefendCount == 0 {
-		return 0, d, false
-	}
-
-	front := d.Defends[0]
-	front.Charges--
-	if front.Charges > 0 {
-		d.Defends[0] = front
-		return front.Card, d, true
-	}
-
-	copy(d.Defends[:d.DefendCount-1], d.Defends[1:d.DefendCount])
+	copy(d.Defends[at:d.DefendCount-1], d.Defends[at+1:d.DefendCount])
 	d.Defends[d.DefendCount-1] = PendingDefend{}
 	d.DefendCount--
-	return front.Card, d, true
+	return d
+}
+
+// strongestDefend is the raised card taking the most off the blow, which is what a Feint strips.
+//
+// **Largest rather than first** *(2026-08-14)*, because with the raise order retired there is no
+// first. Taking the biggest is also what keeps Feint worth its 3 AP: stripping whichever card
+// happened to be cheapest would make it a 3-point attack that removes a 1-point Brace. Ties go to
+// the earliest entry, which needs no rule beyond the order the set was filled in.
+func (d Duelist) strongestDefend() (int, bool) {
+	best, bestPct := -1, 0
+	for i := 0; i < d.DefendCount; i++ {
+		if pct := defendReductionPct(d.Defends[i].Card); pct > bestPct {
+			best, bestPct = i, pct
+		}
+	}
+	return best, best >= 0
 }
 
 // ClearDefenses drops everything a turn put up: the guard and every pending defend card.
@@ -242,6 +255,18 @@ func (c Category) String() string {
 	default:
 		return "?"
 	}
+}
+
+// ParseCategory resolves a category from its name, which is how combos.json writes a combo's
+// scope. It reports failure rather than falling back, for the same reason ParseAction does: a
+// combo quietly counting the wrong phase is a balance change nobody made.
+func ParseCategory(name string) (Category, bool) {
+	for _, c := range Categories() {
+		if c.String() == name {
+			return c, true
+		}
+	}
+	return CategoryPrepare, false
 }
 
 type ActionKind int
@@ -419,11 +444,6 @@ const gatherBonusAP = 2
 // every named hand shape as it grows. See MECHANICS.md.
 const ritualBonusAP = 6
 
-// braceDivisor is how much a spent brace cuts one incoming attack. Its own constant rather than
-// a shared one with guardDivisor: the two are the same number today and are different rules, so
-// tuning one must not silently move the other.
-const braceDivisor = 2
-
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
 
@@ -520,9 +540,10 @@ const (
 	KindDamage
 	KindDefeated
 
-	// KindCombo says a combo formed, and is emitted at the first card of the run rather than
-	// the last — the effects come into force there, so narrating it later would show the
-	// player a boosted hit before telling them why.
+	// KindCombo says a combo formed. **Every one a turn forms is emitted before that turn's
+	// first KindAction**, because the combo phase resolves before the cards do — so a boosted
+	// hit is never shown before the reason for it. Several can arrive together and their runs
+	// may overlap; see matchSlots.
 	KindCombo
 
 	// KindStaggered is one action lost to a stagger. One event per action, so a stagger that
@@ -571,23 +592,41 @@ type Event struct {
 	// with nothing to say about colour says `basic`, exactly as a plain card does.
 	Element Element
 
-	// Combo is set on KindCombo, and names which one fired. The screen looks it up with
-	// ComboByID rather than being told its name here, so a combo renamed is renamed once.
-	Combo ComboID
+	// Hand and Mix are set on KindCombo and name what the attack phase formed. The screen looks
+	// them up with HandByID and MixByID rather than being told their names here, so a hand
+	// renamed is renamed once.
+	//
+	// **Hand is HandNone when no hand formed** and the blow is a lone attack. Mix is still set in
+	// that case, because one card is still one colour.
+	Hand HandID
+	Mix  MixID
 
-	// ComboStart and ComboLength are set on KindCombo alongside Combo: which run of this
-	// side's turn formed it, as an offset and a count into the turn *as it was played*.
+	// Multiplier is the turn's damage multiplier in percent — `Hand.Multiplier + Mix.Multiplier`,
+	// so 350 is the 3.5x a duo pair earns. It is on the event because the screen has no business
+	// re-deriving a number the resolver already worked out.
+	Multiplier int
+
+	// ComboCards and ComboCardCount are set on KindCombo alongside Combo: **which cards of this
+	// side's turn formed it**, as indices into the turn *as it was played*.
 	//
 	// **They are here so a screen never has to work out which cards earned a combo.** The
-	// matcher already knows — ComboHit carries exactly these two numbers — and re-deriving
-	// them from the combo's pattern length would be a second matcher, which is the drift
-	// ResolutionOrder exists to prevent. Matching is greedy and longest-first, so a run of
-	// five Strikes forms one Onslaught and no Flurries; a screen counting cards backwards
-	// from the event would confidently bracket the wrong three.
+	// matcher already knows, and re-deriving it from the combo's pattern would be a second
+	// matcher — the drift ResolutionOrder exists to prevent. It would also be wrong: a counted
+	// hand is not contiguous, so Two Pair can be two cards, a card that earned nothing, and two
+	// more.
 	//
-	// The offset counts the actions that actually resolved, staggered ones already removed,
-	// which is the same sequence as this side's KindAction events.
-	ComboStart, ComboLength int
+	// **A fixed array rather than a slice, because Event has to stay comparable** —
+	// TestCombosDoNotBreakDeterminism compares two logs entry by entry with ==. It is sized to
+	// baseMaxActions, which is every card a legal turn can hold; a balance sim deliberately
+	// queueing more gets its extra cards dropped from the *bracket* rather than from the combo,
+	// the same posture raiseDefend takes on an over-long defend list.
+	//
+	// The indices count the actions that actually resolved, staggered ones already removed,
+	// which is the same sequence as this side's KindAction events — **events that have not
+	// happened yet when this one arrives**, since the combo phase runs first. The screen seats
+	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
+	ComboCards     [baseMaxActions]int
+	ComboCardCount int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits
@@ -639,15 +678,18 @@ func appendTurn(slots []Slot, side Side, cards []Card) []Slot {
 //
 // Inputs are taken by value and never mutated, so a caller can re-run a round from
 // the same starting state — the returned duelists are the authority on what changed.
-func ResolveRound(a, b Duelist, aCards, bCards []Card, round int) (events []Event, aAfter, bAfter Duelist) {
-	return resolveRound(a, b, aCards, bCards, round, comboTable)
+// **`rng` is the round's randomness and may be nil.** It is the seat CLAUDE.md's determinism
+// rules require — an injected source, never a package global — and today the only thing that
+// draws from it is a shock roll. A nil source means no roll ever lands, which is what a caller
+// with no business being random should pass: a preview, or a test pinning the parts of the
+// engine that are still exact.
+func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
+	return resolveRound(a, b, aCards, bCards, round, handTable, mixTable, rng)
 }
 
-// resolveRound is ResolveRound with the combo table injected. It exists so a test can drive
-// a synthetic combo through the whole engine rather than only through the matcher — the
-// damage multiplier and the banked points would otherwise be code paths that shipped without
-// ever having been run, since the two combos the game currently has both use stagger.
-func resolveRound(a, b Duelist, aCards, bCards []Card, round int, table []Combo) (events []Event, aAfter, bAfter Duelist) {
+// resolveRound is ResolveRound with the catalogue injected. It exists so a test can drive a
+// synthetic hand through the whole engine rather than only through the matcher.
+func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, mixes []Mix, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
@@ -661,13 +703,13 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, table []Combo)
 	// stagger is spent at it, and a combo's position is an index *within* it — so the turn
 	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
 	// exactly the slots it produced for that side.
-	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, table)
+	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, hands, mixes, rng)
 
 	// B still loses its standing defenses even in a round it never gets to act in, which is
 	// why this is not inside playTurn's early return: expiry is a property of the turn
 	// arriving, not of anything happening in it.
 	if a.Alive() && b.Alive() {
-		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, table)
+		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, hands, mixes, rng)
 	} else {
 		b = expireDefenses(b)
 	}
@@ -682,19 +724,24 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, table []Combo)
 }
 
 // playTurn runs one side's whole turn: expiry, then whatever a stagger has taken off the
-// front of it, then the actions that survive, with any combo they form in force.
+// front of it, then **every combo the surviving cards form**, and only then the cards
+// themselves.
 //
 // **Combos are matched against what is left after a stagger, not against the queue.** The
 // player queued five attacks; a stagger that ate two means three happened, and a combo
-// scored off cards that never resolved would let a staggered duelist stagger back with a
-// turn they did not take.
+// scored off cards a stagger deleted would let a staggered duelist stagger back with a turn
+// they did not take. That ordering is the reason the combo phase sits *inside* a turn rather
+// than at the top of the round: a round-wide combo phase would score B's combos before A's
+// stagger had taken anything off B.
 func playTurn(
 	events []Event,
 	side Side,
 	actor, target Duelist,
 	turn []Slot,
 	round int,
-	table []Combo,
+	hands []Hand,
+	mixes []Mix,
+	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
 	actor = expireDefenses(actor)
 
@@ -723,67 +770,89 @@ func playTurn(
 	}
 	turn = turn[lost:]
 
-	// One running multiplier for the turn. Combos compose by multiplying, so two overlapping
-	// rewards cannot be made to disagree about which one wins.
-	num, den := 1, 1
-	hits := matchSlots(turn, table)
-
-	for i, slot := range turn {
-		// The action first, then any combo it *completes*. **A combo lands after the cards
-		// that formed it** — changed 2026-08-07, having first been built the other way round.
-		//
-		// Firing at the run's first card let a damage multiplier boost the very cards that
-		// earned it, which is why it was built that way. Two things beat that:
-		//
-		//   - **It read backwards.** "COMBO! Strike Flurry" arrived above three strikes that
-		//     had not happened yet, announcing a thing before its cause.
-		//   - **A run that never finished still paid out.** Matching happens up front, so a
-		//     turn cut short by a Riposte kill on the second of three strikes fired the combo
-		//     anyway. Firing on completion makes that impossible by construction rather than
-		//     by a check somebody has to remember.
-		//
-		// The cost, recorded honestly: a damage multiplier can now only boost what comes
-		// *after* the run. "Complete the combo, get a bonus for the rest of your turn" is a
-		// coherent reading, but it is not the one the multiplier was designed against, and
-		// neither shipping combo uses one — so this is untested by anything real yet.
-		events, actor, target = resolveAction(events, side, actor, target, slot.Card, round, num, den)
-
-		// Either side can fall here: a Riposte kills the attacker who walked into it. A combo
-		// completing on this slot is skipped along with the rest of the turn, which is the
-		// point above.
-		if !actor.Alive() || !target.Alive() {
-			break
+	// **The prepare phase, and it runs before the hand is worked out** *(2026-08-14)*. Nothing a
+	// prepare does today reaches the attack — Gather and Ritual bank for next round, Guard raises
+	// a flag that answers the *opponent's* blow, Sift is the screen's business — so this ordering
+	// is a legibility choice rather than a mechanical one. It is the order the phases are named
+	// in, and a prepare that did feed the hand would need no rule change to do so.
+	for _, slot := range turn {
+		if slot.Card.Category() != CategoryPrepare {
+			continue
 		}
+		events, actor, target = resolvePrepare(events, side, actor, target, slot.Card, round)
+	}
 
-		for _, h := range hits {
-			if i != h.Start+h.Length-1 {
-				continue
-			}
-			events = append(events, Event{
-				Kind:        KindCombo,
-				Side:        side,
-				Combo:       h.ID,
-				ComboStart:  h.Start,
-				ComboLength: h.Length,
-				Round:       round,
-			})
+	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
+	// announced, then the hand they form is announced, then a single figure of damage lands. Five
+	// Strikes are not five hits; they are one Strike Onslaught.
+	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, round, hands, mixes, rng)
 
-			if h.Effect.DamageNum > 0 && h.Effect.DamageDen > 0 {
-				num, den = num*h.Effect.DamageNum, den*h.Effect.DamageDen
-			}
-			if h.Effect.BankAP != 0 {
-				actor.GatheredAP += h.Effect.BankAP
-				events = append(events, Event{
-					Kind:   KindGathered,
-					Side:   side,
-					Amount: h.Effect.BankAP,
-					Round:  round,
-				})
-			}
-			if h.Effect.Stagger != 0 {
-				target.Staggered = addStagger(target.Staggered, h.Effect.Stagger)
-			}
+	// The defend phase raises what will answer the *opponent's* blow, so it comes last: a defence
+	// put up at the end of your turn is standing when they move.
+	//
+	// **It is skipped if either side fell**, since a corpse raising a guard is a line in the log
+	// nobody wants and a duel that is over does not need one.
+	if !actor.Alive() || !target.Alive() {
+		return events, actor, target
+	}
+	for _, slot := range turn {
+		if slot.Card.Category() != CategoryDefend {
+			continue
 		}
+		events = append(events, Event{
+			Kind:    KindAction,
+			Side:    side,
+			Action:  slot.Card.Action,
+			Element: slot.Card.Element,
+			Round:   round,
+		})
+		actor = actor.raiseDefend(slot.Card.Action)
+	}
+
+	return events, actor, target
+}
+
+// resolvePrepare runs one prepare card. **The prepares are the only cards that still resolve one
+// at a time**, because each does something to its own duelist rather than contributing to a
+// shared blow.
+func resolvePrepare(
+	events []Event,
+	side Side,
+	actor, target Duelist,
+	card Card,
+	round int,
+) ([]Event, Duelist, Duelist) {
+	events = append(events, Event{
+		Kind:    KindAction,
+		Side:    side,
+		Action:  card.Action,
+		Element: card.Element,
+		Round:   round,
+	})
+
+	switch card.Action {
+	case Gather, Ritual:
+		bank := gatherBonusAP
+		if card.Action == Ritual {
+			bank = ritualBonusAP
+		}
+		actor.GatheredAP += bank
+		events = append(events, Event{
+			Kind:   KindGathered,
+			Side:   side,
+			Amount: bank,
+			Round:  round,
+		})
+
+	case Guard:
+		actor.Guarded = true
+
+	case Sift:
+		// **Sift has no effect in the rules, and that is the design rather than a gap.** It
+		// manipulates the hand, and the deck deliberately lives on the scene so this package
+		// stays free of a shuffle — see CLAUDE.md on determinism. The screen does the work at the
+		// round boundary; the engine's only job is to charge the action points and give the card
+		// a slot in the resolution order.
 	}
 
 	return events, actor, target
@@ -855,133 +924,109 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 	return events, d
 }
 
-// resolveAction runs a single action by one side against the other. Returning the
-// duelists by value keeps ResolveRound free of pointer aliasing between the two
-// sides, which is the kind of bug that only shows up when both queue a Guard.
-// num/den is the damage multiplier any combo in force has put on this turn, carried down to
-// resolveAttack. 1/1 when nothing is boosting.
-func resolveAction(
+// resolveAttackPhase is the whole of one side's offence: every attack card it queued, the hand
+// they form, and the single blow that follows.
+//
+// **One blow per turn** *(2026-08-14)*. Attack cards no longer resolve one at a time; they are
+// announced, and then `AttackFor` reads them as a set and says what they amount to. Cards that
+// contribute to no hand are announced and then ignored — `Strike, Jab, Strike` is a Strike Pair
+// and the Jab is not in it, so it adds nothing to the figure.
+//
+// The order inside the blow is: shock roll, Feint strip, base damage from the hand's own cards,
+// the hand and mix multiplier, the attacker's earth weight, the defender's raised cards, the
+// defender's guard. **Weight sits where it does because it is a property of the attacker** — it
+// says how hard they can still swing — so everything the defender does happens to a blow that has
+// already been blunted.
+func resolveAttackPhase(
 	events []Event,
 	side Side,
 	actor, target Duelist,
-	card Card,
+	turn []Slot,
 	round int,
-	num, den int,
+	hands []Hand,
+	mixes []Mix,
+	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
 	targetSide := other(side)
-	action := card.Action
 
-	events = append(events, Event{
-		Kind:    KindAction,
-		Side:    side,
-		Action:  action,
-		Element: card.Element,
-		Round:   round,
-	})
-
-	switch action {
-	case Gather, Ritual:
-		bank := gatherBonusAP
-		if action == Ritual {
-			bank = ritualBonusAP
+	// Every attack card is announced whether or not it ends up in the hand. **A slot that
+	// resolved has to produce a beat**, because the screen counts one per slot to know how far
+	// through the round playback is — see TestEverySlotIsEitherTakenOrStaggered.
+	attacks := 0
+	for _, slot := range turn {
+		if slot.Card.Category() != CategoryAttack {
+			continue
 		}
-		actor.GatheredAP += bank
+		attacks++
 		events = append(events, Event{
-			Kind:   KindGathered,
-			Side:   side,
-			Amount: bank,
-			Round:  round,
+			Kind:    KindAction,
+			Side:    side,
+			Action:  slot.Card.Action,
+			Element: slot.Card.Element,
+			Round:   round,
 		})
-		return events, actor, target
-
-	case Sift:
-		// **Sift has no effect in the rules, and that is the design rather than a gap.** It
-		// manipulates the hand, and the deck deliberately lives on the scene so this package
-		// stays free of a shuffle — see CLAUDE.md on determinism. The screen does the work at
-		// the round boundary; the engine's only job is to charge the action points and give the
-		// card a slot in the resolution order. It is also the one concept tools/balance is
-		// structurally unable to see.
-		return events, actor, target
-
-	case Guard:
-		actor.Guarded = true
-		return events, actor, target
-
-	case Brace, Dodge, Riposte, Retreat:
-		// **One arm for all four**, since raise order is the whole of what tells them apart
-		// while they wait. What each does when its turn to answer comes is decided in
-		// resolveAttack, which is the only place that knows what it is answering.
-		actor = actor.raiseDefend(action)
+	}
+	if attacks == 0 {
 		return events, actor, target
 	}
 
-	return resolveAttack(events, side, targetSide, actor, target, card, round, num, den)
-}
+	blow := attackFor(turn, hands, mixes)
+	if len(blow.Cards) == 0 {
+		return events, actor, target
+	}
 
-// resolveAttack lands one attack, or fails to. **The first defend card the target has raised
-// and not spent answers it** — a Dodge or a Retreat stops it dead, a Riposte stops it and hits
-// back, a Brace halves it — and a raised Guard halves whatever is left.
-//
-// **A combo multiplier scales the blow before the Guard halves it**, so a guard is worth the
-// same fraction against a boosted attack as against a plain one. Halving first and then
-// multiplying would make Guard progressively worse the bigger the hit, which is the opposite
-// of what a defensive card is for. The counter-damage from a Riposte is deliberately outside
-// this: it is the *defender* hitting back, and it is not part of the attacker's combo.
-//
-// **The order of the whole calculation is: concept damage, combo multiplier, the attacker's own
-// earth weight, then the defender's brace and guard.** Weight sits where it does because it is a
-// property of the *attacker* — it says how hard they can still swing — so everything the
-// defender does happens to a blow that has already been blunted.
-func resolveAttack(
-	events []Event,
-	side, targetSide Side,
-	actor, target Duelist,
-	card Card,
-	round int,
-	num, den int,
-) ([]Event, Duelist, Duelist) {
-	action := card.Action
+	// The hand is announced before the blow lands, so a boosted figure never arrives before the
+	// reason for it. A lone attack that formed nothing carries HandNone and says only its colour.
+	events = append(events, comboEvent(side, blow, round))
 
-	// A shocked attacker misses outright, and misses before anything else happens — no Feint
-	// strip, no negation spent, no status applied. The attack did not occur.
+	// **What the hand buys besides damage is paid on forming it, not on connecting.** A shock
+	// that makes the blow miss does not undo a stagger the player assembled five cards to earn —
+	// the hand is scored off the queue, and the queue was committed when DUEL! was pressed.
+	if blow.Hand.Effect.BankAP != 0 {
+		actor.GatheredAP += blow.Hand.Effect.BankAP
+		events = append(events, Event{
+			Kind:   KindGathered,
+			Side:   side,
+			Amount: blow.Hand.Effect.BankAP,
+			Round:  round,
+		})
+	}
+	if blow.Hand.Effect.Stagger != 0 {
+		target.Staggered = addStagger(target.Staggered, blow.Hand.Effect.Stagger)
+	}
+
+	// A shocked attacker may miss outright, and misses before anything else happens — no Feint
+	// strip, no defence spent, no status applied. The attack did not occur.
 	//
-	// **It is certain rather than a roll.** See shockPerHit for why this package has no
-	// randomness in it and is not about to acquire any.
-	if shocked, missed := spendShock(actor); missed {
+	// **This is a roll**, and the only one in the package. See shockMissPct.
+	if shocked, missed := spendShock(actor, rng); missed {
 		actor = shocked
 		events = append(events, Event{
 			Kind:    KindMissed,
 			Side:    side,
-			Action:  action,
-			Element: card.Element,
+			Action:  turn[blow.Cards[0]].Card.Action,
+			Element: turn[blow.Cards[0]].Card.Element,
 			Target:  targetSide,
 			Round:   round,
 		})
 		return events, actor, target
+	} else {
+		actor = shocked
 	}
 
-	// A Feint strips the first defend card the target raised, whatever it is, and takes no
-	// counter for it. That is what the extra point over a Strike buys: attacking into a Riposte
-	// normally costs the attacker str/2, and this is the card that clears one safely.
+	// A Feint in the hand strips the defence taking the most off the blow, and takes no counter
+	// for it. That is what the extra point over a Strike buys.
 	//
-	// **It strips whatever is at the front rather than hunting for the Riposte.** The old rule
-	// picked Ripostes before Dodges, because four independent counters had no order to read; now
-	// that the defend list has one, the card the player put first is the card the Feint meets.
-	// That makes the strip something the *defender* can plan against — leading with a Brace
-	// spends the Feint on a 1-point card — instead of a fixed precedence nobody chose.
+	// **Once, however many Feints are in the hand.** A Feint Pair stripping two cards would make
+	// the cheapest way to clear a defensive round a hand the player was building anyway; the
+	// strip is what the *card* does, and the hand already pays in damage.
 	//
-	// **Against a Retreat it takes one charge, not the card.** Three negations for four points
-	// would otherwise be beaten outright by one three-point attack.
-	//
-	// **Unconditional, and deliberately so.** It fires whatever is about to happen to the blow,
-	// because a strip that silently did nothing depending on a card the player cannot see would
-	// be a hidden interaction in a game whose whole point is reading the opponent.
-	//
-	// Guarded is a turn-wide state raised by a *prepare*, not a defend card, and a Feint does
-	// not touch it.
-	if action == Feint {
-		if stripped, after, ok := target.spendDefend(); ok {
-			target = after
+	// Guarded is a turn-wide state raised by a *prepare*, not a defend card, and a Feint does not
+	// touch it.
+	if handHolds(turn, blow.Cards, Feint) {
+		if at, ok := target.strongestDefend(); ok {
+			stripped := target.Defends[at].Card
+			target = target.dropDefend(at)
 			events = append(events, Event{
 				Kind:   KindStripped,
 				Side:   side,
@@ -992,59 +1037,41 @@ func resolveAttack(
 		}
 	}
 
-	// The attacker's own earth weight blunts the blow before any of the defender's cards touch
-	// it. A Riposte's counter is deliberately outside this, exactly as it is outside the combo
-	// multiplier: it is the defender hitting back, not a card the weighted duelist played.
-	//
-	// Computed before the defend list is consulted because a Brace needs a figure to halve.
-	// Nothing here has an effect until it is written to a life total.
-	dmg := blunt(scaleDamage(card.Damage(actor.Str), num, den), actor.weightPct())
+	// **Base damage is the cards in the hand, and the multiplier is DMG on top.** DMG is what one
+	// Strike deals at this duelist's strength, which is the figure the duelist card shows — so
+	// `20 + 10 x 1.5 = 35` for a pair of Strikes at Str 10, exactly as the design states it.
+	dmg := 0
+	for _, i := range blow.Cards {
+		dmg += turn[i].Card.Damage(actor.Str)
+	}
+	dmg += scaleDamage(Strike.Damage(actor.Str), blow.Multiplier)
+	dmg = blunt(dmg, actor.weightPct())
 
-	// **The first defend card the target raised answers this attack, whatever it is.** One
-	// charge is spent either way; what that charge does is the card's business.
-	if kind, ok := target.nextDefend(); ok {
-		_, spent, _ := target.spendDefend()
-		target = spent
+	// **Every raised defence answers the blow, and they compose multiplicatively.** Order is not
+	// read: a turn has one attack, so "which card meets which blow" has no content. Multiplying
+	// what is left rather than adding the percentages is what stops two cards reaching zero by
+	// accident while keeping each one worth something.
+	riposted := false
+	for i := 0; i < target.DefendCount; i++ {
+		card := target.Defends[i].Card
+		pct := defendReductionPct(card)
+		if pct <= 0 {
+			continue
+		}
+		dmg = dmg * (100 - pct) / 100
 
-		switch kind {
+		switch card {
 		case Riposte:
+			riposted = true
 			events = append(events, Event{
 				Kind:   KindNegated,
 				Side:   targetSide,
-				Action: Riposte,
+				Action: card,
 				Target: side,
+				Amount: dmg,
 				Round:  round,
 			})
-
-			// The counter runs the other way: the defender is the one dealing damage now, so
-			// the sides in this event are swapped relative to the attack that provoked it.
-			counter := Riposte.Damage(target.Str)
-			actor.CurrentLife = reduce(actor.CurrentLife, counter)
-
-			events = append(events, Event{
-				Kind:   KindDamage,
-				Side:   targetSide,
-				Target: side,
-				Amount: counter,
-				Life:   actor.CurrentLife,
-				Round:  round,
-			})
-			if !actor.Alive() {
-				events = append(events, Event{
-					Kind:   KindDefeated,
-					Side:   targetSide,
-					Target: side,
-					Round:  round,
-				})
-			}
-			return events, actor, target
-
 		case Brace:
-			// A brace is spent on this blow; a guard is not spent at all. Both can apply,
-			// quartering the hit — deliberate, since they are two cards bought separately and a
-			// rule that ignored one of them would make the cheaper card worthless exactly when
-			// the player committed to both.
-			dmg /= braceDivisor
 			events = append(events, Event{
 				Kind:   KindBraced,
 				Side:   side,
@@ -1053,20 +1080,21 @@ func resolveAttack(
 				Life:   target.CurrentLife,
 				Round:  round,
 			})
-
 		default:
-			// Dodge and Retreat: the two that simply stop it dead. A defend card that does
-			// anything else needs its own arm above rather than falling in with them.
 			events = append(events, Event{
 				Kind:   KindNegated,
 				Side:   targetSide,
-				Action: kind,
+				Action: card,
 				Target: side,
+				Amount: dmg,
 				Round:  round,
 			})
-			return events, actor, target
 		}
 	}
+
+	// Every defence is spent on the one blow it answered.
+	target.Defends = [maxPendingDefends]PendingDefend{}
+	target.DefendCount = 0
 
 	if target.Guarded {
 		dmg /= guardDivisor
@@ -1081,7 +1109,6 @@ func resolveAttack(
 	}
 
 	target.CurrentLife = reduce(target.CurrentLife, dmg)
-
 	events = append(events, Event{
 		Kind:   KindDamage,
 		Side:   side,
@@ -1091,20 +1118,24 @@ func resolveAttack(
 		Round:  round,
 	})
 
-	// **The status lands because the blow did, not because it hurt.** A Jab guarded down to zero
-	// still connected, and making the status conditional on the final figure would mean a
-	// defensive card silently un-applied an element the attacker had already paid for — the same
-	// shape of hidden interaction the unconditional Feint strip above exists to avoid.
+	// **The mix lands its colours' statuses, and it does so because the hand was formed rather
+	// than because the blow hurt.** A hand guarded down to zero still connected, and making the
+	// status conditional on the final figure would mean a defensive card silently un-applied an
+	// element the attacker had already paid for.
 	//
-	// After the damage event so the log reads blow-then-consequence, and after the death check
-	// below would be wrong: a duelist who dies to the hit is not left carrying a chill.
-	if applied, amount, ok := applyStatus(target, card.Element); ok {
+	// One status per distinct colour, so mono lands one and rainbow lands four. Drab lands none,
+	// which is what "basic is not a colour" means at the other end.
+	for _, e := range blow.Elements {
+		applied, amount, ok := applyStatus(target, e)
+		if !ok {
+			continue
+		}
 		target = applied
 		events = append(events, Event{
 			Kind:    KindStatus,
 			Side:    side,
 			Target:  targetSide,
-			Element: card.Element,
+			Element: e,
 			Amount:  amount,
 			Life:    target.CurrentLife,
 			Round:   round,
@@ -1118,9 +1149,69 @@ func resolveAttack(
 			Target: targetSide,
 			Round:  round,
 		})
+		return events, actor, target
+	}
+
+	// The counter runs the other way: the defender is the one dealing damage now, so the sides in
+	// this event are swapped relative to the attack that provoked it.
+	//
+	// **It fires after the blow rather than instead of it**, since a Riposte reduces the hand
+	// rather than negating it. One counter however many Ripostes were raised — the reduction is
+	// what a second one buys.
+	if riposted {
+		counter := Riposte.Damage(target.Str)
+		actor.CurrentLife = reduce(actor.CurrentLife, counter)
+		events = append(events, Event{
+			Kind:   KindDamage,
+			Side:   targetSide,
+			Target: side,
+			Amount: counter,
+			Life:   actor.CurrentLife,
+			Round:  round,
+		})
+		if !actor.Alive() {
+			events = append(events, Event{
+				Kind:   KindDefeated,
+				Side:   targetSide,
+				Target: side,
+				Round:  round,
+			})
+		}
 	}
 
 	return events, actor, target
+}
+
+// comboEvent packages what the attack phase formed for the screen: which hand, which mix, the
+// multiplier, and which cards of the turn earned it.
+func comboEvent(side Side, blow Attack, round int) Event {
+	e := Event{
+		Kind:       KindCombo,
+		Side:       side,
+		Hand:       blow.Hand.ID,
+		Mix:        blow.Mix.ID,
+		Multiplier: blow.Multiplier,
+		Round:      round,
+	}
+	for _, i := range blow.Cards {
+		if e.ComboCardCount >= len(e.ComboCards) {
+			break
+		}
+		e.ComboCards[e.ComboCardCount] = i
+		e.ComboCardCount++
+	}
+	return e
+}
+
+// handHolds reports whether the cards forming the hand include a given concept. It is how Feint
+// finds out whether it is in the blow it is part of.
+func handHolds(turn []Slot, cards []int, a ActionKind) bool {
+	for _, i := range cards {
+		if i >= 0 && i < len(turn) && turn[i].Card.Action == a {
+			return true
+		}
+	}
+	return false
 }
 
 // reduce takes damage off a life total without letting it go negative.

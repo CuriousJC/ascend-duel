@@ -34,7 +34,9 @@ top of, and they are not repeated below:
   `systems.ColorToward` against a light ground. The card's element is its **border** now,
   not its surface.
 - **Widgets are hand-rolled**, `models` struct plus `systems.Update*`/`Draw*`. No toolkit.
-- **Determinism**, which the deck's `rng` and the `deckSeed` placeholder live under.
+- **Determinism**, which the deck's `rng` and the `deckSeed` placeholder live under — and now
+  also `combatRNG`, the screen's own source for the engine's lightning roll, seeded in `Init`
+  from `RunSeed ^ combatSalt`. It is a separate stream and must stay one.
 - **Which of the screen's six files holds what** — the map is in `CLAUDE.md`'s Package layout
   section, and it lives there rather than here so there is only one of it. Everything below
   describes the screen, not a file; they are one package, so a symbol named here may sit in
@@ -44,8 +46,14 @@ top of, and they are not repeated below:
 
 **Phases.** A round is **a whole turn each**: everything side A
 queued resolves before side B does anything, and within a turn the categories go in order —
-**prepare, attacks, defenses**. Defenses come last within a turn because the opponent moves
+**prepare, attack, defenses**. Defenses come last within a turn because the opponent moves
 next, so a defense raised at the end of your turn is up when their blow arrives.
+
+**The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
+`KindAction`, then one `KindCombo` names the hand and mix they formed, then a single `KindDamage`
+lands. Five Strikes are not five hits. **Attack cards that build no hand are announced and
+contribute nothing** — the screen shows them resolving and the engine ignores them, which is a
+gap the pane cannot currently express.
 
 Phases replaced alternation, which replaced volley-per-side. The reason is
 legibility: interleaving may simply not be graspable by players. See
@@ -57,15 +65,15 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 
 ### What this means for the screen
 
-- **Cross-category reordering does nothing.** A defense cannot be dragged ahead of an attack;
-  the drag lands the card in a queue that is then regrouped. **Within-category order is
-  preserved and is the whole of what dragging now changes** — sequence combos will match on
-  it, making an ice Strike before a fire Strike a different round from the reverse.
-- **Within the defend phase, order decides which of your defences meets which blow.**
-  `Duelist.Defends` is a queue and the front of it answers the next incoming attack, so a Brace
-  dragged in front of a Dodge halves the first blow and stops the second — and a Feint strips
-  whatever is at the front. Dragging a defend card is a real decision now, and nothing on the
-  screen says so yet.
+- **Dragging a card changes nothing the engine can see** *(2026-08-14)*. Cross-category
+  reordering never did — the drag lands the card in a queue that is then regrouped — and the two
+  things that read *within*-category order are both gone: hands are counted, so a turn is a set,
+  and every raised defend answers the one blow regardless of when it went up. **The row is still
+  draggable and the gesture still costs the player attention.** That is a design hole, tracked in
+  `TODO.md`; do not paper over it on the screen, and do not invent a rule to justify it.
+- **`Duelist.Defends` is a set, not a queue.** Brace 50%, Dodge 75%, Riposte 75%, Retreat 100%,
+  composed multiplicatively, and a Feint strips the **strongest**. Nothing about the order they
+  were raised in reaches the outcome.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
@@ -82,27 +90,38 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 
 ### Combos, and the one thing they changed on this screen
 
-The rules are in `internal/combat/combo.go` and the design is in
-`MECHANICS.md`; two things matter to the screen.
+The catalogue is `data/combos.json`, the matcher is `internal/combat/combo.go`, and the design is
+in `MECHANICS.md`; these are what matter to the screen.
 
-- **`combat.MatchCombos` is what to call to preview a combo while the player plans.** It is
-  the same matcher the engine uses, so a previewed combo is the combo that fires — by
-  construction, not by two pieces of code agreeing. Nothing draws it yet.
-- **A fired combo brackets its own cards, and the span comes from the event**.
-  `Event.ComboStart`/`ComboLength` say which run of the turn formed it; `ComboHit` always knew
-  and it simply never reached the screen. **Never derive that span from the combo's pattern
-  length.** Matching is greedy and longest-first, so five Strikes are one Onslaught and no
-  Flurries — a screen counting three cards back from the event would confidently bracket the
-  wrong ones. `TestLongerComboReportsItsOwnSpan` pins the case.
-- **A staggered slot is a row that never resolves**, which is the first time the pane has had
-  one. `currentSlot` counts `KindStaggered` alongside `KindAction` for exactly this reason —
-  one beat per slot, taken or lost — and `TestEverySlotIsEitherTakenOrStaggered` pins it.
-  **The pane still draws that row as though it happened**, which is a known gap: it has no way
-  to show a card struck out of the round, just as it has no way to bracket a combo.
+- **A combo is a *hand* and a *mix*, and the event carries both.** `Event.Hand` is a `HandID`,
+  `Event.Mix` a `MixID`, and `Event.Multiplier` the combined percent. `comboName` in
+  `combat_panes.go` looks the two up with `HandByID`/`MixByID` and joins them — "Duo Strike Pair"
+  — dropping the mix when it has no colours. **Exactly one of each fires per turn**, so there is
+  no stacking to draw and no ranking to explain.
+- **`Event.Hand == combat.HandNone` means a lone attack that formed nothing**, which the pane
+  skips rather than narrating as a combo. It still carries a mix, because one card is one colour.
+- **A fired combo brackets its own cards, and the list comes from the event**.
+  `Event.ComboCards[:ComboCardCount]` names which cards of the turn formed it. **Never derive
+  that from the hand's group sizes, and never assume the cards are adjacent.** A counted hand is
+  not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
+  the event carries a list rather than a start and a length.
+- **`combat.AttackFor` is what to call to preview the hand while the player plans.** It is the
+  same function the resolver uses, so a previewed combo is the combo that fires by construction
+  rather than by two pieces of code agreeing. Nothing calls it yet.
+- **A staggered slot is a row that never resolves.** `currentSlot` counts `KindStaggered`
+  alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
+  `TestEverySlotIsEitherTakenOrStaggered` pins it. **The pane still draws that row as though it
+  happened**, which is a known gap.
 
-`KindCombo` is emitted on the card that **completes** the run, so a combo line lands under the
-cards that earned it — firing it on the *first* card reads backwards. The screen does nothing
-to arrange this; it replays the log in order, and the engine decides.
+**Within a turn the order is: prepares one at a time, every attack card announced, the combo, the
+damage, then the defends.** The screen does nothing to arrange this; it replays the log in order,
+and the engine decides.
+
+Two consequences for playback. **The combo line lands after its cards are announced but before
+the damage**, so a boosted figure never arrives before the reason for it, and `noteCombo` has
+real rows to mark because the whole queue is seated at DUEL! rather than a card at a time. And
+**a hand pays its stagger even if the blow then misses** — the shock roll happens after the combo
+event, because the hand is scored off the queue and the queue was committed at DUEL!.
 
 ### What survives any model
 

@@ -1,0 +1,72 @@
+{
+  "hands": [
+    {
+      "key": "pair",
+      "id": 300,
+      "name": "{card} Pair",
+      "groups": [2],
+      "scope": ["attack"],
+      "expand": "attack-cards",
+      "multiplier": 150,
+      "effect": {}
+    },
+    {
+      "key": "two-pair",
+      "id": 1000,
+      "name": "Two Pair",
+      "groups": [2, 2],
+      "scope": ["attack"],
+      "expand": "none",
+      "multiplier": 175,
+      "effect": {}
+    },
+    {
+      "key": "flurry",
+      "id": 100,
+      "name": "{card} Flurry",
+      "groups": [3],
+      "scope": ["attack"],
+      "expand": "attack-cards",
+      "multiplier": 200,
+      "effect": { "stagger": 1 }
+    },
+    {
+      "key": "full-house",
+      "id": 1001,
+      "name": "Full House",
+      "groups": [3, 2],
+      "scope": ["attack"],
+      "expand": "none",
+      "multiplier": 300,
+      "effect": { "stagger": 1 }
+    },
+    {
+      "key": "barrage",
+      "id": 400,
+      "name": "{card} Barrage",
+      "groups": [4],
+      "scope": ["attack"],
+      "expand": "attack-cards",
+      "multiplier": 500,
+      "effect": { "stagger": 2 }
+    },
+    {
+      "key": "onslaught",
+      "id": 200,
+      "name": "{card} Onslaught",
+      "groups": [5],
+      "scope": ["attack"],
+      "expand": "attack-cards",
+      "multiplier": 1000,
+      "effect": { "staggerAll": true }
+    }
+  ],
+
+  "mixes": [
+    { "key": "drab", "id": 1, "name": "Drab", "colours": 0, "multiplier": 0 },
+    { "key": "mono", "id": 2, "name": "Mono", "colours": 1, "multiplier": 0 },
+    { "key": "duo", "id": 3, "name": "Duo", "colours": 2, "multiplier": 200 },
+    { "key": "trio", "id": 4, "name": "Trio", "colours": 3, "multiplier": 500 },
+    { "key": "rainbow", "id": 5, "name": "Rainbow", "colours": 4, "multiplier": 1000 }
+  ]
+}

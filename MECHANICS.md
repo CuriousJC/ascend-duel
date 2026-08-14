@@ -6,15 +6,11 @@
 Everything here is decided unless marked `[?]`. Read this before proposing a design change,
 and before implementing anything that touches a rule.
 
-Captured 2026-08-05 in one session; most of it is still unimplemented. **Cards, categories and
-phase resolution landed on 2026-08-06**, **combos on 2026-08-07**, and **the full 12-concept /
-60-card deck on 2026-08-08** — those sections describe running code and say so. Everything else
-is still design.
+**Running code:** cards and categories, phase resolution, combos, the 12-concept / 60-card
+deck, and the elements and their statuses inside `internal/combat`. Those sections say so.
+Everything else here is design that nothing implements yet.
 
-**Elements crossed into `internal/combat` on 2026-08-12**, along with the four statuses they
-apply. That was the change three others were waiting on, and it unblocked all three: ring
-discounts, flip rings and the five-of-a-colour combo can now all be written. **The next piece of
-work is combos as data** — a `combos.json` catalogue reaching the rules through a bridge
+**Next up: combos as data** — a `combos.json` catalogue reaching the rules through a bridge
 package, so the set can be seen and grown in one file.
 
 ---
@@ -37,7 +33,8 @@ the action and the wielder.
 
 Attributes do **not** need this. `Con`, `Str` and `Spd` are already fields on `Duelist`, and
 `ResolveRound` takes duelists by value, so a ring granting `+5 Str` just hands it a different
-duelist. Base values live in `data/combatants.json` and are expected to move with playtesting.
+duelist. Base values live in `data/duelists.json` and `data/enemies.json`, and are expected to
+move with playtesting.
 What is still frozen is the *conversion* — `LifePerCon`, `baseActionPoints`, `speedPerPoint` —
 and those are the bigger balance levers.
 
@@ -47,26 +44,17 @@ and those are the bigger balance levers.
 
 **Implemented today:** `Con`, `Str`, `Spd` on `Duelist`. Life is `Con × LifePerCon` (5). Action
 points are `4 + Spd/10`, minimum 1. Damage comes from the *action* via `ActionKind.Damage(str)`,
-not from an attribute of its own. Base values are per-combatant data in `combatants.json`.
+not from an attribute of its own. Base values are per-combatant data in `data/duelists.json` and `data/enemies.json`.
 
-**`ideas.md` proposed a different model** — attributes are *speed*, *damage* and *armour*, each
-scaling with level: damage `level × 10`, speed `level × 5`, armour likewise. Two conflicts with
-what exists, both unresolved:
+**Damage reduction has exactly two sources, and no attribute is one of them.** The **earth
+status** blunts what the opponent deals by a percentage, and `guardDivisor` halves a blow
+against a raised guard. A durable combatant is one with high `Con` or earth on it. Anything
+that should reduce damage extends one of those two rather than arriving as a third system —
+two mechanics quietly stacking is the failure to avoid.
 
-- **There is no armour, anywhere.** `Duelist` has no such field and nothing reads one. The only
-  damage reduction in the game is `guardDivisor`, which halves a blow against a raised guard.
-- **Nothing scales with floor.** Enemies are fully-specified records; there is no level term.
-
-`[?]` **Whether armour arrives at all, and if so whether it is a stat or a status.** Worth
-noticing before deciding: **earth is already armour by another name** — "blunts the damage the
-opponent deals, by a percentage" is exactly what an armour stat does. If armour lands as a
-separate stat, the two need to be one system rather than two mechanics that quietly stack.
-
-`[?]` **How enemies scale up the tower**, given the records are flat and the ideas note assumed
-a level multiplier.
-
-**This matters for bosses**, which are recorded below as having "high armour" — a rule resting
-on a stat that does not exist.
+`[?]` **How enemies scale up the tower.** Enemies are fully-specified records with no level
+term. A level multiplier — damage `level × 10`, speed `level × 5` — is the shape that has been
+suggested. Nothing scales with floor today.
 
 ---
 
@@ -74,13 +62,12 @@ on a stat that does not exist.
 
 ### Types
 
-**Implemented 2026-08-06 as `combat.Category`.** Every card is exactly one of three types, and
+**Implemented as `combat.Category`.** Every card is exactly one of three types, and
 the type decides which phase of a turn it resolves in — see *Resolution* below. This is the
 axis the whole round is built on.
 
-**The concept set is a 3x4 grid: three types by four cost tiers, filled** *(decided and built
-2026-08-08)*. Twelve concepts, and the grid is the reason there are twelve rather than however
-many somebody thought of.
+**The concept set is a 3x4 grid: three types by four cost tiers, filled.** Twelve concepts,
+and the grid is the reason there are twelve rather than however many somebody thought of.
 
 | Type | 1 AP | 2 AP | 3 AP | 4 AP |
 |---|---|---|---|---|
@@ -131,17 +118,15 @@ cannot see.
 you choose what leaves. Sift is *throughput* — more cards flow past you and you do not choose
 which. It can eat a card you wanted, which is what makes it cost something beyond its 2 AP.
 
-**Guard is a prepare, not a defend.** It moved on 2026-08-06 and went 2 → 3 AP with the change: it
-does not answer one blow, it dampens a whole turn, and that is a thing you put up before the
-exchange rather than a reaction inside it. Riposte is **defend** despite being a
-counter-attack.
+**Guard is a prepare, not a defend**, at 3 AP: it does not answer one blow, it dampens a whole
+turn, and that is a thing you put up before the exchange rather than a reaction inside it.
+Riposte is **defend** despite being a counter-attack.
 
-**Parry was dropped** the same day, before it was built. Dodge, Riposte and Guard already
-cover cheap-precise, expensive-punishing and broad-dampening; a fourth defence had no job
-left. It can come back.
+**There is no Parry**, and it was dropped before it was built. Dodge, Riposte and Guard
+already cover cheap-precise, expensive-punishing and broad-dampening; a fourth defence had no
+job left. It can come back.
 
-The lopsided 1/2/4 split is gone with it, and so is the two-thirds-defensive theory it
-carried. Six concepts split evenly 2/2/2 — 10 prepare / 10 attack / 10 defend — which is a
+The three types split evenly 2/2/2 — 10 prepare / 10 attack / 10 defend — which is a
 consequence of the concept list rather than a target.
 
 **Ripostes are spent before Dodges** when both are up. Both negate completely, so spending
@@ -154,7 +139,7 @@ affordable — Riposte is only *better* than Dodge, never *different*. What stop
 redundant is the cap on actions per round: one card doing two jobs beats two cards. Being
 played with deliberately before changing anything.
 
-**Feint narrows this without closing it** *(2026-08-08)*. Attacking into a Riposte normally
+**Feint narrows this without closing it**. Attacking into a Riposte normally
 costs the attacker `str/2` in counter-damage; a Feint strips the Riposte and takes no counter,
 so Riposte's punish clause is now something that can be defused and Dodge's cannot be — there
 is nothing on a Dodge to defuse. That makes the two differ in what an opponent can do *about*
@@ -167,19 +152,19 @@ Ripostes before Dodges, matching the order they are spent in.
 adding concepts, not just a description of the starting deck — a new concept arrives as a set
 of five.
 
-Twelve concepts × five = **60 cards**, implemented 2026-08-08. A hand of eight against that is
+Twelve concepts × five = **60 cards**, implemented. A hand of eight against that is
 13% of the deck, against 27% when the deck was 30 — **doubling the deck halved consistency**,
 which is exactly why Sift exists and why `discardsPerRound` is now a number to watch rather
 than a generous placeholder.
 
-**The deck list is data.** `data/cards.json` holds the twelve concepts and the elements each
-ships in, loaded beside `combatants.json`; `startingDeck` is built from it. Cost, category and
+**The deck list is data.** `data/duelist_cards.json` holds the twelve concepts and the elements each
+ships in, loaded beside `data/duelists.json`; `startingDeck` is built from it. Cost, category and
 damage stay in `internal/combat` — the dependency direction forbids the rules package reading
 `data`, and cost is about to stop being a property of the card anyway (see *Rings*). The JSON
 carries the cost tier as **documentation with a check**: the loader asserts every declared tier
 against `ActionKind.Cost()` and fails loudly rather than letting two sources of truth drift.
 
-`Quick` was renamed **Jab** on 2026-08-08 and given its five cards. It had been an `ActionKind`
+`Quick` was renamed **Jab** and given its five cards. It had been an `ActionKind`
 with a cost and damage and no concept — "homeless" — because which of the rules' actions appear
 in a deck was treated as a deckbuilding question. Filling the 1-AP attack cell answered it.
 Riposte's counter-damage is still defined as the same figure, so "hits back for a Jab" is now a
@@ -221,7 +206,7 @@ cards — is `[?]` and not assumed.
 `basic` is the absence of an element, not a fifth colour. It replaced `none`/`plain` in the
 code's naming.
 
-**Poison has no cards and never did** — corrected 2026-08-08. Two places said otherwise (the
+**Poison has no cards and never did**. Two places said otherwise (the
 colour table above, and a comment in `combat_deck.go` claiming poison was in the starting deck
 "because it predates the split"). `primaries` has only ever held basic, fire, ice, lightning and
 earth, so `conceptDeck` has never built a poison card. The constant and its green exist and are
@@ -245,7 +230,7 @@ colour-coded or the elements avoid those hues.
 
 ### Statuses
 
-*Implemented 2026-08-12, in `internal/combat/status.go`.* Elements are **mechanical**, as
+*Implemented in `internal/combat/status.go`.* Elements are **mechanical**, as
 always intended. Each applies a status **to whoever took the blow**:
 
 | Element | Status | What it does |
@@ -256,7 +241,7 @@ always intended. Each applies a status **to whoever took the blow**:
 | **earth** | weight | the victim deals 10% less damage per stack, capped at 50% |
 
 **Element crossed into `internal/combat` the same day**, which is what this section had been
-waiting on since 2026-08-05 and what unblocked ring discounts and the flip ring with it.
+waiting on and what unblocked ring discounts and the flip ring with it.
 `combat.Element` is a rules type, `combat.Card` is a concept plus an element, and `[]Card`
 replaced `[]ActionKind` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor`, `CostOf`
 and every planner. The screen's own `element` type and its `actionCard` struct are gone —
@@ -269,7 +254,7 @@ was moving.
 
 #### The trigger: a landed attack, and nothing else
 
-**Decided 2026-08-12.** A prepare or a defend carries its element for combos and for the ring
+**Decided.** A prepare or a defend carries its element for combos and for the ring
 discount and applies no status. The alternative — every card applying its status — makes a 1-AP
 Gather as good a delivery as a 1-AP Jab and turns the prepare phase into the status engine.
 
@@ -294,7 +279,7 @@ Per-element tuning is one constant each away. Run `tools/balance` before moving 
 
 #### Lightning is deterministic, and that is a change to this document
 
-**"A chance to miss" is gone; a shock makes the next attack miss outright** *(2026-08-12)*. A
+**"A chance to miss" is gone; a shock makes the next attack miss outright**. A
 roll would need an injected `*rand.Rand` on `ResolveRound` — a sixth determinism stream,
 advanced per attack, so any change to round one reshuffles every roll after it — and it would
 end `internal/combat` being pure integer arithmetic, which is what makes it testable and what
@@ -333,7 +318,7 @@ and hunger have no statuses.
 
 #### What the balance tool says, and it is not comfortable
 
-`tools/balance` gained four element postures on 2026-08-12 — all-out in a colour, same concepts
+`tools/balance` carries four element postures — all-out in a colour, same concepts
 and same 6 AP, so a coloured row read against `all-out` is what the element is worth. Enemies
 beaten, out of 96:
 
@@ -356,7 +341,7 @@ beaten, out of 96:
 
 ## Resolution — phases
 
-**Implemented 2026-08-06.** Chosen as an experiment on 2026-08-05 and built the next day; it
+**Implemented.** Chosen as an experiment and built the next day; it
 is what ships. Still open to reconsideration, but it is the model now, not a proposal.
 
 A round is **a whole turn each**. Everything one side queued resolves before the other side
@@ -391,7 +376,7 @@ and still loses its guard in it.
 
 ### Initiative is gone
 
-Removed 2026-08-06, whole. With one contiguous turn per side there is no exchange for a faster
+There is no initiative. With one contiguous turn per side there is no exchange for a faster
 action to lead, so initiative was a number on every card reporting a distinction the resolver
 had stopped making. `Spd` still buys action points and still never buys priority.
 
@@ -401,7 +386,7 @@ initiative back.
 
 ### What this cost, recorded honestly
 
-- **It reverses a decision made 2026-07-31**, when volley-per-side was replaced by alternation
+- **It reverses an earlier decision**, which replaced volley-per-side with alternation
   on the grounds that *"two monolithic volleys gave the player nothing to manipulate."*
   Phase-based is not the same as volley-per-side — it groups by category within a turn — but
   it is closer to the rejected thing than to what alternation was.
@@ -432,7 +417,7 @@ live; when one does, discovery gates the *table* and nothing else changes.
 
 ### The pattern: cards in, one of three rewards out
 
-*Framework implemented 2026-08-07 in `internal/combat/combo.go`.*
+*Framework implemented in `internal/combat/combo.go`.*
 
 Every combo is the same shape. **A run of cards that must appear consecutively in your own
 turn**, and an `Effect` saying what forming it buys. A step matches an exact concept
@@ -441,7 +426,7 @@ turn**, and an `Effect` saying what forming it buys. A step matches an exact con
 (`OfElement(Ice)`). Any of the three can be pinned to a colour as well:
 `Exactly(Strike).WithElement(Ice)` is an ice Strike and nothing else.
 
-**The element axis landed 2026-08-12** with elements themselves, and `Exactly` is what `Card`
+**The element axis arrived with elements themselves**, and `Exactly` is what `Card`
 was called before the `Card` *type* took the name. `basic` is a colour a step may name — the
 constraint is a separate flag rather than "element unset", because an all-plain run is a
 legitimate pattern that `element: 0` could not distinguish from not asking.
@@ -504,7 +489,7 @@ Two of those eight arrived by the family working as designed rather than by anyo
 **Feint got a pair by being an attack card**, and **Jab's pair became reachable** the moment Jab
 entered the deck, having been generated but undrawable while `Quick` was in no deck at all.
 
-**Combo IDs shifted on 2026-08-08 and this was the last cheap moment for that.** `FlurryID` is
+**Combo IDs shifted and this was the last cheap moment for that.** `FlurryID` is
 `comboFlurryBase + ComboID(a)`, derived from the card's raw enum value, and the five new concepts
 had to be inserted *in category order* — the deck overlay sorts on that raw value to group the
 piles the way a turn resolves. So Strike moved from 3 to 5 and its combos from 103/203 to
@@ -514,7 +499,7 @@ re-locks combos the player has found, and the enum's category ordering and the I
 become a genuine conflict. `[?]` Resolve it before a profile ships — most likely by giving
 `ActionKind` an explicit stable ID for combo purposes and letting the enum order serve the sort.
 
-**Per card, not per category** *(decided 2026-08-07, after a category-wide version shipped
+**Per card, not per category** *(decided after a category-wide version shipped
 first)*. `AnyOf(CategoryAttack)` made any three attacks combo, so a Jab counted the same as a
 Heavy and the reward went to whatever you happened to draw. Naming a combo for the card it is
 built on is what makes it worth *building toward*: three Strikes is a deck you assembled. It
@@ -525,7 +510,7 @@ hit harder than a Jab one, and a category-wide combo could never say so.
 list. Discovery persists on the profile, so an ID that shifted when a card was inserted would
 silently re-lock combos the player had already found.
 
-**"Unopposed" is gone from the name and from the rule** *(2026-08-07)*. It was written under
+**"Unopposed" is gone from the name and from the rule**. It was written under
 alternation, where the opponent could interleave and break a streak. Under phases every attack
 you queue is consecutive by construction, so three attacks *is* three in a row and there is no
 way for the opponent to interrupt. Both `[?]` questions this carried — whether a Guard resets
@@ -552,7 +537,7 @@ with a turn it never took.
 
 ### `[?]` Count-based on element: the five-of-a-colour combo
 
-**Five cards of the same element doubles your action points next round** *(added 2026-08-08, not
+**Five cards of the same element doubles your action points next round** *(not
 built)*. The first combo that counts an element rather than a card.
 
 **It is an all-in round by construction.** The action cap is five, permanently, so five
@@ -561,12 +546,12 @@ matching runs on the resolved order rather than the queue, a single off-element 
 the middle of the sequence after phases regroup it and break the run outright. Nothing else in
 the game asks for a whole turn of one colour, which is what makes it worth a doubling.
 
-Two things stood between this and existing. **The first is done as of 2026-08-12** — elements
+Two things stood between this and existing. **The first is done** — elements
 are in `internal/combat`, `OfElement(e)` is a `Step`, and five of them in a row is the whole
 pattern. What is left is the second:
 
-- ~~**`internal/combat` cannot see elements at all.**~~ It can. `ResolveRound` takes `[]Card`,
-  and `TestOfElementMatchesAnyConceptOfOneColour` already drives the exact five-in-a-row shape
+- **`internal/combat` can see elements.** `ResolveRound` takes `[]Card`, and
+  `TestOfElementMatchesAnyConceptOfOneColour` already drives the exact five-in-a-row shape
   through the matcher against a table of its own.
 - **"Double your AP" is a new reward kind, not a table entry.** `BankAP` is flat and additive;
   doubling is multiplicative. Adding it is a field on `Effect` plus one place applying it — the
@@ -578,7 +563,7 @@ pattern. What is left is the second:
 ### Sequence-based
 
 An ordered pair of elements, where **order changes the result**. Not yet built, and **nothing
-stands in the way of building them as of 2026-08-12**: `Exactly(Strike).WithElement(Ice)`
+stands in the way of building them**: `Exactly(Strike).WithElement(Ice)`
 followed by the same with `Fire` is Burnt Icecube's whole pattern, and
 `TestASequenceComboReadsTheOrderTheCardsWereQueuedIn` already pins that the reverse order does
 not match it. What each *does* is still a reward kind the `Effect` vocabulary has not got.
@@ -597,7 +582,7 @@ needs an `Effect` field beyond the three above.
 
 ### `[?]` Whether the enemy draws on this at all
 
-**Open, and deliberately left open on 2026-08-07 rather than settled early.** Combos are
+**Open, and deliberately left open rather than settled early.** Combos are
 symmetric today: `Swarm1` forms a Jab Flurry off four Jabs every round and staggers the
 player for it. `tools/balance` says that makes it **unbeatable by all three postures** — see
 `TODO.md`, which is where the fix is tracked.
@@ -635,12 +620,12 @@ because `Jab` costs 1. **A combo counting cards is priced by whoever has the che
 - **A hard cap on actions per round** gates how much can happen at all, and holds even when
   everything is free.
 
-**Done 2026-08-06.** The cap is five, and it is `Duelist.MaxActions()` beside `ActionPoints()`
+**Done.** The cap is five, and it is `Duelist.MaxActions()` beside `ActionPoints()`
 rather than the screen's old `maxSelected` constant. It moved for a concrete reason as well as
 a tidy one: **the opponent's planner has to obey it exactly as the player's selection does**,
 and a cap enforced only by the screen was a cap the enemy ignored.
 
-**The cap is five permanently, and nothing may ever raise it** *(decided 2026-08-08)*. This
+**The cap is five permanently, and nothing may ever raise it**. This
 reverses the reason it was made a method — "so a brand or ring raising it has somewhere to bite"
 — and the reversal is the point:
 
@@ -682,7 +667,7 @@ than an ever-widening round.
 
 ### Flip rings — the element-transform ring
 
-**A ring that maps one element onto another across the whole deck** *(added 2026-08-08)*. A
+**A ring that maps one element onto another across the whole deck**. A
 "frozen lightning" ring turns every lightning card into an ice card, so a deck holding 12 of
 each now holds 24 ice and no lightning.
 
@@ -710,7 +695,7 @@ purpose of combos.
   rule.
 
 **Discounting matching cards is why element had to cross into `internal/combat`, and it has**
-*(2026-08-12)*. Cost stops being a property of the concept and becomes a property of the
+. Cost stops being a property of the concept and becomes a property of the
 pairing, and the seat is already cut: `Card.Cost()` is a method on the card, `CostOf` takes
 `[]Card`, and the queue type, `ResolveRound`, `ResolutionOrder` and every planner already carry
 the element. Nothing discounts anything yet — a discount needs an equipped ring, which needs
@@ -721,7 +706,7 @@ cost rather than a bare one.
 **Rings are drawn as cards**, in a horizontal row across the top, not necessarily spanning the
 whole bar. Same size as other cards, and **no glyphs**.
 
-**The row is on the screen as of 2026-08-11, at full card size, and it is a sketch** — nothing
+**The row is on the screen, at full card size, and it is a sketch** — nothing
 buys, equips or reads a ring, and `data/rings.json` holds the three that have art. What made it
 possible is that **the vertical problem below solved itself**: the full-height Resolution pane
 left the 12–46% band for a three-line feed above the hand, so the band the row needed was
@@ -730,25 +715,24 @@ already empty. The character block shrank into the top-left corner to give it th
 - **The row spreads to fill its width and closes up as it fills**: first card flush left, last
   flush right, so three rings stand well apart and five sit shoulder to shoulder. The row runs
   to 79% because the enemy card is past 81%, which leaves about 825px — and five cards is 810
-  since **the whole card set came down to 162x224 on 2026-08-11** (a tenth off the width, 15%
+  since **the whole card set is 162x224** (a tenth off the width, 15%
   off the height, at the owner's request). At the old 180 it overlapped by 26px each, and it
   will again if the row ever narrows. Overlap rather than shrink is the accepted answer, the
   same idiom as the deck overlay — a card cannot be scaled, so a smaller ring is a different
   drawing and there is no smaller ring style.
-- **The row is not a box** *(2026-08-11)*. No fill, no frame, no title: a pink panel around five
+- **The row is not a box**. No fill, no frame, no title: a pink panel around five
   pink-bordered cards read as cards trapped in a container. What marks it is a **rule under the
   cards**, the width of the row, with the fraction on its right end — and the cards align flush
   with the top of the character block rather than each sitting inset in a frame.
-- ~~**It does not fit vertically.**~~ It does now, for the reason above. The old arithmetic —
-  264 tall against ~270px of free band while the Resolution pane took 326 — is what the pane's
-  departure removed.
+- **It fits vertically**, for the reason above: the full-height Resolution pane's departure
+  is what freed the band.
 - Dropping the glyphs is exactly what *would* free the height: the glyph column is the floor on
   card size. `[?]` Same width and shorter is the escape if the band is ever wanted back.
 - `internal/cards` draws a ring already — `RingStyle`, pink border, artwork instead of glyphs —
   so the drawer question is answered: rings share the frame and colour logic and skip the glyph
   column. The screen builds it through `ringSpec`.
 
-**The cap is written down after all, as a fraction** *(decided 2026-08-11)*. `worn/5` sits on the
+**The cap is written down after all, as a fraction**. `worn/5` sits on the
 right-hand end of the rule under the row, the same shape as the deck pile's `left/owned` and the
 AP figure. That **softens "the cap is never displayed"** above, deliberately: a number in a corner
 is read without being looked for, where five slots of which two are empty frames would spend the
@@ -765,7 +749,7 @@ Earth has none, so a fourth ring is art before it is data.
 
 ## Brands
 
-**Brands alter the container; rings alter the contents** *(decided 2026-08-08)*. That is the
+**Brands alter the container; rings alter the contents**. That is the
 axis, and it is what tells you which of the two a new power belongs to:
 
 | | Brands | Rings |
@@ -774,7 +758,7 @@ axis, and it is what tells you which of the two a new power belongs to:
 | Removable | **never.** You brand yourself and you do not take it off | freely; five equipped, swap as you like |
 | Scope | **for the run** | for the run, but re-chosen after every fight |
 
-- **"Permanent" means for the run, not across runs** — confirmed 2026-08-08. A brand is a
+- **"Permanent" means for the run, not across runs**. A brand is a
   commitment made *inside* a run that cannot be undone, which is a different thing from
   meta-progression. Combo *discovery* is the profile-scoped mechanic; brands are not.
 - **More actions is struck from the list.** Brands were previously recorded as granting "more
@@ -801,9 +785,9 @@ to `Session` when that exists.
 **8 floors × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
 shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 
-- **Every third fight is a floor boss.** Bosses have high armour and one strong attribute, and
-  cannot spawn enemies — which implies normal enemies can, a mechanic recorded nowhere else and
-  otherwise undefined.
+- **Every third fight is a floor boss.** Bosses are durable — high `Con`, and earth on them if
+  a boss should also blunt damage — with one strong attribute. They cannot spawn enemies, which
+  implies normal enemies can, a mechanic recorded nowhere else and otherwise undefined.
 - **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of stairwell.**
   Captured as two concepts even though the mechanic is likely the same, because one is "next
   fight on this floor" and the other is "next floor" — a real difference to hang divergence on.
@@ -829,7 +813,7 @@ in the affirmative.
 brute on a fire floor has all fire attacks. The deck stays one list and the affix maps
 `basic → fire` across it. This is cheaper than the recorded "affixes become cards shuffled in".
 
-- **Baseline decks are data**, alongside the existing `combatants.json` records.
+- **Baseline decks are data**, alongside the `data/enemies.json` records — `data/enemy_cards.json` holds them.
 - **Affixes are renamed to match the elements**: `hot`/`cold`/`charged` become `fire`/`ice`/
   `lightning`. Two vocabularies for the same things was a collision waiting to happen.
 - **`undying` is parked**, not deleted. Revisit later.
@@ -840,7 +824,7 @@ brute on a fire floor has all fire attacks. The deck stays one list and the affi
 actions; with a deck it has to draw a hand and plan from that, which subjects the enemy to the
 same "what did I draw" pressure the player faces.
 
-### Styles — implemented 2026-08-06, and a step short of decks
+### Styles — implemented, and a step short of decks
 
 `PlanGreedy` is gone. `combat.PlanStyle` replaced it with four behaviours, each a pure
 function of a `Duelist`, chosen by a `PlanStyle` string on the data record:
@@ -921,11 +905,9 @@ Two kinds, and the distinction matters because there is no Escape key and no rig
 while the playback cursor rests there. Presentation-only, so it cannot touch the outcome, and
 splash length joins the pacing constants destined to become the game-speed setting.
 
-~~`[?]` **The Resolution pane has no way to draw "these rows together did a thing."**~~
-**Resolved 2026-08-07, by splitting the pane in two rather than by solving it.** The old
-Resolution pane was renamed **Action Flow** — one row per slot, a walking highlight, the plan —
-and a new **Resolution** pane took the wide slot and the job of saying what actually happened,
-in sentences, accumulating rather than flashing.
+**Two panes, split rather than solved.** **Action Flow** is one row per slot, a walking
+highlight, the plan; **Resolution** takes the wide slot and the job of saying what actually
+happened, in sentences, accumulating rather than flashing.
 
 A combo therefore never has to be drawn *across* rows: it gets a line of its own, in amber, at
 the moment it forms. So does a stagger. The bracket-or-join problem simply stopped existing,
@@ -952,5 +934,4 @@ Collected from above.
   yellow). One of the two schemes has to give.
 - `[?]` Whether the prepare/attack/defend types are the same axis as the *role* taxonomy the
   initiate/respond model in `TODO.md` asks for, or orthogonal to it.
-- `[?]` Whether armour exists, and whether it is a stat or is just what earth already does.
 - `[?]` How enemies scale up the tower.

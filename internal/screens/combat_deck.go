@@ -297,12 +297,12 @@ func (s *CombatScene) drawHand() {
 // played leave** — anything still sitting unselected in the hand stays exactly where it is,
 // and the draw tops the hand back up to size.
 //
-// This reverses the decision recorded in TODO.md that the whole hand discarded every round,
-// played or not, on the grounds that a hand kept back would let a plan be prepared once and
-// repeated. What that actually produced was a hand you could not build on: cards you had
-// deliberately held were taken away for having been held, so the only way to keep anything
-// was to play it. Refilling only what was used is what makes a hand something you shape
-// across rounds rather than a fresh deal you react to.
+// **Do not go back to discarding the whole hand each round.** The argument for it is that a
+// hand kept back would let a plan be prepared once and repeated — but the *queue* already
+// empties every round, so no plan repeats by default, and clearing the hand as well produces
+// a hand you cannot build on: cards you deliberately held are taken away for having been
+// held, so the only way to keep anything is to play it. Refilling only what was used is what
+// makes a hand something you shape across rounds rather than a fresh deal you react to.
 //
 // It also gives Discard a real job. A card you never want now sits in your hand until you
 // throw it out, so the discard button is how you clear it rather than a shortcut for

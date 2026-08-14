@@ -640,7 +640,7 @@ func playTurn(
 	// **The action points are not refunded.** They were committed when the cards were queued,
 	// and letting them come back would make stagger pure tempo; keeping them spent makes it
 	// tempo and economy both, which is the price a combo costing a whole round's budget to
-	// set up should command. Recorded as the open question it was in TODO.md.
+	// set up should command.
 	lost := actor.Staggered
 	actor.Staggered = 0
 	if lost == StaggerAll || lost > len(turn) {

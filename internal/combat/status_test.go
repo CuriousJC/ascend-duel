@@ -50,10 +50,10 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 }
 
 func TestOnlyAttacksApplyAStatus(t *testing.T) {
-	// **Decided 2026-08-12**: a prepare or a defend carries its element for combos and for the
-	// ring discount and applies nothing. Otherwise a 1-AP Gather would be as good a status
-	// delivery as a 1-AP Jab, and the prepare phase would quietly become the status engine.
-	for _, a := range []ActionKind{Gather, Sift, Guard, Ritual, Brace, Dodge, Riposte, Retreat} {
+	// **Decided 2026-08-12**: a plan card carries its element for combos and for the ring
+	// discount and applies nothing. Otherwise a 1-AP Prepare would be as good a status delivery
+	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
+	for _, a := range []ActionKind{Prepare, Plan, Defend} {
 		attacker, target := duelist(10, 40, 500), duelist(10, 10, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
@@ -69,11 +69,11 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 	// **The status lands because the hand formed, not because the blow hurt** *(2026-08-14)*.
 	// This reverses the rule that stood while defends *negated*: back then a stopped attack
-	// carried nothing in, because nothing arrived. Defends reduce now, and a Retreat takes 100%
-	// off — so making the status conditional on the final figure would let a defensive card
-	// silently un-apply an element the attacker had already paid for, and under one blow per turn
-	// that would be every defensive card in the game.
-	for _, defence := range []ActionKind{Dodge, Riposte, Retreat} {
+	// carried nothing in, because nothing arrived. A Defend takes 50% off — so making the status
+	// conditional on the final figure would let a defensive card silently un-apply an element the
+	// attacker had already paid for, and under one blow per turn that would be every defensive
+	// card in the game.
+	for _, defence := range []ActionKind{Defend} {
 		a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
 		// B raises the defence in round one, A swings into it in round two.
@@ -137,20 +137,20 @@ func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
 	}
 }
 
-func TestAGuardedAttackStillAppliesItsStatus(t *testing.T) {
-	// **The status lands because the blow did, not because it hurt.** A Guard halves the hit
+func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
+	// **The status lands because the blow did, not because it hurt.** A Defend halves the hit
 	// and the hit still connected, so making the status conditional on the final figure would
 	// let a defensive card silently un-apply an element the attacker had already paid for.
 	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
 
-	_, a1, b1 := resolve(a, b, nil, []Card{Plain(Guard)}, 1)
+	_, a1, b1 := resolve(a, b, nil, []Card{Plain(Defend)}, 1)
 	events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
 
 	if n := len(statusEvents(events, Ice)); n != 1 {
-		t.Errorf("a guarded Strike applied its chill %d times, want 1", n)
+		t.Errorf("a halved Strike applied its chill %d times, want 1", n)
 	}
 	if !bAfter.Statuses[Ice].Active() {
-		t.Error("a guarded ice Strike left no chill")
+		t.Error("a halved ice Strike left no chill")
 	}
 }
 
@@ -218,8 +218,8 @@ func TestABudgetNeverFallsBelowOneHoweverColdItGets(t *testing.T) {
 func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 	// **A roll again as of 2026-08-14**, reversing the deterministic version taken two days
 	// earlier. One blow per turn is what forced it: a certain miss used to delete one attack out
-	// of several and now deletes the whole turn, so a 1 AP lightning Jab could erase a 10 AP
-	// Onslaught outright.
+	// of several and now deletes the whole turn, so a 1 AP lightning Jab could erase an 8 AP
+	// Barrage outright.
 	//
 	// The same shocked duelist and the same turn, twice, with the two rolls decided rather than
 	// seeded — see fixedSource.
@@ -321,8 +321,8 @@ func TestAShockDeletesTheWholeTurnBecauseATurnIsOneBlow(t *testing.T) {
 }
 
 func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
-	// The miss happens before the Feint strip and before any status is applied. The attack did
-	// not occur.
+	// The miss happens before any defence is spent and before any status is applied. The attack
+	// did not occur.
 	//
 	// **What it does not undo is the hand's own reward** — a stagger is paid on forming the hand,
 	// not on connecting. That is deliberate and is pinned in combo_test.go.
@@ -330,15 +330,15 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
-	// B is shocked and holds a Feint; A is holding a Riposte for it.
+	// B is shocked and swings a fire Strike; A is holding a Defend for it.
 	events, _, bAfter := resolveWith(alwaysMisses(), a1, b1,
-		[]Card{Plain(Riposte)}, []Card{Of(Feint, Fire)}, 2)
+		[]Card{Plain(Defend)}, []Card{Of(Strike, Fire)}, 2)
 
-	if n := countKind(events, KindStripped); n != 0 {
-		t.Error("a missed Feint still stripped a defence")
+	if n := countKind(events, KindNegated); n != 0 {
+		t.Error("a missed attack still spent the defence that was waiting for it")
 	}
 	if n := len(statusEvents(events, Fire)); n != 0 {
-		t.Error("a missed Feint still applied its burn")
+		t.Error("a missed attack still applied its burn")
 	}
 	if bAfter.Statuses[Fire].Active() {
 		t.Error("a missed attack left its element on somebody")
@@ -464,7 +464,7 @@ func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 
 func TestADeadDuelistDoesNotBurn(t *testing.T) {
 	// **A corpse does not tick, and the reason is the log rather than the arithmetic.** The
-	// first version burned regardless: a duelist killed by a Riposte took a fire tick
+	// first version burned regardless: a duelist killed on the opposing turn took a fire tick
 	// afterwards and the Resolution feed read "falls / burns for 2 / falls". Whether a duelist
 	// is dead is settled before either side's round-end runs, so skipping the tick introduces
 	// no order dependence.

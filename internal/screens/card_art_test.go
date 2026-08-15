@@ -78,26 +78,31 @@ func TestElementNamesAgreeAcrossThePackages(t *testing.T) {
 	}
 }
 
-func TestEveryCategoryHasAGlyph(t *testing.T) {
-	// The same hand-written-switch hazard as the elements, one type over. A category
-	// falling through to CategoryNone draws no glyph at all, which on a card whose
-	// category *word* has been deleted means the phase becomes unstated.
-	all := []combat.Category{combat.CategoryPrepare, combat.CategoryAttack, combat.CategoryDefend}
-
-	seen := map[cards.Category]combat.Category{}
-	for _, c := range all {
-		got := category(c)
-		if got == cards.CategoryNone {
-			t.Errorf("%v maps to CategoryNone — it would draw no glyph and the card would not say its phase", c)
+func TestEveryFamilyHasItsOwnMark(t *testing.T) {
+	// The same hand-written-switch hazard as the elements, one type over. A family
+	// falling through to FamilyNone draws no mark at all, which on a card whose
+	// category *word* has been deleted means the card says nothing about what it is.
+	seen := map[cards.Family]combat.Family{}
+	for _, f := range combat.Families() {
+		got := family(f)
+		if got == cards.FamilyNone {
+			t.Errorf("%v maps to FamilyNone — it would draw no mark and the card would not say its family", f)
 		}
 		if prev, dup := seen[got]; dup {
-			t.Errorf("%v and %v both map to cards.%v", prev, c, got)
+			t.Errorf("%v and %v both map to cards.%v", prev, f, got)
 		}
-		seen[got] = c
+		seen[got] = f
 
-		if got.String() != c.String() {
-			t.Errorf("rules call it %q, internal/cards calls it %q", c.String(), got.String())
+		if got.String() != f.String() {
+			t.Errorf("rules call it %q, internal/cards calls it %q", f.String(), got.String())
 		}
+	}
+
+	// **FamilyNone has to survive the crossing too.** The opponent's cards carry it, and one that
+	// mapped onto a real family would draw a letter claiming membership of a deck the player
+	// cannot combo with.
+	if got := family(combat.FamilyNone); got != cards.FamilyNone {
+		t.Errorf("the rules' FamilyNone maps to cards.%v, want FamilyNone", got)
 	}
 }
 
@@ -198,9 +203,9 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 	pctX := func(p int) int { return screenW * p / 100 }
 	pctY := func(p int) int { return screenH * p / 100 }
 
-	// A full row plus its label gutter has to fit the panel it is drawn in.
-	const conceptsPerElement = 12
-	row := (conceptsPerElement-1)*deckStackPitch + cards.Mini.Width + deckRowLabelWidth
+	// A full row plus its label gutter has to fit the panel it is drawn in. The cap is what a
+	// row may hold, so it is what has to fit — the plan row is the one that reaches it.
+	row := (deckMaxPerRow-1)*deckStackPitch + cards.Mini.Width + deckRowLabelWidth
 	if panel := pctX(deckPanelRightPct) - pctX(deckPanelLeftPct); row > panel-24 {
 		t.Errorf("a full row is %dpx wide against a %dpx panel", row, panel)
 	}
@@ -210,9 +215,48 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 	// was a hardcoded number it went stale the moment deckGridTop moved.
 	top := pctY(deckPanelTopPct) + deckGridTop
 	bottom := pctY(deckPanelBottomPct) - deckHintUp
-	rows := len(cards.Elements())*(cards.Mini.Height+deckRowGap) - deckRowGap
+	rows := deckRowCount*(cards.Mini.Height+deckRowGap) - deckRowGap
 	if budget := bottom - top; rows > budget {
 		t.Errorf("%d rows of %d is %dpx tall against a %dpx budget (y=%d..%d)",
-			len(cards.Elements()), cards.Mini.Height, rows, budget, top, bottom)
+			deckRowCount, cards.Mini.Height, rows, budget, top, bottom)
+	}
+
+	// The grid must also start below the legend it sits under, which is what the six-row
+	// squeeze most easily breaks.
+	if deckGridTop <= deckLegendTop {
+		t.Errorf("the grid starts at y=%d, at or above the legend at y=%d", deckGridTop, deckLegendTop)
+	}
+}
+
+func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
+	// **The panel's whole claim is that it shows the deck**, so a card with nowhere to go, or a
+	// row over the cap, is the panel quietly lying. The plan row is the one at the cap — three
+	// concepts at four copies — and the element rows hold nine each.
+	counts := make([]int, deckRowCount)
+	for _, e := range startingDeck {
+		row := deckRowFor(e.card)
+		if row < 0 || row >= deckRowCount {
+			t.Fatalf("%v maps to row %d, which does not exist", e.card, row)
+		}
+		counts[row] += e.count
+	}
+
+	for row, n := range counts {
+		name, _ := deckRowLabel(row)
+		if n == 0 {
+			t.Errorf("the %q row is empty", name)
+		}
+		if n > deckMaxPerRow {
+			t.Errorf("the %q row holds %d cards against a cap of %d — %d would be hidden",
+				name, n, deckMaxPerRow, n-deckMaxPerRow)
+		}
+	}
+
+	// And the plans are in the plan row rather than in basic, which is the whole point of the
+	// sixth row: they are all basic, and leaving them there overflowed it.
+	for _, e := range startingDeck {
+		if e.card.Category() == combat.CategoryPlan && deckRowFor(e.card) != deckPlanRow {
+			t.Errorf("%v is a plan and sits in row %d", e.card, deckRowFor(e.card))
+		}
 	}
 }

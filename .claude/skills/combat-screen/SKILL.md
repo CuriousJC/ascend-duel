@@ -80,9 +80,9 @@ for a faster action to lead. `Spd` still buys action points and still never buys
   and every raised defend answers the one blow regardless of when it went up. **The row is still
   draggable and the gesture still costs the player attention.** That is a design hole, tracked in
   `TODO.md`; do not paper over it on the screen, and do not invent a rule to justify it.
-- **`Duelist.Defends` is a set, not a queue.** Brace 50%, Dodge 75%, Riposte 75%, Retreat 100%,
-  composed multiplicatively, and a Feint strips the **strongest**. Nothing about the order they
-  were raised in reaches the outcome.
+- **`Duelist.Defends` is a set, not a queue.** One card reaches it as of 2026-08-15 — Defend, at
+  50% — and several compose multiplicatively. Nothing about the order they were raised in reaches
+  the outcome, and **nothing reduces a blow to zero**: something always lands.
 - **`Slot.Index` is not a position in the round.** It is where the card sits in its own
   side's queue, which regrouping breaks apart. Anything asking "how far through the round are
   we" counts slots — `CombatScene.currentSlot` does, and lighting the right Resolution row
@@ -123,14 +123,14 @@ in `MECHANICS.md`; these are what matter to the screen.
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
   the event carries a list rather than a start and a length. Both rows bracket, through one
   `drawComboBracket` taking positions, so the opponent's hand is ringed by the same code.
-- **`combat.AttackFor` previews the hand while the player plans** *(2026-08-15)*. It is the same
+- **`combat.BlowFor` previews the hand while the player plans** *(2026-08-15)*. It is the same
   function the resolver uses, so a previewed combo is the combo that fires by construction rather
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
   and **only a formed hand previews** — `HandNone` is a lone attack, and COMBO! over one Strike
   empties the word. Two things show it: `drawComboPreview` rings the cards in the *hand row*
   through the same `drawComboBracket` the table uses, and the Resolution feed carries a line.
-  **`Attack.Cards` indexes the turn, not the hand** — `previewHandSlots` translates through
-  `handIndexForQueue`, or a Gather queued first would ring the wrong cards.
+  **`Blow.Cards` indexes the turn, not the hand** — `previewHandSlots` translates through
+  `handIndexForQueue`, or a Prepare queued first would ring the wrong cards.
 - **A staggered slot is a row that never resolves.** `currentSlot` counts `KindStaggered`
   alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
   `TestEverySlotIsEitherTakenOrStaggered` pins it. **The pane still draws that row as though it
@@ -432,7 +432,7 @@ people playing it.
   portrait on one, three stat rows on the other.
 - **The duelist card holds name, DMG, AP, Vitae, bar, fraction.** DMG is `Strike.Damage(Str)`
   asked of the rules rather than `Str` copied out, so it stays right if strength stops being a
-  1:1 multiplier. AP is the live budget including a banked `Gather`. Vitae is still a fixed
+  1:1 multiplier. AP is the live budget including a banked Prepare. Vitae is still a fixed
   placeholder with no rule behind it.
 - **`Spec.Stats` is a fixed array, not a slice, and that is load-bearing** — the screen's card
   cache keys on the whole `Spec`, so it has to stay comparable. `cards.MaxStatLines` is what
@@ -548,7 +548,7 @@ happened before any of it is read.
 `COMBO!` in front — and it is the one announcement that takes outcomes, because the attack cards
 that would otherwise have carried them write no lines. Which side owns the current line is tracked
 in `curSide` rather than read back off the row's swatch, or the amber would make every hit look
-like a Riposte's counter.
+like it belonged to the other duelist.
 
 **The verb is marked, never chipped or barred.** A saturated rectangle in a pane that already
 carries a swatch and a sentence draws the eye to the block rather than to the word inside it —

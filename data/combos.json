@@ -1,6 +1,16 @@
 {
   "hands": [
     {
+      "key": "high-card",
+      "id": 2000,
+      "name": "High Card",
+      "groups": [1],
+      "scope": ["attack"],
+      "expand": "none",
+      "multiplier": 0,
+      "effect": {}
+    },
+    {
       "key": "pair",
       "id": 300,
       "name": "{card} Pair",
@@ -49,16 +59,6 @@
       "expand": "attack-cards",
       "multiplier": 500,
       "effect": { "stagger": 2 }
-    },
-    {
-      "key": "onslaught",
-      "id": 200,
-      "name": "{card} Onslaught",
-      "groups": [5],
-      "scope": ["attack"],
-      "expand": "attack-cards",
-      "multiplier": 1000,
-      "effect": { "staggerAll": true }
     }
   ],
 

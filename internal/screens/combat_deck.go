@@ -48,15 +48,19 @@ type actionCard = combat.Card
 // Eight from five on 2026-08-04. Eight cards do not fit the screen side by side, which is
 // what the overlap in handPitch is for — the hand is expected to go past eight sometimes.
 //
-// **Eight was sized against a 30-card deck and the deck is now 60.** That is 13% of the deck
-// in hand where it used to be 27%, so consistency halved on 2026-08-08 without this number
-// moving. It is left at eight deliberately, for now: Sift and `discardsPerRound` are the two
-// levers meant to answer draw variance, and moving all three at once would leave no way to
-// tell which one did the work. A brand growing hand size is the recorded permanent version.
+// **Eight was sized against a 30-card deck and the deck is now 48.** That is 17% of the deck
+// in hand where it used to be 27%, so consistency fell without this number moving.
+//
+// **It is the base rather than the size as of 2026-08-15**, because a Plan card widens one hand
+// by two. See handTarget, which is what the refill actually reads; this is what it widens from.
+// Eight is left alone deliberately: `discardsPerRound` and now Plan are the levers meant to
+// answer draw variance, and moving all three at once would leave no way to tell which did the
+// work. A brand growing hand size is the recorded permanent version.
 const handSize = 8
 
-// startingDeck is the deck the player opens a run with: **twelve concepts x five elements = 60
-// cards**, built from `data/cards.json` rather than written out here.
+// startingDeck is the deck the player opens a run with: **nine attack concepts x four colours,
+// plus three plans at four copies = 48 cards**, built from `data/duelist_cards.json` rather than
+// written out here.
 //
 // It became data on 2026-08-08, at the same time the concept grid was filled. The shape it
 // replaced was a `concat` of `conceptDeck` calls — fine for six concepts, and a list nobody
@@ -96,6 +100,13 @@ func buildStartingDeck() []deckEntry {
 				return "", false
 			}
 			return a.Category().String(), true
+		},
+		func(concept string) (string, bool) {
+			a, ok := combat.ParseAction(concept)
+			if !ok {
+				return "", false
+			}
+			return a.Family().String(), true
 		},
 	)
 	if len(problems) > 0 {
@@ -228,6 +239,7 @@ func (s *CombatScene) spendSelected() {
 			}
 			if p, ok := s.playedSeatOf(i); ok {
 				flight.index, flight.count, flight.fromTable = p, len(s.resolved), true
+				flight.split = s.playedSplit()
 			}
 			s.addFlight(flight)
 			continue
@@ -288,11 +300,33 @@ func (s *CombatScene) shuffleDeck() {
 	})
 }
 
-// drawHand fills the hand up to handSize, reshuffling the discard back into the draw pile
+// handTarget is how many cards this round's refill draws to: the usual size, plus whatever a
+// Plan banked in the round before.
+//
+// **This is where a Plan actually draws** *(2026-08-15)*. `internal/combat` has no deck, so a
+// Plan records `BonusDraw` on the duelist and the size of the next hand is the whole of what it
+// bought. It has to be the refill target rather than an immediate two cards: the hand refills to
+// a fixed size at the round boundary anyway, so cards handed over mid-round would be two fewer
+// drawn at the boundary and the card would do nothing at all.
+//
+// The engine assigns `BonusDraw` rather than adding to it, so it lasts exactly one round — a
+// hand of ten, and then a hand of eight again.
+//
+// **A scene with no fighter draws the usual eight.** `OpeningHand` and the flight tests build a
+// bare CombatScene to deal a hand without a duel around it, which is exactly the case a Plan
+// cannot have applied in.
+func (s *CombatScene) handTarget() int {
+	if s.fighter == nil {
+		return handSize
+	}
+	return handSize + s.fighter.BonusDraw
+}
+
+// drawHand fills the hand up to handTarget, reshuffling the discard back into the draw pile
 // when it runs dry. A hand can come up short only if every card the player owns is already
 // in it, which cannot happen with a deck larger than the hand.
 func (s *CombatScene) drawHand() {
-	for len(s.hand) < handSize {
+	for len(s.hand) < s.handTarget() {
 		if len(s.deck) == 0 {
 			if len(s.discard) == 0 {
 				return
@@ -322,77 +356,16 @@ func (s *CombatScene) drawHand() {
 // It also gives Discard a real job. A card you never want now sits in your hand until you
 // throw it out, so the discard button is how you clear it rather than a shortcut for
 // something the round boundary was going to do anyway.
-// **Sift is applied here and nowhere else.** Each Sift played sends two more cards away at
-// random before the refill, so a round that played one Sift replaces seven of eight cards
-// rather than five: the four the player chose, the Sift itself, and two the game chose.
 func (s *CombatScene) endRoundHand() {
-	sifted := s.siftsResolved() * siftExtraDiscards
-
 	s.spendSelected()
-	s.siftHand(sifted)
 	s.discardsLeft = discardsPerRound
-}
-
-// siftExtraDiscards is how many extra cards one Sift sends away.
-//
-// **The extras go at random, and that is the whole difference between Sift and the Discard
-// button.** Discard is steering — you choose what leaves, four times a round. Sift is
-// throughput: more of the deck flows past you and you do not pick which cards pay for it, so it
-// can take a card you were holding on purpose. That is what it costs beyond its 2 AP, and it is
-// why the two are not the same mechanic at different prices.
-//
-// It is also the reason Sift's effect lives on the screen rather than in `internal/combat`: it
-// needs the deck and the hand, and both stay out of the rules package so the rules keep no
-// shuffle. See MECHANICS.md.
-const siftExtraDiscards = 2
-
-// siftsResolved counts the fighter's Sifts that actually happened, read off the resolved event
-// log rather than off the queue.
-//
-// **The log and the queue disagree, and the log is right.** A stagger takes actions off the
-// front of a turn, and under phases the front of a turn is its prepares — so a Sift is among
-// the first things a stagger eats. Counting the queue would sift for a card the engine deleted
-// before it resolved, which is the same class of bug as a combo scoring off cards that never
-// landed. `KindAction` is only emitted for actions that ran; a staggered one emits
-// `KindStaggered` instead.
-func (s *CombatScene) siftsResolved() int {
-	n := 0
-	for _, e := range s.log {
-		if e.Kind == combat.KindAction && e.Side == combat.SideA && e.Action == combat.Sift {
-			n++
-		}
-	}
-	return n
-}
-
-// siftHand sends n cards away at random and deals back up. Drawn from the scene's own rng, the
-// same source as the shuffle — never the package-level functions, which would make a run
-// unreproducible. See the determinism rules in CLAUDE.md.
-//
-// It takes from the *remaining* hand, after the played cards have already gone, so a Sift never
-// discards something the player just spent.
-func (s *CombatScene) siftHand(n int) {
-	if n <= 0 {
-		return
-	}
-
-	for i := 0; i < n && len(s.hand) > 0; i++ {
-		at := s.rng.Intn(len(s.hand))
-		s.discard = append(s.discard, s.hand[at].actionCard)
-		s.hand = append(s.hand[:at], s.hand[at+1:]...)
-	}
-
-	trace.Logf("deck", "sift sent %d card(s) away at random, hand now %s", n, handLabel(s.hand))
-
-	s.drawHand()
-	s.syncQueue()
 }
 
 // Deck overlay geometry. The panel is nearly the whole screen and stops above the button
 // band, so the Deck button that closes it stays outside the panel as well as on top of it.
 //
-// The panel holds **every card you own**, in five rows of twelve, and nothing in it moves
-// as cards shift between piles — a played card dims where it stands rather than leaving.
+// The panel holds **every card you own**, in five rows, and nothing in it moves as cards shift
+// between piles — a played card dims where it stands rather than leaving.
 const (
 	deckPanelLeftPct  = 4
 	deckPanelRightPct = 96
@@ -427,7 +400,7 @@ const (
 	// 8-pixel gaps is 692, so deckGridTop moved up to 120 to buy the clearance back. A
 	// sixth element would not fit and would need a different arrangement, not a smaller
 	// gap.
-	deckRowGap = 8
+	deckRowGap = 6
 
 	// deckStackPitch is how far apart the cards in a row sit. **It is a constant sized for
 	// a full row, never derived from how many cards are actually in one** — the overlay's
@@ -447,8 +420,9 @@ const (
 	// between cards in an 81-pixel row. TestDeckRowFitsThePanel is what catches that.
 	deckStackPitch = 75
 
-	// deckMaxPerRow caps a row so it cannot run off the panel. Twelve is what the deck
-	// holds per element — 12 concepts x 1 copy — and what deckStackPitch is sized against.
+	// deckMaxPerRow caps a row so it cannot run off the panel. Twelve is what the longest row
+	// holds — the plans, at 3 concepts x 4 copies — and what deckStackPitch is sized against.
+	// The four colour rows hold nine each.
 	//
 	// **The cap is what gives the overflow line something to report.** Without it a row
 	// simply drew every card it had and ran off the edge, and the "+N more not shown"
@@ -463,10 +437,14 @@ const (
 	deckRowLabelWidth = 104
 
 	// Offsets down from the panel's top edge.
+	//
+	// **Everything under the title came up by eight on 2026-08-15**, for a grid that briefly had
+	// six rows. It is back to five — four colours and the plans — and the clearance is simply
+	// spare now. TestDeckPitchMatchesTheCard is what holds the arithmetic either way.
 	deckTitleTop  = 40
-	deckCountsTop = 78
-	deckLegendTop = 100
-	deckGridTop   = 120
+	deckCountsTop = 70
+	deckLegendTop = 92
+	deckGridTop   = 112
 	deckHintUp    = 22 // hint's distance up from the panel's bottom edge
 )
 
@@ -517,7 +495,7 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 		op.PrimaryAlign = text.AlignCenter
 		text.Draw(screen, s, small, op)
 	}
-	// The deck total is stated as well as the three piles, because with 60 cards the piles no
+	// The deck total is stated as well as the three piles, because with 48 cards the piles no
 	// longer add up to a number anybody holds in their head — and because it is the one place
 	// the size of cards.json becomes visible while playing.
 	line(deckCountsTop, fmt.Sprintf("draw %d  ·  discard %d  ·  %d in hand  ·  %d owned",
@@ -547,7 +525,7 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 func sortPileEntries(entries []pileEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		a, b := entries[i], entries[j]
-		if ra, rb := categoryRank(a.card.Action.Category()), categoryRank(b.card.Action.Category()); ra != rb {
+		if ra, rb := familyRank(a.card.Action.Family()), familyRank(b.card.Action.Family()); ra != rb {
 			return ra < rb
 		}
 		if ca, cb := a.card.Action.Cost(), b.card.Action.Cost(); ca != cb {
@@ -563,22 +541,28 @@ func sortPileEntries(entries []pileEntry) {
 	})
 }
 
-// categoryRank is the order categories run in along a deck row: attack, defend, prepare.
+// familyRank is the order families run in along a deck row: stab, slash, crush, then the plans.
 //
-// A function rather than the enum's own order, because that order is the *resolution*
-// order — which phase a card acts in — and it is a rule. Reading it here would tie how the
-// deck panel is arranged to how a round plays out, so that changing one silently changed
-// the other.
-func categoryRank(c combat.Category) int {
-	switch c {
-	case combat.CategoryAttack:
+// **It sorts on family rather than category** *(2026-08-15)*. Category has two values now, so
+// sorting by it would put nine cards in one undifferentiated block — and the thing a player is
+// looking for in this panel is how much of a family they still hold, because that is what a pair
+// is counted on.
+//
+// A function rather than the enum's own order, because that order is grouped for the *rules* —
+// it is what an expanded combo ID is derived from. Reading it here would tie how the deck panel
+// is arranged to how hands are numbered, so that changing one silently changed the other.
+func familyRank(f combat.Family) int {
+	switch f {
+	case combat.FamilyStab:
 		return 0
-	case combat.CategoryDefend:
+	case combat.FamilySlash:
 		return 1
-	case combat.CategoryPrepare:
+	case combat.FamilyCrush:
 		return 2
-	default:
+	case combat.FamilyPlan:
 		return 3
+	default:
+		return 4
 	}
 }
 
@@ -588,7 +572,70 @@ type pileEntry struct {
 	available bool
 }
 
-// drawPileGrid lays **every card you own** into rows by element, centred on centerX.
+// deckRowElements is the colours the overlay gives a row to, in the fixed order internal/cards
+// declares them.
+//
+// **Basic is not among them as of 2026-08-15**, because no attack card is basic any more — every
+// attack ships in one of the four colours, and the only basic cards in the deck are the plans,
+// which have their own row. A basic row would draw an empty gutter label over nothing at all.
+//
+// A function rather than a package-level slice so nothing can append to it, and derived from
+// `cards.Elements()` rather than written out, so a fifth colour added to the drawing package
+// arrives here without an edit.
+func deckRowElements() []cards.Element {
+	out := make([]cards.Element, 0, len(cards.Elements()))
+	for _, e := range cards.Elements() {
+		if e == cards.Basic {
+			continue
+		}
+		out = append(out, e)
+	}
+	return out
+}
+
+// deckRowCount is how many rows the overlay draws: one per colour, then the plans.
+//
+// **The plans get a row of their own rather than sitting with the basics** *(2026-08-15)*. Every
+// plan card is basic and no attack card is, so the alternative was a row holding nothing but the
+// plans under a label reading "basic" — which names the colour rather than the thing, on the one
+// row where the colour is the least interesting fact about the cards in it.
+var deckRowCount = len(deckRowElements()) + 1
+
+// deckPlanRow is the index of that row, and where a card goes when it is a plan. It is
+// deliberately not a `cards.Element` — a plan is basic and saying otherwise would put a colour
+// on a card that has none.
+var deckPlanRow = deckRowCount - 1
+
+// deckRowFor is which row a card belongs to: its colour, or the plan row.
+//
+// **A basic attack has nowhere to go and lands in the first row**, which is the deck list being
+// wrong rather than this being lenient — `data/duelist_cards.json` ships no basic attacks and
+// TestEveryCardLandsInExactlyOneDeckRow is what would catch one arriving.
+func deckRowFor(c actionCard) int {
+	if c.Category() == combat.CategoryPlan {
+		return deckPlanRow
+	}
+	for i, e := range deckRowElements() {
+		if e == artFor(c.Element) {
+			return i
+		}
+	}
+	return 0
+}
+
+// deckRowLabel is what the gutter says beside a row, and the colour it says it in.
+func deckRowLabel(row int) (string, color.RGBA) {
+	if row == deckPlanRow {
+		// Neutral, because the plan row is the one row that is not a colour. It borrows the
+		// basic border rather than inventing a fifth hue for a row that means "no element".
+		return "plan", cards.BorderOf(cards.Basic)
+	}
+	e := deckRowElements()[row]
+	return e.String(), cards.BorderOf(e)
+}
+
+// drawPileGrid lays **every card you own** into rows by element, plus a row of plans,
+// centred on centerX.
 //
 // It used to show only what was outside the hand, under the heading "What is left". That
 // made the panel change *shape* as a round went on: eight cards vanished at the start of
@@ -620,13 +667,13 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 
 	sortPileEntries(entries)
 
-	// One row per element, in the fixed order internal/cards declares. Never a map range:
-	// Go randomises that, and a panel whose rows swapped places between looks would be
-	// unreadable.
-	byElement := map[cards.Element][]pileEntry{}
+	// One row per element in the fixed order internal/cards declares, then the plans. A slice
+	// indexed by row rather than a map: Go randomises map iteration, and a panel whose rows
+	// swapped places between looks would be unreadable.
+	rows := make([][]pileEntry, deckRowCount)
 	for _, e := range entries {
-		art := artFor(e.card.Element)
-		byElement[art] = append(byElement[art], e)
+		row := deckRowFor(e.card)
+		rows[row] = append(rows[row], e)
 	}
 
 	pitch := deckStackPitch
@@ -635,7 +682,7 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 	// Widest row sets the left edge, so the rows share one origin and the columns line up
 	// down the panel rather than each row centring on its own count.
 	widest := 0
-	for _, group := range byElement {
+	for _, group := range rows {
 		n := min(len(group), deckMaxPerRow)
 		if w := (n-1)*pitch + cards.Mini.Width; w > widest {
 			widest = w
@@ -645,17 +692,18 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 	cardsLeft := left + deckRowLabelWidth
 
 	shown := 0
-	for i, el := range cards.Elements() {
+	for i, group := range rows {
 		rowTop := int(top) + i*rowPitch
 
-		// The element's name in the gutter, vertically centred on the row. The cards in
-		// this row carry no text at all, so this is the only thing naming them.
+		// The row's name in the gutter, vertically centred on it. A mini card says its own
+		// concept but nothing about which row it is in, so this is what names the row.
+		name, ink := deckRowLabel(i)
 		labelOp := &text.DrawOptions{}
 		labelOp.GeoM.Translate(float64(cardsLeft-12), float64(rowTop+cards.Mini.Height/2))
 		labelOp.PrimaryAlign = text.AlignEnd
 		labelOp.SecondaryAlign = text.AlignCenter
-		labelOp.ColorScale.ScaleWithColor(cards.BorderOf(el))
-		text.Draw(screen, el.String(),
+		labelOp.ColorScale.ScaleWithColor(ink)
+		text.Draw(screen, name,
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, labelOp)
 
 		// **Left to right, so each card is covered on its *right* edge by the next one.**
@@ -663,7 +711,6 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 		// card 0 on top of card 1, and card 1's left edge is exactly where its glyph and
 		// dashes are — so every row rendered as one complete card followed by eleven
 		// blank slivers.
-		group := byElement[el]
 		for j, e := range group {
 			if j >= deckMaxPerRow {
 				break
@@ -680,7 +727,7 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 
 	if over := len(entries) - shown; over > 0 {
 		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(centerX), float64(int(top)+len(cards.Elements())*rowPitch))
+		op.GeoM.Translate(float64(centerX), float64(int(top)+deckRowCount*rowPitch))
 		op.PrimaryAlign = text.AlignCenter
 		text.Draw(screen, fmt.Sprintf("+%d more not shown", over),
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, op)

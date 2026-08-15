@@ -447,7 +447,7 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 	//
 	// **The side is tracked rather than read back off the row's swatch**, because the combo line
 	// wears amber and takes outcomes: a damage event compared against that swatch would read
-	// every hit as a Riposte's counter.
+	// every hit as belonging to the wrong duelist.
 	cur := -1
 	curSide := combat.SideA
 	outcomes := 0
@@ -551,24 +551,24 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 		case combat.KindGathered:
 			attach(fmt.Sprintf("+%d AP", e.Amount))
 
-		case combat.KindGuarded:
-			attach("guarded")
-
-		case combat.KindBraced:
-			attach("braced")
-
-		case combat.KindStripped:
-			// Nothing was stopped, so this must not read like a negation. It is the Feint
-			// doing something *to* the defence rather than the defence doing its job.
-			attach(fmt.Sprintf("strips their %v", lower(e.Action.String())))
+		case combat.KindDrew:
+			// **The cards say "next round" and this line does not**, because a feed line is read
+			// while a round is being replayed and the sentence around it is already in the past.
+			// The card face is the place that has to state the timing.
+			attach(fmt.Sprintf("+%d cards", e.Amount))
 
 		case combat.KindNegated:
-			attach(fmt.Sprintf("stopped by a %v", lower(e.Action.String())))
+			// The card that answered the blow is named rather than assumed. Defend is the only one
+			// that can reach here today, and the sentence is written off the event anyway — a
+			// second card that reduced damage would read correctly without touching this.
+			attach(fmt.Sprintf("halved by a %v", lower(e.Action.String())))
 
 		case combat.KindDamage:
-			// A Riposte's counter belongs to the *defender*, so it lands on the attacker's line
-			// as something done back rather than as a hit of its own. It is the only damage in
-			// the game that runs the other way, so the side mismatch is the whole test.
+			// **Damage whose side does not match the line it is attaching to is damage running the
+			// other way**, which reads as something done back rather than as a hit of its own.
+			// Nothing in the game produces it as of 2026-08-15 — the counter-attacking card that
+			// did was cut — and it is kept because the test is a side comparison rather than a
+			// card name, so it costs one branch and catches the case rather than mis-narrating it.
 			switch {
 			case cur >= 0 && curSide != e.Side:
 				attach(fmt.Sprintf("hits back for %d", e.Amount))
@@ -630,18 +630,26 @@ func swatchFor(side combat.Side) color.RGBA {
 // not describe them. A card renamed changes `String()`; a card that reads badly in a sentence
 // changes only this file.
 var actionPhrases = map[combat.ActionKind]string{
-	combat.Gather:  "and gathers their strength",
-	combat.Sift:    "and sifts through their options",
-	combat.Guard:   "with a guard",
-	combat.Ritual:  "with a long ritual",
-	combat.Jab:     "with a jab",
-	combat.Strike:  "with a strike",
-	combat.Feint:   "with a feint",
-	combat.Heavy:   "with a heavy strike",
-	combat.Brace:   "and braces",
-	combat.Dodge:   "with a dodge",
-	combat.Riposte: "with a riposte",
-	combat.Retreat: "behind a retreat",
+	combat.Jab:    "with a jab",
+	combat.Thrust: "with a thrust",
+	combat.Lunge:  "with a lunge",
+
+	combat.Cut:    "with a cut",
+	combat.Slash:  "with a slash",
+	combat.Cleave: "with a cleave",
+
+	combat.Bash:   "with a bash",
+	combat.Strike: "with a strike",
+	combat.Smash:  "with a smash",
+
+	combat.Prepare: "and gathers their strength",
+	combat.Plan:    "and thinks ahead",
+	combat.Defend:  "behind a defence",
+
+	// The opponent's two. Deliberately plainer than the player's nine: an enemy card is a blow
+	// and nothing more until enemy decks get a vocabulary of their own.
+	combat.Attack: "with a blow",
+	combat.Heavy:  "with a heavy blow",
 }
 
 // **What each card does, in words, printed on its face.** A second table beside the one above
@@ -661,19 +669,30 @@ var actionPhrases = map[combat.ActionKind]string{
 //
 // A concept with no entry draws nothing rather than a placeholder; TestEveryConceptHasEffectText
 // is what stops that being how a card ships.
+// **The attack text names the family's verb rather than saying "Deal"** *(2026-08-15)*. Nine
+// attack cards on one ladder are told apart by which family they are in, and a card whose text
+// began "Deal" on all nine would leave the corner letter carrying that alone.
 var cardEffects = map[combat.ActionKind]string{
-	combat.Gather:  "Bank 2 AP for next round",
-	combat.Sift:    "Throw away 2 more cards, then refill",
-	combat.Guard:   "Halve every attack next turn",
-	combat.Ritual:  "Bank 6 AP for next round",
-	combat.Jab:     "Deal 0.5x DMG",
-	combat.Strike:  "Deal 1x DMG",
-	combat.Feint:   "Strip a defend card, deal 1x DMG",
-	combat.Heavy:   "Deal 2x DMG",
-	combat.Brace:   "Halve 1 incoming attack",
-	combat.Dodge:   "Negate 1 incoming attack",
-	combat.Riposte: "Negate 1 attack, deal 0.5x DMG back",
-	combat.Retreat: "Negate 3 incoming attacks",
+	combat.Jab:    "Stabs for 0.5x DMG",
+	combat.Thrust: "Stabs for 1x DMG",
+	combat.Lunge:  "Stabs for 2x DMG",
+
+	combat.Cut:    "Slashes for 0.5x DMG",
+	combat.Slash:  "Slashes for 1x DMG",
+	combat.Cleave: "Slashes for 2x DMG",
+
+	combat.Bash:   "Crushes for 0.5x DMG",
+	combat.Strike: "Crushes for 1x DMG",
+	combat.Smash:  "Crushes for 2x DMG",
+
+	combat.Prepare: "Bank 2 AP for next round",
+	combat.Plan:    "Draw 2 cards next round",
+	combat.Defend:  "Halve damage this turn",
+
+	// The opponent's two. They are never drawn face up in the hand, but the table lays an enemy's
+	// queue out as cards, so they need text like anything else with a face.
+	combat.Attack: "Hits for 1x DMG",
+	combat.Heavy:  "Hits for 2x DMG",
 }
 
 // actionPhrase is what follows the verb. A card with no phrase falls back to naming itself
@@ -739,18 +758,14 @@ func statusPhrase(e combat.Element) string {
 
 // verbFor is the verb a category is spoken with.
 func verbFor(c combat.Category) string {
-	switch c {
-	case combat.CategoryPrepare:
-		return "prepares"
-	case combat.CategoryDefend:
-		return "defends"
-	default:
-		return "attacks"
+	if c == combat.CategoryPlan {
+		return "plans"
 	}
+	return "attacks"
 }
 
-// The colour the verb is *written* in. **Red for attack, blue for defend, the row's own ink for
-// prepare** — the category made loud enough to scan a round by, without reading it.
+// The colour the verb is *written* in. **Red for attack, blue for plan** — the category made loud
+// enough to scan a round by, without reading it.
 //
 // **The verb was a filled chip until 2026-08-08 and is now the word itself**, coloured, bolded
 // and underlined. The chip was a saturated block in a pane that already carries a swatch and a
@@ -759,22 +774,15 @@ func verbFor(c combat.Category) string {
 // retired the full-width highlight bar a day earlier — this is the same mistake one scale
 // smaller.
 //
-// **Prepare returns zero alpha and inherits the row's ink, deliberately.** As a chip it had to
-// name a near-white ground *and* a near-black foreground, because white-on-white is invisible.
-// With no ground to sit on there is nothing for a pale colour to be legible against, and the
-// pane's own ink is already the colour that reads on that pane whether it is the plum one or the
-// off-white one. So prepare is the category with no hue — which is the right rank for it, since
-// it is the one that does nothing to the opponent — and it is still marked as a verb by the bold
-// and the underline that every verb gets.
+// **Plan takes the blue defend used to have** *(2026-08-15)*, rather than the no-hue prepare had.
+// With two categories the second colour is the whole distinction, and a category rendered in the
+// row's own ink would leave "attacks" as the only marked verb — which is a highlight, not a
+// scheme.
 func verbInkFor(c combat.Category) color.RGBA {
-	switch c {
-	case combat.CategoryPrepare:
-		return color.RGBA{}
-	case combat.CategoryDefend:
+	if c == combat.CategoryPlan {
 		return color.RGBA{R: 52, G: 104, B: 196, A: 255}
-	default:
-		return color.RGBA{R: 186, G: 52, B: 52, A: 255}
 	}
+	return color.RGBA{R: 186, G: 52, B: 52, A: 255}
 }
 
 // lower is strings.ToLower under a shorter name, used only to drop a card name into the middle
@@ -1084,8 +1092,8 @@ func comboNameOf(hand combat.Hand, mix combat.Mix) string {
 //
 // **The cards' damage is one term, not one term each.** MECHANICS.md writes the formula out
 // per card — `10 + 10 + 10x1.5` — and that is the right form for a design document; the feed is
-// three rows of a sentence, and an Onslaught spelled out card by card is half a line spent on
-// five identical numbers.
+// three rows of a sentence, and a Barrage spelled out card by card is half a line spent on
+// four identical numbers.
 //
 // It is the swing before the attacker's weight and before anything the defender raised, so the
 // damage that follows on the same line is often smaller. That gap is what a defence is worth,

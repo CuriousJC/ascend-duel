@@ -240,7 +240,11 @@ type cardFlight struct {
 	// fromTable says the pair locates a seat on the table rather than a slot in the hand. A
 	// card played this round spends the rest of it face up on the left of the table, so at the
 	// end of the round it is thrown from there — not from the hand slot it left long before.
+	//
+	// split goes with it: the table row breaks between its attacks and its plans, so a seat
+	// cannot be located without knowing where that break was. It is unread for a hand slot.
 	fromTable bool
+	split     int
 }
 
 // addFlight queues one. Kept as a method so the two call sites in spendSelected read as
@@ -409,7 +413,7 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 
 	from := slotAt(gs, f.index, f.count)
 	if f.fromTable {
-		from = playedSeatAt(gs, f.index, f.count)
+		from = playedSeatAt(gs, f.index, f.count, f.split)
 	}
 	// Off the left edge by a whole card, so it is gone rather than clipped.
 	toX := -cardWidth
@@ -629,7 +633,7 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 // attackSeats is every seat in one side's row holding an attack card.
 //
 // It counts along the same walk as noteResolved and seatPlayedCards — a seat is a position in
-// that side's own row, not in the round — so a turn that opens with a Gather still numbers its
+// that side's own row, not in the round — so a turn that opens with a Prepare still numbers its
 // Strike as seat 1.
 func attackSeats(order []combat.Slot, side combat.Side) []int {
 	var (
@@ -755,9 +759,9 @@ func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
 
 // at is where a played card is drawn right now: waiting its turn to set off, flying to its
 // seat, sitting in it, or lifted out of it because it is the card currently resolving.
-func (r resolvedCard) at(gs *state.GlobalState, seat, total int, firing bool) image.Point {
+func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing bool) image.Point {
 	from := slotAt(gs, r.handIndex, r.handCount)
-	to := playedSeatAt(gs, seat, total)
+	to := playedSeatAt(gs, seat, total, split)
 
 	switch {
 	case r.waiting():
@@ -780,8 +784,9 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total int, firing bool) im
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
 	var bracketed []image.Point
+	split := s.playedSplit()
 	for i, r := range s.resolved {
-		at := r.at(gs, i, len(s.resolved), lit(s.firingSeats, i))
+		at := r.at(gs, i, len(s.resolved), split, lit(s.firingSeats, i))
 		drawCard(gs, screen, at, cards.Hand, r.card, true, false)
 		if r.combo {
 			bracketed = append(bracketed, at)

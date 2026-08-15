@@ -18,8 +18,8 @@ type Style struct {
 
 	// What this size is big enough to show. A Mini card is 59 pixels wide and cannot
 	// hold a 64-pixel glyph or legible text at any size, so it shows neither — see Mini.
-	ShowName     bool
-	ShowCategory bool
+	ShowName   bool
+	ShowFamily bool
 
 	TextLeft int
 	NameTop  int
@@ -30,14 +30,18 @@ type Style struct {
 	// left-aligned name to line up with, and it reads as having slipped off centre.
 	NameCentered bool
 
-	// The category glyph, above the cost stack. It replaced the category *word*: a
-	// picture where a line of text used to be.
+	// The family mark, above the cost stack: the box it is centred in, and the point size the
+	// placeholder letter is set at.
 	//
-	// **It is not 64, and it is not one number either** — the drawn sword and shield are
-	// 32 and the generated book is 22. systems.SizeOf is the authority and the layout must
-	// ask per glyph rather than assume; see systems/glyphs.go for why the two halves of
-	// the set are sized differently.
-	CategoryGlyphTop int
+	// **The box is a number here rather than `systems.SizeOf`** *(2026-08-15)*. It was, while the
+	// mark was a generated glyph and the glyph's own size was the authority — assuming one was
+	// how a 22-pixel shape got a 64-pixel hole. A letter has no intrinsic size, so the layout has
+	// to name the space it gets, and centring by ink means the letter fills it whatever the font
+	// does. When the families get silhouettes, a glyph bigger than this box overflows it rather
+	// than resizing it, and the box is the one number to change.
+	FamilyTop        int
+	FamilySize       int
+	FamilyLetterSize float64
 
 	// The cost dashes, hamburger-style, below the category glyph.
 	//
@@ -52,14 +56,17 @@ type Style struct {
 	DashHeight int
 	DashGap    int
 
-	// The category glyph's placement and scale.
+	// The family mark's left edge, and the scale a glyph would be blown up by.
 	//
 	// **There is no damage badge at all any more** *(2026-08-14)*. It went in two steps: the
-	// 64-pixel generated sword first, because it said what the category glyph already says
+	// 64-pixel generated sword first, because it said what the corner mark already says
 	// while taking the room the effect text needed, and then the figure beside it — because
 	// the text says what the card does, and "Deal 2x DMG" is the same fact stated once instead
 	// of twice. `systems.GlyphDamage` still exists and is still on the glyph sheet; nothing on
 	// a card draws it.
+	//
+	// GlyphScale is unread while the mark is a letter — a typeface scales by asking for a bigger
+	// size, not by repeating pixels — and is kept for the glyph path it was written for.
 	GlyphScale int
 	GlyphInset int
 
@@ -171,15 +178,26 @@ var Hand = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:     true,
-	ShowCategory: true,
+	ShowName:   true,
+	ShowFamily: true,
 
 	TextLeft:     12,
 	NameTop:      14,
 	NameSize:     20,
 	NameCentered: true,
 
-	CategoryGlyphTop: 0,
+	// 40pt in a 32px box: the letter is centred on its ink, so the point size only has to be
+	// large enough to fill the box and the box is what the layout tests hold.
+	//
+	// **It sits inside the card rather than hanging off the corner** *(2026-08-15)*. The glyph
+	// before it was placed at 0,0 and deliberately cropped by the card's own curve — a
+	// silhouette loses a corner and still reads as itself. A letter does not: clipped at 0,0 the
+	// S came out as a shape with its top-left quarter missing, which reads as a rendering fault
+	// rather than as a mark. The clip in blitGlyph still applies and is still what a glyph will
+	// want; this is the box moving, not the crop going.
+	FamilyTop:        8,
+	FamilySize:       32,
+	FamilyLetterSize: 40,
 
 	DashLeft:   8,
 	DashTop:    48,
@@ -188,7 +206,7 @@ var Hand = Style{
 	DashGap:    5,
 
 	GlyphScale: 1,
-	GlyphInset: 0,
+	GlyphInset: 10,
 
 	TextColumnLeft: 26,
 	TextInset:      8,
@@ -219,7 +237,7 @@ func (st Style) TextLines() int {
 // **It shows the name now, and that was the last thing missing.** The overlay's rows
 // group by element and the glyph and dashes give phase and cost, so the only fact a card
 // was not stating was which concept it is. At 14pt the longest name in the deck —
-// "Riposte" — measures 35 pixels against the usable width, so it was never a question of
+// "Prepare" — measures 35 pixels against the usable width, so it was never a question of
 // room; it was a question of the cards being overlapped so tightly that only 29 pixels
 // showed. Widening the row (see deckStackPitch) is what made the space real.
 //
@@ -237,8 +255,8 @@ var Mini = Style{
 	CornerRadius: 6,
 	BorderWidth:  3,
 
-	ShowName:     true,
-	ShowCategory: true,
+	ShowName:   true,
+	ShowFamily: true,
 
 	TextLeft:     8,
 	NameTop:      8,
@@ -247,7 +265,9 @@ var Mini = Style{
 
 	GlyphScale:       1,
 	GlyphInset:       8,
-	CategoryGlyphTop: 36,
+	FamilyTop:        36,
+	FamilySize:       32,
+	FamilyLetterSize: 34,
 
 	// 72 rather than 66, for the same reason Hand's moved: the drawn glyphs are 32 pixels
 	// and end at y=68. A mini card carries a 32px glyph without shrinking it, because
@@ -282,8 +302,8 @@ var Stack = Style{
 	CornerRadius: 4,
 	BorderWidth:  0,
 
-	ShowName:     false,
-	ShowCategory: false,
+	ShowName:   false,
+	ShowFamily: false,
 }
 
 // EnemyStyle is the opponent, in the card format *(2026-08-11)*.
@@ -326,8 +346,8 @@ var EnemyStyle = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:     true,
-	ShowCategory: false,
+	ShowName:   true,
+	ShowFamily: false,
 
 	TextLeft:     12,
 	NameTop:      12,
@@ -381,8 +401,8 @@ var DuelistStyle = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:     true,
-	ShowCategory: false,
+	ShowName:   true,
+	ShowFamily: false,
 
 	TextLeft:     12,
 	NameTop:      14,
@@ -415,8 +435,8 @@ var RingStyle = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:     true,
-	ShowCategory: false,
+	ShowName:   true,
+	ShowFamily: false,
 
 	TextLeft:     12,
 	NameTop:      14,

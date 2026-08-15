@@ -9,17 +9,28 @@ import (
 // The order cards run in along a deck row. Windowless, like the other tests in this
 // package — sortPileEntries was pulled out of drawPileGrid precisely so this could exist.
 
-func TestDeckRowRunsAttacksThenDefendsThenPrepares(t *testing.T) {
-	// One element's worth of the real deck, deliberately shuffled into a wrong order
-	// first so the test is exercising the sort and not the input.
+func TestDeckRowRunsFamilyByFamily(t *testing.T) {
+	// **One card of every concept the deck holds, rather than one row of the panel** *(2026-08-15)*.
+	// It used to take the basic row, which held all twelve concepts back when attacks shipped in a
+	// drab variant. They no longer do — the attacks are coloured and only the plans are basic — so
+	// no *row* crosses a family boundary at all, and a per-row sample would assert nothing.
+	//
+	// The sort is a function of the cards it is handed, so a synthetic row exercises it exactly as
+	// a real one does, and this one is what the panel's ordering claim is really about: families in
+	// order, cheapest first inside each.
+	//
+	// Shuffled into a wrong order first so the test exercises the sort and not the input.
 	var row []pileEntry
+	seenConcept := map[combat.ActionKind]bool{}
 	for _, e := range startingDeck {
-		if e.card.Element == combat.Fire {
-			row = append(row, pileEntry{e.card, true})
+		if seenConcept[e.card.Action] {
+			continue
 		}
+		seenConcept[e.card.Action] = true
+		row = append(row, pileEntry{e.card, true})
 	}
 	if len(row) == 0 {
-		t.Fatal("no fire cards in the starting deck")
+		t.Fatal("the starting deck is empty")
 	}
 	for i, j := 0, len(row)-1; i < j; i, j = i+1, j-1 {
 		row[i], row[j] = row[j], row[i]
@@ -29,15 +40,15 @@ func TestDeckRowRunsAttacksThenDefendsThenPrepares(t *testing.T) {
 
 	lastRank, lastCost := -1, -1
 	for _, e := range row {
-		rank := categoryRank(e.card.Action.Category())
+		rank := familyRank(e.card.Action.Family())
 		cost := e.card.Action.Cost()
 
 		if rank < lastRank {
-			t.Fatalf("%s (%s) came after a %s card — categories are out of order",
-				e.card.Action, e.card.Action.Category(), combat.Category(lastRank))
+			t.Fatalf("%s (%s) came after a later family — the families are out of order",
+				e.card.Action, e.card.Action.Family())
 		}
 		if rank == lastRank && cost < lastCost {
-			t.Errorf("%s costs %d and follows a %d-cost card in the same category",
+			t.Errorf("%s costs %d and follows a %d-cost card in the same family",
 				e.card.Action, cost, lastCost)
 		}
 		if rank != lastRank {
@@ -46,14 +57,14 @@ func TestDeckRowRunsAttacksThenDefendsThenPrepares(t *testing.T) {
 		lastRank, lastCost = rank, cost
 	}
 
-	// And the three runs are actually all present, or the assertions above pass
-	// vacuously on a row that happens to hold one category.
+	// And every family is actually present, or the assertions above pass vacuously on a row
+	// that happens to hold one.
 	seen := map[int]bool{}
 	for _, e := range row {
-		seen[categoryRank(e.card.Action.Category())] = true
+		seen[familyRank(e.card.Action.Family())] = true
 	}
-	if len(seen) != 3 {
-		t.Errorf("the row holds %d categories, want all 3", len(seen))
+	if len(seen) != len(combat.Families()) {
+		t.Errorf("the row holds %d families, want all %d", len(seen), len(combat.Families()))
 	}
 }
 
@@ -78,14 +89,21 @@ func TestDeckOrderDoesNotDependOnWhichPileACardIsIn(t *testing.T) {
 	}
 }
 
-func TestCategoryRankIsIndependentOfResolutionOrder(t *testing.T) {
-	// categoryRank is written out rather than read off the enum, because the enum's order
-	// is the *resolution* order and that is a rule. This asserts the display order is what
-	// was asked for, and will fail if someone "simplifies" it back to the enum.
-	want := []combat.Category{combat.CategoryAttack, combat.CategoryDefend, combat.CategoryPrepare}
-	for i, c := range want {
-		if got := categoryRank(c); got != i {
-			t.Errorf("%s ranks %d, want %d", c, got, i)
+func TestFamilyRankIsIndependentOfTheEnumsOwnOrder(t *testing.T) {
+	// familyRank is written out rather than read off the enum, because the enum's order is what
+	// an expanded combo ID is derived from and that is a rule. This asserts the display order is
+	// what was asked for, and will fail if someone "simplifies" it back to the enum.
+	want := []combat.Family{combat.FamilyStab, combat.FamilySlash, combat.FamilyCrush, combat.FamilyPlan}
+	for i, f := range want {
+		if got := familyRank(f); got != i {
+			t.Errorf("%s ranks %d, want %d", f, got, i)
 		}
+	}
+
+	// The opponent's familyless cards sort last rather than colliding with a real family — they
+	// are never in the player's deck, so what matters is only that they do not land inside it.
+	if got := familyRank(combat.FamilyNone); got <= familyRank(combat.FamilyPlan) {
+		t.Errorf("FamilyNone ranks %d, at or before the plans at %d",
+			got, familyRank(combat.FamilyPlan))
 	}
 }

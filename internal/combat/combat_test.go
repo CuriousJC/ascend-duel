@@ -8,7 +8,7 @@ import (
 // duelist builds a full-health duelist for tests.
 // resolve is ResolveRound with **no randomness at all**, which is what almost every test here
 // wants: a nil source means the shock roll never fires, so everything that is still exact stays
-// exact and a test about braces is not a test about luck.
+// exact and a test about defences is not a test about luck.
 //
 // The rolled path has its own tests, which pass a decided source deliberately — see below and
 // status_test.go.
@@ -130,16 +130,16 @@ func TestSideATakesItsWholeTurnFirst(t *testing.T) {
 }
 
 func TestATurnResolvesInCategoryOrder(t *testing.T) {
-	// Prepares, then attacks, then defenses, whatever order the cards were queued in. The
-	// defenses go last within a turn because the *opponent* moves next, so a defense
-	// raised at the end of a turn is up when the blow arrives.
+	// Attacks, then plans, whatever order the cards were queued in. The plans go last within a
+	// turn because the *opponent* moves next, so a defence raised at the end of a turn is up when
+	// the blow arrives.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	queued := PlainCards(Dodge, Strike, Gather, Guard, Heavy)
+	queued := PlainCards(Plan, Strike, Prepare, Defend, Smash)
 	events, _, _ := resolve(a, b, queued, nil, 1)
 
-	want := PlainCards(Gather, Guard, Strike, Heavy, Dodge)
+	want := PlainCards(Strike, Smash, Plan, Prepare, Defend)
 	if got := playedCards(events); !cardsEqual(got, want) {
 		t.Errorf("played %v, want %v", got, want)
 	}
@@ -151,14 +151,14 @@ func TestQueuedOrderSurvivesInsideACategory(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	first, _, _ := resolve(a, b, PlainCards(Heavy, Jab), nil, 1)
-	second, _, _ := resolve(a, b, PlainCards(Jab, Heavy), nil, 1)
+	first, _, _ := resolve(a, b, PlainCards(Smash, Jab), nil, 1)
+	second, _, _ := resolve(a, b, PlainCards(Jab, Smash), nil, 1)
 
-	if got := playedCards(first); !cardsEqual(got, PlainCards(Heavy, Jab)) {
-		t.Errorf("played %v, want [Heavy Jab]", got)
+	if got := playedCards(first); !cardsEqual(got, PlainCards(Smash, Jab)) {
+		t.Errorf("played %v, want [Smash Jab]", got)
 	}
-	if got := playedCards(second); !cardsEqual(got, PlainCards(Jab, Heavy)) {
-		t.Errorf("played %v, want [Jab Heavy]", got)
+	if got := playedCards(second); !cardsEqual(got, PlainCards(Jab, Smash)) {
+		t.Errorf("played %v, want [Jab Smash]", got)
 	}
 }
 
@@ -168,8 +168,8 @@ func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
 	// they are the same sequence rather than trusting the shared call.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
-	aPlan := PlainCards(Heavy, Dodge, Gather)
-	bPlan := PlainCards(Jab, Guard)
+	aPlan := PlainCards(Smash, Plan, Prepare)
+	bPlan := PlainCards(Jab, Defend)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 
@@ -187,8 +187,8 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 	// ResolveRound expires side B's defenses at the first B slot, which is only the start
 	// of B's turn if A's slots never follow it. Pin the block structure that relies on.
 	order := ResolutionOrder(
-		PlainCards(Dodge, Strike, Gather),
-		PlainCards(Guard, Heavy, Riposte))
+		PlainCards(Plan, Strike, Prepare),
+		PlainCards(Defend, Smash, Plan))
 
 	seenB := false
 	for _, slot := range order {
@@ -205,16 +205,16 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	// Index is where the card sits in the player's queue, not where it lands in the round.
 	// Anything wanting "how far through the round are we" has to count slots instead.
-	order := ResolutionOrder(PlainCards(Dodge, Gather), nil)
+	order := ResolutionOrder(PlainCards(Plan, Jab), nil)
 
 	if len(order) != 2 {
 		t.Fatalf("got %d slots, want 2", len(order))
 	}
-	if order[0].Card.Action != Gather || order[0].Index != 1 {
-		t.Errorf("first slot = %v index %d, want Gather index 1", order[0].Card.Action, order[0].Index)
+	if order[0].Card.Action != Jab || order[0].Index != 1 {
+		t.Errorf("first slot = %v index %d, want Jab index 1", order[0].Card.Action, order[0].Index)
 	}
-	if order[1].Card.Action != Dodge || order[1].Index != 0 {
-		t.Errorf("second slot = %v index %d, want Dodge index 0", order[1].Card.Action, order[1].Index)
+	if order[1].Card.Action != Plan || order[1].Index != 0 {
+		t.Errorf("second slot = %v index %d, want Plan index 0", order[1].Card.Action, order[1].Index)
 	}
 }
 
@@ -233,18 +233,18 @@ func TestStrikeDealsStrengthAsDamage(t *testing.T) {
 	}
 }
 
-func TestHeavyHitsTwiceAsHardAsStrike(t *testing.T) {
+func TestTheTopTierHitsTwiceAsHardAsTheMiddleOne(t *testing.T) {
 	a := duelist(10, 10, 500)
 	b := duelist(1, 10, 500)
 
 	strikeLog, _, _ := resolve(a, b, PlainCards(Strike), nil, 1)
-	heavyLog, _, _ := resolve(a, b, PlainCards(Heavy), nil, 1)
+	smashLog, _, _ := resolve(a, b, PlainCards(Smash), nil, 1)
 
 	strike := firstDamage(t, strikeLog, SideA)
-	heavy := firstDamage(t, heavyLog, SideA)
+	smash := firstDamage(t, smashLog, SideA)
 
-	if heavy.Amount != strike.Amount*2 {
-		t.Errorf("Heavy = %d, Strike = %d; want Heavy to be double", heavy.Amount, strike.Amount)
+	if smash.Amount != strike.Amount*2 {
+		t.Errorf("Smash = %d, Strike = %d; want the 3 AP card to be double", smash.Amount, strike.Amount)
 	}
 }
 
@@ -258,10 +258,10 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 	}
 }
 
-func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
-	// Riposte reports a damage figure — it is what the counter hits for — but it only ever hits
-	// back at something. Played into an opponent who does nothing, it deals nothing.
-	for _, a := range []ActionKind{Gather, Guard, Dodge, Riposte} {
+func TestOnlyAttacksDealDamage(t *testing.T) {
+	// **Nothing in the plan family hits back.** A defence is a wall, not a counter, so a turn made
+	// of plans alone is a turn in which nobody is hurt.
+	for _, a := range []ActionKind{Prepare, Plan, Defend} {
 		events, _, bAfter := resolve(duelist(10, 10, 100), duelist(10, 10, 100),
 			PlainCards(a), nil, 1)
 
@@ -274,160 +274,85 @@ func TestOnlyAttacksDealDamageOnTheirOwn(t *testing.T) {
 	}
 }
 
-func TestAGuardHalvesTheOpponentsWholeTurn(t *testing.T) {
-	// Guard is a prepare and it is broad: it covers the opposing turn rather than one card. Under
-	// one blow per turn "every attack" and "the blow" are the same thing, so what this pins now is
-	// that the halving lands **after** the combo multiplier — a guard cuts the hand, not the cards
-	// that built it. Halving first would make Guard stronger against exactly the turns it should
-	// be weakest against.
+func TestADefendHalvesTheHandRatherThanTheCards(t *testing.T) {
+	// What this pins is that the halving lands **after** the combo multiplier — a Defend cuts the
+	// hand, not the cards that built it. Halving first would make it strongest against exactly
+	// the turns it should be weakest against.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
 	open, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike, Strike), 1)
-	guarded, _, _ := resolve(a, b, PlainCards(Guard), PlainCards(Strike, Strike, Strike), 1)
+	shielded, _, _ := resolve(a, b, PlainCards(Defend), PlainCards(Strike, Strike, Strike), 1)
 
 	if n := damageCount(open); n != 1 {
 		t.Fatalf("an open turn produced %d damage events, want 1 — a turn is one blow", n)
 	}
-	if n := damageCount(guarded); n != 1 {
-		t.Fatalf("a guarded turn produced %d damage events, want 1", n)
+	if n := damageCount(shielded); n != 1 {
+		t.Fatalf("a defended turn produced %d damage events, want 1", n)
 	}
 
 	full := firstDamage(t, open, SideB).Amount
-	half := firstDamage(t, guarded, SideB).Amount
-	if want := full / guardDivisor; half != want {
-		t.Errorf("a flurry through a guard dealt %d, want %d (half of %d)", half, want, full)
+	half := firstDamage(t, shielded, SideB).Amount
+	if want := full * (100 - defendReductionPct) / 100; half != want {
+		t.Errorf("a flurry through a Defend dealt %d, want %d (half of %d)", half, want, full)
 	}
 	if half >= full {
-		t.Errorf("a guarded blow dealt %d against an unguarded %d — the guard did nothing", half, full)
+		t.Errorf("a defended blow dealt %d against an open %d — the Defend did nothing", half, full)
 	}
 }
 
-func TestAGuardCoversExactlyOneOpposingTurn(t *testing.T) {
+func TestADefendCoversExactlyOneOpposingTurn(t *testing.T) {
 	// Raised in round 1, still up for B's round-1 turn, gone by the time A's round-2 turn
 	// begins. A defense expires at the start of its owner's next turn — not at the round
 	// boundary, which would leave side B's defenses protecting it from nothing.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	round1, a1, b1 := resolve(a, b, PlainCards(Guard), PlainCards(Strike), 1)
+	round1, a1, b1 := resolve(a, b, PlainCards(Defend), PlainCards(Strike), 1)
 	if hit := firstDamage(t, round1, SideB); hit.Amount != 5 {
-		t.Errorf("round 1 hit into a fresh guard = %d, want 5", hit.Amount)
+		t.Errorf("round 1 hit into a fresh Defend = %d, want 5", hit.Amount)
 	}
-	if !a1.Guarded {
-		t.Fatal("A's guard should still be standing at the round boundary")
+	// **Spent, not standing.** A defence answers exactly one blow and goes with it, so B's Strike
+	// is what consumed it — which is the same reason round two below arrives at full strength.
+	if a1.DefendCount != 0 {
+		t.Fatalf("A ended the round holding %d defences, want the Defend spent on B's blow", a1.DefendCount)
 	}
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
-		t.Errorf("round 2 hit after the guard expired = %d, want full 10", hit.Amount)
+		t.Errorf("round 2 hit after the Defend expired = %d, want full 10", hit.Amount)
 	}
 }
 
-func TestSideBsGuardProtectsItInTheFollowingRound(t *testing.T) {
-	// The asymmetry the expiry rule exists for. B acts last, so its guard cannot cover
+func TestSideBsDefenceProtectsItInTheFollowingRound(t *testing.T) {
+	// The asymmetry the expiry rule exists for. B acts last, so its defence cannot cover
 	// anything in the round it was raised — it has to survive the boundary and cover A's
 	// next turn, or the card would be worthless in B's hands.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := resolve(a, b, nil, PlainCards(Guard), 1)
-	if !b1.Guarded {
-		t.Fatal("side B's guard did not survive the round it was raised in")
+	_, a1, b1 := resolve(a, b, nil, PlainCards(Defend), 1)
+	if b1.DefendCount != 1 {
+		t.Fatal("side B's Defend did not survive the round it was raised in")
 	}
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Strike), nil, 2)
 	if hit := firstDamage(t, round2, SideA); hit.Amount != 5 {
-		t.Errorf("A's hit into B's carried guard = %d, want 5", hit.Amount)
+		t.Errorf("A's hit into B's carried Defend = %d, want 5", hit.Amount)
 	}
 }
 
-func TestAnIdleDuelistLosesItsGuard(t *testing.T) {
-	// A turn happens whether or not anything is queued into it, and a defense expires at
-	// the start of its owner's turn. Standing still therefore does not bank a guard —
-	// which the old until-you-act rule allowed, deliberately, and phases dissolve.
+func TestAnIdleDuelistLosesItsDefence(t *testing.T) {
+	// A turn happens whether or not anything is queued into it, and a defence expires at
+	// the start of its owner's turn. Standing still therefore does not bank one.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := resolve(a, b, PlainCards(Guard), nil, 1)
+	_, a1, b1 := resolve(a, b, PlainCards(Defend), nil, 1)
 
 	round2, _, _ := resolve(a1, b1, nil, PlainCards(Strike), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
-		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a guard", hit.Amount)
-	}
-}
-
-func TestADodgeTakesItsShareOffTheOneBlow(t *testing.T) {
-	// **Reductions, not negations** *(2026-08-14)*. A turn resolves one attack, so an all-or-
-	// nothing Dodge erased a whole hand for 2 AP — and "halve the first of five" and "stop three
-	// of five" both collapsed to "the blow", which took Brace's and Retreat's reason to exist
-	// with them. Each card takes its percentage instead.
-	a := duelist(10, 10, 500)
-	b := duelist(10, 10, 500)
-
-	open, _, _ := resolve(a, b, nil, PlainCards(Heavy, Strike), 1)
-	dodged, aAfter, _ := resolve(a, b, PlainCards(Dodge), PlainCards(Heavy, Strike), 1)
-
-	full := firstDamage(t, open, SideB).Amount
-	got := firstDamage(t, dodged, SideB).Amount
-
-	if want := full * (100 - dodgeReductionPct) / 100; got != want {
-		t.Errorf("a blow through one Dodge dealt %d, want %d (%d less %d%%)",
-			got, want, full, dodgeReductionPct)
-	}
-	if got <= 0 {
-		t.Error("a Dodge stopped the blow dead; only Retreat may reach zero")
-	}
-	if aAfter.CurrentLife != a.CurrentLife-got {
-		t.Errorf("A ended on %d, want %d", aAfter.CurrentLife, a.CurrentLife-got)
-	}
-}
-
-func TestOnlyRetreatStopsABlowOutright(t *testing.T) {
-	// The one card that reaches 100%, and the reason it is allowed to: it is the most expensive
-	// defend in the game and 4 of a 6-point budget is most of a round spent doing nothing else.
-	// If a second card ever reaches zero, this is the test that should be argued with first.
-	for _, card := range []ActionKind{Brace, Dodge, Riposte, Retreat} {
-		a := duelist(10, 10, 500)
-		b := duelist(10, 10, 500)
-
-		events, _, _ := resolve(a, b, PlainCards(card), PlainCards(Heavy, Strike), 1)
-		got := firstDamage(t, events, SideB).Amount
-
-		if card == Retreat && got != 0 {
-			t.Errorf("a Retreat let %d through, want 0", got)
-		}
-		if card != Retreat && got <= 0 {
-			t.Errorf("a %v let nothing through; only Retreat may", card)
-		}
-	}
-}
-
-func TestARiposteReducesTheBlowAndHitsBack(t *testing.T) {
-	// **The counter fires after the blow rather than instead of it** *(2026-08-14)*, which is
-	// what a Riposte reducing rather than negating implies: the attacker connects for a quarter
-	// and takes a Jab back for it. Under negation the counter replaced the attack; now it answers
-	// one that happened.
-	a := duelist(10, 10, 500)
-	b := duelist(10, 10, 500)
-
-	open, _, _ := resolve(a, b, nil, PlainCards(Heavy), 1)
-	full := firstDamage(t, open, SideB).Amount
-
-	events, aAfter, bAfter := resolve(a, b, PlainCards(Riposte), PlainCards(Heavy), 1)
-
-	through := full * (100 - riposteReductionPct) / 100
-	if got := a.CurrentLife - aAfter.CurrentLife; got != through {
-		t.Errorf("A took %d through a riposte, want %d", got, through)
-	}
-
-	// The counter is dealt by the defender, so its event belongs to side A.
-	counter := firstDamage(t, events, SideA)
-	if want := Riposte.Damage(a.Str); counter.Amount != want {
-		t.Errorf("counter damage = %d, want %d (a Jab's worth)", counter.Amount, want)
-	}
-	if got := b.CurrentLife - bAfter.CurrentLife; got != counter.Amount {
-		t.Errorf("B ended down %d, want %d", got, counter.Amount)
+		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a defence", hit.Amount)
 	}
 }
 
@@ -442,8 +367,8 @@ func TestTheOrderDefencesWereRaisedInChangesNothing(t *testing.T) {
 	// knowing rather than worth silently allowing.
 	var took []int
 	for _, raised := range [][]Card{
-		PlainCards(Dodge, Brace),
-		PlainCards(Brace, Dodge),
+		PlainCards(Defend, Prepare),
+		PlainCards(Prepare, Defend),
 	} {
 		events, _, _ := resolve(duelist(10, 10, 500), duelist(10, 10, 500),
 			raised, PlainCards(Strike, Strike), 1)
@@ -451,71 +376,48 @@ func TestTheOrderDefencesWereRaisedInChangesNothing(t *testing.T) {
 	}
 
 	if took[0] != took[1] {
-		t.Errorf("Dodge-then-Brace let %d through and Brace-then-Dodge %d — order must not matter",
+		t.Errorf("Defend-then-Prepare let %d through and Prepare-then-Defend %d — order must not matter",
 			took[0], took[1])
 	}
 }
 
-func TestARiposteCanKillTheAttacker(t *testing.T) {
-	// Defenses converting into damage is the theory the category split rests on, so the counter
-	// has to be able to finish a duel.
-	//
-	// **What it can no longer do is cut the turn short.** Every attack card is announced before
-	// the blow is worked out, so both Strikes get a beat even though the counter kills B. That is
-	// one blow per turn showing through in the log, and the screen depends on it — one beat per
-	// slot, taken or lost.
-	a := duelist(10, 10, 500)
-	b := duelist(10, 10, 3)
-
-	events, _, bAfter := resolve(a, b,
-		PlainCards(Riposte), PlainCards(Strike, Strike), 1)
-
-	if bAfter.Alive() {
-		t.Fatalf("B survived its own attack into a riposte with %d life", bAfter.CurrentLife)
-	}
-	if order := actionOrder(events); !sidesEqual(order, []Side{SideA, SideB, SideB}) {
-		t.Errorf("actions = %v, want A's riposte and both of B's announced strikes", order)
-	}
-}
-
 func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
-	// An unspent Dodge does not bank. It covers the opponent's next turn and then goes,
-	// the same rule Guard follows.
+	// An unspent Defend does not bank. It covers the opponent's next turn and then goes.
 	a := duelist(10, 10, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := resolve(a, b, PlainCards(Dodge), nil, 1)
-	if a1.DefendCount != 1 || a1.Defends[0].Card != Dodge {
-		t.Fatalf("A ended round 1 holding %d defends (%v), want one unspent Dodge",
+	_, a1, b1 := resolve(a, b, PlainCards(Defend), nil, 1)
+	if a1.DefendCount != 1 || a1.Defends[0].Card != Defend {
+		t.Fatalf("A ended round 1 holding %d defends (%v), want one unspent Defend",
 			a1.DefendCount, a1.Defends[0].Card)
 	}
 
 	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
 	if n := damageCount(round2); n != 2 {
-		t.Errorf("damage events in round 2 = %d, want 2 — the dodge expired at A's turn", n)
+		t.Errorf("damage events in round 2 = %d, want 2 — the defence expired at A's turn", n)
 	}
 }
 
-func TestGatherFundsTheFollowingRound(t *testing.T) {
+func TestPrepareFundsTheFollowingRound(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP before any bonus
 
-	_, aAfter, _ := resolve(d, duelist(10, 10, 100), PlainCards(Gather), nil, 1)
+	_, aAfter, _ := resolve(d, duelist(10, 10, 100), PlainCards(Prepare), nil, 1)
 
 	if aAfter.ActionPoints() != 7 {
-		t.Errorf("budget after one Gather = %d, want 7 (5 + 2)", aAfter.ActionPoints())
+		t.Errorf("budget after one Prepare = %d, want 7 (5 + 2)", aAfter.ActionPoints())
 	}
 }
 
-func TestGatherDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
+func TestPrepareDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
 	// The whole shape of the card: you pay now and you are paid later, which is what makes
 	// it an investment rather than a discount.
 	d := duelist(10, 11, 100)
 
-	events, _, _ := resolve(d, duelist(10, 10, 100), PlainCards(Gather), nil, 1)
+	events, _, _ := resolve(d, duelist(10, 10, 100), PlainCards(Prepare), nil, 1)
 
 	for _, e := range events {
-		if e.Kind == KindGathered && e.Amount != gatherBonusAP {
-			t.Errorf("gathered %d AP, want %d", e.Amount, gatherBonusAP)
+		if e.Kind == KindGathered && e.Amount != prepareBonusAP {
+			t.Errorf("gathered %d AP, want %d", e.Amount, prepareBonusAP)
 		}
 	}
 	if d.ActionPoints() != 5 {
@@ -523,31 +425,31 @@ func TestGatherDoesNotFundTheRoundItIsPlayedIn(t *testing.T) {
 	}
 }
 
-func TestGathersStackWithinARound(t *testing.T) {
+func TestPreparesStackWithinARound(t *testing.T) {
 	// Two in one round are worth +4. Deliberate: it is what puts a five-attack round in
 	// reach without a ring discount, and that trade — a whole round spent setting up — is
 	// the price of getting there.
 	d := duelist(10, 11, 100) // 5 AP
 
 	_, aAfter, _ := resolve(d, duelist(10, 10, 100),
-		PlainCards(Gather, Gather), nil, 1)
+		PlainCards(Prepare, Prepare), nil, 1)
 
 	if aAfter.ActionPoints() != 9 {
-		t.Errorf("budget after two Gathers = %d, want 9 (5 + 4)", aAfter.ActionPoints())
+		t.Errorf("budget after two Prepares = %d, want 9 (5 + 4)", aAfter.ActionPoints())
 	}
 }
 
-func TestGatherDoesNotCompoundAcrossRounds(t *testing.T) {
-	// Gathering every round is worth a flat +2, not +2 then +4 then +6. The bonus is
+func TestPrepareDoesNotCompoundAcrossRounds(t *testing.T) {
+	// Preparing every round is worth a flat +2, not +2 then +4 then +6. The bonus is
 	// replaced at the boundary rather than added to, which is what bounds the ramp.
 	a := duelist(10, 11, 500) // 5 AP
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := resolve(a, b, PlainCards(Gather), nil, 1)
-	_, a2, _ := resolve(a1, b1, PlainCards(Gather), nil, 2)
+	_, a1, b1 := resolve(a, b, PlainCards(Prepare), nil, 1)
+	_, a2, _ := resolve(a1, b1, PlainCards(Prepare), nil, 2)
 
 	if a2.ActionPoints() != 7 {
-		t.Errorf("budget after gathering twice in a row = %d, want a flat 7", a2.ActionPoints())
+		t.Errorf("budget after preparing twice in a row = %d, want a flat 7", a2.ActionPoints())
 	}
 }
 
@@ -555,7 +457,7 @@ func TestABonusLapsesIfItIsNotRenewed(t *testing.T) {
 	a := duelist(10, 11, 500)
 	b := duelist(10, 10, 500)
 
-	_, a1, b1 := resolve(a, b, PlainCards(Gather), nil, 1)
+	_, a1, b1 := resolve(a, b, PlainCards(Prepare), nil, 1)
 	_, a2, _ := resolve(a1, b1, PlainCards(Strike), nil, 2)
 
 	if a2.ActionPoints() != 5 {
@@ -583,11 +485,11 @@ func TestActionPointsFromSpeed(t *testing.T) {
 func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	d := duelist(10, 11, 100) // 5 AP
 
-	if !d.CanAfford(PlainCards(Heavy, Gather)) { // 4 + 1
-		t.Error("Heavy + Gather costs 5 and should fit a 5 AP budget")
+	if !d.CanAfford(PlainCards(Smash, Thrust)) { // 3 + 2
+		t.Error("Smash + Thrust costs 5 and should fit a 5 AP budget")
 	}
-	if d.CanAfford(PlainCards(Guard, Riposte)) { // 3 + 3
-		t.Error("Guard + Riposte costs 6 and should not fit a 5 AP budget")
+	if d.CanAfford(PlainCards(Defend, Lunge)) { // 3 + 3
+		t.Error("Defend + Lunge costs 6 and should not fit a 5 AP budget")
 	}
 }
 
@@ -595,20 +497,24 @@ func TestCategoriesCoverEveryAction(t *testing.T) {
 	// A new action with no category would silently fall into attack and resolve in the
 	// wrong phase. Pin the whole table instead.
 	want := map[ActionKind]Category{
-		Gather: CategoryPrepare,
-		Sift:   CategoryPrepare,
-		Guard:  CategoryPrepare,
-		Ritual: CategoryPrepare,
-
 		Jab:    CategoryAttack,
-		Strike: CategoryAttack,
-		Feint:  CategoryAttack,
-		Heavy:  CategoryAttack,
+		Thrust: CategoryAttack,
+		Lunge:  CategoryAttack,
 
-		Brace:   CategoryDefend,
-		Dodge:   CategoryDefend,
-		Riposte: CategoryDefend,
-		Retreat: CategoryDefend,
+		Cut:    CategoryAttack,
+		Slash:  CategoryAttack,
+		Cleave: CategoryAttack,
+
+		Bash:   CategoryAttack,
+		Strike: CategoryAttack,
+		Smash:  CategoryAttack,
+
+		Prepare: CategoryPlan,
+		Plan:    CategoryPlan,
+		Defend:  CategoryPlan,
+
+		Attack: CategoryAttack,
+		Heavy:  CategoryAttack,
 	}
 
 	if len(AllActions) != len(want) {
@@ -680,16 +586,14 @@ func TestBothSidesDefendingDoesNotAlias(t *testing.T) {
 	a := duelist(10, 10, 100)
 	b := duelist(10, 10, 100)
 
-	_, a1, b1 := resolve(a, b, PlainCards(Guard), PlainCards(Dodge), 1)
-	if !a1.Guarded {
-		t.Error("A raised a guard and did not end the round with one")
+	_, a1, b1 := resolve(a, b, PlainCards(Defend), PlainCards(Defend), 1)
+	if a1.DefendCount != 1 || a1.Defends[0].Card != Defend {
+		t.Errorf("A raised a Defend and ended the round holding %d (%v)",
+			a1.DefendCount, a1.Defends[0].Card)
 	}
-	if b1.Guarded {
-		t.Error("B's dodge left it guarded; A's flag has leaked across")
-	}
-	if a1.DefendCount != 0 || b1.DefendCount != 1 || b1.Defends[0].Card != Dodge {
-		t.Errorf("pending defends: a=%d b=%d (%v), want none and one Dodge",
-			a1.DefendCount, b1.DefendCount, b1.Defends[0].Card)
+	if b1.DefendCount != 1 || b1.Defends[0].Card != Defend {
+		t.Errorf("B raised a Defend and ended the round holding %d (%v)",
+			b1.DefendCount, b1.Defends[0].Card)
 	}
 }
 
@@ -697,8 +601,8 @@ func TestRoundIsDeterministic(t *testing.T) {
 	a := duelist(7, 13, 300)
 	b := duelist(9, 17, 300)
 
-	aPlan := PlainCards(Strike, Guard, Gather)
-	bPlan := PlainCards(Jab, Riposte)
+	aPlan := PlainCards(Strike, Defend, Prepare)
+	bPlan := PlainCards(Jab, Defend)
 
 	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
 	second, a2, b2 := resolve(a, b, aPlan, bPlan, 1)
@@ -738,7 +642,7 @@ func TestEmptyQueueIsAHarmlessRound(t *testing.T) {
 func stockHand() []Card {
 	var hand []Card
 	for i := 0; i < 6; i++ {
-		hand = append(hand, PlainCards(Gather, Guard, Jab, Strike, Heavy)...)
+		hand = append(hand, PlainCards(Prepare, Defend, Jab, Strike, Heavy)...)
 	}
 	return hand
 }
@@ -752,9 +656,9 @@ func TestNoStylePlaysACardItWasNotDealt(t *testing.T) {
 		nil,
 		PlainCards(Jab),
 		PlainCards(Jab, Jab, Jab),
-		PlainCards(Brace, Dodge, Retreat), // no attacks at all
-		PlainCards(Guard, Gather),
-		PlainCards(Heavy, Heavy, Jab, Brace),
+		PlainCards(Defend, Prepare, Plan), // no attacks at all
+		PlainCards(Defend, Prepare),
+		PlainCards(Heavy, Heavy, Jab, Defend),
 	}
 
 	for _, style := range PlanStyles() {
@@ -784,7 +688,7 @@ func TestPlanningIsReproducible(t *testing.T) {
 	// The determinism rule, at the planner. Nothing here may consult a map's iteration order
 	// or a clock, so the same style and the same hand must plan the same round every time —
 	// which is what lets a seeded run be replayed and what the balance tool depends on.
-	hand := PlainCards(Heavy, Jab, Strike, Guard, Jab, Gather, Strike, Heavy)
+	hand := PlainCards(Heavy, Jab, Strike, Defend, Jab, Prepare, Strike, Heavy)
 
 	for _, style := range PlanStyles() {
 		d := duelist(10, 30, 100)
@@ -887,29 +791,29 @@ func TestSwarmSpendsSpareBudgetOnBiggerAttacksNotMoreOfThem(t *testing.T) {
 	}
 }
 
-func TestWardenGuardsAndStillAttacks(t *testing.T) {
-	d := duelist(10, 15, 100) // 5 AP: Guard is 3, leaving a Strike
+func TestWardenShieldsAndStillAttacks(t *testing.T) {
+	d := duelist(10, 15, 100) // 5 AP: Defend is 4, leaving a Jab
 	plan := PlanFor(StyleWarden, d, stockHand())
 
-	guards, attacks := 0, 0
+	shields, attacks := 0, 0
 	for _, a := range plan {
 		switch a.Category() {
-		case CategoryPrepare:
-			guards++
+		case CategoryPlan:
+			shields++
 		case CategoryAttack:
 			attacks++
 		}
 	}
-	if guards != 1 {
-		t.Errorf("warden queued %d prepares, want exactly 1 Guard", guards)
+	if shields != 1 {
+		t.Errorf("warden queued %d plans, want exactly 1 Defend", shields)
 	}
 	if attacks == 0 {
 		t.Error("warden queued no attacks; a pure turtle cannot win and is not a fight")
 	}
 }
 
-func TestWardenFallsBackToAttackingWhenItCannotAffordAGuard(t *testing.T) {
-	// A duelist too slow to pay 3 for a Guard must still take a turn rather than stand there.
+func TestWardenFallsBackToAttackingWhenItCannotAffordADefend(t *testing.T) {
+	// A duelist too slow to pay 4 for a Defend must still take a turn rather than stand there.
 	d := duelist(10, 0, 100)
 	d.BonusAP = -2 // floors ActionPoints at 1
 
@@ -921,18 +825,18 @@ func TestWardenFallsBackToAttackingWhenItCannotAffordAGuard(t *testing.T) {
 func TestTacticianBanksThenUnloads(t *testing.T) {
 	// The rhythm is the point: a light round the player can punish, then an oversized one
 	// they have to answer. It reads which round it is in off its own BonusAP, so it needs no
-	// memory beyond what Gather already leaves behind.
+	// memory beyond what Prepare already leaves behind.
 	d := duelist(10, 15, 100) // 5 AP
 
 	setup := PlanFor(StyleTactician, d, stockHand())
-	prepares := 0
+	banks := 0
 	for _, c := range setup {
-		if c.Action == Gather {
-			prepares++
+		if c.Action == Prepare {
+			banks++
 		}
 	}
-	if prepares == 0 {
-		t.Fatalf("setup round planned no Gather: %v", setup)
+	if banks == 0 {
+		t.Fatalf("setup round planned no Prepare: %v", setup)
 	}
 
 	// Play the setup round through so the bank is real rather than assumed.
@@ -943,8 +847,8 @@ func TestTacticianBanksThenUnloads(t *testing.T) {
 
 	payoff := PlanFor(StyleTactician, after, stockHand())
 	for _, c := range payoff {
-		if c.Action == Gather {
-			t.Errorf("payoff round is still gathering: %v", payoff)
+		if c.Action == Prepare {
+			t.Errorf("payoff round is still banking: %v", payoff)
 		}
 	}
 	if CostOf(payoff) <= CostOf(setup) {

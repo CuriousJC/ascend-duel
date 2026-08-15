@@ -18,8 +18,14 @@ func TestTheShippingCatalogueLoads(t *testing.T) {
 		if h.Cards() == 0 {
 			t.Errorf("hand %q counts nothing", h.Name)
 		}
-		if h.Multiplier <= 0 {
-			t.Errorf("hand %q is worth nothing", h.Name)
+		// **A one-card hand may be worth nothing and a built one may not.** The High Card pays
+		// no multiplier on purpose — what lands is the card's own face damage — and it is the only
+		// hand nobody chooses to form. Anything asking for two cards and paying nothing is a typo.
+		if h.Cards() > 1 && h.Multiplier <= 0 {
+			t.Errorf("hand %q asks for %d cards and is worth nothing", h.Name, h.Cards())
+		}
+		if h.Multiplier < 0 {
+			t.Errorf("hand %q has a negative multiplier", h.Name)
 		}
 	}
 	for _, m := range Mixes() {
@@ -47,9 +53,9 @@ func TestEveryColourCountHasExactlyOneMix(t *testing.T) {
 }
 
 // Every attack card carries the whole ladder, because the file expands one entry per card. A new
-// attack card gets pair, flurry, barrage and onslaught by existing.
+// attack card gets pair, flurry and barrage by existing.
 func TestEveryAttackCardCarriesTheWholeLadder(t *testing.T) {
-	for _, key := range []string{"pair", "flurry", "barrage", "onslaught"} {
+	for _, key := range []string{"pair", "flurry", "barrage"} {
 		for _, a := range AllActions {
 			id, ok := HandIDFor(key, a)
 			if a.Category() != CategoryAttack {
@@ -73,7 +79,7 @@ func TestEveryAttackCardCarriesTheWholeLadder(t *testing.T) {
 // best-hand rule would pick the wrong one.
 func TestTheLadderClimbs(t *testing.T) {
 	last := 0
-	for _, key := range []string{"pair", "two-pair", "flurry", "full-house", "barrage", "onslaught"} {
+	for _, key := range []string{"pair", "two-pair", "flurry", "full-house", "barrage"} {
 		var h Hand
 		for _, c := range Hands() {
 			if c.Key == key {

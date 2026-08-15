@@ -541,7 +541,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 
 // previewAttack is the blow the current selection would land if DUEL! were pressed now.
 //
-// **It calls the resolver's own `combat.AttackFor`**, which is what makes a preview trustworthy:
+// **It calls the resolver's own `combat.BlowFor`**, which is what makes a preview trustworthy:
 // the combo shown while choosing is the combo that fires, by construction rather than by two
 // pieces of code agreeing about what three Strikes are worth. Nothing here knows what a Flurry
 // is.
@@ -553,24 +553,24 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // The turn is ordered with an empty opposing queue, because `ResolutionOrder` is the authority
 // on which of the player's cards resolve in what order and the opponent's cards do not enter
 // their attack phase. Building the slice by hand here would be a second orderer.
-func (s *CombatScene) previewAttack() (combat.Attack, bool) {
+func (s *CombatScene) previewAttack() (combat.Blow, bool) {
 	if !s.planning() {
-		return combat.Attack{}, false
+		return combat.Blow{}, false
 	}
-	blow := combat.AttackFor(combat.ResolutionOrder(s.fighterActions, nil))
+	blow := combat.BlowFor(combat.ResolutionOrder(s.fighterActions, nil))
 	if !blow.Formed() {
-		return combat.Attack{}, false
+		return combat.Blow{}, false
 	}
 	return blow, true
 }
 
 // previewHandSlots is where the previewed hand's cards are sitting in the row right now.
 //
-// **`Attack.Cards` indexes the turn, not the hand**, and the two differ the moment a Gather is
+// **`Blow.Cards` indexes the turn, not the hand**, and the two differ the moment a Prepare is
 // queued before a Strike — the turn is in resolution order, the hand is in the order the player
 // left it. `handIndexForQueue` is the existing inverse of the walk that builds the queue, so
 // this is a translation rather than a second mapping.
-func (s *CombatScene) previewHandSlots(blow combat.Attack) []int {
+func (s *CombatScene) previewHandSlots(blow combat.Blow) []int {
 	turn := combat.ResolutionOrder(s.fighterActions, nil)
 
 	out := make([]int, 0, len(blow.Cards))

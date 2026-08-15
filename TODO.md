@@ -82,36 +82,44 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         have to bring its own consumer. The other candidate is a partial interleave where one
         designated fast action jumps a phase, which reintroduces the legibility problem phases
         were adopted to solve.
-      - **The card has no room.** The left column is a category glyph over a stack of cost
+      - **The card has no room.** The left column is a family mark over a stack of cost
         dashes, and everything right of it is the effect text; an initiative badge has nowhere
         to go that does not take space from one of the two.
 - [?] **Defence targeting has lost most of its content.** The entry used to be "a defense is a
-      pool rather than a choice — Dodge the first attack and Riposte the second". **There is only
-      one attack now**, so there is nothing to distribute defences across and every raised card
-      answers the same blow.
+      pool rather than a choice — one card for the first attack and another for the second".
+      **There is only one attack now**, so there is nothing to distribute defences across and
+      every raised card answers the same blow.
       - What survives is a weaker question: whether a defence should be able to name something
         about the incoming hand — its element, whether it forms a combo — rather than a slot.
       - What is definitely gone is the ordering half. See the drag entry above; this is the same
         hole.
-- [ ] **Enemies plan from a hand but not from a personality.** `combat.PlanFor(style, duelist,
-      hand)` picks between four planners named by a string on the data record, so behaviour is
-      data and the 96-enemy roster in `data/enemies.json` is tunable without touching Go.
-      - **brute** biggest attack affordable · **swarm** as many attacks as the round allows ·
-        **warden** Guard then attacks · **tactician** banks with Gather then unloads.
-      - What it wants to become is a set of **leanings** — how readily it defends, whether it
-        banks, whether it plays toward a combo — that a generator can dial, rather than one of
-        four functions chosen by a string. That is the piece procedural enemies need.
-      - `AvailableAffixes` is in `data/enemies.json` and read by nothing.
-      - `[?]` Earth has no affix; whether it can be a floor theme is still open.
+- [ ] **Give each enemy its own attacks, and let that replace `PlanStyle`.** *(2026-08-15, owner's
+      call.)* Every opponent currently draws from one shared list — `data/enemy_cards.json` is Attack
+      and Heavy and nothing else — and its behaviour comes from a `PlanStyle` string picking one of
+      four planners in `combat.PlanFor`. **The intended shape is the other way round: an enemy's
+      cards are its personality**, so a Dragon and a Slime differ because they hold different
+      things rather than because a switch statement branches on a name.
+      - What that buys is the thing styles cannot: an enemy becomes readable from *what it plays*.
+        The player learns a deck rather than a label.
+      - **`PlanStyle` and the four planners are what this deletes**, or reduces to one generic
+        planner that spends a hand well. `data/enemies.json` has a `PlanStyle` column that would
+        go with them, and `tools/balance` reads it into its table.
+      - It also settles a live inconsistency by making it moot: three of the four styles are
+        unreachable today, because the warden asks for a Defend by name and the tactician for a
+        Prepare, and the shared enemy list holds neither. Both fall through to brute.
       - **`[?]` None of the four planners was rewritten for one blow per turn, and the change
-        inverts them.** A swarm queueing four Jabs now assembles a Jab Barrage — 5× damage and
-        two staggers — where it used to land four small hits. A brute's single Heavy forms no
-        hand at all and pays no multiplier. So the shape the roster treats as the weak one is
-        now the strong one, entirely by accident. Planners should build *toward* a hand
-        deliberately, and which styles are allowed to is a design decision, not a tuning one.
+        inverts them.** A swarm queueing four Jabs now assembles a Jab Barrage — 5x damage and two
+        staggers — where it used to land four small hits. A brute's single Heavy forms no hand at
+        all and pays no multiplier. So the shape the roster treats as the weak one is now the
+        strong one, entirely by accident. Whatever replaces the styles has to decide deliberately
+        which opponents build toward a hand.
+      - `AvailableAffixes` is in `data/enemies.json` and read by nothing. Affixes *transform* an
+        enemy's deck per MECHANICS.md, which is the same axis as this entry and probably lands with
+        it rather than after it.
+      - `[?]` Earth has no affix; whether it can be a floor theme is still open.
 - [ ] **Retune enemy life totals against the new damage curve.** One blow per turn plus additive
       multipliers made the player's ceiling far higher: two Strikes at Str 10 deal 35 where they
-      used to deal 20, and a rainbow Onslaught is 200 on top of its own cards. `data/enemies.json`
+      used to deal 20, and a rainbow Barrage is 150 on top of its own cards. `data/enemies.json`
       has not moved. The owner has said the HP numbers are the intended lever; this is that work.
       - **Do not tune anything until `tools/balance` reports a distribution** — see below. Right
         now every figure it prints is one draw.
@@ -125,21 +133,29 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Every balance figure this repo has ever recorded was measured against the multi-blow
         model and is deleted rather than annotated.** `MECHANICS.md` says what has to be
         re-measured; nothing should be tuned off memory of the old table.
-- [ ] **`[?]` The defend column is a cost ladder now, which the concept grid exists to prevent.**
-      Brace 50, Dodge 75, Riposte 75, Retreat 100. Two problems fall out:
-      - **Brace is purely a smaller Dodge.** It used to be partial against something binary,
-        which was a real distinction; the repricing spent it.
-      - **Dodge and Riposte carry the same percentage**, so Riposte is exactly Dodge plus a Jab
-        at exactly the price of the two — and a Feint stripping "the strongest" picks between
-        them on a tie-break rather than on anything the player decided.
-      - What would earn the cells back is **riders rather than percentages**: clearing a status
-        as you give ground, a Brace that pays something for taking the hit. Reach for that shape
-        before moving a number.
-- [ ] **`[?]` Guard versus Dodge, re-opened.** Guard costs 3 of a 6 AP budget to halve a turn,
-      where a 2 AP Dodge now takes 75% off it. Under one blow per turn that comparison is even
-      more lopsided than it was, since Guard's "every attack" clause meets exactly one attack.
-      - Candidates: Guard to 2, or the budget grows, or `guardDivisor` becomes a percentage in
-        line with the defends so all four reductions read the same way.
+- [ ] **`[?]` Twelve enemies are walls.** `tools/balance` reports twelve of the 96 beaten by no
+      posture at all as of 2026-08-15, all at floors 6-8. That is the failure the tool was built
+      for — an unwinnable enemy is invisible while playing, because losing slowly looks like losing
+      to bad draws.
+      - It is not obviously a bug: the deep floors are meant to need rings and brands, and neither
+        exists. **Re-read it once the player can be built up**, and treat a floor-two wall as the
+        urgent case rather than a floor-eight one.
+- [ ] **`[?]` Nothing measures what Plan is worth.** `tools/balance` deals no cards, so the
+      `planning` posture holds a wider hand of nothing and the row reads 2 AP as pure loss.
+      - This needs the sim to draw, which is the deckbuilder entry below and its seventh stream.
+        Until then Plan's price is a guess, and it is the one new card whose value the tool is
+        structurally unable to see.
+- [ ] **`[?]` The three attack families differ only in which cards pair with which.** Stab, slash
+      and crush cost the same, hit the same and carry no riders, so a family is a choice of *which*
+      pair to build and nothing else. That is deliberately where the rework stopped.
+      - What would earn the third family its place is a rider that differs in **kind**: something
+        stab does to a defence, something crush does to a status, something slash does across
+        several cards. The concept grid's old rule applies — a family that is only a different
+        word is three cards and one decision.
+- [ ] **Two levers answer draw variance and neither is priced against the other.** A hand of eight
+      from 48 cards is 17% of the deck; `discardsPerRound` throws cards away and Plan widens the
+      next hand by two for 2 AP. They pull in opposite directions — one narrows what you hold, the
+      other broadens it — and nothing has decided which is the primary answer.
 - [ ] **`[?]` Pair fires on most turns, which makes the bottom rung a global buff to the AI.**
       Any two copies of one attack forms it, and the enemy planners repeat a card far more
       readily than a player assembling a mixed hand does. Measured as a real regression on the
@@ -147,10 +163,14 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       the number without addressing the shape.
       - Options: drop Pair's multiplier and start the ladder at Two Pair, or give it a reward
         that does not scale with strength.
-- [ ] **`[?]` 13 of the 27 hand/mix cells cannot be dealt from the starting deck.** A concept
-      ships one card per colour, so every same-concept hand is forced to all-distinct elements: a
-      pair is always duo, a flurry always trio, an Onslaught always rainbow, and **drab and mono
-      are unreachable above one card**. Half the grid is currently decoration.
+- [ ] **`[?]` The mix axis is a function of the hand axis, so most of the grid cannot be dealt.**
+      A concept ships one card per colour, so every same-concept hand is forced to all-distinct
+      elements: a pair is always duo, a flurry always trio, a barrage always rainbow, and **drab and
+      mono are unreachable above one card**. Two axes collapse to one for exactly the hands a player
+      is trying to build, which is the strongest argument for changing the deck's composition rather
+      than its multipliers.
+      - **Drab and Mono are reachable only by the opponent**, whose deck is twelve copies each of
+        two drab cards. The mix axis is not dead content; the two sides reach it from opposite ends.
       - **Expected to resolve when the deck changes over a run** — the owner's call, and the
         deckbuilder entry below is where that lands. Recorded so nobody tunes the grid against a
         deck that cannot show most of it.
@@ -227,7 +247,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         entirely. `cards.Spec.FaceDown` is the lever built for putting it back; this entry is
         what decides how far back.
 - [ ] **Deckbuilder — nothing adds or removes cards.** The hand, draw, discard and reshuffle
-      all work, and the deck is 60 cards built from `data/duelist_cards.json`. What is missing
+      all work, and the deck is 48 cards built from `data/duelist_cards.json`. What is missing
       is the *building*: no card enters or leaves the deck, so there is no thinning reward and
       no acquisition. That needs the loot loop, which needs the tower.
       - **Open:** whether the deck is per-run or per-fight, and whether the discard reshuffles
@@ -236,43 +256,25 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         injected `*rand.Rand` for the lightning roll, so the parameter this entry warned about
         is paid for. **It must not share that source** — a shuffle and a miss-roll are different
         concerns, and the stream rules say a stream is only ever advanced by its own. Doing this
-        would let `tools/balance` measure anything that touches the hand, Sift especially.
+        would let `tools/balance` measure anything that touches the hand.
       - Hand size is 8 and was sized against a 30-card deck, deliberately left alone when the
-        deck doubled to 60. Worth re-deciding once thinning exists — and now also because the
-        deck's one-copy-per-colour shape is what makes half the combo grid undealable.
-- [?] **What a Feint does when more than one defence is up.** The strip takes the **strongest**
-      raised card and the blow then meets whatever is left, composed multiplicatively. So a Feint
-      into a Retreat plus a Brace still meets the Brace and lands half, where against a lone
-      Retreat it lands everything.
-      - That is coherent and nobody chose it; it is a consequence of where the strip sits.
-      - The alternative reading is that a Feint's damage bypasses the defend layer entirely once
-        it has stripped something, which is stronger and makes stacked defences worthless
-        against it.
-      - **It strips once however many Feints are in the hand**, deliberately: a Feint Pair
-        clearing two cards would make the cheapest answer to a defensive round a hand the player
-        was already building.
-- [?] **Does Sift stack?** It does today: `siftsResolved() * siftExtraDiscards`, so two Sifts
-      throw four extra cards away. Gather's within-round stacking is a documented deliberate
-      choice; Sift's is just what the loop does. Two Sifts is 4 AP of a 6 AP round to churn
-      six cards, which may be fine — but it should be a decision.
-- [ ] **Price Sift, and build something that can measure it.** 2 AP replacing seven of eight
-      cards largely erases the consistency cost of a 60-card deck, which is a lot for the
-      cheapest prepare after Gather.
-      - **`tools/balance` structurally cannot see it.** Sift's effect is on the hand, the hand
-        is on the scene, and the tool has no deck — so this is the one concept in the game
-        with no instrument pointed at it. Either the tool grows a deck (see the deckbuilder
-        entry) or something else measures draw variance. The second is probably a small harness
-        over `screens.OpeningHand`, which already deals real hands headlessly.
-- [ ] **The demo has never shown a new card resolving.** `demoSeedName` is `strike-flurry` and
-      `demoClickRun` is `Strike`, so the scripted round plays Strikes and a Riposte. The
-      narration written for Feint, Retreat, Brace and Sift has never appeared on screen, and the
-      demo is the only thing that looks at the screen without a person sitting there.
+        deck grew to 48. **It is a base rather than a fixed size since 2026-08-15** — Plan adds two
+        for one round, via `handTarget`. Worth re-deciding once thinning exists, and now also
+        because the attack ladder's one-copy-per-colour shape is what makes half the combo grid
+        undealable.
+- [ ] **The demo has never shown a plan card resolving.** `demoSeedName` is `strike-flurry` and
+      `demoClickRun` is `Strike`, so the scripted round plays Strikes and nothing else. The
+      narration written for Prepare, Plan and Defend has never appeared on screen, and neither
+      has the table's attack/plan break — the row it splits has never had a plan card in it.
+      The demo is the only thing that looks at the screen without a person sitting there.
       - **The one-blow rewrite made this more urgent, not less.** Nobody has yet *looked* at a
         round where five attack cards are announced and one figure lands, or at a combo line
         naming a hand and a mix together, or at an attack card that resolved and contributed
         nothing. Those are all screen questions and `go test` cannot answer any of them.
-      - Point it at a hand that plays a Retreat into a heavy enemy turn. `all-categories`
-        (seed 6) deals eight distinct concepts including Retreat and Brace.
+      - Point it at a hand that plays a Defend into a heavy enemy turn. `all-plans` (seed 3) deals
+        eight distinct concepts including all three plan cards — Prepare, Plan and Defend together
+        are 6 AP, so the whole plan vocabulary fits one round — and `both-verbs` (seed 1) is the
+        cheapest hand that puts a plan and an attack in the same round.
       - `demoClickRun` has to agree with the seed or the click phase silently selects fewer
         cards and nothing forms. That pairing is what `tools/seeds` exists to keep honest.
 - [ ] **The Resolution pane cannot show three things the engine now produces.** All three are
@@ -282,7 +284,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Which cards formed the hand.** The event carries the list — a counted hand is not
         contiguous, so it is a list rather than a span — and nothing draws the bracket.
       - **A slot deleted by a stagger**, which the pane still draws as though it happened.
-- [ ] **Preview the hand while the player is still planning.** `combat.AttackFor` is exported and
+- [ ] **Preview the hand while the player is still planning.** `combat.BlowFor` is exported and
       is the same function the resolver calls, so a previewed combo would be the combo that fires
       by construction rather than by two pieces of code agreeing. Nothing calls it from the
       screen. This is what makes *building toward a shape* legible before DUEL! is pressed rather

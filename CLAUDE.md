@@ -97,7 +97,7 @@ go run ./tools/seeds        # re-check the named deck seeds, and search for new 
 ```
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
-holds a catalogue of named seeds — `strike-flurry`, `strike-onslaught`, `all-categories` — so a
+holds a catalogue of named seeds — `strike-flurry`, `strike-barrage`, `all-plans` — so a
 hand that demonstrates something can be asked for by name instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
@@ -107,10 +107,11 @@ something else. The tool re-checks the catalogue before it searches and says whi
 longer match — a change to the deck size has invalidated every entry at once before. A demo
 testing a Flurry against a hand with two Strikes in it is worse than no demo, because it passes.
 
-**A bigger deck needs a bigger search.** Five Strikes in a hand of eight is about 1 hand in 98,000
-from 60 cards, against 1 in 3,000 from 30, so `strike-onslaught` took `-n 600000` to find where
-the default 20,000 used to be plenty. A seed the tool reports as unfindable may only mean the
-search was too short — check the arithmetic before concluding the deck cannot deal it.
+**A rarer hand needs a bigger search, and some hands are impossible.** `strike-barrage` is four of
+the four Strikes in a hand of eight from 48 cards and turns up around seed 900; the default 20,000
+finds it. **A hand wanting five copies of a concept cannot be dealt at all**, since no attack card
+exists more than four times — so check the arithmetic before concluding either way. A hand the tool
+reports as unfindable usually means the search was too short, but not always.
 
 **Three build tags, and they compose.** Each selects a different file in its package, so one
 configuration can compile while another does not. Vet and build every one you might have
@@ -389,6 +390,13 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   one pixel off each side, so a three-pixel crossguard renders as two rows of outline
   around one row of metal and reads as a scratch. This is the main constraint the technique
   imposes and it drives every span in the file.
+- **Nothing on a card is a glyph as of 2026-08-15.** The three category glyphs said which phase a
+  card resolved in, and the deck rework replaced that fact with a *family* — stab, slash, crush,
+  plan — which has no art yet. A card's corner therefore carries an **uppercase letter**: S, **D**
+  for slash (Stab took the S), C, P. `cards.Family.glyph()` is the seat the art goes back into and
+  returns nothing for every family today; `internal/systems` is untouched and the glyph sheet
+  still renders everything. The paragraphs below describe the generator, which is still the
+  pattern for interface art and is still what the mute button uses.
 - **Glyphs are the deliberate exception to the colour rule below.** They carry a five-value
   `Palette` — outline, specular, highlight, mid, shade, accent — because a bevel cannot be
   made from one colour scaled down. They are drawn untinted; a disabled card dims them by
@@ -405,8 +413,10 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   five-value palette is mostly spent, and `cards.Surface` is one constant if that ever
   needs re-testing.
 - **Glyphs are not all one size, and `systems.SizeOf(kind)` is the authority.** The damage
-  sword and the runner are 64; the three category glyphs are **22**. Never assume
-  `GlyphSize` at a call site — a small glyph centred in a 64-pixel hole is the failure.
+  sword and the runner are 64; the retired category glyphs were **22**. Never assume
+  `GlyphSize` at a call site — a small glyph centred in a 64-pixel hole is the failure. **The
+  card is now the exception and says so**: `Style.FamilySize` names the box, because a letter has
+  no intrinsic size and centring by ink is what makes it fill one.
 - **A glyph cannot be resized, so a smaller one is a *different drawing*.** `CardGlyphScale`
   is 1 and integer-only: the rim is derived one pixel thick, so a third-size copy of a 64px
   shape is a third-size copy of its outline with nothing inside. The 22px category glyphs
@@ -417,11 +427,14 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **`GlyphKind` is append-only.** The glyph cache keys on the ordinal, so inserting a kind
   mid-enum silently re-points every existing entry — the same hazard `MECHANICS.md` records
   for the concept enum and its combo IDs.
-- **The card is 162x224, and it is a column and a paragraph.** The category glyph sits at 0,0
-  and is cropped by the card's own curve; under it the cost dashes make a **26px column**; and
-  **the effect text takes everything right of that**, centred in it both ways, at 18pt.
+- **The card is 162x224, and it is a column and a paragraph.** The family mark sits in a 32px
+  box at (10,8) — **inside the card, not hanging off the corner**, because a clipped letter
+  reads as a rendering fault where a clipped silhouette reads as itself; under it the cost dashes
+  make a **26px column**; and **the effect text takes everything right of that**, centred in it
+  both ways, at 18pt. `blitGlyph` still clips to the rounded shape, which is what a future glyph
+  will want back.
 - **There is no damage badge at all.** The 64px generated sword went first — it said what the
-  corner glyph already says — and then the bare figure, because the text states what the card
+  corner mark already says — and then the bare figure, because the text states what the card
   deals and a number beside it was the same fact multiplied out by the wielder's Strength.
   `cards.Spec` has no `Damage` field and `drawCard` takes no Strength, so **a card's picture is
   a function of the card alone**. `systems.GlyphDamage` still exists and is still on the glyph
@@ -537,9 +550,10 @@ and are easy to re-break:
   *louder* than the live card beside it, which is how a pane's idle rows end up in front of
   its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a colour
   toward whatever it actually sits on. Card state is expressed as distance to the surface.
-- **Cost is dash marks and the category is a glyph**, not text and not a numeral. Costs run
-  1..4; a fifth tier grows the dash stack further down the card and is a layout change, not
-  just a bigger number. `TestLeftColumnDoesNotCollide` fails rather than rendering it.
+- **Cost is dash marks and the family is a corner mark**, not text and not a numeral. Costs run
+  1..4 — the attack ladder uses 1..3 and the two defences sit at 4; a fifth tier grows the
+  dash stack further down the card and is a layout change, not just a bigger number.
+  `TestLeftColumnDoesNotCollide` fails rather than rendering it.
 
 Rings reuse the whole format with a pink border and artwork instead of glyphs, and no cost
 or category because a ring is neither played from a hand nor resolved in a round. Nothing
@@ -719,9 +733,9 @@ Key conventions:
 
   `PlanStyle` names how an enemy fights and is parsed by `combat.ParsePlanStyle`, falling back to brute — **enemy behaviour is data, so the roster is tunable without touching Go.** `ValidFloors` is `[lowest, highest]` against the planned 8-floor tower, so a Dragon is not on floor one; nothing generates floors yet, so today it only sorts the fight order. `data.EnemyOrder` is the sorted walk — never range the map, per the determinism rules.
 
-  - **The two card lists are one shape, tuned separately.** Concepts, the elements each ships in, and how many copies. `startingDeck` is built from the duelist list, so **deck size is a consequence of a file you can read** — 12 concepts × 5 elements = 60. Enemy cards are all `basic` — not because the colour is thrown away (it is read and carried) but because MECHANICS.md has affixes *transforming* a basic deck into an element, so a colour typed into that file would pre-empt a mechanic that does not exist.
-  - **Cost, category and damage are deliberately *not* in either**; they are rules and live in `internal/combat`, which cannot import `data`. **So a separate enemy file cannot yet give an enemy Strike a different cost** — that is a rules change, not a data one. The JSON's `CostTier` is documentation *with a check*: `data.CheckCostTiers` asserts every declared tier and category against `ActionKind.Cost()`/`.Category()` and both deck builders **panic at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
-- `internal/decks/` — **the opponent's deck, and the only package between `data` and `internal/combat`**. It exists so the combat screen and `tools/balance` share one enemy deck: the balance tool plays whole duels headlessly and cannot import `internal/screens`, which links Ebitengine. **No Ebitengine here, ever**, for that reason. `EnemyPile` is the three piles plus a shuffle; **the enemy's hand does not persist between rounds**, unlike the player's, because a style only takes attacks plus a Guard or Gather and everything else would accumulate until the hand locked up — which it did. The player's hand may persist because Discard exists, and that is the lever an enemy has not got.
+  - **The two card lists are one shape, tuned separately.** Concepts, the family and category each declares, the elements each ships in, and how many copies. `startingDeck` is built from the duelist list, so **deck size is a consequence of a file you can read** — 9 attacks × 4 colours plus 3 plans × 4 copies = **48**. **No player card is drab except the plans** *(2026-08-15)*: attacks are always coloured, and the plans are basic because nothing they do is elemental. One consequence worth knowing before touching the combo table — four copies is the ceiling, so a Barrage is the top of the hand ladder and is always a Rainbow. Enemy cards are `Attack` and `Heavy` and nothing else, all `basic` — not because the colour is thrown away (it is read and carried) but because MECHANICS.md has affixes *transforming* a basic deck into an element, so a colour typed into that file would pre-empt a mechanic that does not exist. **Every plan style therefore collapses to brute**, since the warden asks for a Defend by name and the tactician for a Prepare.
+  - **Cost, category, family and damage are deliberately *not* in either**; they are rules and live in `internal/combat`, which cannot import `data`. **So a separate enemy file cannot yet give an enemy Strike a different cost** — that is a rules change, not a data one. The JSON's `CostTier`, `Category` and `Family` are documentation *with a check*: `data.CheckCostTiers` asserts all three against `ActionKind.Cost()`/`.Category()`/`.Family()` and both deck builders **panic at package init** on any disagreement. A deck quietly five cards short is a balance change nobody made, so it fails on launch instead. Concept names are joined to the rules by `combat.ParseAction`, which reports failure rather than falling back.
+- `internal/decks/` — **the opponent's deck, and the only package between `data` and `internal/combat`**. It exists so the combat screen and `tools/balance` share one enemy deck: the balance tool plays whole duels headlessly and cannot import `internal/screens`, which links Ebitengine. **No Ebitengine here, ever**, for that reason. `EnemyPile` is the three piles plus a shuffle; **the enemy's hand does not persist between rounds**, unlike the player's, because a style only takes attacks plus a Defend or Prepare and everything else would accumulate until the hand locked up — which it did. The player's hand may persist because Discard exists, and that is the lever an enemy has not got.
 - `internal/models/` — plain data structs with no behaviour (`Button`). Constructors only.
 - `internal/systems/` — the behaviour for models, split as `Update*` and `Draw*` free functions taking `(gs, ...)`. `models.Button` + `systems.UpdateButton`/`DrawButton` is the reference example of this model/system split; follow it for new widgets.
 - `internal/entities/` — game-world actors (`Combatant`, embedding `combat.Duelist`), hydrated from `data` records at scene init.
@@ -742,19 +756,21 @@ Key conventions:
   per frame.
 - `internal/music/` — the score, **synthesised at startup from a MIDI file**. See the section below; the short version is that `smf.go` and `synth.go` are pure arithmetic and tested, and only `music.go` touches Ebitengine's audio.
 - `internal/screens/combat_demo_{on,off}.go` — the scripted-demo driver, behind `demoplay`. Same two-file shape, and it lives beside the screen it drives rather than in a package of its own because it reaches into that screen's own methods (`toggle`, `startRound`). It holds its script in package state so `combat.go` gains only two call sites. **It may never change an outcome**, the same constraint as trace and idle.
-- `internal/combat/` — the duel rules, **the elements and their statuses, the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **`combat.Card` is a concept plus an element and is the unit the whole package deals in** — `[]Card` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor` and `CostOf`, which is what let the screen's own `element` type and card struct be deleted rather than mapped. `status.go` holds the four statuses; they share one lifecycle on purpose and `Duelist.Statuses` is an array indexed by element, which makes **`Element` append-only** the same way `ActionKind` and `GlyphKind` are. **A planner takes the hand it was dealt** — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **A turn resolves exactly one attack, and combos are how it is scored** *(2026-08-14)*. `resolveAttackPhase` announces every attack card, then `AttackFor` reads them as a *set* and returns one blow: `Σ Damage(cards in the hand) + Strike.Damage(Str) × (hand + mix)`, where the two multipliers **add**. Attack cards that build no hand are announced and contribute nothing. **The catalogue is two axes, not a list**: `data/combos.json` holds six *hands* (copies of a concept — pair through onslaught) and five *mixes* (distinct non-basic colours — drab through rainbow), `combo_table.go` turns them into rules, and `combo.go` holds the vocabulary and the matcher. Exactly one hand and exactly one mix apply, which is what retired the family/tier machinery: a hand wins on its multiplier, and the mixes name exact colour counts that partition every hand. **Matching is counted only** — the `run` match kind was dropped, so nothing in the game reads card order any more. One closed reward vocabulary (damage multiplier, banked AP, stagger). **Adding a combo is one entry in the JSON**; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. **This is the one file in `data/` that the rules themselves read**, and the only reason `internal/combat` imports that package — see the layering note below. A malformed catalogue panics at init, exactly as a mis-declared cost tier does — including a gap in the mixes' colour counts, since a hand the engine cannot name is the one failure this model can produce. **Defends reduce rather than negate** and compose multiplicatively, order unread; **lightning is a roll**. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
+- `internal/combat/` — the duel rules, **the elements and their statuses, the opponent's planners, and the combo table**. **No Ebitengine import, ever.** **`combat.Card` is a concept plus an element and is the unit the whole package deals in** — `[]Card` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor` and `CostOf`, which is what let the screen's own `element` type and card struct be deleted rather than mapped. `status.go` holds the four statuses; they share one lifecycle on purpose and `Duelist.Statuses` is an array indexed by element, which makes **`Element` append-only** the same way `ActionKind` and `GlyphKind` are. **A planner takes the hand it was dealt** — `PlanFor(style, duelist, hand)` — so a style is how a hand is *played*, not what is played, and a brute that draws no Heavy does not swing one. The shuffle that produced the hand stays outside this package, in `internal/decks`, which is what keeps the rules free of randomness and of a clock. `ResolveRound` returns an event log plus the end state; the screen replays it and never computes an outcome. It is tested because it needs no window — and that property, not the package name, is the rule. `internal/music` and `internal/cards` are tested for the same reason. `internal/screens` has three small tests too, which is a **deliberate narrow exception**: they compare constants and walk switch statements, create no `ebiten.Image`, and run headless. They exist because they guard cross-package invariants a compiler cannot see — the card footprint against the renderer, the element and category mappings, the deck row's sort and geometry. Do not read them as licence to test the rest of the screen, and do not reach for a window to keep one alive. **Two categories, four families** *(2026-08-15)*. `Category` is attack/plan and says *when* a card resolves; `Family` is stab/slash/crush/plan and says what kind of card it is. The attack set is a 3x3 ladder — three families by three tiers at 1/2/3 AP for 0.5x/1x/2x damage, identical across the families — plus three plans on the same 1/2/3 ladder: Prepare (1 AP, banks 2), Plan (2 AP, widens next round's hand by two) and Defend (3 AP, halves the blow). **Nothing reduces a blow to zero, and that is a rule** — a turn lands one figure however many cards made it, so total negation would be a whole opposing turn deleted by one card. `FamilyNone` is a real answer and belongs to the opponent's two cards, `Attack` and `Heavy`. **A turn resolves exactly one attack, and combos are how it is scored** *(2026-08-14)*. `resolveAttackPhase` announces every attack card, then `BlowFor` reads them as a *set* and returns one blow: `Σ Damage(cards in the hand) + Strike.Damage(Str) × (hand + mix)`, where the two multipliers **add**. Attack cards that build no hand are announced and contribute nothing. **The catalogue is two axes, not a list**: `data/combos.json` holds five *hands* (copies of a concept — pair through barrage) and five *mixes* (distinct non-basic colours — drab through rainbow), `combo_table.go` turns them into rules, and `combo.go` holds the vocabulary and the matcher. Exactly one hand and exactly one mix apply, which is what retired the family/tier machinery: a hand wins on its multiplier, and the mixes name exact colour counts that partition every hand. **Matching is counted only** — the `run` match kind was dropped, so nothing in the game reads card order any more. One closed reward vocabulary (damage multiplier, banked AP, stagger). **Adding a combo is one entry in the JSON**; adding a *reward kind* is a field on `Effect` plus one place applying it, and that cost is charged on purpose. **This is the one file in `data/` that the rules themselves read**, and the only reason `internal/combat` imports that package — see the layering note below. A malformed catalogue panics at init, exactly as a mis-declared cost tier does — including a gap in the mixes' colour counts, and including a missing `high-card` entry, since a hand the engine cannot name is the one failure this model can produce. **The High Card is the one-card hand at no multiplier**: when nothing was built, the hardest-hitting attack card is the blow and what lands is its face damage. It is fallen back to rather than matched, because counting picks the commonest concept and not the biggest card. **Defends reduce rather than negate** and compose multiplicatively, order unread; **lightning is a roll**. **The rules cannot draw a card** — there is no deck in the package — so Plan records `Duelist.BonusDraw` and emits `KindDrew`, and the screen's `handTarget` honours it on the next refill. It is assigned rather than added to at the round boundary, so a Plan widens exactly one hand. See `MECHANICS.md`. **Never change these rules to make a screen look right** — if a screen contradicts the engine, say so and let the owner decide which one is wrong. That is a game-design call, and it ripples into the tests and the balance.
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **The combat screen is eight files.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit does not start by finding your place in 2,000 lines. Grouped by what a change is usually about:
   - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
-  - `combat_deck.go` — the cards and the piles: `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, Sift's random discard, and the deck overlay. **`actionCard` is an alias for `combat.Card`** — elements are rules, so the hand, the queue and the round are one type and a card is never converted between them.
-    **The overlay shows every card you own**, in five rows of one element each, at
+  - `combat_deck.go` — the cards and the piles: `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, and the deck overlay. **`actionCard` is an alias for `combat.Card`** — elements are rules, so the hand, the queue and the round are one type and a card is never converted between them.
+    **The overlay shows every card you own**, in four colour rows plus a row of plans, at
     `cards.Mini` overlapped so all but six pixels of each shows. Two rules govern it and
     both have been broken once: *a card does not move when it is played, it only dims* — so
     the hand is included rather than excluded, and availability is the **last** sort key,
     never the first — and the pitch is a constant sized for a full row, never derived from
-    how many cards are currently in one. Rows sort attack, defend, prepare, cheapest first;
-    `categoryRank` is written out rather than read off the enum, because the enum's order is
-    *resolution* order and that is a rule.
+    how many cards are currently in one. Rows sort stab, slash, crush, plan, cheapest first;
+    `familyRank` is written out rather than read off the enum, because the enum's order is what
+    an expanded combo ID is derived from and that is a rule. It sorts on **family** rather than
+    category because category has two values now, and sorting by it would put nine cards in one
+    undifferentiated block.
   - `combat_panes.go` — Action Flow and Resolution: the placements and colours, `paneRow`, `drawPane`, `resolutionLines`, and the prose that turns an event into a sentence.
   - `combat_hud.go` — everything around the round: the two fighter cards, `drawBox`, and the discards badge. **Both duelists are cards**, in opposite top corners, each holding name / DMG / AP / Vitae over a health bar and a fraction. `duelistCardRect` and `enemyCardRect` are the one place each geometry is written, and the ring row takes both of its edges from them.
   - `combat_rings.go` — **the ring row**: full-size `cards.RingStyle` cards from `data/rings.json`, a rule under them running the row's width, and the cap written as `worn/5` on that rule's right end. **A layout sketch, not a mechanic** — nothing buys, equips or reads a ring. It holds the 12–46% band, which is what pays for full-size ring cards. **Its width is what the two fighter cards leave** — `ringPaneRect` reads `duelistCardRect` and `enemyCardRect` rather than a percentage, so the right edge cannot go stale when a card moves. Two things it does deliberately: **a fill, never a frame** — a plain grey backing one step lighter than the screen, no border, no title, no hue, because a framed row reads as cards trapped in a panel while a bare row leaves nothing saying where the middle begins; and **the row drops 10px below the two cards** so the three do not share a top line and read as one wide object. The backing must never reach either card — `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards`. And **the pitch is a function of how many rings are worn**, first card flush left and last flush right, so three stand apart and five close up and overlap by ~26px. Overlap rather than shrink, because a card cannot be scaled and there is no ring style below this one.
@@ -776,7 +792,10 @@ Key conventions:
   - `combat_table.go` — **the two hands facing each other**: the
     player's played cards left-aligned, the opponent's queued cards right-aligned, both full
     size in the band between the ring row and the Resolution feed. It is what shows a round as
-    a confrontation rather than as a list. Both rows come
+    a confrontation rather than as a list. **Each row breaks between its attacks and its plans**
+    (`tableGroupGap`), and the split is read off `combat.ResolutionOrder` rather than counted
+    here — the gap is spent out of the same half-width, so it costs overlap rather than width
+    and the two hands still cannot meet. Both rows come
     from `combat.ResolutionOrder`, so both say what *will* happen rather than what was planned.
     **The opponent's cards are drawn face up and that is temporary** — `concealEnemy` is
     the screen's concealment predicate and this row deliberately ignores it, on the owner's

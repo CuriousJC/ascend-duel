@@ -1,88 +1,101 @@
 [
   {
-    "Concept": "Gather",
-    "Category": "prepare",
+    "Concept": "Jab",
+    "Category": "attack",
+    "Family": "stab",
     "CostTier": 1,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
   {
-    "Concept": "Sift",
-    "Category": "prepare",
+    "Concept": "Thrust",
+    "Category": "attack",
+    "Family": "stab",
     "CostTier": 2,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
   {
-    "Concept": "Guard",
-    "Category": "prepare",
+    "Concept": "Lunge",
+    "Category": "attack",
+    "Family": "stab",
     "CostTier": 3,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
-    "Copies": 1
-  },
-  {
-    "Concept": "Ritual",
-    "Category": "prepare",
-    "CostTier": 4,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
 
   {
-    "Concept": "Jab",
+    "Concept": "Cut",
     "Category": "attack",
+    "Family": "slash",
     "CostTier": 1,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Slash",
+    "Category": "attack",
+    "Family": "slash",
+    "CostTier": 2,
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+  {
+    "Concept": "Cleave",
+    "Category": "attack",
+    "Family": "slash",
+    "CostTier": 3,
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 1
+  },
+
+  {
+    "Concept": "Bash",
+    "Category": "attack",
+    "Family": "crush",
+    "CostTier": 1,
+    "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
   {
     "Concept": "Strike",
     "Category": "attack",
+    "Family": "crush",
     "CostTier": 2,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
   {
-    "Concept": "Feint",
+    "Concept": "Smash",
     "Category": "attack",
+    "Family": "crush",
     "CostTier": 3,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
-    "Copies": 1
-  },
-  {
-    "Concept": "Heavy",
-    "Category": "attack",
-    "CostTier": 4,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
 
   {
-    "Concept": "Brace",
-    "Category": "defend",
+    "Concept": "Prepare",
+    "Category": "plan",
+    "Family": "plan",
     "CostTier": 1,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
-    "Copies": 1
+    "Elements": ["basic"],
+    "Copies": 4
   },
   {
-    "Concept": "Dodge",
-    "Category": "defend",
+    "Concept": "Plan",
+    "Category": "plan",
+    "Family": "plan",
     "CostTier": 2,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
-    "Copies": 1
+    "Elements": ["basic"],
+    "Copies": 4
   },
   {
-    "Concept": "Riposte",
-    "Category": "defend",
+    "Concept": "Defend",
+    "Category": "plan",
+    "Family": "plan",
     "CostTier": 3,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
-    "Copies": 1
-  },
-  {
-    "Concept": "Retreat",
-    "Category": "defend",
-    "CostTier": 4,
-    "Elements": ["basic", "fire", "ice", "lightning", "earth"],
-    "Copies": 1
+    "Elements": ["basic"],
+    "Copies": 4
   }
 ]

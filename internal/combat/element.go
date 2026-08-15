@@ -12,7 +12,7 @@ package combat
 //
 // **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for combo
 // and discount purposes and applies nothing. The alternative was every card applying its status,
-// which would make the 1-AP Jab and the 1-AP Gather equally good status delivery and turn the
+// which would make the 1-AP Jab and the 1-AP Prepare equally good status delivery and turn the
 // prepare phase into the status engine. The cost of the rule chosen: element is mechanically
 // inert on the eight concepts that are not attacks, and it buys them nothing until rings land.
 

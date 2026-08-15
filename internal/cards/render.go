@@ -94,8 +94,10 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if s.Art != nil {
 		drawArt(img, s, st)
 	}
-	if st.ShowCategory {
-		drawCategory(img, s, st)
+	if st.ShowFamily {
+		if err := drawFamily(img, s, st, f, ink); err != nil {
+			return nil, err
+		}
 	}
 
 	drawDashes(img, s, st, border)
@@ -114,8 +116,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // needsFont reports whether this style draws any text at all. A Mini card does not, and
 // requiring a parsed font to render one would make the deck overlay depend on something
 // it never uses.
+// **ShowFamily is in the list now** *(2026-08-15)*: the corner mark is a typeset letter until the
+// families have glyphs, so a style that draws one needs a font exactly as a name does.
 func (st Style) needsFont() bool {
-	return st.ShowName || st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0
+	return st.ShowName || st.ShowFamily ||
+		st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0
 }
 
 // drawStats writes the labelled figures down the face: label against the left margin,
@@ -181,58 +186,95 @@ func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.R
 
 func identity(c color.RGBA) color.RGBA { return c }
 
-// drawCategory draws the phase glyph above the cost stack: a sword for attack, a shield
-// for defend, an open book for prepare.
+// drawFamily marks the card's family in the corner above the cost stack: an uppercase letter
+// today — S, D, C, P — and a silhouette once the families have one.
 //
-// **It replaced the category word.** The word was the card's most load-bearing fact and
-// also the least visible thing on it — small, grey, and set in the same typeface as the
-// name directly above it. A silhouette is read before any text is.
+// **It replaced the phase glyph** *(2026-08-15)*. The sword, shield and open book named which
+// phase a card resolved in, and with the deck rebuilt on three attack families that fact became
+// derivable from the family itself. What the corner says now is the thing a pair is counted on.
+//
+// **The letters are scaffolding and the glyph path is why they can be.** `Family.glyph()` returns
+// nothing for every family, so every card falls through to `Family.Letter()`; drawing the art
+// instead is one return value and no change here. See the comment on that method.
 //
 // **Placed by its ink, not by its canvas** *(2026-08-14)*. Every glyph is drawn on a square
-// canvas and none of them fills it: the sword's ink starts 7 across and 9 down, the shield's 7
-// and 5, and each is a different size inside it. Anchoring the canvas therefore put three
-// different shapes in three different places from one pair of constants, which is why the
-// three read as badly aligned when they are all at 0,0.
+// canvas and none of them fills it: the sword's ink started 7 across and 9 down, the shield's 7
+// and 5, and each was a different size inside it. Anchoring the canvas therefore put three
+// different shapes in three different places from one pair of constants. A typeset letter is
+// worse again — a "C" and a "P" have different bearings and different heights — so the letter
+// goes through exactly the same centring.
 //
-// This centres each glyph's *inked bounds* in the box the style names, so what lines up is
-// what you can see. The cost is one bounds scan per rendered card, on a 32-pixel image, behind
-// the screen's card cache.
-//
-// **Its offsets may be negative, and blitGlyph crops to the card's curve** so a glyph placed
-// hard into the corner cannot square it off.
-func drawCategory(dst *image.RGBA, s Spec, st Style) {
-	kind, ok := s.Category.glyph()
-	if !ok {
-		return
+// **Its offsets may be negative, and blitGlyph crops to the card's curve** so a mark placed hard
+// into the corner cannot square it off.
+func drawFamily(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
+	if s.Family == FamilyNone || st.FamilySize <= 0 {
+		return nil
 	}
-	// Measured, never assumed. The three category glyphs are one size today, and SizeOf is
-	// still the authority — assuming a size here is how a small glyph gets a large hole.
-	size := systems.SizeOf(kind) * st.GlyphScale
-	glyph := systems.RenderGlyph(kind, systems.PaletteWhite)
 
-	box := image.Rect(st.GlyphInset, st.CategoryGlyphTop,
-		st.GlyphInset+size, st.CategoryGlyphTop+size)
+	box := image.Rect(st.GlyphInset, st.FamilyTop,
+		st.GlyphInset+st.FamilySize, st.FamilyTop+st.FamilySize)
 
-	ink := inkBounds(glyph)
+	if kind, ok := s.Family.glyph(); ok {
+		glyph := systems.RenderGlyph(kind, systems.PaletteWhite)
+		at := placeInk(dst, glyph, box, st.GlyphScale, st)
+		if !s.Enabled && !at.Empty() {
+			// Glyphs carry a five-value palette that cannot be dimmed by choosing a duller ink,
+			// so a disabled card fades one in place. A letter needs none of that — it is drawn in
+			// the state's ink to begin with.
+			fadeRegion(dst, at, glyphDisabledToward)
+		}
+		return nil
+	}
+
+	letter := s.Family.Letter()
+	if letter == "" || st.FamilyLetterSize <= 0 {
+		return nil
+	}
+	img, err := letterImage(f, st.FamilyLetterSize, letter, ink(NameInk), st.FamilySize)
+	if err != nil {
+		return err
+	}
+	placeInk(dst, img, box, 1, st)
+	return nil
+}
+
+// letterImage typesets one character onto a transparent square, for placeInk to position.
+//
+// **The canvas is generous rather than tight**, because where a letter's ink lands inside a line
+// box is the font's business: an offset that fits "S" clips the descender off something else.
+// placeInk throws the margin away, so the only cost of being generous is a wider bounds scan on
+// an image the card cache renders once.
+func letterImage(f *Faces, size float64, s string, c color.RGBA, box int) (*image.RGBA, error) {
+	canvas := box * 3
+	img := image.NewRGBA(image.Rect(0, 0, canvas, canvas))
+	if err := drawText(img, f, size, s, box, box, c); err != nil {
+		return nil, err
+	}
+	return img, nil
+}
+
+// placeInk composites src so its *inked* bounds come out centred in box, clipped to the card's
+// own rounded silhouette. It returns the rectangle the ink landed in, which is what a fade pass
+// has to walk — the canvas around it is transparent and fading it would fill in the corner
+// blitGlyph just protected.
+func placeInk(dst *image.RGBA, src *image.RGBA, box image.Rectangle, scale int, st Style) image.Rectangle {
+	ink := inkBounds(src)
 	if ink.Empty() {
-		return
+		return image.Rectangle{}
 	}
-	ink = image.Rectangle{
-		Min: ink.Min.Mul(st.GlyphScale),
-		Max: ink.Max.Mul(st.GlyphScale),
-	}
+	ink = image.Rectangle{Min: ink.Min.Mul(scale), Max: ink.Max.Mul(scale)}
 
 	// Where the canvas has to sit for the ink to come out centred in the box.
-	at := box.Sub(ink.Min).Add(image.Pt(
+	at := box.Min.Sub(ink.Min).Add(image.Pt(
 		(box.Dx()-ink.Dx())/2,
 		(box.Dy()-ink.Dy())/2,
 	))
-	at.Max = at.Min.Add(image.Pt(size, size))
 
-	blitGlyph(dst, at, glyph, st.GlyphScale, st)
-	if !s.Enabled {
-		fadeRegion(dst, at, glyphDisabledToward)
-	}
+	b := src.Bounds()
+	blitGlyph(dst, image.Rectangle{Min: at, Max: at.Add(image.Pt(b.Dx()*scale, b.Dy()*scale))},
+		src, scale, st)
+
+	return image.Rectangle{Min: at.Add(ink.Min), Max: at.Add(ink.Max)}
 }
 
 // inkBounds is the smallest rectangle holding every non-transparent pixel of a glyph.

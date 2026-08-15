@@ -5,8 +5,8 @@
 //
 // It exists for the same reason tools/glyphsheet does: **the art can be reviewed by
 // opening a file instead of by launching the game**, and in the card's case launching
-// the game is worse than usual — seeing a lightning Riposte you cannot afford means
-// dealing yourself the hand that contains one. This renders that card directly.
+// the game is worse than usual — seeing a lightning Cleave you cannot afford means dealing
+// yourself the hand that contains one. This renders that card directly.
 //
 // It needs no graphics context, because internal/cards draws into a plain Go image. That
 // is the whole reason the package was split out of internal/screens, and it is the same
@@ -104,21 +104,25 @@ func run(dir string) error {
 		page.Borders = append(page.Borders, row)
 	}
 
-	// Section two: the three category glyphs, which is the only axis where the *art* is
+	// Section two: the four family marks, which is the only axis where the *mark* is
 	// what varies rather than a colour or a count.
-	catRow := row{Label: "category glyph"}
-	for _, c := range cards.Categories() {
+	//
+	// **They are letters rather than art** *(2026-08-15)*, so this row is where the placeholder
+	// gets judged: four capitals have to be told apart in a corner at a glance, and S against D
+	// against C is the pairing that decides whether they can be lived with until glyphs land.
+	famRow := row{Label: "family mark"}
+	for _, fam := range cards.Families() {
 		spec := specFor("Strike", cards.Fire)
-		spec.Category = c
+		spec.Family = fam
 		cell, err := write(dir, faces, spec, cards.Hand,
-			fmt.Sprintf("category-%s.png", c),
-			fmt.Sprintf("%s — %s", c, glyphNames[c]))
+			fmt.Sprintf("family-%s.png", fam),
+			fmt.Sprintf("%s — %s", fam, familyNotes[fam]))
 		if err != nil {
 			return err
 		}
-		catRow.Cells = append(catRow.Cells, cell)
+		famRow.Cells = append(famRow.Cells, cell)
 	}
-	page.Categories = append(page.Categories, catRow)
+	page.Families = append(page.Families, famRow)
 
 	// Section three: the states. These are here because the redesign changed how they have
 	// to work — the surface used to be the element colour and dimming it was the whole
@@ -154,7 +158,7 @@ func run(dir string) error {
 	for _, spec := range realCards() {
 		cell, err := write(dir, faces, spec, cards.Hand,
 			fmt.Sprintf("shape-%s.png", spec.Name),
-			fmt.Sprintf("%s · %s · %d AP", spec.Name, spec.Category, spec.Cost))
+			fmt.Sprintf("%s · %s · %d AP", spec.Name, spec.Family, spec.Cost))
 		if err != nil {
 			return err
 		}
@@ -346,20 +350,20 @@ type stack struct {
 }
 
 type page struct {
-	Ground     string
-	Style      map[string]int
-	Borders    []row
-	Categories []row
-	States     []row
-	Shapes     []row
-	Backs      []row
-	Deck       []stack
-	Rings      []row
+	Ground   string
+	Style    map[string]int
+	Borders  []row
+	Families []row
+	States   []row
+	Shapes   []row
+	Backs    []row
+	Deck     []stack
+	Rings    []row
 }
 
 func (p page) count() int {
 	n := 0
-	for _, rs := range [][]row{p.Borders, p.Categories, p.States, p.Shapes, p.Backs, p.Rings} {
+	for _, rs := range [][]row{p.Borders, p.Families, p.States, p.Shapes, p.Backs, p.Rings} {
 		for _, r := range rs {
 			n += len(r.Cells)
 		}

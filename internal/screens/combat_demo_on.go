@@ -45,7 +45,7 @@ import (
 // `fighterActions`, which produced a screen state the game itself cannot be in: a queue with no
 // cards behind it. That was survivable while a played card went to a pile in the corner — the
 // pile was simply empty — and it stopped being survivable when the table arrived. Half the
-// table sat blank while the Resolution feed narrated the Duelist gathering and striking, which
+// table sat blank while the Resolution feed narrated the Duelist preparing and striking, which
 // is the demo lying about the one thing it now exists to show.
 //
 // The rule it broke is the one worth keeping: **the demo drives this screen the way a player
@@ -53,8 +53,8 @@ import (
 // captures cannot be trusted, and it had already been documented as producing "an empty corner"
 // rather than being fixed.
 //
-// What it cost is the fixed script. Round two asked for a specific Gather, Riposte and Strike,
-// and the hand dealt after round one's discard is not something the seed pins — so it picks
+// What it cost is the fixed script. Round two asked for three named cards by concept, and the
+// hand dealt after round one's discard is not something the seed pins — so it picks
 // **one card of each category** out of whatever it is holding instead. That still covers all
 // three verbs, which is what round two is for, and covers them by construction rather than by a
 // list that can go stale. An eight-card hand off a twelve-concept deck nearly always holds one

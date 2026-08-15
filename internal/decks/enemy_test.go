@@ -18,8 +18,8 @@ func testEnemy() combat.Duelist {
 
 func TestAnEnemyKeepsActingForAWholeDuel(t *testing.T) {
 	// **The bug this was written for.** The first version kept the opponent's hand between
-	// rounds, the way the player's does. A style only ever takes attacks plus a Guard or a
-	// Gather, so everything it could not use stayed put: by round three the hand was seven
+	// rounds, the way the player's does. A style only ever takes attacks plus a Defend or a
+	// Prepare, so everything it could not use stayed put: by round three the hand was seven
 	// dead cards, nothing could be drawn on top of them, and the enemy stood still for the
 	// rest of the duel. tools/balance reported it as a roster nothing could lose to, which is
 	// exactly the kind of silent balance failure that tool exists to catch.
@@ -104,9 +104,9 @@ func TestEnemyCardsCannotBeEditedByACaller(t *testing.T) {
 	// would be reordering what every future duel is dealt — and the package-level list is
 	// built once at init, so the damage would outlive whatever did it.
 	// Overwritten with a card the enemy deck does not contain, rather than by swapping two
-	// entries. The list opens with four Gathers, so a swap of the first two is a no-op in
-	// value terms and the test passed whether or not the copy was real.
-	notInDeck := combat.Plain(combat.Retreat)
+	// entries. The list opens with a run of identical cards, so a swap of the first two is a
+	// no-op in value terms and the test passed whether or not the copy was real.
+	notInDeck := combat.Plain(combat.Cleave)
 
 	first := EnemyCards()
 	if len(first) == 0 {

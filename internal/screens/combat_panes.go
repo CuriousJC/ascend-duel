@@ -398,13 +398,46 @@ func (s *CombatScene) updateFeed(gs *state.GlobalState) {
 // It reports how many lines it dropped off the top as well as the rows themselves, so the
 // caller can say so — with a marker line when there is room for one, and with the arrow in
 // the corner when there is not.
+// planningLines is what the pane holds before a round has been resolved: the prompt, and above
+// it the combo the current selection has already formed.
+//
+// **The pane records and does not propose — with one standing exception, and this joins it.**
+// `(press DUEL!)` was already a line telling the player what to do, because the caption box that
+// used to say it is gone and this is the only text on the screen with room. The preview goes in
+// the same place for the same reason, and it costs nothing the rule was protecting: the pane is
+// empty while planning, so nothing is being said twice, and the moment the round resolves these
+// lines are replaced by the record.
+//
+// **It reads the way the fired line will read** — same amber swatch, same COMBO! prefix, same
+// name from the same catalogue — so forming a hand and watching it land are recognisably the
+// same event. What it deliberately does not carry is the arithmetic: `Base` and `Swing` are the
+// resolver's, worked out against a strength and a shock roll that have not happened, and a
+// figure printed here that the round then contradicted would be worse than no figure.
+func (s *CombatScene) planningLines() []paneRow {
+	prompt := paneRow{prefix: "(press DUEL!)"}
+
+	blow, ok := s.previewAttack()
+	if !ok {
+		return []paneRow{prompt}
+	}
+
+	return []paneRow{
+		{
+			prefix: "COMBO! " + comboNameOf(blow.Hand, blow.Mix) +
+				" x" + multiplierText(blow.Multiplier),
+			swatch: comboSwatch,
+		},
+		prompt,
+	}
+}
+
 func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markOverflow bool) ([]paneRow, int) {
 	end := s.cursor + 1
 	if end > len(s.log) {
 		end = len(s.log)
 	}
 	if end <= 0 {
-		return []paneRow{{prefix: "(press DUEL!)"}}, 0
+		return s.planningLines(), 0
 	}
 
 	var rows []paneRow
@@ -1029,7 +1062,15 @@ func comboName(e combat.Event) string {
 	if !ok {
 		return "attack"
 	}
-	if mix, ok := combat.MixByID(e.Mix); ok && mix.Colours > 0 {
+	mix, _ := combat.MixByID(e.Mix)
+	return comboNameOf(hand, mix)
+}
+
+// comboNameOf is the same name built from the hand and mix themselves, for the preview the hand
+// row draws while the player is still choosing. **One namer, two callers**: a preview that named
+// a combo differently from the feed that reports it would be two vocabularies for one thing.
+func comboNameOf(hand combat.Hand, mix combat.Mix) string {
+	if mix.Colours > 0 {
 		return mix.Name + " " + hand.Name
 	}
 	return hand.Name

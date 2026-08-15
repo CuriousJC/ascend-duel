@@ -109,18 +109,22 @@ func buildEnemyCards() []combat.Card {
 // sometimes cannot find what it wants.
 const EnemyHandSize = 7
 
-// EnemySeed fixes the opponent's shuffle, so every launch and every balance run deals the
-// same cards.
+// EnemySeed is the *pinned* opponent shuffle, so every balance run deals the same cards.
 //
-// **A separate stream from the player's deckSeed, and that is the point.** CLAUDE.md's
-// determinism rules name "card shuffles" as one stream; sharing one between the two sides
-// would make the player's opening hand a function of how many cards the enemy happened to
-// draw, and every entry in `internal/screens/seeds.go` would break the first time an enemy
-// deck was retuned. A named hand has to stay a fact about the player's deck alone.
+// **The game no longer reads it by default.** A fight seeds the opponent's pile from the run
+// seed — see `shuffleSeeds` in internal/screens — and falls back to this only while `deckSeed`
+// pins the player's hand, because pinning half a duel reproduces nothing. `tools/balance` uses
+// it unconditionally: a balance number that moved because the shuffle moved is not a balance
+// number.
+//
+// **A separate stream from the player's deck, and that is the point.** CLAUDE.md's determinism
+// rules name "card shuffles" as one stream; sharing one between the two sides would make the
+// player's opening hand a function of how many cards the enemy happened to draw, and every
+// entry in `internal/screens/seeds.go` would break the first time an enemy deck was retuned. A
+// named hand has to stay a fact about the player's deck alone.
 //
 // It lives here rather than beside deckSeed so the game and tools/balance cannot end up
-// fighting differently shuffled opponents. Like deckSeed it is a placeholder for the per-run
-// seed described in TODO.md.
+// fighting differently shuffled opponents.
 const EnemySeed int64 = 20260811
 
 // EnemyPile is one opponent's deck through a duel: a draw pile, a hand, and a discard.

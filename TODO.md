@@ -326,9 +326,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       `main` and logged; enemy selection is the first stream reading it. Without a way to see a
       seed and type one back, replayable runs are invisible to the player.
       - **This is the one typed-text field in the whole game**, per the input vocabulary.
-      - The two card shuffles still read fixed constants — `deckSeed` on the scene and
-        `decks.EnemySeed` — and both become `RunSeed`-derived when `Session` lands. Each salts
-        its own source; never share one.
+      - Both card shuffles read `RunSeed` now, salted per side and per fight by
+        `CombatScene.shuffleSeeds`, so a typed seed already reaches the cards. `deckSeed` is
+        the debugging pin over the top of it.
 - [ ] **Don't pre-roll into a fixed array — keep a seeded stream per concern.** A
       `*rand.Rand` seeded once *is* an infinite deterministic list; a pre-generated slice
       is just the first N entries of it, and N has to be guessed. The endless tower has

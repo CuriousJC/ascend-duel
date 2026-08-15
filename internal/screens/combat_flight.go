@@ -585,11 +585,15 @@ func (s *CombatScene) seatPlayedCards() {
 // so the lit cards walk the left row and then the right one; nothing has to clear the other
 // side's seats because the event that lights one side is the event that unlights the other.
 //
-// **Attack cards accumulate; everything else replaces** *(2026-08-14)*. A turn lands one blow, so
-// its attack cards are announced one after another and stay raised as they go — by the time the
-// combo lands, the whole hand is up, which is the thing the feed's single line is talking about.
-// noteCombo then drops whichever of them earned nothing. A prepare or a defend is its own beat
-// and takes the row on its own.
+// **The whole attack hand goes up at once; everything else replaces** *(2026-08-15)*. A turn
+// lands one blow, and the blow is the set — so the first attack announcement raises every attack
+// card of that turn rather than each one climbing on its own beat. What the beats then say is how
+// long the phase takes, not which card is acting, because no single card is: watching four cards
+// rise one at a time reads as four attacks, which is the model this replaced.
+//
+// It is recomputed rather than accumulated, so every later announcement in the phase names the
+// same set and the list cannot drift. noteCombo then drops whichever of them earned nothing.
+// A prepare or a defend is its own beat and takes the row on its own.
 func (s *CombatScene) noteResolved(e combat.Event) {
 	if e.Kind != combat.KindAction {
 		return
@@ -617,9 +621,31 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 	if e.Action.Category() != combat.CategoryAttack {
 		*mine = []int{seat}
 	} else {
-		*mine = append(*mine, seat)
+		*mine = attackSeats(order, side)
 	}
 	*theirs = nil
+}
+
+// attackSeats is every seat in one side's row holding an attack card.
+//
+// It counts along the same walk as noteResolved and seatPlayedCards — a seat is a position in
+// that side's own row, not in the round — so a turn that opens with a Gather still numbers its
+// Strike as seat 1.
+func attackSeats(order []combat.Slot, side combat.Side) []int {
+	var (
+		seats []int
+		seat  int
+	)
+	for _, slot := range order {
+		if slot.Side != side {
+			continue
+		}
+		if slot.Card.Category() == combat.CategoryAttack {
+			seats = append(seats, seat)
+		}
+		seat++
+	}
+	return seats
 }
 
 // lit reports whether a seat is one of the ones currently raised.

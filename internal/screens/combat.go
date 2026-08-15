@@ -102,6 +102,40 @@ const enemySelectSalt = 0x5EED_E9E3
 // inside `internal/combat` rather than around it.
 const combatSalt = 0x5EED_5C0F
 
+// playerDeckSalt and enemyDeckSalt separate the two card shuffles, both from each other and
+// from every other stream off the run seed. **The two sides must never share one**: the
+// player's opening hand would become a function of how many cards the opponent happened to
+// draw, and a named hand in seeds.go has to stay a fact about the player's deck alone.
+const (
+	playerDeckSalt = 0x5EED_DEC4
+	enemyDeckSalt  = 0x5EED_F0E5
+)
+
+// fightStride separates one fight's shuffle from the next within a run. A large odd number so
+// consecutive fights are not consecutive seeds — adjacent seeds are fine for math/rand, but a
+// stride this size also keeps fight N of one run away from fight N+1 of a run seeded one apart.
+const fightStride int64 = 0x2545_F491_4F6C_DD1D
+
+// shuffleSeeds says what the two decks are shuffled from for the fight about to start: the
+// pinned pair if deckSeed is set, otherwise a fresh pair rolled from the run seed.
+//
+// **Pinning is all-or-nothing.** A pinned player deck against a rolled opponent reproduces
+// half a duel, which is worse than reproducing none of it — the hand looks right and the fight
+// still differs, so a problem chased with the pin on cannot be trusted to be the same problem.
+//
+// **Unpinned it is a function of the fight index, not a running stream**, so a defeat and a
+// retry deal the same fight again rather than a different one. That matches the enemy roster,
+// which is rolled once per launch and walked in the same order after a death — the run has no
+// Session yet to re-roll anything, so a retry is a replay of the same fight and both halves
+// of it say so.
+func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) {
+	if deckSeed != 0 {
+		return deckSeed, decks.EnemySeed
+	}
+	fight := int64(s.fightIndex+1) * fightStride
+	return gs.RunSeed ^ playerDeckSalt ^ fight, gs.RunSeed ^ enemyDeckSalt ^ fight
+}
+
 // shuffleWithinFloors reorders a floor-sorted roster inside each run of equal ValidFloors,
 // leaving the bands themselves where they are.
 //
@@ -382,9 +416,10 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.discardsLeft = discardsPerRound
 	s.vitae = startingVitae
 
-	// A fresh deck every visit, shuffled from the same seed, so re-entering the screen
-	// deals the same opening hand rather than continuing a run that has been abandoned.
-	s.rng = rand.New(rand.NewSource(deckSeed))
+	// A fresh deck every visit rather than continuing a run that has been abandoned, and a
+	// fresh *shuffle* per fight — the seeds come from the run seed unless deckSeed pins them.
+	playerSeed, enemySeed := s.shuffleSeeds(gs)
+	s.rng = rand.New(rand.NewSource(playerSeed))
 	s.combatRNG = rand.New(rand.NewSource(gs.RunSeed ^ combatSalt))
 	s.resetDeck()
 
@@ -393,8 +428,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.fighterActions = nil
 	s.drag = nil
 
-	// A fresh shuffled deck for the opponent too, dealt before it plans.
-	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
+	s.enemyPile = decks.NewEnemyPile(enemySeed, decks.EnemyHandSize)
 
 	// A fresh duel: full life, no standing defenses, and no action points banked by a
 	// Gather from a duel that has been walked away from.
@@ -425,8 +460,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	trace.Logf("scene", "fight %d: %s, style %v, %d life, %d AP",
 		s.fightIndex+1, s.enemy.Name, s.enemy.Style,
 		s.enemy.MaxLife, s.enemy.ActionPoints())
-	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seed %d",
-		len(s.deck), len(s.hand), len(s.discard), deckSeed)
+	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seeds player %d enemy %d",
+		len(s.deck), len(s.hand), len(s.discard), playerSeed, enemySeed)
 	s.tracedHand = len(s.hand)
 	s.traceLayout(gs)
 }
@@ -731,6 +766,16 @@ func (s *CombatScene) planEnemyRound() {
 	if !s.fighter.Alive() || !s.enemy.Alive() {
 		return
 	}
+	// **Nothing on a freshly dealt row is firing.** The seat lists are written by playback and
+	// nothing else clears them between rounds, so the last turn's raised cards would come back up
+	// under the new plan — cards the player had not committed, standing as though they had — and
+	// drop again at DUEL!, which is where the lists were being cleared. They are cleared here, on
+	// the same line as the row they describe.
+	//
+	// **After the alive check, not before it.** A finished duel keeps its last round on the table
+	// with the killing blow still raised; that row is the result the player is looking at.
+	s.firingSeats, s.enemyFiringSeats = nil, nil
+
 	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
 	s.seatEnemyCards()
 }

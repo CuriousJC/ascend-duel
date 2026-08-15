@@ -37,6 +37,19 @@ const (
 	tableInset = 24
 	tableGap   = 48
 
+	// tableGroupGap is the clear air a row leaves between its attacks and its plans.
+	//
+	// **The round has two phases and the row now says so** *(2026-08-15)*. Every card in a row
+	// resolves in `combat.ResolutionOrder`, which puts a turn's attacks first and its plans
+	// second — so the boundary is already there and was invisible, and a row of five cards read
+	// as one undifferentiated sequence when it is really "this is what I swing, and then this is
+	// what I do about theirs".
+	//
+	// It is deliberately smaller than `cardGap` doubled: enough to read as a break, not enough to
+	// read as two separate rows. And it is spent out of the same half-width the cards have, so a
+	// full row overlaps by a little more rather than running past the middle.
+	tableGroupGap = 26
+
 	// tableFireLift is how far the card currently resolving rises out of its row.
 	//
 	// **The one thing the row cannot say by itself.** A card used to fly to the middle of the
@@ -74,15 +87,42 @@ func tableHalfWidth(gs *state.GlobalState) int {
 // the derived form matters for the same reason: the cap on how many actions a round holds is
 // a rule that a ring or a brand is expected to raise, so a pitch that only worked for five
 // would put a rendering bug behind a balance change.
-func tablePitch(gs *state.GlobalState, n int) int {
+//
+// **The group gap is taken out of the room before the pitch is worked out**, which is what makes
+// the split cost overlap rather than width: a row that spent the gap on top of a full-width
+// layout would run past the middle of the screen and into the other hand.
+func tablePitch(gs *state.GlobalState, n, split int) int {
 	full := cardWidth + cardGap
 	if n < 2 {
 		return full
 	}
-	if (n-1)*full+cardWidth <= tableHalfWidth(gs) {
+	room := tableHalfWidth(gs) - groupGapFor(n, split)
+	if (n-1)*full+cardWidth <= room {
 		return full
 	}
-	return (tableHalfWidth(gs) - cardWidth) / (n - 1)
+	return (room - cardWidth) / (n - 1)
+}
+
+// groupGapFor is the extra space a row spends on its attack/plan break: one gap, or none if the
+// row is all one kind.
+//
+// `split` is the index the plans start at, which `combat.ResolutionOrder` has already decided —
+// see playedSplit and enemySplit. A split of 0 or of n means every card in the row is on the same
+// side of the boundary, so there is nothing to separate.
+func groupGapFor(n, split int) int {
+	if split <= 0 || split >= n {
+		return 0
+	}
+	return tableGroupGap
+}
+
+// groupShiftFor is how far the nth card is pushed along by the break: the whole gap once the row
+// has crossed into its plans, nothing before that.
+func groupShiftFor(n, split, i int) int {
+	if i < split {
+		return 0
+	}
+	return groupGapFor(n, split)
 }
 
 // playedSeatAt is where the nth of the player's played cards sits: **left-aligned**, the whole
@@ -92,11 +132,12 @@ func tablePitch(gs *state.GlobalState, n int) int {
 // hands are dealt to the table the moment DUEL! is pressed, so the total is known — and a pitch
 // that grew with the row would shuffle every card already sitting there sideways each time
 // another arrived, which reads as the layout twitching rather than as a card being played.
-func playedSeatAt(gs *state.GlobalState, n, total int) image.Point {
+func playedSeatAt(gs *state.GlobalState, n, total, split int) image.Point {
 	if total < 1 {
 		total = 1
 	}
-	return image.Pt(tableInset+n*tablePitch(gs, total), tableRowTop(gs))
+	x := tableInset + n*tablePitch(gs, total, split) + groupShiftFor(total, split, n)
+	return image.Pt(x, tableRowTop(gs))
 }
 
 // enemySeatAt is where the nth of the opponent's queued cards sits: **right-aligned**, the
@@ -106,15 +147,49 @@ func playedSeatAt(gs *state.GlobalState, n, total int) image.Point {
 // the moment the round starts, so it is laid out as a finished hand against its own edge; the
 // player's is revealed a card at a time. Pinning both to the outside edges is what makes them
 // face each other rather than drift toward the middle as they fill.
-func enemySeatAt(gs *state.GlobalState, n, total int) image.Point {
+func enemySeatAt(gs *state.GlobalState, n, total, split int) image.Point {
 	if total < 1 {
 		total = 1
 	}
-	pitch := tablePitch(gs, total)
-	width := (total-1)*pitch + cardWidth
+	pitch := tablePitch(gs, total, split)
+	width := (total-1)*pitch + cardWidth + groupGapFor(total, split)
 	left := gs.ScreenWidth - tableInset - width
 
-	return image.Pt(left+n*pitch, tableRowTop(gs))
+	return image.Pt(left+n*pitch+groupShiftFor(total, split, n), tableRowTop(gs))
+}
+
+// splitOf is where a row laid out in resolution order stops being attacks and starts being plans.
+//
+// **It is found by scanning rather than counted while the row is built**, because the row is
+// built from `combat.ResolutionOrder` and that is the authority on the boundary — a screen
+// keeping its own tally would be a second answer to the same question. It returns len(cards) for
+// a row with no plans in it, which `groupGapFor` reads as "no break".
+func splitOf(cards []combat.Card) int {
+	for i, c := range cards {
+		if c.Category() == combat.CategoryPlan {
+			return i
+		}
+	}
+	return len(cards)
+}
+
+// playedSplit and enemySplit are splitOf over the two rows' own card lists.
+func (s *CombatScene) playedSplit() int {
+	for i, r := range s.resolved {
+		if r.card.Category() == combat.CategoryPlan {
+			return i
+		}
+	}
+	return len(s.resolved)
+}
+
+func (s *CombatScene) enemySplit() int {
+	for i, d := range s.enemyDealt {
+		if d.card.Category() == combat.CategoryPlan {
+			return i
+		}
+	}
+	return len(s.enemyDealt)
 }
 
 // lift raises a seat by tableFireLift, which is how either row says "this is the card
@@ -191,9 +266,9 @@ func (s *CombatScene) seatEnemyCards() {
 // screen to deal from and inventing one would be a second thing to explain; the fighter card is
 // already the thing on screen that *is* the opponent, so cards coming out of it read as theirs
 // without a caption.
-func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, total int, firing bool) image.Point {
+func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, total, split int, firing bool) image.Point {
 	from := s.enemyCardRect(gs).Min
-	to := enemySeatAt(gs, seat, total)
+	to := enemySeatAt(gs, seat, total, split)
 
 	switch {
 	case d.waiting():
@@ -228,8 +303,9 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
 	var bracketed []image.Point
+	split := s.enemySplit()
 	for i, d := range s.enemyDealt {
-		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), lit(s.enemyFiringSeats, i))
+		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), split, lit(s.enemyFiringSeats, i))
 		drawCard(gs, screen, at, cards.Hand, d.card, true, false)
 		if d.combo {
 			bracketed = append(bracketed, at)

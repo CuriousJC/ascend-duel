@@ -136,58 +136,81 @@ func BorderOf(e Element) color.RGBA {
 	return borderColors[e]
 }
 
-// Category is which phase a card resolves in, and it is drawn as a glyph rather than
-// written as a word.
+// Family is which group of cards this one belongs to, and it is drawn in the corner where
+// the phase glyph used to sit.
+//
+// **It replaced the category** *(2026-08-15)*. A card used to say which phase it resolved in —
+// prepare, attack, defend — and with the deck rebuilt around three attack families that fact
+// became both less useful and derivable: everything in Stab, Slash and Crush is an attack and
+// everything in Plan is not. What a card cannot say any other way is *which of the three ways of
+// hitting* it is, because that is what a pair is counted on.
 //
 // It is its own type rather than the string it used to be so the mapping to art is a
 // switch the compiler can see, not a lookup that fails quietly on a typo. internal/screens
-// converts combat.Category into this.
-type Category int
+// converts combat.Family into this.
+type Family int
 
 const (
-	// CategoryNone draws nothing. Rings use it: they have no phase.
-	CategoryNone Category = iota
-	CategoryPrepare
-	CategoryAttack
-	CategoryDefend
+	// FamilyNone draws nothing. Rings and the two fighter cards use it: they belong to no family.
+	FamilyNone Family = iota
+	FamilyStab
+	FamilySlash
+	FamilyCrush
+	FamilyPlan
 )
 
-var categoryNames = [...]string{
-	CategoryNone:    "",
-	CategoryPrepare: "prepare",
-	CategoryAttack:  "attack",
-	CategoryDefend:  "defend",
+var familyNames = [...]string{
+	FamilyNone:  "",
+	FamilyStab:  "stab",
+	FamilySlash: "slash",
+	FamilyCrush: "crush",
+	FamilyPlan:  "plan",
 }
 
-func (c Category) String() string {
-	if int(c) >= len(categoryNames) {
+func (f Family) String() string {
+	if int(f) >= len(familyNames) {
 		return "?"
 	}
-	return categoryNames[c]
+	return familyNames[f]
 }
 
-// Categories is the three real ones, for the contact sheet.
-func Categories() []Category {
-	return []Category{CategoryPrepare, CategoryAttack, CategoryDefend}
+// Families is the four real ones, for the contact sheet.
+func Families() []Family {
+	return []Family{FamilyStab, FamilySlash, FamilyCrush, FamilyPlan}
 }
 
-// glyph is the art for this category.
+// familyLetters is what a card carries in its corner until the families have art.
 //
-// Attack reuses the same sword `systems.GlyphDamage` is drawn from rather than getting a
-// weapon of its own: they say related things, and two different swords in one game would imply
-// a distinction that does not exist. Nothing draws GlyphDamage on a card any more, so on a
-// card this is now the only sword there is.
-func (c Category) glyph() (systems.GlyphKind, bool) {
-	switch c {
-	case CategoryPrepare:
-		return systems.GlyphPrepare, true
-	case CategoryAttack:
-		return systems.GlyphAttack, true
-	case CategoryDefend:
-		return systems.GlyphDefend, true
-	default:
-		return 0, false
+// **Slash is "D", not "S".** Stab took the S first and two families sharing an initial would
+// leave the corner saying nothing — which is the one thing the slot may not do. D is for the
+// draw of a blade; it is a placeholder either way, and the letters go the moment glyphs land.
+var familyLetters = [...]string{
+	FamilyNone:  "",
+	FamilyStab:  "S",
+	FamilySlash: "D",
+	FamilyCrush: "C",
+	FamilyPlan:  "P",
+}
+
+// Letter is the single uppercase character a family is marked with while it has no glyph.
+func (f Family) Letter() string {
+	if int(f) >= len(familyLetters) {
+		return ""
 	}
+	return familyLetters[f]
+}
+
+// glyph is the art for this family, and **no family has any yet** *(2026-08-15)*.
+//
+// The three category glyphs it used to return — sword, shield, open book — described phases that
+// no longer exist on a card. A stab, a slash and a crush want three silhouettes of their own and
+// those have not been drawn, so every family falls through to its Letter above.
+//
+// **The lookup stays rather than the letters becoming the design.** Returning a GlyphKind here is
+// the whole of what putting the art back costs; `systems.RenderGlyph` and the glyph sheet are
+// untouched and still hold the machinery.
+func (f Family) glyph() (systems.GlyphKind, bool) {
+	return 0, false
 }
 
 // Surface is every card's face, whatever its element. One constant, deliberately: the
@@ -321,17 +344,17 @@ const MaxStatLines = 3
 // and a Spec built from the rules could not express those. It also keeps this package
 // free of internal/combat, so the only thing it knows about the game is how to draw it.
 type Spec struct {
-	Name     string
-	Category Category
-	Cost     int // action points, drawn as dash marks
-	Element  Element
+	Name    string
+	Family  Family
+	Cost    int // action points, drawn as dash marks
+	Element Element
 
 	// Text is what the card does, in words, wrapped across the band under the left column.
 	//
-	// **Every action card carries one** *(2026-08-14)*. Six of the twelve concepts could not be
-	// understood from a card that showed only a name, a cost and a damage figure — that Riposte
-	// hits back, that Guard covers a whole turn rather than one blow, that a Retreat has three
-	// negations in it. The band it goes in was being held for a long-press description; the
+	// **Every action card carries one** *(2026-08-14)*. Half the deck could not be understood from
+	// a card that showed only a name, a cost and a damage figure: what a plan card does is not
+	// guessable from its price, and nine attacks on one ladder are told apart by a multiplier that
+	// has to be printed. The band it goes in was being held for a long-press description; the
 	// text is now printed and long press becomes the gesture that *pulls a card forward* so an
 	// overlapped one can be read.
 	//

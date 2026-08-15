@@ -26,7 +26,7 @@ import (
 // table and no dwellFor function to add a case to — the previous version had three dwells
 // selected by a switch with a `default` arm, and the default was the shortest of them. Every
 // event kind added after that switch was written therefore inherited a quarter-second flash
-// without anyone choosing it: KindNegated landed there on 2026-08-06 and a Dodge stopping a
+// without anyone choosing it: KindNegated landed there on 2026-08-06 and a Defend blunting a
 // Heavy — one of the most consequential things that can happen in a round — went past faster
 // than the round-start beat. That is not a tuning mistake, it is a shape that produces
 // tuning mistakes, so the shape is gone.
@@ -432,7 +432,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.enemyPile = decks.NewEnemyPile(enemySeed, decks.EnemyHandSize)
 
 	// A fresh duel: full life, no standing defenses, and no action points banked by a
-	// Gather from a duel that has been walked away from.
+	// Prepare from a duel that has been walked away from.
 	s.fighter.CurrentLife = s.fighter.MaxLife
 	s.enemy.CurrentLife = s.enemy.MaxLife
 	s.fighter.Duelist = resetCombatState(s.fighter.Duelist)
@@ -451,7 +451,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// refuses to plan for a dead duelist, and a screen re-entered after a defeat still has a
 	// corpse on it until the line above brings it back — so planning first would deal the new
 	// fight an opponent with no cards. The budget the planner reads has to be the fresh one too,
-	// or round one is planned against a Gather banked in a duel that is over.
+	// or round one is planned against a Prepare banked in a duel that is over.
 	//
 	// **It spends cards from the opponent's hand**, which is why Init deals that hand first.
 	// A plan is a commitment on either side.
@@ -468,7 +468,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 // resetCombatState clears everything a duel accumulates, leaving the stats a combatant was
 // hydrated with. Init re-enters a screen that may have been left mid-duel, so a standing
-// guard or a banked Gather would otherwise be inherited by the next one.
+// defence or a banked Prepare would otherwise be inherited by the next one.
 //
 // It sets the fields by name rather than rebuilding the struct: Con/Str/Spd/MaxLife come
 // from the data record and must survive, and a zero literal here would quietly wipe them
@@ -476,12 +476,15 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 //
 // **The defences are cleared by `combat.ClearDefenses` rather than field by field.** This
 // function listed them by hand until 2026-08-14 and had fallen behind the rules package, so a
-// Brace survived into the next fight — which is exactly the failure a screen enumerating
-// another package's state invites.
+// raised defence survived into the next fight — which is exactly the failure a screen
+// enumerating another package's state invites. The two fields below are the same hazard and are
+// listed here because they are the screen's to reset, not the engine's.
 func resetCombatState(d combat.Duelist) combat.Duelist {
 	d = combat.ClearDefenses(d)
 	d.BonusAP = 0
 	d.GatheredAP = 0
+	d.BonusDraw = 0
+	d.DrewCards = 0
 	return d
 }
 
@@ -685,13 +688,7 @@ func eventLabel(e combat.Event) string {
 	case combat.KindGathered:
 		return fmt.Sprintf("prepared    %v banks %d AP for next round", e.Side, e.Amount)
 	case combat.KindNegated:
-		return fmt.Sprintf("negated     %v's %v stops %v cold", e.Side, e.Action, e.Target)
-	case combat.KindGuarded:
-		return fmt.Sprintf("guarded     %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
-	case combat.KindBraced:
-		return fmt.Sprintf("braced      %v halves it to %d (target on %d)", e.Target, e.Amount, e.Life)
-	case combat.KindStripped:
-		return fmt.Sprintf("stripped    %v's feint removes %v's %v", e.Side, e.Target, e.Action)
+		return fmt.Sprintf("negated     %v's %v cuts it to %d", e.Side, e.Action, e.Amount)
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindCombo:

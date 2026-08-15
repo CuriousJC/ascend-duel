@@ -55,12 +55,20 @@ type CardData struct {
 	// nobody made on purpose.
 	Concept string `json:"Concept"`
 
-	// Category is which phase this concept resolves in — prepare, attack or defend. Recorded
+	// Category is which phase this concept resolves in — attack or plan. Recorded
 	// for readability and checked against the rules, never read as authority. See CheckCostTiers.
 	Category string `json:"Category"`
 
+	// Family is which group of cards this concept belongs to — stab, slash, crush, plan, or none
+	// for the opponent's, which belong to no family. Recorded and checked exactly as Category is.
+	//
+	// **It is the finer of the two and the one on the card face** *(2026-08-15)*. Category has two
+	// values and is derivable from this; a family is what a pair is counted on and what the card's
+	// corner mark says, so it is the one a deck list is actually read for.
+	Family string `json:"Family"`
+
 	// CostTier is the concept's action-point cost, 1 to 4. It is documentation with a check:
-	// the grid in MECHANICS.md is three categories by these four tiers, and being able to read
+	// the ladder in MECHANICS.md is three attack families by three tiers, and being able to read
 	// the grid off this file is the reason the field exists at all.
 	CostTier int `json:"CostTier"`
 
@@ -116,7 +124,13 @@ func loadCards(raw []byte, name string) []CardData {
 //
 // It returns every disagreement rather than the first, so a designer who has retuned several
 // costs sees the whole list in one run instead of finding them one relaunch at a time.
-func CheckCostTiers(name string, cards []CardData, costOf func(concept string) (int, bool), categoryOf func(concept string) (string, bool)) []error {
+func CheckCostTiers(
+	name string,
+	cards []CardData,
+	costOf func(concept string) (int, bool),
+	categoryOf func(concept string) (string, bool),
+	familyOf func(concept string) (string, bool),
+) []error {
 	var problems []error
 
 	for _, c := range cards {
@@ -133,6 +147,11 @@ func CheckCostTiers(name string, cards []CardData, costOf func(concept string) (
 		if cat, ok := categoryOf(c.Concept); ok && cat != c.Category {
 			problems = append(problems, fmt.Errorf(
 				"%s: %s declares category %q but the rules resolve it in %q", name, c.Concept, c.Category, cat))
+		}
+
+		if fam, ok := familyOf(c.Concept); ok && fam != c.Family {
+			problems = append(problems, fmt.Errorf(
+				"%s: %s declares family %q but the rules put it in %q", name, c.Concept, c.Family, fam))
 		}
 
 		if c.Copies < 1 {

@@ -73,175 +73,119 @@ suggested. Nothing scales with floor today.
 
 ## Cards
 
-### Types
+### Families and types
 
-**Implemented as `combat.Category`.** Every card is exactly one of three types, and
-the type decides which phase of a turn it resolves in — see *Resolution* below. This is the
-axis the whole round is built on.
+**Two axes, and they are not the same one** *(2026-08-15)*. `combat.Category` says *when* a card
+resolves and has two values; `combat.Family` says *what kind of card it is* and has four. Category
+is the coarser and is derivable from the family — everything outside Plan is an attack — so the
+**family is what a card puts on its face** and what a combo is counted on.
 
-**The concept set is a 3x4 grid: three types by four cost tiers, filled.** Twelve concepts,
-and the grid is the reason there are twelve rather than however many somebody thought of.
+**The attack set is a 3x3 ladder: three families by three cost tiers, filled**, and the tiers are
+identical across the families. A family is *which* pair you are building toward, never a stronger
+or weaker way to build one.
 
-| Type | 1 AP | 2 AP | 3 AP | 4 AP |
-|---|---|---|---|---|
-| **prepare** | Gather | Sift | Guard | Ritual |
-| **attack** | Jab | Strike | Feint | Heavy |
-| **defend** | Brace | Dodge | Riposte | Retreat |
-
-| Type | Concept | AP | Effect |
+| Family | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× |
 |---|---|---|---|
-| **prepare** | Gather | 1 | Banks +2 AP for the next round |
-| | Sift | 2 | Two extra cards leave the hand at random at the round boundary, before it refills |
-| | Guard | 3 | Halves every attack in the opponent's next turn |
-| | Ritual | 4 | Banks +6 AP for the next round |
-| **attack** | Jab | 1 | `str/2`, minimum 1 |
-| | Strike | 2 | `str` |
-| | Feint | 3 | `str`, and strips the target's **strongest raised defend** without triggering it |
-| | Heavy | 4 | `str × 2` |
-| **defend** | Brace | 1 | Takes **50%** off the incoming blow |
-| | Dodge | 2 | Takes **75%** off |
-| | Riposte | 3 | Takes **75%** off and hits back for `str/2` |
-| | Retreat | 4 | Takes **100%** off — stops the blow dead |
+| **stab** | Jab | Thrust | Lunge |
+| **slash** | Cut | Slash | Cleave |
+| **crush** | Bash | Strike | Smash |
 
-**An attack card's damage figure is what it contributes to a hand, not a blow it lands on its
-own.** A turn resolves one attack; see *Combos* below for how the figure is assembled.
+| Family | Concept | AP | Effect |
+|---|---|---|---|
+| **stab** | Jab / Thrust / Lunge | 1 / 2 / 3 | Stabs for `str/2` (min 1) / `str` / `str × 2` |
+| **slash** | Cut / Slash / Cleave | 1 / 2 / 3 | Slashes for the same three figures |
+| **crush** | Bash / Strike / Smash | 1 / 2 / 3 | Crushes for the same three figures |
+| **plan** | Prepare | 1 | Banks +2 AP for the next round |
+| | Plan | 2 | Draws **2 extra cards** into the next round's hand |
+| | Defend | 3 | Takes **50%** off the blow aimed at you next |
+
+**Nine attack concepts × four colours = 36 cards; three plans × four copies = 12.** A **48-card
+deck**. **No card in the player's deck is drab** *(2026-08-15)*: every attack ships in one of the
+four primary elements and the only basic cards are the plans, because nothing a plan does is
+elemental and a coloured Defend would be a colour that meant nothing.
+
+**The plans sit on the same 1/2/3 ladder as the attacks**, so nothing in the game costs four. What
+each buys is a different currency at a rising price: Prepare pays in points, Plan pays in cards,
+Defend pays in survival.
+
+**`Strike` is the 1× reference the damage formula reads**, and that is why the crush family holds
+the name: `DMG` on the fighter card is `Strike.Damage(Str)`, and every multiplier is applied to it.
+Nothing stops that reference moving to another family's middle rung; it is one constant.
+
+**The opponent has two cards of its own and they belong to no family** — `Attack` (2 AP, `str`) and
+`Heavy` (3 AP, `str × 2`), priced against the player's tiers. `FamilyNone` is a real answer rather
+than a fallthrough: families are the *player's* deck axis, and an enemy card claiming to be a crush
+would be claiming membership of a deck the player can combo with. They draw with a blank corner.
+
+**What the three families do not yet have is a reason to be three.** They cost the same, hit the
+same, and differ only in which cards pair with which. That is enough to make a hand a *choice* —
+holding two Cleaves is not the same as holding a Cleave and a Smash — and it is deliberately the
+whole of it for now. Riders that differ in *kind* per family are the shape to reach for next, and
+the grid's old rule applies: a family that is only a different word is three cards and one
+decision.
 
 **Every card carries its effect in words on its face**, verb first, filling the card beside the
-cost column. Six of the twelve could not be understood from a name, a cost and a damage figure.
-The wording is `cardEffects` in `internal/screens`, beside the prose the Resolution feed uses:
-the rules package names actions and never describes them. **Short words are a hard constraint** —
-the column is about a dozen characters wide — and two tests hold the wording to it.
+cost column. The attack text names the family's verb — "Stabs for 2x DMG" — rather than opening
+"Deal" on all nine, so the corner letter is not carrying the distinction alone. The wording is
+`cardEffects` in `internal/screens`, beside the prose the Resolution feed uses: the rules package
+names actions and never describes them. **Short words are a hard constraint** — the column is about
+a dozen characters wide — and two tests hold the wording to it.
 
-### Every defend answers the blow, and they multiply
+**The corner mark is a letter, and that is scaffolding** *(2026-08-15)*. S for stab, **D for
+slash** — Stab took the S first, and two families sharing an initial would leave the corner saying
+nothing — C for crush, P for plan. The glyph machinery is untouched underneath: `cards.Family.glyph()`
+returns nothing for every family today, and putting silhouettes back is one return value.
 
-**The defend cards a duelist has up are a set, not a queue.** The opponent's turn produces one
-attack, so *every* raised card meets it and each takes its percentage off what is left: a Dodge
-and a Brace together leave `25% × 50%` = an eighth of the blow. **Order is not read**, and every
-card is spent on the one attack it answered. They all expire together at the start of their
-owner's next turn.
+### Every raised plan answers the blow, and they multiply
 
-This replaced a raise-order queue that had stood for a day, which itself replaced a fixed
-precedence. What broke both of them is one attack per turn: "which of my defences meets which
-blow" is a question with no content when there is only ever one, and negation is intolerable
-when the thing being negated is a whole hand — a 2 AP Dodge cancelling a 10 AP Onslaught.
-Three things follow, and two of them are losses:
+**The plan cards a duelist has up are a set, not a queue.** The opponent's turn produces one
+attack, so *every* raised card meets it and each takes its percentage off what is left. **Order is
+not read**, and every card is spent on the one attack it answered. They all expire together at the
+start of their owner's next turn.
 
-- **Percentages keep the four cards distinct at their four prices.** Under negation, "halve the
-  first of five" and "stop three of five" both collapse to "the blow", so Brace and Retreat lost
-  their reason to exist. As reductions they stay priced by tier and stack sensibly.
-- **Retreat still reaches 100%.** The most expensive defend in the game should be able to stop a
-  turn dead, and at 4 of a 6-point budget it is most of a round spent doing nothing else. It is
-  the only card that reaches zero, which is what it is for.
-- **Within-phase ordering now means nothing anywhere in the game**, and drag-to-reorder has lost
-  its last mechanical job. See *Combos* — counted hands do not read order either. Dragging is
-  currently arrangement, not decision, and `TODO.md` carries what would give it one back.
-- **Feint strips the strongest raised card**, not the first, since there is no first. That is
-  also what keeps it worth 3 AP: stripping whichever card happened to be cheapest would make it
-  a 3-point attack that removes a 1-point Brace. It fires once however many Feints are in the
-  hand, and it does not touch Guard, which is a prepare rather than a defend card.
+**Defend halves, and it is the only card that reduces a blow at all** *(2026-08-15)*. Three points
+of a four-to-six point budget is most of a round, which is what a halving is meant to cost.
+Multiplying rather than adding is what stops several cards reaching past zero by accident: two
+Defends take three quarters and a third takes seven eighths, a curve that never arrives.
 
-Type is a property of the *concept*, not an independent axis — a fire Guard and a basic Guard
-are both prepares.
-
-**The grid is a design brief, not just a count.** An empty cell states a spec before anything
-has a name — "a 3-cost attack" is something to solve. What it must not become is a cost ladder
-where each tier is the one below it with a bigger number: that is twelve cards and three
-decisions, and it is the trap `Dodge`/`Riposte` already half fell into. **Every tier differs in
-kind.** Feint attacks the defence layer rather than the health total; Sift operates on the deck
-and not on the arithmetic at all; Riposte answers back where Dodge only absorbs.
-
-**`[?]` The defend column now fails that rule twice, and reductions are why.** Brace 50, Dodge
-75, Riposte 75, Retreat 100 is a cost ladder with a bigger number at each rung, which is exactly
-what the grid is supposed to prevent. Two of the four still have a second clause — Riposte hits
-back, Retreat reaches zero — but **Brace is now purely a smaller Dodge**, where it used to be
-partial against something binary. That distinction was real and the repricing spent it.
-
-This is the price of the change and it was taken knowingly: negation could not survive one
-attack per turn, and a column of four coherent percentages is better than a column of four cards
-that all read as "the blow does not happen". What would earn the cells back is riders rather
-than percentages — clearing a status as you give ground, a Brace that pays something for taking
-the hit — and that is the shape to reach for before touching the numbers.
-
-**Ritual banks at a better rate than Gather** — 1 AP for +2 against 4 AP for +6, net +1 per
-point against net +2. It sells rate *and* slots: four Gathers bank more (+8) but consume four of
-five action slots, while one Ritual banks +6 and leaves four slots to fight with. It was +5 —
-exactly Gather's rate — until 2026-08-14, on the theory that a 4-cost prepare should sell only
-slots; at that price it was a card nobody had a reason to open with.
-
-**Sift is the one concept whose effect is not a rule.** It manipulates the deck, and the deck
-deliberately lives on the scene rather than in `internal/combat` — so `Sift` is an `ActionKind`
-with a cost, a category and no engine effect, and the screen does the work at the round
-boundary. That is a real division rather than an unimplemented card: the rules package owns
-what a round does, not what you are holding. It also makes Sift the only concept `tools/balance`
-cannot see.
-
-**Sift and the Discard button are not the same thing.** Discard is *steering* — four a round,
-you choose what leaves. Sift is *throughput* — more cards flow past you and you do not choose
-which. It can eat a card you wanted, which is what makes it cost something beyond its 2 AP.
-
-**Guard is a prepare, not a defend**, at 3 AP: it does not answer one blow, it dampens a whole
-turn, and that is a thing you put up before the exchange rather than a reaction inside it.
-Riposte is **defend** despite being a counter-attack.
-
-**There is no Parry**, and it was dropped before it was built. Dodge, Riposte and Guard
-already cover cheap-precise, expensive-punishing and broad-dampening; a fourth defence had no
-job left. It can come back.
-
-The three types split evenly 2/2/2 — 10 prepare / 10 attack / 10 defend — which is a
-consequence of the concept list rather than a target.
-
-**There is no spend order any more.** Every raised defend answers the one blow — see *Every
-defend answers the blow* above — so the old "Ripostes before Dodges" precedence describes
-nothing. The counter fires **after** the blow has landed rather than instead of it, which is
-what a Riposte reducing rather than negating implies: the attacker connects for a quarter and
-takes `str/2` back.
-
-`[?]` **Dodge and Riposte are a tier, not a choice.** Both now take 75%, and Riposte adds a
-counter for one more point — so it is exactly Dodge plus a Jab, priced exactly as the two
-together (2 + 1 = 3), and strictly dominates Dodge whenever it is affordable. The repricing made
-this *worse*, not better: the two used to differ only in the counter, and now they differ only
-in the counter while also carrying the same number. What stops it being redundant is the cap on
-actions per round — one card doing two jobs beats two cards. Being played with deliberately
-before changing anything; the obvious fix is to move one of the two percentages.
-
-**Feint narrows this without closing it**. Attacking into a Riposte costs the attacker `str/2`
-in counter-damage; a Feint strips the Riposte and takes no counter, so Riposte's punish clause
-can be defused and Dodge's cannot — there is nothing on a Dodge to defuse. That makes the two
-differ in what an opponent can do *about* them, which is weaker than differing in what they do,
-so the `[?]` stands. A Feint takes the **strongest** card up — and since Dodge and Riposte are
-now the same percentage, which of the two it takes falls to the tie-break (the earlier entry)
-rather than to anything the player decided. One more reason to move one of those numbers.
+**The plan family is three cards where the attack ladder is nine**, and it is deliberately not a
+3x3 grid of its own. Prepare is the cheapest card in the game and Defend the dearest; what sits
+between them is one card rather than a rung, because a grid filled with cards that differ only by a
+number is the trap this deck was rebuilt to avoid.
 
 ### Concepts and deck composition
 
-**A concept ships as five cards: basic, plus one per primary element.** That is the rule for
-adding concepts, not just a description of the starting deck — a new concept arrives as a set
-of five.
+**An attack concept ships as four cards: one per primary element.** That is the rule for adding an
+attack, not just a description of the starting deck. **A plan ships as four basics** — one concept,
+four copies — because a plan has no elemental behaviour to carry.
 
-Twelve concepts × five = **60 cards**, implemented. A hand of eight against that is
-13% of the deck, against 27% when the deck was 30 — **doubling the deck halved consistency**,
-which is exactly why Sift exists and why `discardsPerRound` is now a number to watch rather
-than a generous placeholder.
+36 + 12 = **48 cards**, implemented. A hand of eight against that is 17% of the deck, against 27%
+when the deck was 30. What answers draw variance is the Discard button and now Plan.
 
-**The deck list is data.** `data/duelist_cards.json` holds the twelve concepts and the elements each
-ships in, loaded beside `data/duelists.json`; `startingDeck` is built from it. Cost, category and
-damage stay in `internal/combat` — the dependency direction forbids the rules package reading
-`data`, and cost is about to stop being a property of the card anyway (see *Rings*). The JSON
-carries the cost tier as **documentation with a check**: the loader asserts every declared tier
-against `ActionKind.Cost()` and fails loudly rather than letting two sources of truth drift.
+**Four copies of a concept is the ceiling, and it shapes the combo table.** No attack concept
+exists more than four times, so a **Barrage is necessarily a Rainbow** — four copies of a concept
+is four different colours — and the top rung of the hand ladder is four rather than five. The Drab
+mix is reachable only by the opponent, whose deck is twelve copies each of two drab cards. See
+*Combos* for what this does to the two axes.
 
-`Quick` was renamed **Jab** and given its five cards. It had been an `ActionKind`
-with a cost and damage and no concept — "homeless" — because which of the rules' actions appear
-in a deck was treated as a deckbuilding question. Filling the 1-AP attack cell answered it.
-Riposte's counter-damage is still defined as the same figure, so "hits back for a Jab" is now a
-sentence rather than a coincidence.
+**The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the family and
+category each declares, the elements each ships in, and how many copies. `startingDeck` is built
+from it. Cost, category, family and damage stay in `internal/combat` — the dependency direction
+forbids the rules package reading `data`, and cost is about to stop being a property of the card
+anyway (see *Rings*). The JSON carries all three as **documentation with a check**: the loader
+asserts every declared tier, category and family against the rules and fails loudly rather than
+letting two sources of truth drift.
 
-**52 was considered and rejected.** The playing-card instinct is real but it argues for 13 ranks
-x 4 suits, and the fifth "suit" here is `basic` — which this document calls the absence of an
-element, not a colour of its own. With `basic` a variant the deck lives on multiples of five and
-52 is unreachable; without it, 13 concepts x 4 elements hits 52 exactly but every card carries
-an element and nothing is plain. The grid decides it instead: 12 concepts is what three types by
-four tiers produces, and 60 is what that costs.
+**`data/enemy_cards.json` is now two concepts.** An opponent draws Attack and Heavy and nothing
+else, so **every plan style collapses to brute** — the warden asks for a Defend and the tactician
+for a Prepare, and neither is in the deck. The styles are written against the deck an enemy will
+have rather than the one it has, exactly as they were before the rework.
+
+**52 was considered and rejected**, and the arithmetic changed but the answer did not. The
+playing-card instinct argues for 13 ranks × 4 suits, and the fifth "suit" here is `basic` — which
+this document calls the absence of an element, not a colour of its own. With `basic` a variant the
+attacks live on multiples of five; without it nothing is plain. The ladder decides it instead: nine
+attack concepts is what three families by three tiers produces.
 
 ### Long press
 
@@ -321,10 +265,11 @@ was moving.
 
 **Decided, and rewritten by one blow per turn.** Statuses are applied by the **mix** — one status
 per distinct non-basic colour among the cards that formed the attack. A mono hand lands one, a
-rainbow lands four, and a drab hand lands none. A prepare or a defend carries its element for the
+rainbow lands four, and a drab hand lands none. A plan card carries its element for the
 mix and for the ring discount and applies nothing itself; the alternative — every card applying
-its status — makes a 1-AP Gather as good a delivery as a 1-AP Jab and turns the prepare phase
-into the status engine.
+its status — would make a 1-AP Prepare as good a delivery as a 1-AP Jab and turn the plan phase
+into the status engine. (The plans are all basic today, so this is a rule waiting for a card
+rather than one currently biting.)
 
 Three consequences, all of them changes from the per-card version:
 
@@ -334,14 +279,14 @@ Three consequences, all of them changes from the per-card version:
   same axis the mix multiplier already pays for.
 - **Cards outside the hand carry no colour at all.** `Strike, Jab, Strike` in fire, ice, fire is
   a fire Strike Pair — mono, one burn — and the ice Jab contributes neither damage nor a chill.
-- **The status lands because the hand formed, not because the blow hurt.** A hand reduced to
-  zero by a Retreat still connected, and making the status conditional on the final figure would
-  let a defensive card silently un-apply an element the attacker had already paid for.
+- **The status lands because the hand formed, not because the blow hurt.** A hand halved by a
+  Defend still connected, and making the status conditional on the final figure would let a
+  defensive card silently un-apply an element the attacker had already paid for.
 
-The cost, stated: **element is mechanically inert on eight of the twelve concepts** until rings
-land.
+The cost, stated: **element is mechanically inert on the three plan cards** until rings land —
+and they are all basic, so today it is inert on nothing that exists.
 
-**Magnitude is per hit, not per card.** A fire Jab and a fire Heavy apply the same burn, so the
+**Magnitude is per hit, not per card.** A fire Jab and a fire Smash apply the same burn, so the
 cheapest attack in the deck is the cheapest status delivery. The concept ladder prices damage;
 the element ladder does not exist. Making status scale with the card is a second axis and a
 design change.
@@ -363,7 +308,7 @@ success would be a guarantee wearing a probability's clothes.
 
 **This reverses the deterministic version taken two days earlier**, and one blow per turn is
 what forced it. A certain miss used to delete one attack out of several; now it deletes the
-whole turn, so a 1 AP lightning Jab could erase a 10 AP Onslaught outright. The alternatives
+whole turn, so a 1 AP lightning Jab could erase an 8 AP Barrage outright. The alternatives
 considered were breaking the hand or cutting the multiplier; a roll was chosen because lightning
 should feel unreliable, which is a design reason rather than a balance one.
 
@@ -398,16 +343,15 @@ one blow per turn makes intolerable.
   `KindDefeated` when it does.
 - **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
   so the order is: the hand's own cards, the combo multiplier, the attacker's weight, then every
-  raised defend, then the guard. A Riposte's counter is outside it, exactly as it is outside the
-  combo multiplier — that is the defender hitting back, not a card the weighted duelist played.
-  **Rounding is toward zero**, matching `guardDivisor`, the defend reductions and `scaleDamage`,
-  so it is predictable from the reductions already in the game.
+  raised plan card. Everything the defender does therefore happens to a blow that has already been
+  blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
+  predictable from the reductions already in the game.
 - **Statuses got a home**, and it is `Duelist.Statuses [ElementCount]Status` — an array indexed
   by element, not four named fields. That is what makes *"consume the status this element
   applies"* expressible and is the difference between a system and four ad-hoc fields. The
-  price: **`Element` is append-only**, like `ActionKind` and `GlyphKind`. `Guarded` and the
-  defend set stay where they are — they are card effects, and filing them in a table indexed by
-  colour would say they were not.
+  price: **`Element` is append-only**, like `ActionKind` and `GlyphKind`. The raised-defence set
+  stays where it is — those are card effects, and filing them in a table indexed by colour would
+  say they were not.
 
 #### The balance numbers are gone and have not been retaken
 
@@ -421,8 +365,11 @@ sheet is worse than none. It is deleted rather than annotated.
 What has to be re-measured before anything is tuned, and roughly what to expect:
 
 - **Damage is much larger and enemy HP has not moved.** Two Strikes at Str 10 is `20 + 10×1.5`
-  = 35 where it used to be 20; a rainbow Onslaught is `10×20 = 200` on top of its cards. Retuning
+  = 35 where it used to be 20; a rainbow Barrage is `10×15 = 150` on top of its cards. Retuning
   enemy life totals is the owner's call and is expected, not a bug report.
+- **And the postures changed again on 2026-08-15.** The deck rework replaced every row: `pairing`
+  and `cheap-flurry` are what the tool now reads a build against, and the old defend-column rows
+  have no cards behind them. `defending` wins 16 of 96 and `planning` 1, both at the shallow end.
 - **Shock's `[?]` is reopened, not answered.** It used to beat the entire roster by cancelling
   attacks for free; a 25%-per-stack roll capped at 75% is a different card and its price is
   unknown. `shockMissPct` and `shockMissCapPct` are the levers now, not `shockPerHit`.
@@ -443,32 +390,38 @@ What has to be re-measured before anything is tuned, and roughly what to expect:
 is what ships. Still open to reconsideration, but it is the model now, not a proposal.
 
 A round is **a whole turn each**. Everything one side queued resolves before the other side
-does anything, and within a turn the categories go in order:
+does anything, and within a turn the two categories go in order:
 
-1. that side's **prepares**, one card at a time
-2. that side's **attack** — *one* blow, whatever it was assembled from
-3. that side's **defenses**, all raised together
-4. then the other side, the same way
+1. that side's **attack** — *one* blow, whatever it was assembled from
+2. that side's **plans**, one card at a time: banks taken, defences raised
+3. then the other side, the same way
 
-Defenses come last *within a turn* because the opponent moves next, so a defense raised at the
-end of your turn is up when their blow arrives.
+**Plans come last** *within a turn* because the opponent moves next, so a defence raised at the
+end of your turn is up when their blow arrives. A Prepare banks for the round after and does not
+care where it sits; resolving plans first would mean every defence expired before anything could
+be aimed at it.
+
+**The combat screen lays a turn out in exactly this order**, and leaves a gap at the boundary — the
+row on the table reads attacks, break, plans. That is not decoration: it is the round's two phases
+made visible in the one place the round is a picture rather than a list.
 
 **The attack phase is a single event, and that is the 2026-08-14 change.** Every attack card
 queued is announced, the hand they form is announced, and then one figure of damage lands. The
-prepares are now the only cards that still resolve one at a time, because each does something to
+plans are now the only cards that still resolve one at a time, because each does something to
 its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
 a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "COMBO!
 Duelist lands a Duo Strike Pair (20 + 10 x 3.5 = 55), 55 damage". Five lines saying a Strike was
 swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
-forms no hand still gets its own ordinary sentence**, because a lone Strike is not a combo and
+forms no hand still gets its own ordinary sentence**, because a High Card is not a combo and
 announcing one over every attack would empty the word.
 
-**Prepares run before the hand is worked out.** Nothing a prepare does reaches the attack today —
-Gather and Ritual bank for next round, Guard answers the *opponent's* blow, Sift is the screen's
-business — so this is a legibility choice rather than a mechanical one. It is the order the
-phases are named in, and a prepare that did feed the hand would need no rule change to do so.
+**The prepare phase is gone and its card moved** *(2026-08-15)*. Prepares used to run *before* the
+attack, on the grounds that nothing they did reached it. With three categories collapsed to two,
+Prepare joined the defences at the end of the turn — which changes nothing, because banking pays
+next round either way. A plan that *did* feed the hand would need the phase order reopened, and
+that is the argument to make rather than to quietly reorder.
 
 **Why:** the interleaving may not be possible for players to grok. That is the whole reason.
 It also simplifies — actions are gathered into their categories inside `ResolutionOrder`, and
@@ -512,7 +465,8 @@ arriving from the other direction, now that dragging has no mechanical effect at
   loss of a designed interaction and it is tracked in `TODO.md`, not written off here.
 - **Guard persistence dissolved**, as predicted. The old *"a raised Guard lasts until its
   owner's next action"* and the deliberate quirk that an idle duelist kept its guard are both
-  gone, along with `TestGuardHoldsWhileItsOwnerDoesNothing`.
+  gone. Guard itself went on 2026-08-15; Defend is what does its job now, as a plan card that is
+  spent on the blow it answered rather than a flag that survived it.
 - **It changes what makes stagger rare** — see below.
 
 `ResolutionOrder` being one pure function is what made this cheap, exactly as hoped: one
@@ -558,17 +512,17 @@ disagree with the rules does. A combo silently dropped is a balance change nobod
 Every combo is the intersection of a **hand** and a **mix**, and both are read off the cards that
 formed one attack.
 
-- The **hand** counts copies of a concept — pair, two pair, flurry, full house, barrage,
-  onslaught. That is exactly what a poker hand counts, so it wears poker's names honestly.
+- The **hand** counts copies of a concept — pair, two pair, flurry, full house, barrage. That is
+  exactly what a poker hand counts, so it wears poker's names honestly.
 - The **mix** counts **distinct non-basic colours** in whatever hand formed — drab, mono, duo,
   trio, rainbow. Basic is not a colour and never counts in either direction, so two basic Strikes
   and an ice Strike show one colour and are mono.
 
-Six hands by five mixes is **27 combos, authored as 11 numbers**. Writing the grid out would be
-27 sets of values nobody could keep consistent; writing the two axes is six lines and five.
+Five hands by five mixes is **25 combos, authored as 10 numbers**. Writing the grid out would be
+25 sets of values nobody could keep consistent; writing the two axes is five lines and five.
 
 **Exactly one hand and exactly one mix apply**, which is what retired the family/tier machinery
-the catalogue used to carry. A hand wins on its multiplier — five Strikes are an Onslaught rather
+the catalogue used to carry. A hand wins on its multiplier — four Strikes are a Barrage rather
 than also the pair and the flurry inside it — and the mixes name an *exact* colour count and
 partition every possible hand, so no two can both be true. Nothing needs ranking against anything.
 
@@ -594,18 +548,18 @@ pair of Strikes at Str 10 is `10 + 10 + 10×1.5` = **35**, and a duo pair of Str
 `10 + 10 + 10×(1.5+2.0)` = **55**.
 
 **The multipliers add rather than compose**, decided deliberately: 1.5× and 2× is 3.5×, not 3×.
-Multiplying them stacks a ladder on a ladder and puts a rainbow Onslaught at 20× before its own
+Multiplying them stacks a ladder on a ladder and puts a rainbow Barrage at 50× before its own
 cards are counted; adding keeps the top of the table at a few hundred damage instead of several
 thousand, and it is arithmetic a player can do in their head while planning.
 
 | Hand | Cards | Multiplier | Besides damage |
 |---|---|---|---|
+| **High Card** | `[1]` | — | — |
 | **`<Card>` Pair** | `[2]` | ×1.5 | — |
 | **Two Pair** | `[2,2]` | ×1.75 | — |
 | **`<Card>` Flurry** | `[3]` | ×2 | opponent loses one action |
 | **Full House** | `[3,2]` | ×3 | opponent loses one action |
 | **`<Card>` Barrage** | `[4]` | ×5 | opponent loses two actions |
-| **`<Card>` Onslaught** | `[5]` | ×10 | opponent loses their whole turn |
 
 | Mix | Colours | Multiplier | Besides damage |
 |---|---|---|---|
@@ -619,8 +573,21 @@ thousand, and it is arithmetic a player can do in their head while planning.
 ordinary hand looks like; the element is already worth having for what it does to the victim, so
 paying a multiplier on top would make plain cards worse than they already are for no design gain.
 
-**Every hand is attack-scoped.** Prepares and defends carry colours for the ring discount and
-nothing else — they are not counted, and a Gather cannot join a rainbow. That is what makes the
+**The High Card is the bottom rung of the other axis, and it pays nothing** *(2026-08-15)*. When a
+turn builds no pair or better, the single hardest-hitting attack card is the blow and what lands is
+exactly its face damage — no multiplier, and every other attack card in the turn contributes
+nothing. It is in `combos.json` with a name and an ID so the feed can say what happened on the turn
+that happens most often; **a blow the engine could not name is the one failure this model can
+have**, which is why the loader panics without it.
+
+**It is fallen back to rather than matched.** Counting is the wrong way to pick it — `matchCountOf`
+fills groups largest-count-first and would hand back whichever concept appeared most, not the card
+that hits hardest — so `matchHand` skips every one-card hand and `biggestAttack` answers the
+question on damage. `Blow.Formed()` draws the same line for the screen's combo preview: the High
+Card is a hand, and it is not something anybody built.
+
+**Every hand is attack-scoped.** Plan cards carry colours for the ring discount and
+nothing else — they are not counted, and a Prepare cannot join a rainbow. That is what makes the
 top of the table an offence you spent a whole turn assembling rather than something a cheap card
 can be padded into.
 
@@ -646,15 +613,20 @@ because a reward vocabulary that grows without limit is one no player can hold i
   does. That was measured as a live problem on the old model and the rewrite has not addressed
   it; it only changed the number. `[?]` **Watch whether Pair should pay a multiplier at all**, or
   whether the ladder should start at Two Pair.
-- **`[?]` `Copies: 1` makes most of the grid unreachable.** The starting deck ships one card per
-  concept per colour, so every same-concept hand is forced to all-distinct elements — a pair is
-  always duo, an Onslaught is always rainbow, and **drab and mono are unreachable at every rung
-  above one card**. 13 of the 27 cells cannot currently be dealt. This is expected to resolve
-  when the deck changes over a run, and is recorded so the grid is not tuned against a deck that
-  cannot show most of it.
+- **`[?]` One copy per concept per colour makes most of the grid unreachable, and cutting the drab
+  attacks made it worse.** Every same-concept hand is forced to all-distinct elements, so **the mix
+  axis is a function of the hand axis** for anything built from copies: a Pair is always Duo, a
+  Flurry always Trio, a Barrage always Rainbow. Two whole axes reduce to one for exactly the hands
+  the player is trying to build, which is the strongest argument on the table for changing the deck
+  composition rather than the multipliers.
+  - **Drab and Mono are unreachable above one card**, and only the opponent can score them — its
+    deck is twelve copies each of two drab cards. So the mix axis is not dead content; it is
+    content the two sides reach from opposite ends.
+  - This is expected to resolve when the deck changes over a run, and is recorded so the grid is
+    not tuned against a deck that cannot show most of it.
 - **Poker's ranking does not transfer to this deck**, and the multipliers above are first
-  drafts. Poker's ordering comes from 52 cards, 4 suits and 13 ranks; here a rank has 5 copies
-  and a suit has 12. `tools/seeds` already searches real hands and is the place to measure
+  drafts. Poker's ordering comes from 52 cards, 4 suits and 13 ranks; here a rank has 4 copies
+  and a colour has 9. `tools/seeds` already searches real hands and is the place to measure
   before tuning further.
 
 ### The catalogue's shape
@@ -671,10 +643,10 @@ and can never be satisfied by five of one card. `staggerAll` is a bool in the fi
 mix, or a turn could form a hand the engine cannot name.
 
 **One entry per card, generated rather than written out.** The four single-group rungs carry
-`"expand": "attack-cards"` and become one hand per attack card — **Jab, Strike, Feint and Heavy**
-— so 16 hands from four lines, and a new attack card gets the whole ladder by existing. **Two
-Pair and Full House are generic**, because naming them per card-pair is 6 and 12 near-identical
-entries nobody can hold in their head. 22 hands in total.
+`"expand": "attack-cards"` and become one hand per attack card — the nine of the player's ladder
+plus the opponent's two — so 44 hands from four lines, and a new attack card gets the whole ladder
+by existing. **Two Pair, Full House and the High Card are generic**, because naming them per card
+is a wall of near-identical entries nobody can hold in their head. 47 hands in total.
 
 **Per card, not per category, for the rungs that expand** *(decided after a category-wide version
 shipped first)*. A category-wide "three attacks" made a Jab count the same as a Heavy and sent the
@@ -693,9 +665,9 @@ card is free and **inserting** one mid-enum still shifts every ID above it. Harm
 ### Stagger
 
 **Stagger takes actions off the front of the victim's next turn**, which under phases is their
-prepare phase — so being staggered costs a Gather before it costs an attack, and leaves you
-poorer next round as well as slower now. The action points are **not** refunded: stagger is tempo
-*and* economy.
+*attack* phase — so being staggered costs a swing before it costs a plan. That reversed on
+2026-08-15 when the prepare phase went: it used to eat a Prepare first, and it now eats the thing
+the turn was for. The action points are **not** refunded: stagger is tempo *and* economy.
 
 **It is symmetric, and one asymmetry falls out of phases.** Side A takes its whole turn first, so
 a combo A forms bites B in the same round; the identical combo formed by B lands when A has
@@ -709,7 +681,7 @@ at the top of the round.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
-whole round on Gathers. That trade is the combo working as intended.
+whole round on Prepares. That trade is the combo working as intended.
 
 ### Sequences — the capability the rewrite dropped
 
@@ -769,7 +741,7 @@ and a multiplier on top of that counting makes the gap wider than it was.
   pane was contradicting. The line carries the arithmetic (`20 + 10 x 3.5 = 55`) off the event, so
   the sum shown is the sum used, and the damage attaches to it. **What is still not drawn** is a
   row that a stagger deleted; that one stands.
-- **A preview of the hand while planning is wanted and does not exist.** `AttackFor` is exported
+- **A preview of the hand while planning is wanted and does not exist.** `BlowFor` is exported
   and is the same function the engine uses, so a previewed combo would be the combo that fires by
   construction. Nothing calls it from the screen yet.
 
@@ -795,19 +767,19 @@ reverses the reason it was made a method — "so a brand or ring raising it has 
 - **A fixed five is what makes hand concepts possible.** Poker hands exist *because* you always
   hold exactly five; that is what lets "a full house" be a permanent, learnable, nameable thing
   rather than a coincidence of how big your hand happened to get. The named five-card shapes are
-  built — Onslaught wants five of one attack, Rainbow wants four colours in one hand — and every
+  built — Barrage wants four of one attack, Rainbow wants four colours in one hand — and every
   one of them needs the five to be a constant the player can plan against for the life of a run.
   The catalogue loader enforces it directly: **a hand asking for more cards than a turn can hold
   is refused at package init.**
-- **A growable cap would dilute every shape as it grew.** An Onslaught is an all-in commitment at
+- **A growable cap would dilute every shape as it grew.** A Barrage is an all-in commitment at
   a cap of five and routine at a cap of seven. The combos would quietly get cheaper every time
   capacity went up, which is the opposite of a reward for building toward them.
 - **It is still a method, and still should be.** Rings and brands need somewhere to bite for
   everything *else* they do, and a method that reads the duelist costs nothing. What changed is
   that this particular lever is off the table: **no ring, brand or combo raises `MaxActions`.**
 
-The consequence for prepare cards: a 4-AP prepare cannot buy action slots, so Ritual buys
-points instead (+6). An earlier draft of Ritual granted +2 AP and +2 slots specifically to reach
+The consequence for the banking card: a plan cannot buy action slots, so Prepare buys
+points instead (+2). An earlier draft of a 4-AP bank granted +2 AP and +2 slots specifically to reach
 six- and seven-card combo hands; that is exactly the dilution above and it was cut.
 
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
@@ -995,14 +967,14 @@ function of a `Duelist`, chosen by a `PlanStyle` string on the data record:
 
 | Style | Plans | Answers it badly | Answers it well |
 |---|---|---|---|
-| **brute** | biggest attack affordable — few, heavy blows | guarding | dodging |
-| **swarm** | as many attacks as the round allows | dodging, guarding | racing it |
-| **warden** | Guard, then attacks — halves what it takes | — | overwhelming it |
-| **tactician** | banks with Gather, then unloads a spike | guarding | reading the tell |
+| **brute** | biggest attack affordable — few, heavy blows | racing it | defending |
+| **swarm** | as many attacks as the round allows | defending | racing it |
+| **warden** | Defend, then attacks — halves what it takes | — | overwhelming it |
+| **tactician** | banks with Prepare, then unloads a spike | defending | reading the tell |
 
 **Why this exists.** With one enemy that spent its whole budget on two big swings, two
 defensive cards bought total immunity — a duel ran three rounds taking 0, 0 and 2 damage.
-That is not a fault in Dodge's cost: a defence was priced against how many attacks arrived, so
+That was not a fault in what a defence cost: it was priced against how many attacks arrived, so
 an opponent's *shape* is what the player is really buying answers to, and one shape means one
 answer.
 
@@ -1106,9 +1078,13 @@ Collected from above.
 
 - `[?]` **Nothing reads within-phase order any more**, so drag-to-reorder has no mechanical
   effect. Either it stops being presented as a decision, or something reads order again.
-- `[?]` **The defend column is a cost ladder with a bigger number at each rung**, which the
-  concept grid exists to prevent. Brace is a smaller Dodge; Dodge and Riposte carry the same
-  percentage.
+- `[?]` **Nothing tests what Plan is worth.** `tools/balance` deals no cards, so a wider hand is a
+  wider hand of nothing and the `planning` row measures 2 AP of pure loss. Pricing it needs the sim
+  to draw, which needs a seventh stream — see the entry under *Determinism*.
+- `[?]` **The three attack families differ only in which cards pair with which.** Same costs,
+  same damage, no riders — enough to make a hand a choice, not enough to make a family one.
+- `[?]` **Draw variance is answered by two levers now** — the Discard button and Plan — and neither
+  has been priced against the other.
 - `[?]` **Pair fires on most turns**, which makes the bottom rung a permanent global multiplier
   favouring whoever repeats themselves — currently the AI planners.
 - `[?]` **13 of the 27 hand/mix cells cannot be dealt** from the starting deck, because one copy
@@ -1128,6 +1104,7 @@ Collected from above.
   playback speed is unanswered.
 - `[?]` Earth's green collides with `playerSwatch`. One of the two schemes has to give, and
   what is holding it off is that a border and a swatch are never seen side by side.
-- `[?]` Whether the prepare/attack/defend types are the same axis as the *role* taxonomy the
-  initiate/respond model in `TODO.md` asks for, or orthogonal to it.
+- `[?]` Whether the attack/plan categories are the same axis as the *role* taxonomy the
+  initiate/respond model in `TODO.md` asks for, or orthogonal to it — and whether the *families*
+  are the axis that taxonomy actually wanted.
 - `[?]` How enemies scale up the tower.

@@ -7,9 +7,17 @@ import "testing"
 func handsFormed(events []Event, by Side) []HandID {
 	var out []HandID
 	for _, e := range events {
-		if e.Kind == KindCombo && e.Side == by && e.Hand != HandNone {
-			out = append(out, e.Hand)
+		if e.Kind != KindCombo || e.Side != by || e.Hand == HandNone {
+			continue
 		}
+		// **The High Card is skipped, because it is not a hand anybody built** *(2026-08-15)*.
+		// It is in the catalogue so the feed can name the commonest result in the game, and
+		// every assertion below is about what a turn's cards amounted to *beyond* the best of
+		// them. `Blow.Formed()` draws exactly the same line for the screen's combo preview.
+		if h, ok := HandByID(e.Hand); ok && h.Cards() < 2 {
+			continue
+		}
+		out = append(out, e.Hand)
 	}
 	return out
 }
@@ -157,8 +165,8 @@ func TestTheHandAndMixMultipliersAdd(t *testing.T) {
 
 // --- which hand forms ---------------------------------------------------------------------
 
-// **The best-paying hand wins.** Five Strikes hold a pair, a flurry and a barrage as well as an
-// onslaught; only the onslaught pays.
+// **The best-paying hand wins.** Four Strikes hold a pair and a flurry as well as a barrage; only
+// the barrage pays. A fifth Strike changes nothing, since a group matches at least its size.
 func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 	a, b := duelist(10, 0, 10000), duelist(10, 0, 10000)
 
@@ -169,7 +177,7 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 		{2, "Strike Pair"},
 		{3, "Strike Flurry"},
 		{4, "Strike Barrage"},
-		{5, "Strike Onslaught"},
+		{5, "Strike Barrage"},
 	} {
 		turn := make([]Card, tc.n)
 		for i := range turn {
@@ -193,7 +201,7 @@ func TestTheTwoConceptHands(t *testing.T) {
 
 	twoPair, _ := HandByName("Two Pair")
 	fullHouse, _ := HandByName("Full House")
-	onslaught, _ := HandByName("Jab Onslaught")
+	barrage, _ := HandByName("Jab Barrage")
 
 	for _, tc := range []struct {
 		turn []Card
@@ -202,7 +210,7 @@ func TestTheTwoConceptHands(t *testing.T) {
 	}{
 		{PlainCards(Jab, Jab, Strike, Strike), twoPair.ID, "two pairs"},
 		{PlainCards(Jab, Jab, Jab, Strike, Strike), fullHouse.ID, "three and two"},
-		{PlainCards(Jab, Jab, Jab, Jab, Jab), onslaught.ID, "five of one card"},
+		{PlainCards(Jab, Jab, Jab, Jab, Jab), barrage.ID, "five of one card"},
 	} {
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
 		if got := handsFormed(events, SideA); len(got) != 1 || got[0] != tc.want {
@@ -224,32 +232,59 @@ func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	}
 }
 
-// The ladder is scoped to attacks, so three Guards are three of a card and form nothing.
+// The ladder is scoped to attacks, so three Prepares are three of a card and form nothing.
 func TestTheLadderCountsAttacksAlone(t *testing.T) {
 	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Guard, Guard, Guard), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Prepare, Prepare, Prepare), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 0 {
-		t.Fatalf("three prepares formed %v, want nothing", got)
+		t.Fatalf("three plans formed %v, want nothing", got)
 	}
 	if n := kindCount(events, KindDamage); n != 0 {
-		t.Fatalf("a turn of prepares dealt damage %d times, want 0", n)
+		t.Fatalf("a turn of plans dealt damage %d times, want 0", n)
 	}
 }
 
-// **With no hand, the biggest single attack is the blow** — and it earns no multiplier, so it
-// deals exactly what the card deals.
+// **With no hand, the biggest single attack is the blow** — the High Card — and it earns no
+// multiplier at all, so what lands is exactly what the card's face says.
 func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
 	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Jab, Heavy, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 0 {
-		t.Fatalf("three different attacks formed %v, want no hand", got)
+		t.Fatalf("three different attacks formed %v, want no built hand", got)
 	}
-	if got, want := damageDealtBy(events, SideA), Heavy.Damage(10); got != want {
-		t.Errorf("dealt %d, want the Heavy's %d and nothing else", got, want)
+	if got, want := damageDealtBy(events, SideA), Smash.Damage(10); got != want {
+		t.Errorf("dealt %d, want the Smash's %d and nothing else", got, want)
+	}
+}
+
+// The High Card is still *named*, which is what lets the feed say what happened on the turn that
+// happens most often. A blow the engine could not name is the one failure this model can have.
+func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
+	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+
+	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
+
+	e, ok := comboEventFor(events, SideA)
+	if !ok {
+		t.Fatal("no KindCombo event — the attack phase said nothing about what it formed")
+	}
+	high, ok := HandByName("High Card")
+	if !ok {
+		t.Fatal("the catalogue holds no High Card")
+	}
+	if e.Hand != high.ID {
+		t.Errorf("three different attacks were named %v, want the High Card", e.Hand)
+	}
+	if e.Multiplier != 0 {
+		t.Errorf("the High Card paid a x%d.%02d multiplier, want none",
+			e.Multiplier/100, e.Multiplier%100)
+	}
+	if e.Amount != Smash.Damage(10) {
+		t.Errorf("the High Card came to %d, want the Smash's own %d", e.Amount, Smash.Damage(10))
 	}
 }
 
@@ -366,15 +401,29 @@ func TestAFlurryCostsTheOpponentTheirNextAction(t *testing.T) {
 	}
 }
 
-func TestOnslaughtTakesTheOpponentsWholeTurn(t *testing.T) {
+// **StaggerAll is a reward kind with nothing in the shipped catalogue using it** *(2026-08-15)*.
+// No shipped hand uses it; the capability is kept because it is one field on Effect and a combo
+// wanting it is a JSON entry away.
+//
+// So it is driven through an injected catalogue rather than through a card. That is what
+// resolveRound's hands and mixes parameters are for, and it is a better test of the *rule* anyway:
+// what is asserted is that StaggerAll empties a turn, not that one particular combo does.
+func TestStaggerAllTakesTheOpponentsWholeTurn(t *testing.T) {
 	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
 
-	events, _, _ := resolve(a, b,
+	hands := []Hand{
+		{ID: 1, Key: "high-card", Name: "High Card", Groups: []int{1}, Scope: []Category{CategoryAttack}},
+		{ID: 2, Key: "wipe", Name: "Wipe", Groups: []int{5}, Scope: []Category{CategoryAttack},
+			Multiplier: 100, Effect: Effect{Stagger: StaggerAll}},
+	}
+	mixes := []Mix{{ID: 1, Key: "drab", Name: "Drab", Colours: 0}}
+
+	events, _, _ := resolveRound(a, b,
 		PlainCards(Jab, Jab, Jab, Jab, Jab),
-		PlainCards(Strike, Strike, Guard), 1)
+		PlainCards(Strike, Strike, Defend), 1, hands, mixes, nil)
 
 	if lost := staggeredActions(events, SideB); len(lost) != 3 {
-		t.Fatalf("Onslaught should take all three of B's actions, got %v", lost)
+		t.Fatalf("StaggerAll should take all three of B's actions, got %v", lost)
 	}
 	if took := sideActions(events, SideB); len(took) != 0 {
 		t.Fatalf("B should take no action at all, got %v", took)
@@ -382,7 +431,7 @@ func TestOnslaughtTakesTheOpponentsWholeTurn(t *testing.T) {
 }
 
 // A hand scored off cards a stagger deleted would let a staggered duelist stagger back with a
-// turn it never took. Two Strikes survive, so a pair forms and emphatically not an onslaught.
+// turn it never took. Two Strikes survive, so a pair forms and emphatically not a barrage.
 func TestStaggeredCardsCannotFormAHand(t *testing.T) {
 	a := duelist(10, 0, 20000)
 	b := duelist(10, 0, 20000)
@@ -401,7 +450,7 @@ func TestStaggeredCardsCannotFormAHand(t *testing.T) {
 func TestSideBsStaggerLandsInTheFollowingRound(t *testing.T) {
 	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
 
-	events, aAfter, _ := resolve(a, b, PlainCards(Gather), PlainCards(Strike, Strike, Strike), 1)
+	events, aAfter, _ := resolve(a, b, PlainCards(Prepare), PlainCards(Strike, Strike, Strike), 1)
 
 	if lost := staggeredActions(events, SideA); len(lost) != 0 {
 		t.Fatalf("A already acted, so nothing can be taken from it this round, got %v", lost)
@@ -482,7 +531,7 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
 	aPlan := PlainCards(Strike, Strike, Strike)
-	bPlan := PlainCards(Gather, Jab, Strike, Dodge)
+	bPlan := PlainCards(Prepare, Jab, Strike, Defend)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 	order := ResolutionOrder(aPlan, bPlan)

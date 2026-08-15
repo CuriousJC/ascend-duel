@@ -23,17 +23,76 @@ import (
 func tableSeats() int { return combat.Duelist{}.MaxActions() }
 
 func TestTheTwoHandsNeverReachEachOther(t *testing.T) {
+	// **Swept across every split as well as every count** *(2026-08-15)*. A row now leaves a gap
+	// between its attacks and its plans, and that gap is spent out of the same half-width — so a
+	// split that widened the row instead of tightening its overlap is exactly how the two hands
+	// would meet in the middle.
 	gs := testState()
 
 	for n := 1; n <= tableSeats(); n++ {
-		player := playedSeatAt(gs, n-1, n)
-		enemy := enemySeatAt(gs, 0, n)
+		for split := 0; split <= n; split++ {
+			player := playedSeatAt(gs, n-1, n, split)
+			enemy := enemySeatAt(gs, 0, n, split)
 
-		playerRight := player.X + cardWidth
-		if playerRight >= enemy.X {
-			t.Errorf("%d cards a side: the player's row ends at x=%d and the opponent's starts at x=%d",
-				n, playerRight, enemy.X)
+			playerRight := player.X + cardWidth
+			if playerRight >= enemy.X {
+				t.Errorf("%d cards a side split at %d: the player's row ends at x=%d and the opponent's starts at x=%d",
+					n, split, playerRight, enemy.X)
+			}
 		}
+	}
+}
+
+func TestARowBreaksBetweenItsAttacksAndItsPlans(t *testing.T) {
+	// The point of the break: the card after it is further along than the pitch alone would put
+	// it, and the cards before it are exactly where they always were.
+	gs := testState()
+
+	const n, split = 4, 2
+	pitch := tablePitch(gs, n, split)
+
+	for i := 0; i < split; i++ {
+		want := tableInset + i*pitch
+		if got := playedSeatAt(gs, i, n, split).X; got != want {
+			t.Errorf("attack %d sits at x=%d, want %d — nothing before the break moves", i, got, want)
+		}
+	}
+	for i := split; i < n; i++ {
+		want := tableInset + i*pitch + tableGroupGap
+		if got := playedSeatAt(gs, i, n, split).X; got != want {
+			t.Errorf("plan %d sits at x=%d, want %d — the whole gap once, at the break", i, got, want)
+		}
+	}
+
+	// And a row that is all one kind gets no gap at all, at either end of the range.
+	for _, split := range []int{0, n} {
+		if got := groupGapFor(n, split); got != 0 {
+			t.Errorf("a row split at %d of %d left %dpx of break, want none", split, n, got)
+		}
+	}
+}
+
+func TestTheSplitIsTakenFromResolutionOrder(t *testing.T) {
+	// **The boundary is the engine's, not the screen's.** ResolutionOrder puts a turn's attacks
+	// first and its plans second; a row that counted its own would be a second answer to a
+	// question already settled, and would drift the first time a card changed category.
+	s := &CombatScene{
+		enemyActions: combat.PlainCards(combat.Defend, combat.Strike, combat.Prepare, combat.Jab),
+	}
+	s.seatEnemyCards()
+
+	if got := s.enemySplit(); got != 2 {
+		t.Errorf("the opponent's row splits at %d, want 2 — two attacks then two plans", got)
+	}
+	if got := splitOf(s.enemyQueueOrder()); got != s.enemySplit() {
+		t.Errorf("splitOf says %d and the row says %d", got, s.enemySplit())
+	}
+
+	// A row with no plans in it splits at its end, which reads as no break.
+	all := &CombatScene{enemyActions: combat.PlainCards(combat.Strike, combat.Jab)}
+	all.seatEnemyCards()
+	if got := all.enemySplit(); got != 2 {
+		t.Errorf("an all-attack row splits at %d, want its length", got)
 	}
 }
 
@@ -41,17 +100,22 @@ func TestEachRowIsPinnedToItsOwnEdge(t *testing.T) {
 	gs := testState()
 
 	for n := 1; n <= tableSeats(); n++ {
-		// The player's grows rightward from the left inset.
-		if got := playedSeatAt(gs, 0, n).X; got != tableInset {
-			t.Errorf("%d cards: the player's row starts at x=%d, want the %dpx inset", n, got, tableInset)
-		}
+		for split := 0; split <= n; split++ {
+			// The player's grows rightward from the left inset.
+			if got := playedSeatAt(gs, 0, n, split).X; got != tableInset {
+				t.Errorf("%d cards split at %d: the player's row starts at x=%d, want the %dpx inset",
+					n, split, got, tableInset)
+			}
 
-		// The opponent's is right-aligned, so its *last* card is flush with the right inset
-		// whatever the count. That is what makes a hand of two hug its own edge rather than
-		// drift toward the middle.
-		last := enemySeatAt(gs, n-1, n).X + cardWidth
-		if want := gs.ScreenWidth - tableInset; last != want {
-			t.Errorf("%d cards: the opponent's row ends at x=%d, want %d", n, last, want)
+			// The opponent's is right-aligned, so its *last* card is flush with the right inset
+			// whatever the count. That is what makes a hand of two hug its own edge rather than
+			// drift toward the middle — and it has to survive the break, which is the thing most
+			// likely to knock a right-aligned row off its edge.
+			last := enemySeatAt(gs, n-1, n, split).X + cardWidth
+			if want := gs.ScreenWidth - tableInset; last != want {
+				t.Errorf("%d cards split at %d: the opponent's row ends at x=%d, want %d",
+					n, split, last, want)
+			}
 		}
 	}
 }
@@ -77,14 +141,14 @@ func TestTheTableSitsBetweenTheRingRowAndTheFeed(t *testing.T) {
 
 func TestTheOpponentsRowIsInResolutionOrder(t *testing.T) {
 	// **The row must say what will happen, not what was planned.** ResolutionOrder regroups a
-	// turn into prepare, then attacks, then defenses, so a queue planned attack-first comes out
-	// of the planner in one order and resolves in another.
+	// turn into attacks then plans, so a queue planned plan-first comes out of the planner in one
+	// order and resolves in another.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Strike, combat.Gather, combat.Brace),
+		enemyActions: combat.PlainCards(combat.Prepare, combat.Strike, combat.Jab),
 	}
 
 	got := s.enemyQueueOrder()
-	want := combat.PlainCards(combat.Gather, combat.Strike, combat.Brace)
+	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Prepare)
 
 	if len(got) != len(want) {
 		t.Fatalf("the row holds %d cards, want %d", len(got), len(want))
@@ -102,10 +166,10 @@ func TestPlayedSeatsDoNotMoveAsTheRoundPlaysOut(t *testing.T) {
 	// shuffle every seated card sideways each time another arrived.
 	gs := testState()
 
-	const total = 4
-	first := playedSeatAt(gs, 0, total)
+	const total, split = 4, 2
+	first := playedSeatAt(gs, 0, total, split)
 	for n := 1; n < total; n++ {
-		if got := playedSeatAt(gs, 0, total); got != first {
+		if got := playedSeatAt(gs, 0, total, split); got != first {
 			t.Fatalf("seat 0 moved to %v while %d cards were down, from %v", got, n, first)
 		}
 	}
@@ -118,26 +182,26 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// have — so this is what replaces that safety.
 	s := &CombatScene{
 		hand: []paletteCard{
+			{actionCard: actionCard{Action: combat.Prepare, Element: combat.Ice}, selected: true},
 			{actionCard: actionCard{Action: combat.Strike, Element: combat.Fire}, selected: true},
-			{actionCard: actionCard{Action: combat.Gather, Element: combat.Ice}, selected: true},
-			{actionCard: actionCard{Action: combat.Brace, Element: combat.Earth}, selected: true},
+			{actionCard: actionCard{Action: combat.Jab, Element: combat.Earth}, selected: true},
 		},
 		fighterActions: []combat.Card{
+			combat.Of(combat.Prepare, combat.Ice),
 			combat.Of(combat.Strike, combat.Fire),
-			combat.Of(combat.Gather, combat.Ice),
-			combat.Of(combat.Brace, combat.Earth),
+			combat.Of(combat.Jab, combat.Earth),
 		},
 	}
 	s.seatPlayedCards()
 
-	// Prepare first, then the attack, then the defense — and each seat holds the card the
-	// player actually selected for it, not the one in the same position in the hand.
+	// The two attacks first and the plan after — and each seat holds the card the player
+	// actually selected for it, not the one in the same position in the hand.
 	// The elements come along, so a seat holding the right concept in the wrong colour fails
 	// too — which is the whole reason the hand and the queue are one type now.
 	want := []combat.Card{
-		combat.Of(combat.Gather, combat.Ice),
 		combat.Of(combat.Strike, combat.Fire),
-		combat.Of(combat.Brace, combat.Earth),
+		combat.Of(combat.Jab, combat.Earth),
+		combat.Of(combat.Prepare, combat.Ice),
 	}
 	if len(s.resolved) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.resolved), len(want))
@@ -164,8 +228,8 @@ func TestBothRowsRaiseTheCardThatIsResolving(t *testing.T) {
 	// hand being scenery rather than the other half of the round.
 	gs := testState()
 
-	player := playedSeatAt(gs, 1, 3)
-	enemy := enemySeatAt(gs, 1, 3)
+	player := playedSeatAt(gs, 1, 3, 3)
+	enemy := enemySeatAt(gs, 1, 3, 3)
 
 	if got := lift(player, true); got.Y != player.Y-tableFireLift {
 		t.Errorf("a firing card on the player's row sits at y=%d, want %d", got.Y, player.Y-tableFireLift)
@@ -286,24 +350,24 @@ func TestAPlayedCardFliesFromItsHandSlotToItsSeat(t *testing.T) {
 
 	r := resolvedCard{travel: newTravel(0, riseTicks), handIndex: 2, handCount: handSize}
 	from := slotAt(gs, 2, handSize)
-	to := playedSeatAt(gs, 1, 3)
+	to := playedSeatAt(gs, 1, 3, 3)
 
-	if got := r.at(gs, 1, 3, false); got != from {
+	if got := r.at(gs, 1, 3, 3, false); got != from {
 		t.Errorf("a card that has not set off is at %v, want its hand slot %v", got, from)
 	}
 
 	r.age = riseTicks
-	if got := r.at(gs, 1, 3, false); got != to {
+	if got := r.at(gs, 1, 3, 3, false); got != to {
 		t.Errorf("a landed card is at %v, want its seat %v", got, to)
 	}
 
 	// Lifted while it resolves, and only once it has landed — a card still arriving is already
 	// the most moving thing on screen.
-	if got := r.at(gs, 1, 3, true); got.Y != to.Y-tableFireLift {
+	if got := r.at(gs, 1, 3, 3, true); got.Y != to.Y-tableFireLift {
 		t.Errorf("a firing card sits at y=%d, want %d", got.Y, to.Y-tableFireLift)
 	}
 	r.age = 0
-	if got := r.at(gs, 1, 3, true); got != from {
+	if got := r.at(gs, 1, 3, 3, true); got != from {
 		t.Errorf("a card that has not set off was lifted: %v, want %v", got, from)
 	}
 }
@@ -316,11 +380,11 @@ func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
 	// does not happen. It is the same walk, and this pins that seating uses it rather than
 	// taking the queue as planned.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Strike, combat.Gather, combat.Brace),
+		enemyActions: combat.PlainCards(combat.Prepare, combat.Strike, combat.Jab),
 	}
 	s.seatEnemyCards()
 
-	want := combat.PlainCards(combat.Gather, combat.Strike, combat.Brace)
+	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Prepare)
 	if len(s.enemyDealt) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.enemyDealt), len(want))
 	}
@@ -340,23 +404,23 @@ func TestTheOpponentsCardsFlyInFromTheEnemyCard(t *testing.T) {
 
 	d := dealtCard{travel: newTravel(0, riseTicks)}
 	from := s.enemyCardRect(gs).Min
-	to := enemySeatAt(gs, 1, 3)
+	to := enemySeatAt(gs, 1, 3, 3)
 
-	if got := s.enemyCardAt(gs, d, 1, 3, false); got != from {
+	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != from {
 		t.Errorf("a card that has not set off is at %v, want the enemy card at %v", got, from)
 	}
 
 	d.age = riseTicks
-	if got := s.enemyCardAt(gs, d, 1, 3, false); got != to {
+	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != to {
 		t.Errorf("a landed card is at %v, want its seat %v", got, to)
 	}
 
 	// Lifted only once it has landed, exactly as the player's row does it.
-	if got := s.enemyCardAt(gs, d, 1, 3, true); got.Y != to.Y-tableFireLift {
+	if got := s.enemyCardAt(gs, d, 1, 3, 3, true); got.Y != to.Y-tableFireLift {
 		t.Errorf("a firing card sits at y=%d, want %d", got.Y, to.Y-tableFireLift)
 	}
 	d.age = 0
-	if got := s.enemyCardAt(gs, d, 1, 3, false); got != from {
+	if got := s.enemyCardAt(gs, d, 1, 3, 3, false); got != from {
 		t.Errorf("a card back on the pad is at %v, want %v", got, from)
 	}
 }
@@ -478,18 +542,18 @@ func TestOneAttackIsNotACombo(t *testing.T) {
 }
 
 func TestThePreviewNamesTheCardsInTheHandNotInTheQueue(t *testing.T) {
-	// **Attack.Cards indexes the turn, which is in resolution order**; the hand is in whatever
-	// order the player left it. A Gather queued first resolves first, so the pair the preview
-	// rings is hand slots 1 and 2 — reading the turn's indices straight would ring slots 0 and 1.
+	// **Blow.Cards indexes the turn, which is in resolution order**; the hand is in whatever
+	// order the player left it. A Prepare queued first resolves *last*, so the pair the preview
+	// rings is hand slots 1 and 2 while the turn's own indices for them are 0 and 1.
 	s := selecting(
-		combat.Of(combat.Gather, combat.Basic),
+		combat.Of(combat.Prepare, combat.Basic),
 		combat.Of(combat.Strike, combat.Fire),
 		combat.Of(combat.Strike, combat.Ice),
 	)
 
 	blow, ok := s.previewAttack()
 	if !ok {
-		t.Fatal("a pair behind a Gather previewed no combo")
+		t.Fatal("a pair behind a Prepare previewed no combo")
 	}
 	if got := s.previewHandSlots(blow); !sameSeats(got, []int{1, 2}) {
 		t.Errorf("the preview rings hand slots %v, want the two Strikes at 1 and 2", got)

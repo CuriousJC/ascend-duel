@@ -132,7 +132,7 @@ func TestTheComboRingFitsOnScreen(t *testing.T) {
 	// moment a card is highest.
 	// The widest row the rules can produce, asked of the rules rather than written down: a
 	// ring raising the cap must not be able to push the ring off the screen quietly.
-	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions())
+	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions(), 0)
 	if left := first.X - comboRingInset - comboRingWidth/2; left < 0 {
 		t.Errorf("the combo ring starts at x=%d, off the left of the screen", left)
 	}

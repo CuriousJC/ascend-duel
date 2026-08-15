@@ -43,28 +43,36 @@ var wants = []want{
 		func(c map[combat.ActionKind]int) bool { return c[combat.Strike] >= 3 },
 	},
 	{
-		"strike-onslaught",
-		"five Strikes: a Strike Onslaught, which takes a whole turn",
-		func(c map[combat.ActionKind]int) bool { return c[combat.Strike] >= 5 },
+		"strike-barrage",
+		"four Strikes: a Strike Barrage, and a Rainbow with it",
+		func(c map[combat.ActionKind]int) bool { return c[combat.Strike] >= 4 },
 	},
 	{
-		"heavy-flurry",
-		"three or more Heavys: 12 AP, unaffordable, but the cards are there",
-		func(c map[combat.ActionKind]int) bool { return c[combat.Heavy] >= 3 },
+		"smash-flurry",
+		"three or more Smashes: 9 AP, unaffordable, but the cards are there",
+		func(c map[combat.ActionKind]int) bool { return c[combat.Smash] >= 3 },
 	},
 	{
-		"all-categories",
-		"a Gather, an attack and a defend: every verb chip in one round",
+		"both-verbs",
+		"a plan card and an attack: both verbs in one round",
 		func(c map[combat.ActionKind]int) bool {
-			return c[combat.Gather] >= 1 &&
-				c[combat.Strike]+c[combat.Heavy] >= 1 &&
-				c[combat.Dodge]+c[combat.Riposte] >= 1
+			plans, attacks := 0, 0
+			for a, n := range c {
+				if a.Category() == combat.CategoryPlan {
+					plans += n
+				} else {
+					attacks += n
+				}
+			}
+			return plans >= 1 && attacks >= 1
 		},
 	},
 	{
-		"defensive",
-		"two Dodges and a Riposte: negation against a swarm",
-		func(c map[combat.ActionKind]int) bool { return c[combat.Dodge] >= 2 && c[combat.Riposte] >= 1 },
+		"all-plans",
+		"a Prepare, a Plan and a Defend: the whole plan vocabulary in hand",
+		func(c map[combat.ActionKind]int) bool {
+			return c[combat.Prepare] >= 1 && c[combat.Plan] >= 1 && c[combat.Defend] >= 1
+		},
 	},
 }
 

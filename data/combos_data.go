@@ -38,7 +38,7 @@ type comboFile struct {
 // a hand happens to be made of are the *mix*, read separately off whatever the hand formed, so
 // a hand and a mix are genuinely independent and multiply out rather than being enumerated.
 type HandData struct {
-	// Key is a stable slug shared by every expansion of this entry — `flurry`, `onslaught`. It
+	// Key is a stable slug shared by every expansion of this entry — `flurry`, `barrage`. It
 	// is how a caller asks for "the flurry built on Strike" without knowing the ID arithmetic,
 	// and it is deliberately independent of Name so a hand can be renamed without breaking
 	// lookups.

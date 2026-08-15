@@ -20,53 +20,57 @@ import (
 // report.
 //
 // The cost of that is drift: the names and costs below are a snapshot of the twelve
-// concepts as of 2026-08-09. If they stop matching the deck it makes the sheet a worse
+// concepts as of 2026-08-15. If they stop matching the deck it makes the sheet a worse
 // preview but never a wrong one, because every pixel still comes from cards.Render.
 
-// glyphNames says what art each category actually draws, for the caption. Worth spelling
-// out on the sheet, because "attack" and "a sword" are the kind of pairing that is
-// obvious to whoever wired it and opaque a month later.
-var glyphNames = map[cards.Category]string{
-	cards.CategoryPrepare: "an open book",
-	cards.CategoryAttack:  "a sword",
-	cards.CategoryDefend:  "a kite shield",
+// familyNotes says what mark each family actually draws, for the caption. Worth spelling out on
+// the sheet, because a bare "S" in a corner is obvious to whoever wired it and opaque a month
+// later — and doubly so for Slash, which carries a D.
+var familyNotes = map[cards.Family]string{
+	cards.FamilyStab:  `the letter "S", pending a glyph`,
+	cards.FamilySlash: `the letter "D", pending a glyph`,
+	cards.FamilyCrush: `the letter "C", pending a glyph`,
+	cards.FamilyPlan:  `the letter "P", pending a glyph`,
 }
 
-// concept is one of the twelve, with the cost, category and effect text the rules give it.
+// concept is one of the twelve, with the cost, family and effect text the rules give it.
 //
 // **No damage figure**: a card does not carry one any more, and what it deals is in the text.
 type concept struct {
-	name     string
-	category cards.Category
-	cost     int
-	text     string
+	name   string
+	family cards.Family
+	cost   int
+	text   string
 }
 
-// The twelve concepts, in cards.json's order, which is grid order.
+// The twelve concepts, in duelist_cards.json's order, which is grid order: three attack families
+// of three tiers, then the plans.
+//
+// **Three families by three tiers, and the tiers cost and hit the same in each** *(2026-08-15)*.
+// 1 AP is half damage, 2 AP is one, 3 AP is two, in Stab and Slash and Crush alike. So a family
+// is *which* pair you are building rather than a stronger or weaker way to build one, and the
+// only thing separating Lunge from Cleave is what it pairs with.
 //
 // **The effect text is a snapshot of `cardEffects` in internal/screens**, under the same rule
 // as the names and costs above it: the tool does not import the game so it can draw cards the
 // rules cannot deal. It is the longest strings here that matter — the sheet is where an
 // overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
-	{"Gather", cards.CategoryPrepare, 1, "Bank 2 AP for next round"},
-	{"Sift", cards.CategoryPrepare, 2, "Throw away 2 more cards, then refill"},
-	// **Guard is a prepare, not a defend** — combat.ActionKind.Category() groups it with
-	// Gather, Sift and Ritual. This list said Defend from the day it was written and the sheet
-	// duly drew it with a kite shield where the game draws an open book. The drift this file
-	// accepts is a card the rules cannot *deal*; a card drawn with the wrong glyph is a
-	// picture that lies, which is the one thing a contact sheet may never be. Corrected
-	// 2026-08-12.
-	{"Guard", cards.CategoryPrepare, 3, "Halve every attack next turn"},
-	{"Ritual", cards.CategoryPrepare, 4, "Bank 6 AP for next round"},
-	{"Jab", cards.CategoryAttack, 1, "Deal 0.5x DMG"},
-	{"Strike", cards.CategoryAttack, 2, "Deal 1x DMG"},
-	{"Feint", cards.CategoryAttack, 3, "Strip a defend card, deal 1x DMG"},
-	{"Heavy", cards.CategoryAttack, 4, "Deal 2x DMG"},
-	{"Brace", cards.CategoryDefend, 1, "Halve 1 incoming attack"},
-	{"Dodge", cards.CategoryDefend, 2, "Negate 1 incoming attack"},
-	{"Riposte", cards.CategoryDefend, 3, "Negate 1 attack, deal 0.5x DMG back"},
-	{"Retreat", cards.CategoryDefend, 4, "Negate 3 incoming attacks"},
+	{"Jab", cards.FamilyStab, 1, "Stabs for 0.5x DMG"},
+	{"Thrust", cards.FamilyStab, 2, "Stabs for 1x DMG"},
+	{"Lunge", cards.FamilyStab, 3, "Stabs for 2x DMG"},
+
+	{"Cut", cards.FamilySlash, 1, "Slashes for 0.5x DMG"},
+	{"Slash", cards.FamilySlash, 2, "Slashes for 1x DMG"},
+	{"Cleave", cards.FamilySlash, 3, "Slashes for 2x DMG"},
+
+	{"Bash", cards.FamilyCrush, 1, "Crushes for 0.5x DMG"},
+	{"Strike", cards.FamilyCrush, 2, "Crushes for 1x DMG"},
+	{"Smash", cards.FamilyCrush, 3, "Crushes for 2x DMG"},
+
+	{"Prepare", cards.FamilyPlan, 1, "Bank 2 AP for next round"},
+	{"Plan", cards.FamilyPlan, 2, "Draw 2 cards next round"},
+	{"Defend", cards.FamilyPlan, 3, "Halve damage this turn"},
 }
 
 // realCards is **all twelve concepts at hand size**, one element after another so the row
@@ -76,8 +80,8 @@ var concepts = []concept{
 // the biggest damage badge, both cost extremes. That was the right row while the only thing
 // varying between concepts was furniture the grid rows above already covered. It is the wrong
 // row now that every card carries its own paragraph — the wording is the thing being reviewed,
-// and six of twelve meant half of it could only be read in the source. Sift and Feint, the two
-// longest strings in the game, were among the six that never appeared.
+// and a sample of six of twelve meant half of it could only be read in the source — including
+// whichever strings were longest, which are the ones a layout breaks on.
 func realCards() []cards.Spec {
 	elements := cards.Elements()
 
@@ -94,7 +98,7 @@ func realDeckRow(e cards.Element) []cards.Spec {
 	out := make([]cards.Spec, 0, len(concepts))
 	for _, c := range concepts {
 		out = append(out, cards.Spec{
-			Name: c.name, Category: c.category, Text: c.text,
+			Name: c.name, Family: c.family, Text: c.text,
 			Cost: c.cost, Element: e, Enabled: true,
 		})
 	}
@@ -105,7 +109,7 @@ func specFor(name string, e cards.Element) cards.Spec {
 	for _, c := range concepts {
 		if c.name == name {
 			return cards.Spec{
-				Name: c.name, Category: c.category, Text: c.text,
+				Name: c.name, Family: c.family, Text: c.text,
 				Cost: c.cost, Element: e, Enabled: true,
 			}
 		}
@@ -187,7 +191,7 @@ func enemySpecs() ([]cards.Spec, error) {
 //
 // **The figures are the only thing on this card that moves**, so the spread is chosen to
 // stretch them rather than to be typical: the starting duelist, one that has taken damage and
-// banked a Gather, a long name against a two-digit column, and a nearly-dead one to put the
+// banked a Prepare, a long name against a two-digit column, and a nearly-dead one to put the
 // health bar near empty beside a full one. The last is where a bar's arithmetic goes wrong.
 //
 // Same caveat as the concepts above: these numbers are illustrative and not read from

@@ -79,7 +79,7 @@ func faces(gs *state.GlobalState) *cards.Faces {
 func cardSpec(c actionCard, enabled, selected bool) cards.Spec {
 	return cards.Spec{
 		Name:     c.Action.String(),
-		Category: category(c.Action.Category()),
+		Family:   family(c.Action.Family()),
 		Cost:     c.Action.Cost(),
 		Element:  artFor(c.Element),
 		Text:     cardEffects[c.Action],
@@ -180,7 +180,7 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.
 // change to how strength becomes damage moves this number without anyone remembering that a
 // card shows it. Writing `c.Str` would have been the same integer today and a lie tomorrow.
 //
-// AP is the live budget, `BonusAP` included, so a Gather banked last round shows up on the
+// AP is the live budget, `BonusAP` included, so a Prepare banked last round shows up on the
 // card before it is spent. Vitae is passed in rather than read off the combatant because it is
 // run-level state that does not live on a duelist yet — see startingVitae.
 //
@@ -270,28 +270,29 @@ func artFor(e combat.Element) cards.Element {
 	}
 }
 
-// category maps the rules' phase onto the drawing package's, which is drawn as a glyph:
-// a sword for attack, a shield for defend, an open book for prepare.
+// family maps the rules' family onto the drawing package's, which is drawn in the card's corner.
 //
 // Two enums again, and for the same reason as the elements — internal/cards knows how to
-// draw a card and nothing about how a round resolves. The default is CategoryNone, which
-// draws no glyph at all rather than guessing at one.
-func category(c combat.Category) cards.Category {
-	switch c {
-	case combat.CategoryPrepare:
-		return cards.CategoryPrepare
-	case combat.CategoryAttack:
-		return cards.CategoryAttack
-	case combat.CategoryDefend:
-		return cards.CategoryDefend
+// draw a card and nothing about how a round resolves. The default is FamilyNone, which
+// draws no mark at all rather than guessing at one, and it is what the opponent's cards get.
+func family(f combat.Family) cards.Family {
+	switch f {
+	case combat.FamilyStab:
+		return cards.FamilyStab
+	case combat.FamilySlash:
+		return cards.FamilySlash
+	case combat.FamilyCrush:
+		return cards.FamilyCrush
+	case combat.FamilyPlan:
+		return cards.FamilyPlan
 	default:
-		return cards.CategoryNone
+		return cards.FamilyNone
 	}
 }
 
 // Compile-time assurance that the action type still answers everything a Spec needs. If
 // combat.ActionKind loses one of these, this fails here rather than in a card that
 // silently renders blank.
-var _ = func(a combat.ActionKind, str int) (string, string, int, int) {
-	return a.String(), a.Category().String(), a.Damage(str), a.Cost()
+var _ = func(a combat.ActionKind, str int) (string, string, string, int, int) {
+	return a.String(), a.Category().String(), a.Family().String(), a.Damage(str), a.Cost()
 }

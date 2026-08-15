@@ -8,13 +8,13 @@ import "sort"
 //
 // **A turn produces exactly one attack** *(2026-08-14)*. The attack phase reads every attack card
 // queued, forms the best hand it can, and resolves a single blow — so five Strikes are not five
-// hits, they are one Strike Onslaught. Attack cards that do not contribute are ignored outright:
+// hits, they are one Strike Barrage. Attack cards that do not contribute are ignored outright:
 // `Strike, Jab, Strike` is a Strike Pair and the Jab is not in it.
 //
 // **Two independent axes, multiplied at load rather than enumerated.**
 //
 //   - The **hand** counts copies of a card — pair, two pair, flurry, full house, barrage,
-//     onslaught. It is what poker counts, and it wears poker's names honestly.
+//     barrage. It is what poker counts, and it wears poker's names honestly.
 //   - The **mix** counts distinct non-basic *colours* in whatever hand formed — drab, mono, duo,
 //     trio, rainbow. Basic is not a colour and never counts in either direction, so two basic
 //     Strikes and an ice Strike is mono.
@@ -25,7 +25,7 @@ import "sort"
 //
 // **Exactly one hand and exactly one mix apply**, which is what retired the family/tier
 // machinery this file used to carry. A hand wins on its multiplier — five Strikes are an
-// Onslaught rather than also the pair and flurry inside it — and the mixes partition every hand
+// Barrage rather than also the pair and flurry inside it — and the mixes partition every hand
 // by an *exact* colour count, so no two can both be true.
 //
 // **Matching is on the resolved order, never on the queue.** ResolutionOrder regroups a queue by
@@ -70,7 +70,7 @@ const multiplierScale = 100
 type Effect struct {
 	// BankAP is added to the round's banked points, arriving as budget in the round after. It
 	// cannot apply to the round that formed the hand — those points were committed when the
-	// cards were queued — so it rides the same GatheredAP/BonusAP path a Gather does.
+	// cards were queued — so it rides the same GatheredAP/BonusAP path a Prepare does.
 	BankAP int
 
 	// Stagger is how many actions the *opponent* loses from their next turn, or StaggerAll.
@@ -206,7 +206,7 @@ func HandIDFor(key string, card ActionKind) (HandID, bool) {
 //
 // **A turn has at most one of these.** It is the whole of the attack phase — there is no second
 // blow behind it, however many attack cards were queued.
-type Attack struct {
+type Blow struct {
 	// Cards are indices into the side's own resolved turn, naming the cards that formed the
 	// hand. Attack cards that contributed nothing are not here.
 	//
@@ -229,35 +229,41 @@ type Attack struct {
 	Elements []Element
 }
 
-// Formed reports whether a real hand was made, as opposed to a lone attack falling through.
-func (a Attack) Formed() bool { return a.Hand.ID != HandNone }
+// Formed reports whether a hand of two or more cards was made, as opposed to the High Card
+// falling through.
+//
+// **The High Card is a hand and still answers false here** *(2026-08-15)*. It has a name, an ID
+// and a line in the catalogue, so the feed can say what fired; what it does not have is anything
+// a player *built*, and this is the question the screen's combo preview asks — whether the cards
+// currently queued amount to more than the best of them.
+func (b Blow) Formed() bool { return b.Hand.ID != HandNone && b.Hand.Cards() > 1 }
 
-// AttackFor works out one side's attack phase from the cards it resolved.
+// BlowFor works out one side's attack phase from the cards it resolved.
 //
-// **The best hand wins, and best means the biggest multiplier.** Five Strikes hold a pair, a
-// flurry and a barrage as well as an onslaught; the onslaught is worth the most, so it is the
-// hand, and nothing else pays. That replaced a family/tier ranking, which was machinery for
-// choosing between combos that could all fire at once — and none can any more.
+// **The best hand wins, and best means the biggest multiplier.** Four Strikes hold a pair and a
+// flurry as well as a barrage; the barrage is worth the most, so it is the hand, and nothing else
+// pays.
 //
-// **When no hand forms, the single biggest attack is the blow.** Ties go to the card queued
-// first, which needs no tie-break rule beyond the order the turn is already in.
-func AttackFor(turn []Slot) Attack {
-	return attackFor(turn, handTable, mixTable)
+// **When no hand of two or more forms, the High Card is the blow**: the single attack that hits
+// hardest, at no multiplier at all, so what lands is the card's own face damage. Ties go to the
+// card queued first, which needs no tie-break rule beyond the order the turn is already in.
+func BlowFor(turn []Slot) Blow {
+	return blowFor(turn, handTable, mixTable)
 }
 
-func attackFor(turn []Slot, hands []Hand, mixes []Mix) Attack {
+func blowFor(turn []Slot, hands []Hand, mixes []Mix) Blow {
 	cards, hand, formed := matchHand(turn, hands)
 	if !formed {
-		cards = biggestAttack(turn)
+		cards, hand = biggestAttack(turn), highCard(hands)
 	}
 	if len(cards) == 0 {
-		return Attack{}
+		return Blow{}
 	}
 
 	elems := elementsOf(turn, cards)
 	mix := mixFor(len(elems), mixes)
 
-	return Attack{
+	return Blow{
 		Cards:      cards,
 		Hand:       hand,
 		Mix:        mix,
@@ -266,7 +272,30 @@ func attackFor(turn []Slot, hands []Hand, mixes []Mix) Attack {
 	}
 }
 
-// matchHand finds the best-paying hand the turn can form.
+// highCardKey is the catalogue entry naming the fallback. **It is in `combos.json` rather than
+// written out here** so the one thing every turn can produce is named and numbered where the rest
+// of the ladder is, and the feed can look it up like any other hand.
+const highCardKey = "high-card"
+
+// highCard is the catalogue's fallback entry. It is required to exist — loadCatalogue panics
+// without it — because a turn with an attack in it always produces a hand, and one the engine
+// could not name is the single failure this model can have.
+func highCard(hands []Hand) Hand {
+	for _, h := range hands {
+		if h.Key == highCardKey {
+			return h
+		}
+	}
+	return Hand{}
+}
+
+// matchHand finds the best-paying hand of **two or more cards** the turn can form.
+//
+// **The one-card hand is skipped rather than matched** *(2026-08-15)*. The High Card is in the
+// catalogue and would match against any attack at all, but counting is the wrong way to pick it:
+// `matchCountOf` fills groups largest-count-first, so it would hand back whichever concept
+// appeared most rather than the card that hits hardest. Which card is the High Card is a question
+// about damage, and `biggestAttack` is what answers it.
 func matchHand(turn []Slot, hands []Hand) ([]int, Hand, bool) {
 	var (
 		best      Hand
@@ -275,6 +304,9 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, bool) {
 	)
 
 	for _, h := range hands {
+		if h.Cards() < 2 {
+			continue
+		}
 		cards, ok := matchCountOf(turn, h)
 		if !ok {
 			continue
@@ -337,12 +369,13 @@ func matchCountOf(turn []Slot, h Hand) ([]int, bool) {
 	return out, true
 }
 
-// biggestAttack is the fallback when no hand formed: the single attack that hits hardest, or
-// nothing if the turn queued no attacks at all.
+// biggestAttack is the High Card: the single attack that hits hardest, or nothing if the turn
+// queued no attacks at all.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
-// blow is. Strike and Feint both deal `str`, so the tie is real and goes to the card queued
-// first — the earliest slot wins, which is deterministic without inventing a rule.
+// blow is. The three families ladder identically — a Lunge, a Cleave and a Smash all deal double
+// — so ties are now the common case rather than the exception, and they go to the card queued
+// first. The earliest slot wins, which is deterministic without inventing a rule.
 func biggestAttack(turn []Slot) []int {
 	best, bestDamage := -1, 0
 	for i, s := range turn {

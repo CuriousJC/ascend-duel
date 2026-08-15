@@ -73,6 +73,13 @@ func buildEnemyCards() []combat.Card {
 			}
 			return a.Category().String(), true
 		},
+		func(concept string) (string, bool) {
+			a, ok := combat.ParseAction(concept)
+			if !ok {
+				return "", false
+			}
+			return a.Family().String(), true
+		},
 	)
 	if len(problems) > 0 {
 		msg := "enemy_cards.json disagrees with the rules:"
@@ -131,7 +138,7 @@ const EnemySeed int64 = 20260811
 //
 // **The hand does NOT persist between rounds, unlike the player's — and that is a fix, not
 // an oversight.** Persisting it was the first thing tried and it deadlocked: a style only
-// ever takes attacks, plus a Guard or a Gather, so every card it could not use stayed in
+// ever takes attacks, plus a Defend or a Prepare, so every card it could not use stayed in
 // hand. By round three the hand was seven dead cards, nothing could be drawn on top of them,
 // and the opponent stood still for the rest of the duel. `tools/balance` showed it as a
 // roster nothing could lose to.

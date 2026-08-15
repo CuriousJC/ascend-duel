@@ -55,7 +55,7 @@ const (
 	//
 	// **It is a roll again as of 2026-08-14**, reversing the deterministic version taken on
 	// 2026-08-12. The reason it had to change: a turn now resolves one attack, so a certain miss
-	// deleted a whole turn — up to a 250-damage Onslaught — for the price of one 1 AP fire Jab.
+	// deleted a whole turn — up to a 250-damage Barrage — for the price of one 1 AP fire Jab.
 	// The reason a roll was chosen over the deterministic alternatives (breaking the hand,
 	// cutting the multiplier) is that lightning should feel unreliable.
 	//

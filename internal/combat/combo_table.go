@@ -99,6 +99,14 @@ func loadCatalogue() ([]Hand, []Mix) {
 		}
 	}
 
+	// **The fallback has to be in the file.** Any turn with an attack in it produces a hand, and
+	// the one it produces when nothing was built is the High Card — so a catalogue without it is a
+	// catalogue that cannot name the commonest result in the game. Same posture as the missing
+	// mix above, and for the same reason.
+	if !seenKey[highCardKey] {
+		panic(fmt.Sprintf("combat: combos.json has no %q hand, so a lone attack could not be named", highCardKey))
+	}
+
 	return hands, mixes
 }
 
@@ -112,8 +120,8 @@ func validateHand(r data.HandData) error {
 		return fmt.Errorf("has no ID, or a zero one, which means 'no hand'")
 	case len(r.Groups) == 0:
 		return fmt.Errorf("names no groups, so it counts nothing")
-	case r.Multiplier <= 0:
-		return fmt.Errorf("has multiplier %d; a hand worth nothing is a hand nobody would form", r.Multiplier)
+	case r.Multiplier < 0:
+		return fmt.Errorf("has a negative multiplier")
 	}
 
 	total := 0
@@ -122,6 +130,13 @@ func validateHand(r data.HandData) error {
 			return fmt.Errorf("names a group of %d cards", g)
 		}
 		total += g
+	}
+	// **A zero multiplier is legal for the one-card hand and a typo in any other** *(2026-08-15)*.
+	// The High Card pays nothing on purpose — what lands is the card's own face damage — and it is
+	// the only hand nobody chooses to form. A pair worth no multiplier is a hand nobody would
+	// build, so it is refused rather than loaded.
+	if total > 1 && r.Multiplier <= 0 {
+		return fmt.Errorf("wants %d cards for multiplier %d; a built hand worth nothing is one nobody would form", total, r.Multiplier)
 	}
 	// **A hand cannot ask for more cards than a turn can hold.** MaxActions is five and frozen,
 	// so a six-card hand is one nobody could ever form and is a typo rather than an ambition.

@@ -63,28 +63,32 @@ func main() {
 	// they exercise. **A card no posture plays is a card this tool cannot see**, which is how
 	// four new concepts would otherwise have shipped with their balance unmeasured.
 	postures := []playerRound{
-		// 6 AP: everything into damage.
-		{"all-out", nil, combat.PlainCards(combat.Heavy, combat.Strike)},
-		// Guard is 3, leaving a Strike.
-		{"guarding", combat.PlainCards(combat.Guard), combat.PlainCards(combat.Strike)},
-		// Two Dodges are 4, leaving a Strike.
-		{"dodging", combat.PlainCards(combat.Dodge, combat.Dodge), combat.PlainCards(combat.Strike)},
+		// 6 AP: everything into damage, and no hand at all — a Smash and a Strike are different
+		// concepts, so this is the High Card posture. It is the floor every other row is read
+		// against.
+		{"all-out", nil, combat.PlainCards(combat.Smash, combat.Strike)},
 
-		// Retreat is 4, leaving a Jab. **This is the posture to read first**: it stops three
-		// attacks and reflects nothing, so its value is set entirely by how many blows arrive.
-		// Against a swarm it should be excellent and against a brute it should be a Dodge that
-		// cost two points too many. Strong against both means the charge count is wrong.
-		{"retreating", combat.PlainCards(combat.Retreat), combat.PlainCards(combat.Jab)},
-		// Three Braces are 3, leaving a Strike — the cheap partial defence spread wide, against
-		// two Dodges' precise negation.
-		{"bracing", combat.PlainCards(combat.Brace, combat.Brace, combat.Brace), combat.PlainCards(combat.Strike)},
-		// Feint is 3 and a Strike is 2. Only distinguishable from all-out against an opponent
-		// holding negations, which is what makes it the anti-Riposte reading.
-		{"feinting", nil, combat.PlainCards(combat.Feint, combat.Strike)},
-		// Ritual is 4, leaving a Jab, and banks +6. Repeated every round it is a posture that
-		// pays 4 AP a round for a budget it never gets to spend — deliberately a bad plan, and
-		// the floor a real Ritual line has to beat.
-		{"ritual", combat.PlainCards(combat.Ritual), combat.PlainCards(combat.Jab)},
+		// 6 AP into a pair, which is the whole point of the rework: three Strikes are 6 AP and a
+		// Strike Flurry, where all-out spends the same budget on two bigger cards and forms
+		// nothing. If all-out ever beats this, the multipliers are too low to be worth building
+		// toward.
+		{"pairing", nil, combat.PlainCards(combat.Strike, combat.Strike, combat.Strike)},
+		// The cheapest hand in the game: three Bashes are 3 AP for a Bash Flurry, leaving a
+		// Strike. Small cards multiplied against big cards unmultiplied.
+		{"cheap-flurry", nil, combat.PlainCards(combat.Bash, combat.Bash, combat.Bash, combat.Strike)},
+
+		// Defend is 3, leaving a Thrust and a Jab. **This is the posture to read first**: half a
+		// round bought half a blow, and if that wins duels the price is wrong.
+		{"defending", combat.PlainCards(combat.Defend), combat.PlainCards(combat.Thrust, combat.Jab)},
+		// Plan is 2 and widens the *next* hand by two. **This tool cannot see what it buys**: the
+		// sim deals no cards, so a wider hand is a wider hand of nothing and the row measures the
+		// 2 AP as pure loss. It is here as the floor — anything at or above `all-out` would mean
+		// the cost is not being felt at all.
+		{"planning", combat.PlainCards(combat.Plan), combat.PlainCards(combat.Thrust, combat.Bash)},
+		// Prepare is 1 and banks +2, leaving 5 AP. Repeated every round it pays a card slot for a
+		// budget it keeps re-spending on the same thing — deliberately a mediocre plan, and the
+		// floor a real banking line has to beat.
+		{"banking", combat.PlainCards(combat.Prepare), combat.PlainCards(combat.Smash, combat.Thrust)},
 
 		// **The four element postures are all-out in a colour** *(2026-08-12)*, and they are meant
 		// to be read against that row rather than against each other: same concepts, same 6 AP,
@@ -92,12 +96,12 @@ func main() {
 		// worth.
 		//
 		// They exist because statuses landed the same day, and **a status no posture applies is a
-		// status this tool cannot see** — the same rule the seven above were extended under when
-		// four concepts arrived with their balance unmeasured.
-		{"burning", nil, elemental(combat.Fire, combat.Heavy, combat.Strike)},
-		{"chilling", nil, elemental(combat.Ice, combat.Heavy, combat.Strike)},
-		{"shocking", nil, elemental(combat.Lightning, combat.Heavy, combat.Strike)},
-		{"weighting", nil, elemental(combat.Earth, combat.Heavy, combat.Strike)},
+		// status this tool cannot see** — the same rule the rows above were extended under when
+		// new concepts arrived with their balance unmeasured.
+		{"burning", nil, elemental(combat.Fire, combat.Smash, combat.Strike)},
+		{"chilling", nil, elemental(combat.Ice, combat.Smash, combat.Strike)},
+		{"shocking", nil, elemental(combat.Lightning, combat.Smash, combat.Strike)},
+		{"weighting", nil, elemental(combat.Earth, combat.Smash, combat.Strike)},
 	}
 	fmt.Println("\npostures:")
 	for _, p := range postures {
@@ -171,8 +175,11 @@ func main() {
 		"\n\nWhat to look for: every enemy should lose to *something* and win against *something*." +
 		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
 		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
-		"\nRetreat is the one to watch — three negations for four points, so it should read as" +
-		"\nexcellent against a swarm and overpriced against a brute. Strong everywhere means wrong.")
+		"\nNothing does that as of 2026-08-15: defending wins 16 of 96 and planning 1, both at the" +
+		"\nshallow end, which is what a card costing most of a round should look like." +
+		"\n\nTwo figures to read next. Twelve enemies are walls, beaten by no posture at all. And" +
+		"\nplanning wins once, but this tool deals no cards — a wider hand is a wider hand of nothing" +
+		"\nhere, so that row measures Plan as 2 AP of pure loss. Read it as the floor, not the card.")
 }
 
 // stalemateRounds is where a duel is called a draw. A fight nobody can finish is as broken

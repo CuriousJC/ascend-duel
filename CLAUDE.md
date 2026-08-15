@@ -269,20 +269,27 @@ rather than treating the first roll as permission for the second.
   **every entry in `seeds.go` would break the first time an enemy deck was retuned** — and a
   named hand has to stay a fact about the player's deck alone. That is the shape of argument
   to apply if a seventh stream is proposed: ask what it would silently reroll.
-- **Both shuffles exist.** The player's lives on `CombatScene` as `rng`, seeded in `Init`
-  from `deckSeed`; the opponent's lives on `decks.EnemyPile`, seeded from `decks.EnemySeed`.
-  Both constants are placeholders for the per-run seed — every launch deals the same hands,
-  which is what makes a problem reproducible while the screen is being built. When `Session`
-  state lands, both read from there and nothing else about the deck code changes.
+- **Both shuffles exist, and both read the run seed as of 2026-08-15.** The player's lives on
+  `CombatScene` as `rng`; the opponent's lives on `decks.EnemyPile`. `CombatScene.shuffleSeeds`
+  is the one place either is chosen: `RunSeed ^ playerDeckSalt ^ fight` and
+  `RunSeed ^ enemyDeckSalt ^ fight`, where `fight` is `(fightIndex+1) * fightStride`. So every
+  fight deals fresh cards, and a defeat and a retry deal that fight again rather than a new
+  one — the same property the enemy roster has, and for the same reason: nothing re-rolls a run
+  until `Session` exists.
+- **`deckSeed` is the pin, and pinning is all-or-nothing.** Non-zero fixes the player's shuffle
+  to a catalogued hand and the opponent's to `decks.EnemySeed`; zero — the default, written as
+  an empty `deckSeedName` — rolls both. It pins both sides because half a reproducible duel is
+  worse than none: the hand looks right and the fight still differs. `tools/balance` and the
+  `demoplay` build are the callers that want the pin.
 - **The per-run seed is `GlobalState.RunSeed`.** `main` sets it once — from `fixedRunSeed` if
   that constant is non-zero, otherwise from the clock — and logs it. **Reading the clock there
   is not a breach of "no `time.Now()` in game rules"**: choosing a seed is the one place a run
   is allowed to be unpredictable, and it happens once, outside the rules, in main.
-  `fixedRunSeed` is the debugging toggle, the counterpart of `deckSeed`. **Enemy selection is
-  the one live stream off it** — the combat screen shuffles the roster *within each floor
-  band* from `RunSeed ^ enemySelectSalt`, so a run opens on a different opponent without a
-  floor-eight enemy ever being fight one. The two card shuffles still read their own fixed
-  constants; a consumer that starts reading `RunSeed` must salt its own source, never share one.
+  `fixedRunSeed` is the debugging toggle, the counterpart of `deckSeed`. **Four streams are
+  live off it** — enemy selection (`RunSeed ^ enemySelectSalt`, shuffled *within each floor
+  band* so a run opens on a different opponent without a floor-eight enemy ever being fight
+  one), the combat roll, and the two card shuffles. A consumer that starts reading `RunSeed`
+  must salt its own source, never share one.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of
   the rules package is what preserves its purity, its tests and the headless balance sim.
   Moving draw into `combat` is a real option later, but it has to arrive as an injected

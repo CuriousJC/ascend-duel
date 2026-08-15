@@ -139,24 +139,39 @@ type deckEntry struct {
 	count int
 }
 
-// deckSeedName is which catalogued opening hand a launch deals. **Set it to whatever the
-// screen is currently being worked on with** — the names and what each deals are in seeds.go,
-// and `go run ./tools/seeds` prints them.
+// deckSeedName pins every launch to one catalogued opening hand. **Empty means unpinned**,
+// which is the default: the shuffles are rolled from the run seed instead and each fight deals
+// a fresh deck. Set it to a name while working on something that needs a particular hand — the
+// names and what each deals are in seeds.go, and `go run ./tools/seeds` prints them.
 //
 // Naming it rather than writing a bare number is the whole point: `deckSeed = 15` says nothing
 // about why 15, and the next person to change it has no way to know they have just stopped
 // dealing the hand a demo depended on.
-const deckSeedName = "strike-flurry"
+const deckSeedName = ""
 
-// deckSeed fixes the shuffle so every launch deals the same cards, which is what makes a
-// layout problem reproducible while the screen is being built. It is a placeholder for the
-// per-run seed described in TODO.md — when Session state exists this reads from there, and
-// the rest of the deck code does not change.
+// deckSeed is the pinned shuffle, or **zero for "roll one from the run seed"** — the same
+// toggle shape as `fixedRunSeed` in main.go, and the counterpart of it: that one pins which
+// enemies a run meets, this one pins which cards it draws. Pinning makes a layout problem
+// reproducible; unpinned is what an actual run looks like.
 //
-// A var rather than a const so a build-tagged file can point it at a different catalogue
-// entry in `init` — which is how the scripted demo picks its hand without the game growing a
-// flag it would have to keep.
-var deckSeed = seedFor(deckSeedName)
+// When it is non-zero the *opponent's* shuffle is pinned too, to `decks.EnemySeed` — see
+// shuffleSeeds. Half a pinned duel is not reproducible, and the scripted demo sets only this
+// one.
+//
+// A var rather than a const so a build-tagged file can point it at a catalogue entry in
+// `init` — which is how the scripted demo picks its hand without the game growing a flag it
+// would have to keep.
+var deckSeed = pinnedDeckSeed()
+
+// pinnedDeckSeed reads deckSeedName, treating the empty name as no pin. seedFor panics on a
+// name it does not know, which is right for a typo and wrong for "no name at all", so the
+// empty case is answered here rather than by adding a not-found path to the catalogue.
+func pinnedDeckSeed() int64 {
+	if deckSeedName == "" {
+		return 0
+	}
+	return seedFor(deckSeedName)
+}
 
 // discardSelected throws the selected cards away: they leave the hand for the discard
 // pile, and the hand is dealt back up to size from the draw pile.

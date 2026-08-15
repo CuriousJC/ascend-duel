@@ -34,9 +34,11 @@ top of, and they are not repeated below:
   `systems.ColorToward` against a light ground. The card's element is its **border** now,
   not its surface.
 - **Widgets are hand-rolled**, `models` struct plus `systems.Update*`/`Draw*`. No toolkit.
-- **Determinism**, which the deck's `rng` and the `deckSeed` placeholder live under — and now
-  also `combatRNG`, the screen's own source for the engine's lightning roll, seeded in `Init`
-  from `RunSeed ^ combatSalt`. It is a separate stream and must stay one.
+- **Determinism.** Three of the screen's sources are seeded in `Init` and all three come off
+  `RunSeed`: the deck's `rng` and the opponent's `enemyPile` from `shuffleSeeds` (salted per
+  side and per fight), and `combatRNG` for the engine's lightning roll from
+  `RunSeed ^ combatSalt`. Separate streams, and they must stay separate. `deckSeed` pins the
+  two shuffles for debugging — both of them, never one.
 - **Which of the screen's six files holds what** — the map is in `CLAUDE.md`'s Package layout
   section, and it lives there rather than here so there is only one of it. Everything below
   describes the screen, not a file; they are one package, so a symbol named here may sit in
@@ -121,9 +123,14 @@ in `MECHANICS.md`; these are what matter to the screen.
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
   the event carries a list rather than a start and a length. Both rows bracket, through one
   `drawComboBracket` taking positions, so the opponent's hand is ringed by the same code.
-- **`combat.AttackFor` is what to call to preview the hand while the player plans.** It is the
-  same function the resolver uses, so a previewed combo is the combo that fires by construction
-  rather than by two pieces of code agreeing. Nothing calls it yet.
+- **`combat.AttackFor` previews the hand while the player plans** *(2026-08-15)*. It is the same
+  function the resolver uses, so a previewed combo is the combo that fires by construction rather
+  than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
+  and **only a formed hand previews** — `HandNone` is a lone attack, and COMBO! over one Strike
+  empties the word. Two things show it: `drawComboPreview` rings the cards in the *hand row*
+  through the same `drawComboBracket` the table uses, and the Resolution feed carries a line.
+  **`Attack.Cards` indexes the turn, not the hand** — `previewHandSlots` translates through
+  `handIndexForQueue`, or a Gather queued first would ring the wrong cards.
 - **A staggered slot is a row that never resolves.** `currentSlot` counts `KindStaggered`
   alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
   `TestEverySlotIsEitherTakenOrStaggered` pins it. **The pane still draws that row as though it
@@ -136,9 +143,9 @@ and the engine decides.
 Three consequences for playback. **The combo line lands after its cards are announced but before
 the damage**, so a boosted figure never arrives before the reason for it, and `noteCombo` has
 real rows to mark because the whole queue is seated at DUEL! rather than a card at a time. **The
-cards raised by those announcements accumulate** — `firingSeats` is a list, not one seat — so the
-whole hand is standing when the combo names it, and `noteCombo` narrows the list to what earned
-it. And **a hand pays its stagger even if the blow then misses** — the shock roll happens after
+whole attack hand is raised by the *first* announcement** — `attackSeats` reads them off the turn,
+so `firingSeats` is a list rather than one seat and the beats after it name the same set — and
+`noteCombo` narrows the list to what earned it. And **a hand pays its stagger even if the blow then misses** — the shock roll happens after
 the combo event, because the hand is scored off the queue and the queue was committed at DUEL!.
 
 ### What survives any model
@@ -336,9 +343,11 @@ of sentences.
   known in full at that moment, so a player's row assembling itself over the next few seconds
   would be one hand against half of another. **Playback drives which cards are lit, not which
   cards exist** — `firingSeats` and `enemyFiringSeats`, written by `noteResolved`.
-- **A prepare or a defend lights its own seat; attack cards accumulate.** A turn lands one blow,
-  so its attack cards go up one after another and stay up, and `noteCombo` then drops whichever of
-  them earned nothing. Only one *side* is ever lit: the event that lights one clears the other.
+- **A prepare or a defend lights its own seat; the attack hand goes up all at once**
+  *(2026-08-15)*. A turn lands one blow and the blow is the set, so the first attack announcement
+  raises every attack card of that turn and `noteCombo` then drops whichever earned nothing. They
+  used to climb one per beat, which read as one attack per card — the model this replaced. Only
+  one *side* is ever lit: the event that lights one clears the other.
 - **`noteResolved` and `seatPlayedCards` count along the same walk.** The third card to resolve
   is not the third card in the hand, and two independent tallies would light the wrong one the
   first time somebody queued a defense before an attack.
@@ -504,6 +513,14 @@ centrepiece should have anyway.
 - **Built only from events playback has reached** (`s.log[:cursor+1]`), so the pane says exactly
   as much as the player has been shown and never spoils the rest of the round.
 - **It clears every round**, because there is no way to scroll back to an earlier one.
+- **Before a round resolves it holds `planningLines` instead**: `(press DUEL!)`, and above it the
+  combo the current selection has already formed. **The pane records rather than proposes, and
+  this is the standing exception rather than a new one** — the prompt was already a proposal,
+  because the caption box that used to carry it is gone and nothing else on the screen has room.
+  It costs nothing the rule protects: the pane is empty while planning, so nothing is said twice,
+  and the record replaces both lines the moment DUEL! is pressed. **It carries no arithmetic** —
+  `Base` and `Swing` are the resolver's, against a strength and a shock roll that have not
+  happened, and a figure the round then contradicted would be worse than no figure.
 - Overflow draws `... N earlier` rather than dropping lines silently — the same rule as the deck
   overlay's `+N more not shown`. A panel that quietly hides part of what it claims to show is a
   picture that lies.

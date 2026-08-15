@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -213,9 +214,9 @@ func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 }
 
 func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
-	// **A turn lands one blow, so the whole hand is up when the combo names it.** The cards are
-	// announced one at a time and stay raised; the combo then drops the ones that earned nothing,
-	// so what is left standing is what the feed's single line is about.
+	// **A turn lands one blow, so the whole hand goes up on the first announcement** — not one
+	// card per beat, which read as one attack per card. The combo then drops the ones that earned
+	// nothing, so what is left standing is what the feed's single line is about.
 	s := &CombatScene{
 		hand: []paletteCard{
 			{actionCard: actionCard{Action: combat.Strike, Element: combat.Fire}, selected: true},
@@ -235,12 +236,21 @@ func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
 	}
 	s.seatPlayedCards()
 
-	for i := range s.log {
+	// One announcement, the whole hand up. The beats that follow say how long the phase takes,
+	// not which card is acting — no single card is.
+	s.cursor = 0
+	s.noteResolved(s.log[0])
+	if !sameSeats(s.firingSeats, []int{0, 1, 2}) {
+		t.Errorf("the first announcement raised %v, want all three cards up at once", s.firingSeats)
+	}
+
+	// And the rest of the phase names the same set rather than adding to it.
+	for i := 1; i < len(s.log); i++ {
 		s.cursor = i
 		s.noteResolved(s.log[i])
 	}
 	if !sameSeats(s.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the attack phase raised %v, want all three cards up", s.firingSeats)
+		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.firingSeats)
 	}
 
 	// The Jab built no hand, so the combo takes it back down — and brackets only the pair.
@@ -410,7 +420,124 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	}
 }
 
-func TestADeadDuelistIsNotDealtAnotherRound(t *testing.T) {
+// selecting builds a scene whose hand is these cards, all selected, with the queue derived from
+// them the way syncQueue does. The player is left alive with no log, which is what planning() is.
+func selecting(cards ...combat.Card) *CombatScene {
+	s := &CombatScene{
+		fighter: &entities.Combatant{
+			Duelist: combat.Duelist{Str: 10, Spd: 10, MaxLife: 60, CurrentLife: 60},
+		},
+		enemy: &entities.Combatant{
+			Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+		},
+	}
+	for _, c := range cards {
+		s.hand = append(s.hand, paletteCard{actionCard: c, selected: true})
+		s.fighterActions = append(s.fighterActions, c)
+	}
+	return s
+}
+
+func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
+	// **The preview is the resolver's own answer**, so what is ringed while choosing is what
+	// fires. Three Strikes are a flurry the instant the third is picked, not when DUEL! is pressed.
+	s := selecting(
+		combat.Of(combat.Strike, combat.Fire),
+		combat.Of(combat.Strike, combat.Ice),
+		combat.Of(combat.Strike, combat.Basic),
+	)
+
+	blow, ok := s.previewAttack()
+	if !ok {
+		t.Fatal("three Strikes previewed no combo")
+	}
+	if len(s.previewHandSlots(blow)) != 3 {
+		t.Errorf("the preview rings %v, want all three cards", s.previewHandSlots(blow))
+	}
+
+	// And the feed says so in the same words the fired line will use.
+	rows := s.planningLines()
+	if len(rows) != 2 || rows[0].swatch != comboSwatch {
+		t.Fatalf("the pane holds %d rows while planning, want the combo line and the prompt", len(rows))
+	}
+	if want := "COMBO! " + comboNameOf(blow.Hand, blow.Mix); !strings.HasPrefix(rows[0].prefix, want) {
+		t.Errorf("the preview reads %q, want it to open %q", rows[0].prefix, want)
+	}
+}
+
+func TestOneAttackIsNotACombo(t *testing.T) {
+	// A lone attack forms no hand, and announcing COMBO! over one Strike would empty the word.
+	s := selecting(combat.Of(combat.Strike, combat.Fire))
+
+	if _, ok := s.previewAttack(); ok {
+		t.Error("one Strike previewed a combo")
+	}
+	if rows := s.planningLines(); len(rows) != 1 {
+		t.Errorf("the pane holds %d rows, want the prompt alone", len(rows))
+	}
+}
+
+func TestThePreviewNamesTheCardsInTheHandNotInTheQueue(t *testing.T) {
+	// **Attack.Cards indexes the turn, which is in resolution order**; the hand is in whatever
+	// order the player left it. A Gather queued first resolves first, so the pair the preview
+	// rings is hand slots 1 and 2 — reading the turn's indices straight would ring slots 0 and 1.
+	s := selecting(
+		combat.Of(combat.Gather, combat.Basic),
+		combat.Of(combat.Strike, combat.Fire),
+		combat.Of(combat.Strike, combat.Ice),
+	)
+
+	blow, ok := s.previewAttack()
+	if !ok {
+		t.Fatal("a pair behind a Gather previewed no combo")
+	}
+	if got := s.previewHandSlots(blow); !sameSeats(got, []int{1, 2}) {
+		t.Errorf("the preview rings hand slots %v, want the two Strikes at 1 and 2", got)
+	}
+}
+
+func TestThePreviewIsGoneOnceTheRoundIsRunning(t *testing.T) {
+	// planning() is the single predicate for "the queue may still be edited", and a preview of a
+	// round that is already resolving would be a proposal drawn over a record.
+	s := selecting(
+		combat.Of(combat.Strike, combat.Fire),
+		combat.Of(combat.Strike, combat.Ice),
+	)
+	s.log = []combat.Event{{Kind: combat.KindRoundStart}}
+	s.cursor = 0
+
+	if _, ok := s.previewAttack(); ok {
+		t.Error("the hand still previewed a combo while the round was playing back")
+	}
+}
+
+func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
+	// A raised card means "this is firing now". The seat lists are written by playback, and a
+	// round that ended with the opponent's second card up would leave it up under the *next*
+	// plan — cards standing as though they had been committed, dropping again at DUEL!.
+	s := &CombatScene{}
+	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	s.enemy = &entities.Combatant{
+		Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+		Style:   combat.StyleBrute,
+	}
+	s.fighter = &entities.Combatant{
+		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+	}
+
+	// Where the last round's playback left them.
+	s.firingSeats = []int{0, 1}
+	s.enemyFiringSeats = []int{1}
+
+	s.planEnemyRound()
+
+	if len(s.firingSeats) != 0 || len(s.enemyFiringSeats) != 0 {
+		t.Errorf("the new plan arrived with %v and %v raised, want nothing lit",
+			s.firingSeats, s.enemyFiringSeats)
+	}
+}
+
+func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	// The row stays on the table when a duel ends — it is the round the player is looking at
 	// the result of — and nothing is drawn from a pile for a fight that is over.
 	s := &CombatScene{}
@@ -423,9 +550,15 @@ func TestADeadDuelistIsNotDealtAnotherRound(t *testing.T) {
 		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
 	}
 
+	// The killing blow is still raised, and stays raised.
+	s.enemyFiringSeats = []int{0}
+
 	s.planEnemyRound()
 
 	if len(s.enemyActions) != 0 || len(s.enemyDealt) != 0 {
 		t.Errorf("a dead opponent planned %v and seated %d cards", s.enemyActions, len(s.enemyDealt))
+	}
+	if len(s.enemyFiringSeats) != 1 {
+		t.Errorf("the finished round was cleared off the table: %v", s.enemyFiringSeats)
 	}
 }

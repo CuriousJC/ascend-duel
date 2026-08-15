@@ -523,6 +523,8 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 			c.actionCard, enabled, c.selected)
 	}
 
+	s.drawComboPreview(gs, screen)
+
 	if s.drag == nil || !s.drag.active || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
 		return
 	}
@@ -535,6 +537,80 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		float32(slot.Min.X)-dropIndicatorWidth/2, top,
 		dropIndicatorWidth, cardHeight,
 		playerSwatch, false)
+}
+
+// previewAttack is the blow the current selection would land if DUEL! were pressed now.
+//
+// **It calls the resolver's own `combat.AttackFor`**, which is what makes a preview trustworthy:
+// the combo shown while choosing is the combo that fires, by construction rather than by two
+// pieces of code agreeing about what three Strikes are worth. Nothing here knows what a Flurry
+// is.
+//
+// **Only a formed hand previews.** A lone attack carries `HandNone` — the feed writes those as
+// an ordinary attack rather than announcing them, and a preview shouting COMBO! over one Strike
+// would empty the word before the player ever earned it.
+//
+// The turn is ordered with an empty opposing queue, because `ResolutionOrder` is the authority
+// on which of the player's cards resolve in what order and the opponent's cards do not enter
+// their attack phase. Building the slice by hand here would be a second orderer.
+func (s *CombatScene) previewAttack() (combat.Attack, bool) {
+	if !s.planning() {
+		return combat.Attack{}, false
+	}
+	blow := combat.AttackFor(combat.ResolutionOrder(s.fighterActions, nil))
+	if !blow.Formed() {
+		return combat.Attack{}, false
+	}
+	return blow, true
+}
+
+// previewHandSlots is where the previewed hand's cards are sitting in the row right now.
+//
+// **`Attack.Cards` indexes the turn, not the hand**, and the two differ the moment a Gather is
+// queued before a Strike — the turn is in resolution order, the hand is in the order the player
+// left it. `handIndexForQueue` is the existing inverse of the walk that builds the queue, so
+// this is a translation rather than a second mapping.
+func (s *CombatScene) previewHandSlots(blow combat.Attack) []int {
+	turn := combat.ResolutionOrder(s.fighterActions, nil)
+
+	out := make([]int, 0, len(blow.Cards))
+	for _, i := range blow.Cards {
+		if i < 0 || i >= len(turn) {
+			continue
+		}
+		if h, ok := s.handIndexForQueue(turn[i].Index); ok {
+			out = append(out, h)
+		}
+	}
+	return out
+}
+
+// drawComboPreview rings the cards in the hand that have formed a combo, the instant they form
+// it rather than when the round plays out.
+//
+// **The same ring the table draws**, through the same `drawComboBracket`, so what the player
+// sees while choosing and what they see when it fires are one drawing. The words that go with
+// it are the Resolution feed's preview line — see resolutionLines — because there is nowhere
+// above the row to put them: the feed's bottom edge sits five pixels over the resting cards and
+// a selected one already lifts into it.
+func (s *CombatScene) drawComboPreview(gs *state.GlobalState, screen *ebiten.Image) {
+	blow, ok := s.previewAttack()
+	if !ok {
+		return
+	}
+
+	slots := s.previewHandSlots(blow)
+	at := make([]image.Point, 0, len(slots))
+	for _, i := range slots {
+		// A card still flying in from the pile is not drawn in its slot, so ringing that slot
+		// would ring a gap. It cannot be selected either, which makes this belt and braces —
+		// kept because the row skips it for the same reason and the two should agree.
+		if s.inboundTo(i) {
+			continue
+		}
+		at = append(at, s.cardSlot(gs, i).Min)
+	}
+	drawComboBracket(screen, at)
 }
 
 // drawAPFigure writes the budget as `3/6 AP`, tucked under the left end of the bar — same left

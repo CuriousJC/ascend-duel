@@ -121,7 +121,12 @@ const (
 
 	// The row never grows past this, whatever the hand holds. Beyond the count that fits at
 	// full pitch the cards overlap and the band stays put — see handPitch.
-	handBandLeftPct  = 4
+	//
+	// **The left edge came in to 2% on 2026-08-16**, when the sort column took a strip off the
+	// right-hand end. The cards were going to overlap by another forty pixels otherwise, and the
+	// screen's left margin was the cheapest place to find some of it back — nothing is drawn
+	// there and the row is the widest thing on the screen.
+	handBandLeftPct  = 2
 	handBandRightPct = 96
 
 	// The card's *interior* — the glyph column, the name and category positions, the
@@ -399,11 +404,22 @@ func handPitch(gs *state.GlobalState, n int) int {
 		return full
 	}
 
-	band := gs.PctX(handBandRightPct) - gs.PctX(handBandLeftPct)
+	band := cardBandWidth(gs)
 	if (n-1)*full+cardWidth <= band {
 		return full
 	}
 	return (band - cardWidth) / (n - 1)
+}
+
+// cardBandWidth is how much of the band the cards themselves get: everything between the two
+// percentages, less the strip the sort column stands in.
+//
+// **One function rather than the subtraction written twice**, because the pitch and the row's
+// centre both need it and the two disagreeing would put the row half a card off centre or run
+// its last card under the buttons. See combat_sort.go for why the column is a fixed reserve
+// rather than something hung off the row's own right edge.
+func cardBandWidth(gs *state.GlobalState) int {
+	return gs.PctX(handBandRightPct) - gs.PctX(handBandLeftPct) - sortColumnReserve
 }
 
 // handBand is the rectangle a row of n cards occupies, centred on the screen rather than
@@ -412,12 +428,19 @@ func handPitch(gs *state.GlobalState, n int) int {
 // This is the single authority on that width. The AP bar spans it, the caption box above
 // the hand matches it, and the card slots are cut out of it, so none of them can drift
 // apart when the hand size changes.
+//
+// **It is centred on the space the cards actually have, not on the screen** *(2026-08-16)*.
+// The sort column stands against the band's right edge, so centring on PctX(50) would push the
+// widest row under it. Centring on the reduced band is what the owner asked for as "nudge the
+// hand left": the whole row moves rather than only its right edge coming in, and the AP bar and
+// the action-point figure travel with it because both are measured from this rectangle.
 func handBand(gs *state.GlobalState, n int) image.Rectangle {
 	if n < 1 {
 		n = 1
 	}
 	w := (n-1)*handPitch(gs, n) + cardWidth
-	left := gs.PctX(50) - w/2
+	centre := gs.PctX(handBandLeftPct) + cardBandWidth(gs)/2
+	left := centre - w/2
 	top := gs.PctY(handTopPct)
 	return image.Rect(left, top, left+w, top+cardHeight)
 }
@@ -510,6 +533,13 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// the round with everything else that was played, which is what keeps the Resolution
 		// pane able to narrate from fighterActions while the round runs.
 		if s.resolvedInHand(i) {
+			continue
+		}
+
+		// A card shuffling into this slot from elsewhere in the row is drawn by its slide,
+		// exactly as a dealt card is drawn by its flight. Same rule, same reason: the hand is
+		// already in its new order and what is suppressed is a drawing.
+		if s.slidingTo(i) {
 			continue
 		}
 

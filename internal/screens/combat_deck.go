@@ -221,7 +221,12 @@ func (s *CombatScene) spendSelected() {
 
 	// Filtering in place over the hand's own array. Safe because kept never runs ahead of
 	// the read cursor, and it keeps the surviving cards in the order the player left them.
+	//
+	// keptFrom records where each survivor was standing, because a card that stays in the hand
+	// still *moves*: the cards around it have gone and the row closes up under it. That is a
+	// slide, and it needs the slot the card is leaving as much as a discard does.
 	kept := s.hand[:0]
+	var keptFrom []int
 	for i, c := range s.hand {
 		if c.selected {
 			s.discard = append(s.discard, c.actionCard)
@@ -245,6 +250,7 @@ func (s *CombatScene) spendSelected() {
 			continue
 		}
 		kept = append(kept, c)
+		keptFrom = append(keptFrom, i)
 	}
 	s.hand = kept
 
@@ -257,11 +263,42 @@ func (s *CombatScene) spendSelected() {
 	// identifiable without drawHand having to report them.
 	dealt := len(s.hand)
 	s.drawHand()
-	for i := dealt; i < len(s.hand); i++ {
-		s.addFlight(cardFlight{
-			travel: newTravel((i-dealt)*flightStaggerPer, flightTicks),
-			card:   s.hand[i].actionCard,
-			index:  i, count: len(s.hand),
+
+	// **The sort runs before anything is animated, not after.** A dealt card lands in the slot
+	// the sort gives it rather than on the right-hand end, so it flies to where it will
+	// actually be sitting — and `inboundTo`, which blanks a slot that is still filling, is
+	// looking at that same index.
+	//
+	// The permutation is what survives the rearrangement. `order[to]` is where the card now at
+	// `to` came from: past `dealt` it came out of the draw pile and flies in, below it the card
+	// was already in the hand and slides across the row from wherever it was standing.
+	order := s.sortHand()
+
+	staggered := 0
+	for to, from := range order {
+		if from >= dealt {
+			s.addFlight(cardFlight{
+				travel: newTravel(staggered*flightStaggerPer, flightTicks),
+				card:   s.hand[to].actionCard,
+				index:  to, count: len(s.hand),
+			})
+			staggered++
+			continue
+		}
+
+		// A survivor. It has moved if its slot changed or if the row it is standing in did —
+		// eight cards centred is not the same place as six centred, so a card that kept its
+		// index still has ground to cover.
+		was := keptFrom[from]
+		if was == to && leaving == len(s.hand) {
+			continue
+		}
+		s.addSlide(handSlide{
+			travel:    newTravel(0, slideTicks),
+			card:      s.hand[to].actionCard,
+			selected:  s.hand[to].selected,
+			fromIndex: was, fromCount: leaving,
+			toIndex: to, toCount: len(s.hand),
 		})
 	}
 
@@ -290,6 +327,10 @@ func (s *CombatScene) resetDeck() {
 
 	s.shuffleDeck()
 	s.drawHand()
+
+	// An opening hand arrives sorted, exactly as a refilled one does. The default is cost, so
+	// this is true of a scene that has never had a sort button pressed on it.
+	s.sortHand()
 }
 
 // shuffleDeck shuffles the draw pile using the scene's own source. Never rand.Shuffle,

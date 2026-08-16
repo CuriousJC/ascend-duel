@@ -77,6 +77,11 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         dropped in the same rewrite, so they would have to be rebuilt — and rebuilt differently,
         because a sequence is now a shape *within* the one hand rather than a second blow.
         `MECHANICS.md` §Sequences holds what was lost.
+      - **Hand sorting widened it on 2026-08-16.** Three buttons now arrange the row and
+        re-arrange it on every refill, so the order is machine-chosen as well as mechanically
+        inert — a drag survives until the next deal and then goes. Taken deliberately: reading
+        the hand is worth more today than a gesture nothing consumes. It does not answer the
+        question, it raises the price of leaving it open.
       - The initiative entry below and the defence-targeting idea are both really this question
         arriving from other directions. Answer it once.
 - [ ] **Revisit whether an initiative system makes sense for resolution.** There is no

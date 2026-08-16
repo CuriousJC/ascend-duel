@@ -294,6 +294,12 @@ type CombatScene struct {
 	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
 	flights []cardFlight
 
+	// Cards currently moving from one slot in the hand to another — a sort, or the row
+	// closing up after cards were spent. Separate from flights rather than a fourth flag on
+	// one, because a slide is the only mover whose journey begins and ends in the row, and it
+	// is the only one that needs a row size at each end.
+	slides []handSlide
+
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
 	// moment the round starts — see seatPlayedCards — and what a combo brackets.
@@ -365,6 +371,12 @@ type CombatScene struct {
 
 	duelButton    *models.Button
 	discardButton *models.Button
+
+	// How the hand is arranged, and the column of buttons that chooses it. See
+	// combat_sort.go — including why this is the one field on the scene that Init does not
+	// reset: it is a reading preference rather than a fact about a duel.
+	sortMode    handSort
+	sortButtons []*models.Button
 }
 
 // Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
@@ -407,6 +419,17 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	//
 	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile itself.
 	// See combat_flight.go.
+	// The sort column, beside the cards rather than on the strip below them: it arranges the
+	// hand and commits nothing, so it belongs against the thing it arranges. **s.sortMode is
+	// deliberately not reset here** — see combat_sort.go.
+	if s.sortButtons == nil {
+		s.buildSortButtons()
+	}
+	for i, b := range s.sortButtons {
+		at := sortButtonCentre(gs, i)
+		b.ScreenX, b.ScreenY = at.X, at.Y
+	}
+
 	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
 	s.discardButton.ScreenX = discardX
 	s.discardButton.ScreenY = gs.PctY(buttonStripPct)
@@ -416,7 +439,19 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.showDeck = false
 	s.feedPressTicks = 0
 	s.flights = nil
+	s.slides = nil
 	s.firingSeats, s.enemyFiringSeats = nil, nil
+
+	// **The table is cleared here as well as by the spend** *(2026-08-16)*. `s.resolved` used to
+	// be emptied in exactly two places — `seatPlayedCards` at the start of a round and
+	// `spendSelected` at the end of one — and that covered every case only because every round
+	// ended in a spend. A settled duel now freezes instead (see endOfRound), so the last round's
+	// cards were still seated when the next fight started: they drew over the new table, and
+	// `resolvedInHand` blanked the hand slots they claimed, so the fresh hand came up with holes
+	// in it. `enemyDealt` goes with it — `planEnemyRound` below rebuilds it, and a scene that
+	// clears one half of the table and not the other is a trap for the next change.
+	s.resolved = nil
+	s.enemyDealt = nil
 	s.restart = false
 	s.discardsLeft = discardsPerRound
 	s.vitae = startingVitae
@@ -538,6 +573,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// purpose: a flight that started before the killing blow should still land, and the deck
 	// stack is the only control that survives its own overlay — it is what closes it.
 	s.updateFlights()
+	s.updateSlides()
 	s.updateResolved()
 	s.updateDeckStack(gs)
 
@@ -556,6 +592,11 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	if !s.showDeck {
 		s.updateActionBox(gs)
 	}
+
+	// Above the branch below, because the column is live under exactly one condition and it is
+	// its own: the hand may be rearranged whenever it may be edited. It goes dead once the duel
+	// is settled for the same reason it goes dead during playback — see updateSortButtons.
+	s.updateSortButtons(gs)
 
 	// Once the duel is decided the DUEL! button becomes the way onward, in place. Reusing
 	// the same button rather than adding a fourth is the point: it is the same slot for
@@ -733,25 +774,50 @@ func (s *CombatScene) advancePlayback() {
 	s.applyEvent(s.log[s.cursor])
 	s.cursor++
 
-	// Playback has caught up with the resolver. Adopt the authoritative end-of-round
-	// state and hand control back to the player to plan the next round.
-	//
-	// The hand is spent here rather than at resolve time, and the ordering matters:
-	// endRoundHand rebuilds fighterActions from what is left, and the Resolution pane
-	// draws fighterActions to narrate the round. Spending it while playback was still
-	// running would empty the pane mid-round.
+	// Playback has caught up with the resolver: hand control back to the player, or freeze
+	// the screen if there is nobody left to play against. See endOfRound.
 	if s.cursor >= len(s.log) {
-		s.fighter.Duelist = s.fighterAfter
-		s.enemy.Duelist = s.enemyAfter
-		s.endRoundHand()
-
-		// **The opponent plans the next round the instant this one is over**, so its cards are
-		// on the table while the player chooses their answer. It has to happen *after* the two
-		// duelists above adopt their end-of-round state, or the plan is made against a budget
-		// that no longer exists — a chill landing this round has to be in the AP the planner
-		// reads.
-		s.planEnemyRound()
+		s.endOfRound()
 	}
+}
+
+// endOfRound is what happens the moment playback catches up with the resolver: the
+// authoritative end-of-round state is adopted, the hand is spent and refilled, and the
+// opponent plans its answer.
+//
+// **A settled duel does none of the last two, and freezes instead** *(2026-08-16)*. Spending
+// the hand takes cards out of the row, and the row is the thing half the lower screen is
+// measured from — `handBand` is a function of how many cards are in it, the AP bar spans that
+// band and the Resolution feed's bottom edge comes off the same row. So the last frame of a
+// won fight used to reflow: the hand collapsed to a narrow centred huddle, the bar shrank to
+// match, and the feed moved under it. **The picture the player is looking at when the killing
+// blow lands is the picture they should still be looking at when they press Next**, so nothing
+// moves — the played cards stay on the table, the hand keeps its gaps, and `Init` clears all of
+// it when the next fight starts.
+//
+// It is a branch here rather than a rule inside `drawHand`, because what has to stop is not the
+// *drawing*, it is the whole end-of-round movement. A hand that was spent but not refilled still
+// reflows.
+func (s *CombatScene) endOfRound() {
+	s.fighter.Duelist = s.fighterAfter
+	s.enemy.Duelist = s.enemyAfter
+
+	if s.duelSettled() {
+		return
+	}
+
+	// The hand is spent here rather than at resolve time, and the ordering matters:
+	// endRoundHand rebuilds fighterActions from what is left, and the Resolution pane draws
+	// fighterActions to narrate the round. Spending it while playback was still running would
+	// empty the pane mid-round.
+	s.endRoundHand()
+
+	// **The opponent plans the next round the instant this one is over**, so its cards are
+	// on the table while the player chooses their answer. It has to happen *after* the two
+	// duelists above adopt their end-of-round state, or the plan is made against a budget
+	// that no longer exists — a chill landing this round has to be in the AP the planner
+	// reads.
+	s.planEnemyRound()
 }
 
 // planEnemyRound asks the opponent for its round and lays the cards on the table.
@@ -878,6 +944,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawEnemyCard(gs, screen)
 	systems.DrawButton(gs, screen, s.duelButton)
 	systems.DrawButton(gs, screen, s.discardButton)
+	s.drawSortButtons(gs, screen)
 	s.drawDiscardsLeft(gs, screen)
 	s.drawDeckStack(gs, screen)
 
@@ -921,6 +988,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// Cards travelling to and from the pile, over everything the dragged card rides over and
 	// for the same reason. Under the overlay, which covers them along with the rest.
+	//
+	// The slides go with them and just under them: a card crossing the row is above the row,
+	// and a card being dealt into a slot arrives over a card still shuffling out of it.
+	s.drawSlides(gs, screen)
 	s.drawFlights(gs, screen)
 
 	// The overlay covers everything, card in flight included — and then Deck is drawn

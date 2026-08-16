@@ -13,6 +13,12 @@ const (
 	ButtonStateHovered
 	ButtonStatePressed
 	ButtonStateDisabled
+
+	// ButtonStateLatched is the active member of a set of modes. **Darker than resting, where
+	// pressed is brighter**: a momentary press is the button lighting up under the cursor, and
+	// a latched one is a control that has been pushed in and stayed there. Reusing the pressed
+	// appearance made the active mode read as a button the cursor was on top of.
+	ButtonStateLatched
 )
 
 // Captures the data of the button but doesn't handle drawing or updating
@@ -37,6 +43,22 @@ type Button struct {
 	// the release can tell a real click from a drag that happened to end here.
 	PressedInside bool
 
+	// TextSize is the label's point size. Zero means the default, which is what every
+	// button that never sets it has always drawn at — a square button carrying a single
+	// character wants a much bigger one than a button carrying a word.
+	TextSize float64
+
+	// Latched holds the button at its latched appearance while it is set, which is what
+	// turns a momentary button into one of a set of modes: the active member stays marked
+	// after the cursor has gone somewhere else.
+	//
+	// It is a general widget idea rather than a rule about one screen, which is why it
+	// lives here and not on the scene that first wanted it. A latched button still fires
+	// OnClick normally — pressing the active member is a real press, and what happens next
+	// is the scene's business. Disabled still wins: a dead control reads as unavailable
+	// first and as active second.
+	Latched bool
+
 	// What Image currently holds, so DrawButton can repaint it only when something
 	// visible has changed rather than every frame.
 	//
@@ -47,10 +69,11 @@ type Button struct {
 	//
 	// These are data about the cached render, not behaviour, so they belong on the struct
 	// like everything else here. Only DrawButton writes them.
-	Painted      bool
-	PaintedState ButtonState
-	PaintedText  string
-	PaintedColor color.RGBA
+	Painted         bool
+	PaintedState    ButtonState
+	PaintedText     string
+	PaintedTextSize float64
+	PaintedColor    color.RGBA
 }
 
 // NewButton creates a new button with the given width, height, and text

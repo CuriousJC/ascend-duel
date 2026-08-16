@@ -190,7 +190,8 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 | Resolution | 15–78% x, 12–46% y | pink | what the round actually did, accumulating as it plays |
 | Action Flow | *built, not drawn* | pink | both queues in play order — see below |
 | Caption box | hand width, 48% y | pink | your plan and its AP cost, and what to press |
-| Hand | centred, 66% y | element | the cards, portrait, in one row |
+| Hand | centred in what the sort column leaves, 66% y | element | the cards, portrait, in one row |
+| Sort column | band's right edge, centred on the cards | slate | `$` / `T` / `E`, the hand's arrangement |
 | AP bar | hand width, directly under the row | blue | the budget |
 | Bottom strip | 95% y | — | AP figure, Discard, DUEL!, deck pile — evenly spread |
 
@@ -419,6 +420,31 @@ holding them and made playing a card the only way to keep it.
 The consequence to hold on to: **Discard is now the only way an unwanted card leaves your
 hand.** `discardsPerRound` stopped being a convenience and became the rate at which a hand can
 be steered.
+
+**A settled duel does not spend the hand at all — it freezes** *(2026-08-16)*. `endOfRound`
+adopts the end state and then returns if `duelSettled()`, so the last round is never cleared
+away: the played cards stay on the table, the hand keeps the gaps they left, the queue stays in
+the Resolution feed, and `Init` clears all of it when the next fight starts.
+
+**What forced it is that the row is a measurement, not just a picture.** `handBand` is a function
+of how many cards are in the hand, the AP bar spans that band, and the feed's bottom edge comes
+off the same row — so spending the hand after the killing blow collapsed the cards into a narrow
+centred huddle and dragged the bar and the feed in with them. **The picture the player is looking
+at when the blow lands is the picture they should still be looking at when they press Next.**
+
+The intermediate version — refill nothing but still spend — does not work and is worth not
+re-trying: a hand that loses cards reflows whether or not it is topped back up. What has to stop
+is the whole end-of-round movement, which is why this is a branch in `endOfRound` rather than a
+rule inside `drawHand`.
+
+**What the freeze cost, and it is the shape of thing to look for again.** `s.resolved` used to be
+emptied in exactly two places — `seatPlayedCards` at the start of a round and `spendSelected` at
+the end of one — and that covered every case *only because every round ended in a spend*. With the
+last one frozen, the winning hand was still seated when the next fight started: it drew over the
+new table, and `resolvedInHand` blanked the hand slots it claimed, so the fresh hand came up full
+of holes. **`Init` clears the table now** — `resolved` and `enemyDealt` both — which is where a
+per-fight reset belonged anyway. Anything else that is only ever cleaned up by the spend is now
+sitting on the same assumption.
 
 **Both fighters are cards, in opposite corners.** The argument for it: everything the duel is
 made of is a card, including both the
@@ -671,6 +697,58 @@ it again to take it out, drag sideways to move it along the row.
   see the bottom-strip section above and `TestTheAPFigureLinesUpWithTheButtonStrip`. The
   bar, the figure, the cards and the Resolution feed all measure off `handTopPct`, which is
   why one constant moves the whole lower half of the screen.
+
+### Sorting the hand
+
+*[combat_sort.go](internal/screens/combat_sort.go), 2026-08-16.* Three 44px square buttons in a
+column against the band's right edge, centred on the cards: **`$` cost, `T` type, `E` element**.
+The active one latches darker than the other two.
+
+- **Nothing here can change a round.** Cross-category order is regrouped away by
+  `ResolutionOrder`, a hand is counted rather than read in sequence, and defends are a set. This
+  is entirely about reading eight overlapping cards, and it is the reason the feature could be
+  taken without asking what it does to the engine.
+- **Cost is the default, and every mode ends with it.** Each arrangement is the deck overlay's
+  own key chain — cost, family, concept, element — with one key promoted to the front, so a row
+  of cards means the same thing in the hand as in the panel. Only the leading key differs.
+- **The sort re-applies on every refill**, in `spendSelected` *before* anything is animated, so a
+  dealt card flies to the slot it will actually occupy. A drag still works and survives until the
+  next deal, at which point the sort reclaims the row.
+- **`sortHand` returns the permutation it applied** — for each new position, the index that card
+  came from — and that is why it sorts a slice of indices and rebuilds rather than sorting the
+  cards in place. Two identical cards cannot be told apart after the fact by looking at them, and
+  a card sliding to its new place has to know where it set off from. `spendSelected` reads the
+  same list to tell a survivor from a card fresh out of the pile: past `dealt` it flies in, below
+  it, it slides.
+- **A sorted card slides, it does not pop.** `handSlide` is the fourth mover in
+  `combat_flight.go` and stores no coordinates, like the other three — but it carries a row size
+  at *each* end, because a survivor at the end of a round leaves one row and lands in a
+  differently sized one. The gesture is flat, full size, no flip or spin: the other three cross
+  the screen, this one shuffles a few inches. `slidingTo` blanks the row's own copy exactly as
+  `inboundTo` does, and `addSlide` drops any earlier slide claiming the same slot so pressing a
+  second mode mid-flight cannot draw one card twice.
+- **`sortHand` resyncs the queue, and that is load-bearing.** The list is the authority on the
+  queue's *order* as well as its membership and `handIndexForQueue` is the inverse of that walk,
+  so a hand rearranged under a stale `fighterActions` leaves the combo preview bracketing
+  whichever cards sit at the old positions.
+- **`sortMode` is the one field `Init` does not reset.** A reading preference is not a fact about
+  a duel, and snapping back to cost every fight would make it something the player re-presses.
+- **All three go dead outside `planning()`** — a resolved card is drawn from the hand slot it
+  flew out of, so rearranging mid-round would light the wrong card on the table.
+- **`elementRank` and `categoryRank` are written out**, like `familyRank`. `combat.Basic` leads
+  its enum as the zero value and trails on screen: the colours are what a mix is counted on, and
+  the drab cards are the plans.
+- **The cards lost width to pay for the column.** `cardBandWidth` is the band less
+  `sortColumnReserve`, `handBand` centres on *that* rather than on `PctX(50)` — so the whole row
+  nudged left instead of only its right edge coming in — and `handBandLeftPct` came in from 4% to
+  2% to find some of the overlap back. The AP bar and the AP figure travel with it, both being
+  measured off `handBand`.
+- **`models.Button.Latched` and `TextSize` arrived for this** and both are deliberately general.
+  A latched button takes `ButtonStateLatched`, drawn at **38% — darker than resting, not
+  brighter**: hover and press own the bright end of the ramp, and an active mode lit to full
+  strength read as a button the cursor was on. Disabled still wins over the latch. `TextSize`
+  zero means the default 20, the same "use the default" convention `BaseColor`'s zero alpha
+  uses; the sort buttons set 30, because a square carrying one character is nearly all label.
 
 ## Hidden information is gated on `DebugGameplay`
 

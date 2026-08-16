@@ -48,6 +48,15 @@ func UpdateButton(gs *state.GlobalState, button *models.Button) {
 	default:
 		button.State = models.ButtonStateNormal
 	}
+
+	// A latched button holds its own appearance whatever the cursor is doing, so a set of
+	// modes says which one is active. Applied after the switch rather than inside it because
+	// hover and press are still real states underneath — the latch simply outranks them,
+	// which is what stops the active mode flickering back to a resting face as the cursor
+	// crosses it.
+	if button.Latched {
+		button.State = models.ButtonStateLatched
+	}
 }
 
 // defaultButtonColor is the full-strength fill for any button that does not name its
@@ -61,10 +70,16 @@ var disabledButtonColor = color.RGBA{R: 35, G: 35, B: 35, A: 255}
 
 // How bright each state draws, as a percentage of the button's full colour. Resting at
 // two thirds means hover and press have somewhere to climb to.
+//
+// **Latched is the one that goes the other way.** A mode that is on is drawn *darker* than
+// the ones that are off, not brighter: hover and press already own the bright end of the
+// ramp, and a latched button lit to full strength reads as a button the cursor is sitting
+// on. Pushed in, rather than lit up.
 const (
 	normalStrength  = 65
 	hoveredStrength = 82
 	pressedStrength = 100
+	latchedStrength = 38
 )
 
 // buttonStateColor picks the fill for a button's current state by dimming its colour
@@ -83,6 +98,8 @@ func buttonStateColor(button *models.Button) color.RGBA {
 		return ColorAtStrength(full, hoveredStrength)
 	case models.ButtonStatePressed:
 		return ColorAtStrength(full, pressedStrength)
+	case models.ButtonStateLatched:
+		return ColorAtStrength(full, latchedStrength)
 	case models.ButtonStateDisabled:
 		return disabledButtonColor
 	default:
@@ -155,6 +172,7 @@ func needsPaint(button *models.Button) bool {
 	return !button.Painted ||
 		button.PaintedState != button.State ||
 		button.PaintedText != button.Text ||
+		button.PaintedTextSize != button.TextSize ||
 		button.PaintedColor != button.BaseColor ||
 		button.Image == nil ||
 		button.Image.Bounds().Dx() != button.Width ||
@@ -183,10 +201,24 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	centerButtonTextOp.PrimaryAlign = text.AlignCenter
 	centerButtonTextOp.SecondaryAlign = text.AlignCenter
 	text.Draw(button.Image, button.Text,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}, centerButtonTextOp)
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: textSizeOf(button)}, centerButtonTextOp)
 
 	button.Painted = true
 	button.PaintedState = button.State
 	button.PaintedText = button.Text
+	button.PaintedTextSize = button.TextSize
 	button.PaintedColor = button.BaseColor
+}
+
+// defaultButtonTextSize is what a button that names no size draws its label at, which is
+// what every button in the game drew at when the size was written into paintButton.
+const defaultButtonTextSize = 20
+
+// textSizeOf resolves a button's label size, zero meaning the default — the same "use the
+// default" convention BaseColor's zero alpha uses.
+func textSizeOf(button *models.Button) float64 {
+	if button.TextSize <= 0 {
+		return defaultButtonTextSize
+	}
+	return button.TextSize
 }

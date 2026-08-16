@@ -37,10 +37,13 @@ type EnemyData struct {
 	// the west-facing idle frames had no drawing left that used them; keeping a second
 	// picture per enemy would have meant cutting 96 more frames for something nothing reads.
 	// `git` has them if animation comes back.
-	Portrait     string `json:"Portrait"`
-	Strength     int    `json:"Strength"`
-	Speed        int    `json:"Speed"`
-	Constitution int    `json:"Constitution"`
+	Portrait string `json:"Portrait"`
+
+	// DMG is what one Attack deals in this enemy's hands — the same field the player's record
+	// carries, renamed off `Strength` on 2026-08-16. See combat.Duelist.DMG.
+	DMG          int `json:"DMG"`
+	Speed        int `json:"Speed"`
+	Constitution int `json:"Constitution"`
 
 	// ValidFloors is the inclusive range of tower floors this enemy may appear on, as
 	// [lowest, highest]. The tower is 8 floors (MECHANICS.md), so 1 is the entrance and 8 is

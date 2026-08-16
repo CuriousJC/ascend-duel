@@ -11,7 +11,7 @@ import (
 // the reason the enemy deck lives here rather than on the combat screen.
 
 func testEnemy() combat.Duelist {
-	d := combat.Duelist{Con: 20, Str: 10, Spd: 15}
+	d := combat.Duelist{Con: 20, DMG: 10, Spd: 15}
 	d.MaxLife, d.CurrentLife = 100, 100
 	return d
 }

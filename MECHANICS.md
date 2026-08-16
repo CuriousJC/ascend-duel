@@ -38,8 +38,8 @@ passed alongside the duelists that `internal/combat` reads instead of the consta
 becomes a function of the card *and* that carrier, the way `Damage` is already a function of
 the action and the wielder.
 
-Attributes do **not** need this. `Con`, `Str` and `Spd` are already fields on `Duelist`, and
-`ResolveRound` takes duelists by value, so a ring granting `+5 Str` just hands it a different
+Attributes do **not** need this. `Con`, `DMG` and `Spd` are already fields on `Duelist`, and
+`ResolveRound` takes duelists by value, so a ring granting `+5 DMG` just hands it a different
 duelist. Base values live in `data/duelists.json` and `data/enemies.json`, and are expected to
 move with playtesting.
 What is still frozen is the *conversion* — `LifePerCon`, `baseActionPoints`, `speedPerPoint` —
@@ -49,9 +49,22 @@ and those are the bigger balance levers.
 
 ## Attributes and scaling
 
-**Implemented today:** `Con`, `Str`, `Spd` on `Duelist`. Life is `Con × LifePerCon` (5). Action
-points are `4 + Spd/10`, minimum 1. Damage comes from the *action* via `ActionKind.Damage(str)`,
-not from an attribute of its own. Base values are per-combatant data in `data/duelists.json` and `data/enemies.json`.
+**Implemented today:** `Con`, `DMG`, `Spd` on `Duelist`. Life is `Con × LifePerCon` (5). Action
+points are `4 + Spd/10`. Damage comes from the *action* via `ActionKind.Damage(dmg)`, scaled off
+`DMG`. Base values are per-combatant data in `data/duelists.json` and `data/enemies.json`.
+
+**`Str` was renamed to `DMG` on 2026-08-16, and it is a stat being removed rather than
+respelled.** Strength converted into damage and did nothing else, and the conversion was an
+identity — `Strike.Damage(Str)` returned `Str` — so the two names described one number and the
+player had to learn a step they could never act on separately. The ladder still scales off it
+(half at 1 AP, it at 2, double at 3); what went is the pretence that the ladder converts a
+different stat. **The figure on the fighter card is still asked of the rules**
+(`Strike.Damage(DMG)`) rather than printed from the field, so if the middle rung ever stops being
+1x the card follows.
+
+**The AP floor went with it.** `ActionPoints` clamped to a minimum of 1 because a chill
+subtracted from it; nothing subtracts now, every term is non-negative, and the clamp was
+arithmetic that could not fire. A future subtraction brings its own floor.
 
 **Damage reduction is percentages all the way down, and no attribute is one of them.** Three
 things cut a blow and they are all the same shape: the **earth status** blunts what the attacker
@@ -92,7 +105,7 @@ or weaker way to build one.
 
 | Family | Concept | AP | Effect |
 |---|---|---|---|
-| **stab** | Jab / Thrust / Lunge | 1 / 2 / 3 | Stabs for `str/2` (min 1) / `str` / `str × 2` |
+| **stab** | Jab / Thrust / Lunge | 1 / 2 / 3 | Stabs for `DMG/2` (min 1) / `DMG` / `DMG × 2` |
 | **slash** | Cut / Slash / Cleave | 1 / 2 / 3 | Slashes for the same three figures |
 | **crush** | Bash / Strike / Smash | 1 / 2 / 3 | Crushes for the same three figures |
 | **plan** | Prepare | 1 | Banks +2 AP for the next round |
@@ -109,11 +122,11 @@ each buys is a different currency at a rising price: Prepare pays in points, Pla
 Defend pays in survival.
 
 **`Strike` is the 1× reference the damage formula reads**, and that is why the crush family holds
-the name: `DMG` on the fighter card is `Strike.Damage(Str)`, and every multiplier is applied to it.
+the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, and every multiplier is applied to it.
 Nothing stops that reference moving to another family's middle rung; it is one constant.
 
-**The opponent has two cards of its own and they belong to no family** — `Attack` (2 AP, `str`) and
-`Heavy` (3 AP, `str × 2`), priced against the player's tiers. `FamilyNone` is a real answer rather
+**The opponent has two cards of its own and they belong to no family** — `Attack` (2 AP, `DMG`) and
+`Heavy` (3 AP, `DMG × 2`), priced against the player's tiers. `FamilyNone` is a real answer rather
 than a fallthrough: families are the *player's* deck axis, and an enemy card claiming to be a crush
 would be claiming membership of a deck the player can combo with. They draw with a blank corner.
 
@@ -239,17 +252,47 @@ takes a green far enough from `playerSwatch` to read as a different idea.
 
 ### Statuses
 
-*Implemented in `internal/combat/status.go`.* Elements are **mechanical**, as
-always intended. Each applies a status **to whoever took the blow**:
+*Implemented in `internal/combat/status.go`.* Each element has a status it applies **to whoever
+took the blow** — **and only if the attacker is wearing that element's ring**:
 
 | Element | Status | What it does |
 |---|---|---|
-| **ice** | chill | −1 AP per stack off the victim's next budget |
-| **lightning** | shock | the victim's next attack misses outright, one per stack |
-| **fire** | burn | 2 damage per stack at the end of each round it survives |
-| **earth** | weight | the victim deals 10% less damage per stack, capped at 50% |
+| **fire** | burn | 10% of the attacker's DMG at the end of each round it survives |
+| **ice** | chill | one card off the front of every turn it outlives |
+| **lightning** | shock | 25% chance the victim's attack misses, rolled every attack |
+| **earth** | weight | the victim deals 25% less damage |
 
-**Element crossed into `internal/combat` the same day**, which is what this section had been
+**Statuses are off by default, and the ring is what switches one on** *(2026-08-16)*. An
+unringed fire attack is a plain attack with a red border: it still counts toward the mix
+multiplier and it leaves nothing behind. `combat.Duelist.Rings` is the flag array, indexed by
+element exactly as `Statuses` is, and `resolveAttackPhase` reads it off the **attacker** before
+applying anything.
+
+**Why the reversal.** Statuses given away free left the first three rings with nothing to *be* —
+every ring had to invent a second mechanic to sell, because the thing its element does was
+already happening. Charging a ring for it makes the element set a combo axis on its own terms and
+makes a ring the thing that turns a colour into a rule. It also gives the loot a shape: what a
+ring buys is legible in one line of card text, and the second and third rings are worth buying
+because one ring is one element.
+
+**Enemies never wear rings.** The zero value is what an enemy is hydrated with and nothing sets
+it, so an enemy's colours are inert by construction rather than by a rule written down somewhere
+else. Statuses reaching the player by some other route — an affix, a boss rule — is expected and
+is a separate mechanic; it will not be an enemy putting on jewellery.
+
+**Four rings exist and the player starts in three**, `startingRings` in `internal/screens`. Earth
+is deliberately left off so every launch is a live test of the gate rather than of the statuses.
+That list is temporary and is the counterpart of `deckSeedName`: a run will start with no rings
+and buy them, which needs `Session`.
+
+**A status shows as a badge along the bottom of the enemy card** *(2026-08-16)*, from
+`assets/effect/`. It is the only place a standing status is stated, and it has to be: two of the
+four bite something the player has not done yet — a chill takes a card off a turn not yet queued,
+a weight blunts a blow not yet swung — so without a badge they are learned by being surprised.
+The row is centred and closes up as it fills. Earth's art is a placeholder. **The player's card
+carries no badges**, because nothing can put a status on the player: the enemy wears no rings.
+
+**Element crossed into `internal/combat` on 2026-08-12**, which is what this section had been
 waiting on and what unblocked ring discounts and the flip ring with it.
 `combat.Element` is a rules type, `combat.Card` is a concept plus an element, and `[]Card`
 replaced `[]ActionKind` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor`, `CostOf`
@@ -283,28 +326,36 @@ Three consequences, all of them changes from the per-card version:
   Defend still connected, and making the status conditional on the final figure would let a
   defensive card silently un-apply an element the attacker had already paid for.
 
-The cost, stated: **element is mechanically inert on the three plan cards** until rings land —
-and they are all basic, so today it is inert on nothing that exists.
+The cost, stated: **element is mechanically inert on the three plan cards**, and they are all
+basic, so today it is inert on nothing that exists.
 
 **Magnitude is per hit, not per card.** A fire Jab and a fire Smash apply the same burn, so the
 cheapest attack in the deck is the cheapest status delivery. The concept ladder prices damage;
 the element ladder does not exist. Making status scale with the card is a second axis and a
-design change.
+design change. **Fire is the one that scales, and it scales off the *duelist*** — 10% of DMG —
+which is a different axis from the card and does not reopen this one.
 
 #### One lifecycle, learned once
 
-**Amount stacks, duration refreshes, everything clears at the end of the round after the one
-that applied it.** `statusDuration` is 2 round-ends and it is one number for all four
-deliberately. It cannot be 1: side B acts second, so a status B applied would expire before it
-ever bit anything.
+**Nothing stacks; a second hit resets the clock, and everything clears at the end of the round
+after the one that applied it.** `statusDuration` is 2 round-ends and it is one number for all
+four deliberately. It cannot be 1: side B acts second, so a status B applied would expire before
+it ever bit anything.
+
+**Stacking went on 2026-08-16.** Amounts added until then, which made a status something to pile
+on rather than something to keep up — and with one blow a turn, four stacks was four cards spent
+saying one word louder. A ring that *does* stack is a ring someone can design; the base rule
+being "no" is what leaves it somewhere to go. The two caps went with it: `shockMissCapPct` and
+`weightCapPct` existed to stop four stacks reaching a certainty, and there is no longer a fourth
+stack to cap.
 
 Per-element tuning is one constant each away. Run `tools/balance` before moving one.
 
 #### Lightning is a roll, and it is the only one in the rules
 
-**A shock is a chance the turn's attack misses: 25% per stack, capped at 75%.** One stack is
-spent per attack phase whether or not the roll lands — a shock that only burned itself on a
-success would be a guarantee wearing a probability's clothes.
+**A shock is a 25% chance the turn's attack misses, rolled on every attack the shock outlives.**
+Nothing is consumed by a roll: with no stacks to wear down, a shock that spent itself on contact
+would be a two-round status that reliably lasted one attack — a duration doing no work.
 
 **This reverses the deterministic version taken two days earlier**, and one blow per turn is
 what forced it. A certain miss used to delete one attack out of several; now it deletes the
@@ -312,9 +363,9 @@ whole turn, so a 1 AP lightning Jab could erase an 8 AP Barrage outright. The al
 considered were breaking the hand or cutting the multiplier; a roll was chosen because lightning
 should feel unreliable, which is a design reason rather than a balance one.
 
-**The cap is what stops the roll becoming the old rule by another route.** Without it four
-lightning hits would be a certain miss again, and a defence that always works is exactly what
-one blow per turn makes intolerable.
+**It can never be a certainty**, which is what one blow per turn demands: a defence that always
+works deletes a whole opposing turn for the price of one card. That used to need a cap over four
+stacks; with stacking gone the ceiling is the number itself.
 
 **What it costs, accepted rather than argued away:**
 
@@ -332,20 +383,33 @@ one blow per turn makes intolerable.
 
 #### The rest, and what each cost
 
-- **Ice is the AP element in both directions.** The ice *ring* discounts your ice cards; the
-  ice *status* cuts the enemy's budget. Same element, opposite targets, deliberate. It is read
-  in `ActionPoints()` rather than subtracted when it lands, which is what makes it bite the
-  round *after* the blow — the budget for the round in progress was committed before the attack
-  resolved. The existing floor of 1 AP still holds however cold it gets.
-- **Fire needed state that outlives an action**, and got it. `KindBurned` fires from `endRound`,
-  side A then side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a
-  burn changes a life total with nobody acting. **A burn can kill**, and produces a
-  `KindDefeated` when it does.
+- **Ice takes a card, not a point** *(2026-08-16)*. It cut the budget by 1 AP until then, which is
+  the quietest status the game could have had: a duelist a point short queued a cheaper card and
+  lost nothing they could name. It now reuses the **stagger** machinery — a chilled duelist loses
+  a card off the front of its turn, and the front of a turn is its attacks — so what ice does is a
+  thing already in the game's vocabulary rather than a second mechanic. What that cost: an AP cut
+  was felt while the player was still choosing, and a card taken off a committed turn is felt
+  after they have.
+  - **A chill and a stagger add up**, and the difference between them is that a stagger is spent
+    when it bites while a chill bites on every turn it outlives.
+  - **The consequence in the feed:** a card lost to ice is announced as `KindStaggered`, so the
+    Resolution pane says "staggered" for something the ring calls a chill. One event kind is what
+    keeps playback's one-beat-per-slot invariant true without a second thing to remember. It is a
+    small lie and it is knowingly taken.
+- **Fire scales with the attacker.** A burn ticks for **10% of the DMG of whoever lit it**, read
+  once and frozen onto the victim — a duelist whose DMG changes later does not retroactively burn
+  harder. It floors at 1, the same rule Jab's damage follows, so a duelist under 10 DMG lights a
+  burn that does something.
+  - Fire needed state that outlives an action and got it. `KindBurned` fires from `endRound`,
+    side A then side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a
+    burn changes a life total with nobody acting. **A burn can kill**, and produces a
+    `KindDefeated` when it does.
 - **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
   so the order is: the hand's own cards, the combo multiplier, the attacker's weight, then every
   raised plan card. Everything the defender does therefore happens to a blow that has already been
   blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
-  predictable from the reductions already in the game.
+  predictable from the reductions already in the game. **25% rather than the 10% it was**, because
+  10% that cannot stack is a status nobody notices landing.
 - **Statuses got a home**, and it is `Duelist.Statuses [ElementCount]Status` — an array indexed
   by element, not four named fields. That is what makes *"consume the status this element
   applies"* expressible and is the difference between a system and four ad-hoc fields. The
@@ -364,7 +428,7 @@ sheet is worse than none. It is deleted rather than annotated.
 
 What has to be re-measured before anything is tuned, and roughly what to expect:
 
-- **Damage is much larger and enemy HP has not moved.** Two Strikes at Str 10 is `20 + 10×1.5`
+- **Damage is much larger and enemy HP has not moved.** Two Strikes at DMG 10 is `20 + 10×1.5`
   = 35 where it used to be 20; a rainbow Barrage is `10×15 = 150` on top of its cards. Retuning
   enemy life totals is the owner's call and is expected, not a bug report.
 - **And the postures changed again on 2026-08-15.** The deck rework replaced every row: `pairing`
@@ -543,8 +607,8 @@ A turn deals damage **once**, in the attack phase, and the figure is:
 (damage of each card in the hand)  +  DMG × (hand multiplier + mix multiplier)
 ```
 
-`DMG` is what one Strike deals at this duelist's strength — the number on the fighter card. So a
-pair of Strikes at Str 10 is `10 + 10 + 10×1.5` = **35**, and a duo pair of Strikes is
+`DMG` is what one Strike deals in this duelist's hands — the number on the fighter card. So a
+pair of Strikes at DMG 10 is `10 + 10 + 10×1.5` = **35**, and a duo pair of Strikes is
 `10 + 10 + 10×(1.5+2.0)` = **55**.
 
 **The multipliers add rather than compose**, decided deliberately: 1.5× and 2× is 3.5×, not 3×.
@@ -794,12 +858,36 @@ than an ever-widening round.
 - **Five at once**, until brands expand capacity. *(ideas.md's "extra fingers bought from a
   shop" is superseded.)*
 - **The cap is never displayed.** It surfaces naturally when you try to buy a sixth.
+- **The four elemental rings confer their element's status, and nothing else does** — this is the
+  first ring rule in the code *(2026-08-16)*. See *Statuses*: without the ring, a coloured attack
+  is a plain attack that still counts toward a mix.
 - **A ring per element discounts cards of that element** — an ice ring makes an ice Strike cost
   one less. Not a budget increase; a per-card discount. This is the expensive branch and it is
-  the chosen one.
+  the chosen one. **Unbuilt**: `Card.Cost()` is the seat and nothing reads a ring in it yet.
 - Rings also boost stats and bend other rules.
 - **No ring changes how many cards can be played.** `MaxActions` is frozen at five — see *A
   round is bounded twice*. A ring may make five cards cheaper, never make it six.
+
+### What the first four rings are
+
+`data/rings.json` holds them; `combat.Duelist.Rings` is what the engine reads. One ring is one
+element, so wearing fire and swinging a rainbow lands a burn and nothing else — which is what
+makes the second and third worth buying.
+
+| Ring | Element | What wearing it does |
+|---|---|---|
+| Fire Ring | fire | your fire attacks burn: 10% of your DMG at the end of each round |
+| Frozen Ring | ice | your ice attacks chill: one card off the front of each of their turns |
+| Thunder Ring | lightning | your lightning attacks shock: 25% chance their attack misses |
+| Earth Ring | earth | your earth attacks weigh: they deal 25% less damage |
+
+**The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire attacks
+burn; it does nothing about fire aimed at you. The alternative would make a ring a liability and
+buying one a decision with a wrong answer.
+
+**The player starts wearing three of the four** — `startingRings`, fire/ice/lightning — with earth
+left off on purpose so a launch tests the gate as well as the statuses. Temporary; a run will
+start bare and buy rings once `Session` exists.
 
 ### Flip rings — the element-transform ring
 
@@ -842,9 +930,11 @@ cost rather than a bare one.
 **Rings are drawn as cards**, in a horizontal row across the top, not necessarily spanning the
 whole bar. Same size as other cards, and **no glyphs**.
 
-**The row is on the screen, at full card size, and it is a sketch** — nothing
-buys, equips or reads a ring, and `data/rings.json` holds the three that have art. What made it
-possible is that **the vertical problem below solved itself**: the full-height Resolution pane
+**The row is on the screen at full card size, and it is what the player is actually wearing**
+*(2026-08-16)*. It drew every record in `data/rings.json` up to the cap while nothing read a
+ring; it now reads `startingRings`, because a catalogue that equips itself would have put the
+earth ring on the moment the file gained a fourth entry. **Nothing buys or unequips one** — that
+is still `Session`'s job. What made the row possible is that **the vertical problem below solved itself**: the full-height Resolution pane
 left the 12–46% band for a three-line feed above the hand, so the band the row needed was
 already empty. The character block shrank into the top-left corner to give it the width.
 

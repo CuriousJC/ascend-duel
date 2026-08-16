@@ -337,6 +337,16 @@ type StatLine struct {
 // TestLeftColumnDoesNotCollide.
 const MaxStatLines = 3
 
+// MaxEffects is how many status badges a card can show at once.
+//
+// **Four, because there are four elements and a duelist carries at most one status of each.**
+// This package does not know that — it holds pictures — so the number is stated here as the
+// width of the row the bottom band fits and checked against the rules by
+// `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` in internal/screens, which is the layer
+// that can see both. A fifth element is a layout change as well as an enum change, exactly as a
+// fourth stat row is.
+const MaxEffects = 4
+
 // Spec is everything about one card that changes what it looks like.
 //
 // It is plain data rather than a combat.ActionKind on purpose. The contact sheet renders
@@ -383,6 +393,20 @@ type Spec struct {
 	// hand-written key that could disagree with what is actually drawn. See MaxStatLines
 	// for why the size is what the card fits rather than a round number.
 	Stats [MaxStatLines]StatLine
+
+	// Effects are the status badges drawn in a row along the bottom edge, on the styles that
+	// ask for them. Nil entries are skipped, so the row is as wide as the statuses actually
+	// standing on the combatant and stays centred as they come and go.
+	//
+	// **What they mean is none of this package's business.** A caller hands over pictures in
+	// the order it wants them read; `internal/screens` fills them from `Duelist.Statuses` in
+	// element order, which is what makes the row's order deterministic. Putting the element
+	// enum in here would give the drawing package an opinion about the rules.
+	//
+	// **A fixed array, and comparable for the same reason `Stats` is** — the screen's card
+	// cache keys on the whole Spec. `image.Image` compares by dynamic type and pointer, which
+	// is exactly what is wanted: the same decoded picture is the same cache entry.
+	Effects [MaxEffects]image.Image
 
 	// Life and MaxLife draw a health bar and a "42/60" line, on the styles that ask for
 	// it. The enemy and duelist cards do — see EnemyStyle and DuelistStyle.

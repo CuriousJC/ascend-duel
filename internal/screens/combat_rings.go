@@ -17,9 +17,11 @@ package screens
 import (
 	"fmt"
 	"image"
+	"log"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -168,23 +170,65 @@ func ringSlotAt(r image.Rectangle, i, worn int) image.Point {
 	return image.Pt(r.Min.X+i*ringSlotPitch(r, worn), r.Min.Y)
 }
 
+// startingRings is what the player is wearing when the game opens, by record key.
+//
+// **Temporary, and the counterpart of `deckSeedName`** *(2026-08-16)*. A duelist will start a run
+// with no rings at all and buy them between fights, which needs the `Session` that does not
+// exist; until then this is how a ring gets onto a finger so the rules behind it can be played.
+//
+// **The earth ring is deliberately left off.** Four rings exist and three are worn, so every
+// launch is a live test of the rule that matters most: an earth attack from a duelist with no
+// earth ring is a plain attack with a brown border. A list that happened to hold everything
+// would prove the statuses fire and prove nothing about the gate.
+var startingRings = []string{"fire-ring", "frozen-ring", "thunder-ring"}
+
 // equippedRings is what the player is wearing.
 //
-// **Everything defined, up to the cap** — this is the sketch's whole rule, and it is the reason
-// the pane shows something at all before equipping exists. It walks `data.RingOrder` rather
-// than the map, per the determinism rules: map order would deal a different row of rings every
-// launch and it would look like a bug in the layout rather than one in the iteration.
+// **It reads `startingRings` rather than the whole catalogue** *(2026-08-16)*. It used to hand
+// back every record in `rings.json` up to the cap, which was fine while nothing read a ring and
+// wrong the moment one did anything: adding a fourth ring to the file would have equipped it.
+//
+// It walks `data.RingOrder` rather than the map, per the determinism rules: map order would deal
+// a different row of rings every launch and it would look like a bug in the layout rather than
+// one in the iteration.
 func equippedRings(gs *state.GlobalState) []data.RingData {
-	order := data.RingOrder(gs.Rings)
-	if len(order) > maxRings {
-		order = order[:maxRings]
+	worn := make(map[string]bool, len(startingRings))
+	for _, key := range startingRings {
+		worn[key] = true
 	}
 
-	out := make([]data.RingData, 0, len(order))
-	for _, key := range order {
+	out := make([]data.RingData, 0, len(startingRings))
+	for _, key := range data.RingOrder(gs.Rings) {
+		if !worn[key] || len(out) == maxRings {
+			continue
+		}
 		out = append(out, gs.Rings[key])
 	}
 	return out
+}
+
+// equipRings turns the row of ring cards into the rules the duelist fights under: one flag per
+// element on `combat.Duelist`, which is what `resolveAttackPhase` reads before it applies a
+// status.
+//
+// **The screen is where the two halves meet on purpose.** `internal/combat` cannot see
+// `data/rings.json` — the dependency direction forbids it and a ring's art key is none of the
+// engine's business — so the element name is parsed here and handed over as a rule. This is the
+// same division `buildStartingDeck` draws for the card list.
+//
+// **A ring naming an element the rules do not have is reported, not ignored.** It is the exact
+// failure `ParseAction` refuses to fall back on: a ring that quietly does nothing looks identical
+// to a status that quietly does not fire.
+func equipRings(gs *state.GlobalState, d combat.Duelist) combat.Duelist {
+	for _, ring := range equippedRings(gs) {
+		e, ok := combat.ParseElement(ring.Element)
+		if !ok {
+			log.Printf("ring %q names element %q, which the rules do not have", ring.RingRecord, ring.Element)
+			continue
+		}
+		d.Rings[e] = true
+	}
+	return d
 }
 
 // drawRingPane draws the backing, the rings, a rule under them, and the cap as a fraction on

@@ -36,8 +36,8 @@ func (s fixedSource) Seed(int64)   {}
 func alwaysMisses() *rand.Rand { return rand.New(fixedSource(0)) }
 func neverMisses() *rand.Rand  { return rand.New(fixedSource(99 << 32)) }
 
-func duelist(str, spd, life int) Duelist {
-	return Duelist{Str: str, Spd: spd, MaxLife: life, CurrentLife: life}
+func duelist(dmg, spd, life int) Duelist {
+	return Duelist{DMG: dmg, Spd: spd, MaxLife: life, CurrentLife: life}
 }
 
 // firstDamage returns the first damage event dealt by the given side.
@@ -218,7 +218,7 @@ func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	}
 }
 
-func TestStrikeDealsStrengthAsDamage(t *testing.T) {
+func TestStrikeDealsDMGAsDamage(t *testing.T) {
 	a := duelist(10, 10, 100)
 	b := duelist(10, 10, 100)
 
@@ -226,7 +226,7 @@ func TestStrikeDealsStrengthAsDamage(t *testing.T) {
 
 	got := firstDamage(t, events, SideA)
 	if got.Amount != 10 {
-		t.Errorf("Strike damage = %d, want 10 (attacker Str)", got.Amount)
+		t.Errorf("Strike damage = %d, want 10 (attacker DMG)", got.Amount)
 	}
 	if bAfter.CurrentLife != 90 {
 		t.Errorf("target life after Strike = %d, want 90", bAfter.CurrentLife)
@@ -249,12 +249,12 @@ func TestTheTopTierHitsTwiceAsHardAsTheMiddleOne(t *testing.T) {
 }
 
 func TestJabHitsForHalfButNeverZero(t *testing.T) {
-	// Str 1 halves to 0 under integer division; a hit that does nothing would make
-	// low-Strength duels unresolvable, so Jab floors at 1.
+	// A DMG of 1 halves to 0 under integer division; a hit that does nothing would make
+	// low-DMG duels unresolvable, so Jab floors at 1.
 	events, _, _ := resolve(duelist(1, 10, 100), duelist(1, 10, 100), PlainCards(Jab), nil, 1)
 
 	if got := firstDamage(t, events, SideA); got.Amount != 1 {
-		t.Errorf("Jab damage at Str 1 = %d, want 1", got.Amount)
+		t.Errorf("Jab damage at DMG 1 = %d, want 1", got.Amount)
 	}
 }
 

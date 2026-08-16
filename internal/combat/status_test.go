@@ -1,17 +1,30 @@
 package combat
 
 import (
-	"math/rand"
 	"testing"
 )
 
-// The four element statuses, and the lifecycle all of them share.
+// The four element statuses, the ring that switches each of them on, and the lifecycle all of
+// them share.
 //
 // **Every test here is written against the rule rather than the constant** where it can be —
-// a chill costs `chillPerHit` action points, not "one" — so tuning a number does not fail a
+// a chill costs `chillCardsPerHit` cards, not "one" — so tuning a number does not fail a
 // test that was checking the mechanic. The exceptions are the ones pinning a *relationship*
-// (a burn ticks twice, a status is gone by the round after), which is the thing that must not
-// move without somebody deciding it should.
+// (a burn ticks twice, a status is gone by the round after, a second hit does not stack), which
+// is the thing that must not move without somebody deciding it should.
+
+// wearing returns the duelist with rings for the named elements on. **Every status test needs
+// one**, which is the whole point of the 2026-08-16 rule: without a ring an element is a border
+// colour and a combo axis and nothing else.
+func wearing(d Duelist, es ...Element) Duelist {
+	for _, e := range es {
+		d.Rings[e] = true
+	}
+	return d
+}
+
+// ringed is a duelist wearing all four, for tests about the lifecycle rather than about rings.
+func ringed(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth) }
 
 // statusEvents returns the KindStatus events for one element.
 func statusEvents(events []Event, e Element) []Event {
@@ -34,10 +47,75 @@ func countKind(events []Event, k EventKind) int {
 	return n
 }
 
-func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
-	// The trigger rule: an attack that connects applies its element, and nothing else does.
+// --- the ring gate ---------------------------------------------------------------------------
+
+func TestAnElementAppliesNothingWithoutItsRing(t *testing.T) {
+	// **The headline rule** *(2026-08-16)*. A coloured attack from a duelist wearing no ring is a
+	// plain attack: it still counts toward the mix multiplier, and it leaves nothing behind.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
 		a, b := duelist(10, 10, 500), duelist(10, 10, 500)
+
+		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
+
+		if n := len(statusEvents(events, e)); n != 0 {
+			t.Errorf("an unringed %v Strike applied %d statuses, want 0", e, n)
+		}
+		if bAfter.Statuses[e].Active() {
+			t.Errorf("an unringed %v Strike left a %v status behind", e, e)
+		}
+	}
+}
+
+func TestOnlyTheRingWornSwitchesItsOwnElementOn(t *testing.T) {
+	// One ring is one element. A duelist wearing fire and swinging a rainbow lands a burn and
+	// nothing else, which is what makes the second and third rings worth buying.
+	a := wearing(duelist(10, 40, 500), Fire)
+	b := duelist(10, 10, 500)
+
+	_, _, bAfter := resolve(a, b,
+		[]Card{Of(Jab, Fire), Of(Jab, Ice), Of(Jab, Lightning), Of(Jab, Earth)}, nil, 1)
+
+	if !bAfter.Statuses[Fire].Active() {
+		t.Error("the fire ring's own colour left no burn")
+	}
+	for _, e := range []Element{Ice, Lightning, Earth} {
+		if bAfter.Statuses[e].Active() {
+			t.Errorf("a %v card left a status on a duelist wearing no %v ring", e, e)
+		}
+	}
+}
+
+func TestTheRingIsReadOffTheAttackerNotTheVictim(t *testing.T) {
+	// Your ring makes your attacks burn. It does nothing about attacks aimed at you — otherwise a
+	// ring would be a liability and buying one would be a decision with a wrong answer.
+	a := duelist(10, 10, 500)
+	b := wearing(duelist(10, 10, 500), Fire)
+
+	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Fire)}, nil, 1)
+
+	if bAfter.Statuses[Fire].Active() {
+		t.Error("the victim's own fire ring lit a burn on themselves")
+	}
+}
+
+func TestBasicIsNeverWorn(t *testing.T) {
+	// Basic is the absence of an element, so there is nothing for a ring to point at. The array is
+	// indexed by Element and its zeroth entry is reachable; this is what stops it meaning anything.
+	d := duelist(10, 10, 500)
+	d.Rings[Basic] = true
+
+	if d.WearsRing(Basic) {
+		t.Error("a duelist reported wearing a basic ring")
+	}
+}
+
+// --- what applies a status -------------------------------------------------------------------
+
+func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
+	// The trigger rule: an attack that connects applies its element, given the ring, and nothing
+	// else does.
+	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
+		a, b := ringed(duelist(10, 10, 500)), duelist(10, 10, 500)
 		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
 
 		if got := statusEvents(events, e); len(got) != 1 {
@@ -54,7 +132,7 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	// discount and applies nothing. Otherwise a 1-AP Prepare would be as good a status delivery
 	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
 	for _, a := range []ActionKind{Prepare, Plan, Defend} {
-		attacker, target := duelist(10, 40, 500), duelist(10, 10, 500)
+		attacker, target := ringed(duelist(10, 40, 500)), duelist(10, 10, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
 		if n := len(statusEvents(events, Fire)); n != 0 {
@@ -74,7 +152,7 @@ func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 	// attacker had already paid for, and under one blow per turn that would be every defensive
 	// card in the game.
 	for _, defence := range []ActionKind{Defend} {
-		a, b := duelist(10, 10, 500), duelist(10, 40, 500)
+		a, b := ringed(duelist(10, 10, 500)), duelist(10, 40, 500)
 
 		// B raises the defence in round one, A swings into it in round two.
 		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defence)}, 1)
@@ -93,22 +171,23 @@ func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
 	// The mix counts **distinct** colours, not coloured cards, so this is the rule that decides
 	// status volume now. Two fire Jabs are a mono fire Pair and land one burn — where under the
 	// per-card model they landed two.
-	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+	a, b := ringed(duelist(10, 40, 500)), duelist(10, 10, 500)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
 
 	if n := len(statusEvents(events, Fire)); n != 1 {
 		t.Errorf("two fire cards in one hand applied %d burns, want 1", n)
 	}
-	if got, want := bAfter.Statuses[Fire].Amount, burnPerHit; got != want {
-		t.Errorf("a mono fire hand stacked to %d, want %d", got, want)
+	want, _ := statusFor(Fire, a)
+	if got := bAfter.Statuses[Fire].Amount; got != want {
+		t.Errorf("a mono fire hand burned for %d, want %d", got, want)
 	}
 }
 
 func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
 	// The other end of the same rule: a duo hand lands both, which is what the mix multiplier is
-	// paying for besides damage.
-	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+	// paying for besides damage — given a ring for each colour.
+	a, b := ringed(duelist(10, 40, 500)), duelist(10, 10, 500)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Ice)}, nil, 1)
 
@@ -124,7 +203,7 @@ func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
 	// Attack cards that build no hand are announced and contribute nothing — not damage and not
 	// an element. `Strike, Jab, Strike` is a Strike Pair and the Jab is not in it, so a fire Jab
 	// alongside two plain Strikes burns nobody.
-	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+	a, b := ringed(duelist(10, 40, 500)), duelist(10, 10, 500)
 
 	events, _, bAfter := resolve(a, b,
 		[]Card{Plain(Strike), Of(Jab, Fire), Plain(Strike)}, nil, 1)
@@ -141,7 +220,7 @@ func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
 	// **The status lands because the blow did, not because it hurt.** A Defend halves the hit
 	// and the hit still connected, so making the status conditional on the final figure would
 	// let a defensive card silently un-apply an element the attacker had already paid for.
-	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
+	a, b := ringed(duelist(10, 10, 500)), duelist(10, 40, 500)
 
 	_, a1, b1 := resolve(a, b, nil, []Card{Plain(Defend)}, 1)
 	events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
@@ -154,21 +233,25 @@ func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
 	}
 }
 
-func TestAStatusStacksInAmountAndRefreshesInDuration(t *testing.T) {
-	// **Two rounds, not two cards** *(2026-08-14)*. A turn lands one blow and its mix applies one
-	// status per distinct colour, so stacking is now something that happens *across* turns —
-	// see TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt for the other half.
-	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+// --- the lifecycle ---------------------------------------------------------------------------
+
+func TestASecondHitResetsTheClockAndDoesNotStack(t *testing.T) {
+	// **Nothing stacks as of 2026-08-16.** Two fire hits burn for what one burns for; what the
+	// second buys is the clock going back to full. Amounts added until then, which made a status
+	// something to pile on rather than something to keep up.
+	a, b := ringed(duelist(10, 40, 500)), duelist(10, 10, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
+	one := b1.Statuses[Fire].Amount
+
 	_, _, b2 := resolve(a1, b1, []Card{Of(Jab, Fire)}, nil, 2)
 
-	if got, want := b2.Statuses[Fire].Amount, burnPerHit*2; got != want {
-		t.Errorf("two fire hits stacked to %d, want %d", got, want)
+	if got := b2.Statuses[Fire].Amount; got != one {
+		t.Errorf("two fire hits burn for %d against one hit's %d — nothing stacks", got, one)
 	}
 	// Refreshed rather than added: statusDuration, less the one round-end that has passed.
 	if got, want := b2.Statuses[Fire].Rounds, statusDuration-1; got != want {
-		t.Errorf("two fire hits left %d rounds, want %d — duration refreshes, it does not add",
+		t.Errorf("two fire hits left %d rounds, want %d — the clock resets, it does not add",
 			got, want)
 	}
 }
@@ -177,7 +260,7 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 	// The lifecycle, pinned as a relationship rather than as a number. A status has to survive
 	// the round-end of the round that applied it — otherwise one applied by side B, who acts
 	// second, would never bite anything at all — and it must not survive the next one.
-	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
+	a, b := ringed(duelist(10, 10, 500)), duelist(10, 10, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
 	if !b1.Statuses[Ice].Active() {
@@ -190,30 +273,80 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 	}
 }
 
-func TestIceCutsTheTargetsBudget(t *testing.T) {
-	// Ice is read at budget time rather than subtracted when it lands, which is what makes it
-	// bite the round *after* the blow — the budget for the round in progress was committed
-	// before the attack resolved.
-	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
+// --- ice ---------------------------------------------------------------------------------------
+
+func TestIceTakesACardOffTheFrontOfTheTurn(t *testing.T) {
+	// **Ice takes a card, not a point** *(2026-08-16)*. It reuses the stagger machinery, so what a
+	// chilled duelist loses is announced as KindStaggered — the front of a turn is its attacks, so
+	// what goes is the blow.
+	a, b := wearing(duelist(10, 10, 500), Ice), duelist(10, 10, 500)
+
+	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike), Plain(Strike)}, 1)
+	if n := countKind(plain, KindStaggered); n != 0 {
+		t.Fatalf("an unchilled turn lost %d cards, want 0", n)
+	}
+
+	events, _, _ := resolve(a, b, []Card{Of(Jab, Ice)}, []Card{Plain(Strike), Plain(Strike)}, 1)
+
+	if got, want := countKind(events, KindStaggered), chillCardsPerHit; got != want {
+		t.Errorf("a chilled turn lost %d cards, want %d", got, want)
+	}
+}
+
+func TestAChillBitesEveryTurnItOutlives(t *testing.T) {
+	// **The difference between a chill and a stagger**: a stagger is spent when it bites, a chill
+	// bites on every turn it is still running for. B is hit in round one and acts after A, so it
+	// loses a card that round and again in round two.
+	a, b := wearing(duelist(10, 10, 500), Ice), duelist(10, 10, 500)
+	bTurn := []Card{Plain(Strike), Plain(Strike)}
+
+	r1, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, bTurn, 1)
+	if n := countKind(r1, KindStaggered); n != chillCardsPerHit {
+		t.Fatalf("round 1 lost %d cards to the chill, want %d", n, chillCardsPerHit)
+	}
+
+	r2, a2, b2 := resolve(a1, b1, nil, bTurn, 2)
+	if n := countKind(r2, KindStaggered); n != chillCardsPerHit {
+		t.Errorf("round 2 lost %d cards to the chill, want %d — a chill bites while it lasts",
+			n, chillCardsPerHit)
+	}
+
+	r3, _, _ := resolve(a2, b2, nil, bTurn, 3)
+	if n := countKind(r3, KindStaggered); n != 0 {
+		t.Errorf("round 3 lost %d cards, want 0 — the chill has expired", n)
+	}
+}
+
+func TestAChillAndAStaggerAddUp(t *testing.T) {
+	// They are the same machinery pointed at the same turn, so they compose rather than one
+	// overwriting the other.
+	a, b := wearing(duelist(10, 10, 500), Ice), duelist(10, 10, 500)
+
+	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, nil, 1)
+	b1.Staggered = 1
+
+	events, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike), Plain(Strike), Plain(Strike)}, 2)
+
+	if got, want := countKind(events, KindStaggered), 1+chillCardsPerHit; got != want {
+		t.Errorf("a chilled and staggered turn lost %d cards, want %d", got, want)
+	}
+}
+
+func TestAStatusNoLongerTouchesTheBudget(t *testing.T) {
+	// Ice cut the action-point budget until 2026-08-16. Nothing does now, and the check is here
+	// rather than deleted because a duelist whose budget quietly moved is the failure this rule
+	// change could reintroduce without anyone noticing.
+	a, b := ringed(duelist(10, 10, 500)), duelist(10, 10, 500)
 	before := b.ActionPoints()
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
 
-	if got, want := bAfter.ActionPoints(), before-chillPerHit; got != want {
-		t.Errorf("a chilled duelist has %d AP, want %d (was %d)", got, want, before)
+	if got := bAfter.ActionPoints(); got != before {
+		t.Errorf("a chilled duelist has %d AP, want %d — statuses do not touch the budget", got, before)
 	}
 }
 
-func TestABudgetNeverFallsBelowOneHoweverColdItGets(t *testing.T) {
-	// The existing floor in ActionPoints has to hold against the new subtraction, or a duelist
-	// hit by enough ice would have a negative budget and could not take a turn at all.
-	d := duelist(10, 0, 500)
-	d.Statuses[Ice] = Status{Amount: 99, Rounds: 1}
-
-	if got := d.ActionPoints(); got != 1 {
-		t.Errorf("a deeply chilled duelist has %d AP, want the floor of 1", got)
-	}
-}
+// --- lightning ---------------------------------------------------------------------------------
 
 func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 	// **A roll again as of 2026-08-14**, reversing the deterministic version taken two days
@@ -223,7 +356,7 @@ func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 	//
 	// The same shocked duelist and the same turn, twice, with the two rolls decided rather than
 	// seeded — see fixedSource.
-	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
+	a, b := wearing(duelist(10, 10, 500), Lightning), duelist(10, 10, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
 	if !b1.Statuses[Lightning].Active() {
@@ -248,55 +381,55 @@ func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 	}
 }
 
-func TestMoreShockIsMoreLikelyButNeverCertain(t *testing.T) {
-	// **The cap is what stops the roll becoming the old rule by another route.** Without it,
-	// enough lightning is a certain miss again — and a defence that always works is exactly what
-	// one blow per turn makes intolerable.
+func TestAShockIsAFlatChanceThatCanNeverBeCertain(t *testing.T) {
+	// **The chance is the Amount now that nothing stacks**, and the cap that used to hold four
+	// stacks under a certainty went with the stacking. What has to stay true is the reason the cap
+	// existed: a defence that always works deletes a whole opposing turn for one card.
+	if shockMissPct >= 100 {
+		t.Errorf("a shock misses %d%% of the time, which is the certain miss this replaced",
+			shockMissPct)
+	}
+	if shockMissPct <= 0 {
+		t.Errorf("a shock misses %d%% of the time, so lightning does nothing", shockMissPct)
+	}
+
 	d := duelist(10, 10, 500)
-	if got := d.shockChancePct(); got != 0 {
-		t.Errorf("an unshocked duelist has a %d%% chance to miss, want 0", got)
+	if shockMisses(d, alwaysMisses()) {
+		t.Error("an unshocked duelist missed")
 	}
 
-	d.Statuses[Lightning] = Status{Amount: 1, Rounds: 1}
-	one := d.shockChancePct()
-	d.Statuses[Lightning] = Status{Amount: 2, Rounds: 1}
-	two := d.shockChancePct()
-	if two <= one {
-		t.Errorf("two stacks gave %d%% against one stack's %d%% — stacks have to add", two, one)
+	d.Statuses[Lightning] = Status{Amount: shockMissPct, Rounds: 1}
+	if !shockMisses(d, alwaysMisses()) {
+		t.Error("a shocked duelist passed a roll it could not pass")
 	}
-
-	d.Statuses[Lightning] = Status{Amount: 99, Rounds: 1}
-	if got := d.shockChancePct(); got != shockMissCapPct {
-		t.Errorf("99 stacks gave %d%%, want the cap of %d%%", got, shockMissCapPct)
+	if shockMisses(d, neverMisses()) {
+		t.Error("a shocked duelist failed a roll it could not fail")
 	}
-	if shockMissCapPct >= 100 {
-		t.Errorf("the cap is %d%%, which allows a certain miss — the rule this replaced",
-			shockMissCapPct)
+	if shockMisses(d, nil) {
+		t.Error("a nil source produced a roll")
 	}
 }
 
-func TestAShockStackIsSpentWhetherOrNotTheRollLands(t *testing.T) {
-	// **One stack per attack phase, win or lose.** A shock that only burned itself on a success
-	// would last until it worked, which is a guarantee wearing a probability's clothes.
-	for _, roll := range []struct {
-		name string
-		rng  *rand.Rand
-		miss bool
-	}{
-		{"a losing roll", alwaysMisses(), true},
-		{"a winning roll", neverMisses(), false},
-	} {
-		d := duelist(10, 10, 500)
-		d.Statuses[Lightning] = Status{Amount: 2, Rounds: statusDuration}
+func TestAShockRollsAgainOnEveryAttackItOutlives(t *testing.T) {
+	// **Nothing is spent** *(2026-08-16)*. A stack used to be consumed by the first attack whether
+	// or not the roll landed; with nothing to wear down, that would make a two-round status one
+	// that reliably lasted one attack.
+	// B is shocked during A's turn and acts later the same round, so it gets one attack that
+	// round and one more in the round after — two rolls out of one hit.
+	a, b := wearing(duelist(10, 10, 500), Lightning), duelist(10, 10, 500)
 
-		after, missed := spendShock(d, roll.rng)
+	r1, a1, b1 := resolveWith(alwaysMisses(), a, b,
+		[]Card{Of(Jab, Lightning)}, []Card{Plain(Strike)}, 1)
+	if n := countKind(r1, KindMissed); n != 1 {
+		t.Fatalf("round 1 missed %d times, want 1", n)
+	}
+	if !b1.Statuses[Lightning].Active() {
+		t.Fatal("the roll consumed the shock")
+	}
 
-		if missed != roll.miss {
-			t.Errorf("%s reported missed=%v, want %v", roll.name, missed, roll.miss)
-		}
-		if got := after.Statuses[Lightning].Amount; got != 1 {
-			t.Errorf("%s left %d stacks, want 1 — one is spent whatever happens", roll.name, got)
-		}
+	r2, _, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Strike)}, 2)
+	if n := countKind(r2, KindMissed); n != 1 {
+		t.Errorf("round 2 missed %d times, want 1 — a shock rolls while it lasts", n)
 	}
 }
 
@@ -304,7 +437,7 @@ func TestAShockDeletesTheWholeTurnBecauseATurnIsOneBlow(t *testing.T) {
 	// Under the multi-blow model a shock cancelled one attack out of several. A turn now resolves
 	// a single blow, so a landed roll deletes all of it — which is the whole reason the certain
 	// miss had to become a roll. See MECHANICS.md.
-	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
+	a, b := wearing(duelist(10, 10, 500), Lightning), duelist(10, 40, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 	events, aAfter, _ := resolveWith(alwaysMisses(), a1, b1, nil, []Card{Plain(Jab), Plain(Jab)}, 2)
@@ -326,7 +459,8 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 	//
 	// **What it does not undo is the hand's own reward** — a stagger is paid on forming the hand,
 	// not on connecting. That is deliberate and is pinned in combo_test.go.
-	a, b := duelist(10, 10, 500), duelist(10, 40, 500)
+	a := wearing(duelist(10, 10, 500), Lightning)
+	b := wearing(duelist(10, 40, 500), Fire)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
@@ -345,10 +479,43 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 	}
 }
 
+// --- fire ---------------------------------------------------------------------------------------
+
+func TestABurnIsAShareOfTheAttackersDMG(t *testing.T) {
+	// **The tick is read off whoever lit it, and frozen when it lands.** A stronger duelist burns
+	// harder; the victim carries the number rather than a pointer back to the attacker.
+	strong := wearing(duelist(100, 10, 5000), Fire)
+	weak := wearing(duelist(10, 10, 5000), Fire)
+	target := duelist(10, 10, 5000)
+
+	_, _, hot := resolve(strong, target, []Card{Of(Jab, Fire)}, nil, 1)
+	_, _, mild := resolve(weak, target, []Card{Of(Jab, Fire)}, nil, 1)
+
+	if want := strong.DMG * burnPctOfDMG / 100; hot.Statuses[Fire].Amount != want {
+		t.Errorf("a DMG %d duelist burned for %d, want %d",
+			strong.DMG, hot.Statuses[Fire].Amount, want)
+	}
+	if hot.Statuses[Fire].Amount <= mild.Statuses[Fire].Amount {
+		t.Errorf("a DMG %d burn of %d did not beat a DMG %d burn of %d",
+			strong.DMG, hot.Statuses[Fire].Amount, weak.DMG, mild.Statuses[Fire].Amount)
+	}
+}
+
+func TestABurnAlwaysTicksForSomething(t *testing.T) {
+	// The floor is the rule Jab's damage already follows: a duelist under 10 DMG would light a
+	// burn worth nothing, and a status that lands and does nothing is worse than one that does not
+	// land.
+	feeble := wearing(duelist(1, 10, 500), Fire)
+
+	if got, _ := statusFor(Fire, feeble); got < 1 {
+		t.Errorf("a DMG %d duelist lights a burn of %d, want at least 1", feeble.DMG, got)
+	}
+}
+
 func TestFireTicksAtTheEndOfEveryRoundItSurvives(t *testing.T) {
 	// The DoT: it lands at end of round, including the end of the round it was applied in, and
 	// it persists across the boundary. Two ticks from one hit at the current duration.
-	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
+	a, b := wearing(duelist(10, 10, 500), Fire), duelist(10, 10, 500)
 
 	r1, a1, b1 := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
 	if n := countKind(r1, KindBurned); n != 1 {
@@ -370,12 +537,12 @@ func TestABurnCanKill(t *testing.T) {
 	// Fire is the one thing in the game that ends a duel without an action, so the log has to
 	// say so — the screen reads KindDefeated to end the fight and would otherwise leave a dead
 	// duelist standing.
-	a := duelist(10, 10, 500)
+	a := wearing(duelist(10, 10, 500), Fire)
 	b := duelist(10, 10, 500)
 
 	// Enough life to survive the Jab and not the tick, so it is unambiguously the fire that
 	// finished it rather than the blow that lit it.
-	b.CurrentLife = Jab.Damage(a.Str) + 1
+	b.CurrentLife = Jab.Damage(a.DMG) + 1
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
 
@@ -387,88 +554,13 @@ func TestABurnCanKill(t *testing.T) {
 	}
 }
 
-func TestEarthBluntsWhatItsVictimDeals(t *testing.T) {
-	// Earth is the only status that reaches forward into what its victim *does*. It applies
-	// attacker-side, before any of the defender's cards touch the blow.
-	a, b := duelist(10, 10, 500), duelist(10, 10, 500)
-
-	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike)}, 1)
-	base := firstDamage(t, plain, SideB).Amount
-
-	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Earth)}, nil, 1)
-	weighted, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike)}, 2)
-
-	got := firstDamage(t, weighted, SideB).Amount
-	want := blunt(base, weightPerHit)
-	if got != want {
-		t.Errorf("a weighted Strike dealt %d, want %d (%d blunted by %d%%)",
-			got, want, base, weightPerHit)
-	}
-	if got >= base {
-		t.Errorf("a weighted Strike dealt %d against an unweighted %d — earth did nothing", got, base)
-	}
-}
-
-func TestAWeightCannotBluntEverything(t *testing.T) {
-	// Without the cap, four earth Jabs make an opponent harmless for 4 AP — a cheaper answer to
-	// a duel than winning it.
-	d := duelist(10, 10, 500)
-	d.Statuses[Earth] = Status{Amount: 1000, Rounds: 1}
-
-	if got := d.weightPct(); got != weightCapPct {
-		t.Errorf("a hugely weighted duelist is blunted %d%%, want the cap of %d%%", got, weightCapPct)
-	}
-	if blunt(100, d.weightPct()) <= 0 {
-		t.Error("a capped weight still reduced a blow to nothing")
-	}
-}
-
-func TestBluntingRoundsTowardZeroLikeEveryOtherReduction(t *testing.T) {
-	// Earth is the first percentage in a package documented as pure integer arithmetic. The
-	// rounding rule matters more than the direction: it has to match guardDivisor and
-	// scaleDamage so a player can predict it from the reductions they already know.
-	if got, want := blunt(15, 10), 13; got != want { // 13.5
-		t.Errorf("15 blunted by 10%% = %d, want %d", got, want)
-	}
-	if got, want := blunt(1, 50), 0; got != want {
-		t.Errorf("1 blunted by 50%% = %d, want %d", got, want)
-	}
-	if got := blunt(20, 0); got != 20 {
-		t.Errorf("an unweighted blow was changed to %d", got)
-	}
-}
-
-func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
-	// The rule the whole package is built on, re-checked against the one feature added since
-	// that could plausibly have broken it. Nothing in a status consults a clock or a map.
-	a, b := duelist(10, 20, 500), duelist(10, 20, 500)
-	aPlan := []Card{Of(Strike, Fire), Of(Jab, Ice)}
-	bPlan := []Card{Of(Jab, Lightning), Of(Jab, Earth)}
-
-	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
-	for i := 0; i < 20; i++ {
-		got, a2, b2 := resolve(a, b, aPlan, bPlan, 1)
-		if len(got) != len(first) {
-			t.Fatalf("run %d produced %d events, first run produced %d", i, len(got), len(first))
-		}
-		for j := range got {
-			if got[j] != first[j] {
-				t.Fatalf("run %d event %d = %+v, first run = %+v", i, j, got[j], first[j])
-			}
-		}
-		if a2 != a1 || b2 != b1 {
-			t.Fatalf("run %d ended in a different state", i)
-		}
-	}
-}
-
 func TestADeadDuelistDoesNotBurn(t *testing.T) {
 	// **A corpse does not tick, and the reason is the log rather than the arithmetic.** The
 	// first version burned regardless: a duelist killed on the opposing turn took a fire tick
 	// afterwards and the Resolution feed read "falls / burns for 2 / falls". Whether a duelist
 	// is dead is settled before either side's round-end runs, so skipping the tick introduces
 	// no order dependence.
-	a, b := duelist(10, 40, 500), duelist(10, 10, 500)
+	a, b := wearing(duelist(10, 40, 500), Fire), duelist(10, 10, 500)
 
 	// A fire Pair rather than a fire Jab beside a plain Strike: the pair is a *hand*, so both
 	// cards count and the mix is fire. A mixed pile would resolve as its single biggest attack —
@@ -495,5 +587,85 @@ func TestADeadDuelistDoesNotBurn(t *testing.T) {
 	}
 	if n := countKind(events, KindDefeated); n != 1 {
 		t.Errorf("%d KindDefeated events, want exactly 1 — a duelist falls once", n)
+	}
+}
+
+// --- earth -------------------------------------------------------------------------------------
+
+func TestEarthBluntsWhatItsVictimDeals(t *testing.T) {
+	// Earth is the only status that reaches forward into what its victim *does*. It applies
+	// attacker-side, before any of the defender's cards touch the blow.
+	a, b := wearing(duelist(10, 10, 500), Earth), duelist(10, 10, 500)
+
+	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike)}, 1)
+	base := firstDamage(t, plain, SideB).Amount
+
+	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Earth)}, nil, 1)
+	weighted, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike)}, 2)
+
+	got := firstDamage(t, weighted, SideB).Amount
+	want := blunt(base, weightPct)
+	if got != want {
+		t.Errorf("a weighted Strike dealt %d, want %d (%d blunted by %d%%)",
+			got, want, base, weightPct)
+	}
+	if got >= base {
+		t.Errorf("a weighted Strike dealt %d against an unweighted %d — earth did nothing", got, base)
+	}
+}
+
+func TestAWeightCannotBluntEverything(t *testing.T) {
+	// **What bounded this was a cap on four stacks; what bounds it now is that there is only ever
+	// one.** The rule it protects is unchanged: nothing takes a blow to nothing, because a turn
+	// lands one figure and total negation is a whole turn deleted by one card.
+	if weightPct >= 100 {
+		t.Errorf("a weight of %d%% can erase a blow outright", weightPct)
+	}
+
+	d := duelist(10, 10, 500)
+	d.Statuses[Earth] = Status{Amount: weightPct, Rounds: 1}
+	if blunt(100, d.weight()) <= 0 {
+		t.Error("a weighted blow was reduced to nothing")
+	}
+}
+
+func TestBluntingRoundsTowardZeroLikeEveryOtherReduction(t *testing.T) {
+	// Earth is the first percentage in a package documented as pure integer arithmetic. The
+	// rounding rule matters more than the direction: it has to match guardDivisor and
+	// scaleDamage so a player can predict it from the reductions they already know.
+	if got, want := blunt(15, 10), 13; got != want { // 13.5
+		t.Errorf("15 blunted by 10%% = %d, want %d", got, want)
+	}
+	if got, want := blunt(1, 50), 0; got != want {
+		t.Errorf("1 blunted by 50%% = %d, want %d", got, want)
+	}
+	if got := blunt(20, 0); got != 20 {
+		t.Errorf("an unweighted blow was changed to %d", got)
+	}
+}
+
+// --- determinism ---------------------------------------------------------------------------------
+
+func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
+	// The rule the whole package is built on, re-checked against the one feature added since
+	// that could plausibly have broken it. Nothing in a status consults a clock or a map.
+	a, b := ringed(duelist(10, 20, 500)), ringed(duelist(10, 20, 500))
+	aPlan := []Card{Of(Strike, Fire), Of(Jab, Ice)}
+	bPlan := []Card{Of(Jab, Lightning), Of(Jab, Earth)}
+
+	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
+	for i := 0; i < 20; i++ {
+		got, a2, b2 := resolve(a, b, aPlan, bPlan, 1)
+		if len(got) != len(first) {
+			t.Fatalf("run %d produced %d events, first run produced %d", i, len(got), len(first))
+		}
+		for j := range got {
+			if got[j] != first[j] {
+				t.Fatalf("run %d event %d = %+v, first run = %+v", i, j, got[j], first[j])
+			}
+		}
+		if a2 != a1 || b2 != b1 {
+			t.Fatalf("run %d ended in a different state", i)
+		}
 	}
 }

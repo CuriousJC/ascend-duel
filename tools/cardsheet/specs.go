@@ -150,9 +150,15 @@ func ringSpecs() ([]cards.Spec, error) {
 	}, nil
 }
 
-// enemySpecs is the opponent in the card format, at four states of health.
+// enemySpecs is the opponent in the card format, at four states of health and four counts of
+// status badge.
 //
-// **Four, because the health bar is the only thing on this card that moves**, and a bar is
+// **The badges are drawn at every count from none to four** *(2026-08-16)*, because the row is
+// centred and closes up as it fills — the same property the ring row has, and the same failure
+// available: a row laid out against the maximum leaves a single badge hard left. Twenty pixels
+// is small enough that this is a thing to look at rather than to reason about.
+//
+// **Four states of health, because the bar is the other thing on this card that moves**, and a bar is
 // exactly the widget where full and empty both look fine and the middle is where the
 // arithmetic is wrong — so full, most, a third and nearly dead. The names are drawn from
 // `data/enemies.json`, but the life totals here are illustrative: the sheet draws what a
@@ -166,11 +172,18 @@ func enemySpecs() ([]cards.Spec, error) {
 		name     string
 		key      string
 		life, of int
+
+		// The status badges along the bottom, by assets key. **The counts are what matter
+		// here** — one badge and four are different layouts, and a row that is right at four
+		// and off-centre at one is the failure mode the sheet exists to catch by eye.
+		effects []string
 	}{
-		{"Giant Rat", "giantrat-portrait", 50, 50},
-		{"Dragonfly", "dragonfly-portrait", 33, 60},
-		{"Ogre Warlord", "ogrewarlord-portrait", 4, 160},
-		{"Bio-Titan Omega", "biotitan-omega-portrait", 137, 200},
+		{"Giant Rat", "giantrat-portrait", 50, 50, nil},
+		{"Dragonfly", "dragonfly-portrait", 33, 60, []string{"fireeffect_png"}},
+		{"Ogre Warlord", "ogrewarlord-portrait", 4, 160, []string{
+			"fireeffect_png", "frozeneffect_png"}},
+		{"Bio-Titan Omega", "biotitan-omega-portrait", 137, 200, []string{
+			"fireeffect_png", "frozeneffect_png", "thundereffect_png", "eartheffect_png"}},
 	}
 
 	var specs []cards.Spec
@@ -179,10 +192,18 @@ func enemySpecs() ([]cards.Spec, error) {
 		if err != nil {
 			return nil, err
 		}
-		specs = append(specs, cards.Spec{
+		spec := cards.Spec{
 			Name: e.name, Element: cards.Basic, Art: art,
 			Life: e.life, MaxLife: e.of, Enabled: true,
-		})
+		}
+		for i, key := range e.effects {
+			badge, err := loadPNG(key)
+			if err != nil {
+				return nil, err
+			}
+			spec.Effects[i] = badge
+		}
+		specs = append(specs, spec)
 	}
 	return specs, nil
 }

@@ -372,6 +372,11 @@ type CombatScene struct {
 func (s *CombatScene) Init(gs *state.GlobalState) {
 	if s.fighter == nil {
 		s.fighter = duelistFromRecord(gs, "Fighter1")
+
+		// **What the player is wearing is part of hydrating them**, not part of resetting a
+		// duel: rings are run-level and a fight does not take them off. See startingRings for
+		// why the set is a constant here rather than something a Session hands over.
+		s.fighter.Duelist = equipRings(gs, s.fighter.Duelist)
 	}
 
 	// The enemy is rebuilt every visit rather than once, because fightIndex may have moved
@@ -470,7 +475,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 // hydrated with. Init re-enters a screen that may have been left mid-duel, so a standing
 // defence or a banked Prepare would otherwise be inherited by the next one.
 //
-// It sets the fields by name rather than rebuilding the struct: Con/Str/Spd/MaxLife come
+// It sets the fields by name rather than rebuilding the struct: Con/DMG/Spd/MaxLife come
 // from the data record and must survive, and a zero literal here would quietly wipe them
 // the first time someone re-entered the screen.
 //
@@ -479,12 +484,18 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 // raised defence survived into the next fight — which is exactly the failure a screen
 // enumerating another package's state invites. The two fields below are the same hazard and are
 // listed here because they are the screen's to reset, not the engine's.
+// **The statuses go too, and the rings stay** *(2026-08-16)*. A burn is something one duel did
+// to you; a ring is something you are wearing, and clearing it here would strip the player between
+// fights. Both are fields on `combat.Duelist` and the difference between them is what this
+// function exists to know.
 func resetCombatState(d combat.Duelist) combat.Duelist {
 	d = combat.ClearDefenses(d)
 	d.BonusAP = 0
 	d.GatheredAP = 0
 	d.BonusDraw = 0
 	d.DrewCards = 0
+	d.Staggered = 0
+	d.Statuses = [combat.ElementCount]combat.Status{}
 	return d
 }
 
@@ -790,6 +801,21 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// A combo has formed: bracket the cards the engine says formed it.
 	s.noteCombo(e)
 
+	// A status has landed: put its badge on the card at the beat it was announced.
+	//
+	// **This is a drawing, and it is overwritten a few frames later.** The authoritative statuses
+	// arrive with `s.enemyAfter` when playback finishes; what is written here is the same fact
+	// arriving early, so the badge appears on the line that says it landed rather than after the
+	// round is over. `Rounds` is set to 1 for no better reason than that `Active()` needs one —
+	// nothing on this screen reads a duration, and the engine's own count replaces it.
+	//
+	// The same argument as the burn below: the alternative is a card that disagrees with the
+	// sentence next to it.
+	if e.Kind == combat.KindStatus {
+		s.applyStatusBadge(e)
+		return
+	}
+
 	// **A burn changes a life total without anybody acting**, so it has to be applied here
 	// alongside damage rather than being a consequence of a card. Missing it would leave the two
 	// fighter cards showing a life the engine has already spent — and a duelist who dies to a
@@ -803,6 +829,23 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	} else {
 		s.enemy.CurrentLife = e.Life
 	}
+}
+
+// applyStatusBadge shows one landed status on the target's card, mid-playback.
+//
+// **Only the enemy card draws badges today** and this writes to both anyway, because which card
+// shows what is `EnemyStyle`'s business and not this function's — the duelist's statuses are
+// already tracked on its duelist for every other purpose, and having the screen hold two
+// different ideas of what is standing on a combatant is how the two come to disagree.
+func (s *CombatScene) applyStatusBadge(e combat.Event) {
+	target := s.enemy
+	if e.Target == combat.SideA {
+		target = s.fighter
+	}
+	if e.Element <= combat.Basic || int(e.Element) >= combat.ElementCount {
+		return
+	}
+	target.Statuses[e.Element] = combat.Status{Amount: e.Amount, Rounds: 1}
 }
 
 // **There is no caption box**, and the slot above the hand is the Resolution feed instead.

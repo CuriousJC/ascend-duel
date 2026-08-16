@@ -110,7 +110,72 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 			return nil, err
 		}
 	}
+	drawEffects(img, s, st)
 	return img, nil
+}
+
+// drawEffects lays the status badges out in a centred row along the bottom of the card.
+//
+// **The row is sized to what is actually there.** Nil entries are skipped before the width is
+// worked out, so one status sits in the middle of the card and four spread across it — rather
+// than four fixed slots of which three are holes, which would say the card is waiting for three
+// more statuses it may never take.
+//
+// **Fitted and resampled like the portrait, not blitted like a glyph.** These are 500-pixel
+// drawings landing in a twenty-pixel box; nearest-neighbour at that ratio throws away 24 rows
+// out of every 25 and what survives is noise. `drawArt`'s argument applies with more force here,
+// and this runs once per distinct card rather than per frame.
+//
+// Each badge is fitted into its own square without distorting, so a picture that is not square
+// keeps its shape and is centred in the slot it was given.
+func drawEffects(dst *image.RGBA, s Spec, st Style) {
+	if st.EffectSize <= 0 {
+		return
+	}
+
+	shown := make([]image.Image, 0, len(s.Effects))
+	for _, e := range s.Effects {
+		if e != nil {
+			shown = append(shown, e)
+		}
+	}
+	if len(shown) == 0 {
+		return
+	}
+
+	span := len(shown)*st.EffectSize + (len(shown)-1)*st.EffectGap
+	left := (st.Width - span) / 2
+
+	for i, e := range shown {
+		box := image.Rect(0, 0, st.EffectSize, st.EffectSize).
+			Add(image.Pt(left+i*(st.EffectSize+st.EffectGap), st.EffectTop))
+		fitInto(dst, e, box)
+	}
+}
+
+// fitInto scales src to fit box without distorting it and centres it there. It is drawArt's
+// arithmetic with the box named by the caller rather than read off the style, which is what lets
+// a row of small badges and one large portrait share it.
+func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
+	b := src.Bounds()
+	if b.Dx() == 0 || b.Dy() == 0 || box.Empty() {
+		return
+	}
+
+	scale := float64(box.Dx()) / float64(b.Dx())
+	if v := float64(box.Dy()) / float64(b.Dy()); v < scale {
+		scale = v
+	}
+	w, h := int(float64(b.Dx())*scale), int(float64(b.Dy())*scale)
+	if w <= 0 || h <= 0 {
+		return
+	}
+
+	at := image.Rect(0, 0, w, h).
+		Add(box.Min).
+		Add(image.Pt((box.Dx()-w)/2, (box.Dy()-h)/2))
+
+	xdraw.CatmullRom.Scale(dst, at, src, b, xdraw.Over, nil)
 }
 
 // needsFont reports whether this style draws any text at all. A Mini card does not, and
@@ -576,31 +641,9 @@ func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int
 // row and produces visible stair-stepping. CatmullRom is the expensive option and this
 // runs once per distinct card, not per frame.
 func drawArt(dst *image.RGBA, s Spec, st Style) {
-	boxW := st.Width - 2*st.ArtInset
-	boxH := st.ArtMaxH
-	if boxW <= 0 || boxH <= 0 {
-		return
-	}
-
-	src := s.Art.Bounds()
-	if src.Dx() == 0 || src.Dy() == 0 {
-		return
-	}
-
-	// Fit inside the box without distorting: whichever axis is tighter sets the scale.
-	scale := float64(boxW) / float64(src.Dx())
-	if v := float64(boxH) / float64(src.Dy()); v < scale {
-		scale = v
-	}
-	w, h := int(float64(src.Dx())*scale), int(float64(src.Dy())*scale)
-	if w <= 0 || h <= 0 {
-		return
-	}
-
-	at := image.Rect(0, 0, w, h).
-		Add(image.Pt(st.ArtInset+(boxW-w)/2, st.ArtTop+(boxH-h)/2))
-
-	xdraw.CatmullRom.Scale(dst, at, s.Art, src, xdraw.Over, nil)
+	fitInto(dst, s.Art, image.Rect(
+		st.ArtInset, st.ArtTop,
+		st.Width-st.ArtInset, st.ArtTop+st.ArtMaxH))
 }
 
 // fadeRegion moves every pixel of a rectangle pct of the way to the disabled surface.

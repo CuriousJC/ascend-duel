@@ -459,11 +459,11 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	s := &CombatScene{}
 	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
-		Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
 		Style:   combat.StyleBrute,
 	}
 	s.fighter = &entities.Combatant{
-		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
 	}
 
 	s.planEnemyRound()
@@ -489,10 +489,10 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 func selecting(cards ...combat.Card) *CombatScene {
 	s := &CombatScene{
 		fighter: &entities.Combatant{
-			Duelist: combat.Duelist{Str: 10, Spd: 10, MaxLife: 60, CurrentLife: 60},
+			Duelist: combat.Duelist{DMG: 10, Spd: 10, MaxLife: 60, CurrentLife: 60},
 		},
 		enemy: &entities.Combatant{
-			Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+			Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
 		},
 	}
 	for _, c := range cards {
@@ -582,11 +582,11 @@ func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
 	s := &CombatScene{}
 	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
-		Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
 		Style:   combat.StyleBrute,
 	}
 	s.fighter = &entities.Combatant{
-		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
 	}
 
 	// Where the last round's playback left them.
@@ -607,11 +607,11 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	s := &CombatScene{}
 	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
-		Duelist: combat.Duelist{Str: 5, Spd: 10, MaxLife: 60, CurrentLife: 0},
+		Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 0},
 		Style:   combat.StyleBrute,
 	}
 	s.fighter = &entities.Combatant{
-		Duelist: combat.Duelist{Str: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
 	}
 
 	// The killing blow is still raised, and stays raised.

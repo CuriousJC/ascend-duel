@@ -430,14 +430,31 @@ people playing it.
   comparing them into an act of measurement. `TestTheTwoFighterCardsShareTheirHealthGeometry`
   pins it. Above the bar they differ, because that is where they say different things: a
   portrait on one, three stat rows on the other.
-- **The duelist card holds name, DMG, AP, Vitae, bar, fraction.** DMG is `Strike.Damage(Str)`
-  asked of the rules rather than `Str` copied out, so it stays right if strength stops being a
-  1:1 multiplier. AP is the live budget including a banked Prepare. Vitae is still a fixed
+- **The duelist card holds name, DMG, AP, Vitae, bar, fraction.** DMG is `Strike.Damage(DMG)`
+  asked of the rules rather than the field copied out. **That is an identity today** — the stat
+  was renamed off `Str` on 2026-08-16 precisely because the middle rung of the ladder returns it
+  unchanged — and the call is still worth making, because it makes the figure follow the *ladder*
+  rather than the field. AP is the live budget including a banked Prepare. Vitae is still a fixed
   placeholder with no rule behind it.
 - **`Spec.Stats` is a fixed array, not a slice, and that is load-bearing** — the screen's card
   cache keys on the whole `Spec`, so it has to stay comparable. `cards.MaxStatLines` is what
   the layout fits rather than headroom over it: a fourth figure lands on the health bar and
   `TestStatRowsClearTheHealthBar` fails rather than drawing it.
+- **The enemy card carries the statuses standing on it**, as a row of badges along the bottom
+  edge from `assets/effect/` — flame, snowflake, bolt, and a placeholder for earth. **It is the
+  only thing on screen that says a status is on**: a chill takes a card off a turn not yet
+  queued and a weight blunts a blow not yet swung, so without a badge either is learned only by
+  being surprised by it. Twenty pixels, in the strip the life fraction leaves above the border,
+  and `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both ends of it. **The row is
+  centred and closes up**, like the ring row.
+  - **The badge appears on the beat the status lands**, not when playback finishes.
+    `applyEvent` writes it from `KindStatus` — a drawing, overwritten a few frames later when
+    the two duelists adopt `s.enemyAfter`. Same argument as the burn: a card that disagrees with
+    the sentence beside it.
+  - **The duelist card has no badge row**, and that is not an oversight of the twins rule — the
+    bar and the fraction are still at identical offsets, which is where that rule bites. Nothing
+    can put a status on the player: an enemy wears no rings, and a ring is what makes a status
+    happen. `DuelistStyle` gains the three fields when one can.
 - **The enemy names itself above its portrait**. The name sat between the
   portrait and the bar until then; every other card in the game carries its name across the
   top, and a card with its own reading order reads as a different kind of object.

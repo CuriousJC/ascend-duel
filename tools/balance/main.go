@@ -55,8 +55,8 @@ func main() {
 	recs := data.LoadEnemies()
 
 	fighter := duelistOfDuelist(duelists["Fighter1"])
-	fmt.Printf("Fighter1: %d life, %d AP, Str %d, %d actions/round\n",
-		fighter.MaxLife, fighter.ActionPoints(), fighter.Str, fighter.MaxActions())
+	fmt.Printf("Fighter1: %d life, %d AP, DMG %d, %d actions/round, wearing all four rings\n",
+		fighter.MaxLife, fighter.ActionPoints(), fighter.DMG, fighter.MaxActions())
 
 	// The postures bracket the real choice. The first three are the original set — all offence,
 	// broad defence, precise defence — and the rest were added on 2026-08-08 with the concepts
@@ -114,7 +114,7 @@ func main() {
 	// how many of the seven postures beat this enemy. `-v <EnemyRecord>` still prints the
 	// round-by-round detail, for one record at a time.
 	fmt.Printf("\n%-24s %-10s %-6s %5s %4s %4s   %s\n",
-		"enemy", "style", "floors", "life", "AP", "Str", "beaten by")
+		"enemy", "style", "floors", "life", "AP", "DMG", "beaten by")
 	fmt.Println(strings.Repeat("-", 96))
 
 	band := 0
@@ -150,7 +150,7 @@ func main() {
 
 		fmt.Printf("%-24s %-10v %d-%d    %5d %4d %4d   %s\n",
 			rec.Name, style, rec.ValidFloors[0], rec.ValidFloors[1],
-			enemy.MaxLife, enemy.ActionPoints(), enemy.Str, verdict)
+			enemy.MaxLife, enemy.ActionPoints(), enemy.DMG, verdict)
 	}
 
 	if *detail != "" {
@@ -160,8 +160,8 @@ func main() {
 		} else {
 			enemy := duelistOf(rec)
 			style, _ := combat.ParsePlanStyle(rec.PlanStyle)
-			fmt.Printf("\n== %s  %v  %d life, %d AP, Str %d\n",
-				rec.Name, style, enemy.MaxLife, enemy.ActionPoints(), enemy.Str)
+			fmt.Printf("\n== %s  %v  %d life, %d AP, DMG %d\n",
+				rec.Name, style, enemy.MaxLife, enemy.ActionPoints(), enemy.DMG)
 			for _, p := range postures {
 				report(fighter, enemy, style, p)
 			}
@@ -279,7 +279,7 @@ func outcome(f, e combat.Duelist, rounds int) string {
 // this tool has no reason to open — but it reads LifePerCon from entities so the conversion
 // cannot drift from the game's.
 func duelistOf(d data.EnemyData) combat.Duelist {
-	du := combat.Duelist{Con: d.Constitution, Str: d.Strength, Spd: d.Speed}
+	du := combat.Duelist{Con: d.Constitution, DMG: d.DMG, Spd: d.Speed}
 	du.MaxLife = du.Con * entities.LifePerCon
 	du.CurrentLife = du.MaxLife
 	return du
@@ -289,8 +289,19 @@ func duelistOf(d data.EnemyData) combat.Duelist {
 // the roster split on 2026-08-11. Two near-identical functions rather than one generic one:
 // the two records genuinely have different fields, and the day they stop sharing even these
 // three is the day a shared helper would have been quietly wrong.
+//
+// **The fighter wears all four rings** *(2026-08-16)*, which is a deliberate departure from the
+// game — the player starts in three and the enemy wears none. A status only happens if its
+// element's ring is on, so a ringless fighter would make the four elemental postures below
+// identical to their plain equivalents and this tool would report four rows measuring nothing.
+// **A card no posture plays is a card this tool cannot see**, and a posture whose whole point is
+// inert is the same failure by another route. It measures the ceiling; the floor is the plain
+// postures beside it.
 func duelistOfDuelist(d data.DuelistData) combat.Duelist {
-	du := combat.Duelist{Con: d.Constitution, Str: d.Strength, Spd: d.Speed}
+	du := combat.Duelist{Con: d.Constitution, DMG: d.DMG, Spd: d.Speed}
+	for _, e := range combat.AllElements {
+		du.Rings[e] = e != combat.Basic
+	}
 	du.MaxLife = du.Con * entities.LifePerCon
 	du.CurrentLife = du.MaxLife
 	return du

@@ -87,6 +87,9 @@ var frozenring_png []byte
 //go:embed ring/thunder-ring.png
 var thunderring_png []byte
 
+//go:embed ring/earth-ring.png
+var earthring_png []byte
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
@@ -95,6 +98,16 @@ var frozeneffect_png []byte
 
 //go:embed effect/thunder-effect.png
 var thundereffect_png []byte
+
+//go:embed effect/earth-effect.png
+var eartheffect_png []byte
+
+// The badge an element with no artwork of its own falls back to, so a status always shows
+// *something* rather than nothing — a status that is on and invisible is worse than one drawn
+// as a shape you have not learned yet.
+//
+//go:embed effect/default-effect.png
+var defaulteffect_png []byte
 
 // MUSIC
 //
@@ -125,9 +138,12 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["firering_png"] = loadImage(firering_png)
 	assets["frozenring_png"] = loadImage(frozenring_png)
 	assets["thunderring_png"] = loadImage(thunderring_png)
+	assets["earthring_png"] = loadImage(earthring_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
+	assets["eartheffect_png"] = loadImage(eartheffect_png)
+	assets["defaulteffect_png"] = loadImage(defaulteffect_png)
 	// The enemy portraits are deliberately absent. They are drawn *into* a card by
 	// internal/cards, which has no graphics context, so they are handed out as bytes by
 	// LoadImageData instead — and decoding 96 of them here at startup would cost about
@@ -172,6 +188,15 @@ func LoadImageData() map[string][]byte {
 	images["firering_png"] = firering_png
 	images["frozenring_png"] = frozenring_png
 	images["thunderring_png"] = thunderring_png
+	images["earthring_png"] = earthring_png
+
+	// The status badges, for the same reason as the ring art: they are drawn *into* the enemy
+	// card by internal/cards, which has no graphics context.
+	images["fireeffect_png"] = fireeffect_png
+	images["frozeneffect_png"] = frozeneffect_png
+	images["thundereffect_png"] = thundereffect_png
+	images["eartheffect_png"] = eartheffect_png
+	images["defaulteffect_png"] = defaulteffect_png
 
 	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
 	// same reason the ring art does: RenderGlyph draws into a plain Go image so the contact

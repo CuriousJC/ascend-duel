@@ -18,19 +18,25 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       Migrating health bars onto the plain-Go path would collapse the two, and is the only
       way to get back to one — the reverse is impossible, since the mask path needs a window.
       Low priority, but it is a real inconsistency.
-- [~] **Rings are drawn and nothing else.** `cards.RingStyle` and `cards.Ring` draw one —
-      same format, pink border, artwork instead of glyphs, no cost or category — and the
-      combat screen has a **ring row** drawing the entries in `data/rings.json` at full size,
-      with `worn/5` under it. That is the layout only: no buying, no equipping, no
-      unequipping, and no rule reads a ring.
-      - **Blocked on `Session`**, and only that. Elements are in `internal/combat` and
-        `Card.Cost()` is the seat a discount sits in, so the discount and the flip are
-        writable now — but a ring has to survive a fight and `CombatScene` does not. Vitae
-        actually being spent comes after.
-      - The sketch equips everything defined up to the cap on every `Init`, standing in for
-        equipment until `Session` exists.
+- [~] **Rings do one thing, and cannot be acquired.** The four elemental rings confer their
+      element's status and nothing else does *(2026-08-16)* — `combat.Duelist.Rings` is what
+      `resolveAttackPhase` reads. What is missing is the loop around it: **no buying, no
+      equipping, no unequipping**, and the worn set is the `startingRings` constant in
+      `internal/screens` (fire, ice, lightning; earth deliberately left off so the gate is
+      testable in play).
+      - **Blocked on `Session`**, and only that: a ring has to survive a fight and
+        `CombatScene` does not. Vitae actually being spent comes after.
+      - **The discount and the flip are still unwritten.** `Card.Cost()` is the seat the
+        discount sits in and `Duelist.Rings` is now the thing it would read, so both are
+        writable — the screen's AP bar and over-budget check are the other half.
       - `Spec.Dragging` was added for the ring preview and is unused by both the row and the
         hand, which does have drag-and-drop and no visual for it.
+- [ ] **A card lost to a chill says "staggered".** Ice takes a card off the front of a turn
+      through the stagger machinery, so the Resolution feed narrates it with the stagger
+      sentence. One event kind is what keeps playback's one-beat-per-slot counting honest —
+      `currentSlot` counts `KindAction` and `KindStaggered` to find the lit row — so a
+      `KindChilled` would have to be added to that count as well as to the prose, and getting
+      that wrong desyncs the highlight for the rest of the round. Small lie, knowingly taken.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the
@@ -118,7 +124,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         it rather than after it.
       - `[?]` Earth has no affix; whether it can be a floor theme is still open.
 - [ ] **Retune enemy life totals against the new damage curve.** One blow per turn plus additive
-      multipliers made the player's ceiling far higher: two Strikes at Str 10 deal 35 where they
+      multipliers made the player's ceiling far higher: two Strikes at DMG 10 deal 35 where they
       used to deal 20, and a rainbow Barrage is 150 on top of its own cards. `data/enemies.json`
       has not moved. The owner has said the HP numbers are the intended lever; this is that work.
       - **Do not tune anything until `tools/balance` reports a distribution** — see below. Right
@@ -410,9 +416,11 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         no error. Same applies to any other enum that reaches the save file.
       - **`[?]` The combat roll has to be settled before this ships.** `MECHANICS.md` requires
         rolling on every attack phase and discarding the irrelevant result, precisely so a
-        balance tweak does not shift every later roll in a run. `spendShock` short-circuits when
+        balance tweak does not shift every later roll in a run. `shockMisses` short-circuits when
         the attacker carries no shock, so the stream only advances when lightning is in play —
-        which is exactly the drift the rule forbids. Nothing depends on stored seeds yet, so it
+        which is exactly the drift the rule forbids. **It got narrower on 2026-08-16**: a shock
+        now needs a thunder ring on the attacker to exist at all, so an unringed duel advances
+        the stream never. Nothing depends on stored seeds yet, so it
         is cheap to fix now and expensive to fix after a save format exists.
       - Serializing live state instead means a migration every time state changes — the
         refactor this whole set of decisions exists to avoid.

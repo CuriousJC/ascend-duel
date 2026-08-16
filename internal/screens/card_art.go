@@ -161,8 +161,12 @@ func artwork(gs *state.GlobalState, key string) image.Image {
 // Life is on the Spec, so a point of damage produces a different cache entry — see the
 // field's comment in internal/cards. Bounded by how many distinct life totals a fight passes
 // through, which is a handful.
+// **It carries the statuses standing on the opponent** *(2026-08-16)*, as a row of badges along
+// the bottom edge — see `effectArt`. A status is invisible without it: a chill takes a card off
+// a turn that has not been queued yet and a weight blunts a blow not yet swung, so a player with
+// no badge to look at learns about either only by being surprised by it.
 func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.Spec {
-	return cards.Spec{
+	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
 		Art:     artwork(gs, c.Portrait),
@@ -170,15 +174,62 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}
+
+	// **Walked in element order, which is what makes the row stable.** A badge that moved along
+	// the row as another status came and went would read as a different badge. `AllElements` is
+	// the fixed order the determinism rules require; Basic carries no status and contributes
+	// nothing.
+	n := 0
+	for _, e := range combat.AllElements {
+		if n == len(spec.Effects) || !c.Statuses[e].Active() {
+			continue
+		}
+		img := effectArt(gs, e)
+		if img == nil {
+			continue
+		}
+		spec.Effects[n] = img
+		n++
+	}
+	return spec
+}
+
+// effectKeys is the badge each element's status is drawn with.
+//
+// **A table here rather than a field in `data/rings.json`**, because a badge belongs to the
+// *status* and not to the ring that switches it on: a status arriving by some other route — an
+// affix, a boss rule — has to draw the same picture, and reading the art key off a ring the
+// enemy is not wearing would be the wrong lookup by construction.
+//
+// Basic is absent because it has no status. An element with no entry falls back to
+// `defaulteffect_png`, so a fifth element shows a shape nobody has learned rather than nothing
+// at all.
+var effectKeys = map[combat.Element]string{
+	combat.Fire:      "fireeffect_png",
+	combat.Ice:       "frozeneffect_png",
+	combat.Lightning: "thundereffect_png",
+	combat.Earth:     "eartheffect_png",
+}
+
+func effectArt(gs *state.GlobalState, e combat.Element) image.Image {
+	key, ok := effectKeys[e]
+	if !ok {
+		key = "defaulteffect_png"
+	}
+	return artwork(gs, key)
 }
 
 // duelistSpec is the player as a card: their name, three figures, and the life they have
 // left.
 //
-// **DMG is asked of the rules rather than written here.** `combat.Strike.Damage(Str)` is what
-// one plain attack does in these hands, which is the "1x base damage" the figure means — so a
-// change to how strength becomes damage moves this number without anyone remembering that a
-// card shows it. Writing `c.Str` would have been the same integer today and a lie tomorrow.
+// **DMG is asked of the rules rather than written here.** `combat.Strike.Damage(DMG)` is what
+// one plain attack does in these hands, which is the "1x base damage" the figure means.
+//
+// **That is an identity today and the call is still worth making** *(2026-08-16)*. The stat is
+// now called DMG precisely because the middle rung of the ladder returns it unchanged, so
+// `c.DMG` would print the same integer. What the call buys is that the figure follows the
+// *ladder*: if the 2 AP rung ever stops being 1x, the card says so without anyone remembering
+// it shows this.
 //
 // AP is the live budget, `BonusAP` included, so a Prepare banked last round shows up on the
 // card before it is spent. Vitae is passed in rather than read off the combatant because it is
@@ -194,7 +245,7 @@ func duelistSpec(c *entities.Combatant, name string, vitae int) cards.Spec {
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}
-	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(combat.Strike.Damage(c.Str))}
+	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(combat.Strike.Damage(c.DMG))}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(c.ActionPoints())}
 	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae)}
 	return spec
@@ -293,6 +344,6 @@ func family(f combat.Family) cards.Family {
 // Compile-time assurance that the action type still answers everything a Spec needs. If
 // combat.ActionKind loses one of these, this fails here rather than in a card that
 // silently renders blank.
-var _ = func(a combat.ActionKind, str int) (string, string, string, int, int) {
-	return a.String(), a.Category().String(), a.Family().String(), a.Damage(str), a.Cost()
+var _ = func(a combat.ActionKind, dmg int) (string, string, string, int, int) {
+	return a.String(), a.Category().String(), a.Family().String(), a.Damage(dmg), a.Cost()
 }

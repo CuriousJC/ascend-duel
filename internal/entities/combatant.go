@@ -11,7 +11,7 @@ const LifePerCon = 5
 
 // Combatant is a duelist that can be drawn. The stats live in the embedded
 // combat.Duelist so the rules engine can take them without ever seeing a sprite;
-// the promoted fields mean gs.Fighter.Str and friends still read the same.
+// the promoted fields mean gs.Fighter.DMG and friends still read the same.
 type Combatant struct {
 	combat.Duelist
 
@@ -61,7 +61,7 @@ func NewEnemyFrom(d data.EnemyData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
 			Con: d.Constitution,
-			Str: d.Strength,
+			DMG: d.DMG,
 			Spd: d.Speed,
 		},
 		Style:    style,
@@ -84,7 +84,7 @@ func NewDuelistFrom(d data.DuelistData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
 			Con: d.Constitution,
-			Str: d.Strength,
+			DMG: d.DMG,
 			Spd: d.Speed,
 		},
 		Name:     d.Name,

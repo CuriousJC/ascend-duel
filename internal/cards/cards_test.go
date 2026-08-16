@@ -734,6 +734,93 @@ func TestTheTwoFighterCardsShareTheirHealthGeometry(t *testing.T) {
 	}
 }
 
+func TestStatusBadgesClearTheHealthTextAndTheBorder(t *testing.T) {
+	// The badges live in whatever the fraction leaves above the bottom border, which is about
+	// twenty pixels. Both ends matter and neither is obvious by eye at that size: a badge over
+	// the fraction makes the life total unreadable, and one through the border squares off the
+	// card's corner. Moving `HealthTextTop` to make room would move it on the *duelist* card
+	// too — see the twins rule — so this failing is a decision, not a nudge.
+	st := EnemyStyle
+	f := faces(t)
+	face, err := f.at(st.HealthTextSize)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := face.Metrics()
+
+	// The fraction is digits and a slash, so its ink stops at the baseline: drawText places the
+	// string's top at HealthTextTop and drops the dot by the ascent.
+	textBottom := st.HealthTextTop + m.Ascent.Ceil()
+	if st.EffectTop < textBottom {
+		t.Errorf("the badges start at y=%d, %dpx into the hit points ending at y=%d",
+			st.EffectTop, textBottom-st.EffectTop, textBottom)
+	}
+
+	if bottom, inside := st.EffectTop+st.EffectSize, st.Height-st.BorderWidth; bottom > inside {
+		t.Errorf("the badges end at y=%d, %dpx into the bottom border at y=%d",
+			bottom, bottom-inside, inside)
+	}
+
+	// And a full row fits across the card between its side borders.
+	span := MaxEffects*st.EffectSize + (MaxEffects-1)*st.EffectGap
+	if usable := st.Width - 2*st.BorderWidth; span > usable {
+		t.Errorf("%d badges span %dpx across a card %dpx wide inside its borders",
+			MaxEffects, span, usable)
+	}
+}
+
+func TestAnEffectRowIsCentredAndClosesUpAsItEmpties(t *testing.T) {
+	// Nil entries are skipped rather than drawn as holes, so one status sits in the middle of
+	// the card. What this checks is that the *drawn* row is centred for every count — the
+	// failure it guards is a row laid out against MaxEffects, which leaves a single badge
+	// hard left with three empty slots beside it.
+	st := EnemyStyle
+	f := faces(t)
+
+	solid := image.NewRGBA(image.Rect(0, 0, 8, 8))
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			solid.SetRGBA(x, y, color.RGBA{R: 255, A: 255})
+		}
+	}
+
+	for count := 1; count <= MaxEffects; count++ {
+		spec := Spec{Name: "Goblin", Element: Basic, Life: 10, MaxLife: 10, Enabled: true}
+		for i := 0; i < count; i++ {
+			spec.Effects[i] = solid
+		}
+
+		img, err := Render(spec, st, f)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		band := inkBounds(subImage(img, image.Rect(0, st.EffectTop, st.Width, st.EffectTop+st.EffectSize)))
+		if band.Empty() {
+			t.Fatalf("%d badges drew nothing in the effect band", count)
+		}
+
+		// Centred: the margin either side of the drawn row has to match within a pixel, which
+		// is all integer division can promise.
+		leftGap, rightGap := band.Min.X, st.Width-band.Max.X
+		if diff := leftGap - rightGap; diff > 1 || diff < -1 {
+			t.Errorf("%d badges sit %dpx from the left and %dpx from the right",
+				count, leftGap, rightGap)
+		}
+	}
+}
+
+// subImage copies a rectangle of a card out for measuring, since inkBounds walks a whole image.
+func subImage(src *image.RGBA, r image.Rectangle) *image.RGBA {
+	out := image.NewRGBA(r)
+	for y := r.Min.Y; y < r.Max.Y; y++ {
+		for x := r.Min.X; x < r.Max.X; x++ {
+			out.SetRGBA(x, y, src.RGBAAt(x, y))
+		}
+	}
+	return out
+}
+
 func TestStatRowsClearTheHealthBar(t *testing.T) {
 	// MaxStatLines is a *layout* cap, so this is what makes it one: the full ladder has to
 	// finish above the bar. Raising the constant without moving the bar fails here rather

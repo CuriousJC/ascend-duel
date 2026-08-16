@@ -2,18 +2,18 @@ package data
 
 // The rings: what the player can equip between fights.
 //
-// **Added 2026-08-11, and it is a layout sketch rather than a mechanic.** Nothing reads
-// Element or Text yet — the combat screen draws these three as cards in the ring pane and
-// that is all. The file exists first so the set can be *seen and extended* while the rules
-// are still being decided, which is the same order the enemy roster arrived in.
+// **Added 2026-08-11 as a layout sketch; the first rule arrived on 2026-08-16.** A ring is what
+// makes its element's status happen at all — an unringed fire attack is a plain attack with a red
+// border — so `Element` is now read, by `internal/screens`, and turned into a flag on
+// `combat.Duelist.Rings`. `Text` is still for the long press that does not exist.
 //
-// **What is deliberately not here.** MECHANICS.md decides what a ring does — a per-element
-// discount, or a flip mapping one element onto another across the whole deck — and both need
-// `element` to cross into `internal/combat` before they can be written down as anything a
-// loader could check. So Element below says *which element this ring is about* and no more;
-// when the rules land, the discount or the flip becomes a field beside it and this comment
-// goes. Do not invent a rules vocabulary in JSON ahead of the rules, which is the mistake
-// `CostTier` in the card lists is checked against rather than trusted.
+// **What is deliberately not here.** How much a status is worth, how long it lasts, and what it
+// does are all in `internal/combat`, which cannot import this package. What crosses over is one
+// word — the element's name — resolved by `combat.ParseElement` at the point of use, the same
+// division the deck lists draw with `ParseAction`. The discount and the flip MECHANICS.md
+// describes are still unwritten; when they land they become fields beside Element. Do not invent
+// a rules vocabulary in JSON ahead of the rules, which is the mistake `CostTier` in the card
+// lists is checked against rather than trusted.
 //
 // **Art is an assets key, not a path**, like every other named asset — see assets/embed.go.
 // It has to be a key `LoadImageData` hands back rather than one `LoadAssets` does, because a
@@ -44,9 +44,12 @@ type RingData struct {
 	// refuses to start over a missing picture is worse.
 	Art string `json:"Art"`
 
-	// Element is which element this ring is about — the one it would discount, or the one a
-	// flip would land on. It is documentation until elements reach internal/combat; nothing
-	// reads it today.
+	// Element is which element this ring is about: the one whose status it switches on, and the
+	// one it would discount or a flip would land on.
+	//
+	// **It is read as of 2026-08-16.** `internal/screens` parses it with `combat.ParseElement`
+	// and sets the matching flag on `combat.Duelist.Rings`, which is what makes a fire attack
+	// burn. A name the rules do not have is logged rather than silently dropped.
 	//
 	// **It does not colour the card.** A ring's border is pink whatever its element, because
 	// the one thing that must never happen is reaching for a ring thinking it is a card you

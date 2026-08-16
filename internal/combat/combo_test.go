@@ -124,7 +124,7 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 
 // --- the damage formula -------------------------------------------------------------------
 
-// **damage = the hand's own cards, plus DMG times the multiplier.** Two Strikes at Str 10 are 20
+// **damage = the hand's own cards, plus DMG times the multiplier.** Two Strikes at DMG 10 are 20
 // of cards and a 1.5x pair on a DMG of 10, so 35.
 func TestDamageIsTheHandsCardsPlusDMGTimesTheMultiplier(t *testing.T) {
 	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
@@ -344,9 +344,10 @@ func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
 	}
 }
 
-// **One status per colour in the hand**, so mono lands one and a rainbow lands four.
+// **One status per colour in the hand**, so mono lands one and a rainbow lands four — for a
+// duelist wearing all four rings, which is what a status needs since 2026-08-16.
 func TestTheMixLandsOneStatusPerColour(t *testing.T) {
-	a, b := duelist(10, 0, 10000), duelist(10, 0, 10000)
+	a, b := ringed(duelist(10, 0, 10000)), duelist(10, 0, 10000)
 
 	events, _, bAfter := resolve(a, b, []Card{
 		Of(Strike, Fire), Of(Strike, Ice), Of(Strike, Earth), Of(Strike, Lightning),
@@ -375,7 +376,7 @@ func TestADrabHandLandsNoStatus(t *testing.T) {
 // A lone attack that formed no hand still applies its own element, which is the rule that
 // predates hands and was deliberately kept.
 func TestALoneAttackStillAppliesItsElement(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := ringed(duelist(10, 0, 5000)), duelist(10, 0, 5000)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Plain(Jab)}, nil, 1)
 

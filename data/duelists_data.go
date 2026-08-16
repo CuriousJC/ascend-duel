@@ -41,7 +41,10 @@ type DuelistData struct {
 	// over one would be worse.
 	CardBack string `json:"CardBack"`
 
-	Strength     int `json:"Strength"`
+	// DMG is what one Strike deals in this duelist's hands. It was `Strength` until
+	// 2026-08-16, when the stat and the figure it converted into turned out to be one number
+	// wearing two names — see combat.Duelist.DMG.
+	DMG          int `json:"DMG"`
 	Speed        int `json:"Speed"`
 	Constitution int `json:"Constitution"`
 }

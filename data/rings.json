@@ -4,20 +4,27 @@
     "Name": "Fire Ring",
     "Art": "firering_png",
     "Element": "fire",
-    "Text": "Fire cards cost one less."
+    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 10% DMG each turn."
   },
   {
     "RingRecord": "frozen-ring",
     "Name": "Frozen Ring",
     "Art": "frozenring_png",
     "Element": "ice",
-    "Text": "Ice cards cost one less."
+    "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn."
   },
   {
     "RingRecord": "thunder-ring",
     "Name": "Thunder Ring",
     "Art": "thunderring_png",
     "Element": "lightning",
-    "Text": "Lightning cards cost one less."
+    "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss."
+  },
+  {
+    "RingRecord": "earth-ring",
+    "Name": "Earth Ring",
+    "Art": "earthring_png",
+    "Element": "earth",
+    "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG."
   }
 ]

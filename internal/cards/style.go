@@ -122,6 +122,17 @@ type Style struct {
 	HealthBarHeight int
 	HealthTextTop   int
 	HealthTextSize  float64
+
+	// Spec.Effects drawn as a centred row of squares along the bottom edge. A zero
+	// EffectSize means the style shows none, which is every style but EnemyStyle.
+	//
+	// **A square box each, and the badge is fitted into it** — the art is 500px and this is
+	// twenty, so it is scaled like the portrait rather than blitted like a glyph. The row is
+	// centred on the card and closes up as badges come and go, so two statuses sit in the
+	// middle rather than clinging to the left.
+	EffectSize int
+	EffectTop  int
+	EffectGap  int
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
@@ -319,7 +330,22 @@ var Stack = Style{
 //	 44  portrait          44..156   (Spec.Art, scaled to fit and centred)
 //	161  health bar        161..175
 //	180  hit points        "42/60", centred
+//	197  status badges     197..217  (Spec.Effects, a centred row)
 //	218  inside of the bottom border
+//
+// **The badges are on this card and not the duelist's** *(2026-08-16)*, which breaks the
+// twins rule everywhere except where that rule actually bites — the bar and the fraction are
+// still at identical offsets, and the band under them is the same free strip on both. The
+// reason is that nothing can put a status on the player: the enemy wears no rings and a ring
+// is what makes a status happen. Drawing an empty band on the duelist card would be reserving
+// space for a mechanic that does not exist. `DuelistStyle` gains it in three lines when one
+// does.
+//
+// **The strip they sit in is what was left, not what was wanted.** The fraction's ink ends
+// around y=197 at 18pt and the border starts at 218, so the badges get twenty pixels — small
+// for a 500-pixel drawing, and legible because what a badge has to say is a colour and a rough
+// shape rather than a picture. `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both
+// ends of that strip; making them bigger means moving the fraction on *both* fighter cards.
 //
 // **The name moved above the portrait on 2026-08-12**, having sat between the portrait and
 // the bar since the card was built. It puts the name where every other card in the game
@@ -363,6 +389,10 @@ var EnemyStyle = Style{
 	HealthBarHeight: 14,
 	HealthTextTop:   180,
 	HealthTextSize:  18,
+
+	EffectSize: 20,
+	EffectTop:  197,
+	EffectGap:  6,
 }
 
 // DuelistStyle is the player, in the card format *(2026-08-12)*.

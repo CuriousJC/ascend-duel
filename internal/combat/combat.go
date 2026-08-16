@@ -50,8 +50,21 @@ func (s Side) String() string {
 // duelists with ==, so nothing here may become a slice or a map. The defend queue is a fixed
 // array plus a count rather than a slice for exactly that reason.
 type Duelist struct {
-	Con         int
-	Str         int
+	Con int
+
+	// DMG is what one Strike deals in this duelist's hands, and it is the figure on the fighter
+	// card.
+	//
+	// **It was `Str` until 2026-08-16, and the rename is the removal of a stat rather than a
+	// spelling change.** Strength existed as a number that converted into damage and did nothing
+	// else — `Strike.Damage(Str)` returned `Str` exactly — so the conversion was an identity and
+	// the two names described one quantity. A stat that leads to a second stat and stops there is
+	// a step the player has to learn without ever being able to act on it differently.
+	//
+	// The ladder still scales off this: the cheap tier is half of it, the middle tier is it, the
+	// dear tier is double. What went is the pretence that the ladder converts a *different* stat.
+	DMG int
+
 	Spd         int
 	MaxLife     int
 	CurrentLife int
@@ -129,6 +142,36 @@ type Duelist struct {
 	// The defences above deliberately stay where they are. Defend is a card effect, not an
 	// element status, and filing it in a table indexed by colour would say it was one.
 	Statuses [ElementCount]Status
+
+	// Rings is which elements this duelist wears a ring for, indexed the same way Statuses is.
+	//
+	// **It is what makes an element do anything at all** *(2026-08-16)*. A fire attack from a
+	// duelist with no fire ring is a plain attack with a red border: it counts toward a mix, it
+	// is discounted by nothing, and it applies no burn. See status.go for the argument, which is
+	// that statuses given away free left the first three rings with no mechanic of their own.
+	//
+	// **The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire
+	// attacks burn; it does nothing when a fire attack is aimed at you.
+	//
+	// **An array of bools rather than a set**, because Duelist has to stay comparable — see the
+	// note at the top of this struct — and because Element is already the index of the status it
+	// switches on. It is the seat the ring discount sits in as well: `Card.Cost()` has the other
+	// half of that and neither is wired to the other yet.
+	//
+	// **Enemies never wear one.** The zero value is what an enemy is hydrated with and nothing
+	// sets it for them, so an enemy's elements are inert by construction rather than by a rule
+	// written down somewhere else. Statuses reaching the player by some other route later is
+	// expected; it will not be by an enemy putting on jewellery.
+	Rings [ElementCount]bool
+}
+
+// WearsRing reports whether this duelist's ring makes the named element do something. Basic is
+// never worn — it is the absence of an element, so there is nothing for a ring to point at.
+func (d Duelist) WearsRing(e Element) bool {
+	if e <= Basic || int(e) >= ElementCount {
+		return false
+	}
+	return d.Rings[e]
 }
 
 // Alive reports whether this duelist can still fight.
@@ -506,17 +549,14 @@ const baseMaxActions = 5
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
 // ActionPoints is how much this duelist has to spend in a round, including anything
-// banked by a Prepare in the round before and less anything an ice hit has taken off.
+// banked by a Prepare in the round before.
 //
-// **A chill is read here rather than subtracted when it lands**, which is what makes ice bite
-// the round after the blow rather than the round it was struck in — the budget for the round in
-// progress has already been committed by the time an attack resolves.
+// **No status touches the budget as of 2026-08-16.** A chill did until then, and it is now a card
+// off the front of the turn instead — see playTurn. What that costs is the one thing the old
+// version had going for it: an AP cut was felt while the player was still choosing, and a card
+// taken off a committed turn is felt after they have. What it buys is a status a player can name.
 func (d Duelist) ActionPoints() int {
-	ap := baseActionPoints + d.Spd/speedPerPoint + d.BonusAP - d.chill()
-	if ap < 1 {
-		ap = 1
-	}
-	return ap
+	return baseActionPoints + d.Spd/speedPerPoint + d.BonusAP
 }
 
 // CostOf totals the action-point cost of a queued set.
@@ -535,25 +575,25 @@ func (d Duelist) CanAfford(cards []Card) bool {
 	return CostOf(cards) <= d.ActionPoints()
 }
 
-// Damage is what an action deals given the attacker's Strength.
+// Damage is what an action deals in the hands of a duelist with this DMG.
 //
-// **One ladder, three families** *(2026-08-15)*: half strength at 1 AP, strength at 2, double at
+// **One ladder, three families** *(2026-08-15)*: half DMG at 1 AP, DMG at 2, double at
 // 3, in Stab and Slash and Crush alike. A family says which pair a card builds toward and nothing
 // about how hard it hits, which is what makes the choice between them a *plan* rather than an
 // arithmetic comparison.
 //
 // The opponent's Attack and Heavy sit on the same ladder at the same prices. A plan card deals
 // nothing.
-func (a ActionKind) Damage(str int) int {
+func (a ActionKind) Damage(dmg int) int {
 	switch a {
 	case Lunge, Cleave, Smash, Heavy:
-		return str * 2
+		return dmg * 2
 	case Thrust, Slash, Strike, Attack:
-		return str
+		return dmg
 	case Jab, Cut, Bash:
-		// The floor keeps the cheapest cards from rounding away to nothing at low Strength,
+		// The floor keeps the cheapest cards from rounding away to nothing at a low DMG,
 		// which is where a duel starts.
-		d := str / 2
+		d := dmg / 2
 		if d < 1 {
 			d = 1
 		}
@@ -809,15 +849,25 @@ func playTurn(
 	actor = expireDefenses(actor)
 
 	// Stagger comes off the front, which needs no tie-break and so is the only pick that is
-	// deterministic without inventing a rule. Under phases the front of a turn is its prepares,
-	// so being staggered costs a Prepare before it costs an attack — a real consequence, and
-	// the one that makes stagger worth planning around rather than merely suffering.
+	// deterministic without inventing a rule. **The front of a turn is its attacks** — the phase
+	// order puts them before the plans — so what a stagger costs first is the blow, which is what
+	// makes it worth planning around rather than merely suffering.
 	//
 	// **The action points are not refunded.** They were committed when the cards were queued,
 	// and letting them come back would make stagger pure tempo; keeping them spent makes it
 	// tempo and economy both, which is the price a combo costing a whole round's budget to
 	// set up should command.
-	lost := actor.Staggered
+	//
+	// **A chill is added to the stagger rather than counted separately** *(2026-08-16)*. Ice takes
+	// a card off the front of a turn, which is precisely what a stagger is, so the two add and one
+	// loop announces both. The difference between them is where they come from and how long they
+	// last: a stagger is spent when it bites, a chill bites on every turn it outlives.
+	//
+	// The consequence, stated: a card lost to ice is announced as `KindStaggered`, so the feed
+	// says "staggered" for something the ring calls a chill. One event kind is what keeps the
+	// playback's one-beat-per-slot invariant true without a second thing to remember — see
+	// `currentSlot` on the screen, which counts these events to find the lit row.
+	lost := addStagger(actor.Staggered, actor.chillCards())
 	actor.Staggered = 0
 	if lost == StaggerAll || lost > len(turn) {
 		lost = len(turn)
@@ -1030,7 +1080,7 @@ func resolveAttackPhase(
 	// reason for it. A lone attack that formed nothing carries HandNone and says only its colour.
 	//
 	// **It also carries the sum**, which is what the damage below is taken from — see comboEvent.
-	swung := comboEvent(side, blow, turn, actor.Str, round)
+	swung := comboEvent(side, blow, turn, actor.DMG, round)
 	events = append(events, swung)
 
 	// **What the hand buys besides damage is paid on forming it, not on connecting.** A shock
@@ -1052,9 +1102,9 @@ func resolveAttackPhase(
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
 	// spent, no status applied. The attack did not occur.
 	//
-	// **This is a roll**, and the only one in the package. See shockMissPct.
-	if shocked, missed := spendShock(actor, rng); missed {
-		actor = shocked
+	// **This is a roll**, and the only one in the package. See shockMissPct. Nothing is consumed
+	// by it: a shock rolls on every attack it outlives, so the duelist comes back unchanged.
+	if shockMisses(actor, rng) {
 		events = append(events, Event{
 			Kind:    KindMissed,
 			Side:    side,
@@ -1064,8 +1114,6 @@ func resolveAttackPhase(
 			Round:   round,
 		})
 		return events, actor, target
-	} else {
-		actor = shocked
 	}
 
 	// **Base damage is the cards in the hand, and the multiplier is DMG on top.** DMG is what one
@@ -1074,7 +1122,7 @@ func resolveAttackPhase(
 	//
 	// That sum is the announcement's `Amount`, taken rather than repeated: the feed prints the
 	// arithmetic, and a second copy of it here is the one way the printed sum could be wrong.
-	dmg := blunt(swung.Amount, actor.weightPct())
+	dmg := blunt(swung.Amount, actor.weight())
 
 	// **Every raised defence answers the blow, and they compose multiplicatively.** Order is not
 	// read: a turn has one attack, so "which card meets which blow" has no content. Multiplying
@@ -1120,8 +1168,16 @@ func resolveAttackPhase(
 	//
 	// One status per distinct colour, so mono lands one and rainbow lands four. Drab lands none,
 	// which is what "basic is not a colour" means at the other end.
+	//
+	// **And every one of them is gated on a ring the attacker is wearing** *(2026-08-16)*. A
+	// rainbow thrown by a duelist wearing two rings lands two statuses; thrown by an enemy it
+	// lands none. The colours still count toward the mix multiplier either way — what the ring
+	// buys is the status, not the combo.
 	for _, e := range blow.Elements {
-		applied, amount, ok := applyStatus(target, e)
+		if !actor.WearsRing(e) {
+			continue
+		}
+		applied, amount, ok := applyStatus(target, e, actor)
 		if !ok {
 			continue
 		}
@@ -1156,15 +1212,15 @@ func resolveAttackPhase(
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
-func comboEvent(side Side, blow Blow, turn []Slot, str, round int) Event {
+func comboEvent(side Side, blow Blow, turn []Slot, dmg, round int) Event {
 	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
 	// this event rather than recomputing it, so the sentence the feed prints and the damage that
 	// lands cannot be two different sums.
 	base := 0
 	for _, i := range blow.Cards {
-		base += turn[i].Card.Damage(str)
+		base += turn[i].Card.Damage(dmg)
 	}
-	swing := Strike.Damage(str)
+	swing := Strike.Damage(dmg)
 
 	lead := turn[blow.Cards[0]].Card
 

@@ -107,9 +107,9 @@ func (c Card) Cost() int { return c.Action.Cost() }
 // prepares — the element never moves a card between phases.
 func (c Card) Category() Category { return c.Action.Category() }
 
-// Damage is what this card deals given the attacker's Strength, before any multiplier, blunting
-// or defence.
-func (c Card) Damage(str int) int { return c.Action.Damage(str) }
+// Damage is what this card deals in the hands of a duelist with this DMG, before any multiplier,
+// blunting or defence.
+func (c Card) Damage(dmg int) int { return c.Action.Damage(dmg) }
 
 func (c Card) String() string {
 	if c.Element == Basic {

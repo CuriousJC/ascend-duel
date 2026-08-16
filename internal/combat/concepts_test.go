@@ -83,9 +83,9 @@ func TestDefendHalvesTheBlowAndIsSpent(t *testing.T) {
 // cards went into it, so a card taking all of it would delete a whole opposing turn by itself.
 // Halving cannot: something always lands, so the opponent is always still playing.
 func TestNoDefenceStopsABlowOutright(t *testing.T) {
-	str := 10
-	a := duelist(str, 0, 500)
-	b := duelist(str, 0, 500)
+	dmg := 10
+	a := duelist(dmg, 0, 500)
+	b := duelist(dmg, 0, 500)
 
 	// Four Jabs is a Barrage, which is the biggest thing a cheap hand can assemble, into every
 	// defensive card the game has.
@@ -141,9 +141,9 @@ func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
 	//
 	// Composed multiplicatively, so two Defends take three quarters rather than the whole thing —
 	// which is the point of multiplying rather than adding: cards cannot reach past zero by accident.
-	str := 100
-	a := duelist(str, 0, 5000)
-	b := duelist(str, 0, 5000)
+	dmg := 100
+	a := duelist(dmg, 0, 5000)
+	b := duelist(dmg, 0, 5000)
 
 	// The undefended figure comes off a fresh pair, so it is the same blow against nothing.
 	open, _, _ := resolve(a, b, PlainCards(Smash, Strike), nil, 2)
@@ -205,7 +205,7 @@ func TestTheAttackLadderIsThreeFamiliesByThreeTiers(t *testing.T) {
 	//
 	// It also catches a concept falling through Cost()'s default arm, which returns a mid-tier
 	// price — a mistake that would otherwise hide behind an entirely plausible number.
-	const str = 10
+	const dmg = 10
 
 	attackFamilies := []Family{FamilyStab, FamilySlash, FamilyCrush}
 	tiers := map[Family]map[int]ActionKind{}
@@ -244,9 +244,9 @@ func TestTheAttackLadderIsThreeFamiliesByThreeTiers(t *testing.T) {
 			if !ok {
 				continue
 			}
-			if got.Damage(str) != want.Damage(str) {
+			if got.Damage(dmg) != want.Damage(dmg) {
 				t.Errorf("at %d AP, %v deals %d and %v deals %d — the families must ladder identically",
-					tier, got, got.Damage(str), want, want.Damage(str))
+					tier, got, got.Damage(dmg), want, want.Damage(dmg))
 			}
 		}
 	}
@@ -255,15 +255,15 @@ func TestTheAttackLadderIsThreeFamiliesByThreeTiers(t *testing.T) {
 func TestPlanCardsDealNothingAndAttacksDoNot(t *testing.T) {
 	// The two categories are what a card *is*, so each has to hold on its own side of the line. A
 	// plan that dealt damage would be an attack wearing the wrong verb in the feed.
-	const str = 10
+	const dmg = 10
 	for _, a := range AllActions {
 		switch a.Category() {
 		case CategoryPlan:
-			if d := a.Damage(str); d != 0 {
+			if d := a.Damage(dmg); d != 0 {
 				t.Errorf("%v is a plan and deals %d damage", a, d)
 			}
 		case CategoryAttack:
-			if d := a.Damage(str); d <= 0 {
+			if d := a.Damage(dmg); d <= 0 {
 				t.Errorf("%v is an attack and deals %d damage", a, d)
 			}
 		}

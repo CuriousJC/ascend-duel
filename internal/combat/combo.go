@@ -382,9 +382,9 @@ func biggestAttack(turn []Slot) []int {
 		if s.Card.Category() != CategoryAttack {
 			continue
 		}
-		// A fixed reference strength: this is a comparison between concepts, and every concept
-		// scales from the same Str, so any positive value ranks them identically.
-		if d := s.Card.Action.Damage(damageRankStr); d > bestDamage {
+		// A fixed reference DMG: this is a comparison between concepts, and every concept
+		// scales from the same DMG, so any positive value ranks them identically.
+		if d := s.Card.Action.Damage(damageRankDMG); d > bestDamage {
 			best, bestDamage = i, d
 		}
 	}
@@ -394,10 +394,10 @@ func biggestAttack(turn []Slot) []int {
 	return []int{best}
 }
 
-// damageRankStr is the strength `biggestAttack` ranks concepts at. It never reaches a life total
+// damageRankDMG is the DMG `biggestAttack` ranks concepts at. It never reaches a life total
 // — it exists only so Heavy sorts above Strike sorts above Jab — and it is deliberately large
-// enough that Jab's `str/2` floor of 1 cannot flatten the ladder.
-const damageRankStr = 100
+// enough that Jab's `dmg/2` floor of 1 cannot flatten the ladder.
+const damageRankDMG = 100
 
 // elementsOf is every distinct non-basic colour among the cards that formed the hand, in element
 // order.

@@ -260,3 +260,38 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 		}
 	}
 }
+
+func TestTheCardHoldsAsManyEffectsAsThereAreStatuses(t *testing.T) {
+	// `cards.MaxEffects` is a layout number in a package that cannot see the rules, and the
+	// rules decide how many statuses one duelist can carry at once: one per element, since a
+	// status does not stack and the array is indexed by element. This is the join.
+	//
+	// A fifth element would silently drop a badge off the enemy card — the row would draw four
+	// of five and look like a rendering glitch rather than a missing status. Failing here is
+	// what makes adding an element a layout change too, exactly as MaxStatLines does for a
+	// fourth stat row.
+	statuses := combat.ElementCount - 1 // Basic carries none
+	if cards.MaxEffects < statuses {
+		t.Errorf("a card shows %d status badges against %d statuses a duelist can carry — %d would be dropped",
+			cards.MaxEffects, statuses, statuses-cards.MaxEffects)
+	}
+}
+
+func TestEveryStatusElementHasABadge(t *testing.T) {
+	// A status with no artwork falls back to the default badge, which is a shape nobody has
+	// learned — fine as a backstop, wrong as the thing a shipped element draws. This walks the
+	// elements the rules can actually put on a duelist and asks for a picture of its own.
+	for _, e := range combat.AllElements {
+		if e == combat.Basic {
+			continue
+		}
+		key, ok := effectKeys[e]
+		if !ok {
+			t.Errorf("%v has no status badge and would draw the default", e)
+			continue
+		}
+		if _, ok := assets.LoadImageData()[key]; !ok {
+			t.Errorf("%v's badge is %q, which is not an embedded image", e, key)
+		}
+	}
+}

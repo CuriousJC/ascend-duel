@@ -20,6 +20,11 @@ form are two multipliers that **add**, defends became percentage reductions inst
 negations, and lightning went back to being a roll. Where an older rule survives it is because
 it was re-decided, not because it was left alone.
 
+**And it is the player's rule, not the game's** *(2026-08-17, owner's call)*. An enemy's attack
+cards resolve **one at a time, in the order its planner chose them**, each landing its own blow —
+`Duelist.SoloAttacks` is the flag and `resolveSoloAttacks` is the phase. See "Enemies do not
+combo" below.
+
 ---
 
 ## The thrust
@@ -1090,6 +1095,37 @@ shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 - **Generate both doors, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 
+### The ascent curve
+
+**Every room grows the opponent's HP and DMG by 10%, compounding** *(2026-08-17, owner's call)*.
+Floor 1's outer room is the baseline and takes a record's stats unchanged; each fight after it is
+10% harder than the one before. `entities.AscentGrowthPct` is the number, `entities.ScaleToFight`
+is the arithmetic, and `entities.NewEnemyFrom` takes the fight index so an unscaled opponent cannot
+be built by accident.
+
+- **It compounds per *room*, not per floor.** A floor is three rooms, so a floor costs about a
+  third more than the one below it and the stairway boss is harder than the inner room beside it.
+- **HP and DMG only. `Actions` is left alone**, because it is the budget a *deck* is spent out of:
+  growing it hands an opponent more cards rather than a harder version of its own. It stays a
+  per-enemy dial, authored deliberately.
+- **Integer arithmetic, and the multiplier compounds rather than the stat.** The obvious version —
+  `v = v * 110 / 100` once per room — freezes every stat below 10, because integer division
+  truncates `5 * 110 / 100` straight back to 5. Half the roster opens on DMG 5 or 6, so the curve
+  would have done nothing to exactly the band it was added for. A fixed-point multiplier truncated
+  once at the end is what fixes it, and `TestASmallStatStillClimbs` is what caught it.
+- **No `math.Pow`.** A float power is not reliably identical across two machines and a stat feeds a
+  duel meant to be replayable from a seed — the same rule that keeps `math/rand` out of the game.
+- **Nothing caps the fight index.** The fight order is the whole 96-record roster standing in for a
+  generator, so playing far enough asks for numbers the 8-floor tower never would.
+
+**It doubles a curve that is already in the data, and that is deliberate but worth stating.**
+`ValidFloors` already sorts the roster from an 80 HP / DMG 5 Giant Bat to a 400 HP / DMG 22
+Bio-Titan, roughly a fivefold climb; the ascent curve multiplies on top of that, reaching about
+×8.9 by floor 8's stairway. The measured cost is in the balance table below.
+
+`[?]` Whether the curve should be flatter now that it stacks on the roster's own progression, or
+whether the roster should flatten instead and let the curve carry the climb.
+
 `[?]` What distinguishes one stairwell from another. `[?]` Whether the shop and the door choice
 are one screen or two, and in which order.
 
@@ -1116,22 +1152,51 @@ drew from one shared list of `Attack` and `Heavy`. Three consequences, all now m
 An enemy holding four cheap copies of one card is a swarm. One holding four expensive ones is a
 brute. One holding shields is a warden. The player learns a deck.
 
+### Enemies do not combo
+
+**An enemy's attack cards resolve one at a time, in the order its planner chose them**
+*(2026-08-17, owner's call)*. Each lands its own blow at its own face damage; no hand is read, so
+there is no multiplier, no mix, no banked AP and no stagger off an enemy's turn. `Duelist.SoloAttacks`
+carries it and `resolveSoloAttacks` is the phase.
+
+**Combos are the player's axis and an enemy has neither half of it.** A hand counts copies of a
+*concept* and a mix counts distinct *colours*; every enemy card in the roster is authored `basic`
+and `FamilyNone`, so what an enemy "formed" was an accident of what its planner could afford. Now
+three cards on the table mean three blows, which is a round the player can read off the table
+before pressing DUEL!.
+
+- **A defence still covers the whole turn.** Raised cards answer *every* blow of the opposing turn
+  and are spent once it is over — see `applyDefends`. Spending a Defend on the first swing would
+  make it nearly worthless against the only opponents that swing more than once.
+- **One shock roll per turn, not one per card.** A shock is "the turn's attack misses". Rolling per
+  card would change what the status means and would advance the package's one random stream a
+  different number of times each round.
+- **It is a flag on the duelist, never a rule about side B.** The engine has no idea which side is a
+  person and must not learn: the balance tool plays both sides headlessly.
+- **`[?]` Whether a boss or an affix can hand an enemy combos back.** The flag is per duelist, so
+  nothing in the rules forbids it.
+
 ### One planner
 
-`PlanFor(duelist, hand)` **scores every affordable combination of the hand's attacks through the
-same `blowFor` the resolver uses**, and takes the best. It is exhaustive rather than greedy because
-a greedy pass cannot see that three Ooze forming a Flurry beat one Dissolve — a hand is at most
-seven cards, so this is 128 candidates.
+`PlanFor(duelist, hand)` **scores every affordable combination of the hand's attacks**, and takes
+the best. It is exhaustive rather than greedy because a greedy pass cannot see that three Ooze
+forming a Flurry beat one Dissolve — a hand is at most seven cards, so this is 128 candidates.
+
+**A comboing duelist is scored through the same `blowFor` the resolver uses**, so the plan it plays
+is the plan the engine will score. **A solo attacker is scored as the sum of what it picked**, which
+is the same arithmetic its phase performs — so the search is looking for the most damage the budget
+buys rather than for the best combination.
 
 **Then it spends what the attacks did not want**, on defences first and the hand's own order after.
 That second pass is what keeps a non-attack card in an enemy deck from being dead content: a
 planner that only maximised damage would never raise a shield, and every `Congeal` in the roster
 would sit in a discard pile forever.
 
-**`Copies` is the difficulty dial and it is sharper than it looks.** A turn resolves one blow and
-counted hands multiply it, so four copies of a 1 AP card in one turn is a Barrage at 5x. The shape
-the old roster treated as weakest is now the strongest, and authoring a deck is where that gets
-decided — deliberately, per enemy.
+**`Copies` was the difficulty dial and it is a blunter one now.** Under combos, four copies of a
+1 AP card was a Barrage at 5x; with no hand to form, four copies is four small blows and the dial
+is simply *how many cards a turn holds*. What sharpened instead is **variety**: an enemy with three
+different attacks used to land only the biggest of them, because distinct concepts formed no hand
+and fell through to the High Card. It now lands all three.
 
 ### Balance after the rework — measured, and not yet good
 
@@ -1142,10 +1207,23 @@ decided — deliberately, per enemy.
 |---|---|
 | before this change | 12 of 96 |
 | enemy decks, HP left alone | 15 of 96 |
-| **enemy decks and HP doubled — what ships** | **44 of 96** |
+| **enemy decks and HP doubled** | **44 of 96** |
+| enemies stopped comboing *(2026-08-17)* | 45 of 96 |
+| **the 10% ascent curve — what ships** *(2026-08-17)* | **74 of 96** |
 
-So **the per-enemy decks cost three walls and the HP doubling cost twenty-nine**. Floors 1–2 are
-untouched and everything from floor 5 up is a wall.
+So **the per-enemy decks cost three walls, the HP doubling twenty-nine, the combo removal one, and
+the ascent curve another twenty-nine**. Floors 1–2 are untouched — floor 1's outer room is the
+curve's baseline — and everything from floor 3 up is now a wall.
+
+**The curve is measured at the shallowest slot each enemy can occupy**, the first fight of its
+lowest valid floor, so those are the kindest numbers a player will ever meet it with.
+
+**Taking combos off the enemies moved the total by one and the roster underneath it a lot**, in
+both directions, which is worth knowing before reading the total as "no change". Floors 1–2 got
+markedly easier — several enemies went from being beaten by two postures to being beaten by eight —
+and floors 2–5 got harder, because an enemy holding three *different* attacks used to land only the
+biggest of them and now lands all three. The tool is one draw rather than a distribution, so a
+±1 movement in the total is inside its noise; the per-band movement is not.
 
 **Forty-four walls is accepted, not a regression to fix** *(2026-08-16, owner's call)*. The
 objection was that the doubling overshot against a player whose own ceiling has not moved. The

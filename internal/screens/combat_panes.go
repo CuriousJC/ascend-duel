@@ -507,10 +507,15 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// something the caption and the character block both already carry.
 
 		case combat.KindAction:
-			// **An attack card writes no line.** Its beat still passes — the engine announces
-			// every card so the table can light it and playback can count slots — but the
+			// **A comboing side's attack card writes no line.** Its beat still passes — the engine
+			// announces every card so the table can light it and playback can count slots — but the
 			// sentence for the whole phase is the KindCombo below.
-			if combat.Plain(e.Action).Category() == combat.CategoryAttack {
+			//
+			// **A solo attacker has no phase line, so the card's own sentence is the line**
+			// *(2026-08-17)*. There is no KindCombo coming for it, and an attack that reported
+			// nothing but a damage figure with no verb in front of it would be the one kind of
+			// action in the round that never says what it was.
+			if combat.Plain(e.Action).Category() == combat.CategoryAttack && !s.soloAttacker(e.Side) {
 				break
 			}
 			act(e.Side, combat.Card{Concept: e.Action, Element: e.Element})
@@ -820,6 +825,23 @@ const duelistName = "Duelist"
 // Monster1..Tactician1 — style names standing in for creature names because there was
 // nowhere else to put one. Records carry a Name now, so a line says "Ogre Warlord attacks"
 // rather than "OgreWarlord attacks".
+// soloAttacker reports whether a side's attack cards resolve one at a time rather than as a hand.
+//
+// **It reads the duelist the round was resolved for, not the side** — see
+// `combat.Duelist.SoloAttacks`. Two things on this screen change with it and both would otherwise
+// have to guess: the feed writes a sentence per attack card because no combo line is coming, and
+// the table lights one card at a time because no single blow is being assembled.
+//
+// A missing combatant answers false, which is the comboing case: this is asked while drawing, and
+// a half-built scene should read as the ordinary round rather than as an enemy's.
+func (s *CombatScene) soloAttacker(side combat.Side) bool {
+	c := s.fighter
+	if side == combat.SideB {
+		c = s.enemy
+	}
+	return c != nil && c.SoloAttacks
+}
+
 func (s *CombatScene) sideName(side combat.Side) string {
 	c := s.fighter
 	if side == combat.SideB {

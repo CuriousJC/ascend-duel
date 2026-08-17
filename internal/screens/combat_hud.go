@@ -13,6 +13,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -112,6 +113,81 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
+}
+
+// Where in the tower this fight is: **the floor, and which of that floor's three rooms**, in
+// two lines under the duelist card.
+//
+// MECHANICS.md's tower is 8 floors x 3 fights with a choice of door after fights 1 and 2 and a
+// choice of stairwell after the boss, so a floor is three rooms deep and the third one is the
+// way up. That makes the position entirely a function of how far along the fight order the
+// player has got, which is why nothing is stored: `fightIndex` already says it, and it is the
+// same stand-in the enemy roster is walked with. `Session` owns both the moment it exists.
+//
+// **It says where you are, not what is coming.** Naming the third room Stairway is the only
+// thing on this screen that says a floor is about to end — the doors and the stairwell are the
+// screen that does not exist yet.
+const (
+	// fightsPerFloor is how many fights a floor holds, and the third of them is its boss.
+	//
+	// **It is `entities.FightsPerFloor` rather than a 3 of this screen's own**, because the ascent
+	// curve that grows an enemy per room reads the same number and `tools/balance` reads it to map
+	// a floor band onto a fight index. Two copies would let the label and the difficulty disagree
+	// about how deep a floor is.
+	fightsPerFloor = entities.FightsPerFloor
+
+	towerLineGap   = 10 // gap from the card's bottom edge to the first line
+	towerLineSize  = 18
+	towerLinePitch = 22 // the same pitch a card sets its own text at
+	towerLines     = 2  // the floor, then the room
+)
+
+// towerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
+// fight's position within its floor, so it must stay fightsPerFloor long — the two are checked
+// against each other by TestEveryRoomOnAFloorIsNamed.
+var towerRoomNames = [fightsPerFloor]string{"Outer Room", "Inner Room", "Stairway"}
+
+// towerFloor is which floor a fight is on, counting from one.
+//
+// **It is not capped at the tower's eight.** The fight order is every record in the roster —
+// 96 of them, scaffolding for a generator that does not exist — so playing far enough reads
+// Floor 9 and beyond. A clamp would be a screen quietly disagreeing with the counter it is
+// drawing; the honest fix is the tower, not a maximum here.
+func towerFloor(fight int) int { return fight/fightsPerFloor + 1 }
+
+// towerRoom names which of its floor's fights this is.
+func towerRoom(fight int) string { return towerRoomNames[fight%fightsPerFloor] }
+
+// towerPlaceRect is what the two lines occupy: the duelist card's column, starting below it.
+//
+// The width is the card's rather than the text's — the lines are short and left-aligned to the
+// card's left edge, and what the rectangle is for is holding the block against what is drawn
+// under it. See TestTheTowerLinesFitBetweenTheCardAndTheTable.
+func (s *CombatScene) towerPlaceRect(gs *state.GlobalState) image.Rectangle {
+	r := s.duelistCardRect(gs)
+	top := r.Max.Y + towerLineGap
+	return image.Rect(r.Min.X, top, r.Max.X, top+towerLines*towerLinePitch)
+}
+
+// drawTowerPlace writes the floor and the room under the duelist card.
+//
+// Straight onto the ground rather than onto a surface of its own, so it takes `groundInk` — it
+// belongs to the card above it and a panel would make it a third object in a row that already
+// has three.
+func (s *CombatScene) drawTowerPlace(gs *state.GlobalState, screen *ebiten.Image) {
+	r := s.towerPlaceRect(gs)
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: towerLineSize}
+
+	lines := [towerLines]string{
+		fmt.Sprintf("Floor %d", towerFloor(s.fightIndex)),
+		towerRoom(s.fightIndex),
+	}
+	for i, line := range lines {
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y+i*towerLinePitch))
+		op.ColorScale.ScaleWithColor(groundInk)
+		text.Draw(screen, line, face, op)
+	}
 }
 
 // The discards-left badge: a filled disc centred exactly on the Discard button's bottom-right

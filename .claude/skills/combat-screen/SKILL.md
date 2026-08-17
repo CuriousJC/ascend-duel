@@ -64,6 +64,20 @@ no hand writes an ordinary attack sentence instead**, from the card the engine n
 nothing**, and what says so is the table: every attack card is raised as it is announced, and the
 combo lowers the ones it did not name.
 
+**None of the three paragraphs above describes an enemy's turn** *(2026-08-17)*. `Duelist.SoloAttacks`
+makes attack cards resolve one at a time in queue order, each landing its own blow, and **no
+`KindCombo` is emitted at all**. `CombatScene.soloAttacker(side)` is the screen's single predicate
+for it and two things read it:
+
+- **The feed writes a sentence per attack card**, because there is no phase line coming to carry
+  them. `resolutionLines` suppresses an attack's `KindAction` only when a combo *is* coming.
+- **The table lights one card at a time**, so `noteResolved` seats `[]int{seat}` rather than
+  `attackSeats`. Raising the set says "these cards are one blow", which is exactly what an enemy's
+  turn is not: three cards swing three times, and the card that is up is the card that is hitting.
+
+Everything else about playback is unchanged — one `KindAction` per slot, so `currentSlot` still
+counts beats the same way.
+
 Phases replaced alternation, which replaced volley-per-side. The reason is
 legibility: interleaving may simply not be graspable by players. See
 [MECHANICS.md](../../../MECHANICS.md).
@@ -348,7 +362,8 @@ of sentences.
   *(2026-08-15)*. A turn lands one blow and the blow is the set, so the first attack announcement
   raises every attack card of that turn and `noteCombo` then drops whichever earned nothing. They
   used to climb one per beat, which read as one attack per card — the model this replaced. Only
-  one *side* is ever lit: the event that lights one clears the other.
+  one *side* is ever lit: the event that lights one clears the other. **A solo attacker climbs one
+  per beat and should** *(2026-08-17)*, because one attack per card is exactly what its turn is.
 - **`noteResolved` and `seatPlayedCards` count along the same walk.** The third card to resolve
   is not the third card in the hand, and two independent tallies would light the wrong one the
   first time somebody queued a defense before an attack.

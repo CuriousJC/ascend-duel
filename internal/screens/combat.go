@@ -394,7 +394,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The enemy is rebuilt every visit rather than once, because fightIndex may have moved
 	// since the last one. Init is how the next fight starts, not only how the screen is
 	// entered — see nextFight.
-	s.enemy = enemyFromRecord(gs, s.roster(gs)[s.fightIndex%len(s.roster(gs))])
+	s.enemy = enemyFromRecord(gs, s.roster(gs)[s.fightIndex%len(s.roster(gs))], s.fightIndex)
 
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.
@@ -936,6 +936,12 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// at 88%,34%; see drawDuelistCard and drawEnemyCard for why each moved.
 	s.drawDuelistCard(gs, screen)
 
+	// Where in the tower this fight is, in the band the card leaves above the table. See
+	// drawTowerPlace — it is under the duelist card because the floor is something about the
+	// run rather than about either fighter, and that corner is where the run's own figures
+	// already are.
+	s.drawTowerPlace(gs, screen)
+
 	// **The ring pane is a sketch** *(2026-08-11)* — it draws what `data/rings.json` defines
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
 	// combat_rings.go.
@@ -1136,12 +1142,14 @@ func planLabel(cards []combat.Card) string {
 	return label
 }
 
-// enemyFromRecord hydrates an enemy out of global state.
+// enemyFromRecord hydrates an enemy out of global state, **grown to the fight it is met at** —
+// see entities.ScaleToFight. `fightIndex` is the whole of what the ascent curve reads, which is
+// the same counter the floor and room under the duelist card are derived from.
 //
 // **No sheet to look up any more** — the enemy is a card, so its picture is a portrait key
 // that internal/cards decodes when it draws one.
-func enemyFromRecord(gs *state.GlobalState, record string) *entities.Combatant {
-	return entities.NewEnemyFrom(gs.Enemies[record])
+func enemyFromRecord(gs *state.GlobalState, record string, fight int) *entities.Combatant {
+	return entities.NewEnemyFrom(gs.Enemies[record], fight)
 }
 
 // duelistFromRecord resolves a playable duelist. **No sheet to look up** — the character

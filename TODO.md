@@ -128,16 +128,19 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       |---|---|
       | before per-enemy decks | 12 |
       | per-enemy decks, HP left alone | 15 |
-      | **decks and doubled HP — what ships** | **44** |
+      | decks and doubled HP | 44 |
+      | enemies stopped comboing *(2026-08-17)* | 45 |
+      | **the 10% ascent curve — what ships** *(2026-08-17)* | **74** |
 
-      - So **the decks cost three walls and the doubling cost twenty-nine.** Floors 1–2 are
-        untouched; everything from floor 5 up is a wall.
+      - So **the decks cost three walls, the doubling twenty-nine, the combo removal one, and the
+        ascent curve another twenty-nine.** Floors 1–2 are untouched — floor 1's outer room is the
+        curve's baseline — and everything from floor 3 up is a wall.
       - **This is accepted rather than open** *(2026-08-16, owner's call)*. The deep tower is meant
         to need a build, and **rings are what gets the player over those walls** — so the number to
         object to is a wall on a *shallow* floor, not the count. The ascension is not expected to
         be winnable yet.
-      - What is left here is the shallow end: `tools/balance` puts one wall at floors 2–4 (Dire
-        Wolf), which is the old failure rather than the new design.
+      - What is left here is the shallow end, and **it got worse rather than better on
+        2026-08-17** — see the entry below.
       - **Do not tune anything until `tools/balance` reports a distribution** — see below. Every
         figure it prints is one draw, and it measures a fighter with no build at all.
 - [ ] **`tools/balance` is a single sample and needs to be a distribution.** Combat rolls for
@@ -150,14 +153,22 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Every balance figure this repo has ever recorded was measured against the multi-blow
         model and is deleted rather than annotated.** `MECHANICS.md` says what has to be
         re-measured; nothing should be tuned off memory of the old table.
-- [ ] **One wall is on floor two, and that one is a bug.** `tools/balance` reports forty-four of
-      the 96 beaten by no posture as of 2026-08-16 — see the retune entry above, where the count
-      is accepted — but a Dire Wolf at floors 2–4 beating every posture is the failure the tool was
-      built for. An unwinnable enemy is invisible while playing, because losing slowly looks like
-      losing to bad draws.
+- [ ] **Nine walls sit on floors 2–4, and those are a bug.** *(2026-08-17)* The total of
+      seventy-four is accepted — see the retune entry above — but a wall on a *shallow* floor is
+      the failure `tools/balance` was built for. An unwinnable enemy is invisible while playing,
+      because losing slowly looks like losing to bad draws.
+      - **It was one — Dire Wolf — until the ascent curve landed.** Removing the enemies' combos
+        actually fixed Dire Wolf; the 10% per-room curve then put nine enemies in its place, at
+        floor 2's outer room. Amber Slime, Android Mk I, Dire Wolf, Giant Spider, Green Slime II,
+        Rot Hound, Sken, Specimen A, Yellow Pod.
+      - **Floors 1–2 are still clean**, which is the line that matters most: floor 1 is the curve's
+        baseline and nothing in the 1–2 or 1–3 bands is a wall.
       - The deep floors are meant to need rings and brands. **Floor two is not**, because there is
         nothing the player could have bought by then.
-      - Fix it in `data/enemies.json` rather than in the rules: its deck or its HP.
+      - Three ways out and they are not equivalent: retune those nine in `data/enemies.json`, flatten
+        the ascent curve (MECHANICS.md carries the `[?]` asking whether the curve or the roster
+        should carry the climb), or accept it until more rings exist. **Do not tune until
+        `tools/balance` reports a distribution** — see below.
 - [ ] **`[?]` Nothing measures what Plan is worth.** `tools/balance` deals no cards, so the
       `planning` posture holds a wider hand of nothing and the row reads 2 AP as pure loss.
       - This needs the sim to draw, which is the deckbuilder entry below and its seventh stream.

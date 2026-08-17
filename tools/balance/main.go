@@ -27,6 +27,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
+	"github.com/curiousjc/ascend-duel/internal/entities"
 )
 
 // playerRound is a posture the fighter can take, and what it costs them to hold it. The
@@ -114,12 +115,16 @@ func main() {
 	// round-by-round detail, for one record at a time.
 	fmt.Printf("\n%-24s %-6s %-6s %5s %4s %4s   %s\n",
 		"enemy", "cards", "floors", "life", "AP", "DMG", "beaten by")
+	fmt.Println("(life and DMG are grown by the ascent curve to the first fight of the enemy's" +
+		"\nlowest valid floor - the shallowest slot the tower could put it in, and so the" +
+		"\nkindest version of it a player will ever meet. The record's own numbers are in" +
+		"\ndata/enemies.json.)")
 	fmt.Println(strings.Repeat("-", 96))
 
 	band := 0
 	for _, name := range data.EnemyOrder(recs) {
 		rec := recs[name]
-		enemy := duelistOf(rec)
+		enemy := duelistOf(rec, entities.FirstFightOnFloor(rec.ValidFloors[0]))
 
 		// A blank line each time the lowest valid floor moves, so the table reads as the
 		// tower it describes rather than as ninety-six rows.
@@ -152,7 +157,7 @@ func main() {
 		if !ok {
 			fmt.Printf("\nno enemy record called %q\n", *detail)
 		} else {
-			enemy := duelistOf(rec)
+			enemy := duelistOf(rec, entities.FirstFightOnFloor(rec.ValidFloors[0]))
 			fmt.Printf("\n== %s  %d cards, %d life, %d AP, DMG %d\n",
 				rec.Name, len(decks.EnemyCards(*detail)), enemy.MaxLife, enemy.ActionPoints(), enemy.DMG)
 			fmt.Printf("   deck: %s\n", label(decks.EnemyCards(*detail)))
@@ -170,9 +175,13 @@ func main() {
 		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
 		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
 		"\nNothing does that as of 2026-08-16: no posture beats more than a third of the roster." +
-		"\n\nTwo figures to read next. Forty-four enemies are walls, beaten by no posture at all," +
-		"\nup from twelve before per-enemy decks and doubled HP - the decks cost three of that and" +
-		"\nthe doubling cost twenty-nine. And planning wins rarely, but this tool deals no cards: a" +
+		"\n\nTwo figures to read next. Seventy-four enemies are walls, beaten by no posture at all," +
+		"\nup from twelve before per-enemy decks, doubled HP and the ascent curve. The decks cost" +
+		"\nthree of that, the doubling twenty-nine, enemies losing their combos one, and the 10%" +
+		"\nper-room curve the remaining twenty-nine. Floors 1-2 are untouched by the curve, since" +
+		"\nfloor 1's outer room is its baseline, and everything from floor 3 up is now a wall." +
+		"\n\nRead that against a bare fighter in three rings, which is what this tool measures and" +
+		"\nnot what the deep tower is priced for. And planning wins rarely, but this tool deals no cards: a" +
 		"\nwider hand is a wider hand of nothing here, so that row measures Plan as 2 AP of pure" +
 		"\nloss. Read it as the floor, not the card.")
 }
@@ -272,8 +281,22 @@ func outcome(f, e combat.Duelist, rounds int) string {
 // **There is no conversion left to drift** *(2026-08-16)*. It read `entities.LifePerCon` so life
 // could not be worked out two ways; the record now says HP, so copying three fields is the whole
 // of it.
-func duelistOf(d data.EnemyData) combat.Duelist {
-	du := combat.Duelist{DMG: d.DMG, Actions: d.Actions, MaxLife: d.HP}
+// **SoloAttacks is set here as well as in entities.NewEnemyFrom** *(2026-08-17)*, which is the
+// price of this function existing at all: an enemy that comboed in the sim and not in the game
+// would make every number below a measurement of a fight nobody plays.
+//
+// **`fight` is where in the ascent the enemy is met**, and it applies the same curve the game
+// does — see entities.ScaleToFight. The caller maps a record onto the first fight of its lowest
+// valid floor, which is the shallowest slot the tower could put it in and therefore the kindest
+// version of it the player will ever see. Reporting the record's raw stats instead would describe
+// an opponent that exists nowhere.
+func duelistOf(d data.EnemyData, fight int) combat.Duelist {
+	du := combat.Duelist{
+		DMG:         entities.ScaleToFight(d.DMG, fight),
+		Actions:     d.Actions,
+		MaxLife:     entities.ScaleToFight(d.HP, fight),
+		SoloAttacks: true,
+	}
 	du.CurrentLife = du.MaxLife
 	return du
 }

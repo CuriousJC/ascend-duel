@@ -52,7 +52,7 @@ queued resolves before side B does anything, and within a turn the categories go
 next, so a defense raised at the end of your turn is up when their blow arrives.
 
 **The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
-`KindAction`, then one `KindCombo` names the hand and mix they formed, then a single `KindDamage`
+`KindAction`, then one `KindCombo` names the hand they formed, then a single `KindDamage`
 lands. Five Strikes are not five hits.
 
 **The phase is also one line in the feed, and it is the combo's.** The `KindAction`s still play —
@@ -116,15 +116,16 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 The catalogue is `data/combos.json`, the matcher is `internal/combat/combo.go`, and the design is
 in `MECHANICS.md`; these are what matter to the screen.
 
-- **A combo is a *hand* and a *mix*, and the event carries both.** `Event.Hand` is a `HandID`,
-  `Event.Mix` a `MixID`, and `Event.Multiplier` the combined percent. `comboName` in
-  `combat_panes.go` looks the two up with `HandByID`/`MixByID` and joins them — "Duo Strike Pair"
-  — dropping the mix when it has no colours. **Exactly one of each fires per turn**, so there is
-  no stacking to draw and no ranking to explain.
+- **A combo is a *hand*, and it is a damage multiplier and nothing else** *(2026-08-17)*.
+  `Event.Hand` is a `HandID` and `Event.Multiplier` the percent. `comboName` in `combat_panes.go`
+  looks it up with `HandByID` and prints `Hand.Name` — "Two Pair" — **assembling nothing**. It used
+  to join a hand to a *mix* counting the distinct colours, and to fill a `{card}` template from the
+  concept that formed the hand, so one combo could print as "Duo Strike Flurry"; both axes are gone
+  and a hand carries its whole name. **Exactly one fires per turn**, so there is no stacking to draw
+  and no ranking to explain.
 - **`Event.Hand == combat.HandNone` means a lone attack that formed nothing**, which the pane
-  writes as an ordinary attack sentence rather than as a combo. It still carries a mix, because
-  one card is one colour, and it carries the card it led with in `Action`/`Element` so the pane
-  has something to name.
+  writes as an ordinary attack sentence rather than as a combo. It carries the card it led with in
+  `Action`/`Element` so the pane has something to name.
 - **The event carries the arithmetic, and the engine takes its damage from the same field.**
   `Base` is what the hand's own cards deal, `Swing` is one Strike at this attacker's strength, and
   `Amount` is what they come to under the multiplier — the blow *before* the attacker's weight and
@@ -145,10 +146,10 @@ in `MECHANICS.md`; these are what matter to the screen.
   through the same `drawComboBracket` the table uses, and the Resolution feed carries a line.
   **`Blow.Cards` indexes the turn, not the hand** — `previewHandSlots` translates through
   `handIndexForQueue`, or a Prepare queued first would ring the wrong cards.
-- **A staggered slot is a row that never resolves.** `currentSlot` counts `KindStaggered`
+- **A chilled slot is a row that never resolves.** `currentSlot` counts `KindChilled`
   alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
-  `TestEverySlotIsEitherTakenOrStaggered` pins it. **The pane still draws that row as though it
-  happened**, which is a known gap.
+  `TestEverySlotIsEitherTakenOrChilled` pins it. **The pane still draws that row as though it
+  happened**, which is a known gap. Ice is the only thing that can take a slot.
 
 **Within a turn the order is: prepares one at a time, every attack card announced, the combo, the
 damage, then the defends.** The screen does nothing to arrange this; it replays the log in order,
@@ -159,8 +160,9 @@ the damage**, so a boosted figure never arrives before the reason for it, and `n
 real rows to mark because the whole queue is seated at DUEL! rather than a card at a time. **The
 whole attack hand is raised by the *first* announcement** — `attackSeats` reads them off the turn,
 so `firingSeats` is a list rather than one seat and the beats after it name the same set — and
-`noteCombo` narrows the list to what earned it. And **a hand pays its stagger even if the blow then misses** — the shock roll happens after
-the combo event, because the hand is scored off the queue and the queue was committed at DUEL!.
+`noteCombo` narrows the list to what earned it. And **the hand is announced even if the blow then
+misses** — the shock roll happens after the combo event, because the hand is scored off the queue
+and the queue was committed at DUEL!.
 
 ### What survives any model
 
@@ -168,7 +170,7 @@ the combo event, because the hand is scored off the queue and the queue was comm
   it returns and the Action Flow pane draws what it returns. Neither derives the order
   independently, which is what makes it structurally impossible for the pane to lie to the
   player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
-  **Stagger is the one thing that can remove a slot** rather than reorder it, and the
+  **A chill is the one thing that can remove a slot** rather than reorder it, and the
   every-slot-accounted-for test above is what keeps that honest.
   **This is what made the phase change cheap** — one pure function body plus its tests, and
   both consumers followed untouched. It paid for itself exactly as predicted.
@@ -556,7 +558,7 @@ The rest of this section describes the split as designed, and still applies if F
 Showing the round twice is only worth the space because of that split, and it is what retired
 the open problem of how one pane could be both. **Action Flow never learned to bracket a combo
 across non-adjacent slots and no longer has to**, because Resolution says it in words. Same for
-a slot a stagger deleted: Flow still draws it as a row, Resolution reports it lost.
+a slot a chill deleted: Flow still draws it as a row, Resolution reports it lost.
 
 **The narrow column and the wide one are not interchangeable.** Flow rows are short labels
 (`Strike`, `??? (attack)`) and fit the 15–39% column the Actions pane vacated. Resolution rows
@@ -567,7 +569,7 @@ centrepiece should have anyway.
   Drawing the log verbatim would need a scrollback, and **there is no scroll gesture** — no
   wheel convention, no keyboard, no right click. Merging an action with its outcome is
   presentation of events the engine already decided; it computes nothing.
-- **Combos and staggers get lines of their own**, because they are not something a card did.
+- **Combos and chills get lines of their own**, because they are not something a card did.
   Folding a combo into the line of the card that happened to start it would bury the one thing
   the pane was added to show.
 - **Built only from events playback has reached** (`s.log[:cursor+1]`), so the pane says exactly
@@ -757,8 +759,8 @@ The active one latches darker than the other two.
 - **All three go dead outside `planning()`** — a resolved card is drawn from the hand slot it
   flew out of, so rearranging mid-round would light the wrong card on the table.
 - **`elementRank` and `categoryRank` are written out**, like `familyRank`. `combat.Basic` leads
-  its enum as the zero value and trails on screen: the colours are what a mix is counted on, and
-  the drab cards are the plans.
+  its enum as the zero value and trails on screen: the colours are what the statuses are counted
+  on, and the colourless cards are the plans.
 - **The cards lost width to pay for the column.** `cardBandWidth` is the band less
   `sortColumnReserve`, `handBand` centres on *that* rather than on `PctX(50)` — so the whole row
   nudged left instead of only its right edge coming in — and `handBandLeftPct` came in from 4% to

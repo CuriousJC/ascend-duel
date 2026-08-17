@@ -38,17 +38,17 @@ type want struct {
 
 var wants = []want{
 	{
-		"strike-flurry",
-		"three or more Strikes: a Strike Flurry that can be clicked",
+		"three-strikes",
+		"three or more Strikes: a Three of a Kind that can be clicked",
 		func(c map[combat.ConceptID]int) bool { return c[combat.Strike] >= 3 },
 	},
 	{
-		"strike-barrage",
-		"four Strikes: a Strike Barrage, and a Rainbow with it",
+		"four-strikes",
+		"four Strikes: a Four of a Kind, the top of the ladder",
 		func(c map[combat.ConceptID]int) bool { return c[combat.Strike] >= 4 },
 	},
 	{
-		"smash-flurry",
+		"three-smashes",
 		"three or more Smashes: 9 AP, unaffordable, but the cards are there",
 		func(c map[combat.ConceptID]int) bool { return c[combat.Smash] >= 3 },
 	},

@@ -43,12 +43,8 @@ func damageDealtBy(events []Event, by Side) int {
 	return total
 }
 
-// staggeredActions returns the actions one side lost to a stagger.
-// handByKey finds a catalogue entry by its key rather than by the name it prints.
-//
-// **Hands stopped having per-card names on 2026-08-16.** One entry covers every concept in the
-// game and `{card}` is filled in at match time, so "Strike Pair" is something a *formed* hand is
-// called rather than something the catalogue holds.
+// handByKey finds a catalogue entry by its key rather than by the name it prints, so a rung
+// renamed does not silently stop being asserted about.
 func handByKey(key string) (Hand, bool) {
 	id, ok := HandIDForKey(key)
 	if !ok {
@@ -57,10 +53,11 @@ func handByKey(key string) (Hand, bool) {
 	return HandByID(id)
 }
 
-func staggeredActions(events []Event, by Side) []ConceptID {
+// chilledActions returns the actions one side lost to a chill.
+func chilledActions(events []Event, by Side) []ConceptID {
 	var out []ConceptID
 	for _, e := range events {
-		if e.Kind == KindStaggered && e.Side == by {
+		if e.Kind == KindChilled && e.Side == by {
 			out = append(out, e.Action)
 		}
 	}
@@ -155,24 +152,33 @@ func TestDamageIsTheHandsCardsPlusDMGTimesTheMultiplier(t *testing.T) {
 	}
 }
 
-// **The multiplier is additive across the two axes**, not multiplicative — a 1.5x pair that is
-// also a 2x duo is 3.5x, not 3x. That is what keeps the top of the ladder at a few hundred damage
-// rather than several thousand.
-func TestTheHandAndMixMultipliersAdd(t *testing.T) {
+// **The hand is the whole multiplier** *(2026-08-17)*. A second axis counted the distinct colours
+// in the formed hand and added its own multiplier on top, so a coloured pair paid more than a plain
+// one. Colour buys statuses now and nothing else, and a pair of any two colours is worth exactly
+// what the catalogue says a pair is worth.
+func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	pair, _ := handByKey("pair")
-	duo, _ := MixByName("Duo")
 
-	events, _, _ := resolve(a, b, []Card{Of(Strike, Fire), Of(Strike, Ice)}, nil, 1)
+	for _, tc := range []struct {
+		what string
+		turn []Card
+	}{
+		{"two basics", PlainCards(Strike, Strike)},
+		{"one colour", []Card{Of(Strike, Ice), Of(Strike, Ice)}},
+		{"two colours", []Card{Of(Strike, Fire), Of(Strike, Ice)}},
+	} {
+		events, _, _ := resolve(a, b, tc.turn, nil, 1)
 
-	e, ok := comboEventFor(events, SideA)
-	if !ok {
-		t.Fatal("no attack phase event")
-	}
-	if want := pair.Multiplier + duo.Multiplier; e.Multiplier != want {
-		t.Errorf("a duo pair reports x%d, want x%d (%d + %d)",
-			e.Multiplier, want, pair.Multiplier, duo.Multiplier)
+		e, ok := comboEventFor(events, SideA)
+		if !ok {
+			t.Fatalf("%s: no attack phase event", tc.what)
+		}
+		if e.Multiplier != pair.Multiplier {
+			t.Errorf("a pair of %s reports x%d, want the pair's own x%d",
+				tc.what, e.Multiplier, pair.Multiplier)
+		}
 	}
 }
 
@@ -188,9 +194,9 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 		want string
 	}{
 		{2, "pair"},
-		{3, "flurry"},
-		{4, "barrage"},
-		{5, "barrage"},
+		{3, "three-of-a-kind"},
+		{4, "four-of-a-kind"},
+		{5, "four-of-a-kind"},
 	} {
 		turn := make([]Card, tc.n)
 		for i := range turn {
@@ -214,7 +220,7 @@ func TestTheTwoConceptHands(t *testing.T) {
 
 	twoPair, _ := handByKey("two-pair")
 	fullHouse, _ := handByKey("full-house")
-	barrage, _ := handByKey("barrage")
+	barrage, _ := handByKey("four-of-a-kind")
 
 	for _, tc := range []struct {
 		turn []Card
@@ -237,7 +243,7 @@ func TestTheTwoConceptHands(t *testing.T) {
 func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	flurry, _ := handByKey("flurry")
+	flurry, _ := handByKey("three-of-a-kind")
 	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 1 || got[0] != flurry.ID {
@@ -301,65 +307,65 @@ func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
 	}
 }
 
-// --- element mixes ------------------------------------------------------------------------
+// --- the hand's colours ---------------------------------------------------------------------
 
-// The mix is the count of *distinct non-basic* colours in the hand that formed, and basic never
-// counts in either direction.
-func TestTheMixCountsDistinctColoursAndIgnoresBasic(t *testing.T) {
-	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
-
+// **The colours in the formed hand are what land, and basic is not one.** This used to be counted
+// into a "mix" that paid its own multiplier; what survives is the list, which decides the statuses
+// and nothing else.
+func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 	for _, tc := range []struct {
 		what string
 		turn []Card
-		want string
+		want []Element
 	}{
-		{"two basics", PlainCards(Strike, Strike), "Drab"},
-		{"a basic and an ice", []Card{Plain(Strike), Of(Strike, Ice)}, "Mono"},
-		{"two ice", []Card{Of(Strike, Ice), Of(Strike, Ice)}, "Mono"},
-		{"ice and fire", []Card{Of(Strike, Ice), Of(Strike, Fire)}, "Duo"},
-		{"ice, fire and a basic", []Card{Of(Strike, Ice), Of(Strike, Fire), Plain(Strike)}, "Duo"},
-		{"three colours", []Card{Of(Strike, Ice), Of(Strike, Fire), Of(Strike, Earth)}, "Trio"},
+		{"two basics", PlainCards(Strike, Strike), nil},
+		{"a basic and an ice", []Card{Plain(Strike), Of(Strike, Ice)}, []Element{Ice}},
+		{"two ice", []Card{Of(Strike, Ice), Of(Strike, Ice)}, []Element{Ice}},
+		{"ice and fire", []Card{Of(Strike, Ice), Of(Strike, Fire)}, []Element{Ice, Fire}},
+		{"ice, fire and a basic", []Card{Of(Strike, Ice), Of(Strike, Fire), Plain(Strike)},
+			[]Element{Ice, Fire}},
 		{"four colours", []Card{
 			Of(Strike, Ice), Of(Strike, Fire), Of(Strike, Earth), Of(Strike, Lightning),
-		}, "Rainbow"},
+		}, []Element{Ice, Fire, Earth, Lightning}},
 	} {
-		want, ok := MixByName(tc.want)
-		if !ok {
-			t.Fatalf("the catalogue has no %q", tc.want)
-		}
-		events, _, _ := resolve(a, b, tc.turn, nil, 1)
-		e, found := comboEventFor(events, SideA)
-		if !found {
-			t.Fatalf("%s: no attack phase event", tc.what)
-		}
-		if e.Mix != want.ID {
-			got, _ := MixByID(e.Mix)
-			t.Errorf("%s read as %s, want %s", tc.what, got.Name, tc.want)
+		a, b := ringed(duelist(10, 4, 10000)), duelist(10, 4, 10000)
+		_, _, bAfter := resolve(a, b, tc.turn, nil, 1)
+
+		for _, e := range AllElements {
+			if e == Basic {
+				continue
+			}
+			wanted := false
+			for _, w := range tc.want {
+				if w == e {
+					wanted = true
+				}
+			}
+			if got := bAfter.Statuses[e].Active(); got != wanted {
+				t.Errorf("%s: %v active is %v, want %v", tc.what, e, got, wanted)
+			}
 		}
 	}
 }
 
-// **Only the cards in the hand decide the mix.** An off-colour card that contributed to no hand
-// cannot recolour the one that formed.
+// **Only the cards in the hand carry colour.** An off-colour card that contributed to no hand
+// cannot put its status on anybody.
 func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
-	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
+	a, b := ringed(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, []Card{Of(Strike, Ice), Of(Jab, Fire), Of(Strike, Ice)}, nil, 1)
+	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Of(Jab, Fire), Of(Strike, Ice)}, nil, 1)
 
-	mono, _ := MixByName("Mono")
-	e, ok := comboEventFor(events, SideA)
-	if !ok {
-		t.Fatal("no attack phase event")
+	if !bAfter.Statuses[Ice].Active() {
+		t.Error("the ice pair is the hand and should have chilled")
 	}
-	if e.Mix != mono.ID {
-		got, _ := MixByID(e.Mix)
-		t.Errorf("the pair read as %s, want Mono — the fire Jab is in no hand", got.Name)
+	if bAfter.Statuses[Fire].Active() {
+		t.Error("the fire Jab is in no hand, so it should have burned nobody")
 	}
 }
 
-// **One status per colour in the hand**, so mono lands one and a rainbow lands four — for a
+// **One status per colour in the hand**, so one colour lands one and four land four — for a
 // duelist wearing all four rings, which is what a status needs since 2026-08-16.
-func TestTheMixLandsOneStatusPerColour(t *testing.T) {
+func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
 	a, b := ringed(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 
 	events, _, bAfter := resolve(a, b, []Card{
@@ -376,13 +382,13 @@ func TestTheMixLandsOneStatusPerColour(t *testing.T) {
 	}
 }
 
-func TestADrabHandLandsNoStatus(t *testing.T) {
+func TestAColourlessHandLandsNoStatus(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
 	if n := kindCount(events, KindStatus); n != 0 {
-		t.Errorf("a drab pair landed %d statuses, want 0 — basic is not a colour", n)
+		t.Errorf("a colourless pair landed %d statuses, want 0 — basic is not a colour", n)
 	}
 }
 
@@ -401,76 +407,47 @@ func TestALoneAttackStillAppliesItsElement(t *testing.T) {
 	}
 }
 
-// --- stagger ------------------------------------------------------------------------------
+// --- a chilled turn -------------------------------------------------------------------------
 
-func TestAFlurryCostsTheOpponentTheirNextAction(t *testing.T) {
-	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
-
-	events, _, _ := resolve(a, b,
-		PlainCards(Strike, Strike, Strike),
-		PlainCards(Jab, Strike), 1)
-
-	if lost := staggeredActions(events, SideB); len(lost) != 1 || lost[0] != Jab {
-		t.Fatalf("B should lose exactly its first action, got %v", lost)
-	}
-}
-
-// **StaggerAll is a reward kind with nothing in the shipped catalogue using it** *(2026-08-15)*.
-// No shipped hand uses it; the capability is kept because it is one field on Effect and a combo
-// wanting it is a JSON entry away.
-//
-// So it is driven through an injected catalogue rather than through a card. That is what
-// resolveRound's hands and mixes parameters are for, and it is a better test of the *rule* anyway:
-// what is asserted is that StaggerAll empties a turn, not that one particular combo does.
-func TestStaggerAllTakesTheOpponentsWholeTurn(t *testing.T) {
-	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
-
-	hands := []Hand{
-		{ID: 1, Key: "high-card", Name: "High Card", Groups: []int{1}, Scope: []Category{CategoryAttack}},
-		{ID: 2, Key: "wipe", Name: "Wipe", Groups: []int{5}, Scope: []Category{CategoryAttack},
-			Multiplier: 100, Effect: Effect{Stagger: StaggerAll}},
-	}
-	mixes := []Mix{{ID: 1, Key: "drab", Name: "Drab", Colours: 0}}
-
-	events, _, _ := resolveRound(a, b,
-		PlainCards(Jab, Jab, Jab, Jab, Jab),
-		PlainCards(Strike, Strike, Defend), 1, hands, mixes, nil)
-
-	if lost := staggeredActions(events, SideB); len(lost) != 3 {
-		t.Fatalf("StaggerAll should take all three of B's actions, got %v", lost)
-	}
-	if took := sideActions(events, SideB); len(took) != 0 {
-		t.Fatalf("B should take no action at all, got %v", took)
-	}
-}
-
-// A hand scored off cards a stagger deleted would let a staggered duelist stagger back with a
-// turn it never took. Two Strikes survive, so a pair forms and emphatically not a barrage.
-func TestStaggeredCardsCannotFormAHand(t *testing.T) {
-	a := duelist(10, 4, 20000)
+// **A hand is scored off what survives the chill, not off the queue.** Scoring the queue would let
+// a chilled duelist swing with a turn it never took. Four Strikes survive out of five, so a four of
+// a kind forms rather than whatever five would have been.
+func TestChilledCardsCannotFormAHand(t *testing.T) {
+	a := wearing(duelist(10, 4, 20000), Ice)
 	b := duelist(10, 4, 20000)
-	b.Staggered = 3
 
-	events, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike, Strike, Strike, Strike), 1)
+	// A's ice Jab chills B before B's own turn is read.
+	events, _, _ := resolve(a, b,
+		[]Card{Of(Jab, Ice)},
+		PlainCards(Strike, Strike, Strike, Strike, Strike), 1)
 
-	pair, _ := handByKey("pair")
-	if got := handsFormed(events, SideB); len(got) != 1 || got[0] != pair.ID {
-		t.Fatalf("two surviving Strikes should form a pair, got %v", got)
+	if lost := chilledActions(events, SideB); len(lost) != chillCardsPerHit {
+		t.Fatalf("B should lose %d card to the chill, got %v", chillCardsPerHit, lost)
+	}
+
+	fourOfAKind, _ := handByKey("four-of-a-kind")
+	if got := handsFormed(events, SideB); len(got) != 1 || got[0] != fourOfAKind.ID {
+		t.Fatalf("four surviving Strikes should form a four of a kind, got %v", got)
 	}
 }
 
-// Side B acts last, so a stagger B earns has no turn left to bite in and carries to the round
-// after. That is the one asymmetry phases impose.
-func TestSideBsStaggerLandsInTheFollowingRound(t *testing.T) {
-	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
+// Side B acts last, so ice B lands finds A has already acted, and bites in the round after. That is
+// the one asymmetry phases impose, and the status is what carries it across the boundary.
+func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
+	a, b := duelist(10, 4, 20000), wearing(duelist(10, 4, 20000), Ice)
 
-	events, aAfter, _ := resolve(a, b, PlainCards(Prepare), PlainCards(Strike, Strike, Strike), 1)
+	r1, a1, b1 := resolve(a, b, PlainCards(Prepare), []Card{Of(Strike, Ice)}, 1)
 
-	if lost := staggeredActions(events, SideA); len(lost) != 0 {
+	if lost := chilledActions(r1, SideA); len(lost) != 0 {
 		t.Fatalf("A already acted, so nothing can be taken from it this round, got %v", lost)
 	}
-	if aAfter.Staggered != 1 {
-		t.Fatalf("the stagger should be held on A for next round, got %d", aAfter.Staggered)
+	if !a1.Statuses[Ice].Active() {
+		t.Fatal("A should be carrying the chill into the next round")
+	}
+
+	r2, _, _ := resolve(a1, b1, PlainCards(Strike, Strike), nil, 2)
+	if lost := chilledActions(r2, SideA); len(lost) != chillCardsPerHit {
+		t.Fatalf("A should lose %d card in the round after, got %v", chillCardsPerHit, lost)
 	}
 }
 
@@ -539,12 +516,12 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 	}
 }
 
-// TestEverySlotIsEitherTakenOrStaggered is the invariant the screen's highlight rests on:
+// TestEverySlotIsEitherTakenOrChilled is the invariant the screen's highlight rests on:
 // CombatScene.currentSlot counts one beat per slot, taken or lost, and would light the wrong card
 // for the rest of the round if a slot went unaccounted for.
-func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
-	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
-	aPlan := PlainCards(Strike, Strike, Strike)
+func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
+	a, b := wearing(duelist(10, 4, 20000), Ice), duelist(10, 4, 20000)
+	aPlan := []Card{Of(Strike, Ice), Of(Strike, Ice), Of(Strike, Ice)}
 	bPlan := PlainCards(Prepare, Jab, Strike, Defend)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
@@ -552,7 +529,7 @@ func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 
 	var beats []ConceptID
 	for _, e := range events {
-		if e.Kind == KindAction || e.Kind == KindStaggered {
+		if e.Kind == KindAction || e.Kind == KindChilled {
 			beats = append(beats, e.Action)
 		}
 	}
@@ -566,7 +543,7 @@ func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 		}
 	}
 
-	if lost := staggeredActions(events, SideB); len(lost) == 0 {
-		t.Fatal("this fixture is meant to stagger side B")
+	if lost := chilledActions(events, SideB); len(lost) == 0 {
+		t.Fatal("this fixture is meant to chill side B")
 	}
 }

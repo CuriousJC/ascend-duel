@@ -69,14 +69,14 @@ func main() {
 		// against.
 		{"all-out", nil, combat.PlainCards(combat.Smash, combat.Strike)},
 
-		// 6 AP into a pair, which is the whole point of the rework: three Strikes are 6 AP and a
-		// Strike Flurry, where all-out spends the same budget on two bigger cards and forms
+		// 6 AP into a built hand, which is the whole point of the rework: three Strikes are 6 AP
+		// and a Three of a Kind, where all-out spends the same budget on two bigger cards and forms
 		// nothing. If all-out ever beats this, the multipliers are too low to be worth building
 		// toward.
-		{"pairing", nil, combat.PlainCards(combat.Strike, combat.Strike, combat.Strike)},
-		// The cheapest hand in the game: three Bashes are 3 AP for a Bash Flurry, leaving a
+		{"trips", nil, combat.PlainCards(combat.Strike, combat.Strike, combat.Strike)},
+		// The cheapest hand in the game: three Bashes are 3 AP for a Three of a Kind, leaving a
 		// Strike. Small cards multiplied against big cards unmultiplied.
-		{"cheap-flurry", nil, combat.PlainCards(combat.Bash, combat.Bash, combat.Bash, combat.Strike)},
+		{"cheap-trips", nil, combat.PlainCards(combat.Bash, combat.Bash, combat.Bash, combat.Strike)},
 
 		// Defend is 3, leaving a Thrust and a Jab. **This is the posture to read first**: half a
 		// round bought half a blow, and if that wins duels the price is wrong.
@@ -176,11 +176,13 @@ func main() {
 		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
 		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
 		"\nNothing does that as of 2026-08-16: no posture beats more than a third of the roster." +
-		"\n\nTwo figures to read next. Seventy-four enemies are walls, beaten by no posture at all," +
+		"\n\nTwo figures to read next. Eighty-four enemies are walls, beaten by no posture at all," +
 		"\nup from twelve before per-enemy decks, doubled HP and the ascent curve. The decks cost" +
-		"\nthree of that, the doubling twenty-nine, enemies losing their combos one, and the 10%" +
-		"\nper-room curve the remaining twenty-nine. Floors 1-2 are untouched by the curve, since" +
-		"\nfloor 1's outer room is its baseline, and everything from floor 3 up is now a wall." +
+		"\nthree of that, the doubling twenty-nine, enemies losing their combos one, the 10%" +
+		"\nper-room curve twenty-nine, and combos ceasing to take an action off the opponent the" +
+		"\nlast ten — every one of those ten a hand posture, since nothing else was earning a" +
+		"\nstagger. Floors 1-2 are untouched by the curve, since floor 1's outer room is its" +
+		"\nbaseline, and everything from floor 3 up is now a wall." +
 		"\n\nRead that against a bare fighter in three rings, which is what this tool measures and" +
 		"\nnot what the deep tower is priced for. And planning wins rarely, but this tool deals no cards: a" +
 		"\nwider hand is a wider hand of nothing here, so that row measures Plan as 2 AP of pure" +

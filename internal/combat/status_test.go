@@ -277,18 +277,18 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 
 func TestIceTakesACardOffTheFrontOfTheTurn(t *testing.T) {
 	// **Ice takes a card, not a point** *(2026-08-16)*. It reuses the stagger machinery, so what a
-	// chilled duelist loses is announced as KindStaggered — the front of a turn is its attacks, so
+	// chilled duelist loses is announced as KindChilled — the front of a turn is its attacks, so
 	// what goes is the blow.
 	a, b := wearing(duelist(10, 5, 500), Ice), duelist(10, 5, 500)
 
 	plain, _, _ := resolve(a, b, nil, []Card{Plain(Strike), Plain(Strike)}, 1)
-	if n := countKind(plain, KindStaggered); n != 0 {
+	if n := countKind(plain, KindChilled); n != 0 {
 		t.Fatalf("an unchilled turn lost %d cards, want 0", n)
 	}
 
 	events, _, _ := resolve(a, b, []Card{Of(Jab, Ice)}, []Card{Plain(Strike), Plain(Strike)}, 1)
 
-	if got, want := countKind(events, KindStaggered), chillCardsPerHit; got != want {
+	if got, want := countKind(events, KindChilled), chillCardsPerHit; got != want {
 		t.Errorf("a chilled turn lost %d cards, want %d", got, want)
 	}
 }
@@ -301,34 +301,34 @@ func TestAChillBitesEveryTurnItOutlives(t *testing.T) {
 	bTurn := []Card{Plain(Strike), Plain(Strike)}
 
 	r1, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, bTurn, 1)
-	if n := countKind(r1, KindStaggered); n != chillCardsPerHit {
+	if n := countKind(r1, KindChilled); n != chillCardsPerHit {
 		t.Fatalf("round 1 lost %d cards to the chill, want %d", n, chillCardsPerHit)
 	}
 
 	r2, a2, b2 := resolve(a1, b1, nil, bTurn, 2)
-	if n := countKind(r2, KindStaggered); n != chillCardsPerHit {
+	if n := countKind(r2, KindChilled); n != chillCardsPerHit {
 		t.Errorf("round 2 lost %d cards to the chill, want %d — a chill bites while it lasts",
 			n, chillCardsPerHit)
 	}
 
 	r3, _, _ := resolve(a2, b2, nil, bTurn, 3)
-	if n := countKind(r3, KindStaggered); n != 0 {
+	if n := countKind(r3, KindChilled); n != 0 {
 		t.Errorf("round 3 lost %d cards, want 0 — the chill has expired", n)
 	}
 }
 
-func TestAChillAndAStaggerAddUp(t *testing.T) {
-	// They are the same machinery pointed at the same turn, so they compose rather than one
-	// overwriting the other.
+// **A second hit resets the clock rather than deepening the chill** *(2026-08-17)*. Nothing stacks,
+// so a duelist hit twice still loses one card a turn — for longer.
+func TestASecondIceHitDoesNotDeepenTheChill(t *testing.T) {
 	a, b := wearing(duelist(10, 5, 500), Ice), duelist(10, 5, 500)
+	bTurn := []Card{Plain(Strike), Plain(Strike), Plain(Strike)}
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, nil, 1)
-	b1.Staggered = 1
 
-	events, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike), Plain(Strike), Plain(Strike)}, 2)
+	events, _, _ := resolve(a1, b1, []Card{Of(Jab, Ice)}, bTurn, 2)
 
-	if got, want := countKind(events, KindStaggered), 1+chillCardsPerHit; got != want {
-		t.Errorf("a chilled and staggered turn lost %d cards, want %d", got, want)
+	if got, want := countKind(events, KindChilled), chillCardsPerHit; got != want {
+		t.Errorf("a twice-chilled turn lost %d cards, want %d", got, want)
 	}
 }
 

@@ -146,7 +146,7 @@ func TestAShockedSoloAttackerMissesWithEverything(t *testing.T) {
 
 func TestEverySoloAttackAnnouncesItself(t *testing.T) {
 	// One beat per slot is what playback counts to know which card is lit — see
-	// TestEverySlotIsEitherTakenOrStaggered, which the comboing phase is held to for the same
+	// TestEverySlotIsEitherTakenOrChilled, which the comboing phase is held to for the same
 	// reason. It has to hold when the blows are separate too.
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)

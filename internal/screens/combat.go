@@ -513,7 +513,6 @@ func resetCombatState(d combat.Duelist) combat.Duelist {
 	d.GatheredAP = 0
 	d.BonusDraw = 0
 	d.DrewCards = 0
-	d.Staggered = 0
 	d.Statuses = [combat.ElementCount]combat.Status{}
 	return d
 }
@@ -745,8 +744,8 @@ func eventLabel(e combat.Event) string {
 	case combat.KindCombo:
 		return fmt.Sprintf("attack      %v forms %s (x%d.%02d)",
 			e.Side, comboName(e), e.Multiplier/100, e.Multiplier%100)
-	case combat.KindStaggered:
-		return fmt.Sprintf("staggered   %v loses its %v", e.Side, e.Action)
+	case combat.KindChilled:
+		return fmt.Sprintf("chilled     %v loses its %v", e.Side, e.Action)
 	case combat.KindDefeated:
 		return fmt.Sprintf("defeated    %v falls to %v", e.Target, e.Side)
 	default:
@@ -1028,13 +1027,13 @@ func (s *CombatScene) currentSlot() (int, bool) {
 		return 0, false
 	}
 
-	// **A staggered action counts as a slot even though it never happened.** The pane draws
-	// every slot ResolutionOrder produced, including ones a stagger deleted, so counting only
+	// **A chilled action counts as a slot even though it never happened.** The pane draws
+	// every slot ResolutionOrder produced, including ones a chill deleted, so counting only
 	// the actions that resolved would leave the highlight one row short for the rest of the
 	// round and light the wrong card. One beat per slot, whether it was taken or lost.
 	played := -1
 	for _, e := range s.log[:s.cursor+1] {
-		if e.Kind == combat.KindAction || e.Kind == combat.KindStaggered {
+		if e.Kind == combat.KindAction || e.Kind == combat.KindChilled {
 			played++
 		}
 	}

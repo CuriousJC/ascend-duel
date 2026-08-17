@@ -38,20 +38,20 @@ type namedSeed struct {
 
 var seedCatalog = []namedSeed{
 	// 1xThrust 1xLunge 1xCut 1xCleave 1xBash 3xStrike. Three Strikes is 6 AP, exactly the opening
-	// budget, so the Flurry is clickable on round one with nothing set up first — and being three
-	// colours it is a Trio as well, which is what the two combo axes look like when they arrive
-	// together.
-	{"strike-flurry", 56, "three or more Strikes: a Strike Flurry that can be clicked"},
+	// budget, so the Three of a Kind is clickable on round one with nothing set up first — and being
+	// three colours it lands three statuses with it, which is what the hand and its colours look
+	// like when they arrive together.
+	{"three-strikes", 56, "three or more Strikes: a Three of a Kind that can be clicked"},
 
 	// 1xThrust 1xCut 1xSlash 1xBash 4xStrike. **The biggest hand the deck can deal**: four copies is
-	// every Strike there is, so this is the top of the hand ladder. Eight AP, so it needs a banked
-	// round, and it is necessarily a Rainbow — four copies means four colours.
-	{"strike-barrage", 904, "four Strikes: a Strike Barrage, and a Rainbow with it"},
+	// every Strike there is, so this is the top of the ladder. Eight AP, so it needs a banked round,
+	// and it necessarily shows all four colours — four copies of a concept are four elements.
+	{"four-strikes", 904, "four Strikes: a Four of a Kind, the top of the ladder"},
 
 	// 1xLunge 2xCleave 3xSmash 1xPrepare 1xPlan. The same shape one family over and at the top of
 	// the ladder: three Smashes is 9 AP and cannot be paid for out of an opening budget, so this is
 	// the hand that shows a combo you can see and cannot afford.
-	{"smash-flurry", 21, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
+	{"three-smashes", 21, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
 
 	// 1xJab 1xThrust 2xSlash 2xStrike 2xDefend. Both verbs in one round, which is what the two
 	// categories have to be told apart by: a plan card and an attack, so a blue "plans" and a red

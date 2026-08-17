@@ -35,7 +35,7 @@ import (
 // — and `ResolveRound` neither sees it nor is called by it.
 //
 // **It picks its own opening hand by name**, via the seed catalogue in seeds.go. That is what
-// lets round one be *clicked* rather than forced: `strike-flurry` guarantees three Strikes in
+// lets round one be *clicked* rather than forced: `three-strikes` guarantees three Strikes in
 // hand, so the demo selects them through `toggle` exactly as a player would and the combo
 // fires off a real selection. Before named seeds the deal held no three-of-a-kind and the only
 // way to see a combo was to write the queue directly, which tested the pane but not the path
@@ -64,8 +64,8 @@ import (
 const demoScriptedRounds = 1
 
 // demoSeedName is the opening hand the demo asks for, overriding whatever a plain launch uses.
-// `strike-flurry` puts three Strikes in hand, which is what round one clicks.
-const demoSeedName = "strike-flurry"
+// `three-strikes` puts three Strikes in hand, which is what round one clicks.
+const demoSeedName = "three-strikes"
 
 // demoClickRun is the card round one selects three of. It has to be a card the chosen seed
 // actually deals three of, or the click phase quietly selects fewer and no combo forms —

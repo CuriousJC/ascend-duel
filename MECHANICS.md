@@ -188,10 +188,10 @@ four copies — because a plan has no elemental behaviour to carry.
 when the deck was 30. What answers draw variance is the Discard button and now Plan.
 
 **Four copies of a concept is the ceiling, and it shapes the combo table.** No attack concept
-exists more than four times, so a **Barrage is necessarily a Rainbow** — four copies of a concept
-is four different colours — and the top rung of the hand ladder is four rather than five. The Drab
-mix is reachable only by the opponent, whose deck is twelve copies each of two drab cards. See
-*Combos* for what this does to the two axes.
+exists more than four times, so the top rung of the ladder is Four of a Kind rather than five of a
+kind, and **a Four of a Kind necessarily shows all four colours** — four copies of a concept are
+four different elements, so the biggest hand in the deck is also the one that lands every status
+the player is ringed for.
 
 **The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the family and
 category each declares, the elements each ships in, and how many copies. `startingDeck` is built
@@ -308,8 +308,8 @@ took the blow** — **and only if the attacker is wearing that element's ring**:
 | **earth** | weight | the victim deals 25% less damage |
 
 **Statuses are off by default, and the ring is what switches one on** *(2026-08-16)*. An
-unringed fire attack is a plain attack with a red border: it still counts toward the mix
-multiplier and it leaves nothing behind. `combat.Duelist.Rings` is the flag array, indexed by
+unringed fire attack is a plain attack with a red border: it forms hands exactly as any other
+card does and it leaves nothing behind. `combat.Duelist.Rings` is the flag array, indexed by
 element exactly as `Statuses` is, and `resolveAttackPhase` reads it off the **attacker** before
 applying anything.
 
@@ -376,22 +376,24 @@ was moving.
 
 #### The trigger: the colours in the hand that formed
 
-**Decided, and rewritten by one blow per turn.** Statuses are applied by the **mix** — one status
-per distinct non-basic colour among the cards that formed the attack. A mono hand lands one, a
-rainbow lands four, and a drab hand lands none. A plan card carries its element for the
-mix and for the ring discount and applies nothing itself; the alternative — every card applying
-its status — would make a 1-AP Prepare as good a delivery as a 1-AP Jab and turn the plan phase
-into the status engine. (The plans are all basic today, so this is a rule waiting for a card
-rather than one currently biting.)
+**Decided, and rewritten by one blow per turn.** One status lands **per distinct non-basic colour
+among the cards that formed the attack**. One colour lands one, four land four, and an all-basic
+hand lands none. A plan card carries its element for the ring discount and applies nothing itself;
+the alternative — every card applying its status — would make a 1-AP Prepare as good a delivery as
+a 1-AP Jab and turn the plan phase into the status engine. (The plans are all basic today, so this
+is a rule waiting for a card rather than one currently biting.)
+
+**This is the whole of what colour does to a blow** *(2026-08-17)*. Distinct colours used to pay a
+second damage multiplier on top of the hand's — the *mix* axis — and that is gone: an element earns
+its keep by what it leaves on the victim, not by hitting harder.
 
 Three consequences, all of them changes from the per-card version:
 
-- **A colour is counted once however many cards carry it.** Two ice Strikes and an ice Jab are
-  mono ice and land one chill, where three separate ice hits used to land three. Status volume
-  moved from "how many coloured cards" to "how many *different* coloured cards", which is the
-  same axis the mix multiplier already pays for.
-- **Cards outside the hand carry no colour at all.** `Strike, Jab, Strike` in fire, ice, fire is
-  a fire Strike Pair — mono, one burn — and the ice Jab contributes neither damage nor a chill.
+- **A colour is counted once however many cards carry it.** Two ice Strikes and an ice Jab land
+  one chill, where three separate ice hits used to land three. Status volume moved from "how many
+  coloured cards" to "how many *different* coloured cards".
+- **Cards outside the hand carry no colour at all.** `Strike, Jab, Strike` in fire, ice, fire is a
+  fire Pair — one burn — and the ice Jab contributes neither damage nor a chill.
 - **The status lands because the hand formed, not because the blow hurt.** A hand halved by a
   Defend still connected, and making the status conditional on the final figure would let a
   defensive card silently un-apply an element the attacker had already paid for.
@@ -429,7 +431,7 @@ would be a two-round status that reliably lasted one attack — a duration doing
 
 **This reverses the deterministic version taken two days earlier**, and one blow per turn is
 what forced it. A certain miss used to delete one attack out of several; now it deletes the
-whole turn, so a 1 AP lightning Jab could erase an 8 AP Barrage outright. The alternatives
+whole turn, so a 1 AP lightning Jab could erase an 8 AP Four of a Kind outright. The alternatives
 considered were breaking the hand or cutting the multiplier; a roll was chosen because lightning
 should feel unreliable, which is a design reason rather than a balance one.
 
@@ -455,17 +457,24 @@ stacks; with stacking gone the ceiling is the number itself.
 
 - **Ice takes a card, not a point** *(2026-08-16)*. It cut the budget by 1 AP until then, which is
   the quietest status the game could have had: a duelist a point short queued a cheaper card and
-  lost nothing they could name. It now reuses the **stagger** machinery — a chilled duelist loses
-  a card off the front of its turn, and the front of a turn is its attacks — so what ice does is a
-  thing already in the game's vocabulary rather than a second mechanic. What that cost: an AP cut
-  was felt while the player was still choosing, and a card taken off a committed turn is felt
-  after they have.
-  - **A chill and a stagger add up**, and the difference between them is that a stagger is spent
-    when it bites while a chill bites on every turn it outlives.
-  - **The consequence in the feed:** a card lost to ice is announced as `KindStaggered`, so the
-    Resolution pane says "staggered" for something the ring calls a chill. One event kind is what
-    keeps playback's one-beat-per-slot invariant true without a second thing to remember. It is a
-    small lie and it is knowingly taken.
+  lost nothing they could name. A chilled duelist loses a card off the front of its turn instead,
+  and the front of a turn is its attacks — so ice costs a swing. What that cost: an AP cut was
+  felt while the player was still choosing, and a card taken off a committed turn is felt after
+  they have.
+  - **It is the only thing in the game that takes an action** *(2026-08-17)*. Combos could until
+    then, and the machinery was shared; combos buy damage alone now, so the chill is read straight
+    off the status and `Duelist` carries no separate counter. The action points are **not**
+    refunded: a chill is tempo *and* economy.
+  - **It bites on every turn it outlives**, rather than being spent when it bites — the status
+    counting down is what ends it, and a second hit resets the clock rather than deepening it.
+  - **The asymmetry phases impose is carried by the status.** Side A acts first, so ice A lands
+    takes a card from B in the same round; ice B lands finds A has already acted and bites in the
+    round after.
+  - **A chill deletes cards before the hand is matched**, so a chilled duelist cannot swing with a
+    turn it never took. That ordering is why the hand is worked out *inside* a turn rather than at
+    the top of the round.
+  - **In the feed** it is announced as `KindChilled`, one event per card lost, which is what keeps
+    playback's one-beat-per-slot invariant true.
 - **Fire scales with the attacker.** A burn ticks for **10% of the DMG of whoever lit it**, read
   once and frozen onto the victim — a duelist whose DMG changes later does not retroactively burn
   harder. It floors at 1, the same rule Jab's damage follows, so a duelist under 10 DMG lights a
@@ -499,22 +508,22 @@ sheet is worse than none. It is deleted rather than annotated.
 What has to be re-measured before anything is tuned, and roughly what to expect:
 
 - **Damage is much larger and enemy HP has not moved.** Two Strikes at DMG 10 is `20 + 10×1.5`
-  = 35 where it used to be 20; a rainbow Barrage is `10×15 = 150` on top of its cards. Retuning
+  = 35 where it used to be 20; a Four of a Kind is `10×5 = 50` on top of its cards. Retuning
   enemy life totals is the owner's call and is expected, not a bug report.
-- **And the postures changed again on 2026-08-15.** The deck rework replaced every row: `pairing`
-  and `cheap-flurry` are what the tool now reads a build against, and the old defend-column rows
+- **And the postures changed again on 2026-08-15.** The deck rework replaced every row: `trips`
+  and `cheap-trips` are what the tool now reads a build against, and the old defend-column rows
   have no cards behind them. `defending` wins 16 of 96 and `planning` 1, both at the shallow end.
 - **Shock's `[?]` is reopened, not answered.** It used to beat the entire roster by cancelling
   attacks for free; a 25%-per-stack roll capped at 75% is a different card and its price is
   unknown. `shockMissPct` and `shockMissCapPct` are the levers now, not `shockPerHit`.
 - **The tool is a distribution now.** One fixed-seed sample per matchup is reproducible but is
   one draw; a posture that wins 51% of the time and one that wins 100% currently look identical.
-- **`[?]` Every element beats plain, and the mix multiplier widened the gap.** A fire Strike
-  costs what a Strike costs and does strictly more, and now a *mixed* pair of colours pays 200
-  on top where a plain one pays nothing. The 12 basic cards in a 60-card deck were the worst 12
-  before this change and are further behind after it. That is a consequence of cost being per
-  concept, which is deliberate and is what the ring discount is designed around. Worth deciding
-  whether basic is a *cheaper* card or simply the thing an affix transforms.
+- **`[?]` Every element beats plain, and the gap narrowed on 2026-08-17 without closing.** A fire
+  Strike costs what a Strike costs and does strictly more. Distinct colours used to pay a damage
+  multiplier on top of that, which widened the gap; with the mix axis cut, a coloured card is ahead
+  only by the status it leaves — and only if the attacker wears the ring. That is a consequence of
+  cost being per concept, which is deliberate and is what the ring discount is designed around.
+  Worth deciding whether basic is a *cheaper* card or simply the thing an affix transforms.
 
 ---
 
@@ -546,7 +555,7 @@ its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
 a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "COMBO!
-Duelist lands a Duo Strike Pair (20 + 10 x 3.5 = 55), 55 damage". Five lines saying a Strike was
+Duelist lands a Pair (20 + 10 x 1.5 = 35), 35 damage". Five lines saying a Strike was
 swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
 forms no hand still gets its own ordinary sentence**, because a High Card is not a combo and
 announcing one over every attack would empty the word.
@@ -601,7 +610,7 @@ arriving from the other direction, now that dragging has no mechanical effect at
   owner's next action"* and the deliberate quirk that an idle duelist kept its guard are both
   gone. Guard itself went on 2026-08-15; Defend is what does its job now, as a plan card that is
   spent on the blow it answered rather than a flag that survived it.
-- **It changes what makes stagger rare** — see below.
+- **It changes what makes a chill rare** — see the ice status under *Elements*.
 
 `ResolutionOrder` being one pure function is what made this cheap, exactly as hoped: one
 function body plus its tests, and both consumers followed without being touched. Three other
@@ -613,8 +622,12 @@ candidate models are recorded in `TODO.md`; this is a fourth.
 
 **This is where the game is meant to be.** Throwing whatever you drew at the opponent works;
 *choosing a shape* and building a deck toward it is meant to work better. Combos are the
-mechanism that pays for that choice, and they are expected to grow to dozens of entries — so
-they are a **framework with one pattern**, not a pile of special cases.
+mechanism that pays for that choice.
+
+**A combo is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. It buys no
+status, no action points and no action off the opponent's turn. Statuses come from **elements
+and the rings that arm them**, and that split is the whole reason this section is now short:
+there is one axis, one number per rung, and one place to look for what a hand is worth.
 
 Combos are **discovered**, not given, and discovery persists on the **profile** — part of the
 roguelike unlock structure, not the run. No profile exists yet, so every combo is currently
@@ -627,92 +640,69 @@ live; when one does, discovery gates the *table* and nothing else changes.
 `combo.go`.*
 
 **`data` holds the shape, `internal/combat` holds the meaning**, which is the division
-`RegisterConcept` already draws for the deck lists. The file can say `"scope": ["attack"]` and
-`"expand": "attack-cards"`; only the rules can say what an attack *is*, so that is where the
-names are resolved (`ParseCategory`, `ParseVerb`) and where a malformed catalogue is refused.
+`RegisterConcept` already draws for the deck lists. The file says how many copies of a card a rung
+wants and what it pays; only the rules can say what a turn is and how wide one can be, so that is
+where a malformed catalogue is refused.
 
 **This is the one thing in `data/` that the rules themselves read**, and it is why
 `internal/combat` imports that package at all. Everything else there is consumed by `screens`,
 `decks` or `entities` — layers *above* the rules — so the rules never needed it. That is the
-line to hold if a sixth list is proposed: **ask who reads it, not whether it is data.** `data`
+line to hold if a seventh list is proposed: **ask who reads it, not whether it is data.** `data`
 imports nothing but the standard library, so the edge costs `internal/combat` neither its
 testability nor its freedom from Ebitengine.
 
 **A malformed catalogue panics at package init**, exactly as a deck whose declared cost tiers
 disagree with the rules does. A combo silently dropped is a balance change nobody made.
 
-### The pattern: two axes, multiplied at load
+### The pattern: one axis, and it wears poker's names
 
-Every combo is the intersection of a **hand** and a **mix**, and both are read off the cards that
-formed one attack.
+A hand counts **copies of an attack concept** in the cards that formed one attack — which is
+exactly what a poker hand counts, so it wears poker's names honestly: High Card, Pair, Two Pair,
+Three of a Kind, Full House, Four of a Kind.
 
-- The **hand** counts copies of a concept — pair, two pair, flurry, full house, barrage. That is
-  exactly what a poker hand counts, so it wears poker's names honestly.
-- The **mix** counts **distinct non-basic colours** in whatever hand formed — drab, mono, duo,
-  trio, rainbow. Basic is not a colour and never counts in either direction, so two basic Strikes
-  and an ice Strike show one colour and are mono.
+**Exactly one hand applies.** It wins on its multiplier — four Strikes are a Four of a Kind rather
+than also the pair and the trips inside it — so a turn produces one combo with no ranking
+machinery beyond that comparison.
 
-Five hands by five mixes is **25 combos, authored as 10 numbers**. Writing the grid out would be
-25 sets of values nobody could keep consistent; writing the two axes is five lines and five.
+**A lone attack forms no hand.** That is the fallback: when nothing counts, the single
+hardest-hitting attack card is the blow, ties going to the card queued first.
 
-**Exactly one hand and exactly one mix apply**, which is what retired the family/tier machinery
-the catalogue used to carry. A hand wins on its multiplier — four Strikes are a Barrage rather
-than also the pair and the flurry inside it — and the mixes name an *exact* colour count and
-partition every possible hand, so no two can both be true. Nothing needs ranking against anything.
+**Attack cards outside the hand contribute nothing.** `Strike, Jab, Strike` is a Pair; the Jab is
+announced, is not in the hand, adds no damage and carries no colour. That is a stated rule rather
+than a consequence — it is what makes *choosing a shape* pay more than throwing everything you
+drew.
 
-**A lone attack forms no hand and still has a mix**, because one card is still one colour. That
-is the fallback: when nothing counts, the single hardest-hitting attack card is the blow, ties
-going to the card queued first.
+**Only attacks aimed at the opponent are counted, and that is the matcher's rule rather than the
+catalogue's** *(2026-08-17)*. An entry used to name the categories it counted; the matcher's own
+test is strictly narrower — it also excludes recoil — so the field could never change what was
+counted and only invited an entry to claim otherwise. Plan cards are not counted, and a Prepare
+cannot join a hand.
 
-**Attack cards outside the hand contribute nothing.** `Strike, Jab, Strike` is a Strike Pair; the
-Jab is announced, is not in the hand, adds no damage and carries no colour. That is a stated rule
-rather than a consequence — it is what makes *choosing a shape* pay more than throwing everything
-you drew.
-
-### Damage: one blow, and the multipliers add
+### Damage: one blow, one multiplier
 
 A turn deals damage **once**, in the attack phase, and the figure is:
 
 ```
-(damage of each card in the hand)  +  DMG × (hand multiplier + mix multiplier)
+(damage of each card in the hand)  +  DMG × (hand multiplier)
 ```
 
 `DMG` is what one Strike deals in this duelist's hands — the number on the fighter card. So a
-pair of Strikes at DMG 10 is `10 + 10 + 10×1.5` = **35**, and a duo pair of Strikes is
-`10 + 10 + 10×(1.5+2.0)` = **55**.
+pair of Strikes at DMG 10 is `10 + 10 + 10×1.5` = **35**.
 
-**The multipliers add rather than compose**, decided deliberately: 1.5× and 2× is 3.5×, not 3×.
-Multiplying them stacks a ladder on a ladder and puts a rainbow Barrage at 50× before its own
-cards are counted; adding keeps the top of the table at a few hundred damage instead of several
-thousand, and it is arithmetic a player can do in their head while planning.
+| Hand | Cards | Multiplier |
+|---|---|---|
+| **High Card** | `[1]` | — |
+| **Pair** | `[2]` | ×1.5 |
+| **Two Pair** | `[2,2]` | ×1.75 |
+| **Three of a Kind** | `[3]` | ×2 |
+| **Full House** | `[3,2]` | ×3 |
+| **Four of a Kind** | `[4]` | ×5 |
 
-| Hand | Cards | Multiplier | Besides damage |
-|---|---|---|---|
-| **High Card** | `[1]` | — | — |
-| **`<Card>` Pair** | `[2]` | ×1.5 | — |
-| **Two Pair** | `[2,2]` | ×1.75 | — |
-| **`<Card>` Flurry** | `[3]` | ×2 | opponent loses one action |
-| **Full House** | `[3,2]` | ×3 | opponent loses one action |
-| **`<Card>` Barrage** | `[4]` | ×5 | opponent loses two actions |
-
-| Mix | Colours | Multiplier | Besides damage |
-|---|---|---|---|
-| **Drab** | 0 | — | — |
-| **Mono** | 1 | — | that colour's status |
-| **Duo** | 2 | ×2 | both statuses |
-| **Trio** | 3 | ×5 | all three statuses |
-| **Rainbow** | 4 | ×10 | all four statuses |
-
-**Mono pays in status alone, and that is the point of the bottom rung.** One colour is what an
-ordinary hand looks like; the element is already worth having for what it does to the victim, so
-paying a multiplier on top would make plain cards worse than they already are for no design gain.
-
-**The High Card is the bottom rung of the other axis, and it pays nothing** *(2026-08-15)*. When a
-turn builds no pair or better, the single hardest-hitting attack card is the blow and what lands is
-exactly its face damage — no multiplier, and every other attack card in the turn contributes
-nothing. It is in `combos.json` with a name and an ID so the feed can say what happened on the turn
-that happens most often; **a blow the engine could not name is the one failure this model can
-have**, which is why the loader panics without it.
+**The High Card pays nothing** *(2026-08-15)*. When a turn builds no pair or better, the single
+hardest-hitting attack card is the blow and what lands is exactly its face damage. It is in
+`combos.json` with a name and an ID so the feed can say what happened on the turn that happens most
+often; **a blow the engine could not name is the one failure this model can have**, which is why
+the loader panics without it.
 
 **It is fallen back to rather than matched.** Counting is the wrong way to pick it — `matchCountOf`
 fills groups largest-count-first and would hand back whichever concept appeared most, not the card
@@ -720,100 +710,53 @@ that hits hardest — so `matchHand` skips every one-card hand and `biggestAttac
 question on damage. `Blow.Formed()` draws the same line for the screen's combo preview: the High
 Card is a hand, and it is not something anybody built.
 
-**Every hand is attack-scoped.** Plan cards carry colours for the ring discount and
-nothing else — they are not counted, and a Prepare cannot join a rainbow. That is what makes the
-top of the table an offence you spent a whole turn assembling rather than something a cheap card
-can be padded into.
+**Colour buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
+formed hand each land their status, gated on the attacker wearing that element's ring; basic is
+not a colour and never counts, so two basic Strikes and an ice Strike show one colour. That list
+is all that survives of the second axis.
 
-**Stagger is paid on forming the hand, not on connecting.** A shock that makes the blow miss does
-not undo a stagger the player assembled five cards to earn: the hand is scored off the queue, and
-the queue was committed when DUEL! was pressed. The same applies to banked AP.
-
-**The reward vocabulary stays deliberately small and closed** — a damage multiplier, banked
-action points, and stagger. Adding a combo is one entry in `combos.json`. Adding a new *kind* of
-reward is a field on `Effect` plus one place applying it, and that cost is charged on purpose,
-because a reward vocabulary that grows without limit is one no player can hold in their head.
-
-### What the two axes cost, recorded honestly
+### What the axis cost, recorded honestly
 
 - **Counted matching only.** A hand reads the turn as a set, so a Jab between two Strikes does
   not break the pair. The **run** match kind — N consecutive cards, which a sequence combo needs
-  — was in the schema and is **gone**, dropped in the rewrite. Nothing had ever used it. The
-  consequence is below, under *Sequences*.
+  — is gone. The consequence is below, under *Sequences*.
 - **A hand cut short still pays out.** Nothing can interrupt it — a turn's attacks resolve as one
-  event — so this is now true by construction rather than by rule.
+  event — so this is true by construction rather than by rule.
 - **The bottom rung fires constantly.** Any two copies of one attack is a pair, which is most
-  turns, and the AI planners repeat a card far more readily than a human building a mixed hand
-  does. That was measured as a live problem on the old model and the rewrite has not addressed
-  it; it only changed the number. `[?]` **Watch whether Pair should pay a multiplier at all**, or
-  whether the ladder should start at Two Pair.
-- **`[?]` One copy per concept per colour makes most of the grid unreachable, and cutting the drab
-  attacks made it worse.** Every same-concept hand is forced to all-distinct elements, so **the mix
-  axis is a function of the hand axis** for anything built from copies: a Pair is always Duo, a
-  Flurry always Trio, a Barrage always Rainbow. Two whole axes reduce to one for exactly the hands
-  the player is trying to build, which is the strongest argument on the table for changing the deck
-  composition rather than the multipliers.
-  - **Drab and Mono are unreachable above one card**, and only the opponent can score them — its
-    deck is twelve copies each of two drab cards. So the mix axis is not dead content; it is
-    content the two sides reach from opposite ends.
-  - This is expected to resolve when the deck changes over a run, and is recorded so the grid is
-    not tuned against a deck that cannot show most of it.
+  turns. `[?]` **Watch whether Pair should pay a multiplier at all**, or whether the ladder should
+  start at Two Pair.
 - **Poker's ranking does not transfer to this deck**, and the multipliers above are first
   drafts. Poker's ordering comes from 52 cards, 4 suits and 13 ranks; here a rank has 4 copies
   and a colour has 9. `tools/seeds` already searches real hands and is the place to measure
   before tuning further.
+- **Narrowing to damage alone cost ten enemies, measured** *(2026-08-17)*. `tools/balance` goes
+  from 74 walls out of 96 to **84**, and every one of the ten is a hand posture — `trips` lost
+  eleven wins and `cheap-trips` five, while the four coloured postures lost none. **What was doing
+  the work was the lost action, not the lost colour multiplier**: a Three of a Kind used to take an
+  action off the opponent's next turn, every round, which is what those postures were winning on.
+  Cutting the colour multiplier flipped no outcome in the sample at all. The ladder's own numbers
+  were kept unchanged through the cut on purpose, so this figure is the size of the hole before any
+  retuning.
 
 ### The catalogue's shape
 
-`data/combos.json` holds two lists and nothing else.
+`data/combos.json` holds one list. **A hand carries a key, an ID, a name, `groups` and a
+`multiplier` in percent** — nothing else. `groups` naming *distinct* concepts is why `[3,2]` is a
+full house and can never be satisfied by five of one card.
 
-**Hands** carry a key, an ID, a name, `groups`, a `scope`, a `multiplier` in percent, an
-`expand` mode and an `effect`. `groups` naming *distinct* concepts is why `[3,2]` is a full house
-and can never be satisfied by five of one card. `staggerAll` is a bool in the file rather than the
-`-1` the rules use, because a file saying `"stagger": -1` is one nobody can read.
-
-**Mixes** carry a key, an ID, a name, an exact `colours` count and a `multiplier`. The loader
-**refuses a catalogue with a gap in the colour counts** — every count from zero to four needs a
-mix, or a turn could form a hand the engine cannot name.
-
-**One entry per card, generated rather than written out.** The four single-group rungs carry
-`"expand": "attack-cards"` and become one hand per attack card — the nine of the player's ladder
-plus the opponent's two — so 44 hands from four lines, and a new attack card gets the whole ladder
-by existing. **Two Pair, Full House and the High Card are generic**, because naming them per card
-is a wall of near-identical entries nobody can hold in their head. 47 hands in total.
-
-**Per card, not per category, for the rungs that expand** *(decided after a category-wide version
-shipped first)*. A category-wide "three attacks" made a Jab count the same as a Heavy and sent the
-reward to whatever you happened to draw. Naming a combo for the card it is built on is what makes
-it worth *building toward*, and it leaves room for the effects to differ per card later.
-
-**Straights are dropped rather than invented** — the concepts have no natural order to be
-consecutive in.
+**Adding a rung is one entry.** There is no reward vocabulary to extend and no second axis to keep
+in step, which is the point of narrowing it: the only thing a new entry can say is what shape it
+wants and what that shape is worth.
 
 **Combo IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
 be the base in `combos.json` plus the card's enum value, so inserting a card mid-enum shifted every
 ID above it — an open question against profile discovery. One entry now covers every concept in the
-game and is named at match time, so there is **one ID per catalogue key** and it is written down
-rather than derived. Reordering the cards cannot renumber a combo a player has already found.
+game, so there is **one ID per catalogue key** and it is written down rather than derived.
+Reordering the cards cannot renumber a combo a player has already found. They run 1–6 in ladder
+order, renumbered on 2026-08-17 while no profile exists to record them; once one does, they freeze.
 
-The bands in the file are now larger than they need to be, which is harmless and left alone.
-
-### Stagger
-
-**Stagger takes actions off the front of the victim's next turn**, which under phases is their
-*attack* phase — so being staggered costs a swing before it costs a plan. That reversed on
-2026-08-15 when the prepare phase went: it used to eat a Prepare first, and it now eats the thing
-the turn was for. The action points are **not** refunded: stagger is tempo *and* economy.
-
-**It is symmetric, and one asymmetry falls out of phases.** Side A takes its whole turn first, so
-a combo A forms bites B in the same round; the identical combo formed by B lands when A has
-already acted and carries to the round after. That is why `Duelist.Staggered` persists across the
-boundary — it makes the rule one rule (*a staggered duelist loses actions from its next turn,
-whenever that is*) rather than two spelled differently per side.
-
-**A stagger deletes cards before the hand is matched**, so a staggered duelist cannot combo back
-with a turn it never took. That ordering is why the hand is worked out *inside* a turn rather than
-at the top of the round.
+**Straights are dropped rather than invented** — the concepts have no natural order to be
+consecutive in.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
@@ -834,49 +777,29 @@ cost* under Resolution, and the defend section under Cards.
 should stop being presented as a decision, or something has to read order again. Sequences are
 the obvious candidate and would need the run matcher rebuilt against the one-blow model — a
 sequence is a shape *within* the hand, not a second blow. Extinguishing Strike additionally needs
-a reward kind that *consumes* a status, which the `Effect` vocabulary has never had.
-
-### `[?]` Whether the enemy draws on this at all
-
-**Open, and deliberately left open rather than settled early.** Combos are symmetric today, and
-the rewrite made that symmetry cost more: a swarm queueing four Jabs no longer lands four small
-hits, it forms a **Jab Barrage** — five times damage and two staggers — for 4 AP.
-
-**The four planners were not rewritten for one blow per turn and the change inverts them.** A
-swarm builds a hand by accident; a brute's single Heavy forms nothing at all and pays no
-multiplier. The shape the roster treats as the crude one is now the strong one, which nobody
-designed. `TODO.md` carries it.
-
-It is left standing on purpose, to watch how it balances out. **It is not settled that enemies
-share the player's combo table, or even the player's cards.** An enemy built from a deck and an
-affix could plausibly have attacks the player never sees and combos of its own, in which case
-the symmetry here is a temporary convenience rather than a rule.
-
-The pricing note worth keeping either way: every costing in this document reasons from the
-player's budget — three Strikes is 6 AP, five is 10 — and a swarm gets four Jabs for 4 AP
-because `Jab` costs 1. **A combo counting cards is priced by whoever has the cheapest cards**,
-and a multiplier on top of that counting makes the gap wider than it was.
+a reward that *consumes* a status — and since a combo now pays damage and nothing else, that is a
+larger change than it was: it would mean reopening the reward vocabulary this narrowing closed.
 
 ### Requirements
 
 - **Combos are rules and live in `internal/combat`**, matching on the resolved cards. The
   screen must never derive one; that is what makes the Resolution pane structurally incapable
   of lying about the round.
-- **A `KindCombo` event** carrying what fired. *Done.* It carries a `HandID`, a `MixID`, the
-  combined multiplier and the list of cards that formed the hand, and the screen looks the two
-  names up with `HandByID`/`MixByID` — so a combo renamed is renamed once.
+- **A `KindCombo` event** carrying what fired. *Done.* It carries a `HandID`, the multiplier and
+  the list of cards that formed the hand, and the screen looks the name up with `HandByID` — so a
+  combo renamed is renamed once.
 - **The combo event carries its own card list, not a span.** A counted hand is not contiguous —
   Two Pair can be two cards, a card that earned nothing, and two more — so the screen brackets
   what the engine names and never derives it from a pattern length.
-- **`KindStaggered` counts as a slot in playback** even though nothing happened, or the
+- **`KindChilled` counts as a slot in playback** even though nothing happened, or the
   Resolution pane's highlight runs a row short for the rest of the round.
 - **A place to browse combos** — a reference the player can return to. Probably belongs with the
-  profile rather than inside a duel. `Hands()` and `Mixes()` exist for it to read.
+  profile rather than inside a duel. `Hands()` exists for it to read.
 - **The attack phase writes one line, and it is the combo's.** *Done.* Attack cards no longer draw
   a row each — a turn of five Strikes read as five actions and one figure, which is the model the
-  pane was contradicting. The line carries the arithmetic (`20 + 10 x 3.5 = 55`) off the event, so
+  pane was contradicting. The line carries the arithmetic (`20 + 10 x 1.5 = 35`) off the event, so
   the sum shown is the sum used, and the damage attaches to it. **What is still not drawn** is a
-  row that a stagger deleted; that one stands.
+  row that a chill deleted; that one stands.
 - **A preview of the hand while planning is wanted and does not exist.** `BlowFor` is exported
   and is the same function the engine uses, so a previewed combo would be the combo that fires by
   construction. Nothing calls it from the screen yet.
@@ -903,12 +826,12 @@ reverses the reason it was made a method — "so a brand or ring raising it has 
 - **A fixed five is what makes hand concepts possible.** Poker hands exist *because* you always
   hold exactly five; that is what lets "a full house" be a permanent, learnable, nameable thing
   rather than a coincidence of how big your hand happened to get. The named five-card shapes are
-  built — Barrage wants four of one attack, Rainbow wants four colours in one hand — and every
-  one of them needs the five to be a constant the player can plan against for the life of a run.
+  built — a Full House wants five cards in a 3-and-2 shape — and every one of them needs the five
+  to be a constant the player can plan against for the life of a run.
   The catalogue loader enforces it directly: **a hand asking for more cards than a turn can hold
   is refused at package init.**
-- **A growable cap would dilute every shape as it grew.** A Barrage is an all-in commitment at
-  a cap of five and routine at a cap of seven. The combos would quietly get cheaper every time
+- **A growable cap would dilute every shape as it grew.** A Four of a Kind is an all-in commitment
+  at a cap of five and routine at a cap of seven. The combos would quietly get cheaper every time
   capacity went up, which is the opposite of a reward for building toward them.
 - **It is still a method, and still should be.** Rings and brands need somewhere to bite for
   everything *else* they do, and a method that reads the duelist costs nothing. What changed is
@@ -930,21 +853,91 @@ than an ever-widening round.
 - **Five at once**, until brands expand capacity. *(ideas.md's "extra fingers bought from a
   shop" is superseded.)*
 - **The cap is never displayed.** It surfaces naturally when you try to buy a sixth.
-- **The four elemental rings confer their element's status, and nothing else does** — this is the
-  first ring rule in the code *(2026-08-16)*. See *Statuses*: without the ring, a coloured attack
-  is a plain attack that still counts toward a mix.
-- **A ring per element discounts cards of that element** — an ice ring makes an ice Strike cost
-  one less. Not a budget increase; a per-card discount. This is the expensive branch and it is
-  the chosen one. **Unbuilt**: `Card.Cost()` is the seat and nothing reads a ring in it yet.
-- Rings also boost stats and bend other rules.
 - **No ring changes how many cards can be played.** `MaxActions` is frozen at five — see *A
   round is bounded twice*. A ring may make five cards cheaper, never make it six.
+- **Rings are the duelist's only** *(2026-08-17)*. An enemy wears none; affixes are the
+  enemy-side counterpart.
+
+### A ring is written in a grammar *(2026-08-17, owner's call)*
+
+**Every ring is data, in a `When` / `If` / `Then` grammar** — the design is decided and
+**nothing is built**. The full vocabulary, the code seat each moment lands on, and the questions
+to put to a new ring idea live in
+[.claude/skills/rings/SKILL.md](.claude/skills/rings/SKILL.md); this is the argument for the
+shape.
+
+**A ring is the only collected thing that is never played.** A card resolves in the turn you
+queued it, a worm fires when you pick it, a combo is scored when the attack phase runs — each
+already knows *when*. A ring waits, so it says so itself, and that is the third part the card
+language does not need.
+
+- **A ring holds a *list* of rules.** Forced by the growing stat rings, which accumulate at one
+  moment and apply at another; it generalises to any ring wanting two.
+- **`Then` is a list too**, which is what buys a lightning ring that shocks *and* chills with no
+  new vocabulary.
+- **Seven moments, and only four are in `internal/combat`.** The other three fire in `session`
+  and on the post-battle screen, which is what makes a ring a **run** concept the rules consult
+  rather than a combat one. `rings.json` is therefore parsed in `internal/session`, beside the
+  worms and for the same reason.
+- **Rings fire left to right, in worn order.** A determinism rule, not a preference: multiplicative
+  effects are order-sensitive, and worn order is the only order the player can see. **Compounding
+  is intended** — two slash rings are ×4.
+- **A ring may only bend a rule the game already has.** Banker scales vitae propagation, so
+  propagation had to be designed first. This is the test to apply to any new ring.
+
+**What the grammar costs, and every item is real work:**
+
+- `Duelist.Rings` is `[ElementCount]bool`. A family multiplier has no element to be a bit under,
+  so it becomes a slice of rules-level rings.
+- `Duelist.Statuses` is indexed by element and has to be indexed by **status** — see below.
+- **Growing rings hold state**, the first ring thing that does, and the first that must be
+  **serialized**: an accumulator on `Session`, keyed by `RingRecord`, which is why the record key
+  is the identity rather than an index. **Uncapped, by decision** — a +5 HP ring is +100 by the
+  top of the tower and that is the intent.
+- **`tools/balance` cannot see any of this.** It measures postures against the roster and knows
+  nothing about rings, so a damage ring is unmeasurable until it does.
+
+### Statuses are their own collection, and no longer an element *(2026-08-17, owner's call)*
+
+**A status is data**, in `statuses.json`: a key, a name, a badge, one of four closed effect kinds
+(`damage-over-time`, `lose-actions`, `miss-chance`, `damage-reduction`), an amount and a duration.
+
+**Fully decoupled — fire does not burn on its own**, including for the four rings that ship. This
+holds the 2026-08-16 position rather than reversing it: the statuses being free is what left
+rings with nothing to be, and a *second* fire status arriving on a different ring later is only
+possible if the first was never inherent to the colour.
+
+**What it costs:** `Duelist.Statuses` re-indexes from element to status; `cards.MaxEffects` is 4
+*because* there are four elements and decoupled statuses can exceed that on one card;
+`effectKeys` in `card_art.go` maps element→badge and becomes status→badge; and `Status` becomes
+an append-only ID carrying the hazard `Element` and `GlyphKind` already carry.
+
+### The rings that are designed
+
+The elemental four exist in code as a hard-coded rule; everything else here is decided and
+unbuilt. **Only the discount and the flip predate the grammar**; the rest came out of it.
+
+| Ring | Moment | Does |
+|---|---|---|
+| Fire / Frozen / Thunder / Earth | `attack-lands` | its element's status — the four that exist today, re-expressed with no special case |
+| **Storm** | `attack-lands` | lightning shocks *and* chills |
+| **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
+| **Striker** | `card-damage` | doubles every Strike — a concept ring, 4 cards where a family covers 12, and priced accordingly |
+| **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
+| **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
+| **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
+| **stat rings** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
+| **discount** | `card-cost` | a matching card costs 1 less |
+| **flip** | `deck-built` | recolours every matching card; see below |
+
+**A concept ring and a family ring are not the same object** and must not be priced as one.
+Striker covers 4 cards, Keen covers 12.
 
 ### What the first four rings are
 
 `data/rings.json` holds them; `combat.Duelist.Rings` is what the engine reads. One ring is one
-element, so wearing fire and swinging a rainbow lands a burn and nothing else — which is what
-makes the second and third worth buying.
+element, so wearing fire and swinging a hand of all four colours lands a burn and nothing else —
+which is what makes the second and third worth buying.
 
 | Ring | Element | What wearing it does |
 |---|---|---|
@@ -1164,7 +1157,7 @@ Thinning a 48-card deck against a fixed hand of eight raises consistency every t
 deliberate rather than unnoticed: the offer is two worms out of a growing catalogue, so removal
 being the best of what is on the table is only sometimes the question. **`duplicate` is the one
 most likely to need a cost** — copies are the sharpest dial in the game, since four of one concept
-in a turn is a Barrage.
+in a turn is a Four of a Kind.
 
 ### `[?]` The deck overlay stops being able to show the deck
 
@@ -1220,10 +1213,26 @@ for the `data/` pattern: JSON beside a small Go loader.
 
 ## Vitae
 
-The currency. Earned from fights, spent on rings.
+The currency. Earned from fights, spent on rings. `Session` carries the purse; the post-battle
+screen's third prize card is currently the only thing that adds to it, at +5.
 
-It is already on screen in the character block, reading a fixed `5` as a placeholder. It moves
-to `Session` when that exists.
+### Propagation — vitae earns interest *(2026-08-17, owner's call)*
+
+**After every fight, a run gains +1 vitae for every 5 it is already holding**, capped at **+5**.
+So 5 held pays 1, 10 pays 2, and 25 pays the maximum 5 — holding more than 25 propagates no
+faster.
+
+- **It is a rule of the run, not a ring.** The Banker ring scales it, which means it has to exist
+  on its own first — a ring may only ever bend a rule the game already has.
+- **The cap is what stops it running away.** Uncapped, +1 per 5 is roughly ×1.2 a purse per
+  fight, which compounds across 24 fights into a number no shop can be priced against. Capping
+  the *rate* rather than the purse leaves a big purse worth having and stops the curve.
+- **Rounded down**, like every other integer rule in the game.
+- `[?]` **Whether the cap binds the Banker ring too.** Banker adds a second +1 per 5 (see
+  *Rings*), so at 25 held the pair would pay +10 against a rule that says +5. Either the cap is
+  on the base rate and Banker doubles the capped figure, or the cap is absolute and Banker only
+  matters below 25 — the second makes the ring worthless late, so the first is the likely answer.
+  **Settle this before building either.**
 
 ---
 
@@ -1305,12 +1314,12 @@ brute. One holding shields is a warden. The player learns a deck.
 
 **An enemy's attack cards resolve one at a time, in the order its planner chose them**
 *(2026-08-17, owner's call)*. Each lands its own blow at its own face damage; no hand is read, so
-there is no multiplier, no mix, no banked AP and no stagger off an enemy's turn. `Duelist.SoloAttacks`
+there is no multiplier and no hand off an enemy's turn. `Duelist.SoloAttacks`
 carries it and `resolveSoloAttacks` is the phase.
 
-**Combos are the player's axis and an enemy has neither half of it.** A hand counts copies of a
-*concept* and a mix counts distinct *colours*; every enemy card in the roster is authored `basic`
-and `FamilyNone`, so what an enemy "formed" was an accident of what its planner could afford. Now
+**Combos are the player's axis and an enemy has no way into it.** A hand counts copies of a
+*concept*, and every enemy card in the roster is authored `basic` and `FamilyNone`, so what an
+enemy "formed" was an accident of what its planner could afford. Now
 three cards on the table mean three blows, which is a round the player can read off the table
 before pressing DUEL!.
 
@@ -1329,7 +1338,7 @@ before pressing DUEL!.
 
 `PlanFor(duelist, hand)` **scores every affordable combination of the hand's attacks**, and takes
 the best. It is exhaustive rather than greedy because a greedy pass cannot see that three Ooze
-forming a Flurry beat one Dissolve — a hand is at most seven cards, so this is 128 candidates.
+forming a Three of a Kind beat one Dissolve — a hand is at most seven cards, so this is 128 candidates.
 
 **A comboing duelist is scored through the same `blowFor` the resolver uses**, so the plan it plays
 is the plan the engine will score. **A solo attacker is scored as the sum of what it picked**, which
@@ -1342,7 +1351,7 @@ planner that only maximised damage would never raise a shield, and every `Congea
 would sit in a discard pile forever.
 
 **`Copies` was the difficulty dial and it is a blunter one now.** Under combos, four copies of a
-1 AP card was a Barrage at 5x; with no hand to form, four copies is four small blows and the dial
+1 AP card was a Four of a Kind at 5x; with no hand to form, four copies is four small blows and the dial
 is simply *how many cards a turn holds*. What sharpened instead is **variety**: an enemy with three
 different attacks used to land only the biggest of them, because distinct concepts formed no hand
 and fell through to the High Card. It now lands all three.
@@ -1452,7 +1461,7 @@ highlight, the plan; **Resolution** takes the wide slot and the job of saying wh
 happened, in sentences, accumulating rather than flashing.
 
 A combo therefore never has to be drawn *across* rows: it gets a line of its own, in amber, at
-the moment it forms. So does a stagger. The bracket-or-join problem simply stopped existing,
+the moment it forms. So does a chill. The bracket-or-join problem simply stopped existing,
 which is worth recording as the pattern — **the pane was being asked to answer two questions at
 once, and the fix was a second pane, not a cleverer drawing.**
 
@@ -1476,8 +1485,9 @@ Collected from above.
   has been priced against the other.
 - `[?]` **Pair fires on most turns**, which makes the bottom rung a permanent global multiplier
   favouring whoever repeats themselves — currently the AI planners.
-- `[?]` **13 of the 27 hand/mix cells cannot be dealt** from the starting deck, because one copy
-  per concept per colour forces every same-concept hand to distinct elements.
+- `[?]` **Every same-concept hand shows all-distinct colours**, because the deck holds one copy per
+  concept per colour. It no longer costs a multiplier, but it does mean a built hand always lands
+  every status the player is ringed for — the colours are not a choice.
 - `[?]` **The shock roll is conditional**, against a written rule that it should be unconditional.
   Settle it before the save format lands.
 - `[?]` **Enemy life totals have not been retuned** against the new damage curve, and

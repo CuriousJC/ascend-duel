@@ -15,7 +15,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `enemies.json` | `LoadEnemies` | 96 opponents: three stats, their own deck, portrait, valid floors |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `rings.json` | `LoadRings` | the rings that exist: name, art key, element, one line of text |
-| `combos.json` | `LoadCombos` | the two combo axes: five hands, five element mixes |
+| `combos.json` | `LoadCombos` | the six poker hands and what each multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
 
 ## Who may read what, and why it is not "whether it is data"
@@ -67,7 +67,7 @@ enemies'. Eight fields:
 - **There is no `Category` column.** Attack-or-plan falls out of the verb. Carrying both would
   let a file say a card is an attack that banks points.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
-  card in one turn is a Barrage at 5x. Four is also the ceiling of the hand ladder.
+  card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
 - **No player card is drab except the plans** *(2026-08-15)*. Attacks are always coloured; the
   plans are basic because nothing they do is elemental.
 - **Enemy cards are all `basic` and `FamilyNone`**, and that is deliberate rather than sloppy.
@@ -158,16 +158,18 @@ That is the card language paying off, and it is the shape to reach for before ad
 
 ### Combos
 
-`combos.json` is **two axes, not a list**: five *hands* (copies of a concept, pair through
-barrage) and five *mixes* (distinct non-basic colours, drab through rainbow). Exactly one of
-each applies.
+`combos.json` is **one list**: the six poker hands, High Card through Four of a Kind, each with a
+key, an ID, a name, `groups` and a percent `multiplier`. Exactly one applies, winning on its
+multiplier.
 
-**Adding a combo is one entry in the JSON. Adding a reward *kind* is a Go change** — a field on
-`Effect` plus one place applying it — and that cost is charged on purpose, the same posture the
-verb vocabulary takes.
+**A combo is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
+reward vocabulary to extend, no second axis counting colours, and no `scope` field — statuses come
+from elements and rings, and the matcher counts attacks aimed at the opponent because that is what
+`formsBlow` says, not because an entry asked it to. **Adding a rung is one entry in the JSON**;
+adding anything a hand can *buy* is a design decision, not a field.
 
-A malformed catalogue panics at init: a gap in the mixes' colour counts, or a missing
-`high-card` entry, since a hand the engine cannot name is the one failure this model produces.
+A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
+engine cannot name is the one failure this model produces.
 
 ## Adding a file, or a field
 

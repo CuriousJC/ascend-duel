@@ -31,12 +31,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         writable — the screen's AP bar and over-budget check are the other half.
       - `Spec.Dragging` was added for the ring preview and is unused by both the row and the
         hand, which does have drag-and-drop and no visual for it.
-- [ ] **A card lost to a chill says "staggered".** Ice takes a card off the front of a turn
-      through the stagger machinery, so the Resolution feed narrates it with the stagger
-      sentence. One event kind is what keeps playback's one-beat-per-slot counting honest —
-      `currentSlot` counts `KindAction` and `KindStaggered` to find the lit row — so a
-      `KindChilled` would have to be added to that count as well as to the prose, and getting
-      that wrong desyncs the highlight for the rest of the round. Small lie, knowingly taken.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the
@@ -89,6 +83,35 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       Blocked on `Session` like the rest of the run-level state.
 
 ## Next — where the game actually starts
+
+- [ ] **Build the ring grammar.** Designed in full on 2026-08-17 and **nothing is built**. Read
+      [.claude/skills/rings/SKILL.md](.claude/skills/rings/SKILL.md) first — it holds the
+      `When`/`If`/`Then` shape, the three closed vocabularies, the moment→code-seat table and
+      what a ring may never do. `MECHANICS.md` under *Rings* holds the argument for the shape;
+      *Vitae* holds the propagation rule Banker scales.
+      - **Two decisions are still open and both block a specific ring**: whether propagation's
+        +5 cap binds Banker as well (`MECHANICS.md` → *Vitae*), and which effect a growing
+        ring's accumulator feeds when it holds more than one (the skill). Everything else is
+        settled.
+      - **Build order, because each step unblocks the next:**
+        1. **`statuses.json` and the decoupling.** Nothing else can be expressed until a status
+           is a thing in its own right. Re-index `Duelist.Statuses` from element to status,
+           move `effectKeys` with it, and decide `cards.MaxEffects` — it is 4 *because* there
+           are four elements.
+        2. **`Duelist.Rings` becomes a slice** of rules-level rings, and `WearsRing` becomes a
+           query over it. This is what unblocks every non-elemental ring.
+        3. **Parse `rings.json` in `internal/session`**, beside the worms and for the same
+           reason, handing `combat` the rules type. `data` stays ignorant.
+        4. **The four combat moments** — `card-cost`, `card-damage`, `attack-lands`,
+           `deck-built`. `Card.Cost()`, `Card.Damage()` and `Card.Amount()` are already methods
+           on the card, so three of these are a line each rather than a rewrite.
+        5. **Vitae propagation as a rule of the run**, then the three moments outside combat:
+           `fight-start`, `fight-won`, `prizes-dealt`.
+        6. **Growing rings last** — they are the only ones holding state, and the first ring
+           thing that will have to be serialized.
+      - **`tools/balance` cannot see any of this** and a damage ring is unmeasurable until it
+        can. Say so rather than guessing at a multiplier.
+      - Ring *appearance* is explicitly not in scope; the row looks fine as it is.
 
 - [ ] **Nothing reads card order any more, so drag-to-reorder decides nothing.** The one-blow
       rewrite on 2026-08-14 took the last two consumers of within-phase order at once: counted
@@ -315,7 +338,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         for one round, via `handTarget`. Worth re-deciding once thinning exists, and now also
         because the attack ladder's one-copy-per-colour shape is what makes half the combo grid
         undealable.
-- [ ] **The demo has never shown a plan card resolving.** `demoSeedName` is `strike-flurry` and
+- [ ] **The demo has never shown a plan card resolving.** `demoSeedName` is `three-strikes` and
       `demoClickRun` is `Strike`, so the scripted round plays Strikes and nothing else. The
       narration written for Prepare, Plan and Defend has never appeared on screen, and neither
       has the table's attack/plan break — the row it splits has never had a plan card in it.

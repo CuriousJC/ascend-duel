@@ -504,14 +504,15 @@ func selecting(cards ...combat.Card) *CombatScene {
 
 func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	// **The preview is the resolver's own answer**, so what is ringed while choosing is what
-	// fires. Three Strikes are a flurry the instant the third is picked, not when DUEL! is pressed.
+	// fires. Three Strikes are three of a kind the instant the third is picked, not when DUEL! is
+	// pressed.
 	s := selecting(
 		combat.Of(combat.Strike, combat.Fire),
 		combat.Of(combat.Strike, combat.Ice),
 		combat.Of(combat.Strike, combat.Basic),
 	)
 
-	blow, turn, ok := s.previewBlow()
+	blow, _, ok := s.previewBlow()
 	if !ok {
 		t.Fatal("three Strikes previewed no combo")
 	}
@@ -519,21 +520,18 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 		t.Errorf("the preview rings %v, want all three cards", s.previewHandSlots(blow))
 	}
 
-	// And the feed says so in the same words the fired line will use.
+	// And the feed says so in the same words the fired line will use — the hand's own name, from
+	// the catalogue, with nothing assembled here.
 	rows := s.planningLines()
 	if len(rows) != 2 || rows[0].swatch != comboSwatch {
 		t.Fatalf("the pane holds %d rows while planning, want the combo line and the prompt", len(rows))
 	}
-	want := "COMBO! " + comboNameOf(blow.Hand, blow.Mix, turn[blow.Lead].Card.Concept)
+	want := "COMBO! " + blow.Hand.Name
 	if !strings.HasPrefix(rows[0].prefix, want) {
 		t.Errorf("the preview reads %q, want it to open %q", rows[0].prefix, want)
 	}
-
-	// **And the template is filled in.** A catalogue entry holds `{card} Flurry`, so a name that
-	// reached the pane unsubstituted would print the brace at the player - which is what shipped
-	// for the length of one demo run.
-	if strings.Contains(rows[0].prefix, "{card}") {
-		t.Errorf("the preview reads %q, with the hand's name template still in it", rows[0].prefix)
+	if blow.Hand.Key != "three-of-a-kind" {
+		t.Errorf("three Strikes previewed %q, want the three of a kind", blow.Hand.Key)
 	}
 }
 

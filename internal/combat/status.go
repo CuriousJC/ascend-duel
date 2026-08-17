@@ -72,8 +72,8 @@ const (
 	// **Ice stopped being the AP element on 2026-08-16.** It took a point off the budget until
 	// then, which the ring's own text does not describe and which was the quietest possible
 	// status: a duelist a point short simply queued a cheaper card and lost nothing they could
-	// name. Taking a card is the stagger the combo table already deals in, and a chilled duelist
-	// loses a card off every turn it is chilled for rather than one card once.
+	// name. Taking a card off the front of a turn is what it does instead, and a chilled duelist
+	// loses one off every turn it is chilled for rather than one card once.
 	chillCardsPerHit = 1
 
 	// shockMissPct is how likely a shocked duelist's attack is to miss, in percentage points. It
@@ -152,9 +152,9 @@ func applyStatus(d Duelist, e Element, by Duelist) (Duelist, int, bool) {
 	return d, amount, true
 }
 
-// chillCards is how many actions this duelist loses off the front of its turn to ice. It is read
-// where a stagger is read and adds to one, which is what makes "a chilled duelist loses a card"
-// one rule rather than a second machinery beside the one the combo table already uses.
+// chillCards is how many actions this duelist loses off the front of its turn to ice, for as long
+// as the status lasts. It adds to `Duelist.Chilled`, which is what an ice hit banked for the turn
+// to come — see playTurn, where the two are read together.
 func (d Duelist) chillCards() int {
 	if !d.Statuses[Ice].Active() {
 		return 0

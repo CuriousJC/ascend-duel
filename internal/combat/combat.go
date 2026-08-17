@@ -100,18 +100,6 @@ type Duelist struct {
 	BonusAP    int
 	GatheredAP int
 
-	// Staggered is how many actions are taken off the front of this duelist's *next* turn,
-	// or StaggerAll for all of them. Set by an opponent's combo and consumed when that turn
-	// comes round.
-	//
-	// **It has to persist across the round boundary, and that is a consequence of phases
-	// rather than a choice.** Side A takes its whole turn first, so a combo A forms bites B
-	// in the same round; the identical combo formed by B lands when A has already acted, and
-	// has nowhere to go but the round after. Holding it on the duelist is what makes the rule
-	// one rule — *a staggered duelist loses actions from its next turn, whenever that is* —
-	// instead of two rules that happen to be spelled differently for the two sides.
-	Staggered int
-
 	// The two halves of Plan, and the same shape as Prepare above for the same reason: DrewCards
 	// is what has been earned *this* round and BonusDraw is what the round after may draw.
 	//
@@ -168,9 +156,9 @@ type Duelist struct {
 	// through the combo table.
 	//
 	// **It is what an enemy is** *(2026-08-17, owner's call)*. Combos are the player's mechanic:
-	// the hands are counted off concepts and the mixes off colours, and an enemy has neither axis
-	// to play with — every enemy card in `data/enemies.json` is authored `basic` and
-	// `FamilyNone`, so an opponent's "hand" was whatever its planner happened to afford. Now an
+	// the hands are counted off concepts, and an enemy has no axis to play with — every enemy
+	// card in `data/enemies.json` is authored `basic` and `FamilyNone`, so an opponent's "hand"
+	// was whatever its planner happened to afford. Now an
 	// enemy holding three cards swings three times and the player can read the round off the
 	// cards on the table.
 	//
@@ -441,9 +429,9 @@ const (
 	// may overlap; see matchSlots.
 	KindCombo
 
-	// KindStaggered is one action lost to a stagger. One event per action, so a stagger that
-	// takes a whole round narrates as the several things it actually is.
-	KindStaggered
+	// KindChilled is one action lost to a chill. One event per action, so a chill deep enough to
+	// take several narrates as the several things it actually is.
+	KindChilled
 
 	// The three element events, added 2026-08-12 with the statuses.
 
@@ -458,7 +446,7 @@ const (
 
 	// KindMissed is an attack that never happened because its owner was shocked. Action is the
 	// attack that was lost and Side is whose it was, which makes it the lightning counterpart of
-	// KindStaggered — a slot that resolves into nothing.
+	// KindChilled — a slot that resolves into nothing.
 	//
 	// It is deliberately not a KindNegated: nothing of the defender's stopped it, and a log
 	// saying a blow was "stopped cold" by a defence that was never raised would send the player
@@ -476,7 +464,7 @@ const (
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
-	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindStaggered for the action lost, on KindMissed for the attack that never landed, and on KindCombo for the card the blow led with
+	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindCombo for the card the blow led with
 	Amount int       // damage dealt, action points banked, status applied, or on KindCombo what the hand adds up to
 	Target Side      // who took the damage
 	Life   int       // target's life after the event
@@ -487,18 +475,15 @@ type Event struct {
 	// with nothing to say about colour says `basic`, exactly as a plain card does.
 	Element Element
 
-	// Hand and Mix are set on KindCombo and name what the attack phase formed. The screen looks
-	// them up with HandByID and MixByID rather than being told their names here, so a hand
-	// renamed is renamed once.
+	// Hand is set on KindCombo and names what the attack phase formed. The screen looks it up
+	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
-	// **Hand is HandNone when no hand formed** and the blow is a lone attack. Mix is still set in
-	// that case, because one card is still one colour.
+	// **It is HandNone when no hand formed** and the blow is a lone attack.
 	Hand HandID
-	Mix  MixID
 
-	// Multiplier is the turn's damage multiplier in percent — `Hand.Multiplier + Mix.Multiplier`,
-	// so 350 is the 3.5x a duo pair earns. It is on the event because the screen has no business
-	// re-deriving a number the resolver already worked out.
+	// Multiplier is the turn's damage multiplier in percent — the hand's, so 150 is the 1.5x a
+	// pair earns. It is on the event because the screen has no business re-deriving a number the
+	// resolver already worked out.
 	Multiplier int
 
 	// Base and Swing are the other two terms of the blow's arithmetic on KindCombo, and they are
@@ -529,7 +514,7 @@ type Event struct {
 	// queueing more gets its extra cards dropped from the *bracket* rather than from the combo,
 	// the same posture raiseDefend takes on an over-long defend list.
 	//
-	// The indices count the actions that actually resolved, staggered ones already removed,
+	// The indices count the actions that actually resolved, chilled ones already removed,
 	// which is the same sequence as this side's KindAction events — **events that have not
 	// happened yet when this one arrives**, since the combo phase runs first. The screen seats
 	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
@@ -592,12 +577,12 @@ func appendTurn(slots []Slot, side Side, cards []Card) []Slot {
 // with no business being random should pass: a preview, or a test pinning the parts of the
 // engine that are still exact.
 func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
-	return resolveRound(a, b, aCards, bCards, round, handTable, mixTable, rng)
+	return resolveRound(a, b, aCards, bCards, round, handTable, rng)
 }
 
 // resolveRound is ResolveRound with the catalogue injected. It exists so a test can drive a
 // synthetic hand through the whole engine rather than only through the matcher.
-func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, mixes []Mix, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
+func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
@@ -608,16 +593,16 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, 
 	//
 	// A whole turn each, A then B. This used to be one flat loop over ResolutionOrder with a
 	// flag watching for the handover; combos made a turn a thing with its own beginning —
-	// stagger is spent at it, and a combo's position is an index *within* it — so the turn
+	// a chill is spent at it, and a combo's position is an index *within* it — so the turn
 	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
 	// exactly the slots it produced for that side.
-	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, hands, mixes, rng)
+	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, hands, rng)
 
 	// B still loses its standing defenses even in a round it never gets to act in, which is
 	// why this is not inside playTurn's early return: expiry is a property of the turn
 	// arriving, not of anything happening in it.
 	if a.Alive() && b.Alive() {
-		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, hands, mixes, rng)
+		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, hands, rng)
 	} else {
 		b = expireDefenses(b)
 	}
@@ -631,16 +616,16 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, 
 	return events, a, b
 }
 
-// playTurn runs one side's whole turn: expiry, then whatever a stagger has taken off the
+// playTurn runs one side's whole turn: expiry, then whatever a chill has taken off the
 // front of it, then **every combo the surviving cards form**, and only then the cards
 // themselves.
 //
-// **Combos are matched against what is left after a stagger, not against the queue.** The
-// player queued five attacks; a stagger that ate two means three happened, and a combo
-// scored off cards a stagger deleted would let a staggered duelist stagger back with a turn
-// they did not take. That ordering is the reason the combo phase sits *inside* a turn rather
-// than at the top of the round: a round-wide combo phase would score B's combos before A's
-// stagger had taken anything off B.
+// **Combos are matched against what is left after a chill, not against the queue.** The
+// player queued five attacks; a chill that ate two means three happened, and a combo scored
+// off cards a chill deleted would let a chilled duelist swing with a turn they did not take.
+// That ordering is the reason the combo phase sits *inside* a turn rather than at the top of
+// the round: a round-wide combo phase would score B's combos before A's ice had taken
+// anything off B.
 func playTurn(
 	events []Event,
 	side Side,
@@ -648,38 +633,35 @@ func playTurn(
 	turn []Slot,
 	round int,
 	hands []Hand,
-	mixes []Mix,
 	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
 	actor = expireDefenses(actor)
 
-	// Stagger comes off the front, which needs no tie-break and so is the only pick that is
+	// A chill comes off the front, which needs no tie-break and so is the only pick that is
 	// deterministic without inventing a rule. **The front of a turn is its attacks** — the phase
-	// order puts them before the plans — so what a stagger costs first is the blow, which is what
+	// order puts them before the plans — so what a chill costs first is the blow, which is what
 	// makes it worth planning around rather than merely suffering.
 	//
 	// **The action points are not refunded.** They were committed when the cards were queued,
-	// and letting them come back would make stagger pure tempo; keeping them spent makes it
-	// tempo and economy both, which is the price a combo costing a whole round's budget to
-	// set up should command.
+	// and letting them come back would make a chill pure tempo; keeping them spent makes it
+	// tempo and economy both.
 	//
-	// **A chill is added to the stagger rather than counted separately** *(2026-08-16)*. Ice takes
-	// a card off the front of a turn, which is precisely what a stagger is, so the two add and one
-	// loop announces both. The difference between them is where they come from and how long they
-	// last: a stagger is spent when it bites, a chill bites on every turn it outlives.
+	// **The chill is read off the status and nowhere else** *(2026-08-17)*. A duelist used to
+	// carry a separate counter as well, banked by a combo that took actions off the opponent's
+	// next turn; combos buy damage alone now, so the status is the only thing that can take a
+	// card and there is one place to look for how many.
 	//
-	// The consequence, stated: a card lost to ice is announced as `KindStaggered`, so the feed
-	// says "staggered" for something the ring calls a chill. One event kind is what keeps the
-	// playback's one-beat-per-slot invariant true without a second thing to remember — see
-	// `currentSlot` on the screen, which counts these events to find the lit row.
-	lost := addStagger(actor.Staggered, actor.chillCards())
-	actor.Staggered = 0
-	if lost == StaggerAll || lost > len(turn) {
+	// **It bites on every turn it outlives**, rather than being spent when it bites — the status
+	// counting down is what ends it. The asymmetry phases impose is carried by the status too:
+	// side A acts first, so ice A lands takes a card from B the same round, while ice B lands
+	// finds A has already acted and bites in the round after.
+	lost := actor.chillCards()
+	if lost > len(turn) {
 		lost = len(turn)
 	}
 	for i := 0; i < lost; i++ {
 		events = append(events, Event{
-			Kind:    KindStaggered,
+			Kind:    KindChilled,
 			Side:    side,
 			Action:  turn[i].Card.Concept,
 			Element: turn[i].Card.Element,
@@ -690,8 +672,8 @@ func playTurn(
 
 	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
 	// announced, then the hand they form is announced, then a single figure of damage lands. Five
-	// Strikes are not five hits; they are one Strike Barrage.
-	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, round, hands, mixes, rng)
+	// Strikes are not five hits; they are one Four of a Kind.
+	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, round, hands, rng)
 
 	// **The plan phase comes second, and that is what a defence needs** *(2026-08-15)*. A Defend
 	// answers the *opponent's* blow, and the opponent acts after this turn ends — so a defence
@@ -765,15 +747,6 @@ func resolvePlan(
 	return events, actor, target
 }
 
-// addStagger combines an existing stagger with a new one. StaggerAll absorbs everything —
-// there is nothing above "the whole turn" for a count to add to.
-func addStagger(existing, add int) int {
-	if existing == StaggerAll || add == StaggerAll {
-		return StaggerAll
-	}
-	return existing + add
-}
-
 // expireDefenses drops everything the previous turn put up. Called at the start of a
 // side's own turn, never at the round boundary — side B acts last, so a defense cleared
 // at the boundary would have protected B from nothing at all.
@@ -840,13 +813,13 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 //
 // **One blow per turn** *(2026-08-14)*. Attack cards no longer resolve one at a time; they are
 // announced, and then `BlowFor` reads them as a set and says what they amount to. Cards that
-// contribute to no hand are announced and then ignored — `Strike, Jab, Strike` is a Strike Pair
-// and the Jab is not in it, so it adds nothing to the figure.
+// contribute to no hand are announced and then ignored — `Strike, Jab, Strike` is a Pair and the
+// Jab is not in it, so it adds nothing to the figure.
 //
-// The order inside the blow is: shock roll, base damage from the hand's own cards, the hand and
-// mix multiplier, the attacker's earth weight, then the defender's raised cards. **Weight sits
-// where it does because it is a property of the attacker** — it says how hard they can still
-// swing — so everything the defender does happens to a blow that has already been blunted.
+// The order inside the blow is: shock roll, base damage from the hand's own cards, the hand
+// multiplier, the attacker's earth weight, then the defender's raised cards. **Weight sits where
+// it does because it is a property of the attacker** — it says how hard they can still swing — so
+// everything the defender does happens to a blow that has already been blunted.
 func resolveAttackPhase(
 	events []Event,
 	side Side,
@@ -854,7 +827,6 @@ func resolveAttackPhase(
 	turn []Slot,
 	round int,
 	hands []Hand,
-	mixes []Mix,
 	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
 	targetSide := other(side)
@@ -870,7 +842,7 @@ func resolveAttackPhase(
 
 	// Every attack card is announced whether or not it ends up in the hand. **A slot that
 	// resolved has to produce a beat**, because the screen counts one per slot to know how far
-	// through the round playback is — see TestEverySlotIsEitherTakenOrStaggered.
+	// through the round playback is — see TestEverySlotIsEitherTakenOrChilled.
 	attacks := 0
 	for _, slot := range turn {
 		if slot.Card.Category() != CategoryAttack {
@@ -921,7 +893,7 @@ func resolveAttackPhase(
 		return events, actor, target
 	}
 
-	blow := blowFor(turn, hands, mixes)
+	blow := blowFor(turn, hands)
 	if len(blow.Cards) == 0 {
 		return events, actor, target
 	}
@@ -930,24 +902,13 @@ func resolveAttackPhase(
 	// reason for it. A lone attack that formed nothing carries HandNone and says only its colour.
 	//
 	// **It also carries the sum**, which is what the damage below is taken from — see comboEvent.
+	//
+	// **A hand buys damage and nothing else** *(2026-08-17)*. It used to be able to bank action
+	// points or take actions off the opponent's next turn, which is why there was a phase here
+	// paying those out before the blow landed. Statuses come from elements and rings now, so the
+	// multiplier is the whole reward and there is nothing to pay before the roll.
 	swung := comboEvent(side, blow, turn, actor.DMG, round)
 	events = append(events, swung)
-
-	// **What the hand buys besides damage is paid on forming it, not on connecting.** A shock
-	// that makes the blow miss does not undo a stagger the player assembled five cards to earn —
-	// the hand is scored off the queue, and the queue was committed when DUEL! was pressed.
-	if blow.Hand.Effect.BankAP != 0 {
-		actor.GatheredAP += blow.Hand.Effect.BankAP
-		events = append(events, Event{
-			Kind:   KindGathered,
-			Side:   side,
-			Amount: blow.Hand.Effect.BankAP,
-			Round:  round,
-		})
-	}
-	if blow.Hand.Effect.Stagger != 0 {
-		target.Staggered = addStagger(target.Staggered, blow.Hand.Effect.Stagger)
-	}
 
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
 	// spent, no status applied. The attack did not occur.
@@ -1070,15 +1031,15 @@ func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]
 // resolves completely, in queue order, before the next one starts**.
 //
 // **No hand is read and no combo event is emitted** *(2026-08-17)*. That is the whole of the
-// difference — there is no set to score, so there is no multiplier, no mix, no banked AP and no
-// stagger. What lands is the sum of what was played, one figure at a time, and the screen writes a
-// sentence per card because there is no phase line to carry them.
+// difference — there is no set to score, so there is no multiplier. What lands is the sum of what
+// was played, one figure at a time, and the screen writes a sentence per card because there is no
+// phase line to carry them.
 //
 // Three things it keeps deliberately in step with the comboing phase, because they are rules about
 // attacking rather than rules about combos:
 //
 //   - **One beat per slot.** Every attack card announces itself with a KindAction, so playback can
-//     still count how far through the round it is — see TestEverySlotIsEitherTakenOrStaggered.
+//     still count how far through the round it is — see TestEverySlotIsEitherTakenOrChilled.
 //   - **One shock roll for the turn, not one per card.** A shock is "the turn's attack misses", and
 //     rolling per card would both change what the status means and advance the one random stream in
 //     the package a different number of times per round. A shocked solo attacker misses with
@@ -1198,8 +1159,8 @@ func resolveSoloAttacks(
 	return events, actor, target
 }
 
-// comboEvent packages what the attack phase formed for the screen: which hand, which mix, the
-// multiplier, which cards of the turn earned it, and the arithmetic they come to.
+// comboEvent packages what the attack phase formed for the screen: which hand, the multiplier,
+// which cards of the turn earned it, and the arithmetic they come to.
 //
 // **It is the attack phase's one line in the feed** *(2026-08-14)*, so it carries everything that
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
@@ -1224,7 +1185,6 @@ func comboEvent(side Side, blow Blow, turn []Slot, dmg, round int) Event {
 		Element:    lead.Element,
 		Amount:     base + scaleDamage(swing, blow.Multiplier),
 		Hand:       blow.Hand.ID,
-		Mix:        blow.Mix.ID,
 		Multiplier: blow.Multiplier,
 		Base:       base,
 		Swing:      swing,
@@ -1297,15 +1257,15 @@ func other(s Side) Side {
 // enemy's colours do nothing until an affix attunes them, so preferring one would be preferring a
 // border.
 func PlanFor(d Duelist, hand []Card) []Card {
-	return planFor(d, hand, handTable, mixTable)
+	return planFor(d, hand, handTable)
 }
 
 // planFor is PlanFor with the catalogue injected, so a test can drive a planner against a
 // synthetic ladder.
-func planFor(d Duelist, hand []Card, hands []Hand, mixes []Mix) []Card {
+func planFor(d Duelist, hand []Card, hands []Hand) []Card {
 	budget, slots := d.ActionPoints(), d.MaxActions()
 
-	chosen, spent := bestAttacks(d, hand, budget, slots, hands, mixes)
+	chosen, spent := bestAttacks(d, hand, budget, slots, hands)
 	return append(chosen, spareCards(hand, chosen, budget-spent, slots-len(chosen))...)
 }
 
@@ -1316,7 +1276,7 @@ func planFor(d Duelist, hand []Card, hands []Hand, mixes []Mix) []Card {
 // this is at most 128 candidates, each scored by the real `blowFor`. Above `maxSearchableAttacks`
 // it falls back to taking the biggest cards that fit — a balance sim deliberately handing an
 // opponent twenty attacks should get a plan rather than a hung process.
-func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand, mixes []Mix) ([]Card, int) {
+func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Card, int) {
 	var offence []int
 	for i, c := range hand {
 		s := c.Spec()
@@ -1350,7 +1310,7 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand, mixes 
 		if len(pick) > slots || cost > budget {
 			continue
 		}
-		if score := blowScore(d, hand, pick, hands, mixes); score > bestScore {
+		if score := blowScore(d, hand, pick, hands); score > bestScore {
 			bestScore, bestCost, best = score, cost, pick
 		}
 	}
@@ -1369,7 +1329,7 @@ const maxSearchableAttacks = 14
 // blowScore is what one candidate turn would actually land, run through the same matcher the
 // resolver uses. It is the blow before any defence, which is all a planner can know — it cannot
 // see what the other side has raised.
-func blowScore(d Duelist, hand []Card, pick []int, hands []Hand, mixes []Mix) int {
+func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 	// **A solo attacker's turn is worth the sum of its cards and nothing else.** No hand is read,
 	// so there is no multiplier to chase and no card that earns nothing — which also means the
 	// search is now looking for the most damage the budget buys rather than the best combination.
@@ -1386,7 +1346,7 @@ func blowScore(d Duelist, hand []Card, pick []int, hands []Hand, mixes []Mix) in
 		turn = append(turn, Slot{Index: i, Card: hand[idx]})
 	}
 
-	blow := blowFor(turn, hands, mixes)
+	blow := blowFor(turn, hands)
 	if len(blow.Cards) == 0 {
 		return 0
 	}

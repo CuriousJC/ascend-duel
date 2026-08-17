@@ -384,7 +384,7 @@ func (s *CombatScene) updateFeed(gs *state.GlobalState) {
 // Merging an action with its outcome is presentation of events the engine already decided; it
 // computes nothing, so the pane still cannot disagree with the round.
 //
-// Combos and staggers get lines of their own. They are not something a card did, they are
+// Combos and chills get lines of their own. They are not something a card did, they are
 // something that happened *to* the round, and folding a combo into the line of the card that
 // happened to start it would bury the one thing this pane was added to show.
 //
@@ -416,14 +416,14 @@ func (s *CombatScene) updateFeed(gs *state.GlobalState) {
 func (s *CombatScene) planningLines() []paneRow {
 	prompt := paneRow{prefix: "(press DUEL!)"}
 
-	blow, turn, ok := s.previewBlow()
+	blow, _, ok := s.previewBlow()
 	if !ok {
 		return []paneRow{prompt}
 	}
 
 	return []paneRow{
 		{
-			prefix: "COMBO! " + comboNameOf(blow.Hand, blow.Mix, turn[blow.Lead].Card.Concept) +
+			prefix: "COMBO! " + blow.Hand.Name +
 				" x" + multiplierText(blow.Multiplier),
 			swatch: comboSwatch,
 		},
@@ -520,8 +520,8 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			}
 			act(e.Side, combat.Card{Concept: e.Action, Element: e.Element})
 
-		case combat.KindStaggered:
-			announce(fmt.Sprintf("%s is staggered - %v is lost", s.sideName(e.Side), combat.ConceptOf(e.Action).Label),
+		case combat.KindChilled:
+			announce(fmt.Sprintf("%s is chilled - %v is lost", s.sideName(e.Side), combat.ConceptOf(e.Action).Label),
 				swatchFor(e.Side))
 
 		case combat.KindMissed:
@@ -1056,7 +1056,7 @@ const (
 // **It no longer has to draw a combo spanning non-adjacent slots**, which was an open problem
 // for as long as this was the only pane: one row per slot with a single walking highlight has
 // no way to say "these together did a thing". The Resolution pane says it in words instead.
-// The same goes for a slot a stagger deleted — this pane still draws it as a row, and the
+// The same goes for a slot a chill deleted — this pane still draws it as a row, and the
 // other one is where it is reported as lost.
 func (s *CombatScene) actionFlowRows(fighter, enemy []combat.Card, concealEnemy bool) []paneRow {
 	order := combat.ResolutionOrder(fighter, enemy)
@@ -1098,38 +1098,22 @@ func concealedLabel(c combat.Card) string {
 	return fmt.Sprintf("??? (%s)", c.Category())
 }
 
-// comboName is what the attack phase formed, said in words: the element makeup in front of the
-// hand, as "Duo Strike Flurry".
+// comboName is what the attack phase formed, said in words: "Two Pair", "Four of a Kind".
 //
-// **The mix is dropped when the hand showed no colour**, because "Drab Strike Flurry" is a word
-// spent saying nothing. And a blow that formed no hand at all is named only as an attack — the
-// pane does not announce those, but the trace does.
+// **A hand carries its whole name** *(2026-08-17)*. The name used to be assembled here from two
+// parts — the element makeup in front of the hand, "Duo Strike Flurry" — and both of those axes
+// are gone: colour buys statuses rather than a multiplier, and a hand is named for its shape
+// rather than for the card that formed it. A blow that formed no hand at all is named only as an
+// attack; the pane does not announce those, but the trace does.
 //
-// The names come from the catalogue rather than being written here, so a hand renamed in
+// The name comes from the catalogue rather than being written here, so a hand renamed in
 // `data/combos.json` is renamed once.
 func comboName(e combat.Event) string {
 	hand, ok := combat.HandByID(e.Hand)
 	if !ok {
 		return "attack"
 	}
-	mix, _ := combat.MixByID(e.Mix)
-	return comboNameOf(hand, mix, e.Action)
-}
-
-// comboNameOf is the same name built from the hand and mix themselves, for the preview the hand
-// row draws while the player is still choosing. **One namer, two callers**: a preview that named
-// a combo differently from the feed that reports it would be two vocabularies for one thing.
-//
-// **`lead` is the concept the hand is named after** *(2026-08-16)*. A catalogue entry holds a
-// template — `{card} Pair` — because one entry covers every card in the game, so a name that was
-// not filled in prints the template at the player. `combat.HandName` is the one place that
-// substitution happens.
-func comboNameOf(hand combat.Hand, mix combat.Mix, lead combat.ConceptID) string {
-	name := combat.HandName(hand, lead)
-	if mix.Colours > 0 {
-		return mix.Name + " " + name
-	}
-	return name
+	return hand.Name
 }
 
 // comboMath is the blow written out as the sum it is: `20 + 10 x 3.5 = 55`.

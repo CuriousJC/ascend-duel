@@ -96,6 +96,56 @@ func TestTheRingRowSitsBelowTheCardsBesideIt(t *testing.T) {
 	}
 }
 
+// The two tower lines sit in the band between the duelist card and the table's left-hand row,
+// and that band is only about seventy pixels deep. Both of its edges move on their own — the
+// card's off topRowTopPct, the table's off handTopPct and the feed's height — so the fit is
+// exactly the kind of thing that goes stale silently.
+func TestTheTowerLinesFitBetweenTheCardAndTheTable(t *testing.T) {
+	gs := testState()
+	s := &CombatScene{}
+
+	card, place := s.duelistCardRect(gs), s.towerPlaceRect(gs)
+
+	if place.Min.Y <= card.Max.Y {
+		t.Errorf("the tower lines start at y=%d, inside the duelist card ending at y=%d",
+			place.Min.Y, card.Max.Y)
+	}
+	if place.Min.X != card.Min.X {
+		t.Errorf("the tower lines start at x=%d and the card at x=%d — they share a left edge",
+			place.Min.X, card.Min.X)
+	}
+
+	// The player's row of played cards starts at tableInset, well left of the card's right
+	// edge, so the lines have to finish above it.
+	if top := tableRowTop(gs); place.Max.Y > top {
+		t.Errorf("the tower lines reach y=%d, into the table row at y=%d", place.Max.Y, top)
+	}
+}
+
+func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
+	// Three fights to a floor and three names for them: towerRoom indexes one array by the
+	// other's modulus, so a fourth fight per floor would panic rather than draw a blank line.
+	if len(towerRoomNames) != fightsPerFloor {
+		t.Fatalf("%d room names for %d fights a floor", len(towerRoomNames), fightsPerFloor)
+	}
+
+	// The floor turns over on the fight after the last room, and the first fight is the first
+	// room of floor one — an off-by-one here would name the boss room "Outer".
+	for fight, want := range map[int]string{
+		0: "Outer Room", 1: "Inner Room", 2: "Stairway",
+		3: "Outer Room", 5: "Stairway", 6: "Outer Room",
+	} {
+		if got := towerRoom(fight); got != want {
+			t.Errorf("fight %d is the %s, want the %s", fight, got, want)
+		}
+	}
+	for fight, want := range map[int]int{0: 1, 2: 1, 3: 2, 5: 2, 6: 3, 23: 8} {
+		if got := towerFloor(fight); got != want {
+			t.Errorf("fight %d is on floor %d, want %d", fight, got, want)
+		}
+	}
+}
+
 func TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}

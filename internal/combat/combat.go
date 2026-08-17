@@ -162,6 +162,32 @@ type Duelist struct {
 	// written down somewhere else. Statuses reaching the player by some other route later is
 	// expected; it will not be by an enemy putting on jewellery.
 	Rings [ElementCount]bool
+
+	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
+	// were queued**, each landing its own blow — instead of being read as a set and scored
+	// through the combo table.
+	//
+	// **It is what an enemy is** *(2026-08-17, owner's call)*. Combos are the player's mechanic:
+	// the hands are counted off concepts and the mixes off colours, and an enemy has neither axis
+	// to play with — every enemy card in `data/enemies.json` is authored `basic` and
+	// `FamilyNone`, so an opponent's "hand" was whatever its planner happened to afford. Now an
+	// enemy holding three cards swings three times and the player can read the round off the
+	// cards on the table.
+	//
+	// **The default is false, so a plain `Duelist{}` combos.** Combos are the norm and this is the
+	// exception, which is why the field is named for the exception rather than for the norm: a
+	// `Combos bool` would have made every existing literal — the whole test suite, the balance
+	// tool's fighter — quietly stop comboing.
+	//
+	// **It is a flag on the duelist rather than a rule about SideB.** The engine has no idea which
+	// side is a person, and it must not learn: the balance tool plays both sides headlessly, and
+	// a rule keyed on the side would be a rule that cannot be tested from the other end.
+	//
+	// The alternative considered and rejected was deriving it from the cards — an enemy card is
+	// `FamilyNone`, so "no family, no combo" needs no field at all. It was rejected because it
+	// couples two things that are not the same thing: affixes are designed to *transform* an
+	// enemy deck, and a card that gained a family would silently gain combos with it.
+	SoloAttacks bool
 }
 
 // WearsRing reports whether this duelist's ring makes the named element do something. Basic is
@@ -831,6 +857,15 @@ func resolveAttackPhase(
 ) ([]Event, Duelist, Duelist) {
 	targetSide := other(side)
 
+	// **A solo attacker takes a different phase entirely, not a special case inside this one.**
+	// The two are different shapes: one announces everything and then lands a single figure, the
+	// other resolves each card completely before the next one starts. Threading a flag through
+	// the blow, the multiplier and the combo event would leave a function whose every step had
+	// two readings.
+	if actor.SoloAttacks {
+		return resolveSoloAttacks(events, side, actor, target, turn, round, rng)
+	}
+
 	// Every attack card is announced whether or not it ends up in the hand. **A slot that
 	// resolved has to produce a beat**, because the screen counts one per slot to know how far
 	// through the round playback is — see TestEverySlotIsEitherTakenOrStaggered.
@@ -937,32 +972,10 @@ func resolveAttackPhase(
 	// arithmetic, and a second copy of it here is the one way the printed sum could be wrong.
 	dmg := blunt(swung.Amount, actor.weight())
 
-	// **Every raised defence answers the blow, and they compose multiplicatively.** Order is not
-	// read: a turn has one attack, so "which card meets which blow" has no content. Multiplying
-	// what is left rather than adding the percentages is what stops two cards reaching zero by
-	// accident while keeping each one worth something — two Defends take three quarters rather
-	// than the whole thing, and a third takes seven eighths, which is a curve that never arrives.
-	for i := 0; i < target.DefendCount; i++ {
-		card := target.Defends[i].Card
-		pct := reductionFor(card)
-		if pct <= 0 {
-			continue
-		}
-		dmg = dmg * (100 - pct) / 100
+	events, dmg = applyDefends(events, side, target, dmg, round)
 
-		events = append(events, Event{
-			Kind:   KindNegated,
-			Side:   targetSide,
-			Action: card,
-			Target: side,
-			Amount: dmg,
-			Round:  round,
-		})
-	}
-
-	// Every defence is spent on the one blow it answered.
-	target.Defends = [maxPendingDefends]PendingDefend{}
-	target.DefendCount = 0
+	// Every defence is spent on the turn it answered.
+	target = ClearDefenses(target)
 
 	target.CurrentLife = reduce(target.CurrentLife, dmg)
 	events = append(events, Event{
@@ -1015,6 +1028,171 @@ func resolveAttackPhase(
 		})
 	}
 
+	return events, actor, target
+}
+
+// applyDefends runs every card the target has raised over one incoming blow and reports what is
+// left of it, announcing each as it bites.
+//
+// **It does not spend them, and the caller clears them once the turn is over.** A defence covers
+// exactly one opposing *turn* — see expireDefenses — which is one blow from a comboing duelist and
+// several from a solo one. Spending them on the first blow would make a Defend nearly worthless
+// against the very opponents that swing more than once.
+//
+// **They compose multiplicatively and the order is not read.** Multiplying what is left rather
+// than adding the percentages is what stops two cards reaching zero by accident while keeping each
+// one worth something: two Defends take three quarters rather than the whole thing, and a third
+// takes seven eighths, which is a curve that never arrives.
+func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]Event, int) {
+	for i := 0; i < target.DefendCount; i++ {
+		card := target.Defends[i].Card
+		pct := reductionFor(card)
+		if pct <= 0 {
+			continue
+		}
+		dmg = dmg * (100 - pct) / 100
+
+		events = append(events, Event{
+			Kind:   KindNegated,
+			Side:   other(side),
+			Action: card,
+			Target: side,
+			Amount: dmg,
+			Round:  round,
+		})
+	}
+	return events, dmg
+}
+
+// resolveSoloAttacks is the attack phase of a duelist whose cards do not combo: **every attack
+// resolves completely, in queue order, before the next one starts**.
+//
+// **No hand is read and no combo event is emitted** *(2026-08-17)*. That is the whole of the
+// difference — there is no set to score, so there is no multiplier, no mix, no banked AP and no
+// stagger. What lands is the sum of what was played, one figure at a time, and the screen writes a
+// sentence per card because there is no phase line to carry them.
+//
+// Three things it keeps deliberately in step with the comboing phase, because they are rules about
+// attacking rather than rules about combos:
+//
+//   - **One beat per slot.** Every attack card announces itself with a KindAction, so playback can
+//     still count how far through the round it is — see TestEverySlotIsEitherTakenOrStaggered.
+//   - **One shock roll for the turn, not one per card.** A shock is "the turn's attack misses", and
+//     rolling per card would both change what the status means and advance the one random stream in
+//     the package a different number of times per round. A shocked solo attacker misses with
+//     everything and says so on each card.
+//   - **Weight, then defences, then statuses**, in that order, for the reason the other phase gives:
+//     weight is a property of the attacker, so everything the defender does happens to a blow that
+//     has already been blunted.
+func resolveSoloAttacks(
+	events []Event,
+	side Side,
+	actor, target Duelist,
+	turn []Slot,
+	round int,
+	rng *rand.Rand,
+) ([]Event, Duelist, Duelist) {
+	targetSide := other(side)
+
+	attacked := false
+	missed := false
+	rolled := false
+
+	for _, slot := range turn {
+		if slot.Card.Category() != CategoryAttack {
+			continue
+		}
+		attacked = true
+
+		events = append(events, Event{
+			Kind:    KindAction,
+			Side:    side,
+			Action:  slot.Card.Concept,
+			Element: slot.Card.Element,
+			Round:   round,
+		})
+
+		// **Recoil is the card hurting its own owner**, and it is not a blow: it lands whatever the
+		// shock did, because a duelist tearing themselves open has already paid by the time the
+		// swing would have missed.
+		if slot.Card.Spec().Recoils() {
+			actor.CurrentLife = reduce(actor.CurrentLife, slot.Card.Damage(actor.DMG))
+			events = append(events, Event{
+				Kind:    KindDamage,
+				Side:    side,
+				Target:  side,
+				Element: slot.Card.Element,
+				Amount:  slot.Card.Damage(actor.DMG),
+				Life:    actor.CurrentLife,
+				Round:   round,
+			})
+			if !actor.Alive() {
+				events = append(events, Event{Kind: KindDefeated, Side: side, Target: side, Round: round})
+				return events, actor, target
+			}
+			continue
+		}
+
+		// The roll happens on the first card that could actually swing, and once only. Rolling
+		// before the loop would advance the stream for a turn of nothing but recoil.
+		if !rolled {
+			missed, rolled = shockMisses(actor, rng), true
+		}
+		if missed {
+			events = append(events, Event{
+				Kind:    KindMissed,
+				Side:    side,
+				Action:  slot.Card.Concept,
+				Element: slot.Card.Element,
+				Target:  targetSide,
+				Round:   round,
+			})
+			continue
+		}
+
+		dmg := blunt(slot.Card.Damage(actor.DMG), actor.weight())
+		events, dmg = applyDefends(events, side, target, dmg, round)
+
+		target.CurrentLife = reduce(target.CurrentLife, dmg)
+		events = append(events, Event{
+			Kind:   KindDamage,
+			Side:   side,
+			Target: targetSide,
+			Amount: dmg,
+			Life:   target.CurrentLife,
+			Round:  round,
+		})
+
+		// One card, one colour, and the same ring gate the other phase applies. An enemy wears no
+		// rings, so this does nothing for the only duelists that are solo attackers today — it is
+		// here because the rule belongs to attacking, not to comboing.
+		if actor.WearsRing(slot.Card.Element) {
+			if applied, amount, ok := applyStatus(target, slot.Card.Element, actor); ok {
+				target = applied
+				events = append(events, Event{
+					Kind:    KindStatus,
+					Side:    side,
+					Target:  targetSide,
+					Element: slot.Card.Element,
+					Amount:  amount,
+					Life:    target.CurrentLife,
+					Round:   round,
+				})
+			}
+		}
+
+		if !target.Alive() {
+			events = append(events, Event{Kind: KindDefeated, Side: side, Target: targetSide, Round: round})
+			return events, actor, target
+		}
+	}
+
+	// **The defences are spent only if something was swung at them**, which is the comboing
+	// phase's rule too: a turn with no attacks in it returns before clearing, and expireDefenses
+	// takes them at the start of their owner's next turn instead.
+	if attacked {
+		target = ClearDefenses(target)
+	}
 	return events, actor, target
 }
 
@@ -1190,6 +1368,17 @@ const maxSearchableAttacks = 14
 // resolver uses. It is the blow before any defence, which is all a planner can know — it cannot
 // see what the other side has raised.
 func blowScore(d Duelist, hand []Card, pick []int, hands []Hand, mixes []Mix) int {
+	// **A solo attacker's turn is worth the sum of its cards and nothing else.** No hand is read,
+	// so there is no multiplier to chase and no card that earns nothing — which also means the
+	// search is now looking for the most damage the budget buys rather than the best combination.
+	if d.SoloAttacks {
+		total := 0
+		for _, idx := range pick {
+			total += hand[idx].Damage(d.DMG)
+		}
+		return total
+	}
+
 	turn := make([]Slot, 0, len(pick))
 	for i, idx := range pick {
 		turn = append(turn, Slot{Index: i, Card: hand[idx]})

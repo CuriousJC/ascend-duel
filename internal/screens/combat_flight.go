@@ -725,7 +725,11 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		mine, theirs = &s.enemyFiringSeats, &s.firingSeats
 	}
 
-	if combat.Plain(e.Action).Category() != combat.CategoryAttack {
+	// **A solo attacker lifts one card at a time, and that is the whole point of it**
+	// *(2026-08-17)*. Raising the set says "these cards are one blow", which is exactly what an
+	// enemy's turn is not any more: three cards swing three times, in order, and the card that is
+	// up is the card that is hitting.
+	if combat.Plain(e.Action).Category() != combat.CategoryAttack || s.soloAttacker(side) {
 		*mine = []int{seat}
 	} else {
 		*mine = attackSeats(order, side)

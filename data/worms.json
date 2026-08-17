@@ -1,0 +1,68 @@
+[
+  {
+    "WormRecord": "devour",
+    "Name": "Devour",
+    "Target": "remove",
+    "Text": "eat one card"
+  },
+  {
+    "WormRecord": "spawn",
+    "Name": "Spawn",
+    "Target": "duplicate",
+    "Text": "copy one card"
+  },
+  {
+    "WormRecord": "ember-worm",
+    "Name": "Ember Worm",
+    "Target": "element",
+    "Value": "fire",
+    "Text": "make one card FIRE"
+  },
+  {
+    "WormRecord": "rime-worm",
+    "Name": "Rime Worm",
+    "Target": "element",
+    "Value": "ice",
+    "Text": "make one card ICE"
+  },
+  {
+    "WormRecord": "arc-worm",
+    "Name": "Arc Worm",
+    "Target": "element",
+    "Value": "lightning",
+    "Text": "make one card BOLT"
+  },
+  {
+    "WormRecord": "loam-worm",
+    "Name": "Loam Worm",
+    "Target": "element",
+    "Value": "earth",
+    "Text": "make one card EARTH"
+  },
+  {
+    "WormRecord": "whetworm",
+    "Name": "Whetworm",
+    "Target": "cost",
+    "Value": "-1",
+    "Text": "one card costs 1 less AP"
+  },
+  {
+    "WormRecord": "swell",
+    "Name": "Swell",
+    "Target": "amount",
+    "Value": "150",
+    "Text": "one card does half again"
+  },
+  {
+    "WormRecord": "grow",
+    "Name": "Grow",
+    "Target": "promote",
+    "Text": "one card up a tier"
+  },
+  {
+    "WormRecord": "shrink",
+    "Name": "Shrink",
+    "Target": "demote",
+    "Text": "one card down a tier"
+  }
+]

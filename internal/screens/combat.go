@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -85,39 +86,18 @@ const (
 func (s *CombatScene) roster(gs *state.GlobalState) []string {
 	if s.enemyRoster == nil {
 		s.enemyRoster = shuffleWithinFloors(data.EnemyOrder(gs.Enemies), gs.Enemies,
-			rand.New(rand.NewSource(gs.RunSeed^enemySelectSalt)))
+			rand.New(rand.NewSource(seeds.For(gs.RunSeed, seeds.EnemySelect))))
 	}
 	return s.enemyRoster
 }
 
-// enemySelectSalt separates the enemy-selection stream from every other consumer of the run
-// seed. **A stream is only ever advanced by its own concern** — the deck shuffles, the loot and
-// the floor offers each get their own source seeded the same way, so that retuning one cannot
-// silently reroll another. Seeding two of them from the bare RunSeed would make them identical
-// sequences, which is the same bug wearing a disguise.
-const enemySelectSalt = 0x5EED_E9E3
-
-// combatSalt separates the rules' own stream — the shock roll — from every other consumer of the
-// run seed, for exactly the reason above. It is the sixth stream and the first one that lives
-// inside `internal/combat` rather than around it.
-const combatSalt = 0x5EED_5C0F
-
-// playerDeckSalt and enemyDeckSalt separate the two card shuffles, both from each other and
-// from every other stream off the run seed. **The two sides must never share one**: the
-// player's opening hand would become a function of how many cards the opponent happened to
-// draw, and a named hand in seeds.go has to stay a fact about the player's deck alone.
-const (
-	playerDeckSalt = 0x5EED_DEC4
-	enemyDeckSalt  = 0x5EED_F0E5
-)
-
-// fightStride separates one fight's shuffle from the next within a run. A large odd number so
-// consecutive fights are not consecutive seeds — adjacent seeds are fine for math/rand, but a
-// stride this size also keeps fight N of one run away from fight N+1 of a run seeded one apart.
-const fightStride int64 = 0x2545_F491_4F6C_DD1D
-
 // shuffleSeeds says what the two decks are shuffled from for the fight about to start: the
 // pinned pair if deckSeed is set, otherwise a fresh pair rolled from the run seed.
+//
+// **The salts and the stride left this file on 2026-08-17** for `internal/seeds`, which is the
+// one place every stream is now derived and the only place a duplicate salt can be seen. What
+// stays here is the *policy* — which is a screen's business — and it is the pin, not the
+// derivation.
 //
 // **Pinning is all-or-nothing.** A pinned player deck against a rolled opponent reproduces
 // half a duel, which is worse than reproducing none of it — the hand looks right and the fight
@@ -130,10 +110,10 @@ const fightStride int64 = 0x2545_F491_4F6C_DD1D
 // of it say so.
 func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) {
 	if deckSeed != 0 {
-		return deckSeed, decks.EnemySeed
+		return deckSeed, seeds.EnemyDeckPin
 	}
-	fight := int64(s.fightIndex+1) * fightStride
-	return gs.RunSeed ^ playerDeckSalt ^ fight, gs.RunSeed ^ enemyDeckSalt ^ fight
+	return seeds.ForFight(gs.RunSeed, seeds.PlayerDeck, s.fightIndex),
+		seeds.ForFight(gs.RunSeed, seeds.EnemyDeck, s.fightIndex)
 }
 
 // shuffleWithinFloors reorders a floor-sorted roster inside each run of equal ValidFloors,
@@ -190,11 +170,6 @@ func shuffleWithinFloors(names []string, recs map[string]data.EnemyData, rng *ra
 // Four against a hand of eight is deliberately generous for now — a number to play against,
 // not a balanced one.
 const discardsPerRound = 4
-
-// startingVitae is a placeholder. Vitae is a run-level resource that will live on Session
-// state once that exists; until then the block shows a fixed 5 so the field has a shape on
-// screen and somewhere to be read from.
-const startingVitae = 5
 
 // screenGround is what the whole combat screen is painted on, and **it went cream on
 // 2026-08-14**, from the {50,50,50} dark grey it had been since the screen existed.
@@ -332,19 +307,27 @@ type CombatScene struct {
 	enemyFiringSeats []int
 
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
-	// every round; vitae is a placeholder that never moves yet.
+	// every round. **Vitae is the run's, not the screen's** *(2026-08-17)* — see session.Session,
+	// which is what the post-battle screen pays into.
 	discardsLeft int
-	vitae        int
 
-	// fightIndex is how far along enemyRoster the player has got. It survives Init because
-	// Init is also how the *next* fight starts — see nextFight, which advances it and then
-	// asks for a re-init rather than resetting the screen itself.
+	// fightIndex is how far along enemyRoster the player has got.
 	//
-	// restart is that request. It is a flag rather than a direct call because it is raised
-	// from a button's OnClick, which takes no arguments and so cannot reach the global state
-	// Init needs.
+	// **The run owns this now** *(2026-08-17)* — `session.Session.Fight()` — because the
+	// post-battle screen seeds its offer from it and a number living on one scene is invisible to
+	// every other. This is a per-visit copy, read in Init, so the draw paths and the seed
+	// arithmetic can go on reading a plain int.
+	//
+	// restart is what a defeat raises: a retry re-enters this screen rather than changing to
+	// another one. A flag rather than a direct call because it is raised from a button's OnClick,
+	// which takes no arguments and so cannot reach the global state Init needs.
 	fightIndex int
 	restart    bool
+
+	// won is the other exit: the fight was won, so the run advances and the post-battle screen
+	// takes over. Same shape as restart and for the same reason — raised by a button, consumed by
+	// Update with the global state in hand.
+	won bool
 
 	// enemyRoster is the fight order, built once from the loaded records. On the scene
 	// rather than at package scope because it reads global state, which does not exist
@@ -394,6 +377,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The enemy is rebuilt every visit rather than once, because fightIndex may have moved
 	// since the last one. Init is how the next fight starts, not only how the screen is
 	// entered — see nextFight.
+	// The run says which room this is; the scene keeps a copy for the frame. See fightIndex.
+	s.fightIndex = gs.Run.Fight()
 	s.enemy = enemyFromRecord(gs, s.roster(gs)[s.fightIndex%len(s.roster(gs))], s.fightIndex)
 
 	// The scene builds its own widgets and wires them to its own methods, so no other
@@ -454,14 +439,13 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.enemyDealt = nil
 	s.restart = false
 	s.discardsLeft = discardsPerRound
-	s.vitae = startingVitae
 
 	// A fresh deck every visit rather than continuing a run that has been abandoned, and a
 	// fresh *shuffle* per fight — the seeds come from the run seed unless deckSeed pins them.
 	playerSeed, enemySeed := s.shuffleSeeds(gs)
 	s.rng = rand.New(rand.NewSource(playerSeed))
-	s.combatRNG = rand.New(rand.NewSource(gs.RunSeed ^ combatSalt))
-	s.resetDeck()
+	s.combatRNG = rand.New(rand.NewSource(seeds.For(gs.RunSeed, seeds.CombatRoll)))
+	s.resetDeck(gs.Run)
 
 	// The queue starts empty every visit and is derived from what is selected in hand.
 	// DUEL! is disabled until something is in it.
@@ -545,15 +529,19 @@ func (s *CombatScene) duelSettled() bool {
 // no arguments and Init needs the global state — so it raises a flag that Update acts on
 // with the pointer already in hand.
 //
-// Winning advances along the roster; losing puts the same opponent back up.
+// **Winning leaves the screen; losing stays on it.** A win goes to the post-battle scene, which
+// offers one alteration to the deck and sends the player back here for the next room — so the
+// advance along the roster is the run's (`WonFight`), not this screen's. A defeat has nothing to
+// award, so it re-enters directly and puts the same opponent back up.
 func (s *CombatScene) nextFight() {
 	if !s.duelSettled() {
 		return
 	}
-	if !s.enemy.Alive() {
-		s.fightIndex++
+	if s.enemy.Alive() {
+		s.restart = true
+		return
 	}
-	s.restart = true
+	s.won = true
 }
 
 func (s *CombatScene) Update(gs *state.GlobalState) error {
@@ -566,6 +554,17 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	if s.restart {
 		s.restart = false
 		s.Init(gs)
+		return nil
+	}
+
+	// A won fight advances the run and hands over to the post-battle screen, which comes back
+	// here when the player has taken their alteration. The advance is here rather than in
+	// nextFight so the run moves once, on the tick the screen actually leaves.
+	if s.won {
+		s.won = false
+		gs.Run.WonFight()
+		gs.ActiveScreen = state.PostBattle
+		gs.NewScreen = true
 		return nil
 	}
 

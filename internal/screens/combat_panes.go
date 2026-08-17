@@ -684,20 +684,26 @@ func multiplierText(amount int) string {
 // It is deliberately not the same wording as cardPhrase: that is prose for a *sentence about a
 // round* — "attacks with a heavy strike" — and this is a rules description read while deciding
 // whether to play the thing.
-func cardEffect(id combat.ConceptID) string {
-	c := combat.ConceptOf(id)
+// **It reads the card, not the concept** *(2026-08-17)*. Every figure printed here comes from
+// `Card.Amount()`, which is where a worm's scaling is applied — so an altered Defend says the
+// percentage it actually cuts and an altered Prepare says what it actually banks. The wording was
+// already a template over the value; what changed is which value it reads. A card whose face
+// disagreed with its behaviour would be the worst thing an alteration mechanic could produce.
+func cardEffect(card combat.Card) string {
+	c := card.Spec()
+	amount := card.Amount()
 	switch c.Verb {
 	case combat.VerbDefend:
-		return "Cuts damage by " + strconv.Itoa(c.Amount) + "%"
+		return "Cuts damage by " + strconv.Itoa(amount) + "%"
 	case combat.VerbBank:
-		return "Bank " + strconv.Itoa(c.Amount) + " AP for next round"
+		return "Bank " + strconv.Itoa(amount) + " AP for next round"
 	case combat.VerbDraw:
-		return "Draw " + strconv.Itoa(c.Amount) + " cards next round"
+		return "Draw " + strconv.Itoa(amount) + " cards next round"
 	default:
 		if c.Target == combat.TargetSelf {
-			return "Costs you " + multiplierText(c.Amount) + " DMG"
+			return "Costs you " + multiplierText(amount) + " DMG"
 		}
-		return attackVerb(c.Family) + " for " + multiplierText(c.Amount) + " DMG"
+		return attackVerb(c.Family) + " for " + multiplierText(amount) + " DMG"
 	}
 }
 

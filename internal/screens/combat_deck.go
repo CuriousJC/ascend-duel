@@ -15,6 +15,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -108,14 +109,30 @@ func buildStartingDeck() []deckEntry {
 	return out
 }
 
-// deckSize is how many cards the starting deck actually deals, counting copies. Used by the
-// trace dump and the deck overlay's heading, so neither has to recount.
-func deckSize() int {
-	n := 0
+// StartingDeck is the authored deck expanded to one entry per card — what a run opens with, and
+// what `main` hands to `session.New`.
+//
+// Exported because a *run* starts outside this package now. Nothing here owns the deck any more:
+// the piles are dealt from `GlobalState.Run` and a worm can thin or recolour it between fights,
+// so this is the list a run begins from rather than the list it plays with.
+func StartingDeck() []actionCard {
+	out := make([]actionCard, 0, 48)
 	for _, e := range startingDeck {
-		n += e.count
+		for i := 0; i < e.count; i++ {
+			out = append(out, e.card)
+		}
 	}
-	return n
+	return out
+}
+
+// deckSize is how many cards the player owns right now, counting all three piles.
+//
+// **It counts rather than reading a constant** *(2026-08-17)*. It used to total the authored
+// starting list, which was the same number every time and stopped being true the moment a worm
+// could remove a card. The piles are conserved — nothing is created or destroyed mid-fight — so
+// their sum is the run's deck size for as long as the fight lasts.
+func (s *CombatScene) deckSize() int {
+	return len(s.deck) + len(s.discard) + len(s.hand)
 }
 
 // deckEntry is one line of a deck list: a card and how many copies of it.
@@ -139,7 +156,7 @@ const deckSeedName = ""
 // enemies a run meets, this one pins which cards it draws. Pinning makes a layout problem
 // reproducible; unpinned is what an actual run looks like.
 //
-// When it is non-zero the *opponent's* shuffle is pinned too, to `decks.EnemySeed` — see
+// When it is non-zero the *opponent's* shuffle is pinned too, to `seeds.EnemyDeckPin` — see
 // shuffleSeeds. Half a pinned duel is not reproducible, and the scripted demo sets only this
 // one.
 //
@@ -286,14 +303,24 @@ func (s *CombatScene) toggleDeck() {
 		s.showDeck, len(s.deck), len(s.discard))
 }
 
-// resetDeck builds the starting deck, shuffles it, empties the discard and deals an
+// resetDeck fills the draw pile from the run, shuffles it, empties the discard and deals an
 // opening hand.
-func (s *CombatScene) resetDeck() {
+//
+// **The deck comes from the run now, not from the authored list** *(2026-08-17)*. That is the
+// whole of what makes a worm stick: the piles are rebuilt on every `Init`, and `Init` is how the
+// next fight starts, so a deck edit held anywhere on this scene would be thrown away between
+// rooms.
+//
+// **A nil run means the starting deck**, which is not a fallback for the game — `main` always
+// builds one — but for the callers that deal a hand without a run around it: `OpeningHand` in
+// seeds.go, `tools/seeds`, and the flight tests. A named seed is a fact about the *starting*
+// deck, so those must not read a run even when one exists.
+func (s *CombatScene) resetDeck(run *session.Session) {
 	s.deck = s.deck[:0]
-	for _, e := range startingDeck {
-		for i := 0; i < e.count; i++ {
-			s.deck = append(s.deck, e.card)
-		}
+	if run != nil {
+		s.deck = append(s.deck, run.Deck()...)
+	} else {
+		s.deck = append(s.deck, StartingDeck()...)
 	}
 
 	s.discard = s.discard[:0]
@@ -514,7 +541,7 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 	// longer add up to a number anybody holds in their head — and because it is the one place
 	// the size of cards.json becomes visible while playing.
 	line(deckCountsTop, fmt.Sprintf("draw %d  ·  discard %d  ·  %d in hand  ·  %d owned",
-		len(s.deck), len(s.discard), len(s.hand), deckSize()))
+		len(s.deck), len(s.discard), len(s.hand), s.deckSize()))
 	line(deckLegendTop, "dimmed cards are in your hand or the discard - the rest are still to draw")
 
 	s.drawPileGrid(gs, screen, left+width/2, top+deckGridTop)

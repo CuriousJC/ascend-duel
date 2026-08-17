@@ -57,10 +57,11 @@ func NewGame() *Game {
 	return &Game{
 		GlobalState: state.NewGlobalState(),
 		scenes: map[state.ActiveScreen]screens.Scene{
-			state.Title:   &screens.TitleScene{},
-			state.Ascend:  &screens.AscendScene{},
-			state.Combat:  &screens.CombatScene{},
-			state.Credits: &screens.CreditsScene{},
+			state.Title:      &screens.TitleScene{},
+			state.Ascend:     &screens.AscendScene{},
+			state.Combat:     &screens.CombatScene{},
+			state.PostBattle: &screens.PostBattleScene{},
+			state.Credits:    &screens.CreditsScene{},
 		},
 	}
 }

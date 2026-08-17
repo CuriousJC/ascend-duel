@@ -97,7 +97,9 @@ func Seeds() (names []string, values []int64, wants []string) {
 func OpeningHand(seed int64) []combat.ConceptID {
 	var s CombatScene
 	s.rng = rand.New(rand.NewSource(seed))
-	s.resetDeck()
+	// A nil run: a named seed is a fact about the *starting* deck, so the catalogue must not
+	// read whatever a run has been altered into.
+	s.resetDeck(nil)
 
 	out := make([]combat.ConceptID, 0, len(s.hand))
 	for _, c := range s.hand {

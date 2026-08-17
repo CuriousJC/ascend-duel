@@ -7,6 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
 
 // The table's geometry, which is arithmetic and needs no window — the same narrow exception
@@ -457,7 +458,7 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	// the opponent commits at the start of the planning phase instead. If startRound ever
 	// re-planned, the cards the player chose against would not be the cards they faced.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, decks.EnemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, seeds.EnemyDeckPin, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
 		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 	}
@@ -587,7 +588,7 @@ func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
 	// round that ended with the opponent's second card up would leave it up under the *next*
 	// plan — cards standing as though they had been committed, dropping again at DUEL!.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, decks.EnemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, seeds.EnemyDeckPin, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
 		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 	}
@@ -611,7 +612,7 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	// The row stays on the table when a duel ends — it is the round the player is looking at
 	// the result of — and nothing is drawn from a pile for a fight that is over.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, decks.EnemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, seeds.EnemyDeckPin, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
 		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 0},
 	}

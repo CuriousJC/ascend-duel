@@ -103,7 +103,7 @@ func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
 // for the same reason drawCard does nothing.
 func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Image) {
 	img := cardImage(gs,
-		duelistSpec(s.fighter, s.sideName(combat.SideA), s.vitae),
+		duelistSpec(s.fighter, s.sideName(combat.SideA), gs.Run.Vitae()),
 		cards.DuelistStyle)
 	if img == nil {
 		return

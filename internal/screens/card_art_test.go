@@ -113,7 +113,7 @@ func TestEveryConceptHasEffectText(t *testing.T) {
 	// its own cards and the table lays an enemy's queue out as cards, so a verb the generator does
 	// not cover is four hundred blank faces rather than one.
 	for _, a := range combat.AllConcepts() {
-		if cardEffect(a) == "" {
+		if cardEffect(combat.Plain(a)) == "" {
 			t.Errorf("%v has no effect text — its card would say nothing about what it does",
 				combat.ConceptOf(a).Key)
 		}
@@ -141,13 +141,13 @@ func TestEveryCardTextFitsItsBand(t *testing.T) {
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
 	for _, a := range combat.AllConcepts() {
-		lines, err := cards.WrapText(f, st.TextSize, cardEffect(a), width)
+		lines, err := cards.WrapText(f, st.TextSize, cardEffect(combat.Plain(a)), width)
 		if err != nil {
 			t.Fatalf("%v: %v", a, err)
 		}
 		if len(lines) > st.TextLines() {
 			t.Errorf("%v's text wraps to %d lines and the band holds %d: %q",
-				combat.ConceptOf(a).Key, len(lines), st.TextLines(), cardEffect(a))
+				combat.ConceptOf(a).Key, len(lines), st.TextLines(), cardEffect(combat.Plain(a)))
 		}
 	}
 }
@@ -170,7 +170,7 @@ func TestNoEffectTextWordIsWiderThanItsColumn(t *testing.T) {
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
 	for _, a := range combat.AllConcepts() {
-		for _, word := range strings.Fields(cardEffect(a)) {
+		for _, word := range strings.Fields(cardEffect(combat.Plain(a))) {
 			w, err := cards.TextWidth(f, st.TextSize, word)
 			if err != nil {
 				t.Fatalf("%v: %v", a, err)

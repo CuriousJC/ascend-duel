@@ -63,6 +63,30 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         immediately and the state-versus-surface split gets tested by something real.
       - The panes are the least urgent and the largest areas, so a heavy bevel there will
         read as chrome. Worth doing last and lightly.
+- [~] **Worms — the between-fights deck alteration.** *(built 2026-08-17; see MECHANICS.md)* Win a
+      fight, choose one of two worms, choose the card it takes. `data/worms.json` holds six, the
+      grammar is a target plus a value across seven targets, and `session.Apply` is the one place a
+      deck is altered.
+      What is left:
+      - **The deck overlay hides cards as you build.** Rows cap at `deckMaxPerRow = 12` and an
+        `element` worm migrates cards between colour rows, so building toward a colour pushes that
+        row past the cap. **The replacement is not a bigger cap**: the panel wants counts —
+        attacks, plans, how many of each colour — rather than every card drawn at once. Owner's
+        ideas, owner's call, deferred.
+      - **Worms have no art.** They draw as `cards.Hand` with a zero cost and no family, so what
+        shows is the name and the text. A style of their own is what this wants once there is a
+        picture to put on one.
+      - **No rarity and no weighting.** Every worm is equally likely to be offered.
+      - **The catalogue is ten worms across seven targets**, of which four are the same recolour
+        in four colours. It wants more *kinds*, not more colours.
+      - **Vitae is awarded and never spent.** The +5 card pays into `session.Session`, the combat
+        screen shows the purse, and there is no shop to spend it in.
+
+- [ ] **Brands need a data file and a way to be acquired.** The mechanic is already decided —
+      see `MECHANICS.md`'s Brands section: they alter the container where rings alter the
+      contents, they are permanent *for the run*, and nothing takes one off. What does not
+      exist is any of it in code: no `brands.json`, no acquisition, no seat on the duelist.
+      Blocked on `Session` like the rest of the run-level state.
 
 ## Next — where the game actually starts
 

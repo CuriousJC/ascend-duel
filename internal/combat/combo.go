@@ -1,6 +1,9 @@
 package combat
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Combos are the layer where a round stops being a pile of cards and starts being a plan.
 // Throwing whatever you drew at the opponent works; *choosing* a shape and building toward it is
@@ -80,8 +83,8 @@ type Effect struct {
 // Hand is one rung of the ladder, after combos.json has been read and expanded.
 type Hand struct {
 	ID   HandID
-	Key  string // the catalogue key, shared by every expansion of one file entry
-	Name string
+	Key  string
+	Name string // may hold `{card}`, which HandName fills from whatever concept matched
 
 	// Groups is how many cards of each *distinct* concept the hand wants. `[3,2]` is a full
 	// house; the groups naming distinct values is why five of one card can never be one.
@@ -89,11 +92,6 @@ type Hand struct {
 
 	// Scope is which categories this hand counts. Empty means every card in the turn.
 	Scope []Category
-
-	// Pin fixes the hand to one concept: the Strike Flurry is the flurry entry pinned to Strike.
-	// Set by expansion, so a generic entry like Two Pair carries none.
-	Pin    ActionKind
-	HasPin bool
 
 	// Multiplier is this hand's contribution to the turn's damage, in percent.
 	Multiplier int
@@ -189,16 +187,33 @@ func MixByName(name string) (Mix, bool) {
 	return Mix{}, false
 }
 
-// HandIDFor names the hand an expanded entry produced for one card — the `flurry` entry pinned to
-// Strike. It reads the catalogue rather than recomputing `base + value`, so the file stays the
-// single source of the number.
-func HandIDFor(key string, card ActionKind) (HandID, bool) {
+// HandIDForKey is the number the catalogue gives one entry.
+//
+// **One ID per key as of 2026-08-16.** A pinned entry used to produce one hand *per attack concept*
+// with `base + int(concept)` for an ID, and the bands were a hundred apart — which held twelve
+// concepts and could not hold four hundred, since a per-enemy deck list would have run `pair`
+// straight through `barrage`. Hands match generically now and are named at match time.
+//
+// It also closes the open question MECHANICS.md recorded against profile discovery: a combo ID no
+// longer derives from a concept's position, so reordering the cards cannot renumber a combo the
+// player has already found.
+func HandIDForKey(key string) (HandID, bool) {
 	for _, h := range handTable {
-		if h.Key == key && h.HasPin && h.Pin == card {
+		if h.Key == key {
 			return h.ID, true
 		}
 	}
 	return HandNone, false
+}
+
+// HandName is what a formed hand is called, with `{card}` filled from the concept that formed it:
+// the `pair` entry matched by two Strikes is a "Strike Pair".
+//
+// **The substitution happens here rather than in the catalogue** so one entry covers every concept
+// in the game, the player's and every enemy's. A hand with no template in its name — Two Pair, Full
+// House — is returned unchanged.
+func HandName(h Hand, lead ConceptID) string {
+	return strings.ReplaceAll(h.Name, "{card}", ConceptOf(lead).Label)
 }
 
 // Attack is what one side's attack phase amounts to: which cards were spent on it, what hand and
@@ -213,6 +228,11 @@ type Blow struct {
 	// **A list rather than a start and a length**, because a counted hand is not contiguous: Two
 	// Pair can be two cards, a card that earned nothing, and two more.
 	Cards []int
+
+	// Lead is the turn index of the card the hand is named after: the first card of its first
+	// group, or the High Card itself. It is what fills `{card}` in a hand's name, and what the
+	// combo event reports as the card the blow led with.
+	Lead int
 
 	// Hand and Mix are what formed. A lone attack that forms no hand carries HandNone and still
 	// carries a Mix, because one card is still one colour.
@@ -252,9 +272,12 @@ func BlowFor(turn []Slot) Blow {
 }
 
 func blowFor(turn []Slot, hands []Hand, mixes []Mix) Blow {
-	cards, hand, formed := matchHand(turn, hands)
+	cards, hand, lead, formed := matchHand(turn, hands)
 	if !formed {
 		cards, hand = biggestAttack(turn), highCard(hands)
+		if len(cards) > 0 {
+			lead = cards[0]
+		}
 	}
 	if len(cards) == 0 {
 		return Blow{}
@@ -265,6 +288,7 @@ func blowFor(turn []Slot, hands []Hand, mixes []Mix) Blow {
 
 	return Blow{
 		Cards:      cards,
+		Lead:       lead,
 		Hand:       hand,
 		Mix:        mix,
 		Multiplier: hand.Multiplier + mix.Multiplier,
@@ -296,95 +320,118 @@ func highCard(hands []Hand) Hand {
 // `matchCountOf` fills groups largest-count-first, so it would hand back whichever concept
 // appeared most rather than the card that hits hardest. Which card is the High Card is a question
 // about damage, and `biggestAttack` is what answers it.
-func matchHand(turn []Slot, hands []Hand) ([]int, Hand, bool) {
+func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 	var (
 		best      Hand
 		bestCards []int
 		found     bool
 	)
 
+	bestLead := -1
 	for _, h := range hands {
 		if h.Cards() < 2 {
 			continue
 		}
-		cards, ok := matchCountOf(turn, h)
+		cards, lead, ok := matchCountOf(turn, h)
 		if !ok {
 			continue
 		}
 		if !found || h.Multiplier > best.Multiplier {
-			best, bestCards, found = h, cards, true
+			best, bestCards, bestLead, found = h, cards, lead, true
 		}
 	}
-	return bestCards, best, found
+	return bestCards, best, bestLead, found
 }
 
 // matchCountOf reads the turn as a set: how many cards carry each concept, and whether that
 // satisfies the hand's groups.
 //
-// **Groups are filled largest-count-first**, and a tie goes to the lower enum value. A full house
-// asked for `[3,2]` against three Jabs and two Strikes has only one reading, but the rule has to
-// be written down for the cases that do not — and it has to be a rule rather than a map walk, per
-// the determinism note in CLAUDE.md.
-func matchCountOf(turn []Slot, h Hand) ([]int, bool) {
-	width := len(AllActions)
-	members := make([][]int, width)
+// **Groups are filled largest-count-first**, and a tie goes to the concept registered first. A
+// full house asked for `[3,2]` against three Jabs and two Strikes has only one reading, but the
+// rule has to be written down for the cases that do not — and it has to be a rule rather than a
+// map walk, per the determinism note in CLAUDE.md.
+//
+// **It tallies the turn rather than indexing a fixed-width array** *(2026-08-16)*. The array was
+// `len(AllActions)` wide, which is a number that stopped existing when concepts became data: a
+// registry holding every enemy's cards is hundreds wide and grows as decks are built, and a turn
+// is at most five cards. Tallying what is actually in the turn, in the order it was played, is
+// both smaller and deterministic without depending on how many enemies happen to be loaded.
+//
+// The second return is the turn index of the first card of the *first* group — the concept the
+// hand is named after. `{card} Pair` matched by two Strikes is a Strike Pair, and this is what says
+// which word goes in.
+func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
+	type tally struct {
+		id      ConceptID
+		members []int
+		spent   bool
+	}
+
+	var tallies []tally
 	for i, s := range turn {
-		if !h.inScope(s.Card.Category()) {
+		if !h.inScope(s.Card.Category()) || !s.Card.formsBlow() {
 			continue
 		}
-		v := int(s.Card.Action)
-		if v < 0 || v >= width {
-			continue
+		at := -1
+		for j := range tallies {
+			if tallies[j].id == s.Card.Concept {
+				at = j
+				break
+			}
 		}
-		members[v] = append(members[v], i)
+		if at < 0 {
+			tallies = append(tallies, tally{id: s.Card.Concept})
+			at = len(tallies) - 1
+		}
+		tallies[at].members = append(tallies[at].members, i)
 	}
 
 	var out []int
-	spent := make([]bool, width)
+	lead := -1
 	for _, g := range h.Groups {
 		best, bestCount := -1, 0
-		for v := 0; v < width; v++ {
-			if spent[v] || len(members[v]) < g {
+		for j := range tallies {
+			if tallies[j].spent || len(tallies[j].members) < g {
 				continue
 			}
-			// A pinned hand is the one entry in its rung that names a concept: the Strike Flurry
-			// counts Strikes and nothing else.
-			if h.HasPin && v != int(h.Pin) {
-				continue
-			}
-			if len(members[v]) > bestCount {
-				best, bestCount = v, len(members[v])
+			// Strictly greater, so a tie goes to the earlier tally — which is the concept whose
+			// first card was played first, since tallies are built by walking the turn.
+			if len(tallies[j].members) > bestCount {
+				best, bestCount = j, len(tallies[j].members)
 			}
 		}
 		if best < 0 {
-			return nil, false
+			return nil, -1, false
 		}
-		spent[best] = true
-		out = append(out, members[best][:g]...)
+		tallies[best].spent = true
+		if lead < 0 {
+			lead = tallies[best].members[0]
+		}
+		out = append(out, tallies[best].members[:g]...)
 	}
 
 	// The cards are collected group by group, so a full house arrives as its three and then its
 	// two. Sorting puts them back into the order they resolve, which is what a bracket wants.
 	sort.Ints(out)
-	return out, true
+	return out, lead, true
 }
 
 // biggestAttack is the High Card: the single attack that hits hardest, or nothing if the turn
 // queued no attacks at all.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
-// blow is. The three families ladder identically — a Lunge, a Cleave and a Smash all deal double
-// — so ties are now the common case rather than the exception, and they go to the card queued
-// first. The earliest slot wins, which is deterministic without inventing a rule.
+// blow is. The player's three families ladder identically — a Lunge, a Cleave and a Smash all deal
+// double — so ties are common rather than exceptional, and they go to the card queued first. The
+// earliest slot wins, which is deterministic without inventing a rule.
 func biggestAttack(turn []Slot) []int {
 	best, bestDamage := -1, 0
 	for i, s := range turn {
-		if s.Card.Category() != CategoryAttack {
+		if !s.Card.formsBlow() {
 			continue
 		}
 		// A fixed reference DMG: this is a comparison between concepts, and every concept
 		// scales from the same DMG, so any positive value ranks them identically.
-		if d := s.Card.Action.Damage(damageRankDMG); d > bestDamage {
+		if d := s.Card.Damage(damageRankDMG); d > bestDamage {
 			best, bestDamage = i, d
 		}
 	}
@@ -392,6 +439,16 @@ func biggestAttack(turn []Slot) []int {
 		return nil
 	}
 	return []int{best}
+}
+
+// formsBlow reports whether this card contributes to its side's one attack.
+//
+// **Recoil is an attack that does not** *(2026-08-16)*. It resolves in the attack phase and is
+// announced like any other card, but it is aimed at its own owner — so counting it toward a hand
+// would let a duelist earn a Barrage by hurting themselves four times.
+func (c Card) formsBlow() bool {
+	s := c.Spec()
+	return s.Verb == VerbAttack && s.Target == TargetOpponent
 }
 
 // damageRankDMG is the DMG `biggestAttack` ranks concepts at. It never reaches a life total

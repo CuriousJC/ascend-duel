@@ -182,9 +182,9 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// have — so this is what replaces that safety.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Action: combat.Prepare, Element: combat.Ice}, selected: true},
-			{actionCard: actionCard{Action: combat.Strike, Element: combat.Fire}, selected: true},
-			{actionCard: actionCard{Action: combat.Jab, Element: combat.Earth}, selected: true},
+			{actionCard: actionCard{Concept: combat.Prepare, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Fire}, selected: true},
+			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Earth}, selected: true},
 		},
 		fighterActions: []combat.Card{
 			combat.Of(combat.Prepare, combat.Ice),
@@ -283,9 +283,9 @@ func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
 	// nothing, so what is left standing is what the feed's single line is about.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Action: combat.Strike, Element: combat.Fire}, selected: true},
-			{actionCard: actionCard{Action: combat.Strike, Element: combat.Ice}, selected: true},
-			{actionCard: actionCard{Action: combat.Jab, Element: combat.Basic}, selected: true},
+			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Fire}, selected: true},
+			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Basic}, selected: true},
 		},
 		fighterActions: []combat.Card{
 			combat.Of(combat.Strike, combat.Fire),
@@ -457,13 +457,12 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	// the opponent commits at the start of the planning phase instead. If startRound ever
 	// re-planned, the cards the player chose against would not be the cards they faced.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, decks.EnemySeed, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
-		Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
-		Style:   combat.StyleBrute,
+		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 	}
 	s.fighter = &entities.Combatant{
-		Duelist: combat.Duelist{DMG: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 10, Actions: 6, MaxLife: 60, CurrentLife: 60},
 	}
 
 	s.planEnemyRound()
@@ -489,10 +488,10 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 func selecting(cards ...combat.Card) *CombatScene {
 	s := &CombatScene{
 		fighter: &entities.Combatant{
-			Duelist: combat.Duelist{DMG: 10, Spd: 10, MaxLife: 60, CurrentLife: 60},
+			Duelist: combat.Duelist{DMG: 10, Actions: 5, MaxLife: 60, CurrentLife: 60},
 		},
 		enemy: &entities.Combatant{
-			Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
+			Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 		},
 	}
 	for _, c := range cards {
@@ -511,7 +510,7 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 		combat.Of(combat.Strike, combat.Basic),
 	)
 
-	blow, ok := s.previewAttack()
+	blow, turn, ok := s.previewBlow()
 	if !ok {
 		t.Fatal("three Strikes previewed no combo")
 	}
@@ -524,8 +523,16 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	if len(rows) != 2 || rows[0].swatch != comboSwatch {
 		t.Fatalf("the pane holds %d rows while planning, want the combo line and the prompt", len(rows))
 	}
-	if want := "COMBO! " + comboNameOf(blow.Hand, blow.Mix); !strings.HasPrefix(rows[0].prefix, want) {
+	want := "COMBO! " + comboNameOf(blow.Hand, blow.Mix, turn[blow.Lead].Card.Concept)
+	if !strings.HasPrefix(rows[0].prefix, want) {
 		t.Errorf("the preview reads %q, want it to open %q", rows[0].prefix, want)
+	}
+
+	// **And the template is filled in.** A catalogue entry holds `{card} Flurry`, so a name that
+	// reached the pane unsubstituted would print the brace at the player - which is what shipped
+	// for the length of one demo run.
+	if strings.Contains(rows[0].prefix, "{card}") {
+		t.Errorf("the preview reads %q, with the hand's name template still in it", rows[0].prefix)
 	}
 }
 
@@ -580,13 +587,12 @@ func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
 	// round that ended with the opponent's second card up would leave it up under the *next*
 	// plan — cards standing as though they had been committed, dropping again at DUEL!.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, decks.EnemySeed, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
-		Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 60},
-		Style:   combat.StyleBrute,
+		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 60},
 	}
 	s.fighter = &entities.Combatant{
-		Duelist: combat.Duelist{DMG: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 10, Actions: 6, MaxLife: 60, CurrentLife: 60},
 	}
 
 	// Where the last round's playback left them.
@@ -605,13 +611,12 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	// The row stays on the table when a duel ends — it is the round the player is looking at
 	// the result of — and nothing is drawn from a pile for a fight that is over.
 	s := &CombatScene{}
-	s.enemyPile = decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(testEnemyRecord, decks.EnemySeed, decks.EnemyHandSize)
 	s.enemy = &entities.Combatant{
-		Duelist: combat.Duelist{DMG: 5, Spd: 10, MaxLife: 60, CurrentLife: 0},
-		Style:   combat.StyleBrute,
+		Duelist: combat.Duelist{DMG: 5, Actions: 5, MaxLife: 60, CurrentLife: 0},
 	}
 	s.fighter = &entities.Combatant{
-		Duelist: combat.Duelist{DMG: 10, Spd: 20, MaxLife: 60, CurrentLife: 60},
+		Duelist: combat.Duelist{DMG: 10, Actions: 6, MaxLife: 60, CurrentLife: 60},
 	}
 
 	// The killing blow is still raised, and stays raised.
@@ -626,3 +631,8 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 		t.Errorf("the finished round was cleared off the table: %v", s.enemyFiringSeats)
 	}
 }
+
+// testEnemyRecord is the roster entry the table tests deal from. **A named record rather than the
+// first one sorted**, so a change to the roster's order does not silently change which deck these
+// tests are exercising — and a low-floor enemy, so the hand it draws is small and cheap.
+const testEnemyRecord = "ClearSlime1"

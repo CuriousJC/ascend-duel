@@ -67,68 +67,42 @@ const handSize = 8
 // could count at a glance for twelve. What the JSON buys is that the deck's *size* is now a
 // consequence of a file the designer can read and edit, rather than of a Go expression.
 //
-// **The rules did not move with it.** Cost, category and damage stay in `internal/combat`;
-// `cards.json` names concepts and elements and declares a cost tier that `buildStartingDeck`
-// checks against the engine. See data/card_data.go for why the tier is checked rather than
-// trusted.
+// **The rules moved with it on 2026-08-16.** Cost, damage, category and family used to live in
+// `internal/combat` as switch statements, and this file declared a cost tier that was checked
+// against them. A card carries its own rules now — `internal/combat` registers the concepts from
+// this same file at init — so there is nothing left to cross-check and `CheckCostTiers` went with
+// the duplication it guarded. What this function does is the other half: turning the concepts into
+// a *pile*, which is a screen's business and not the rules'.
 var startingDeck = buildStartingDeck()
 
 // buildStartingDeck turns the data records into deck entries, in file order — which is grid
 // order, which is the order the deck overlay sorts into anyway.
 //
-// **It panics on a bad record, and that is the right severity.** An unknown concept name, a
-// cost tier that disagrees with the rules, or an element the screen does not know are all
-// things that would otherwise produce a deck quietly missing five cards. A missing concept is
-// a balance change nobody made on purpose, and a game that starts anyway is a game that hides
-// it. This runs at package init, so it fails on launch rather than mid-duel.
+// **It panics on a bad record, and that is the right severity.** A concept the registry does not
+// hold, or an element the rules do not know, would otherwise produce a deck quietly missing four
+// cards — a balance change nobody made on purpose, and a game that starts anyway is a game that
+// hides it. This runs at package init, so it fails on launch rather than mid-duel.
+//
+// A label the registry has not got means `internal/combat` refused the record when it registered
+// the file, which it reports with its own reason; reaching here means the two loaders disagree
+// about the same file, so the message says so.
 func buildStartingDeck() []deckEntry {
 	// Not named `cards`: that is the drawing package, imported above, and shadowing a
 	// package name inside the one function that builds the deck is a trap.
 	records := data.LoadDuelistCards()
 
-	problems := data.CheckCostTiers("duelist_cards.json", records,
-		func(concept string) (int, bool) {
-			a, ok := combat.ParseAction(concept)
-			if !ok {
-				return 0, false
-			}
-			return a.Cost(), true
-		},
-		func(concept string) (string, bool) {
-			a, ok := combat.ParseAction(concept)
-			if !ok {
-				return "", false
-			}
-			return a.Category().String(), true
-		},
-		func(concept string) (string, bool) {
-			a, ok := combat.ParseAction(concept)
-			if !ok {
-				return "", false
-			}
-			return a.Family().String(), true
-		},
-	)
-	if len(problems) > 0 {
-		msg := "duelist_cards.json disagrees with the rules:"
-		for _, p := range problems {
-			msg += "\n  " + p.Error()
-		}
-		panic(msg)
-	}
-
 	var out []deckEntry
 	for _, c := range records {
-		action, ok := combat.ParseAction(c.Concept)
+		id, ok := combat.ConceptByKey(c.Label)
 		if !ok {
-			panic("duelist_cards.json: unknown concept " + c.Concept)
+			panic("duelist_cards.json: the rules did not register a card called " + c.Label)
 		}
 		for _, name := range c.Elements {
 			e, ok := combat.ParseElement(name)
 			if !ok {
-				panic("duelist_cards.json: " + c.Concept + " names unknown element " + name)
+				panic("duelist_cards.json: " + c.Label + " names unknown element " + name)
 			}
-			out = append(out, deckEntry{actionCard{Action: action, Element: e}, c.Copies})
+			out = append(out, deckEntry{actionCard{Concept: id, Element: e}, c.Copies})
 		}
 	}
 	return out
@@ -566,14 +540,14 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 func sortPileEntries(entries []pileEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		a, b := entries[i], entries[j]
-		if ra, rb := familyRank(a.card.Action.Family()), familyRank(b.card.Action.Family()); ra != rb {
+		if ra, rb := familyRank(a.card.Family()), familyRank(b.card.Family()); ra != rb {
 			return ra < rb
 		}
-		if ca, cb := a.card.Action.Cost(), b.card.Action.Cost(); ca != cb {
+		if ca, cb := a.card.Cost(), b.card.Cost(); ca != cb {
 			return ca < cb
 		}
-		if a.card.Action != b.card.Action {
-			return a.card.Action < b.card.Action
+		if a.card.Concept != b.card.Concept {
+			return a.card.Concept < b.card.Concept
 		}
 		if a.card.Element != b.card.Element {
 			return a.card.Element < b.card.Element

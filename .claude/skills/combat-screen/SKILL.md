@@ -384,9 +384,11 @@ of sentences.
   coming out of the thing that *is* the opponent needs no caption. Same `riseTicks` and same
   `flightStaggerPer` as the player's row, and `TestBothRowsUseTheSameArrivalClock` is what stops
   a later change to one being made twice.
-- **Every opponent card is elementless**, because `data/enemy_cards.json` is. That was a fact
-  nobody could see when an enemy card was never drawn; it is visible now, and the neutral grey
-  border is the truth rather than a placeholder.
+- **Every opponent card is elementless**, because every enemy's deck in `data/enemies.json` is
+  authored `basic`. That was a fact nobody could see when an enemy card was never drawn; it is
+  visible now, and the neutral grey border is the truth rather than a placeholder. It stays true
+  until affixes exist: an enemy's colour does nothing without one, so a coloured enemy card would
+  be a border claiming a rule.
 - **A played card has not left the hand.** It leaves at the end of the round with everything
   else played, which is what keeps the Resolution pane able to narrate from `fighterActions`
   while the round is still running. `resolvedInHand` hides a *drawing*, exactly like
@@ -617,9 +619,13 @@ that is the argument to answer.
   it. It used to hang under a chip of fixed height; with no chip the only thing to position it
   against is the text, and `text.Measure` reports the full line including descent — which is what
   clears the `p` in "prepares". A rule placed a few pixels above the baseline struck through it.
-- **The prose lives in `internal/screens`, not `internal/combat`.** The rules package names
-  actions; it does not describe them. `actionPhrases` is a map keyed by `ActionKind`, with a
-  fallback so a new card reads awkwardly rather than producing a sentence with a hole in it.
+- **The prose lives in `internal/screens`, not `internal/combat`.** The rules package names cards;
+  it does not describe them. **It is generated from the verb rather than tabulated** *(2026-08-16)*
+  — `actionPhrase` and `cardEffect` in `combat_panes.go`, switching on `Verb` and dropping the
+  card's own label in as the noun. There were two hand-maintained maps, one string per concept,
+  which worked for fourteen concepts and cannot work for the ~400 that per-enemy decks produce: a
+  card with no entry drew a blank face. **Every phrase carries an article** so `cardPhrase` can
+  slot an element into it — that is a constraint on any new wording here.
 - **Outcomes append to `suffix`**, after the verb, so the mark never moves as a line grows.
 - **The name is said as well as coloured, deliberately.** The swatch already encodes the side,
   but a line beginning "Strike" reads as an instruction rather than a report, and with both

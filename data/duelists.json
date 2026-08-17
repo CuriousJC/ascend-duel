@@ -4,7 +4,7 @@
     "Name": "Duelist",
     "CardBack": "triangle",
     "DMG": 10,
-    "Speed": 20,
-    "Constitution": 12
+    "Actions": 6,
+    "HP": 60
   }
 ]

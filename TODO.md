@@ -104,36 +104,42 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         about the incoming hand — its element, whether it forms a combo — rather than a slot.
       - What is definitely gone is the ordering half. See the drag entry above; this is the same
         hole.
-- [ ] **Give each enemy its own attacks, and let that replace `PlanStyle`.** *(2026-08-15, owner's
-      call.)* Every opponent currently draws from one shared list — `data/enemy_cards.json` is Attack
-      and Heavy and nothing else — and its behaviour comes from a `PlanStyle` string picking one of
-      four planners in `combat.PlanFor`. **The intended shape is the other way round: an enemy's
-      cards are its personality**, so a Dragon and a Slime differ because they hold different
-      things rather than because a switch statement branches on a name.
-      - What that buys is the thing styles cannot: an enemy becomes readable from *what it plays*.
-        The player learns a deck rather than a label.
-      - **`PlanStyle` and the four planners are what this deletes**, or reduces to one generic
-        planner that spends a hand well. `data/enemies.json` has a `PlanStyle` column that would
-        go with them, and `tools/balance` reads it into its table.
-      - It also settles a live inconsistency by making it moot: three of the four styles are
-        unreachable today, because the warden asks for a Defend by name and the tactician for a
-        Prepare, and the shared enemy list holds neither. Both fall through to brute.
-      - **`[?]` None of the four planners was rewritten for one blow per turn, and the change
-        inverts them.** A swarm queueing four Jabs now assembles a Jab Barrage — 5x damage and two
-        staggers — where it used to land four small hits. A brute's single Heavy forms no hand at
-        all and pays no multiplier. So the shape the roster treats as the weak one is now the
-        strong one, entirely by accident. Whatever replaces the styles has to decide deliberately
-        which opponents build toward a hand.
-      - `AvailableAffixes` is in `data/enemies.json` and read by nothing. Affixes *transform* an
-        enemy's deck per MECHANICS.md, which is the same axis as this entry and probably lands with
-        it rather than after it.
-      - `[?]` Earth has no affix; whether it can be a floor theme is still open.
-- [ ] **Retune enemy life totals against the new damage curve.** One blow per turn plus additive
-      multipliers made the player's ceiling far higher: two Strikes at DMG 10 deal 35 where they
-      used to deal 20, and a rainbow Barrage is 150 on top of its own cards. `data/enemies.json`
-      has not moved. The owner has said the HP numbers are the intended lever; this is that work.
-      - **Do not tune anything until `tools/balance` reports a distribution** — see below. Right
-        now every figure it prints is one draw.
+- [ ] **`[?]` Nothing reads recoil, so no enemy deck should hold one yet.** An attack aimed at
+      `self` is built and resolves — plain self-damage, before the blow, forming no hand — and the
+      planner will never queue one, because it costs life and buys nothing. That is correct as far
+      as it goes and it means recoil is currently unauthored content.
+      - **What would make it worth playing is a rider**: a self-status (see below), a discount, or
+        a hand that pays more for having been bought with blood.
+      - `TestThePlannerNeverSpendsAnAttackOnItself` pins that the search does not stumble into one.
+- [ ] **The eight statuses are four.** `MECHANICS.md` §Elements now designs a self-side mirror for
+      each element — enflame, focus, charge, ward — and none is built.
+      - **Blocked on the source rule having an enemy half**, which is affixes. A self-status needs
+        attunement exactly as an opponent-side one does, and a status with no source is not a
+        status.
+      - It doubles the badge art: `assets/effect/` is keyed by element and would become element ×
+        target. `TestEveryStatusElementHasABadge` is what holds that today.
+      - **Lightning-on-self must not be a roll.** A shock is the only randomness in the engine and
+        `CLAUDE.md` requires a second one to make its argument from scratch.
+- [~] **Retune enemy life totals — the doubling overshot, and it is measured.** *(2026-08-16)*
+      Every enemy's HP was doubled when the stats changed, at the owner's call, because fights were
+      squishy. `tools/balance` before and after:
+
+      | | walls, of 96 |
+      |---|---|
+      | before per-enemy decks | 12 |
+      | per-enemy decks, HP left alone | 15 |
+      | **decks and doubled HP — what ships** | **44** |
+
+      - So **the decks cost three walls and the doubling cost twenty-nine.** Floors 1–2 are
+        untouched; everything from floor 5 up is a wall.
+      - **This is accepted rather than open** *(2026-08-16, owner's call)*. The deep tower is meant
+        to need a build, and **rings are what gets the player over those walls** — so the number to
+        object to is a wall on a *shallow* floor, not the count. The ascension is not expected to
+        be winnable yet.
+      - What is left here is the shallow end: `tools/balance` puts one wall at floors 2–4 (Dire
+        Wolf), which is the old failure rather than the new design.
+      - **Do not tune anything until `tools/balance` reports a distribution** — see below. Every
+        figure it prints is one draw, and it measures a fighter with no build at all.
 - [ ] **`tools/balance` is a single sample and needs to be a distribution.** Combat rolls for
       lightning as of 2026-08-14, so a posture winning half its duels and one winning all of them
       print the same line. The tool seeds one fixed `balanceSeed` per run, which keeps a result
@@ -144,13 +150,14 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Every balance figure this repo has ever recorded was measured against the multi-blow
         model and is deleted rather than annotated.** `MECHANICS.md` says what has to be
         re-measured; nothing should be tuned off memory of the old table.
-- [ ] **`[?]` Twelve enemies are walls.** `tools/balance` reports twelve of the 96 beaten by no
-      posture at all as of 2026-08-15, all at floors 6-8. That is the failure the tool was built
-      for — an unwinnable enemy is invisible while playing, because losing slowly looks like losing
-      to bad draws.
-      - It is not obviously a bug: the deep floors are meant to need rings and brands, and neither
-        exists. **Re-read it once the player can be built up**, and treat a floor-two wall as the
-        urgent case rather than a floor-eight one.
+- [ ] **One wall is on floor two, and that one is a bug.** `tools/balance` reports forty-four of
+      the 96 beaten by no posture as of 2026-08-16 — see the retune entry above, where the count
+      is accepted — but a Dire Wolf at floors 2–4 beating every posture is the failure the tool was
+      built for. An unwinnable enemy is invisible while playing, because losing slowly looks like
+      losing to bad draws.
+      - The deep floors are meant to need rings and brands. **Floor two is not**, because there is
+        nothing the player could have bought by then.
+      - Fix it in `data/enemies.json` rather than in the rules: its deck or its HP.
 - [ ] **`[?]` Nothing measures what Plan is worth.** `tools/balance` deals no cards, so the
       `planning` posture holds a wider hand of nothing and the row reads 2 AP as pure loss.
       - This needs the sim to draw, which is the deckbuilder entry below and its seventh stream.
@@ -415,10 +422,10 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         only answer "what if I took the other ring", where plans answer "what if I had
         guarded on round 3". It is also what makes a "this seed is winnable" claim
         checkable — a proof is just a choice log that replays to a win.
-      - **Serialize action names, not `iota` ordinals.** `ActionKind` and `Element` are both
-        `iota`-based and append-only, so inserting a new one anywhere but the end silently
-        reinterprets every existing log — a saved `Guard` becomes whatever now sits at 1, with
-        no error. Same applies to any other enum that reaches the save file.
+      - **Serialize card *keys*, not `ConceptID`s.** This got sharper on 2026-08-16: an ID is an
+        index into a registry built by walking `duelist_cards.json` and then every enemy's deck,
+        so it is stable for one build of one data set and for nothing else. Adding an enemy
+        renumbers every concept after it. `Element` carries the same `iota` hazard it always did.
       - **`[?]` The combat roll has to be settled before this ships.** `MECHANICS.md` requires
         rolling on every attack phase and discarding the irrelevant result, precisely so a
         balance tweak does not shift every later roll in a run. `shockMisses` short-circuits when

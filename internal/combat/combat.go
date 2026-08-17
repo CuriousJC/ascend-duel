@@ -49,23 +49,22 @@ func (s Side) String() string {
 // Every field is comparable on purpose: TestRoundIsDeterministic compares two resolved
 // duelists with ==, so nothing here may become a slice or a map. The defend queue is a fixed
 // array plus a count rather than a slice for exactly that reason.
+//
+// **Three stats, and every one of them is the number it sounds like** *(2026-08-16)*. Constitution
+// and Speed went with the same argument that took Strength the day before: each existed only to be
+// converted into something else — `Con * 5` was life and `4 + Spd/10` was the action-point budget
+// — so the player had to learn a number they could never act on directly. Speed was the clearer
+// case of the two: twenty-four distinct values across the roster produced three distinct budgets.
 type Duelist struct {
-	Con int
-
-	// DMG is what one Strike deals in this duelist's hands, and it is the figure on the fighter
-	// card.
-	//
-	// **It was `Str` until 2026-08-16, and the rename is the removal of a stat rather than a
-	// spelling change.** Strength existed as a number that converted into damage and did nothing
-	// else — `Strike.Damage(Str)` returned `Str` exactly — so the conversion was an identity and
-	// the two names described one quantity. A stat that leads to a second stat and stops there is
-	// a step the player has to learn without ever being able to act on it differently.
-	//
-	// The ladder still scales off this: the cheap tier is half of it, the middle tier is it, the
-	// dear tier is double. What went is the pretence that the ladder converts a *different* stat.
+	// DMG is what a 1x attack deals in this duelist's hands, and it is the figure on the fighter
+	// card. The ladder scales off it: a card declares its multiplier and the arithmetic is
+	// `DMG * Amount / 100`.
 	DMG int
 
-	Spd         int
+	// Actions is this duelist's action-point budget before anything banked. It is what a round is
+	// spent out of, and cards cost 1 to 3 of it.
+	Actions int
+
 	MaxLife     int
 	CurrentLife int
 
@@ -80,8 +79,8 @@ type Duelist struct {
 	// **Every raised card answers the opponent's one blow, and they compose multiplicatively**
 	// *(2026-08-14)*. A turn resolves a single attack, so "which card meets which blow" is a
 	// question with no content: a second Defend takes half of what is left after the first has
-	// taken half, and the order they were raised in changes nothing. `defendReductionPct` is what
-	// each is worth.
+	// taken half, and the order they were raised in changes nothing. `reductionFor` is what each is
+	// worth, and it reads the card's own declared Amount.
 	//
 	// **A fixed array, not a slice**, because TestRoundIsDeterministic compares two resolved
 	// duelists with == and nothing on this struct may stop being comparable. It is a set rather
@@ -183,31 +182,27 @@ func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 // resolving more than one attack — counting incoming blows is meaningless when there is only
 // ever one.
 type PendingDefend struct {
-	Card ActionKind
+	Card ConceptID
 }
 
 // maxPendingDefends bounds the defend set. A turn is capped at MaxActions cards and every one of
 // them could be a defence, so this is everything a legal turn can raise.
 const maxPendingDefends = baseMaxActions
 
-// defendReductionPct is what one raised Defend takes off the one blow it answers.
+// reductionFor is what one raised card takes off the blow: its own declared Amount, as a
+// percentage.
 //
 // **Nothing reduces a blow to zero, and that is a rule rather than a number.** A turn lands one
 // figure however many cards went into it, so total negation would be a whole opposing turn deleted
 // by a single card — a dominant strategy rather than a decision. Something always lands, so the
-// opponent is always still playing. `TestNoDefenceStopsABlowOutright` holds it.
-const defendReductionPct = 50
-
-// reductionFor is what one raised card takes off the blow. **Defend is the only card that
-// answers a blow at all**, and the switch stays a switch because a second one is a data change
-// away rather than a rewrite.
-func reductionFor(a ActionKind) int {
-	switch a {
-	case Defend:
-		return defendReductionPct
-	default:
+// opponent is always still playing. `RegisterConcept` refuses a card declaring 100 or more, and
+// `TestNoDefenceStopsABlowOutright` holds the resolver to it.
+func reductionFor(id ConceptID) int {
+	c := ConceptOf(id)
+	if c.Verb != VerbDefend {
 		return 0
 	}
+	return c.Amount
 }
 
 // raiseDefend adds a defend card to the set.
@@ -216,7 +211,7 @@ func reductionFor(a ActionKind) int {
 // turn at five actions, so the array holds everything a legal turn can raise; ResolveRound
 // deliberately trusts what it is handed so a balance sim can probe outside the rules, and a sim
 // that queues six defends should get five of them rather than a crash.
-func (d Duelist) raiseDefend(a ActionKind) Duelist {
+func (d Duelist) raiseDefend(a ConceptID) Duelist {
 	if d.DefendCount >= len(d.Defends) {
 		return d
 	}
@@ -339,200 +334,6 @@ func ParseFamily(name string) (Family, bool) {
 	return FamilyNone, false
 }
 
-type ActionKind int
-
-// Declared in family order, and **within a family in ascending cost order**, so anything
-// that sorts by the raw value — the deck overlay does — groups the piles the same way a turn
-// resolves them and ladders them by price inside that.
-//
-// **The twelve are three attack families by three tiers, plus three plans** *(2026-08-15)*. Every
-// family runs 1 AP for half damage, 2 AP for one, 3 AP for two, so a family is *which* pair you
-// are building rather than a better or worse way to build one. See MECHANICS.md.
-//
-// **Attack and Heavy are the opponent's, and they are deliberately not in a family.** An enemy
-// draws from its own short list — see `data/enemy_cards.json` — and giving those cards a family
-// would put them in a deck axis the player cannot reach.
-//
-// **Rewriting this enum shifted every combo ID**, because an expanded hand's ID is derived from
-// the card's raw value. That was safe because no profile exists yet, so no discovered combo could
-// be re-locked by the shift, and it stops being safe the moment one does. The conflict between
-// grouping here and ID stability there is recorded as an open question in MECHANICS.md.
-const (
-	// Stab.
-	Jab ActionKind = iota
-	Thrust
-	Lunge
-
-	// Slash.
-	Cut
-	Slash
-	Cleave
-
-	// Crush.
-	Bash
-	Strike
-	Smash
-
-	// Plan. The concept named Plan is one card of the family named plan, which is a collision
-	// of words rather than of meanings: the family is what the card's corner says and this is
-	// the card that draws.
-	Prepare
-	Plan
-	Defend
-
-	// The opponent's, which belong to no family.
-	Attack
-	Heavy
-)
-
-// AllActions is every action either side can queue, in family order.
-var AllActions = []ActionKind{
-	Jab, Thrust, Lunge,
-	Cut, Slash, Cleave,
-	Bash, Strike, Smash,
-	Prepare, Plan, Defend,
-	Attack, Heavy,
-}
-
-func (a ActionKind) String() string {
-	switch a {
-	case Jab:
-		return "Jab"
-	case Thrust:
-		return "Thrust"
-	case Lunge:
-		return "Lunge"
-	case Cut:
-		return "Cut"
-	case Slash:
-		return "Slash"
-	case Cleave:
-		return "Cleave"
-	case Bash:
-		return "Bash"
-	case Strike:
-		return "Strike"
-	case Smash:
-		return "Smash"
-	case Prepare:
-		return "Prepare"
-	case Plan:
-		return "Plan"
-	case Defend:
-		return "Defend"
-	case Attack:
-		return "Attack"
-	case Heavy:
-		return "Heavy"
-	default:
-		return "Unknown"
-	}
-}
-
-// Family is which group this action belongs to. The opponent's two belong to none.
-func (a ActionKind) Family() Family {
-	switch a {
-	case Jab, Thrust, Lunge:
-		return FamilyStab
-	case Cut, Slash, Cleave:
-		return FamilySlash
-	case Bash, Strike, Smash:
-		return FamilyCrush
-	case Prepare, Plan, Defend:
-		return FamilyPlan
-	default:
-		return FamilyNone
-	}
-}
-
-// ParseAction resolves an action from its name, which is how a data record names a concept.
-// The bool reports whether it was found rather than falling back to something playable —
-// unlike ParsePlanStyle, where a typo should still produce a fightable enemy. A deck quietly
-// short a concept is a balance change nobody made, so the caller is expected to fail loudly.
-func ParseAction(name string) (ActionKind, bool) {
-	for _, a := range AllActions {
-		if a.String() == name {
-			return a, true
-		}
-	}
-	return Jab, false
-}
-
-// Category is which phase this action resolves in.
-func (a ActionKind) Category() Category {
-	switch a {
-	case Prepare, Plan, Defend:
-		return CategoryPlan
-	default:
-		return CategoryAttack
-	}
-}
-
-// Action point costs. The budget is the decision: a couple of big swings, or a
-// fistful of small ones, or a whole round traded away for a defence.
-//
-// **The three attack tiers cost the same in every family** — 1, 2, 3 — which is what makes a
-// family a choice of *which* pair to build rather than a stronger or weaker way to build one.
-//
-// **The three plans sit on the same 1/2/3 ladder**, so the whole game prices in three tiers and
-// nothing costs four. Prepare pays in points, Plan pays in cards and Defend pays in survival, and
-// they cost more in that order — three of a four-to-six point budget is most of a round, which
-// is what halving a blow is meant to cost.
-const (
-	costLight = 1 // Jab, Cut, Bash
-	costMid   = 2 // Thrust, Slash, Strike
-	costHeavy = 3 // Lunge, Cleave, Smash
-
-	costPrepare = 1
-	costPlan    = 2
-	costDefend  = 3
-
-	// The opponent's two, priced against the player's tiers so an enemy Attack costs what a
-	// Strike does and an enemy Heavy costs what a Smash does.
-	costEnemyAttack = 2
-	costEnemyHeavy  = 3
-)
-
-// Cost is what this action takes out of the round's action-point budget.
-func (a ActionKind) Cost() int {
-	switch a {
-	case Jab, Cut, Bash:
-		return costLight
-	case Lunge, Cleave, Smash:
-		return costHeavy
-	case Prepare:
-		return costPrepare
-	case Plan:
-		return costPlan
-	case Defend:
-		return costDefend
-	case Heavy:
-		return costEnemyHeavy
-	case Attack:
-		return costEnemyAttack
-	default:
-		return costMid
-	}
-}
-
-// Budget conversion: everyone gets a usable turn, and speed is a real edge without
-// being a landslide.
-const (
-	baseActionPoints = 4
-	speedPerPoint    = 10
-)
-
-// prepareBonusAP is what one Prepare banks for the following round. Two for one is a
-// deliberate profit — the cost of Prepare is the card slot and the action slot it takes
-// out of the round it is played in, not the point it costs.
-const prepareBonusAP = 2
-
-// planDrawCards is how many extra cards one Plan puts in the following round's hand. Two for two
-// points, and **for one round only** — see Duelist.BonusDraw, which is assigned rather than added
-// to at the round boundary. What it buys is choice rather than cards: the deck is not thinned and
-// nothing is gained permanently, so a Plan is a wider hand once and then a hand of eight again.
-const planDrawCards = 2
-
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
 
@@ -551,12 +352,16 @@ func (d Duelist) MaxActions() int { return baseMaxActions }
 // ActionPoints is how much this duelist has to spend in a round, including anything
 // banked by a Prepare in the round before.
 //
-// **No status touches the budget as of 2026-08-16.** A chill did until then, and it is now a card
-// off the front of the turn instead — see playTurn. What that costs is the one thing the old
-// version had going for it: an AP cut was felt while the player was still choosing, and a card
-// taken off a committed turn is felt after they have. What it buys is a status a player can name.
+// **It is the stat plus the bank, and nothing else** *(2026-08-16)*. It used to be
+// `4 + Spd/10 + BonusAP`, a conversion whose only observable effect was to flatten
+// twenty-four distinct Speed values into three budgets. Now the file says what the budget is.
+//
+// **No status touches it.** A chill did until 2026-08-16, and it is now a card off the front of
+// the turn instead — see playTurn. What that costs is the one thing the old version had going for
+// it: an AP cut was felt while the player was still choosing, and a card taken off a committed
+// turn is felt after they have. What it buys is a status a player can name.
 func (d Duelist) ActionPoints() int {
-	return baseActionPoints + d.Spd/speedPerPoint + d.BonusAP
+	return d.Actions + d.BonusAP
 }
 
 // CostOf totals the action-point cost of a queued set.
@@ -573,34 +378,6 @@ func CostOf(cards []Card) int {
 // so that a balance sim can deliberately probe outside the rules.
 func (d Duelist) CanAfford(cards []Card) bool {
 	return CostOf(cards) <= d.ActionPoints()
-}
-
-// Damage is what an action deals in the hands of a duelist with this DMG.
-//
-// **One ladder, three families** *(2026-08-15)*: half DMG at 1 AP, DMG at 2, double at
-// 3, in Stab and Slash and Crush alike. A family says which pair a card builds toward and nothing
-// about how hard it hits, which is what makes the choice between them a *plan* rather than an
-// arithmetic comparison.
-//
-// The opponent's Attack and Heavy sit on the same ladder at the same prices. A plan card deals
-// nothing.
-func (a ActionKind) Damage(dmg int) int {
-	switch a {
-	case Lunge, Cleave, Smash, Heavy:
-		return dmg * 2
-	case Thrust, Slash, Strike, Attack:
-		return dmg
-	case Jab, Cut, Bash:
-		// The floor keeps the cheapest cards from rounding away to nothing at a low DMG,
-		// which is where a duel starts.
-		d := dmg / 2
-		if d < 1 {
-			d = 1
-		}
-		return d
-	default:
-		return 0
-	}
 }
 
 type EventKind int
@@ -670,11 +447,11 @@ const (
 // Event is one entry in the replayable log for a single round.
 type Event struct {
 	Kind   EventKind
-	Side   Side       // who acted
-	Action ActionKind // set on KindAction, on KindNegated for the defense that stopped it, on KindStaggered for the action lost, on KindMissed for the attack that never landed, and on KindCombo for the card the blow led with
-	Amount int        // damage dealt, action points banked, status applied, or on KindCombo what the hand adds up to
-	Target Side       // who took the damage
-	Life   int        // target's life after the event
+	Side   Side      // who acted
+	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindStaggered for the action lost, on KindMissed for the attack that never landed, and on KindCombo for the card the blow led with
+	Amount int       // damage dealt, action points banked, status applied, or on KindCombo what the hand adds up to
+	Target Side      // who took the damage
+	Life   int       // target's life after the event
 	Round  int
 
 	// Element is the card's element on KindAction and KindMissed, and which status is meant on
@@ -735,7 +512,7 @@ type Event struct {
 // Slot is one card's place in a round's resolution order: whose it is, where it sits
 // in that side's queue, and what it is.
 //
-// **It holds a whole Card rather than a bare ActionKind** since 2026-08-12. A slot is what both
+// **It holds a whole Card rather than a bare concept** since 2026-08-12. A slot is what both
 // the engine and the screen walk, so anything that has to know a card's element while a round is
 // being ordered — a combo matching on colour, a row drawing a border — reads it here.
 type Slot struct {
@@ -876,7 +653,7 @@ func playTurn(
 		events = append(events, Event{
 			Kind:    KindStaggered,
 			Side:    side,
-			Action:  turn[i].Card.Action,
+			Action:  turn[i].Card.Concept,
 			Element: turn[i].Card.Element,
 			Round:   round,
 		})
@@ -921,36 +698,40 @@ func resolvePlan(
 	events = append(events, Event{
 		Kind:    KindAction,
 		Side:    side,
-		Action:  card.Action,
+		Action:  card.Concept,
 		Element: card.Element,
 		Round:   round,
 	})
 
-	switch card.Action {
-	case Prepare:
-		actor.GatheredAP += prepareBonusAP
+	// **The switch is on the verb, not on the card** *(2026-08-16)*. It used to name Prepare, Plan
+	// and Defend one at a time, which meant an enemy's `Congeal` could not shield anything however
+	// obviously it was a defence. Three verbs, any number of cards.
+	spec := card.Spec()
+	switch spec.Verb {
+	case VerbBank:
+		actor.GatheredAP += spec.Amount
 		events = append(events, Event{
 			Kind:   KindGathered,
 			Side:   side,
-			Amount: prepareBonusAP,
+			Amount: spec.Amount,
 			Round:  round,
 		})
 
-	case Plan:
+	case VerbDraw:
 		// **Recorded, not drawn.** There is no deck in this package; what is banked here is honoured
 		// by whoever holds one when the round is over. See Duelist.BonusDraw.
-		actor.DrewCards += planDrawCards
+		actor.DrewCards += spec.Amount
 		events = append(events, Event{
 			Kind:   KindDrew,
 			Side:   side,
-			Amount: planDrawCards,
+			Amount: spec.Amount,
 			Round:  round,
 		})
 
-	case Defend:
+	case VerbDefend:
 		// Raised, not spent. What it is worth is `reductionFor`, and it is read when the opponent's
 		// blow arrives — see resolveAttackPhase.
-		actor = actor.raiseDefend(card.Action)
+		actor = actor.raiseDefend(card.Concept)
 	}
 
 	return events, actor, target
@@ -1062,12 +843,44 @@ func resolveAttackPhase(
 		events = append(events, Event{
 			Kind:    KindAction,
 			Side:    side,
-			Action:  slot.Card.Action,
+			Action:  slot.Card.Concept,
 			Element: slot.Card.Element,
 			Round:   round,
 		})
 	}
 	if attacks == 0 {
+		return events, actor, target
+	}
+
+	// **Recoil is paid before the blow, and it is not part of it.** An attack aimed at self costs
+	// its owner life and contributes nothing to the hand — `formsBlow` is what keeps it out of the
+	// matcher, so a Blood Rite beside two Strikes is a Strike Pair rather than a Strike Flurry.
+	//
+	// It resolves first because it is the wind-up rather than the follow-through: a duelist who
+	// tears themselves open to swing has already paid when the swing lands, and a recoil that
+	// killed its owner after their blow connected would read as a corpse having hit something.
+	for _, slot := range turn {
+		if !slot.Card.Spec().Recoils() {
+			continue
+		}
+		actor.CurrentLife = reduce(actor.CurrentLife, slot.Card.Damage(actor.DMG))
+		events = append(events, Event{
+			Kind:    KindDamage,
+			Side:    side,
+			Target:  side,
+			Element: slot.Card.Element,
+			Amount:  slot.Card.Damage(actor.DMG),
+			Life:    actor.CurrentLife,
+			Round:   round,
+		})
+	}
+	if !actor.Alive() {
+		events = append(events, Event{
+			Kind:   KindDefeated,
+			Side:   side,
+			Target: side,
+			Round:  round,
+		})
 		return events, actor, target
 	}
 
@@ -1108,7 +921,7 @@ func resolveAttackPhase(
 		events = append(events, Event{
 			Kind:    KindMissed,
 			Side:    side,
-			Action:  turn[blow.Cards[0]].Card.Action,
+			Action:  turn[blow.Cards[0]].Card.Concept,
 			Element: turn[blow.Cards[0]].Card.Element,
 			Target:  targetSide,
 			Round:   round,
@@ -1220,14 +1033,14 @@ func comboEvent(side Side, blow Blow, turn []Slot, dmg, round int) Event {
 	for _, i := range blow.Cards {
 		base += turn[i].Card.Damage(dmg)
 	}
-	swing := Strike.Damage(dmg)
+	swing := referenceSwing(dmg)
 
 	lead := turn[blow.Cards[0]].Card
 
 	e := Event{
 		Kind:       KindCombo,
 		Side:       side,
-		Action:     lead.Action,
+		Action:     lead.Concept,
 		Element:    lead.Element,
 		Amount:     base + scaleDamage(swing, blow.Multiplier),
 		Hand:       blow.Hand.ID,
@@ -1247,6 +1060,15 @@ func comboEvent(side Side, blow Blow, turn []Slot, dmg, round int) Event {
 	return e
 }
 
+// referenceSwing is the blow a hand's multiplier is applied to: one 1x attack at this duelist's
+// DMG, which is exactly their DMG.
+//
+// **It was `Strike.Damage(dmg)` until 2026-08-16**, and it named a particular card because the
+// ladder was a switch statement with Strike sitting on its middle rung. A card declares its own
+// multiplier now, so 1x is the definition rather than one card's entry — and the multiplier a hand
+// pays should not move because the player's Strike was retuned.
+func referenceSwing(dmg int) int { return dmg }
+
 // reduce takes damage off a life total without letting it go negative.
 func reduce(life, dmg int) int {
 	life -= dmg
@@ -1264,282 +1086,199 @@ func other(s Side) Side {
 	return SideA
 }
 
-// PlanStyle is how an opponent fights. It exists because a defence is priced against how many
-// attacks arrive, and for as long as every enemy spent its whole budget on two big swings, two
-// defensive cards bought total immunity — a duel that ran three rounds taking 0, 0 and 2 damage.
-// That was not a fault in what a defence cost. It is one opponent wearing one shape, and the
-// shape is what the player is really buying answers to.
+// PlanFor builds one round's plan out of the hand an opponent was dealt.
 //
-// Each style is a pure function of a Duelist, so an enemy's whole plan is reproducible from
-// its stats and what it banked last round. No randomness, no clock, no memory beyond the
-// Duelist itself.
+// **One planner as of 2026-08-16, and the deck is what makes an enemy itself.** There were four
+// styles — brute, swarm, warden, tactician — chosen by a string on the enemy record, and they went
+// with the shared enemy deck. An opponent that holds six cheap copies of one card *is* a swarm; one
+// holding three expensive ones *is* a brute. The personality moved into the thing the player can
+// actually read, which is what the cards do rather than which branch a switch took.
 //
-// **These are behaviours, not the enemy model.** MECHANICS.md decides that enemies get a
-// deck and that an affix transforms it, which subjects the opponent to the same "what did I
-// draw" pressure the player faces. That is a bigger build needing its own shuffle stream; a
-// deck-driven planner will arrive as one more style beside these rather than replacing the
-// idea of a style.
-type PlanStyle int
-
-const (
-	// StyleBrute spends everything on the biggest attack it can afford. Few, heavy blows —
-	// the shape every enemy used to have, kept because it is a fine *first* opponent and a
-	// useful baseline. A Defend is at its best against it, which is the point of it not being
-	// alone: one big swing is exactly the blow halving is worth most against.
-	StyleBrute PlanStyle = iota
-
-	// StyleSwarm attacks as many times as the round allows. It used to be the answer to the
-	// immunity problem, back when a defence stopped one blow of several. **One blow per turn has
-	// taken that away**: a swarm's five cheap attacks arrive as one figure like everything else,
-	// so what the style now buys is a *hand* — five cards is a combo and two is not.
-	StyleSwarm
-
-	// StyleWarden opens with a Defend and attacks with the rest, so the player's damage is
-	// halved until they can punch through it.
-	StyleWarden
-
-	// StyleTactician banks action points and then unloads them. It alternates a light
-	// setup round against an oversized one, which is a rhythm the player can read and
-	// answer — guard the spike, punish the setup.
-	StyleTactician
-)
-
-func (p PlanStyle) String() string {
-	switch p {
-	case StyleSwarm:
-		return "swarm"
-	case StyleWarden:
-		return "warden"
-	case StyleTactician:
-		return "tactician"
-	default:
-		return "brute"
-	}
+// Two things went wrong with styles that this cannot repeat. Three of the four were unreachable —
+// the warden asked for a Defend by name and the shared list held none, so every enemy in the game
+// fought as a brute. And none of them was rewritten when a turn stopped resolving several blows, so
+// the shape the roster treated as weakest (a swarm's four cheap attacks, now a Barrage at 5x) had
+// quietly become the strongest.
+//
+// **The rule is: hit as hard as this hand can, then spend what is left over.** The attack half is
+// exact rather than greedy — it scores every affordable combination through `blowFor`, the same
+// function that resolves the round, so the plan the opponent plays is the plan the engine will
+// score. A greedy "take the dearest" pass cannot see that three Ooze beat one Dissolve.
+//
+// **Bounded by the budget and by MaxActions**, both, and it may never return a card it was not
+// dealt — TestThePlannerObeysBothBounds holds it.
+//
+// **The shuffle stays outside this package.** What arrives is a hand, already dealt, exactly as the
+// player's hand reaches the screen: `internal/combat` keeps no randomness and no clock, which is
+// what TestRoundIsDeterministic pins and what lets the balance tool run whole duels headlessly.
+//
+// **The planner reasons about concepts and carries elements along.** Every choice is made on cost
+// and damage; the element rides on the card it was dealt on and reaches the round untouched. An
+// enemy's colours do nothing until an affix attunes them, so preferring one would be preferring a
+// border.
+func PlanFor(d Duelist, hand []Card) []Card {
+	return planFor(d, hand, handTable, mixTable)
 }
 
-// PlanStyles is every style, in a fixed order, for anything that has to walk them.
-func PlanStyles() []PlanStyle {
-	return []PlanStyle{StyleBrute, StyleSwarm, StyleWarden, StyleTactician}
-}
-
-// ParsePlanStyle reads a style out of a data record, falling back to brute so a typo in
-// JSON produces a fightable enemy rather than a panic or a duelist that stands still.
-func ParsePlanStyle(s string) (PlanStyle, bool) {
-	for _, p := range PlanStyles() {
-		if p.String() == s {
-			return p, true
-		}
-	}
-	return StyleBrute, false
-}
-
-// PlanFor builds one round's plan in the given style, **chosen from the hand the opponent
-// was dealt**. Every style is bounded by the action-point budget and by MaxActions, and none
-// may return a plan its duelist cannot pay for or a card it was not holding —
-// TestEveryStyleObeysBothBounds holds all of them to that.
-//
-// **A style used to conjure its cards** *(changed 2026-08-11)*. A brute produced Heavies
-// whether or not a Heavy existed anywhere in the game, which made an enemy deck a thing that
-// could be authored and never read — and made MECHANICS.md's affixes, which *transform* an
-// enemy's deck, unable to change anything. A style is now how a hand is played rather than
-// what is played, and an enemy that draws no attacks does nothing that round.
-//
-// **The shuffle stays outside this package.** What arrives is a hand, already dealt, exactly
-// as the player's hand reaches the screen — `internal/combat` keeps no randomness and no
-// clock, which is what `TestRoundIsDeterministic` pins and what lets the balance tool run
-// whole duels headlessly.
-// **A planner reasons about concepts and carries elements along.** Every choice below is made
-// on cost and category; the element rides on the card it was dealt on and reaches the round
-// untouched. That is deliberate and it is currently free — `data/enemy_cards.json` is all basic,
-// per MECHANICS.md's plan that an affix transforms an enemy's deck rather than the file naming
-// colours. A style that *preferred* an element would be a fifth style, not a change here.
-func PlanFor(style PlanStyle, d Duelist, hand []Card) []Card {
+// planFor is PlanFor with the catalogue injected, so a test can drive a planner against a
+// synthetic ladder.
+func planFor(d Duelist, hand []Card, hands []Hand, mixes []Mix) []Card {
 	budget, slots := d.ActionPoints(), d.MaxActions()
-	p := newPool(hand)
 
-	switch style {
-	case StyleSwarm:
-		return planSwarm(p, budget, slots)
-	case StyleWarden:
-		return planWarden(p, budget, slots)
-	case StyleTactician:
-		return planTactician(d, p, budget, slots)
-	default:
-		return planBrute(p, budget, slots)
-	}
+	chosen, spent := bestAttacks(d, hand, budget, slots, hands, mixes)
+	return append(chosen, spareCards(hand, chosen, budget-spent, slots-len(chosen))...)
 }
 
-// pool is a hand being spent: the cards dealt, and which of them a plan has taken.
+// bestAttacks is the hardest-hitting affordable combination of attacks in the hand, and what it
+// cost. It returns the cards in the order they were dealt.
 //
-// **A slice with used flags rather than a count per kind.** A map of counts would be the
-// obvious shape and would make every choice below depend on Go's randomised map iteration —
-// which the determinism rules forbid outright, and which would show up as an enemy that
-// planned differently on identical input. Order here is the order the cards were dealt in,
-// and every scan below runs front to back so ties resolve the same way twice.
-type pool struct {
-	cards []Card
-	used  []bool
-}
-
-func newPool(hand []Card) *pool {
-	return &pool{cards: hand, used: make([]bool, len(hand))}
-}
-
-// take removes one card of a concept and hands it back whole, element included, reporting
-// whether the hand held one. It matches on the concept alone: no style asks for a colour.
-func (p *pool) take(k ActionKind) (Card, bool) {
-	for i, c := range p.cards {
-		if !p.used[i] && c.Action == k {
-			p.used[i] = true
-			return c, true
+// **Exhaustive over subsets, which is affordable because a hand is small.** EnemyHandSize is 7, so
+// this is at most 128 candidates, each scored by the real `blowFor`. Above `maxSearchableAttacks`
+// it falls back to taking the biggest cards that fit — a balance sim deliberately handing an
+// opponent twenty attacks should get a plan rather than a hung process.
+func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand, mixes []Mix) ([]Card, int) {
+	var offence []int
+	for i, c := range hand {
+		s := c.Spec()
+		if s.Verb == VerbAttack && s.Target == TargetOpponent {
+			offence = append(offence, i)
 		}
 	}
-	return Card{}, false
-}
-
-// put returns a card to the hand. Used by the swarm's upgrade pass, which swaps a small
-// attack out for a bigger one and has to make the small one available again.
-//
-// It matches the whole card, so a fire Jab put back frees a fire Jab. Two identical cards are
-// interchangeable and it does not matter which of them is marked unused; two Jabs of different
-// elements are not, and matching on the concept alone would quietly recolour a hand.
-func (p *pool) put(card Card) {
-	for i, c := range p.cards {
-		if p.used[i] && c == card {
-			p.used[i] = false
-			return
-		}
+	if len(offence) == 0 {
+		return nil, 0
 	}
-}
+	if len(offence) > maxSearchableAttacks {
+		return greedyAttacks(hand, offence, budget, slots)
+	}
 
-// takeAttack removes the attack this style wants and reports it: the most expensive one
-// inside the budget, or the cheapest, depending on which way the style leans. Ties go to the
-// card dealt first, which is what makes the choice reproducible.
-//
-// `above` is a floor the cost has to beat, so the swarm's upgrade pass can ask for something
-// strictly better than what it already has.
-func (p *pool) takeAttack(budget int, dearest bool, above int) (Card, bool) {
-	best, bestAt, found := Card{}, -1, false
+	bestScore, bestCost := -1, 0
+	var best []int
 
-	for i, c := range p.cards {
-		if p.used[i] || c.Category() != CategoryAttack {
+	// Ascending masks, and a strictly-better test, so a tie goes to the combination whose cards
+	// were dealt earliest. That is deterministic without inventing a rule — the same tie-break
+	// `matchCountOf` and `biggestAttack` take.
+	for mask := 1; mask < 1<<len(offence); mask++ {
+		var pick []int
+		cost := 0
+		for bit, idx := range offence {
+			if mask&(1<<bit) == 0 {
+				continue
+			}
+			pick = append(pick, idx)
+			cost += hand[idx].Cost()
+		}
+		if len(pick) > slots || cost > budget {
 			continue
 		}
-		cost := c.Cost()
-		if cost > budget || cost <= above {
-			continue
-		}
-		switch {
-		case !found:
-			best, bestAt, found = c, i, true
-		case dearest && cost > best.Cost():
-			best, bestAt = c, i
-		case !dearest && cost < best.Cost():
-			best, bestAt = c, i
+		if score := blowScore(d, hand, pick, hands, mixes); score > bestScore {
+			bestScore, bestCost, best = score, cost, pick
 		}
 	}
 
-	if !found {
-		return Card{}, false
+	out := make([]Card, 0, len(best))
+	for _, i := range best {
+		out = append(out, hand[i])
 	}
-	p.used[bestAt] = true
-	return best, true
+	return out, bestCost
 }
 
-// planBrute fills with the most expensive attack in hand that still fits.
-func planBrute(p *pool, budget, slots int) []Card {
-	plan := make([]Card, 0, slots)
+// maxSearchableAttacks bounds the exhaustive search. Seven is a full enemy hand; this is well
+// above it and exists only so a sim probing outside the rules degrades rather than hangs.
+const maxSearchableAttacks = 14
 
-	for len(plan) < slots {
-		a, ok := p.takeAttack(budget, true, 0)
-		if !ok {
-			return plan
-		}
-		plan, budget = append(plan, a), budget-a.Cost()
+// blowScore is what one candidate turn would actually land, run through the same matcher the
+// resolver uses. It is the blow before any defence, which is all a planner can know — it cannot
+// see what the other side has raised.
+func blowScore(d Duelist, hand []Card, pick []int, hands []Hand, mixes []Mix) int {
+	turn := make([]Slot, 0, len(pick))
+	for i, idx := range pick {
+		turn = append(turn, Slot{Index: i, Card: hand[idx]})
 	}
-	return plan
+
+	blow := blowFor(turn, hands, mixes)
+	if len(blow.Cards) == 0 {
+		return 0
+	}
+
+	base := 0
+	for _, i := range blow.Cards {
+		base += turn[i].Card.Damage(d.DMG)
+	}
+	return base + scaleDamage(referenceSwing(d.DMG), blow.Multiplier)
 }
 
-// planSwarm takes as many separate attacks as the round allows, then spends whatever is
-// left over making those attacks bigger rather than adding a sixth it has no slot for.
-//
-// Widening first and upgrading second is the whole character of the style: a swarm with
-// more points does not become a brute, it becomes a swarm that hurts. Without the upgrade
-// pass a fast swarm would simply waste the points its speed bought it.
-//
-// **The upgrade is now limited by the hand as well as the budget.** It swaps a planned
-// attack for a dearer one still in the pool and puts the small one back, so a swarm holding
-// six Jabs and nothing else stays six Jabs however many points it has spare — which is the
-// deck doing its job rather than the planner failing.
-func planSwarm(p *pool, budget, slots int) []Card {
-	plan := make([]Card, 0, slots)
-	for len(plan) < slots {
-		a, ok := p.takeAttack(budget, false, 0)
-		if !ok {
+// greedyAttacks is the fallback for a hand too big to search: the dearest cards that fit, which is
+// what the old brute did.
+func greedyAttacks(hand []Card, offence []int, budget, slots int) ([]Card, int) {
+	used := make([]bool, len(hand))
+	var out []Card
+	spent := 0
+
+	for len(out) < slots {
+		best, bestCost := -1, 0
+		for _, i := range offence {
+			if used[i] {
+				continue
+			}
+			if cost := hand[i].Cost(); cost <= budget-spent && cost > bestCost {
+				best, bestCost = i, cost
+			}
+		}
+		if best < 0 {
 			break
 		}
-		plan, budget = append(plan, a), budget-a.Cost()
+		used[best] = true
+		out = append(out, hand[best])
+		spent += bestCost
 	}
-
-	// Upgrade along the plan rather than pouring everything into the first slot, so the
-	// round stays wide.
-	for i := range plan {
-		have := plan[i].Cost()
-		better, ok := p.takeAttack(budget+have, true, have)
-		if !ok {
-			continue
-		}
-		p.put(plan[i])
-		budget -= better.Cost() - have
-		plan[i] = better
-	}
-	return plan
+	return out, spent
 }
 
-// planWarden puts a Defend up first and attacks with what is left. Defend is a plan, so
-// resolution moves it to the *end* of the turn regardless of where it sits here — it is
-// first in the slice only because that is how the plan reads.
+// spareCards fills the slots and points the attacks did not want with whatever else the hand holds.
 //
-// **No Defend in hand and it fights like a brute**, which is the deck showing through the
-// style: a warden is a duelist that shields when it can, not one that always has a shield.
+// **This is what keeps a non-attack card in an enemy deck from being dead content.** A planner that
+// only maximised damage would never raise a shield or bank a point, so every `Congeal` authored
+// into the roster would sit in a discard pile forever. Attacking is still the whole of the plan;
+// this is the change left over.
 //
-// **Today it is always a brute**, because `data/enemy_cards.json` deals nothing but Attack and
-// Heavy — an opponent has no plan cards at all as of 2026-08-15. This is written against the deck
-// it will have rather than the deck it has, exactly as it was before the rework.
-func planWarden(p *pool, budget, slots int) []Card {
-	if budget < costDefend || slots < 1 {
-		return planBrute(p, budget, slots)
-	}
-	shield, ok := p.take(Defend)
-	if !ok {
-		return planBrute(p, budget, slots)
-	}
-	return append([]Card{shield}, planBrute(p, budget-costDefend, slots-1)...)
-}
-
-// planTactician alternates between banking and spending, reading which round it is in off
-// its own BonusAP: anything banked means last round was the setup, so this one is the
-// payoff. It needs no memory of its own because Prepare already leaves the evidence.
-//
-// **Also always a brute today**, and for the same reason as the warden: no enemy deck holds a
-// Prepare.
-func planTactician(d Duelist, p *pool, budget, slots int) []Card {
-	if d.BonusAP > 0 {
-		// The payoff round. Everything into the biggest attacks that fit.
-		return planBrute(p, budget, slots)
+// **Defences go up first, then the hand's own order.** A defence is the one leftover that changes
+// whether the enemy is alive to use the next one, so it earns the tie-break; past that the deck
+// author decides by what they put in, and the draw decides which of it turned up.
+func spareCards(hand []Card, chosen []Card, budget, slots int) []Card {
+	if slots <= 0 || budget <= 0 {
+		return nil
 	}
 
-	// The setup round: bank what a second Prepare is worth, keep enough back to stay
-	// dangerous, and never spend so much banking that the round is a free hit for the
-	// player. Two Prepares is the whole point — it is what makes the next round oversized,
-	// and a hand holding one is a setup round that only half works.
-	plan := make([]Card, 0, slots)
-	for len(plan) < slots-1 && budget >= costPrepare*2 && len(plan) < 2 {
-		bank, ok := p.take(Prepare)
-		if !ok {
-			break
+	used := make([]bool, len(hand))
+	for _, c := range chosen {
+		for i, h := range hand {
+			if !used[i] && h == c {
+				used[i] = true
+				break
+			}
 		}
-		plan, budget = append(plan, bank), budget-costPrepare
 	}
-	return append(plan, planBrute(p, budget, slots-len(plan))...)
+
+	var out []Card
+	for _, wantDefend := range []bool{true, false} {
+		for i, c := range hand {
+			if used[i] || len(out) >= slots {
+				continue
+			}
+			s := c.Spec()
+			if s.Verb == VerbAttack {
+				continue // an attack the search already declined is an attack that did not help
+			}
+			if (s.Verb == VerbDefend) != wantDefend {
+				continue
+			}
+			if s.Cost > budget {
+				continue
+			}
+			used[i] = true
+			out = append(out, c)
+			budget -= s.Cost
+		}
+	}
+	return out
 }

@@ -44,8 +44,21 @@ func damageDealtBy(events []Event, by Side) int {
 }
 
 // staggeredActions returns the actions one side lost to a stagger.
-func staggeredActions(events []Event, by Side) []ActionKind {
-	var out []ActionKind
+// handByKey finds a catalogue entry by its key rather than by the name it prints.
+//
+// **Hands stopped having per-card names on 2026-08-16.** One entry covers every concept in the
+// game and `{card}` is filled in at match time, so "Strike Pair" is something a *formed* hand is
+// called rather than something the catalogue holds.
+func handByKey(key string) (Hand, bool) {
+	id, ok := HandIDForKey(key)
+	if !ok {
+		return Hand{}, false
+	}
+	return HandByID(id)
+}
+
+func staggeredActions(events []Event, by Side) []ConceptID {
+	var out []ConceptID
 	for _, e := range events {
 		if e.Kind == KindStaggered && e.Side == by {
 			out = append(out, e.Action)
@@ -55,8 +68,8 @@ func staggeredActions(events []Event, by Side) []ActionKind {
 }
 
 // sideActions returns the actions one side actually took.
-func sideActions(events []Event, by Side) []ActionKind {
-	var out []ActionKind
+func sideActions(events []Event, by Side) []ConceptID {
+	var out []ConceptID
 	for _, e := range events {
 		if e.Kind == KindAction && e.Side == by {
 			out = append(out, e.Action)
@@ -73,7 +86,7 @@ func comboCards(e Event) []int { return e.ComboCards[:e.ComboCardCount] }
 // **The rule the whole model rests on.** However many attack cards a turn queues, exactly one
 // figure of damage lands.
 func TestATurnDealsDamageExactlyOnce(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	for _, turn := range [][]Card{
 		PlainCards(Strike),
@@ -84,7 +97,7 @@ func TestATurnDealsDamageExactlyOnce(t *testing.T) {
 	} {
 		events, _, _ := resolve(a, b, turn, nil, 1)
 		if n := kindCount(events, KindDamage); n != 1 {
-			t.Errorf("%v dealt damage %d times, want exactly 1", Actions(turn), n)
+			t.Errorf("%v dealt damage %d times, want exactly 1", Concepts(turn), n)
 		}
 	}
 }
@@ -92,7 +105,7 @@ func TestATurnDealsDamageExactlyOnce(t *testing.T) {
 // Every attack card is still announced, even the ones that contribute nothing — the screen counts
 // one beat per slot to know how far through the round playback is.
 func TestEveryAttackCardIsAnnouncedEvenOutsideTheHand(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike), nil, 1)
 
@@ -104,7 +117,7 @@ func TestEveryAttackCardIsAnnouncedEvenOutsideTheHand(t *testing.T) {
 // **A card that builds to no hand contributes nothing to the blow.** `Strike, Jab, Strike` is a
 // Strike Pair and the Jab is not in it.
 func TestACardOutsideTheHandAddsNothing(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	withJab, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike), nil, 1)
 	without, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
@@ -127,16 +140,16 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 // **damage = the hand's own cards, plus DMG times the multiplier.** Two Strikes at DMG 10 are 20
 // of cards and a 1.5x pair on a DMG of 10, so 35.
 func TestDamageIsTheHandsCardsPlusDMGTimesTheMultiplier(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	pair, ok := HandByName("Strike Pair")
+	pair, ok := handByKey("pair")
 	if !ok {
-		t.Fatal("the catalogue has no Strike Pair")
+		t.Fatal("the catalogue has no pair")
 	}
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
-	want := Strike.Damage(10)*2 + Strike.Damage(10)*pair.Multiplier/multiplierScale
+	want := Plain(Strike).Damage(10)*2 + Plain(Strike).Damage(10)*pair.Multiplier/multiplierScale
 	if got := damageDealtBy(events, SideA); got != want {
 		t.Errorf("a plain Strike Pair dealt %d, want %d", got, want)
 	}
@@ -146,9 +159,9 @@ func TestDamageIsTheHandsCardsPlusDMGTimesTheMultiplier(t *testing.T) {
 // also a 2x duo is 3.5x, not 3x. That is what keeps the top of the ladder at a few hundred damage
 // rather than several thousand.
 func TestTheHandAndMixMultipliersAdd(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	pair, _ := HandByName("Strike Pair")
+	pair, _ := handByKey("pair")
 	duo, _ := MixByName("Duo")
 
 	events, _, _ := resolve(a, b, []Card{Of(Strike, Fire), Of(Strike, Ice)}, nil, 1)
@@ -168,23 +181,23 @@ func TestTheHandAndMixMultipliersAdd(t *testing.T) {
 // **The best-paying hand wins.** Four Strikes hold a pair and a flurry as well as a barrage; only
 // the barrage pays. A fifth Strike changes nothing, since a group matches at least its size.
 func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
-	a, b := duelist(10, 0, 10000), duelist(10, 0, 10000)
+	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 
 	for _, tc := range []struct {
 		n    int
 		want string
 	}{
-		{2, "Strike Pair"},
-		{3, "Strike Flurry"},
-		{4, "Strike Barrage"},
-		{5, "Strike Barrage"},
+		{2, "pair"},
+		{3, "flurry"},
+		{4, "barrage"},
+		{5, "barrage"},
 	} {
 		turn := make([]Card, tc.n)
 		for i := range turn {
 			turn[i] = Plain(Strike)
 		}
 
-		want, ok := HandByName(tc.want)
+		want, ok := handByKey(tc.want)
 		if !ok {
 			t.Fatalf("the catalogue has no %q", tc.want)
 		}
@@ -197,11 +210,11 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 
 // Two Pair and Full House need two different concepts, so five of one card can be neither.
 func TestTheTwoConceptHands(t *testing.T) {
-	a, b := duelist(10, 0, 10000), duelist(10, 0, 10000)
+	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 
-	twoPair, _ := HandByName("Two Pair")
-	fullHouse, _ := HandByName("Full House")
-	barrage, _ := HandByName("Jab Barrage")
+	twoPair, _ := handByKey("two-pair")
+	fullHouse, _ := handByKey("full-house")
+	barrage, _ := handByKey("barrage")
 
 	for _, tc := range []struct {
 		turn []Card
@@ -222,19 +235,19 @@ func TestTheTwoConceptHands(t *testing.T) {
 // **A counted hand does not care what sits between its cards.** Three Strikes with a Jab among
 // them is a Flurry; the run-matcher this replaced needed them adjacent and formed nothing.
 func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	flurry, _ := HandByName("Strike Flurry")
+	flurry, _ := handByKey("flurry")
 	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 1 || got[0] != flurry.ID {
-		t.Fatalf("three Strikes around a Jab formed %v, want a Strike Flurry", got)
+		t.Fatalf("three Strikes around a Jab formed %v, want a flurry", got)
 	}
 }
 
 // The ladder is scoped to attacks, so three Prepares are three of a card and form nothing.
 func TestTheLadderCountsAttacksAlone(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Prepare, Prepare, Prepare), nil, 1)
 
@@ -249,14 +262,14 @@ func TestTheLadderCountsAttacksAlone(t *testing.T) {
 // **With no hand, the biggest single attack is the blow** — the High Card — and it earns no
 // multiplier at all, so what lands is exactly what the card's face says.
 func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 0 {
 		t.Fatalf("three different attacks formed %v, want no built hand", got)
 	}
-	if got, want := damageDealtBy(events, SideA), Smash.Damage(10); got != want {
+	if got, want := damageDealtBy(events, SideA), Plain(Smash).Damage(10); got != want {
 		t.Errorf("dealt %d, want the Smash's %d and nothing else", got, want)
 	}
 }
@@ -264,7 +277,7 @@ func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
 // The High Card is still *named*, which is what lets the feed say what happened on the turn that
 // happens most often. A blow the engine could not name is the one failure this model can have.
 func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
 
@@ -272,7 +285,7 @@ func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
 	if !ok {
 		t.Fatal("no KindCombo event — the attack phase said nothing about what it formed")
 	}
-	high, ok := HandByName("High Card")
+	high, ok := handByKey("high-card")
 	if !ok {
 		t.Fatal("the catalogue holds no High Card")
 	}
@@ -283,8 +296,8 @@ func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
 		t.Errorf("the High Card paid a x%d.%02d multiplier, want none",
 			e.Multiplier/100, e.Multiplier%100)
 	}
-	if e.Amount != Smash.Damage(10) {
-		t.Errorf("the High Card came to %d, want the Smash's own %d", e.Amount, Smash.Damage(10))
+	if e.Amount != Plain(Smash).Damage(10) {
+		t.Errorf("the High Card came to %d, want the Smash's own %d", e.Amount, Plain(Smash).Damage(10))
 	}
 }
 
@@ -293,7 +306,7 @@ func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
 // The mix is the count of *distinct non-basic* colours in the hand that formed, and basic never
 // counts in either direction.
 func TestTheMixCountsDistinctColoursAndIgnoresBasic(t *testing.T) {
-	a, b := duelist(10, 0, 10000), duelist(10, 0, 10000)
+	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 
 	for _, tc := range []struct {
 		what string
@@ -329,7 +342,7 @@ func TestTheMixCountsDistinctColoursAndIgnoresBasic(t *testing.T) {
 // **Only the cards in the hand decide the mix.** An off-colour card that contributed to no hand
 // cannot recolour the one that formed.
 func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, []Card{Of(Strike, Ice), Of(Jab, Fire), Of(Strike, Ice)}, nil, 1)
 
@@ -347,7 +360,7 @@ func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
 // **One status per colour in the hand**, so mono lands one and a rainbow lands four — for a
 // duelist wearing all four rings, which is what a status needs since 2026-08-16.
 func TestTheMixLandsOneStatusPerColour(t *testing.T) {
-	a, b := ringed(duelist(10, 0, 10000)), duelist(10, 0, 10000)
+	a, b := ringed(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 
 	events, _, bAfter := resolve(a, b, []Card{
 		Of(Strike, Fire), Of(Strike, Ice), Of(Strike, Earth), Of(Strike, Lightning),
@@ -364,7 +377,7 @@ func TestTheMixLandsOneStatusPerColour(t *testing.T) {
 }
 
 func TestADrabHandLandsNoStatus(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
@@ -376,7 +389,7 @@ func TestADrabHandLandsNoStatus(t *testing.T) {
 // A lone attack that formed no hand still applies its own element, which is the rule that
 // predates hands and was deliberately kept.
 func TestALoneAttackStillAppliesItsElement(t *testing.T) {
-	a, b := ringed(duelist(10, 0, 5000)), duelist(10, 0, 5000)
+	a, b := ringed(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Plain(Jab)}, nil, 1)
 
@@ -391,7 +404,7 @@ func TestALoneAttackStillAppliesItsElement(t *testing.T) {
 // --- stagger ------------------------------------------------------------------------------
 
 func TestAFlurryCostsTheOpponentTheirNextAction(t *testing.T) {
-	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 
 	events, _, _ := resolve(a, b,
 		PlainCards(Strike, Strike, Strike),
@@ -410,7 +423,7 @@ func TestAFlurryCostsTheOpponentTheirNextAction(t *testing.T) {
 // resolveRound's hands and mixes parameters are for, and it is a better test of the *rule* anyway:
 // what is asserted is that StaggerAll empties a turn, not that one particular combo does.
 func TestStaggerAllTakesTheOpponentsWholeTurn(t *testing.T) {
-	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 
 	hands := []Hand{
 		{ID: 1, Key: "high-card", Name: "High Card", Groups: []int{1}, Scope: []Category{CategoryAttack}},
@@ -434,22 +447,22 @@ func TestStaggerAllTakesTheOpponentsWholeTurn(t *testing.T) {
 // A hand scored off cards a stagger deleted would let a staggered duelist stagger back with a
 // turn it never took. Two Strikes survive, so a pair forms and emphatically not a barrage.
 func TestStaggeredCardsCannotFormAHand(t *testing.T) {
-	a := duelist(10, 0, 20000)
-	b := duelist(10, 0, 20000)
+	a := duelist(10, 4, 20000)
+	b := duelist(10, 4, 20000)
 	b.Staggered = 3
 
 	events, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike, Strike, Strike, Strike), 1)
 
-	pair, _ := HandByName("Strike Pair")
+	pair, _ := handByKey("pair")
 	if got := handsFormed(events, SideB); len(got) != 1 || got[0] != pair.ID {
-		t.Fatalf("two surviving Strikes should form a Strike Pair, got %v", got)
+		t.Fatalf("two surviving Strikes should form a pair, got %v", got)
 	}
 }
 
 // Side B acts last, so a stagger B earns has no turn left to bite in and carries to the round
 // after. That is the one asymmetry phases impose.
 func TestSideBsStaggerLandsInTheFollowingRound(t *testing.T) {
-	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 
 	events, aAfter, _ := resolve(a, b, PlainCards(Prepare), PlainCards(Strike, Strike, Strike), 1)
 
@@ -466,9 +479,9 @@ func TestSideBsStaggerLandsInTheFollowingRound(t *testing.T) {
 // **A counted hand is not contiguous**, which is the case a start-and-length bracket could not
 // describe: Two Pair is two cards, a card that earned nothing, and two more.
 func TestTheEventNamesScatteredCards(t *testing.T) {
-	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 
-	events, _, _ := resolve(a, b, PlainCards(Jab, Jab, Heavy, Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Jab, Jab, Smash, Strike, Strike), nil, 1)
 
 	e, ok := comboEventFor(events, SideA)
 	if !ok {
@@ -476,14 +489,14 @@ func TestTheEventNamesScatteredCards(t *testing.T) {
 	}
 	got := comboCards(e)
 	if len(got) != 4 || got[0] != 0 || got[1] != 1 || got[2] != 3 || got[3] != 4 {
-		t.Fatalf("two pair says it was formed from %v, want [0 1 3 4] around the Heavy", got)
+		t.Fatalf("two pair says it was formed from %v, want [0 1 3 4] around the Smash", got)
 	}
 }
 
 // The attack phase is announced before the blow lands, so a boosted figure never arrives before
 // the reason for it.
 func TestTheHandIsAnnouncedBeforeTheDamage(t *testing.T) {
-	a, b := duelist(10, 0, 5000), duelist(10, 0, 5000)
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
@@ -507,7 +520,7 @@ func TestTheHandIsAnnouncedBeforeTheDamage(t *testing.T) {
 // --- housekeeping -------------------------------------------------------------------------
 
 func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
-	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 	turn := PlainCards(Strike, Strike, Strike)
 
 	e1, a1, b1 := resolve(a, b, turn, PlainCards(Jab, Strike), 1)
@@ -530,14 +543,14 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 // CombatScene.currentSlot counts one beat per slot, taken or lost, and would light the wrong card
 // for the rest of the round if a slot went unaccounted for.
 func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
-	a, b := duelist(10, 0, 20000), duelist(10, 0, 20000)
+	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 	aPlan := PlainCards(Strike, Strike, Strike)
 	bPlan := PlainCards(Prepare, Jab, Strike, Defend)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 	order := ResolutionOrder(aPlan, bPlan)
 
-	var beats []ActionKind
+	var beats []ConceptID
 	for _, e := range events {
 		if e.Kind == KindAction || e.Kind == KindStaggered {
 			beats = append(beats, e.Action)
@@ -548,8 +561,8 @@ func TestEverySlotIsEitherTakenOrStaggered(t *testing.T) {
 		t.Fatalf("every slot needs exactly one beat: %d slots, %d beats", len(order), len(beats))
 	}
 	for i, slot := range order {
-		if beats[i] != slot.Card.Action {
-			t.Fatalf("beat %d is %v, but slot %d is %v", i, beats[i], i, slot.Card.Action)
+		if beats[i] != slot.Card.Concept {
+			t.Fatalf("beat %d is %v, but slot %d is %v", i, beats[i], i, slot.Card.Concept)
 		}
 	}
 

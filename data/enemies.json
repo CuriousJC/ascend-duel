@@ -4,9 +4,8 @@
     "Name": "Clear Pod",
     "Portrait": "clearpod1-portrait",
     "DMG": 5,
-    "Speed": 4,
-    "Constitution": 12,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 120,
     "ValidFloors": [
       1,
       2
@@ -14,6 +13,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Spore",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Burst",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Harden",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -21,9 +54,8 @@
     "Name": "Clear Slime",
     "Portrait": "clearslime1-portrait",
     "DMG": 5,
-    "Speed": 6,
-    "Constitution": 10,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 100,
     "ValidFloors": [
       1,
       2
@@ -31,6 +63,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Dissolve",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -38,9 +104,8 @@
     "Name": "Clear Slime II",
     "Portrait": "clearslime2-portrait",
     "DMG": 6,
-    "Speed": 8,
-    "Constitution": 12,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 120,
     "ValidFloors": [
       1,
       2
@@ -48,6 +113,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Dissolve",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -55,9 +154,8 @@
     "Name": "Scout Drone",
     "Portrait": "drone1-portrait",
     "DMG": 6,
-    "Speed": 26,
-    "Constitution": 9,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 90,
     "ValidFloors": [
       1,
       2
@@ -65,6 +163,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Ping",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Volley",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Overload",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Recharge",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -72,9 +204,8 @@
     "Name": "Giant Bat",
     "Portrait": "giantbat-portrait",
     "DMG": 5,
-    "Speed": 25,
-    "Constitution": 8,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 80,
     "ValidFloors": [
       1,
       2
@@ -83,6 +214,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Nip",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Swoop",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Drain",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Roost",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -90,9 +255,8 @@
     "Name": "Giant Rat",
     "Portrait": "giantrat-portrait",
     "DMG": 6,
-    "Speed": 15,
-    "Constitution": 10,
-    "PlanStyle": "swarm",
+    "Actions": 5,
+    "HP": 100,
     "ValidFloors": [
       1,
       2
@@ -101,6 +265,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Gnaw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Maul",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Skitter",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -108,9 +306,8 @@
     "Name": "Goblin",
     "Portrait": "goblin-portrait",
     "DMG": 6,
-    "Speed": 22,
-    "Constitution": 9,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 90,
     "ValidFloors": [
       1,
       2
@@ -119,6 +316,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Poke",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Stab",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Cleaver",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Cower",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -126,9 +357,8 @@
     "Name": "Blue Slime",
     "Portrait": "blueslime1-portrait",
     "DMG": 6,
-    "Speed": 8,
-    "Constitution": 12,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 120,
     "ValidFloors": [
       1,
       3
@@ -136,6 +366,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Drown",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -143,9 +407,8 @@
     "Name": "Clear Cube",
     "Portrait": "clearcube1-portrait",
     "DMG": 6,
-    "Speed": 4,
-    "Constitution": 14,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 140,
     "ValidFloors": [
       1,
       3
@@ -153,6 +416,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Nudge",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Crush",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Set",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -160,9 +457,8 @@
     "Name": "Dragonfly",
     "Portrait": "dragonfly-portrait",
     "DMG": 8,
-    "Speed": 20,
-    "Constitution": 12,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 120,
     "ValidFloors": [
       1,
       3
@@ -171,6 +467,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Flit",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Skewer",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Dive",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Hover",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -178,9 +508,8 @@
     "Name": "Frogman",
     "Portrait": "frogman-portrait",
     "DMG": 9,
-    "Speed": 10,
-    "Constitution": 14,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 140,
     "ValidFloors": [
       1,
       3
@@ -189,6 +518,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Tongue",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Spear",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Leap Slam",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Croak",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -196,9 +559,8 @@
     "Name": "Green Slime",
     "Portrait": "greenslime1-portrait",
     "DMG": 6,
-    "Speed": 8,
-    "Constitution": 13,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 130,
     "ValidFloors": [
       1,
       3
@@ -206,6 +568,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Digest",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -213,9 +609,8 @@
     "Name": "Blue Slime II",
     "Portrait": "blueslime2-portrait",
     "DMG": 7,
-    "Speed": 10,
-    "Constitution": 14,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 140,
     "ValidFloors": [
       2,
       3
@@ -223,6 +618,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Drown",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -230,9 +659,8 @@
     "Name": "Hunter Drone",
     "Portrait": "drone2-portrait",
     "DMG": 8,
-    "Speed": 28,
-    "Constitution": 11,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 110,
     "ValidFloors": [
       2,
       3
@@ -240,6 +668,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Ping",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Volley",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Overload",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Recharge",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -247,9 +709,8 @@
     "Name": "Green Pod",
     "Portrait": "greenpod1-portrait",
     "DMG": 7,
-    "Speed": 6,
-    "Constitution": 15,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 150,
     "ValidFloors": [
       2,
       3
@@ -257,6 +718,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Spore",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Vine Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bloom Burst",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Harden",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -264,9 +759,8 @@
     "Name": "Amber Slime",
     "Portrait": "amberslime1-portrait",
     "DMG": 8,
-    "Speed": 10,
-    "Constitution": 16,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 160,
     "ValidFloors": [
       2,
       4
@@ -274,6 +768,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Encase",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -281,9 +809,8 @@
     "Name": "Android Mk I",
     "Portrait": "android1-portrait",
     "DMG": 9,
-    "Speed": 20,
-    "Constitution": 15,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 150,
     "ValidFloors": [
       2,
       4
@@ -291,6 +818,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jolt",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Servo Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Piston Drive",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reboot",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -298,9 +859,8 @@
     "Name": "Blue Cube",
     "Portrait": "bluecube1-portrait",
     "DMG": 7,
-    "Speed": 6,
-    "Constitution": 16,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 160,
     "ValidFloors": [
       2,
       4
@@ -308,6 +868,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Nudge",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Crush",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Set",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -315,9 +909,8 @@
     "Name": "Clear Humanoid",
     "Portrait": "clearhumanoid1-portrait",
     "DMG": 8,
-    "Speed": 12,
-    "Constitution": 16,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 160,
     "ValidFloors": [
       2,
       4
@@ -325,6 +918,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Punch",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Brace",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -332,9 +959,8 @@
     "Name": "Dire Wolf",
     "Portrait": "direwolf-portrait",
     "DMG": 8,
-    "Speed": 15,
-    "Constitution": 16,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 160,
     "ValidFloors": [
       2,
       4
@@ -343,6 +969,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Snap",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Rend",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Circle",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -350,9 +1010,8 @@
     "Name": "Giant Spider",
     "Portrait": "giantspider-portrait",
     "DMG": 9,
-    "Speed": 24,
-    "Constitution": 14,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 140,
     "ValidFloors": [
       2,
       4
@@ -361,6 +1020,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Nip",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Fang",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Web Crush",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Spin",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -368,9 +1061,8 @@
     "Name": "Gore Bat",
     "Portrait": "gorebat-portrait",
     "DMG": 8,
-    "Speed": 28,
-    "Constitution": 11,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 110,
     "ValidFloors": [
       2,
       4
@@ -379,6 +1071,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Nip",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Swoop",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Gore",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Roost",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -386,9 +1112,8 @@
     "Name": "Green Cube",
     "Portrait": "greencube1-portrait",
     "DMG": 8,
-    "Speed": 6,
-    "Constitution": 18,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 180,
     "ValidFloors": [
       2,
       4
@@ -396,6 +1121,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Nudge",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Crush",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Set",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -403,9 +1162,8 @@
     "Name": "Green Slime II",
     "Portrait": "greenslime2-portrait",
     "DMG": 8,
-    "Speed": 10,
-    "Constitution": 15,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 150,
     "ValidFloors": [
       2,
       4
@@ -413,6 +1171,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Digest",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -420,9 +1212,8 @@
     "Name": "Rot Hound",
     "Portrait": "hound1-portrait",
     "DMG": 9,
-    "Speed": 24,
-    "Constitution": 13,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 130,
     "ValidFloors": [
       2,
       4
@@ -430,6 +1221,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Snap",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rend",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Circle",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -437,9 +1262,8 @@
     "Name": "Hungry Plant",
     "Portrait": "hungryplant-portrait",
     "DMG": 9,
-    "Speed": 6,
-    "Constitution": 22,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 220,
     "ValidFloors": [
       2,
       4
@@ -448,6 +1272,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Thorn",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Vine Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Snap Trap",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Root",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -455,9 +1313,8 @@
     "Name": "Mutant",
     "Portrait": "mutant1-portrait",
     "DMG": 9,
-    "Speed": 12,
-    "Constitution": 16,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 160,
     "ValidFloors": [
       2,
       4
@@ -465,6 +1322,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rampage",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Twitch",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -472,9 +1363,8 @@
     "Name": "Red Slime",
     "Portrait": "redslime1-portrait",
     "DMG": 9,
-    "Speed": 8,
-    "Constitution": 14,
-    "PlanStyle": "brute",
+    "Actions": 4,
+    "HP": 140,
     "ValidFloors": [
       2,
       4
@@ -482,6 +1372,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Scald",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -489,9 +1413,8 @@
     "Name": "Sken",
     "Portrait": "sken-portrait",
     "DMG": 8,
-    "Speed": 20,
-    "Constitution": 13,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 130,
     "ValidFloors": [
       2,
       4
@@ -500,6 +1423,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Slice",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Gash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Rip",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Skulk",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -507,9 +1464,8 @@
     "Name": "Specimen A",
     "Portrait": "specimen1-portrait",
     "DMG": 8,
-    "Speed": 18,
-    "Constitution": 14,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 140,
     "ValidFloors": [
       2,
       4
@@ -517,6 +1473,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Probe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Convulse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Adapt",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -524,9 +1514,8 @@
     "Name": "Yellow Pod",
     "Portrait": "yellowpod1-portrait",
     "DMG": 8,
-    "Speed": 18,
-    "Constitution": 14,
-    "PlanStyle": "swarm",
+    "Actions": 5,
+    "HP": 140,
     "ValidFloors": [
       2,
       4
@@ -534,6 +1523,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Pollen",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Seed Burst",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Harden",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -541,9 +1564,8 @@
     "Name": "Amber Cube",
     "Portrait": "ambercube1-portrait",
     "DMG": 9,
-    "Speed": 8,
-    "Constitution": 20,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 200,
     "ValidFloors": [
       3,
       5
@@ -551,6 +1573,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Nudge",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Encase",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Set",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -558,9 +1614,8 @@
     "Name": "Amber Slime II",
     "Portrait": "amberslime2-portrait",
     "DMG": 10,
-    "Speed": 12,
-    "Constitution": 19,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 190,
     "ValidFloors": [
       3,
       5
@@ -568,6 +1623,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Encase",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -575,9 +1664,8 @@
     "Name": "Android Mk II",
     "Portrait": "android2-portrait",
     "DMG": 11,
-    "Speed": 22,
-    "Constitution": 18,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 180,
     "ValidFloors": [
       3,
       5
@@ -585,6 +1673,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jolt",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Servo Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Piston Drive",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reboot",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -592,9 +1714,8 @@
     "Name": "Blood Eye",
     "Portrait": "bloodeye-portrait",
     "DMG": 10,
-    "Speed": 18,
-    "Constitution": 16,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 160,
     "ValidFloors": [
       3,
       5
@@ -603,6 +1724,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Gaze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Beam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Burn Ray",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Blink",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -610,9 +1765,8 @@
     "Name": "Blue Humanoid",
     "Portrait": "bluehumanoid1-portrait",
     "DMG": 10,
-    "Speed": 14,
-    "Constitution": 19,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 190,
     "ValidFloors": [
       3,
       5
@@ -620,6 +1774,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Punch",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Brace",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -627,9 +1815,8 @@
     "Name": "Bugbear",
     "Portrait": "bugbear-portrait",
     "DMG": 12,
-    "Speed": 14,
-    "Constitution": 20,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 200,
     "ValidFloors": [
       3,
       5
@@ -638,6 +1825,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Swipe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Club",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Crush",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Snarl",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -645,9 +1866,8 @@
     "Name": "Clot Slime",
     "Portrait": "clotslime1-portrait",
     "DMG": 9,
-    "Speed": 6,
-    "Constitution": 18,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 180,
     "ValidFloors": [
       3,
       5
@@ -655,6 +1875,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Clot",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Smother",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Coagulate",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Thicken",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -662,9 +1916,8 @@
     "Name": "Frogman Veteran",
     "Portrait": "frogmanveteran-portrait",
     "DMG": 11,
-    "Speed": 14,
-    "Constitution": 18,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 180,
     "ValidFloors": [
       3,
       5
@@ -673,6 +1926,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Tongue",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Spear",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Leap Slam",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Croak",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -680,9 +1967,8 @@
     "Name": "Bone Hound",
     "Portrait": "hound2-portrait",
     "DMG": 10,
-    "Speed": 26,
-    "Constitution": 15,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 150,
     "ValidFloors": [
       3,
       5
@@ -690,6 +1976,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Snap",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rend",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Circle",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -697,9 +2017,8 @@
     "Name": "Warped Mutant",
     "Portrait": "mutant2-portrait",
     "DMG": 11,
-    "Speed": 14,
-    "Constitution": 19,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 190,
     "ValidFloors": [
       3,
       5
@@ -707,6 +2026,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rampage",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Twitch",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -714,9 +2067,8 @@
     "Name": "Purple Pod",
     "Portrait": "purplepod1-portrait",
     "DMG": 9,
-    "Speed": 16,
-    "Constitution": 16,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 160,
     "ValidFloors": [
       3,
       5
@@ -724,6 +2076,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Spore",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bruise Burst",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Steep",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -731,9 +2117,8 @@
     "Name": "Red Pod",
     "Portrait": "redpod1-portrait",
     "DMG": 10,
-    "Speed": 8,
-    "Constitution": 17,
-    "PlanStyle": "brute",
+    "Actions": 4,
+    "HP": 170,
     "ValidFloors": [
       3,
       5
@@ -741,6 +2126,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ember",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Blood Burst",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Harden",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -748,9 +2167,8 @@
     "Name": "Red Slime II",
     "Portrait": "redslime2-portrait",
     "DMG": 11,
-    "Speed": 10,
-    "Constitution": 17,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 170,
     "ValidFloors": [
       3,
       5
@@ -758,6 +2176,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ooze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Engulf",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Scald",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Congeal",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -765,9 +2217,8 @@
     "Name": "Specimen B",
     "Portrait": "specimen2-portrait",
     "DMG": 10,
-    "Speed": 20,
-    "Constitution": 17,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 170,
     "ValidFloors": [
       3,
       5
@@ -775,6 +2226,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Probe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Convulse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Adapt",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -782,9 +2267,8 @@
     "Name": "Woodwose",
     "Portrait": "woodwose-portrait",
     "DMG": 10,
-    "Speed": 12,
-    "Constitution": 20,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 200,
     "ValidFloors": [
       3,
       5
@@ -793,6 +2277,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Branch",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Bough",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Uproot",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Bark Skin",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -800,9 +2318,8 @@
     "Name": "Winged Eye",
     "Portrait": "wingedeye-portrait",
     "DMG": 9,
-    "Speed": 26,
-    "Constitution": 14,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 140,
     "ValidFloors": [
       3,
       6
@@ -811,6 +2328,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Gaze",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Beam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Burn Ray",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Blink",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -818,9 +2369,8 @@
     "Name": "Android Mk III",
     "Portrait": "android3-portrait",
     "DMG": 13,
-    "Speed": 24,
-    "Constitution": 21,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 210,
     "ValidFloors": [
       4,
       6
@@ -828,6 +2378,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jolt",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Servo Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Piston Drive",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reboot",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -835,9 +2419,8 @@
     "Name": "Basilisk",
     "Portrait": "basilisk-portrait",
     "DMG": 13,
-    "Speed": 12,
-    "Constitution": 26,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 260,
     "ValidFloors": [
       4,
       6
@@ -846,6 +2429,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Nip",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Petrify",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Coil",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -853,9 +2470,8 @@
     "Name": "Doomsday Beast",
     "Portrait": "beast1-portrait",
     "DMG": 14,
-    "Speed": 14,
-    "Constitution": 26,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 260,
     "ValidFloors": [
       4,
       6
@@ -863,6 +2479,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Gore",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Trample",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Devour",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bellow",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -870,9 +2520,8 @@
     "Name": "Clot Slime II",
     "Portrait": "clotslime2-portrait",
     "DMG": 11,
-    "Speed": 8,
-    "Constitution": 21,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 210,
     "ValidFloors": [
       4,
       6
@@ -880,6 +2529,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Clot",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Smother",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Coagulate",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Thicken",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -887,9 +2570,8 @@
     "Name": "Flesh Pod",
     "Portrait": "fleshpod1-portrait",
     "DMG": 11,
-    "Speed": 6,
-    "Constitution": 22,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 220,
     "ValidFloors": [
       4,
       6
@@ -897,6 +2579,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Sinew",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Rupture",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Knit",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -904,9 +2620,8 @@
     "Name": "Green Humanoid",
     "Portrait": "greenhumanoid1-portrait",
     "DMG": 11,
-    "Speed": 14,
-    "Constitution": 21,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 210,
     "ValidFloors": [
       4,
       6
@@ -914,6 +2629,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Punch",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Brace",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -921,9 +2670,8 @@
     "Name": "Meat Spider",
     "Portrait": "meatspider1-portrait",
     "DMG": 11,
-    "Speed": 24,
-    "Constitution": 18,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 180,
     "ValidFloors": [
       4,
       6
@@ -931,6 +2679,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Nip",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Fang",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Web Crush",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Spin",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -938,9 +2720,8 @@
     "Name": "Mega Mutant",
     "Portrait": "megamutant1-portrait",
     "DMG": 13,
-    "Speed": 12,
-    "Constitution": 24,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 240,
     "ValidFloors": [
       4,
       6
@@ -948,6 +2729,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rampage",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Twitch",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -955,9 +2770,8 @@
     "Name": "Mineral Slime",
     "Portrait": "mineralslime1-portrait",
     "DMG": 10,
-    "Speed": 6,
-    "Constitution": 24,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 240,
     "ValidFloors": [
       4,
       6
@@ -965,6 +2779,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Grit",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Grind",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Avalanche",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Calcify",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -972,9 +2820,8 @@
     "Name": "Ogre Grunt",
     "Portrait": "ogregrunt-portrait",
     "DMG": 13,
-    "Speed": 12,
-    "Constitution": 24,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 240,
     "ValidFloors": [
       4,
       6
@@ -983,6 +2830,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Cuff",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Club",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Overhead",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Roar",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -990,9 +2871,8 @@
     "Name": "Red Cube",
     "Portrait": "redcube1-portrait",
     "DMG": 12,
-    "Speed": 8,
-    "Constitution": 22,
-    "PlanStyle": "brute",
+    "Actions": 4,
+    "HP": 220,
     "ValidFloors": [
       4,
       6
@@ -1000,6 +2880,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Nudge",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Scald",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Set",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1007,9 +2921,8 @@
     "Name": "Specimen C",
     "Portrait": "specimen3-portrait",
     "DMG": 12,
-    "Speed": 22,
-    "Constitution": 20,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 200,
     "ValidFloors": [
       4,
       6
@@ -1017,6 +2930,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Probe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Convulse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Adapt",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1024,9 +2971,8 @@
     "Name": "Abomination",
     "Portrait": "abomination1-portrait",
     "DMG": 15,
-    "Speed": 12,
-    "Constitution": 28,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 280,
     "ValidFloors": [
       5,
       7
@@ -1034,6 +2980,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Flail",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Grasp",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rupture",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Knit",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1041,9 +3021,8 @@
     "Name": "Amber Humanoid",
     "Portrait": "amberhumanoid1-portrait",
     "DMG": 13,
-    "Speed": 16,
-    "Constitution": 24,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 240,
     "ValidFloors": [
       5,
       7
@@ -1051,6 +3030,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Punch",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Brace",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1058,9 +3071,8 @@
     "Name": "Android Mk IV",
     "Portrait": "android4-portrait",
     "DMG": 15,
-    "Speed": 26,
-    "Constitution": 24,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 240,
     "ValidFloors": [
       5,
       7
@@ -1068,6 +3080,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jolt",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Servo Strike",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Piston Drive",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reboot",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1075,9 +3121,8 @@
     "Name": "Dracolisk",
     "Portrait": "dracolisk-portrait",
     "DMG": 14,
-    "Speed": 18,
-    "Constitution": 26,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 260,
     "ValidFloors": [
       5,
       7
@@ -1086,6 +3131,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Tail Sweep",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Coil",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1093,9 +3172,8 @@
     "Name": "Flesh Pod II",
     "Portrait": "fleshpod2-portrait",
     "DMG": 13,
-    "Speed": 8,
-    "Constitution": 25,
-    "PlanStyle": "warden",
+    "Actions": 4,
+    "HP": 250,
     "ValidFloors": [
       5,
       7
@@ -1103,6 +3181,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Sinew",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Rupture",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Knit",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1110,9 +3222,8 @@
     "Name": "Iridescent Slime",
     "Portrait": "iridescentslime1-portrait",
     "DMG": 12,
-    "Speed": 18,
-    "Constitution": 20,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 200,
     "ValidFloors": [
       5,
       7
@@ -1120,6 +3231,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Glint",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Refract",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Prism Beam",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Phase",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1127,9 +3272,8 @@
     "Name": "Meat Cube",
     "Portrait": "meatcube1-portrait",
     "DMG": 13,
-    "Speed": 6,
-    "Constitution": 26,
-    "PlanStyle": "brute",
+    "Actions": 4,
+    "HP": 260,
     "ValidFloors": [
       5,
       7
@@ -1137,6 +3281,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Slap",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Pulp",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Clench",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1144,9 +3322,8 @@
     "Name": "Mega Mutant Torch",
     "Portrait": "megamutant1-flamethrower-portrait",
     "DMG": 13,
-    "Speed": 14,
-    "Constitution": 25,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 250,
     "ValidFloors": [
       5,
       7
@@ -1154,6 +3331,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Singe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Flame Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Firestorm",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Stoke",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1161,9 +3372,8 @@
     "Name": "Mega Mutant Fist",
     "Portrait": "megamutant1-melee-portrait",
     "DMG": 15,
-    "Speed": 12,
-    "Constitution": 26,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 260,
     "ValidFloors": [
       5,
       7
@@ -1171,6 +3381,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Hook",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Guard Up",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1178,9 +3422,8 @@
     "Name": "Mega Mutant Gun",
     "Portrait": "megamutant1-minigun-portrait",
     "DMG": 11,
-    "Speed": 22,
-    "Constitution": 22,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 220,
     "ValidFloors": [
       5,
       7
@@ -1188,6 +3431,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Spray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Salvo",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Suppress",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Reload",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1195,9 +3472,8 @@
     "Name": "Mega Mutant II",
     "Portrait": "megamutant2-portrait",
     "DMG": 14,
-    "Speed": 13,
-    "Constitution": 26,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 260,
     "ValidFloors": [
       5,
       7
@@ -1205,6 +3481,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rampage",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Twitch",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1212,9 +3522,8 @@
     "Name": "Mega Mutant II Torch",
     "Portrait": "megamutant2-flamethrower-portrait",
     "DMG": 14,
-    "Speed": 15,
-    "Constitution": 27,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 270,
     "ValidFloors": [
       5,
       7
@@ -1222,6 +3531,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Singe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Flame Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Firestorm",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Stoke",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1229,9 +3572,8 @@
     "Name": "Mega Mutant II Fist",
     "Portrait": "megamutant2-melee-portrait",
     "DMG": 16,
-    "Speed": 13,
-    "Constitution": 28,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 280,
     "ValidFloors": [
       5,
       7
@@ -1239,6 +3581,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Hook",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Guard Up",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1246,9 +3622,8 @@
     "Name": "Mega Mutant II Gun",
     "Portrait": "megamutant2-minigun-portrait",
     "DMG": 12,
-    "Speed": 23,
-    "Constitution": 24,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 240,
     "ValidFloors": [
       5,
       7
@@ -1256,6 +3631,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Spray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Salvo",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Suppress",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Reload",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1263,9 +3672,8 @@
     "Name": "Ogre Warrior",
     "Portrait": "ogrewarrior-portrait",
     "DMG": 15,
-    "Speed": 14,
-    "Constitution": 27,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 270,
     "ValidFloors": [
       5,
       7
@@ -1274,6 +3682,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Cuff",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Club",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Overhead",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Roar",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1281,9 +3723,8 @@
     "Name": "Greater Abomination",
     "Portrait": "abomination2-portrait",
     "DMG": 17,
-    "Speed": 14,
-    "Constitution": 31,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 310,
     "ValidFloors": [
       6,
       8
@@ -1291,6 +3732,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Flail",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Grasp",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rupture",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Knit",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1298,9 +3773,8 @@
     "Name": "Entropic Cube",
     "Portrait": "entropiccube1-portrait",
     "DMG": 14,
-    "Speed": 10,
-    "Constitution": 30,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 300,
     "ValidFloors": [
       6,
       8
@@ -1308,6 +3782,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Fray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Collapse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reform",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1315,9 +3823,8 @@
     "Name": "Entropic Slime",
     "Portrait": "entropicslime1-portrait",
     "DMG": 15,
-    "Speed": 20,
-    "Constitution": 26,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 260,
     "ValidFloors": [
       6,
       8
@@ -1325,6 +3832,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Fray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Unravel",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Collapse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reform",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1332,9 +3873,8 @@
     "Name": "Entropic Spider",
     "Portrait": "entropicspider1-portrait",
     "DMG": 14,
-    "Speed": 28,
-    "Constitution": 22,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 220,
     "ValidFloors": [
       6,
       8
@@ -1342,6 +3882,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Fray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Fang",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Collapse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Spin",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1349,9 +3923,8 @@
     "Name": "Ettin",
     "Portrait": "ettin-portrait",
     "DMG": 16,
-    "Speed": 10,
-    "Constitution": 34,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 340,
     "ValidFloors": [
       6,
       8
@@ -1360,6 +3933,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Left Club",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Right Club",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Double Smash",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Bicker",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1367,9 +3974,8 @@
     "Name": "Mega Mutant III",
     "Portrait": "megamutant3-portrait",
     "DMG": 16,
-    "Speed": 14,
-    "Constitution": 29,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 290,
     "ValidFloors": [
       6,
       8
@@ -1377,6 +3983,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Rampage",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Twitch",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1384,9 +4024,8 @@
     "Name": "Mega Mutant III Torch",
     "Portrait": "megamutant3-flamethrower-portrait",
     "DMG": 16,
-    "Speed": 16,
-    "Constitution": 30,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 300,
     "ValidFloors": [
       6,
       8
@@ -1394,6 +4033,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Singe",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Flame Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Firestorm",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Stoke",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1401,9 +4074,8 @@
     "Name": "Mega Mutant III Fist",
     "Portrait": "megamutant3-melee-portrait",
     "DMG": 18,
-    "Speed": 14,
-    "Constitution": 31,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 310,
     "ValidFloors": [
       6,
       8
@@ -1411,6 +4083,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Hook",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Guard Up",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1418,9 +4124,8 @@
     "Name": "Mega Mutant III Gun",
     "Portrait": "megamutant3-minigun-portrait",
     "DMG": 13,
-    "Speed": 25,
-    "Constitution": 26,
-    "PlanStyle": "swarm",
+    "Actions": 6,
+    "HP": 260,
     "ValidFloors": [
       6,
       8
@@ -1428,6 +4133,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Spray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Salvo",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Suppress",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Reload",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1435,9 +4174,8 @@
     "Name": "Ogre Warlord",
     "Portrait": "ogrewarlord-portrait",
     "DMG": 18,
-    "Speed": 16,
-    "Constitution": 32,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 320,
     "ValidFloors": [
       6,
       8
@@ -1446,6 +4184,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Cuff",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Club",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Overhead",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Roar",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1453,9 +4225,8 @@
     "Name": "Prismatic Pod",
     "Portrait": "prismaticpod1-portrait",
     "DMG": 14,
-    "Speed": 20,
-    "Constitution": 24,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 240,
     "ValidFloors": [
       6,
       8
@@ -1463,6 +4234,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Glint",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Refract",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Prism Burst",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Phase",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1470,9 +4275,8 @@
     "Name": "Red Humanoid",
     "Portrait": "redhumanoid1-portrait",
     "DMG": 15,
-    "Speed": 16,
-    "Constitution": 27,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 270,
     "ValidFloors": [
       6,
       8
@@ -1480,6 +4284,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Jab",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Punch",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Haymaker",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Brace",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1487,9 +4325,8 @@
     "Name": "Bio-Titan Plagueborn",
     "Portrait": "biotitan-plagueborn-portrait",
     "DMG": 18,
-    "Speed": 18,
-    "Constitution": 33,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 330,
     "ValidFloors": [
       7,
       8
@@ -1497,6 +4334,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Blight",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Pound",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Pandemic",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Regrow",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1504,9 +4375,8 @@
     "Name": "Bio-Titan Toxoid",
     "Portrait": "biotitan-toxoid-portrait",
     "DMG": 17,
-    "Speed": 14,
-    "Constitution": 34,
-    "PlanStyle": "warden",
+    "Actions": 5,
+    "HP": 340,
     "ValidFloors": [
       7,
       8
@@ -1514,6 +4384,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Sting",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Pound",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Toxin Flood",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Regrow",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1521,9 +4425,8 @@
     "Name": "Dragon",
     "Portrait": "dragon-portrait",
     "DMG": 19,
-    "Speed": 20,
-    "Constitution": 36,
-    "PlanStyle": "brute",
+    "Actions": 6,
+    "HP": 360,
     "ValidFloors": [
       7,
       8
@@ -1532,6 +4435,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Breath",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Wing Guard",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1539,9 +4476,8 @@
     "Name": "Blue Dragon",
     "Portrait": "dragonblue-portrait",
     "DMG": 18,
-    "Speed": 24,
-    "Constitution": 34,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 340,
     "ValidFloors": [
       7,
       8
@@ -1550,6 +4486,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Frost Breath",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Wing Guard",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1557,9 +4527,8 @@
     "Name": "Red Dragon",
     "Portrait": "dragonred-portrait",
     "DMG": 21,
-    "Speed": 18,
-    "Constitution": 38,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 380,
     "ValidFloors": [
       7,
       8
@@ -1568,6 +4537,40 @@
       "ice",
       "fire",
       "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Claw",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Bite",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Fire Breath",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Wing Guard",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1575,9 +4578,8 @@
     "Name": "Entropic Humanoid",
     "Portrait": "entropichumanoid1-portrait",
     "DMG": 18,
-    "Speed": 18,
-    "Constitution": 32,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 320,
     "ValidFloors": [
       7,
       8
@@ -1585,6 +4587,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Fray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Punch",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Collapse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Reform",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1592,9 +4628,8 @@
     "Name": "Entropic Pod",
     "Portrait": "entropicpod1-portrait",
     "DMG": 16,
-    "Speed": 18,
-    "Constitution": 28,
-    "PlanStyle": "tactician",
+    "Actions": 5,
+    "HP": 280,
     "ValidFloors": [
       7,
       8
@@ -1602,6 +4637,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Fray",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Collapse",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Reform",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1609,9 +4678,8 @@
     "Name": "Galaxy Slime",
     "Portrait": "galaxyslime1-portrait",
     "DMG": 16,
-    "Speed": 22,
-    "Constitution": 28,
-    "PlanStyle": "tactician",
+    "Actions": 6,
+    "HP": 280,
     "ValidFloors": [
       7,
       8
@@ -1619,6 +4687,40 @@
     "AvailableAffixes": [
       "ice",
       "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Mote",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Gravity Well",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Starfall",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 2
+      },
+      {
+        "Label": "Drift",
+        "Verb": "bank",
+        "Amount": 2,
+        "Cost": 1,
+        "Target": "self",
+        "Copies": 3
+      }
     ]
   },
   {
@@ -1626,9 +4728,8 @@
     "Name": "Mega Brute",
     "Portrait": "megamutantbrute-portrait",
     "DMG": 20,
-    "Speed": 12,
-    "Constitution": 36,
-    "PlanStyle": "brute",
+    "Actions": 5,
+    "HP": 360,
     "ValidFloors": [
       7,
       8
@@ -1636,6 +4737,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Cuff",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Slam",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Pulverise",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Brace",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   },
   {
@@ -1643,9 +4778,8 @@
     "Name": "Bio-Titan Omega",
     "Portrait": "biotitan-omega-portrait",
     "DMG": 22,
-    "Speed": 20,
-    "Constitution": 40,
-    "PlanStyle": "brute",
+    "Actions": 6,
+    "HP": 400,
     "ValidFloors": [
       8,
       8
@@ -1653,6 +4787,40 @@
     "AvailableAffixes": [
       "lightning",
       "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Lash",
+        "Verb": "attack",
+        "Amount": 50,
+        "Cost": 1,
+        "Target": "opponent",
+        "Copies": 1
+      },
+      {
+        "Label": "Pound",
+        "Verb": "attack",
+        "Amount": 100,
+        "Cost": 2,
+        "Target": "opponent",
+        "Copies": 3
+      },
+      {
+        "Label": "Cataclysm",
+        "Verb": "attack",
+        "Amount": 200,
+        "Cost": 3,
+        "Target": "opponent",
+        "Copies": 4
+      },
+      {
+        "Label": "Regrow",
+        "Verb": "defend",
+        "Amount": 50,
+        "Cost": 3,
+        "Target": "self",
+        "Copies": 2
+      }
     ]
   }
 ]

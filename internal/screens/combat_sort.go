@@ -177,7 +177,7 @@ func (s *CombatScene) sortHand() []int {
 func handLess(mode handSort, a, b actionCard) bool {
 	switch mode {
 	case sortByType:
-		if ra, rb := categoryRank(a.Action.Category()), categoryRank(b.Action.Category()); ra != rb {
+		if ra, rb := categoryRank(a.Category()), categoryRank(b.Category()); ra != rb {
 			return ra < rb
 		}
 	case sortByElement:
@@ -197,14 +197,14 @@ func handLess(mode handSort, a, b actionCard) bool {
 // afforded, so cost leads. Everything under that is the same order in both places, so scanning
 // a row of cards means the same thing wherever the row is.
 func costChainLess(a, b actionCard) bool {
-	if ca, cb := a.Action.Cost(), b.Action.Cost(); ca != cb {
+	if ca, cb := a.Cost(), b.Cost(); ca != cb {
 		return ca < cb
 	}
-	if ra, rb := familyRank(a.Action.Family()), familyRank(b.Action.Family()); ra != rb {
+	if ra, rb := familyRank(a.Family()), familyRank(b.Family()); ra != rb {
 		return ra < rb
 	}
-	if a.Action != b.Action {
-		return a.Action < b.Action
+	if a.Concept != b.Concept {
+		return a.Concept < b.Concept
 	}
 	return elementRank(a.Element) < elementRank(b.Element)
 }

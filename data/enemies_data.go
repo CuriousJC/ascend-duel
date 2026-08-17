@@ -39,11 +39,19 @@ type EnemyData struct {
 	// `git` has them if animation comes back.
 	Portrait string `json:"Portrait"`
 
-	// DMG is what one Attack deals in this enemy's hands — the same field the player's record
-	// carries, renamed off `Strength` on 2026-08-16. See combat.Duelist.DMG.
-	DMG          int `json:"DMG"`
-	Speed        int `json:"Speed"`
-	Constitution int `json:"Constitution"`
+	// **Three stats, and every one of them is the number it sounds like** *(2026-08-16)*. Speed
+	// and Constitution were conversions — `4 + Speed/10` was the action-point budget and
+	// `Constitution * 5` was life — so the roster was tuned in units nobody could act on. Speed was
+	// the worse of the two: twenty-four distinct values across these records produced three
+	// distinct budgets, so most of the hand-tuning in that column was never felt.
+	//
+	// DMG is what a 1x attack deals in this enemy's hands. Actions is its action-point budget, and
+	// cards cost 1 to 3 of it. HP is life, and every enemy's was doubled when the fields changed —
+	// the roster was written against a game where a turn landed several small blows, and one blow
+	// per turn plus combo multipliers made every fight far shorter than it reads.
+	DMG     int `json:"DMG"`
+	Actions int `json:"Actions"`
+	HP      int `json:"HP"`
 
 	// ValidFloors is the inclusive range of tower floors this enemy may appear on, as
 	// [lowest, highest]. The tower is 8 floors (MECHANICS.md), so 1 is the entrance and 8 is
@@ -71,23 +79,22 @@ type EnemyData struct {
 	// absent because whether it can be a floor theme is still open.
 	AvailableAffixes []string `json:"AvailableAffixes"`
 
-	// PlanStyle is how this combatant fights: brute, swarm, warden or tactician. It is a
-	// string here and a combat.PlanStyle after hydration, so the roster is tunable without
-	// touching Go — which is the whole reason enemy shape is data and not code.
+	// Cards is this enemy's own deck, and it is what replaced `PlanStyle` on 2026-08-16.
 	//
-	// Empty or unrecognised falls back to brute, so a record predating this field, or one
-	// with a typo, still produces a fightable enemy rather than one that stands still.
+	// **An enemy's personality is what it holds, not which branch a switch takes.** There were four
+	// styles — brute, swarm, warden, tactician — named by a string here and implemented as four
+	// planners; every enemy in the game drew from one shared list of `Attack` and `Heavy`. So a
+	// Dragon and a Slime differed by a label, three of the four styles were unreachable (the warden
+	// asked for a Defend by name and the shared list held none), and MECHANICS.md's affixes — which
+	// *transform* a deck — had almost nothing to transform.
 	//
-	// **The deck arrived on 2026-08-11 and a style is now how a hand is *played*, not what
-	// is played.** It used to synthesise actions from nothing — a brute produced Heavies
-	// whether or not a Heavy existed anywhere. Every enemy now draws from
-	// `enemy_cards.json` and the style chooses among what it was dealt, which is what makes
-	// the affix plan below mean anything: transforming a deck does nothing to a planner that
-	// never read one.
+	// An enemy holding six cheap copies of one card is a swarm. One holding four expensive ones is
+	// a brute. One holding shields is a warden. The player learns a deck rather than a label.
 	//
-	// The deck itself is still one shared list rather than a field here. Per-enemy decks are
-	// the obvious next step and this is where that field would go.
-	PlanStyle string `json:"PlanStyle"`
+	// **`Copies` is the difficulty dial, and it is sharper than it looks.** A turn resolves one
+	// blow and counted hands multiply it, so four copies of a 1 AP card in one turn is a Barrage at
+	// 5x — the shape the old roster treated as weakest is now the strongest. See TODO.md.
+	Cards []CardData `json:"Cards"`
 }
 
 // AllowsFloor reports whether this enemy may appear on a given floor.

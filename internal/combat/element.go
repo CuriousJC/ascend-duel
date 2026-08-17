@@ -20,9 +20,9 @@ package combat
 // colour, which is why it is the zero value: a card that names no element is a plain card, and
 // so is a zero `Card`.
 //
-// **Append-only, like ActionKind and GlyphKind.** `Duelist.Statuses` is an array indexed by this
-// value, so inserting an element mid-enum silently re-points every status a duelist is carrying.
-// Add at the end.
+// **Append-only, like GlyphKind.** `Duelist.Statuses` and `Duelist.Rings` are arrays indexed by
+// this value, so inserting an element mid-enum silently re-points every status a duelist is
+// carrying. Add at the end.
 type Element int
 
 const (
@@ -69,61 +69,93 @@ func ParseElement(name string) (Element, bool) {
 	return Basic, false
 }
 
-// Card is one playable card: a concept and the element it is made of. It is the unit that
-// crosses into this package now, replacing the bare ActionKind that used to.
+// Card is one playable card: a registered concept and the element it is made of.
 //
 // **Comparable, and it must stay that way.** The screen caches rendered card faces on a struct
-// holding one of these, and `Slot` is compared in tests.
+// holding one of these, and `Slot` is compared in tests. Holding a `ConceptID` rather than the
+// concept itself is what keeps that true now that a concept is a record with a string in it.
 type Card struct {
-	Action  ActionKind
+	Concept ConceptID
 	Element Element
 }
 
 // Plain is a card with no element, which is what an enemy draws and what most tests want.
-func Plain(a ActionKind) Card { return Card{Action: a} }
+func Plain(id ConceptID) Card { return Card{Concept: id} }
 
 // Of is a card of a named element.
-func Of(a ActionKind, e Element) Card { return Card{Action: a, Element: e} }
+func Of(id ConceptID, e Element) Card { return Card{Concept: id, Element: e} }
 
 // PlainCards lifts a list of concepts into elementless cards. It exists for tools/balance and
 // for tests, which reason about concepts and have nothing to say about colour.
-func PlainCards(actions ...ActionKind) []Card {
-	out := make([]Card, len(actions))
-	for i, a := range actions {
-		out[i] = Plain(a)
+func PlainCards(ids ...ConceptID) []Card {
+	out := make([]Card, len(ids))
+	for i, id := range ids {
+		out[i] = Plain(id)
 	}
 	return out
 }
 
+// Spec is this card's rules, looked up once.
+func (c Card) Spec() Concept { return ConceptOf(c.Concept) }
+
 // Cost is what this card takes out of the round's budget.
 //
-// **It is a method on the card rather than on the action, and that is the seat the ring discount
+// **It is a method on the card rather than on the concept, and that is the seat the ring discount
 // sits in.** MECHANICS.md records that a matching ring makes cost a property of the *pairing*
 // rather than of the concept; nothing discounts anything yet, so this delegates. Cutting the
 // seat now costs nothing and saves rewriting every call site a second time.
-func (c Card) Cost() int { return c.Action.Cost() }
+func (c Card) Cost() int { return c.Spec().Cost }
 
-// Category is which phase this card resolves in. A fire Guard and a plain Guard are both
-// prepares — the element never moves a card between phases.
-func (c Card) Category() Category { return c.Action.Category() }
+// Category is which phase this card resolves in, and it falls out of the verb: an attack resolves
+// in the attack phase and everything else in the plan phase. A fire Defend and a plain Defend are
+// both plans — the element never moves a card between phases.
+func (c Card) Category() Category {
+	if c.Spec().Verb == VerbAttack {
+		return CategoryAttack
+	}
+	return CategoryPlan
+}
+
+// Family is which group of cards this one belongs to. Enemy cards belong to none.
+func (c Card) Family() Family { return c.Spec().Family }
+
+// Label is what this card is called on screen and in the Resolution feed.
+func (c Card) Label() string { return c.Spec().Label }
 
 // Damage is what this card deals in the hands of a duelist with this DMG, before any multiplier,
 // blunting or defence.
-func (c Card) Damage(dmg int) int { return c.Action.Damage(dmg) }
+//
+// **The ladder is a number on the card now** *(2026-08-16)*. It was three switch cases — half DMG,
+// DMG, double — which is exactly the 50/100/200 the player's nine attacks still declare. What
+// changed is that an enemy may sit anywhere on it, and that a card at 150 needs no new rung.
+//
+// The floor keeps the cheapest cards from rounding away to nothing at a low DMG, which is where a
+// duel starts. A card that is meant to deal nothing is not an attack.
+func (c Card) Damage(dmg int) int {
+	s := c.Spec()
+	if s.Verb != VerbAttack {
+		return 0
+	}
+	d := dmg * s.Amount / 100
+	if d < 1 {
+		d = 1
+	}
+	return d
+}
 
 func (c Card) String() string {
 	if c.Element == Basic {
-		return c.Action.String()
+		return c.Label()
 	}
-	return c.Element.String() + " " + c.Action.String()
+	return c.Element.String() + " " + c.Label()
 }
 
-// Actions strips the elements off a list of cards. It is for callers that genuinely only care
+// Concepts strips the elements off a list of cards. It is for callers that genuinely only care
 // about concepts — a hand tally, a label — and never for anything that resolves a round.
-func Actions(cards []Card) []ActionKind {
-	out := make([]ActionKind, len(cards))
+func Concepts(cards []Card) []ConceptID {
+	out := make([]ConceptID, len(cards))
 	for i, c := range cards {
-		out[i] = c.Action
+		out[i] = c.Concept
 	}
 	return out
 }

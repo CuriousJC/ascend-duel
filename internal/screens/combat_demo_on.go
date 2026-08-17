@@ -161,7 +161,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 			if picked >= flurryRunCards {
 				break
 			}
-			if s.hand[i].actionCard.Action == demoClickRun {
+			if s.hand[i].actionCard.Concept == demoClickRun {
 				s.toggle(i)
 				picked++
 			}
@@ -247,7 +247,7 @@ func (s *CombatScene) demoPickRound() {
 	for _, cat := range combat.Categories() {
 		pick, cost := -1, 0
 		for i, c := range s.hand {
-			if c.selected || c.Action.Category() != cat {
+			if c.selected || c.Category() != cat {
 				continue
 			}
 			if pick < 0 || c.Cost() < cost {

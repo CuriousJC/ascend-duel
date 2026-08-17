@@ -25,8 +25,8 @@ func sortHandOf(mode handSort, cards ...actionCard) []paletteCard {
 	return s.hand
 }
 
-func card(a combat.ActionKind, e combat.Element) actionCard {
-	return actionCard{Action: a, Element: e}
+func card(a combat.ConceptID, e combat.Element) actionCard {
+	return actionCard{Concept: a, Element: e}
 }
 
 func TestCostIsTheDefaultSort(t *testing.T) {
@@ -49,7 +49,7 @@ func TestCostSortRunsCheapestFirst(t *testing.T) {
 
 	last := 0
 	for _, c := range hand {
-		if got := c.Action.Cost(); got < last {
+		if got := c.Cost(); got < last {
 			t.Fatalf("hand runs %s, which drops from %d AP to %d", handLabel(hand), last, got)
 		} else {
 			last = got
@@ -67,7 +67,7 @@ func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
 
 	seenPlan := false
 	for _, c := range hand {
-		isPlan := c.Action.Category() == combat.CategoryPlan
+		isPlan := c.Category() == combat.CategoryPlan
 		if seenPlan && !isPlan {
 			t.Fatalf("hand runs %s, which puts an attack after a plan", handLabel(hand))
 		}
@@ -76,10 +76,10 @@ func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
 
 	// And within each group it is the cost sort, which is the whole point of the chain: a
 	// type sort is a cost sort with one key in front of it.
-	if hand[0].Action != combat.Jab || hand[1].Action != combat.Cleave {
+	if hand[0].Concept != combat.Jab || hand[1].Concept != combat.Cleave {
 		t.Errorf("attacks run %s, want the cheaper one first", handLabel(hand[:2]))
 	}
-	if hand[2].Action != combat.Prepare || hand[3].Action != combat.Defend {
+	if hand[2].Concept != combat.Prepare || hand[3].Concept != combat.Defend {
 		t.Errorf("plans run %s, want the cheaper one first", handLabel(hand[2:]))
 	}
 }
@@ -129,7 +129,7 @@ func TestEverySortFallsThroughToTheSameChain(t *testing.T) {
 
 	for _, mode := range []handSort{sortByCost, sortByType, sortByElement} {
 		hand := sortHandOf(mode, dear, cheap)
-		if hand[0].Action != combat.Jab {
+		if hand[0].Concept != combat.Jab {
 			t.Errorf("sorting by %v ran %s, want the cost chain to break the tie",
 				mode, handLabel(hand))
 		}
@@ -163,7 +163,7 @@ func TestSortingRebuildsTheQueueInTheNewOrder(t *testing.T) {
 	s.syncQueue()
 	s.setSort(sortByCost)
 
-	if len(s.fighterActions) != 2 || s.fighterActions[0].Action != combat.Jab {
+	if len(s.fighterActions) != 2 || s.fighterActions[0].Concept != combat.Jab {
 		t.Fatalf("queue is %v, want it rebuilt cheapest first from the sorted hand",
 			s.fighterActions)
 	}
@@ -189,7 +189,7 @@ func TestARefilledHandComesBackSorted(t *testing.T) {
 
 	last := 0
 	for _, c := range s.hand {
-		if got := c.Action.Cost(); got < last {
+		if got := c.Cost(); got < last {
 			t.Fatalf("refilled hand runs %s, which is not in cost order", handLabel(s.hand))
 		} else {
 			last = got

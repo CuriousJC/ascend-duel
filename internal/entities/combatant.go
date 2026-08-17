@@ -5,21 +5,19 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// LifePerCon converts Constitution into maximum life. Placeholder value — this is
-// the first real game rule, kept as one constant so it is cheap to tune.
-const LifePerCon = 5
-
 // Combatant is a duelist that can be drawn. The stats live in the embedded
 // combat.Duelist so the rules engine can take them without ever seeing a sprite;
 // the promoted fields mean gs.Fighter.DMG and friends still read the same.
 type Combatant struct {
 	combat.Duelist
 
-	// Style is how this combatant fights, for the ones the game plans for. It sits here
-	// rather than on Duelist because it is not a rule the resolver reads: ResolveRound is
-	// handed a queued set and never asks who chose it, which is exactly what keeps the
-	// engine symmetric and lets a balance sim drive both sides.
-	Style combat.PlanStyle
+	// Record is which roster entry this combatant was built from, and it is what names its deck
+	// in `internal/decks` *(2026-08-16)*. It replaced `Style combat.PlanStyle`: an enemy's
+	// behaviour used to be a string picking one of four planners and is now the cards it holds,
+	// so what a caller needs from this struct is the key to those cards.
+	//
+	// Empty for the player, whose deck is built by the screen.
+	Record string
 
 	// **There is no sprite here any more** *(2026-08-11)*. The fighter's went when the
 	// character block replaced it, and the enemy's went when the enemy became a card — so
@@ -54,24 +52,17 @@ type Combatant struct {
 // out of one, which is why the caller had to resolve an asset out of global state and pass
 // it in; the enemy is a card now, so all that is left is the portrait's key.
 func NewEnemyFrom(d data.EnemyData) *Combatant {
-	// An unknown or missing style falls back to brute rather than failing the load. A record
-	// that predates the field still has to produce a fightable enemy.
-	style, _ := combat.ParsePlanStyle(d.PlanStyle)
-
 	c := &Combatant{
 		Duelist: combat.Duelist{
-			Con: d.Constitution,
-			DMG: d.DMG,
-			Spd: d.Speed,
+			DMG:     d.DMG,
+			Actions: d.Actions,
+			MaxLife: d.HP,
 		},
-		Style:    style,
+		Record:   d.EnemyRecord,
 		Name:     d.Name,
 		Portrait: d.Portrait,
 	}
-
-	c.MaxLife = c.Con * LifePerCon
 	c.CurrentLife = c.MaxLife
-
 	return c
 }
 
@@ -83,16 +74,13 @@ func NewEnemyFrom(d data.EnemyData) *Combatant {
 func NewDuelistFrom(d data.DuelistData) *Combatant {
 	c := &Combatant{
 		Duelist: combat.Duelist{
-			Con: d.Constitution,
-			DMG: d.DMG,
-			Spd: d.Speed,
+			DMG:     d.DMG,
+			Actions: d.Actions,
+			MaxLife: d.HP,
 		},
 		Name:     d.Name,
 		CardBack: d.CardBack,
 	}
-
-	c.MaxLife = c.Con * LifePerCon
 	c.CurrentLife = c.MaxLife
-
 	return c
 }

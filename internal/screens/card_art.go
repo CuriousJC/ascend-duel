@@ -74,15 +74,15 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // because the number a card deals is a property of the pairing rather than of the concept —
 // and that is exactly what made it worth removing once the effect text arrived: "Deal 2x DMG"
 // is the rule, where "14" was the rule already multiplied out by this duelist's strength and
-// was the same fact said twice. `combat.ActionKind.Damage` is still what the engine resolves
-// with, and the duelist card still shows a DMG stat.
+// was the same fact said twice. `combat.Card.Damage` is still what the engine resolves with, and
+// the duelist card still shows a DMG stat.
 func cardSpec(c actionCard, enabled, selected bool) cards.Spec {
 	return cards.Spec{
-		Name:     c.Action.String(),
-		Family:   family(c.Action.Family()),
-		Cost:     c.Action.Cost(),
+		Name:     c.Label(),
+		Family:   family(c.Family()),
+		Cost:     c.Cost(),
 		Element:  artFor(c.Element),
-		Text:     cardEffects[c.Action],
+		Text:     cardEffect(c.Concept),
 		Enabled:  enabled,
 		Selected: selected,
 	}
@@ -222,14 +222,11 @@ func effectArt(gs *state.GlobalState, e combat.Element) image.Image {
 // duelistSpec is the player as a card: their name, three figures, and the life they have
 // left.
 //
-// **DMG is asked of the rules rather than written here.** `combat.Strike.Damage(DMG)` is what
-// one plain attack does in these hands, which is the "1x base damage" the figure means.
-//
-// **That is an identity today and the call is still worth making** *(2026-08-16)*. The stat is
-// now called DMG precisely because the middle rung of the ladder returns it unchanged, so
-// `c.DMG` would print the same integer. What the call buys is that the figure follows the
-// *ladder*: if the 2 AP rung ever stops being 1x, the card says so without anyone remembering
-// it shows this.
+// **DMG is the stat, printed** *(2026-08-16)*. It used to be `combat.Strike.Damage(DMG)`, on the
+// grounds that the figure should follow the ladder rather than the stat — which was worth doing
+// while the ladder was a switch statement with Strike on its middle rung. A card declares its own
+// multiplier now, so 1x is the definition rather than one card's entry, and asking a particular
+// card what it deals would make this figure move when that card was retuned.
 //
 // AP is the live budget, `BonusAP` included, so a Prepare banked last round shows up on the
 // card before it is spent. Vitae is passed in rather than read off the combatant because it is
@@ -245,7 +242,7 @@ func duelistSpec(c *entities.Combatant, name string, vitae int) cards.Spec {
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}
-	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(combat.Strike.Damage(c.DMG))}
+	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(c.ActionPoints())}
 	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae)}
 	return spec
@@ -341,9 +338,8 @@ func family(f combat.Family) cards.Family {
 	}
 }
 
-// Compile-time assurance that the action type still answers everything a Spec needs. If
-// combat.ActionKind loses one of these, this fails here rather than in a card that
-// silently renders blank.
-var _ = func(a combat.ActionKind, dmg int) (string, string, string, int, int) {
-	return a.String(), a.Category().String(), a.Family().String(), a.Damage(dmg), a.Cost()
+// Compile-time assurance that a card still answers everything a Spec needs. If combat.Card loses
+// one of these, this fails here rather than in a card that silently renders blank.
+var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
+	return c.Label(), c.Category().String(), c.Family().String(), c.Damage(dmg), c.Cost()
 }

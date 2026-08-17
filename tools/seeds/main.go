@@ -33,32 +33,32 @@ import (
 type want struct {
 	name  string
 	desc  string
-	match func(counts map[combat.ActionKind]int) bool
+	match func(counts map[combat.ConceptID]int) bool
 }
 
 var wants = []want{
 	{
 		"strike-flurry",
 		"three or more Strikes: a Strike Flurry that can be clicked",
-		func(c map[combat.ActionKind]int) bool { return c[combat.Strike] >= 3 },
+		func(c map[combat.ConceptID]int) bool { return c[combat.Strike] >= 3 },
 	},
 	{
 		"strike-barrage",
 		"four Strikes: a Strike Barrage, and a Rainbow with it",
-		func(c map[combat.ActionKind]int) bool { return c[combat.Strike] >= 4 },
+		func(c map[combat.ConceptID]int) bool { return c[combat.Strike] >= 4 },
 	},
 	{
 		"smash-flurry",
 		"three or more Smashes: 9 AP, unaffordable, but the cards are there",
-		func(c map[combat.ActionKind]int) bool { return c[combat.Smash] >= 3 },
+		func(c map[combat.ConceptID]int) bool { return c[combat.Smash] >= 3 },
 	},
 	{
 		"both-verbs",
 		"a plan card and an attack: both verbs in one round",
-		func(c map[combat.ActionKind]int) bool {
+		func(c map[combat.ConceptID]int) bool {
 			plans, attacks := 0, 0
 			for a, n := range c {
-				if a.Category() == combat.CategoryPlan {
+				if combat.Plain(a).Category() == combat.CategoryPlan {
 					plans += n
 				} else {
 					attacks += n
@@ -70,7 +70,7 @@ var wants = []want{
 	{
 		"all-plans",
 		"a Prepare, a Plan and a Defend: the whole plan vocabulary in hand",
-		func(c map[combat.ActionKind]int) bool {
+		func(c map[combat.ConceptID]int) bool {
 			return c[combat.Prepare] >= 1 && c[combat.Plan] >= 1 && c[combat.Defend] >= 1
 		},
 	},
@@ -164,24 +164,24 @@ func wantByName(name string) (want, bool) {
 	return want{}, false
 }
 
-func tally(hand []combat.ActionKind) map[combat.ActionKind]int {
-	counts := make(map[combat.ActionKind]int, len(hand))
+func tally(hand []combat.ConceptID) map[combat.ConceptID]int {
+	counts := make(map[combat.ConceptID]int, len(hand))
 	for _, a := range hand {
 		counts[a]++
 	}
 	return counts
 }
 
-// handLabel renders a hand as counts in a fixed order. **Sorted by AllActions rather than by
-// ranging the tally**, because Go randomises map iteration and a tool whose output reshuffled
-// between runs could not be diffed. See CLAUDE.md.
-func handLabel(hand []combat.ActionKind) string {
+// handLabel renders a hand as counts in a fixed order. **Sorted by the player's concept list
+// rather than by ranging the tally**, because Go randomises map iteration and a tool whose output
+// reshuffled between runs could not be diffed. See CLAUDE.md.
+func handLabel(hand []combat.ConceptID) string {
 	counts := tally(hand)
 
 	var parts []string
-	for _, a := range combat.AllActions {
+	for _, a := range combat.PlayerConcepts() {
 		if n := counts[a]; n > 0 {
-			parts = append(parts, fmt.Sprintf("%dx%v", n, a))
+			parts = append(parts, fmt.Sprintf("%dx%v", n, combat.ConceptOf(a).Label))
 		}
 	}
 	return strings.Join(parts, " ")

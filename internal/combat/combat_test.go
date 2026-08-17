@@ -389,7 +389,7 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 	b := duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, PlainCards(Defend), nil, 1)
-	if a1.DefendCount != 1 || a1.Defends[0].Card != Defend {
+	if a1.DefendCount != 1 || a1.Defends[0].Card.Concept != Defend {
 		t.Fatalf("A ended round 1 holding %d defends (%v), want one unspent Defend",
 			a1.DefendCount, a1.Defends[0].Card)
 	}
@@ -591,11 +591,11 @@ func TestBothSidesDefendingDoesNotAlias(t *testing.T) {
 	b := duelist(10, 5, 100)
 
 	_, a1, b1 := resolve(a, b, PlainCards(Defend), PlainCards(Defend), 1)
-	if a1.DefendCount != 1 || a1.Defends[0].Card != Defend {
+	if a1.DefendCount != 1 || a1.Defends[0].Card.Concept != Defend {
 		t.Errorf("A raised a Defend and ended the round holding %d (%v)",
 			a1.DefendCount, a1.Defends[0].Card)
 	}
-	if b1.DefendCount != 1 || b1.Defends[0].Card != Defend {
+	if b1.DefendCount != 1 || b1.Defends[0].Card.Concept != Defend {
 		t.Errorf("B raised a Defend and ended the round holding %d (%v)",
 			b1.DefendCount, b1.Defends[0].Card)
 	}

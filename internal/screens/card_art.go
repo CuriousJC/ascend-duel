@@ -2,6 +2,7 @@ package screens
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	_ "image/png"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -82,7 +84,7 @@ func cardSpec(c actionCard, enabled, selected bool) cards.Spec {
 		Family:   family(c.Family()),
 		Cost:     c.Cost(),
 		Element:  artFor(c.Element),
-		Text:     cardEffect(c.Concept),
+		Text:     cardEffect(c),
 		Enabled:  enabled,
 		Selected: selected,
 	}
@@ -342,4 +344,68 @@ func family(f combat.Family) cards.Family {
 // one of these, this fails here rather than in a card that silently renders blank.
 var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 	return c.Label(), c.Category().String(), c.Family().String(), c.Damage(dmg), c.Cost()
+}
+
+// wormSpec is a worm drawn as a card: a name, a line of what it does, and the colour of whatever
+// it grants.
+//
+// **It borrows `cards.Hand` at the call site rather than taking a style of its own**, because a
+// worm has no cost and no family and that style draws both as nothing — no dashes for a zero cost,
+// no letter for FamilyNone. What is left is exactly the name and the text, which is the whole of
+// what a worm has to say. A style of its own is what this wants the day a worm has art.
+//
+// **The border carries the element for the same reason a card's does**: an Ember Worm is red
+// because what it hands you is red. The ones that take a card away rather than colour it are
+// basic, which is the mid grey `cards.BorderOf` gives that element — deliberately not a fifth hue,
+// since removal is the absence of a colour rather than one of its own.
+func wormSpec(w session.Worm, enabled bool) cards.Spec {
+	return cards.Spec{
+		Name:    w.Name,
+		Family:  cards.FamilyNone,
+		Cost:    0,
+		Element: artFor(w.Element),
+		Text:    w.Text,
+		Enabled: enabled,
+	}
+}
+
+// vitaeSpec is the money card. **It is a card because everything on that screen is** — the reward
+// for a fight is three cards and you take one, so declining a change to your deck has to look like
+// a choice rather than like leaving.
+//
+// Basic-bordered, since vitae has no element: it is the one prize that is not about the deck at
+// all.
+func vitaeSpec(amount int, enabled bool) cards.Spec {
+	return cards.Spec{
+		Name:    "Vitae",
+		Family:  cards.FamilyNone,
+		Element: cards.Basic,
+		Text:    fmt.Sprintf("+%d vitae", amount),
+		Enabled: enabled,
+	}
+}
+
+// drawSpecCard draws a card built straight from a spec, for the faces that are not action cards
+// and not worms — the vitae, today. Same cache, same footprint.
+func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
+	img := cardImage(gs, spec, cards.Hand)
+	if img == nil {
+		return
+	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(at.X), float64(at.Y))
+	screen.DrawImage(img, op)
+}
+
+// drawWormCard draws one, at the same footprint an action card has.
+func drawWormCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	w session.Worm, enabled bool) {
+
+	img := cardImage(gs, wormSpec(w, enabled), cards.Hand)
+	if img == nil {
+		return
+	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(at.X), float64(at.Y))
+	screen.DrawImage(img, op)
 }

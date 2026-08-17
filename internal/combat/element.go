@@ -77,6 +77,20 @@ func ParseElement(name string) (Element, bool) {
 type Card struct {
 	Concept ConceptID
 	Element Element
+
+	// CostDelta and AmountPct are **per-card modifiers, and they are what a worm writes**
+	// *(2026-08-17)*. Everything else about a card lives on the shared concept, so altering one
+	// copy of a Strike would otherwise alter every Strike in the deck.
+	//
+	// CostDelta is added to the concept's cost; AmountPct scales its amount, as a percentage, with
+	// **zero meaning unmodified** so a plain card is still the zero value and every existing
+	// `Card{Concept: x}` literal keeps working.
+	//
+	// **The bounds live in the methods, not here**, because a stack of worms has to clamp rather
+	// than be refused — see Cost and Amount. A card is still comparable, which is what
+	// TestRoundIsDeterministic and the screen's render cache both need.
+	CostDelta int
+	AmountPct int
 }
 
 // Plain is a card with no element, which is what an enemy draws and what most tests want.
@@ -104,7 +118,53 @@ func (c Card) Spec() Concept { return ConceptOf(c.Concept) }
 // sits in.** MECHANICS.md records that a matching ring makes cost a property of the *pairing*
 // rather than of the concept; nothing discounts anything yet, so this delegates. Cutting the
 // seat now costs nothing and saves rewriting every call site a second time.
-func (c Card) Cost() int { return c.Spec().Cost }
+func (c Card) Cost() int {
+	cost := c.Spec().Cost + c.CostDelta
+	if cost < minCardCost {
+		cost = minCardCost
+	}
+	return cost
+}
+
+// minCardCost is the floor a cheapening worm can drive a card to.
+//
+// **Zero, deliberately, and it moves the game onto its other bound.** A round is capped by cost
+// *and* by count independently — `MaxActions` cards however cheap they are — so a free card is not
+// unbounded, it is bounded by the count instead. That is a real shift in what limits a turn and it
+// was taken with it in view (owner's call, 2026-08-17), not as an oversight about a number that
+// happened not to have a floor.
+const minCardCost = 0
+
+// Amount is the card's figure, read against its verb: a defence percentage, action points banked,
+// cards drawn, or the damage multiplier.
+//
+// **It is the seat a worm's scaling sits in**, the same shape Cost is, and it is why the three
+// places that used to read `Spec().Amount` directly now go through the card. A modified card that
+// still reported its concept's figure would behave differently from what its own face says.
+//
+// **A defence is clamped below 100 and everything is floored at 1.** `RegisterConcept` refuses a
+// concept declaring a defence of 100 or more, because nothing may reduce a blow to zero; a worm
+// stacking onto a Defend has to obey the same rule, and it clamps rather than being refused —
+// a reward that silently did nothing would be worse than one that hits its ceiling.
+func (c Card) Amount() int {
+	s := c.Spec()
+
+	amount := s.Amount
+	if c.AmountPct != 0 {
+		amount = amount * c.AmountPct / 100
+	}
+	if amount < 1 {
+		amount = 1
+	}
+	if s.Verb == VerbDefend && amount > maxDefendPct {
+		amount = maxDefendPct
+	}
+	return amount
+}
+
+// maxDefendPct is the most a single card may take off a blow. **Nothing stops a blow outright** —
+// see reductionFor, which holds the same rule from the other side.
+const maxDefendPct = 99
 
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves
 // in the attack phase and everything else in the plan phase. A fire Defend and a plain Defend are
@@ -136,7 +196,7 @@ func (c Card) Damage(dmg int) int {
 	if s.Verb != VerbAttack {
 		return 0
 	}
-	d := dmg * s.Amount / 100
+	d := dmg * c.Amount() / 100
 	if d < 1 {
 		d = 1
 	}

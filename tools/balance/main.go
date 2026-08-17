@@ -28,6 +28,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
 
 // playerRound is a posture the fighter can take, and what it costs them to hold it. The
@@ -237,7 +238,7 @@ func play(fighter, enemy combat.Duelist, record string, p playerRound,
 	//
 	// A fresh pile per posture, so each row starts from the same shuffle and the seven of
 	// them can be compared with each other.
-	pile := decks.NewEnemyPile(record, decks.EnemySeed, decks.EnemyHandSize)
+	pile := decks.NewEnemyPile(record, seeds.EnemyDeckPin, decks.EnemyHandSize)
 
 	// **The rules take a source now, and this tool stopped being exact when they did.** A shock
 	// roll decides whether a turn's whole attack lands, so one run of one matchup is a sample

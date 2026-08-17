@@ -1045,6 +1045,155 @@ Earth has none, so a fourth ring is art before it is data.
 
 ---
 
+---
+
+## Worms — altering the deck between fights
+
+**A worm is a change to a card you already own.** It recolours it, removes it, or copies it. It
+never invents one, and that restriction is the whole safety property: the *concept* is never
+touched, so nothing a worm produces can be a card `internal/combat` has not registered.
+
+**Offered after a won fight, on the post-battle screen.** Two worms are drawn from the catalogue
+and shown as cards; pick one, pick the card it takes, **see what it would become**, and confirm.
+
+| | |
+|---|---|
+| When | after a won fight, before the next room |
+| Offered | **three cards**: two worms from `data/worms.json`, and **+5 Vitae** |
+| Then | a hand dealt fresh off the whole run deck, at the combat hand size |
+| Then | a **morph**: the card before and after, side by side, nothing committed |
+| Choice | one prize, and — if it is a worm — one card |
+
+- **Worm first, card second, and it turned round to get there** *(2026-08-17)*. The first version
+  asked for a card and then offered verbs on it, which made the reward look like a property of the
+  card. **What you were given for winning has to be the thing on the screen when you arrive.**
+- **Two options, so the choice is a comparison.** One is an instruction; three is a menu to read
+  rather than a decision to make. They are distinct by construction — the offer shuffles the
+  catalogue rather than drawing from it twice.
+- **The card offer is dealt off the *whole deck*, not off what the fight left in the piles.** A
+  reward is about what you own.
+- **Two random streams, and they are separate on purpose.** Which worms and which cards are
+  drawn from different lists and change on different schedules: sharing would mean adding a worm
+  to the catalogue silently rerolled which cards every fight of every run offered.
+- **Nothing is committed until the take.** Back steps out of the morph to the cards and out of the
+  cards to the worms, so a player who picked up the wrong worm or aimed it at the wrong card is
+  never stuck with either.
+- **The preview runs the real worm against a throwaway copy of the run**, never a second
+  implementation of what each target does. A preview with its own arithmetic is a preview that can
+  disagree with the thing it previews.
+- **The result flies to the middle and is held there.** A card won and immediately lost into a
+  deck of forty-eight is a reward the player never sees, which is the same reason the morph exists
+  — and it *travels* rather than appearing, per CLAUDE.md's rule that cards always do. The hold
+  does not start until it lands, so a slower flight is a longer look rather than a card arriving
+  late to a countdown already running. **A removal has nothing to fly**: what was won is an
+  absence, so the empty seat is drawn and nothing crosses the screen.
+- **There is no decline, because the money is a card** *(2026-08-17)*. Declining used to be a
+  button off to one side, which made it the odd thing out on a screen otherwise made of cards.
+  Taking vitae instead of altering the deck is now a **choice among three with a price**, not an
+  exit — and it means every path through the screen is the same path: **pick a card, watch it fly
+  to the middle.**
+- **The vitae card's seat never moves.** It is appended last rather than shuffled in, so a player
+  who has learned where the money is can take it without reading.
+- **Run-scoped, never persisted.** Two runs from the same seed may hold different decks, because
+  an alteration is a *choice*: replay is a seed plus a choice log. See the `randomness` skill.
+
+### The grammar: a target and a new value
+
+A worm record is the card language pointed at a card that already exists — see `data/worms.json`
+and `internal/session/worm.go`, which is where a record is validated.
+
+| Target | Value | What it does |
+|---|---|---|
+| `element` | a colour | recolours one card |
+| `remove` | — | takes one card out of the run |
+| `duplicate` | — | puts a second copy of one card into the run |
+| `cost` | a signed delta | changes what one card costs |
+| `amount` | a percentage | scales one card's figure, whatever that figure is |
+| `promote` | — | one rung up its family's ladder: Jab → Strike → Smash |
+| `demote` | — | one rung down: cheaper and weaker |
+
+**The vocabulary is closed**, the same posture the card verbs take: a new target is a Go change
+plus one place applying it, never something a JSON file can assert into existence. A bad record —
+an unknown target, an element the rules lack, a value on a target that reads none — **panics at
+init**.
+
+**`amount` reaches every card in the deck with one worm**, because what the figure *is* depends on
+the verb: a defence percentage, points banked, cards drawn, or a damage multiplier. That is the
+card language paying off — one worm, four meanings, no special cases.
+
+**Cost and amount are per-card and the rest of a card is not.** `combat.Card` carries `CostDelta`
+and `AmountPct`; `Cost()`, `Amount()` and `Damage()` are the three methods that read them, which is
+where the bounds live. **Family and label are still concept-wide**, so a worm reaching for one of
+those would change every copy of that card in the deck — that is the argument to make again from
+scratch before adding one.
+
+### The bounds
+
+| | Floor | Ceiling |
+|---|---|---|
+| Cost | **0** | none declared; concepts run 1–3 |
+| Amount | 1 | a defence is clamped **under 100** |
+
+- **A card may be driven to 0 AP** *(owner's call, 2026-08-17)*, and that moves the game onto its
+  other bound: a round is capped by cost *and* by count independently, so a free card is limited by
+  `MaxActions` rather than by the budget. Taken with that in view, not as an oversight.
+- **Nothing stops a blow outright, however many worms are stacked on a Defend.** `RegisterConcept`
+  refuses a *concept* declaring 100 or more; `Card.Amount` clamps a *modified* one. It clamps
+  rather than refusing, because a reward that silently did nothing is worse than one that hits its
+  ceiling.
+- **`amount` compounds rather than replaces** — 150% twice is 225% — so a second worm on the same
+  card is worth taking.
+- **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a plan
+  card has no family and so no ladder at all. The screen asks `CanApply` before offering a card, so
+  a worm that would do nothing is never presented as a choice.
+
+### The card says what the card does
+
+**Effect text reads the card, not the concept** *(2026-08-17)*. It was already a template over the
+value; what changed is which value it reads. So an altered Defend prints the percentage it
+actually cuts and an altered Prepare prints what it actually banks. **A card whose face disagreed
+with its behaviour is the worst thing an alteration mechanic can produce**, and it is the reason
+this was not deferred.
+
+**A worm may not recolour a card to basic.** That would be a way to *lose* a colour rather than
+choose one, and no attack card in the deck is drab.
+
+### REMOVE is the strongest option, and that is accepted
+
+Thinning a 48-card deck against a fixed hand of eight raises consistency every time. It is
+deliberate rather than unnoticed: the offer is two worms out of a growing catalogue, so removal
+being the best of what is on the table is only sometimes the question. **`duplicate` is the one
+most likely to need a cost** — copies are the sharpest dial in the game, since four of one concept
+in a turn is a Barrage.
+
+### `[?]` The deck overlay stops being able to show the deck
+
+Rows in the deck panel cap at twelve, and `element` worms *migrate* cards between colour rows — so
+building toward fire pushes that row past the cap and the panel starts hiding exactly what was
+built. **Owner's call (2026-08-17): defer.** The replacement is not a bigger cap: the panel wants
+counts — attacks, plans, how many of each colour — rather than every card drawn at once.
+
+### What it needed that did not exist
+
+**The run.** `internal/session` holds the deck now, because the combat screen rebuilds its piles
+on every `Init` and `Init` is how the next fight starts — so anything held on that scene is thrown
+away between rooms. It is the same hole rings, vitae and brands are blocked on.
+
+**No card identity, and that is a consequence of *when* alteration happens.** Between fights no
+pile is live, so an offer is a list of positions in the run deck and a position is unambiguous for
+as long as the screen is up. Mid-fight alteration would need a real ID *and* a field on every
+event, since the Resolution pane rebuilds a card from what an event carries.
+
+### The between-fight chain
+
+Post-battle is the first of several scenes between one room and the next: **alteration**, then a
+**shop** where vitae is spent, then a **room or stairway choice** between two doors. Each is an
+ordinary scene in the registry rather than a mode of the combat screen. What is missing is
+whatever decides the order they run in — today the chain is hard-wired, win → post-battle →
+combat.
+
+---
+
 ## Brands
 
 **Brands alter the container; rings alter the contents**. That is the

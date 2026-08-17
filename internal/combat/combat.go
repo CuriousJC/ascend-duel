@@ -208,7 +208,10 @@ func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 // resolving more than one attack — counting incoming blows is meaningless when there is only
 // ever one.
 type PendingDefend struct {
-	Card ConceptID
+	// Card is the whole card rather than its concept, **because what a defence is worth is a
+	// property of the card** *(2026-08-17)*: a worm can scale one Defend without touching the
+	// others. Storing the ID lost that the moment it was raised.
+	Card Card
 }
 
 // maxPendingDefends bounds the defend set. A turn is capped at MaxActions cards and every one of
@@ -223,12 +226,11 @@ const maxPendingDefends = baseMaxActions
 // by a single card — a dominant strategy rather than a decision. Something always lands, so the
 // opponent is always still playing. `RegisterConcept` refuses a card declaring 100 or more, and
 // `TestNoDefenceStopsABlowOutright` holds the resolver to it.
-func reductionFor(id ConceptID) int {
-	c := ConceptOf(id)
-	if c.Verb != VerbDefend {
+func reductionFor(card Card) int {
+	if card.Spec().Verb != VerbDefend {
 		return 0
 	}
-	return c.Amount
+	return card.Amount()
 }
 
 // raiseDefend adds a defend card to the set.
@@ -237,11 +239,11 @@ func reductionFor(id ConceptID) int {
 // turn at five actions, so the array holds everything a legal turn can raise; ResolveRound
 // deliberately trusts what it is handed so a balance sim can probe outside the rules, and a sim
 // that queues six defends should get five of them rather than a crash.
-func (d Duelist) raiseDefend(a ConceptID) Duelist {
+func (d Duelist) raiseDefend(card Card) Duelist {
 	if d.DefendCount >= len(d.Defends) {
 		return d
 	}
-	d.Defends[d.DefendCount] = PendingDefend{Card: a}
+	d.Defends[d.DefendCount] = PendingDefend{Card: card}
 	d.DefendCount++
 	return d
 }
@@ -735,29 +737,29 @@ func resolvePlan(
 	spec := card.Spec()
 	switch spec.Verb {
 	case VerbBank:
-		actor.GatheredAP += spec.Amount
+		actor.GatheredAP += card.Amount()
 		events = append(events, Event{
 			Kind:   KindGathered,
 			Side:   side,
-			Amount: spec.Amount,
+			Amount: card.Amount(),
 			Round:  round,
 		})
 
 	case VerbDraw:
 		// **Recorded, not drawn.** There is no deck in this package; what is banked here is honoured
 		// by whoever holds one when the round is over. See Duelist.BonusDraw.
-		actor.DrewCards += spec.Amount
+		actor.DrewCards += card.Amount()
 		events = append(events, Event{
 			Kind:   KindDrew,
 			Side:   side,
-			Amount: spec.Amount,
+			Amount: card.Amount(),
 			Round:  round,
 		})
 
 	case VerbDefend:
 		// Raised, not spent. What it is worth is `reductionFor`, and it is read when the opponent's
 		// blow arrives — see resolveAttackPhase.
-		actor = actor.raiseDefend(card.Concept)
+		actor = actor.raiseDefend(card)
 	}
 
 	return events, actor, target
@@ -1055,7 +1057,7 @@ func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]
 		events = append(events, Event{
 			Kind:   KindNegated,
 			Side:   other(side),
-			Action: card,
+			Action: card.Concept,
 			Target: side,
 			Amount: dmg,
 			Round:  round,

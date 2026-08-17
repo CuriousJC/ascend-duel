@@ -380,3 +380,36 @@ func PlayerConcepts() []ConceptID {
 	}
 	return out
 }
+
+// Tier is where a card sits on its family's ladder, and it is **the concept's own cost**.
+//
+// The player's attacks are a 3x3 grid — three families by three tiers at 1/2/3 AP for 0.5x/1x/2x
+// damage — so the price *is* the rung. Reading the declared cost rather than a per-card one is
+// deliberate: a worm that cheapened a Strike must not thereby turn it into a Jab.
+func (c Concept) Tier() int { return c.Cost }
+
+// Neighbour is the concept one rung up or down the same family's ladder, or false if there is
+// none — the top of a family cannot be promoted and the bottom cannot be demoted.
+//
+// **A family with no name has no ladder.** Every enemy card is `FamilyNone`, and they share this
+// registry with the player's, so matching on the zero family would step a Goblin's Bite onto a
+// Slime's. The player's nine attacks are the only cards with a family, which is exactly the set
+// that has a ladder to walk.
+//
+// It scans the registry rather than reading a table, so the ladder is a *consequence* of what
+// `data/duelist_cards.json` declares rather than a second list to keep in step with it.
+func Neighbour(id ConceptID, step int) (ConceptID, bool) {
+	from := ConceptOf(id)
+	if from.Family == FamilyNone || from.Verb != VerbAttack {
+		return NoConcept, false
+	}
+
+	want := from.Tier() + step
+	for other := range registry {
+		c := registry[other]
+		if c.Family == from.Family && c.Verb == VerbAttack && c.Tier() == want {
+			return ConceptID(other), true
+		}
+	}
+	return NoConcept, false
+}

@@ -3,6 +3,7 @@ package state
 
 import (
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -88,9 +89,22 @@ type GlobalState struct {
 
 	// Rings is what the player can equip. **Genuinely global for the same reason the rosters
 	// are** — it is loaded once from data/rings.json and no screen owns it. What is *equipped*
-	// is not here: that is run state and belongs on Session when Session exists, and on the
-	// combat scene until then. See MECHANICS.md — rings are the first thing that needs it.
+	// is not here: that is run state and belongs on Run, below. It is still the combat scene's
+	// `startingRings` constant until buying exists.
 	Rings map[string]data.RingData
+
+	// Run is what the player is carrying up the tower — the deck today, the worn rings and the
+	// purse next. **Genuinely global**: the combat screen deals from it and the post-battle
+	// screen alters it, and it has to outlive a fight, which no scene does.
+	//
+	// **This is the one field that makes `state` import `internal/combat`, transitively**
+	// *(2026-08-17)*. The rule it bends says global state must not import `combat`, `entities`
+	// or `models` — written to stop *screen* state leaking back in here, which is a different
+	// thing from a run. A run belongs beside ActiveScreen, not on whichever screen happened to
+	// need it first.
+	//
+	// Nil until main builds it. Scenes must not create one: two would be two runs.
+	Run *session.Session
 
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
@@ -149,6 +163,12 @@ const (
 	Title ActiveScreen = iota
 	Ascend
 	Combat
+
+	// PostBattle is the first of the between-fight scenes: one alteration to the deck, offered
+	// from a hand dealt off it. A shop and a room choice are meant to follow it, and each is an
+	// ordinary scene here rather than a mode of the combat screen.
+	PostBattle
+
 	Credits
 )
 
@@ -160,6 +180,8 @@ func (active ActiveScreen) String() string {
 		return "Ascend"
 	case Combat:
 		return "Combat"
+	case PostBattle:
+		return "PostBattle"
 	case Credits:
 		return "Credits"
 	default:

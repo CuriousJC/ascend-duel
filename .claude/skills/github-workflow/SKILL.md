@@ -106,20 +106,46 @@ I'm back."*
 commit, so the branch tip is never an ancestor of `main`. This is expected, not a warning to
 investigate.
 
+**Two branches exist at a time: `main` and one feature branch. Everything else is rubbish,
+and clearing it out is a standing instruction rather than a question.** Stated by the owner
+on 2026-08-17, after a cleanup turned up nine stale remote branches and two stale local ones,
+every one of them a PR merged days earlier. Delete them — local and remote, in the same pass
+as the new branch — and report what went, rather than listing them and waiting.
+
+**This is the one deliberate exception to "stop before anything reaches the remote".** The
+general rule is about publishing *content*; deleting a branch whose content is already on
+`main` publishes nothing, and the proof below is what makes that true. Pushes, PRs and
+releases still stop and wait.
+
 ```powershell
 # 1. confirm the content actually landed - an EMPTY diff is the check,
 #    not whether -d succeeds
-git diff main game-updates-2 --stat
+git diff origin/main game-updates-33 --stat
 
 # 2. move to the next branch off the new main
-git checkout main; git pull; git checkout -b game-updates-3
+git checkout main; git pull; git checkout -b game-updates-34
 
-# 3. clean up both copies of the old one
-git branch -D game-updates-2
-git push origin --delete game-updates-2
+# 3. sweep every branch that is not main or the new one, both copies
+git branch -D game-updates-33 combat-rework game-updates-28
+git push origin --delete game-updates-23 game-updates-24 game-updates-33
+git fetch --prune
 ```
 
-`git diff main <branch>` returning nothing is the proof. Only then `-D`.
+**Each branch needs its own proof before it is deleted, and there are two kinds.** Neither
+takes long and skipping them is how unmerged work disappears:
+
+- **The branch just merged**: `git diff origin/main <branch> --stat` is empty. Diff against
+  `origin/main`, not `main` — a local `main` that has not been pulled yet reports a
+  difference that is only its own staleness.
+- **An older stale branch**: that diff is *not* empty and cannot be, because `main` has moved
+  on since. Ask the other question instead — `git rev-list --count origin/main..<branch>`
+  is `0`, meaning it holds no commit `main` has not got. For a squash-merged branch that
+  count is non-zero, so confirm it through its PR: `gh pr list --state merged --limit 20
+  --json number,headRefName,mergedAt` names the branch each merged PR came from.
+
+**A branch matching no merged PR and holding commits `main` has not got is the one case that
+stops and asks.** `combat-rework` looked like that and turned out to be `rev-list` 0 —
+already contained — so it went with the rest.
 
 ## Gotchas that have cost time
 

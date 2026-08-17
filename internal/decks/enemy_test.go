@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
 
 // This package needs no window — it is `data` plus `internal/combat`, neither of which
@@ -68,7 +69,7 @@ func TestAnEnemyKeepsActingForAWholeDuel(t *testing.T) {
 	//
 	// Forty rounds is the balance tool's stalemate bound, so this covers a whole duel.
 	for _, name := range sampleRecords(t) {
-		p := NewEnemyPile(name, EnemySeed, EnemyHandSize)
+		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 40; round++ {
@@ -88,7 +89,7 @@ func TestAPlanOnlyEverSpendsCardsFromTheDeck(t *testing.T) {
 			held[c] = true
 		}
 
-		p := NewEnemyPile(name, EnemySeed, EnemyHandSize)
+		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 20; round++ {
@@ -123,7 +124,7 @@ func TestTheDeckIsConserved(t *testing.T) {
 	for _, name := range sampleRecords(t) {
 		want := len(EnemyCards(name))
 
-		p := NewEnemyPile(name, EnemySeed, EnemyHandSize)
+		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 30; round++ {
@@ -143,8 +144,8 @@ func TestTheSameSeedDealsTheSameDuel(t *testing.T) {
 	// what lets a run be replayed and what stops the balance tool reporting a different
 	// roster every time it is run.
 	for _, name := range sampleRecords(t) {
-		a := NewEnemyPile(name, EnemySeed, EnemyHandSize)
-		b := NewEnemyPile(name, EnemySeed, EnemyHandSize)
+		a := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
+		b := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()
 
 		for round := 1; round <= 20; round++ {

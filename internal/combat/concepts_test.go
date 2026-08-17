@@ -189,7 +189,7 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	// one. Pin the whole set rather than only the fields this session added.
 	var d Duelist
 	for _, k := range []ConceptID{Defend, Defend} {
-		d = d.raiseDefend(k)
+		d = d.raiseDefend(Plain(k))
 	}
 
 	got := ClearDefenses(d)
@@ -341,5 +341,67 @@ func TestParseFamilyRoundTripsEveryFamily(t *testing.T) {
 	// names itself, because a deck list writes "none" for the opponent's cards.
 	if got := FamilyNone.String(); got != "none" {
 		t.Errorf("FamilyNone is named %q, want %q", got, "none")
+	}
+}
+
+// TestAWormsBoundsHold. The two per-card modifiers are the only way a card's numbers move, and
+// both ends of each are a rule rather than a convenience.
+func TestAWormsBoundsHold(t *testing.T) {
+	// Cost floors at zero and does not go negative. A free card is bounded by the count cap
+	// instead of the budget, which is the trade that was taken deliberately.
+	cheap := Card{Concept: Strike, CostDelta: -99}
+	if got := cheap.Cost(); got != 0 {
+		t.Errorf("a card cheapened past zero costs %d, want 0", got)
+	}
+
+	// Nothing stops a blow outright, however many worms are stacked on a Defend.
+	wall := Card{Concept: Defend, AmountPct: 10000}
+	if got := wall.Amount(); got >= 100 {
+		t.Errorf("a defence scaled up reduces by %d%%, and nothing may reach 100", got)
+	}
+
+	// An amount cannot be scaled away to nothing: a reward that left a card doing zero would be
+	// a punishment wearing a gift's clothes.
+	crushed := Card{Concept: Prepare, AmountPct: 1}
+	if got := crushed.Amount(); got < 1 {
+		t.Errorf("a scaled-down card banks %d", got)
+	}
+
+	// The zero value is unmodified, which is what keeps every existing Card literal working.
+	plain := Card{Concept: Prepare}
+	if plain.Amount() != ConceptOf(Prepare).Amount {
+		t.Errorf("an unmodified card reports %d against the concept's %d",
+			plain.Amount(), ConceptOf(Prepare).Amount)
+	}
+}
+
+// TestTheLadderWalksItsOwnFamily. Promote and demote are derived from what duelist_cards.json
+// declares rather than from a table beside it, so this pins that the derivation finds the right
+// neighbour and stops at both ends.
+func TestTheLadderWalksItsOwnFamily(t *testing.T) {
+	up, ok := Neighbour(Jab, 1)
+	if !ok {
+		t.Fatal("Jab cannot be promoted, and it is the bottom of its ladder")
+	}
+	if ConceptOf(up).Family != ConceptOf(Jab).Family {
+		t.Errorf("promoting a %v produced a %v", ConceptOf(Jab).Family, ConceptOf(up).Family)
+	}
+	if ConceptOf(up).Tier() != ConceptOf(Jab).Tier()+1 {
+		t.Errorf("promoting moved from tier %d to %d", ConceptOf(Jab).Tier(), ConceptOf(up).Tier())
+	}
+
+	if down, ok := Neighbour(up, -1); !ok || down != Jab {
+		t.Errorf("demoting the promotion gave %v, want Jab", down)
+	}
+
+	// Both ends stop. A card at the top of its family cannot be promoted, and the screen asks
+	// before it offers so the player is never shown a worm that would do nothing.
+	if _, ok := Neighbour(Jab, -1); ok {
+		t.Error("the bottom of a ladder was demoted")
+	}
+
+	// A plan has no family and therefore no ladder, and neither has any enemy card.
+	if _, ok := Neighbour(Prepare, 1); ok {
+		t.Error("a plan card was promoted")
 	}
 }

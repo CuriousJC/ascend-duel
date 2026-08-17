@@ -9,6 +9,8 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/music"
+	"github.com/curiousjc/ascend-duel/internal/screens"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -80,6 +82,15 @@ func main() {
 	g.GlobalState.Enemies = data.LoadEnemies()
 	g.GlobalState.Duelists = data.LoadDuelists()
 	g.GlobalState.Rings = data.LoadRings()
+
+	// **The run starts here** *(2026-08-17)*, because a run outlives every screen and no scene
+	// may build one — two would be two runs. It carries the deck, which the combat screen deals
+	// from and the post-battle screen alters, and it is where the worn rings and the purse go
+	// when buying exists.
+	//
+	// Built from the authored starting list. When a title-screen "New Run" arrives this moves
+	// there and becomes one line in that action instead.
+	g.GlobalState.Run = session.New(screens.StartingDeck())
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session

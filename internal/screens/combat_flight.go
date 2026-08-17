@@ -474,7 +474,7 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 	op.PrimaryAlign = text.AlignEnd
 	op.SecondaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d", len(s.deck), deckSize()),
+	text.Draw(screen, fmt.Sprintf("%d/%d", len(s.deck), s.deckSize()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)
 }
 

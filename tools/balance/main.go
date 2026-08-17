@@ -27,7 +27,6 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
-	"github.com/curiousjc/ascend-duel/internal/entities"
 )
 
 // playerRound is a posture the fighter can take, and what it costs them to hold it. The
@@ -113,15 +112,14 @@ func main() {
 	// reads. What is worth reading at that size is the number this tool exists to surface:
 	// how many of the seven postures beat this enemy. `-v <EnemyRecord>` still prints the
 	// round-by-round detail, for one record at a time.
-	fmt.Printf("\n%-24s %-10s %-6s %5s %4s %4s   %s\n",
-		"enemy", "style", "floors", "life", "AP", "DMG", "beaten by")
+	fmt.Printf("\n%-24s %-6s %-6s %5s %4s %4s   %s\n",
+		"enemy", "cards", "floors", "life", "AP", "DMG", "beaten by")
 	fmt.Println(strings.Repeat("-", 96))
 
 	band := 0
 	for _, name := range data.EnemyOrder(recs) {
 		rec := recs[name]
 		enemy := duelistOf(rec)
-		style, known := combat.ParsePlanStyle(rec.PlanStyle)
 
 		// A blank line each time the lowest valid floor moves, so the table reads as the
 		// tower it describes rather than as ninety-six rows.
@@ -132,7 +130,7 @@ func main() {
 
 		var beat []string
 		for _, p := range postures {
-			if playerWins(fighter, enemy, style, p) {
+			if playerWins(fighter, enemy, name, p) {
 				beat = append(beat, p.label)
 			}
 		}
@@ -144,12 +142,8 @@ func main() {
 		case len(postures):
 			verdict = "everything - free"
 		}
-		if !known {
-			verdict += fmt.Sprintf("   ** PlanStyle %q not recognised **", rec.PlanStyle)
-		}
-
-		fmt.Printf("%-24s %-10v %d-%d    %5d %4d %4d   %s\n",
-			rec.Name, style, rec.ValidFloors[0], rec.ValidFloors[1],
+		fmt.Printf("%-24s %-6d %d-%d    %5d %4d %4d   %s\n",
+			rec.Name, len(decks.EnemyCards(name)), rec.ValidFloors[0], rec.ValidFloors[1],
 			enemy.MaxLife, enemy.ActionPoints(), enemy.DMG, verdict)
 	}
 
@@ -159,11 +153,11 @@ func main() {
 			fmt.Printf("\nno enemy record called %q\n", *detail)
 		} else {
 			enemy := duelistOf(rec)
-			style, _ := combat.ParsePlanStyle(rec.PlanStyle)
-			fmt.Printf("\n== %s  %v  %d life, %d AP, DMG %d\n",
-				rec.Name, style, enemy.MaxLife, enemy.ActionPoints(), enemy.DMG)
+			fmt.Printf("\n== %s  %d cards, %d life, %d AP, DMG %d\n",
+				rec.Name, len(decks.EnemyCards(*detail)), enemy.MaxLife, enemy.ActionPoints(), enemy.DMG)
+			fmt.Printf("   deck: %s\n", label(decks.EnemyCards(*detail)))
 			for _, p := range postures {
-				report(fighter, enemy, style, p)
+				report(fighter, enemy, *detail, p)
 			}
 		}
 	}
@@ -175,11 +169,12 @@ func main() {
 		"\n\nWhat to look for: every enemy should lose to *something* and win against *something*." +
 		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
 		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
-		"\nNothing does that as of 2026-08-15: defending wins 16 of 96 and planning 1, both at the" +
-		"\nshallow end, which is what a card costing most of a round should look like." +
-		"\n\nTwo figures to read next. Twelve enemies are walls, beaten by no posture at all. And" +
-		"\nplanning wins once, but this tool deals no cards — a wider hand is a wider hand of nothing" +
-		"\nhere, so that row measures Plan as 2 AP of pure loss. Read it as the floor, not the card.")
+		"\nNothing does that as of 2026-08-16: no posture beats more than a third of the roster." +
+		"\n\nTwo figures to read next. Forty-four enemies are walls, beaten by no posture at all," +
+		"\nup from twelve before per-enemy decks and doubled HP - the decks cost three of that and" +
+		"\nthe doubling cost twenty-nine. And planning wins rarely, but this tool deals no cards: a" +
+		"\nwider hand is a wider hand of nothing here, so that row measures Plan as 2 AP of pure" +
+		"\nloss. Read it as the floor, not the card.")
 }
 
 // stalemateRounds is where a duel is called a draw. A fight nobody can finish is as broken
@@ -195,11 +190,9 @@ const stalemateRounds = 40
 // happened to sample. Running the duel costs nothing here and cannot be wrong about a rule,
 // because it is the same ResolveRound the game calls.
 //
-// The first two rounds are still printed because a tactician's character is that its second
-// round is not its first, and a verdict alone would not show that.
-func report(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound) {
-	// The first two rounds are printed because a tactician's character is that its second
-	// round is not its first, and a verdict alone would not show that.
+// The first two rounds are still printed because an opponent that banks points has a second round
+// unlike its first, and a verdict alone would not show that.
+func report(fighter, enemy combat.Duelist, record string, p playerRound) {
 	sample := func(round int, enemyPlan []combat.Card, dealt, taken int) {
 		if round <= 2 {
 			fmt.Printf("   r%d %-9s vs %-30s deal %2d  take %2d\n",
@@ -207,7 +200,7 @@ func report(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound
 		}
 	}
 
-	f, e, round := play(fighter, enemy, style, p, sample)
+	f, e, round := play(fighter, enemy, record, p, sample)
 	fmt.Printf("      %-9s -> %s\n", p.label, outcome(f, e, round))
 }
 
@@ -220,7 +213,7 @@ func report(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound
 //
 // `each` may be nil, and is called with the round number, what the opponent queued, and what
 // each side lost in that round.
-func play(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound,
+func play(fighter, enemy combat.Duelist, record string, p playerRound,
 	each func(round int, enemyPlan []combat.Card, dealt, taken int)) (combat.Duelist, combat.Duelist, int) {
 
 	plan := append(append([]combat.Card{}, p.defence...), p.attack...)
@@ -228,15 +221,14 @@ func play(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound,
 	f, e := fighter, enemy
 	round := 0
 
-	// **The opponent draws from the real deck** *(2026-08-11)*, through the same
-	// internal/decks pile the game uses, seeded the same way. Before enemies had decks a
-	// style conjured its cards and this loop needed nothing but the style; now a brute that
-	// draws no Heavy does not swing one, and a report that skipped the deck would be a
-	// report about an enemy nobody fights.
+	// **The opponent draws its own deck** *(2026-08-16)*, through the same internal/decks pile the
+	// game uses, seeded the same way. It used to be one shared list for the whole roster picked
+	// over by one of four planners; the deck is the enemy now, so a report that skipped it would
+	// be a report about an enemy nobody fights.
 	//
 	// A fresh pile per posture, so each row starts from the same shuffle and the seven of
 	// them can be compared with each other.
-	pile := decks.NewEnemyPile(decks.EnemySeed, decks.EnemyHandSize)
+	pile := decks.NewEnemyPile(record, decks.EnemySeed, decks.EnemyHandSize)
 
 	// **The rules take a source now, and this tool stopped being exact when they did.** A shock
 	// roll decides whether a turn's whole attack lands, so one run of one matchup is a sample
@@ -245,7 +237,7 @@ func play(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound,
 
 	for f.Alive() && e.Alive() && round < stalemateRounds {
 		round++
-		enemyPlan := pile.Plan(style, e)
+		enemyPlan := pile.Plan(e)
 
 		beforeF, beforeE := f.CurrentLife, e.CurrentLife
 		_, f, e = combat.ResolveRound(f, e, plan, enemyPlan, round, rng)
@@ -275,12 +267,13 @@ func outcome(f, e combat.Duelist, rounds int) string {
 }
 
 // duelistOf hydrates the stats half of a record. It deliberately does not go through
-// entities.NewEnemyFrom, which needs an *ebiten.Image and therefore a graphics context
-// this tool has no reason to open — but it reads LifePerCon from entities so the conversion
-// cannot drift from the game's.
+// entities.NewEnemyFrom, which used to need a graphics context this tool has no reason to open.
+//
+// **There is no conversion left to drift** *(2026-08-16)*. It read `entities.LifePerCon` so life
+// could not be worked out two ways; the record now says HP, so copying three fields is the whole
+// of it.
 func duelistOf(d data.EnemyData) combat.Duelist {
-	du := combat.Duelist{Con: d.Constitution, DMG: d.DMG, Spd: d.Speed}
-	du.MaxLife = du.Con * entities.LifePerCon
+	du := combat.Duelist{DMG: d.DMG, Actions: d.Actions, MaxLife: d.HP}
 	du.CurrentLife = du.MaxLife
 	return du
 }
@@ -298,11 +291,10 @@ func duelistOf(d data.EnemyData) combat.Duelist {
 // inert is the same failure by another route. It measures the ceiling; the floor is the plain
 // postures beside it.
 func duelistOfDuelist(d data.DuelistData) combat.Duelist {
-	du := combat.Duelist{Con: d.Constitution, DMG: d.DMG, Spd: d.Speed}
+	du := combat.Duelist{DMG: d.DMG, Actions: d.Actions, MaxLife: d.HP}
 	for _, e := range combat.AllElements {
 		du.Rings[e] = e != combat.Basic
 	}
-	du.MaxLife = du.Con * entities.LifePerCon
 	du.CurrentLife = du.MaxLife
 	return du
 }
@@ -311,14 +303,14 @@ func duelistOfDuelist(d data.DuelistData) combat.Duelist {
 //
 // It shares report's loop rather than duplicating it — see there for why the duel is played
 // rather than a damage rate divided into a life total.
-func playerWins(fighter, enemy combat.Duelist, style combat.PlanStyle, p playerRound) bool {
-	f, e, _ := play(fighter, enemy, style, p, nil)
+func playerWins(fighter, enemy combat.Duelist, record string, p playerRound) bool {
+	f, e, _ := play(fighter, enemy, record, p, nil)
 	return !e.Alive() && f.Alive()
 }
 
 // elemental builds a posture's attacks all in one element. Only the four element rows use it,
 // and they are deliberately the same concepts as all-out so the comparison stays clean.
-func elemental(e combat.Element, actions ...combat.ActionKind) []combat.Card {
+func elemental(e combat.Element, actions ...combat.ConceptID) []combat.Card {
 	out := make([]combat.Card, len(actions))
 	for i, a := range actions {
 		out[i] = combat.Of(a, e)

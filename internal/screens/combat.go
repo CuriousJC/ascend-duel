@@ -469,7 +469,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.drag = nil
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
-	s.enemyPile = decks.NewEnemyPile(enemySeed, decks.EnemyHandSize)
+	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
 
 	// A fresh duel: full life, no standing defenses, and no action points banked by a
 	// Prepare from a duel that has been walked away from.
@@ -497,8 +497,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// A plan is a commitment on either side.
 	s.planEnemyRound()
 
-	trace.Logf("scene", "fight %d: %s, style %v, %d life, %d AP",
-		s.fightIndex+1, s.enemy.Name, s.enemy.Style,
+	trace.Logf("scene", "fight %d: %s, %d cards, %d life, %d AP",
+		s.fightIndex+1, s.enemy.Name, len(decks.EnemyCards(s.enemy.Record)),
 		s.enemy.MaxLife, s.enemy.ActionPoints())
 	trace.Logf("scene", "combat init: deck %d hand %d discard %d, seeds player %d enemy %d",
 		len(s.deck), len(s.hand), len(s.discard), playerSeed, enemySeed)
@@ -708,8 +708,8 @@ func (s *CombatScene) startRound() {
 	if trace.Enabled() {
 		trace.Section(fmt.Sprintf("round %d", s.round))
 		trace.Logf("round", "fighter %d AP, plan %s", s.fighter.ActionPoints(), planLabel(s.fighterActions))
-		trace.Logf("round", "enemy   %d AP, %v plan %s",
-			s.enemy.ActionPoints(), s.enemy.Style, planLabel(s.enemyActions))
+		trace.Logf("round", "enemy   %d AP, plan %s",
+			s.enemy.ActionPoints(), planLabel(s.enemyActions))
 		for i, e := range log {
 			trace.Logf("event", "%2d %s", i, eventLabel(e))
 		}
@@ -730,7 +730,7 @@ func eventLabel(e combat.Event) string {
 	case combat.KindRoundEnd:
 		return fmt.Sprintf("round-end   round %d", e.Round)
 	case combat.KindAction:
-		return fmt.Sprintf("action      %v plays %v %v (%v)", e.Side, e.Element, e.Action, e.Action.Category())
+		return fmt.Sprintf("action      %v plays %v %v (%v)", e.Side, e.Element, combat.ConceptOf(e.Action).Label, combat.Plain(e.Action).Category())
 	case combat.KindStatus:
 		return fmt.Sprintf("status      %v puts %d %v on %v", e.Side, e.Amount, e.Element, e.Target)
 	case combat.KindMissed:
@@ -850,7 +850,7 @@ func (s *CombatScene) planEnemyRound() {
 	// with the killing blow still raised; that row is the result the player is looking at.
 	s.firingSeats, s.enemyFiringSeats = nil, nil
 
-	s.enemyActions = s.enemyPile.Plan(s.enemy.Style, s.enemy.Duelist)
+	s.enemyActions = s.enemyPile.Plan(s.enemy.Duelist)
 	s.seatEnemyCards()
 }
 
@@ -1102,9 +1102,9 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 // cardLabel names a card for a trace line: "Strike/fire", or just "Strike" when plain.
 func cardLabel(c actionCard) string {
 	if c.Element == combat.Basic {
-		return c.Action.String()
+		return c.Label()
 	}
-	return c.Action.String() + "/" + c.Element.String()
+	return c.Label() + "/" + c.Element.String()
 }
 
 // handLabel renders the whole hand for a trace line, marking the selected ones.

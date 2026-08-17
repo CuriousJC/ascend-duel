@@ -94,14 +94,14 @@ func Seeds() (names []string, values []int64, wants []string) {
 // it builds a bare CombatScene and calls the same resetDeck the game does, so the tool cannot
 // drift from what a launch actually deals. Nothing here touches Ebitengine, which is what
 // lets a windowless tool call it.
-func OpeningHand(seed int64) []combat.ActionKind {
+func OpeningHand(seed int64) []combat.ConceptID {
 	var s CombatScene
 	s.rng = rand.New(rand.NewSource(seed))
 	s.resetDeck()
 
-	out := make([]combat.ActionKind, 0, len(s.hand))
+	out := make([]combat.ConceptID, 0, len(s.hand))
 	for _, c := range s.hand {
-		out = append(out, c.actionCard.Action)
+		out = append(out, c.actionCard.Concept)
 	}
 	return out
 }

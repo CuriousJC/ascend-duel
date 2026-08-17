@@ -107,17 +107,16 @@ func TestEveryFamilyHasItsOwnMark(t *testing.T) {
 }
 
 func TestEveryConceptHasEffectText(t *testing.T) {
-	// A card with no entry draws a name, a cost, a glyph and nothing that says what it does —
-	// which is the state six of the twelve concepts were in before this table existed. There is
-	// no fallback on purpose: a missing line is silence on the card, so it has to fail here.
-	for _, a := range combat.AllActions {
-		if cardEffects[a] == "" {
-			t.Errorf("%v has no effect text — its card would say nothing about what it does", a)
+	// A card with no text draws a name, a cost, a corner mark and nothing that says what it does.
+	//
+	// **It walks the whole registry, not the player's twelve** *(2026-08-16)*. Every enemy carries
+	// its own cards and the table lays an enemy's queue out as cards, so a verb the generator does
+	// not cover is four hundred blank faces rather than one.
+	for _, a := range combat.AllConcepts() {
+		if cardEffect(a) == "" {
+			t.Errorf("%v has no effect text — its card would say nothing about what it does",
+				combat.ConceptOf(a).Key)
 		}
-	}
-	if len(cardEffects) != len(combat.AllActions) {
-		t.Errorf("cardEffects holds %d entries for %d concepts — one of them names a card that is gone",
-			len(cardEffects), len(combat.AllActions))
 	}
 }
 
@@ -141,14 +140,14 @@ func TestEveryCardTextFitsItsBand(t *testing.T) {
 	st := cards.Hand
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
-	for _, a := range combat.AllActions {
-		lines, err := cards.WrapText(f, st.TextSize, cardEffects[a], width)
+	for _, a := range combat.AllConcepts() {
+		lines, err := cards.WrapText(f, st.TextSize, cardEffect(a), width)
 		if err != nil {
 			t.Fatalf("%v: %v", a, err)
 		}
 		if len(lines) > st.TextLines() {
 			t.Errorf("%v's text wraps to %d lines and the band holds %d: %q",
-				a, len(lines), st.TextLines(), cardEffects[a])
+				combat.ConceptOf(a).Key, len(lines), st.TextLines(), cardEffect(a))
 		}
 	}
 }
@@ -170,8 +169,8 @@ func TestNoEffectTextWordIsWiderThanItsColumn(t *testing.T) {
 	st := cards.Hand
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
-	for _, a := range combat.AllActions {
-		for _, word := range strings.Fields(cardEffects[a]) {
+	for _, a := range combat.AllConcepts() {
+		for _, word := range strings.Fields(cardEffect(a)) {
 			w, err := cards.TextWidth(f, st.TextSize, word)
 			if err != nil {
 				t.Fatalf("%v: %v", a, err)

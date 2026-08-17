@@ -41,12 +41,16 @@ type DuelistData struct {
 	// over one would be worse.
 	CardBack string `json:"CardBack"`
 
+	// **Three stats, and every one of them is the number it sounds like** *(2026-08-16)*. Speed
+	// and Constitution were conversions into the action-point budget and into life; they went the
+	// day after Strength went, and for the same reason. See combat.Duelist.
+	//
 	// DMG is what one Strike deals in this duelist's hands. It was `Strength` until
 	// 2026-08-16, when the stat and the figure it converted into turned out to be one number
 	// wearing two names — see combat.Duelist.DMG.
-	DMG          int `json:"DMG"`
-	Speed        int `json:"Speed"`
-	Constitution int `json:"Constitution"`
+	DMG     int `json:"DMG"`
+	Actions int `json:"Actions"`
+	HP      int `json:"HP"`
 }
 
 // LoadDuelists parses the embedded duelist list into a map keyed by DuelistRecord.

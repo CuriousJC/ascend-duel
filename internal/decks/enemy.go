@@ -1,4 +1,4 @@
-// Package decks turns a card list in `data` into cards the rules understand, and holds an
+// Package decks turns the card lists in `data` into cards the rules understand, and holds an
 // opponent's three piles while a duel is played.
 //
 // **It exists so the combat screen and `tools/balance` share one enemy deck** *(2026-08-11)*.
@@ -15,96 +15,92 @@
 // move through a hand that can be reordered, neither of which is true of an enemy's, and pulling
 // it down here would mean giving this package a screen's vocabulary to reuse a loop.
 //
-// **The element used to be the other half of that argument and is not any more** *(2026-08-12)*.
-// It was a screen concept; it is a rule now, `combat.Element`, so both decks deal
-// `combat.Card` and this package reads the colour out of its JSON like any other field.
+// **This package is where enemy concepts are registered** *(2026-08-16)*. Card definitions became
+// data — see `combat.RegisterConcept` — and `data` may not import the rules, so something between
+// the two has to hand one to the other. This is the package built for exactly that edge, and it is
+// the reason every enemy deck in the game is built here rather than in the screen that draws it.
 package decks
 
 import (
+	"fmt"
 	"math/rand"
+	"sort"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// enemyCards is what every opponent draws from, built once at package init so a bad record
+// enemyDecks is every enemy's deck, keyed by record, built once at package init so a bad record
 // fails on launch rather than mid-duel.
 //
-// **One list for every enemy**, not one per record. Which of them a Warden actually plays is
-// decided by its style, which is the smallest thing that makes an enemy deck real; per-enemy
-// lists want a field on data.EnemyData and are the obvious next step.
-var enemyCards = buildEnemyCards()
+// **One deck per enemy, not one for the roster** *(2026-08-16)*. Every opponent used to draw from
+// `enemy_cards.json`, twelve Attacks and twelve Heavies, and its behaviour came from a `PlanStyle`
+// string picking one of four planners. Both are gone: an enemy is what it holds.
+var enemyDecks = buildEnemyDecks()
 
-// EnemyCards is the list, copied, for anything that wants to look at it without being able
-// to change what every future duel is dealt.
-func EnemyCards() []combat.Card {
-	return append([]combat.Card(nil), enemyCards...)
+// buildEnemyDecks registers every enemy's concepts and expands its deck.
+//
+// **It walks the roster in sorted order**, per the determinism rules in CLAUDE.md — a map range
+// would assign concept IDs in whatever order Go felt like, and while nothing compares IDs across
+// processes today, a registry that renumbers itself between runs is a trap laid for the save
+// format.
+//
+// It panics on a bad record for the reason the player's deck builder does: a deck quietly missing
+// cards is a balance change nobody made, and a launch failure naming the record is cheaper to fix
+// than an enemy that turns out to be harmless three floors in.
+func buildEnemyDecks() map[string][]combat.Card {
+	records := data.LoadEnemies()
+	out := make(map[string][]combat.Card, len(records))
+
+	for _, name := range data.EnemyOrder(records) {
+		rec := records[name]
+		if len(rec.Cards) == 0 {
+			panic(fmt.Sprintf("enemies.json: %s has no cards, so it cannot fight", name))
+		}
+
+		var deck []combat.Card
+		for _, c := range rec.Cards {
+			id, err := combat.RegisterConcept(name, c)
+			if err != nil {
+				panic("enemies.json: " + err.Error())
+			}
+
+			elements := c.Elements
+			if len(elements) == 0 {
+				// **Empty means basic**, which is what every enemy card is today. An enemy's colour
+				// does nothing until an elemental affix attunes it — see MECHANICS.md — so writing
+				// one in now would hand it a status it has no source for.
+				elements = []string{combat.Basic.String()}
+			}
+			for _, en := range elements {
+				element, ok := combat.ParseElement(en)
+				if !ok {
+					panic(fmt.Sprintf("enemies.json: %s.%s names unknown element %q", name, c.Label, en))
+				}
+				for i := 0; i < c.Copies; i++ {
+					deck = append(deck, combat.Of(id, element))
+				}
+			}
+		}
+		out[name] = deck
+	}
+	return out
 }
 
-// buildEnemyCards turns the data records into a flat list, in file order.
-//
-// It panics on a bad record for exactly the reasons the player's deck builder does: an
-// unknown concept, or a cost tier that disagrees with the rules, would otherwise produce a
-// deck quietly missing cards — and an enemy silently short its Heavies is a balance change
-// nobody made.
-//
-// **Elements are carried now, and today they are all basic** *(2026-08-12)*. The list used to
-// multiply the copies and throw the colour away, on the grounds that an enemy card was never
-// drawn on screen. It is drawn now — the table lays both queues out — and the element is a rule
-// rather than a border, so the file is read as written. Every entry says `basic`, which is
-// MECHANICS.md's plan working rather than a gap: an affix *transforms* an enemy's basic deck
-// into an element, so a colour typed into this file would pre-empt a mechanic that does not
-// exist. Nothing stops one being added the day affixes land.
-func buildEnemyCards() []combat.Card {
-	records := data.LoadEnemyCards()
+// EnemyCards is one opponent's deck, copied, so a caller cannot change what every future duel is
+// dealt. An unknown record hands back nothing rather than panicking — the roster is walked from
+// the same map, so a miss here means the caller invented a name.
+func EnemyCards(record string) []combat.Card {
+	return append([]combat.Card(nil), enemyDecks[record]...)
+}
 
-	problems := data.CheckCostTiers("enemy_cards.json", records,
-		func(concept string) (int, bool) {
-			a, ok := combat.ParseAction(concept)
-			if !ok {
-				return 0, false
-			}
-			return a.Cost(), true
-		},
-		func(concept string) (string, bool) {
-			a, ok := combat.ParseAction(concept)
-			if !ok {
-				return "", false
-			}
-			return a.Category().String(), true
-		},
-		func(concept string) (string, bool) {
-			a, ok := combat.ParseAction(concept)
-			if !ok {
-				return "", false
-			}
-			return a.Family().String(), true
-		},
-	)
-	if len(problems) > 0 {
-		msg := "enemy_cards.json disagrees with the rules:"
-		for _, p := range problems {
-			msg += "\n  " + p.Error()
-		}
-		panic(msg)
+// EnemyRecords is every record with a deck, sorted. For a tool walking the roster.
+func EnemyRecords() []string {
+	out := make([]string, 0, len(enemyDecks))
+	for name := range enemyDecks {
+		out = append(out, name)
 	}
-
-	var out []combat.Card
-	for _, c := range records {
-		action, ok := combat.ParseAction(c.Concept)
-		if !ok {
-			panic("enemy_cards.json: unknown concept " + c.Concept)
-		}
-		for _, name := range c.Elements {
-			element, ok := combat.ParseElement(name)
-			if !ok {
-				panic("enemy_cards.json: " + c.Concept + " names unknown element " + name)
-			}
-			for i := 0; i < c.Copies; i++ {
-				out = append(out, combat.Of(action, element))
-			}
-		}
-	}
+	sort.Strings(out)
 	return out
 }
 
@@ -112,7 +108,7 @@ func buildEnemyCards() []combat.Card {
 //
 // **Bigger than MaxActions on purpose**, which is 5 across the roster today. A hand exactly
 // the size of the action cap would make the deck a formality — every card drawn would be
-// played — and the point of dealing a hand is that a style has to choose from it, and
+// played — and the point of dealing a hand is that a planner has to choose from it, and
 // sometimes cannot find what it wants.
 const EnemyHandSize = 7
 
@@ -137,11 +133,10 @@ const EnemySeed int64 = 20260811
 // EnemyPile is one opponent's deck through a duel: a draw pile, a hand, and a discard.
 //
 // **The hand does NOT persist between rounds, unlike the player's — and that is a fix, not
-// an oversight.** Persisting it was the first thing tried and it deadlocked: a style only
-// ever takes attacks, plus a Defend or a Prepare, so every card it could not use stayed in
-// hand. By round three the hand was seven dead cards, nothing could be drawn on top of them,
-// and the opponent stood still for the rest of the duel. `tools/balance` showed it as a
-// roster nothing could lose to.
+// an oversight.** Persisting it was the first thing tried and it deadlocked: a planner only ever
+// takes what it can spend, so every card it could not use stayed in hand. By round three the hand
+// was seven dead cards, nothing could be drawn on top of them, and the opponent stood still for
+// the rest of the duel. `tools/balance` showed it as a roster nothing could lose to.
 //
 // The player's hand may persist because Discard exists — since 2026-08-06 it is the *only*
 // way an unwanted card leaves a hand, which is exactly the lever an enemy does not have.
@@ -160,10 +155,10 @@ type EnemyPile struct {
 	rng *rand.Rand
 }
 
-// NewEnemyPile shuffles a fresh deck and deals an opening hand.
-func NewEnemyPile(seed int64, handSize int) *EnemyPile {
+// NewEnemyPile shuffles one enemy's deck and deals an opening hand.
+func NewEnemyPile(record string, seed int64, handSize int) *EnemyPile {
 	p := &EnemyPile{
-		draw:     EnemyCards(),
+		draw:     EnemyCards(record),
 		handSize: handSize,
 		rng:      rand.New(rand.NewSource(seed)),
 	}
@@ -172,22 +167,22 @@ func NewEnemyPile(seed int64, handSize int) *EnemyPile {
 	return p
 }
 
-// Plan deals the opponent back up to a full hand, asks its style what to do with it, and
+// Plan deals the opponent back up to a full hand, asks the planner what to do with it, and
 // moves what it chose to the discard.
 //
 // **The cards leave the hand here, before the round resolves.** That mirrors the player's
 // queue: what is committed is spent, whether or not a stagger later deletes it from the
 // round. A card the engine refuses to play is still a card that was thrown.
-func (p *EnemyPile) Plan(style combat.PlanStyle, d combat.Duelist) []combat.Card {
+func (p *EnemyPile) Plan(d combat.Duelist) []combat.Card {
 	p.fill()
 
-	plan := combat.PlanFor(style, d, p.hand)
+	plan := combat.PlanFor(d, p.hand)
 	for _, c := range plan {
 		p.spend(c)
 	}
 
 	// What was not played goes back too. See the type's comment: without a discard of its
-	// own, an opponent that kept its leftovers would fill its hand with cards no style reads
+	// own, an opponent that kept its leftovers would fill its hand with cards no plan reads
 	// and stop acting entirely.
 	p.discard = append(p.discard, p.hand...)
 	p.hand = nil

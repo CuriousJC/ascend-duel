@@ -52,26 +52,52 @@ func TestEveryColourCountHasExactlyOneMix(t *testing.T) {
 	}
 }
 
-// Every attack card carries the whole ladder, because the file expands one entry per card. A new
-// attack card gets pair, flurry and barrage by existing.
-func TestEveryAttackCardCarriesTheWholeLadder(t *testing.T) {
+// **One hand per catalogue key, not one per card** *(2026-08-16)*. An entry used to expand into
+// one hand per attack concept, numbered `base + int(concept)`, with bands a hundred apart — which
+// held twelve concepts and could not hold the four hundred a per-enemy deck list produces. The
+// name is filled in at match time instead.
+func TestEachLadderRungIsOneHand(t *testing.T) {
 	for _, key := range []string{"pair", "flurry", "barrage"} {
-		for _, a := range AllActions {
-			id, ok := HandIDFor(key, a)
-			if a.Category() != CategoryAttack {
-				if ok {
-					t.Errorf("%v is not an attack but carries a %s (%d)", a, key, id)
-				}
-				continue
-			}
-			if !ok {
-				t.Errorf("%v has no %s", a, key)
-				continue
-			}
-			if _, found := HandByID(id); !found {
-				t.Errorf("%v's %s claims ID %d, which is in no table", a, key, id)
+		id, ok := HandIDForKey(key)
+		if !ok {
+			t.Errorf("no hand called %s", key)
+			continue
+		}
+
+		found := 0
+		for _, h := range Hands() {
+			if h.Key == key {
+				found++
 			}
 		}
+		if found != 1 {
+			t.Errorf("%s is %d hands, want exactly 1", key, found)
+		}
+		if _, in := HandByID(id); !in {
+			t.Errorf("%s claims ID %d, which is in no table", key, id)
+		}
+	}
+}
+
+// A templated name is filled from whatever concept formed the hand, which is the whole reason one
+// entry can cover every card in the game.
+func TestATemplatedHandIsNamedAfterTheCardThatFormedIt(t *testing.T) {
+	pair, ok := HandByName("{card} Pair")
+	if !ok {
+		t.Fatal("the catalogue has no templated pair entry")
+	}
+
+	if got := HandName(pair, Strike); got != "Strike Pair" {
+		t.Errorf("a pair of Strikes is called %q, want \"Strike Pair\"", got)
+	}
+
+	// A hand with no template is left alone rather than mangled.
+	twoPair, ok := HandByName("Two Pair")
+	if !ok {
+		t.Fatal("the catalogue has no Two Pair")
+	}
+	if got := HandName(twoPair, Strike); got != "Two Pair" {
+		t.Errorf("Two Pair became %q", got)
 	}
 }
 

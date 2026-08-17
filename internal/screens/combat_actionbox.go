@@ -584,14 +584,27 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // on which of the player's cards resolve in what order and the opponent's cards do not enter
 // their attack phase. Building the slice by hand here would be a second orderer.
 func (s *CombatScene) previewAttack() (combat.Blow, bool) {
+	blow, _, ok := s.previewBlow()
+	return blow, ok
+}
+
+// previewBlow is previewAttack plus the turn the blow indexes into.
+//
+// **`Blow.Lead` is a turn index, not a hand one** *(2026-08-16)*, exactly as `Blow.Cards` is —
+// and the name of the hand is looked up through it, so a caller that reached into
+// `s.fighterActions` with it would name the combo after whichever card happened to sit at that
+// position in the row. The turn is in resolution order; the hand is in the order the player left
+// it.
+func (s *CombatScene) previewBlow() (combat.Blow, []combat.Slot, bool) {
 	if !s.planning() {
-		return combat.Blow{}, false
+		return combat.Blow{}, nil, false
 	}
-	blow := combat.BlowFor(combat.ResolutionOrder(s.fighterActions, nil))
+	turn := combat.ResolutionOrder(s.fighterActions, nil)
+	blow := combat.BlowFor(turn)
 	if !blow.Formed() {
-		return combat.Blow{}, false
+		return combat.Blow{}, nil, false
 	}
-	return blow, true
+	return blow, turn, true
 }
 
 // previewHandSlots is where the previewed hand's cards are sitting in the row right now.

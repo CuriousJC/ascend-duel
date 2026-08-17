@@ -31,36 +31,43 @@ Rings and brands are rule-modifiers first and stat-boosters second — more acti
 cards, free cards, and stats too, since a stat is just another rule to bend. Every constant
 below is a candidate for something to bend.
 
-The consequence for the code: rules cannot stay `const`. `baseActionPoints`, `speedPerPoint`,
-the per-action costs, `guardDivisor` and the actions-per-round cap are compile-time constants
-today, read by functions with no access to the run. They need a **carrier** — a modifier set
+The consequence for the code: rules cannot stay `const`. **Most of them already stopped being
+constants** *(2026-08-16)* — a card's cost, damage, defence percentage, bank and draw are fields on
+its record, so retuning one is a file edit. What is left as a compile-time constant is the
+actions-per-round cap and the status magnitudes, read by functions with no access to the run. They need a **carrier** — a modifier set
 passed alongside the duelists that `internal/combat` reads instead of the constants. Cost
 becomes a function of the card *and* that carrier, the way `Damage` is already a function of
 the action and the wielder.
 
-Attributes do **not** need this. `Con`, `DMG` and `Spd` are already fields on `Duelist`, and
+Attributes do **not** need this. `DMG`, `Actions` and `HP` are already fields on `Duelist`, and
 `ResolveRound` takes duelists by value, so a ring granting `+5 DMG` just hands it a different
 duelist. Base values live in `data/duelists.json` and `data/enemies.json`, and are expected to
-move with playtesting.
-What is still frozen is the *conversion* — `LifePerCon`, `baseActionPoints`, `speedPerPoint` —
-and those are the bigger balance levers.
+move with playtesting. **There is no conversion left to freeze** *(2026-08-16)* — see below.
 
 ---
 
 ## Attributes and scaling
 
-**Implemented today:** `Con`, `DMG`, `Spd` on `Duelist`. Life is `Con × LifePerCon` (5). Action
-points are `4 + Spd/10`. Damage comes from the *action* via `ActionKind.Damage(dmg)`, scaled off
-`DMG`. Base values are per-combatant data in `data/duelists.json` and `data/enemies.json`.
+**Three stats, and every one of them is the number it sounds like** *(2026-08-16)*: `DMG`,
+`Actions` and `HP` on `Duelist`, all three straight out of `data/duelists.json` and
+`data/enemies.json`. Life is HP. The action-point budget is `Actions + BonusAP`. Damage is
+`DMG × the card's own multiplier ÷ 100`.
 
-**`Str` was renamed to `DMG` on 2026-08-16, and it is a stat being removed rather than
-respelled.** Strength converted into damage and did nothing else, and the conversion was an
-identity — `Strike.Damage(Str)` returned `Str` — so the two names described one number and the
-player had to learn a step they could never act on separately. The ladder still scales off it
-(half at 1 AP, it at 2, double at 3); what went is the pretence that the ladder converts a
-different stat. **The figure on the fighter card is still asked of the rules**
-(`Strike.Damage(DMG)`) rather than printed from the field, so if the middle rung ever stops being
-1x the card follows.
+**All three conversions were removed over two days, and each for the same reason: a stat that
+leads to a second stat and stops there is a step the player must learn and can never act on.**
+
+- **`Str` became `DMG`** *(2026-08-16)*. The conversion was an identity — `Strike.Damage(Str)`
+  returned `Str` — so two names described one number.
+- **`Con` became `HP`** *(2026-08-16)*. Life was `Con × 5`, so the roster was tuned in units of
+  a fifth of a life total.
+- **`Spd` became `Actions`** *(2026-08-16)*, and it was the clearest of the three. The budget was
+  `4 + Spd/10`, so the **twenty-four distinct Speed values across the ninety-six enemies produced
+  three distinct budgets** — most of the hand-tuning in that column was never felt by anyone.
+
+**Every enemy's HP doubled in the same change**, at the owner's call: the roster was written
+against a game where a turn landed several small blows, and one blow per turn with combo
+multipliers made every fight far shorter than the numbers read. See *Enemies* below for what
+`tools/balance` says about the result, which is not yet a balanced game.
 
 **The AP floor went with it.** `ActionPoints` clamped to a minimum of 1 because a chill
 subtracted from it; nothing subtracts now, every term is non-negative, and the clamp was
@@ -69,7 +76,7 @@ arithmetic that could not fire. A future subtraction brings its own floor.
 **Damage reduction is percentages all the way down, and no attribute is one of them.** Three
 things cut a blow and they are all the same shape: the **earth status** blunts what the attacker
 deals, the four **defend cards** each take a percentage off what arrives, and `guardDivisor`
-halves whatever is left. A durable combatant is one with high `Con` or earth on it. Anything
+halves whatever is left. A durable combatant is one with high `HP` or earth on it. Anything
 that should reduce damage extends one of those three rather than arriving as a fourth system —
 two mechanics quietly stacking is the failure to avoid.
 
@@ -183,16 +190,49 @@ mix is reachable only by the opponent, whose deck is twelve copies each of two d
 
 **The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the family and
 category each declares, the elements each ships in, and how many copies. `startingDeck` is built
-from it. Cost, category, family and damage stay in `internal/combat` — the dependency direction
-forbids the rules package reading `data`, and cost is about to stop being a property of the card
-anyway (see *Rings*). The JSON carries all three as **documentation with a check**: the loader
-asserts every declared tier, category and family against the rules and fails loudly rather than
-letting two sources of truth drift.
+from it.
 
-**`data/enemy_cards.json` is now two concepts.** An opponent draws Attack and Heavy and nothing
-else, so **every plan style collapses to brute** — the warden asks for a Defend and the tactician
-for a Prepare, and neither is in the deck. The styles are written against the deck an enemy will
-have rather than the one it has, exactly as they were before the rework.
+### The card language
+
+**A card carries its own rules** *(2026-08-16)*. Cost, damage, category and family used to be
+switch statements over a closed `ActionKind` enum of fourteen constants, with the JSON declaring a
+`CostTier` that was checked against them. That holds twelve player cards. It cannot hold three or
+four bespoke cards for each of ninety-six enemies — roughly four hundred concepts, each wanting its
+own multiplier and its own name — so the card stopped being an enum value and became a record.
+
+Eight fields, and the player's twelve are written in the same language as every enemy's:
+
+| Field | Means |
+|---|---|
+| `Label` | what the card face says, and — scoped by its owner — the rules identity |
+| `Verb` | **attack · defend · bank · draw**. A closed vocabulary; a fifth is a Go change |
+| `Amount` | read against the verb: % of DMG, % off the blow, points banked, cards drawn |
+| `Cost` | action points |
+| `Target` | **opponent · self** |
+| `Family` | stab / slash / crush / plan, or none — the player's deck axis |
+| `Elements` | which colours the concept ships in |
+| `Copies` | how many of each |
+
+- **There is no `Category` column.** Attack-or-plan falls out of the verb, and carrying both would
+  let a file say a card is an attack that banks points.
+- **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
+  attacks ship one per colour and its plans four of one colour — the same four cards reached along
+  different axes. An enemy's cards are all `basic`, so `Copies` carries its whole deck size.
+- **A key is scoped to its owner** (`ClearSlime1.Engulf`). Forty creatures want a card called
+  `Bite` and they do not all want it at the same multiplier; the label collides freely, the key
+  must not.
+- **`Verb × Target` is a grid, and only recoil is new.** An attack aimed at `self` costs its owner
+  life and forms no hand. Banking or drawing at the opponent — drain and mill — is designed and
+  **refused at registration** rather than accepted and silently redirected.
+- **Validation replaced the cross-check.** `CheckCostTiers` compared a declared cost against the
+  rules and had nothing left to compare once the file became the rules. `combat.RegisterConcept`
+  refuses an unknown verb, a defence of 100% or more, a zero amount, and the unbuilt half of the
+  grid. A bad record panics at init.
+
+**A card never names a status, and that is load-bearing.** See *Elements* — what a colour does is
+decided by the source of that colour on the card's owner, and a ring may later decide *which* fire
+a fire card applies. A card that named its own status would be deciding something that is not its
+to decide.
 
 **52 was considered and rejected**, and the arithmetic changed but the answer did not. The
 playing-card instinct argues for 13 ranks × 4 suits, and the fifth "suit" here is `basic` — which
@@ -277,8 +317,33 @@ because one ring is one element.
 
 **Enemies never wear rings.** The zero value is what an enemy is hydrated with and nothing sets
 it, so an enemy's colours are inert by construction rather than by a rule written down somewhere
-else. Statuses reaching the player by some other route — an affix, a boss rule — is expected and
-is a separate mechanic; it will not be an enemy putting on jewellery.
+else.
+
+### One rule, two sources — the intersection *(2026-08-16, owner's call)*
+
+**An element does something only where a card's colour meets a source of that colour on its
+owner.** The player's source is a **ring**. An enemy's is an **elemental affix** — its own, or the
+floor's. Neither side gets statuses free; both get them at an intersection.
+
+What this buys is that `Duelist.Rings` turns out to be the general mechanism rather than the
+player's half of one: an affix sets flags in the same array. Nothing new is needed for it, and the
+name is what should eventually change rather than the machinery.
+
+**A card still never names a status**, and that is the reason the rule is worth stating this way. A
+ring may later confer *which* fire a fire card applies — different rings, different burns — so the
+decision belongs to the source and not to the card. See *The card language*.
+
+**Enemy statuses are blocked on affixes, which do not exist.** Every enemy card is authored
+`basic`, so today the whole element system still runs in one direction only. Colouring an enemy
+card before an affix can gate it would hand it a free status, which is exactly what this rule
+forbids.
+
+**A self-side status is designed and unbuilt.** Each of the four statuses is what a colour does to
+an *opponent*; aimed at yourself each has a mirror — fire enflames, ice focuses, lightning charges,
+earth wards. **Lightning-on-self must not be a roll**, because a shock is the only randomness in
+the engine and a second one needs its argument made from scratch. None of it is built: recoil
+lands as plain self-damage, and a self-status with no source is not a status. Eight badges instead
+of four is the art bill when it is.
 
 **Four rings exist and the player starts in three**, `startingRings` in `internal/screens`. Earth
 is deliberately left off so every launch is a live test of the gate rather than of the statuses.
@@ -295,7 +360,7 @@ carries no badges**, because nothing can put a status on the player: the enemy w
 **Element crossed into `internal/combat` on 2026-08-12**, which is what this section had been
 waiting on and what unblocked ring discounts and the flip ring with it.
 `combat.Element` is a rules type, `combat.Card` is a concept plus an element, and `[]Card`
-replaced `[]ActionKind` through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor`, `CostOf`
+replaced `[]ActionKind` (now `ConceptID`) through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor`, `CostOf`
 and every planner. The screen's own `element` type and its `actionCard` struct are gone —
 `actionCard` is an alias for `combat.Card`, so the hand, the queue and the round are one type
 and a card is never converted between them.
@@ -413,7 +478,7 @@ stacks; with stacking gone the ceiling is the number itself.
 - **Statuses got a home**, and it is `Duelist.Statuses [ElementCount]Status` — an array indexed
   by element, not four named fields. That is what makes *"consume the status this element
   applies"* expressible and is the difference between a system and four ad-hoc fields. The
-  price: **`Element` is append-only**, like `ActionKind` and `GlyphKind`. The raised-defence set
+  price: **`Element` is append-only**, like `GlyphKind`. The raised-defence set
   stays where it is — those are card effects, and filing them in a table indexed by colour would
   say they were not.
 
@@ -557,9 +622,9 @@ live; when one does, discovery gates the *table* and nothing else changes.
 `combo.go`.*
 
 **`data` holds the shape, `internal/combat` holds the meaning**, which is the division
-`CheckCostTiers` already draws for the deck lists. The file can say `"scope": ["attack"]` and
+`RegisterConcept` already draws for the deck lists. The file can say `"scope": ["attack"]` and
 `"expand": "attack-cards"`; only the rules can say what an attack *is*, so that is where the
-names are resolved (`ParseCategory`, `ParseAction`) and where a malformed catalogue is refused.
+names are resolved (`ParseCategory`, `ParseVerb`) and where a malformed catalogue is refused.
 
 **This is the one thing in `data/` that the rules themselves read**, and it is why
 `internal/combat` imports that package at all. Everything else there is consumed by `screens`,
@@ -720,11 +785,13 @@ it worth *building toward*, and it leaves room for the effects to differ per car
 **Straights are dropped rather than invented** — the concepts have no natural order to be
 consecutive in.
 
-**Combo IDs are written in the file, and the hazard they carry is unchanged.** An expanded
-entry's ID is the base in `combos.json` plus the card's enum value, so **appending** an attack
-card is free and **inserting** one mid-enum still shifts every ID above it. Harmless only because
-**no profile exists yet**. `[?]` Resolve it before a profile ships — most likely by giving
-`ActionKind` an explicit stable ID for combo purposes.
+**Combo IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
+be the base in `combos.json` plus the card's enum value, so inserting a card mid-enum shifted every
+ID above it — an open question against profile discovery. One entry now covers every concept in the
+game and is named at match time, so there is **one ID per catalogue key** and it is written down
+rather than derived. Reordering the cards cannot renumber a combo a player has already found.
+
+The bands in the file are now larger than they need to be, which is harmless and left alone.
 
 ### Stagger
 
@@ -1011,7 +1078,7 @@ to `Session` when that exists.
 **8 floors × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
 shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 
-- **Every third fight is a floor boss.** Bosses are durable — high `Con`, and earth on them if
+- **Every third fight is a floor boss.** Bosses are durable — high `HP`, and earth on them if
   a boss should also blunt damage — with one strong attribute. They cannot spawn enemies, which
   implies normal enemies can, a mechanic recorded nowhere else and otherwise undefined.
 - **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of stairwell.**
@@ -1032,62 +1099,67 @@ are one screen or two, and in which order.
 
 ## Enemies
 
-**Enemies have a deck**, smaller than the player's. This answers an open question in `TODO.md`
-in the affirmative.
+**Every enemy carries its own deck, and that is what makes it itself** *(2026-08-16, owner's
+call)*. `data/enemies.json` holds a `Cards` array per record, written in the card language above:
+three attacks on the 0.5x / 1x / 2x rungs plus one non-attack, named to the creature. A Clear Slime
+oozes, engulfs, dissolves and congeals.
 
-**An affix transforms the deck rather than adding to it.** A brute has basic attacks; a *fire*
-brute on a fire floor has all fire attacks. The deck stays one list and the affix maps
-`basic → fire` across it. This is cheaper than the recorded "affixes become cards shuffled in".
+**This deleted `PlanStyle` and the four planners.** An opponent's behaviour used to be a string on
+its record picking one of `brute`, `swarm`, `warden` or `tactician`, and every enemy in the game
+drew from one shared list of `Attack` and `Heavy`. Three consequences, all now moot:
 
-- **Baseline decks are data**, alongside the `data/enemies.json` records — `data/enemy_cards.json` holds them.
-- **Affixes are renamed to match the elements**: `hot`/`cold`/`charged` become `fire`/`ice`/
-  `lightning`. Two vocabularies for the same things was a collision waiting to happen.
-- **`undying` is parked**, not deleted. Revisit later.
-- `[?]` Earth has no affix — either it joins the list or there is a reason it cannot be a floor
-  theme.
+- A Dragon and a Slime differed by a label rather than by anything the player could read.
+- **Three of the four styles were unreachable.** The warden asked for a Defend by name and the
+  tactician for a Prepare; the shared list held neither, so *every* enemy fought as a brute.
+- Affixes, which *transform* a deck, had almost nothing to transform.
 
-**`PlanGreedy` stops working as written.** It plans from a `Duelist` and a fixed set of four
-actions; with a deck it has to draw a hand and plan from that, which subjects the enemy to the
-same "what did I draw" pressure the player faces.
+An enemy holding four cheap copies of one card is a swarm. One holding four expensive ones is a
+brute. One holding shields is a warden. The player learns a deck.
 
-### Styles — implemented, and a step short of decks
+### One planner
 
-`PlanGreedy` is gone. `combat.PlanStyle` replaced it with four behaviours, each a pure
-function of a `Duelist`, chosen by a `PlanStyle` string on the data record:
+`PlanFor(duelist, hand)` **scores every affordable combination of the hand's attacks through the
+same `blowFor` the resolver uses**, and takes the best. It is exhaustive rather than greedy because
+a greedy pass cannot see that three Ooze forming a Flurry beat one Dissolve — a hand is at most
+seven cards, so this is 128 candidates.
 
-| Style | Plans | Answers it badly | Answers it well |
-|---|---|---|---|
-| **brute** | biggest attack affordable — few, heavy blows | racing it | defending |
-| **swarm** | as many attacks as the round allows | defending | racing it |
-| **warden** | Defend, then attacks — halves what it takes | — | overwhelming it |
-| **tactician** | banks with Prepare, then unloads a spike | defending | reading the tell |
+**Then it spends what the attacks did not want**, on defences first and the hand's own order after.
+That second pass is what keeps a non-attack card in an enemy deck from being dead content: a
+planner that only maximised damage would never raise a shield, and every `Congeal` in the roster
+would sit in a discard pile forever.
 
-**Why this exists.** With one enemy that spent its whole budget on two big swings, two
-defensive cards bought total immunity — a duel ran three rounds taking 0, 0 and 2 damage.
-That was not a fault in what a defence cost: it was priced against how many attacks arrived, so
-an opponent's *shape* is what the player is really buying answers to, and one shape means one
-answer.
+**`Copies` is the difficulty dial and it is sharper than it looks.** A turn resolves one blow and
+counted hands multiply it, so four copies of a 1 AP card in one turn is a Barrage at 5x. The shape
+the old roster treated as weakest is now the strongest, and authoring a deck is where that gets
+decided — deliberately, per enemy.
 
-**The styles now differ in what they build, not in how many blows they land.** With one attack
-per turn, "as many attacks as the round allows" is a swarm assembling a *hand* — four Jabs is a
-Jab Barrage, not four hits — and a brute's single Heavy forms nothing at all. That inverts the
-old reading: the swarm is now the dangerous shape and the brute is the one giving up a
-multiplier. **Nothing in the planners was rewritten for this**, so what each style is worth is
-an open measurement rather than a designed outcome.
+### Balance after the rework — measured, and not yet good
 
-- **A style is not a deck.** It is the behaviour that will eventually plan *from* one, so it
-  can stay when decks arrive rather than being replaced by them. Baseline decks and affixes
-  above are still unbuilt.
-- **The tactician's tell is the concealment scheme working.** A concealed row still shows its
-  category, so a round of `??? (prepare) ??? (prepare)` says a spike is coming without saying
-  what. That was not designed for this and turned out to be exactly what it needed.
-- **`tools/balance` plays every posture against every enemy** through the real `ResolveRound`
-  and prints who wins. It was written because the first roster shipped an unwinnable enemy:
-  Warden1 halving all incoming damage at 120 life was a 24-round grind against a fighter who
-  dies in 10. **Run it after touching any cost, stat line or planner.**
-- `[?]` The roster is four enemies fought in a fixed order, with the screen advancing on a
-  win. That is scaffolding standing in for the tower and it should be deleted when the tower
-  arrives, not extended.
+`tools/balance` plays every posture against every enemy through the real `ResolveRound`. As of
+2026-08-16, against a fighter of DMG 10 / 6 AP / 60 HP wearing all four rings:
+
+| | walls (beaten by no posture) |
+|---|---|
+| before this change | 12 of 96 |
+| enemy decks, HP left alone | 15 of 96 |
+| **enemy decks and HP doubled — what ships** | **44 of 96** |
+
+So **the per-enemy decks cost three walls and the HP doubling cost twenty-nine**. Floors 1–2 are
+untouched and everything from floor 5 up is a wall.
+
+**Forty-four walls is accepted, not a regression to fix** *(2026-08-16, owner's call)*. The
+objection was that the doubling overshot against a player whose own ceiling has not moved. The
+answer is that the ceiling is *supposed* to move, and rings are how: a duelist wearing nothing is
+not the duelist those floors are priced against, and the deep tower is meant to need a build. **The
+whole ascension is not expected to be winnable yet** and reading these numbers as though it should
+be is what would produce the wrong tuning.
+
+What this does mean is that **the wall count stops being a bug signal and becomes a progression
+signal**, which is a different thing to measure — and the thing to measure it with is a player who
+has been built up, not the bare fighter this tool uses. Two figures still deserve reading: a wall
+on a *shallow* floor is the old failure and is still a failure, and the tool being one draw rather
+than a distribution makes every number here softer than it looks.
+
 
 ### The count bound moved into the rules
 

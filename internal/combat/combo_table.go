@@ -2,7 +2,6 @@ package combat
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 )
@@ -191,22 +190,7 @@ func expandHand(r data.HandData) ([]Hand, error) {
 		return []Hand{base}, nil
 	}
 
-	var out []Hand
-	for _, a := range AllActions {
-		if a.Category() != CategoryAttack {
-			continue
-		}
-		h := base
-		// **The ID is the base plus the enum value**, which is what keeps a hand's number stable
-		// as cards are *appended* — and what still shifts every number above one that is
-		// *inserted* mid-enum. See MECHANICS.md; it is an open question against profile
-		// discovery, and moving the catalogue into a file has not closed it.
-		h.ID = base.ID + HandID(a)
-		h.Name = strings.ReplaceAll(base.Name, "{card}", a.String())
-		h.Pin, h.HasPin = a, true
-		out = append(out, h)
-	}
-	return out, nil
+	return []Hand{base}, nil
 }
 
 // handBase builds the hand every expansion of a record shares, leaving ID, Name and Pin to be

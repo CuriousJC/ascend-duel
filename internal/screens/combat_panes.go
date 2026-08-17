@@ -416,14 +416,14 @@ func (s *CombatScene) updateFeed(gs *state.GlobalState) {
 func (s *CombatScene) planningLines() []paneRow {
 	prompt := paneRow{prefix: "(press DUEL!)"}
 
-	blow, ok := s.previewAttack()
+	blow, turn, ok := s.previewBlow()
 	if !ok {
 		return []paneRow{prompt}
 	}
 
 	return []paneRow{
 		{
-			prefix: "COMBO! " + comboNameOf(blow.Hand, blow.Mix) +
+			prefix: "COMBO! " + comboNameOf(blow.Hand, blow.Mix, turn[blow.Lead].Card.Concept) +
 				" x" + multiplierText(blow.Multiplier),
 			swatch: comboSwatch,
 		},
@@ -471,9 +471,9 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 	act := func(side combat.Side, c combat.Card) {
 		rows = append(rows, paneRow{
 			prefix:  s.sideName(side) + " ",
-			verb:    verbFor(c.Action.Category()),
+			verb:    verbFor(c.Category()),
 			suffix:  " " + cardPhrase(c),
-			verbInk: verbInkFor(c.Action.Category()),
+			verbInk: verbInkFor(c.Category()),
 			swatch:  swatchFor(side),
 		})
 		cur, curSide = len(rows)-1, side
@@ -510,13 +510,13 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// **An attack card writes no line.** Its beat still passes — the engine announces
 			// every card so the table can light it and playback can count slots — but the
 			// sentence for the whole phase is the KindCombo below.
-			if e.Action.Category() == combat.CategoryAttack {
+			if combat.Plain(e.Action).Category() == combat.CategoryAttack {
 				break
 			}
-			act(e.Side, combat.Card{Action: e.Action, Element: e.Element})
+			act(e.Side, combat.Card{Concept: e.Action, Element: e.Element})
 
 		case combat.KindStaggered:
-			announce(fmt.Sprintf("%s is staggered - %v is lost", s.sideName(e.Side), e.Action),
+			announce(fmt.Sprintf("%s is staggered - %v is lost", s.sideName(e.Side), combat.ConceptOf(e.Action).Label),
 				swatchFor(e.Side))
 
 		case combat.KindMissed:
@@ -543,7 +543,7 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// the ordinary sentence for the card it led with, which the engine names on the
 			// event for exactly this.
 			if e.Hand == combat.HandNone {
-				act(e.Side, combat.Card{Action: e.Action, Element: e.Element})
+				act(e.Side, combat.Card{Concept: e.Action, Element: e.Element})
 				break
 			}
 			blow(e)
@@ -561,7 +561,7 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			// The card that answered the blow is named rather than assumed. Defend is the only one
 			// that can reach here today, and the sentence is written off the event anyway — a
 			// second card that reduced damage would read correctly without touching this.
-			attach(fmt.Sprintf("halved by a %v", lower(e.Action.String())))
+			attach(fmt.Sprintf("halved by a %v", lower(combat.ConceptOf(e.Action).Label)))
 
 		case combat.KindDamage:
 			// **Damage whose side does not match the line it is attaching to is damage running the
@@ -629,80 +629,94 @@ func swatchFor(side combat.Side) color.RGBA {
 // **The prose is here and not in `internal/combat`.** The rules package names actions; it does
 // not describe them. A card renamed changes `String()`; a card that reads badly in a sentence
 // changes only this file.
-var actionPhrases = map[combat.ActionKind]string{
-	combat.Jab:    "with a jab",
-	combat.Thrust: "with a thrust",
-	combat.Lunge:  "with a lunge",
+// **Every card's prose is generated from its verb, not written down** *(2026-08-16)*. There were
+// two hand-maintained tables here, one string per concept, which worked while there were fourteen
+// concepts. There are hundreds now — every enemy carries its own cards — so a table would be a
+// list nobody could keep complete, and a card with no entry read as though nothing had happened.
+//
+// **The wording still lives here and not in `internal/combat`.** The rules package names cards; it
+// does not describe them. What changed is that the description is now a function of the rule
+// rather than a lookup beside it, which is the only version that can cover a deck written in JSON.
 
-	combat.Cut:    "with a cut",
-	combat.Slash:  "with a slash",
-	combat.Cleave: "with a cleave",
-
-	combat.Bash:   "with a bash",
-	combat.Strike: "with a strike",
-	combat.Smash:  "with a smash",
-
-	combat.Prepare: "and gathers their strength",
-	combat.Plan:    "and thinks ahead",
-	combat.Defend:  "behind a defence",
-
-	// The opponent's two. Deliberately plainer than the player's nine: an enemy card is a blow
-	// and nothing more until enemy decks get a vocabulary of their own.
-	combat.Attack: "with a blow",
-	combat.Heavy:  "with a heavy blow",
+// attackVerb is the word a family hits with. **The player's three families are told apart by it** —
+// nine attack cards on one ladder, and a card whose text began "Deal" on all nine would leave the
+// corner letter carrying the distinction alone. An enemy card belongs to no family and simply hits.
+func attackVerb(f combat.Family) string {
+	switch f {
+	case combat.FamilyStab:
+		return "Stabs"
+	case combat.FamilySlash:
+		return "Slashes"
+	case combat.FamilyCrush:
+		return "Crushes"
+	default:
+		return "Hits"
+	}
 }
 
-// **What each card does, in words, printed on its face.** A second table beside the one above
-// and deliberately not the same strings: `actionPhrases` is prose for a *sentence about a
-// round* — "attacks with a heavy strike" — and this is a rules description read while
-// deciding whether to play the thing.
+// multiplierText writes a damage multiplier the way a card says it: 0.5x, 1x, 1.5x, 2x.
 //
-// **The rule it describes lives in `internal/combat` and the wording lives here**, the same
-// split actionPhrases is built on: the rules package names actions and must not grow UI
-// strings. `internal/cards` knows how to set the text on a card and not what any card does.
+// **A multiplier rather than a word** — "0.5x" instead of "half" — because a multiplier is what
+// the rule actually is, and because the column is about a dozen characters wide.
+func multiplierText(amount int) string {
+	whole, frac := amount/100, amount%100
+	if frac == 0 {
+		return strconv.Itoa(whole) + "x"
+	}
+	if frac%10 == 0 {
+		return fmt.Sprintf("%d.%dx", whole, frac/10)
+	}
+	return fmt.Sprintf("%d.%02dx", whole, frac)
+}
+
+// cardEffect is what a card does, in words, printed on its face.
 //
 // **Verb first, on every card.** They are read in a row while the player is counting action
 // points — the first word saying what the card *does to the round* is what makes eight of them
-// scannable. "0.5x" and "1x" rather than "half" and "full" because a multiplier is what the
-// rule actually is, and **"DMG" rather than "damage"** because the column is about a dozen
-// characters wide and the duelist card already labels the figure that way.
+// scannable. **"DMG" rather than "damage"** because the column is about a dozen characters wide
+// and the duelist card already labels the figure that way.
 //
-// A concept with no entry draws nothing rather than a placeholder; TestEveryConceptHasEffectText
-// is what stops that being how a card ships.
-// **The attack text names the family's verb rather than saying "Deal"** *(2026-08-15)*. Nine
-// attack cards on one ladder are told apart by which family they are in, and a card whose text
-// began "Deal" on all nine would leave the corner letter carrying that alone.
-var cardEffects = map[combat.ActionKind]string{
-	combat.Jab:    "Stabs for 0.5x DMG",
-	combat.Thrust: "Stabs for 1x DMG",
-	combat.Lunge:  "Stabs for 2x DMG",
-
-	combat.Cut:    "Slashes for 0.5x DMG",
-	combat.Slash:  "Slashes for 1x DMG",
-	combat.Cleave: "Slashes for 2x DMG",
-
-	combat.Bash:   "Crushes for 0.5x DMG",
-	combat.Strike: "Crushes for 1x DMG",
-	combat.Smash:  "Crushes for 2x DMG",
-
-	combat.Prepare: "Bank 2 AP for next round",
-	combat.Plan:    "Draw 2 cards next round",
-	combat.Defend:  "Halve damage this turn",
-
-	// The opponent's two. They are never drawn face up in the hand, but the table lays an enemy's
-	// queue out as cards, so they need text like anything else with a face.
-	combat.Attack: "Hits for 1x DMG",
-	combat.Heavy:  "Hits for 2x DMG",
+// It is deliberately not the same wording as cardPhrase: that is prose for a *sentence about a
+// round* — "attacks with a heavy strike" — and this is a rules description read while deciding
+// whether to play the thing.
+func cardEffect(id combat.ConceptID) string {
+	c := combat.ConceptOf(id)
+	switch c.Verb {
+	case combat.VerbDefend:
+		return "Cuts damage by " + strconv.Itoa(c.Amount) + "%"
+	case combat.VerbBank:
+		return "Bank " + strconv.Itoa(c.Amount) + " AP for next round"
+	case combat.VerbDraw:
+		return "Draw " + strconv.Itoa(c.Amount) + " cards next round"
+	default:
+		if c.Target == combat.TargetSelf {
+			return "Costs you " + multiplierText(c.Amount) + " DMG"
+		}
+		return attackVerb(c.Family) + " for " + multiplierText(c.Amount) + " DMG"
+	}
 }
 
-// actionPhrase is what follows the verb. A card with no phrase falls back to naming itself
-// rather than producing a sentence with a hole in it — a new card reads awkwardly until it is
-// given a line here, which is a better failure than reading as though nothing happened.
-func actionPhrase(a combat.ActionKind) string {
-	if p, ok := actionPhrases[a]; ok {
-		return p
+// actionPhrase is what follows the verb in a Resolution line, and every phrase carries an article
+// so cardPhrase can slot an element into it.
+//
+// **The card's own label is the noun.** That is what lets one function narrate four hundred
+// concepts: "with a fire strike" for the player, "behind a congeal" for a slime.
+func actionPhrase(id combat.ConceptID) string {
+	c := combat.ConceptOf(id)
+	name := lower(c.Label)
+	switch c.Verb {
+	case combat.VerbDefend:
+		return "behind a " + name
+	case combat.VerbBank:
+		return "and gathers with a " + name
+	case combat.VerbDraw:
+		return "and looks ahead with a " + name
+	default:
+		if c.Target == combat.TargetSelf {
+			return "with a " + name + ", at their own cost"
+		}
+		return "with a " + name
 	}
-	return "with " + lower(a.String())
 }
 
 // cardPhrase is actionPhrase with the element worked into it: "with a fire strike".
@@ -717,7 +731,7 @@ func actionPhrase(a combat.ActionKind) string {
 // currently does nothing mechanical, so a line that reads slightly like a note is honest about
 // what it is — and it is better than a sentence bent around a word that does not fit it.
 func cardPhrase(c combat.Card) string {
-	phrase := actionPhrase(c.Action)
+	phrase := actionPhrase(c.Concept)
 	if c.Element == combat.Basic {
 		return phrase
 	}
@@ -1026,11 +1040,11 @@ func (s *CombatScene) actionFlowRows(fighter, enemy []combat.Card, concealEnemy 
 
 	rows := make([]paneRow, 0, len(order))
 	for i, slot := range order {
-		label, swatch := slot.Card.Action.String(), playerSwatch
+		label, swatch := slot.Card.Label(), playerSwatch
 		if slot.Side == combat.SideB {
 			swatch = enemySwatch
 			if concealEnemy {
-				label = concealedLabel(slot.Card.Action)
+				label = concealedLabel(slot.Card)
 			}
 		}
 
@@ -1052,8 +1066,8 @@ func (s *CombatScene) actionFlowRows(fighter, enemy []combat.Card, concealEnemy 
 // This is the first cut at graded reveal rather than the finished scheme. What else
 // leaks per action — whether it damages, whether it applies a status — is still open;
 // see TODO.md.
-func concealedLabel(a combat.ActionKind) string {
-	return fmt.Sprintf("??? (%s)", a.Category())
+func concealedLabel(c combat.Card) string {
+	return fmt.Sprintf("??? (%s)", c.Category())
 }
 
 // comboName is what the attack phase formed, said in words: the element makeup in front of the
@@ -1071,17 +1085,23 @@ func comboName(e combat.Event) string {
 		return "attack"
 	}
 	mix, _ := combat.MixByID(e.Mix)
-	return comboNameOf(hand, mix)
+	return comboNameOf(hand, mix, e.Action)
 }
 
 // comboNameOf is the same name built from the hand and mix themselves, for the preview the hand
 // row draws while the player is still choosing. **One namer, two callers**: a preview that named
 // a combo differently from the feed that reports it would be two vocabularies for one thing.
-func comboNameOf(hand combat.Hand, mix combat.Mix) string {
+//
+// **`lead` is the concept the hand is named after** *(2026-08-16)*. A catalogue entry holds a
+// template — `{card} Pair` — because one entry covers every card in the game, so a name that was
+// not filled in prints the template at the player. `combat.HandName` is the one place that
+// substitution happens.
+func comboNameOf(hand combat.Hand, mix combat.Mix, lead combat.ConceptID) string {
+	name := combat.HandName(hand, lead)
 	if mix.Colours > 0 {
-		return mix.Name + " " + hand.Name
+		return mix.Name + " " + name
 	}
-	return hand.Name
+	return name
 }
 
 // comboMath is the blow written out as the sum it is: `20 + 10 x 3.5 = 55`.
@@ -1099,12 +1119,16 @@ func comboNameOf(hand combat.Hand, mix combat.Mix) string {
 // damage that follows on the same line is often smaller. That gap is what a defence is worth,
 // and it is only legible because both figures are shown.
 func comboMath(e combat.Event) string {
-	return fmt.Sprintf("(%d + %d x %s = %d)", e.Base, e.Swing, multiplierText(e.Multiplier), e.Amount)
+	return fmt.Sprintf("(%d + %d x %s = %d)", e.Base, e.Swing, comboMultiplierText(e.Multiplier), e.Amount)
 }
 
-// multiplierText writes a percentage multiplier the way the design does: 350 as `3.5`, 200 as
-// `2`, 1000 as `10`. Trailing zeros are dropped rather than padded to two places, because
-// `x 10.00` reads as a precision the game does not have.
-func multiplierText(pct int) string {
+// comboMultiplierText writes a *combo's* percentage multiplier the way the design does: 350 as
+// `3.5`, 200 as `2`, 1000 as `10`. Trailing zeros are dropped rather than padded to two places,
+// because `x 10.00` reads as a precision the game does not have.
+//
+// It is not `multiplierText`, which writes a *card's* multiplier and keeps its `x`. The two read
+// almost the same and are printed in different sentences: this one lands inside the arithmetic
+// line, where the `x` is already there as an operator.
+func comboMultiplierText(pct int) string {
 	return strconv.FormatFloat(float64(pct)/100, 'f', -1, 64)
 }

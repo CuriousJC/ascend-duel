@@ -21,12 +21,12 @@ func TestDeckRowRunsFamilyByFamily(t *testing.T) {
 	//
 	// Shuffled into a wrong order first so the test exercises the sort and not the input.
 	var row []pileEntry
-	seenConcept := map[combat.ActionKind]bool{}
+	seenConcept := map[combat.ConceptID]bool{}
 	for _, e := range startingDeck {
-		if seenConcept[e.card.Action] {
+		if seenConcept[e.card.Concept] {
 			continue
 		}
-		seenConcept[e.card.Action] = true
+		seenConcept[e.card.Concept] = true
 		row = append(row, pileEntry{e.card, true})
 	}
 	if len(row) == 0 {
@@ -40,16 +40,16 @@ func TestDeckRowRunsFamilyByFamily(t *testing.T) {
 
 	lastRank, lastCost := -1, -1
 	for _, e := range row {
-		rank := familyRank(e.card.Action.Family())
-		cost := e.card.Action.Cost()
+		rank := familyRank(e.card.Family())
+		cost := e.card.Cost()
 
 		if rank < lastRank {
 			t.Fatalf("%s (%s) came after a later family — the families are out of order",
-				e.card.Action, e.card.Action.Family())
+				e.card.Label(), e.card.Family())
 		}
 		if rank == lastRank && cost < lastCost {
 			t.Errorf("%s costs %d and follows a %d-cost card in the same family",
-				e.card.Action, cost, lastCost)
+				e.card.Label(), cost, lastCost)
 		}
 		if rank != lastRank {
 			lastCost = -1
@@ -61,7 +61,7 @@ func TestDeckRowRunsFamilyByFamily(t *testing.T) {
 	// that happens to hold one.
 	seen := map[int]bool{}
 	for _, e := range row {
-		seen[familyRank(e.card.Action.Family())] = true
+		seen[familyRank(e.card.Family())] = true
 	}
 	if len(seen) != len(combat.Families()) {
 		t.Errorf("the row holds %d families, want all %d", len(seen), len(combat.Families()))

@@ -725,7 +725,7 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		mine, theirs = &s.enemyFiringSeats, &s.firingSeats
 	}
 
-	if e.Action.Category() != combat.CategoryAttack {
+	if combat.Plain(e.Action).Category() != combat.CategoryAttack {
 		*mine = []int{seat}
 	} else {
 		*mine = attackSeats(order, side)

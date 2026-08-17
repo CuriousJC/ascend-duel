@@ -19,7 +19,7 @@ import (
 func flightScene(hand []paletteCard) *CombatScene {
 	s := &CombatScene{hand: hand}
 	for i := 0; i < 30; i++ {
-		s.deck = append(s.deck, actionCard{Action: combat.Strike, Element: combat.Fire})
+		s.deck = append(s.deck, actionCard{Concept: combat.Strike, Element: combat.Fire})
 	}
 	return s
 }
@@ -28,7 +28,7 @@ func selectedHand(n, selected int) []paletteCard {
 	out := make([]paletteCard, 0, n)
 	for i := 0; i < n; i++ {
 		out = append(out, paletteCard{
-			actionCard: actionCard{Action: combat.Jab, Element: combat.Ice},
+			actionCard: actionCard{Concept: combat.Jab, Element: combat.Ice},
 			selected:   i < selected,
 		})
 	}

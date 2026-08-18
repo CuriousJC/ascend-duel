@@ -17,18 +17,17 @@ import (
 // hand fires.
 //
 // **It exists because the sum was the one number on this screen nobody could source**
-// *(2026-08-18)*. The Resolution feed has always printed it — `(40 x 1.5 = 60)` — in sixteen-point
-// text on the third line of a three-line box, beside the sentence it belongs to. That is a
-// record, and a record is the right thing for the feed to be; what it is not is an *explanation*.
-// A player watching a blow land could see the total and could not see which card paid for which
-// part of it, so the multiplier read as a number the game had decided rather than one they had
-// built. The fix is not a better sentence: it is showing the figures leaving the cards.
+// *(2026-08-18)*. The Resolution feed printed it — `(40 x 1.5 = 60)` — in sixteen-point text on
+// the third line of a three-line box, beside the sentence it belonged to. That is a record, and a
+// record is the right thing for a feed to be; what it is not is an *explanation*. A player
+// watching a blow land could see the total and could not see which card paid for which part of
+// it, so the multiplier read as a number the game had decided rather than one they had built. The
+// fix is not a better sentence: it is showing the figures leaving the cards.
 //
-// **The dialog says nothing the feed does not.** Every figure in it comes off the same
-// `KindCombo` event the feed's line does — `ComboAmounts`, `Multiplier`, `Amount` — and nothing
-// here multiplies, adds or rounds. That is the rule to hold: this is a second *drawing* of one
-// event, never a second arithmetic. If it ever needs a figure the event does not carry, the field
-// goes on the event.
+// **It says nothing the event does not.** Every figure in it comes off the `KindCombo` event —
+// `ComboAmounts`, `Multiplier`, `Amount` — and nothing here multiplies, adds or rounds. That is
+// the rule to hold: this is a second *drawing* of one event, never a second arithmetic. If it
+// ever needs a figure the event does not carry, the field goes on the event.
 //
 // **It may not change an outcome**, the same constraint as playback speed, the debug flags,
 // `internal/trace` and every card in flight. What it does change is *pacing* — playback stops
@@ -36,11 +35,11 @@ import (
 // cannot fit inside. A round therefore takes longer with a combo in it, which is the point: the
 // blow is the moment of the round and it used to go past in one and a quarter seconds.
 //
-// **It draws over the Resolution feed**, in the feed's own collapsed band, and clears itself
-// before the damage lands. The band was chosen because it is where the player is already looking
-// for what happened, and because it is the only place on the screen with room for forty-point
-// numerals. What it costs is three lines of the record for about three seconds — which the feed
-// still holds and redraws the moment the box is gone.
+// **It draws across the band above the hand**, which the Resolution feed used to hold and left on
+// 2026-08-18, and clears itself before the damage lands. That band was chosen while the feed was
+// still in it, because it is where the player was already looking for what happened and because
+// it is the only place on the screen with room for forty-point numerals. **The feed leaving costs
+// this nothing and is why the band is still measured the way it is** — see comboMathRect.
 
 const (
 	// The script's beats, in ticks at 60 a second.
@@ -272,29 +271,32 @@ func handShout(name string) string { return upper(name) + "!" }
 // CLAUDE.md's colour section describes, and one this screen has fallen into before.
 func mathOperatorInk() color.RGBA { return systems.ColorToward(groundInk, screenGround, 45) }
 
-// comboMathRect is the band the sum is written in: the Resolution feed's rows, at the table's
+// comboMathRect is the band the sum is written in: the strip above the hand, at the table's
 // width.
 //
-// **It takes its height from the feed and its width from the table, and neither is an accident.**
+// **It takes its height from the band and its width from the table, and neither is an accident.**
 //
-// The vertical band is the feed's *collapsed* box, computed here rather than taken from
-// `feedRect`. A player holding the feed open grows that box upward, and a dialog that moved with
-// it would re-lay a line of figures out from under a reader mid-flight — so the box claims the
-// band the feed occupies at rest, whatever the feed is currently doing.
+// The vertical band is `mathBandHeight`, which is the Resolution feed's collapsed box — the size
+// it was when the sum was laid out and looked at against it. The feed itself is gone
+// *(2026-08-18)*, and the constant deliberately survived it: the arithmetic was tuned against
+// that depth, so changing the number is re-laying out the sum rather than tidying up after a
+// deleted pane. While the feed was still there this was computed rather than read off `feedRect`
+// for a related reason — a player holding the box open grew it upward, and a dialog that moved
+// with it would have re-laid a line of figures out from under a reader mid-flight.
 //
-// The width is deliberately **not** the feed's. `feedRect` spans `handBand`, which is a function
-// of how many cards are in the hand — and that is fine for the feed, whose rows are left-aligned
-// sentences that simply have less room, but wrong for a centred line of large figures that does
-// not wrap and cannot shrink. A two-card hand gives a band around 330px against a widest sum of
-// roughly 640, so the arithmetic would have run off both ends of it in exactly the rounds a duel
-// is decided in. `TestTheWidestSumFitsItsBand` is what found that and what holds it.
+// The width was deliberately **not** the feed's. `feedRect` spanned `handBand`, which is a
+// function of how many cards are in the hand — fine for left-aligned sentences that simply have
+// less room, wrong for a centred line of large figures that does not wrap and cannot shrink. A
+// two-card hand gives a band around 330px against a widest sum of roughly 640, so the arithmetic
+// would have run off both ends of it in exactly the rounds a duel is decided in.
+// `TestTheWidestSumFitsItsBand` is what found that and what holds it. **The trap is still live
+// anywhere else that borrows `handBand` for something that is not the hand.**
 //
 // The table's insets are the right width because the box is drawn on the bare ground rather than
-// inside a pane — it is an overlay at the same width as the two rows of cards it is about, not a
-// pane whose edges have to line up with another pane's.
+// inside a pane — it is an overlay at the same width as the two rows of cards it is about.
 func (s *CombatScene) comboMathRect(gs *state.GlobalState) image.Rectangle {
-	bottom := gs.PctY(handTopPct) - feedGapAboveCards
-	return image.Rect(tableInset, bottom-feedHeight(), gs.ScreenWidth-tableInset, bottom)
+	bottom := gs.PctY(handTopPct) - mathBandGapAboveCards
+	return image.Rect(tableInset, bottom-mathBandHeight, gs.ScreenWidth-tableInset, bottom)
 }
 
 // layOutMath measures every item and centres the finished line in the band.

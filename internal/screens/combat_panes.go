@@ -1,12 +1,14 @@
 package screens
 
-// The two read-only panes — Action Flow and Resolution — their placements and colours, the
-// row model they are both drawn from, and the prose that turns an event into a sentence.
+// The pane machinery — the row model, the placements and colours, and the prose that turns an
+// event into a sentence.
 //
-// Split out of combat.go on 2026-08-07. **The prose lives here and not in internal/combat**
-// on purpose: the rules package names actions, it does not describe them. Everything in this
-// file is presentation over a log the engine has already finished deciding, which is what
-// makes it structurally impossible for a pane to disagree with the round it reports.
+// **Nothing in this file is drawn on the combat screen as of 2026-08-18.** Action Flow is built
+// and unwired, and the Resolution feed is gone; what draws these rows now is the fight log — see
+// combat_log.go. Split out of combat.go on 2026-08-07. **The prose lives here and not in
+// internal/combat** on purpose: the rules package names actions, it does not describe them.
+// Everything here is presentation over a log the engine has already finished deciding, which is
+// what makes it structurally impossible for a panel to disagree with the round it reports.
 
 import (
 	"fmt"
@@ -44,52 +46,25 @@ const (
 	paneTextRowHeight = 22
 )
 
-// **Resolution is a three-line feed above the hand now** *(2026-08-11)*, in the slot the
-// caption box used to hold, and it grows upward while it is long-pressed.
+// **The band above the hand, which the Resolution feed used to occupy** *(vacated 2026-08-18)*.
+// Nothing is drawn there at rest now; what claims it is the combo dialog, which writes the
+// blow's arithmetic across it, and `drawPlannedHand`, which writes the name of the hand the
+// selection has already formed in the same place. See combat_mathbox.go.
 //
-// The pane it replaced was 15–78% wide and a third of the screen tall, which bought a whole
-// round on screen at once at a cost the screen could not keep paying — it was the largest
-// thing on it, and what it mostly held was blank rows. The feed is the opposite trade: the
-// last few things that happened, where the eye already is, and the rest one press away.
-//
-// **Older lines scroll off silently, which suspends a rule this pane wrote.** "Never hide
-// part of what you claim to show" is why the deck overlay draws `+N more not shown` and why
-// this pane drew `... N earlier`. Three rows cannot afford a line of bookkeeping out of
-// three, and the long press is what makes the omission honest — the full account is a press
-// away rather than gone. **The expanded view keeps the marker**, because there it is a line
-// out of nineteen and it is the only place the count can still be told.
+// The two constants stay because the band does: `tableRowTop` keeps the played cards clear of
+// it, and `comboMathRect` is measured from it. Their **values are the feed's** — the sum was
+// laid out and looked at against a box of exactly this height, so keeping the number is what
+// stops removing the feed from quietly re-laying out the arithmetic.
 const (
-	// feedRowInset is the gap from the box's edge to the first row, and again below the
-	// last. It stands in for paneFirstRow, which reserves room for a title the feed has
-	// no space for.
-	feedRowInset = 8
+	// mathBandHeight is how deep it is: what the feed's collapsed three rows came to.
+	mathBandHeight = 82
 
-	// feedRows is how many lines the box shows when it is not being held. Everything about
-	// the box's height is derived from it.
-	feedRows = 3
-
-	// feedGapAboveCards is how far the box's bottom edge sits above the resting hand row.
+	// mathBandGapAboveCards is how far its bottom edge sits above the resting hand row.
 	//
-	// **A selected card lifts by selectedNudge and does overlap it**, by 21 pixels, and that
-	// is accepted rather than overlooked: the box is measured against where the cards live,
-	// not against where one of them goes when it is picked. What it costs is that the box's
-	// bottom strip cannot take a long press — see updateFeed, which ignores a press inside
-	// handZone so a lifted card is still the thing under the cursor there.
-	feedGapAboveCards = 5
-
-	// feedExpandTopPct is how far up a held box grows: the top of the band the full-height
-	// pane used to occupy. It expands into the space that pane vacated, which is what makes
-	// the room free.
-	feedExpandTopPct = paneTopPct
-
-	// longPressTicks is how long the button has to be held before it counts as a long press.
-	// A third of a second at 60 TPS.
-	//
-	// **This is the game's first long press.** `CLAUDE.md` has had it in the input vocabulary
-	// since the vocabulary was written — left click, drag and drop, long press — and nothing
-	// had used it. If a second one arrives this constant and the counter beside it are what
-	// should be lifted into a shared widget rather than copied.
-	longPressTicks = 20
+	// **A selected card lifts by selectedNudge and does overlap it**, by 21 pixels, and that is
+	// accepted rather than overlooked: the band is measured against where the cards live, not
+	// against where one of them goes when it is picked.
+	mathBandGapAboveCards = 5
 )
 
 // panePlacement is one pane's horizontal slot, label and identifying colour. The
@@ -154,29 +129,9 @@ var (
 		rowHeight: paneRowHeight,
 		firstRow:  paneFirstRow,
 	}
-
-	// **Resolution keeps its colours and loses its column** *(2026-08-11)*. The left and
-	// right percentages are unused — the feed takes its width from the hand, like the AP bar
-	// and the box it replaced — and the title is dropped, because a heading in a three-line
-	// box costs a line and the box is under the cards it is reporting on, which says what it
-	// is more directly than a word would.
-	//
-	// **The off-white ground survives the move deliberately**, even though the box it took
-	// over from was a dim pink one. The verbs are coloured, and a light ground is what makes
-	// three saturated inks legible — that was the whole reason this pane went off-white on
-	// 2026-08-07. `paneEdge` still names it, so the pink identity is in the border.
-	resolutionPane = panePlacement{
-		title:     "",
-		color:     paneEdge,
-		fill:      color.RGBA{R: 234, G: 230, B: 224, A: 255},
-		ink:       color.RGBA{R: 34, G: 32, B: 38, A: 255},
-		nowInk:    color.RGBA{R: 178, G: 22, B: 106, A: 255},
-		rowHeight: paneTextRowHeight,
-		firstRow:  feedRowInset,
-	}
 )
 
-// paneEdge is the pink both panes are bordered and named in. Still a placeholder palette.
+// paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
 var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
 // comboSwatch marks a line that is not one side acting but something the round did — a combo
@@ -234,206 +189,32 @@ func (s *CombatScene) drawActionFlow(gs *state.GlobalState, screen *ebiten.Image
 		s.actionFlowRows(s.fighterActions, s.enemyActions, s.concealEnemy(gs)))
 }
 
-// drawResolution shows what the round actually did, accumulating as it plays back.
-func (s *CombatScene) drawResolution(gs *state.GlobalState, screen *ebiten.Image) {
-	r := s.feedRect(gs)
-	expanded := s.feedExpanded()
-
-	rows, hidden := s.resolutionLines(gs, feedCapacity(r), expanded)
-	s.drawPane(gs, screen, resolutionPane, r, rows)
-
-	if !expanded && hidden > 0 {
-		drawMoreAbove(screen, r)
-	}
-}
-
-// The little upward arrow in the box's top-right corner: **there are lines above this one**.
+// logRows writes the sentences for a run of events: one line per thing that happened, in the
+// order the resolver produced them.
 //
-// It is drawn only when something is actually scrolled off, so it is a report and not a
-// decoration. That has a cost worth stating: on a short round nothing advertises the long
-// press, and the long press is the only way to reach what the arrow points at. The
-// alternative — always drawing it — makes the gesture discoverable and makes the arrow lie
-// on every round that fits, which is the trade the deck overlay's `+N more not shown` and
-// this pane's own `... N earlier` both already decided the same way.
-//
-// `attentionYellow` is the screen's one "look here" colour, which is exactly what this is.
-// **It is drawn twice, black then yellow.** The box's ground is off-white and the arrow is
-// a small saturated yellow, which is the one pairing `attentionYellow` is weak at — the deck
-// stack wears the same colour against a dark screen and reads instantly. An outline is what
-// buys it back without introducing a second "look here" colour.
-const (
-	moreArrowWidth  = 14
-	moreArrowHeight = 8
-	moreArrowInset  = 12 // from the box's top and right edges
-	moreArrowBorder = 2
-)
-
-func drawMoreAbove(screen *ebiten.Image, box image.Rectangle) {
-	cx := float32(box.Max.X-moreArrowInset) - moreArrowWidth/2
-	top := float32(box.Min.Y + moreArrowInset)
-
-	outline := color.RGBA{A: 255}
-
-	// The outline is the same triangle grown by the border on every side: wider at the base
-	// by twice the border, taller by it, and started that much higher so the point keeps its
-	// margin. Growing it rather than stroking it means there is only one shape to be wrong.
-	fillArrowUp(screen, cx, top-moreArrowBorder,
-		moreArrowWidth+2*moreArrowBorder, moreArrowHeight+moreArrowBorder, outline)
-
-	// **The base needs its own bar** *(2026-08-11)*. Growing the triangle cannot supply one:
-	// a taller triangle is also a wider one, so its bottom row lands on the same scanline as
-	// the yellow base rather than under it, and the arrow drew as two black slopes with an
-	// open bottom — a caret, not a triangle. This is the third side, at the grown width so it
-	// ends flush with them.
-	vector.DrawFilledRect(screen,
-		cx-(moreArrowWidth+2*moreArrowBorder)/2, top+moreArrowHeight,
-		moreArrowWidth+2*moreArrowBorder, moreArrowBorder, outline, false)
-
-	fillArrowUp(screen, cx, top, moreArrowWidth, moreArrowHeight, attentionYellow)
-}
-
-// fillArrowUp draws an upward triangle centred on cx, in scanlines rather than a path — the
-// same hand-rolled idiom as everything else on this screen. The point is at the top because
-// that is the direction the hidden lines are in.
-func fillArrowUp(screen *ebiten.Image, cx, top, w, h float32, c color.RGBA) {
-	for i := float32(0); i < h; i++ {
-		rowW := w * (i + 1) / h
-		vector.DrawFilledRect(screen, cx-rowW/2, top+i, rowW, 1, c, false)
-	}
-}
-
-// feedRect is the box Resolution is drawn in: hand width, bottom edge a few pixels above the
-// cards, and either three rows tall or grown up to the vacated pane band while held.
-//
-// **The bottom edge is the fixed one.** It is anchored to the hand — the thing the box is
-// reporting on — so expanding moves the top and nothing the eye is already resting on
-// shifts. A box that grew downward would push into the cards; one that grew both ways would
-// move every line already on screen.
-func (s *CombatScene) feedRect(gs *state.GlobalState) image.Rectangle {
-	band := handBand(gs, s.laidOutCount())
-	bottom := gs.PctY(handTopPct) - feedGapAboveCards
-
-	top := bottom - feedHeight()
-	if s.feedExpanded() {
-		top = gs.PctY(feedExpandTopPct)
-	}
-	return image.Rect(band.Min.X, top, band.Max.X, bottom)
-}
-
-// feedHeight is the collapsed box: the rows it holds, plus a margin above the first and
-// below the last. Derived from feedRows so the two cannot disagree.
-func feedHeight() int {
-	return 2*feedRowInset + feedRows*paneTextRowHeight
-}
-
-// feedCapacity is how many lines fit in a box of this size. Derived rather than written down,
-// so neither the collapsed height nor the expanded one can leave a constant behind claiming a
-// capacity the box does not have.
-func feedCapacity(r image.Rectangle) int {
-	n := (r.Dy() - 2*feedRowInset) / paneTextRowHeight
-	if n < 1 {
-		return 1
-	}
-	return n
-}
-
-// feedExpanded reports whether the box is currently grown. It is derived from how long the
-// button has been held rather than stored as a mode, for the same reason planning() is
-// derived: two things that can disagree about whether the box is open is a bug waiting to be
-// written.
-func (s *CombatScene) feedExpanded() bool {
-	return s.feedPressTicks >= longPressTicks
-}
-
-// updateFeed runs the long press: hold the mouse down on the box and it grows, release and it
-// snaps back.
-//
-// **Held rather than latched, deliberately.** A latched panel is a second dialog, and the one
-// dialog in the game needs a bright yellow ring around its only exit to stop being a trap. A
-// press that ends when the button comes up has nothing to escape from.
-//
-// It ignores a press inside handZone. A selected card lifts into the box's bottom 21 pixels,
-// and the card is what the player means there — see feedGapAboveCards. The action box reads
-// that press on the same tick, so without this both would fire.
-func (s *CombatScene) updateFeed(gs *state.GlobalState) {
-	at := image.Pt(gs.MouseX, gs.MouseY)
-
-	// The overlay is a dialog: nothing behind it responds, and that includes this.
-	held := !s.showDeck &&
-		ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) &&
-		!at.In(handZone(gs))
-
-	// Once it is open the press keeps it open wherever the cursor has wandered to — the box
-	// grew out from under it. Starting one still requires the cursor to be on the collapsed
-	// box.
-	if held && (s.feedExpanded() || at.In(s.feedRect(gs))) {
-		s.feedPressTicks++
-		return
-	}
-	s.feedPressTicks = 0
-}
-
-// resolutionLines turns the event log into one line per slot, an action and what it did,
-// **built only from events playback has already reached**. That is what makes the pane a
-// record rather than a spoiler: it says exactly as much as the player has been shown.
-//
-// **One line per slot, not one per event.** A busy round is 25-30 events and the pane holds a
-// dozen lines, so drawing the log verbatim would need either a scrollback — and there is no
-// scroll gesture in the input vocabulary, no wheel convention and no keyboard — or a pane that
-// only ever showed the tail, which is the opposite of being able to read the round afterwards.
-// Merging an action with its outcome is presentation of events the engine already decided; it
-// computes nothing, so the pane still cannot disagree with the round.
-//
-// Combos and chills get lines of their own. They are not something a card did, they are
-// something that happened *to* the round, and folding a combo into the line of the card that
-// happened to start it would bury the one thing this pane was added to show.
+// **One line per slot, not one per event.** A busy round is 25-30 events, so writing the log
+// verbatim would be a panel nobody could read. Merging an action with its outcome is
+// presentation of events the engine already decided; it computes nothing, so what is written
+// here still cannot disagree with what the round did. **Combos and chills get lines of their
+// own**, because they are not something a card did — folding a combo into the line of the card
+// that happened to start it would bury the one thing worth reading.
 //
 // **The attack phase is one line, and it is the combo's** *(2026-08-14)*. Prepares and defends
 // still write a line each; the attack cards write none. A turn lands one blow, so five sentences
-// saying "Duelist attacks with an earth strike" described a round that does not happen — and the
-// line that matters, what the five cards came to, was the sixth. The combo line says who, what
-// they formed and the arithmetic, and the damage attaches to it. **A blow that formed no hand
-// still gets its sentence**, from the card it led with, because a lone Strike is not a combo and
-// announcing one over every attack would make the word mean nothing.
-// It reports how many lines it dropped off the top as well as the rows themselves, so the
-// caller can say so — with a marker line when there is room for one, and with the arrow in
-// the corner when there is not.
-// planningLines is what the pane holds before a round has been resolved: the prompt, and above
-// it the combo the current selection has already formed.
+// saying "Duelist attacks with an earth strike" described a round that does not happen, and the
+// line that mattered — what the five cards came to — was the sixth. **A blow that formed no hand
+// still gets its sentence**, from the card it led with, because announcing COMBO! over a lone
+// Strike would make the word mean nothing.
 //
-// **The pane records and does not propose — with one standing exception, and this joins it.**
-// `(press DUEL!)` was already a line telling the player what to do, because the caption box that
-// used to say it is gone and this is the only text on the screen with room. The preview goes in
-// the same place for the same reason, and it costs nothing the rule was protecting: the pane is
-// empty while planning, so nothing is being said twice, and the moment the round resolves these
-// lines are replaced by the record.
+// **It takes the events rather than reading the round off the scene** *(2026-08-18)*. It was the
+// Resolution feed's walk, over `s.log[:cursor+1]`; the feed is gone and the fight log is what
+// draws these rows now, over every round of the fight. Passing the slice is what let one walk
+// serve both while both existed, and it is what keeps this function free of any opinion about
+// where the rows are going.
 //
-// **It reads the way the fired line will read** — same amber swatch, same COMBO! prefix, same
-// name from the same catalogue — so forming a hand and watching it land are recognisably the
-// same event. What it deliberately does not carry is the arithmetic: `Base` is the resolver's,
-// worked out against a strength and a shock roll that have not happened, and a figure printed here
-// that the round then contradicted would be worse than no figure.
-func (s *CombatScene) planningLines() []paneRow {
-	// **The prompt is all that is left here** *(2026-08-18)*. It used to carry the previewed combo
-	// as well — `COMBO! Two Pair x1.75` — and that line has moved to `drawPlannedHand`, which
-	// writes the hand's name across the band the sum will fill the moment DUEL! is pressed.
-	//
-	// **Moved, not duplicated.** Two places saying one thing is the failure this pane was
-	// introduced to fix, back when the caption narrated the event the feed was already carrying.
-	// The multiplier did not move with it: a preview carries no arithmetic, and `x1.75` beside a
-	// name is the arithmetic starting.
-	return []paneRow{{prefix: "(press DUEL!)"}}
-}
-
-func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markOverflow bool) ([]paneRow, int) {
-	end := s.cursor + 1
-	if end > len(s.log) {
-		end = len(s.log)
-	}
-	if end <= 0 {
-		return s.planningLines(), 0
-	}
-
+// It knows nothing about capacity, overflow or which row is live. Those are properties of the
+// panel the rows are poured into, not of the round, and they stay with the caller.
+func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 	var rows []paneRow
 
 	// cur is the line the next outcome attaches to, or -1 when the last thing appended was
@@ -494,11 +275,14 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 		outcomes = 1 // the sum is already on the line, so the first outcome reads as a list
 	}
 
-	for _, e := range s.log[:end] {
+	for _, e := range events {
 		switch e.Kind {
 		case combat.KindRoundStart, combat.KindRoundEnd:
-			// The pane holds one round, so saying which round it is would be a line spent on
-			// something the caption and the character block both already carry.
+			// The feed holds one round, so saying which round it is would be a line spent on
+			// something the caption and the character block both already carry. **The fight log
+			// does need it and writes its own heading**, from the position of the round in the
+			// fight rather than from these events — a heading belongs to the caller, which is
+			// the only one of the two that knows whether a round has anything before it.
 
 		case combat.KindAction:
 			// **A comboing side's attack card writes no line.** Its beat still passes — the engine
@@ -583,34 +367,7 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 		}
 	}
 
-	// **Two ways to overflow, and which one applies is the box's size** *(2026-08-11)*.
-	//
-	// Expanded, the old rule holds: never silently drop lines, the same reason the deck
-	// overlay draws "+N more not shown". A panel that quietly hides part of what it claims to
-	// show is a picture that lies.
-	//
-	// Collapsed, the box takes the newest lines and the rest simply scroll off. Three rows
-	// cannot spend one of themselves on a count, and the claim is different at that size —
-	// the feed says "here is what just happened", not "here is the round". What keeps it
-	// honest is the long press: the full account is one hold away, which is where the count
-	// is drawn.
-	hidden := 0
-	if len(rows) > capacity {
-		if markOverflow {
-			hidden = len(rows) - capacity + 1
-			rows = append([]paneRow{{prefix: fmt.Sprintf("... %d earlier", hidden)}}, rows[hidden:]...)
-		} else {
-			hidden = len(rows) - capacity
-			rows = rows[hidden:]
-		}
-	}
-
-	// The newest line is the one playback is on, which ties this pane to the lit row in
-	// Action Flow — the same moment, told two ways.
-	if s.cursor < len(s.log) && len(rows) > 0 {
-		rows[len(rows)-1].highlighted = true
-	}
-	return rows, hidden
+	return rows
 }
 
 // swatchFor is a side's colour: green is you, yellow is them.

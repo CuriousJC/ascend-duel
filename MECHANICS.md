@@ -155,7 +155,7 @@ decision.
 **Every card carries its effect in words on its face**, verb first, filling the card beside the
 cost column. The attack text names the family's verb — "Stabs for 2x DMG" — rather than opening
 "Deal" on all nine, so the corner letter is not carrying the distinction alone. The wording is
-`cardEffects` in `internal/screens`, beside the prose the Resolution feed uses: the rules package
+`cardEffects` in `internal/screens`, beside the prose the fight log uses: the rules package
 names actions and never describes them. **Short words are a hard constraint** — the column is about
 a dozen characters wide — and two tests hold the wording to it.
 
@@ -479,7 +479,7 @@ stacks; with stacking gone the ceiling is the number itself.
   - **A chill deletes cards before the hand is matched**, so a chilled duelist cannot swing with a
     turn it never took. That ordering is why the hand is worked out *inside* a turn rather than at
     the top of the round.
-  - **In the feed** it is announced as `KindChilled`, one event per card lost, which is what keeps
+  - **In the log** it is announced as `KindChilled`, one event per card lost, which is what keeps
     playback's one-beat-per-slot invariant true.
 - **Fire scales with the attacker.** A burn ticks for **10% of the DMG of whoever lit it**, read
   once and frozen onto the victim — a duelist whose DMG changes later does not retroactively burn
@@ -571,8 +571,8 @@ announcing one over every attack would empty the word.
 **The sentence is a record, and it is no longer the only thing that says what a blow was made of**
 *(2026-08-18)*. The combo dialog acts the sum out at the size of the screen on the beat the hand
 fires — the hand's name shouted beside the cards it names, then each card's own figure flying down
-into a line, then the multiplier, then the answer. It exists because the feed's line is sixteen
-points of arithmetic on the third row of a three-row box: it *records* the sum correctly and never
+into a line, then the multiplier, then the answer. It exists because the Resolution feed's line was sixteen
+points of arithmetic on the third row of a three-row box: it *recorded* the sum correctly and never
 showed which card paid which part of it, so the multiplier read as a number the game had decided
 rather than one the player had built. **It says nothing the event does not carry and computes
 nothing**, and the one thing it changes is pacing — playback holds while it runs. See the
@@ -587,7 +587,7 @@ that is the argument to make rather than to quietly reorder.
 **Why:** the interleaving may not be possible for players to grok. That is the whole reason.
 It also simplifies — actions are gathered into their categories inside `ResolutionOrder`, and
 hidden information survives untouched, because that is a single pure function which both
-`ResolveRound` and the Resolution pane read.
+`ResolveRound` and the table's two rows read.
 
 ### Defense expiry — the rule this turns on
 
@@ -734,7 +734,7 @@ Two things follow and both were the reason for the change:
 **The High Card pays the identity** *(2026-08-18)*. When a turn builds no pair or better, the
 single hardest-hitting attack card is the blow and what lands is exactly its face damage — which
 is now `×1` rather than the `×0` it carried while the multiplier was a bonus term, since ×0 would
-be an attack phase that dealt nothing. It is in `combos.json` with a name and an ID so the feed can
+be an attack phase that dealt nothing. It is in `combos.json` with a name and an ID so the log can
 say what happened on the turn that happens most often; **a blow the engine could not name is the
 one failure this model can have**, which is why the loader panics without it.
 
@@ -832,7 +832,7 @@ larger change than it was: it would mean reopening the reward vocabulary this na
 ### Requirements
 
 - **Combos are rules and live in `internal/combat`**, matching on the resolved cards. The
-  screen must never derive one; that is what makes the Resolution pane structurally incapable
+  screen must never derive one; that is what makes the written account structurally incapable
   of lying about the round.
 - **A `KindCombo` event** carrying what fired. *Done.* It carries a `HandID`, the multiplier and
   the list of cards that formed the hand, and the screen looks the name up with `HandByID` — so a
@@ -841,7 +841,7 @@ larger change than it was: it would mean reopening the reward vocabulary this na
   Two Pair can be two cards, a card that earned nothing, and two more — so the screen brackets
   what the engine names and never derives it from a pattern length.
 - **`KindChilled` counts as a slot in playback** even though nothing happened, or the
-  Resolution pane's highlight runs a row short for the rest of the round.
+  log runs a row short for the rest of the round.
 - **A place to browse combos** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
 - **The attack phase writes one line, and it is the combo's.** *Done.* Attack cards no longer draw
@@ -1244,7 +1244,7 @@ away between rooms. It is the same hole rings, vitae and brands are blocked on.
 **No card identity, and that is a consequence of *when* alteration happens.** Between fights no
 pile is live, so an offer is a list of positions in the run deck and a position is unambiguous for
 as long as the screen is up. Mid-fight alteration would need a real ID *and* a field on every
-event, since the Resolution pane rebuilds a card from what an event carries.
+event, since the log rebuilds a card from what an event carries.
 
 ### The between-fight chain
 

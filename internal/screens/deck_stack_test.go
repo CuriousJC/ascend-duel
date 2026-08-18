@@ -140,33 +140,38 @@ func TestTheComboRingFitsOnScreen(t *testing.T) {
 		t.Errorf("the combo ring starts at y=%d, off the top of the screen", top)
 	}
 
-	// And its bottom must clear the Resolution feed, which is the one thing a played card may
-	// never cover — see tableRowTop.
+	// And its bottom must clear the band above the hand, where the sum is written — see
+	// tableRowTop.
 	bottom := first.Y + cardHeight + comboRingInset + comboRingWidth/2
-	feedTop := gs.PctY(handTopPct) - feedGapAboveCards - feedHeight()
-	if bottom > feedTop {
-		t.Errorf("the combo ring reaches y=%d, through the Resolution feed at y=%d", bottom, feedTop)
+	bandTop := gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight
+	if bottom > bandTop {
+		t.Errorf("the combo ring reaches y=%d, through the band above the hand at y=%d", bottom, bandTop)
 	}
 }
 
-// The bottom strip is four things on one line — the AP figure, Discard, DUEL! and the deck
-// pile — and what is wanted of the two buttons is a *relationship*: the space between the
-// figure and the pile shared equally, rather than two percentages that happened to look right
-// once. That is what this checks, in the only terms it can be stated in: the three gaps.
+// The bottom strip is five things on one line — the AP figure, Discard, DUEL!, the Log button
+// and the deck pile — and what is wanted of the two buttons is a *relationship*: the space
+// between the figure and the things in the corner shared equally, rather than two percentages
+// that happened to look right once. That is what this checks, in the only terms it can be
+// stated in: the three gaps.
+//
+// **The right-hand end is the Log button, not the pile** *(2026-08-18)*. It arrived between the
+// two, so a strip still measured to the pile would spread its buttons across a span with a
+// control standing in it.
 func TestTheButtonStripSharesItsSpaceEvenly(t *testing.T) {
 	gs := testState()
 
 	const discardWidth, duelWidth = stripButtonWidth, stripButtonWidth
 	discardX, duelX := buttonStripSlots(gs, discardWidth, duelWidth)
 
-	figure, pile := apFigureRight(gs), deckStackBounds(gs).Min.X
+	figure, corner := apFigureRight(gs), logButtonRect(gs).Min.X
 	before := discardX - discardWidth/2 - figure
 	between := duelX - duelWidth/2 - (discardX + discardWidth/2)
-	after := pile - (duelX + duelWidth/2)
+	after := corner - (duelX + duelWidth/2)
 
 	if before <= 0 || between <= 0 || after <= 0 {
-		t.Fatalf("the buttons do not fit between the AP figure at x=%d and the pile at x=%d: gaps %d, %d, %d",
-			figure, pile, before, between, after)
+		t.Fatalf("the buttons do not fit between the AP figure at x=%d and the Log button at x=%d: gaps %d, %d, %d",
+			figure, corner, before, between, after)
 	}
 
 	// Integer division puts the remainder in the last gap, so the tolerance is the two pixels

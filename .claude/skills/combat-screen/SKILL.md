@@ -55,8 +55,8 @@ next, so a defense raised at the end of your turn is up when their blow arrives.
 `KindAction`, then one `KindCombo` names the hand they formed, then a single `KindDamage`
 lands. Five Strikes are not five hits.
 
-**The phase is also one line in the feed, and it is the combo's.** The `KindAction`s still play —
-each is a beat, and each raises its card on the table — but the pane draws no sentence for them.
+**The phase is also one line in the log, and it is the combo's.** The `KindAction`s still play —
+each is a beat, and each raises its card on the table — but `logRows` writes no sentence for them.
 `KindCombo` carries `Base`, `Multiplier` and `Amount`, so the line reads *"COMBO! Duelist
 lands a Pair (20 x 1.5 = 30)"* and the damage attaches to it. **The multiplier is dropped from the
 line when it is the identity**, so a High Card prints `(20)` — `20 x 1 = 20` is a sum with nothing
@@ -71,8 +71,8 @@ makes attack cards resolve one at a time in queue order, each landing its own bl
 `KindCombo` is emitted at all**. `CombatScene.soloAttacker(side)` is the screen's single predicate
 for it and two things read it:
 
-- **The feed writes a sentence per attack card**, because there is no phase line coming to carry
-  them. `resolutionLines` suppresses an attack's `KindAction` only when a combo *is* coming.
+- **The log writes a sentence per attack card**, because there is no phase line coming to carry
+  them. `logRows` suppresses an attack's `KindAction` only when a combo *is* coming.
 - **The table lights one card at a time**, so `noteResolved` seats `[]int{seat}` rather than
   `attackSeats`. Raising the set says "these cards are one blow", which is exactly what an enemy's
   turn is not: three cards swing three times, and the card that is up is the card that is hitting.
@@ -155,7 +155,8 @@ in `MECHANICS.md`; these are what matter to the screen.
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
   and **only a formed hand previews** — `HandNone` is a lone attack, and COMBO! over one Strike
   empties the word. Two things show it: `drawComboPreview` rings the cards in the *hand row*
-  through the same `drawComboBracket` the table uses, and the Resolution feed carries a line.
+  through the same `drawComboBracket` the table uses, and `drawPlannedHand` writes its name across
+  the band above the row.
   **`Blow.Cards` indexes the turn, not the hand** — `previewHandSlots` translates through
   `handIndexForQueue`, or a Prepare queued first would ring the wrong cards.
 - **A chilled slot is a row that never resolves.** `currentSlot` counts `KindChilled`
@@ -167,17 +168,17 @@ in `MECHANICS.md`; these are what matter to the screen.
 
 *`combat_mathbox.go`, 2026-08-18.* On the beat a hand fires, the blow's arithmetic is played out at
 the size of the screen: the hand's name shouted beside the cards it names, then each card's own
-figure flying down out of that card into a line over the Resolution feed, then the multiplier, then
+figure flying down out of that card into the band above the hand, then the multiplier, then
 the answer.
 
-**It exists because the sum was the one number on this screen nobody could source.** The feed has
-always printed it, correctly, in sixteen-point text on the third row of a three-row box. That is a
-*record*, which is what the feed should be; what it is not is an *explanation*. A player could see
+**It exists because the sum was the one number on this screen nobody could source.** The Resolution
+feed printed it, correctly, in sixteen-point text on the third row of a three-row box. That is a
+*record*, which is what a feed should be; what it is not is an *explanation*. A player could see
 the total and could not see which card paid for which part of it, so the multiplier read as a
 number the game had decided rather than one they had built.
 
 - **It says nothing the event does not carry and computes nothing.** Every figure comes off the
-  same `KindCombo` the feed's line does — `ComboAmounts`, `Multiplier`, `Amount`. **This is the
+  `KindCombo` event — `ComboAmounts`, `Multiplier`, `Amount`. **This is the
   rule to hold**: a second *drawing* of one event, never a second arithmetic. A figure it needs and
   the event has not got is a field that goes on the event.
 - **It is the one thing on this screen that can stop the playback cursor.** `advancePlayback` holds
@@ -193,17 +194,20 @@ number the game had decided rather than one they had built.
 - **The layout is computed once, before anything is shown**, and items are revealed left to right
   into space already claimed. Laying the line out again as each item appeared would recentre the
   whole sum on every beat, so figures already on screen would crawl sideways while being read.
-- **It takes its height from the feed and its width from the table, and neither is an accident.**
-  The vertical band is the feed's *collapsed* box, computed in `comboMathRect` rather than taken
-  from `feedRect` — a player holding the feed open grows that box upward, and a dialog that moved
-  with it would re-lay a line of figures out from under a reader mid-flight. The **width** is
-  deliberately not the feed's: `feedRect` spans `handBand`, which narrows as the hand empties, and
-  a two-card hand gives about 330px against a widest sum of roughly 640 — so a centred line that
-  does not wrap and cannot shrink would have run off both ends in exactly the rounds a duel is
-  decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same trap is live
-  anywhere else that borrows `handBand` for something that is not the hand.**
+- **It takes its height from the band above the hand and its width from the table, and neither is
+  an accident.** The depth is `mathBandHeight`, which is what the Resolution feed's collapsed box
+  came to — the size the sum was laid out and looked at against. **The feed is gone and the
+  constant deliberately outlived it**: changing that number is re-laying out the arithmetic, not
+  tidying up after a deleted pane. While the feed was there this was computed in `comboMathRect`
+  rather than read off `feedRect`, because a player holding the box open grew it upward and a
+  dialog that moved with it would re-lay a line of figures out from under a reader mid-flight. The
+  **width** was deliberately not the feed's either: `feedRect` spanned `handBand`, which narrows as
+  the hand empties, and a two-card hand gives about 330px against a widest sum of roughly 640 — so
+  a centred line that does not wrap and cannot shrink would have run off both ends in exactly the
+  rounds a duel is decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same
+  trap is live anywhere else that borrows `handBand` for something that is not the hand.**
 - **Only a built hand is shouted.** `HIGH CARD!` over a lone attack is the same emptying of the
-  word that keeps `COMBO!` off a single Strike in the feed — but the *arithmetic* still plays, on
+  word that keeps `COMBO!` off a single Strike in the log — but the *arithmetic* still plays, on
   the owner's call, so every attack phase shows where its figure came from.
 - **The shout goes on whichever side of the cards the row is not**: the player's row is
   left-aligned so its shout takes the space to the right, the opponent's is right-aligned so its
@@ -283,10 +287,11 @@ different gestures would be more machinery than the nine gestures.
   the card-flight argument applied to every event. Written down as a table the rule is checkable;
   written into nine call sites it is a habit.
 - **The checkable part is completeness.** `TestEveryEventKindIsChoreographed` fails when a new kind
-  arrives without an entry. That matters because the Resolution feed is going behind a button, and
-  after that an event nobody drew is an event the player is never told about. **A kind with no
-  picture says so with `anchorNone` and a reason** — an absent entry and a deliberate silence
-  otherwise read identically.
+  arrives without an entry. **That matters more since the Resolution feed went behind a button**
+  *(2026-08-18)*: with no running commentary on screen, an event nobody drew is an event the
+  player is only ever told about by opening the log. **A kind with no picture says so with
+  `anchorNone` and a reason** — an absent entry and a deliberate silence otherwise read
+  identically.
 - **Anchors are named by role, never by side.** `anchorActorSeat` is the acting side's row whichever
   side that is, for the reason `SoloAttacks` is a flag on a duelist rather than a rule about
   `SideB`: the engine has no idea which duelist is a person and this screen must not grow a second
@@ -307,7 +312,8 @@ different gestures would be more machinery than the nine gestures.
   `KindAction`'s drawing is the card lifting in its own seat, which `tableFireLift` already does.
   Everything else — a banked point landing on the AP figure, a status flying off its ring, a chill
   acting from the badge row, a missed turn struck out — describes what the gesture should be when
-  someone builds it. The feed writes a sentence for each of those; none of them moves.
+  someone builds it. The log writes a sentence for each of those; none of them moves — and with
+  the feed gone, a sentence in a panel is the only place they are said at all.
 
 ### What survives any model
 
@@ -348,13 +354,13 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 | Ring row | between the two cards, 10px below their top | pink borders on grey | what you are wearing |
 | Enemy card | right edge at 99% x, 2% y | — | the opponent |
 | The table | full width, under the top row | element | both queues as cards, player left, enemy right |
-| Resolution | 15–78% x, 12–46% y | pink | what the round actually did, accumulating as it plays |
+| The math band | table width, above the hand | — | empty at rest; the previewed hand's name, then the blow's arithmetic |
 | Action Flow | *built, not drawn* | pink | both queues in play order — see below |
-| Caption box | hand width, 48% y | pink | your plan and its AP cost, and what to press |
+| Fight log | a dialog, 4–96% | pink | every round of the fight, behind the Log button |
 | Hand | centred in what the sort column leaves, 66% y | element | the cards, portrait, in one row |
 | Sort column | band's right edge, centred on the cards | slate | `$` / `T` / `E`, the hand's arrangement |
 | AP bar | hand width, directly under the row | blue | the budget |
-| Bottom strip | 95% y | — | AP figure, Discard, DUEL!, deck pile — evenly spread |
+| Bottom strip | 95% y | — | AP figure, Discard, DUEL!, Log, deck pile — evenly spread |
 
 **The top of the screen is one row of three things**: the duelist card in the
 left corner, the enemy card in the right, the rings filling everything between.
@@ -388,15 +394,23 @@ are cut out of it, the AP bar spans it and the caption box matches it, so the th
 drift apart when the hand size changes. A card in flight still owns its slot, which is what
 stops the row sliding half a card sideways when one is lifted.
 
-**The strip at 95% is one row of four things, spaced rather than placed**: the
-AP figure at the hand's left edge, Discard, DUEL!, and the deck pile at the right. The two
+**The strip at 95% is one row of five things, spaced rather than placed**: the
+AP figure at the hand's left edge, Discard, DUEL!, then the Log button and the deck pile in the
+corner. The two
 buttons used to sit at 20% and 33%, side by side because they were the same choice made two
 ways. **They are separate choices now and the spacing says so** — `buttonStripSlots` divides
-what is left between the figure's column and the pile into three equal gaps and puts a button
+what is left between the figure's column and the **Log button** into three equal gaps and puts a
+button
 in each of the two spaces, so the strip stays evenly spread if any of the three fixed things
 moves. `TestTheButtonStripSharesItsSpaceEvenly` checks the gaps against each other rather than
 against numbers, because the property wanted is the relationship, not a coordinate. Discard
 still carries one condition DUEL! does not: a round's discards can run out.
+
+**The right-hand end of that span is the Log button, not the pile** *(2026-08-18)*. It arrived
+between the two, and a strip still measured to the pile would spread its buttons across a span
+with a control standing in it. **The two corner controls are a pair**: both are things you open to
+look at, as against Discard and DUEL!, which commit a round — which is also why the Log button
+takes the sort column's slate rather than a committing colour.
 
 **The bottom of the screen is one line**, and two of the three things on it are
 now hung off the bottom edge rather than off the hand's geometry:
@@ -420,8 +434,8 @@ into it until the action-point figure's top landed on the Discard button's top. 
 coincidence of five constants — `handTopPct`, `cardHeight`, `apBarBelow`, `apBarHeight`,
 `apFigureBelowBar` against the strip — and nothing in the code enforces it, so
 `TestTheAPFigureLinesUpWithTheButtonStrip` does. **What the drop buys is height at the top**:
-the bar, the figure, the cards and the Resolution feed all measure off this row, so moving it
-moves the whole lower half together and opens the band between the fighter cards and the feed.
+the bar, the figure, the cards and the band above them all measure off this row, so moving it
+moves the whole lower half together and opens the space between the fighter cards and the hand.
 
 **`apFigureReserve` is a fixed column width, not the figure's measured width.** Measuring
 would move both buttons the moment the text went from `9/12 AP` to `10/12 AP`. The reserve
@@ -587,14 +601,14 @@ be steered.
 
 **A settled duel does not spend the hand at all — it freezes** *(2026-08-16)*. `endOfRound`
 adopts the end state and then returns if `duelSettled()`, so the last round is never cleared
-away: the played cards stay on the table, the hand keeps the gaps they left, the queue stays in
-the Resolution feed, and `Init` clears all of it when the next fight starts.
+away: the played cards stay on the table, the hand keeps the gaps they left, and `Init` clears
+all of it when the next fight starts.
 
 **What forced it is that the row is a measurement, not just a picture.** `handBand` is a function
-of how many cards are in the hand, the AP bar spans that band, and the feed's bottom edge comes
-off the same row — so spending the hand after the killing blow collapsed the cards into a narrow
-centred huddle and dragged the bar and the feed in with them. **The picture the player is looking
-at when the blow lands is the picture they should still be looking at when they press Next.**
+of how many cards are in the hand and the AP bar spans that band — so spending the hand after the
+killing blow collapsed the cards into a narrow centred huddle and dragged the bar in with them.
+**The picture the player is looking at when the blow lands is the picture they should still be
+looking at when they press Next.**
 
 The intermediate version — refill nothing but still spend — does not work and is worth not
 re-trying: a hand that loses cards reflows whether or not it is topped back up. What has to stop
@@ -662,7 +676,7 @@ people playing it.
 - **Discards left lives on the Discard button, not on the duelist card** — see
   `drawDiscardsLeft`. The card holds what is read between rounds, not what is watched during one.
 
-**The deck overlay is a dialog, and the only one in the game.** It fills nearly the screen,
+**The deck overlay is a dialog, and one of two in the game** — the fight log below is the other. It fills nearly the screen,
 everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
 overlay so the single live control is the only one that looks live. Pressing it closes it.
 There is no Escape key to fall back on and no right click, so a modal has to make its exit
@@ -680,71 +694,107 @@ the brightest thing on screen or it is a trap.
   at twenty cards, but deckbuilding will grow the deck and a panel that quietly hid cards
   would be a picture that lies about what you own.
 
-### Action Flow is built and currently not drawn
+### The fight log, and the second dialog
 
-*Split, then narrowed.* The old single Resolution pane was renamed
-**Action Flow** and a new **Resolution** took its slot. Flow was then **dropped from `Draw` as
-an experiment** and Resolution widened to 15–78% to take both columns. `drawActionFlow` and
-`actionFlowRows` are deliberately left in place and unwired, so restoring it is one line.
+*`combat_log.go`, 2026-08-18.* A 44px square marked `L` beside the draw pile, sharing its bottom
+edge, opening a panel with every round of this fight written out in sentences.
 
-**What is given up while it is off, and it is not nothing:** the enemy's queued shape during
-planning. Those `??? (attack)` rows are the tell — see the concealment section below — and
-Resolution is empty until DUEL! is pressed, so nothing on screen says what the opponent is
-about to do. It bites hardest against a tactician, whose whole design is that you read
-`??? (prepare) ??? (prepare)` and brace.
+**It replaced the Resolution feed rather than joining it**, in two steps the same day: the log
+first, then the feed removed once it was clear the log held what the feed had been holding. That
+feed showed one round, cleared at the start of the next and had no scroll gesture to reach an
+earlier one — so a fight's account was something the player had to have been watching. That was
+survivable while it was the only thing narrating a round. It stopped being that: the table shows
+both hands, cards fly to their seats, the sum is acted out and the damage figure travels into the
+bar it empties. Once the pictures say what happened, a running list of sentences under them is a
+second telling costing a band of the screen, and what the sentences are *good* for is the thing
+the feed could not do — being read back.
+
+- **The walk was not rewritten.** `logRows(events)` is the feed's own walk: the prose, the merging
+  of an action with its outcome, the one line per slot. It knows nothing about capacity, overflow
+  or which row is live — those are properties of the box, and they stay with the caller. **That is
+  why a round reads here exactly as it read while it was happening.**
+- **The round in progress is included only as far as playback has reached**, the same slice the
+  feed drew and the same protection: the dialog can be opened mid-round, the resolved round is
+  sitting in `s.log` in full, and a log built from all of it would hand the player the rest of the
+  round they are watching.
+- **`CombatScene.rounds` holds events, not finished lines.** Storing sentences would freeze a
+  fight's account against the wording of the day it was played, and would be a second copy of
+  something the events already say. A round moves into it in `startRound`, as `log` is about to
+  stop being the current round. Appending at the end of playback instead would double it:
+  `log` still holds the finished round through the planning phase, and `fightLogRows` reads both.
+- **Headings belong to the caller.** `logRows` still ignores `KindRoundStart`/`KindRoundEnd`,
+  because only the caller knows whether a round has anything before it. A heading is a row with no
+  swatch and no verb, which `drawPane` centres.
+- **The two dialogs are mutually exclusive rather than stacked.** Each one's button is dead while
+  the other is up, so there is no way to open the second without closing the first — and each
+  survives its *own* overlay, because it is the only thing that closes one. `modalUp()` is the
+  single predicate every other control gates on; a button left live under a dialog is a round
+  edited through a panel the player is only reading.
+- **It takes the deck overlay's footprint and the Resolution pane's colours.** Two dialogs at two
+  sizes would read as two kinds of thing, and the off-white ground is what makes the coloured verbs
+  legible — the reason Resolution went light in the first place.
+- **What it does not do yet:** the log keeps only the newest rows a full panel can hold and reports
+  the rest as `... N earlier`, and it is a *fight* log rather than a run log — `Init` clears it.
+  Both are in `TODO.md`. Neither is fixable inside the panel: the first wants a scroll gesture the
+  input vocabulary has not got, the second wants the rounds moved onto `session.Session`.
+
+### Neither pane is drawn any more
+
+*Split, then narrowed, then emptied.* The old single Resolution pane was renamed **Action Flow**
+and a new **Resolution** took its slot. Flow was **dropped from `Draw` as an experiment** on
+2026-08-07 and Resolution widened to take both columns; **Resolution was removed in turn on
+2026-08-18**, when the log arrived to hold what it had been holding. `drawActionFlow` and
+`actionFlowRows` are deliberately left in place and unwired, so restoring Flow is one line.
+`drawResolution`, `resolutionLines`, `planningLines`, `feedRect` and the long press that expanded
+the box are **deleted**, not unwired — the log is where those rows are read now.
+
+**What is given up, and it is not nothing:** the enemy's queued shape during planning was Flow's
+`??? (attack)` rows, and a running account of the round as it played was Resolution's. The first
+matters less than it did, since the table has drawn the opponent's cards face up since
+2026-08-12; the second is the trade the owner took — the table, the flights, the combo dialog and
+the travelling damage figure narrate a round in pictures, and the sentences are for reading back.
+
+**The prompt went with it.** `(press DUEL!)` was a line in the feed, and nothing carries it now;
+the button says DUEL! on its face, which is what has to be enough. **Nothing on screen says why a
+dark DUEL! button is dark** either — the AP bar going red says something is wrong, not what to do
+about it. That was already true and is now the only thing saying it.
 
 The rest of this section describes the split as designed, and still applies if Flow comes back.
 
 - **Action Flow** is what you **queued**, in play order — live while you plan, before anything
   has happened. A prediction, and what drag-to-reorder edits.
-- **Resolution** is what actually **happened** — empty until DUEL! is pressed, filling as the
-  round plays back. A record.
+- **Resolution** was what actually **happened** — empty until DUEL! was pressed, filling as the
+  round played back. A record, and that is the half the fight log took over.
 
-Showing the round twice is only worth the space because of that split, and it is what retired
-the open problem of how one pane could be both. **Action Flow never learned to bracket a combo
-across non-adjacent slots and no longer has to**, because Resolution says it in words. Same for
-a slot a chill deleted: Flow still draws it as a row, Resolution reports it lost.
+**Action Flow never learned to bracket a combo across non-adjacent slots and does not have to**,
+because the table rings them and the log says it in words. Same for a slot a chill deleted: Flow
+draws it as a row, the log reports it lost.
 
 **The narrow column and the wide one are not interchangeable.** Flow rows are short labels
-(`Strike`, `??? (attack)`) and fit the 15–39% column the Actions pane vacated. Resolution rows
-are sentences, so it keeps the wide middle slot — which is what the pane billed as the
-centrepiece should have anyway.
+(`Strike`, `??? (attack)`) and fit the 15–39% column the Actions pane vacated. Sentences want the
+width, which is why the log is a full-screen panel rather than a column.
 
-- **One line per slot, not one per event.** A busy round is 25–30 events against a dozen rows.
-  Drawing the log verbatim would need a scrollback, and **there is no scroll gesture** — no
-  wheel convention, no keyboard, no right click. Merging an action with its outcome is
-  presentation of events the engine already decided; it computes nothing.
+Four rules survive into the log, and they are the ones to protect:
+
+- **One line per slot, not one per event.** A busy round is 25–30 events. Merging an action with
+  its outcome is presentation of events the engine already decided; it computes nothing.
 - **Combos and chills get lines of their own**, because they are not something a card did.
   Folding a combo into the line of the card that happened to start it would bury the one thing
-  the pane was added to show.
-- **Built only from events playback has reached** (`s.log[:cursor+1]`), so the pane says exactly
-  as much as the player has been shown and never spoils the rest of the round.
-- **It clears every round**, because there is no way to scroll back to an earlier one.
-- **Before a round resolves it holds `planningLines` instead**: `(press DUEL!)`, and above it the
-  combo the current selection has already formed. **The pane records rather than proposes, and
-  this is the standing exception rather than a new one** — the prompt was already a proposal,
-  because the caption box that used to carry it is gone and nothing else on the screen has room.
-  It costs nothing the rule protects: the pane is empty while planning, so nothing is said twice,
-  and the record replaces both lines the moment DUEL! is pressed. **It carries no arithmetic** —
-  `Base` is the resolver's, against a strength and a shock roll that have not happened, and a
-  figure the round then contradicted would be worse than no figure.
-- Overflow draws `... N earlier` rather than dropping lines silently — the same rule as the deck
-  overlay's `+N more not shown`. A panel that quietly hides part of what it claims to show is a
-  picture that lies.
-- `resolutionCapacity` is **derived** from the band and the pitch, so changing either cannot
-  leave a constant behind claiming a capacity the pane does not have.
+  worth reading.
+- **Built only from events playback has reached**, so nothing ever spoils the rest of a round in
+  progress. It was `s.log[:cursor+1]` in the feed and it is the same slice in `fightLogRows`.
+- **Overflow is reported, never silent** — `... N earlier`, the same rule as the deck overlay's
+  `+N more not shown`. A panel that quietly hides part of what it claims to show is a picture that
+  lies.
 
-**The caption stopped narrating.** It used to show one event at a time, which meant the whole
-account of a round existed only as a quarter-second flash — a combo forming was unreadable and
-a block that halved a Heavy went past before it could be noticed. It now returns `""` during
-playback and keeps its other job: the plan line, its AP cost, and what to press when a fight
-ends. **One job each — the pane records, the caption proposes.** Letting both narrate would put
-the newest line on screen twice, which is the thing the pane was added to fix.
+**The caption stopped narrating long before the feed went** and there is no caption box at all
+now. It used to show one event at a time, which meant the whole account of a round existed only as
+a quarter-second flash.
 
 `panePlacement` carries its own `rowHeight` because the two panes hold different things:
 `paneRowHeight` (30) for card names, `paneTextRowHeight` (22) for sentences.
 
-### Resolution writes sentences, and the verb is marked in the text
+### The log writes sentences, and the verb is marked in the text
 
 *A line is `<who> <verb> <phrase>` — **"Duelist attacks with a
 heavy strike"** — and the verb is **coloured, bold and underlined**: **red for attack, blue for
@@ -863,7 +913,7 @@ it again to take it out, drag sideways to move it along the row.
 - **And down again to 66%**, once the pile stopped being measured from the bar
   at all. The row falls exactly where the AP figure's top meets the Discard button's top;
   see the bottom-strip section above and `TestTheAPFigureLinesUpWithTheButtonStrip`. The
-  bar, the figure, the cards and the Resolution feed all measure off `handTopPct`, which is
+  bar, the figure, the cards and the band above them all measure off `handTopPct`, which is
   why one constant moves the whole lower half of the screen.
 
 ### Sorting the hand
@@ -925,10 +975,10 @@ unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single predicate
 `!gs.DebugGameplay && s.planning()` — and anything else that becomes secret should join it
 rather than growing a second rule.
 
-**Resolution needs no concealment rule at all**, and that falls out of its design rather than
-being a second decision: it is built from `s.log[:cursor+1]`, so it can only ever contain
-events playback has already reached, and an action that has resolved is not a secret. There is
-no way for it to leak the rest of the round because it has not been given the rest of the round.
+**The fight log needs no concealment rule at all**, and that falls out of its design rather than
+being a second decision: it is built from `s.log[:cursor+1]` for the round in progress, so it can
+only ever contain events playback has already reached, and an action that has resolved is not a
+secret. There is no way for it to leak the rest of the round because it has not been given it.
 
 - **Concealment lifts once playback starts**, for the same reason.
 - **Concealed rows keep their real count**, so the opponent's AP spend stays readable even

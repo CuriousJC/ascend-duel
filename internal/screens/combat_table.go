@@ -72,7 +72,7 @@ const (
 // This is where `firingAt` used to put a single card, and the number is unchanged; what moved
 // is that a whole row lives here now instead of one card passing through.
 func tableRowTop(gs *state.GlobalState) int {
-	return gs.PctY(handTopPct) - feedGapAboveCards - feedHeight() - firingGap - cardHeight
+	return gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight - firingGap - cardHeight
 }
 
 // tableHalfWidth is how much room one hand has: the screen less both insets and the gap in

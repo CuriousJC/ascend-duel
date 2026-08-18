@@ -257,7 +257,7 @@ func elementRank(e combat.Element) int {
 // rearranging the hand mid-round would light the wrong card on the table. The deck overlay
 // takes them out for the reason it takes out everything else: it is a dialog.
 func (s *CombatScene) updateSortButtons(gs *state.GlobalState) {
-	live := s.planning() && !s.showDeck
+	live := s.planning() && !s.modalUp()
 	for i, b := range s.sortButtons {
 		b.Latched = sortButtonSpecs[i].mode == s.sortMode
 		setEnabled(b, live)

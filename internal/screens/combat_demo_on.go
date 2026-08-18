@@ -338,11 +338,11 @@ func (s *CombatScene) demoDraw(gs *state.GlobalState, screen *ebiten.Image) {
 func (s *CombatScene) demoReport(gs *state.GlobalState, label string) {
 	fmt.Printf("\n--- %s ---\n", label)
 
-	// **The whole round, not the three lines the box is showing** *(2026-08-11)*. Resolution
-	// became a short feed that scrolls, and a report that only printed what currently fits
-	// would answer "what is on screen" when the question this is asked is "what did the round
-	// say". One row per slot at most, so the event count is an upper bound that cannot trim.
-	rows, _ := s.resolutionLines(gs, len(s.log)+1, false)
+	// **The whole round, and there is nothing left on screen to compare it against**
+	// *(2026-08-18)*. This used to print what the Resolution feed held; the feed is gone and the
+	// same rows now live behind the Log button, so a report reading them straight out of the
+	// events is the only version there can be. It is the same logRows walk the log draws.
+	rows := s.logRows(s.log)
 	for _, row := range rows {
 		line := row.prefix + row.verb + row.suffix
 		if line == "" {

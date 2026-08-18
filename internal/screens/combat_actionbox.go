@@ -55,7 +55,7 @@ const (
 	// is 887 — and the button strip's centre at PctY(95) less half a 50px button is 887 too.
 	// **Nothing enforces that**, so TestTheAPFigureLinesUpWithTheButtonStrip does.
 	//
-	// The bar's own y is measured from this row and the Resolution feed's bottom edge from it
+	// The bar's own y is measured from this row and the band above the hand from it as well, so
 	// as well, so moving the row moves the whole lower half of the screen together — which is
 	// the point: what the drop buys is height between the top row and the cards.
 	handTopPct = 66
@@ -633,9 +633,9 @@ func (s *CombatScene) previewHandSlots(blow combat.Blow) []int {
 //
 // **The same ring the table draws**, through the same `drawComboBracket`, so what the player
 // sees while choosing and what they see when it fires are one drawing. The words that go with
-// it are the Resolution feed's preview line — see resolutionLines — because there is nowhere
-// above the row to put them: the feed's bottom edge sits five pixels over the resting cards and
-// a selected one already lifts into it.
+// it are `drawPlannedHand`, which writes the hand's name across the band above the row — there
+// is nowhere above the cards to put them, and that band is the one the sum will fill the moment
+// DUEL! is pressed.
 func (s *CombatScene) drawComboPreview(gs *state.GlobalState, screen *ebiten.Image) {
 	blow, ok := s.previewAttack()
 	if !ok {
@@ -702,7 +702,7 @@ func apFigureRight(gs *state.GlobalState) int {
 // It reads the pile's *bounds*, not its front card: the backs are drawn up and to the left, so
 // the front card's edge is not the pile's edge.
 func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, int) {
-	left, right := apFigureRight(gs), deckStackBounds(gs).Min.X
+	left, right := apFigureRight(gs), logButtonRect(gs).Min.X
 	gap := (right - left - discardWidth - duelWidth) / 3
 
 	discardLeft := left + gap

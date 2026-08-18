@@ -183,7 +183,7 @@ const discardsPerRound = 4
 // and become one step darker.
 //
 // **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} and the
-// Resolution pane's fill is {234,230,224} — because a card, a pane and the table cannot all be
+// fight log's panel fill is {234,230,224} — because a card, a panel and the table cannot all be
 // the same off-white or the objects stop having edges. The warmth is where the separation
 // comes from: the ground is the yellowest of the three.
 var screenGround = color.RGBA{R: 226, G: 208, B: 176, A: 255}
@@ -259,11 +259,28 @@ type CombatScene struct {
 	// respond, so reading the deck cannot accidentally re-plan the round.
 	showDeck bool
 
-	// How many ticks the mouse has been held down on the Resolution feed. The box is
-	// expanded while this is past longPressTicks — a count rather than a bool, because
-	// "expanded" is then derived and there is no second state to fall out of step. See
-	// updateFeed.
-	feedPressTicks int
+	// showLog toggles the fight log. The second dialog in the game, and it obeys the first
+	// one's rules — see combat_log.go.
+	showLog bool
+
+	// logButton opens and closes it. Held on the scene rather than built in Draw because it
+	// is a widget with hover and press state, like every other button here.
+	logButton *models.Button
+
+	// rounds is every round of this fight that has finished, oldest first, kept as the event
+	// logs the resolver produced.
+	//
+	// **The round in progress is not in here** — it is still `log`, and the log dialog reads
+	// the two together. A round moves across in startRound, as the previous one is replaced,
+	// which is the one moment `log` is about to stop being the current round. Appending at
+	// the *end* of playback instead would double the round the feed is still showing during
+	// the planning phase.
+	//
+	// **It holds events rather than finished lines.** The prose is generated from the events
+	// by logRows, so storing sentences would freeze this fight's account against the wording
+	// of the day it was played — and would be a second copy of something the events already
+	// say. Events are what the engine produced; everything else is a reading of them.
+	rounds [][]combat.Event
 
 	// Cards currently travelling to or from the draw pile. Purely something to look at:
 	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
@@ -352,8 +369,8 @@ type CombatScene struct {
 	ticks  int
 	round  int
 
-	// mathBox is the combo dialog: the blow's arithmetic acted out over the Resolution feed on
-	// the beat the hand fires. See combat_mathbox.go.
+	// mathBox is the combo dialog: the blow's arithmetic acted out across the band above the hand
+	// on the beat the hand fires. See combat_mathbox.go.
 	//
 	// **It is the one thing on this screen that can stop the playback cursor.** Every other
 	// animation runs on its own clock beside the log; this one is a beat *of* the log, because a
@@ -439,6 +456,17 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		b.ScreenX, b.ScreenY = at.X, at.Y
 	}
 
+	// The Log button, beside the draw pile. Built once and placed every visit, like the strip
+	// below — its position is a function of the pile, which is a function of the screen.
+	if s.logButton == nil {
+		s.buildLogButton()
+	}
+	{
+		r := logButtonRect(gs)
+		s.logButton.ScreenX = r.Min.X + r.Dx()/2
+		s.logButton.ScreenY = r.Min.Y + r.Dy()/2
+	}
+
 	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
 	s.discardButton.ScreenX = discardX
 	s.discardButton.ScreenY = gs.PctY(buttonStripPct)
@@ -446,7 +474,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.duelButton.ScreenY = gs.PctY(buttonStripPct)
 
 	s.showDeck = false
-	s.feedPressTicks = 0
+	s.showLog = false
+
 	s.flights = nil
 	s.slides = nil
 	s.firingSeats, s.enemyFiringSeats = nil, nil
@@ -494,6 +523,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.enemy.Duelist = resetCombatState(s.enemy.Duelist)
 
 	s.log = nil
+	s.rounds = nil
 	s.cursor = 0
 	s.ticks = 0
 	s.round = 0
@@ -604,21 +634,23 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.updateFlights()
 	s.updateSlides()
 	s.updateResolved()
-	s.updateDeckStack(gs)
+	// **The pile is dead under the log and the Log button is dead under the deck**, and each
+	// survives its own overlay because it is the only thing that closes one. Neither may be
+	// reachable through the panel the other has put up: a dialog whose exit is not the
+	// brightest thing on screen is a trap, and two live exits is two.
+	if !s.showLog {
+		s.updateDeckStack(gs)
+	}
+	s.updateLogButton(gs)
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
 	// live on top of it. Written unconditionally from what the screen already knows, never
-	// toggled — see state.ModalOpen. The deck overlay is the only dialog in the game.
-	gs.ModalOpen = s.showDeck
-
-	// The long press on the Resolution feed. Outside every branch below for the same reason
-	// the flights are: reading back what just happened is not an action, and it has to work
-	// while a round plays and after one side is down.
-	s.updateFeed(gs)
+	// toggled — see state.ModalOpen. There are two dialogs: the deck overlay and the log.
+	gs.ModalOpen = s.modalUp()
 
 	// The overlay swallows card interaction, so reading the deck cannot re-plan the round
 	// through the panel covering it. The buttons stay live — one of them is how it closes.
-	if !s.showDeck {
+	if !s.modalUp() {
 		s.updateActionBox(gs)
 	}
 
@@ -636,7 +668,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		if !s.enemy.Alive() {
 			s.duelButton.Text = "Next"
 		}
-		setEnabled(s.duelButton, !s.showDeck)
+		setEnabled(s.duelButton, !s.modalUp())
 		setEnabled(s.discardButton, false)
 
 		systems.UpdateButton(gs, s.duelButton)
@@ -660,7 +692,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	//
 	// This is what makes over-allocating safe to allow: the budget is enforced here, at the
 	// point of playing, rather than at the point of picking a card up.
-	live := s.planning() && len(s.fighterActions) > 0 && !s.showDeck
+	live := s.planning() && len(s.fighterActions) > 0 && !s.modalUp()
 	setEnabled(s.duelButton, live && !s.overBudget())
 	setEnabled(s.discardButton, live && s.discardsLeft > 0)
 
@@ -725,6 +757,13 @@ func (s *CombatScene) startRound() {
 
 	s.fighterAfter = fighterAfter
 	s.enemyAfter = enemyAfter
+	// **The round being replaced moves into the fight log.** This is the one moment `log` is
+	// about to stop being the current round, so it is where the handover belongs — and the
+	// feed goes on drawing the round that just ended right up to it, off `log`, so a round in
+	// both places for a frame would be a round said twice. See combat_log.go.
+	if len(s.log) > 0 {
+		s.rounds = append(s.rounds, s.log)
+	}
 	s.log = log
 	s.cursor = 0
 	s.ticks = 0
@@ -993,7 +1032,8 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 	target.Statuses[e.Status] = combat.Status{Amount: e.Amount, Rounds: 1}
 }
 
-// **There is no caption box**, and the slot above the hand is the Resolution feed instead.
+// **There is no caption box**, and since 2026-08-18 there is no Resolution feed either — the
+// band above the hand is empty except while a hand is previewed or a blow is being acted out.
 //
 // What that costs, stated rather than discovered later: nothing on screen says *why* a dark
 // DUEL! button is dark. The AP bar turning red says that something is wrong, not what to do
@@ -1032,33 +1072,31 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawSortButtons(gs, screen)
 	s.drawDiscardsLeft(gs, screen)
 	s.drawDeckStack(gs, screen)
+	s.drawLogButton(gs, screen)
 
 	// **Order below is contested, and the ranking is written down because it will be
-	// re-broken otherwise** *(2026-08-11)*. Three things want to be on top of each other and
-	// they cannot all win:
+	// re-broken otherwise** *(2026-08-11, narrowed 2026-08-18)*. Two things want to be on top
+	// of each other and they cannot both win:
 	//
-	//  1. The feed over the enemy and its health bar. An expanded feed reaches 12% and the
-	//     opponent sits at 34%, so a box the player is holding open to read would otherwise
-	//     have a monster drawn through it. Hence Resolution after drawCombatant.
-	//  2. A selected card over the feed. Selection lifts a card 26px into the box's bottom
-	//     21 — see feedGapAboveCards — and the card is the thing being acted on. Hence the
-	//     hand row after Resolution.
-	//  3. A firing card over the inert hand row, at full size. Unchanged, and why the
-	//     resolved pile is still drawn after the row.
+	//  1. A selected card over whatever is written in the band above the hand. Selection lifts
+	//     a card 26px into that band's bottom 21 — see mathBandGapAboveCards — and the card is
+	//     the thing being acted on. Hence the hand row after anything drawn in the band.
+	//  2. A firing card over the inert hand row, at full size. Unchanged, and why the resolved
+	//     pile is still drawn after the row.
 	//
-	// **What loses is a firing card passing over an expanded feed**, and it is the right one
-	// to give up: 1 and 2 are on screen constantly, that is only during playback with the box
-	// held open, and the card holds above y=467 so the newest lines stay clear of it.
+	// **The Resolution feed was the third and is gone** *(2026-08-18)*: it wanted to be over
+	// the enemy card, because a box held open reached 12% and the opponent sits at 34%. The
+	// band it left is claimed by the combo dialog and the planned hand's name, both of which
+	// are drawn much later and neither of which is ever held open.
 	//
-	// EXPERIMENT 2026-08-07: Action Flow is not drawn, and Resolution has taken its column as
-	// well as its own. drawActionFlow and actionFlowRows are deliberately left in place and
-	// unwired so this is one line to put back.
+	// EXPERIMENT 2026-08-07: Action Flow is not drawn either. drawActionFlow and actionFlowRows
+	// are deliberately left in place and unwired so this is one line to put back — and with the
+	// feed gone it is the only pane the screen still has.
 	//
-	// **What this gives up, if it stays:** the enemy's queued shape while planning. Those
-	// `??? (attack)` rows are the tell — see the concealment section of the combat-screen
-	// skill — and Resolution is empty until DUEL! is pressed, so nothing on screen says what
-	// the opponent is about to do.
-	s.drawResolution(gs, screen)
+	// **What that gives up:** the enemy's queued shape while planning. Those `??? (attack)`
+	// rows are the tell — see the concealment section of the combat-screen skill — though the
+	// table has drawn the opponent's cards face up since 2026-08-12, which is most of what the
+	// pane was hiding.
 	s.drawHandRow(gs, screen)
 
 	// Over the panes and the button it passes across.
@@ -1080,9 +1118,9 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawFlights(gs, screen)
 
 	// **The combo dialog, over everything but the deck overlay.** It is the loudest thing on the
-	// screen for the few seconds it is up, and it is deliberately over the opponent's row and the
-	// Resolution feed alike: the shout stands beside the cards it names, and the sum is written
-	// across the band the feed occupies. See combat_mathbox.go.
+	// screen for the few seconds it is up, and it is deliberately over the opponent's row: the
+	// shout stands beside the cards it names, and the sum is written across the band above the
+	// hand. See combat_mathbox.go.
 	s.drawComboMath(gs, screen)
 
 	// **The planned hand's name, in the band the sum is about to be written across.** It and the
@@ -1101,6 +1139,15 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	if s.showDeck {
 		s.drawDeckOverlay(gs, screen)
 		s.drawDeckStack(gs, screen)
+	}
+
+	// The log's overlay, and the Log button drawn again on top of it — the same rule the deck
+	// lives under, and it has to be a separate block because the two dialogs are mutually
+	// exclusive rather than stacked: each one's button is dead while the other is up, so there
+	// is no way to open the second without closing the first.
+	if s.showLog {
+		s.drawLogOverlay(gs, screen)
+		s.drawLogButton(gs, screen)
 	}
 
 	// Last of all, so a capture holds the finished frame rather than a half-drawn one.
@@ -1162,13 +1209,12 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("handBand", band)
 	trace.Rect("actionFlowPane", panePlacementRect(gs, actionFlowPane))
 
-	// Both states, because the collapsed one is what is on screen and the expanded one is
-	// the thing a long press has to land inside. A dump of only the box as it currently
-	// stands would say nothing about where it goes.
-	trace.Rect("resolutionFeed", s.feedRect(gs))
-	trace.Rect("resolutionFeed expanded", image.Rect(
-		band.Min.X, gs.PctY(feedExpandTopPct),
-		band.Max.X, gs.PctY(handTopPct)-feedGapAboveCards))
+	// The band above the hand. Nothing is drawn there at rest — the feed left it on
+	// 2026-08-18 — but the combo dialog and the planned hand's name are both laid out
+	// against it, so it is worth a rectangle in the dump.
+	trace.Rect("mathBand", image.Rect(
+		tableInset, gs.PctY(handTopPct)-mathBandGapAboveCards-mathBandHeight,
+		gs.ScreenWidth-tableInset, gs.PctY(handTopPct)-mathBandGapAboveCards))
 	trace.Rect("duelistCard", s.duelistCardRect(gs))
 	trace.Rect("enemyCard", s.enemyCardRect(gs))
 	trace.Rect("ringPane", s.ringPaneRect(gs))

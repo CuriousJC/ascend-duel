@@ -306,7 +306,10 @@ func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image
 	split := s.enemySplit()
 	for i, d := range s.enemyDealt {
 		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), split, lit(s.enemyFiringSeats, i))
-		drawCard(gs, screen, at, cards.Hand, d.card, true, false)
+		// **The opponent's own cost, not the player's** — a discount ring is the player's and a
+		// queued enemy card printing a discounted price would be the screen telling a lie about
+		// whose ring it is.
+		drawCard(gs, screen, at, cards.Hand, d.card, s.enemy.CardCost(d.card), true, false)
 		if d.combo {
 			bracketed = append(bracketed, at)
 		}

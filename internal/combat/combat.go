@@ -116,40 +116,46 @@ type Duelist struct {
 	BonusDraw int
 	DrewCards int
 
-	// Statuses is what elements have done to this duelist, indexed by the element that did it.
-	// See status.go for the lifecycle, which is one rule for all four.
+	// Statuses is what has been done to this duelist, **indexed by status** — see status.go for
+	// the lifecycle, which is one rule for all of them.
 	//
-	// **An array indexed by Element rather than four named fields**, and that is the load-bearing
-	// choice. It means a fifth element does not grow this struct, and — the reason it is worth
-	// doing at all — it makes *"consume the status this element applies"* expressible, which is
-	// what MECHANICS.md's Extinguishing Strike needs and what turns four ad-hoc fields into a
-	// system. The price is that Element is now append-only: inserting one mid-enum re-points
+	// **It was indexed by element until 2026-08-17**, which is the array the ring grammar could not
+	// use: one element applying two statuses is the case that breaks it, and a status arriving from
+	// something that is not a colour at all has no seat in it. The price moves with the index —
+	// `statuses.json` is now the append-only file, because inserting a record mid-file re-points
 	// every status a duelist is carrying.
 	//
-	// The defences above deliberately stay where they are. Defend is a card effect, not an
-	// element status, and filing it in a table indexed by colour would say it was one.
-	Statuses [ElementCount]Status
+	// An array rather than named fields for the reason it always was: a new status does not grow
+	// this struct, and *"consume the status this card applies"* stays expressible.
+	//
+	// The defences above deliberately stay where they are. Defend is a card effect rather than a
+	// status, and filing it in this table would say it was one.
+	Statuses [MaxStatuses]Status
 
-	// Rings is which elements this duelist wears a ring for, indexed the same way Statuses is.
+	// Rings is what this duelist is wearing, in worn order, and RingCount is how many of the
+	// array is in use. See ring.go for the grammar and WornRings for why the order is a rule.
 	//
 	// **It is what makes an element do anything at all** *(2026-08-16)*. A fire attack from a
-	// duelist with no fire ring is a plain attack with a red border: it counts toward a mix, it
+	// duelist with no fire ring is a plain attack with a red border: it counts toward a hand, it
 	// is discounted by nothing, and it applies no burn. See status.go for the argument, which is
 	// that statuses given away free left the first three rings with no mechanic of their own.
+	//
+	// **It was `[ElementCount]bool` until 2026-08-17**, and the grammar is what took the flags
+	// away: a family multiplier and a vitae ring have no element to be a bit under.
 	//
 	// **The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire
 	// attacks burn; it does nothing when a fire attack is aimed at you.
 	//
-	// **An array of bools rather than a set**, because Duelist has to stay comparable — see the
-	// note at the top of this struct — and because Element is already the index of the status it
-	// switches on. It is the seat the ring discount sits in as well: `Card.Cost()` has the other
-	// half of that and neither is wired to the other yet.
+	// **A fixed array plus a count rather than a slice**, exactly like the defend set above and
+	// for the same reason: Duelist has to stay comparable. A WornRing is an ID and a number, so
+	// the ring's own rules stay in the registry where they can be a slice.
 	//
-	// **Enemies never wear one.** The zero value is what an enemy is hydrated with and nothing
-	// sets it for them, so an enemy's elements are inert by construction rather than by a rule
-	// written down somewhere else. Statuses reaching the player by some other route later is
-	// expected; it will not be by an enemy putting on jewellery.
-	Rings [ElementCount]bool
+	// **Enemies never wear one.** The zero value is an empty hand and nothing sets it for them, so
+	// an enemy's elements are inert by construction rather than by a rule written down somewhere
+	// else. Statuses reaching the player by some other route later is expected; it will not be by
+	// an enemy putting on jewellery.
+	Rings     [MaxWornRings]WornRing
+	RingCount int
 
 	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
 	// were queued**, each landing its own blow — instead of being read as a set and scored
@@ -176,15 +182,6 @@ type Duelist struct {
 	// couples two things that are not the same thing: affixes are designed to *transform* an
 	// enemy deck, and a card that gained a family would silently gain combos with it.
 	SoloAttacks bool
-}
-
-// WearsRing reports whether this duelist's ring makes the named element do something. Basic is
-// never worn — it is the absence of an element, so there is nothing for a ring to point at.
-func (d Duelist) WearsRing(e Element) bool {
-	if e <= Basic || int(e) >= ElementCount {
-		return false
-	}
-	return d.Rings[e]
 }
 
 // Alive reports whether this duelist can still fight.
@@ -380,20 +377,14 @@ func (d Duelist) ActionPoints() int {
 	return d.Actions + d.BonusAP
 }
 
-// CostOf totals the action-point cost of a queued set.
-func CostOf(cards []Card) int {
-	total := 0
-	for _, c := range cards {
-		total += c.Cost()
-	}
-	return total
-}
-
 // CanAfford reports whether a queued set fits inside this duelist's budget. The UI
 // enforces this while the player builds a set; ResolveRound trusts what it is given
 // so that a balance sim can deliberately probe outside the rules.
+//
+// **It is the duelist's own costs that are totalled** — see CostOf in ring.go — because a discount
+// ring makes a cost a property of the pairing rather than of the card.
 func (d Duelist) CanAfford(cards []Card) bool {
-	return CostOf(cards) <= d.ActionPoints()
+	return d.CostOf(cards) <= d.ActionPoints()
 }
 
 type EventKind int
@@ -470,10 +461,21 @@ type Event struct {
 	Life   int       // target's life after the event
 	Round  int
 
-	// Element is the card's element on KindAction and KindMissed, and which status is meant on
-	// KindStatus and KindBurned. Basic everywhere else, which is also the zero value — an event
-	// with nothing to say about colour says `basic`, exactly as a plain card does.
+	// Element is the card's element on KindAction, KindMissed and KindStatus. Basic everywhere
+	// else, which is also the zero value — an event with nothing to say about colour says `basic`,
+	// exactly as a plain card does.
 	Element Element
+
+	// Status is which status is meant, on KindStatus and KindBurned.
+	//
+	// **It replaced reading Element for it** *(2026-08-17)*, because a status is no longer the same
+	// object as a colour: two rings can put two different statuses on the same fire card, and an
+	// event naming the colour could not say which had landed. Element still carries the card's own
+	// colour on a KindStatus, which is what the feed's swatch and its sentence are drawn from.
+	//
+	// **The zero value is a real status**, the first one registered — the hazard Action carries for
+	// concepts. It is set on the two kinds that mean it and read on no others.
+	Status StatusID
 
 	// Hand is set on KindCombo and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
@@ -772,19 +774,27 @@ func expireDefenses(d Duelist) Duelist { return ClearDefenses(d) }
 // "Goblin falls / Goblin burns for 2 / Goblin falls". Statuses still tick down, so a duelist
 // somehow revived does not wake up carrying an expired burn.
 func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist) {
-	if burn := d.Statuses[Fire]; burn.Active() && d.Alive() {
-		d.CurrentLife = reduce(d.CurrentLife, burn.Amount)
+	// **Every damage-over-time status ticks, one at a time**, in registration order. There is one
+	// such status in the game today; walking them is what stops a second one being silently
+	// ignored, and the order is fixed because which tick killed a duelist decides what the feed
+	// says they fell to.
+	for _, id := range d.tickingStatuses() {
+		if !d.Alive() {
+			break
+		}
+		tick := d.Statuses[id].Amount
+		d.CurrentLife = reduce(d.CurrentLife, tick)
 
-		// Side and Target are both this duelist, because nobody acted. The fire was applied by an
-		// attack rounds ago and the duelist that lit it may not even be the one alive to see this.
+		// Side and Target are both this duelist, because nobody acted. The status was applied by an
+		// attack rounds ago and whoever applied it may not even be alive to see this.
 		events = append(events, Event{
-			Kind:    KindBurned,
-			Side:    side,
-			Target:  side,
-			Element: Fire,
-			Amount:  burn.Amount,
-			Life:    d.CurrentLife,
-			Round:   round,
+			Kind:   KindBurned,
+			Side:   side,
+			Target: side,
+			Status: id,
+			Amount: tick,
+			Life:   d.CurrentLife,
+			Round:  round,
 		})
 
 		if !d.Alive() {
@@ -872,13 +882,13 @@ func resolveAttackPhase(
 		if !slot.Card.Spec().Recoils() {
 			continue
 		}
-		actor.CurrentLife = reduce(actor.CurrentLife, slot.Card.Damage(actor.DMG))
+		actor.CurrentLife = reduce(actor.CurrentLife, actor.CardDamage(slot.Card))
 		events = append(events, Event{
 			Kind:    KindDamage,
 			Side:    side,
 			Target:  side,
 			Element: slot.Card.Element,
-			Amount:  slot.Card.Damage(actor.DMG),
+			Amount:  actor.CardDamage(slot.Card),
 			Life:    actor.CurrentLife,
 			Round:   round,
 		})
@@ -907,7 +917,7 @@ func resolveAttackPhase(
 	// points or take actions off the opponent's next turn, which is why there was a phase here
 	// paying those out before the blow landed. Statuses come from elements and rings now, so the
 	// multiplier is the whole reward and there is nothing to pay before the roll.
-	swung := comboEvent(side, blow, turn, actor.DMG, round)
+	swung := comboEvent(side, blow, turn, actor, round)
 	events = append(events, swung)
 
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
@@ -915,7 +925,7 @@ func resolveAttackPhase(
 	//
 	// **This is a roll**, and the only one in the package. See shockMissPct. Nothing is consumed
 	// by it: a shock rolls on every attack it outlives, so the duelist comes back unchanged.
-	if shockMisses(actor, rng) {
+	if attackMisses(actor, rng) {
 		events = append(events, Event{
 			Kind:    KindMissed,
 			Side:    side,
@@ -950,35 +960,37 @@ func resolveAttackPhase(
 		Round:  round,
 	})
 
-	// **The mix lands its colours' statuses, and it does so because the hand was formed rather
-	// than because the blow hurt.** A hand halved by a Defend still connected, and making the
-	// status conditional on the final figure would mean a defensive card silently un-applied an
-	// element the attacker had already paid for.
+	// **The blow lands whatever the attacker's rings say it does, and it does so because the hand
+	// was formed rather than because the blow hurt.** A hand halved by a Defend still connected, and
+	// making the status conditional on the final figure would mean a defensive card silently
+	// un-applied something the attacker had already paid for.
 	//
-	// One status per distinct colour, so mono lands one and rainbow lands four. Drab lands none,
-	// which is what "basic is not a colour" means at the other end.
+	// **Every status comes off a worn ring** *(2026-08-16, re-expressed in the grammar 2026-08-17)*.
+	// A rainbow thrown by a duelist wearing two elemental rings lands two statuses; thrown by an
+	// enemy it lands none. The colours still count toward the hand either way — what a ring buys is
+	// the status, not the multiplier.
 	//
-	// **And every one of them is gated on a ring the attacker is wearing** *(2026-08-16)*. A
-	// rainbow thrown by a duelist wearing two rings lands two statuses; thrown by an enemy it
-	// lands none. The colours still count toward the mix multiplier either way — what the ring
-	// buys is the status, not the combo.
-	for _, e := range blow.Elements {
-		if !actor.WearsRing(e) {
-			continue
-		}
-		applied, amount, ok := applyStatus(target, e, actor)
+	// The cards of the hand are what the rings match against, so a family ring or a concept ring
+	// reaches this the same way an elemental one does. `statusesFrom` deduplicates, which is what
+	// keeps two fire cards from announcing one burn twice.
+	blowCards := make([]Card, 0, len(blow.Cards))
+	for _, i := range blow.Cards {
+		blowCards = append(blowCards, turn[i].Card)
+	}
+	for _, id := range actor.statusesFrom(blowCards) {
+		applied, amount, ok := applyStatus(target, id, actor)
 		if !ok {
 			continue
 		}
 		target = applied
 		events = append(events, Event{
-			Kind:    KindStatus,
-			Side:    side,
-			Target:  targetSide,
-			Element: e,
-			Amount:  amount,
-			Life:    target.CurrentLife,
-			Round:   round,
+			Kind:   KindStatus,
+			Side:   side,
+			Target: targetSide,
+			Status: id,
+			Amount: amount,
+			Life:   target.CurrentLife,
+			Round:  round,
 		})
 	}
 
@@ -1079,13 +1091,13 @@ func resolveSoloAttacks(
 		// shock did, because a duelist tearing themselves open has already paid by the time the
 		// swing would have missed.
 		if slot.Card.Spec().Recoils() {
-			actor.CurrentLife = reduce(actor.CurrentLife, slot.Card.Damage(actor.DMG))
+			actor.CurrentLife = reduce(actor.CurrentLife, actor.CardDamage(slot.Card))
 			events = append(events, Event{
 				Kind:    KindDamage,
 				Side:    side,
 				Target:  side,
 				Element: slot.Card.Element,
-				Amount:  slot.Card.Damage(actor.DMG),
+				Amount:  actor.CardDamage(slot.Card),
 				Life:    actor.CurrentLife,
 				Round:   round,
 			})
@@ -1099,7 +1111,7 @@ func resolveSoloAttacks(
 		// The roll happens on the first card that could actually swing, and once only. Rolling
 		// before the loop would advance the stream for a turn of nothing but recoil.
 		if !rolled {
-			missed, rolled = shockMisses(actor, rng), true
+			missed, rolled = attackMisses(actor, rng), true
 		}
 		if missed {
 			events = append(events, Event{
@@ -1113,7 +1125,7 @@ func resolveSoloAttacks(
 			continue
 		}
 
-		dmg := blunt(slot.Card.Damage(actor.DMG), actor.weight())
+		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())
 		events, dmg = applyDefends(events, side, target, dmg, round)
 
 		target.CurrentLife = reduce(target.CurrentLife, dmg)
@@ -1126,22 +1138,25 @@ func resolveSoloAttacks(
 			Round:  round,
 		})
 
-		// One card, one colour, and the same ring gate the other phase applies. An enemy wears no
-		// rings, so this does nothing for the only duelists that are solo attackers today — it is
-		// here because the rule belongs to attacking, not to comboing.
-		if actor.WearsRing(slot.Card.Element) {
-			if applied, amount, ok := applyStatus(target, slot.Card.Element, actor); ok {
-				target = applied
-				events = append(events, Event{
-					Kind:    KindStatus,
-					Side:    side,
-					Target:  targetSide,
-					Element: slot.Card.Element,
-					Amount:  amount,
-					Life:    target.CurrentLife,
-					Round:   round,
-				})
+		// One card, and the same rings the other phase reads. An enemy wears none, so this does
+		// nothing for the only duelists that are solo attackers today — it is here because the rule
+		// belongs to attacking, not to comboing.
+		for _, id := range actor.statusesFrom([]Card{slot.Card}) {
+			applied, amount, ok := applyStatus(target, id, actor)
+			if !ok {
+				continue
 			}
+			target = applied
+			events = append(events, Event{
+				Kind:    KindStatus,
+				Side:    side,
+				Target:  targetSide,
+				Element: slot.Card.Element,
+				Status:  id,
+				Amount:  amount,
+				Life:    target.CurrentLife,
+				Round:   round,
+			})
 		}
 
 		if !target.Alive() {
@@ -1166,15 +1181,15 @@ func resolveSoloAttacks(
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
-func comboEvent(side Side, blow Blow, turn []Slot, dmg, round int) Event {
+func comboEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Event {
 	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
 	// this event rather than recomputing it, so the sentence the feed prints and the damage that
 	// lands cannot be two different sums.
 	base := 0
 	for _, i := range blow.Cards {
-		base += turn[i].Card.Damage(dmg)
+		base += actor.CardDamage(turn[i].Card)
 	}
-	swing := referenceSwing(dmg)
+	swing := referenceSwing(actor.DMG)
 
 	lead := turn[blow.Cards[0]].Card
 
@@ -1288,7 +1303,7 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Car
 		return nil, 0
 	}
 	if len(offence) > maxSearchableAttacks {
-		return greedyAttacks(hand, offence, budget, slots)
+		return greedyAttacks(d, hand, offence, budget, slots)
 	}
 
 	bestScore, bestCost := -1, 0
@@ -1305,7 +1320,7 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Car
 				continue
 			}
 			pick = append(pick, idx)
-			cost += hand[idx].Cost()
+			cost += d.CardCost(hand[idx])
 		}
 		if len(pick) > slots || cost > budget {
 			continue
@@ -1336,7 +1351,7 @@ func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 	if d.SoloAttacks {
 		total := 0
 		for _, idx := range pick {
-			total += hand[idx].Damage(d.DMG)
+			total += d.CardDamage(hand[idx])
 		}
 		return total
 	}
@@ -1353,14 +1368,14 @@ func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 
 	base := 0
 	for _, i := range blow.Cards {
-		base += turn[i].Card.Damage(d.DMG)
+		base += d.CardDamage(turn[i].Card)
 	}
 	return base + scaleDamage(referenceSwing(d.DMG), blow.Multiplier)
 }
 
 // greedyAttacks is the fallback for a hand too big to search: the dearest cards that fit, which is
 // what the old brute did.
-func greedyAttacks(hand []Card, offence []int, budget, slots int) ([]Card, int) {
+func greedyAttacks(d Duelist, hand []Card, offence []int, budget, slots int) ([]Card, int) {
 	used := make([]bool, len(hand))
 	var out []Card
 	spent := 0
@@ -1371,7 +1386,7 @@ func greedyAttacks(hand []Card, offence []int, budget, slots int) ([]Card, int) 
 			if used[i] {
 				continue
 			}
-			if cost := hand[i].Cost(); cost <= budget-spent && cost > bestCost {
+			if cost := d.CardCost(hand[i]); cost <= budget-spent && cost > bestCost {
 				best, bestCost = i, cost
 			}
 		}

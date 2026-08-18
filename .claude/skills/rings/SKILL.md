@@ -99,7 +99,7 @@ not ignored.
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
 | `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
 | `grow` | `fight-won` | `Amount` | adds to **this ring's own accumulator** |
-| `adjust-propagation` | `fight-won` | `Amount` per five held | adds to the vitae interest rate |
+| `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
 
@@ -142,16 +142,20 @@ There is no default status per element. This is the 2026-08-16 position held rat
 reversed: the statuses being free is what left rings with nothing to be, and giving a ring a
 second fire status later is only possible if the first one was never inherent.
 
-**What decoupling costs, and all of it is real:**
+**What decoupling cost, all of it paid on 2026-08-17:**
 
-- `Duelist.Statuses` is `[ElementCount]Status`, indexed by element. It has to be indexed by
-  **status**. One element applying two statuses is the case that breaks it.
-- `Duelist.Rings` is `[ElementCount]bool`. A slash multiplier has no element to be a bit under.
-  It becomes a slice of rules-level rings.
-- `cards.MaxEffects` is **4** because there are four elements. Decoupled statuses can exceed
-  four badges on one card; `effectKeys` in `card_art.go` maps element→badge and becomes
-  status→badge.
-- `Status` becomes an append-only ID, the same hazard `Element` and `GlyphKind` carry.
+- `Duelist.Statuses` is indexed by **status**, and its width is `combat.MaxStatuses` — an array
+  width rather than a design cap, since a duelist must stay comparable. Registration refuses a
+  record past it rather than dropping it.
+- `Duelist.Rings` is a fixed array of `WornRing` plus a count, not a bool per element.
+- `cards.MaxEffects` is **4 because the file holds four statuses**, checked by
+  `TestTheCardHoldsAsManyEffectsAsThereAreStatuses`. The badge row fits six at the current pitch,
+  so a fifth status is a one-number layout change.
+- The badge is read off each record's `Badge`; `card_art.go` no longer keys anything by element.
+- `StatusID` is append-only, and it is the *file* that decides the order — inserting a record
+  mid-file re-points every status a duelist is carrying.
+- **Queries are by effect kind and they sum**: two `lose-actions` statuses take two cards. Nothing
+  applies two yet, but choosing between them silently would be a rule nobody wrote down.
 
 ## Growing rings hold state, and they are the first thing that does
 
@@ -176,8 +180,10 @@ not — it carries a number that lives on the run:
   record key is the identity and not an index.
 - **Uncapped, by decision** *(2026-08-17)*. +5 a fight reaches +100 by the top of the tower and
   that is the intent, not an overflow.
-- `[?]` **A growing ring should hold one numeric effect until this is settled.** With two, it is
-  not stated which the accumulator feeds. Ask before authoring one.
+- **A growing ring holds exactly one numeric effect** *(2026-08-17, owner's call)*, so the
+  accumulator has exactly one thing to feed and does not need to say which. A ring wanting two
+  growing numbers is outside the grammar; it needs a decision before it can be authored, not a
+  second accumulator field written ahead of it.
 
 ## What a ring may never do
 
@@ -196,15 +202,34 @@ Reach for these first when an idea sounds too easy.
   one of those would change every copy in the deck. Same bound a worm has.
 - **Five worn at once**, until brands expand it.
 
-## Where the code goes
+## Where the code is — it is built *(2026-08-17)*
+
+| Piece | Where |
+|---|---|
+| the vocabulary, `RegisterRing`, and every applier | `internal/combat/ring.go` |
+| the status catalogue and its lifecycle | `internal/combat/status.go`, `data/statuses.json` |
+| parsing `rings.json` into rules, and registering it | `internal/session/ring.go` |
+| what a run wears, and its accumulators | `session.Session` — `Wear`, `Worn`, `WornRings`, `Grown` |
+| `deck-built` / `fight-start` / `fight-won` | `session.FightDeck`, `session.Equip`, `session.WonFight` |
+| `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
+| the row on screen | `internal/screens/combat_rings.go` — a lookup from worn key to record |
 
 **`rings.json` is parsed in `internal/session`**, which already parses worms and for the same
-reason: a ring belongs to a *run*. `session` hands `combat` a rules-level `[]Ring` on the
-duelist, so `data` stays ignorant of the rules and `internal/combat` never reads a file holding
-an art key. That is the who-consumes-it test in the `data` skill, answered without a new package.
+reason: a ring belongs to a *run*. It hands `combat` rules types — `RegisterRing(key, name,
+[]RingRule)` — so `data` stays ignorant of the rules and `internal/combat` never reads a file
+holding an art key. That is the who-consumes-it test in the `data` skill, answered without a new
+package.
 
 **Bad records panic at load**, like every other catalogue: an unknown moment, a verb used at the
 wrong moment, a predicate the rules cannot resolve, or a status key that is in no file.
+
+**A duelist wears `[MaxWornRings]WornRing` plus a count**, not a slice — `Duelist` has to stay
+comparable, so a worn ring is an ID and its accumulator and the rules themselves live in the
+registry. `WearsRing` takes a `RingID`.
+
+**What is not built: acquisition.** Nothing buys, sells or unequips a ring; a run opens wearing
+`session.StartingRings`. Unequipping also needs a decision nobody has made — what happens to a
+growing ring's accumulator when its ring comes off.
 
 ## Discussing a new ring
 
@@ -230,13 +255,13 @@ The questions to put to an idea, in order:
 
 They reached for the same screen and nearly did the same job. Settled *(2026-08-17)*:
 
-- **Banker** adds **a second +1 per 5 held** into vitae propagation, at `fight-won`. It scales a
-  rule of the run — see *Vitae* in `MECHANICS.md`, which is where propagation itself is defined
-  and capped at +5.
+- **Banker doubles vitae propagation**, at `fight-won` — `scale-propagation`, 200. It scales a
+  rule of the run, defined and capped in *Vitae* in `MECHANICS.md`.
+  - **The cap binds the base rate; the ring scales what the cap produced.** At 25 held that is
+    +5 bare and +10 wearing Banker. An absolute cap would leave the ring doing nothing past 25,
+    which is a ring that stops working when a run can finally afford it.
+  - So the order is: count the fives, clamp to +5, then apply every scaling ring left to right.
+    Two of them compound, like every other ring effect.
 - **Soul Taker** is a **flat +5 to the vitae prize card**, at `prizes-dealt`: 5 becomes 10. Flat,
   not a percentage.
 - **Hungry** takes neither — it adds a *pick*, not a value.
-
-`[?]` **Whether propagation's +5 cap binds Banker as well.** At 25 held the pair would pay +10
-against a rule that says +5. Carried in `MECHANICS.md` under *Vitae*; **settle it before building
-either ring**.

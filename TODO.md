@@ -18,17 +18,26 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       Migrating health bars onto the plain-Go path would collapse the two, and is the only
       way to get back to one — the reverse is impossible, since the mask path needs a window.
       Low priority, but it is a real inconsistency.
-- [~] **Rings do one thing, and cannot be acquired.** The four elemental rings confer their
-      element's status and nothing else does *(2026-08-16)* — `combat.Duelist.Rings` is what
-      `resolveAttackPhase` reads. What is missing is the loop around it: **no buying, no
-      equipping, no unequipping**, and the worn set is the `startingRings` constant in
-      `internal/screens` (fire, ice, lightning; earth deliberately left off so the gate is
-      testable in play).
-      - **Blocked on `Session`**, and only that: a ring has to survive a fight and
-        `CombatScene` does not. Vitae actually being spent comes after.
-      - **The discount and the flip are still unwritten.** `Card.Cost()` is the seat the
-        discount sits in and `Duelist.Rings` is now the thing it would read, so both are
-        writable — the screen's AP bar and over-budget check are the other half.
+- [~] **Rings work and cannot be acquired.** The grammar is built *(2026-08-17)* and sixteen
+      rings are authored, but a run opens wearing three and **nothing buys, sells or unequips
+      one** — so thirteen of the sixteen are reachable only by editing `session.StartingRings`.
+      - **The shop is what is missing**, and it is a scene rather than a mechanic: vitae is
+        earned and propagates, `Session.Wear` exists and caps at five, and no screen calls it.
+        Unequipping needs a method and a rule about what happens to a growing ring's
+        accumulator when its ring comes off — nothing decides that yet.
+      - **Two authored names were invented and should be reviewed**: `bulwark-ring` (+25 HP;
+        `heart-ring` is the skill's name for the growing one) and `thrifty-ring` (the discount,
+        which the design never named). Thirteen of the sixteen also have **no art**, and draw
+        as a ring card with a hole in it.
+      - **`tools/balance` still cannot see a ring.** It wears the four elemental ones and
+        nothing else, so a damage, discount or stat ring is unmeasurable — a worn set as a
+        posture axis is what that needs.
+      - **The two cost sorts read the card's printed cost, not the wearer's.** `costChainLess`
+        in `combat_sort.go` and `sortPileEntries` in `combat_deck.go` are pure functions with
+        tests pinning them, so a discount ring would order a hand by a number the cards no
+        longer show. Nothing can equip a discount ring yet, so this bites the day the shop
+        lands — and which of the two numbers a sort *should* use is a real question, not
+        obviously the discounted one.
       - `Spec.Dragging` was added for the ring preview and is unused by both the row and the
         hand, which does have drag-and-drop and no visual for it.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
@@ -73,8 +82,10 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **No rarity and no weighting.** Every worm is equally likely to be offered.
       - **The catalogue is ten worms across seven targets**, of which four are the same recolour
         in four colours. It wants more *kinds*, not more colours.
-      - **Vitae is awarded and never spent.** The +5 card pays into `session.Session`, the combat
-        screen shows the purse, and there is no shop to spend it in.
+      - **Vitae is awarded, propagates, and is never spent.** The prize card pays into
+        `session.Session`, the purse earns +1 per 5 held after every win *(2026-08-17)*, the combat
+        screen shows it, and there is no shop to spend it in. Rings are what it is meant to buy,
+        and they are all built and unreachable — the two entries are one piece of work.
 
 - [ ] **Brands need a data file and a way to be acquired.** The mechanic is already decided —
       see `MECHANICS.md`'s Brands section: they alter the container where rings alter the
@@ -84,34 +95,17 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Next — where the game actually starts
 
-- [ ] **Build the ring grammar.** Designed in full on 2026-08-17 and **nothing is built**. Read
-      [.claude/skills/rings/SKILL.md](.claude/skills/rings/SKILL.md) first — it holds the
-      `When`/`If`/`Then` shape, the three closed vocabularies, the moment→code-seat table and
-      what a ring may never do. `MECHANICS.md` under *Rings* holds the argument for the shape;
-      *Vitae* holds the propagation rule Banker scales.
-      - **Two decisions are still open and both block a specific ring**: whether propagation's
-        +5 cap binds Banker as well (`MECHANICS.md` → *Vitae*), and which effect a growing
-        ring's accumulator feeds when it holds more than one (the skill). Everything else is
-        settled.
-      - **Build order, because each step unblocks the next:**
-        1. **`statuses.json` and the decoupling.** Nothing else can be expressed until a status
-           is a thing in its own right. Re-index `Duelist.Statuses` from element to status,
-           move `effectKeys` with it, and decide `cards.MaxEffects` — it is 4 *because* there
-           are four elements.
-        2. **`Duelist.Rings` becomes a slice** of rules-level rings, and `WearsRing` becomes a
-           query over it. This is what unblocks every non-elemental ring.
-        3. **Parse `rings.json` in `internal/session`**, beside the worms and for the same
-           reason, handing `combat` the rules type. `data` stays ignorant.
-        4. **The four combat moments** — `card-cost`, `card-damage`, `attack-lands`,
-           `deck-built`. `Card.Cost()`, `Card.Damage()` and `Card.Amount()` are already methods
-           on the card, so three of these are a line each rather than a rewrite.
-        5. **Vitae propagation as a rule of the run**, then the three moments outside combat:
-           `fight-start`, `fight-won`, `prizes-dealt`.
-        6. **Growing rings last** — they are the only ones holding state, and the first ring
-           thing that will have to be serialized.
-      - **`tools/balance` cannot see any of this** and a damage ring is unmeasurable until it
-        can. Say so rather than guessing at a multiplier.
-      - Ring *appearance* is explicitly not in scope; the row looks fine as it is.
+- [ ] **A status can be authored and a *kind* of status cannot.** `statuses.json` holds four
+      records against four closed effect kinds — `damage-over-time`, `lose-actions`,
+      `miss-chance`, `damage-reduction` — and every kind has exactly one record using it. That is
+      the point of the vocabulary being closed, but it means the decoupling is untested by
+      anything real: no second fire status exists, so nothing in play proves a colour can carry
+      two.
+      - The cheapest proof is a ring, not a status: **Storm is authored** and applies shocked
+        *and* chilled off one lightning card, which is the two-statuses-one-card case. It is
+        unreachable until something equips it.
+      - `cards.MaxEffects` is 4 and the badge row fits six at the current pitch, so a fifth
+        status is a one-number layout change with a test already pointing at it.
 
 - [ ] **Nothing reads card order any more, so drag-to-reorder decides nothing.** The one-blow
       rewrite on 2026-08-14 took the last two consumers of within-phase order at once: counted

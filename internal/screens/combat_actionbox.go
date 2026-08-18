@@ -203,7 +203,7 @@ func (s *CombatScene) selectedCount() int {
 // overBudget reports whether the selection costs more than the fighter can spend. Legal to
 // be in — it is how cards are gathered for a discard — but DUEL! will not fire from it.
 func (s *CombatScene) overBudget() bool {
-	return combat.CostOf(s.fighterActions) > s.fighter.ActionPoints()
+	return s.fighter.CostOf(s.fighterActions) > s.fighter.ActionPoints()
 }
 
 // syncQueue rebuilds the round's queue from the list: the selected cards, in list order.
@@ -338,7 +338,7 @@ func (s *CombatScene) toggle(i int) {
 		}
 		trace.Logf("input", "%s card[%d] %s -> %d/%d AP%s  hand %s",
 			verb, i, cardLabel(s.hand[i].actionCard),
-			combat.CostOf(s.fighterActions), s.fighter.ActionPoints(),
+			s.fighter.CostOf(s.fighterActions), s.fighter.ActionPoints(),
 			overSuffix(s), handLabel(s.hand))
 	}
 }
@@ -346,7 +346,7 @@ func (s *CombatScene) toggle(i int) {
 // overSuffix marks a trace line when the selection has gone past the budget, since that is
 // the state DUEL! refuses to fire from and the one worth spotting in a log.
 func overSuffix(s *CombatScene) string {
-	if over := combat.CostOf(s.fighterActions) - s.fighter.ActionPoints(); over > 0 {
+	if over := s.fighter.CostOf(s.fighterActions) - s.fighter.ActionPoints(); over > 0 {
 		return fmt.Sprintf(" (+%d OVER)", over)
 	}
 	return ""
@@ -550,7 +550,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// has to stay open, and it is the way out of an over-allocation.
 		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
 		drawCard(gs, screen, s.cardSlot(gs, i).Min, cards.Hand,
-			c.actionCard, enabled, c.selected)
+			c.actionCard, s.fighter.CardCost(c.actionCard), enabled, c.selected)
 	}
 
 	s.drawComboPreview(gs, screen)
@@ -667,7 +667,7 @@ func (s *CombatScene) drawComboPreview(gs *state.GlobalState, screen *ebiten.Ima
 // **An overspend is said twice on purpose**, here in words and by the bar's red cells. It is
 // the one state that stops DUEL! working.
 func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, left, barBottom int) {
-	spent, budget := combat.CostOf(s.fighterActions), s.fighter.ActionPoints()
+	spent, budget := s.fighter.CostOf(s.fighterActions), s.fighter.ActionPoints()
 
 	label := fmt.Sprintf("%d/%d AP", spent, budget)
 	op := &text.DrawOptions{}
@@ -731,7 +731,7 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 	if budget <= 0 {
 		return
 	}
-	spent := combat.CostOf(s.fighterActions)
+	spent := s.fighter.CostOf(s.fighterActions)
 
 	// Over budget the bar grows extra cells rather than overflowing, so the overspend is
 	// shown at whatever size it happens to be instead of pinning at full.
@@ -785,7 +785,7 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 
 	at := image.Pt(gs.MouseX-s.drag.grabDX, gs.MouseY-s.drag.grabDY)
 	drawCard(gs, screen, at, cards.Hand,
-		s.drag.card.actionCard, true, s.drag.card.selected)
+		s.drag.card.actionCard, s.fighter.CardCost(s.drag.card.actionCard), true, s.drag.card.selected)
 }
 
 // drawCard draws one action card at `at`, in the given style.
@@ -799,9 +799,9 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 // was part of the cache key. The face carries effect text instead of a figure now, and a
 // card's picture is a function of the card alone.
 func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
-	c actionCard, enabled, selected bool) {
+	c actionCard, cost int, enabled, selected bool) {
 
-	img := cardImage(gs, cardSpec(c, enabled, selected), st)
+	img := cardImage(gs, cardSpec(c, cost, enabled, selected), st)
 	if img == nil {
 		return
 	}

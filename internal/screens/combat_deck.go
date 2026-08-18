@@ -318,7 +318,9 @@ func (s *CombatScene) toggleDeck() {
 func (s *CombatScene) resetDeck(run *session.Session) {
 	s.deck = s.deck[:0]
 	if run != nil {
-		s.deck = append(s.deck, run.Deck()...)
+		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a flip ring recolours
+		// what is dealt without touching what the run owns. See session.FightDeck.
+		s.deck = append(s.deck, run.FightDeck()...)
 	} else {
 		s.deck = append(s.deck, StartingDeck()...)
 	}
@@ -762,7 +764,7 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 			// is an inventory, not a choice, and dimming by the round's remaining AP would
 			// say something about a budget that has nothing to do with a pile you cannot
 			// play from.
-			drawCard(gs, screen, at, cards.Mini, e.card, e.available, false)
+			drawCard(gs, screen, at, cards.Mini, e.card, s.fighter.CardCost(e.card), e.available, false)
 		}
 		shown += min(len(group), deckMaxPerRow)
 	}

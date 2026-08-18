@@ -341,7 +341,7 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 					wanted = true
 				}
 			}
-			if got := bAfter.Statuses[e].Active(); got != wanted {
+			if got := bAfter.Statuses[statusOf(e)].Active(); got != wanted {
 				t.Errorf("%s: %v active is %v, want %v", tc.what, e, got, wanted)
 			}
 		}
@@ -355,10 +355,10 @@ func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Of(Jab, Fire), Of(Strike, Ice)}, nil, 1)
 
-	if !bAfter.Statuses[Ice].Active() {
+	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("the ice pair is the hand and should have chilled")
 	}
-	if bAfter.Statuses[Fire].Active() {
+	if bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("the fire Jab is in no hand, so it should have burned nobody")
 	}
 }
@@ -376,7 +376,7 @@ func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
 		t.Errorf("a rainbow landed %d statuses, want 4", n)
 	}
 	for _, e := range []Element{Fire, Ice, Earth, Lightning} {
-		if !bAfter.Statuses[e].Active() {
+		if !bAfter.Statuses[statusOf(e)].Active() {
 			t.Errorf("%v did not land", e)
 		}
 	}
@@ -402,7 +402,7 @@ func TestALoneAttackStillAppliesItsElement(t *testing.T) {
 	if got := handsFormed(events, SideA); len(got) != 0 {
 		t.Fatalf("a Strike and a Jab formed %v, want no hand", got)
 	}
-	if !bAfter.Statuses[Ice].Active() {
+	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("the ice Strike was the blow and should still have chilled")
 	}
 }
@@ -421,8 +421,8 @@ func TestChilledCardsCannotFormAHand(t *testing.T) {
 		[]Card{Of(Jab, Ice)},
 		PlainCards(Strike, Strike, Strike, Strike, Strike), 1)
 
-	if lost := chilledActions(events, SideB); len(lost) != chillCardsPerHit {
-		t.Fatalf("B should lose %d card to the chill, got %v", chillCardsPerHit, lost)
+	if lost := chilledActions(events, SideB); len(lost) != chillPct() {
+		t.Fatalf("B should lose %d card to the chill, got %v", chillPct(), lost)
 	}
 
 	fourOfAKind, _ := handByKey("four-of-a-kind")
@@ -441,13 +441,13 @@ func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 	if lost := chilledActions(r1, SideA); len(lost) != 0 {
 		t.Fatalf("A already acted, so nothing can be taken from it this round, got %v", lost)
 	}
-	if !a1.Statuses[Ice].Active() {
+	if !a1.Statuses[statusOf(Ice)].Active() {
 		t.Fatal("A should be carrying the chill into the next round")
 	}
 
 	r2, _, _ := resolve(a1, b1, PlainCards(Strike, Strike), nil, 2)
-	if lost := chilledActions(r2, SideA); len(lost) != chillCardsPerHit {
-		t.Fatalf("A should lose %d card in the round after, got %v", chillCardsPerHit, lost)
+	if lost := chilledActions(r2, SideA); len(lost) != chillPct() {
+		t.Fatalf("A should lose %d card in the round after, got %v", chillPct(), lost)
 	}
 }
 

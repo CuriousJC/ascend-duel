@@ -3,28 +3,222 @@
     "RingRecord": "fire-ring",
     "Name": "Fire Ring",
     "Art": "firering_png",
-    "Element": "fire",
-    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 10% DMG each turn."
+    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 10% DMG each turn.",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "apply-status", "Status": "burning" }]
+      }
+    ]
   },
   {
     "RingRecord": "frozen-ring",
     "Name": "Frozen Ring",
     "Art": "frozenring_png",
-    "Element": "ice",
-    "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn."
+    "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "apply-status", "Status": "chilled" }]
+      }
+    ]
   },
   {
     "RingRecord": "thunder-ring",
     "Name": "Thunder Ring",
     "Art": "thunderring_png",
-    "Element": "lightning",
-    "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss."
+    "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "apply-status", "Status": "shocked" }]
+      }
+    ]
   },
   {
     "RingRecord": "earth-ring",
     "Name": "Earth Ring",
     "Art": "earthring_png",
-    "Element": "earth",
-    "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG."
+    "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "apply-status", "Status": "weighted" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "storm-ring",
+    "Name": "Storm Ring",
+    "Art": "",
+    "Text": "Lightning attacks SHOCK and CHILL the target.",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "lightning" },
+        "Then": [
+          { "Do": "apply-status", "Status": "shocked" },
+          { "Do": "apply-status", "Status": "chilled" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "keen-ring",
+    "Name": "Keen Ring",
+    "Art": "",
+    "Text": "Every slash card deals double DMG.",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Family": "slash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "heavy-ring",
+    "Name": "Heavy Ring",
+    "Art": "",
+    "Text": "Every crush card deals double DMG.",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Family": "crush" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "needle-ring",
+    "Name": "Needle Ring",
+    "Art": "",
+    "Text": "Every stab card deals double DMG.",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Family": "stab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "striker-ring",
+    "Name": "Striker Ring",
+    "Art": "",
+    "Text": "Every Strike deals double DMG.",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Strike" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "thrifty-ring",
+    "Name": "Thrifty Ring",
+    "Art": "",
+    "Text": "Fire cards cost 1 AP less.",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "frozen-lightning-ring",
+    "Name": "Frozen Lightning Ring",
+    "Art": "",
+    "Text": "Every lightning card is dealt as an ice card.",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "might-ring",
+    "Name": "Might Ring",
+    "Art": "",
+    "Text": "+10 DMG for every fight.",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "add-dmg", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "bulwark-ring",
+    "Name": "Bulwark Ring",
+    "Art": "",
+    "Text": "+25 HP for every fight.",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "add-hp", "Amount": 25 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "heart-ring",
+    "Name": "Heart Ring",
+    "Art": "",
+    "Text": "+5 HP, and 5 more for every fight won.",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "add-hp", "Amount": 5 }]
+      },
+      {
+        "When": "fight-won",
+        "Then": [{ "Do": "grow", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "banker-ring",
+    "Name": "Banker Ring",
+    "Art": "",
+    "Text": "Vitae propagates twice as fast.",
+    "Rules": [
+      {
+        "When": "fight-won",
+        "Then": [{ "Do": "scale-propagation", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "soul-taker-ring",
+    "Name": "Soul Taker Ring",
+    "Art": "",
+    "Text": "The vitae prize card pays 5 more.",
+    "Rules": [
+      {
+        "When": "prizes-dealt",
+        "Then": [{ "Do": "adjust-prize-vitae", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hungry-ring",
+    "Name": "Hungry Ring",
+    "Art": "",
+    "Text": "Two prizes after a fight instead of one.",
+    "Rules": [
+      {
+        "When": "prizes-dealt",
+        "Then": [{ "Do": "adjust-picks", "Amount": 1 }]
+      }
+    ]
   }
 ]

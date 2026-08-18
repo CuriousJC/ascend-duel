@@ -8,17 +8,68 @@ import (
 // them share.
 //
 // **Every test here is written against the rule rather than the constant** where it can be —
-// a chill costs `chillCardsPerHit` cards, not "one" — so tuning a number does not fail a
+// a chill costs `chillPct()` cards, not "one" — so tuning a number does not fail a
 // test that was checking the mechanic. The exceptions are the ones pinning a *relationship*
 // (a burn ticks twice, a status is gone by the round after, a second hit does not stack), which
 // is the thing that must not move without somebody deciding it should.
+
+// **These tests talk in colours and the rules no longer do** *(2026-08-17)*. A status is its own
+// record and a ring is what connects the two, so the four rings below are built here — this package
+// cannot read `rings.json`, which is parsed in `internal/session` — and every element-shaped helper
+// goes through them. What that buys is that a test about the *lifecycle* stays written the way the
+// mechanic is discussed, while the decoupling is exercised by the wiring underneath it.
+
+// statusOf is the status the named colour's ring applies, by the pairing `rings.json` ships.
+func statusOf(e Element) StatusID {
+	switch e {
+	case Fire:
+		return MustStatus("burning")
+	case Ice:
+		return MustStatus("chilled")
+	case Lightning:
+		return MustStatus("shocked")
+	case Earth:
+		return MustStatus("weighted")
+	default:
+		return NoStatus
+	}
+}
+
+// The four figures the tests used to read off constants in status.go. They are file entries now, so
+// a test naming the rule rather than the number reads it back out of the registry.
+func burnPct() int      { return StatusOf(statusOf(Fire)).Amount }
+func chillPct() int     { return StatusOf(statusOf(Ice)).Amount }
+func shockPct() int     { return StatusOf(statusOf(Lightning)).Amount }
+func statusRounds() int { return StatusOf(statusOf(Fire)).Rounds }
+func weightPct() int    { return StatusOf(statusOf(Earth)).Amount }
+
+// testRings is the four elemental rings, registered once for the whole test binary. **Registered
+// rather than faked**, so what the tests exercise is the same `RegisterRing` path the game loads
+// through — a rule the registry would refuse fails here too.
+var testRings = registerTestRings()
+
+func registerTestRings() map[Element]RingID {
+	out := map[Element]RingID{}
+	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
+		id, err := RegisterRing("test."+e.String(), "Test "+e.String(), []RingRule{{
+			When: MomentAttackLands,
+			If:   RingCondition{Element: e, HasElement: true},
+			Then: []RingEffect{{Do: DoApplyStatus, Status: statusOf(e)}},
+		}})
+		if err != nil {
+			panic(err)
+		}
+		out[e] = id
+	}
+	return out
+}
 
 // wearing returns the duelist with rings for the named elements on. **Every status test needs
 // one**, which is the whole point of the 2026-08-16 rule: without a ring an element is a border
 // colour and a combo axis and nothing else.
 func wearing(d Duelist, es ...Element) Duelist {
 	for _, e := range es {
-		d.Rings[e] = true
+		d = d.Wearing(WornRing{Ring: testRings[e]})
 	}
 	return d
 }
@@ -26,11 +77,11 @@ func wearing(d Duelist, es ...Element) Duelist {
 // ringed is a duelist wearing all four, for tests about the lifecycle rather than about rings.
 func ringed(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth) }
 
-// statusEvents returns the KindStatus events for one element.
+// statusEvents returns the KindStatus events for the status one colour's ring applies.
 func statusEvents(events []Event, e Element) []Event {
 	var out []Event
 	for _, ev := range events {
-		if ev.Kind == KindStatus && ev.Element == e {
+		if ev.Kind == KindStatus && ev.Status == statusOf(e) {
 			out = append(out, ev)
 		}
 	}
@@ -60,7 +111,7 @@ func TestAnElementAppliesNothingWithoutItsRing(t *testing.T) {
 		if n := len(statusEvents(events, e)); n != 0 {
 			t.Errorf("an unringed %v Strike applied %d statuses, want 0", e, n)
 		}
-		if bAfter.Statuses[e].Active() {
+		if bAfter.Statuses[statusOf(e)].Active() {
 			t.Errorf("an unringed %v Strike left a %v status behind", e, e)
 		}
 	}
@@ -75,11 +126,11 @@ func TestOnlyTheRingWornSwitchesItsOwnElementOn(t *testing.T) {
 	_, _, bAfter := resolve(a, b,
 		[]Card{Of(Jab, Fire), Of(Jab, Ice), Of(Jab, Lightning), Of(Jab, Earth)}, nil, 1)
 
-	if !bAfter.Statuses[Fire].Active() {
+	if !bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("the fire ring's own colour left no burn")
 	}
 	for _, e := range []Element{Ice, Lightning, Earth} {
-		if bAfter.Statuses[e].Active() {
+		if bAfter.Statuses[statusOf(e)].Active() {
 			t.Errorf("a %v card left a status on a duelist wearing no %v ring", e, e)
 		}
 	}
@@ -93,19 +144,39 @@ func TestTheRingIsReadOffTheAttackerNotTheVictim(t *testing.T) {
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Fire)}, nil, 1)
 
-	if bAfter.Statuses[Fire].Active() {
+	if bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("the victim's own fire ring lit a burn on themselves")
 	}
 }
 
-func TestBasicIsNeverWorn(t *testing.T) {
-	// Basic is the absence of an element, so there is nothing for a ring to point at. The array is
-	// indexed by Element and its zeroth entry is reachable; this is what stops it meaning anything.
-	d := duelist(10, 5, 500)
-	d.Rings[Basic] = true
+func TestABasicAttackAppliesNothingHoweverManyRingsAreWorn(t *testing.T) {
+	// Basic is the absence of an element rather than a fifth colour, so no elemental ring can match
+	// it. A duelist wearing all four and swinging a plain card leaves nothing behind — which is what
+	// keeps "drab lands none" true from the ring's side as well as the card's.
+	a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
 
-	if d.WearsRing(Basic) {
-		t.Error("a duelist reported wearing a basic ring")
+	events, _, bAfter := resolve(a, b, []Card{Plain(Strike)}, nil, 1)
+
+	if n := countKind(events, KindStatus); n != 0 {
+		t.Errorf("a basic Strike applied %d statuses, want 0", n)
+	}
+	for _, id := range AllStatuses() {
+		if bAfter.Statuses[id].Active() {
+			t.Errorf("a basic Strike left %s behind", StatusOf(id).Key)
+		}
+	}
+}
+
+func TestARingNotWornDoesNothing(t *testing.T) {
+	// WearsRing is a query over the worn set rather than a flag read, so this is the shape of the
+	// gate now: a registered ring nobody put on is a ring that never fires.
+	d := wearing(duelist(10, 5, 500), Fire)
+
+	if !d.WearsRing(testRings[Fire]) {
+		t.Error("a duelist wearing the fire ring reported not wearing it")
+	}
+	if d.WearsRing(testRings[Ice]) {
+		t.Error("a duelist reported wearing a ring nobody put on")
 	}
 }
 
@@ -121,7 +192,7 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 		if got := statusEvents(events, e); len(got) != 1 {
 			t.Errorf("a %v Strike raised %d status events, want 1", e, len(got))
 		}
-		if !bAfter.Statuses[e].Active() {
+		if !bAfter.Statuses[statusOf(e)].Active() {
 			t.Errorf("a %v Strike left no %v status on the target", e, e)
 		}
 	}
@@ -138,7 +209,7 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 		if n := len(statusEvents(events, Fire)); n != 0 {
 			t.Errorf("a fire %v applied a status %d times", a, n)
 		}
-		if bAfter.Statuses[Fire].Active() {
+		if bAfter.Statuses[statusOf(Fire)].Active() {
 			t.Errorf("a fire %v left a burn on the opponent", a)
 		}
 	}
@@ -161,7 +232,7 @@ func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 		if n := len(statusEvents(events, Fire)); n != 1 {
 			t.Errorf("a Strike met by a %v applied its burn %d times, want 1", defence, n)
 		}
-		if !bAfter.Statuses[Fire].Active() {
+		if !bAfter.Statuses[statusOf(Fire)].Active() {
 			t.Errorf("a Strike met by a %v left no burn", defence)
 		}
 	}
@@ -178,8 +249,8 @@ func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
 	if n := len(statusEvents(events, Fire)); n != 1 {
 		t.Errorf("two fire cards in one hand applied %d burns, want 1", n)
 	}
-	want, _ := statusFor(Fire, a)
-	if got := bAfter.Statuses[Fire].Amount; got != want {
+	want := statusAmount(StatusOf(statusOf(Fire)), a)
+	if got := bAfter.Statuses[statusOf(Fire)].Amount; got != want {
 		t.Errorf("a mono fire hand burned for %d, want %d", got, want)
 	}
 }
@@ -191,10 +262,10 @@ func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Ice)}, nil, 1)
 
-	if !bAfter.Statuses[Fire].Active() {
+	if !bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("a duo fire/ice hand left no burn")
 	}
-	if !bAfter.Statuses[Ice].Active() {
+	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("a duo fire/ice hand left no chill")
 	}
 }
@@ -211,7 +282,7 @@ func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
 	if n := len(statusEvents(events, Fire)); n != 0 {
 		t.Errorf("a fire Jab outside the hand applied %d burns, want 0", n)
 	}
-	if bAfter.Statuses[Fire].Active() {
+	if bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("a card that earned nothing still left its element behind")
 	}
 }
@@ -228,7 +299,7 @@ func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
 	if n := len(statusEvents(events, Ice)); n != 1 {
 		t.Errorf("a halved Strike applied its chill %d times, want 1", n)
 	}
-	if !bAfter.Statuses[Ice].Active() {
+	if !bAfter.Statuses[statusOf(Ice)].Active() {
 		t.Error("a halved ice Strike left no chill")
 	}
 }
@@ -242,15 +313,15 @@ func TestASecondHitResetsTheClockAndDoesNotStack(t *testing.T) {
 	a, b := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
-	one := b1.Statuses[Fire].Amount
+	one := b1.Statuses[statusOf(Fire)].Amount
 
 	_, _, b2 := resolve(a1, b1, []Card{Of(Jab, Fire)}, nil, 2)
 
-	if got := b2.Statuses[Fire].Amount; got != one {
+	if got := b2.Statuses[statusOf(Fire)].Amount; got != one {
 		t.Errorf("two fire hits burn for %d against one hit's %d — nothing stacks", got, one)
 	}
-	// Refreshed rather than added: statusDuration, less the one round-end that has passed.
-	if got, want := b2.Statuses[Fire].Rounds, statusDuration-1; got != want {
+	// Refreshed rather than added: statusRounds(), less the one round-end that has passed.
+	if got, want := b2.Statuses[statusOf(Fire)].Rounds, statusRounds()-1; got != want {
 		t.Errorf("two fire hits left %d rounds, want %d — the clock resets, it does not add",
 			got, want)
 	}
@@ -263,12 +334,12 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 	a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
-	if !b1.Statuses[Ice].Active() {
+	if !b1.Statuses[statusOf(Ice)].Active() {
 		t.Fatal("the chill did not survive the round it was applied in")
 	}
 
 	_, _, b2 := resolve(a1, b1, nil, nil, 2)
-	if b2.Statuses[Ice].Active() {
+	if b2.Statuses[statusOf(Ice)].Active() {
 		t.Error("the chill outlived the round after the one that applied it")
 	}
 }
@@ -288,7 +359,7 @@ func TestIceTakesACardOffTheFrontOfTheTurn(t *testing.T) {
 
 	events, _, _ := resolve(a, b, []Card{Of(Jab, Ice)}, []Card{Plain(Strike), Plain(Strike)}, 1)
 
-	if got, want := countKind(events, KindChilled), chillCardsPerHit; got != want {
+	if got, want := countKind(events, KindChilled), chillPct(); got != want {
 		t.Errorf("a chilled turn lost %d cards, want %d", got, want)
 	}
 }
@@ -301,14 +372,14 @@ func TestAChillBitesEveryTurnItOutlives(t *testing.T) {
 	bTurn := []Card{Plain(Strike), Plain(Strike)}
 
 	r1, a1, b1 := resolve(a, b, []Card{Of(Jab, Ice)}, bTurn, 1)
-	if n := countKind(r1, KindChilled); n != chillCardsPerHit {
-		t.Fatalf("round 1 lost %d cards to the chill, want %d", n, chillCardsPerHit)
+	if n := countKind(r1, KindChilled); n != chillPct() {
+		t.Fatalf("round 1 lost %d cards to the chill, want %d", n, chillPct())
 	}
 
 	r2, a2, b2 := resolve(a1, b1, nil, bTurn, 2)
-	if n := countKind(r2, KindChilled); n != chillCardsPerHit {
+	if n := countKind(r2, KindChilled); n != chillPct() {
 		t.Errorf("round 2 lost %d cards to the chill, want %d — a chill bites while it lasts",
-			n, chillCardsPerHit)
+			n, chillPct())
 	}
 
 	r3, _, _ := resolve(a2, b2, nil, bTurn, 3)
@@ -327,7 +398,7 @@ func TestASecondIceHitDoesNotDeepenTheChill(t *testing.T) {
 
 	events, _, _ := resolve(a1, b1, []Card{Of(Jab, Ice)}, bTurn, 2)
 
-	if got, want := countKind(events, KindChilled), chillCardsPerHit; got != want {
+	if got, want := countKind(events, KindChilled), chillPct(); got != want {
 		t.Errorf("a twice-chilled turn lost %d cards, want %d", got, want)
 	}
 }
@@ -359,7 +430,7 @@ func TestAShockIsARollAndTheSourceDecidesIt(t *testing.T) {
 	a, b := wearing(duelist(10, 5, 500), Lightning), duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
-	if !b1.Statuses[Lightning].Active() {
+	if !b1.Statuses[statusOf(Lightning)].Active() {
 		t.Fatal("the lightning Strike left no shock")
 	}
 
@@ -385,27 +456,27 @@ func TestAShockIsAFlatChanceThatCanNeverBeCertain(t *testing.T) {
 	// **The chance is the Amount now that nothing stacks**, and the cap that used to hold four
 	// stacks under a certainty went with the stacking. What has to stay true is the reason the cap
 	// existed: a defence that always works deletes a whole opposing turn for one card.
-	if shockMissPct >= 100 {
+	if shockPct() >= 100 {
 		t.Errorf("a shock misses %d%% of the time, which is the certain miss this replaced",
-			shockMissPct)
+			shockPct())
 	}
-	if shockMissPct <= 0 {
-		t.Errorf("a shock misses %d%% of the time, so lightning does nothing", shockMissPct)
+	if shockPct() <= 0 {
+		t.Errorf("a shock misses %d%% of the time, so lightning does nothing", shockPct())
 	}
 
 	d := duelist(10, 5, 500)
-	if shockMisses(d, alwaysMisses()) {
+	if attackMisses(d, alwaysMisses()) {
 		t.Error("an unshocked duelist missed")
 	}
 
-	d.Statuses[Lightning] = Status{Amount: shockMissPct, Rounds: 1}
-	if !shockMisses(d, alwaysMisses()) {
+	d.Statuses[statusOf(Lightning)] = Status{Amount: shockPct(), Rounds: 1}
+	if !attackMisses(d, alwaysMisses()) {
 		t.Error("a shocked duelist passed a roll it could not pass")
 	}
-	if shockMisses(d, neverMisses()) {
+	if attackMisses(d, neverMisses()) {
 		t.Error("a shocked duelist failed a roll it could not fail")
 	}
-	if shockMisses(d, nil) {
+	if attackMisses(d, nil) {
 		t.Error("a nil source produced a roll")
 	}
 }
@@ -423,7 +494,7 @@ func TestAShockRollsAgainOnEveryAttackItOutlives(t *testing.T) {
 	if n := countKind(r1, KindMissed); n != 1 {
 		t.Fatalf("round 1 missed %d times, want 1", n)
 	}
-	if !b1.Statuses[Lightning].Active() {
+	if !b1.Statuses[statusOf(Lightning)].Active() {
 		t.Fatal("the roll consumed the shock")
 	}
 
@@ -474,7 +545,7 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 	if n := len(statusEvents(events, Fire)); n != 0 {
 		t.Error("a missed attack still applied its burn")
 	}
-	if bAfter.Statuses[Fire].Active() {
+	if bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Error("a missed attack left its element on somebody")
 	}
 }
@@ -491,13 +562,13 @@ func TestABurnIsAShareOfTheAttackersDMG(t *testing.T) {
 	_, _, hot := resolve(strong, target, []Card{Of(Jab, Fire)}, nil, 1)
 	_, _, mild := resolve(weak, target, []Card{Of(Jab, Fire)}, nil, 1)
 
-	if want := strong.DMG * burnPctOfDMG / 100; hot.Statuses[Fire].Amount != want {
+	if want := strong.DMG * burnPct() / 100; hot.Statuses[statusOf(Fire)].Amount != want {
 		t.Errorf("a DMG %d duelist burned for %d, want %d",
-			strong.DMG, hot.Statuses[Fire].Amount, want)
+			strong.DMG, hot.Statuses[statusOf(Fire)].Amount, want)
 	}
-	if hot.Statuses[Fire].Amount <= mild.Statuses[Fire].Amount {
+	if hot.Statuses[statusOf(Fire)].Amount <= mild.Statuses[statusOf(Fire)].Amount {
 		t.Errorf("a DMG %d burn of %d did not beat a DMG %d burn of %d",
-			strong.DMG, hot.Statuses[Fire].Amount, weak.DMG, mild.Statuses[Fire].Amount)
+			strong.DMG, hot.Statuses[statusOf(Fire)].Amount, weak.DMG, mild.Statuses[statusOf(Fire)].Amount)
 	}
 }
 
@@ -507,7 +578,7 @@ func TestABurnAlwaysTicksForSomething(t *testing.T) {
 	// land.
 	feeble := wearing(duelist(1, 5, 500), Fire)
 
-	if got, _ := statusFor(Fire, feeble); got < 1 {
+	if got := statusAmount(StatusOf(statusOf(Fire)), feeble); got < 1 {
 		t.Errorf("a DMG %d duelist lights a burn of %d, want at least 1", feeble.DMG, got)
 	}
 }
@@ -579,7 +650,7 @@ func TestADeadDuelistDoesNotBurn(t *testing.T) {
 	if bAfter.Alive() {
 		t.Fatalf("the target survived on %d life; this test needs it dead", bAfter.CurrentLife)
 	}
-	if !bAfter.Statuses[Fire].Active() {
+	if !bAfter.Statuses[statusOf(Fire)].Active() {
 		t.Fatal("the fire hand left no burn, so this test proves nothing")
 	}
 	if n := countKind(events, KindBurned); n != 0 {
@@ -604,10 +675,10 @@ func TestEarthBluntsWhatItsVictimDeals(t *testing.T) {
 	weighted, _, _ := resolve(a1, b1, nil, []Card{Plain(Strike)}, 2)
 
 	got := firstDamage(t, weighted, SideB).Amount
-	want := blunt(base, weightPct)
+	want := blunt(base, weightPct())
 	if got != want {
 		t.Errorf("a weighted Strike dealt %d, want %d (%d blunted by %d%%)",
-			got, want, base, weightPct)
+			got, want, base, weightPct())
 	}
 	if got >= base {
 		t.Errorf("a weighted Strike dealt %d against an unweighted %d — earth did nothing", got, base)
@@ -618,12 +689,12 @@ func TestAWeightCannotBluntEverything(t *testing.T) {
 	// **What bounded this was a cap on four stacks; what bounds it now is that there is only ever
 	// one.** The rule it protects is unchanged: nothing takes a blow to nothing, because a turn
 	// lands one figure and total negation is a whole turn deleted by one card.
-	if weightPct >= 100 {
-		t.Errorf("a weight of %d%% can erase a blow outright", weightPct)
+	if weightPct() >= 100 {
+		t.Errorf("a weight of %d%% can erase a blow outright", weightPct())
 	}
 
 	d := duelist(10, 5, 500)
-	d.Statuses[Earth] = Status{Amount: weightPct, Rounds: 1}
+	d.Statuses[statusOf(Earth)] = Status{Amount: weightPct(), Rounds: 1}
 	if blunt(100, d.weight()) <= 0 {
 		t.Error("a weighted blow was reduced to nothing")
 	}

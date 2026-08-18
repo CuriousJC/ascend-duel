@@ -1,0 +1,38 @@
+[
+  {
+    "StatusRecord": "burning",
+    "Name": "BURNING",
+    "Badge": "fireeffect_png",
+    "Effect": "damage-over-time",
+    "Amount": 10,
+    "Rounds": 2,
+    "Text": "takes 10% of the attacker's DMG at the end of each round"
+  },
+  {
+    "StatusRecord": "chilled",
+    "Name": "CHILLED",
+    "Badge": "frozeneffect_png",
+    "Effect": "lose-actions",
+    "Amount": 1,
+    "Rounds": 2,
+    "Text": "loses one card off the front of each turn"
+  },
+  {
+    "StatusRecord": "shocked",
+    "Name": "SHOCKED",
+    "Badge": "thundereffect_png",
+    "Effect": "miss-chance",
+    "Amount": 25,
+    "Rounds": 2,
+    "Text": "has a 25% chance to miss with every attack"
+  },
+  {
+    "StatusRecord": "weighted",
+    "Name": "WEIGHTED",
+    "Badge": "eartheffect_png",
+    "Effect": "damage-reduction",
+    "Amount": 25,
+    "Rounds": 2,
+    "Text": "deals 25% less DMG"
+  }
+]

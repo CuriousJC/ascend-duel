@@ -232,7 +232,7 @@ func (s *CombatScene) demoSendPlan() {
 
 	if s.overBudget() {
 		fmt.Printf("demo: plan %d costs %d against a budget of %d and will not resolve\n",
-			demo.round, combat.CostOf(s.fighterActions), s.fighter.ActionPoints())
+			demo.round, s.fighter.CostOf(s.fighterActions), s.fighter.ActionPoints())
 	}
 	s.startRound()
 }
@@ -260,7 +260,7 @@ func (s *CombatScene) demoPickRound() {
 				cat, demo.round+1)
 			continue
 		}
-		if combat.CostOf(s.fighterActions)+cost > s.fighter.ActionPoints() {
+		if s.fighter.CostOf(s.fighterActions)+cost > s.fighter.ActionPoints() {
 			fmt.Printf("demo: cannot afford a %v card in round %d on %d AP\n",
 				cat, demo.round+1, s.fighter.ActionPoints())
 			continue

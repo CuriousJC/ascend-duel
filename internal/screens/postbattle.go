@@ -64,6 +64,12 @@ const (
 // cards.
 type prize struct {
 	vitae bool
+
+	// taken is set once this prize has been picked and paid out. **It stays in the row rather than
+	// being removed from it** — a card leaving would move the two beside it, and the vitae's seat
+	// never moving is the whole reason it is always last. Only a ring that adds a pick can produce a
+	// row with a taken card still in it.
+	taken bool
 	worm  session.Worm
 }
 
@@ -175,6 +181,14 @@ type PostBattleScene struct {
 
 	// pendingWhat is what the trace line will say once the alteration lands.
 	pendingWhat string
+
+	// picksLeft is how many prizes this visit still owes the player, from `session.Picks` — the
+	// `prizes-dealt` moment, which the Hungry ring is what moves off 1.
+	//
+	// **A second pick is another card out of the same row**, not a fresh row: the offer was dealt
+	// once, and re-dealing it would make the second pick a different draw of the same fight. The card
+	// offer *is* re-dealt, because a worm may have removed a card and every index after it has moved.
+	picksLeft int
 }
 
 // Init deals both offers. **Re-entered on every visit**, because each fight earns its own.
@@ -195,11 +209,12 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
 	s.offer = dealOffer(gs)
+	s.picksLeft = gs.Run.Picks()
 
 	s.place(gs)
 
-	trace.Logf("postbattle", "after fight %d: prizes %v, %d cards of %d",
-		gs.Run.Fight(), prizeNames(s.prizes), len(s.offer), gs.Run.Size())
+	trace.Logf("postbattle", "after fight %d: prizes %v, %d cards of %d, %d to take",
+		gs.Run.Fight(), prizeNames(s.prizes), len(s.offer), gs.Run.Size(), s.picksLeft)
 }
 
 func prizeNames(ps []prize) []string {
@@ -320,6 +335,9 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 				trace.Logf("postbattle", "%s, deck now %d", s.pendingWhat, gs.Run.Size())
 				s.applyNow = nil
 			}
+			if s.rearm(gs) {
+				return nil
+			}
 			gs.ActiveScreen = state.Combat
 			gs.NewScreen = true
 		}
@@ -384,7 +402,7 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 // has nothing to choose, so it flies straight to the middle and the screen settles on it. Both
 // paths end the same way — a card in the centre — which is the whole reason the money is a card.
 func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
-	if i < 0 || i >= len(s.prizes) {
+	if i < 0 || i >= len(s.prizes) || s.prizes[i].taken {
 		return
 	}
 	s.chosen = i
@@ -394,9 +412,43 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 		return
 	}
 
-	s.applyNow = func(run *session.Session) { run.AddVitae(vitaeReward) }
-	s.pendingWhat = fmt.Sprintf("took %d vitae", vitaeReward)
+	// **What the vitae card pays is the run's business, not this screen's** *(2026-08-17)*. The
+	// `prizes-dealt` moment is where the Soul Taker ring turns 5 into 10, and it is a flat addition
+	// rather than a scaling — see MECHANICS.md, where the two vitae rings are deliberately different
+	// objects.
+	paid := gs.Run.PrizeVitae(vitaeReward)
+	s.applyNow = func(run *session.Session) { run.AddVitae(paid) }
+	s.pendingWhat = fmt.Sprintf("took %d vitae", paid)
 	s.settle(gs, s.wormSlot(gs, i))
+}
+
+// rearm is what a second pick is: the taken prize is struck off, the row stays where it is, and the
+// screen goes back to the top. It reports whether another pick is owed.
+//
+// **The card offer is re-dealt and the prize row is not.** A worm may have removed a card, so every
+// index the old offer held has moved — where the prizes are the same three cards they always were,
+// one of them now spent. The seed is the same, which is deliberate: it is the same fight's offer,
+// re-resolved against a deck that changed.
+func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
+	s.picksLeft--
+	if s.picksLeft <= 0 {
+		return false
+	}
+
+	if s.chosen >= 0 && s.chosen < len(s.prizes) {
+		s.prizes[s.chosen].taken = true
+	}
+
+	s.chosen, s.aimed = -1, -1
+	s.stage = pickWorm
+	s.removes, s.held = false, 0
+	s.arrival, s.arrivedFrom, s.taking = travel{}, image.Rectangle{}, false
+	s.pendingWhat, s.applyNow = "", nil
+	s.offer = dealOffer(gs)
+	s.place(gs)
+
+	trace.Logf("postbattle", "another pick: %d left, %d cards", s.picksLeft, gs.Run.Size())
+	return true
 }
 
 // settle starts the last stage: the won card flies from wherever it was to the middle, is held
@@ -572,7 +624,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			// of a click that silently does nothing.
 			worm, _ := s.chosenWorm()
 			usable := gs.Run.CanApply(worm, deckIndex)
-			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, usable, false)
+			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, deckCardCost(gs, card), usable, false)
 		}
 		systems.DrawButton(gs, screen, s.backButton)
 	}
@@ -601,7 +653,7 @@ func (s *PostBattleScene) drawMorph(gs *state.GlobalState, screen *ebiten.Image,
 
 	beforeAt, afterAt := morphSlots(gs)
 
-	drawCard(gs, screen, beforeAt.Min, cards.Hand, s.before, true, false)
+	drawCard(gs, screen, beforeAt.Min, cards.Hand, s.before, deckCardCost(gs, s.before), true, false)
 
 	arrow := &text.DrawOptions{}
 	arrow.GeoM.Translate(float64(gs.PctX(50)), float64(beforeAt.Min.Y+cardHeight/2))
@@ -614,7 +666,7 @@ func (s *PostBattleScene) drawMorph(gs *state.GlobalState, screen *ebiten.Image,
 		drawEmptySeat(screen, afterAt)
 		return
 	}
-	drawCard(gs, screen, afterAt.Min, cards.Hand, s.after, true, true)
+	drawCard(gs, screen, afterAt.Min, cards.Hand, s.after, deckCardCost(gs, s.after), true, true)
 }
 
 // gone is the mark between the two cards. A hyphen and a chevron rather than an em dash: the
@@ -655,10 +707,10 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 
 	card := s.after
 	if p, ok := s.chosenPrize(); ok && p.vitae {
-		drawSpecCard(gs, screen, at, vitaeSpec(vitaeReward, true))
+		drawSpecCard(gs, screen, at, vitaeSpec(gs.Run.PrizeVitae(vitaeReward), true))
 		return
 	}
-	drawCard(gs, screen, at, cards.Hand, card, true, false)
+	drawCard(gs, screen, at, cards.Hand, card, deckCardCost(gs, card), true, false)
 }
 
 // flyingTo is where a card sits part-way between two seats. **Eased out**, so it leaves quickly
@@ -695,10 +747,20 @@ func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	p prize, enabled bool) {
 
 	if p.vitae {
-		drawSpecCard(gs, screen, at, vitaeSpec(vitaeReward, enabled))
+		drawSpecCard(gs, screen, at, vitaeSpec(prizeVitae(gs), enabled))
 		return
 	}
 	drawWormCard(gs, screen, at, p.worm, enabled)
+}
+
+// prizeVitae is what the money card is worth to this run — the base plus whatever the rings add.
+// **The card says the true figure**, because a card offering 5 that pays 10 would make the ring
+// invisible at exactly the moment it is doing its work.
+func prizeVitae(gs *state.GlobalState) int {
+	if gs.Run == nil {
+		return vitaeReward
+	}
+	return gs.Run.PrizeVitae(vitaeReward)
 }
 
 // drawWorms puts the offer up as cards. **A worm is a card because it is a thing you are given**,
@@ -716,7 +778,7 @@ func (s *PostBattleScene) drawWorms(gs *state.GlobalState, screen *ebiten.Image)
 		return
 	}
 	for i, p := range s.prizes {
-		drawPrizeCard(gs, screen, s.wormSlot(gs, i).Min, p, true)
+		drawPrizeCard(gs, screen, s.wormSlot(gs, i).Min, p, !p.taken)
 	}
 }
 
@@ -740,6 +802,10 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 		w, _ := s.chosenWorm()
 		return fmt.Sprintf("%s - pick the card it takes", w.Name)
 	default:
+		if s.picksLeft > 1 {
+			return fmt.Sprintf("take %d - %d cards in your deck, %d vitae in hand",
+				s.picksLeft, gs.Run.Size(), gs.Run.Vitae())
+		}
 		return fmt.Sprintf("take one - %d cards in your deck, %d vitae in hand",
 			gs.Run.Size(), gs.Run.Vitae())
 	}

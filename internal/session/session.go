@@ -45,16 +45,32 @@ type Session struct {
 	fight int
 
 	// vitae is the purse. **Run-level and nothing spends it yet** — the shop is the scene that
-	// will — but it is awarded now, by the post-battle screen, which is what made it stop being a
-	// constant on the combat screen.
+	// will — but it is awarded now, by the post-battle screen and by propagation, which is what made
+	// it stop being a constant on the combat screen.
 	vitae int
+
+	// worn is what the player is wearing, by record key, **in worn order** — which is a rule and not
+	// a presentation detail: rings fire left to right and compound, so the order has to be one the
+	// player can see. See ring.go.
+	worn []string
+
+	// grown is each growing ring's accumulator, keyed by record. **Keyed by record rather than by
+	// position**, because it is the first ring state that will have to be serialized and a position
+	// would mean nothing in a save file.
+	grown map[string]int
 }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
 // card. The slice is copied, so the caller's starting list cannot be edited by a worm.
+//
+// **It opens wearing StartingRings**, which is temporary and lives in ring.go beside the reason.
 func New(deck []combat.Card) *Session {
-	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae}
+	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{}}
 	copy(s.deck, deck)
+
+	for _, key := range StartingRings {
+		s.Wear(key)
+	}
 	return s
 }
 
@@ -124,7 +140,16 @@ func (s *Session) Fight() int { return s.fight }
 
 // WonFight advances to the next room. **Losing does not call this**, which is what makes a defeat
 // put the same opponent back up rather than skipping past it.
-func (s *Session) WonFight() { s.fight++ }
+//
+// **It is the `fight-won` moment**, so it is also where vitae propagates and where every growing
+// ring takes its step. Both happen before the room counter moves and before the post-battle screen
+// deals its prizes, which is the order MECHANICS.md states: propagation is interest on what the run
+// walked out of the fight holding, not on what the prize card is about to pay it.
+func (s *Session) WonFight() {
+	s.propagate()
+	s.growRings()
+	s.fight++
+}
 
 // Add puts a card into the run. Nothing offers this yet — REMOVE and MODIFY are the two worms
 // that exist — but the third one named in the design is "add", and it is one line.

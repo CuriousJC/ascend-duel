@@ -21,6 +21,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
+	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
 // playerRound is a posture the fighter can take, and what it costs them to hold it. The
@@ -309,21 +311,37 @@ func duelistOf(d data.EnemyData, fight int) combat.Duelist {
 // the two records genuinely have different fields, and the day they stop sharing even these
 // three is the day a shared helper would have been quietly wrong.
 //
-// **The fighter wears all four rings** *(2026-08-16)*, which is a deliberate departure from the
-// game — the player starts in three and the enemy wears none. A status only happens if its
-// element's ring is on, so a ringless fighter would make the four elemental postures below
-// identical to their plain equivalents and this tool would report four rows measuring nothing.
-// **A card no posture plays is a card this tool cannot see**, and a posture whose whole point is
-// inert is the same failure by another route. It measures the ceiling; the floor is the plain
-// postures beside it.
+// **The fighter wears all four elemental rings** *(2026-08-16)*, which is a deliberate departure
+// from the game — the player starts in three and the enemy wears none. A status only happens if a
+// ring says so, so a ringless fighter would make the four elemental postures below identical to
+// their plain equivalents and this tool would report four rows measuring nothing. **A card no
+// posture plays is a card this tool cannot see**, and a posture whose whole point is inert is the
+// same failure by another route. It measures the ceiling; the floor is the plain postures beside it.
+//
+// **The rings are named rather than derived** *(2026-08-17)*: a ring is a list of rules now and
+// there is no longer any such thing as "the ring for this element" that a loop could find. It reads
+// them through `internal/session`, which is the package that registers the catalogue — and which
+// this tool may import for the reason it may import `internal/decks`: no Ebitengine.
+//
+// **This tool still cannot see anything else a ring does.** A damage ring, a discount ring or a stat
+// ring would change every number it prints and none of them are worn here, so a ring's balance is
+// unmeasurable until this tool takes a worn set as a posture axis. Say so rather than guessing.
 func duelistOfDuelist(d data.DuelistData) combat.Duelist {
 	du := combat.Duelist{DMG: d.DMG, Actions: d.Actions, MaxLife: d.HP}
-	for _, e := range combat.AllElements {
-		du.Rings[e] = e != combat.Basic
+	for _, key := range elementalRings {
+		id, ok := session.RingID(key)
+		if !ok {
+			log.Fatalf("balance: %s is in no ring record", key)
+		}
+		du = du.Wearing(combat.WornRing{Ring: id})
 	}
 	du.CurrentLife = du.MaxLife
 	return du
 }
+
+// elementalRings is the four whose whole rule is "this colour applies its status", which is what the
+// elemental postures below are measuring.
+var elementalRings = []string{"fire-ring", "frozen-ring", "thunder-ring", "earth-ring"}
 
 // playerWins plays the posture out and reports only the verdict, for the summary table.
 //

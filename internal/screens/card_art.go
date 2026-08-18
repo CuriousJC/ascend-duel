@@ -78,11 +78,15 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // is the rule, where "14" was the rule already multiplied out by this duelist's strength and
 // was the same fact said twice. `combat.Card.Damage` is still what the engine resolves with, and
 // the duelist card still shows a DMG stat.
-func cardSpec(c actionCard, enabled, selected bool) cards.Spec {
+// **The cost is passed in rather than read off the card** *(2026-08-17)*, because a discount ring
+// makes it a property of the pairing: the same card costs 2 to a duelist wearing the discount and 3
+// to one who is not. Every caller names the wearer it is drawing for, which is what keeps an enemy's
+// queued card out of the player's discounts.
+func cardSpec(c actionCard, cost int, enabled, selected bool) cards.Spec {
 	return cards.Spec{
 		Name:     c.Label(),
 		Family:   family(c.Family()),
-		Cost:     c.Cost(),
+		Cost:     cost,
 		Element:  artFor(c.Element),
 		Text:     cardEffect(c),
 		Enabled:  enabled,
@@ -177,16 +181,15 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.
 		Enabled: true,
 	}
 
-	// **Walked in element order, which is what makes the row stable.** A badge that moved along
-	// the row as another status came and went would read as a different badge. `AllElements` is
-	// the fixed order the determinism rules require; Basic carries no status and contributes
-	// nothing.
+	// **Walked in registration order, which is what makes the row stable.** A badge that moved along
+	// the row as another status came and went would read as a different badge. `AllStatuses` is the
+	// file order the determinism rules require.
 	n := 0
-	for _, e := range combat.AllElements {
-		if n == len(spec.Effects) || !c.Statuses[e].Active() {
+	for _, id := range combat.AllStatuses() {
+		if n == len(spec.Effects) || !c.Statuses[id].Active() {
 			continue
 		}
-		img := effectArt(gs, e)
+		img := effectArt(gs, id)
 		if img == nil {
 			continue
 		}
@@ -196,25 +199,32 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.
 	return spec
 }
 
-// effectKeys is the badge each element's status is drawn with.
+// statusBadges is the art key each status is drawn with, **read off `statuses.json`** rather than
+// held in a table here *(2026-08-17)*.
 //
-// **A table here rather than a field in `data/rings.json`**, because a badge belongs to the
-// *status* and not to the ring that switches it on: a status arriving by some other route — an
-// affix, a boss rule — has to draw the same picture, and reading the art key off a ring the
-// enemy is not wearing would be the wrong lookup by construction.
+// **A badge belongs to the status and not to the ring that switches it on**, which is why the key
+// sits in the status record: a status arriving by some other route — an affix, a boss rule — has to
+// draw the same picture, and reading the art key off a ring the enemy is not wearing would be the
+// wrong lookup by construction. It was a table keyed by element until statuses stopped being
+// elements, at which point the table would have had to be keyed by the record anyway — so the
+// record carries it.
 //
-// Basic is absent because it has no status. An element with no entry falls back to
-// `defaulteffect_png`, so a fifth element shows a shape nobody has learned rather than nothing
-// at all.
-var effectKeys = map[combat.Element]string{
-	combat.Fire:      "fireeffect_png",
-	combat.Ice:       "frozeneffect_png",
-	combat.Lightning: "thundereffect_png",
-	combat.Earth:     "eartheffect_png",
+// A status whose badge is empty or unknown falls back to `defaulteffect_png`, so one nobody has made
+// art for shows a shape nobody has learned rather than nothing at all.
+var statusBadges = badgeKeys()
+
+func badgeKeys() map[string]string {
+	out := map[string]string{}
+	for _, s := range data.LoadStatuses() {
+		if s.Badge != "" {
+			out[s.StatusRecord] = s.Badge
+		}
+	}
+	return out
 }
 
-func effectArt(gs *state.GlobalState, e combat.Element) image.Image {
-	key, ok := effectKeys[e]
+func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
+	key, ok := statusBadges[combat.StatusOf(id).Key]
 	if !ok {
 		key = "defaulteffect_png"
 	}
@@ -344,6 +354,16 @@ func family(f combat.Family) cards.Family {
 // one of these, this fails here rather than in a card that silently renders blank.
 var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 	return c.Label(), c.Category().String(), c.Family().String(), c.Damage(dmg), c.Cost()
+}
+
+// deckCardCost is what a card out of the run deck costs, discounts included. The post-battle screen
+// draws deck cards with no duelist to ask, and a card whose price changed when it reached the hand
+// would be the screen contradicting itself between two screens.
+func deckCardCost(gs *state.GlobalState, c combat.Card) int {
+	if gs.Run == nil {
+		return c.Cost()
+	}
+	return gs.Run.CardCost(c)
 }
 
 // wormSpec is a worm drawn as a card: a name, a line of what it does, and the colour of whatever

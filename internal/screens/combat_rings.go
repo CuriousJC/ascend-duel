@@ -2,11 +2,10 @@ package screens
 
 // The ring pane: what the player is wearing, drawn as cards.
 //
-// **A layout sketch, added 2026-08-11.** Nothing here is a mechanic — no ring is bought,
-// equipped, unequipped or read by any rule, and `internal/combat` still cannot see an element
-// so neither the discount nor the flip MECHANICS.md describes can exist yet. What this does is
-// put five ring-sized slots on the screen and fill the first few from `data/rings.json`, so the
-// space rings will want is spoken for while the rules are still being written.
+// **It draws what the run is wearing** *(2026-08-17)*. The worn set lives on `session.Session` —
+// which is what makes it survive a fight — and every rule a ring has is in `data/rings.json` in the
+// `When` / `If` / `Then` grammar. This file is the row; it no longer decides anything. What is still
+// missing is the loop around it: nothing buys a ring and nothing takes one off.
 //
 // **It claims the band the full-height panes vacated.** Action Flow is built and not drawn,
 // and Resolution left for the three-line feed above the hand on 2026-08-11, so 12–46% was
@@ -32,11 +31,11 @@ import (
 
 // maxRings is how many rings can be worn at once.
 //
-// **Five, and it is a rule from MECHANICS.md rather than a number the layout chose** — brands
-// are what expand it, and nothing else may. It lives here because the pane is the only thing
-// that reads it today; when equipping becomes real it moves to wherever the rule does, exactly
-// as `maxSelected` moved off this screen and into `internal/combat`.
-const maxRings = 5
+// **Five, and it is a rule rather than a number the layout chose** — brands are what expand it, and
+// nothing else may. It reads `combat.MaxWornRings` rather than declaring a second five: the rule
+// moved into the engine with the grammar on 2026-08-17, exactly as `maxSelected` did before it, and
+// the row saying `worn/5` while the duelist held a sixth is the drift this prevents.
+const maxRings = combat.MaxWornRings
 
 const (
 	// The gap on either side of the row: it starts where the duelist card ends and stops
@@ -170,65 +169,32 @@ func ringSlotAt(r image.Rectangle, i, worn int) image.Point {
 	return image.Pt(r.Min.X+i*ringSlotPitch(r, worn), r.Min.Y)
 }
 
-// startingRings is what the player is wearing when the game opens, by record key.
+// wornRings is what the player is wearing, as records, in worn order.
 //
-// **Temporary, and the counterpart of `deckSeedName`** *(2026-08-16)*. A duelist will start a run
-// with no rings at all and buy them between fights, which needs the `Session` that does not
-// exist; until then this is how a ring gets onto a finger so the rules behind it can be played.
+// **The run is the authority and this is the lookup** *(2026-08-17)*. `session.Session` holds the
+// worn keys — in worn order, which is a rule, since rings fire left to right — and `gs.Rings` holds
+// the record each key names, for its art and its name. The screen decides nothing.
 //
-// **The earth ring is deliberately left off.** Four rings exist and three are worn, so every
-// launch is a live test of the rule that matters most: an earth attack from a duelist with no
-// earth ring is a plain attack with a brown border. A list that happened to hold everything
-// would prove the statuses fire and prove nothing about the gate.
-var startingRings = []string{"fire-ring", "frozen-ring", "thunder-ring"}
-
-// equippedRings is what the player is wearing.
-//
-// **It reads `startingRings` rather than the whole catalogue** *(2026-08-16)*. It used to hand
-// back every record in `rings.json` up to the cap, which was fine while nothing read a ring and
-// wrong the moment one did anything: adding a fourth ring to the file would have equipped it.
-//
-// It walks `data.RingOrder` rather than the map, per the determinism rules: map order would deal
-// a different row of rings every launch and it would look like a bug in the layout rather than
-// one in the iteration.
-func equippedRings(gs *state.GlobalState) []data.RingData {
-	worn := make(map[string]bool, len(startingRings))
-	for _, key := range startingRings {
-		worn[key] = true
+// **A worn key with no record is reported, not ignored.** It is the failure `ParseElement` refuses to
+// fall back on: a ring that quietly does not draw looks exactly like a ring that was never bought.
+func wornRings(gs *state.GlobalState) []data.RingData {
+	if gs.Run == nil {
+		return nil
 	}
 
-	out := make([]data.RingData, 0, len(startingRings))
-	for _, key := range data.RingOrder(gs.Rings) {
-		if !worn[key] || len(out) == maxRings {
+	out := make([]data.RingData, 0, maxRings)
+	for _, key := range gs.Run.Worn() {
+		if len(out) == maxRings {
+			break
+		}
+		record, ok := gs.Rings[key]
+		if !ok {
+			log.Printf("the run is wearing %q, which is in no record", key)
 			continue
 		}
-		out = append(out, gs.Rings[key])
+		out = append(out, record)
 	}
 	return out
-}
-
-// equipRings turns the row of ring cards into the rules the duelist fights under: one flag per
-// element on `combat.Duelist`, which is what `resolveAttackPhase` reads before it applies a
-// status.
-//
-// **The screen is where the two halves meet on purpose.** `internal/combat` cannot see
-// `data/rings.json` — the dependency direction forbids it and a ring's art key is none of the
-// engine's business — so the element name is parsed here and handed over as a rule. This is the
-// same division `buildStartingDeck` draws for the card list.
-//
-// **A ring naming an element the rules do not have is reported, not ignored.** It is the exact
-// failure `ParseAction` refuses to fall back on: a ring that quietly does nothing looks identical
-// to a status that quietly does not fire.
-func equipRings(gs *state.GlobalState, d combat.Duelist) combat.Duelist {
-	for _, ring := range equippedRings(gs) {
-		e, ok := combat.ParseElement(ring.Element)
-		if !ok {
-			log.Printf("ring %q names element %q, which the rules do not have", ring.RingRecord, ring.Element)
-			continue
-		}
-		d.Rings[e] = true
-	}
-	return d
 }
 
 // drawRingPane draws the backing, the rings, a rule under them, and the cap as a fraction on
@@ -256,7 +222,7 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		ringPaneBackColor, false)
 
-	worn := equippedRings(gs)
+	worn := wornRings(gs)
 	for i, ring := range worn {
 		img := cardImage(gs, ringSpec(gs, ring), cards.RingStyle)
 		if img == nil {

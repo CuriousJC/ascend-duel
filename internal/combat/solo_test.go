@@ -122,7 +122,7 @@ func TestAShockedSoloAttackerMissesWithEverything(t *testing.T) {
 	// roll per card would change what the status means as well as how far the package's one random
 	// stream advances in a round.
 	a := soloist(10, 9, 500)
-	a.Statuses[Lightning] = Status{Amount: 50, Rounds: 2}
+	a.Statuses[statusOf(Lightning)] = Status{Amount: 50, Rounds: 2}
 	b := duelist(10, 5, 500)
 
 	events, _, after := resolveWith(alwaysMisses(), a, b, PlainCards(Strike, Strike, Strike), nil, 1)

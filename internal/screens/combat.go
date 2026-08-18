@@ -365,13 +365,23 @@ type CombatScene struct {
 // Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
 // built once, everything else resets every visit.
 func (s *CombatScene) Init(gs *state.GlobalState) {
-	if s.fighter == nil {
-		s.fighter = duelistFromRecord(gs, "Fighter1")
+	// **The fighter is rebuilt from the record on every visit, and then re-equipped**
+	// *(2026-08-17)*. It used to be built once, which was fine while a ring was a flag that never
+	// changed — a growing ring's accumulator moves between fights, so equipping once would have
+	// left every fight after the first paying fight one's figure. Rebuilding first is what stops
+	// the stat rings stacking on themselves instead.
+	//
+	// Nothing is lost by rebuilding: a duel already restores full life below, and everything else
+	// on the combatant comes out of the record.
+	s.fighter = duelistFromRecord(gs, "Fighter1")
 
-		// **What the player is wearing is part of hydrating them**, not part of resetting a
-		// duel: rings are run-level and a fight does not take them off. See startingRings for
-		// why the set is a constant here rather than something a Session hands over.
-		s.fighter.Duelist = equipRings(gs, s.fighter.Duelist)
+	// **What the player is wearing is part of hydrating them**, not part of resetting a duel:
+	// rings are run-level and a fight does not take them off. **The run puts them on**, which is
+	// also the `fight-start` moment — a stat ring's DMG and HP arrive here, and a growing one
+	// arrives with whatever it has accumulated. The screen used to parse an element off each
+	// record and set a flag; the grammar is in `session.Equip` now and this is one call.
+	if gs.Run != nil {
+		s.fighter.Duelist = gs.Run.Equip(s.fighter.Duelist)
 	}
 
 	// The enemy is rebuilt every visit rather than once, because fightIndex may have moved
@@ -513,7 +523,7 @@ func resetCombatState(d combat.Duelist) combat.Duelist {
 	d.GatheredAP = 0
 	d.BonusDraw = 0
 	d.DrewCards = 0
-	d.Statuses = [combat.ElementCount]combat.Status{}
+	d.Statuses = [combat.MaxStatuses]combat.Status{}
 	return d
 }
 
@@ -730,11 +740,12 @@ func eventLabel(e combat.Event) string {
 	case combat.KindAction:
 		return fmt.Sprintf("action      %v plays %v %v (%v)", e.Side, e.Element, combat.ConceptOf(e.Action).Label, combat.Plain(e.Action).Category())
 	case combat.KindStatus:
-		return fmt.Sprintf("status      %v puts %d %v on %v", e.Side, e.Amount, e.Element, e.Target)
+		return fmt.Sprintf("status      %v puts %d %v on %v", e.Side, e.Amount, combat.StatusOf(e.Status).Key, e.Target)
 	case combat.KindMissed:
 		return fmt.Sprintf("missed      %v's %v never lands - shocked", e.Side, e.Action)
 	case combat.KindBurned:
-		return fmt.Sprintf("burned      %v takes %d, leaving %d", e.Target, e.Amount, e.Life)
+		return fmt.Sprintf("burned      %v takes %d from %v, leaving %d",
+			e.Target, e.Amount, combat.StatusOf(e.Status).Key, e.Life)
 	case combat.KindGathered:
 		return fmt.Sprintf("prepared    %v banks %d AP for next round", e.Side, e.Amount)
 	case combat.KindNegated:
@@ -906,10 +917,10 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 	if e.Target == combat.SideA {
 		target = s.fighter
 	}
-	if e.Element <= combat.Basic || int(e.Element) >= combat.ElementCount {
+	if e.Status < 0 || int(e.Status) >= combat.StatusCount() {
 		return
 	}
-	target.Statuses[e.Element] = combat.Status{Amount: e.Amount, Rounds: 1}
+	target.Statuses[e.Status] = combat.Status{Amount: e.Amount, Rounds: 1}
 }
 
 // **There is no caption box**, and the slot above the hand is the Resolution feed instead.
@@ -1078,8 +1089,8 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("ringPane backing", s.ringPaneBackRect(gs))
 	// The slots as they currently stand, not as they would at the cap: the pitch is a function
 	// of how many rings are worn, so a dump of five would describe a row that is not on screen.
-	for i := 0; i < len(equippedRings(gs)); i++ {
-		at := ringSlotAt(s.ringPaneRect(gs), i, len(equippedRings(gs)))
+	for i := 0; i < len(wornRings(gs)); i++ {
+		at := ringSlotAt(s.ringPaneRect(gs), i, len(wornRings(gs)))
 		trace.Rect(fmt.Sprintf("ringSlot[%d]", i), image.Rect(
 			at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height))
 	}

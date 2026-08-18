@@ -532,14 +532,17 @@ func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markO
 			attach("misses - shocked")
 
 		case combat.KindStatus:
-			attach(statusPhrase(e.Element))
+			attach(statusPhrase(e.Status))
 
 		case combat.KindBurned:
 			// A tick belongs to nobody's card, so it opens its own line. It carries the
 			// victim's swatch because it is a thing happening *to* them, which is also the
 			// only side the event names.
-			announce(fmt.Sprintf("%s burns for %d", s.sideName(e.Target), e.Amount),
-				swatchFor(e.Target))
+			//
+			// **The status names itself** *(2026-08-17)*: with statuses decoupled from the colours,
+			// a second damage-over-time status would otherwise narrate identically to the first.
+			announce(fmt.Sprintf("%s %s %d",
+				s.sideName(e.Target), tickVerb(e.Status), e.Amount), swatchFor(e.Target))
 
 		case combat.KindCombo:
 			// **This is the attack phase's line, whether or not a hand formed.** A blow that
@@ -760,25 +763,39 @@ func cardPhrase(c combat.Card) string {
 	return phrase + " (" + name + ")"
 }
 
-// statusPhrase is what a landed element says it did, as an outcome attached to the attacker's
-// line. Each names the *effect* rather than the element, because "chills them" says what
-// happens next and "applies ice" says only that a rule fired.
+// statusPhrase is what a landed status says it did, as an outcome attached to the attacker's line.
+// Each names the *effect* rather than the status, because "chills them" says what happens next and
+// "applies chilled" says only that a rule fired.
 //
-// Basic has no phrase because it applies no status and no KindStatus event is ever raised for
-// it; the fallback exists so a fifth element narrates as something rather than as an empty tail.
-func statusPhrase(e combat.Element) string {
-	switch e {
-	case combat.Fire:
+// **Keyed by record rather than by element** *(2026-08-17)*, since a status is no longer a colour:
+// two rings can put two different statuses on the same fire card, and one phrase per colour could
+// not tell them apart. The fallback is what a status with no sentence of its own narrates as — its
+// own name, which is at least true — so authoring a status in the file does not need a Go change to
+// read properly.
+func statusPhrase(id combat.StatusID) string {
+	spec := combat.StatusOf(id)
+	switch spec.Key {
+	case "burning":
 		return "sets them burning"
-	case combat.Ice:
+	case "chilled":
 		return "chills them"
-	case combat.Lightning:
+	case "shocked":
 		return "shocks them"
-	case combat.Earth:
+	case "weighted":
 		return "weighs them down"
 	default:
-		return "leaves " + lower(e.String()) + " on them"
+		return "leaves them " + lower(spec.Name)
 	}
+}
+
+// tickVerb is how a damage-over-time status reads when it bites at the end of a round: "Goblin burns
+// for 2". A status with no verb of its own falls back to its name, which is true rather than
+// graceful — and is what stops a second such status narrating as a burn.
+func tickVerb(id combat.StatusID) string {
+	if combat.StatusOf(id).Key == "burning" {
+		return "burns for"
+	}
+	return "takes " + lower(combat.StatusOf(id).Name) + " damage:"
 }
 
 // verbFor is the verb a category is spoken with.

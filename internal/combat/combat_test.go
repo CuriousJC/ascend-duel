@@ -25,7 +25,7 @@ func resolveWith(rng *rand.Rand, a, b Duelist, aCards, bCards []Card, round int)
 
 // fixedSource always hands back the same value, so a test can *say* "this attack misses" instead
 // of hunting for a seed that happens to make it. A seed would work and would be unreadable: the
-// test would assert a miss while naming a number, and retuning shockMissPct could silently turn
+// test would assert a miss while naming a number, and retuning shockPct() could silently turn
 // it into a test about something else.
 type fixedSource int64
 
@@ -709,7 +709,7 @@ func TestThePlannerObeysBothBounds(t *testing.T) {
 
 			if !d.CanAfford(plan) {
 				t.Errorf("at %d actions bonus %d: plan costs %d, budget is %d",
-					actions, bonus, CostOf(plan), d.ActionPoints())
+					actions, bonus, d.CostOf(plan), d.ActionPoints())
 			}
 			if len(plan) > d.MaxActions() {
 				t.Errorf("at %d actions bonus %d: %d actions, cap is %d",

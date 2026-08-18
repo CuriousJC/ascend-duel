@@ -1,6 +1,6 @@
 ---
 name: data
-description: The game's static data - the six JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or rings, or writing a loader.
+description: The game's static data - the seven JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or rings, or writing a loader.
 ---
 
 # The data files
@@ -14,14 +14,24 @@ is what lets every layer above read it, and it **must never import upward**.
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
 | `enemies.json` | `LoadEnemies` | 96 opponents: three stats, their own deck, portrait, valid floors |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
-| `rings.json` | `LoadRings` | the rings that exist: name, art key, element, one line of text |
+| `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, and a list of `When`/`If`/`Then` rules |
+| `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `combos.json` | `LoadCombos` | the six poker hands and what each multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
 
 ## Who may read what, and why it is not "whether it is data"
 
-**Two files are read by `internal/combat` itself**: `combos.json` and `duelist_cards.json`. The
-rest are consumed by `screens`, `decks` or `entities`.
+**Three files are read by `internal/combat` itself**: `combos.json`, `duelist_cards.json` and
+`statuses.json`. The rest are consumed by `screens`, `decks`, `session` or `entities`.
+
+**`statuses.json` joined them on 2026-08-17** and passes the same test: how much a status is worth,
+how long it lasts and which of four things it does are rules by definition — the engine cannot
+resolve a round without them, and its own tests could not run if a screen had to hand them over.
+Its `Badge` is the exception the engine ignores, exactly as it ignores a ring's `Art`.
+
+**`rings.json` is the counter-example, and it is read by `internal/session`.** A ring's rules *are*
+rules, but the record carries an art key and a ring belongs to a *run* — so `session` parses the
+strings into `combat` types and calls `RegisterRing`. Same shape as `decks` for enemy cards.
 
 **The test is who consumes a file, not whether it is data.** A card's cost and damage are rules
 by definition; a portrait key, an art key and a floor band are a screen's or a roster's
@@ -177,10 +187,11 @@ engine cannot name is the one failure this model produces.
    it needs a `decks`-shaped package in between.
 2. Four lines: `//go:embed`, the tagged struct, the `Load…`, and a sorted `…Order` if it returns
    a map.
-3. **Do not grow a rules vocabulary in JSON ahead of the rules.** The ring discount and the flip
-   are the live example: they are described in `MECHANICS.md`, `Card.Cost()` is the seat the
-   discount will sit in, and neither is a field in `rings.json` yet. `CostTier` is what happens
-   when a file declares something the rules also know.
+3. **Do not grow a rules vocabulary in JSON ahead of the rules.** The ring grammar is the worked
+   example of doing it the other way round *(2026-08-17)*: every moment, predicate and effect verb
+   in `rings.json` has a Go seat that refuses it at load if it is used wrongly, and a word the file
+   invents does not exist. `CostTier` is what happens when a file declares something the rules also
+   know.
 4. If the file describes a mechanic, the *design* goes in `MECHANICS.md`. This skill is the
    plumbing.
 
@@ -188,7 +199,9 @@ engine cannot name is the one failure this model produces.
 
 The data is about to grow three ways at once, which is why this was carved out of `CLAUDE.md`:
 
-- **More rings**, once buying and equipping exist.
+- **More rings.** The grammar is built and sixteen are authored; growing the *vocabulary* — a new
+  moment or a new effect verb — is a Go change, and is meant to be. What does not exist is buying,
+  selling or unequipping.
 - **More worms.** `worms.json` exists and holds ten across seven targets. Growing it is one record
   each; growing the *target vocabulary* is not, and MECHANICS.md says why.
 - **Brands** — permanent for the run, altering the container where rings alter the contents. The

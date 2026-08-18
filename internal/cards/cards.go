@@ -339,12 +339,17 @@ const MaxStatLines = 3
 
 // MaxEffects is how many status badges a card can show at once.
 //
-// **Four, because there are four elements and a duelist carries at most one status of each.**
-// This package does not know that — it holds pictures — so the number is stated here as the
-// width of the row the bottom band fits and checked against the rules by
-// `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` in internal/screens, which is the layer
-// that can see both. A fifth element is a layout change as well as an enum change, exactly as a
-// fourth stat row is.
+// **Four, because `statuses.json` holds four and a duelist carries at most one of each.** This
+// package does not know that — it holds pictures — so the number is stated here as the width of the
+// row the bottom band fits, and checked against the rules by
+// `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` in internal/screens, which is the layer that can
+// see both.
+//
+// **It stopped being "one per element" on 2026-08-17**, when statuses became their own collection.
+// The two were the same number only because a status *was* an element. Authoring a fifth status is
+// therefore a layout change as well as a file edit, exactly as a fourth stat row is — though a cheap
+// one: at 20px badges and a 6px gap the row fits six inside the borders, so the fix is this number
+// rather than a redesign.
 const MaxEffects = 4
 
 // Spec is everything about one card that changes what it looks like.

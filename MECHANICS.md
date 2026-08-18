@@ -370,15 +370,18 @@ and every planner. The screen's own `element` type and its `actionCard` struct a
 `actionCard` is an alias for `combat.Card`, so the hand, the queue and the round are one type
 and a card is never converted between them.
 
-**Cost is now a method on the card** (`Card.Cost()`), delegating to the concept. Nothing
-discounts anything yet; that is the seat the ring discount sits in, cut while everything else
-was moving.
+**Cost is a property of the pairing** *(2026-08-17)*. `Card.Cost()` is the card's own printed
+figure and `Duelist.CardCost` is what it costs the duelist holding it, discounts included — which
+is what everything that spends or checks a budget reads.
 
-#### The trigger: the colours in the hand that formed
+#### The trigger: the cards in the hand that formed
 
-**Decided, and rewritten by one blow per turn.** One status lands **per distinct non-basic colour
-among the cards that formed the attack**. One colour lands one, four land four, and an all-basic
-hand lands none. A plan card carries its element for the ring discount and applies nothing itself;
+**Decided, rewritten by one blow per turn, and rewritten again by the ring grammar** *(2026-08-17)*.
+The rings match against **the cards that formed the attack**, and each `apply-status` they fire lands
+once however many cards matched it — so the four elemental rings still read as "one status per
+distinct non-basic colour", and a family or concept ring reaches the same moment by the same route.
+An all-basic hand lands nothing, because no elemental rule matches a colourless card. A plan card
+carries its element for the ring discount and applies nothing itself;
 the alternative — every card applying its status — would make a 1-AP Prepare as good a delivery as
 a 1-AP Jab and turn the plan phase into the status engine. (The plans are all basic today, so this
 is a rule waiting for a card rather than one currently biting.)
@@ -860,9 +863,10 @@ than an ever-widening round.
 
 ### A ring is written in a grammar *(2026-08-17, owner's call)*
 
-**Every ring is data, in a `When` / `If` / `Then` grammar** — the design is decided and
-**nothing is built**. The full vocabulary, the code seat each moment lands on, and the questions
-to put to a new ring idea live in
+**Every ring is data, in a `When` / `If` / `Then` grammar**, and it is **built** *(2026-08-17)*:
+`data/rings.json` is written in it, `internal/session` parses it, and `internal/combat/ring.go`
+holds the vocabulary and refuses a rule that misuses it. The full vocabulary, the code seat each
+moment lands on, and the questions to put to a new ring idea live in
 [.claude/skills/rings/SKILL.md](.claude/skills/rings/SKILL.md); this is the argument for the
 shape.
 
@@ -885,17 +889,21 @@ language does not need.
 - **A ring may only bend a rule the game already has.** Banker scales vitae propagation, so
   propagation had to be designed first. This is the test to apply to any new ring.
 
-**What the grammar costs, and every item is real work:**
+**What the grammar cost, and every item was real work:**
 
-- `Duelist.Rings` is `[ElementCount]bool`. A family multiplier has no element to be a bit under,
-  so it becomes a slice of rules-level rings.
-- `Duelist.Statuses` is indexed by element and has to be indexed by **status** — see below.
+- `Duelist.Rings` was `[ElementCount]bool`, which a family multiplier had no element to be a bit
+  under. It is a fixed array of `WornRing` — a `RingID` and its accumulator — plus a count, which is
+  the shape the defend set already used and the reason a duelist is still comparable.
+- `Duelist.Statuses` was indexed by element and is indexed by **status** — see below.
 - **Growing rings hold state**, the first ring thing that does, and the first that must be
   **serialized**: an accumulator on `Session`, keyed by `RingRecord`, which is why the record key
   is the identity rather than an index. **Uncapped, by decision** — a +5 HP ring is +100 by the
-  top of the tower and that is the intent.
-- **`tools/balance` cannot see any of this.** It measures postures against the roster and knows
-  nothing about rings, so a damage ring is unmeasurable until it does.
+  top of the tower and that is the intent. **One numeric effect per growing ring**, so the
+  accumulator never has to say which of two it feeds.
+- **`tools/balance` still cannot see any of this.** It puts the four elemental rings on its fighter
+  and nothing else, so a damage ring, a discount ring or a stat ring changes every number it prints
+  and none of them are worn. **A ring's balance is unmeasurable until a worn set is a posture axis** —
+  say so rather than guessing at a multiplier.
 
 ### Statuses are their own collection, and no longer an element *(2026-08-17, owner's call)*
 
@@ -907,15 +915,26 @@ holds the 2026-08-16 position rather than reversing it: the statuses being free 
 rings with nothing to be, and a *second* fire status arriving on a different ring later is only
 possible if the first was never inherent to the colour.
 
-**What it costs:** `Duelist.Statuses` re-indexes from element to status; `cards.MaxEffects` is 4
-*because* there are four elements and decoupled statuses can exceed that on one card;
-`effectKeys` in `card_art.go` maps element→badge and becomes status→badge; and `Status` becomes
-an append-only ID carrying the hazard `Element` and `GlyphKind` already carry.
+**What it cost, all of it paid on 2026-08-17:** `Duelist.Statuses` re-indexed from element to
+status, and its width is now `MaxStatuses` — an array width rather than a design cap, which
+registration refuses to grow past because a duelist has to stay comparable. `cards.MaxEffects` is
+still 4, but it is 4 *because the file holds four statuses* rather than because there are four
+elements, and `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` is what turns authoring a fifth into
+a visible layout decision — the badge row fits six at the current pitch, so that is a number rather
+than a redesign. `effectKeys` in `card_art.go` was a table keyed by element and is now read straight
+off each status record's `Badge`. And `StatusID` is append-only, carrying the hazard `Element` and
+`GlyphKind` already carry — with the file, not the enum, deciding the order.
 
 ### The rings that are designed
 
-The elemental four exist in code as a hard-coded rule; everything else here is decided and
-unbuilt. **Only the discount and the flip predate the grammar**; the rest came out of it.
+**Every row below is in `data/rings.json` and works** *(2026-08-17)*. **Only the discount and the
+flip predate the grammar**; the rest came out of it. What does not exist is any way to *get* one:
+a run opens wearing three and nothing buys, sells or unequips, so the twelve rings past those three
+are reachable only by editing `StartingRings`.
+
+Two names were invented rather than taken from this table, and are the two most worth changing:
+**Bulwark** (+25 HP, since Heart is the skill's own name for the growing one) and **Thrifty** (the
+discount, which had no name at all).
 
 | Ring | Moment | Does |
 |---|---|---|
@@ -935,9 +954,11 @@ Striker covers 4 cards, Keen covers 12.
 
 ### What the first four rings are
 
-`data/rings.json` holds them; `combat.Duelist.Rings` is what the engine reads. One ring is one
-element, so wearing fire and swinging a hand of all four colours lands a burn and nothing else —
-which is what makes the second and third worth buying.
+`data/rings.json` holds them, each as one `attack-lands` rule matching one colour and applying one
+status. **There is no special case for them in the engine** *(2026-08-17)* — they are the plainest
+thing the grammar can say, which is what the grammar was checked against. One ring is one element,
+so wearing fire and swinging a hand of all four colours lands a burn and nothing else — which is
+what makes the second and third worth buying.
 
 | Ring | Element | What wearing it does |
 |---|---|---|
@@ -950,9 +971,10 @@ which is what makes the second and third worth buying.
 burn; it does nothing about fire aimed at you. The alternative would make a ring a liability and
 buying one a decision with a wrong answer.
 
-**The player starts wearing three of the four** — `startingRings`, fire/ice/lightning — with earth
-left off on purpose so a launch tests the gate as well as the statuses. Temporary; a run will
-start bare and buy rings once `Session` exists.
+**The player starts wearing three of the four** — `session.StartingRings`, fire/ice/lightning — with
+earth left off on purpose so a launch tests the gate as well as the statuses. Temporary; a run will
+start bare and buy rings once a shop exists. It moved off the combat screen and onto the run on
+2026-08-17, which is what makes a worn ring survive a fight.
 
 ### Flip rings — the element-transform ring
 
@@ -983,14 +1005,13 @@ purpose of combos.
   a 36-of-60 monochrome deck. Watch it before deciding whether the cap is the ring slots or a
   rule.
 
-**Discounting matching cards is why element had to cross into `internal/combat`, and it has**
-. Cost stops being a property of the concept and becomes a property of the
-pairing, and the seat is already cut: `Card.Cost()` is a method on the card, `CostOf` takes
-`[]Card`, and the queue type, `ResolveRound`, `ResolutionOrder` and every planner already carry
-the element. Nothing discounts anything yet — a discount needs an equipped ring, which needs
-`Session` — but the rewrite this entry warned about was paid for with the elements work and is
-not owed twice. What is left is the screen's AP bar and over-budget check reading a discounted
-cost rather than a bare one.
+**Discounting matching cards is built** *(2026-08-17)*. Cost is a property of the **pairing**:
+`Duelist.CardCost` and `Duelist.CostOf` are what the engine, the planner, the AP bar and the
+over-budget check all read, and `Card.Cost()` is only the card's own printed figure. Every card face
+on every screen is drawn at the wearer's cost — the hand, the deck overlay, the flights, and the
+post-battle offer through `session.CardCost` — because a card showing three dashes while the budget
+charges two is the screen contradicting the engine. **An enemy's queued card is priced by the
+enemy**, never by the player's rings.
 
 **Rings are drawn as cards**, in a horizontal row across the top, not necessarily spanning the
 whole bar. Same size as other cards, and **no glyphs**.
@@ -1216,7 +1237,7 @@ for the `data/` pattern: JSON beside a small Go loader.
 The currency. Earned from fights, spent on rings. `Session` carries the purse; the post-battle
 screen's third prize card is currently the only thing that adds to it, at +5.
 
-### Propagation — vitae earns interest *(2026-08-17, owner's call)*
+### Propagation — vitae earns interest *(2026-08-17, owner's call; built the same day)*
 
 **After every fight, a run gains +1 vitae for every 5 it is already holding**, capped at **+5**.
 So 5 held pays 1, 10 pays 2, and 25 pays the maximum 5 — holding more than 25 propagates no
@@ -1228,11 +1249,16 @@ faster.
   fight, which compounds across 24 fights into a number no shop can be priced against. Capping
   the *rate* rather than the purse leaves a big purse worth having and stops the curve.
 - **Rounded down**, like every other integer rule in the game.
-- `[?]` **Whether the cap binds the Banker ring too.** Banker adds a second +1 per 5 (see
-  *Rings*), so at 25 held the pair would pay +10 against a rule that says +5. Either the cap is
-  on the base rate and Banker doubles the capped figure, or the cap is absolute and Banker only
-  matters below 25 — the second makes the ring worthless late, so the first is the likely answer.
-  **Settle this before building either.**
+- **The cap binds the base rate, and a ring scales what the cap produced** *(2026-08-17, owner's
+  call)*. So at 25 held propagation is +5, and +10 wearing Banker. The alternative — an absolute
+  cap on the figure that finally lands — would make Banker do nothing past 25 held, which is a
+  ring that stops working exactly when a run can afford it.
+- **Order of operations, therefore:** count the fives, clamp to +5, *then* apply every ring that
+  scales propagation, left to right in worn order. Two such rings compound, like every other
+  ring effect.
+- **It happens in `Session.WonFight`**, before the room counter moves and before the post-battle
+  screen deals its prizes: propagation is interest on what the run walked out of the fight holding,
+  not on what the prize card is about to pay it.
 
 ---
 

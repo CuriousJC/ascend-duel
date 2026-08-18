@@ -261,36 +261,44 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 }
 
 func TestTheCardHoldsAsManyEffectsAsThereAreStatuses(t *testing.T) {
-	// `cards.MaxEffects` is a layout number in a package that cannot see the rules, and the
-	// rules decide how many statuses one duelist can carry at once: one per element, since a
-	// status does not stack and the array is indexed by element. This is the join.
+	// `cards.MaxEffects` is a layout number in a package that cannot see the rules, and the rules
+	// decide how many statuses one duelist can carry at once: one of each in the file, since a
+	// status does not stack. This is the join.
 	//
-	// A fifth element would silently drop a badge off the enemy card — the row would draw four
-	// of five and look like a rendering glitch rather than a missing status. Failing here is
-	// what makes adding an element a layout change too, exactly as MaxStatLines does for a
-	// fourth stat row.
-	statuses := combat.ElementCount - 1 // Basic carries none
-	if cards.MaxEffects < statuses {
-		t.Errorf("a card shows %d status badges against %d statuses a duelist can carry — %d would be dropped",
-			cards.MaxEffects, statuses, statuses-cards.MaxEffects)
+	// **It is a check against `statuses.json` now** *(2026-08-17)*, where it used to be a check
+	// against the element count — the two were the same number only because a status *was* an
+	// element. A fifth status would silently drop a badge off the enemy card: the row would draw
+	// four of five and look like a rendering glitch rather than a missing status. Failing here is
+	// what makes authoring one a layout change too, exactly as MaxStatLines does for a fourth stat
+	// row. The row has space for six at the current pitch, so the fix is a number, not a redesign.
+	if cards.MaxEffects < combat.StatusCount() {
+		t.Errorf("a card shows %d status badges against %d statuses in the file — %d would be dropped",
+			cards.MaxEffects, combat.StatusCount(), combat.StatusCount()-cards.MaxEffects)
 	}
 }
 
-func TestEveryStatusElementHasABadge(t *testing.T) {
+func TestEveryStatusHasABadge(t *testing.T) {
 	// A status with no artwork falls back to the default badge, which is a shape nobody has
-	// learned — fine as a backstop, wrong as the thing a shipped element draws. This walks the
-	// elements the rules can actually put on a duelist and asks for a picture of its own.
-	for _, e := range combat.AllElements {
-		if e == combat.Basic {
-			continue
-		}
-		key, ok := effectKeys[e]
+	// learned — fine as a backstop, wrong as the thing a shipped status draws. This walks the
+	// catalogue the rules can actually put on a duelist and asks each for a picture of its own.
+	for _, id := range combat.AllStatuses() {
+		key, ok := statusBadges[combat.StatusOf(id).Key]
 		if !ok {
-			t.Errorf("%v has no status badge and would draw the default", e)
+			t.Errorf("%s has no status badge and would draw the default", combat.StatusOf(id).Key)
 			continue
 		}
 		if _, ok := assets.LoadImageData()[key]; !ok {
-			t.Errorf("%v's badge is %q, which is not an embedded image", e, key)
+			t.Errorf("%s's badge is %q, which is not an embedded image", combat.StatusOf(id).Key, key)
 		}
+	}
+}
+
+func TestEveryStatusTheRulesHoldFitsTheDuelistArray(t *testing.T) {
+	// The other half of the same join, one layer down: `Duelist.Statuses` is a fixed array because
+	// a duelist has to stay comparable, and registration refuses a record past the end of it. This
+	// fails while there is still room, so the file being one short of the wall is visible before
+	// somebody hits it.
+	if combat.StatusCount() > combat.MaxStatuses {
+		t.Fatalf("%d statuses against an array of %d", combat.StatusCount(), combat.MaxStatuses)
 	}
 }

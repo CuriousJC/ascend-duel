@@ -410,25 +410,19 @@ func (s *CombatScene) updateFeed(gs *state.GlobalState) {
 //
 // **It reads the way the fired line will read** — same amber swatch, same COMBO! prefix, same
 // name from the same catalogue — so forming a hand and watching it land are recognisably the
-// same event. What it deliberately does not carry is the arithmetic: `Base` and `Swing` are the
-// resolver's, worked out against a strength and a shock roll that have not happened, and a
-// figure printed here that the round then contradicted would be worse than no figure.
+// same event. What it deliberately does not carry is the arithmetic: `Base` is the resolver's,
+// worked out against a strength and a shock roll that have not happened, and a figure printed here
+// that the round then contradicted would be worse than no figure.
 func (s *CombatScene) planningLines() []paneRow {
-	prompt := paneRow{prefix: "(press DUEL!)"}
-
-	blow, _, ok := s.previewBlow()
-	if !ok {
-		return []paneRow{prompt}
-	}
-
-	return []paneRow{
-		{
-			prefix: "COMBO! " + blow.Hand.Name +
-				" x" + multiplierText(blow.Multiplier),
-			swatch: comboSwatch,
-		},
-		prompt,
-	}
+	// **The prompt is all that is left here** *(2026-08-18)*. It used to carry the previewed combo
+	// as well — `COMBO! Two Pair x1.75` — and that line has moved to `drawPlannedHand`, which
+	// writes the hand's name across the band the sum will fill the moment DUEL! is pressed.
+	//
+	// **Moved, not duplicated.** Two places saying one thing is the failure this pane was
+	// introduced to fix, back when the caption narrated the event the feed was already carrying.
+	// The multiplier did not move with it: a preview carries no arithmetic, and `x1.75` beside a
+	// name is the arithmetic starting.
+	return []paneRow{{prefix: "(press DUEL!)"}}
 }
 
 func (s *CombatScene) resolutionLines(gs *state.GlobalState, capacity int, markOverflow bool) ([]paneRow, int) {
@@ -1133,23 +1127,37 @@ func comboName(e combat.Event) string {
 	return hand.Name
 }
 
-// comboMath is the blow written out as the sum it is: `20 + 10 x 3.5 = 55`.
+// comboMath is the blow written out as the sum it is: `20 x 1.5 = 30`.
 //
-// **Every figure in it comes off the event.** Base, Swing, Multiplier and the total are all
-// worked out by the resolver, so the line cannot claim a sum the round did not use — which is
-// the whole reason those fields are on the event rather than being recomputed here.
+// **Every figure in it comes off the event.** Base, Multiplier and the total are all worked out
+// by the resolver, so the line cannot claim a sum the round did not use — which is the whole
+// reason those fields are on the event rather than being recomputed here.
 //
-// **The cards' damage is one term, not one term each.** MECHANICS.md writes the formula out
-// per card — `10 + 10 + 10x1.5` — and that is the right form for a design document; the feed is
-// three rows of a sentence, and a Barrage spelled out card by card is half a line spent on
-// four identical numbers.
+// **The cards' damage is one term, not one term each.** The combo dialog is what spells the hand
+// out card by card; the feed is three rows of a sentence, and four identical numbers would be
+// half a line saying what the dialog just showed at four times the size.
 //
-// It is the swing before the attacker's weight and before anything the defender raised, so the
+// **The multiplier is dropped when it is the identity.** A High Card prints `20`, because
+// `20 x 1 = 20` is a sum with nothing in it — and the High Card is the commonest turn in the game,
+// so it is the line that would be read most and say least.
+//
+// It is the blow before the attacker's weight and before anything the defender raised, so the
 // damage that follows on the same line is often smaller. That gap is what a defence is worth,
 // and it is only legible because both figures are shown.
 func comboMath(e combat.Event) string {
-	return fmt.Sprintf("(%d + %d x %s = %d)", e.Base, e.Swing, comboMultiplierText(e.Multiplier), e.Amount)
+	if e.Multiplier == comboIdentity {
+		return fmt.Sprintf("(%d)", e.Amount)
+	}
+	return fmt.Sprintf("(%d x %s = %d)", e.Base, comboMultiplierText(e.Multiplier), e.Amount)
 }
+
+// comboIdentity is the multiplier that changes nothing — the percent scale `data/combos.json`
+// holds its numbers over, which is what the High Card carries.
+//
+// **It is written here rather than read off `combat`** because the scale is unexported there and
+// deliberately so: the screen is allowed to know that 100 means "times one" in order to *print* it,
+// and is not allowed to do arithmetic with it. Nothing in this file multiplies by it.
+const comboIdentity = 100
 
 // comboMultiplierText writes a *combo's* percentage multiplier the way the design does: 350 as
 // `3.5`, 200 as `2`, 1000 as `10`. Trailing zeros are dropped rather than padded to two places,

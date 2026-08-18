@@ -15,6 +15,13 @@ import "sort"
 // wears poker's names because it is poker's question — high card, pair, two pair, three of a kind,
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
 //
+// **The multiplier multiplies the hand's own cards** *(2026-08-18, owner's call)*. A Pair of Lunges
+// is `(20 + 20) x 1.5`, so what a hand is worth is a proportion of what its cards deal. It used to
+// be applied to a separate reference swing of one 1x attack at the attacker's DMG, added on top of
+// the cards, which made a percent buy a *fixed* figure: 500% was worth 2.5x the base on Jabs and
+// 0.6x on Lunges, so the ladder paid least to the decks that had climbed furthest. The High Card
+// carries 100 for the same reason, and it is what makes a lone attack land its own face damage.
+//
 // **That is deliberately narrow.** Combos used to carry a second axis counting the distinct colours
 // in the formed hand, and a reward vocabulary that could bank action points or take actions off the
 // opponent's next turn. Both are gone: statuses come from **elements and the rings that arm them**,
@@ -146,7 +153,7 @@ type Blow struct {
 
 	// Multiplier is the hand's, in percent, and exists as its own field because the blow is what
 	// the resolver and the feed both read — neither should have to know the multiplier has only
-	// one source today.
+	// one source today. 100 is the identity: it is what the High Card carries.
 	Multiplier int
 
 	// Elements is every distinct non-basic colour in the hand, in element order. It is what
@@ -161,7 +168,8 @@ type Blow struct {
 // **The High Card is a hand and still answers false here** *(2026-08-15)*. It has a name, an ID
 // and a line in the catalogue, so the feed can say what fired; what it does not have is anything
 // a player *built*, and this is the question the screen's combo preview asks — whether the cards
-// currently queued amount to more than the best of them.
+// currently queued amount to more than the best of them. The combo dialog reads it too, to decide
+// whether there is a hand to shout.
 func (b Blow) Formed() bool { return b.Hand.ID != HandNone && b.Hand.Cards() > 1 }
 
 // BlowFor works out one side's attack phase from the cards it resolved.
@@ -171,8 +179,9 @@ func (b Blow) Formed() bool { return b.Hand.ID != HandNone && b.Hand.Cards() > 1
 // nothing else pays.
 //
 // **When no hand of two or more forms, the High Card is the blow**: the single attack that hits
-// hardest, at no multiplier at all, so what lands is the card's own face damage. Ties go to the
-// card queued first, which needs no tie-break rule beyond the order the turn is already in.
+// hardest, at the catalogue's identity multiplier, so what lands is the card's own face damage.
+// Ties go to the card queued first, which needs no tie-break rule beyond the order the turn is
+// already in.
 func BlowFor(turn []Slot) Blow {
 	return blowFor(turn, handTable)
 }
@@ -392,11 +401,14 @@ func elementsOf(turn []Slot, cards []int) []Element {
 	return out
 }
 
-// scaleDamage applies a turn's multiplier to a base figure.
+// scaleDamage applies a turn's multiplier to a base figure — since 2026-08-18 that figure is the
+// sum of the hand's own cards, so this is the whole of the blow rather than a bonus term.
 //
 // Rounding is deliberately toward zero, matching guardDivisor and the defend reductions: the
 // package is integer arithmetic throughout, so a multiplier that rounded the other way would be
-// the one rule a player could not predict from the others.
+// the one rule a player could not predict from the others. A hand at an odd percent can therefore
+// lose a point off its total, which is why the dialog prints the figures rather than inviting the
+// player to multiply them out.
 func scaleDamage(base, pct int) int {
 	if pct <= 0 {
 		return 0

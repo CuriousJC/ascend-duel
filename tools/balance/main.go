@@ -117,7 +117,7 @@ func main() {
 	// how many of the seven postures beat this enemy. `-v <EnemyRecord>` still prints the
 	// round-by-round detail, for one record at a time.
 	fmt.Printf("\n%-24s %-6s %-6s %5s %4s %4s   %s\n",
-		"enemy", "cards", "floors", "life", "AP", "DMG", "beaten by")
+		"enemy", "cards", "floors", "life", "AP", "DMG", "beaten by (rounds)")
 	fmt.Println("(life and DMG are grown by the ascent curve to the first fight of the enemy's" +
 		"\nlowest valid floor - the shallowest slot the tower could put it in, and so the" +
 		"\nkindest version of it a player will ever meet. The record's own numbers are in" +
@@ -136,20 +136,11 @@ func main() {
 			fmt.Println()
 		}
 
-		var beat []string
-		for _, p := range postures {
-			if playerWins(fighter, enemy, name, p) {
-				beat = append(beat, p.label)
-			}
+		results := make([]duelResult, len(postures))
+		for i, p := range postures {
+			results[i] = play(fighter, enemy, name, p, nil)
 		}
-
-		verdict := strings.Join(beat, " ")
-		switch len(beat) {
-		case 0:
-			verdict = "NOTHING - a wall"
-		case len(postures):
-			verdict = "everything - free"
-		}
+		verdict := verdictOf(postures, results)
 		fmt.Printf("%-24s %-6d %d-%d    %5d %4d %4d   %s\n",
 			rec.Name, len(decks.EnemyCards(name)), rec.ValidFloors[0], rec.ValidFloors[1],
 			enemy.MaxLife, enemy.ActionPoints(), enemy.DMG, verdict)
@@ -174,6 +165,10 @@ func main() {
 		"\nexact. What is idealised is the *hand*: the fighter repeats one posture every round" +
 		"\nand always draws it. A real player is at the mercy of the deck, so read these as the" +
 		"\nbest case for each posture — an enemy that beats a posture here beats it always." +
+		"\n\nRead the last column for figures, not just for names. A posture is written with how many" +
+		"\nrounds it took, and a wall says which posture came closest and what the enemy had left -" +
+		"\nwhich is where a damage change shows up. A wall at 3% and a wall at 43% are not the same" +
+		"\nopponent, and a table of win-or-lose called them both walls." +
 		"\n\nWhat to look for: every enemy should lose to *something* and win against *something*." +
 		"\nAn enemy beaten by every posture is free, and one that beats them all is a wall." +
 		"\n\nAnd per posture: a posture that wins against everything is a card that needs pricing." +
@@ -214,8 +209,8 @@ func report(fighter, enemy combat.Duelist, record string, p playerRound) {
 		}
 	}
 
-	f, e, round := play(fighter, enemy, record, p, sample)
-	fmt.Printf("      %-9s -> %s\n", p.label, outcome(f, e, round))
+	r := play(fighter, enemy, record, p, sample)
+	fmt.Printf("      %-9s -> %s\n", p.label, outcome(r))
 }
 
 // play runs one posture against one enemy for a whole duel and hands back how it ended.
@@ -228,7 +223,7 @@ func report(fighter, enemy combat.Duelist, record string, p playerRound) {
 // `each` may be nil, and is called with the round number, what the opponent queued, and what
 // each side lost in that round.
 func play(fighter, enemy combat.Duelist, record string, p playerRound,
-	each func(round int, enemyPlan []combat.Card, dealt, taken int)) (combat.Duelist, combat.Duelist, int) {
+	each func(round int, enemyPlan []combat.Card, dealt, taken int)) duelResult {
 
 	plan := append(append([]combat.Card{}, p.defence...), p.attack...)
 
@@ -260,11 +255,18 @@ func play(fighter, enemy combat.Duelist, record string, p playerRound,
 			each(round, enemyPlan, beforeE-e.CurrentLife, beforeF-f.CurrentLife)
 		}
 	}
-	return f, e, round
+	return duelResult{
+		won:          !e.Alive() && f.Alive(),
+		rounds:       round,
+		fighter:      f,
+		enemy:        e,
+		enemyLifePct: pctOf(e.CurrentLife, e.MaxLife),
+	}
 }
 
 // outcome describes how the duel actually finished.
-func outcome(f, e combat.Duelist, rounds int) string {
+func outcome(r duelResult) string {
+	f, e, rounds := r.fighter, r.enemy, r.rounds
 	switch {
 	case !e.Alive() && !f.Alive():
 		return fmt.Sprintf("both fall in round %d", rounds)
@@ -343,13 +345,72 @@ func duelistOfDuelist(d data.DuelistData) combat.Duelist {
 // elemental postures below are measuring.
 var elementalRings = []string{"fire-ring", "frozen-ring", "thunder-ring", "earth-ring"}
 
-// playerWins plays the posture out and reports only the verdict, for the summary table.
+// duelResult is how one posture's duel against one enemy ended.
 //
-// It shares report's loop rather than duplicating it — see there for why the duel is played
-// rather than a damage rate divided into a life total.
-func playerWins(fighter, enemy combat.Duelist, record string, p playerRound) bool {
-	f, e, _ := play(fighter, enemy, record, p, nil)
-	return !e.Alive() && f.Alive()
+// **It replaced a bare bool on 2026-08-18, and what forced it is a change this tool could not
+// see.** The damage formula moved to (the hand's own cards) x (the hand multiplier) and the
+// roster table came out byte-identical either side of it, because a table of win-or-lose only
+// moves when a posture crosses that line and none did. The damage had genuinely moved: at DMG
+// 10, trips went from 50 to 60 a round and cheap-trips from 35 to 30, which took cheap-trips
+// from three rounds to four. **How fast a winning posture wins, and how close a losing one
+// gets, are what a balance change actually moves**; the verdict is the last thing to shift and
+// the coarsest.
+type duelResult struct {
+	won    bool
+	rounds int
+
+	// fighter and enemy are the two of them as the duel left them, which is what outcome reads
+	// to describe a stalemate or a mutual kill.
+	fighter, enemy combat.Duelist
+
+	// enemyLifePct is what the enemy had left at the end. For a posture that lost, that is the
+	// whole measure of how close it came - the difference between a wall the fighter nearly
+	// brought down and one they never scratched.
+	enemyLifePct int
+}
+
+// verdictOf writes the summary table's last column: which postures won and how long each took,
+// and - when none did - which came closest and how close.
+//
+// **A collapsed verdict still carries a figure.** "everything - free" and "NOTHING - a wall"
+// are the two rows worth spotting at a glance across ninety-six of them, so they stay short;
+// but each names the number that moves when the balance does, the fastest kill on one and the
+// nearest miss on the other. A row saying only "a wall" cannot tell a change from no change,
+// which is the failure this whole column exists to fix.
+func verdictOf(postures []playerRound, results []duelResult) string {
+	var beat []string
+	fastest, closest := -1, -1
+	for i, r := range results {
+		if r.won {
+			beat = append(beat, fmt.Sprintf("%s:%d", postures[i].label, r.rounds))
+			if fastest < 0 || r.rounds < results[fastest].rounds {
+				fastest = i
+			}
+			continue
+		}
+		if closest < 0 || r.enemyLifePct < results[closest].enemyLifePct {
+			closest = i
+		}
+	}
+
+	switch {
+	case len(beat) == 0:
+		return fmt.Sprintf("NOTHING - a wall (closest %s, enemy %d%% left)",
+			postures[closest].label, results[closest].enemyLifePct)
+	case len(beat) == len(postures):
+		return fmt.Sprintf("everything - free (fastest %s:%d)",
+			postures[fastest].label, results[fastest].rounds)
+	}
+	return strings.Join(beat, " ")
+}
+
+// pctOf is what is left of a life total, floored at zero: a duel both sides lose would
+// otherwise report a negative share.
+func pctOf(cur, max int) int {
+	if cur <= 0 || max <= 0 {
+		return 0
+	}
+	return cur * 100 / max
 }
 
 // elemental builds a posture's attacks all in one element. Only the four element rows use it,

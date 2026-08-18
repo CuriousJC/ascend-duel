@@ -134,9 +134,11 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 
 // --- the damage formula -------------------------------------------------------------------
 
-// **damage = the hand's own cards, plus DMG times the multiplier.** Two Strikes at DMG 10 are 20
-// of cards and a 1.5x pair on a DMG of 10, so 35.
-func TestDamageIsTheHandsCardsPlusDMGTimesTheMultiplier(t *testing.T) {
+// **damage = the hand's own cards, times the multiplier** *(2026-08-18)*. Two Strikes at DMG 10
+// are 20 of cards, and a 1.5x pair takes that to 30. There is no third term: the multiplier used
+// to be applied to a separate swing of one 1x attack at the attacker's DMG and added on top, which
+// made a hand's percent worth a fixed figure rather than a proportion of the cards that formed it.
+func TestDamageIsTheHandsCardsTimesTheMultiplier(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	pair, ok := handByKey("pair")
@@ -146,9 +148,95 @@ func TestDamageIsTheHandsCardsPlusDMGTimesTheMultiplier(t *testing.T) {
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
-	want := Plain(Strike).Damage(10)*2 + Plain(Strike).Damage(10)*pair.Multiplier/multiplierScale
+	want := Plain(Strike).Damage(10) * 2 * pair.Multiplier / multiplierScale
 	if got := damageDealtBy(events, SideA); got != want {
 		t.Errorf("a plain Strike Pair dealt %d, want %d", got, want)
+	}
+}
+
+// **A hand is worth a proportion of its own cards, so the same hand pays more on bigger cards.**
+// This is the property the swing term did not have — it paid the same figure whatever was played,
+// so a Four of a Kind was worth 2.5x the base on the cheapest cards and 0.6x on the dearest.
+func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
+	a, b := duelist(10, 6, 5000), duelist(10, 6, 5000)
+
+	jabs, _, _ := resolve(a, b, PlainCards(Jab, Jab), nil, 1)
+	lunges, _, _ := resolve(a, b, PlainCards(Lunge, Lunge), nil, 1)
+
+	jabPair, lungePair := damageDealtBy(jabs, SideA), damageDealtBy(lunges, SideA)
+
+	// The cards themselves are 4x apart — Jab deals half DMG and Lunge double — so the pairs have
+	// to stay 4x apart. A term added outside the multiplier would close that gap.
+	if want := jabPair * 4; lungePair != want {
+		t.Errorf("a Lunge Pair dealt %d against a Jab Pair's %d; the cards are 4x apart, so want %d",
+			lungePair, jabPair, want)
+	}
+}
+
+// **Every multiplier the catalogue holds is worth what it says against the cards.** The ladder is
+// tuned by editing combos.json alone, which is only true while nothing in the resolver adds to the
+// figure the file's percent is applied to.
+func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
+	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
+
+	for _, tc := range []struct {
+		key  string
+		turn []Card
+	}{
+		{"high-card", PlainCards(Strike)},
+		{"pair", PlainCards(Strike, Strike)},
+		{"three-of-a-kind", PlainCards(Strike, Strike, Strike)},
+		{"four-of-a-kind", PlainCards(Strike, Strike, Strike, Strike)},
+	} {
+		h, ok := handByKey(tc.key)
+		if !ok {
+			t.Fatalf("the catalogue has no %q", tc.key)
+		}
+
+		events, _, _ := resolve(a, b, tc.turn, nil, 1)
+		e, ok := comboEventFor(events, SideA)
+		if !ok {
+			t.Fatalf("%s: no KindCombo event", tc.key)
+		}
+
+		base := Plain(Strike).Damage(10) * len(tc.turn)
+		if e.Base != base {
+			t.Errorf("%s: base was %d, want the %d cards' own %d", tc.key, e.Base, len(tc.turn), base)
+		}
+		if want := base * h.Multiplier / multiplierScale; e.Amount != want {
+			t.Errorf("%s: came to %d, want %d x %d%% = %d", tc.key, e.Amount, base, h.Multiplier, want)
+		}
+	}
+}
+
+// **The per-card figures on the event add up to its base.** The combo dialog flies each one down
+// into a sum on screen, so a card whose figure disagreed with the total would be arithmetic the
+// player can see is wrong.
+func TestTheComboAmountsAddUpToTheBase(t *testing.T) {
+	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
+
+	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
+	e, ok := comboEventFor(events, SideA)
+	if !ok {
+		t.Fatal("no KindCombo event")
+	}
+	if e.ComboCardCount != 3 {
+		t.Fatalf("the trips say they were formed from %d cards, want 3", e.ComboCardCount)
+	}
+
+	sum := 0
+	for i := 0; i < e.ComboCardCount; i++ {
+		if e.ComboAmounts[i] <= 0 {
+			t.Errorf("card %d of the hand carries a figure of %d", i, e.ComboAmounts[i])
+		}
+		sum += e.ComboAmounts[i]
+	}
+	if sum != e.Base {
+		t.Errorf("the hand's cards carry %d between them, but the base is %d", sum, e.Base)
+	}
+	// The Jab is in no hand, so its figure is in neither.
+	if e.Base != Plain(Strike).Damage(10)*3 {
+		t.Errorf("the base is %d, want the three Strikes' own %d", e.Base, Plain(Strike).Damage(10)*3)
 	}
 }
 
@@ -282,7 +370,7 @@ func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
 
 // The High Card is still *named*, which is what lets the feed say what happened on the turn that
 // happens most often. A blow the engine could not name is the one failure this model can have.
-func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
+func TestTheHighCardIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
@@ -298,8 +386,11 @@ func TestTheHighCardIsNamedAndPaysNoMultiplier(t *testing.T) {
 	if e.Hand != high.ID {
 		t.Errorf("three different attacks were named %v, want the High Card", e.Hand)
 	}
-	if e.Multiplier != 0 {
-		t.Errorf("the High Card paid a x%d.%02d multiplier, want none",
+	// **The High Card sits at the identity** *(2026-08-18)*. It was 0 while the multiplier applied
+	// to a swing added on top of the cards; now that it multiplies the cards, 0 would be an attack
+	// phase that dealt nothing, and 100 is what makes a lone attack land its own face damage.
+	if e.Multiplier != multiplierScale {
+		t.Errorf("the High Card paid a x%d.%02d multiplier, want the identity",
 			e.Multiplier/100, e.Multiplier%100)
 	}
 	if e.Amount != Plain(Smash).Damage(10) {

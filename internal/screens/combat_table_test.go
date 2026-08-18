@@ -1,7 +1,6 @@
 package screens
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -520,18 +519,25 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 		t.Errorf("the preview rings %v, want all three cards", s.previewHandSlots(blow))
 	}
 
-	// And the feed says so in the same words the fired line will use — the hand's own name, from
-	// the catalogue, with nothing assembled here.
-	rows := s.planningLines()
-	if len(rows) != 2 || rows[0].swatch != comboSwatch {
-		t.Fatalf("the pane holds %d rows while planning, want the combo line and the prompt", len(rows))
-	}
-	want := "COMBO! " + blow.Hand.Name
-	if !strings.HasPrefix(rows[0].prefix, want) {
-		t.Errorf("the preview reads %q, want it to open %q", rows[0].prefix, want)
+	// And it is named in the same words the fired shout will use.
+	//
+	// **This moved out of the feed on 2026-08-18.** The pane carried `COMBO! Three of a Kind
+	// x2` while planning; the words are now written across the band the sum will fill, by
+	// `drawPlannedHand`. What has to hold either way is that the preview and the announcement are
+	// one spelling — two spellings of PAIR would read as two different things happening — and
+	// `handShout` is the single function both go through, so that is what is checked here rather
+	// than a row of pane text.
+	if got, want := handShout(blow.Hand.Name), "THREE OF A KIND!"; got != want {
+		t.Errorf("the planned hand reads %q, want %q", got, want)
 	}
 	if blow.Hand.Key != "three-of-a-kind" {
 		t.Errorf("three Strikes previewed %q, want the three of a kind", blow.Hand.Key)
+	}
+
+	// The prompt is the whole of the pane while planning now, and nothing about the hand is said
+	// twice.
+	if rows := s.planningLines(); len(rows) != 1 {
+		t.Errorf("the pane holds %d rows while planning, want the prompt alone", len(rows))
 	}
 }
 
@@ -542,8 +548,13 @@ func TestOneAttackIsNotACombo(t *testing.T) {
 	if _, ok := s.previewAttack(); ok {
 		t.Error("one Strike previewed a combo")
 	}
-	if rows := s.planningLines(); len(rows) != 1 {
-		t.Errorf("the pane holds %d rows, want the prompt alone", len(rows))
+
+	// **The two gates have to agree about which hands are worth shouting**, because one governs
+	// the planned name and the other the fired one. `Blow.Formed` is `Hand.Cards() > 1` and
+	// `handWasBuilt` asks an event the same question — so a lone attack is silent in both places,
+	// and HIGH CARD! never appears anywhere.
+	if got := shoutFor(combat.Event{Kind: combat.KindCombo, Hand: combat.HandNone}); got != "" {
+		t.Errorf("a lone attack shouts %q, want silence", got)
 	}
 }
 

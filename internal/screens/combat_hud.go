@@ -103,7 +103,8 @@ func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
 // for the same reason drawCard does nothing.
 func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Image) {
 	img := cardImage(gs,
-		duelistSpec(s.fighter, s.sideName(combat.SideA), gs.Run.Vitae()),
+		duelistSpec(s.fighter, s.sideName(combat.SideA), gs.Run.Vitae(),
+			s.shownLife(combat.SideA, s.fighter.CurrentLife)),
 		cards.DuelistStyle)
 	if img == nil {
 		return
@@ -289,7 +290,8 @@ func (s *CombatScene) enemyCardRect(gs *state.GlobalState) image.Rectangle {
 // reason drawCard does nothing: a card-shaped hole gets reported, a card in a fallback font
 // does not.
 func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image) {
-	img := cardImage(gs, enemySpec(gs, s.enemy, s.sideName(combat.SideB)), cards.EnemyStyle)
+	img := cardImage(gs, enemySpec(gs, s.enemy, s.sideName(combat.SideB),
+		s.shownLife(combat.SideB, s.enemy.CurrentLife)), cards.EnemyStyle)
 	if img == nil {
 		return
 	}

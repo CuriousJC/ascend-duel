@@ -133,9 +133,12 @@ elemental and a coloured Defend would be a colour that meant nothing.
 each buys is a different currency at a rising price: Prepare pays in points, Plan pays in cards,
 Defend pays in survival.
 
-**`Strike` is the 1× reference the damage formula reads**, and that is why the crush family holds
-the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, and every multiplier is applied to it.
-Nothing stops that reference moving to another family's middle rung; it is one constant.
+**`Strike` is the 1× reference the ladder is written against**, and that is why the crush family
+holds the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, so the figure the player reads
+is what one middle-rung card deals. Nothing stops that reference moving to another family's middle
+rung; it is one constant. **What it is no longer is a term in the damage formula** *(2026-08-18)* —
+a hand's multiplier applies to the cards that formed it, not to a reference swing added on top, so
+`DMG` reaches a blow only through the cards themselves.
 
 **The opponent has two cards of its own and they belong to no family** — `Attack` (2 AP, `DMG`) and
 `Heavy` (3 AP, `DMG × 2`), priced against the player's tiers. `FamilyNone` is a real answer rather
@@ -510,9 +513,11 @@ sheet is worse than none. It is deleted rather than annotated.
 
 What has to be re-measured before anything is tuned, and roughly what to expect:
 
-- **Damage is much larger and enemy HP has not moved.** Two Strikes at DMG 10 is `20 + 10×1.5`
-  = 35 where it used to be 20; a Four of a Kind is `10×5 = 50` on top of its cards. Retuning
-  enemy life totals is the owner's call and is expected, not a bug report.
+- **Damage is much larger and enemy HP has not moved.** Two Strikes at DMG 10 is `20 × 1.5` = 30
+  where it used to be 20, and four Lunges are `80 × 5` = **400**. Retuning enemy life totals is the
+  owner's call and is expected, not a bug report. *(The figures here were `20 + 10×1.5 = 35` and
+  `10×5 = 50` on top of the cards until 2026-08-18, when the swing term went; see the damage
+  formula above.)*
 - **And the postures changed again on 2026-08-15.** The deck rework replaced every row: `trips`
   and `cheap-trips` are what the tool now reads a build against, and the old defend-column rows
   have no cards behind them. `defending` wins 16 of 96 and `planning` 1, both at the shallow end.
@@ -558,10 +563,20 @@ its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
 a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "COMBO!
-Duelist lands a Pair (20 + 10 x 1.5 = 35), 35 damage". Five lines saying a Strike was
+Duelist lands a Pair (20 x 1.5 = 30), 30 damage". Five lines saying a Strike was
 swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
 forms no hand still gets its own ordinary sentence**, because a High Card is not a combo and
 announcing one over every attack would empty the word.
+
+**The sentence is a record, and it is no longer the only thing that says what a blow was made of**
+*(2026-08-18)*. The combo dialog acts the sum out at the size of the screen on the beat the hand
+fires — the hand's name shouted beside the cards it names, then each card's own figure flying down
+into a line, then the multiplier, then the answer. It exists because the feed's line is sixteen
+points of arithmetic on the third row of a three-row box: it *records* the sum correctly and never
+showed which card paid which part of it, so the multiplier read as a number the game had decided
+rather than one the player had built. **It says nothing the event does not carry and computes
+nothing**, and the one thing it changes is pacing — playback holds while it runs. See the
+`combat-screen` skill.
 
 **The prepare phase is gone and its card moved** *(2026-08-15)*. Prepares used to run *before* the
 attack, on the grounds that nothing they did reached it. With three categories collapsed to two,
@@ -686,26 +701,42 @@ cannot join a hand.
 A turn deals damage **once**, in the attack phase, and the figure is:
 
 ```
-(damage of each card in the hand)  +  DMG × (hand multiplier)
+(damage of each card in the hand)  ×  (hand multiplier)
 ```
 
-`DMG` is what one Strike deals in this duelist's hands — the number on the fighter card. So a
-pair of Strikes at DMG 10 is `10 + 10 + 10×1.5` = **35**.
+So a pair of Lunges at DMG 10 is `(20 + 20) × 1.5` = **60**.
 
 | Hand | Cards | Multiplier |
 |---|---|---|
-| **High Card** | `[1]` | — |
+| **High Card** | `[1]` | ×1 |
 | **Pair** | `[2]` | ×1.5 |
 | **Two Pair** | `[2,2]` | ×1.75 |
 | **Three of a Kind** | `[3]` | ×2 |
 | **Full House** | `[3,2]` | ×3 |
 | **Four of a Kind** | `[4]` | ×5 |
 
-**The High Card pays nothing** *(2026-08-15)*. When a turn builds no pair or better, the single
-hardest-hitting attack card is the blow and what lands is exactly its face damage. It is in
-`combos.json` with a name and an ID so the feed can say what happened on the turn that happens most
-often; **a blow the engine could not name is the one failure this model can have**, which is why
-the loader panics without it.
+**The multiplier multiplies the cards, and it did not always** *(2026-08-18, owner's call)*. Until
+then the formula carried a third term — `Σ cards + DMG × multiplier` — where `DMG` was a reference
+swing of one 1× attack at the attacker's strength, *added on top of* what the cards dealt. The
+percent therefore bought a **fixed figure rather than a proportion**: at DMG 10 a Four of a Kind
+was worth +50 whether it was built from four Jabs dealing 5 each or four Lunges dealing 20 each —
+2.5× the base in the first case and 0.6× in the second. **The ladder paid least to the decks that
+had climbed furthest**, which is backwards, and the arithmetic could not be read off `combos.json`
+because the number the percent applied to was not in the file.
+
+Two things follow and both were the reason for the change:
+
+- **The ladder is tunable from `data/combos.json` alone.** The percent now applies to a figure the
+  file's reader can see, so an entry means what it says.
+- **A hand is worth more on bigger cards, in proportion.** A Pair of Lunges beats a Pair of Jabs by
+  exactly the 4× the cards themselves are apart.
+
+**The High Card pays the identity** *(2026-08-18)*. When a turn builds no pair or better, the
+single hardest-hitting attack card is the blow and what lands is exactly its face damage — which
+is now `×1` rather than the `×0` it carried while the multiplier was a bonus term, since ×0 would
+be an attack phase that dealt nothing. It is in `combos.json` with a name and an ID so the feed can
+say what happened on the turn that happens most often; **a blow the engine could not name is the
+one failure this model can have**, which is why the loader panics without it.
 
 **It is fallen back to rather than matched.** Counting is the wrong way to pick it — `matchCountOf`
 fills groups largest-count-first and would hand back whichever concept appeared most, not the card
@@ -740,6 +771,21 @@ is all that survives of the second axis.
   Cutting the colour multiplier flipped no outcome in the sample at all. The ladder's own numbers
   were kept unchanged through the cut on purpose, so this figure is the size of the hole before any
   retuning.
+- **Dropping the swing term flipped no outcome either, and that is a fact about the tool as much as
+  about the change** *(2026-08-18)*. `tools/balance` prints the same 84 walls and a byte-identical
+  roster table before and after. The damage genuinely moved — `trips` deals 50 → **60** a round and
+  `cheap-trips` 35 → **30**, so `cheap-trips` now takes four rounds to kill a Giant Rat where it
+  took three — but the tool reports **who won, not how fast**, so a posture that still wins and a
+  posture that now wins with a quarter of its life left print the same line. Read the unchanged
+  table as "no posture crossed the win/lose line", never as "nothing changed", and treat
+  multi-sample or rounds-to-kill reporting as the thing the tool needs before this ladder is tuned
+  against it.
+- **The change is a buff at the top and a nerf at the bottom.** A hand of the dearest cards gains
+  and a hand of the cheapest loses, because the fixed term it replaced was worth proportionally
+  more to small cards. At DMG 10: four Lunges go 130 → **400**, four Jabs 70 → **100**, three Bashes
+  35 → **30**. **Nothing in the ladder was retuned to absorb that** — the percents are exactly what
+  they were — so the numbers above are the size of the shift before any tuning, and the tuning is
+  one file.
 
 ### The catalogue's shape
 
@@ -800,9 +846,11 @@ larger change than it was: it would mean reopening the reward vocabulary this na
   profile rather than inside a duel. `Hands()` exists for it to read.
 - **The attack phase writes one line, and it is the combo's.** *Done.* Attack cards no longer draw
   a row each — a turn of five Strikes read as five actions and one figure, which is the model the
-  pane was contradicting. The line carries the arithmetic (`20 + 10 x 1.5 = 35`) off the event, so
-  the sum shown is the sum used, and the damage attaches to it. **What is still not drawn** is a
-  row that a chill deleted; that one stands.
+  pane was contradicting. The line carries the arithmetic (`20 x 1.5 = 30`) off the event, so
+  the sum shown is the sum used, and the damage attaches to it. **The combo dialog now carries the
+  same arithmetic at the size of the screen**, spelled out card by card; the line stays because it
+  is the record and the dialog is the moment. **What is still not drawn** is a row that a chill
+  deleted; that one stands.
 - **A preview of the hand while planning is wanted and does not exist.** `BlowFor` is exported
   and is the same function the engine uses, so a previewed combo would be the combo that fires by
   construction. Nothing calls it from the screen yet.

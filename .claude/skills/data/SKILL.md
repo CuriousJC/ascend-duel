@@ -178,6 +178,14 @@ from elements and rings, and the matcher counts attacks aimed at the opponent be
 `formsBlow` says, not because an entry asked it to. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.
 
+**The multiplier multiplies the hand's own cards, and `100` is the identity** *(2026-08-18)*. A
+blow is `(sum of the hand's cards) x multiplier / 100`, so `high-card` carries `100` rather than the
+`0` it held while the percent applied to a separate swing added on top of the cards. **`0` is now an
+attack phase that deals nothing** and is refused for every hand; a multi-card hand at or below `100`
+is refused too, being one a player would be punished for building. Below `100` is legal for the
+High Card alone and would be a penalty — deliberately allowed, because taking a lever out of the
+file is the opposite of what the narrowing was for.
+
 A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
 engine cannot name is the one failure this model produces.
 

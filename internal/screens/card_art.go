@@ -171,12 +171,16 @@ func artwork(gs *state.GlobalState, key string) image.Image {
 // the bottom edge — see `effectArt`. A status is invisible without it: a chill takes a card off
 // a turn that has not been queued yet and a weight blunts a blow not yet swung, so a player with
 // no badge to look at learns about either only by being surprised by it.
-func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string) cards.Spec {
+// **`life` is passed in rather than read off the combatant** *(2026-08-18)*, because the bar waits
+// for the figure flying at it: while a hit is in the air the card keeps drawing what the duelist had
+// before the blow, so the drop and the arrival are one event. The combatant is already correct
+// underneath — see `CombatScene.shownLife`, which is a view over it and never a second copy.
+func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life int) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
 		Art:     artwork(gs, c.Portrait),
-		Life:    c.CurrentLife,
+		Life:    life,
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}
@@ -246,11 +250,12 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 //
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
-func duelistSpec(c *entities.Combatant, name string, vitae int) cards.Spec {
+// `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
+func duelistSpec(c *entities.Combatant, name string, vitae, life int) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
-		Life:    c.CurrentLife,
+		Life:    life,
 		MaxLife: c.MaxLife,
 		Enabled: true,
 	}

@@ -306,6 +306,11 @@ type CombatScene struct {
 	firingSeats      []int
 	enemyFiringSeats []int
 
+	// hits are the damage figures currently travelling into a fighter card, and the reason a
+	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
+	// while one of these is up; what waits is the drawing.
+	hits []hitFlight
+
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round. **Vitae is the run's, not the screen's** *(2026-08-17)* — see session.Session,
 	// which is what the post-battle screen pays into.
@@ -346,6 +351,15 @@ type CombatScene struct {
 	cursor int
 	ticks  int
 	round  int
+
+	// mathBox is the combo dialog: the blow's arithmetic acted out over the Resolution feed on
+	// the beat the hand fires. See combat_mathbox.go.
+	//
+	// **It is the one thing on this screen that can stop the playback cursor.** Every other
+	// animation runs on its own clock beside the log; this one is a beat *of* the log, because a
+	// sum revealed a figure at a time does not fit inside a single event's dwell. It still
+	// decides nothing — `ResolveRound` settled the round before any of it was drawn.
+	mathBox comboMathBox
 
 	// The authoritative end-of-round state, adopted once playback catches up. Guard
 	// flags in particular only exist here, since no event carries them.
@@ -436,6 +450,13 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.flights = nil
 	s.slides = nil
 	s.firingSeats, s.enemyFiringSeats = nil, nil
+	s.mathBox.clear()
+
+	// **A figure in the air belongs to the fight that raised it.** A settled duel freezes rather
+	// than spending its hand, so nothing between rounds clears this — the same trap the note below
+	// records about `s.resolved`: anything tidied up only by the end-of-round spend is still on
+	// screen when the next fight starts.
+	s.clearHits()
 
 	// **The table is cleared here as well as by the spend** *(2026-08-16)*. `s.resolved` used to
 	// be emptied in exactly two places — `seatPlayedCards` at the start of a round and
@@ -645,7 +666,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 
 	systems.UpdateButton(gs, s.duelButton)
 	systems.UpdateButton(gs, s.discardButton)
-	s.advancePlayback()
+
+	// **Before advancePlayback, not after, and never inside it.** The cursor waits on a figure
+	// still in the air, so a tick that only ran when playback was allowed to advance would leave
+	// the flight frozen at age zero and hang the round on itself.
+	s.tickHits()
+	s.advancePlayback(gs)
 
 	if trace.Enabled() && len(s.hand) != s.tracedHand {
 		s.tracedHand = len(s.hand)
@@ -708,6 +734,7 @@ func (s *CombatScene) startRound() {
 	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
 	// above is already resolved. See combat_table.go.
 	s.firingSeats, s.enemyFiringSeats = nil, nil
+	s.mathBox.clear()
 	s.seatPlayedCards()
 
 	// The whole round, not a count of it. ResolveRound already decided every one of these
@@ -767,8 +794,28 @@ func eventLabel(e combat.Event) string {
 // advancePlayback walks the round's event log one entry at a time, applying each to
 // the on-screen combatants. This is the whole of the screen's combat logic: the round
 // was already decided by combat.ResolveRound, so playback can never disagree with it.
-func (s *CombatScene) advancePlayback() {
+func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	if s.cursor >= len(s.log) {
+		return
+	}
+
+	// **The combo dialog owns the beat while it runs, and it is the one exception to the dwell
+	// below** *(2026-08-18)*. A sum revealed a figure at a time takes several seconds and cannot
+	// be fitted inside one event's dwell, so rather than the box racing playback the cursor waits
+	// for it. Everything else that moves on this screen runs on its own clock alongside the log.
+	//
+	// **It still cannot change an outcome.** The round was decided before a frame of this was
+	// drawn; what waits is the drawing of it.
+	if s.mathBox.running() {
+		s.mathBox.tick()
+		return
+	}
+
+	// **A landing figure holds the cursor for the same reason** *(2026-08-18)*. The number crosses
+	// half the screen and the target's health bar is waiting on it, so letting playback run on
+	// would drop the bar before the figure reached it — which is the picture the flight exists to
+	// remove. See combat_hits.go; it changes pacing and cannot change an outcome.
+	if s.hitsRunning() {
 		return
 	}
 
@@ -780,7 +827,22 @@ func (s *CombatScene) advancePlayback() {
 	}
 	s.ticks = 0
 
+	// **The finished sum stays on screen until the event after it lands, and that is a handoff
+	// rather than a hold** *(2026-08-18)*. It used to be cleared on the tick after the script
+	// stopped running, which put an empty band on screen for the whole of the dwell that follows —
+	// so the damage figure, whose whole job is to be *that total* travelling into the card, set off
+	// from a space the total had left a second and a quarter earlier. Clearing it here means the
+	// last frame of the sum and the first frame of the flight are the same frame, at the same
+	// point, in the same colour and at the same size. See combat_hits.go.
+	//
+	// A turn that misses rather than landing clears it the same way, on its `KindMissed`. When the
+	// strike-through arrives that event will want this same handoff, so keep them together.
+	if s.mathBox.active && !s.mathBox.running() {
+		s.mathBox.clear()
+	}
+
 	s.applyEvent(s.log[s.cursor])
+	s.startComboMath(gs, s.log[s.cursor])
 	s.cursor++
 
 	// Playback has caught up with the resolver: hand control back to the player, or freeze
@@ -904,6 +966,14 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	} else {
 		s.enemy.CurrentLife = e.Life
 	}
+
+	// **The figure is raised after the life has already moved**, so it is a ghost of something
+	// that has happened rather than a thing in progress — the same division every card in flight
+	// keeps. What lags is the bar's *drawing*, through `shownLife`. A burn is not flown from here:
+	// it has its own source, the badge it ticks off, and its own row in the theatre table.
+	if e.Kind == combat.KindDamage {
+		s.noteHit(e)
+	}
 }
 
 // applyStatusBadge shows one landed status on the target's card, mid-playback.
@@ -1008,6 +1078,22 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and a card being dealt into a slot arrives over a card still shuffling out of it.
 	s.drawSlides(gs, screen)
 	s.drawFlights(gs, screen)
+
+	// **The combo dialog, over everything but the deck overlay.** It is the loudest thing on the
+	// screen for the few seconds it is up, and it is deliberately over the opponent's row and the
+	// Resolution feed alike: the shout stands beside the cards it names, and the sum is written
+	// across the band the feed occupies. See combat_mathbox.go.
+	s.drawComboMath(gs, screen)
+
+	// **The planned hand's name, in the band the sum is about to be written across.** It and the
+	// shout above can never both be up: this one is gated on `planning()` and that one only runs
+	// during playback. See drawPlannedHand.
+	s.drawPlannedHand(gs, screen)
+
+	// **The damage figures, over the sum they came out of and the card they are flying into.**
+	// They are drawn after the dialog because a figure leaving the sum has to be on top of it —
+	// underneath, the first frames of the flight would be hidden by the number it left.
+	s.drawHits(gs, screen)
 
 	// The overlay covers everything, card in flight included — and then Deck is drawn
 	// again on top of it. While the deck is open it is the only control that still does

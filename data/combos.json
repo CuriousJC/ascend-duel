@@ -5,7 +5,7 @@
       "id": 1,
       "name": "High Card",
       "groups": [1],
-      "multiplier": 0
+      "multiplier": 100
     },
     {
       "key": "pair",

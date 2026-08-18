@@ -39,7 +39,7 @@ top of, and they are not repeated below:
   side and per fight), and `combatRNG` for the engine's lightning roll from
   `RunSeed ^ combatSalt`. Separate streams, and they must stay separate. `deckSeed` pins the
   two shuffles for debugging — both of them, never one.
-- **Which of the screen's six files holds what** — the map is in `CLAUDE.md`'s Package layout
+- **Which of the screen's files holds what** — the map is in `CLAUDE.md`'s Package layout
   section, and it lives there rather than here so there is only one of it. Everything below
   describes the screen, not a file; they are one package, so a symbol named here may sit in
   any of them and `Grep` over `internal/screens/` is the way to find it.
@@ -57,8 +57,10 @@ lands. Five Strikes are not five hits.
 
 **The phase is also one line in the feed, and it is the combo's.** The `KindAction`s still play —
 each is a beat, and each raises its card on the table — but the pane draws no sentence for them.
-`KindCombo` carries `Base`, `Swing`, `Multiplier` and `Amount`, so the line reads *"COMBO! Duelist
-lands a Duo Strike Pair (20 + 10 x 3.5 = 55)"* and the damage attaches to it. **A blow that formed
+`KindCombo` carries `Base`, `Multiplier` and `Amount`, so the line reads *"COMBO! Duelist
+lands a Pair (20 x 1.5 = 30)"* and the damage attaches to it. **The multiplier is dropped from the
+line when it is the identity**, so a High Card prints `(20)` — `20 x 1 = 20` is a sum with nothing
+in it, and it is the commonest turn in the game. **A blow that formed
 no hand writes an ordinary attack sentence instead**, from the card the engine names on the event —
 "COMBO!" over a lone Strike would empty the word. **Attack cards that build no hand contribute
 nothing**, and what says so is the table: every attack card is raised as it is announced, and the
@@ -127,11 +129,21 @@ in `MECHANICS.md`; these are what matter to the screen.
   writes as an ordinary attack sentence rather than as a combo. It carries the card it led with in
   `Action`/`Element` so the pane has something to name.
 - **The event carries the arithmetic, and the engine takes its damage from the same field.**
-  `Base` is what the hand's own cards deal, `Swing` is one Strike at this attacker's strength, and
-  `Amount` is what they come to under the multiplier — the blow *before* the attacker's weight and
-  before any defence. `resolveAttackPhase` blunts `Amount` rather than re-adding the sum, so the
-  figure printed and the figure landed cannot be two different numbers. The gap between that and
-  the `KindDamage` after it is exactly what the defence was worth.
+  `Base` is what the hand's own cards deal added up, and `Amount` is `Base` under the multiplier —
+  the blow *before* the attacker's weight and before any defence. `resolveAttackPhase` blunts
+  `Amount` rather than re-adding the sum, so the figure printed and the figure landed cannot be two
+  different numbers. The gap between that and the `KindDamage` after it is exactly what the defence
+  was worth.
+- **The multiplier multiplies the cards** *(2026-08-18, owner's call)*. There is no third term: the
+  event carried a `Swing` — one 1x attack at the attacker's DMG, *added* to the cards — until then,
+  which made a hand's percent worth a fixed figure rather than a proportion. `Swing` is gone from
+  `Event` and `high-card` sits at `100` rather than `0`, since a multiplier applied to the cards
+  cannot be zero without deleting the blow. See MECHANICS.md.
+- **`Event.ComboAmounts` is what each of the hand's cards deals**, parallel to `ComboCards` and to
+  the same count, summing to `Base`. It exists so the combo dialog can show the sum term by term
+  without the screen owning `CardDamage`, the strength scaling and every ring that touches a card's
+  damage — which would be a second resolver, the thing `Base` and `Multiplier` are on the event to
+  prevent.
 - **A fired combo brackets its own cards, and the list comes from the event**.
   `Event.ComboCards[:ComboCardCount]` names which cards of the turn formed it. **Never derive
   that from the hand's group sizes, and never assume the cards are adjacent.** A counted hand is
@@ -151,6 +163,59 @@ in `MECHANICS.md`; these are what matter to the screen.
   `TestEverySlotIsEitherTakenOrChilled` pins it. **The pane still draws that row as though it
   happened**, which is a known gap. Ice is the only thing that can take a slot.
 
+### The combo dialog: the sum acted out
+
+*`combat_mathbox.go`, 2026-08-18.* On the beat a hand fires, the blow's arithmetic is played out at
+the size of the screen: the hand's name shouted beside the cards it names, then each card's own
+figure flying down out of that card into a line over the Resolution feed, then the multiplier, then
+the answer.
+
+**It exists because the sum was the one number on this screen nobody could source.** The feed has
+always printed it, correctly, in sixteen-point text on the third row of a three-row box. That is a
+*record*, which is what the feed should be; what it is not is an *explanation*. A player could see
+the total and could not see which card paid for which part of it, so the multiplier read as a
+number the game had decided rather than one they had built.
+
+- **It says nothing the event does not carry and computes nothing.** Every figure comes off the
+  same `KindCombo` the feed's line does — `ComboAmounts`, `Multiplier`, `Amount`. **This is the
+  rule to hold**: a second *drawing* of one event, never a second arithmetic. A figure it needs and
+  the event has not got is a field that goes on the event.
+- **It is the one thing on this screen that can stop the playback cursor.** `advancePlayback` holds
+  while `mathBox.running()`, because a sum revealed a figure at a time does not fit inside one
+  event's dwell and the alternative is the box racing the log. Every other animation runs on its
+  own clock beside playback. **It still cannot change an outcome** — the round was decided before a
+  frame of it was drawn — but it *does* change pacing, and `demoGiveUpAt` is sized against the dwell
+  alone, so a longer script is worth checking against it.
+- **`mathScript(e)` is the half with no geometry in it**, and it is what `combat_mathbox_test.go`
+  pins: the strings, their order, which items fly, and that the line ends with the event's own total
+  rather than a sum of its terms. The tests create no `ebiten.Image` and need no font — the same
+  narrow exception the other screen tests take.
+- **The layout is computed once, before anything is shown**, and items are revealed left to right
+  into space already claimed. Laying the line out again as each item appeared would recentre the
+  whole sum on every beat, so figures already on screen would crawl sideways while being read.
+- **It takes its height from the feed and its width from the table, and neither is an accident.**
+  The vertical band is the feed's *collapsed* box, computed in `comboMathRect` rather than taken
+  from `feedRect` — a player holding the feed open grows that box upward, and a dialog that moved
+  with it would re-lay a line of figures out from under a reader mid-flight. The **width** is
+  deliberately not the feed's: `feedRect` spans `handBand`, which narrows as the hand empties, and
+  a two-card hand gives about 330px against a widest sum of roughly 640 — so a centred line that
+  does not wrap and cannot shrink would have run off both ends in exactly the rounds a duel is
+  decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same trap is live
+  anywhere else that borrows `handBand` for something that is not the hand.**
+- **Only a built hand is shouted.** `HIGH CARD!` over a lone attack is the same emptying of the
+  word that keeps `COMBO!` off a single Strike in the feed — but the *arithmetic* still plays, on
+  the owner's call, so every attack phase shows where its figure came from.
+- **The shout goes on whichever side of the cards the row is not**: the player's row is
+  left-aligned so its shout takes the space to the right, the opponent's is right-aligned so its
+  shout goes left. A fixed side would put one of them on top of the cards it is about.
+- **`attentionYellow` gained a third caller and it means the same thing.** The colour's own note
+  asks that question of anyone who wants it; the answer here is that the shout and the ring round
+  the cards are the *same* combo at the *same* moment, and the shout is text on the ground rather
+  than on a card.
+- **A flown figure travels and grows; an operator is stamped in place.** That difference is the
+  whole grammar of the box — something that flies came off a card, something that pops is
+  punctuation the game supplied.
+
 **Within a turn the order is: prepares one at a time, every attack card announced, the combo, the
 damage, then the defends.** The screen does nothing to arrange this; it replays the log in order,
 and the engine decides.
@@ -163,6 +228,86 @@ so `firingSeats` is a list rather than one seat and the beats after it name the 
 `noteCombo` narrows the list to what earned it. And **the hand is announced even if the blow then
 misses** — the shock roll happens after the combo event, because the hand is scored off the queue
 and the queue was committed at DUEL!.
+
+### The blow landing, and the bar that waits for it
+
+*`combat_hits.go`, 2026-08-18.* The damage figure travels out of wherever the blow was last seen
+and into the card whose bar it empties, and **the bar holds its old figure until the number
+arrives**, so the drop and the arrival are one event rather than two. It is the second half of the
+combo dialog: that answered "where did that number come from", this answers "and what did it do" —
+which used to be a bar dropping while the total sat in the middle of the screen with nothing drawn
+between them.
+
+- **The model has already moved.** `applyEvent` writes the new life the instant the event is
+  reached, exactly as it always did, and the flight is raised afterwards — so a figure in the air is
+  a ghost of something that has happened, and nothing that asks how much life is left gets a
+  different answer while it is up. What lags is the *drawing*, through `shownLife`, which is a view
+  over the combatant rather than a second copy of it. Same division `spendSelected` keeps: the
+  animation never owns the state. `enemySpec` and `duelistSpec` take the life to draw as an
+  argument for exactly this reason.
+- **It stops the playback cursor too**, for the dialog's reason: a figure crossing half the screen
+  does not fit inside one event's dwell, and the alternative is the bar dropping before the number
+  reaches it. `hitsRunning` is what `advancePlayback` waits on. It changes pacing and cannot change
+  an outcome.
+- **Where it sets off from is a rule, not a rectangle** — `anchorBlow`. The sum line when the turn
+  scored a hand, because the total is already on screen there and two figures for one blow would be
+  two blows; the acting card's own seat when it did not, because a solo attacker emits no
+  `KindCombo` at all and every attack lands its own face damage. `soloAttacker(side)` is the
+  predicate that already knows which.
+- **The handoff from the sum is four things matching, and all four are deliberate**: the figure is
+  the total's size (`hitFigureSize` *is* `mathTotalSize`), the total's colour, at the total's
+  position, on the frame the box clears — `advancePlayback` clears a finished box at the top of the
+  beat the damage lands rather than a tick after the script stops, so the last frame of the sum and
+  the first frame of the flight are the same frame. Any one of the four missing and it reads as two
+  numbers swapping rather than one setting off. It also does not fade *in*, for the same reason.
+- **It shrinks where the sum's items grow**, and the difference is the meaning: a term flying into
+  the sum comes toward the reader, a total flying into a card goes away into it.
+- **`clearHits` is called from `Init`**, which is the lesson the frozen last round taught — anything
+  tidied up only by the end-of-round spend assumes every round ends in one, and a settled duel does
+  not.
+- **`shownLife` walks the list although there is only ever one figure owed.** The cursor holds for a
+  whole flight, so a second `KindDamage` cannot be reached while the first is up — but relying on
+  that would break the day the hold is shortened, and it would break as a bar showing a life nobody
+  has, which is hard to attribute.
+
+### The theatre: what travels, out of what, into what
+
+*`combat_theatre.go`, 2026-08-18.* One table, one entry per `EventKind`, naming a source anchor, a
+target anchor, a gesture and the reason. **It is the map, not the machinery** — the drawings stay
+with the code that already owns each region, because a generic renderer over nine genuinely
+different gestures would be more machinery than the nine gestures.
+
+- **The rule it holds is one sentence: everything travels from the thing that caused it to the
+  thing it happened to.** A figure appearing in the middle of the screen is a figure that was never
+  anywhere else, so the player has to be *told* what it was instead of having watched it happen —
+  the card-flight argument applied to every event. Written down as a table the rule is checkable;
+  written into nine call sites it is a habit.
+- **The checkable part is completeness.** `TestEveryEventKindIsChoreographed` fails when a new kind
+  arrives without an entry. That matters because the Resolution feed is going behind a button, and
+  after that an event nobody drew is an event the player is never told about. **A kind with no
+  picture says so with `anchorNone` and a reason** — an absent entry and a deliberate silence
+  otherwise read identically.
+- **Anchors are named by role, never by side.** `anchorActorSeat` is the acting side's row whichever
+  side that is, for the reason `SoloAttacks` is a flag on a duelist rather than a rule about
+  `SideB`: the engine has no idea which duelist is a person and this screen must not grow a second
+  opinion about it.
+- **`Event.Ring` exists because of one row.** `KindStatus` flies out of the ring that caused it, and
+  nothing on screen could say which ring that was — reading it off the card's element would be a
+  second rule about something the ring grammar already decides, and wrong the first time a family
+  or concept ring applied a status, both of which `RegisterRing` accepts today. `statusesFrom`
+  always knew and used to throw the answer away; the first ring worn is the one credited.
+- **It is deliberately not JSON** *(owner asked)*. Every anchor is a geometry function that takes
+  arguments — `ringSlotAt`, `enemySeatAt`, `enemyCardRect` — and a file can only name one by string,
+  so the Go table a file would need underneath it is this table. `data/*.json` is `//go:embed`ed
+  too, so a beat in a file costs the same rebuild as a beat in a constant. **If the timings turn out
+  to be what gets edited over and over, lift the timings out and leave the anchors** — timings are
+  data, anchors are code.
+- **Most rows are not drawn yet, and that is the point of writing them down.** What travels today
+  is `KindDamage` and `KindCombo`; the kinds marked `anchorNone` are done by being silent, and
+  `KindAction`'s drawing is the card lifting in its own seat, which `tableFireLift` already does.
+  Everything else — a banked point landing on the AP figure, a status flying off its ring, a chill
+  acting from the badge row, a missed turn struck out — describes what the gesture should be when
+  someone builds it. The feed writes a sentence for each of those; none of them moves.
 
 ### What survives any model
 
@@ -581,8 +726,8 @@ centrepiece should have anyway.
   because the caption box that used to carry it is gone and nothing else on the screen has room.
   It costs nothing the rule protects: the pane is empty while planning, so nothing is said twice,
   and the record replaces both lines the moment DUEL! is pressed. **It carries no arithmetic** —
-  `Base` and `Swing` are the resolver's, against a strength and a shock roll that have not
-  happened, and a figure the round then contradicted would be worse than no figure.
+  `Base` is the resolver's, against a strength and a shock roll that have not happened, and a
+  figure the round then contradicted would be worse than no figure.
 - Overflow draws `... N earlier` rather than dropping lines silently — the same rule as the deck
   overlay's `+N more not shown`. A panel that quietly hides part of what it claims to show is a
   picture that lies.

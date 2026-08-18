@@ -477,6 +477,23 @@ type Event struct {
 	// concepts. It is set on the two kinds that mean it and read on no others.
 	Status StatusID
 
+	// Ring is the worn ring that applied the status, on KindStatus.
+	//
+	// **It is here because a status has a cause the player can see** *(2026-08-18)*. The screen
+	// flies the word out of the ring that caused it, and there is no other honest way for it to
+	// know which ring that was: reading it off the card's element would be a second rule about
+	// something the grammar already decides, and it would be wrong the first time a family ring or
+	// a concept ring applied a status - both of which RegisterRing accepts today.
+	//
+	// **Which ring, not which slot.** A RingID says something in a trace and in a test; a worn
+	// index says nothing outside one duelist's array. The screen finds its position by walking the
+	// worn list, which is at most five entries and is the same order the ring row is drawn in.
+	//
+	// **The zero value is a real ring**, exactly as Status's is a real status, so it is set on the
+	// one kind that means it and read on no others. NoRing is the absence, for a caller that wants
+	// to say so explicitly.
+	Ring RingID
+
 	// Hand is set on KindCombo and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
@@ -488,18 +505,20 @@ type Event struct {
 	// resolver already worked out.
 	Multiplier int
 
-	// Base and Swing are the other two terms of the blow's arithmetic on KindCombo, and they are
-	// here for the same reason Multiplier is: the Resolution feed prints the sum — `20 + 10 x 3.5
-	// = 55` — and a screen working a damage figure out for itself would be a second resolver.
+	// Base is the other term of the blow's arithmetic on KindCombo, and it is here for the same
+	// reason Multiplier is: the Resolution feed prints the sum — `(20 + 20) x 1.5 = 60` — and a
+	// screen working a damage figure out for itself would be a second resolver.
 	//
-	// Base is what the hand's own cards carry; Swing is what one Strike deals at this attacker's
-	// strength, which is the DMG on their fighter card. `Amount` is what the three come to.
+	// Base is what the hand's own cards carry, added up. `Amount` is that figure after the hand's
+	// multiplier, and there is no third term: **the multiplier multiplies the cards** *(2026-08-18,
+	// owner's call)*. It used to be applied to a separate reference swing of one 1x attack at the
+	// attacker's DMG, added on top of the cards — which meant a hand's percent bought a fixed
+	// figure rather than a proportion, so 500% was worth 2.5x the base on Jabs and 0.6x on Lunges.
 	//
 	// **Amount is the blow before the attacker's weight and before anything the defender raised**,
 	// so it is what the hand was worth rather than what landed. What landed is the KindDamage
 	// after it, and the gap between the two figures is exactly what the defence was worth.
-	Base  int
-	Swing int
+	Base int
 
 	// ComboCards and ComboCardCount are set on KindCombo alongside Combo: **which cards of this
 	// side's turn formed it**, as indices into the turn *as it was played*.
@@ -522,6 +541,17 @@ type Event struct {
 	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
 	ComboCards     [baseMaxActions]int
 	ComboCardCount int
+
+	// ComboAmounts is what each of those cards deals, in the same order and to the same count.
+	//
+	// **It is here so the screen can show the arithmetic rather than assert it** *(2026-08-18)*.
+	// The combo dialog flies each card's own figure down into a sum, and re-deriving one on the
+	// screen would mean the screen owning `CardDamage`, the Strength scaling and every ring that
+	// touches a card's damage — a second resolver, exactly what Base and Multiplier are on the
+	// event to prevent. `Base` is the sum of the first ComboCardCount entries.
+	//
+	// A fixed array for the reason ComboCards is one: Event has to stay comparable.
+	ComboAmounts [baseMaxActions]int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits
@@ -977,8 +1007,8 @@ func resolveAttackPhase(
 	for _, i := range blow.Cards {
 		blowCards = append(blowCards, turn[i].Card)
 	}
-	for _, id := range actor.statusesFrom(blowCards) {
-		applied, amount, ok := applyStatus(target, id, actor)
+	for _, a := range actor.statusesFrom(blowCards) {
+		applied, amount, ok := applyStatus(target, a.Status, actor)
 		if !ok {
 			continue
 		}
@@ -987,7 +1017,8 @@ func resolveAttackPhase(
 			Kind:   KindStatus,
 			Side:   side,
 			Target: targetSide,
-			Status: id,
+			Status: a.Status,
+			Ring:   a.Ring,
 			Amount: amount,
 			Life:   target.CurrentLife,
 			Round:  round,
@@ -1141,8 +1172,8 @@ func resolveSoloAttacks(
 		// One card, and the same rings the other phase reads. An enemy wears none, so this does
 		// nothing for the only duelists that are solo attackers today — it is here because the rule
 		// belongs to attacking, not to comboing.
-		for _, id := range actor.statusesFrom([]Card{slot.Card}) {
-			applied, amount, ok := applyStatus(target, id, actor)
+		for _, a := range actor.statusesFrom([]Card{slot.Card}) {
+			applied, amount, ok := applyStatus(target, a.Status, actor)
 			if !ok {
 				continue
 			}
@@ -1152,7 +1183,8 @@ func resolveSoloAttacks(
 				Side:    side,
 				Target:  targetSide,
 				Element: slot.Card.Element,
-				Status:  id,
+				Status:  a.Status,
+				Ring:    a.Ring,
 				Amount:  amount,
 				Life:    target.CurrentLife,
 				Round:   round,
@@ -1182,47 +1214,43 @@ func resolveSoloAttacks(
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
 func comboEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Event {
-	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
-	// this event rather than recomputing it, so the sentence the feed prints and the damage that
-	// lands cannot be two different sums.
-	base := 0
-	for _, i := range blow.Cards {
-		base += actor.CardDamage(turn[i].Card)
-	}
-	swing := referenceSwing(actor.DMG)
-
-	lead := turn[blow.Cards[0]].Card
-
 	e := Event{
 		Kind:       KindCombo,
 		Side:       side,
-		Action:     lead.Concept,
-		Element:    lead.Element,
-		Amount:     base + scaleDamage(swing, blow.Multiplier),
 		Hand:       blow.Hand.ID,
 		Multiplier: blow.Multiplier,
-		Base:       base,
-		Swing:      swing,
 		Round:      round,
 	}
+
+	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
+	// this event rather than recomputing it, so the sentence the feed prints and the damage that
+	// lands cannot be two different sums — and the dialog flying the figures down reads the same
+	// per-card amounts the sum was made of.
+	//
+	// A card past the array's width is dropped from the *bracket* rather than from the sum, which
+	// is the posture ComboCards already takes: the arithmetic on screen may be short of a term
+	// before the damage that lands is wrong.
 	for _, i := range blow.Cards {
-		if e.ComboCardCount >= len(e.ComboCards) {
-			break
+		d := actor.CardDamage(turn[i].Card)
+		e.Base += d
+		if e.ComboCardCount < len(e.ComboCards) {
+			e.ComboCards[e.ComboCardCount] = i
+			e.ComboAmounts[e.ComboCardCount] = d
+			e.ComboCardCount++
 		}
-		e.ComboCards[e.ComboCardCount] = i
-		e.ComboCardCount++
 	}
+
+	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
+	// hand is worth a proportion of what its own cards deal, so a Pair of Lunges is worth more
+	// than a Pair of Jabs by exactly the margin the cards themselves are worth.
+	e.Amount = scaleDamage(e.Base, blow.Multiplier)
+
+	lead := turn[blow.Cards[0]].Card
+	e.Action = lead.Concept
+	e.Element = lead.Element
+
 	return e
 }
-
-// referenceSwing is the blow a hand's multiplier is applied to: one 1x attack at this duelist's
-// DMG, which is exactly their DMG.
-//
-// **It was `Strike.Damage(dmg)` until 2026-08-16**, and it named a particular card because the
-// ladder was a switch statement with Strike sitting on its middle rung. A card declares its own
-// multiplier now, so 1x is the definition rather than one card's entry — and the multiplier a hand
-// pays should not move because the player's Strike was retuned.
-func referenceSwing(dmg int) int { return dmg }
 
 // reduce takes damage off a life total without letting it go negative.
 func reduce(life, dmg int) int {
@@ -1370,7 +1398,7 @@ func blowScore(d Duelist, hand []Card, pick []int, hands []Hand) int {
 	for _, i := range blow.Cards {
 		base += d.CardDamage(turn[i].Card)
 	}
-	return base + scaleDamage(referenceSwing(d.DMG), blow.Multiplier)
+	return scaleDamage(base, blow.Multiplier)
 }
 
 // greedyAttacks is the fallback for a hand too big to search: the dearest cards that fit, which is

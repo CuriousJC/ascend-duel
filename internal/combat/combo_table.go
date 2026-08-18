@@ -75,8 +75,15 @@ func validateHand(r data.HandData) error {
 		return fmt.Errorf("has no ID, or a zero one, which means 'no hand'")
 	case len(r.Groups) == 0:
 		return fmt.Errorf("names no groups, so it counts nothing")
-	case r.Multiplier < 0:
-		return fmt.Errorf("has a negative multiplier")
+	// **100 is the identity and 0 deletes the blow** *(2026-08-18)*. The multiplier multiplies the
+	// hand's own cards now rather than a separate swing added on top of them, so a hand at 0 is not
+	// "pays no bonus" — it is an attack phase that deals nothing. Every hand needs a real number,
+	// the High Card included, and its 100 is what makes a lone attack land its face damage.
+	//
+	// Anything below 100 is a *penalty* and is deliberately still legal: refusing it would take a
+	// tuning lever away from the file, which is the one place the ladder is meant to be tuned.
+	case r.Multiplier <= 0:
+		return fmt.Errorf("has a multiplier of %d; the multiplier scales the hand's own cards, so that is an attack phase dealing nothing", r.Multiplier)
 	}
 
 	total := 0
@@ -86,12 +93,11 @@ func validateHand(r data.HandData) error {
 		}
 		total += g
 	}
-	// **A zero multiplier is legal for the one-card hand and a typo in any other** *(2026-08-15)*.
-	// The High Card pays nothing on purpose — what lands is the card's own face damage — and it is
-	// the only hand nobody chooses to form. A pair worth no multiplier is a hand nobody would
-	// build, so it is refused rather than loaded.
-	if total > 1 && r.Multiplier <= 0 {
-		return fmt.Errorf("wants %d cards for multiplier %d; a built hand worth nothing is one nobody would form", total, r.Multiplier)
+	// **A built hand has to beat the cards that formed it.** The High Card sits at the identity, so
+	// a multi-card hand at or below 100 is one a player would be punished for making — a typo
+	// rather than an ambition, and refused rather than loaded.
+	if total > 1 && r.Multiplier <= multiplierScale {
+		return fmt.Errorf("wants %d cards for multiplier %d, which is no better than playing them as a High Card", total, r.Multiplier)
 	}
 	// **A hand cannot ask for more cards than a turn can hold.** MaxActions is five and frozen,
 	// so a six-card hand is one nobody could ever form and is a typo rather than an ambition.

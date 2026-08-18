@@ -552,8 +552,19 @@ func (d Duelist) CardDamage(c Card) int {
 // describing two things that did not happen.
 //
 // **Ring order outer, cards inner**, per the worn-order rule.
-func (d Duelist) statusesFrom(cards []Card) []StatusID {
-	var out []StatusID
+//
+// **It says which ring applied each status, not just which statuses landed** *(2026-08-18)*. It
+// always knew - the ring is the thing being walked - and threw the answer away, which left the
+// screen unable to fly a CHILLED out of the ring that caused it without inventing an element-to-ring
+// table of its own. That table would be a second rule about the same thing, and it would be wrong
+// the first time a family ring or a concept ring applied a status, which this grammar already
+// allows. See Event.Ring.
+//
+// **The first ring to apply a status is the one credited**, which falls out of the dedup and out of
+// worn order being left to right. Two rings that both set something burning are one burn, and it
+// belongs to the one worn first - the same tie-break every other compounding effect takes.
+func (d Duelist) statusesFrom(cards []Card) []appliedStatus {
+	var out []appliedStatus
 	seen := make(map[StatusID]bool)
 
 	for _, w := range d.WornRings() {
@@ -570,12 +581,22 @@ func (d Duelist) statusesFrom(cards []Card) []StatusID {
 						continue
 					}
 					seen[e.Status] = true
-					out = append(out, e.Status)
+					out = append(out, appliedStatus{Ring: w.Ring, Status: e.Status})
 				}
 			}
 		}
 	}
 	return out
+}
+
+// appliedStatus is one status a blow lands, and the worn ring that put it there.
+//
+// **The pair travels together because the screen needs both and can derive neither.** A status
+// names what landed; only the ring names where it came from, and "where it came from" is a card
+// the player is looking at.
+type appliedStatus struct {
+	Ring   RingID
+	Status StatusID
 }
 
 // AddedDMG and AddedHP are what a worn set adds for the fight about to start. They take the worn

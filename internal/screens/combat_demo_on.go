@@ -130,6 +130,12 @@ const (
 	// Sized against the dwell rather than as a flat number, so slowing playback down cannot
 	// quietly turn the safety net into the thing that ends the run. Sixty events is roughly
 	// double what two rounds produce.
+	//
+	// **The dwell is no longer the only thing pacing a round** *(2026-08-18)*. The combo dialog
+	// stops the cursor for a few seconds each time a hand fires — see combat_mathbox.go — so a
+	// round costs its events plus one box per attack phase. Two rounds with a combo in each are
+	// still comfortably inside this, but the budget is no longer a pure multiple of the dwell,
+	// and a longer script is the thing to check against it.
 	demoGiveUpAt = 60 * eventDwellTicks
 )
 

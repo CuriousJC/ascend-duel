@@ -10,6 +10,103 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ---
 
+## NEXT — pick this up first *(left 2026-08-18, unattended session)*
+
+**Two things landed together and neither has been looked at on screen.** The rules change is
+tested and measured; the dialog is built, compiles, vets under all four build-tag configurations
+and has headless tests over the half that has no geometry — but **nobody has watched it run**, by
+explicit instruction. Everything below is what to check and what was deliberately left.
+
+### 1. Launch it and watch a combo
+
+```powershell
+go run .
+```
+
+Select two of the same attack card, press DUEL!, and watch the attack phase. The script is: the
+hand's name pops beside the raised cards → each card's figure flies down into a line over the
+Resolution feed → `x` → the multiplier flies down out of the shout → `=` → the total lands. Then
+the box holds and clears, and the damage lands after it.
+
+**What to judge, in the order it will bite:**
+
+- **Pacing.** The whole script is ~3 seconds for a Pair and ~4 for a Four of a Kind, *on top of*
+  the usual 1.25s dwell either side. The five beat constants are at the top of
+  `internal/screens/combat_mathbox.go` (`mathShoutTicks`, `mathTermTicks`, `mathSymbolTicks`,
+  `mathTotalTicks`, `mathHoldTicks`) and are separate on purpose so one can be tuned without the
+  others.
+- **The High Card plays the sum too** — your call, taken deliberately. Every single-attack turn
+  now spends ~1.4s showing `20 = 20`. That is the commonest turn in the game, and it is the first
+  thing likely to feel long. `mathScript` already drops the `x` step for it; making the *whole*
+  box conditional on `handWasBuilt` is a two-line change if it wears out.
+- **The shout's placement.** It sits centred in the space to the right of the bracketed cards,
+  over the opponent's queued row. It is drawn on the bare ground with no backing — if it does not
+  read against the cards behind it, a fill is the thing to add, not a bigger size.
+- **Where the figures land.** The line is centred over the Resolution feed's collapsed rows, at
+  38pt for the cards' figures and 50pt for the total, across the table's full width. Nothing wraps
+  and nothing shrinks to fit, so `TestTheWidestSumFitsItsBand` measures a deliberately
+  over-the-top line — four three-digit terms and a five-digit total — against that width. If a
+  type size is raised, that test is the thing that will say so.
+- **The feed is covered while the box is up**, deliberately. Three lines of the record for about
+  three seconds, redrawn the moment the box clears.
+
+### 2. The damage formula changed, and the ladder was not retuned
+
+`(Σ the hand's own cards) × (hand multiplier)`, with `high-card` now at `100` rather than `0`.
+The old third term — a reference swing of one 1× attack at the attacker's DMG, *added* on top —
+is gone from `Event`, from `combos.json`'s meaning, and from every doc.
+
+**Everything is tuned from `data/combos.json` alone now**, which was the point. The percents are
+untouched at 150 / 175 / 200 / 300 / 500. What that shift is worth, at DMG 10:
+
+| hand | before | after |
+|---|---|---|
+| four Lunges | 130 | **400** |
+| four Jabs | 70 | **100** |
+| two Lunges | 55 | **60** |
+| three Bashes | 35 | **30** |
+
+So it is **a buff at the top and a nerf at the bottom** — a hand of dear cards gains, a hand of
+cheap ones loses, because the fixed term it replaced was worth proportionally more to small cards.
+
+**`tools/balance` could not see the change at all, and that has been fixed** *(2026-08-18)*. The
+roster table was byte-identical before and after — 84 walls either way, the same `beaten by` lists
+— because it printed *who won, not how fast*, and nothing crossed a win/lose line. The damage had
+genuinely moved: `go run ./tools/balance -v GiantRat` shows `trips` at 50 → **60** a round and
+`cheap-trips` at 35 → **30**, with `cheap-trips` taking four rounds where it took three. The
+table now writes each winning posture as `trips:2` and each wall as `NOTHING - a wall (closest
+trips, enemy 3% left)`, so both figures are in the column that gets read.
+
+**What that immediately surfaced, and it is worth a look before any tuning:** the floor-2 band is
+not uniformly a wall. `Blue Slime II` ends at **3%** enemy life, `Green Pod` at 9%, `Blue Cube`
+and `Hunter Drone` at 15–17% — near-misses that the old table filed beside `Bio-Titan Omega` at
+97%. **`trips` is the closest posture on every single wall in the roster**, which is its own
+finding: nothing else is near.
+
+### 3. One bug the tests caught on the way
+
+The box first took its width from `feedRect`, which spans `handBand` — **a function of how many
+cards are in the hand**. That is right for the feed, whose rows are left-aligned sentences that
+simply get less room, and wrong for a centred line of large figures: a two-card hand gives about
+330px against a widest sum of roughly 640, so the arithmetic would have run off both ends of the
+screen in exactly the rounds a duel is decided in. It takes the table's insets now, which are a
+function of the screen alone. Worth knowing because **the same trap is live anywhere else that
+borrows `handBand` for something that is not the hand.**
+
+### 4. What was deliberately not done
+
+- **No retuning.** You asked for the percents as stated so the ladder stays a one-file lever.
+  The table above is the size of the shift before any tuning.
+- **The dialog was not looked at**, per instruction — no `demoplay` captures were taken.
+  `go run -tags demoplay .` writes `demo/*.png` and would show the box, but a still frame of an
+  animation is close to useless here and `demoGiveUpAt` is sized against the dwell alone, which
+  the box now adds to.
+- **No enemy ever sees this.** `Duelist.SoloAttacks` means enemies emit no `KindCombo` at all, so
+  the dialog is player-only in practice. The code handles `SideB` — the shout mirrors to the left
+  of a right-aligned row — but nothing exercises it.
+
+---
+
 ## Now — quick wins, independent of any design decision
 
 - [ ] **Two rounded-rectangle implementations exist.** Cards rasterise their corners in

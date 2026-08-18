@@ -205,6 +205,80 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 	}
 }
 
+func TestAStatusNamesTheRingThatAppliedIt(t *testing.T) {
+	// **The screen flies the word out of the ring that caused it**, so the event has to say which
+	// ring that was. Nothing else can: the card's colour is not the answer, because a ring may
+	// match on a family or a concept and apply a status with no colour involved at all - which is
+	// the case the second half of this test pins.
+	burning := MustStatus("burning")
+	chilled := MustStatus("chilled")
+
+	fire := ring(t, "names-fire", RingRule{
+		When: MomentAttackLands,
+		If:   RingCondition{Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoApplyStatus, Status: burning}},
+	})
+	// A ring that reads the family rather than the colour, which is what makes deriving the ring
+	// from the element impossible rather than merely fragile.
+	slash := ring(t, "names-slash", RingRule{
+		When: MomentAttackLands,
+		If:   RingCondition{Family: FamilySlash, HasFamily: true},
+		Then: []RingEffect{{Do: DoApplyStatus, Status: chilled}},
+	})
+
+	a := duelist(10, 8, 500).Wearing(WornRing{Ring: fire}).Wearing(WornRing{Ring: slash})
+	b := duelist(10, 5, 500)
+
+	// One fire slash matches both rings at once, so both statuses land off one card.
+	events, _, _ := resolve(a, b, []Card{Of(Slash, Fire)}, nil, 1)
+
+	got := map[StatusID]RingID{}
+	for _, e := range events {
+		if e.Kind == KindStatus {
+			got[e.Status] = e.Ring
+		}
+	}
+	if len(got) != 2 {
+		t.Fatalf("a fire slash under two rings announced %d statuses, want 2", len(got))
+	}
+	if got[burning] != fire {
+		t.Errorf("the burn is credited to ring %d, want the fire ring %d", got[burning], fire)
+	}
+	if got[chilled] != slash {
+		t.Errorf("the chill is credited to ring %d, want the slash ring %d", got[chilled], slash)
+	}
+}
+
+func TestTheFirstRingToApplyAStatusIsTheOneCredited(t *testing.T) {
+	// Two rings, one status, one blow. The dedup keeps it to a single event; worn order decides
+	// whose it is, which is the tie-break every other compounding effect already takes.
+	burning := MustStatus("burning")
+	rule := RingRule{
+		When: MomentAttackLands,
+		If:   RingCondition{Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoApplyStatus, Status: burning}},
+	}
+	first := ring(t, "credit-first", rule)
+	second := ring(t, "credit-second", rule)
+
+	a := duelist(10, 8, 500).Wearing(WornRing{Ring: first}).Wearing(WornRing{Ring: second})
+	events, _, _ := resolve(a, duelist(10, 5, 500), []Card{Of(Jab, Fire)}, nil, 1)
+
+	n := 0
+	for _, e := range events {
+		if e.Kind != KindStatus {
+			continue
+		}
+		n++
+		if e.Ring != first {
+			t.Errorf("the burn is credited to ring %d, want the one worn first, %d", e.Ring, first)
+		}
+	}
+	if n != 1 {
+		t.Errorf("two rings applying one status announced it %d times, want 1", n)
+	}
+}
+
 func TestOneBlowLandsOneOfEachStatus(t *testing.T) {
 	// Two fire cards match a fire ring twice. The status does not stack, so applying it twice is
 	// the same as applying it once — but announcing it twice would describe two things that did

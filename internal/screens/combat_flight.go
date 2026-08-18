@@ -132,27 +132,27 @@ const (
 	// than as deliberate.
 	slideTicks = 14
 
-	// firingGap is how far clear of the Resolution feed the table sits.
+	// firingGap is how far clear of the band above the hand the table sits.
 	//
-	// **Cards are played at full size, and what they must not cover is Resolution** — the
-	// written record being made at the same moment. That has not changed through three
-	// arrangements of this screen; see tableRowTop, which is the one place it is applied now.
+	// **Cards are played at full size, and what they must not cover is the band the blow's
+	// arithmetic is written across.** That has not changed through three arrangements of this
+	// screen; see tableRowTop, which is the one place it is applied now.
 	firingGap = 12
 )
 
-// attentionYellow is the screen's one "look here" colour, and it has exactly two users: the
-// ring round the deck stack while its overlay is open, and the ring round the cards a combo
-// was formed from.
+// attentionYellow is the screen's one "look here" colour, and it has three users: the ring
+// round the deck stack while its overlay is open, the ring round the cards a combo was formed
+// from, and the combo dialog's shout beside them.
 //
 // **One colour, one meaning.** Both say "this is the thing right now", and a screen with two
 // different attention colours has neither — so this is a single value rather than two that
-// happen to match today. If a third caller wants it, the question to answer first is whether
+// happen to match today. If a fourth caller wants it, the question to answer first is whether
 // it means the same thing.
 //
 // **It is only ever drawn as a ring, never on a card.** A card's border is its element and
 // nothing else may claim it; a combo says its piece in the space *around* the cards, which
-// is also the only way to mark three of them as one thing — something the Resolution pane
-// cannot do and is recorded as a known gap.
+// is also the only way to mark three of them as one thing — something a list of sentences
+// cannot do.
 //
 // **Darkened on 2026-08-14 when the ground went cream.** It was {255,214,0}, which is a fine
 // ring on {50,50,50} and nearly invisible on {226,208,176} — a yellow and a cream are close in

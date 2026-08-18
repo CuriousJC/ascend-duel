@@ -10,103 +10,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ---
 
-## NEXT — pick this up first *(left 2026-08-18, unattended session)*
-
-**Two things landed together and neither has been looked at on screen.** The rules change is
-tested and measured; the dialog is built, compiles, vets under all four build-tag configurations
-and has headless tests over the half that has no geometry — but **nobody has watched it run**, by
-explicit instruction. Everything below is what to check and what was deliberately left.
-
-### 1. Launch it and watch a combo
-
-```powershell
-go run .
-```
-
-Select two of the same attack card, press DUEL!, and watch the attack phase. The script is: the
-hand's name pops beside the raised cards → each card's figure flies down into a line over the
-Resolution feed → `x` → the multiplier flies down out of the shout → `=` → the total lands. Then
-the box holds and clears, and the damage lands after it.
-
-**What to judge, in the order it will bite:**
-
-- **Pacing.** The whole script is ~3 seconds for a Pair and ~4 for a Four of a Kind, *on top of*
-  the usual 1.25s dwell either side. The five beat constants are at the top of
-  `internal/screens/combat_mathbox.go` (`mathShoutTicks`, `mathTermTicks`, `mathSymbolTicks`,
-  `mathTotalTicks`, `mathHoldTicks`) and are separate on purpose so one can be tuned without the
-  others.
-- **The High Card plays the sum too** — your call, taken deliberately. Every single-attack turn
-  now spends ~1.4s showing `20 = 20`. That is the commonest turn in the game, and it is the first
-  thing likely to feel long. `mathScript` already drops the `x` step for it; making the *whole*
-  box conditional on `handWasBuilt` is a two-line change if it wears out.
-- **The shout's placement.** It sits centred in the space to the right of the bracketed cards,
-  over the opponent's queued row. It is drawn on the bare ground with no backing — if it does not
-  read against the cards behind it, a fill is the thing to add, not a bigger size.
-- **Where the figures land.** The line is centred over the Resolution feed's collapsed rows, at
-  38pt for the cards' figures and 50pt for the total, across the table's full width. Nothing wraps
-  and nothing shrinks to fit, so `TestTheWidestSumFitsItsBand` measures a deliberately
-  over-the-top line — four three-digit terms and a five-digit total — against that width. If a
-  type size is raised, that test is the thing that will say so.
-- **The feed is covered while the box is up**, deliberately. Three lines of the record for about
-  three seconds, redrawn the moment the box clears.
-
-### 2. The damage formula changed, and the ladder was not retuned
-
-`(Σ the hand's own cards) × (hand multiplier)`, with `high-card` now at `100` rather than `0`.
-The old third term — a reference swing of one 1× attack at the attacker's DMG, *added* on top —
-is gone from `Event`, from `combos.json`'s meaning, and from every doc.
-
-**Everything is tuned from `data/combos.json` alone now**, which was the point. The percents are
-untouched at 150 / 175 / 200 / 300 / 500. What that shift is worth, at DMG 10:
-
-| hand | before | after |
-|---|---|---|
-| four Lunges | 130 | **400** |
-| four Jabs | 70 | **100** |
-| two Lunges | 55 | **60** |
-| three Bashes | 35 | **30** |
-
-So it is **a buff at the top and a nerf at the bottom** — a hand of dear cards gains, a hand of
-cheap ones loses, because the fixed term it replaced was worth proportionally more to small cards.
-
-**`tools/balance` could not see the change at all, and that has been fixed** *(2026-08-18)*. The
-roster table was byte-identical before and after — 84 walls either way, the same `beaten by` lists
-— because it printed *who won, not how fast*, and nothing crossed a win/lose line. The damage had
-genuinely moved: `go run ./tools/balance -v GiantRat` shows `trips` at 50 → **60** a round and
-`cheap-trips` at 35 → **30**, with `cheap-trips` taking four rounds where it took three. The
-table now writes each winning posture as `trips:2` and each wall as `NOTHING - a wall (closest
-trips, enemy 3% left)`, so both figures are in the column that gets read.
-
-**What that immediately surfaced, and it is worth a look before any tuning:** the floor-2 band is
-not uniformly a wall. `Blue Slime II` ends at **3%** enemy life, `Green Pod` at 9%, `Blue Cube`
-and `Hunter Drone` at 15–17% — near-misses that the old table filed beside `Bio-Titan Omega` at
-97%. **`trips` is the closest posture on every single wall in the roster**, which is its own
-finding: nothing else is near.
-
-### 3. One bug the tests caught on the way
-
-The box first took its width from `feedRect`, which spans `handBand` — **a function of how many
-cards are in the hand**. That is right for the feed, whose rows are left-aligned sentences that
-simply get less room, and wrong for a centred line of large figures: a two-card hand gives about
-330px against a widest sum of roughly 640, so the arithmetic would have run off both ends of the
-screen in exactly the rounds a duel is decided in. It takes the table's insets now, which are a
-function of the screen alone. Worth knowing because **the same trap is live anywhere else that
-borrows `handBand` for something that is not the hand.**
-
-### 4. What was deliberately not done
-
-- **No retuning.** You asked for the percents as stated so the ladder stays a one-file lever.
-  The table above is the size of the shift before any tuning.
-- **The dialog was not looked at**, per instruction — no `demoplay` captures were taken.
-  `go run -tags demoplay .` writes `demo/*.png` and would show the box, but a still frame of an
-  animation is close to useless here and `demoGiveUpAt` is sized against the dwell alone, which
-  the box now adds to.
-- **No enemy ever sees this.** `Duelist.SoloAttacks` means enemies emit no `KindCombo` at all, so
-  the dialog is player-only in practice. The code handles `SideB` — the shout mirrors to the left
-  of a right-aligned row — but nothing exercises it.
-
----
-
 ## Now — quick wins, independent of any design decision
 
 - [ ] **Two rounded-rectangle implementations exist.** Cards rasterise their corners in
@@ -291,6 +194,14 @@ borrows `handBand` for something that is not the hand.**
       - **Every balance figure this repo has ever recorded was measured against the multi-blow
         model and is deleted rather than annotated.** `MECHANICS.md` says what has to be
         re-measured; nothing should be tuned off memory of the old table.
+- [ ] **The combo ladder has not been tuned since the formula changed.** *(2026-08-18)* A blow is
+      `(Σ the hand's own cards) × (hand multiplier)` and `data/combos.json` is the only lever left,
+      which was the point — but the percents are still 150 / 175 / 200 / 300 / 500, chosen when a
+      fixed reference swing was added on top of the cards. At DMG 10 the shift is worth four
+      Lunges 130 → 400, four Jabs 70 → 100, two Lunges 55 → 60 and three Bashes 35 → 30: a buff at
+      the top of the ladder and a nerf at the bottom, because the term it replaced was worth
+      proportionally more to cheap cards.
+      - **Do not tune until `tools/balance` reports a distribution** — see above.
 - [ ] **Nine walls sit on floors 2–4, and those are a bug.** *(2026-08-17)* The total of
       seventy-four is accepted — see the retune entry above — but a wall on a *shallow* floor is
       the failure `tools/balance` was built for. An unwinnable enemy is invisible while playing,
@@ -307,6 +218,13 @@ borrows `handBand` for something that is not the hand.**
         the ascent curve (MECHANICS.md carries the `[?]` asking whether the curve or the roster
         should carry the climb), or accept it until more rings exist. **Do not tune until
         `tools/balance` reports a distribution** — see below.
+      - **The margins are readable now** *(2026-08-18)*: the roster table writes a wall as
+        `NOTHING - a wall (closest trips, enemy 3% left)`, so a near-miss can be told from a
+        hopeless one. `Blue Slime II` ends at 3%, `Green Pod` at 9%, `Blue Cube` and
+        `Hunter Drone` at 15–17% — all filed beside `Bio-Titan Omega` at 97% until the column
+        existed.
+      - **`trips` is the closest posture on every wall in the roster**, which is its own
+        finding: nothing else is near.
 - [ ] **`[?]` Nothing measures what Plan is worth.** `tools/balance` deals no cards, so the
       `planning` posture holds a wider hand of nothing and the row reads 2 AP as pure loss.
       - This needs the sim to draw, which is the deckbuilder entry below and its seventh stream.
@@ -444,13 +362,34 @@ borrows `handBand` for something that is not the hand.**
         cheapest hand that puts a plan and an attack in the same round.
       - `demoClickRun` has to agree with the seed or the click phase silently selects fewer
         cards and nothing forms. That pairing is what `tools/seeds` exists to keep honest.
-- [ ] **The Resolution pane cannot show three things the engine now produces.** All three are
-      presentation gaps rather than rules problems, and they arrived together on 2026-08-14:
+- [ ] **The fight log keeps a fight, not a run, and cannot be scrolled.** *(the log landed and the
+      Resolution feed was removed, 2026-08-18 — `combat_log.go`)* Both limits are real and neither
+      is fixable inside the panel.
+      - **`Init` clears `s.rounds`**, so the account of a fight is gone the moment the next one
+        starts and the post-battle screen has nothing to show. A run log means moving the rounds
+        onto `session.Session`, where run-level state belongs — and then deciding what a log of
+        forty fights is *for*, because it is a different thing from a fight's.
+      - **A long fight loses its oldest rounds.** The panel keeps the newest rows that fit and
+        reports the rest as `... N earlier`, which is honest and is the wrong shape for a thing
+        built to be read back. The input vocabulary has no wheel and no keyboard; **a drag on the
+        panel is the gesture that exists and is unclaimed**.
+- [ ] **Nothing on screen says what to press, or why DUEL! is dark.** `(press DUEL!)` was a line in
+      the Resolution feed and went with it *(2026-08-18)*; there has been no caption box since
+      2026-08-11. The button's own face says DUEL!, which is probably enough for the prompt — the
+      second half is not covered at all: a dark DUEL! button is explained only by the AP bar going
+      red, which says something is wrong rather than what to do about it.
+      - Worth watching for rather than fixing blind. The first version of a fix is a line under the
+        bar, and the reason there was never one is that the band it would sit in is the one the sum
+        is written across.
+- [ ] **The written account cannot show two things the engine produces.** Both are presentation
+      gaps rather than rules problems, they arrived together on 2026-08-14, and they moved with the
+      prose from the Resolution feed into the fight log *(2026-08-18)* — the walk is the same
+      `logRows`, so the gaps are the same gaps. A third — which cards formed the hand — was
+      answered on the table instead, which rings them in `attentionYellow`, and by the mathbox,
+      which names each one.
       - **An attack card that was announced and contributed nothing.** `Strike, Jab, Strike`
         reads as three actions with no sign that the Jab was outside the hand.
-      - **Which cards formed the hand.** The event carries the list — a counted hand is not
-        contiguous, so it is a list rather than a span — and nothing draws the bracket.
-      - **A slot deleted by a stagger**, which the pane still draws as though it happened.
+      - **A slot deleted by a stagger**, which the log still writes as though it happened.
 - [ ] **Preview the hand while the player is still planning.** `combat.BlowFor` is exported and
       is the same function the resolver calls, so a previewed combo would be the combo that fires
       by construction rather than by two pieces of code agreeing. Nothing calls it from the

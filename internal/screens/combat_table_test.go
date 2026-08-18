@@ -132,10 +132,11 @@ func TestTheTableSitsBetweenTheRingRowAndTheFeed(t *testing.T) {
 		t.Errorf("the table starts at y=%d, into the ring row's count ending at y=%d", top, ringBottom)
 	}
 
-	// And clear of the Resolution feed, which is the one thing a played card may never cover.
-	feedTop := gs.PctY(handTopPct) - feedGapAboveCards - feedHeight()
-	if bottom := top + cardHeight; bottom > feedTop {
-		t.Errorf("the table ends at y=%d, into the Resolution feed at y=%d", bottom, feedTop)
+	// And clear of the band above the hand, where the sum is written — the one region a played
+	// card may never cover.
+	bandTop := gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight
+	if bottom := top + cardHeight; bottom > bandTop {
+		t.Errorf("the table ends at y=%d, into the band above the hand at y=%d", bottom, bandTop)
 	}
 }
 
@@ -532,12 +533,6 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	}
 	if blow.Hand.Key != "three-of-a-kind" {
 		t.Errorf("three Strikes previewed %q, want the three of a kind", blow.Hand.Key)
-	}
-
-	// The prompt is the whole of the pane while planning now, and nothing about the hand is said
-	// twice.
-	if rows := s.planningLines(); len(rows) != 1 {
-		t.Errorf("the pane holds %d rows while planning, want the prompt alone", len(rows))
 	}
 }
 

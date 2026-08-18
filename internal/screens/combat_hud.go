@@ -47,9 +47,9 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 }
 
 // **The caption box stood here and is gone** *(2026-08-11)*. It was a hand-width box at 48%
-// holding the plan line and its action-point cost; the Resolution feed took the slot, and it
-// takes its width from the hand for the same reason this did — the same band the AP bar
-// spans, so the two line up on both edges however many cards are held. See combat_panes.go.
+// holding the plan line and its action-point cost; the Resolution feed took the slot and has
+// since left it too *(2026-08-18)*. What stands there now is the band the combo dialog writes
+// the blow's arithmetic across. See combat_mathbox.go.
 
 // **The character block is gone and the player is a card** *(2026-08-12)*.
 //

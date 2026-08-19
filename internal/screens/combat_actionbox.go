@@ -439,10 +439,19 @@ func handBand(gs *state.GlobalState, n int) image.Rectangle {
 		n = 1
 	}
 	w := (n-1)*handPitch(gs, n) + cardWidth
-	centre := gs.PctX(handBandLeftPct) + cardBandWidth(gs)/2
-	left := centre - w/2
+	left := handRowCentre(gs).X - w/2
 	top := gs.PctY(handTopPct)
 	return image.Rect(left, top, left+w, top+cardHeight)
+}
+
+// handRowCentre is the middle of the resting hand row, and it is **not a function of how many
+// cards are in it**. `handBand` narrows as the hand empties and centres itself on this point, so
+// anything that wants "the middle of the row" for something that is not a card — the fired shout
+// does — takes it from here rather than from the band, or it would drift sideways as cards were
+// spent while it was on screen.
+func handRowCentre(gs *state.GlobalState) image.Point {
+	return image.Pt(gs.PctX(handBandLeftPct)+cardBandWidth(gs)/2,
+		gs.PctY(handTopPct)+cardHeight/2)
 }
 
 // handRowLeft is the x of the first slot.
@@ -553,8 +562,6 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 			c.actionCard, s.fighter.CardCost(c.actionCard), enabled, c.selected)
 	}
 
-	s.drawComboPreview(gs, screen)
-
 	if s.drag == nil || !s.drag.active || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
 		return
 	}
@@ -576,9 +583,16 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // pieces of code agreeing about what three Strikes are worth. Nothing here knows what a Flurry
 // is.
 //
-// **Only a formed hand previews.** A lone attack carries `HandNone` — the feed writes those as
-// an ordinary attack rather than announcing them, and a preview shouting COMBO! over one Strike
-// would empty the word before the player ever earned it.
+// **Every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single attack
+// card is a hand — the catalogue's `high-card`, at the identity multiplier — and the name says so
+// while it is being chosen, so the label is on screen from the first attack picked rather than
+// appearing only when a pair happens to form. A queue of nothing but plans still names nothing:
+// `BlowFor` returns a blow with no cards and there is no attack to be one.
+//
+// **This reverses a rule**, and the argument it reverses is worth keeping in view — announcing
+// COMBO! over one Strike would empty the word. What makes it safe is that the label names the
+// *hand* rather than shouting COMBO!: `HIGH CARD!` is an honest name for the commonest turn in the
+// game, and the log still writes a lone attack as an ordinary attack sentence.
 //
 // The turn is ordered with an empty opposing queue, because `ResolutionOrder` is the authority
 // on which of the player's cards resolve in what order and the opponent's cards do not enter
@@ -601,59 +615,10 @@ func (s *CombatScene) previewBlow() (combat.Blow, []combat.Slot, bool) {
 	}
 	turn := combat.ResolutionOrder(s.fighterActions, nil)
 	blow := combat.BlowFor(turn)
-	if !blow.Formed() {
+	if len(blow.Cards) == 0 {
 		return combat.Blow{}, nil, false
 	}
 	return blow, turn, true
-}
-
-// previewHandSlots is where the previewed hand's cards are sitting in the row right now.
-//
-// **`Blow.Cards` indexes the turn, not the hand**, and the two differ the moment a Prepare is
-// queued before a Strike — the turn is in resolution order, the hand is in the order the player
-// left it. `handIndexForQueue` is the existing inverse of the walk that builds the queue, so
-// this is a translation rather than a second mapping.
-func (s *CombatScene) previewHandSlots(blow combat.Blow) []int {
-	turn := combat.ResolutionOrder(s.fighterActions, nil)
-
-	out := make([]int, 0, len(blow.Cards))
-	for _, i := range blow.Cards {
-		if i < 0 || i >= len(turn) {
-			continue
-		}
-		if h, ok := s.handIndexForQueue(turn[i].Index); ok {
-			out = append(out, h)
-		}
-	}
-	return out
-}
-
-// drawComboPreview rings the cards in the hand that have formed a combo, the instant they form
-// it rather than when the round plays out.
-//
-// **The same ring the table draws**, through the same `drawComboBracket`, so what the player
-// sees while choosing and what they see when it fires are one drawing. The words that go with
-// it are `drawPlannedHand`, which writes the hand's name across the band above the row — there
-// is nowhere above the cards to put them, and that band is the one the sum will fill the moment
-// DUEL! is pressed.
-func (s *CombatScene) drawComboPreview(gs *state.GlobalState, screen *ebiten.Image) {
-	blow, ok := s.previewAttack()
-	if !ok {
-		return
-	}
-
-	slots := s.previewHandSlots(blow)
-	at := make([]image.Point, 0, len(slots))
-	for _, i := range slots {
-		// A card still flying in from the pile is not drawn in its slot, so ringing that slot
-		// would ring a gap. It cannot be selected either, which makes this belt and braces —
-		// kept because the row skips it for the same reason and the two should agree.
-		if s.inboundTo(i) {
-			continue
-		}
-		at = append(at, s.cardSlot(gs, i).Min)
-	}
-	drawComboBracket(screen, at)
 }
 
 // drawAPFigure writes the budget as `3/6 AP`, tucked under the left end of the bar — same left

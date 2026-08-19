@@ -10,10 +10,11 @@ func handsFormed(events []Event, by Side) []HandID {
 		if e.Kind != KindCombo || e.Side != by || e.Hand == HandNone {
 			continue
 		}
-		// **The High Card is skipped, because it is not a hand anybody built** *(2026-08-15)*.
-		// It is in the catalogue so the feed can name the commonest result in the game, and
-		// every assertion below is about what a turn's cards amounted to *beyond* the best of
-		// them. `Blow.Formed()` draws exactly the same line for the screen's combo preview.
+		// **The High Card is skipped here, because every assertion below is about what a turn's
+		// cards amounted to *beyond* the best of them** — a helper for the matcher's tests, not a
+		// statement about what the game shows. **The screens draw no such line any more**
+		// *(2026-08-19)*: a lone attack is named, previewed and shouted like any other hand, and
+		// `Blow.Formed()` went with that change, having been the predicate for the distinction.
 		if h, ok := HandByID(e.Hand); ok && h.Cards() < 2 {
 			continue
 		}

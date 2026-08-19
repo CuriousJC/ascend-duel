@@ -35,19 +35,26 @@ import (
 // alternative is the bar dropping before the number reaches it — which is the picture this exists
 // to remove. `hitsRunning` is what `advancePlayback` waits on.
 
-const (
+// The figure's journey and the pause it takes on the card, **as fractions of the one playback
+// speed** *(2026-08-19)* — see `beat`. They reproduce the 26 and 18 they were tuned to at a speed
+// of 25, and they move with it from here: both stop the playback cursor, so a round watched at
+// half the speed would otherwise spend twice the share of itself waiting on a number crossing the
+// screen.
+var (
 	// hitFlyTicks is how long the figure takes to reach the card. Longer than a card's flight
 	// because it crosses more screen and because the bar is waiting on it — a hit that arrives
-	// before the eye has followed it lands the damage twice as far from its cause as no
-	// animation at all would.
-	hitFlyTicks = 26
+	// before the eye has followed it lands the damage twice as far from its cause as no animation
+	// at all would.
+	hitFlyTicks = beat(1, 1)
 
 	// hitHoldTicks is how long the figure stays on the card after landing, before it fades. The
 	// bar drops at the *start* of this, so there is a beat where the number and the emptier bar
-	// are on screen together: that overlap is the causal link, and without it the two read as
-	// two separate events.
-	hitHoldTicks = 18
+	// are on screen together: that overlap is the causal link, and without it the two read as two
+	// separate events.
+	hitHoldTicks = beat(7, 10)
+)
 
+const (
 	// hitFigureSize is the type size of a landing figure, and it is **`mathTotalSize` on purpose,
 	// not a size of its own**. The figure is meant to *be* the sum's total continuing its journey:
 	// `advancePlayback` clears the box on the same frame this launches, at the same point, and
@@ -108,13 +115,17 @@ func (h hitFlight) arrived() bool { return h.t.age >= hitFlyTicks }
 func (h hitFlight) done() bool { return h.t.age >= hitFlyTicks+hitHoldTicks }
 
 // noteHit raises the figure for one damage event, after `applyEvent` has already written the new
-// life.
+// life. `held` is the life the target's bar was showing a moment earlier, which is what it goes on
+// showing until the figure lands.
 //
-// **The pre-damage life is taken from the event rather than from the combatant**, because the
-// combatant has already been updated by the time this runs: `e.Life` is what is left and
-// `e.Life + e.Amount` is what was there. Reading the card would give the new figure and the bar
-// would not lag at all — a bug that looks exactly like the animation not working.
-func (s *CombatScene) noteHit(e combat.Event) {
+// **The caller reads that life off the combatant before overwriting it, and it may not be derived
+// here** *(2026-08-19)*. It was `e.Life + e.Amount` — what was there, worked back from what is
+// left plus what was dealt — and that is right for every blow except the one that ends a duel:
+// `e.Life` is clamped at zero, so the arithmetic returns the *size of the blow* instead. A pair of
+// Cleaves for 60 on an enemy holding 30 drew 60, so the bar jumped up for the length of a flight
+// and then emptied. **Overkill is exactly the case the reconstruction cannot see**, which is why
+// it only ever showed on a killing blow.
+func (s *CombatScene) noteHit(e combat.Event, held int) {
 	if e.Kind != combat.KindDamage || e.Amount <= 0 {
 		return
 	}
@@ -124,7 +135,7 @@ func (s *CombatScene) noteHit(e combat.Event) {
 		side:   e.Side,
 		target: e.Target,
 		seat:   s.blowSeat(e),
-		held:   e.Life + e.Amount,
+		held:   held,
 		t:      newTravel(0, hitFlyTicks+hitHoldTicks),
 	})
 }
@@ -224,8 +235,10 @@ func (s *CombatScene) drawHits(gs *state.GlobalState, screen *ebiten.Image) {
 		)
 
 		scale := hitFromScale + (hitToScale-hitFromScale)*p
+		// Not bold: the sum's own total is not, and the handoff between the two depends on the
+		// figure setting off looking exactly like the number it left.
 		drawMathText(gs, screen, "-"+strconv.Itoa(h.amount), hitFigureSize, hitInk(),
-			at, scale, hitAlpha(h))
+			at, scale, hitAlpha(h), false)
 	}
 }
 

@@ -75,6 +75,16 @@ func tableRowTop(gs *state.GlobalState) int {
 	return gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight - firingGap - cardHeight
 }
 
+// playerTableCentre is the middle of the player's half of the table, on the row's own centre
+// line: **the space their played cards land in**, and empty for the whole of the planning phase
+// that leads up to them landing there.
+//
+// It is where the planned hand is named — see drawPlannedHand — and it is derived from the row
+// rather than written down, so the name follows the table if the table moves.
+func playerTableCentre(gs *state.GlobalState) image.Point {
+	return image.Pt(tableInset+tableHalfWidth(gs)/2, tableRowTop(gs)+cardHeight/2)
+}
+
 // tableHalfWidth is how much room one hand has: the screen less both insets and the gap in
 // the middle, halved.
 func tableHalfWidth(gs *state.GlobalState) int {
@@ -235,10 +245,6 @@ type dealtCard struct {
 	travel
 
 	card combat.Card
-
-	// combo marks a card the opponent's own combo bracketed, exactly as resolvedCard carries it
-	// for the player's row. Set from the span the engine put on the event; never worked out here.
-	combo bool
 }
 
 // seatEnemyCards lays the opponent's whole queue out and sets it flying in.
@@ -302,7 +308,6 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 // and none of that exists yet. So they draw with the neutral mid-grey border, which is the truth
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
-	var bracketed []image.Point
 	split := s.enemySplit()
 	for i, d := range s.enemyDealt {
 		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), split, lit(s.enemyFiringSeats, i))
@@ -310,10 +315,5 @@ func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image
 		// queued enemy card printing a discounted price would be the screen telling a lie about
 		// whose ring it is.
 		drawCard(gs, screen, at, cards.Hand, d.card, s.enemy.CardCost(d.card), true, false)
-		if d.combo {
-			bracketed = append(bracketed, at)
-		}
 	}
-
-	drawComboBracket(screen, bracketed)
 }

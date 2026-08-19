@@ -143,7 +143,7 @@ func (s *CombatScene) setSort(mode handSort) {
 // **It resyncs the queue, and that is not housekeeping.** The list is the authority on the
 // queue's order as well as its membership, and `handIndexForQueue` is the inverse of that one
 // walk — so a hand rearranged under a stale `fighterActions` would leave the combo preview
-// bracketing whichever cards happen to sit at the old positions. Nothing about the *round*
+// naming a hand the cards it now holds do not make. Nothing about the *round*
 // changes: the queue holds the same cards, and order is not something the engine reads.
 //
 // **It returns the permutation it applied** — for each new position, the index that card came

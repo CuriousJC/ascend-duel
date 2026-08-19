@@ -32,13 +32,13 @@ func TestOnlyDamageRaisesALandingFigure(t *testing.T) {
 		combat.KindAction, combat.KindBurned, combat.KindNegated,
 		combat.KindCombo, combat.KindStatus, combat.KindMissed,
 	} {
-		s.noteHit(combat.Event{Kind: k, Amount: 10, Target: combat.SideB, Life: 90})
+		s.noteHit(combat.Event{Kind: k, Amount: 10, Target: combat.SideB, Life: 90}, 100)
 	}
 	if len(s.hits) != 0 {
 		t.Errorf("%d figures were raised by events that are not damage", len(s.hits))
 	}
 
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 10, Target: combat.SideB, Life: 90})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 10, Target: combat.SideB, Life: 90}, 100)
 	if len(s.hits) != 1 {
 		t.Fatalf("damage raised %d figures, want 1", len(s.hits))
 	}
@@ -49,7 +49,7 @@ func TestAZeroBlowRaisesNothing(t *testing.T) {
 	// nothing reduces a blow to zero by the rules, but a shocked turn writes no damage event at
 	// all and a future effect might well land a nought.
 	s := hitScene()
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 0, Target: combat.SideB, Life: 100})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 0, Target: combat.SideB, Life: 100}, 100)
 	if len(s.hits) != 0 {
 		t.Errorf("a blow of nothing raised %d figures", len(s.hits))
 	}
@@ -64,7 +64,7 @@ func TestTheHeldLifeComesFromTheEventNotTheCard(t *testing.T) {
 	s := hitScene()
 	s.enemy.CurrentLife = 70 // as applyEvent would have left it
 
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
 	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 100 {
 		t.Errorf("the bar draws %d while the figure is in the air, want the 100 it had before", got)
@@ -77,7 +77,7 @@ func TestTheHeldLifeComesFromTheEventNotTheCard(t *testing.T) {
 func TestTheBarCatchesUpWhenTheFigureLands(t *testing.T) {
 	s := hitScene()
 	s.enemy.CurrentLife = 70
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
 	for i := 0; i < hitFlyTicks; i++ {
 		if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 100 {
@@ -101,7 +101,7 @@ func TestTheOtherSidesBarIsUnaffected(t *testing.T) {
 	// function, so this is the mistake a side-blind implementation would make.
 	s := hitScene()
 	s.enemy.CurrentLife = 70
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
 	if got := s.shownLife(combat.SideA, s.fighter.CurrentLife); got != 60 {
 		t.Errorf("the duelist's bar draws %d while the enemy is being hit, want its own 60", got)
@@ -112,7 +112,7 @@ func TestTheFigureFinishesAndIsDroppedSoPlaybackCanResume(t *testing.T) {
 	// **The cursor waits on `hitsRunning`**, so a figure that never finishes hangs the round on
 	// itself. This is the test that says it cannot.
 	s := hitScene()
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 
 	for i := 0; i < hitFlyTicks+hitHoldTicks+2; i++ {
 		s.tickHits()
@@ -195,7 +195,7 @@ func TestTheLandingFigureIsTheSumsTotalContinuing(t *testing.T) {
 
 	// And it is solid from the first frame: a fade-in would blink against the opaque total.
 	s := hitScene()
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 	if got := hitAlpha(s.hits[0]); got != 1 {
 		t.Errorf("the figure sets off at alpha %v, want 1", got)
 	}
@@ -206,7 +206,7 @@ func TestClearingTheSceneDropsFiguresInTheAir(t *testing.T) {
 	// not spend its hand, so anything cleaned up only by the end-of-round spend is still on screen
 	// when the next fight starts.
 	s := hitScene()
-	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70})
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 30, Target: combat.SideB, Life: 70}, 100)
 	s.clearHits()
 
 	if s.hitsRunning() || len(s.hits) != 0 {
@@ -215,5 +215,38 @@ func TestClearingTheSceneDropsFiguresInTheAir(t *testing.T) {
 	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != s.enemy.CurrentLife {
 		t.Errorf("the bar still lags at %d after clearing, want the model's %d",
 			got, s.enemy.CurrentLife)
+	}
+}
+
+func TestAKillingBlowHoldsTheLifeThatWasThereNotTheSizeOfTheBlow(t *testing.T) {
+	// **The bug this exists for** *(2026-08-19)*: an enemy on 30 of 90 took a pair of Cleaves for
+	// 60, and its bar drew 60/90 for the length of the flight before emptying — health visibly
+	// going *up* on the one blow that kills.
+	//
+	// The cause was the held life being worked back from the event: `e.Life + e.Amount`, which is
+	// right whenever the blow is smaller than the life it lands on and is the *size of the blow*
+	// whenever it is not, `e.Life` being clamped at zero. **Overkill is the only case that shows
+	// it**, which is why it was invisible until a fight ended.
+	//
+	// `applyEvent` reads the life off the combatant before overwriting it now, so this passes the
+	// pre-hit life the way the caller does.
+	s := hitScene()
+	s.enemy.MaxLife, s.enemy.CurrentLife = 90, 30
+
+	before := s.enemy.CurrentLife
+	s.enemy.CurrentLife = 0 // what applyEvent writes from e.Life
+	s.noteHit(combat.Event{Kind: combat.KindDamage, Amount: 60, Target: combat.SideB, Life: 0}, before)
+
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 30 {
+		t.Errorf("the bar draws %d while a 60 lands on 30 of 90, want the 30 that was there", got)
+	}
+
+	// And once the figure arrives it is the real life, which is zero — the drop still happens, it
+	// just happens on arrival like every other hit.
+	for i := 0; i < hitFlyTicks+1; i++ {
+		s.tickHits()
+	}
+	if got := s.shownLife(combat.SideB, s.enemy.CurrentLife); got != 0 {
+		t.Errorf("the bar draws %d after the killing figure landed, want 0", got)
 	}
 }

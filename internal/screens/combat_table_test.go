@@ -318,17 +318,15 @@ func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
 		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.firingSeats)
 	}
 
-	// The Jab built no hand, so the combo takes it back down — and brackets only the pair.
+	// The Jab built no hand, so the combo takes it back down. **Raising is the whole of what says
+	// which cards earned the hand** since the yellow ring went on 2026-08-19, which is why this is
+	// the only assertion left here.
 	combo := combat.Event{Kind: combat.KindCombo, Side: combat.SideA, ComboCardCount: 2}
 	combo.ComboCards[0], combo.ComboCards[1] = 0, 1
 	s.noteCombo(combo)
 
 	if !sameSeats(s.firingSeats, []int{0, 1}) {
 		t.Errorf("the combo left %v raised, want only the two cards that formed it", s.firingSeats)
-	}
-	if !s.resolved[0].combo || !s.resolved[1].combo || s.resolved[2].combo {
-		t.Errorf("bracketed %v, want the first two only",
-			[]bool{s.resolved[0].combo, s.resolved[1].combo, s.resolved[2].combo})
 	}
 }
 
@@ -503,7 +501,7 @@ func selecting(cards ...combat.Card) *CombatScene {
 }
 
 func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
-	// **The preview is the resolver's own answer**, so what is ringed while choosing is what
+	// **The preview is the resolver's own answer**, so what is named while choosing is what
 	// fires. Three Strikes are three of a kind the instant the third is picked, not when DUEL! is
 	// pressed.
 	s := selecting(
@@ -516,8 +514,8 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	if !ok {
 		t.Fatal("three Strikes previewed no combo")
 	}
-	if len(s.previewHandSlots(blow)) != 3 {
-		t.Errorf("the preview rings %v, want all three cards", s.previewHandSlots(blow))
+	if len(blow.Cards) != 3 {
+		t.Errorf("the previewed hand is made of %v, want all three cards", blow.Cards)
 	}
 
 	// And it is named in the same words the fired shout will use.
@@ -536,27 +534,46 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 	}
 }
 
-func TestOneAttackIsNotACombo(t *testing.T) {
-	// A lone attack forms no hand, and announcing COMBO! over one Strike would empty the word.
+func TestOneAttackIsTheHighCard(t *testing.T) {
+	// **A single attack is a hand and is named as one** *(2026-08-19, owner's call)*, where it used
+	// to preview nothing at all. The label is on screen from the first attack card picked rather
+	// than appearing only if a pair happens to form.
 	s := selecting(combat.Of(combat.Strike, combat.Fire))
 
-	if _, ok := s.previewAttack(); ok {
-		t.Error("one Strike previewed a combo")
+	blow, ok := s.previewAttack()
+	if !ok {
+		t.Fatal("one Strike previewed no hand")
+	}
+	if blow.Hand.Key != "high-card" {
+		t.Errorf("one Strike previewed %q, want the high card", blow.Hand.Key)
 	}
 
-	// **The two gates have to agree about which hands are worth shouting**, because one governs
-	// the planned name and the other the fired one. `Blow.Formed` is `Hand.Cards() > 1` and
-	// `handWasBuilt` asks an event the same question — so a lone attack is silent in both places,
-	// and HIGH CARD! never appears anywhere.
-	if got := shoutFor(combat.Event{Kind: combat.KindCombo, Hand: combat.HandNone}); got != "" {
-		t.Errorf("a lone attack shouts %q, want silence", got)
+	// **The planned name and the fired one are one spelling**, which is what lets the banner carry
+	// the word through DUEL! instead of the dialog announcing it a second time.
+	if got, want := handShout(blow.Hand.Name), "HIGH CARD!"; got != want {
+		t.Errorf("one Strike is named %q, want %q", got, want)
 	}
 }
 
-func TestThePreviewNamesTheCardsInTheHandNotInTheQueue(t *testing.T) {
-	// **Blow.Cards indexes the turn, which is in resolution order**; the hand is in whatever
-	// order the player left it. A Prepare queued first resolves *last*, so the pair the preview
-	// rings is hand slots 1 and 2 while the turn's own indices for them are 0 and 1.
+func TestAQueueWithNoAttackNamesNothing(t *testing.T) {
+	// **A hand is an attack.** Plans build the round rather than land it, so there is nothing for a
+	// hand to be made of and nothing to name — which is the line the High Card arriving in the
+	// preview must not blur.
+	s := selecting(
+		combat.Of(combat.Prepare, combat.Basic),
+		combat.Of(combat.Plan, combat.Basic),
+	)
+
+	if _, ok := s.previewAttack(); ok {
+		t.Error("a queue of plans previewed a hand")
+	}
+}
+
+func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
+	// **`Blow.Cards` indexes the turn, which is in resolution order**, not the hand — a Prepare
+	// picked first resolves *last*, so the pair sits at turn indices 0 and 1 while it sits in hand
+	// slots 1 and 2. The preview goes through `ResolutionOrder` for exactly that reason, and a
+	// preview built off the hand as the player left it would miss this hand entirely.
 	s := selecting(
 		combat.Of(combat.Prepare, combat.Basic),
 		combat.Of(combat.Strike, combat.Fire),
@@ -567,8 +584,11 @@ func TestThePreviewNamesTheCardsInTheHandNotInTheQueue(t *testing.T) {
 	if !ok {
 		t.Fatal("a pair behind a Prepare previewed no combo")
 	}
-	if got := s.previewHandSlots(blow); !sameSeats(got, []int{1, 2}) {
-		t.Errorf("the preview rings hand slots %v, want the two Strikes at 1 and 2", got)
+	if blow.Hand.Key != "pair" {
+		t.Errorf("a pair behind a Prepare previewed %q, want the pair", blow.Hand.Key)
+	}
+	if !sameSeats(blow.Cards, []int{0, 1}) {
+		t.Errorf("the previewed hand is turn slots %v, want the two Strikes at 0 and 1", blow.Cards)
 	}
 }
 

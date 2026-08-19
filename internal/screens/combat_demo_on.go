@@ -133,10 +133,14 @@ const (
 	//
 	// **The dwell is no longer the only thing pacing a round** *(2026-08-18)*. The combo dialog
 	// stops the cursor for a few seconds each time a hand fires — see combat_mathbox.go — so a
-	// round costs its events plus one box per attack phase. Two rounds with a combo in each are
-	// still comfortably inside this, but the budget is no longer a pure multiple of the dwell,
-	// and a longer script is the thing to check against it.
-	demoGiveUpAt = 60 * eventDwellTicks
+	// round costs its events plus one box per attack phase.
+	//
+	// **Which is why there is a flat term as well as a multiple** *(2026-08-19)*. The dwell came
+	// down to 25 ticks that day, and a budget that was a pure multiple of it came down with it —
+	// while the dialogs and the flights it has to survive did not move at all, being on their own
+	// clocks. Sixty events of playback plus half a minute of animation; reaching it still means
+	// something hung, which is the only thing this number is for.
+	demoGiveUpAt = 60*eventDwellTicks + 30*ticksPerSecond
 )
 
 func (s *CombatScene) demoUpdate(gs *state.GlobalState) {

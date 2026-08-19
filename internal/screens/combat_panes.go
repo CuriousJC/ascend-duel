@@ -107,7 +107,7 @@ type panePlacement struct {
 //     as the round plays back — a record.
 //
 // Showing the round twice is only worth the space because of that split. It also retired the
-// open question of how one pane could be both: the flow pane never learned to bracket a combo
+// open question of how one pane could be both: the flow pane never learned to mark a combo
 // across non-adjacent rows, and no longer has to, because Resolution says it in words.
 //
 // The narrow column and the wide one are **not** interchangeable. Flow rows are short labels
@@ -202,9 +202,9 @@ func (s *CombatScene) drawActionFlow(gs *state.GlobalState, screen *ebiten.Image
 // **The attack phase is one line, and it is the combo's** *(2026-08-14)*. Prepares and defends
 // still write a line each; the attack cards write none. A turn lands one blow, so five sentences
 // saying "Duelist attacks with an earth strike" described a round that does not happen, and the
-// line that mattered — what the five cards came to — was the sixth. **A blow that formed no hand
-// still gets its sentence**, from the card it led with, because announcing COMBO! over a lone
-// Strike would make the word mean nothing.
+// line that mattered — what the five cards came to — was the sixth. **Every hand takes that line,
+// the High Card included** *(2026-08-19)* — a lone attack is the catalogue's one-card hand and is
+// announced like any other.
 //
 // **It takes the events rather than reading the round off the scene** *(2026-08-18)*. It was the
 // Resolution feed's walk, over `s.log[:cursor+1]`; the feed is gone and the fight log is what
@@ -323,15 +323,16 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 				s.sideName(e.Target), tickVerb(e.Status), e.Amount), swatchFor(e.Target))
 
 		case combat.KindCombo:
-			// **This is the attack phase's line, whether or not a hand formed.** A blow that
-			// formed nothing is not a combo and must not be announced as one — announcing
-			// "COMBO!" over every single Strike would make the word mean nothing — so it writes
-			// the ordinary sentence for the card it led with, which the engine names on the
-			// event for exactly this.
-			if e.Hand == combat.HandNone {
-				act(e.Side, combat.Card{Concept: e.Action, Element: e.Element})
-				break
-			}
+			// **This is the attack phase's line, and every hand takes it — the High Card
+			// included** *(2026-08-19)*. There used to be a branch here writing an ordinary attack
+			// sentence when `e.Hand` was `HandNone`, on the argument that announcing "COMBO!" over
+			// a single Strike empties the word. **It had been unreachable for some time**:
+			// `blowFor` falls back to the catalogue's `high-card` entry, so a turn with an attack
+			// in it always names a hand and the branch could not fire. What the log actually
+			// printed was the combo line, correctly, while the code beside it said otherwise.
+			//
+			// The High Card is an equal citizen throughout now, on the owner's call, so this is
+			// deliberate rather than merely true.
 			blow(e)
 
 		case combat.KindGathered:
@@ -894,27 +895,18 @@ func comboName(e combat.Event) string {
 // out card by card; the feed is three rows of a sentence, and four identical numbers would be
 // half a line saying what the dialog just showed at four times the size.
 //
-// **The multiplier is dropped when it is the identity.** A High Card prints `20`, because
-// `20 x 1 = 20` is a sum with nothing in it — and the High Card is the commonest turn in the game,
-// so it is the line that would be read most and say least.
+// **The multiplier is always written, the identity included** *(2026-08-19, owner's call)*. A High
+// Card used to print `(20)` rather than `(20 x 1 = 20)`, on the argument that a sum times one says
+// nothing. **Hands are going to be upgradable**, which makes that 1 a number that will change — and
+// a term that appears only once it stops being 1 would make an upgrade read as a new rule rather
+// than as a bigger figure. The dialog does the same, so the line and the sum say one thing.
 //
 // It is the blow before the attacker's weight and before anything the defender raised, so the
 // damage that follows on the same line is often smaller. That gap is what a defence is worth,
 // and it is only legible because both figures are shown.
 func comboMath(e combat.Event) string {
-	if e.Multiplier == comboIdentity {
-		return fmt.Sprintf("(%d)", e.Amount)
-	}
 	return fmt.Sprintf("(%d x %s = %d)", e.Base, comboMultiplierText(e.Multiplier), e.Amount)
 }
-
-// comboIdentity is the multiplier that changes nothing — the percent scale `data/combos.json`
-// holds its numbers over, which is what the High Card carries.
-//
-// **It is written here rather than read off `combat`** because the scale is unexported there and
-// deliberately so: the screen is allowed to know that 100 means "times one" in order to *print* it,
-// and is not allowed to do arithmetic with it. Nothing in this file multiplies by it.
-const comboIdentity = 100
 
 // comboMultiplierText writes a *combo's* percentage multiplier the way the design does: 350 as
 // `3.5`, 200 as `2`, 1000 as `10`. Trailing zeros are dropped rather than padded to two places,

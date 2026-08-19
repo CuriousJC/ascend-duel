@@ -3,6 +3,7 @@ package screens
 import (
 	"fmt"
 	"image"
+	"math"
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -45,14 +46,110 @@ import (
 const (
 	ticksPerSecond = 60
 
-	// eventDwellTicks is a second and a quarter — three quarters of a second until
-	// 2026-08-07, when it went up by half a second because **an event now carries a sentence
-	// rather than a card name**. The Resolution pane made every beat something to read, and
-	// three quarters of a second is a glance, not a read. The pane accumulating rather than
-	// replacing takes some of the pressure off — a line missed is still on screen — but the
-	// live row is the one being followed, and it has to hold long enough to follow.
-	eventDwellTicks = 5 * ticksPerSecond / 4
+	// eventDwellTicks is **the game's one playback speed**, and every beat in a round is this
+	// number times its kind's multiplier. See eventDwells: tuning the whole of playback is this
+	// constant, and tuning one kind against the others is a multiplier — which is what makes
+	// "everything is too slow" and "prepares are too slow" two different edits rather than one
+	// argument.
+	//
+	// **Five twelfths of a second since 2026-08-19** *(owner's call, from playing it)*, where it
+	// was a second and a quarter. History, because the number has moved for real reasons twice
+	// before: three seconds an action originally; halved on 2026-08-02 because a six-action round
+	// took twenty seconds; up to 75 on 2026-08-07 because the Resolution feed had made every beat
+	// a sentence to read. **That last reason is gone** — the feed went behind a button on
+	// 2026-08-18 and the round narrates itself in pictures now, which is what a quarter of a
+	// second a beat is for.
+	eventDwellTicks = 25
 )
+
+// beat scales the playback speed by a fraction, and it is **how every clock on this screen that
+// is not the dwell itself is written** *(2026-08-19, owner's call)*: `eventDwellTicks` is the one
+// number, and a card's flight, a figure's journey and each beat of the combo dialog are all
+// proportions of it. Before this they were fifteen independent constants tuned against a dwell of
+// 75, so cutting the speed to 25 sped the round's *account* up and left every animation in it
+// exactly as slow as it was — a round paced by whichever of the two happened to be longer.
+//
+// **Never less than a tick**, or a small enough fraction of a slow enough speed becomes a
+// movement that does not happen. The fractions are written to reproduce the values those fifteen
+// constants had at a speed of 25, so this changed nothing on the day it landed; what it changes is
+// that they move together from here.
+//
+// **What is deliberately not written this way is `mathBreathTicks`** — see it for why.
+func beat(num, den int) int {
+	if ticks := eventDwellTicks * num / den; ticks > 1 {
+		return ticks
+	}
+	return 1
+}
+
+// eventDwells is each kind's share of the playback speed: a multiplier on `eventDwellTicks`,
+// where 1 is the ordinary beat every event gets.
+//
+// **One speed setting and a table of proportions, rather than a table of durations**
+// *(2026-08-19, owner's call)*. Playback as a whole is `eventDwellTicks`; whether a chill should
+// hold longer than a card firing is this table. Written as ticks, the two questions could not be
+// asked separately — every retune of the speed meant re-deriving every entry, and an entry that
+// had drifted out of proportion looked exactly like one that had been chosen.
+//
+// **Everything is 1 as of 2026-08-19**, deliberately: the beats were being tuned against a dwell
+// that was itself wrong, so the speed came down and the proportions were flattened to see what
+// that alone does. **A row that is not 1 needs a sentence saying why**, the way the theatre table's
+// entries carry a reason — a multiplier nobody can account for is the per-kind pacing this screen
+// removed once already.
+//
+// **It is a table with an entry per kind and no default arm, and that shape is the whole point.**
+// This screen had three dwells selected by a `switch` with a `default` once, and the default was
+// the shortest of them — so every event kind added after that switch was written silently
+// inherited a quarter-second flash. `KindNegated` landed there and a Defend blunting a heavy blow
+// went past faster than the round-start beat. A map plus `TestEveryEventKindHasADwell` cannot do
+// that: a kind added without a line here fails the tests rather than quietly picking up whatever
+// the last arm said.
+//
+// **Nothing in here can change an outcome.** The round was resolved before a frame of it was
+// drawn; these decide only how long the player looks at each part of it. Same constraint as the
+// debug flags and every card in flight.
+var eventDwells = map[combat.EventKind]float64{
+	combat.KindRoundStart: 1,
+	combat.KindAction:     1,
+	combat.KindGathered:   1,
+	combat.KindDrew:       1,
+	combat.KindNegated:    1,
+	combat.KindDamage:     1,
+	combat.KindDefeated:   1,
+	combat.KindCombo:      1,
+	combat.KindChilled:    1,
+	combat.KindStatus:     1,
+	combat.KindMissed:     1,
+	combat.KindBurned:     1,
+	combat.KindRoundEnd:   1,
+}
+
+// eventDwell is how long one kind is held, in ticks: the speed times the kind's multiplier.
+//
+// **A kind with no entry takes the plain beat** rather than nothing — too long is noticed and too
+// short is missed, so that is the safe direction to be wrong in, and the test is what stops it
+// staying wrong. **Never less than one tick**, or a multiplier small enough to round to zero would
+// make an event nobody can see.
+func eventDwell(kind combat.EventKind) int {
+	mult, ok := eventDwells[kind]
+	if !ok {
+		mult = 1
+	}
+	if ticks := int(math.Round(eventDwellTicks * mult)); ticks > 1 {
+		return ticks
+	}
+	return 1
+}
+
+// dwellForCurrent is the hold owed by the event currently on screen, which is the one *behind* the
+// cursor: the cursor names the event about to be applied. Before the first event there is nothing
+// on screen yet, so the lead-in takes the plain beat.
+func (s *CombatScene) dwellForCurrent() int {
+	if s.cursor <= 0 || s.cursor > len(s.log) {
+		return eventDwellTicks
+	}
+	return eventDwell(s.log[s.cursor-1].Kind)
+}
 
 // The order enemies are fought in: **every record in the roster** *(2026-08-11)*, shallowest
 // floor first, where it was a hand-written list of four. Beat one and the next steps up; lose
@@ -294,7 +391,8 @@ type CombatScene struct {
 
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
-	// moment the round starts — see seatPlayedCards — and what a combo brackets.
+	// moment the round starts — see seatPlayedCards — and what a combo narrows to the cards it
+	// was made of.
 	//
 	// Cleared when the hand is spent, which is the moment those cards actually leave.
 	resolved []resolvedCard
@@ -327,6 +425,12 @@ type CombatScene struct {
 	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
+
+	// banner is the name of the hand the player committed, on its way from the planning seat to
+	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
+	// which is what makes the planned name and the fired one one word that moves rather than two
+	// that appear. See combat_mathbox.go.
+	banner handBanner
 
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round. **Vitae is the run's, not the screen's** *(2026-08-17)* — see session.Session,
@@ -480,6 +584,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.slides = nil
 	s.firingSeats, s.enemyFiringSeats = nil, nil
 	s.mathBox.clear()
+	s.banner.clear()
 
 	// **A figure in the air belongs to the fight that raised it.** A settled duel freezes rather
 	// than spending its hand, so nothing between rounds clears this — the same trap the note below
@@ -634,6 +739,10 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.updateFlights()
 	s.updateSlides()
 	s.updateResolved()
+	// The committed hand's name, flying down into the hand row. Here rather than in playback
+	// because it sets off at DUEL!, before the first event is reached, and must not be held up by
+	// the dialog that stops the cursor. See handBanner.
+	s.banner.tick()
 	// **The pile is dead under the log and the Log button is dead under the deck**, and each
 	// survives its own overlay because it is the only thing that closes one. Neither may be
 	// reachable through the panel the other has put up: a dialog whose exit is not the
@@ -738,6 +847,20 @@ func (s *CombatScene) startRound() {
 	// reporting of it, so a round can never resolve a queue the fighter cannot pay for.
 	if s.overBudget() {
 		return
+	}
+
+	// **The name of the hand is captured here, while the preview can still be asked for it.**
+	// `previewAttack` is gated on `planning()`, which stops being true the moment the log below is
+	// adopted — so this is the last frame the screen can name what the player built. From here it
+	// is the banner's, and it flies down into the hand row as the cards fly up to the table. See
+	// handBanner.
+	s.banner.clear()
+	if blow, ok := s.previewAttack(); ok {
+		s.banner = handBanner{
+			name:   handShout(blow.Hand.Name),
+			flight: newTravel(0, bannerFlyTicks),
+			flying: true,
+		}
 	}
 
 	s.round++
@@ -858,10 +981,11 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		return
 	}
 
-	// One dwell, every event, no exceptions. See eventDwellTicks for why this is not a
-	// lookup on the event's kind.
+	// How long the event already on screen is held before the next one lands. **It is keyed on the
+	// event *behind* the cursor**, which is the one the player is looking at — the cursor names
+	// the event about to arrive. See eventDwell.
 	s.ticks++
-	if s.ticks < eventDwellTicks {
+	if s.ticks < s.dwellForCurrent() {
 		return
 	}
 	s.ticks = 0
@@ -915,6 +1039,11 @@ func (s *CombatScene) endOfRound() {
 	if s.duelSettled() {
 		return
 	}
+
+	// **The banner goes when the hand it named goes**, and a settled duel has already returned
+	// above — the last round of a fight freezes with its cards on the table, so the name of the
+	// hand that ended it stays up with them.
+	s.banner.clear()
 
 	// The hand is spent here rather than at resolve time, and the ordering matters:
 	// endRoundHand rebuilds fighterActions from what is left, and the Resolution pane draws
@@ -974,7 +1103,7 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// A card of the player's has fired: lift it out of the hand and start it toward the pile.
 	s.noteResolved(e)
 
-	// A combo has formed: bracket the cards the engine says formed it.
+	// A combo has formed: leave raised only the cards the engine says formed it.
 	s.noteCombo(e)
 
 	// A status has landed: put its badge on the card at the beat it was announced.
@@ -1000,6 +1129,16 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
+	// **The life the bar is showing right now, read before it is overwritten.** That is what the
+	// figure in flight has to keep drawing, and it cannot be reconstructed afterwards: `e.Life` is
+	// clamped at zero, so a killing blow's `Life + Amount` is the *size of the blow*, not the life
+	// that was there. A 60-damage hand on a duelist with 30 left read as 60 — a bar that jumped
+	// *up* for the length of a flight and then emptied, on the killing blow and nowhere else.
+	before := s.enemy.CurrentLife
+	if e.Target == combat.SideA {
+		before = s.fighter.CurrentLife
+	}
+
 	if e.Target == combat.SideA {
 		s.fighter.CurrentLife = e.Life
 	} else {
@@ -1011,7 +1150,7 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// keeps. What lags is the bar's *drawing*, through `shownLife`. A burn is not flown from here:
 	// it has its own source, the badge it ticks off, and its own row in the theatre table.
 	if e.Kind == combat.KindDamage {
-		s.noteHit(e)
+		s.noteHit(e, before)
 	}
 }
 
@@ -1103,8 +1242,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawDraggedCard(gs, screen)
 
 	// The table: the round as a confrontation. The opponent's queued cards right-aligned, the
-	// player's played cards left-aligned facing them, and the ring round any that formed a
-	// combo. Over the hand, which is inert during playback, and under the overlay like
+	// player's played cards left-aligned facing them, and whichever of them is firing lifted
+	// out of its row. Over the hand, which is inert during playback, and under the overlay like
 	// everything else. See combat_table.go.
 	s.drawEnemyQueue(gs, screen)
 	s.drawPlayedCards(gs, screen)
@@ -1118,14 +1257,14 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawFlights(gs, screen)
 
 	// **The combo dialog, over everything but the deck overlay.** It is the loudest thing on the
-	// screen for the few seconds it is up, and it is deliberately over the opponent's row: the
-	// shout stands beside the cards it names, and the sum is written across the band above the
-	// hand. See combat_mathbox.go.
+	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
+	// shout is written across the hand row, which is inert while it is up, and the sum across the
+	// band above it. See combat_mathbox.go.
 	s.drawComboMath(gs, screen)
 
-	// **The planned hand's name, in the band the sum is about to be written across.** It and the
-	// shout above can never both be up: this one is gated on `planning()` and that one only runs
-	// during playback. See drawPlannedHand.
+	// **The planned hand's name, in the middle of the half of the table its cards are about to
+	// land in.** It and the shout above can never both be up: this one is gated on `planning()`
+	// and that one only runs during playback. See drawPlannedHand.
 	s.drawPlannedHand(gs, screen)
 
 	// **The damage figures, over the sum they came out of and the card they are flying into.**

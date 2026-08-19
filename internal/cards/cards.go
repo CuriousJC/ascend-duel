@@ -115,10 +115,16 @@ func (e Element) String() string {
 // an off-white card it would be invisible, so it becomes a mid grey — still the quietest
 // of the set, still obviously the absence of an element, but actually a border.
 var borderColors = [...]color.RGBA{
-	Basic:     {R: 150, G: 154, B: 163, A: 255},
-	Fire:      {R: 235, G: 120, B: 45, A: 255},
-	Ice:       {R: 80, G: 155, B: 230, A: 255},
-	Lightning: {R: 240, G: 205, B: 55, A: 255},
+	Basic: {R: 150, G: 154, B: 163, A: 255},
+	Fire:  {R: 235, G: 120, B: 45, A: 255},
+	Ice:   {R: 80, G: 155, B: 230, A: 255},
+	// **Darkened on 2026-08-19** from {240,205,55}, which is a fine yellow on a dark ground and
+	// nearly invisible on two of the three light ones this game draws on — the off-white card
+	// surface and the combat screen's cream. It first showed up as an unreadable damage figure in
+	// the combo sum, where the number is drawn straight onto the cream; the border had the same
+	// problem more quietly. This is `screens.attentionYellow`'s value, which took the same
+	// correction for the same reason when the ground went cream.
+	Lightning: {R: 214, G: 152, B: 12, A: 255},
 	Earth:     {R: 76, G: 140, B: 52, A: 255},
 
 	// Pink, and deliberately unlike any of the four above — a ring has to be

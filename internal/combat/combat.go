@@ -497,7 +497,11 @@ type Event struct {
 	// Hand is set on KindCombo and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
-	// **It is HandNone when no hand formed** and the blow is a lone attack.
+	// **It always names a hand**, because `blowFor` falls back to the catalogue's High Card: a
+	// turn with an attack in it produces a blow, and a blow the engine could not name is the one
+	// failure this model can have. `HandNone` is the zero value and reaches a screen only on an
+	// event that is not a KindCombo. The comment here claimed the opposite until 2026-08-19, and a
+	// dead branch in the log was written against it.
 	Hand HandID
 
 	// Multiplier is the turn's damage multiplier in percent — the hand's, so 150 is the 1.5x a
@@ -939,7 +943,8 @@ func resolveAttackPhase(
 	}
 
 	// The hand is announced before the blow lands, so a boosted figure never arrives before the
-	// reason for it. A lone attack that formed nothing carries HandNone and says only its colour.
+	// reason for it. **Every turn with an attack in it announces a hand** — a lone attack is the
+	// High Card, which is a catalogue entry like any other rather than an absence.
 	//
 	// **It also carries the sum**, which is what the damage below is taken from — see comboEvent.
 	//

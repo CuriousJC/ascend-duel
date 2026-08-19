@@ -748,7 +748,13 @@ Key conventions:
 - `internal/screens/` — one `Scene` implementation per screen, owning its own state and widgets, calling into `systems` to draw them.
 - **`postbattle.go` is the first between-fight scene** *(2026-08-17)*: it is also the `prizes-dealt` moment — `session.Picks` says how many prizes a visit owes and `session.PrizeVitae` what the money card pays, so a ring can add a pick or raise the figure without this screen knowing which ring did it. A second pick is another card out of the *same* row, re-armed after the first has settled. Win a fight and it offers two **worms**, drawn from `data/worms.json` and shown as cards; pick one — the third card is always **+5 Vitae**, which is what replaced the decline button, so every path through the screen is "take a card and watch it fly to the middle" — then for a worm, pick the card out of a hand dealt off the whole run deck that it takes, **see what it would become**, and confirm. The morph stage previews by running the real worm against a throwaway copy of the run, never by re-deriving what each target does, and the result is held on screen before the deck swallows it. **Worm first, card second, and it was built the other way round first**: the reward has to be the thing on screen when the player arrives, and a menu of verbs under a chosen card made the reward look like a property of the card. Three things it settles, with MECHANICS.md holding the argument: the card offer is dealt off **what you own** rather than what the fight left in the piles; a worm only ever varies a **concept the game already defines**, so nothing here can produce a card the rules cannot resolve; and an offer is **indices into the run deck**, which is only safe because alteration happens when no pile is live. **Two random streams, deliberately separate** — which worms and which cards. A shop and a room choice are meant to join it, each as its own scene: `CombatScene` does not grow a fourth phase.
 - **The combat screen is fourteen files.** They are one package and Go does not care where a declaration sits, so these are *reading* boundaries — the point is that an edit does not start by finding your place in 2,000 lines. Grouped by what a change is usually about:
-  - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
+  - `combat.go` — the scene: `CombatScene`, `Init`, `Update`, `Draw`, `startRound`, **the playback
+    speed and its per-kind multipliers** (`eventDwellTicks` is the one speed, 25 ticks;
+    `eventDwells` is a multiplier per event kind, all 1 today, with an entry per kind and a test
+    rather than a `switch` with a `default` — which is what silently gave new kinds a
+    quarter-second flash the first time this screen had per-kind pacing; and `beat(num, den)`,
+    which is how **every other clock on the screen** is written, from a card's flight to each beat
+    of the combo dialog, so one number paces the whole thing), playback (`advancePlayback`, `applyEvent`, `currentSlot`), the caption text, `nextFight`, and the trace layout dump.
   - `combat_deck.go` — the cards and the piles: `actionCard`, `buildStartingDeck` (which reads `data/duelist_cards.json`), the deck seed, the shuffle and draw, `spendSelected`, and the deck overlay. **`actionCard` is an alias for `combat.Card`** — elements are rules, so the hand, the queue and the round are one type and a card is never converted between them.
     **The overlay shows every card you own**, in four colour rows plus a row of plans, at
     `cards.Mini` overlapped so all but six pixels of each shows. Two rules govern it and
@@ -783,8 +789,15 @@ Key conventions:
     reason `familyRank` is — `combat.Basic` leads its enum as the zero value and trails on
     screen, where the colours are what the statuses are counted on.
   - `combat_mathbox.go` — **the combo dialog**: the blow's arithmetic acted out across the band
-    above the hand on the beat a hand fires — the hand's name shouted beside the cards it names,
-    then each card's own figure flying down into a line, then the multiplier, then the answer. It
+    above the hand on the beat a hand fires — each card's own figure flying down into a line, then
+    the multiplier, then the answer, **all of it at double the type it was drawn at before
+    2026-08-19**, the landing damage figure included since `hitFigureSize` is `mathTotalSize`. **It also owns the hand's name, which is one word with two
+    homes** *(2026-08-19)*: `handBanner` sits it in the middle of the player's half of the table
+    while the round is planned, and flies it *down* into the hand row at DUEL! — growing from 80
+    points to 124 — as the cards fly *up* to the table. It rests there for the round, breathing,
+    and is what the multiplier later flies out of. The name never leaves the screen and is never
+    drawn twice: the box suppresses its own shout while the banner is carrying the same word. Both
+    states are bold, faux, the pane's own two-pass idiom. It
     exists because the Resolution feed's `(20 x 1.5 = 30)` was a *record* and not an
     *explanation*: the total was visible and which card paid for which part of it was not. **It
     says nothing the `KindCombo` event carries and computes nothing** — a second drawing of one
@@ -839,8 +852,9 @@ Key conventions:
       the table. **The whole queue is dealt there when the round starts**, not
       a card at a time as each fires; playback drives which card is *lit*, not which cards
       exist. Because `ResolutionOrder` decides the row, it is laid out in phase order
-      **without this file knowing what a phase is**. A combo brackets its own cards in
-      `attentionYellow`, from the span the engine puts on the event — never worked out here.
+      **without this file knowing what a phase is**. **What says which cards earned the hand is
+      which cards are still raised** *(2026-08-19)*: `noteCombo` narrows the lifted set to the
+      ones the engine names, and the yellow ring that used to be drawn round them is gone.
   - `combat_table.go` — **the two hands facing each other**: the
     player's played cards left-aligned, the opponent's queued cards right-aligned, both full
     size in the band between the ring row and the strip above the hand. It is what shows a round as

@@ -70,33 +70,46 @@ func TestAFourCardHandReadsAsFourTerms(t *testing.T) {
 	}
 }
 
-// **The identity multiplier is dropped**, so the commonest turn in the game does not spend a beat
-// showing that one times something is itself. The feed's own line drops it for the same reason.
-func TestTheHighCardShowsNoMultiplier(t *testing.T) {
+// **Every sum reads the same shape, the identity multiplier included** *(2026-08-19, owner's
+// call)*. The High Card's `x 1` was dropped until then, on the argument that a sum times one says
+// nothing — right about the arithmetic and wrong about the game: **hands are going to be
+// upgradable**, so that 1 is a number that will change, and a term appearing only once it stops
+// being 1 would make an upgrade read as a new rule rather than as a bigger figure. The log's line
+// says it the same way.
+func TestTheHighCardShowsItsMultiplier(t *testing.T) {
 	got := scriptText(mathScript(comboEvent("high-card", []int{20}, 100, 20)))
-	if want := "20 = 20"; got != want {
+	if want := "20 x 1 = 20"; got != want {
 		t.Errorf("a High Card reads %q, want %q", got, want)
 	}
 }
 
-// **Only a hand that was built is shouted.** `HIGH CARD!` over a lone attack is the same emptying
-// of the word that keeps `COMBO!` off a single Strike in the Resolution feed.
-func TestOnlyABuiltHandIsShouted(t *testing.T) {
+// **Every hand the engine names is shouted, the High Card included** *(2026-08-19, owner's call)*.
+// It was silent until then, on the argument that `HIGH CARD!` over a lone attack empties the word
+// the way `COMBO!` over a single Strike does. What changed is that the name is now carried by the
+// banner from DUEL! onward — so silence here would not withhold an announcement, it would take a
+// word off the screen at the moment the blow lands.
+//
+// **An event naming no hand at all is still silent.** Nothing emits one, a turn with an attack in
+// it always producing a blow, and a bare `!` at 124 points is what the check is worth.
+func TestEveryNamedHandIsShouted(t *testing.T) {
 	if got := shoutFor(comboEvent("pair", []int{20, 20}, 150, 60)); got != "PAIR!" {
 		t.Errorf("a Pair shouts %q, want %q", got, "PAIR!")
 	}
-	if got := shoutFor(comboEvent("high-card", []int{20}, 100, 20)); got != "" {
-		t.Errorf("a High Card shouts %q, want silence", got)
+	if got := shoutFor(comboEvent("high-card", []int{20}, 100, 20)); got != "HIGH CARD!" {
+		t.Errorf("a High Card shouts %q, want %q", got, "HIGH CARD!")
+	}
+	if got := shoutFor(combat.Event{Kind: combat.KindCombo, Hand: combat.HandNone}); got != "" {
+		t.Errorf("an event naming no hand shouts %q, want silence", got)
 	}
 }
 
 // **Every hand in the catalogue can be shouted and none of them is empty.** A hand added to
-// `data/combos.json` with no name would put a bare `!` on the screen at sixty points.
-func TestEveryBuiltHandInTheCatalogueHasAShout(t *testing.T) {
+// `data/combos.json` with no name would put a bare `!` on the screen at 124 points.
+//
+// **The one-card hand is in the sweep now** rather than skipped: the High Card is shouted like any
+// other since 2026-08-19.
+func TestEveryHandInTheCatalogueHasAShout(t *testing.T) {
 	for _, h := range combat.Hands() {
-		if h.Cards() < 2 {
-			continue
-		}
 		e := combat.Event{Kind: combat.KindCombo, Hand: h.ID}
 		got := shoutFor(e)
 		if got == "" || got == "!" {
@@ -118,7 +131,7 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 		flies int
 	}{
 		{"a Pair", comboEvent("pair", []int{20, 20}, 150, 60), 3},
-		{"a High Card", comboEvent("high-card", []int{20}, 100, 20), 1},
+		{"a High Card", comboEvent("high-card", []int{20}, 100, 20), 2},
 		{"trips", comboEvent("three-of-a-kind", []int{10, 10, 10}, 200, 60), 4},
 	} {
 		items := mathScript(tc.e)
@@ -211,14 +224,20 @@ func TestTheWidestSumFitsItsBand(t *testing.T) {
 	box := comboMathBox{items: mathScript(e)}
 	scene.layOutMath(gs, &box)
 
+	// **Measured to the ink, not to the centres.** Checking the resting *points* passes a line
+	// half of which is off the screen, which is most of what this test is for — and it matters more
+	// since the figures doubled on 2026-08-19.
 	first, last := box.items[0], box.items[len(box.items)-1]
-	if first.at.X <= band.Min.X {
-		t.Errorf("the first figure is centred at x=%d, outside the band's left edge at %d",
-			first.at.X, band.Min.X)
+	firstW, _ := text.Measure(first.text, mathFace(gs, first.size), 0)
+	lastW, _ := text.Measure(last.text, mathFace(gs, last.size), 0)
+
+	if left := first.at.X - int(firstW/2); left <= band.Min.X {
+		t.Errorf("the first figure starts at x=%d, outside the band's left edge at %d",
+			left, band.Min.X)
 	}
-	if last.at.X >= band.Max.X {
-		t.Errorf("the total is centred at x=%d, outside the band's right edge at %d",
-			last.at.X, band.Max.X)
+	if right := last.at.X + int(lastW/2); right >= band.Max.X {
+		t.Errorf("the total ends at x=%d, outside the band's right edge at %d",
+			right, band.Max.X)
 	}
 }
 
@@ -247,5 +266,33 @@ func TestTheSumIsLaidOutLeftToRight(t *testing.T) {
 		if it.at.Y != cy {
 			t.Errorf("item %d (%q) sits at y=%d, want the band's centre %d", i, it.text, it.at.Y, cy)
 		}
+	}
+}
+
+// **The longest hand name in the catalogue fits the screen at the size it is shouted.** The shout
+// doubled to 124 points on 2026-08-19, and a name is not a figure: `FOUR OF A KIND!` is fifteen
+// characters against `19980`'s five, so the shout reaches its limit long before the sum does. It is
+// centred on the hand row and does not wrap, so a name too wide runs off *both* edges at once.
+//
+// Measured against the whole screen rather than against a band, because that is what it is drawn
+// on — the row it stands over is narrower than the name is allowed to be.
+func TestTheWidestHandNameFitsTheScreen(t *testing.T) {
+	gs := mathTestState(t)
+
+	widest, name := 0.0, ""
+	for _, hand := range combat.Hands() {
+		w, _ := text.Measure(handShout(hand.Name), mathFace(gs, mathShoutSize), 0)
+		if w > widest {
+			widest, name = w, handShout(hand.Name)
+		}
+	}
+
+	// The breath swells it, and the shout is faux-bold, so what has to fit is the widest it is
+	// ever actually drawn rather than its resting width.
+	widest = widest*(1+mathBreathAmount) + mathBoldStep(mathShoutSize)
+
+	if widest > float64(gs.ScreenWidth) {
+		t.Errorf("%q is %.0f wide at the shout's %d points, against a %d-wide screen",
+			name, widest, mathShoutSize, gs.ScreenWidth)
 	}
 }

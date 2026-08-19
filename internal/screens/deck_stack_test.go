@@ -120,32 +120,32 @@ func TestStackStyleKeepsTheCardsProportions(t *testing.T) {
 	}
 }
 
-func TestTheComboRingFitsOnScreen(t *testing.T) {
+func TestThePlayedRowFitsOnScreen(t *testing.T) {
 	gs := testState()
 
-	// The ring is drawn around the played cards, so the row's inset has to leave room for it.
-	// Flush against the margin puts the bracket off the screen, which reads as a highlight
-	// with a side missing rather than as a card being too far left.
+	// **A card lifted by tableFireLift is the top of the row**, so the check is against that
+	// rather than against the row's resting y — the moment a card is firing is the moment it is
+	// highest, and a row that only fitted at rest would clip exactly when it mattered.
 	//
-	// **A card lifted by tableFireLift is the top of the ring**, so the check is against that
-	// rather than against the row's resting y — the one moment a combo fires is also the one
-	// moment a card is highest.
-	// The widest row the rules can produce, asked of the rules rather than written down: a
-	// ring raising the cap must not be able to push the ring off the screen quietly.
+	// The widest row the rules can produce, asked of the rules rather than written down: a ring
+	// raising the action cap must not be able to push the row off the screen quietly.
+	//
+	// **This measured the yellow combo ring until 2026-08-19**, which stood off the cards and so
+	// set the margins. The ring is gone and the cards themselves are what has to fit.
 	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions(), 0)
-	if left := first.X - comboRingInset - comboRingWidth/2; left < 0 {
-		t.Errorf("the combo ring starts at x=%d, off the left of the screen", left)
+	if first.X < 0 {
+		t.Errorf("the played row starts at x=%d, off the left of the screen", first.X)
 	}
-	if top := first.Y - tableFireLift - comboRingInset - comboRingWidth/2; top < 0 {
-		t.Errorf("the combo ring starts at y=%d, off the top of the screen", top)
+	if top := first.Y - tableFireLift; top < 0 {
+		t.Errorf("a firing card reaches y=%d, off the top of the screen", top)
 	}
 
 	// And its bottom must clear the band above the hand, where the sum is written — see
 	// tableRowTop.
-	bottom := first.Y + cardHeight + comboRingInset + comboRingWidth/2
+	bottom := first.Y + cardHeight
 	bandTop := gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight
 	if bottom > bandTop {
-		t.Errorf("the combo ring reaches y=%d, through the band above the hand at y=%d", bottom, bandTop)
+		t.Errorf("the played row reaches y=%d, through the band above the hand at y=%d", bottom, bandTop)
 	}
 }
 

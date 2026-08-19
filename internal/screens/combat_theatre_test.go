@@ -121,3 +121,35 @@ func TestTheEngineIsTheAuthorityOnDamagesSource(t *testing.T) {
 		t.Errorf("damage lands on %v, not on the card whose bar it empties", spec.to)
 	}
 }
+
+// TestEveryEventKindHasADwell is `eventDwells`' half of the same guarantee, and it exists because
+// of a specific bug rather than for symmetry.
+//
+// Playback used to pick a dwell with a `switch` over the kind, with a `default` arm that was the
+// *shortest* of them — so a kind added after that switch was written inherited a quarter-second
+// flash chosen by nobody, and `KindNegated` did. The table came back on 2026-08-19 as multipliers
+// on one speed; what must not come back with it is a beat nobody chose. A table plus this test is
+// the difference.
+func TestEveryEventKindHasADwell(t *testing.T) {
+	for k := combat.EventKind(0); k <= combat.KindRoundEnd; k++ {
+		if _, ok := eventDwells[k]; !ok {
+			t.Errorf("event kind %d has no dwell multiplier - give it one, 1 if it is "+
+				"an ordinary beat", k)
+		}
+	}
+
+	for k := range eventDwells {
+		if k < 0 || k > combat.KindRoundEnd {
+			t.Errorf("eventDwells times event kind %d, which the engine does not emit", k)
+		}
+	}
+
+	// And no multiplier may be zero or negative: an event held for no time is one nobody can read,
+	// which is the failure the old default arm produced in a milder form. `eventDwell` floors the
+	// result at a tick, but a zero here is a beat somebody meant to delete rather than to shorten.
+	for k, mult := range eventDwells {
+		if mult <= 0 {
+			t.Errorf("event kind %d has a %.2fx dwell", k, mult)
+		}
+	}
+}

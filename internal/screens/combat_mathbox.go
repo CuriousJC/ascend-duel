@@ -3,11 +3,13 @@ package screens
 import (
 	"image"
 	"image/color"
+	"math"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -48,18 +50,34 @@ const (
 	// different questions: how long a shout needs to be read, how long a figure takes to cross a
 	// quarter of the screen, and how long an operator needs to register. Tuning one should not
 	// move the others.
-	mathShoutTicks  = 34 // the hand's name popping in
-	mathTermTicks   = 22 // one card's figure flying down into the row
-	mathSymbolTicks = 11 // a +, an x or an = appearing in place
-	mathTotalTicks  = 26 // the answer landing
-	mathHoldTicks   = 40 // the finished sum held before the box clears
+	// **They are proportions of `eventDwellTicks` rather than durations** *(2026-08-19)*, so the
+	// dialog speeds up and slows down with the round it is part of. The fractions reproduce the
+	// numbers they were tuned to — 35, 22, 10, 25, 40 — at a speed of 25. See beat.
 
 	// Type sizes. The figures are the point of the box, so they are the biggest thing on the
 	// screen that is not a card; the operators are smaller because they are punctuation.
-	mathTermSize   = 38
-	mathSymbolSize = 30
-	mathTotalSize  = 50
-	mathShoutSize  = 62
+	//
+	// **All three doubled on 2026-08-19, with the hand's name** *(owner's call)*: at 38 points a
+	// term was being overwhelmed by the cards and the name around it, and the arithmetic is the
+	// thing the box exists to make readable. `mathTotalSize` carries the landing damage figure
+	// with it — see `hitFigureSize`, which is this constant rather than a size of its own.
+	//
+	// **Width is checked and depth is not.** The widest sum the rules could ever produce is about
+	// 830 pixels against a 1232-wide band, which is what `TestTheWidestSumFitsItsBand` holds — but
+	// a 100-point total measures 85 pixels tall against `mathBandHeight`'s 82, so the line now
+	// stands a pixel and a half past the band top and bottom. It clears its neighbours either way
+	// (`firingGap` above, `mathBandGapAboveCards` below), so this is a note rather than a bug: the
+	// next increase is the one that has to move the band rather than only the type.
+	mathTermSize   = 76
+	mathSymbolSize = 60
+	mathTotalSize  = 100
+
+	// mathShoutSize is the hand's name once it has been committed, and **it is deliberately the
+	// biggest type on the screen** *(doubled 2026-08-19, owner's call)*: the hand is what the
+	// round is about, and everything else the screen says about it is a figure.
+	// `TestTheWidestHandNameFitsTheScreen` is what stops the longest name in the catalogue running
+	// off the edges at this size.
+	mathShoutSize = 124
 
 	// mathItemGap is the air between one item of the sum and the next.
 	mathItemGap = 16
@@ -69,17 +87,44 @@ const (
 	// split the caption and the Resolution feed already keep — so the planned hand must not arrive
 	// at the size the fired one does, or pressing DUEL! would change nothing about the loudest
 	// thing on screen and the player would learn to stop reading it.
-	mathPreviewSize = 40
+	//
+	// **The gap between the two is now something the player watches close** rather than a
+	// difference between two drawings: the name swells from this to `mathShoutSize` as it flies
+	// down to the hand row. See handBanner.
+	mathPreviewSize = 80
+
+	// mathBoldMinStep is the smallest faux-bold offset, in pixels. **Bold is the same run drawn
+	// again a step to the right** — the pane's own idiom, and for the pane's own reason: `text/v2`
+	// has no synthetic bold and kubasta ships one weight. The step is scaled off the type size
+	// above this floor, because a one-pixel thickening on a 124-point word is not visible at all.
+	mathBoldMinStep  = 1
+	mathBoldSizeStep = 32 // one pixel of thickening per this many points
 
 	// mathPreviewAlpha is how solid it is. Far enough back to read as a proposal rather than an
 	// event, and it is the second mark saying so: the size alone was ambiguous against a long
 	// hand name, which fills more of the band than a short one at any size.
 	mathPreviewAlpha = 0.62
 
-	// mathShoutGap is how far clear of the bracketed cards the shout sits. The bracket already
-	// stands `comboRingInset` off the cards, so this is measured from the ring rather than from
-	// the card edge.
-	mathShoutGap = 28
+	// The breath: how far the hand's name swells past its own size and how long a full
+	// expand-and-contract takes, in ticks at 60 a second.
+	//
+	// **It is small and slow on purpose.** The name is the only thing on this screen that moves
+	// while nothing is happening — the whole planning phase is otherwise still — so it has to read
+	// as a thing alive rather than as a thing flashing. Six per cent is about four pixels on the
+	// preview and it is enough to catch an eye that is looking elsewhere.
+	//
+	// **It is a multiplier on the scale, never on the size**, so it costs no re-measuring and
+	// cannot reflow anything: the text is laid out once at its own size and the breath is applied
+	// to the drawing.
+	//
+	// **It is the one clock on this screen that is not a fraction of the playback speed**, and
+	// deliberately: everything `beat` scales is a *duration between two things* — how long a beat
+	// is held, how long a journey takes — and this is neither. It is an idle oscillation on a word
+	// that is mostly on screen while nothing at all is playing back, so tying it to playback would
+	// make the label breathe faster the faster a round is watched, which is the opposite of what a
+	// resting pulse means.
+	mathBreathAmount = 0.06
+	mathBreathTicks  = 84
 
 	// The scales an item is drawn at as it arrives. A flown figure grows into place, which reads
 	// as coming toward the reader; an operator and the total drop *onto* the line from bigger,
@@ -89,6 +134,39 @@ const (
 	mathTotalPopScale = 2.4
 	mathShoutPopScale = 2.1
 )
+
+// The script's beats, as fractions of the one playback speed. See the const block above for what
+// each one is, and `beat` for why they are written this way.
+var (
+	mathShoutTicks  = beat(7, 5)  // the hand's name popping in
+	mathTermTicks   = beat(9, 10) // one card's figure flying down into the row
+	mathSymbolTicks = beat(2, 5)  // a +, an x or an = appearing in place
+	mathTotalTicks  = beat(1, 1)  // the answer landing
+	mathHoldTicks   = beat(8, 5)  // the finished sum held before the box clears
+
+	// bannerFlyTicks is the hand's name travelling from the planning seat to the hand row when
+	// DUEL! is pressed — a shade longer than a card's own flight, because it crosses more screen
+	// and grows by half again while it does it.
+	bannerFlyTicks = beat(1, 1)
+)
+
+// handNameInk is the colour the hand's name is written in, planned and shouted alike, and the
+// colour the multiplier that comes out of it is written in with it.
+//
+// **Pink since 2026-08-19** *(owner's call)*, where it was `attentionYellow`. The yellow had just
+// become the lightning element's colour as well — see cards.BorderOf — so the loudest word on the
+// screen was wearing a hue that also means "this card is lightning", and a lightning figure flying
+// up out of a card into the sum was arriving in the name's own colour.
+//
+// **The multiplier follows it rather than staying yellow**, because the multiplier flies out of
+// the word: `PAIR!` and `1.5` are one fact said twice, and a figure that leaves a pink word in
+// yellow reads as a second thing appearing rather than as that word's own number setting off.
+//
+// It is the screen's existing pink — `paneEdge`'s value — rather than a fifth hue, and that is
+// worth knowing rather than hiding: pink already means "ring" on this screen (the ring row's
+// borders) and "pane chrome" in the panels. Nothing puts a ring card and the hand's name side by
+// side, but that is the question to answer if a third pink is ever proposed.
+var handNameInk = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
 // mathItem is one thing written on the line: a card's figure, an operator, the multiplier, or
 // the answer.
@@ -113,6 +191,55 @@ type mathItem struct {
 	// t is this item's own clock, started when the script reaches it.
 	t travel
 }
+
+// handBanner is the name of the hand the player has built, and it is **one object with two homes
+// rather than two drawings of one word** *(2026-08-19, owner's call)*.
+//
+// While the round is being planned the name sits in the middle of the player's half of the table,
+// where their cards are about to land. When DUEL! is pressed those cards fly *up* into that half
+// and the name flies *down* into the hand row they left, growing from `mathPreviewSize` to
+// `mathShoutSize` on the way — and there it stays for the rest of the round, which is where the
+// multiplier later flies out of it.
+//
+// **The point is that it never leaves the screen.** It used to be a preview that vanished at DUEL!
+// and an unrelated shout that popped into existence several beats later, which asked the player to
+// recognise the same word twice rather than to watch it move — the card-flight argument, applied
+// to the one thing on this screen that is not a card.
+//
+// It holds no rules and cannot change an outcome: the name is the one the resolver already
+// decided, and the flight is a drawing on its own clock beside playback.
+type handBanner struct {
+	// name is the exclamation as it will be read — `PAIR!` — captured at DUEL! from the same
+	// `handShout` the fired event goes through, so the word cannot change as it travels.
+	name string
+
+	// flight is the journey to the hand row. Started when the round starts; once it is done the
+	// banner rests in the hand row until the round is over.
+	flight travel
+
+	// flying is set for the whole of the committed half of the banner's life, `flight` still
+	// running or not. Without it a banner that had arrived would be indistinguishable from one
+	// that had never set off.
+	flying bool
+}
+
+// showing reports whether the banner is already saying this word, which is what stops the combo
+// dialog popping a second copy of it on the beat the hand fires.
+func (b handBanner) showing(name string) bool {
+	return b.flying && name != "" && b.name == name
+}
+
+// tick advances the flight. Called every frame from `Update` rather than from playback, because
+// the journey starts at DUEL! — before the first event is reached — and must not be held up by a
+// dialog that stops the cursor.
+func (b *handBanner) tick() {
+	if b.flying {
+		b.flight.tick()
+	}
+}
+
+// clear takes the banner down: the round is over and the hand it named has been spent.
+func (b *handBanner) clear() { *b = handBanner{} }
 
 // comboMathBox is the whole dialog: a shout, a line of items, and a hold at the end.
 //
@@ -154,6 +281,23 @@ func (s *CombatScene) startComboMath(gs *state.GlobalState, e combat.Event) {
 		items:  mathScript(e),
 	}
 
+	// **The banner is already saying it, so the box does not say it again** *(2026-08-19)*. The
+	// player's hand was named at DUEL! and the word has been sitting in the hand row ever since;
+	// popping a second copy of it over the top would be the same announcement twice, and the
+	// multiplier would fly out of whichever of the two happened to be drawn last. The box keeps
+	// its own shout for a hand it did not carry down — an opponent's, which nothing produces
+	// today but which the engine can still emit.
+	if s.banner.showing(box.shout) {
+		box.shout = ""
+	} else if s.banner.flying {
+		// **The announcement wins over the banner it disagrees with.** The two can only differ if
+		// the hand that fired is not the hand that was planned — which nothing produces today,
+		// since only a chill can take a queued card away and no enemy can put a status on the
+		// player — but if it ever does, the truth is the event, and two words at one point would
+		// be worse than either alone.
+		s.banner.clear()
+	}
+
 	// **Where each figure sets off from is the screen's business, not the script's.** The script
 	// says what the sum reads; this says which card on the table paid which term, which is the one
 	// part of the box that has to know how a row is laid out.
@@ -163,7 +307,14 @@ func (s *CombatScene) startComboMath(gs *state.GlobalState, e combat.Event) {
 			continue
 		}
 		if term < e.ComboCardCount {
-			box.items[i].from = s.comboCardCentre(gs, e.Side, e.ComboCards[term])
+			// **A figure is drawn in the colour of whatever produced it** *(2026-08-19, owner's
+			// call)*, and a card's figure is produced by the card — so it wears that card's
+			// element, which is the colour of its border. It leaves the card in the card's own
+			// colour and keeps it all the way into the line, which is what says the sum is made
+			// of the cards rather than handed down by the game.
+			seat := e.ComboCards[term]
+			box.items[i].from = s.comboCardCentre(gs, e.Side, seat)
+			box.items[i].tint = s.comboCardInk(e.Side, seat)
 			term++
 			continue
 		}
@@ -172,7 +323,7 @@ func (s *CombatScene) startComboMath(gs *state.GlobalState, e combat.Event) {
 	}
 
 	s.layOutMath(gs, &box)
-	box.shoutAt = s.comboShoutAt(gs, e)
+	box.shoutAt = s.comboShoutAt(gs)
 
 	s.mathBox = box
 }
@@ -194,24 +345,31 @@ func mathScript(e combat.Event) []mathItem {
 		items = append(items, mathItem{
 			text: strconv.Itoa(e.ComboAmounts[i]),
 			size: mathTermSize,
+			// **The ground ink is a fallback, not the colour a term is drawn in.** Every figure
+			// wears the colour of what produced it, and a card's figure is its card's element —
+			// which is a question about a row on a screen, so `startComboMath` fills it in. This
+			// half of the box has no screen and must not grow one.
 			tint: groundInk,
 			fly:  true,
 			t:    newTravel(0, mathTermTicks),
 		})
 	}
 
-	// **The multiplier is dropped when it is the identity**, exactly as the feed's line drops it.
-	// `20 x 1 = 20` is a sum with nothing in it, and the High Card is the commonest turn in the
-	// game — so it would be the arithmetic shown most often and saying least.
-	if e.Multiplier != comboIdentity {
-		items = append(items, mathOperator("x"), mathItem{
-			text: comboMultiplierText(e.Multiplier),
-			size: mathTermSize,
-			tint: attentionYellow,
-			fly:  true,
-			t:    newTravel(0, mathTermTicks),
-		})
-	}
+	// **The multiplier is always shown, the identity included** *(2026-08-19, owner's call)*. It
+	// was dropped at `x 1` on the argument that `20 x 1 = 20` is a sum with nothing in it — true
+	// of the arithmetic and wrong about the game: **hands are going to be upgradable**, so the
+	// High Card's 1 is a number that will change, and a term that appears only once it stops being
+	// 1 would make an upgrade look like a new rule rather than a bigger figure. Every hand's sum
+	// reads the same shape, and the one the player sees most is the one teaching it.
+	items = append(items, mathOperator("x"), mathItem{
+		text: comboMultiplierText(e.Multiplier),
+		size: mathTermSize,
+		// The hand's own colour, because the hand is what produced it — and the word it flies out
+		// of is written in it. See handNameInk.
+		tint: handNameInk,
+		fly:  true,
+		t:    newTravel(0, mathTermTicks),
+	})
 
 	return append(items, mathOperator("="), mathItem{
 		text: strconv.Itoa(e.Amount),
@@ -231,29 +389,24 @@ func mathOperator(str string) mathItem {
 	}
 }
 
-// handWasBuilt is the one predicate for "the player made something", and it is the engine's own:
-// a hand of two or more cards, as opposed to the High Card falling through.
+// shoutFor is the hand's name made into an exclamation: `PAIR!`, `FOUR OF A KIND!`, and
+// `HIGH CARD!` for the turn that built nothing bigger.
 //
-// **It is asked of the catalogue rather than of the card count on the event**, so a hand added to
-// `data/combos.json` is covered without this file learning about it.
-func handWasBuilt(e combat.Event) bool {
-	hand, ok := combat.HandByID(e.Hand)
-	return ok && hand.Cards() > 1
-}
-
-// shoutFor is the hand's name made into an exclamation: `PAIR!`, `FOUR OF A KIND!`. It is empty
-// for a hand nobody built, which is the High Card — a lone attack shouting its own name is the
-// same emptying of the word that keeps `COMBO!` off a single Strike in the feed.
+// **The High Card is shouted like any other hand** *(2026-08-19, owner's call)*, where it used to
+// be silent. It is a real entry in the catalogue at the identity multiplier, it is the commonest
+// turn in the game, and it is the name the banner has been carrying since DUEL! — so falling
+// silent here would take the word off the screen at the exact moment the blow lands.
 //
-// **The name comes from the catalogue**, like every other place the screen names a hand, so a
-// hand renamed in `data/combos.json` is renamed once. Caps are safe at this size — the kubasta
-// note in CLAUDE.md is about small text, where `VITAE` renders as `VITRE`; at sixty points the
-// diagonal on an uppercase A is unmistakable.
+// **The name comes from the catalogue**, like every other place the screen names a hand, so a hand
+// renamed in `data/combos.json` is renamed once. An event naming no hand at all still shouts
+// nothing; nothing in the game emits one, since a turn with an attack in it always produces a
+// blow. Caps are safe at this size — the kubasta note in CLAUDE.md is about small text, where
+// `VITAE` renders as `VITRE`.
 func shoutFor(e combat.Event) string {
-	if !handWasBuilt(e) {
+	hand, ok := combat.HandByID(e.Hand)
+	if !ok {
 		return ""
 	}
-	hand, _ := combat.HandByID(e.Hand)
 	return handShout(hand.Name)
 }
 
@@ -342,58 +495,51 @@ func (s *CombatScene) comboCardCentre(gs *state.GlobalState, side combat.Side, s
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2)
 }
 
-// comboBracketBox is the rectangle the ring is drawn round: the union of the cards that formed
-// the hand, standing off by the same inset `drawComboBracket` uses.
+// comboCardInk is the colour of the card in a seat: its element's border, the same colour the
+// card on the table is wearing round its edge.
 //
-// **The two agree by sharing a number, not by being the same code.** `drawComboBracket` takes a
-// list of positions and knows nothing about events; this takes an event and knows nothing about
-// drawing. What they share is `comboRingInset`, which is the thing that would have to move.
-func (s *CombatScene) comboBracketBox(gs *state.GlobalState, e combat.Event) image.Rectangle {
-	var box image.Rectangle
-	for _, seat := range e.ComboCards[:e.ComboCardCount] {
-		c := s.comboCardCentre(gs, e.Side, seat)
-		card := image.Rect(c.X-cardWidth/2, c.Y-cardHeight/2, c.X+cardWidth/2, c.Y+cardHeight/2)
-		if box.Empty() {
-			box = card
-			continue
+// **It reads the card rather than the event**, because the event carries one `Element` for the
+// blow's lead card and the sum has a figure per card. Nothing here is arithmetic — the amount is
+// still the event's — and a seat the table does not hold falls back to the ground ink rather than
+// inventing a colour.
+func (s *CombatScene) comboCardInk(side combat.Side, seat int) color.RGBA {
+	if side == combat.SideB {
+		if seat < 0 || seat >= len(s.enemyDealt) {
+			return groundInk
 		}
-		box = box.Union(card)
+		return cards.BorderOf(artFor(s.enemyDealt[seat].card.Element))
 	}
-	if box.Empty() {
-		return box
+	if seat < 0 || seat >= len(s.resolved) {
+		return groundInk
 	}
-	return box.Inset(-comboRingInset)
+	return cards.BorderOf(artFor(s.resolved[seat].card.Element))
 }
 
-// comboShoutAt is where the hand's name is written: **clear of the cards it names, on whichever
-// side of them the row is not**.
+// comboShoutAt is where the hand's name is written when it fires: **across the hand row**, dead
+// centre of it, whichever side formed the hand.
 //
-// The player's row is left-aligned, so its shout takes the space to the right; the opponent's is
-// right-aligned, so its shout goes left. That is what "beside the hand" has to mean on a screen
-// where the two hands are anchored to opposite edges — a fixed side would put one of them on top
-// of the cards it is about.
-func (s *CombatScene) comboShoutAt(gs *state.GlobalState, e combat.Event) image.Point {
-	box := s.comboBracketBox(gs, e)
-	if box.Empty() {
-		return image.Pt(gs.ScreenWidth/2, tableRowTop(gs)+cardHeight/2)
-	}
-
-	cy := (box.Min.Y + box.Max.Y) / 2
-	if e.Side == combat.SideB {
-		return image.Pt((tableInset+box.Min.X-mathShoutGap)/2, cy)
-	}
-	return image.Pt((box.Max.X+mathShoutGap+gs.ScreenWidth-tableInset)/2, cy)
+// **It used to stand beside the cards it named** *(until 2026-08-19)*, on whichever side of the
+// row was free — which only worked because the ring round those cards said which ones it was
+// about. With the ring gone the shout is not a label on a group any more, it is the round's one
+// announcement, so it goes where the eye already is: over the hand, in the space the player has
+// been reading for the whole planning phase.
+//
+// **The row is inert while this is up**, so nothing is hidden that could still be acted on — and
+// `handRowCentre` rather than `handBand` is what it is centred on, or it would drift sideways as
+// the row narrowed under it.
+func (s *CombatScene) comboShoutAt(gs *state.GlobalState) image.Point {
+	return handRowCentre(gs)
 }
 
-// comboMultiplierOrigin is where the multiplier flies from: the shout, when there is one, because
-// the shout is what the multiplier *is* — `PAIR!` and `1.5` are one fact said twice, and having
-// the figure leave the word is what joins them. With no shout it drops in from above the band.
-func (s *CombatScene) comboMultiplierOrigin(gs *state.GlobalState, e combat.Event) image.Point {
-	if handWasBuilt(e) {
-		return s.comboShoutAt(gs, e)
-	}
-	r := s.comboMathRect(gs)
-	return image.Pt((r.Min.X+r.Max.X)/2, r.Min.Y-cardHeight/2)
+// comboMultiplierOrigin is where the multiplier flies from: **the hand's name**, because the name
+// is what the multiplier *is* — `PAIR!` and `1.5` are one fact said twice, and having the figure
+// leave the word is what joins them.
+//
+// Every hand is named since 2026-08-19, so there is no longer a case with no word to leave. It
+// keeps taking the event because that is the fact it is about, and a caller should not have to
+// know the answer is currently the same for all of them.
+func (s *CombatScene) comboMultiplierOrigin(gs *state.GlobalState, _ combat.Event) image.Point {
+	return s.comboShoutAt(gs)
 }
 
 // --- the clock ---------------------------------------------------------------------------
@@ -438,13 +584,20 @@ func (b *comboMathBox) clear() { *b = comboMathBox{} }
 // --- drawing -----------------------------------------------------------------------------
 
 // drawPlannedHand writes the name of the hand the current selection has already formed, in the
-// band the sum will be written across the moment DUEL! is pressed.
+// middle of the player's half of the table.
 //
-// **The name goes where its arithmetic is going to go** *(2026-08-18)*. That continuity is the
-// whole reason it is here rather than over the hand row: the player reads THREE OF A KIND, presses
-// DUEL!, and the figures land in the space the words were occupying. Putting it above the cards was
-// impossible anyway — see drawComboPreview, whose comment records that the feed sits five pixels
-// over the resting row and a selected card lifts into it.
+// **The name goes where the cards it names are about to land** *(2026-08-19, owner's call)*. The
+// half is empty for the whole of the planning phase and fills at DUEL!, so the words are standing
+// in the space their own cards fly into — and being on the table rather than in the band above the
+// hand leaves the sum's line clear to arrive into.
+//
+// **It is the only thing saying a hand has formed.** The yellow ring round the cards in the row
+// went with the move, so a player choosing a Two Pair out of five sees the *name* and not which
+// two pairs earned it. That is the trade, and it is the owner's; it is worth knowing before
+// something else is hung off the assumption that the row marks its own combo.
+//
+// **It breathes** — see mathBreath. Nothing else on the screen moves while the player is choosing,
+// which is what makes a slow swell enough to be noticed without being a flash.
 //
 // **It carries no number, and that is a rule rather than an omission.** `Blow.Base` is the
 // resolver working against a strength and a shock roll that have not happened, so a figure shown
@@ -459,15 +612,38 @@ func (b *comboMathBox) clear() { *b = comboMathBox{} }
 // It draws nothing once playback starts, because `previewBlow` is gated on `planning()` — so this
 // and the real shout can never be on screen together.
 func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Image) {
+	// The committed half: the same word on its way to, or resting in, the hand row.
+	if s.banner.flying {
+		t := easeOut(s.banner.flight.progress())
+		at := lerpPoint(playerTableCentre(gs), handRowCentre(gs), t)
+		size := mathPreviewSize + (mathShoutSize-mathPreviewSize)*t
+		alpha := mathPreviewAlpha + (1-mathPreviewAlpha)*t
+		drawMathText(gs, screen, s.banner.name, size, handNameInk,
+			at, mathBreath(gs), float32(alpha), true)
+		return
+	}
+
 	blow, ok := s.previewAttack()
 	if !ok {
 		return
 	}
 
-	r := s.comboMathRect(gs)
-	at := image.Pt((r.Min.X+r.Max.X)/2, (r.Min.Y+r.Max.Y)/2)
-	drawMathText(gs, screen, handShout(blow.Hand.Name), mathPreviewSize, attentionYellow,
-		at, 1, mathPreviewAlpha)
+	drawMathText(gs, screen, handShout(blow.Hand.Name), mathPreviewSize, handNameInk,
+		playerTableCentre(gs), mathBreath(gs), mathPreviewAlpha, true)
+}
+
+// mathBreath is the swell the hand's name is drawn at: a slow expand and contract, forever, for
+// as long as the name is up.
+//
+// **It is read off `gs.Count` rather than kept on the box**, because it belongs to no beat of any
+// script — the preview has no clock at all and the shout's own clock finishes while the word is
+// still on screen. A free-running tick is what makes both of them breathe at the same rate
+// without either owning the other's timing.
+//
+// It is presentation, and the usual constraint applies: nothing here can change an outcome, and
+// pacing is untouched — the box holds the cursor for exactly as long either way.
+func mathBreath(gs *state.GlobalState) float64 {
+	return 1 + mathBreathAmount*math.Sin(2*math.Pi*float64(gs.Count)/mathBreathTicks)
 }
 
 // drawComboMath draws the shout and however much of the sum has been revealed.
@@ -482,15 +658,19 @@ func (s *CombatScene) drawComboMath(gs *state.GlobalState, screen *ebiten.Image)
 	}
 
 	if b.shout != "" {
-		drawMathText(gs, screen, b.shout, mathShoutSize, attentionYellow, b.shoutAt,
-			popScale(mathShoutPopScale, b.shoutT), alphaOf(b.shoutT))
+		// **The pop and the breath multiply rather than take turns.** The pop is the arrival and
+		// the breath is what the word does for the rest of its time on screen; handing over from
+		// one to the other at the moment the pop finished would put a step in the middle of the
+		// only thing moving.
+		drawMathText(gs, screen, b.shout, mathShoutSize, handNameInk, b.shoutAt,
+			popScale(mathShoutPopScale, b.shoutT)*mathBreath(gs), alphaOf(b.shoutT), true)
 	}
 
 	for i := range b.items {
 		it := &b.items[i]
 		switch {
 		case i < b.at:
-			drawMathText(gs, screen, it.text, it.size, it.tint, it.at, 1, 1)
+			drawMathText(gs, screen, it.text, it.size, it.tint, it.at, 1, 1, false)
 		case i == b.at:
 			drawArrivingMathItem(gs, screen, it)
 		}
@@ -508,13 +688,14 @@ func drawArrivingMathItem(gs *state.GlobalState, screen *ebiten.Image, it *mathI
 		if it.size == mathTotalSize {
 			pop = mathTotalPopScale
 		}
-		drawMathText(gs, screen, it.text, it.size, it.tint, it.at, popScale(pop, it.t), alphaOf(it.t))
+		drawMathText(gs, screen, it.text, it.size, it.tint, it.at, popScale(pop, it.t), alphaOf(it.t),
+			false)
 		return
 	}
 
 	t := easeOut(it.t.progress())
 	drawMathText(gs, screen, it.text, it.size, it.tint,
-		lerpPoint(it.from, it.at, t), mathFlyFromScale+(1-mathFlyFromScale)*t, 1)
+		lerpPoint(it.from, it.at, t), mathFlyFromScale+(1-mathFlyFromScale)*t, 1, false)
 }
 
 // popScale eases a scale down to 1 from `from`. Used by everything that appears in place.
@@ -539,7 +720,7 @@ func alphaOf(t travel) float32 {
 // grew. Measuring and translating by half puts the middle of the glyphs on the point at every
 // scale, which is what lets a figure grow without drifting.
 func drawMathText(gs *state.GlobalState, screen *ebiten.Image, str string, size float64,
-	tint color.RGBA, at image.Point, scale float64, alpha float32) {
+	tint color.RGBA, at image.Point, scale float64, alpha float32, bold bool) {
 
 	if str == "" || alpha <= 0 {
 		return
@@ -547,13 +728,34 @@ func drawMathText(gs *state.GlobalState, screen *ebiten.Image, str string, size 
 	face := mathFace(gs, size)
 	w, h := text.Measure(str, face, 0)
 
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(-w/2, -h/2)
-	op.GeoM.Scale(scale, scale)
-	op.GeoM.Translate(float64(at.X), float64(at.Y))
-	op.ColorScale.ScaleWithColor(tint)
-	op.ColorScale.ScaleAlpha(alpha)
-	text.Draw(screen, str, face, op)
+	draw := func(dx float64) {
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(-w/2, -h/2)
+		op.GeoM.Scale(scale, scale)
+		op.GeoM.Translate(float64(at.X)+dx, float64(at.Y))
+		op.ColorScale.ScaleWithColor(tint)
+		op.ColorScale.ScaleAlpha(alpha)
+		text.Draw(screen, str, face, op)
+	}
+
+	draw(0)
+	if bold {
+		// **Faux bold: the same word drawn again a step right**, the pane's own idiom — `text/v2`
+		// has no synthetic bold and kubasta ships one weight. The step is drawn *after* the scale,
+		// so it is a screen-space thickening and a breathing word does not pulse between bold and
+		// not.
+		draw(mathBoldStep(size))
+	}
+}
+
+// mathBoldStep is how far the second pass is offset, in pixels: proportional to the type size,
+// never less than one. A single pixel is a bold face at a pane's 22 points and invisible at the
+// shout's 124.
+func mathBoldStep(size float64) float64 {
+	if step := size / mathBoldSizeStep; step > mathBoldMinStep {
+		return step
+	}
+	return mathBoldMinStep
 }
 
 // upper is the counterpart of `lower` in combat_panes.go, and it is written out rather than

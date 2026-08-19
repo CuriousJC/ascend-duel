@@ -103,17 +103,34 @@ const (
 	deckHighlightWidth = 4
 	deckHighlightInset = 6
 
-	// How long a card takes to travel, and how far apart the drawn ones set off. Both in
-	// ticks at 60 TPS: about a third of a second each, overlapping.
-	flightTicks      = 20
-	flightStaggerPer = 4
-
 	// outboundDriftUp is how far a discarded card rises as it leaves, and outboundSpin how
 	// far it turns. A card tossed flat off the side of the table reads as a bug; a little
 	// lift and rotation reads as a throw.
 	outboundDriftUp = 40
 	outboundSpin    = -0.42 // radians at the end of the flight
 	outboundShrink  = 0.72  // scale it reaches as it goes
+
+	//
+	// **Cards are played at full size, and what they must not cover is the band the blow's
+	// arithmetic is written across.** That has not changed through three arrangements of this
+	// screen; see tableRowTop, which is the one place it is applied now.
+	firingGap = 12
+)
+
+// Every journey a card makes, **as fractions of the one playback speed** *(2026-08-19)* — see
+// `beat`. They reproduce the numbers they were tuned to at a speed of 25, so this changed nothing
+// on the day it landed; what it changes is that they move with the round from here.
+//
+// **Cards move during planning as well as during playback**, which is the thing to know before
+// turning the speed down: a discard leaving the hand and a card dealt back into it are on this
+// clock too, and no round is playing while they happen. That is the trade for a single speed —
+// the alternative is a second constant for movement, which is two numbers to keep in step on a
+// screen where most movement *is* the round.
+var (
+	// How long a card takes to travel, and how far apart the drawn ones set off. Both in
+	// ticks at 60 TPS: about a third of a second each, overlapping.
+	flightTicks      = beat(4, 5)
+	flightStaggerPer = beat(1, 6)
 
 	// riseTicks is how long a card takes to fly from the hand to its seat on the table.
 	//
@@ -123,51 +140,40 @@ const (
 	// the readable place, so there is one beat now: out of the hand and into its seat, where it
 	// stays for the rest of the round. What the hold used to say — "this is the one resolving"
 	// — is said by tableFireLift instead.
-	riseTicks = 16
+	riseTicks = beat(3, 5)
 
-	// slideTicks is how long a card takes to move from one slot in the hand to another — a
 	// sort, or the row closing up after cards were spent. Shorter than the other three
 	// journeys because it is the shortest one: a few inches across the row rather than a
 	// trip across the screen, and a long ease over that distance reads as sluggish rather
 	// than as deliberate.
-	slideTicks = 14
-
-	// firingGap is how far clear of the band above the hand the table sits.
-	//
-	// **Cards are played at full size, and what they must not cover is the band the blow's
-	// arithmetic is written across.** That has not changed through three arrangements of this
-	// screen; see tableRowTop, which is the one place it is applied now.
-	firingGap = 12
+	slideTicks = beat(1, 2)
 )
 
-// attentionYellow is the screen's one "look here" colour, and it has three users: the ring
-// round the deck stack while its overlay is open, the ring round the cards a combo was formed
-// from, and the combo dialog's shout beside them.
+// attentionYellow is the screen's "look here" colour, and **it has one user left**: the ring round
+// the deck stack while its overlay is open. The hand's name and its multiplier wore it until
+// 2026-08-19 and are pink now — see handNameInk, which records why.
 //
-// **One colour, one meaning.** Both say "this is the thing right now", and a screen with two
-// different attention colours has neither — so this is a single value rather than two that
-// happen to match today. If a fourth caller wants it, the question to answer first is whether
-// it means the same thing.
+// **One colour, one meaning.** It says "this is the thing right now", and a screen with two
+// different attention colours has neither — so this stays a single value rather than becoming two
+// that happen to match. If a second caller wants it, the question to answer first is whether it
+// means the same thing.
 //
-// **It is only ever drawn as a ring, never on a card.** A card's border is its element and
-// nothing else may claim it; a combo says its piece in the space *around* the cards, which
-// is also the only way to mark three of them as one thing — something a list of sentences
-// cannot do.
+// **It is never drawn on a card.** A card's border is its element and nothing else may claim
+// it, so what wears this colour is drawn on the bare ground.
 //
 // **Darkened on 2026-08-14 when the ground went cream.** It was {255,214,0}, which is a fine
 // ring on {50,50,50} and nearly invisible on {226,208,176} — a yellow and a cream are close in
 // brightness whatever the hue does. The amber below reads on both, which it has to: this ring
 // is drawn on the bare ground around the table cards *and* on the dimmed screen behind the
 // deck overlay.
+// **It is now the same value as `cards.BorderOf(cards.Lightning)`** *(2026-08-19)*, which took
+// this correction on the same day and for the same reason. That is a collision worth knowing
+// about rather than a shared constant: the two mean different things — "look here" and "this card
+// is lightning" — and a lightning card's border therefore reads in the attention colour. It is
+// what moved the hand's name to pink, since the loudest word on the screen should not be wearing
+// an element. **If one of them has to move again, it is this one**, because an element's colour is
+// a fact about the game and an attention colour is a choice about the screen.
 var attentionYellow = color.RGBA{R: 214, G: 152, B: 12, A: 255}
-
-// The ring's weight and how far it stands off the cards. The inset is tight because the pile
-// shares the hand row's bottom edge and the action-point figure is printed ten pixels under
-// it — a wider standoff draws the bracket straight through "6/6 AP".
-const (
-	comboRingWidth = 5
-	comboRingInset = 6
-)
 
 // travel is the clock every moving card on this screen shares: hold for `delay`, then run for
 // `ticks`. Three things embed it — a card flying to or from the draw pile, one of the player's
@@ -627,10 +633,6 @@ type resolvedCard struct {
 	// starts from the card's own place. Same reason cardFlight stores the pair — the hand is
 	// still holding this card, but a later discard could re-lay the row out around it.
 	handIndex, handCount int
-
-	// combo marks a card a combo bracketed. Set when the KindCombo event plays back, from
-	// the span the engine put on the event — never worked out here.
-	combo bool
 }
 
 // seatPlayedCards deals the player's whole queue to the table, in resolution order.
@@ -769,18 +771,20 @@ func lit(seats []int, seat int) bool {
 	return false
 }
 
-// noteCombo brackets the cards a combo was formed from.
+// noteCombo narrows what is raised to the cards the hand was made of.
 //
 // The engine names them — see Event.ComboCards — so this is a lookup, not a search. Nothing
-// here knows what a Flurry is or how many cards one takes, which is what stops the bracket
+// here knows what a Flurry is or how many cards one takes, which is what stops the table
 // disagreeing with the combo that actually fired.
 //
 // **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
-// earned nothing, and two more, so this marks the seats it is given rather than a span between
+// earned nothing, and two more, so this takes the seats it is given rather than a span between
 // the first and the last.
-// **It also narrows what is raised to the cards it names.** Every attack card of the turn is
-// lifted by the time this arrives; the ones that built no hand drop back into the row here, so
-// what stays up is the hand the line beneath it is about.
+//
+// **Raising is the whole of what says which cards earned it** *(2026-08-19)*. Every attack card
+// of the turn is lifted by the time this arrives; the ones that built no hand drop back into the
+// row here, and the yellow ring that used to be drawn round the survivors is gone — the shout
+// names the hand and the row shows which cards are standing.
 func (s *CombatScene) noteCombo(e combat.Event) {
 	if e.Kind != combat.KindCombo {
 		return
@@ -791,20 +795,10 @@ func (s *CombatScene) noteCombo(e combat.Event) {
 
 	if e.Side == combat.SideB {
 		s.enemyFiringSeats = seats
-		for _, i := range seats {
-			if i >= 0 && i < len(s.enemyDealt) {
-				s.enemyDealt[i].combo = true
-			}
-		}
 		return
 	}
 
 	s.firingSeats = seats
-	for _, i := range seats {
-		if i >= 0 && i < len(s.resolved) {
-			s.resolved[i].combo = true
-		}
-	}
 }
 
 // handIndexForQueue maps a position in the player's queue to the hand slot holding it.
@@ -890,46 +884,11 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 // reads in the order the round happens — and so a card still arriving is drawn over the ones
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
-	var bracketed []image.Point
 	split := s.playedSplit()
 	for i, r := range s.resolved {
 		at := r.at(gs, i, len(s.resolved), split, lit(s.firingSeats, i))
 		drawCard(gs, screen, at, cards.Hand, r.card, s.fighter.CardCost(r.card), true, false)
-		if r.combo {
-			bracketed = append(bracketed, at)
-		}
 	}
-
-	drawComboBracket(screen, bracketed)
-}
-
-// drawComboBracket rings the cards a combo was formed from.
-//
-// **A ring around the group, not a colour on the cards.** A card's border is its element and
-// nothing else may claim it, so a combo says its piece in the space around the cards — which
-// is also the only way to say "these three together".
-//
-// **It takes positions rather than a row**, so the opponent's hand is ringed by the same code
-// that rings the player's. The lift is shared for that reason too — see lift — and a combo drawn
-// only on one side would say "yours" where it means "this one".
-func drawComboBracket(screen *ebiten.Image, at []image.Point) {
-	var box image.Rectangle
-	for _, p := range at {
-		card := image.Rect(p.X, p.Y, p.X+cardWidth, p.Y+cardHeight)
-		if box.Empty() {
-			box = card
-			continue
-		}
-		box = box.Union(card)
-	}
-	if box.Empty() {
-		return
-	}
-
-	box = box.Inset(-comboRingInset)
-	vector.StrokeRect(screen,
-		float32(box.Min.X), float32(box.Min.Y), float32(box.Dx()), float32(box.Dy()),
-		comboRingWidth, attentionYellow, false)
 }
 
 // lerpPoint walks between two points. Integer output because a resolved card is drawn at

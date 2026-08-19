@@ -58,11 +58,11 @@ lands. Five Strikes are not five hits.
 **The phase is also one line in the log, and it is the combo's.** The `KindAction`s still play —
 each is a beat, and each raises its card on the table — but `logRows` writes no sentence for them.
 `KindCombo` carries `Base`, `Multiplier` and `Amount`, so the line reads *"COMBO! Duelist
-lands a Pair (20 x 1.5 = 30)"* and the damage attaches to it. **The multiplier is dropped from the
-line when it is the identity**, so a High Card prints `(20)` — `20 x 1 = 20` is a sum with nothing
-in it, and it is the commonest turn in the game. **A blow that formed
-no hand writes an ordinary attack sentence instead**, from the card the engine names on the event —
-"COMBO!" over a lone Strike would empty the word. **Attack cards that build no hand contribute
+lands a Pair (20 x 1.5 = 30)"* and the damage attaches to it. **Every hand takes that line and
+every line carries its multiplier, the identity included** *(2026-08-19, owner's call)* — a High
+Card prints `(20 x 1 = 20)`, because hands are going to be upgradable and a term that appeared only
+once the multiplier stopped being 1 would make an upgrade read as a new rule. It is also the
+commonest turn in the game, so it is the line that teaches the shape. **Attack cards that build no hand contribute
 nothing**, and what says so is the table: every attack card is raised as it is announced, and the
 combo lowers the ones it did not name.
 
@@ -125,9 +125,14 @@ in `MECHANICS.md`; these are what matter to the screen.
   concept that formed the hand, so one combo could print as "Duo Strike Flurry"; both axes are gone
   and a hand carries its whole name. **Exactly one fires per turn**, so there is no stacking to draw
   and no ranking to explain.
-- **`Event.Hand == combat.HandNone` means a lone attack that formed nothing**, which the pane
-  writes as an ordinary attack sentence rather than as a combo. It carries the card it led with in
-  `Action`/`Element` so the pane has something to name.
+- **`Event.Hand` always names a hand** *(corrected 2026-08-19)*. A turn with an attack in it falls
+  back to the catalogue's `high-card`, so `HandNone` never reaches a `KindCombo` — the log had a
+  branch written against the opposite belief and it had been unreachable for some time. **The High
+  Card takes the combo line like any other hand**, and carries its `x 1` in both the line and the
+  dialog since 2026-08-19 — **the last place it was written differently from the rest**. What is
+  left that treats it specially is `matchHand` reaching it by fallback rather than by counting,
+  which is structural: counting would match the one-card hand against every turn in the game, and
+  the fallback picks the hardest-hitting card rather than the commonest.
 - **The event carries the arithmetic, and the engine takes its damage from the same field.**
   `Base` is what the hand's own cards deal added up, and `Amount` is `Base` under the multiplier —
   the blow *before* the attacker's weight and before any defence. `resolveAttackPhase` blunts
@@ -144,21 +149,32 @@ in `MECHANICS.md`; these are what matter to the screen.
   without the screen owning `CardDamage`, the strength scaling and every ring that touches a card's
   damage — which would be a second resolver, the thing `Base` and `Multiplier` are on the event to
   prevent.
-- **A fired combo brackets its own cards, and the list comes from the event**.
+- **A fired combo keeps its own cards raised, and the list comes from the event**.
   `Event.ComboCards[:ComboCardCount]` names which cards of the turn formed it. **Never derive
   that from the hand's group sizes, and never assume the cards are adjacent.** A counted hand is
   not contiguous — Two Pair is two cards, a card that earned nothing, and two more — which is why
-  the event carries a list rather than a start and a length. Both rows bracket, through one
-  `drawComboBracket` taking positions, so the opponent's hand is ringed by the same code.
+  the event carries a list rather than a start and a length. `noteCombo` narrows the raised set on
+  whichever row it belongs to, so the opponent's hand says it the same way.
+  **The yellow bracket round those cards is gone** *(2026-08-19, owner's call)*, in the hand row
+  and on both table rows. What is left saying which cards earned the hand is the lift, and in the
+  hand row nothing says it at all — the name is the whole of the feedback while planning. That is
+  the trade to know about before adding a third way to mark a set of cards.
 - **`combat.BlowFor` previews the hand while the player plans** *(2026-08-15)*. It is the same
   function the resolver uses, so a previewed combo is the combo that fires by construction rather
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
-  and **only a formed hand previews** — `HandNone` is a lone attack, and COMBO! over one Strike
-  empties the word. Two things show it: `drawComboPreview` rings the cards in the *hand row*
-  through the same `drawComboBracket` the table uses, and `drawPlannedHand` writes its name across
-  the band above the row.
-  **`Blow.Cards` indexes the turn, not the hand** — `previewHandSlots` translates through
-  `handIndexForQueue`, or a Prepare queued first would ring the wrong cards.
+  and **every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single
+  attack card is a hand — the catalogue's `high-card` at the identity multiplier — so the name is
+  on screen from the first attack picked; a queue of nothing but plans names nothing, `BlowFor`
+  returning a blow with no cards. **This reverses the old rule**, which was that only a hand of two
+  or more previewed, on the argument that COMBO! over one Strike empties the word. What makes it
+  safe is that the label names the *hand* rather than shouting COMBO!, and the log still writes a
+  lone attack as an ordinary attack sentence. **One thing shows it**: `drawPlannedHand` writes its name in the middle of the
+  player's half of the table, breathing, in `handNameInk` — and that same word is what flies
+  down to the hand row at DUEL!, so the preview and the announcement are one object. See
+  `handBanner`.
+  **`Blow.Cards` indexes the turn, not the hand**, which is why the preview goes through
+  `ResolutionOrder` — a Prepare queued first resolves last, so a preview read off the hand as the
+  player left it would miss the hand behind it.
 - **A chilled slot is a row that never resolves.** `currentSlot` counts `KindChilled`
   alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
   `TestEverySlotIsEitherTakenOrChilled` pins it. **The pane still draws that row as though it
@@ -206,16 +222,71 @@ number the game had decided rather than one they had built.
   a centred line that does not wrap and cannot shrink would have run off both ends in exactly the
   rounds a duel is decided in. `TestTheWidestSumFitsItsBand` found that and holds it. **The same
   trap is live anywhere else that borrows `handBand` for something that is not the hand.**
-- **Only a built hand is shouted.** `HIGH CARD!` over a lone attack is the same emptying of the
-  word that keeps `COMBO!` off a single Strike in the log — but the *arithmetic* still plays, on
-  the owner's call, so every attack phase shows where its figure came from.
-- **The shout goes on whichever side of the cards the row is not**: the player's row is
-  left-aligned so its shout takes the space to the right, the opponent's is right-aligned so its
-  shout goes left. A fixed side would put one of them on top of the cards it is about.
-- **`attentionYellow` gained a third caller and it means the same thing.** The colour's own note
-  asks that question of anyone who wants it; the answer here is that the shout and the ring round
-  the cards are the *same* combo at the *same* moment, and the shout is text on the ground rather
-  than on a card.
+- **Every hand the engine names is shouted, `HIGH CARD!` included** *(2026-08-19, owner's call)*.
+  It was silent until then, on the argument above. What changed is that the name is carried by the
+  banner from DUEL! onward, so silence at the combo beat would not withhold an announcement — it
+  would take a word off the screen at the moment the blow lands, and take the multiplier's origin
+  with it. The arithmetic plays either way, so every attack phase shows where its figure came from.
+  An event naming *no* hand is still silent; nothing emits one.
+- **The hand's name is one word with two homes, and it travels between them** *(2026-08-19,
+  owner's call)*. `handBanner` holds it: the planning seat is the middle of the player's half of
+  the table, and at DUEL! it flies *down* into the hand row while the cards fly *up* to the table,
+  growing from `mathPreviewSize` to `mathShoutSize` and up to full alpha as it goes. It rests
+  there for the rest of the round.
+  **The point is that it never leaves the screen.** A preview that vanished at DUEL! and a shout
+  that popped in several beats later asked the player to recognise the same word twice instead of
+  watching it move — the card-flight argument applied to the one thing on this screen that is not
+  a card.
+  Three things follow. **The box does not shout what the banner is already saying** — otherwise the
+  announcement is drawn twice and the multiplier flies out of whichever copy was drawn last;
+  `showing` is that check, and a word the banner does *not* carry (an opponent's hand, which
+  nothing produces today) still pops on its own. **It is raised in `startRound`**, on the last frame
+  `previewAttack` can still be asked, and cleared in `endOfRound` — except on a settled duel, which
+  freezes with its cards and its name up. And **it is centred on `handRowCentre`, never on
+  `handBand`**, or it would drift sideways as the row narrowed under it — the same trap the sum's
+  width avoids.
+- **Both sizes doubled and both are bold** *(2026-08-19, owner's call)*: 80 points planned, 124
+  shouted, making the name the biggest type on the screen. Bold is faux — the same word drawn again
+  `mathBoldStep` to the right, the pane's own idiom, since `text/v2` has no synthetic bold and
+  kubasta ships one weight. The step is proportional to the size and applied *after* the scale, so
+  a breathing word does not pulse between bold and not.
+  **`TestTheWidestHandNameFitsTheScreen` is what holds the size**: a name is not a figure —
+  `FOUR OF A KIND!` is fifteen characters — and it is centred, does not wrap and cannot shrink, so
+  one too wide runs off both edges at once.
+- **Both names breathe** — `mathBreath`, a slow ±6% swell read off `gs.Count`. It is on the free
+  clock rather than on a script's, because the preview has no clock at all and the shout's own
+  finishes while the word is still up. For the shout it *multiplies* the pop rather than taking
+  over from it, so there is no step in the middle of the only thing moving.
+- **The name is pink, and the multiplier is pink with it** *(2026-08-19, owner's call)*.
+  `handNameInk` — planned name, shouted name and the multiplier that flies out of it. It was
+  `attentionYellow` until lightning's border took that same darkened yellow, at which point the
+  loudest word on the screen was wearing a hue that also means "this card is lightning". **The
+  multiplier follows the word rather than staying behind**: it flies *out* of it, and a figure
+  leaving a pink word in yellow reads as a second thing appearing. `attentionYellow` has one user
+  left, the ring round the deck stack. Pink already means ring and pane chrome, which is the
+  question to answer before a third pink is proposed.
+- **The arithmetic doubled with the name** *(2026-08-19, owner's call)*: terms 38 → 76, operators
+  30 → 60, the total 50 → 100 — it was being overwhelmed by the cards and the shout around it. The
+  landing damage figure doubled with it and had to, `hitFigureSize` being `mathTotalSize` rather
+  than a size of its own. Width still fits with room — the widest sum the rules can produce is
+  about 830 against a 1232-wide band, and `TestTheWidestSumFitsItsBand` measures to the ink now
+  rather than to the resting centres. **Depth is the constraint that is nearly spent**: a
+  100-point total is 85 pixels tall against `mathBandHeight`'s 82, so it clears its neighbours but
+  the next increase has to move the band, not only the type.
+- **Every number is drawn in the colour of what produced it** *(2026-08-19, owner's call)*. A
+  card's figure wears that card's element — `cards.BorderOf`, the same colour as the border it
+  flies out of — so the sum reads as being made *of the cards* rather than handed down by the
+  game; the multiplier wears `handNameInk`, the hand's own colour, which is also the banner it
+  leaves; the total wears the attack ink, and the damage figure that flies on out of it wears the
+  same. Operators stay faded ground ink, being the one thing on the line the game supplied rather
+  than the player. **The element is read off the card in the seat, never off the event** —
+  `Event.Element` is the blow's lead card and the sum has a figure per card.
+  **Lightning's own colour was darkened to make this work** — `{240,205,55}` to `{214,152,12}`, in
+  `cards`, so every lightning border moved with it. A bright yellow is legible on a dark ground and
+  nearly invisible on the two light ones this game draws on — the off-white card surface and the
+  cream screen — and a figure written straight onto the cream is where that finally showed. It is
+  now the same value as `attentionYellow`: a collision rather than a shared constant, and the
+  attention colour is the one that moves if they ever have to be told apart.
 - **A flown figure travels and grows; an operator is stamped in place.** That difference is the
   whole grammar of the box — something that flies came off a card, something that pops is
   punctuation the game supplied.
@@ -232,6 +303,48 @@ so `firingSeats` is a list rather than one seat and the beats after it name the 
 `noteCombo` narrows the list to what earned it. And **the hand is announced even if the blow then
 misses** — the shock roll happens after the combo event, because the hand is scored off the queue
 and the queue was committed at DUEL!.
+
+### Pacing: one speed, and a table of proportions
+
+*2026-08-19, owner's call, from playing it.* **`eventDwellTicks` is the game's one playback speed
+— 25 ticks, five twelfths of a second** — and `eventDwells` is a multiplier per event kind, read
+through `eventDwell`. Everything is `1` today: the beats were being tuned against a dwell that was
+itself wrong, so the speed came down and the proportions were flattened to see what that alone
+does.
+
+- **Two questions, two edits.** "Playback is too slow" is the constant; "a chill should hold longer
+  than a card firing" is a multiplier. Written as durations the two could not be asked separately —
+  every retune of the speed meant re-deriving every entry, and an entry that had drifted out of
+  proportion looked exactly like one that had been chosen. **A row that is not 1 needs a sentence
+  saying why**, the way the theatre table's rows carry a reason.
+- **75 → 25 is the feed leaving, not impatience.** The dwell went *up* to 75 on 2026-08-07 because
+  the Resolution feed had made every beat a sentence to read. The feed went behind a button on
+  2026-08-18 and the round narrates itself in pictures now, so the reason for the long beat left
+  with it.
+- **Per-kind pacing is back, and the shape it comes back in is the point.** It was a `switch` with
+  a `default` arm once, and the default was the shortest dwell — so every kind added after that
+  switch was written inherited a quarter-second flash nobody chose, `KindNegated` included. A map
+  with an entry per kind, `TestEveryEventKindHasADwell` failing when a kind is added, and a missing
+  entry falling back to the *plain* beat rather than to nothing.
+- **The dwell is keyed on the event behind the cursor**, not the one at it: the cursor names the
+  event about to arrive, and what is being held is the one already on screen. `dwellForCurrent` is
+  that offset, in one place.
+- **Every other clock on the screen is a fraction of the same speed** *(2026-08-19, owner's call)*.
+  `beat(num, den)` is how they are written: each beat of the combo dialog, the damage figure's
+  flight and its hold, the banner's journey, and every card flight, deal, stagger and slide. The
+  fractions reproduce the numbers those fifteen constants held at a speed of 25, so introducing it
+  changed nothing — what it changes is that they move together. Before it, cutting the speed sped
+  the round's *account* up and left every animation in it exactly as slow, so a round was paced by
+  whichever of the two happened to be longer. `beat` never returns less than a tick.
+- **The one clock that is not tied to it is `mathBreathTicks`**, and the line is worth holding:
+  everything `beat` scales is a *duration between two things*, and the breath is an idle
+  oscillation on a word that is mostly on screen while nothing is playing back at all. Tying it
+  would make the label breathe faster the faster a round is watched.
+- **Cards move during planning too**, which is the thing to know before turning the speed down: a
+  discard leaving the hand is on the same clock as the round, and no round is playing while it
+  happens. That is the trade for a single speed; the alternative is a second constant for movement.
+- **`demoGiveUpAt` has a flat term as well as a multiple of the speed**, since the safety net has
+  to outlast dialogs that no longer shrink in proportion to it.
 
 ### The blow landing, and the bar that waits for it
 
@@ -266,6 +379,13 @@ between them.
   numbers swapping rather than one setting off. It also does not fade *in*, for the same reason.
 - **It shrinks where the sum's items grow**, and the difference is the meaning: a term flying into
   the sum comes toward the reader, a total flying into a card goes away into it.
+- **What the bar holds is read off the combatant, never worked back from the event** *(2026-08-19,
+  bug)*. It was `e.Life + e.Amount` — what was there, from what is left plus what was dealt — which
+  is right for every blow except the one that ends a duel: `e.Life` is clamped at zero, so overkill
+  makes that arithmetic return the *size of the blow*. A pair of Cleaves for 60 on an enemy holding
+  30 of 90 drew `60/90` for the length of the flight and then emptied — health visibly going *up*,
+  on the killing blow and nowhere else. `applyEvent` reads the life before it overwrites it and
+  hands it to `noteHit`.
 - **`clearHits` is called from `Init`**, which is the lesson the frozen last round taught — anything
   tidied up only by the end-of-round spend assumes every round ends in one, and a settled duel does
   not.
@@ -766,8 +886,8 @@ The rest of this section describes the split as designed, and still applies if F
 - **Resolution** was what actually **happened** — empty until DUEL! was pressed, filling as the
   round played back. A record, and that is the half the fight log took over.
 
-**Action Flow never learned to bracket a combo across non-adjacent slots and does not have to**,
-because the table rings them and the log says it in words. Same for a slot a chill deleted: Flow
+**Action Flow never learned to mark a combo across non-adjacent slots and does not have to**,
+because the table keeps those cards raised and the log says it in words. Same for a slot a chill deleted: Flow
 draws it as a row, the log reports it lost.
 
 **The narrow column and the wide one are not interchangeable.** Flow rows are short labels
@@ -947,8 +1067,8 @@ The active one latches darker than the other two.
   second mode mid-flight cannot draw one card twice.
 - **`sortHand` resyncs the queue, and that is load-bearing.** The list is the authority on the
   queue's *order* as well as its membership and `handIndexForQueue` is the inverse of that walk,
-  so a hand rearranged under a stale `fighterActions` leaves the combo preview bracketing
-  whichever cards sit at the old positions.
+  so a hand rearranged under a stale `fighterActions` leaves the combo preview naming a hand the
+  cards at those positions do not make.
 - **`sortMode` is the one field `Init` does not reset.** A reading preference is not a fact about
   a duel, and snapping back to cost every fight would make it something the player re-presses.
 - **All three go dead outside `planning()`** — a resolved card is drawn from the hand slot it

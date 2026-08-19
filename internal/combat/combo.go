@@ -148,7 +148,9 @@ type Blow struct {
 	// led with.
 	Lead int
 
-	// Hand is what formed. A lone attack that forms no hand carries HandNone.
+	// Hand is what formed, and **it is always a hand**: a turn that builds nothing bigger falls
+	// back to the catalogue's High Card. A blow with no cards in it at all — a turn with no attack
+	// — is the zero Blow, and `len(Cards) == 0` is how a caller asks that.
 	Hand Hand
 
 	// Multiplier is the hand's, in percent, and exists as its own field because the blow is what
@@ -161,16 +163,6 @@ type Blow struct {
 	// damage.
 	Elements []Element
 }
-
-// Formed reports whether a hand of two or more cards was made, as opposed to the High Card
-// falling through.
-//
-// **The High Card is a hand and still answers false here** *(2026-08-15)*. It has a name, an ID
-// and a line in the catalogue, so the feed can say what fired; what it does not have is anything
-// a player *built*, and this is the question the screen's combo preview asks — whether the cards
-// currently queued amount to more than the best of them. The combo dialog reads it too, to decide
-// whether there is a hand to shout.
-func (b Blow) Formed() bool { return b.Hand.ID != HandNone && b.Hand.Cards() > 1 }
 
 // BlowFor works out one side's attack phase from the cards it resolved.
 //

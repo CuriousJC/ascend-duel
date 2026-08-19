@@ -24,7 +24,7 @@ import (
 // It exists for the same reason `tools/glyphsheet` does. Glyph art was being reviewed by
 // launching the game and hunting for a card that used it; the sheet replaced that with a file.
 // This is that idea applied to the one thing a sheet cannot capture — a screen mid-playback,
-// with a combo line on it and the highlight on the right row.
+// with a hand line on it and the highlight on the right row.
 //
 // **It is a build tag rather than a flag, and it must stay deletable in one commit.** A game
 // that plays itself is not a thing to ship, and `go build .` carries none of this: no script,
@@ -36,9 +36,9 @@ import (
 //
 // **It picks its own opening hand by name**, via the seed catalogue in seeds.go. That is what
 // lets round one be *clicked* rather than forced: `three-strikes` guarantees three Strikes in
-// hand, so the demo selects them through `toggle` exactly as a player would and the combo
+// hand, so the demo selects them through `toggle` exactly as a player would and the hand
 // fires off a real selection. Before named seeds the deal held no three-of-a-kind and the only
-// way to see a combo was to write the queue directly, which tested the pane but not the path
+// way to see a hand was to write the queue directly, which tested the pane but not the path
 // to it.
 //
 // **Round two is clicked too, as of 2026-08-12.** It used to be written straight into
@@ -68,7 +68,7 @@ const demoScriptedRounds = 1
 const demoSeedName = "three-strikes"
 
 // demoClickRun is the card round one selects three of. It has to be a card the chosen seed
-// actually deals three of, or the click phase quietly selects fewer and no combo forms —
+// actually deals three of, or the click phase quietly selects fewer and no hand forms —
 // `tools/seeds` is what keeps those two facts in agreement.
 var demoClickRun = combat.Strike
 
@@ -119,7 +119,7 @@ const (
 	// It has to clear the arrival: riseTicks plus a full row's stagger is 16 + 4x4 = 32.
 	demoBetweenRounds = 60
 
-	// How many of one card round one clicks. Named against the combo it is trying to form
+	// How many of one card round one clicks. Named against the hand it is trying to form
 	// rather than written as a 3, so it stays honest if the flurry run length ever changes.
 	flurryRunCards = 3
 
@@ -131,7 +131,7 @@ const (
 	// quietly turn the safety net into the thing that ends the run. Sixty events is roughly
 	// double what two rounds produce.
 	//
-	// **The dwell is no longer the only thing pacing a round** *(2026-08-18)*. The combo dialog
+	// **The dwell is no longer the only thing pacing a round** *(2026-08-18)*. The hand dialog
 	// stops the cursor for a few seconds each time a hand fires — see combat_mathbox.go — so a
 	// round costs its events plus one box per attack phase.
 	//
@@ -164,7 +164,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 
 	switch demo.tick {
 	case demoSelectAt:
-		// Round one, clicked: three of one card through the real selection path, so the combo
+		// Round one, clicked: three of one card through the real selection path, so the hand
 		// that follows came out of a hand the player could have picked themselves.
 		picked := 0
 		for i := range s.hand {
@@ -177,7 +177,7 @@ func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 			}
 		}
 		if picked < flurryRunCards {
-			fmt.Printf("demo: seed %q dealt only %d %v - no combo will form; re-run tools/seeds\n",
+			fmt.Printf("demo: seed %q dealt only %d %v - no hand will form; re-run tools/seeds\n",
 				demoSeedName, picked, demoClickRun)
 		}
 
@@ -307,7 +307,7 @@ func demoShotsWanted() demoShotMode {
 }
 
 // keyShotsPerRound is how many frames `keys` mode takes of a round's playback, spread evenly
-// across it. Three is enough to see the pane fill, a combo land and the round settle without
+// across it. Three is enough to see the pane fill, a hand land and the round settle without
 // producing a flipbook.
 const keyShotsPerRound = 3
 
@@ -337,7 +337,7 @@ func (s *CombatScene) demoDraw(gs *state.GlobalState, screen *ebiten.Image) {
 //
 // **This is the cheap way to check what a round said**, and it is what the captures were being
 // read for most of the time. It cannot answer a question about colour or spacing, and it is
-// not meant to — it answers "did the combo fire, in the right place, with the right words",
+// not meant to — it answers "did the hand fire, in the right place, with the right words",
 // which is most of them.
 func (s *CombatScene) demoReport(gs *state.GlobalState, label string) {
 	fmt.Printf("\n--- %s ---\n", label)

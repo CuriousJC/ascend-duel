@@ -767,7 +767,7 @@ func prizeVitae(gs *state.GlobalState) int {
 // and the game already has one visual language for that — a name, a border colour and a line
 // saying what it does.
 //
-// It borrows `cards.Hand` rather than taking a style of its own: a worm has no cost and no family,
+// It borrows `cards.Hand` rather than taking a style of its own: a worm has no cost and no form,
 // which that style draws as nothing at all, so what is left is exactly the name and the text. A
 // dedicated style is what this wants once a worm has art.
 func (s *PostBattleScene) drawWorms(gs *state.GlobalState, screen *ebiten.Image) {

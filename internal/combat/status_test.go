@@ -66,7 +66,7 @@ func registerTestRings() map[Element]RingID {
 
 // wearing returns the duelist with rings for the named elements on. **Every status test needs
 // one**, which is the whole point of the 2026-08-16 rule: without a ring an element is a border
-// colour and a combo axis and nothing else.
+// colour and a hand axis and nothing else.
 func wearing(d Duelist, es ...Element) Duelist {
 	for _, e := range es {
 		d = d.Wearing(WornRing{Ring: testRings[e]})
@@ -199,7 +199,7 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 }
 
 func TestOnlyAttacksApplyAStatus(t *testing.T) {
-	// **Decided 2026-08-12**: a plan card carries its element for combos and for the ring
+	// **Decided 2026-08-12**: a plan card carries its element for hands and for the ring
 	// discount and applies nothing. Otherwise a 1-AP Prepare would be as good a status delivery
 	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
 	for _, a := range []ConceptID{Prepare, Plan, Defend} {
@@ -529,7 +529,7 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 	// did not occur.
 	//
 	// **What it does not undo is the hand's own reward** — a stagger is paid on forming the hand,
-	// not on connecting. That is deliberate and is pinned in combo_test.go.
+	// not on connecting. That is deliberate and is pinned in hand_test.go.
 	a := wearing(duelist(10, 5, 500), Lightning)
 	b := wearing(duelist(10, 8, 500), Fire)
 

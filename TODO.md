@@ -76,7 +76,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         row past the cap. **The replacement is not a bigger cap**: the panel wants counts —
         attacks, plans, how many of each colour — rather than every card drawn at once. Owner's
         ideas, owner's call, deferred.
-      - **Worms have no art.** They draw as `cards.Hand` with a zero cost and no family, so what
+      - **Worms have no art.** They draw as `cards.Hand` with a zero cost and no form, so what
         shows is the name and the text. A style of their own is what this wants once there is a
         picture to put on one.
       - **No rarity and no weighting.** Every worm is equally likely to be offered.
@@ -114,7 +114,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       is still there, still costs the player attention, and now buys them nothing.**
       - **This is the design hole to fill, not a bug to fix.** Either the row stops presenting
         itself as orderable, or something starts reading order again.
-      - **Sequence combos are the obvious candidate** and the schema's `run` match kind was
+      - **Sequence hands are the obvious candidate** and the schema's `run` match kind was
         dropped in the same rewrite, so they would have to be rebuilt — and rebuilt differently,
         because a sequence is now a shape *within* the one hand rather than a second blow.
         `MECHANICS.md` §Sequences holds what was lost.
@@ -134,7 +134,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         have to bring its own consumer. The other candidate is a partial interleave where one
         designated fast action jumps a phase, which reintroduces the legibility problem phases
         were adopted to solve.
-      - **The card has no room.** The left column is a family mark over a stack of cost
+      - **The card has no room.** The left column is a form mark over a stack of cost
         dashes, and everything right of it is the effect text; an initiative badge has nowhere
         to go that does not take space from one of the two.
 - [?] **Defence targeting has lost most of its content.** The entry used to be "a defense is a
@@ -142,7 +142,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       **There is only one attack now**, so there is nothing to distribute defences across and
       every raised card answers the same blow.
       - What survives is a weaker question: whether a defence should be able to name something
-        about the incoming hand — its element, whether it forms a combo — rather than a slot.
+        about the incoming hand — its element, whether it forms a hand — rather than a slot.
       - What is definitely gone is the ordering half. See the drag entry above; this is the same
         hole.
 - [ ] **`[?]` Nothing reads recoil, so no enemy deck should hold one yet.** An attack aimed at
@@ -170,11 +170,14 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       | before per-enemy decks | 12 |
       | per-enemy decks, HP left alone | 15 |
       | decks and doubled HP | 44 |
-      | enemies stopped comboing *(2026-08-17)* | 45 |
-      | **the 10% ascent curve — what ships** *(2026-08-17)* | **74** |
+      | enemies stopped hand-forming *(2026-08-17)* | 45 |
+      | the 10% ascent curve *(2026-08-17)* | 74 |
+      | hands narrowed to damage alone *(2026-08-17)* | 84 |
+      | **three matching axes — what ships** *(2026-08-19)* | **76** |
 
-      - So **the decks cost three walls, the doubling twenty-nine, the combo removal one, and the
-        ascent curve another twenty-nine.** Floors 1–2 are untouched — floor 1's outer room is the
+      - So **the decks cost three walls, the doubling twenty-nine, the hand removal one, the ascent
+        curve another twenty-nine and the damage-only narrowing ten — and the three matching axes
+        gave eight back.** Floors 1–2 are untouched — floor 1's outer room is the
         curve's baseline — and everything from floor 3 up is a wall.
       - **This is accepted rather than open** *(2026-08-16, owner's call)*. The deep tower is meant
         to need a build, and **rings are what gets the player over those walls** — so the number to
@@ -194,22 +197,39 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Every balance figure this repo has ever recorded was measured against the multi-blow
         model and is deleted rather than annotated.** `MECHANICS.md` says what has to be
         re-measured; nothing should be tuned off memory of the old table.
-- [ ] **The combo ladder has not been tuned since the formula changed.** *(2026-08-18)* A blow is
-      `(Σ the hand's own cards) × (hand multiplier)` and `data/combos.json` is the only lever left,
-      which was the point — but the percents are still 150 / 175 / 200 / 300 / 500, chosen when a
-      fixed reference swing was added on top of the cards. At DMG 10 the shift is worth four
-      Lunges 130 → 400, four Jabs 70 → 100, two Lunges 55 → 60 and three Bashes 35 → 30: a buff at
-      the top of the ladder and a nerf at the bottom, because the term it replaced was worth
-      proportionally more to cheap cards.
-      - **Do not tune until `tools/balance` reports a distribution** — see above.
+- [ ] **The ladder is priced against rarity and has never been checked against outcomes.**
+      *(2026-08-19)* All sixteen entries come from `tools/handodds` through
+      `100 + 58.6 × ln(1/P)`, which says a rung pays in proportion to how hard it is to build — and
+      says nothing about whether the resulting fights are good ones. `tools/balance` still reports
+      who won rather than a distribution, so that check cannot be made yet. See the entry above.
+- [ ] **The three axes are a broad buff and nothing on the enemy side answers it.** *(2026-08-19)*
+      `tools/balance` goes 84 walls → **76**, and clear speeds move everywhere: Clear Pod falls to
+      `all-out` in 4 rounds where it took 6. Most of that is not the multipliers — it is that two
+      mismatched attacks now *sum* where the bigger one used to land alone, and that four crush
+      cards became a form Four of a Kind rather than a concept Three of a Kind.
+      - **The lever is the roster or the curve, not the ladder**, if this turns out to be too much:
+        the ladder is now priced against a model and moving it by feel would throw that away.
+- [ ] **The best hand is chosen on multiplier, not on the damage it would deal.** *(predates the
+      axes; easier to hit since)* `Jab Jab Jab Cut Cut` takes the card Three of a Kind at 255 over
+      the card Two Pair at 230, and deals 382 instead of 460, because the trips uses three cards and
+      the two pair four. The fix is to pick on the resulting blow and tie-break on the multiplier —
+      knowable before resolution, so it breaks none of the matching rules.
+- [ ] **`[?]` Two Pair is rarer than Three of a Kind on the form and element axes**, so the ladders
+      are forced to climb against their own rarity at those two rungs — 31% paying less than 61% on
+      form, 23% less than 42% on element. Either the inversion is accepted or those rungs are
+      renamed; poker's ordering is what makes it look wrong.
 - [ ] **Nine walls sit on floors 2–4, and those are a bug.** *(2026-08-17)* The total of
       seventy-four is accepted — see the retune entry above — but a wall on a *shallow* floor is
       the failure `tools/balance` was built for. An unwinnable enemy is invisible while playing,
       because losing slowly looks like losing to bad draws.
-      - **It was one — Dire Wolf — until the ascent curve landed.** Removing the enemies' combos
+      - **It was one — Dire Wolf — until the ascent curve landed.** Removing the enemies' hands
         actually fixed Dire Wolf; the 10% per-room curve then put nine enemies in its place, at
         floor 2's outer room. Amber Slime, Android Mk I, Dire Wolf, Giant Spider, Green Slime II,
         Rot Hound, Sken, Specimen A, Yellow Pod.
+      - **Eight of the nine survived the three matching axes** *(2026-08-19)*, and Yellow Pod falls
+        in three rounds now. The other eight got closer rather than beaten — Rot Hound and Sken go
+        from 30% of the enemy's life left to 7% — so this is still the open entry it was, on a
+        smaller margin.
       - **Floors 1–2 are still clean**, which is the line that matters most: floor 1 is the curve's
         baseline and nothing in the 1–2 or 1–3 bands is a wall.
       - The deep floors are meant to need rings and brands. **Floor two is not**, because there is
@@ -230,12 +250,12 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - This needs the sim to draw, which is the deckbuilder entry below and its seventh stream.
         Until then Plan's price is a guess, and it is the one new card whose value the tool is
         structurally unable to see.
-- [ ] **`[?]` The three attack families differ only in which cards pair with which.** Stab, slash
-      and crush cost the same, hit the same and carry no riders, so a family is a choice of *which*
+- [ ] **`[?]` The three attack forms differ only in which cards pair with which.** Stab, slash
+      and crush cost the same, hit the same and carry no riders, so a form is a choice of *which*
       pair to build and nothing else. That is deliberately where the rework stopped.
-      - What would earn the third family its place is a rider that differs in **kind**: something
+      - What would earn the third form its place is a rider that differs in **kind**: something
         stab does to a defence, something crush does to a status, something slash does across
-        several cards. The concept grid's old rule applies — a family that is only a different
+        several cards. The concept grid's old rule applies — a form that is only a different
         word is three cards and one decision.
 - [ ] **Two levers answer draw variance and neither is priced against the other.** A hand of eight
       from 48 cards is 17% of the deck; `discardsPerRound` throws cards away and Plan widens the
@@ -345,7 +365,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - Hand size is 8 and was sized against a 30-card deck, deliberately left alone when the
         deck grew to 48. **It is a base rather than a fixed size since 2026-08-15** — Plan adds two
         for one round, via `handTarget`. Worth re-deciding once thinning exists, and now also
-        because the attack ladder's one-copy-per-colour shape is what makes half the combo grid
+        because the attack ladder's one-copy-per-colour shape is what makes half the hand grid
         undealable.
 - [ ] **The demo has never shown a plan card resolving.** `demoSeedName` is `three-strikes` and
       `demoClickRun` is `Strike`, so the scripted round plays Strikes and nothing else. The
@@ -353,7 +373,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       has the table's attack/plan break — the row it splits has never had a plan card in it.
       The demo is the only thing that looks at the screen without a person sitting there.
       - **The one-blow rewrite made this more urgent, not less.** Nobody has yet *looked* at a
-        round where five attack cards are announced and one figure lands, or at a combo line
+        round where five attack cards are announced and one figure lands, or at a hand line
         naming a hand and a mix together, or at an attack card that resolved and contributed
         nothing. Those are all screen questions and `go test` cannot answer any of them.
       - Point it at a hand that plays a Defend into a heavy enemy turn. `all-plans` (seed 3) deals
@@ -391,7 +411,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         reads as three actions with no sign that the Jab was outside the hand.
       - **A slot deleted by a stagger**, which the log still writes as though it happened.
 - [ ] **Preview the hand while the player is still planning.** `combat.BlowFor` is exported and
-      is the same function the resolver calls, so a previewed combo would be the combo that fires
+      is the same function the resolver calls, so a previewed hand would be the hand that fires
       by construction rather than by two pieces of code agreeing. Nothing calls it from the
       screen. This is what makes *building toward a shape* legible before DUEL! is pressed rather
       than after.
@@ -533,7 +553,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       now — a *property to avoid destroying*. Deterministic combat plus deterministic
       streams plus a bounded choice space means a run is in principle searchable.
       - What it would give: guaranteeing a daily seed is beatable, difficulty grading a
-        seed by how narrow its winning lines are, and finding degenerate loot combos
+        seed by how narrow its winning lines are, and finding degenerate loot hands
         without playing thousands of runs.
       - Feasibility is unclear and worth being honest about. 24 binary loot choices and 7
         binary floor choices is only ~2^31 paths, which pruning handles easily — but the

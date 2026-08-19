@@ -175,8 +175,8 @@ func main() {
 		"\nNothing does that as of 2026-08-16: no posture beats more than a third of the roster." +
 		"\n\nTwo figures to read next. Eighty-four enemies are walls, beaten by no posture at all," +
 		"\nup from twelve before per-enemy decks, doubled HP and the ascent curve. The decks cost" +
-		"\nthree of that, the doubling twenty-nine, enemies losing their combos one, the 10%" +
-		"\nper-room curve twenty-nine, and combos ceasing to take an action off the opponent the" +
+		"\nthree of that, the doubling twenty-nine, enemies losing their hands one, the 10%" +
+		"\nper-room curve twenty-nine, and hands ceasing to take an action off the opponent the" +
 		"\nlast ten — every one of those ten a hand posture, since nothing else was earning a" +
 		"\nstagger. Floors 1-2 are untouched by the curve, since floor 1's outer room is its" +
 		"\nbaseline, and everything from floor 3 up is now a wall." +
@@ -289,7 +289,7 @@ func outcome(r duelResult) string {
 // could not be worked out two ways; the record now says HP, so copying three fields is the whole
 // of it.
 // **SoloAttacks is set here as well as in entities.NewEnemyFrom** *(2026-08-17)*, which is the
-// price of this function existing at all: an enemy that comboed in the sim and not in the game
+// price of this function existing at all: an enemy that handed in the sim and not in the game
 // would make every number below a measurement of a fight nobody plays.
 //
 // **`fight` is where in the ascent the enemy is met**, and it applies the same curve the game

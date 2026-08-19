@@ -211,17 +211,17 @@ func TestMutingSurvivesHavingNoAudioDevice(t *testing.T) {
 		t.Skip("an audio device was opened; this covers the case where none was")
 	}
 
-	defer SetMuted(false)
+	defer SetMuted(true)
 
-	if Muted() {
-		t.Fatal("the score starts muted")
-	}
-	SetMuted(true)
 	if !Muted() {
-		t.Error("muting with no player did not record the state")
+		t.Fatal("the score no longer starts muted")
 	}
 	SetMuted(false)
 	if Muted() {
 		t.Error("unmuting with no player did not record the state")
+	}
+	SetMuted(true)
+	if !Muted() {
+		t.Error("muting with no player did not record the state")
 	}
 }

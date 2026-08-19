@@ -68,7 +68,7 @@ const handSize = 8
 // could count at a glance for twelve. What the JSON buys is that the deck's *size* is now a
 // consequence of a file the designer can read and edit, rather than of a Go expression.
 //
-// **The rules moved with it on 2026-08-16.** Cost, damage, category and family used to live in
+// **The rules moved with it on 2026-08-16.** Cost, damage, category and form used to live in
 // `internal/combat` as switch statements, and this file declared a cost tier that was checked
 // against them. A card carries its own rules now — `internal/combat` registers the concepts from
 // this same file at init — so there is nothing left to cross-check and `CheckCostTiers` went with
@@ -569,7 +569,7 @@ func (s *CombatScene) drawDeckOverlay(gs *state.GlobalState, screen *ebiten.Imag
 func sortPileEntries(entries []pileEntry) {
 	sort.Slice(entries, func(i, j int) bool {
 		a, b := entries[i], entries[j]
-		if ra, rb := familyRank(a.card.Family()), familyRank(b.card.Family()); ra != rb {
+		if ra, rb := formRank(a.card.Form()), formRank(b.card.Form()); ra != rb {
 			return ra < rb
 		}
 		if ca, cb := a.card.Cost(), b.card.Cost(); ca != cb {
@@ -585,25 +585,25 @@ func sortPileEntries(entries []pileEntry) {
 	})
 }
 
-// familyRank is the order families run in along a deck row: stab, slash, crush, then the plans.
+// formRank is the order forms run in along a deck row: stab, slash, crush, then the plans.
 //
-// **It sorts on family rather than category** *(2026-08-15)*. Category has two values now, so
+// **It sorts on form rather than category** *(2026-08-15)*. Category has two values now, so
 // sorting by it would put nine cards in one undifferentiated block — and the thing a player is
-// looking for in this panel is how much of a family they still hold, because that is what a pair
+// looking for in this panel is how much of a form they still hold, because that is what a pair
 // is counted on.
 //
 // A function rather than the enum's own order, because that order is grouped for the *rules* —
-// it is what an expanded combo ID is derived from. Reading it here would tie how the deck panel
+// it is what an expanded hand ID is derived from. Reading it here would tie how the deck panel
 // is arranged to how hands are numbered, so that changing one silently changed the other.
-func familyRank(f combat.Family) int {
+func formRank(f combat.Form) int {
 	switch f {
-	case combat.FamilyStab:
+	case combat.FormStab:
 		return 0
-	case combat.FamilySlash:
+	case combat.FormSlash:
 		return 1
-	case combat.FamilyCrush:
+	case combat.FormCrush:
 		return 2
-	case combat.FamilyPlan:
+	case combat.FormPlan:
 		return 3
 	default:
 		return 4

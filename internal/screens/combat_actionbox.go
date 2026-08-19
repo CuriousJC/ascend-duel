@@ -579,7 +579,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // previewAttack is the blow the current selection would land if DUEL! were pressed now.
 //
 // **It calls the resolver's own `combat.BlowFor`**, which is what makes a preview trustworthy:
-// the combo shown while choosing is the combo that fires, by construction rather than by two
+// the hand shown while choosing is the hand that fires, by construction rather than by two
 // pieces of code agreeing about what three Strikes are worth. Nothing here knows what a Flurry
 // is.
 //
@@ -590,8 +590,8 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 // `BlowFor` returns a blow with no cards and there is no attack to be one.
 //
 // **This reverses a rule**, and the argument it reverses is worth keeping in view — announcing
-// COMBO! over one Strike would empty the word. What makes it safe is that the label names the
-// *hand* rather than shouting COMBO!: `HIGH CARD!` is an honest name for the commonest turn in the
+// HAND! over one Strike would empty the word. What makes it safe is that the label names the
+// *hand* rather than shouting HAND!: `HIGH CARD!` is an honest name for the commonest turn in the
 // game, and the log still writes a lone attack as an ordinary attack sentence.
 //
 // The turn is ordered with an empty opposing queue, because `ResolutionOrder` is the authority
@@ -606,7 +606,7 @@ func (s *CombatScene) previewAttack() (combat.Blow, bool) {
 //
 // **`Blow.Lead` is a turn index, not a hand one** *(2026-08-16)*, exactly as `Blow.Cards` is —
 // and the name of the hand is looked up through it, so a caller that reached into
-// `s.fighterActions` with it would name the combo after whichever card happened to sit at that
+// `s.fighterActions` with it would name the hand after whichever card happened to sit at that
 // position in the row. The turn is in resolution order; the hand is in the order the player left
 // it.
 func (s *CombatScene) previewBlow() (combat.Blow, []combat.Slot, bool) {

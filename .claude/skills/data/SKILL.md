@@ -16,12 +16,12 @@ is what lets every layer above read it, and it **must never import upward**.
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
-| `combos.json` | `LoadCombos` | the six poker hands and what each multiplies a blow by |
+| `hands.json` | `LoadHands` | the poker hands on each of three matching axes, and what each multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
 
 ## Who may read what, and why it is not "whether it is data"
 
-**Three files are read by `internal/combat` itself**: `combos.json`, `duelist_cards.json` and
+**Three files are read by `internal/combat` itself**: `hands.json`, `duelist_cards.json` and
 `statuses.json`. The rest are consumed by `screens`, `decks`, `session` or `entities`.
 
 **`statuses.json` joined them on 2026-08-17** and passes the same test: how much a status is worth,
@@ -67,7 +67,7 @@ that unmarshals it, and — for anything returning a map — a sorted `…Order`
 enemies'. Eight fields:
 
 `Label` · `Verb` (attack / defend / bank / draw) · `Amount`, read against the verb · `Cost` ·
-`Target` (opponent / self) · `Family` · `Elements` · `Copies`
+`Target` (opponent / self) · `Form` · `Elements` · `Copies`
 
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
   attacks ship one per colour; its plans ship four copies of one colour; an enemy — all `basic`
@@ -80,15 +80,15 @@ enemies'. Eight fields:
   card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
 - **No player card is drab except the plans** *(2026-08-15)*. Attacks are always coloured; the
   plans are basic because nothing they do is elemental.
-- **Enemy cards are all `basic` and `FamilyNone`**, and that is deliberate rather than sloppy.
+- **Enemy cards are all `basic` and `FormNone`**, and that is deliberate rather than sloppy.
   The colour is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
   into an element, so a colour typed into `enemies.json` would pre-empt a mechanic that does not
-  exist. A family would be worse: it would claim an enemy card combos, and combos are the
+  exist. A form would be worse: it would claim an enemy card forms hands, and hands are the
   player's axis.
 
 ### Validation lives at registration, not in a cross-check
 
-**`combat.RegisterConcept` is the validation.** Cost, damage, category and family used to be
+**`combat.RegisterConcept` is the validation.** Cost, damage, category and form used to be
 switch statements over a closed `ActionKind` enum with a `CostTier` in the JSON that
 `data.CheckCostTiers` asserted against them. That held fourteen concepts and could not hold the
 ~400 a per-enemy deck list produces, so the card became a record and both went.
@@ -159,23 +159,46 @@ vocabulary is closed the way the card verbs are — a new one is a Go change plu
 it, never something a file can assert into existence.
 
 **`cost` and `amount` are per-card**, carried on `combat.Card` as `CostDelta` and `AmountPct`, and
-their bounds live in `Card.Cost()` and `Card.Amount()`. **Family and label are still
+their bounds live in `Card.Cost()` and `Card.Amount()`. **Form and label are still
 concept-wide**, so a worm targeting one of those would change every copy of that card in the deck —
 make the argument in MECHANICS.md again before adding one.
 
 **`amount` reaches every card with one worm**, because what the figure means depends on the verb.
 That is the card language paying off, and it is the shape to reach for before adding a target.
 
-### Combos
+### Hands
 
-`combos.json` is **one list**: the six poker hands, High Card through Four of a Kind, each with a
-key, an ID, a name, `groups` and a percent `multiplier`. Exactly one applies, winning on its
-multiplier.
+`hands.json` is **one list of nineteen**: six poker rungs, Pair through Five of a Kind, on each of
+three axes, plus the one High Card they fall back to. Each carries a key, an ID, a name, a `match`,
+`groups` and a percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to
+the narrowest axis.
 
-**A combo is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
-reward vocabulary to extend, no second axis counting colours, and no `scope` field — statuses come
-from elements and rings, and the matcher counts attacks aimed at the opponent because that is what
-`formsBlow` says, not because an entry asked it to. **Adding a rung is one entry in the JSON**;
+**`match` is the axis, and it is required** *(2026-08-19)* — `concept` (copies of the same card),
+`form` (stab/slash/crush) or `element`. A missing or unknown one is refused at init rather than
+defaulted: an entry landing on the wrong axis by omission would be a balance change nobody made.
+`groups` counts distinct values **on that axis**, so `[3,2]` on `element` is three cards of one
+colour and two of another.
+
+**Keys carry the axis and the names are long**: `concept-two-pair` / `form-two-pair` /
+`element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. IDs are banded
+— 1 high card, 10s concept, 20s form, 30s element — so a new axis or rung lands without moving one.
+The five-of-a-kind rungs did exactly that on 2026-08-19, landing as 15, 25 and 35.
+
+**The three ladders are priced apart and are meant to be.** They come from measured reachability
+against the real 48-card deck rather than from poker's ordering: a form pair is a 99% hand at 110
+and a concept Four of a Kind a 0.1% hand at 500. The model is in MECHANICS.md; do not "fix" the
+ladders into agreement.
+
+**Two of the three five-of-a-kind rungs could not be measured, and MECHANICS.md says so entry by
+entry.** An elemental five costs 7 AP against a 6 AP turn and a card five needs a fifth copy of a
+concept the deck does not ship, so their numbers are an extrapolation and a judgement rather than a
+`ln(1/P)`. **Run `go run ./tools/handodds` before changing any of them**, and `-ap 8` for the rung
+the plain budget cannot reach.
+
+**A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
+reward vocabulary to extend, no mix axis counting distinct colours, and no `scope` field — statuses
+come from elements and rings, and the matcher counts attacks aimed at the opponent because that is
+what `formsBlow` says, not because an entry asked it to. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.
 
 **The multiplier multiplies the hand's own cards, and `100` is the identity** *(2026-08-18)*. A
@@ -187,7 +210,9 @@ High Card alone and would be a penalty — deliberately allowed, because taking 
 file is the opposite of what the narrowing was for.
 
 A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
-engine cannot name is the one failure this model produces.
+engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
+wanting more cards than a turn holds, and one wanting more groups than its axis has values, since
+only three forms and four elements ever reach a blow.
 
 ## Adding a file, or a field
 

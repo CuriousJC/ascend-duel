@@ -6,14 +6,14 @@
 Everything here is decided unless marked `[?]`. Read this before proposing a design change,
 and before implementing anything that touches a rule.
 
-**Running code:** cards and categories, phase resolution, combos, the 12-concept / 60-card
+**Running code:** cards and categories, phase resolution, hands, the 12-concept / 60-card
 deck, and the elements and their statuses inside `internal/combat`. Those sections say so.
 Everything else here is design that nothing implements yet.
 
-**Combos are data** as of 2026-08-14 — `data/combos.json`, read by `internal/combat`, which is
+**Hands are data** as of 2026-08-14 — `data/hands.json`, read by `internal/combat`, which is
 the one edge from the rules into that package.
 
-**A turn resolves one attack, and combos are how it is scored** *(2026-08-14)*. This is the
+**A turn resolves one attack, and hands are how it is scored** *(2026-08-14)*. This is the
 largest rules change the game has taken and it reaches into almost every section below: attack
 cards are read as a *set* rather than played one at a time, the hand and the element makeup they
 form are two multipliers that **add**, defends became percentage reductions instead of
@@ -23,7 +23,7 @@ it was re-decided, not because it was left alone.
 **And it is the player's rule, not the game's** *(2026-08-17, owner's call)*. An enemy's attack
 cards resolve **one at a time, in the order its planner chose them**, each landing its own blow —
 `Duelist.SoloAttacks` is the flag and `resolveSoloAttacks` is the phase. See "Enemies do not
-combo" below.
+hand" below.
 
 ---
 
@@ -70,7 +70,7 @@ leads to a second stat and stops there is a step the player must learn and can n
   three distinct budgets** — most of the hand-tuning in that column was never felt by anyone.
 
 **Every enemy's HP doubled in the same change**, at the owner's call: the roster was written
-against a game where a turn landed several small blows, and one blow per turn with combo
+against a game where a turn landed several small blows, and one blow per turn with hand
 multipliers made every fight far shorter than the numbers read. See *Enemies* below for what
 `tools/balance` says about the result, which is not yet a balanced game.
 
@@ -85,7 +85,7 @@ halves whatever is left. A durable combatant is one with high `HP` or earth on i
 that should reduce damage extends one of those three rather than arriving as a fourth system —
 two mechanics quietly stacking is the failure to avoid.
 
-**They compose multiplicatively and in a fixed order**: concept damage, the combo multiplier,
+**They compose multiplicatively and in a fixed order**: concept damage, the hand multiplier,
 the attacker's weight, then every raised defend, then the guard. Weight sits on the attacker's
 side of that line because it says how hard they can still swing; everything after it happens to
 a blow that has already been blunted.
@@ -98,24 +98,24 @@ suggested. Nothing scales with floor today.
 
 ## Cards
 
-### Families and types
+### Forms and types
 
 **Two axes, and they are not the same one** *(2026-08-15)*. `combat.Category` says *when* a card
-resolves and has two values; `combat.Family` says *what kind of card it is* and has four. Category
-is the coarser and is derivable from the family — everything outside Plan is an attack — so the
-**family is what a card puts on its face** and what a combo is counted on.
+resolves and has two values; `combat.Form` says *what kind of card it is* and has four. Category
+is the coarser and is derivable from the form — everything outside Plan is an attack — so the
+**form is what a card puts on its face** and what a hand is counted on.
 
-**The attack set is a 3x3 ladder: three families by three cost tiers, filled**, and the tiers are
-identical across the families. A family is *which* pair you are building toward, never a stronger
+**The attack set is a 3x3 ladder: three forms by three cost tiers, filled**, and the tiers are
+identical across the forms. A form is *which* pair you are building toward, never a stronger
 or weaker way to build one.
 
-| Family | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× |
+| Form | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× |
 |---|---|---|---|
 | **stab** | Jab | Thrust | Lunge |
 | **slash** | Cut | Slash | Cleave |
 | **crush** | Bash | Strike | Smash |
 
-| Family | Concept | AP | Effect |
+| Form | Concept | AP | Effect |
 |---|---|---|---|
 | **stab** | Jab / Thrust / Lunge | 1 / 2 / 3 | Stabs for `DMG/2` (min 1) / `DMG` / `DMG × 2` |
 | **slash** | Cut / Slash / Cleave | 1 / 2 / 3 | Slashes for the same three figures |
@@ -133,36 +133,36 @@ elemental and a coloured Defend would be a colour that meant nothing.
 each buys is a different currency at a rising price: Prepare pays in points, Plan pays in cards,
 Defend pays in survival.
 
-**`Strike` is the 1× reference the ladder is written against**, and that is why the crush family
+**`Strike` is the 1× reference the ladder is written against**, and that is why the crush form
 holds the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, so the figure the player reads
-is what one middle-rung card deals. Nothing stops that reference moving to another family's middle
+is what one middle-rung card deals. Nothing stops that reference moving to another form's middle
 rung; it is one constant. **What it is no longer is a term in the damage formula** *(2026-08-18)* —
 a hand's multiplier applies to the cards that formed it, not to a reference swing added on top, so
 `DMG` reaches a blow only through the cards themselves.
 
-**The opponent has two cards of its own and they belong to no family** — `Attack` (2 AP, `DMG`) and
-`Heavy` (3 AP, `DMG × 2`), priced against the player's tiers. `FamilyNone` is a real answer rather
-than a fallthrough: families are the *player's* deck axis, and an enemy card claiming to be a crush
-would be claiming membership of a deck the player can combo with. They draw with a blank corner.
+**The opponent has two cards of its own and they belong to no form** — `Attack` (2 AP, `DMG`) and
+`Heavy` (3 AP, `DMG × 2`), priced against the player's tiers. `FormNone` is a real answer rather
+than a fallthrough: forms are the *player's* deck axis, and an enemy card claiming to be a crush
+would be claiming membership of a deck the player can build hands against. They draw with a blank corner.
 
-**What the three families do not yet have is a reason to be three.** They cost the same, hit the
+**What the three forms do not yet have is a reason to be three.** They cost the same, hit the
 same, and differ only in which cards pair with which. That is enough to make a hand a *choice* —
 holding two Cleaves is not the same as holding a Cleave and a Smash — and it is deliberately the
-whole of it for now. Riders that differ in *kind* per family are the shape to reach for next, and
-the grid's old rule applies: a family that is only a different word is three cards and one
+whole of it for now. Riders that differ in *kind* per form are the shape to reach for next, and
+the grid's old rule applies: a form that is only a different word is three cards and one
 decision.
 
 **Every card carries its effect in words on its face**, verb first, filling the card beside the
-cost column. The attack text names the family's verb — "Stabs for 2x DMG" — rather than opening
+cost column. The attack text names the form's verb — "Stabs for 2x DMG" — rather than opening
 "Deal" on all nine, so the corner letter is not carrying the distinction alone. The wording is
 `cardEffects` in `internal/screens`, beside the prose the fight log uses: the rules package
 names actions and never describes them. **Short words are a hard constraint** — the column is about
 a dozen characters wide — and two tests hold the wording to it.
 
 **The corner mark is a letter, and that is scaffolding** *(2026-08-15)*. S for stab, **D for
-slash** — Stab took the S first, and two families sharing an initial would leave the corner saying
-nothing — C for crush, P for plan. The glyph machinery is untouched underneath: `cards.Family.glyph()`
-returns nothing for every family today, and putting silhouettes back is one return value.
+slash** — Stab took the S first, and two forms sharing an initial would leave the corner saying
+nothing — C for crush, P for plan. The glyph machinery is untouched underneath: `cards.Form.glyph()`
+returns nothing for every form today, and putting silhouettes back is one return value.
 
 ### Every raised plan answers the blow, and they multiply
 
@@ -176,7 +176,7 @@ of a four-to-six point budget is most of a round, which is what a halving is mea
 Multiplying rather than adding is what stops several cards reaching past zero by accident: two
 Defends take three quarters and a third takes seven eighths, a curve that never arrives.
 
-**The plan family is three cards where the attack ladder is nine**, and it is deliberately not a
+**The plan form is three cards where the attack ladder is nine**, and it is deliberately not a
 3x3 grid of its own. Prepare is the cheapest card in the game and Defend the dearest; what sits
 between them is one card rather than a rung, because a grid filled with cards that differ only by a
 number is the trap this deck was rebuilt to avoid.
@@ -190,19 +190,21 @@ four copies — because a plan has no elemental behaviour to carry.
 36 + 12 = **48 cards**, implemented. A hand of eight against that is 17% of the deck, against 27%
 when the deck was 30. What answers draw variance is the Discard button and now Plan.
 
-**Four copies of a concept is the ceiling, and it shapes the combo table.** No attack concept
-exists more than four times, so the top rung of the ladder is Four of a Kind rather than five of a
-kind, and **a Four of a Kind necessarily shows all four colours** — four copies of a concept are
-four different elements, so the biggest hand in the deck is also the one that lands every status
-the player is ringed for.
+**Four copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
+No attack concept ships more than four times, so **a Card Four of a Kind necessarily shows all four
+colours** — four copies of a concept are four different elements, so it is also the hand that lands
+every status the player is ringed for. **The ladder still goes to five** *(2026-08-19)*: five of one
+*form* is a 1-in-2700 turn off the starting deck and five of one *colour* is reachable once a
+Prepare has banked, while a Card Five of a Kind needs a fifth copy of a concept and so exists only
+after a `duplicate` worm. See the reachability table below.
 
-**The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the family and
+**The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the form and
 category each declares, the elements each ships in, and how many copies. `startingDeck` is built
 from it.
 
 ### The card language
 
-**A card carries its own rules** *(2026-08-16)*. Cost, damage, category and family used to be
+**A card carries its own rules** *(2026-08-16)*. Cost, damage, category and form used to be
 switch statements over a closed `ActionKind` enum of fourteen constants, with the JSON declaring a
 `CostTier` that was checked against them. That holds twelve player cards. It cannot hold three or
 four bespoke cards for each of ninety-six enemies — roughly four hundred concepts, each wanting its
@@ -217,7 +219,7 @@ Eight fields, and the player's twelve are written in the same language as every 
 | `Amount` | read against the verb: % of DMG, % off the blow, points banked, cards drawn |
 | `Cost` | action points |
 | `Target` | **opponent · self** |
-| `Family` | stab / slash / crush / plan, or none — the player's deck axis |
+| `Form` | stab / slash / crush / plan, or none — the player's deck axis |
 | `Elements` | which colours the concept ships in |
 | `Copies` | how many of each |
 
@@ -246,7 +248,7 @@ to decide.
 playing-card instinct argues for 13 ranks × 4 suits, and the fifth "suit" here is `basic` — which
 this document calls the absence of an element, not a colour of its own. With `basic` a variant the
 attacks live on multiples of five; without it nothing is plain. The ladder decides it instead: nine
-attack concepts is what three families by three tiers produces.
+attack concepts is what three forms by three tiers produces.
 
 ### Long press
 
@@ -318,7 +320,7 @@ applying anything.
 
 **Why the reversal.** Statuses given away free left the first three rings with nothing to *be* —
 every ring had to invent a second mechanic to sell, because the thing its element does was
-already happening. Charging a ring for it makes the element set a combo axis on its own terms and
+already happening. Charging a ring for it makes the element set a hand axis on its own terms and
 makes a ring the thing that turns a colour into a rule. It also gives the loot a shape: what a
 ring buys is legible in one line of card text, and the second and third rings are worth buying
 because one ring is one element.
@@ -382,7 +384,7 @@ is what everything that spends or checks a budget reads.
 **Decided, rewritten by one blow per turn, and rewritten again by the ring grammar** *(2026-08-17)*.
 The rings match against **the cards that formed the attack**, and each `apply-status` they fire lands
 once however many cards matched it — so the four elemental rings still read as "one status per
-distinct non-basic colour", and a family or concept ring reaches the same moment by the same route.
+distinct non-basic colour", and a form or concept ring reaches the same moment by the same route.
 An all-basic hand lands nothing, because no elemental rule matches a colourless card. A plan card
 carries its element for the ring discount and applies nothing itself;
 the alternative — every card applying its status — would make a 1-AP Prepare as good a delivery as
@@ -456,7 +458,7 @@ stacks; with stacking gone the ceiling is the number itself.
 - The stream advances **per attack phase**, so a change early in a duel reshuffles every roll
   after it. That is the cost `MECHANICS.md` predicted when it argued against the roll; it is
   real and it is now paid.
-- It breaks the rule combos otherwise follow — *what you committed to cannot be silently undone*.
+- It breaks the rule hands otherwise follow — *what you committed to cannot be silently undone*.
   Lightning is the deliberate exception, and it is the only one.
 
 #### The rest, and what each cost
@@ -467,8 +469,8 @@ stacks; with stacking gone the ceiling is the number itself.
   and the front of a turn is its attacks — so ice costs a swing. What that cost: an AP cut was
   felt while the player was still choosing, and a card taken off a committed turn is felt after
   they have.
-  - **It is the only thing in the game that takes an action** *(2026-08-17)*. Combos could until
-    then, and the machinery was shared; combos buy damage alone now, so the chill is read straight
+  - **It is the only thing in the game that takes an action** *(2026-08-17)*. Hands could until
+    then, and the machinery was shared; hands buy damage alone now, so the chill is read straight
     off the status and `Duelist` carries no separate counter. The action points are **not**
     refunded: a chill is tempo *and* economy.
   - **It bites on every turn it outlives**, rather than being spent when it bites — the status
@@ -490,7 +492,7 @@ stacks; with stacking gone the ceiling is the number itself.
     burn changes a life total with nobody acting. **A burn can kill**, and produces a
     `KindDefeated` when it does.
 - **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
-  so the order is: the hand's own cards, the combo multiplier, the attacker's weight, then every
+  so the order is: the hand's own cards, the hand multiplier, the attacker's weight, then every
   raised plan card. Everything the defender does therefore happens to a blow that has already been
   blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
   predictable from the reductions already in the game. **25% rather than the 10% it was**, because
@@ -562,14 +564,14 @@ plans are now the only cards that still resolve one at a time, because each does
 its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
-a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "COMBO!
+a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "HAND!
 Duelist lands a Pair (20 x 1.5 = 30), 30 damage". Five lines saying a Strike was
 swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
-forms no hand still gets its own ordinary sentence**, because a High Card is not a combo and
+forms no hand still gets its own ordinary sentence**, because a High Card is not a hand and
 announcing one over every attack would empty the word.
 
 **The sentence is a record, and it is no longer the only thing that says what a blow was made of**
-*(2026-08-18)*. The combo dialog acts the sum out at the size of the screen on the beat the hand
+*(2026-08-18)*. The hand dialog acts the sum out at the size of the screen on the beat the hand
 fires — the hand's name shouted beside the cards it names, then each card's own figure flying down
 into a line, then the multiplier, then the answer. It exists because the Resolution feed's line was sixteen
 points of arithmetic on the third row of a three-row box: it *recorded* the sum correctly and never
@@ -636,26 +638,26 @@ candidate models are recorded in `TODO.md`; this is a fourth.
 
 ---
 
-## Combos
+## Hands
 
 **This is where the game is meant to be.** Throwing whatever you drew at the opponent works;
-*choosing a shape* and building a deck toward it is meant to work better. Combos are the
+*choosing a shape* and building a deck toward it is meant to work better. Hands are the
 mechanism that pays for that choice.
 
-**A combo is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. It buys no
+**A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. It buys no
 status, no action points and no action off the opponent's turn. Statuses come from **elements
 and the rings that arm them**, and that split is the whole reason this section is now short:
 there is one axis, one number per rung, and one place to look for what a hand is worth.
 
-Combos are **discovered**, not given, and discovery persists on the **profile** — part of the
-roguelike unlock structure, not the run. No profile exists yet, so every combo is currently
+Hands are **discovered**, not given, and discovery persists on the **profile** — part of the
+roguelike unlock structure, not the run. No profile exists yet, so every hand is currently
 live; when one does, discovery gates the *table* and nothing else changes.
 
 ### The catalogue is data
 
-*`data/combos.json`, with `data/combos_data.go` holding its shape and
-`internal/combat/combo_table.go` turning it into rules. The vocabulary and the matcher are in
-`combo.go`.*
+*`data/hands.json`, with `data/hands_data.go` holding its shape and
+`internal/combat/hand_table.go` turning it into rules. The vocabulary and the matcher are in
+`hand.go`.*
 
 **`data` holds the shape, `internal/combat` holds the meaning**, which is the division
 `RegisterConcept` already draws for the deck lists. The file says how many copies of a card a rung
@@ -670,20 +672,57 @@ imports nothing but the standard library, so the edge costs `internal/combat` ne
 testability nor its freedom from Ebitengine.
 
 **A malformed catalogue panics at package init**, exactly as a deck whose declared cost tiers
-disagree with the rules does. A combo silently dropped is a balance change nobody made.
+disagree with the rules does. A hand silently dropped is a balance change nobody made.
 
-### The pattern: one axis, and it wears poker's names
+### The pattern: three axes, and they wear poker's names
 
-A hand counts **copies of an attack concept** in the cards that formed one attack — which is
-exactly what a poker hand counts, so it wears poker's names honestly: High Card, Pair, Two Pair,
-Three of a Kind, Full House, Four of a Kind.
+A hand counts **cards that agree** in the set that formed one attack — which is exactly what a
+poker hand counts, so it wears poker's names honestly: High Card, Pair, Two Pair, Three of a Kind,
+Full House, Four of a Kind.
+
+**What they have to agree *on* is the hand's own axis** *(2026-08-19, owner's call)*, and there are
+three:
+
+| Axis | Cards agree on | Two that form a pair | Two that do not |
+|---|---|---|---|
+| `concept` | the same card | ice Bash + fire Bash | Bash + Strike |
+| `form` | stab, slash or crush | Bash + Smash (both crush) | Bash + Thrust |
+| `element` | fire, ice, lightning or earth | ice Bash + ice Thrust | ice Bash + fire Bash |
+
+**Every rung exists once per axis**, as its own catalogue entry rather than as one entry with three
+readings — so a Card Three of a Kind and an Elemental Three of a Kind can be priced apart, which
+they have to be: one wants three copies of a nine-copy concept and the other three of nine cards
+sharing a colour.
+
+**The axes are not parallel, and the nesting is the thing to hold onto.** A concept fixes a form,
+so **every card hand is also a form hand**; element is independent of both, which is why an ice
+Bash beside a fire Bash is a card hand and no kind of elemental one. That asymmetry is what the
+tie-break and the multiplier ordering below both exist to answer.
+
+**A card with no value on an axis matches nothing on it.** `FormNone` and `Basic` are absences
+rather than values, so an enemy's formless colourless deck cannot build a form or an elemental hand
+at all — its whole ladder is the concept axis, which is what its `Copies` field was always buying.
+The player's plans are basic too, though they have already been excluded for being plans.
+
+**Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Bashes satisfy the
+Card Pair and the Form Pair at once; the narrower one is what the player aimed at, so `concept`
+beats `form` beats `element` whenever the multipliers are level. `combat.Axis` is written in that
+order for exactly this reason and is never serialized, so the order is free to mean something.
 
 **Exactly one hand applies.** It wins on its multiplier — four Strikes are a Four of a Kind rather
-than also the pair and the trips inside it — so a turn produces one combo with no ranking
+than also the pair and the trips inside it — so a turn produces one hand with no ranking
 machinery beyond that comparison.
 
 **A lone attack forms no hand.** That is the fallback: when nothing counts, the single
 hardest-hitting attack card is the blow, ties going to the card queued first.
+
+**The fallback almost never fires any more, and that is the biggest single consequence of the three
+axes** *(2026-08-19)*. Two attacks used to have to be the same card to both count; now they need
+only share a form or a colour, so a turn of two mismatched attacks that landed the bigger one alone
+lands the sum of both times a multiplier. Smash + Strike at DMG 10 goes from **20** — the Smash, by
+itself — to **33**, and none of that comes from the multiplier being generous: 1.1x of two cards
+beats 1.0x of one. Two attacks that agree on nothing at all are now the rare case rather than the
+common one, and the High Card is what names it.
 
 **Attack cards outside the hand contribute nothing.** `Strike, Jab, Strike` is a Pair; the Jab is
 announced, is not in the hand, adds no damage and carries no colour. That is a stated rule rather
@@ -721,12 +760,12 @@ swing of one 1× attack at the attacker's strength, *added on top of* what the c
 percent therefore bought a **fixed figure rather than a proportion**: at DMG 10 a Four of a Kind
 was worth +50 whether it was built from four Jabs dealing 5 each or four Lunges dealing 20 each —
 2.5× the base in the first case and 0.6× in the second. **The ladder paid least to the decks that
-had climbed furthest**, which is backwards, and the arithmetic could not be read off `combos.json`
+had climbed furthest**, which is backwards, and the arithmetic could not be read off `hands.json`
 because the number the percent applied to was not in the file.
 
 Two things follow and both were the reason for the change:
 
-- **The ladder is tunable from `data/combos.json` alone.** The percent now applies to a figure the
+- **The ladder is tunable from `data/hands.json` alone.** The percent now applies to a figure the
   file's reader can see, so an entry means what it says.
 - **A hand is worth more on bigger cards, in proportion.** A Pair of Lunges beats a Pair of Jabs by
   exactly the 4× the cards themselves are apart.
@@ -734,14 +773,14 @@ Two things follow and both were the reason for the change:
 **The High Card pays the identity** *(2026-08-18)*. When a turn builds no pair or better, the
 single hardest-hitting attack card is the blow and what lands is exactly its face damage — which
 is now `×1` rather than the `×0` it carried while the multiplier was a bonus term, since ×0 would
-be an attack phase that dealt nothing. It is in `combos.json` with a name and an ID so the log can
+be an attack phase that dealt nothing. It is in `hands.json` with a name and an ID so the log can
 say what happened on the turn that happens most often; **a blow the engine could not name is the
 one failure this model can have**, which is why the loader panics without it.
 
 **It is fallen back to rather than matched.** Counting is the wrong way to pick it — `matchCountOf`
 fills groups largest-count-first and would hand back whichever concept appeared most, not the card
 that hits hardest — so `matchHand` skips every one-card hand and `biggestAttack` answers the
-question on damage. `Blow.Formed()` draws the same line for the screen's combo preview: the High
+question on damage. `Blow.Formed()` draws the same line for the screen's hand preview: the High
 Card is a hand, and it is not something anybody built.
 
 **Colour buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
@@ -752,17 +791,20 @@ is all that survives of the second axis.
 ### What the axis cost, recorded honestly
 
 - **Counted matching only.** A hand reads the turn as a set, so a Jab between two Strikes does
-  not break the pair. The **run** match kind — N consecutive cards, which a sequence combo needs
+  not break the pair. The **run** match kind — N consecutive cards, which a sequence hand needs
   — is gone. The consequence is below, under *Sequences*.
 - **A hand cut short still pays out.** Nothing can interrupt it — a turn's attacks resolve as one
   event — so this is true by construction rather than by rule.
-- **The bottom rung fires constantly.** Any two copies of one attack is a pair, which is most
-  turns. `[?]` **Watch whether Pair should pay a multiplier at all**, or whether the ladder should
-  start at Two Pair.
-- **Poker's ranking does not transfer to this deck**, and the multipliers above are first
-  drafts. Poker's ordering comes from 52 cards, 4 suits and 13 ranks; here a rank has 4 copies
-  and a colour has 9. `tools/seeds` already searches real hands and is the place to measure
-  before tuning further.
+- **The bottom rung fires constantly**, and as of 2026-08-19 it is priced as such: the form and
+  elemental pairs are 98–99% hands paying 110, which is a floor rather than a reward. The open
+  question of whether the ladder should start at Two Pair is **answered by pricing instead** — a
+  near-certain rung pays near the identity, so it costs nothing to leave it in and it keeps the
+  bottom of the ladder legible.
+- **Poker's ranking does not transfer to this deck, and the ladders are now priced off measured
+  rarity rather than off poker** *(2026-08-19)*. Poker's ordering comes from 52 cards, 4 suits and
+  13 ranks; here a concept has 4 copies, a colour 9 and a form 12, and the turn is bounded by AP
+  rather than by the draw. See *The multipliers come from how often a hand can actually be built*
+  above for the model and the table.
 - **Narrowing to damage alone cost ten enemies, measured** *(2026-08-17)*. `tools/balance` goes
   from 74 walls out of 96 to **84**, and every one of the ten is a hand posture — `trips` lost
   eleven wins and `cheap-trips` five, while the four coloured postures lost none. **What was doing
@@ -780,6 +822,14 @@ is all that survives of the second axis.
   table as "no posture crossed the win/lose line", never as "nothing changed", and treat
   multi-sample or rounds-to-kill reporting as the thing the tool needs before this ladder is tuned
   against it.
+- **The three axes are a broad buff, measured** *(2026-08-19)*. `tools/balance` goes from **84
+  walls out of 96 to 76**, and the roster table moves everywhere rather than at the margin: Clear
+  Pod falls to `all-out` in 4 rounds where it took 6, and to `cheap-trips` in 2 where it took 4.
+  Almost none of that is the multipliers. Two things did it — a turn's mismatched attacks now
+  *sum* instead of the biggest one landing alone, and `cheap-trips` (Bash Bash Bash Strike, four
+  crush cards) stopped being a concept Three of a Kind at 200 and became a **form Four of a Kind at
+  320**. **Nothing on the enemy side was retuned to absorb it**; the ascent curve and the roster are
+  exactly what they were, so this is the size of the shift before any answer to it.
 - **The change is a buff at the top and a nerf at the bottom.** A hand of the dearest cards gains
   and a hand of the cheapest loses, because the fixed term it replaced was worth proportionally
   more to small cards. At DMG 10: four Lunges go 130 → **400**, four Jabs 70 → **100**, three Bashes
@@ -789,31 +839,127 @@ is all that survives of the second axis.
 
 ### The catalogue's shape
 
-`data/combos.json` holds one list. **A hand carries a key, an ID, a name, `groups` and a
-`multiplier` in percent** — nothing else. `groups` naming *distinct* concepts is why `[3,2]` is a
-full house and can never be satisfied by five of one card.
+`data/hands.json` holds one list of **nineteen** entries: six rungs on each of three axes, plus the
+one High Card they all fall back to. **A hand carries a key, an ID, a name, a `match`, `groups` and
+a `multiplier` in percent** — nothing else. `groups` naming *distinct values on the hand's own axis*
+is why `[3,2]` is a full house and can never be satisfied by five cards sharing one value.
 
-**Adding a rung is one entry.** There is no reward vocabulary to extend and no second axis to keep
-in step, which is the point of narrowing it: the only thing a new entry can say is what shape it
-wants and what that shape is worth.
+**`match` is required and never defaulted.** An entry that landed on the wrong axis by omission
+would be a balance change nobody made, so a missing or unknown one is refused at init like any other
+malformed record. Two further refusals live beside it: a hand wanting more cards than a turn holds,
+and one wanting more groups than its axis has values — only three forms and four elements ever reach
+a blow, so a four-group form hand is a rung nobody could climb and would otherwise fail silently.
 
-**Combo IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
-be the base in `combos.json` plus the card's enum value, so inserting a card mid-enum shifted every
+**A hand names one axis, not one per group.** A mixed hand — three ice cards *and* a pair of
+Bashes — is deliberately not expressible; reopening it is a schema change and should be argued for
+here first.
+
+**Keys carry their axis and the names are long, for now** *(2026-08-19, owner's call)*.
+`concept-two-pair`, `form-two-pair`, `element-two-pair`; on screen, **Card Two Pair**, **Form Two
+Pair**, **Elemental Two Pair**. The file's word is `concept` and the player's is *Card*, which is
+the one deliberate mismatch — a player has never heard of a concept. The longest name is
+`ELEMENTAL THREE OF A KIND!`; it measured 1220 pixels of a 1280-wide screen while the name was
+shouted at 124 points, and about 790 since the name settled at one size of 80.
+`TestTheWidestHandNameFitsTheScreen` is what fails if a name or a type size grows past the screen.
+
+**Adding a rung is one entry.** There is no reward vocabulary to extend, which is the point of the
+narrowing: the only things a new entry can say are which axis it counts on, what shape it wants, and
+what that shape is worth.
+
+### The multipliers come from how often a hand can actually be built *(2026-08-19)*
+
+The three ladders are **not** the same numbers, because the axes are nowhere near equally hard. The
+starting deck is 36 attack cards — **4 per concept, 12 per form, 9 per element** — dealt into a hand
+of eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is priced against
+rather than poker's.
+
+Reachability, from a two-million-hand simulation of round one — *can this turn afford some set
+forming this rung* — with the multiplier each was given:
+
+| Rung | concept | | form | | element | |
+|---|---|---|---|---|---|---|
+| | reach | pays | reach | pays | reach | pays |
+| Pair | 78.9% | 115 | 99.5% | 110 | 98.4% | 110 |
+| Two Pair | 10.8% | 230 | 31.3% | 170 | 23.6% | 185 |
+| Three of a Kind | 7.1% | 255 | 60.7% | 180 | 42.3% | 195 |
+| Full House | 0.39% | 425 | 2.7% | 310 | 1.1% | 365 |
+| Four of a Kind | 0.11% | 500 | 5.2% | 320 | 1.8% | 375 |
+| Five of a Kind | — | 745 | 0.036% | 565 | — | 665 |
+
+The rule that produced them: **`100 + 58.6 × ln(1/P)`, floored at 110, rounded to five, then forced
+to climb within each ladder.** The constant is set by anchoring the rarest hand in the game — a
+concept Four of a Kind, one turn in a thousand — at the 500 it already carried, so the concept
+ladder is recognisably the tuned one it was and the other two are priced off the same curve.
+
+**The five-of-a-kind row is the one that is not all measurement** *(2026-08-19)*, and it is written
+out because a number that came from somewhere else must not read as one that came from the tool:
+
+- **Form Five of a Kind, 565, is straight off the curve.** 0.036% is one turn in 2,774 — five cards
+  of one form is four 1 AP copies plus a 2 AP one, exactly the 6 AP budget — which makes it the
+  rarest thing a round-one hand can actually build, rarer than a Card Four of a Kind, and it is
+  paid accordingly.
+- **Elemental Five of a Kind, 665, is an estimate.** Five cards of one colour cost 7 AP at the
+  cheapest, since a colour holds one card per form per tier, so its round-one reachability is
+  **zero** and `ln(1/P)` has nothing to work with. It was measured at 8 AP instead — the turn after
+  a Prepare — where form five is 0.859% and element five 0.160%, a gap of 98.5 on the curve, and
+  that step was added to the form rung's price. `go run ./tools/handodds -ap 8` is the run.
+- **Card Five of a Kind, 745, is a judgement.** The starting deck ships four copies of a concept,
+  so nothing can deal a fifth: the rung exists for the `duplicate` worm and cannot be measured
+  against any deck the tool models. It carries the concept-over-form premium the ladder already
+  shows — +75 at trips, +115 at the full house, +180 at four of a kind — applied once more at
+  +180 over the form rung. **It is the one number in the table with no probability behind it**, and
+  the thing to re-derive first if the worm ever makes five copies common.
+
+Three things fall out of it and are worth keeping:
+
+- **A near-certain hand pays near the identity.** The form and elemental pairs are 98–99% hands, so
+  they are a floor rather than a reward — what they buy is the *sum of both cards*, which is
+  already most of the change.
+- **The narrower axis pays more at every rung**, which is what stops the nesting from making the
+  concept ladder dead content: a card hand is always also a form hand, so if the form rung paid the
+  same, nobody would ever have a reason to build the narrower one.
+  `TestANarrowerAxisPaysMore` holds it.
+- **The ladders cross, and that is intended.** A form Three of a Kind (180) pays less than a card
+  Two Pair (230) though it uses fewer cards, because it is eight times as easy to build.
+
+`[?]` **Two Pair is rarer than Three of a Kind on the form and element axes** — 31% against 61%,
+23% against 42% — because the binding constraint here is cards and AP, not draws: two pair needs
+four cards across two values where trips needs three of one. Rarity alone would price two pair
+*above* trips and invert the poker ordering the names promise. The ladders are forced to climb
+instead, so those two rungs are the least rarity-honest numbers in the table. Fixing it properly
+means either accepting the inversion or renaming the rungs.
+
+`[?]` **The best hand is chosen on multiplier, not on what it would deal**, and now that the
+multipliers no longer climb with card count across axes, those two can disagree. A turn of
+`Jab Jab Jab Cut Cut` has a card Three of a Kind (255, three cards) and a card Two Pair (230, four
+cards); the matcher takes the trips at 382 damage where the two pair was worth 460. **This predates
+the three axes** — the old ladder had the same hole at 200 against 175 — but it is easier to hit
+now. The fix is to pick on the resulting blow and tie-break on multiplier, which is knowable before
+resolution and stays deterministic; it is not done, because it is a rules change beyond the axis
+work.
+
+**Hand IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
+be the base in `hands.json` plus the card's enum value, so inserting a card mid-enum shifted every
 ID above it — an open question against profile discovery. One entry now covers every concept in the
 game, so there is **one ID per catalogue key** and it is written down rather than derived.
-Reordering the cards cannot renumber a combo a player has already found. They run 1–6 in ladder
-order, renumbered on 2026-08-17 while no profile exists to record them; once one does, they freeze.
+Reordering the cards cannot renumber a hand a player has already found. **They are banded by axis**
+— 1 for the High Card, 10–15 concept, 20–25 form, 30–35 element — renumbered on 2026-08-19 while no
+profile exists to record them. The banding paid for itself the same day: the five-of-a-kind rungs
+landed as 15, 25 and 35 without moving a single existing ID. Once a profile does exist, they
+freeze.
 
 **Straights are dropped rather than invented** — the concepts have no natural order to be
 consecutive in.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
-whole round on Prepares. That trade is the combo working as intended.
+whole round on Prepares — and five *Strikes* is not even dealable, the deck holding four. That
+trade is the hand working as intended, and it is why the five-of-a-kind rungs are the cheapest
+cards of a form or a colour rather than of a concept.
 
 ### Sequences — the capability the rewrite dropped
 
-**There are no ordered combos, and there is no longer a way to write one.** The schema's `run`
+**There are no ordered hands, and there is no longer a way to write one.** The schema's `run`
 match kind went with the rewrite, so `ice Strike then fire Strike` cannot be expressed at all.
 
 Two entries were recorded here as buildable and are **not**: *Burnt Icecube* (ice then fire,
@@ -826,33 +972,33 @@ cost* under Resolution, and the defend section under Cards.
 should stop being presented as a decision, or something has to read order again. Sequences are
 the obvious candidate and would need the run matcher rebuilt against the one-blow model — a
 sequence is a shape *within* the hand, not a second blow. Extinguishing Strike additionally needs
-a reward that *consumes* a status — and since a combo now pays damage and nothing else, that is a
+a reward that *consumes* a status — and since a hand now pays damage and nothing else, that is a
 larger change than it was: it would mean reopening the reward vocabulary this narrowing closed.
 
 ### Requirements
 
-- **Combos are rules and live in `internal/combat`**, matching on the resolved cards. The
+- **Hands are rules and live in `internal/combat`**, matching on the resolved cards. The
   screen must never derive one; that is what makes the written account structurally incapable
   of lying about the round.
-- **A `KindCombo` event** carrying what fired. *Done.* It carries a `HandID`, the multiplier and
+- **A `KindHand` event** carrying what fired. *Done.* It carries a `HandID`, the multiplier and
   the list of cards that formed the hand, and the screen looks the name up with `HandByID` — so a
-  combo renamed is renamed once.
-- **The combo event carries its own card list, not a span.** A counted hand is not contiguous —
+  hand renamed is renamed once.
+- **The hand event carries its own card list, not a span.** A counted hand is not contiguous —
   Two Pair can be two cards, a card that earned nothing, and two more — so the screen brackets
   what the engine names and never derives it from a pattern length.
 - **`KindChilled` counts as a slot in playback** even though nothing happened, or the
   log runs a row short for the rest of the round.
-- **A place to browse combos** — a reference the player can return to. Probably belongs with the
+- **A place to browse hands** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
-- **The attack phase writes one line, and it is the combo's.** *Done.* Attack cards no longer draw
+- **The attack phase writes one line, and it is the hand's.** *Done.* Attack cards no longer draw
   a row each — a turn of five Strikes read as five actions and one figure, which is the model the
   pane was contradicting. The line carries the arithmetic (`20 x 1.5 = 30`) off the event, so
-  the sum shown is the sum used, and the damage attaches to it. **The combo dialog now carries the
+  the sum shown is the sum used, and the damage attaches to it. **The hand dialog now carries the
   same arithmetic at the size of the screen**, spelled out card by card; the line stays because it
   is the record and the dialog is the moment. **What is still not drawn** is a row that a chill
   deleted; that one stands.
 - **A preview of the hand while planning is wanted and does not exist.** `BlowFor` is exported
-  and is the same function the engine uses, so a previewed combo would be the combo that fires by
+  and is the same function the engine uses, so a previewed hand would be the hand that fires by
   construction. Nothing calls it from the screen yet.
 
 ---
@@ -882,15 +1028,15 @@ reverses the reason it was made a method — "so a brand or ring raising it has 
   The catalogue loader enforces it directly: **a hand asking for more cards than a turn can hold
   is refused at package init.**
 - **A growable cap would dilute every shape as it grew.** A Four of a Kind is an all-in commitment
-  at a cap of five and routine at a cap of seven. The combos would quietly get cheaper every time
+  at a cap of five and routine at a cap of seven. The hands would quietly get cheaper every time
   capacity went up, which is the opposite of a reward for building toward them.
 - **It is still a method, and still should be.** Rings and brands need somewhere to bite for
   everything *else* they do, and a method that reads the duelist costs nothing. What changed is
-  that this particular lever is off the table: **no ring, brand or combo raises `MaxActions`.**
+  that this particular lever is off the table: **no ring, brand or hand raises `MaxActions`.**
 
 The consequence for the banking card: a plan cannot buy action slots, so Prepare buys
 points instead (+2). An earlier draft of a 4-AP bank granted +2 AP and +2 slots specifically to reach
-six- and seven-card combo hands; that is exactly the dilution above and it was cut.
+six- and seven-card hand hands; that is exactly the dilution above and it was cut.
 
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
 than incidental — and with the cap frozen, a discount ring's ceiling is five free cards rather
@@ -919,7 +1065,7 @@ moment lands on, and the questions to put to a new ring idea live in
 shape.
 
 **A ring is the only collected thing that is never played.** A card resolves in the turn you
-queued it, a worm fires when you pick it, a combo is scored when the attack phase runs — each
+queued it, a worm fires when you pick it, a hand is scored when the attack phase runs — each
 already knows *when*. A ring waits, so it says so itself, and that is the third part the card
 language does not need.
 
@@ -939,7 +1085,7 @@ language does not need.
 
 **What the grammar cost, and every item was real work:**
 
-- `Duelist.Rings` was `[ElementCount]bool`, which a family multiplier had no element to be a bit
+- `Duelist.Rings` was `[ElementCount]bool`, which a form multiplier had no element to be a bit
   under. It is a fixed array of `WornRing` — a `RingID` and its accumulator — plus a count, which is
   the shape the defend set already used and the reason a duelist is still comparable.
 - `Duelist.Statuses` was indexed by element and is indexed by **status** — see below.
@@ -989,7 +1135,7 @@ discount, which had no name at all).
 | Fire / Frozen / Thunder / Earth | `attack-lands` | its element's status — the four that exist today, re-expressed with no special case |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
-| **Striker** | `card-damage` | doubles every Strike — a concept ring, 4 cards where a family covers 12, and priced accordingly |
+| **Striker** | `card-damage` | doubles every Strike — a concept ring, 4 cards where a form covers 12, and priced accordingly |
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
@@ -997,7 +1143,7 @@ discount, which had no name at all).
 | **discount** | `card-cost` | a matching card costs 1 less |
 | **flip** | `deck-built` | recolours every matching card; see below |
 
-**A concept ring and a family ring are not the same object** and must not be priced as one.
+**A concept ring and a form ring are not the same object** and must not be priced as one.
 Striker covers 4 cards, Keen covers 12.
 
 ### What the first four rings are
@@ -1030,10 +1176,10 @@ start bare and buy rings once a shop exists. It moved off the combat screen and 
 "frozen lightning" ring turns every lightning card into an ice card, so a deck holding 12 of
 each now holds 24 ice and no lightning.
 
-**This is the ring the five-of-an-element combo needs to exist.** At 12 cards per element in a
+**This is the ring the five-of-an-element hand needs to exist.** At 12 cards per element in a
 60-card deck, drawing five of one in a hand of eight is a fluke you cannot build toward. A flip
-doubles the pool and turns the combo into a deck you assembled — which is the whole stated
-purpose of combos.
+doubles the pool and turns the hand into a deck you assembled — which is the whole stated
+purpose of hands.
 
 - **It is deliberately more powerful than a discount ring**, and that is accepted. The primary
   engine-building of this game is the interaction of rings, brands and how the deck has been
@@ -1043,7 +1189,7 @@ purpose of combos.
   enemy's deck (see *Enemies*). One transform mechanism, pointed at either side — build it once.
 - **It is cheaper to implement than the discount ring.** A flip is a pure transform on a card's
   element and never touches `Cost()`, so it does not require the "cost becomes a property of the
-  pairing" rewrite. It still needs element to reach `internal/combat` for the combo to *match* on
+  pairing" rewrite. It still needs element to reach `internal/combat` for the hand to *match* on
   it.
 - **Flips do not compose.** Every flip reads the card's *original* element, so lightning→ice and
   fire→ice both land on their own sources and cannot chain. Without that rule two flips could
@@ -1171,7 +1317,7 @@ and `internal/session/worm.go`, which is where a record is validated.
 | `duplicate` | — | puts a second copy of one card into the run |
 | `cost` | a signed delta | changes what one card costs |
 | `amount` | a percentage | scales one card's figure, whatever that figure is |
-| `promote` | — | one rung up its family's ladder: Jab → Strike → Smash |
+| `promote` | — | one rung up its form's ladder: Jab → Strike → Smash |
 | `demote` | — | one rung down: cheaper and weaker |
 
 **The vocabulary is closed**, the same posture the card verbs take: a new target is a Go change
@@ -1185,7 +1331,7 @@ card language paying off — one worm, four meanings, no special cases.
 
 **Cost and amount are per-card and the rest of a card is not.** `combat.Card` carries `CostDelta`
 and `AmountPct`; `Cost()`, `Amount()` and `Damage()` are the three methods that read them, which is
-where the bounds live. **Family and label are still concept-wide**, so a worm reaching for one of
+where the bounds live. **Form and label are still concept-wide**, so a worm reaching for one of
 those would change every copy of that card in the deck — that is the argument to make again from
 scratch before adding one.
 
@@ -1206,7 +1352,7 @@ scratch before adding one.
 - **`amount` compounds rather than replaces** — 150% twice is 225% — so a second worm on the same
   card is worth taking.
 - **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a plan
-  card has no family and so no ladder at all. The screen asks `CanApply` before offering a card, so
+  card has no form and so no ladder at all. The screen asks `CanApply` before offering a card, so
   a worm that would do nothing is never presented as a choice.
 
 ### The card says what the card does
@@ -1269,7 +1415,7 @@ axis, and it is what tells you which of the two a new power belongs to:
 
 - **"Permanent" means for the run, not across runs**. A brand is a
   commitment made *inside* a run that cannot be undone, which is a different thing from
-  meta-progression. Combo *discovery* is the profile-scoped mechanic; brands are not.
+  meta-progression. Hand *discovery* is the profile-scoped mechanic; brands are not.
 - **More actions is struck from the list.** Brands were previously recorded as granting "more
   actions"; the action cap is now permanently five and nothing raises it. A brand growing hand
   size is the nearest legal thing and is a container change, so it fits the axis.
@@ -1384,15 +1530,15 @@ drew from one shared list of `Attack` and `Heavy`. Three consequences, all now m
 An enemy holding four cheap copies of one card is a swarm. One holding four expensive ones is a
 brute. One holding shields is a warden. The player learns a deck.
 
-### Enemies do not combo
+### Enemies do not form hands
 
 **An enemy's attack cards resolve one at a time, in the order its planner chose them**
 *(2026-08-17, owner's call)*. Each lands its own blow at its own face damage; no hand is read, so
 there is no multiplier and no hand off an enemy's turn. `Duelist.SoloAttacks`
 carries it and `resolveSoloAttacks` is the phase.
 
-**Combos are the player's axis and an enemy has no way into it.** A hand counts copies of a
-*concept*, and every enemy card in the roster is authored `basic` and `FamilyNone`, so what an
+**Hands are the player's axis and an enemy has no way into it.** A hand counts copies of a
+*concept*, and every enemy card in the roster is authored `basic` and `FormNone`, so what an
 enemy "formed" was an accident of what its planner could afford. Now
 three cards on the table mean three blows, which is a round the player can read off the table
 before pressing DUEL!.
@@ -1405,7 +1551,7 @@ before pressing DUEL!.
   different number of times each round.
 - **It is a flag on the duelist, never a rule about side B.** The engine has no idea which side is a
   person and must not learn: the balance tool plays both sides headlessly.
-- **`[?]` Whether a boss or an affix can hand an enemy combos back.** The flag is per duelist, so
+- **`[?]` Whether a boss or an affix can give an enemy hands back.** The flag is per duelist, so
   nothing in the rules forbids it.
 
 ### One planner
@@ -1414,7 +1560,7 @@ before pressing DUEL!.
 the best. It is exhaustive rather than greedy because a greedy pass cannot see that three Ooze
 forming a Three of a Kind beat one Dissolve — a hand is at most seven cards, so this is 128 candidates.
 
-**A comboing duelist is scored through the same `blowFor` the resolver uses**, so the plan it plays
+**A hand-forming duelist is scored through the same `blowFor` the resolver uses**, so the plan it plays
 is the plan the engine will score. **A solo attacker is scored as the sum of what it picked**, which
 is the same arithmetic its phase performs — so the search is looking for the most damage the budget
 buys rather than for the best combination.
@@ -1424,7 +1570,7 @@ That second pass is what keeps a non-attack card in an enemy deck from being dea
 planner that only maximised damage would never raise a shield, and every `Congeal` in the roster
 would sit in a discard pile forever.
 
-**`Copies` was the difficulty dial and it is a blunter one now.** Under combos, four copies of a
+**`Copies` was the difficulty dial and it is a blunter one now.** Under hands, four copies of a
 1 AP card was a Four of a Kind at 5x; with no hand to form, four copies is four small blows and the dial
 is simply *how many cards a turn holds*. What sharpened instead is **variety**: an enemy with three
 different attacks used to land only the biggest of them, because distinct concepts formed no hand
@@ -1440,17 +1586,17 @@ and fell through to the High Card. It now lands all three.
 | before this change | 12 of 96 |
 | enemy decks, HP left alone | 15 of 96 |
 | **enemy decks and HP doubled** | **44 of 96** |
-| enemies stopped comboing *(2026-08-17)* | 45 of 96 |
+| enemies stopped hand-forming *(2026-08-17)* | 45 of 96 |
 | **the 10% ascent curve — what ships** *(2026-08-17)* | **74 of 96** |
 
-So **the per-enemy decks cost three walls, the HP doubling twenty-nine, the combo removal one, and
+So **the per-enemy decks cost three walls, the HP doubling twenty-nine, the hand removal one, and
 the ascent curve another twenty-nine**. Floors 1–2 are untouched — floor 1's outer room is the
 curve's baseline — and everything from floor 3 up is now a wall.
 
 **The curve is measured at the shallowest slot each enemy can occupy**, the first fight of its
 lowest valid floor, so those are the kindest numbers a player will ever meet it with.
 
-**Taking combos off the enemies moved the total by one and the roster underneath it a lot**, in
+**Taking hands off the enemies moved the total by one and the roster underneath it a lot**, in
 both directions, which is worth knowing before reading the total as "no change". Floors 1–2 got
 markedly easier — several enemies went from being beaten by two postures to being beaten by eight —
 and floors 2–5 got harder, because an enemy holding three *different* attacks used to land only the
@@ -1520,13 +1666,13 @@ The same trick should apply to the player's deck once `Session` exists.
 Two kinds, and the distinction matters because there is no Escape key and no right click:
 
 - **Modal** — fills the screen, everything behind goes dead, requires a deliberate action to
-  leave. The deck overlay today; a combo reference later. Its exit must be the brightest thing
+  leave. The deck overlay today; a hand reference later. Its exit must be the brightest thing
   on screen or it is a trap.
-- **Transient** — flashes over a frozen screen, takes no input, dismisses itself. The **COMBO**
+- **Transient** — flashes over a frozen screen, takes no input, dismisses itself. The **HAND**
   splash. Needs no exit affordance precisely because it accepts nothing.
 
 **The freeze is already built.** `dwellFor` decides how long each event holds the screen, so a
-`KindCombo` event with a splash-length dwell gets a frozen screen for free and the splash draws
+`KindHand` event with a splash-length dwell gets a frozen screen for free and the splash draws
 while the playback cursor rests there. Presentation-only, so it cannot touch the outcome, and
 splash length joins the pacing constants destined to become the game-speed setting.
 
@@ -1534,13 +1680,13 @@ splash length joins the pacing constants destined to become the game-speed setti
 highlight, the plan; **Resolution** takes the wide slot and the job of saying what actually
 happened, in sentences, accumulating rather than flashing.
 
-A combo therefore never has to be drawn *across* rows: it gets a line of its own, in amber, at
+A hand therefore never has to be drawn *across* rows: it gets a line of its own, in amber, at
 the moment it forms. So does a chill. The bracket-or-join problem simply stopped existing,
 which is worth recording as the pattern — **the pane was being asked to answer two questions at
 once, and the fix was a second pane, not a cleverer drawing.**
 
-The **COMBO splash** above is still wanted and still unbuilt; the pane makes a combo *legible*,
-not *loud*. `dwellFor` freezing the screen for a splash-length `KindCombo` remains free.
+The **hand splash** above is still wanted and still unbuilt; the pane makes a hand *legible*,
+not *loud*. `dwellFor` freezing the screen for a splash-length `KindHand` remains free.
 
 ---
 
@@ -1553,8 +1699,8 @@ Collected from above.
 - `[?]` **Nothing tests what Plan is worth.** `tools/balance` deals no cards, so a wider hand is a
   wider hand of nothing and the `planning` row measures 2 AP of pure loss. Pricing it needs the sim
   to draw, which needs a seventh stream — see the entry under *Determinism*.
-- `[?]` **The three attack families differ only in which cards pair with which.** Same costs,
-  same damage, no riders — enough to make a hand a choice, not enough to make a family one.
+- `[?]` **The three attack forms differ only in which cards pair with which.** Same costs,
+  same damage, no riders — enough to make a hand a choice, not enough to make a form one.
 - `[?]` **Draw variance is answered by two levers now** — the Discard button and Plan — and neither
   has been priced against the other.
 - `[?]` **Pair fires on most turns**, which makes the bottom rung a permanent global multiplier
@@ -1573,11 +1719,11 @@ Collected from above.
 - `[?]` Whether earth becomes a floor affix.
 - `[?]` How a player is shown that an attack card contributed nothing. The pane no longer draws a
   line per attack card, so a card outside the hand is silent there; the table says it, by raising
-  every attack card and then lowering the ones the combo did not name. Whether that is legible at
+  every attack card and then lowering the ones the hand did not name. Whether that is legible at
   playback speed is unanswered.
 - `[?]` Earth's green collides with `playerSwatch`. One of the two schemes has to give, and
   what is holding it off is that a border and a swatch are never seen side by side.
 - `[?]` Whether the attack/plan categories are the same axis as the *role* taxonomy the
-  initiate/respond model in `TODO.md` asks for, or orthogonal to it — and whether the *families*
+  initiate/respond model in `TODO.md` asks for, or orthogonal to it — and whether the *forms*
   are the axis that taxonomy actually wanted.
 - `[?]` How enemies scale up the tower.

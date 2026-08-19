@@ -76,7 +76,7 @@ func RingID(key string) (combat.RingID, bool) {
 }
 
 // ringRules turns one record's strings into rules. **Every word is resolved rather than trusted** —
-// a moment, a verb, an element, a family, a concept label and a status key are six vocabularies, and
+// a moment, a verb, an element, a form, a concept label and a status key are six vocabularies, and
 // a misspelling in any of them is a ring that wears cleanly and does nothing.
 func ringRules(r data.RingData) ([]combat.RingRule, error) {
 	out := make([]combat.RingRule, 0, len(r.Rules))
@@ -119,12 +119,12 @@ func ringCondition(key string, in *data.RingIfData) (combat.RingCondition, error
 		}
 		cond.Element, cond.HasElement = e, true
 	}
-	if in.Family != "" {
-		f, ok := combat.ParseFamily(in.Family)
+	if in.Form != "" {
+		f, ok := combat.ParseForm(in.Form)
 		if !ok {
-			return cond, fmt.Errorf("%s matches family %q, which the rules do not have", key, in.Family)
+			return cond, fmt.Errorf("%s matches form %q, which the rules do not have", key, in.Form)
 		}
-		cond.Family, cond.HasFamily = f, true
+		cond.Form, cond.HasForm = f, true
 	}
 	if in.Concept != "" {
 		// A concept is named by its label, which for the player's deck is its registry key. An

@@ -701,7 +701,7 @@ func (s *CombatScene) seatPlayedCards() {
 // rise one at a time reads as four attacks, which is the model this replaced.
 //
 // It is recomputed rather than accumulated, so every later announcement in the phase names the
-// same set and the list cannot drift. noteCombo then drops whichever of them earned nothing.
+// same set and the list cannot drift. noteHand then drops whichever of them earned nothing.
 // A prepare or a defend is its own beat and takes the row on its own.
 func (s *CombatScene) noteResolved(e combat.Event) {
 	if e.Kind != combat.KindAction {
@@ -771,11 +771,11 @@ func lit(seats []int, seat int) bool {
 	return false
 }
 
-// noteCombo narrows what is raised to the cards the hand was made of.
+// noteHand narrows what is raised to the cards the hand was made of.
 //
-// The engine names them — see Event.ComboCards — so this is a lookup, not a search. Nothing
+// The engine names them — see Event.HandCards — so this is a lookup, not a search. Nothing
 // here knows what a Flurry is or how many cards one takes, which is what stops the table
-// disagreeing with the combo that actually fired.
+// disagreeing with the hand that actually fired.
 //
 // **The cards need not be adjacent.** A counted hand like Two Pair is two cards, a card that
 // earned nothing, and two more, so this takes the seats it is given rather than a span between
@@ -785,13 +785,13 @@ func lit(seats []int, seat int) bool {
 // of the turn is lifted by the time this arrives; the ones that built no hand drop back into the
 // row here, and the yellow ring that used to be drawn round the survivors is gone — the shout
 // names the hand and the row shows which cards are standing.
-func (s *CombatScene) noteCombo(e combat.Event) {
-	if e.Kind != combat.KindCombo {
+func (s *CombatScene) noteHand(e combat.Event) {
+	if e.Kind != combat.KindHand {
 		return
 	}
 
-	seats := make([]int, 0, e.ComboCardCount)
-	seats = append(seats, e.ComboCards[:e.ComboCardCount]...)
+	seats := make([]int, 0, e.HandCardCount)
+	seats = append(seats, e.HandCards[:e.HandCardCount]...)
 
 	if e.Side == combat.SideB {
 		s.enemyFiringSeats = seats

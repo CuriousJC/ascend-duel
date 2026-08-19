@@ -118,12 +118,12 @@ func TestNoDiscountTakesACardBelowFree(t *testing.T) {
 	}
 }
 
-func TestAFamilyRingDoublesEveryMatchingCardInTheTurn(t *testing.T) {
+func TestAFormRingDoublesEveryMatchingCardInTheTurn(t *testing.T) {
 	// **Per card is the point** — three slash cards in a turn are three doublings inside the same
 	// blow, not one. This checks the per-card figure, which is what the blow is summed from.
 	keen := ring(t, "keen", RingRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Family: FamilySlash, HasFamily: true},
+		If:   RingCondition{Form: FormSlash, HasForm: true},
 		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
@@ -143,12 +143,12 @@ func TestTwoMatchingRingsCompound(t *testing.T) {
 	// order is a rule — multiplicative effects are order-sensitive.
 	a := ring(t, "keen a", RingRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Family: FamilySlash, HasFamily: true},
+		If:   RingCondition{Form: FormSlash, HasForm: true},
 		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 	b := ring(t, "keen b", RingRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Family: FamilySlash, HasFamily: true},
+		If:   RingCondition{Form: FormSlash, HasForm: true},
 		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
@@ -161,7 +161,7 @@ func TestTwoMatchingRingsCompound(t *testing.T) {
 }
 
 func TestAConceptRingReachesOneCardOnly(t *testing.T) {
-	// A concept ring is a much narrower object than a family ring — 4 cards against 12 — which is
+	// A concept ring is a much narrower object than a form ring — 4 cards against 12 — which is
 	// the distinction this holds and the reason the two must not be priced alike.
 	striker := ring(t, "striker", RingRule{
 		When: MomentCardDamage,
@@ -187,7 +187,7 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 		When: MomentCardDamage,
 		If: RingCondition{
 			Element: Fire, HasElement: true,
-			Family: FamilySlash, HasFamily: true,
+			Form: FormSlash, HasForm: true,
 		},
 		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
@@ -208,7 +208,7 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 func TestAStatusNamesTheRingThatAppliedIt(t *testing.T) {
 	// **The screen flies the word out of the ring that caused it**, so the event has to say which
 	// ring that was. Nothing else can: the card's colour is not the answer, because a ring may
-	// match on a family or a concept and apply a status with no colour involved at all - which is
+	// match on a form or a concept and apply a status with no colour involved at all - which is
 	// the case the second half of this test pins.
 	burning := MustStatus("burning")
 	chilled := MustStatus("chilled")
@@ -218,11 +218,11 @@ func TestAStatusNamesTheRingThatAppliedIt(t *testing.T) {
 		If:   RingCondition{Element: Fire, HasElement: true},
 		Then: []RingEffect{{Do: DoApplyStatus, Status: burning}},
 	})
-	// A ring that reads the family rather than the colour, which is what makes deriving the ring
+	// A ring that reads the form rather than the colour, which is what makes deriving the ring
 	// from the element impossible rather than merely fragile.
 	slash := ring(t, "names-slash", RingRule{
 		When: MomentAttackLands,
-		If:   RingCondition{Family: FamilySlash, HasFamily: true},
+		If:   RingCondition{Form: FormSlash, HasForm: true},
 		Then: []RingEffect{{Do: DoApplyStatus, Status: chilled}},
 	})
 

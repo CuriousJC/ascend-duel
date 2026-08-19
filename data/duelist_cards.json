@@ -5,7 +5,7 @@
     "Amount": 50,
     "Cost": 1,
     "Target": "opponent",
-    "Family": "stab",
+    "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -15,7 +15,7 @@
     "Amount": 100,
     "Cost": 2,
     "Target": "opponent",
-    "Family": "stab",
+    "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -25,7 +25,7 @@
     "Amount": 200,
     "Cost": 3,
     "Target": "opponent",
-    "Family": "stab",
+    "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -36,7 +36,7 @@
     "Amount": 50,
     "Cost": 1,
     "Target": "opponent",
-    "Family": "slash",
+    "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -46,7 +46,7 @@
     "Amount": 100,
     "Cost": 2,
     "Target": "opponent",
-    "Family": "slash",
+    "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -56,7 +56,7 @@
     "Amount": 200,
     "Cost": 3,
     "Target": "opponent",
-    "Family": "slash",
+    "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -67,7 +67,7 @@
     "Amount": 50,
     "Cost": 1,
     "Target": "opponent",
-    "Family": "crush",
+    "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -77,7 +77,7 @@
     "Amount": 100,
     "Cost": 2,
     "Target": "opponent",
-    "Family": "crush",
+    "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -87,7 +87,7 @@
     "Amount": 200,
     "Cost": 3,
     "Target": "opponent",
-    "Family": "crush",
+    "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
@@ -98,7 +98,7 @@
     "Amount": 2,
     "Cost": 1,
     "Target": "self",
-    "Family": "plan",
+    "Form": "plan",
     "Elements": ["basic"],
     "Copies": 4
   },
@@ -108,7 +108,7 @@
     "Amount": 2,
     "Cost": 2,
     "Target": "self",
-    "Family": "plan",
+    "Form": "plan",
     "Elements": ["basic"],
     "Copies": 4
   },
@@ -118,7 +118,7 @@
     "Amount": 50,
     "Cost": 3,
     "Target": "self",
-    "Family": "plan",
+    "Form": "plan",
     "Elements": ["basic"],
     "Copies": 4
   }

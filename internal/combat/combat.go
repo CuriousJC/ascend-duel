@@ -95,7 +95,7 @@ type Duelist struct {
 	//
 	// BonusAP is overwritten rather than added to at the boundary, so gathering twice in
 	// one round is worth +4 next round while gathering once a round is worth a flat +2.
-	// Stacking within a round is deliberate and is what puts the five-attack combo in
+	// Stacking within a round is deliberate and is what puts the five-attack hand in
 	// reach without a ring; carrying across rounds would compound without limit.
 	BonusAP    int
 	GatheredAP int
@@ -141,7 +141,7 @@ type Duelist struct {
 	// that statuses given away free left the first three rings with no mechanic of their own.
 	//
 	// **It was `[ElementCount]bool` until 2026-08-17**, and the grammar is what took the flags
-	// away: a family multiplier and a vitae ring have no element to be a bit under.
+	// away: a form multiplier and a vitae ring have no element to be a bit under.
 	//
 	// **The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire
 	// attacks burn; it does nothing when a fire attack is aimed at you.
@@ -159,28 +159,28 @@ type Duelist struct {
 
 	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
 	// were queued**, each landing its own blow — instead of being read as a set and scored
-	// through the combo table.
+	// through the hand table.
 	//
-	// **It is what an enemy is** *(2026-08-17, owner's call)*. Combos are the player's mechanic:
+	// **It is what an enemy is** *(2026-08-17, owner's call)*. Hands are the player's mechanic:
 	// the hands are counted off concepts, and an enemy has no axis to play with — every enemy
-	// card in `data/enemies.json` is authored `basic` and `FamilyNone`, so an opponent's "hand"
+	// card in `data/enemies.json` is authored `basic` and `FormNone`, so an opponent's "hand"
 	// was whatever its planner happened to afford. Now an
 	// enemy holding three cards swings three times and the player can read the round off the
 	// cards on the table.
 	//
-	// **The default is false, so a plain `Duelist{}` combos.** Combos are the norm and this is the
+	// **The default is false, so a plain `Duelist{}` hands.** Hands are the norm and this is the
 	// exception, which is why the field is named for the exception rather than for the norm: a
-	// `Combos bool` would have made every existing literal — the whole test suite, the balance
-	// tool's fighter — quietly stop comboing.
+	// `Hands bool` would have made every existing literal — the whole test suite, the balance
+	// tool's fighter — quietly stop hand-forming.
 	//
 	// **It is a flag on the duelist rather than a rule about SideB.** The engine has no idea which
 	// side is a person, and it must not learn: the balance tool plays both sides headlessly, and
 	// a rule keyed on the side would be a rule that cannot be tested from the other end.
 	//
 	// The alternative considered and rejected was deriving it from the cards — an enemy card is
-	// `FamilyNone`, so "no family, no combo" needs no field at all. It was rejected because it
+	// `FormNone`, so "no form, no hand" needs no field at all. It was rejected because it
 	// couples two things that are not the same thing: affixes are designed to *transform* an
-	// enemy deck, and a card that gained a family would silently gain combos with it.
+	// enemy deck, and a card that gained a form would silently gain hands with it.
 	SoloAttacks bool
 }
 
@@ -249,7 +249,7 @@ func ClearDefenses(d Duelist) Duelist {
 // and a plain Lunge are both attacks.
 //
 // **There are two of them as of 2026-08-15**, down from prepare/attack/defend. The deck is now
-// three attack families and one plan family, and the three-way split was describing a deck that
+// three attack forms and one plan form, and the three-way split was describing a deck that
 // no longer exists: Prepare, Plan and Defend all sit in the same phase, and what separates them
 // is what they do in it rather than when they happen.
 type Category int
@@ -283,9 +283,9 @@ func (c Category) String() string {
 	}
 }
 
-// ParseCategory resolves a category from its name, which is how combos.json writes a combo's
+// ParseCategory resolves a category from its name, which is how hands.json writes a hand's
 // scope. It reports failure rather than falling back, for the same reason ParseAction does: a
-// combo quietly counting the wrong phase is a balance change nobody made.
+// hand quietly counting the wrong phase is a balance change nobody made.
 func ParseCategory(name string) (Category, bool) {
 	for _, c := range Categories() {
 		if c.String() == name {
@@ -295,56 +295,56 @@ func ParseCategory(name string) (Category, bool) {
 	return CategoryAttack, false
 }
 
-// Family is which group of cards an action belongs to: three ways of hitting, plus the plans.
+// Form is which group of cards an action belongs to: three ways of hitting, plus the plans.
 //
 // **It is what the card's corner says, and it is not the same axis as Category** *(2026-08-15)*.
-// Category is when a card resolves and there are two of those; a family is what kind of card it
-// is and there are four. Every family but Plan resolves in the attack phase, so the family is the
+// Category is when a card resolves and there are two of those; a form is what kind of card it
+// is and there are four. Every form but Plan resolves in the attack phase, so the form is the
 // finer distinction and the one worth putting on a card face.
 //
-// **FamilyNone is the zero value and is a real answer**, not a failure: the opponent's cards
-// belong to no family. Families are the player's deck axis — three ways of building a pair — and
+// **FormNone is the zero value and is a real answer**, not a failure: the opponent's cards
+// belong to no form. Forms are the player's deck axis — three ways of building a pair — and
 // an enemy Attack claiming to be a crush would be saying something untrue about a deck the player
-// cannot combo with.
-type Family int
+// cannot build hands against.
+type Form int
 
 const (
-	FamilyNone Family = iota
-	FamilyStab
-	FamilySlash
-	FamilyCrush
-	FamilyPlan
+	FormNone Form = iota
+	FormStab
+	FormSlash
+	FormCrush
+	FormPlan
 )
 
-// Families is every real family, in a fixed order, for anything that walks them.
-func Families() []Family {
-	return []Family{FamilyStab, FamilySlash, FamilyCrush, FamilyPlan}
+// Forms is every real form, in a fixed order, for anything that walks them.
+func Forms() []Form {
+	return []Form{FormStab, FormSlash, FormCrush, FormPlan}
 }
 
-func (f Family) String() string {
+func (f Form) String() string {
 	switch f {
-	case FamilyStab:
+	case FormStab:
 		return "stab"
-	case FamilySlash:
+	case FormSlash:
 		return "slash"
-	case FamilyCrush:
+	case FormCrush:
 		return "crush"
-	case FamilyPlan:
+	case FormPlan:
 		return "plan"
 	default:
 		return "none"
 	}
 }
 
-// ParseFamily resolves a family from its name, which is how a deck list writes one. It reports
+// ParseForm resolves a form from its name, which is how a deck list writes one. It reports
 // failure rather than falling back, for the same reason ParseAction does.
-func ParseFamily(name string) (Family, bool) {
-	for _, f := range Families() {
+func ParseForm(name string) (Form, bool) {
+	for _, f := range Forms() {
 		if f.String() == name {
 			return f, true
 		}
 	}
-	return FamilyNone, false
+	return FormNone, false
 }
 
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
@@ -414,11 +414,11 @@ const (
 	KindDamage
 	KindDefeated
 
-	// KindCombo says a combo formed. **Every one a turn forms is emitted before that turn's
-	// first KindAction**, because the combo phase resolves before the cards do — so a boosted
+	// KindHand says a hand formed. **Every one a turn forms is emitted before that turn's
+	// first KindAction**, because the hand phase resolves before the cards do — so a boosted
 	// hit is never shown before the reason for it. Several can arrive together and their runs
 	// may overlap; see matchSlots.
-	KindCombo
+	KindHand
 
 	// KindChilled is one action lost to a chill. One event per action, so a chill deep enough to
 	// take several narrates as the several things it actually is.
@@ -455,8 +455,8 @@ const (
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
-	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindCombo for the card the blow led with
-	Amount int       // damage dealt, action points banked, status applied, or on KindCombo what the hand adds up to
+	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindHand for the card the blow led with
+	Amount int       // damage dealt, action points banked, status applied, or on KindHand what the hand adds up to
 	Target Side      // who took the damage
 	Life   int       // target's life after the event
 	Round  int
@@ -482,7 +482,7 @@ type Event struct {
 	// **It is here because a status has a cause the player can see** *(2026-08-18)*. The screen
 	// flies the word out of the ring that caused it, and there is no other honest way for it to
 	// know which ring that was: reading it off the card's element would be a second rule about
-	// something the grammar already decides, and it would be wrong the first time a family ring or
+	// something the grammar already decides, and it would be wrong the first time a form ring or
 	// a concept ring applied a status - both of which RegisterRing accepts today.
 	//
 	// **Which ring, not which slot.** A RingID says something in a trace and in a test; a worn
@@ -494,13 +494,13 @@ type Event struct {
 	// to say so explicitly.
 	Ring RingID
 
-	// Hand is set on KindCombo and names what the attack phase formed. The screen looks it up
+	// Hand is set on KindHand and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
 	//
 	// **It always names a hand**, because `blowFor` falls back to the catalogue's High Card: a
 	// turn with an attack in it produces a blow, and a blow the engine could not name is the one
 	// failure this model can have. `HandNone` is the zero value and reaches a screen only on an
-	// event that is not a KindCombo. The comment here claimed the opposite until 2026-08-19, and a
+	// event that is not a KindHand. The comment here claimed the opposite until 2026-08-19, and a
 	// dead branch in the log was written against it.
 	Hand HandID
 
@@ -509,7 +509,7 @@ type Event struct {
 	// resolver already worked out.
 	Multiplier int
 
-	// Base is the other term of the blow's arithmetic on KindCombo, and it is here for the same
+	// Base is the other term of the blow's arithmetic on KindHand, and it is here for the same
 	// reason Multiplier is: the Resolution feed prints the sum — `(20 + 20) x 1.5 = 60` — and a
 	// screen working a damage figure out for itself would be a second resolver.
 	//
@@ -524,38 +524,38 @@ type Event struct {
 	// after it, and the gap between the two figures is exactly what the defence was worth.
 	Base int
 
-	// ComboCards and ComboCardCount are set on KindCombo alongside Combo: **which cards of this
+	// HandCards and HandCardCount are set on KindHand alongside Hand: **which cards of this
 	// side's turn formed it**, as indices into the turn *as it was played*.
 	//
-	// **They are here so a screen never has to work out which cards earned a combo.** The
-	// matcher already knows, and re-deriving it from the combo's pattern would be a second
+	// **They are here so a screen never has to work out which cards earned a hand.** The
+	// matcher already knows, and re-deriving it from the hand's pattern would be a second
 	// matcher — the drift ResolutionOrder exists to prevent. It would also be wrong: a counted
 	// hand is not contiguous, so Two Pair can be two cards, a card that earned nothing, and two
 	// more.
 	//
 	// **A fixed array rather than a slice, because Event has to stay comparable** —
-	// TestCombosDoNotBreakDeterminism compares two logs entry by entry with ==. It is sized to
+	// TestHandsDoNotBreakDeterminism compares two logs entry by entry with ==. It is sized to
 	// baseMaxActions, which is every card a legal turn can hold; a balance sim deliberately
-	// queueing more gets its extra cards dropped from the *bracket* rather than from the combo,
+	// queueing more gets its extra cards dropped from the *bracket* rather than from the hand,
 	// the same posture raiseDefend takes on an over-long defend list.
 	//
 	// The indices count the actions that actually resolved, chilled ones already removed,
 	// which is the same sequence as this side's KindAction events — **events that have not
-	// happened yet when this one arrives**, since the combo phase runs first. The screen seats
+	// happened yet when this one arrives**, since the hand phase runs first. The screen seats
 	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
-	ComboCards     [baseMaxActions]int
-	ComboCardCount int
+	HandCards     [baseMaxActions]int
+	HandCardCount int
 
-	// ComboAmounts is what each of those cards deals, in the same order and to the same count.
+	// HandAmounts is what each of those cards deals, in the same order and to the same count.
 	//
 	// **It is here so the screen can show the arithmetic rather than assert it** *(2026-08-18)*.
-	// The combo dialog flies each card's own figure down into a sum, and re-deriving one on the
+	// The hand dialog flies each card's own figure down into a sum, and re-deriving one on the
 	// screen would mean the screen owning `CardDamage`, the Strength scaling and every ring that
 	// touches a card's damage — a second resolver, exactly what Base and Multiplier are on the
-	// event to prevent. `Base` is the sum of the first ComboCardCount entries.
+	// event to prevent. `Base` is the sum of the first HandCardCount entries.
 	//
-	// A fixed array for the reason ComboCards is one: Event has to stay comparable.
-	ComboAmounts [baseMaxActions]int
+	// A fixed array for the reason HandCards is one: Event has to stay comparable.
+	HandAmounts [baseMaxActions]int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits
@@ -563,7 +563,7 @@ type Event struct {
 //
 // **It holds a whole Card rather than a bare concept** since 2026-08-12. A slot is what both
 // the engine and the screen walk, so anything that has to know a card's element while a round is
-// being ordered — a combo matching on colour, a row drawing a border — reads it here.
+// being ordered — a hand matching on colour, a row drawing a border — reads it here.
 type Slot struct {
 	Side  Side
 	Index int
@@ -578,7 +578,7 @@ type Slot struct {
 // **A whole turn each, in category order.** Everything side A queued resolves — prepares,
 // then attacks, then defenses — and only then does side B begin. Within a category the
 // queued order is kept, which is where drag-to-reorder still bites and where sequence
-// combos will match.
+// hands will match.
 //
 // Index is the action's position in its own side's queue, which is *not* its position
 // here: reordering by category is the whole job. Consumers wanting "how far through the
@@ -628,8 +628,8 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, 
 	// a side that queues nothing still has a turn, and still loses its guard in it.
 	//
 	// A whole turn each, A then B. This used to be one flat loop over ResolutionOrder with a
-	// flag watching for the handover; combos made a turn a thing with its own beginning —
-	// a chill is spent at it, and a combo's position is an index *within* it — so the turn
+	// flag watching for the handover; hands made a turn a thing with its own beginning —
+	// a chill is spent at it, and a hand's position is an index *within* it — so the turn
 	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
 	// exactly the slots it produced for that side.
 	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, hands, rng)
@@ -653,14 +653,14 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, 
 }
 
 // playTurn runs one side's whole turn: expiry, then whatever a chill has taken off the
-// front of it, then **every combo the surviving cards form**, and only then the cards
+// front of it, then **every hand the surviving cards form**, and only then the cards
 // themselves.
 //
-// **Combos are matched against what is left after a chill, not against the queue.** The
-// player queued five attacks; a chill that ate two means three happened, and a combo scored
+// **Hands are matched against what is left after a chill, not against the queue.** The
+// player queued five attacks; a chill that ate two means three happened, and a hand scored
 // off cards a chill deleted would let a chilled duelist swing with a turn they did not take.
-// That ordering is the reason the combo phase sits *inside* a turn rather than at the top of
-// the round: a round-wide combo phase would score B's combos before A's ice had taken
+// That ordering is the reason the hand phase sits *inside* a turn rather than at the top of
+// the round: a round-wide hand phase would score B's hands before A's ice had taken
 // anything off B.
 func playTurn(
 	events []Event,
@@ -683,8 +683,8 @@ func playTurn(
 	// tempo and economy both.
 	//
 	// **The chill is read off the status and nowhere else** *(2026-08-17)*. A duelist used to
-	// carry a separate counter as well, banked by a combo that took actions off the opponent's
-	// next turn; combos buy damage alone now, so the status is the only thing that can take a
+	// carry a separate counter as well, banked by a hand that took actions off the opponent's
+	// next turn; hands buy damage alone now, so the status is the only thing that can take a
 	// card and there is one place to look for how many.
 	//
 	// **It bites on every turn it outlives**, rather than being spent when it bites — the status
@@ -878,7 +878,7 @@ func resolveAttackPhase(
 	// **A solo attacker takes a different phase entirely, not a special case inside this one.**
 	// The two are different shapes: one announces everything and then lands a single figure, the
 	// other resolves each card completely before the next one starts. Threading a flag through
-	// the blow, the multiplier and the combo event would leave a function whose every step had
+	// the blow, the multiplier and the hand event would leave a function whose every step had
 	// two readings.
 	if actor.SoloAttacks {
 		return resolveSoloAttacks(events, side, actor, target, turn, round, rng)
@@ -946,13 +946,13 @@ func resolveAttackPhase(
 	// reason for it. **Every turn with an attack in it announces a hand** — a lone attack is the
 	// High Card, which is a catalogue entry like any other rather than an absence.
 	//
-	// **It also carries the sum**, which is what the damage below is taken from — see comboEvent.
+	// **It also carries the sum**, which is what the damage below is taken from — see handEvent.
 	//
 	// **A hand buys damage and nothing else** *(2026-08-17)*. It used to be able to bank action
 	// points or take actions off the opponent's next turn, which is why there was a phase here
 	// paying those out before the blow landed. Statuses come from elements and rings now, so the
 	// multiplier is the whole reward and there is nothing to pay before the roll.
-	swung := comboEvent(side, blow, turn, actor, round)
+	swung := handEvent(side, blow, turn, actor, round)
 	events = append(events, swung)
 
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
@@ -1005,7 +1005,7 @@ func resolveAttackPhase(
 	// enemy it lands none. The colours still count toward the hand either way — what a ring buys is
 	// the status, not the multiplier.
 	//
-	// The cards of the hand are what the rings match against, so a family ring or a concept ring
+	// The cards of the hand are what the rings match against, so a form ring or a concept ring
 	// reaches this the same way an elemental one does. `statusesFrom` deduplicates, which is what
 	// keeps two fire cards from announcing one burn twice.
 	blowCards := make([]Card, 0, len(blow.Cards))
@@ -1046,7 +1046,7 @@ func resolveAttackPhase(
 // left of it, announcing each as it bites.
 //
 // **It does not spend them, and the caller clears them once the turn is over.** A defence covers
-// exactly one opposing *turn* — see expireDefenses — which is one blow from a comboing duelist and
+// exactly one opposing *turn* — see expireDefenses — which is one blow from a hand-forming duelist and
 // several from a solo one. Spending them on the first blow would make a Defend nearly worthless
 // against the very opponents that swing more than once.
 //
@@ -1075,16 +1075,16 @@ func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]
 	return events, dmg
 }
 
-// resolveSoloAttacks is the attack phase of a duelist whose cards do not combo: **every attack
+// resolveSoloAttacks is the attack phase of a duelist whose cards form no hands: **every attack
 // resolves completely, in queue order, before the next one starts**.
 //
-// **No hand is read and no combo event is emitted** *(2026-08-17)*. That is the whole of the
+// **No hand is read and no hand event is emitted** *(2026-08-17)*. That is the whole of the
 // difference — there is no set to score, so there is no multiplier. What lands is the sum of what
 // was played, one figure at a time, and the screen writes a sentence per card because there is no
 // phase line to carry them.
 //
-// Three things it keeps deliberately in step with the comboing phase, because they are rules about
-// attacking rather than rules about combos:
+// Three things it keeps deliberately in step with the hand-forming phase, because they are rules about
+// attacking rather than rules about hands:
 //
 //   - **One beat per slot.** Every attack card announces itself with a KindAction, so playback can
 //     still count how far through the round it is — see TestEverySlotIsEitherTakenOrChilled.
@@ -1176,7 +1176,7 @@ func resolveSoloAttacks(
 
 		// One card, and the same rings the other phase reads. An enemy wears none, so this does
 		// nothing for the only duelists that are solo attackers today — it is here because the rule
-		// belongs to attacking, not to comboing.
+		// belongs to attacking, not to hand-forming.
 		for _, a := range actor.statusesFrom([]Card{slot.Card}) {
 			applied, amount, ok := applyStatus(target, a.Status, actor)
 			if !ok {
@@ -1202,7 +1202,7 @@ func resolveSoloAttacks(
 		}
 	}
 
-	// **The defences are spent only if something was swung at them**, which is the comboing
+	// **The defences are spent only if something was swung at them**, which is the hand-forming
 	// phase's rule too: a turn with no attacks in it returns before clearing, and expireDefenses
 	// takes them at the start of their owner's next turn instead.
 	if attacked {
@@ -1211,16 +1211,16 @@ func resolveSoloAttacks(
 	return events, actor, target
 }
 
-// comboEvent packages what the attack phase formed for the screen: which hand, the multiplier,
+// handEvent packages what the attack phase formed for the screen: which hand, the multiplier,
 // which cards of the turn earned it, and the arithmetic they come to.
 //
 // **It is the attack phase's one line in the feed** *(2026-08-14)*, so it carries everything that
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
-func comboEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Event {
+func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Event {
 	e := Event{
-		Kind:       KindCombo,
+		Kind:       KindHand,
 		Side:       side,
 		Hand:       blow.Hand.ID,
 		Multiplier: blow.Multiplier,
@@ -1233,15 +1233,15 @@ func comboEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Eve
 	// per-card amounts the sum was made of.
 	//
 	// A card past the array's width is dropped from the *bracket* rather than from the sum, which
-	// is the posture ComboCards already takes: the arithmetic on screen may be short of a term
+	// is the posture HandCards already takes: the arithmetic on screen may be short of a term
 	// before the damage that lands is wrong.
 	for _, i := range blow.Cards {
 		d := actor.CardDamage(turn[i].Card)
 		e.Base += d
-		if e.ComboCardCount < len(e.ComboCards) {
-			e.ComboCards[e.ComboCardCount] = i
-			e.ComboAmounts[e.ComboCardCount] = d
-			e.ComboCardCount++
+		if e.HandCardCount < len(e.HandCards) {
+			e.HandCards[e.HandCardCount] = i
+			e.HandAmounts[e.HandCardCount] = d
+			e.HandCardCount++
 		}
 	}
 

@@ -7,7 +7,7 @@ import "testing"
 func handsFormed(events []Event, by Side) []HandID {
 	var out []HandID
 	for _, e := range events {
-		if e.Kind != KindCombo || e.Side != by || e.Hand == HandNone {
+		if e.Kind != KindHand || e.Side != by || e.Hand == HandNone {
 			continue
 		}
 		// **The High Card is skipped here, because every assertion below is about what a turn's
@@ -23,10 +23,10 @@ func handsFormed(events []Event, by Side) []HandID {
 	return out
 }
 
-// comboEventFor is the KindCombo event one side's attack phase raised.
-func comboEventFor(events []Event, by Side) (Event, bool) {
+// handEventFor is the KindHand event one side's attack phase raised.
+func handEventFor(events []Event, by Side) (Event, bool) {
 	for _, e := range events {
-		if e.Kind == KindCombo && e.Side == by {
+		if e.Kind == KindHand && e.Side == by {
 			return e, true
 		}
 	}
@@ -76,8 +76,8 @@ func sideActions(events []Event, by Side) []ConceptID {
 	return out
 }
 
-// comboCards is the cards one event says formed its hand.
-func comboCards(e Event) []int { return e.ComboCards[:e.ComboCardCount] }
+// handCards is the cards one event says formed its hand.
+func handCards(e Event) []int { return e.HandCards[:e.HandCardCount] }
 
 // --- one blow per turn --------------------------------------------------------------------
 
@@ -124,11 +124,11 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 		t.Errorf("the Jab added %d damage; it is in no hand and should add nothing", got-want)
 	}
 
-	e, ok := comboEventFor(withJab, SideA)
+	e, ok := handEventFor(withJab, SideA)
 	if !ok {
 		t.Fatal("no attack phase event")
 	}
-	if got := comboCards(e); len(got) != 2 {
+	if got := handCards(e); len(got) != 2 {
 		t.Errorf("the pair says it was formed from %v, want the two Strikes only", got)
 	}
 }
@@ -142,7 +142,7 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 func TestDamageIsTheHandsCardsTimesTheMultiplier(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	pair, ok := handByKey("pair")
+	pair, ok := handByKey("concept-pair")
 	if !ok {
 		t.Fatal("the catalogue has no pair")
 	}
@@ -168,14 +168,20 @@ func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
 
 	// The cards themselves are 4x apart — Jab deals half DMG and Lunge double — so the pairs have
 	// to stay 4x apart. A term added outside the multiplier would close that gap.
-	if want := jabPair * 4; lungePair != want {
-		t.Errorf("a Lunge Pair dealt %d against a Jab Pair's %d; the cards are 4x apart, so want %d",
+	//
+	// **Within the rounding, and that slack is not slop.** The blow is integer arithmetic, so a
+	// multiplier that does not divide the small figure exactly loses up to a point on the Jab pair
+	// — and comparing `jabPair * 4` multiplies that loss by four. A gap wider than the truncation
+	// is a term outside the multiplier, which is what this is here to catch.
+	want := jabPair * 4
+	if lungePair < want || lungePair > want+4 {
+		t.Errorf("a Lunge Pair dealt %d against a Jab Pair's %d; the cards are 4x apart, so want %d (+ up to 4 of rounding)",
 			lungePair, jabPair, want)
 	}
 }
 
 // **Every multiplier the catalogue holds is worth what it says against the cards.** The ladder is
-// tuned by editing combos.json alone, which is only true while nothing in the resolver adds to the
+// tuned by editing hands.json alone, which is only true while nothing in the resolver adds to the
 // figure the file's percent is applied to.
 func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
@@ -185,9 +191,9 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 		turn []Card
 	}{
 		{"high-card", PlainCards(Strike)},
-		{"pair", PlainCards(Strike, Strike)},
-		{"three-of-a-kind", PlainCards(Strike, Strike, Strike)},
-		{"four-of-a-kind", PlainCards(Strike, Strike, Strike, Strike)},
+		{"concept-pair", PlainCards(Strike, Strike)},
+		{"concept-three-of-a-kind", PlainCards(Strike, Strike, Strike)},
+		{"concept-four-of-a-kind", PlainCards(Strike, Strike, Strike, Strike)},
 	} {
 		h, ok := handByKey(tc.key)
 		if !ok {
@@ -195,9 +201,9 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 		}
 
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
-		e, ok := comboEventFor(events, SideA)
+		e, ok := handEventFor(events, SideA)
 		if !ok {
-			t.Fatalf("%s: no KindCombo event", tc.key)
+			t.Fatalf("%s: no KindHand event", tc.key)
 		}
 
 		base := Plain(Strike).Damage(10) * len(tc.turn)
@@ -210,27 +216,27 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 	}
 }
 
-// **The per-card figures on the event add up to its base.** The combo dialog flies each one down
+// **The per-card figures on the event add up to its base.** The hand dialog flies each one down
 // into a sum on screen, so a card whose figure disagreed with the total would be arithmetic the
 // player can see is wrong.
-func TestTheComboAmountsAddUpToTheBase(t *testing.T) {
+func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 	a, b := duelist(10, 8, 5000), duelist(10, 8, 5000)
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
-	e, ok := comboEventFor(events, SideA)
+	e, ok := handEventFor(events, SideA)
 	if !ok {
-		t.Fatal("no KindCombo event")
+		t.Fatal("no KindHand event")
 	}
-	if e.ComboCardCount != 3 {
-		t.Fatalf("the trips say they were formed from %d cards, want 3", e.ComboCardCount)
+	if e.HandCardCount != 3 {
+		t.Fatalf("the trips say they were formed from %d cards, want 3", e.HandCardCount)
 	}
 
 	sum := 0
-	for i := 0; i < e.ComboCardCount; i++ {
-		if e.ComboAmounts[i] <= 0 {
-			t.Errorf("card %d of the hand carries a figure of %d", i, e.ComboAmounts[i])
+	for i := 0; i < e.HandCardCount; i++ {
+		if e.HandAmounts[i] <= 0 {
+			t.Errorf("card %d of the hand carries a figure of %d", i, e.HandAmounts[i])
 		}
-		sum += e.ComboAmounts[i]
+		sum += e.HandAmounts[i]
 	}
 	if sum != e.Base {
 		t.Errorf("the hand's cards carry %d between them, but the base is %d", sum, e.Base)
@@ -248,7 +254,7 @@ func TestTheComboAmountsAddUpToTheBase(t *testing.T) {
 func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	pair, _ := handByKey("pair")
+	pair, _ := handByKey("concept-pair")
 
 	for _, tc := range []struct {
 		what string
@@ -260,7 +266,7 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 	} {
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
 
-		e, ok := comboEventFor(events, SideA)
+		e, ok := handEventFor(events, SideA)
 		if !ok {
 			t.Fatalf("%s: no attack phase event", tc.what)
 		}
@@ -274,7 +280,12 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 // --- which hand forms ---------------------------------------------------------------------
 
 // **The best-paying hand wins.** Four Strikes hold a pair and a flurry as well as a barrage; only
-// the barrage pays. A fifth Strike changes nothing, since a group matches at least its size.
+// the barrage pays.
+//
+// **A fifth Strike is its own rung** *(2026-08-19)*. It used to change nothing — a group matches at
+// least its size, so five of one card was still the four — and the ladder now goes one further on
+// every axis. Five copies of a concept cannot be dealt from the 48-card deck, which ships four of
+// each; the `duplicate` worm is what makes this reachable, and the rung is priced for that.
 func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 
@@ -282,10 +293,10 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 		n    int
 		want string
 	}{
-		{2, "pair"},
-		{3, "three-of-a-kind"},
-		{4, "four-of-a-kind"},
-		{5, "four-of-a-kind"},
+		{2, "concept-pair"},
+		{3, "concept-three-of-a-kind"},
+		{4, "concept-four-of-a-kind"},
+		{5, "concept-five-of-a-kind"},
 	} {
 		turn := make([]Card, tc.n)
 		for i := range turn {
@@ -307,9 +318,9 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 func TestTheTwoConceptHands(t *testing.T) {
 	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 
-	twoPair, _ := handByKey("two-pair")
-	fullHouse, _ := handByKey("full-house")
-	barrage, _ := handByKey("four-of-a-kind")
+	twoPair, _ := handByKey("concept-two-pair")
+	fullHouse, _ := handByKey("concept-full-house")
+	fiveOfAKind, _ := handByKey("concept-five-of-a-kind")
 
 	for _, tc := range []struct {
 		turn []Card
@@ -318,7 +329,7 @@ func TestTheTwoConceptHands(t *testing.T) {
 	}{
 		{PlainCards(Jab, Jab, Strike, Strike), twoPair.ID, "two pairs"},
 		{PlainCards(Jab, Jab, Jab, Strike, Strike), fullHouse.ID, "three and two"},
-		{PlainCards(Jab, Jab, Jab, Jab, Jab), barrage.ID, "five of one card"},
+		{PlainCards(Jab, Jab, Jab, Jab, Jab), fiveOfAKind.ID, "five of one card"},
 	} {
 		events, _, _ := resolve(a, b, tc.turn, nil, 1)
 		if got := handsFormed(events, SideA); len(got) != 1 || got[0] != tc.want {
@@ -332,7 +343,7 @@ func TestTheTwoConceptHands(t *testing.T) {
 func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	flurry, _ := handByKey("three-of-a-kind")
+	flurry, _ := handByKey("concept-three-of-a-kind")
 	events, _, _ := resolve(a, b, PlainCards(Strike, Jab, Strike, Strike), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 1 || got[0] != flurry.ID {
@@ -359,7 +370,7 @@ func TestTheLadderCountsAttacksAlone(t *testing.T) {
 func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Jab, Cut, Smash), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 0 {
 		t.Fatalf("three different attacks formed %v, want no built hand", got)
@@ -374,11 +385,11 @@ func TestWithNoHandTheBiggestAttackIsTheBlow(t *testing.T) {
 func TestTheHighCardIsNamedAndPaysTheIdentityMultiplier(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Jab, Smash, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Jab, Cut, Smash), nil, 1)
 
-	e, ok := comboEventFor(events, SideA)
+	e, ok := handEventFor(events, SideA)
 	if !ok {
-		t.Fatal("no KindCombo event — the attack phase said nothing about what it formed")
+		t.Fatal("no KindHand event — the attack phase said nothing about what it formed")
 	}
 	high, ok := handByKey("high-card")
 	if !ok {
@@ -517,7 +528,7 @@ func TestChilledCardsCannotFormAHand(t *testing.T) {
 		t.Fatalf("B should lose %d card to the chill, got %v", chillPct(), lost)
 	}
 
-	fourOfAKind, _ := handByKey("four-of-a-kind")
+	fourOfAKind, _ := handByKey("concept-four-of-a-kind")
 	if got := handsFormed(events, SideB); len(got) != 1 || got[0] != fourOfAKind.ID {
 		t.Fatalf("four surviving Strikes should form a four of a kind, got %v", got)
 	}
@@ -550,13 +561,13 @@ func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 func TestTheEventNamesScatteredCards(t *testing.T) {
 	a, b := duelist(10, 4, 20000), duelist(10, 4, 20000)
 
-	events, _, _ := resolve(a, b, PlainCards(Jab, Jab, Smash, Strike, Strike), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Jab, Jab, Smash, Cut, Cut), nil, 1)
 
-	e, ok := comboEventFor(events, SideA)
+	e, ok := handEventFor(events, SideA)
 	if !ok {
 		t.Fatal("no attack phase event")
 	}
-	got := comboCards(e)
+	got := handCards(e)
 	if len(got) != 4 || got[0] != 0 || got[1] != 1 || got[2] != 3 || got[3] != 4 {
 		t.Fatalf("two pair says it was formed from %v, want [0 1 3 4] around the Smash", got)
 	}
@@ -569,19 +580,19 @@ func TestTheHandIsAnnouncedBeforeTheDamage(t *testing.T) {
 
 	events, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
-	comboAt, damageAt := -1, -1
+	handAt, damageAt := -1, -1
 	for i, e := range events {
-		if e.Kind == KindCombo && comboAt < 0 {
-			comboAt = i
+		if e.Kind == KindHand && handAt < 0 {
+			handAt = i
 		}
 		if e.Kind == KindDamage && damageAt < 0 {
 			damageAt = i
 		}
 	}
-	if comboAt < 0 || damageAt < 0 {
-		t.Fatal("expected both a combo and a damage event")
+	if handAt < 0 || damageAt < 0 {
+		t.Fatal("expected both a hand and a damage event")
 	}
-	if comboAt > damageAt {
+	if handAt > damageAt {
 		t.Error("the damage landed before the hand that explains it was announced")
 	}
 }

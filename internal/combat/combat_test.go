@@ -149,7 +149,7 @@ func TestATurnResolvesInCategoryOrder(t *testing.T) {
 
 func TestQueuedOrderSurvivesInsideACategory(t *testing.T) {
 	// Reordering across categories does nothing, but reordering *within* one is the whole
-	// remaining point of dragging a card along the row — sequence combos will match on it.
+	// remaining point of dragging a card along the row — sequence hands will match on it.
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
 
@@ -261,7 +261,7 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 }
 
 func TestOnlyAttacksDealDamage(t *testing.T) {
-	// **Nothing in the plan family hits back.** A defence is a wall, not a counter, so a turn made
+	// **Nothing in the plan form hits back.** A defence is a wall, not a counter, so a turn made
 	// of plans alone is a turn in which nobody is hurt.
 	for _, a := range []ConceptID{Prepare, Plan, Defend} {
 		events, _, bAfter := resolve(duelist(10, 5, 100), duelist(10, 5, 100),
@@ -277,7 +277,7 @@ func TestOnlyAttacksDealDamage(t *testing.T) {
 }
 
 func TestADefendHalvesTheHandRatherThanTheCards(t *testing.T) {
-	// What this pins is that the halving lands **after** the combo multiplier — a Defend cuts the
+	// What this pins is that the halving lands **after** the hand multiplier — a Defend cuts the
 	// hand, not the cards that built it. Halving first would make it strongest against exactly
 	// the turns it should be weakest against.
 	a := duelist(10, 5, 500)

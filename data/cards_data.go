@@ -3,7 +3,7 @@ package data
 // The card language: the one schema every card in the game is written in, the player's twelve
 // and every enemy's own.
 //
-// **A card carries its own rules as of 2026-08-16.** Cost, damage, category and family used to be
+// **A card carries its own rules as of 2026-08-16.** Cost, damage, category and form used to be
 // switch statements over a closed `combat.ActionKind` enum, and this file carried a `CostTier`
 // column that was checked against them. That worked for twelve concepts. It cannot hold three or
 // four bespoke cards for each of ninety-six enemies — roughly four hundred concepts, each wanting
@@ -42,7 +42,7 @@ type CardData struct {
 	Label string `json:"Label"`
 
 	// Verb is what the card does: attack, defend, bank or draw. A closed vocabulary, exactly like
-	// the reward kinds in combos.json — adding a fifth is a Go change, and is meant to be.
+	// the reward kinds in hands.json — adding a fifth is a Go change, and is meant to be.
 	Verb string `json:"Verb"`
 
 	// Amount is read against the verb, which is what lets one field carry four meanings without a
@@ -64,11 +64,11 @@ type CardData struct {
 	// derivable from the verb. It costs its owner life.
 	Target string `json:"Target"`
 
-	// Family is which group of cards this concept belongs to — stab, slash, crush or plan. Empty
-	// means none, which is what every enemy card is: a family is the player's deck axis, the thing
+	// Form is which group of cards this concept belongs to — stab, slash, crush or plan. Empty
+	// means none, which is what every enemy card is: a form is the player's deck axis, the thing
 	// a pair is counted on and the letter in the card's corner, and an enemy card claiming to be a
-	// crush would be saying something untrue about a deck the player cannot combo with.
-	Family string `json:"Family"`
+	// crush would be saying something untrue about a deck the player cannot build hands against.
+	Form string `json:"Form"`
 
 	// Elements is which colours this concept ships in. Empty means `basic` alone.
 	//

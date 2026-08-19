@@ -25,13 +25,13 @@ import (
 // **A closed vocabulary, and closing it is the point** — the same posture `combat.Verb` takes.
 // The set is short for a structural reason rather than a lack of imagination: `combat.Card` is a
 // concept plus an element, and **the element is the only per-instance field**. Cost, damage,
-// family and label all live on the shared concept, so a worm targeting one of those would change
+// form and label all live on the shared concept, so a worm targeting one of those would change
 // every copy of that card in the deck rather than the one the player picked.
 //
 // **Cost and amount became per-card on 2026-08-17** — `Card.CostDelta` and `Card.AmountPct` — and
 // it was cheaper than it looked: `Cost()` and `Damage()` were already methods on the card, so the
 // override went in one place each, and `Amount()` was added beside them for the three sites that
-// read `Spec().Amount` directly. **Family and label are still concept-wide**, and a worm reaching
+// read `Spec().Amount` directly. **Form and label are still concept-wide**, and a worm reaching
 // for one of those is the moment to make the same argument again from scratch.
 type WormTarget int
 
@@ -59,7 +59,7 @@ const (
 	// under 100 by `Card.Amount`, because nothing stops a blow outright.
 	TargetAmount
 
-	// TargetPromote moves a card one rung up its family's ladder — Jab to Strike to Smash. It
+	// TargetPromote moves a card one rung up its form's ladder — Jab to Strike to Smash. It
 	// costs more and hits harder, and the ladder is a consequence of what `duelist_cards.json`
 	// declares rather than a table beside it.
 	TargetPromote

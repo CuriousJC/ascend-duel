@@ -30,7 +30,7 @@ import (
 //
 // **It cannot change an outcome.** The round was decided before any of it was drawn.
 //
-// **It can stop the playback cursor**, which the combo dialog was the first thing on this screen
+// **It can stop the playback cursor**, which the hand dialog was the first thing on this screen
 // to do. A figure crossing half the screen does not fit inside one event's dwell, and the
 // alternative is the bar dropping before the number reaches it — which is the picture this exists
 // to remove. `hitsRunning` is what `advancePlayback` waits on.
@@ -78,7 +78,7 @@ const (
 // **The attack red the log's verbs are marked in, asked for rather than restated.** `verbInkFor`
 // decides what an attack is coloured in this screen, and a figure that lands damage is the same
 // meaning as the verb it marks — so it takes the same answer, and a change to one is a change
-// to both. It is deliberately not `attentionYellow`: that belongs to the combo, and reusing it
+// to both. It is deliberately not `attentionYellow`: that belongs to the hand, and reusing it
 // would say the hand fired twice.
 func hitInk() color.RGBA { return verbInkFor(combat.CategoryAttack) }
 
@@ -145,7 +145,7 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 // **The sum line when the turn scored a hand, the acting card's own seat when it did not.** A
 // player's turn is one blow read off a hand, so the total is on screen in the sum box and the
 // figure should leave from there — anything else would put two different figures on screen for one
-// blow. A solo attacker emits no `KindCombo` at all, so there is no sum, and the figure has to come
+// blow. A solo attacker emits no `KindHand` at all, so there is no sum, and the figure has to come
 // out of the card that swung.
 //
 // It returns -1 for the sum, which is what `hitFlight.seat` means by it.
@@ -260,7 +260,7 @@ func hitAlpha(h hitFlight) float32 {
 // hitOrigin is where a figure sets off from — `anchorBlow`, resolved to a point.
 func (s *CombatScene) hitOrigin(gs *state.GlobalState, h hitFlight) (image.Point, bool) {
 	if h.seat < 0 {
-		r := s.comboMathRect(gs)
+		r := s.handMathRect(gs)
 		return image.Pt((r.Min.X+r.Max.X)/2, (r.Min.Y+r.Max.Y)/2), true
 	}
 

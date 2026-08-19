@@ -9,7 +9,7 @@ import (
 // **Named deck seeds, so a specific opening hand can be asked for by name.**
 //
 // The shuffle is deterministic from `deckSeed`, which means a seed *is* an opening hand.
-// Before this, checking anything that needed a particular hand — a combo you can actually
+// Before this, checking anything that needed a particular hand — a hand you can actually
 // click, a round with all three card categories in it — meant relaunching and hoping, or
 // reaching past the input layer to force the queue. A named seed replaces both with a number.
 //
@@ -31,7 +31,7 @@ type namedSeed struct {
 // Every number here came out of `tools/seeds`.
 //
 // **Every entry has been replaced three times**: on 2026-08-08 when the deck went from 30 cards to
-// 60, on 2026-08-15 when it was rebuilt as three attack families plus the plans, and again the same
+// 60, on 2026-08-15 when it was rebuilt as three attack forms plus the plans, and again the same
 // day when the drab attacks were cut and the deck fell to 48. Every re-check failed at once each
 // time, which is exactly what the re-check exists for — a seed is a fact about one particular
 // deck, and changing the deck silently re-deals every catalogued hand.
@@ -48,9 +48,9 @@ var seedCatalog = []namedSeed{
 	// and it necessarily shows all four colours — four copies of a concept are four elements.
 	{"four-strikes", 904, "four Strikes: a Four of a Kind, the top of the ladder"},
 
-	// 1xLunge 2xCleave 3xSmash 1xPrepare 1xPlan. The same shape one family over and at the top of
+	// 1xLunge 2xCleave 3xSmash 1xPrepare 1xPlan. The same shape one form over and at the top of
 	// the ladder: three Smashes is 9 AP and cannot be paid for out of an opening budget, so this is
-	// the hand that shows a combo you can see and cannot afford.
+	// the hand that shows a hand you can see and cannot afford.
 	{"three-smashes", 21, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
 
 	// 1xJab 1xThrust 2xSlash 2xStrike 2xDefend. Both verbs in one round, which is what the two

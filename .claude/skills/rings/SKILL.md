@@ -6,7 +6,7 @@ description: The ring grammar - how a ring is written as data, the closed vocabu
 # Rings
 
 **A ring is the only collected thing that is never played.** A card resolves in the turn you
-queued it, a worm fires when you pick it, a combo is scored when the attack phase runs — each
+queued it, a worm fires when you pick it, a hand is scored when the attack phase runs — each
 already knows *when* it happens. A ring waits, so it has to say so itself.
 
 That is the whole reason the grammar has three parts where the card language has two.
@@ -46,7 +46,7 @@ stat rings below need exactly that, one rule to accumulate and one to apply.
 **`Do` is one word carrying both the operation and its subject** — `scale-damage`, not
 `{Op: scale, Of: damage}` *(owner's call, 2026-08-17)*. Splitting it into two crossing lists
 would buy a grid that is mostly meaningless cells, and `apply-status` sits on neither axis. This
-is the same argument that took the mixes out of `combos.json`; do not re-propose it without a
+is the same argument that took the mixes out of `hands.json`; do not re-propose it without a
 new one.
 
 ## The three vocabularies
@@ -66,7 +66,7 @@ which is what makes a ring a *run* concept rather than a combat one.
 | `fight-won` | `session` | after the win | once per win |
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
 
-**`card-damage` and `card-cost` fire per card, and that is the point.** A family ring doubles
+**`card-damage` and `card-cost` fire per card, and that is the point.** A form ring doubles
 *every* card that matches, not one of them — three slash cards in a turn are three doublings
 inside the same blow.
 
@@ -75,14 +75,14 @@ inside the same blow.
 | Predicate | Matches on | Example |
 |---|---|---|
 | `Element` | the card's colour | `{ "Element": "ice" }` |
-| `Family` | stab / slash / crush / plan | `{ "Family": "slash" }` |
+| `Form` | stab / slash / crush / plan | `{ "Form": "slash" }` |
 | `Concept` | one named card | `{ "Concept": "Strike" }` |
 | *(absent)* | always | Banker, Hungry, the stat rings |
 
 **`Concept` names a card by its label**, resolved at load the way a deck list is. A concept *ID*
 is registration-ordered and must never be serialized — the label is what is stable.
 
-**A concept ring is a much narrower object than a family ring**, and pricing them the same is a
+**A concept ring is a much narrower object than a form ring**, and pricing them the same is a
 mistake waiting to happen: Striker covers 4 cards where Keen covers 12.
 
 ### `Then` — the effects
@@ -198,7 +198,7 @@ Reach for these first when an idea sounds too easy.
   the enemy-side counterpart. `attack-lands` is symmetric in the engine, so nothing has to be
   undone if affixes later reuse the machinery.
 - **A ring may not change what a *concept* is.** Cost and amount are per-card
-  (`Card.CostDelta`, `Card.AmountPct`); family and label are concept-wide, so a ring targeting
+  (`Card.CostDelta`, `Card.AmountPct`); form and label are concept-wide, so a ring targeting
   one of those would change every copy in the deck. Same bound a worm has.
 - **Five worn at once**, until brands expand it.
 
@@ -237,7 +237,7 @@ The questions to put to an idea, in order:
 
 1. **Which moment?** If none of the seven fits, that is the finding — say so rather than
    inventing one quietly. A new moment is a Go seat.
-2. **Does the `If` exist?** Element, family and concept are the three. Anything else is new
+2. **Does the `If` exist?** Element, form and concept are the three. Anything else is new
    vocabulary.
 3. **Does the `Then` exist?** If not, is it a new verb or a re-use? A new verb is one table row
    plus one place applying it.

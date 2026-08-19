@@ -155,7 +155,7 @@ func TestSortingKeepsIdenticalCardsInPlace(t *testing.T) {
 func TestSortingRebuildsTheQueueInTheNewOrder(t *testing.T) {
 	// The hand is the authority on the queue's order as well as its membership, and
 	// handIndexForQueue is the inverse of that walk. Sorting without resyncing would leave the
-	// two disagreeing, and the visible symptom is a combo preview ringing the wrong cards.
+	// two disagreeing, and the visible symptom is a hand preview ringing the wrong cards.
 	s := &CombatScene{hand: []paletteCard{
 		{actionCard: card(combat.Cleave, combat.Fire), selected: true}, // 3 AP
 		{actionCard: card(combat.Jab, combat.Fire), selected: true},    // 1 AP

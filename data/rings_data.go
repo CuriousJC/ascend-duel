@@ -4,7 +4,7 @@ package data
 //
 // **A ring is written in a grammar as of 2026-08-17.** It was a record naming one element, which
 // `internal/screens` turned into a flag — that held the four elemental rings and nothing else, because
-// a family multiplier and a vitae ring have no element to be a bit under. A ring is now a list of
+// a form multiplier and a vitae ring have no element to be a bit under. A ring is now a list of
 // `When` / `If` / `Then` rules: the moment that wakes it, what has to be true, and what happens. The
 // full vocabulary, the code seat each moment lands on, and the questions to put to a new ring idea
 // are in `.claude/skills/rings/SKILL.md`; MECHANICS.md holds the argument for the shape.
@@ -85,13 +85,13 @@ type RingIfData struct {
 	// Element is the card's colour: `fire`, `ice`, `lightning`, `earth` or `basic`.
 	Element string `json:"Element,omitempty"`
 
-	// Family is `stab`, `slash`, `crush` or `plan`.
-	Family string `json:"Family,omitempty"`
+	// Form is `stab`, `slash`, `crush` or `plan`.
+	Form string `json:"Form,omitempty"`
 
 	// Concept names one card by its label — `Strike`. Resolved at load the way a deck list is,
 	// because a concept's ID is registration-ordered and must never be written in a file.
 	//
-	// **A concept ring is a much narrower object than a family ring** and pricing them alike is a
+	// **A concept ring is a much narrower object than a form ring** and pricing them alike is a
 	// mistake waiting to happen: Striker covers 4 cards where Keen covers 12.
 	Concept string `json:"Concept,omitempty"`
 }

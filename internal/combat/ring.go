@@ -4,7 +4,7 @@ package combat
 // inside this package.
 //
 // **A ring is the only collected thing that is never played** *(2026-08-17)*. A card resolves in the
-// turn you queued it, a worm fires when you pick it, a combo is scored when the attack phase runs —
+// turn you queued it, a worm fires when you pick it, a hand is scored when the attack phase runs —
 // each already knows *when* it happens. A ring waits, so it has to say so itself, and that is the
 // third part the card language does not need. `.claude/skills/rings/SKILL.md` is the whole grammar;
 // MECHANICS.md holds the argument for its shape.
@@ -38,7 +38,7 @@ const (
 
 	// MomentCardDamage fires per card inside the blow's base sum: Duelist.CardDamage.
 	//
-	// **Per card is the point.** A family ring doubles *every* card that matches, so three slash
+	// **Per card is the point.** A form ring doubles *every* card that matches, so three slash
 	// cards in a turn are three doublings inside the same blow.
 	MomentCardDamage
 
@@ -109,7 +109,7 @@ func (m Moment) readsACard() bool {
 // RingVerb is what a rule does. **One word carrying both the operation and its subject** —
 // `scale-damage`, not an operation crossed with a subject *(owner's call, 2026-08-17)*: two crossing
 // lists would buy a grid that is mostly meaningless cells, and `apply-status` sits on neither axis.
-// The same argument that took the mixes out of `combos.json`.
+// The same argument that took the mixes out of `hands.json`.
 //
 // **Each verb belongs to exactly one moment**, and a verb used at the wrong one is refused at
 // registration rather than ignored. See verbMoment.
@@ -215,21 +215,21 @@ func verbMoment(v RingVerb) Moment {
 // the two vitae rings want and why the field is optional in the file.
 //
 // Comparable, and each predicate carries its own "is it set" flag because every one of the three has
-// a meaningful zero value: Basic is an element, FamilyNone is a family, and concept zero is the
+// a meaningful zero value: Basic is an element, FormNone is a form, and concept zero is the
 // player's first card.
 type RingCondition struct {
 	Element    Element
 	HasElement bool
 
-	Family    Family
-	HasFamily bool
+	Form    Form
+	HasForm bool
 
 	Concept    ConceptID
 	HasConcept bool
 }
 
 // Any reports whether this condition constrains anything at all.
-func (c RingCondition) Any() bool { return c.HasElement || c.HasFamily || c.HasConcept }
+func (c RingCondition) Any() bool { return c.HasElement || c.HasForm || c.HasConcept }
 
 // Matches reports whether a card satisfies every predicate that is set. **Every one, not any** — two
 // predicates on one rule narrow it, which is what a "fire slash" ring would want.
@@ -237,7 +237,7 @@ func (c RingCondition) Matches(card Card) bool {
 	if c.HasElement && card.Element != c.Element {
 		return false
 	}
-	if c.HasFamily && card.Family() != c.Family {
+	if c.HasForm && card.Form() != c.Form {
 		return false
 	}
 	if c.HasConcept && card.Concept != c.Concept {
@@ -453,7 +453,7 @@ func (d Duelist) Wearing(w WornRing) Duelist {
 
 // WearsRing reports whether this duelist has one particular ring on. **A query rather than a flag**
 // *(2026-08-17)*: it was an array of bools indexed by element until the grammar landed, which a
-// family multiplier had no element to be a bit under.
+// form multiplier had no element to be a bit under.
 func (d Duelist) WearsRing(id RingID) bool {
 	for _, w := range d.WornRings() {
 		if w.Ring == id {
@@ -468,7 +468,7 @@ func (d Duelist) WearsRing(id RingID) bool {
 //
 // **The card is what an `If` is matched against**, and a zero Card is what the three cardless moments
 // pass — a rule with a predicate at one of those is refused at registration, so nothing here has to
-// decide what a family means at `fight-start`.
+// decide what a form means at `fight-start`.
 func RingEffectsAt(worn []WornRing, m Moment, card Card) []RingEffect {
 	var out []RingEffect
 	for _, w := range worn {
@@ -557,7 +557,7 @@ func (d Duelist) CardDamage(c Card) int {
 // always knew - the ring is the thing being walked - and threw the answer away, which left the
 // screen unable to fly a CHILLED out of the ring that caused it without inventing an element-to-ring
 // table of its own. That table would be a second rule about the same thing, and it would be wrong
-// the first time a family ring or a concept ring applied a status, which this grammar already
+// the first time a form ring or a concept ring applied a status, which this grammar already
 // allows. See Event.Ring.
 //
 // **The first ring to apply a status is the one credited**, which falls out of the dedup and out of

@@ -1,0 +1,159 @@
+{
+  "hands": [
+    {
+      "key": "high-card",
+      "id": 1,
+      "name": "High Card",
+      "match": "concept",
+      "groups": [1],
+      "multiplier": 100
+    },
+
+    {
+      "key": "concept-pair",
+      "id": 10,
+      "name": "Card Pair",
+      "match": "concept",
+      "groups": [2],
+      "multiplier": 115
+    },
+    {
+      "key": "concept-two-pair",
+      "id": 11,
+      "name": "Card Two Pair",
+      "match": "concept",
+      "groups": [2, 2],
+      "multiplier": 230
+    },
+    {
+      "key": "concept-three-of-a-kind",
+      "id": 12,
+      "name": "Card Three of a Kind",
+      "match": "concept",
+      "groups": [3],
+      "multiplier": 255
+    },
+    {
+      "key": "concept-full-house",
+      "id": 13,
+      "name": "Card Full House",
+      "match": "concept",
+      "groups": [3, 2],
+      "multiplier": 425
+    },
+    {
+      "key": "concept-four-of-a-kind",
+      "id": 14,
+      "name": "Card Four of a Kind",
+      "match": "concept",
+      "groups": [4],
+      "multiplier": 500
+    },
+    {
+      "key": "concept-five-of-a-kind",
+      "id": 15,
+      "name": "Card Five of a Kind",
+      "match": "concept",
+      "groups": [5],
+      "multiplier": 745
+    },
+
+    {
+      "key": "form-pair",
+      "id": 20,
+      "name": "Form Pair",
+      "match": "form",
+      "groups": [2],
+      "multiplier": 110
+    },
+    {
+      "key": "form-two-pair",
+      "id": 21,
+      "name": "Form Two Pair",
+      "match": "form",
+      "groups": [2, 2],
+      "multiplier": 170
+    },
+    {
+      "key": "form-three-of-a-kind",
+      "id": 22,
+      "name": "Form Three of a Kind",
+      "match": "form",
+      "groups": [3],
+      "multiplier": 180
+    },
+    {
+      "key": "form-full-house",
+      "id": 23,
+      "name": "Form Full House",
+      "match": "form",
+      "groups": [3, 2],
+      "multiplier": 310
+    },
+    {
+      "key": "form-four-of-a-kind",
+      "id": 24,
+      "name": "Form Four of a Kind",
+      "match": "form",
+      "groups": [4],
+      "multiplier": 320
+    },
+    {
+      "key": "form-five-of-a-kind",
+      "id": 25,
+      "name": "Form Five of a Kind",
+      "match": "form",
+      "groups": [5],
+      "multiplier": 565
+    },
+
+    {
+      "key": "element-pair",
+      "id": 30,
+      "name": "Elemental Pair",
+      "match": "element",
+      "groups": [2],
+      "multiplier": 110
+    },
+    {
+      "key": "element-two-pair",
+      "id": 31,
+      "name": "Elemental Two Pair",
+      "match": "element",
+      "groups": [2, 2],
+      "multiplier": 185
+    },
+    {
+      "key": "element-three-of-a-kind",
+      "id": 32,
+      "name": "Elemental Three of a Kind",
+      "match": "element",
+      "groups": [3],
+      "multiplier": 195
+    },
+    {
+      "key": "element-full-house",
+      "id": 33,
+      "name": "Elemental Full House",
+      "match": "element",
+      "groups": [3, 2],
+      "multiplier": 365
+    },
+    {
+      "key": "element-four-of-a-kind",
+      "id": 34,
+      "name": "Elemental Four of a Kind",
+      "match": "element",
+      "groups": [4],
+      "multiplier": 375
+    },
+    {
+      "key": "element-five-of-a-kind",
+      "id": 35,
+      "name": "Elemental Five of a Kind",
+      "match": "element",
+      "groups": [5],
+      "multiplier": 665
+    }
+  ]
+}

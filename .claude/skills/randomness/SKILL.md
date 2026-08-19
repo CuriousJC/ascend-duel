@@ -127,6 +127,7 @@ off by default**, because a pinned game is not the game.
 | `deckSeedName` / `deckSeed` (`combat_deck.go`) | `""` — unpinned | the player's hand *and* the opponent's, together |
 | `seeds.EnemyDeckPin` | always used by `tools/balance` | the opponent's shuffle |
 | `balanceSeed` (`tools/balance`) | always | the lightning rolls in a balance run |
+| `oddsSeed` (`tools/handodds`) | always | which hands the rarity sample deals |
 
 **`deckSeed` pins both sides or neither.** Half a reproducible duel is worse than none: the
 hand looks right and the fight still differs. When it is non-zero the opponent's pile falls
@@ -146,7 +147,7 @@ exception, not the precedent. It was taken because unreliability is what lightni
 because the alternatives — breaking the hand, cutting the multiplier — were weighed and written
 down in `MECHANICS.md`.
 
-**Certainty is often the better game as well as the cheaper code.** It matches the rule combos
+**Certainty is often the better game as well as the cheaper code.** It matches the rule hands
 otherwise follow: what you committed to cannot be silently undone. **A second roll needs the
 same argument made from scratch**, in `MECHANICS.md`, not an appeal to lightning.
 

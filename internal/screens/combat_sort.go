@@ -142,7 +142,7 @@ func (s *CombatScene) setSort(mode handSort) {
 //
 // **It resyncs the queue, and that is not housekeeping.** The list is the authority on the
 // queue's order as well as its membership, and `handIndexForQueue` is the inverse of that one
-// walk — so a hand rearranged under a stale `fighterActions` would leave the combo preview
+// walk — so a hand rearranged under a stale `fighterActions` would leave the hand preview
 // naming a hand the cards it now holds do not make. Nothing about the *round*
 // changes: the queue holds the same cards, and order is not something the engine reads.
 //
@@ -192,15 +192,15 @@ func handLess(mode handSort, a, b actionCard) bool {
 // then the deck overlay's own keys.
 //
 // **It is the overlay's chain with cost promoted to the front**, deliberately rather than
-// coincidentally. The panel arranges the whole deck family-first because what a player looks
-// for there is how much of a family they still hold; a hand is looked at to find what can be
+// coincidentally. The panel arranges the whole deck form-first because what a player looks
+// for there is how much of a form they still hold; a hand is looked at to find what can be
 // afforded, so cost leads. Everything under that is the same order in both places, so scanning
 // a row of cards means the same thing wherever the row is.
 func costChainLess(a, b actionCard) bool {
 	if ca, cb := a.Cost(), b.Cost(); ca != cb {
 		return ca < cb
 	}
-	if ra, rb := familyRank(a.Family()), familyRank(b.Family()); ra != rb {
+	if ra, rb := formRank(a.Form()), formRank(b.Form()); ra != rb {
 		return ra < rb
 	}
 	if a.Concept != b.Concept {
@@ -211,7 +211,7 @@ func costChainLess(a, b actionCard) bool {
 
 // categoryRank is the order the type sort runs in: everything that attacks, then the plans.
 //
-// A function rather than the enum's own order, for the reason familyRank is one — the enum is
+// A function rather than the enum's own order, for the reason formRank is one — the enum is
 // grouped for the rules, and reading it here would tie how the hand is arranged to a rules
 // decision that has no reason to keep agreeing with it.
 func categoryRank(c combat.Category) int {

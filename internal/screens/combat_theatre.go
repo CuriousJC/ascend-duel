@@ -61,7 +61,7 @@ const (
 	// status.
 	anchorRing
 
-	// anchorSumLine is the combo dialog's line of figures, in the feed's collapsed band.
+	// anchorSumLine is the hand dialog's line of figures, in the feed's collapsed band.
 	anchorSumLine
 
 	// anchorBlow is where this turn's damage figure was last seen, and it is the one anchor with a
@@ -70,13 +70,20 @@ const (
 	//
 	// It exists because `KindDamage` means two different pictures. A player's turn is one blow
 	// scored off a hand, so its figure is already on screen in the sum and should travel from
-	// there. A solo attacker emits no `KindCombo` at all — every attack lands its own face damage,
+	// there. A solo attacker emits no `KindHand` at all — every attack lands its own face damage,
 	// one card at a time — so there is no sum, and the figure has to come out of the card that
 	// swung. `soloAttacker(side)` is the predicate that already knows which.
 	anchorBlow
 
 	// anchorAPFigure is the action-point figure on the button strip, under the left end of the AP
-	// bar. What a Prepare banks lands on the number it changes.
+	// bar: **this round's budget being spent**.
+	//
+	// **Nothing targets it, and a Prepare deliberately does not** *(2026-08-19, owner's call)*. It
+	// was this row's target on the reasoning that banked points should land on the AP number — but
+	// there are two, and the one they change is the fighter card's, which is the budget with
+	// `BonusAP` in it. A figure arriving here would be a number landing on a total that does not
+	// move. It stays in the enum because it is a real place and the next thing that raises or
+	// spends *this* round's budget belongs on it.
 	anchorAPFigure
 
 	// anchorHandRow is the hand band itself — the row a Plan widens.
@@ -185,8 +192,8 @@ var theatre = map[combat.EventKind]flightSpec{
 		"the card lifting in its own seat is the drawing, and tableFireLift already does it",
 	},
 	combat.KindGathered: {
-		anchorActorSeat, anchorAPFigure, gestureFly,
-		"banked points land on the budget figure they change",
+		anchorActorSeat, anchorActorCard, gestureFly,
+		"banked points land on the AP line they raise, which is the fighter card's and not the strip's",
 	},
 	combat.KindDrew: {
 		anchorActorSeat, anchorHandRow, gestureFly,
@@ -194,7 +201,7 @@ var theatre = map[combat.EventKind]flightSpec{
 	},
 	combat.KindNegated: {
 		anchorNone, anchorSumLine, gesturePop,
-		"a defence is the reverse of a combo and takes the combo's grammar: x50% on the same line",
+		"a defence is the reverse of a hand and takes the hand's grammar: x50% on the same line",
 	},
 	combat.KindDamage: {
 		anchorBlow, anchorTargetCard, gestureFly,
@@ -204,7 +211,7 @@ var theatre = map[combat.EventKind]flightSpec{
 		anchorNone, anchorNone, gestureNone,
 		"the bar reaching zero says it; a word as well would say it twice",
 	},
-	combat.KindCombo: {
+	combat.KindHand: {
 		anchorActorSeat, anchorSumLine, gestureFly,
 		"each card's own figure flies out of that card into the sum - the dialog that started this",
 	},

@@ -9,7 +9,7 @@ package data
 // record in this file, named by a ring's `apply-status` effect. See the `rings` skill.
 //
 // **`internal/combat` reads this file directly**, which is the third such file after
-// `combos.json` and `duelist_cards.json` and passes the same who-consumes-it test: how much a
+// `hands.json` and `duelist_cards.json` and passes the same who-consumes-it test: how much a
 // status is worth, how long it lasts and which of four things it does are rules by definition. The
 // engine cannot resolve a round without them, and its own tests could not run if a screen had to
 // hand them over.

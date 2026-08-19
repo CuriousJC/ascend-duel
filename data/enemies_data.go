@@ -48,7 +48,7 @@ type EnemyData struct {
 	// DMG is what a 1x attack deals in this enemy's hands. Actions is its action-point budget, and
 	// cards cost 1 to 3 of it. HP is life, and every enemy's was doubled when the fields changed —
 	// the roster was written against a game where a turn landed several small blows, and one blow
-	// per turn plus combo multipliers made every fight far shorter than it reads.
+	// per turn plus hand multipliers made every fight far shorter than it reads.
 	DMG     int `json:"DMG"`
 	Actions int `json:"Actions"`
 	HP      int `json:"HP"`

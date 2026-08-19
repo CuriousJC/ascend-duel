@@ -64,7 +64,11 @@ func Start(midi []byte) error {
 	if err != nil {
 		return fmt.Errorf("music: opening the audio device: %w", err)
 	}
-	p.SetVolume(volume)
+	if muted {
+		p.SetVolume(0)
+	} else {
+		p.SetVolume(volume)
+	}
 	p.Play()
 
 	player = p
@@ -73,7 +77,12 @@ func Start(midi []byte) error {
 
 // muted is whether the score is currently silenced. Package state alongside the player,
 // because it is a property of the one thing this package owns.
-var muted bool
+//
+// **It starts true: the game boots silent and the player turns the score on.** Music that
+// begins on its own is the first thing a new player reaches for a control to stop, and there
+// is no settings screen to stop it from — the mute button in the chrome is the whole vocabulary.
+// Start reads this when it opens the device, so nothing is heard before the button is touched.
+var muted = true
 
 // Available reports whether there is anything to mute.
 //

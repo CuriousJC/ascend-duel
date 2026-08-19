@@ -36,7 +36,7 @@ func TestTheRegistryRefusesACardTheRulesCannotResolve(t *testing.T) {
 		{"no label", data.CardData{Verb: "attack", Amount: 100, Cost: 1}},
 		{"unknown verb", data.CardData{Label: "Bad1", Verb: "smite", Amount: 100, Cost: 1}},
 		{"unknown target", data.CardData{Label: "Bad2", Verb: "attack", Amount: 100, Cost: 1, Target: "everyone"}},
-		{"unknown family", data.CardData{Label: "Bad3", Verb: "attack", Amount: 100, Cost: 1, Family: "punch"}},
+		{"unknown form", data.CardData{Label: "Bad3", Verb: "attack", Amount: 100, Cost: 1, Form: "punch"}},
 		{"zero amount", data.CardData{Label: "Bad4", Verb: "attack", Amount: 0, Cost: 1}},
 		{"negative cost", data.CardData{Label: "Bad5", Verb: "attack", Amount: 100, Cost: -1}},
 

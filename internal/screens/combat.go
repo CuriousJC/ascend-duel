@@ -64,7 +64,7 @@ const (
 
 // beat scales the playback speed by a fraction, and it is **how every clock on this screen that
 // is not the dwell itself is written** *(2026-08-19, owner's call)*: `eventDwellTicks` is the one
-// number, and a card's flight, a figure's journey and each beat of the combo dialog are all
+// number, and a card's flight, a figure's journey and each beat of the hand dialog are all
 // proportions of it. Before this they were fifteen independent constants tuned against a dwell of
 // 75, so cutting the speed to 25 sped the round's *account* up and left every animation in it
 // exactly as slow as it was — a round paced by whichever of the two happened to be longer.
@@ -81,6 +81,12 @@ func beat(num, den int) int {
 	}
 	return 1
 }
+
+// victoryHoldTicks is how long a won fight sits finished before the post-battle screen takes over
+// by itself. A fraction of the one playback speed like every other clock here, and **the one
+// number to move if the pause reads as too long or too short** — the picture it holds up is the
+// last round of a won duel, cards on the table and an empty enemy bar. See holdVictory.
+var victoryHoldTicks = beat(4, 1)
 
 // eventDwells is each kind's share of the playback speed: a multiplier on `eventDwellTicks`,
 // where 1 is the ordinary beat every event gets.
@@ -116,7 +122,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindNegated:    1,
 	combat.KindDamage:     1,
 	combat.KindDefeated:   1,
-	combat.KindCombo:      1,
+	combat.KindHand:       1,
 	combat.KindChilled:    1,
 	combat.KindStatus:     1,
 	combat.KindMissed:     1,
@@ -391,7 +397,7 @@ type CombatScene struct {
 
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
-	// moment the round starts — see seatPlayedCards — and what a combo narrows to the cards it
+	// moment the round starts — see seatPlayedCards — and what a hand narrows to the cards it
 	// was made of.
 	//
 	// Cleared when the hand is spent, which is the moment those cards actually leave.
@@ -415,7 +421,7 @@ type CombatScene struct {
 	//
 	// **A list rather than one seat, because the attack phase is one blow** *(2026-08-14)*. The
 	// cards announce one after another and stay up as they do, so the whole hand is raised by the
-	// time the combo lands on it — and the combo then drops whichever of them earned nothing. A
+	// time the hand lands on it — and the hand then drops whichever of them earned nothing. A
 	// single lit seat could only ever say "this card", which is the reading the one-blow rule
 	// exists to stop.
 	firingSeats      []int
@@ -425,6 +431,13 @@ type CombatScene struct {
 	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
+
+	// banks are the `+2 AP` figures a Prepare sends to the fighter card whose budget it raises,
+	// and bankShown is what they have already delivered — the points a card's AP line is drawing
+	// on top of `Duelist.BonusAP`, which the engine does not write until the round's end state is
+	// adopted. Indexed by side. See combat_bank.go.
+	banks     []bankFlight
+	bankShown [2]int
 
 	// banner is the name of the hand the player committed, on its way from the planning seat to
 	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
@@ -455,6 +468,10 @@ type CombatScene struct {
 	// Update with the global state in hand.
 	won bool
 
+	// victoryHeld counts the frames a won fight has been sitting finished, and it is what raises
+	// `won` without anybody pressing anything. See victoryHoldTicks.
+	victoryHeld int
+
 	// enemyRoster is the fight order, built once from the loaded records. On the scene
 	// rather than at package scope because it reads global state, which does not exist
 	// until main has run. See roster.
@@ -473,14 +490,14 @@ type CombatScene struct {
 	ticks  int
 	round  int
 
-	// mathBox is the combo dialog: the blow's arithmetic acted out across the band above the hand
+	// mathBox is the hand dialog: the blow's arithmetic acted out across the band above the hand
 	// on the beat the hand fires. See combat_mathbox.go.
 	//
 	// **It is the one thing on this screen that can stop the playback cursor.** Every other
 	// animation runs on its own clock beside the log; this one is a beat *of* the log, because a
 	// sum revealed a figure at a time does not fit inside a single event's dwell. It still
 	// decides nothing — `ResolveRound` settled the round before any of it was drawn.
-	mathBox comboMathBox
+	mathBox handMathBox
 
 	// The authoritative end-of-round state, adopted once playback catches up. Guard
 	// flags in particular only exist here, since no event carries them.
@@ -592,6 +609,11 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// screen when the next fight starts.
 	s.clearHits()
 
+	// **The banked figures go with them**, and for the same reason: a Prepare's points are a fact
+	// about one round of one fight, and `bankShown` is a drawing that only the end of a round takes
+	// down.
+	s.clearBanks()
+
 	// **The table is cleared here as well as by the spend** *(2026-08-16)*. `s.resolved` used to
 	// be emptied in exactly two places — `seatPlayedCards` at the start of a round and
 	// `spendSelected` at the end of one — and that covered every case only because every round
@@ -603,6 +625,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.resolved = nil
 	s.enemyDealt = nil
 	s.restart = false
+	s.victoryHeld = 0
 	s.discardsLeft = discardsPerRound
 
 	// A fresh deck every visit rather than continuing a run that has been abandoned, and a
@@ -684,8 +707,10 @@ func resetCombatState(d combat.Duelist) combat.Duelist {
 }
 
 // duelSettled reports that the fight is over *and* has finished being watched. Both halves
-// matter: life reaches zero partway through playback, and offering the way out before the
-// killing blow has been drawn would cut the round short at its most interesting moment.
+// matter: life reaches zero partway through playback, and taking the way out before the killing
+// blow has been drawn would cut the round short at its most interesting moment. That is as true
+// of the exit a won fight takes by itself as it was of the button — see holdVictory, which counts
+// from here.
 func (s *CombatScene) duelSettled() bool {
 	return s.cursor >= len(s.log) && (!s.fighter.Alive() || !s.enemy.Alive())
 }
@@ -698,6 +723,40 @@ func (s *CombatScene) duelSettled() bool {
 // offers one alteration to the deck and sends the player back here for the next room — so the
 // advance along the roster is the run's (`WonFight`), not this screen's. A defeat has nothing to
 // award, so it re-enters directly and puts the same opponent back up.
+// victoryPending reports a won fight winding down: settled, the enemy dead, and the screen holding
+// its last picture until the post-battle scene takes over on its own. It is what the button strip
+// and `Draw` read, so "the fight is over and there is nothing to press" is asked in one place.
+func (s *CombatScene) victoryPending() bool {
+	return s.duelSettled() && !s.enemy.Alive()
+}
+
+// holdVictory is what carries a won fight into the post-battle screen **without the player
+// pressing anything** *(2026-08-19, owner's call)*. It counts frames since the last event was
+// drawn and raises the same flag Next does once `victoryHoldTicks` have passed.
+//
+// **The hold is the whole of the design, not a delay before one.** The screen freezes a settled
+// duel deliberately — the cards stay on the table, the hand keeps its gaps, and the picture the
+// player is looking at when the killing blow lands is the picture that stays up (see endOfRound).
+// Leaving on the frame the last figure arrives would throw that away, so the pause is kept and
+// only the press is dropped.
+//
+// **Next stays live and still works**, so the hold is a floor rather than a wait: a player who has
+// seen enough presses on. And **the count stops while a dialog is up** — the fight log can be
+// opened on a won fight, and a screen that changed out from under an open panel would be reading
+// material snatched away.
+//
+// A defeat is untouched: `Retry` is a decision to play the same fight again, and a screen that
+// restarted a lost duel by itself would take that decision away.
+func (s *CombatScene) holdVictory() {
+	if s.modalUp() {
+		return
+	}
+	s.victoryHeld++
+	if s.victoryHeld >= victoryHoldTicks {
+		s.nextFight()
+	}
+}
+
 func (s *CombatScene) nextFight() {
 	if !s.duelSettled() {
 		return
@@ -773,10 +832,21 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// "commit and move the game forward", and a control that appears only at the end of a
 	// fight would be a control nobody has learned.
 	if s.duelSettled() {
-		s.duelButton.Text, s.duelButton.OnClick = "Retry", s.nextFight
-		if !s.enemy.Alive() {
-			s.duelButton.Text = "Next"
+		// **A won fight has no control at all** *(2026-08-19, owner's call)*. It holds its last
+		// picture and then leaves, so there is nothing to press and nothing to label: a `Next`
+		// standing lit under a screen that is about to change by itself is an offer of a choice
+		// the player has not got. See holdVictory and victoryPending — the button is not drawn
+		// either.
+		if s.victoryPending() {
+			s.holdVictory()
+			setEnabled(s.discardButton, false)
+			systems.UpdateButton(gs, s.discardButton)
+			return nil
 		}
+
+		// A defeat keeps its button: Retry is a decision to play the same fight again, and it is
+		// the player's.
+		s.duelButton.Text, s.duelButton.OnClick = "Retry", s.nextFight
 		setEnabled(s.duelButton, !s.modalUp())
 		setEnabled(s.discardButton, false)
 
@@ -812,6 +882,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// still in the air, so a tick that only ran when playback was allowed to advance would leave
 	// the flight frozen at age zero and hang the round on itself.
 	s.tickHits()
+	s.tickBanks()
 	s.advancePlayback(gs)
 
 	if trace.Enabled() && len(s.hand) != s.tracedHand {
@@ -857,7 +928,11 @@ func (s *CombatScene) startRound() {
 	s.banner.clear()
 	if blow, ok := s.previewAttack(); ok {
 		s.banner = handBanner{
-			name:   handShout(blow.Hand.Name),
+			name: handShout(blow.Hand.Name),
+			// The multiplier travels with the name, so what the hand is worth is written down
+			// from the moment it was chosen rather than first met when the figure flies out of
+			// the word. See handBanner.
+			mult:   handMultiplierLine(blow.Multiplier),
 			flight: newTravel(0, bannerFlyTicks),
 			flying: true,
 		}
@@ -941,9 +1016,9 @@ func eventLabel(e combat.Event) string {
 		return fmt.Sprintf("negated     %v's %v cuts it to %d", e.Side, e.Action, e.Amount)
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
-	case combat.KindCombo:
+	case combat.KindHand:
 		return fmt.Sprintf("attack      %v forms %s (x%d.%02d)",
-			e.Side, comboName(e), e.Multiplier/100, e.Multiplier%100)
+			e.Side, handName(e), e.Multiplier/100, e.Multiplier%100)
 	case combat.KindChilled:
 		return fmt.Sprintf("chilled     %v loses its %v", e.Side, e.Action)
 	case combat.KindDefeated:
@@ -961,7 +1036,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		return
 	}
 
-	// **The combo dialog owns the beat while it runs, and it is the one exception to the dwell
+	// **The hand dialog owns the beat while it runs, and it is the one exception to the dwell
 	// below** *(2026-08-18)*. A sum revealed a figure at a time takes several seconds and cannot
 	// be fitted inside one event's dwell, so rather than the box racing playback the cursor waits
 	// for it. Everything else that moves on this screen runs on its own clock alongside the log.
@@ -970,6 +1045,15 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// drawn; what waits is the drawing of it.
 	if s.mathBox.running() {
 		s.mathBox.tick()
+		// **The banner goes when its own figure sets off** *(2026-08-19, owner's call)*. The
+		// multiplier flies out of the second line under the hand's name and into the sum, so from
+		// that frame the number is in the line and the banner is a copy of something that has
+		// moved. The name goes with it rather than a beat later: it has been carried down, said,
+		// and spent, and leaving it lit over the hand while the sum finishes and the enemy swings
+		// back is a word breathing at the player long after it has anything left to tell them.
+		if s.mathBox.at >= s.mathBox.multAt {
+			s.banner.clear()
+		}
 		return
 	}
 
@@ -978,6 +1062,13 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// would drop the bar before the figure reached it — which is the picture the flight exists to
 	// remove. See combat_hits.go; it changes pacing and cannot change an outcome.
 	if s.hitsRunning() {
+		return
+	}
+
+	// **And a banked figure holds it too**, for the same reason and with the same limits: the AP
+	// line on the fighter card is waiting on the number, so playback running on would raise the
+	// budget before the points got there. See combat_bank.go.
+	if s.banksRunning() {
 		return
 	}
 
@@ -1005,7 +1096,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	}
 
 	s.applyEvent(s.log[s.cursor])
-	s.startComboMath(gs, s.log[s.cursor])
+	s.startHandMath(gs, s.log[s.cursor])
 	s.cursor++
 
 	// Playback has caught up with the resolver: hand control back to the player, or freeze
@@ -1025,7 +1116,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 // band and the Resolution feed's bottom edge comes off the same row. So the last frame of a
 // won fight used to reflow: the hand collapsed to a narrow centred huddle, the bar shrank to
 // match, and the feed moved under it. **The picture the player is looking at when the killing
-// blow lands is the picture they should still be looking at when they press Next**, so nothing
+// blow lands is the picture they should still be looking at while the screen holds**, so nothing
 // moves — the played cards stay on the table, the hand keeps its gaps, and `Init` clears all of
 // it when the next fight starts.
 //
@@ -1036,13 +1127,18 @@ func (s *CombatScene) endOfRound() {
 	s.fighter.Duelist = s.fighterAfter
 	s.enemy.Duelist = s.enemyAfter
 
+	// **The adoption above is where banked points become `BonusAP`**, so what the cards have been
+	// drawing on top of it since the figures landed is now in the model and has to stop being
+	// added. Before the early return below: a settled duel adopts its end state like any other.
+	s.bankShown = [2]int{}
+
 	if s.duelSettled() {
 		return
 	}
 
-	// **The banner goes when the hand it named goes**, and a settled duel has already returned
-	// above — the last round of a fight freezes with its cards on the table, so the name of the
-	// hand that ended it stays up with them.
+	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into the sum
+	// — see advancePlayback. This is the round that scored no hand at all: nothing took the name
+	// down because nothing ever asked for it.
 	s.banner.clear()
 
 	// The hand is spent here rather than at resolve time, and the ordering matters:
@@ -1103,8 +1199,8 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// A card of the player's has fired: lift it out of the hand and start it toward the pile.
 	s.noteResolved(e)
 
-	// A combo has formed: leave raised only the cards the engine says formed it.
-	s.noteCombo(e)
+	// A hand has formed: leave raised only the cards the engine says formed it.
+	s.noteHand(e)
 
 	// A status has landed: put its badge on the card at the beat it was announced.
 	//
@@ -1118,6 +1214,14 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// sentence next to it.
 	if e.Kind == combat.KindStatus {
 		s.applyStatusBadge(e)
+		return
+	}
+
+	// A Prepare has banked: send its points to the fighter card whose budget they raise. The
+	// engine has already counted them into `GatheredAP`, so this is a ghost of something that has
+	// happened — see combat_bank.go, and noteHit below, which keeps the same division.
+	if e.Kind == combat.KindGathered {
+		s.noteBank(e)
 		return
 	}
 
@@ -1206,7 +1310,12 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawRingPane(gs, screen)
 
 	s.drawEnemyCard(gs, screen)
-	systems.DrawButton(gs, screen, s.duelButton)
+	// **Nothing is drawn in the DUEL! slot on a won fight.** The screen is holding its last
+	// picture and leaving by itself, so the slot stands empty for the second or so that takes —
+	// see victoryPending. A defeat still shows Retry there.
+	if !s.victoryPending() {
+		systems.DrawButton(gs, screen, s.duelButton)
+	}
 	systems.DrawButton(gs, screen, s.discardButton)
 	s.drawSortButtons(gs, screen)
 	s.drawDiscardsLeft(gs, screen)
@@ -1225,7 +1334,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	//
 	// **The Resolution feed was the third and is gone** *(2026-08-18)*: it wanted to be over
 	// the enemy card, because a box held open reached 12% and the opponent sits at 34%. The
-	// band it left is claimed by the combo dialog and the planned hand's name, both of which
+	// band it left is claimed by the hand dialog and the planned hand's name, both of which
 	// are drawn much later and neither of which is ever held open.
 	//
 	// EXPERIMENT 2026-08-07: Action Flow is not drawn either. drawActionFlow and actionFlowRows
@@ -1256,11 +1365,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawSlides(gs, screen)
 	s.drawFlights(gs, screen)
 
-	// **The combo dialog, over everything but the deck overlay.** It is the loudest thing on the
+	// **The hand dialog, over everything but the deck overlay.** It is the loudest thing on the
 	// screen for the few seconds it is up, and it is deliberately over both rows of cards: the
 	// shout is written across the hand row, which is inert while it is up, and the sum across the
 	// band above it. See combat_mathbox.go.
-	s.drawComboMath(gs, screen)
+	s.drawHandMath(gs, screen)
 
 	// **The planned hand's name, in the middle of the half of the table its cards are about to
 	// land in.** It and the shout above can never both be up: this one is gated on `planning()`
@@ -1271,6 +1380,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// They are drawn after the dialog because a figure leaving the sum has to be on top of it —
 	// underneath, the first frames of the flight would be hidden by the number it left.
 	s.drawHits(gs, screen)
+
+	// **The banked figures, over the card they are flying out of and the fighter card they raise.**
+	// Beside the damage figures because they are the same gesture in the other direction, and after
+	// the table for the reason those are: a figure leaving a card has to be on top of it.
+	s.drawBanks(gs, screen)
 
 	// The overlay covers everything, card in flight included — and then Deck is drawn
 	// again on top of it. While the deck is open it is the only control that still does
@@ -1349,7 +1463,7 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("actionFlowPane", panePlacementRect(gs, actionFlowPane))
 
 	// The band above the hand. Nothing is drawn there at rest — the feed left it on
-	// 2026-08-18 — but the combo dialog and the planned hand's name are both laid out
+	// 2026-08-18 — but the hand dialog and the planned hand's name are both laid out
 	// against it, so it is worth a rectangle in the dump.
 	trace.Rect("mathBand", image.Rect(
 		tableInset, gs.PctY(handTopPct)-mathBandGapAboveCards-mathBandHeight,

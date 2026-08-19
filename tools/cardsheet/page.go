@@ -121,14 +121,14 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   </div>
 {{end}}
 
-<h2>Family mark</h2>
+<h2>Form mark</h2>
 <p class="note">
   The glyph sits in the top-left corner, cropped by the card's own curve, and
   <em>replaced the category word</em> that used to run under the name. Attack reuses the same
   sword the damage badge was drawn from — the badge is gone, so on a card this is now the only
   sword there is.
 </p>
-{{range .Families}}
+{{range .Forms}}
   <div class="row">
     <div class="row-label">{{.Label}}</div>
     <div class="cells">

@@ -6,15 +6,15 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The combo catalogue is data, and this file is the joint between the file and the rules.
+// The hand catalogue is data, and this file is the joint between the file and the rules.
 //
-// **`data/combos.json` holds the shape; this holds the meaning.** That is the same division
+// **`data/hands.json` holds the shape; this holds the meaning.** That is the same division
 // `CheckCostTiers` already draws for the deck lists — the file can say `"groups": [3,2]`, and only
 // this package can say what a turn is and how wide it can be.
 //
 // **This is the one place `internal/combat` imports `data`, and it is why that edge exists.**
 // Everything else in `data/` is read by `screens`, `decks` or `entities` — layers above the
-// rules — so the rules never needed it. A combo is different: it is read by the resolver itself.
+// rules — so the rules never needed it. A hand is different: it is read by the resolver itself.
 // `data` imports nothing but the standard library, so the edge costs this package neither its
 // testability nor its freedom from Ebitengine.
 //
@@ -25,18 +25,19 @@ import (
 // loadCatalogue reads the file. It panics rather than returning an error: it runs at package init,
 // and there is no sensible game to hand back if the rules could not be read.
 func loadCatalogue() []Hand {
-	handRecs := data.LoadCombos()
+	handRecs := data.LoadHands()
 
 	hands := make([]Hand, 0, len(handRecs))
 	seenKey := map[string]bool{}
 	seenID := map[HandID]string{}
 
 	for _, rec := range handRecs {
-		if err := validateHand(rec); err != nil {
-			panic(fmt.Sprintf("combat: combos.json hand %q: %v", rec.Key, err))
+		axis, err := validateHand(rec)
+		if err != nil {
+			panic(fmt.Sprintf("combat: hands.json hand %q: %v", rec.Key, err))
 		}
 		if seenKey[rec.Key] {
-			panic(fmt.Sprintf("combat: combos.json declares hand key %q twice", rec.Key))
+			panic(fmt.Sprintf("combat: hands.json declares hand key %q twice", rec.Key))
 		}
 		seenKey[rec.Key] = true
 
@@ -44,6 +45,7 @@ func loadCatalogue() []Hand {
 			ID:         HandID(rec.ID),
 			Key:        rec.Key,
 			Name:       rec.Name,
+			Match:      axis,
 			Groups:     append([]int(nil), rec.Groups...),
 			Multiplier: rec.Multiplier,
 		}
@@ -59,22 +61,22 @@ func loadCatalogue() []Hand {
 	// catalogue that cannot name the commonest result in the game, which is the one failure this
 	// model can have.
 	if !seenKey[highCardKey] {
-		panic(fmt.Sprintf("combat: combos.json has no %q hand, so a lone attack could not be named", highCardKey))
+		panic(fmt.Sprintf("combat: hands.json has no %q hand, so a lone attack could not be named", highCardKey))
 	}
 
 	return hands
 }
 
-func validateHand(r data.HandData) error {
+func validateHand(r data.HandData) (Axis, error) {
 	switch {
 	case r.Key == "":
-		return fmt.Errorf("has no key")
+		return AxisConcept, fmt.Errorf("has no key")
 	case r.Name == "":
-		return fmt.Errorf("has no name")
+		return AxisConcept, fmt.Errorf("has no name")
 	case r.ID <= 0:
-		return fmt.Errorf("has no ID, or a zero one, which means 'no hand'")
+		return AxisConcept, fmt.Errorf("has no ID, or a zero one, which means 'no hand'")
 	case len(r.Groups) == 0:
-		return fmt.Errorf("names no groups, so it counts nothing")
+		return AxisConcept, fmt.Errorf("names no groups, so it counts nothing")
 	// **100 is the identity and 0 deletes the blow** *(2026-08-18)*. The multiplier multiplies the
 	// hand's own cards now rather than a separate swing added on top of them, so a hand at 0 is not
 	// "pays no bonus" — it is an attack phase that deals nothing. Every hand needs a real number,
@@ -83,13 +85,13 @@ func validateHand(r data.HandData) error {
 	// Anything below 100 is a *penalty* and is deliberately still legal: refusing it would take a
 	// tuning lever away from the file, which is the one place the ladder is meant to be tuned.
 	case r.Multiplier <= 0:
-		return fmt.Errorf("has a multiplier of %d; the multiplier scales the hand's own cards, so that is an attack phase dealing nothing", r.Multiplier)
+		return AxisConcept, fmt.Errorf("has a multiplier of %d; the multiplier scales the hand's own cards, so that is an attack phase dealing nothing", r.Multiplier)
 	}
 
 	total := 0
 	for _, g := range r.Groups {
 		if g < 1 {
-			return fmt.Errorf("names a group of %d cards", g)
+			return AxisConcept, fmt.Errorf("names a group of %d cards", g)
 		}
 		total += g
 	}
@@ -97,13 +99,37 @@ func validateHand(r data.HandData) error {
 	// a multi-card hand at or below 100 is one a player would be punished for making — a typo
 	// rather than an ambition, and refused rather than loaded.
 	if total > 1 && r.Multiplier <= multiplierScale {
-		return fmt.Errorf("wants %d cards for multiplier %d, which is no better than playing them as a High Card", total, r.Multiplier)
+		return AxisConcept, fmt.Errorf("wants %d cards for multiplier %d, which is no better than playing them as a High Card", total, r.Multiplier)
 	}
 	// **A hand cannot ask for more cards than a turn can hold.** MaxActions is five and frozen,
 	// so a six-card hand is one nobody could ever form and is a typo rather than an ambition.
 	if total > baseMaxActions {
-		return fmt.Errorf("wants %d cards but a turn holds %d", total, baseMaxActions)
+		return AxisConcept, fmt.Errorf("wants %d cards but a turn holds %d", total, baseMaxActions)
 	}
 
-	return nil
+	// **Nor for more distinct values than its axis has** *(2026-08-19)*. Three forms reach a blow
+	// and four elements do, so a hand wanting four groups on the form axis is unclimbable — the
+	// same class of typo as one wanting six cards, and invisible without the check because the
+	// matcher would simply never find it.
+	axis, ok := ParseAxis(r.Match)
+	if !ok {
+		return AxisConcept, fmt.Errorf("matches on %q, which is not one of %s", r.Match, axisList())
+	}
+	if spread := axis.spread(); spread > 0 && len(r.Groups) > spread {
+		return AxisConcept, fmt.Errorf("wants %d groups but only %d %ss can reach a blow", len(r.Groups), spread, axis)
+	}
+
+	return axis, nil
+}
+
+// axisList is the axes written out for an error message.
+func axisList() string {
+	out := ""
+	for i, a := range AllAxes {
+		if i > 0 {
+			out += ", "
+		}
+		out += a.String()
+	}
+	return out
 }

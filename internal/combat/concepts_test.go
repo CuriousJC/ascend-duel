@@ -2,9 +2,9 @@ package combat
 
 import "testing"
 
-// The 2026-08-15 card set: three attack families of three tiers, plus the three plans. Each of
+// The 2026-08-15 card set: three attack forms of three tiers, plus the three plans. Each of
 // the plans gets the case that says what it does, and the ladder gets the structural cases that
-// say the families are three ways of doing the same thing at the same prices — which is the claim
+// say the forms are three ways of doing the same thing at the same prices — which is the claim
 // MECHANICS.md makes about the deck and the one a retuned cost quietly breaks.
 
 // hasKind reports whether the log holds an event of the given kind.
@@ -64,10 +64,11 @@ func TestDefendHalvesTheBlowAndIsSpent(t *testing.T) {
 	b := duelist(10, 4, 500)
 
 	// B defends first. B acts second, so its Defend is standing when A's next turn arrives.
-	// A Smash and a Strike are different concepts and form no hand, so the blow is the High Card
-	// — the Smash alone — and the arithmetic is about the Defend rather than about a multiplier.
+	// A Smash and a Thrust are different concepts and different forms, and both are colourless, so
+	// they agree on no axis and form no hand: the blow is the High Card — the Smash alone — and the
+	// arithmetic is about the Defend rather than about a multiplier.
 	_, a, b = resolve(a, b, nil, PlainCards(Defend), 1)
-	events, _, bAfter := resolve(a, b, PlainCards(Smash, Strike), nil, 2)
+	events, _, bAfter := resolve(a, b, PlainCards(Smash, Thrust), nil, 2)
 
 	if !hasKind(events, KindNegated) {
 		t.Fatal("no KindNegated event — the Defend did not apply")
@@ -199,9 +200,9 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	}
 }
 
-func TestTheAttackLadderIsThreeFamiliesByThreeTiers(t *testing.T) {
-	// One concept per family per tier, and **the tiers are identical across the families** — same
-	// cost, same damage. That is the structural claim MECHANICS.md makes about the deck: a family
+func TestTheAttackLadderIsThreeFormsByThreeTiers(t *testing.T) {
+	// One concept per form per tier, and **the tiers are identical across the forms** — same
+	// cost, same damage. That is the structural claim MECHANICS.md makes about the deck: a form
 	// is which pair you are building, never a better or worse way to build one. It is also the
 	// thing that quietly breaks the first time somebody makes a Cleave hit harder than a Lunge.
 	//
@@ -209,12 +210,12 @@ func TestTheAttackLadderIsThreeFamiliesByThreeTiers(t *testing.T) {
 	// price — a mistake that would otherwise hide behind an entirely plausible number.
 	const dmg = 10
 
-	attackFamilies := []Family{FamilyStab, FamilySlash, FamilyCrush}
-	tiers := map[Family]map[int]ConceptID{}
+	attackForms := []Form{FormStab, FormSlash, FormCrush}
+	tiers := map[Form]map[int]ConceptID{}
 
 	for _, a := range PlayerConcepts() {
-		fam := ConceptOf(a).Family
-		if Plain(a).Category() != CategoryAttack || fam == FamilyNone {
+		fam := ConceptOf(a).Form
+		if Plain(a).Category() != CategoryAttack || fam == FormNone {
 			continue
 		}
 		if ConceptOf(a).Cost < 1 || ConceptOf(a).Cost > 3 {
@@ -229,25 +230,25 @@ func TestTheAttackLadderIsThreeFamiliesByThreeTiers(t *testing.T) {
 		tiers[fam][ConceptOf(a).Cost] = a
 	}
 
-	for _, fam := range attackFamilies {
+	for _, fam := range attackForms {
 		if len(tiers[fam]) != 3 {
 			t.Errorf("%v has %d of 3 tiers filled", fam, len(tiers[fam]))
 		}
 	}
 
-	// Every family's rung deals what Stab's rung deals.
+	// Every form's rung deals what Stab's rung deals.
 	for tier := 1; tier <= 3; tier++ {
-		want, ok := tiers[FamilyStab][tier]
+		want, ok := tiers[FormStab][tier]
 		if !ok {
 			continue
 		}
-		for _, fam := range attackFamilies[1:] {
+		for _, fam := range attackForms[1:] {
 			got, ok := tiers[fam][tier]
 			if !ok {
 				continue
 			}
 			if Plain(got).Damage(dmg) != Plain(want).Damage(dmg) {
-				t.Errorf("at %d AP, %v deals %d and %v deals %d — the families must ladder identically",
+				t.Errorf("at %d AP, %v deals %d and %v deals %d — the forms must ladder identically",
 					tier, got, Plain(got).Damage(dmg), want, Plain(want).Damage(dmg))
 			}
 		}
@@ -272,29 +273,29 @@ func TestPlanCardsDealNothingAndAttacksDoNot(t *testing.T) {
 	}
 }
 
-func TestEveryPlanIsInThePlanFamilyAndViceVersa(t *testing.T) {
-	// Category has two values and is derivable from the family, which is exactly why the two must
-	// not be able to disagree: the card face says the family and the feed says the category, and a
+func TestEveryPlanIsInThePlanFormAndViceVersa(t *testing.T) {
+	// Category has two values and is derivable from the form, which is exactly why the two must
+	// not be able to disagree: the card face says the form and the feed says the category, and a
 	// card whose corner and verb told different stories would be the screen contradicting itself.
 	for _, a := range PlayerConcepts() {
-		if (ConceptOf(a).Family == FamilyPlan) != (Plain(a).Category() == CategoryPlan) {
-			t.Errorf("%v is family %v but category %v", a, ConceptOf(a).Family, Plain(a).Category())
+		if (ConceptOf(a).Form == FormPlan) != (Plain(a).Category() == CategoryPlan) {
+			t.Errorf("%v is form %v but category %v", a, ConceptOf(a).Form, Plain(a).Category())
 		}
 	}
 }
 
-func TestEveryPlayerCardHasAFamily(t *testing.T) {
-	// **FamilyNone is a real answer, not a fallthrough**, and after 2026-08-16 it belongs entirely
-	// to the enemies: a family is the player's deck axis, the thing a pair is counted on and the
+func TestEveryPlayerCardHasAForm(t *testing.T) {
+	// **FormNone is a real answer, not a fallthrough**, and after 2026-08-16 it belongs entirely
+	// to the enemies: a form is the player's deck axis, the thing a pair is counted on and the
 	// letter in the card's corner. A player's card landing there would draw with a blank corner and
 	// be excluded from the deck panel's sort.
 	//
 	// It used to name the two shared enemy concepts as the permitted exceptions. There is no shared
-	// enemy deck now — every enemy carries its own cards, all of them familyless — so the rule is
+	// enemy deck now — every enemy carries its own cards, all of them formless — so the rule is
 	// simply that the player's side is fully covered.
 	for _, a := range PlayerConcepts() {
-		if ConceptOf(a).Family == FamilyNone {
-			t.Errorf("%v has no family; only an enemy's cards may", ConceptOf(a).Label)
+		if ConceptOf(a).Form == FormNone {
+			t.Errorf("%v has no form; only an enemy's cards may", ConceptOf(a).Label)
 		}
 	}
 }
@@ -320,27 +321,27 @@ func TestEveryPlayerConceptIsFoundByItsLabel(t *testing.T) {
 	}
 }
 
-func TestParseFamilyRoundTripsEveryFamily(t *testing.T) {
-	// The deck lists declare a family and `CheckCostTiers` holds it against the rules, so the join
+func TestParseFormRoundTripsEveryForm(t *testing.T) {
+	// The deck lists declare a form and `CheckCostTiers` holds it against the rules, so the join
 	// has to work in both directions exactly as ParseAction's does.
-	for _, f := range Families() {
-		got, ok := ParseFamily(f.String())
+	for _, f := range Forms() {
+		got, ok := ParseForm(f.String())
 		if !ok {
-			t.Errorf("ParseFamily(%q) failed for a family the rules define", f.String())
+			t.Errorf("ParseForm(%q) failed for a form the rules define", f.String())
 			continue
 		}
 		if got != f {
-			t.Errorf("ParseFamily(%q) = %v, want %v", f.String(), got, f)
+			t.Errorf("ParseForm(%q) = %v, want %v", f.String(), got, f)
 		}
 	}
 
-	if _, ok := ParseFamily("stabby"); ok {
-		t.Error("ParseFamily accepted a typo")
+	if _, ok := ParseForm("stabby"); ok {
+		t.Error("ParseForm accepted a typo")
 	}
-	// And FamilyNone is not in Families(), so it cannot be parsed into by accident — but it still
+	// And FormNone is not in Forms(), so it cannot be parsed into by accident — but it still
 	// names itself, because a deck list writes "none" for the opponent's cards.
-	if got := FamilyNone.String(); got != "none" {
-		t.Errorf("FamilyNone is named %q, want %q", got, "none")
+	if got := FormNone.String(); got != "none" {
+		t.Errorf("FormNone is named %q, want %q", got, "none")
 	}
 }
 
@@ -375,16 +376,16 @@ func TestAWormsBoundsHold(t *testing.T) {
 	}
 }
 
-// TestTheLadderWalksItsOwnFamily. Promote and demote are derived from what duelist_cards.json
+// TestTheLadderWalksItsOwnForm. Promote and demote are derived from what duelist_cards.json
 // declares rather than from a table beside it, so this pins that the derivation finds the right
 // neighbour and stops at both ends.
-func TestTheLadderWalksItsOwnFamily(t *testing.T) {
+func TestTheLadderWalksItsOwnForm(t *testing.T) {
 	up, ok := Neighbour(Jab, 1)
 	if !ok {
 		t.Fatal("Jab cannot be promoted, and it is the bottom of its ladder")
 	}
-	if ConceptOf(up).Family != ConceptOf(Jab).Family {
-		t.Errorf("promoting a %v produced a %v", ConceptOf(Jab).Family, ConceptOf(up).Family)
+	if ConceptOf(up).Form != ConceptOf(Jab).Form {
+		t.Errorf("promoting a %v produced a %v", ConceptOf(Jab).Form, ConceptOf(up).Form)
 	}
 	if ConceptOf(up).Tier() != ConceptOf(Jab).Tier()+1 {
 		t.Errorf("promoting moved from tier %d to %d", ConceptOf(Jab).Tier(), ConceptOf(up).Tier())
@@ -394,13 +395,13 @@ func TestTheLadderWalksItsOwnFamily(t *testing.T) {
 		t.Errorf("demoting the promotion gave %v, want Jab", down)
 	}
 
-	// Both ends stop. A card at the top of its family cannot be promoted, and the screen asks
+	// Both ends stop. A card at the top of its form cannot be promoted, and the screen asks
 	// before it offers so the player is never shown a worm that would do nothing.
 	if _, ok := Neighbour(Jab, -1); ok {
 		t.Error("the bottom of a ladder was demoted")
 	}
 
-	// A plan has no family and therefore no ladder, and neither has any enemy card.
+	// A plan has no form and therefore no ladder, and neither has any enemy card.
 	if _, ok := Neighbour(Prepare, 1); ok {
 		t.Error("a plan card was promoted")
 	}

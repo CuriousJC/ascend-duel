@@ -30,7 +30,7 @@ func TestOnlyDamageRaisesALandingFigure(t *testing.T) {
 	s := hitScene()
 	for _, k := range []combat.EventKind{
 		combat.KindAction, combat.KindBurned, combat.KindNegated,
-		combat.KindCombo, combat.KindStatus, combat.KindMissed,
+		combat.KindHand, combat.KindStatus, combat.KindMissed,
 	} {
 		s.noteHit(combat.Event{Kind: k, Amount: 10, Target: combat.SideB, Life: 90}, 100)
 	}
@@ -128,7 +128,7 @@ func TestTheFigureFinishesAndIsDroppedSoPlaybackCanResume(t *testing.T) {
 func TestAScoredHandsFigureLeavesTheSumAndASoloAttackersLeavesItsCard(t *testing.T) {
 	// **This is `anchorBlow`**, and it is the one anchor that is a rule rather than a rectangle.
 	// A player's turn is one blow read off a hand, so the total is already on screen in the sum
-	// box and the figure travels from there. A solo attacker emits no combo at all — every attack
+	// box and the figure travels from there. A solo attacker emits no hand at all — every attack
 	// lands its own face damage — so there is no sum, and the figure comes out of the card that
 	// swung.
 	//
@@ -147,11 +147,11 @@ func TestAScoredHandsFigureLeavesTheSumAndASoloAttackersLeavesItsCard(t *testing
 		t.Errorf("the solo attacker's blow leaves seat %d, want the card that is lit, 2", got)
 	}
 
-	// And the flag, not the side: a comboing opponent's figure comes out of the sum exactly as the
+	// And the flag, not the side: a hand-forming opponent's figure comes out of the sum exactly as the
 	// player's does.
 	s.enemy.SoloAttacks = false
 	if got := s.blowSeat(combat.Event{Side: combat.SideB}); got != -1 {
-		t.Errorf("a comboing opponent's blow leaves seat %d, want -1 for the sum line", got)
+		t.Errorf("a hand-forming opponent's blow leaves seat %d, want -1 for the sum line", got)
 	}
 }
 
@@ -170,7 +170,7 @@ func TestASoloAttackerWithNothingLitFallsBackToTheSum(t *testing.T) {
 
 func TestTheLandingFigureIsTheSumsTotalContinuing(t *testing.T) {
 	// **Four things have to match for one number to appear to set off rather than two to swap**:
-	// the point, the frame, the colour and the size. The point is `comboMathRect`'s centre at both
+	// the point, the frame, the colour and the size. The point is `handMathRect`'s centre at both
 	// ends; the frame is `advancePlayback` clearing the box on the same tick the figure launches;
 	// and these are the other two.
 	//

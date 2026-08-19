@@ -278,9 +278,9 @@ func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 	}
 }
 
-func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
+func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	// **A turn lands one blow, so the whole hand goes up on the first announcement** — not one
-	// card per beat, which read as one attack per card. The combo then drops the ones that earned
+	// card per beat, which read as one attack per card. The hand then drops the ones that earned
 	// nothing, so what is left standing is what the feed's single line is about.
 	s := &CombatScene{
 		hand: []paletteCard{
@@ -318,15 +318,15 @@ func TestTheWholeAttackHandIsRaisedAndTheComboKeepsWhatEarnedIt(t *testing.T) {
 		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.firingSeats)
 	}
 
-	// The Jab built no hand, so the combo takes it back down. **Raising is the whole of what says
+	// The Jab built no hand, so the hand takes it back down. **Raising is the whole of what says
 	// which cards earned the hand** since the yellow ring went on 2026-08-19, which is why this is
 	// the only assertion left here.
-	combo := combat.Event{Kind: combat.KindCombo, Side: combat.SideA, ComboCardCount: 2}
-	combo.ComboCards[0], combo.ComboCards[1] = 0, 1
-	s.noteCombo(combo)
+	hand := combat.Event{Kind: combat.KindHand, Side: combat.SideA, HandCardCount: 2}
+	hand.HandCards[0], hand.HandCards[1] = 0, 1
+	s.noteHand(hand)
 
 	if !sameSeats(s.firingSeats, []int{0, 1}) {
-		t.Errorf("the combo left %v raised, want only the two cards that formed it", s.firingSeats)
+		t.Errorf("the hand left %v raised, want only the two cards that formed it", s.firingSeats)
 	}
 }
 
@@ -512,7 +512,7 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 
 	blow, _, ok := s.previewBlow()
 	if !ok {
-		t.Fatal("three Strikes previewed no combo")
+		t.Fatal("three Strikes previewed no hand")
 	}
 	if len(blow.Cards) != 3 {
 		t.Errorf("the previewed hand is made of %v, want all three cards", blow.Cards)
@@ -520,16 +520,16 @@ func TestAHandPreviewsTheMomentItIsSelected(t *testing.T) {
 
 	// And it is named in the same words the fired shout will use.
 	//
-	// **This moved out of the feed on 2026-08-18.** The pane carried `COMBO! Three of a Kind
+	// **This moved out of the feed on 2026-08-18.** The pane carried `HAND! Three of a Kind
 	// x2` while planning; the words are now written across the band the sum will fill, by
 	// `drawPlannedHand`. What has to hold either way is that the preview and the announcement are
 	// one spelling — two spellings of PAIR would read as two different things happening — and
 	// `handShout` is the single function both go through, so that is what is checked here rather
 	// than a row of pane text.
-	if got, want := handShout(blow.Hand.Name), "THREE OF A KIND!"; got != want {
+	if got, want := handShout(blow.Hand.Name), "CARD THREE OF A KIND!"; got != want {
 		t.Errorf("the planned hand reads %q, want %q", got, want)
 	}
-	if blow.Hand.Key != "three-of-a-kind" {
+	if blow.Hand.Key != "concept-three-of-a-kind" {
 		t.Errorf("three Strikes previewed %q, want the three of a kind", blow.Hand.Key)
 	}
 }
@@ -582,9 +582,9 @@ func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
 
 	blow, ok := s.previewAttack()
 	if !ok {
-		t.Fatal("a pair behind a Prepare previewed no combo")
+		t.Fatal("a pair behind a Prepare previewed no hand")
 	}
-	if blow.Hand.Key != "pair" {
+	if blow.Hand.Key != "concept-pair" {
 		t.Errorf("a pair behind a Prepare previewed %q, want the pair", blow.Hand.Key)
 	}
 	if !sameSeats(blow.Cards, []int{0, 1}) {
@@ -603,7 +603,7 @@ func TestThePreviewIsGoneOnceTheRoundIsRunning(t *testing.T) {
 	s.cursor = 0
 
 	if _, ok := s.previewAttack(); ok {
-		t.Error("the hand still previewed a combo while the round was playing back")
+		t.Error("the hand still previewed a hand while the round was playing back")
 	}
 }
 

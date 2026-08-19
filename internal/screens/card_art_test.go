@@ -78,15 +78,15 @@ func TestElementNamesAgreeAcrossThePackages(t *testing.T) {
 	}
 }
 
-func TestEveryFamilyHasItsOwnMark(t *testing.T) {
-	// The same hand-written-switch hazard as the elements, one type over. A family
-	// falling through to FamilyNone draws no mark at all, which on a card whose
+func TestEveryFormHasItsOwnMark(t *testing.T) {
+	// The same hand-written-switch hazard as the elements, one type over. A form
+	// falling through to FormNone draws no mark at all, which on a card whose
 	// category *word* has been deleted means the card says nothing about what it is.
-	seen := map[cards.Family]combat.Family{}
-	for _, f := range combat.Families() {
-		got := family(f)
-		if got == cards.FamilyNone {
-			t.Errorf("%v maps to FamilyNone — it would draw no mark and the card would not say its family", f)
+	seen := map[cards.Form]combat.Form{}
+	for _, f := range combat.Forms() {
+		got := form(f)
+		if got == cards.FormNone {
+			t.Errorf("%v maps to FormNone — it would draw no mark and the card would not say its form", f)
 		}
 		if prev, dup := seen[got]; dup {
 			t.Errorf("%v and %v both map to cards.%v", prev, f, got)
@@ -98,11 +98,11 @@ func TestEveryFamilyHasItsOwnMark(t *testing.T) {
 		}
 	}
 
-	// **FamilyNone has to survive the crossing too.** The opponent's cards carry it, and one that
-	// mapped onto a real family would draw a letter claiming membership of a deck the player
-	// cannot combo with.
-	if got := family(combat.FamilyNone); got != cards.FamilyNone {
-		t.Errorf("the rules' FamilyNone maps to cards.%v, want FamilyNone", got)
+	// **FormNone has to survive the crossing too.** The opponent's cards carry it, and one that
+	// mapped onto a real form would draw a letter claiming membership of a deck the player
+	// cannot build hands against.
+	if got := form(combat.FormNone); got != cards.FormNone {
+		t.Errorf("the rules' FormNone maps to cards.%v, want FormNone", got)
 	}
 }
 

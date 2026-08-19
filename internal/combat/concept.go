@@ -2,7 +2,7 @@ package combat
 
 // The concept registry: what a card *is*, as data rather than as a switch statement.
 //
-// **This replaced `ActionKind` on 2026-08-16.** A card's cost, damage, category and family were
+// **This replaced `ActionKind` on 2026-08-16.** A card's cost, damage, category and form were
 // four switch statements over a closed enum of fourteen constants, and a fifth turned it into a
 // name. That held twelve player cards. It could not hold three or four bespoke cards for each of
 // ninety-six enemies, so the card stopped being an enum value and became a record — see
@@ -28,7 +28,7 @@ import (
 )
 
 // Verb is what a card does. **A closed vocabulary, and closing it is the point** — the same
-// posture `combos.json` takes with its reward kinds. Adding a fifth verb is a Go change plus one
+// posture `hands.json` takes with its reward kinds. Adding a fifth verb is a Go change plus one
 // place applying it, and that cost is charged deliberately: a card language that could express
 // anything would be a scripting language, and the rules would stop being readable in one file.
 type Verb int
@@ -140,7 +140,7 @@ type Concept struct {
 	Amount int
 	Cost   int
 	Target Target
-	Family Family
+	Form   Form
 }
 
 // Recoils reports whether this concept turns its damage on its own owner.
@@ -207,13 +207,13 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 		return NoConcept, fmt.Errorf("%s is a %s aimed at the opponent, which nothing resolves yet", key, verb)
 	}
 
-	family := FamilyNone
-	if c.Family != "" {
-		f, ok := ParseFamily(c.Family)
+	form := FormNone
+	if c.Form != "" {
+		f, ok := ParseForm(c.Form)
 		if !ok {
-			return NoConcept, fmt.Errorf("%s names family %q, which the rules do not have", key, c.Family)
+			return NoConcept, fmt.Errorf("%s names form %q, which the rules do not have", key, c.Form)
 		}
-		family = f
+		form = f
 	}
 
 	if c.Cost < 0 {
@@ -237,7 +237,7 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 		Amount: c.Amount,
 		Cost:   c.Cost,
 		Target: target,
-		Family: family,
+		Form:   form,
 	})
 	registryBy[key] = id
 	return id, nil
@@ -314,7 +314,7 @@ func RegisteredKeys() []string {
 // decides whether a file in `data/` may be read by the rules on *who consumes it* rather than on
 // whether it is data — enemy rosters and art keys are a screen's business, and a rules package
 // reaching for one would mean the rules had grown an opinion about portraits. A card's cost and
-// damage are rules by definition. This is the second such file after `combos.json`, and for the
+// damage are rules by definition. This is the second such file after `hands.json`, and for the
 // same reason.
 var playerConcepts = registerPlayerConcepts()
 
@@ -355,8 +355,8 @@ var (
 	Strike = mustPlayer("Strike")
 	Smash  = mustPlayer("Smash")
 
-	// Plan. The concept named Plan is one card of the family named plan, which is a collision of
-	// words rather than of meanings: the family is what the card's corner says and this is the
+	// Plan. The concept named Plan is one card of the form named plan, which is a collision of
+	// words rather than of meanings: the form is what the card's corner says and this is the
 	// card that draws.
 	Prepare = mustPlayer("Prepare")
 	Plan    = mustPlayer("Plan")
@@ -381,33 +381,33 @@ func PlayerConcepts() []ConceptID {
 	return out
 }
 
-// Tier is where a card sits on its family's ladder, and it is **the concept's own cost**.
+// Tier is where a card sits on its form's ladder, and it is **the concept's own cost**.
 //
-// The player's attacks are a 3x3 grid — three families by three tiers at 1/2/3 AP for 0.5x/1x/2x
+// The player's attacks are a 3x3 grid — three forms by three tiers at 1/2/3 AP for 0.5x/1x/2x
 // damage — so the price *is* the rung. Reading the declared cost rather than a per-card one is
 // deliberate: a worm that cheapened a Strike must not thereby turn it into a Jab.
 func (c Concept) Tier() int { return c.Cost }
 
-// Neighbour is the concept one rung up or down the same family's ladder, or false if there is
-// none — the top of a family cannot be promoted and the bottom cannot be demoted.
+// Neighbour is the concept one rung up or down the same form's ladder, or false if there is
+// none — the top of a form cannot be promoted and the bottom cannot be demoted.
 //
-// **A family with no name has no ladder.** Every enemy card is `FamilyNone`, and they share this
-// registry with the player's, so matching on the zero family would step a Goblin's Bite onto a
-// Slime's. The player's nine attacks are the only cards with a family, which is exactly the set
+// **A form with no name has no ladder.** Every enemy card is `FormNone`, and they share this
+// registry with the player's, so matching on the zero form would step a Goblin's Bite onto a
+// Slime's. The player's nine attacks are the only cards with a form, which is exactly the set
 // that has a ladder to walk.
 //
 // It scans the registry rather than reading a table, so the ladder is a *consequence* of what
 // `data/duelist_cards.json` declares rather than a second list to keep in step with it.
 func Neighbour(id ConceptID, step int) (ConceptID, bool) {
 	from := ConceptOf(id)
-	if from.Family == FamilyNone || from.Verb != VerbAttack {
+	if from.Form == FormNone || from.Verb != VerbAttack {
 		return NoConcept, false
 	}
 
 	want := from.Tier() + step
 	for other := range registry {
 		c := registry[other]
-		if c.Family == from.Family && c.Verb == VerbAttack && c.Tier() == want {
+		if c.Form == from.Form && c.Verb == VerbAttack && c.Tier() == want {
 			return ConceptID(other), true
 		}
 	}

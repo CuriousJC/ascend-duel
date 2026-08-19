@@ -94,8 +94,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if s.Art != nil {
 		drawArt(img, s, st)
 	}
-	if st.ShowFamily {
-		if err := drawFamily(img, s, st, f, ink); err != nil {
+	if st.ShowForm {
+		if err := drawForm(img, s, st, f, ink); err != nil {
 			return nil, err
 		}
 	}
@@ -181,10 +181,10 @@ func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
 // needsFont reports whether this style draws any text at all. A Mini card does not, and
 // requiring a parsed font to render one would make the deck overlay depend on something
 // it never uses.
-// **ShowFamily is in the list now** *(2026-08-15)*: the corner mark is a typeset letter until the
-// families have glyphs, so a style that draws one needs a font exactly as a name does.
+// **ShowForm is in the list now** *(2026-08-15)*: the corner mark is a typeset letter until the
+// forms have glyphs, so a style that draws one needs a font exactly as a name does.
 func (st Style) needsFont() bool {
-	return st.ShowName || st.ShowFamily ||
+	return st.ShowName || st.ShowForm ||
 		st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0
 }
 
@@ -251,15 +251,15 @@ func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.R
 
 func identity(c color.RGBA) color.RGBA { return c }
 
-// drawFamily marks the card's family in the corner above the cost stack: an uppercase letter
-// today — S, D, C, P — and a silhouette once the families have one.
+// drawForm marks the card's form in the corner above the cost stack: an uppercase letter
+// today — S, D, C, P — and a silhouette once the forms have one.
 //
 // **It replaced the phase glyph** *(2026-08-15)*. The sword, shield and open book named which
-// phase a card resolved in, and with the deck rebuilt on three attack families that fact became
-// derivable from the family itself. What the corner says now is the thing a pair is counted on.
+// phase a card resolved in, and with the deck rebuilt on three attack forms that fact became
+// derivable from the form itself. What the corner says now is the thing a pair is counted on.
 //
-// **The letters are scaffolding and the glyph path is why they can be.** `Family.glyph()` returns
-// nothing for every family, so every card falls through to `Family.Letter()`; drawing the art
+// **The letters are scaffolding and the glyph path is why they can be.** `Form.glyph()` returns
+// nothing for every form, so every card falls through to `Form.Letter()`; drawing the art
 // instead is one return value and no change here. See the comment on that method.
 //
 // **Placed by its ink, not by its canvas** *(2026-08-14)*. Every glyph is drawn on a square
@@ -271,15 +271,15 @@ func identity(c color.RGBA) color.RGBA { return c }
 //
 // **Its offsets may be negative, and blitGlyph crops to the card's curve** so a mark placed hard
 // into the corner cannot square it off.
-func drawFamily(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
-	if s.Family == FamilyNone || st.FamilySize <= 0 {
+func drawForm(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
+	if s.Form == FormNone || st.FormSize <= 0 {
 		return nil
 	}
 
-	box := image.Rect(st.GlyphInset, st.FamilyTop,
-		st.GlyphInset+st.FamilySize, st.FamilyTop+st.FamilySize)
+	box := image.Rect(st.GlyphInset, st.FormTop,
+		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
 
-	if kind, ok := s.Family.glyph(); ok {
+	if kind, ok := s.Form.glyph(); ok {
 		glyph := systems.RenderGlyph(kind, systems.PaletteWhite)
 		at := placeInk(dst, glyph, box, st.GlyphScale, st)
 		if !s.Enabled && !at.Empty() {
@@ -291,11 +291,11 @@ func drawFamily(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA
 		return nil
 	}
 
-	letter := s.Family.Letter()
-	if letter == "" || st.FamilyLetterSize <= 0 {
+	letter := s.Form.Letter()
+	if letter == "" || st.FormLetterSize <= 0 {
 		return nil
 	}
-	img, err := letterImage(f, st.FamilyLetterSize, letter, ink(NameInk), st.FamilySize)
+	img, err := letterImage(f, st.FormLetterSize, letter, ink(NameInk), st.FormSize)
 	if err != nil {
 		return err
 	}

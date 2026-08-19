@@ -75,7 +75,7 @@
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Family": "slash" },
+        "If": { "Form": "slash" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]
@@ -88,7 +88,7 @@
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Family": "crush" },
+        "If": { "Form": "crush" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]
@@ -101,7 +101,7 @@
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Family": "stab" },
+        "If": { "Form": "stab" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]

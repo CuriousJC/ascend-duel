@@ -5,21 +5,21 @@ import "testing"
 // A solo attacker's turn: **every attack resolves on its own, in order**, with no hand read off
 // the set. It is what an enemy is as of 2026-08-17 — see Duelist.SoloAttacks.
 //
-// These are the properties the comboing phase does *not* have, so nothing above covers them: one
-// damage event per card rather than one per turn, no combo event at all, and a defence that has to
+// These are the properties the hand-forming phase does *not* have, so nothing above covers them: one
+// damage event per card rather than one per turn, no hand event at all, and a defence that has to
 // survive long enough to answer every blow of the turn instead of just the first.
 
-// soloist is a duelist whose attack cards do not combo.
+// soloist is a duelist whose attack cards form no hands.
 func soloist(dmg, actions, life int) Duelist {
 	d := duelist(dmg, actions, life)
 	d.SoloAttacks = true
 	return d
 }
 
-func comboCount(events []Event) int {
+func handCount(events []Event) int {
 	n := 0
 	for _, e := range events {
-		if e.Kind == KindCombo {
+		if e.Kind == KindHand {
 			n++
 		}
 	}
@@ -35,11 +35,11 @@ func TestASoloAttackerSwingsOncePerCard(t *testing.T) {
 	if n := damageCount(events); n != 3 {
 		t.Errorf("three Strikes produced %d damage events, want 3 — one per card", n)
 	}
-	if n := comboCount(events); n != 0 {
-		t.Errorf("a solo attacker formed %d combos, want none", n)
+	if n := handCount(events); n != 0 {
+		t.Errorf("a solo attacker formed %d hands, want none", n)
 	}
 
-	// **The face damage and nothing else.** The comboing version of this turn is a Strike Flurry:
+	// **The face damage and nothing else.** The hand-forming version of this turn is a Strike Flurry:
 	// the same three cards plus DMG times the multiplier, which is the whole of what this removes.
 	if want := 500 - 3*ConceptOf(Strike).Amount*a.DMG/100; after.CurrentLife != want {
 		t.Errorf("three Strikes left %d life, want %d — the sum of the cards' own damage",
@@ -146,7 +146,7 @@ func TestAShockedSoloAttackerMissesWithEverything(t *testing.T) {
 
 func TestEverySoloAttackAnnouncesItself(t *testing.T) {
 	// One beat per slot is what playback counts to know which card is lit — see
-	// TestEverySlotIsEitherTakenOrChilled, which the comboing phase is held to for the same
+	// TestEverySlotIsEitherTakenOrChilled, which the hand-forming phase is held to for the same
 	// reason. It has to hold when the blows are separate too.
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)
@@ -166,7 +166,7 @@ func TestEverySoloAttackAnnouncesItself(t *testing.T) {
 }
 
 func TestASoloPlannerTakesTheMostDamageItCanAfford(t *testing.T) {
-	// The comboing planner would rather have three cheap copies of one card, because three of a
+	// The hand-forming planner would rather have three cheap copies of one card, because three of a
 	// kind is a Flurry. A solo planner has no multiplier to chase, so it wants the biggest total —
 	// and with the budget for it, that is the expensive card plus whatever still fits.
 	d := soloist(10, 4, 100)
@@ -180,7 +180,7 @@ func TestASoloPlannerTakesTheMostDamageItCanAfford(t *testing.T) {
 	}
 
 	// Smash is 3 AP and Jab 1, so a 4-point budget buys Smash and one Jab: 20 + 5. Three Jabs
-	// would be 15, which is the plan the combo table used to prefer.
+	// would be 15, which is the plan the hand table used to prefer.
 	if want := Plain(Smash).Damage(d.DMG) + Plain(Jab).Damage(d.DMG); got != want {
 		t.Errorf("the plan lands %d damage, want %d — %v", got, want, planKey(plan))
 	}

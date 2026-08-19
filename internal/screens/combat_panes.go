@@ -47,12 +47,12 @@ const (
 )
 
 // **The band above the hand, which the Resolution feed used to occupy** *(vacated 2026-08-18)*.
-// Nothing is drawn there at rest now; what claims it is the combo dialog, which writes the
+// Nothing is drawn there at rest now; what claims it is the hand dialog, which writes the
 // blow's arithmetic across it, and `drawPlannedHand`, which writes the name of the hand the
 // selection has already formed in the same place. See combat_mathbox.go.
 //
 // The two constants stay because the band does: `tableRowTop` keeps the played cards clear of
-// it, and `comboMathRect` is measured from it. Their **values are the feed's** — the sum was
+// it, and `handMathRect` is measured from it. Their **values are the feed's** — the sum was
 // laid out and looked at against a box of exactly this height, so keeping the number is what
 // stops removing the feed from quietly re-laying out the arithmetic.
 const (
@@ -107,7 +107,7 @@ type panePlacement struct {
 //     as the round plays back — a record.
 //
 // Showing the round twice is only worth the space because of that split. It also retired the
-// open question of how one pane could be both: the flow pane never learned to mark a combo
+// open question of how one pane could be both: the flow pane never learned to mark a hand
 // across non-adjacent rows, and no longer has to, because Resolution says it in words.
 //
 // The narrow column and the wide one are **not** interchangeable. Flow rows are short labels
@@ -134,19 +134,19 @@ var (
 // paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
 var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
-// comboSwatch marks a line that is not one side acting but something the round did — a combo
+// handSwatch marks a line that is not one side acting but something the round did — a hand
 // forming. **It is the yellow the enemy used to be**, freed when the opponent went grey on
-// 2026-08-07: a combo is the loudest thing that can happen in a round and had been sharing a
+// 2026-08-07: a hand is the loudest thing that can happen in a round and had been sharing a
 // hue with every enemy action on screen.
 //
 // Darker than a screen yellow because it sits on a light pane now — the same figure that read
 // as amber on plum reads as washed-out cream on off-white.
-var comboSwatch = color.RGBA{R: 198, G: 142, B: 16, A: 255}
+var handSwatch = color.RGBA{R: 198, G: 142, B: 16, A: 255}
 
 // The two sides' colours: **green is you, grey is them.**
 //
-// The opponent was yellow until 2026-08-07 and went grey to give the yellow to `comboSwatch` —
-// a combo is the loudest thing that can happen in a round and was sharing a hue with every
+// The opponent was yellow until 2026-08-07 and went grey to give the yellow to `handSwatch` —
+// a hand is the loudest thing that can happen in a round and was sharing a hue with every
 // enemy action on screen. Grey is also the right *rank* for the opponent: their rows are
 // context for yours, and a saturated colour was claiming more attention than they earn.
 //
@@ -195,11 +195,11 @@ func (s *CombatScene) drawActionFlow(gs *state.GlobalState, screen *ebiten.Image
 // **One line per slot, not one per event.** A busy round is 25-30 events, so writing the log
 // verbatim would be a panel nobody could read. Merging an action with its outcome is
 // presentation of events the engine already decided; it computes nothing, so what is written
-// here still cannot disagree with what the round did. **Combos and chills get lines of their
-// own**, because they are not something a card did — folding a combo into the line of the card
+// here still cannot disagree with what the round did. **Hands and chills get lines of their
+// own**, because they are not something a card did — folding a hand into the line of the card
 // that happened to start it would bury the one thing worth reading.
 //
-// **The attack phase is one line, and it is the combo's** *(2026-08-14)*. Prepares and defends
+// **The attack phase is one line, and it is the hand's** *(2026-08-14)*. Prepares and defends
 // still write a line each; the attack cards write none. A turn lands one blow, so five sentences
 // saying "Duelist attacks with an earth strike" described a round that does not happen, and the
 // line that mattered — what the five cards came to — was the sixth. **Every hand takes that line,
@@ -220,7 +220,7 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 	// cur is the line the next outcome attaches to, or -1 when the last thing appended was
 	// an announcement rather than an action. curSide is whose line it is.
 	//
-	// **The side is tracked rather than read back off the row's swatch**, because the combo line
+	// **The side is tracked rather than read back off the row's swatch**, because the hand line
 	// wears amber and takes outcomes: a damage event compared against that swatch would read
 	// every hit as belonging to the wrong duelist.
 	cur := -1
@@ -267,9 +267,9 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 	// would otherwise have carried them no longer write lines of their own.
 	blow := func(e combat.Event) {
 		rows = append(rows, paneRow{
-			prefix: fmt.Sprintf("COMBO!  %s lands a %s", s.sideName(e.Side), comboName(e)),
-			suffix: "  " + comboMath(e),
-			swatch: comboSwatch,
+			prefix: fmt.Sprintf("HAND!  %s lands a %s", s.sideName(e.Side), handName(e)),
+			suffix: "  " + handMath(e),
+			swatch: handSwatch,
 		})
 		cur, curSide = len(rows)-1, e.Side
 		outcomes = 1 // the sum is already on the line, so the first outcome reads as a list
@@ -285,12 +285,12 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			// the only one of the two that knows whether a round has anything before it.
 
 		case combat.KindAction:
-			// **A comboing side's attack card writes no line.** Its beat still passes — the engine
+			// **A hand-forming side's attack card writes no line.** Its beat still passes — the engine
 			// announces every card so the table can light it and playback can count slots — but the
-			// sentence for the whole phase is the KindCombo below.
+			// sentence for the whole phase is the KindHand below.
 			//
 			// **A solo attacker has no phase line, so the card's own sentence is the line**
-			// *(2026-08-17)*. There is no KindCombo coming for it, and an attack that reported
+			// *(2026-08-17)*. There is no KindHand coming for it, and an attack that reported
 			// nothing but a damage figure with no verb in front of it would be the one kind of
 			// action in the round that never says what it was.
 			if combat.Plain(e.Action).Category() == combat.CategoryAttack && !s.soloAttacker(e.Side) {
@@ -322,14 +322,14 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			announce(fmt.Sprintf("%s %s %d",
 				s.sideName(e.Target), tickVerb(e.Status), e.Amount), swatchFor(e.Target))
 
-		case combat.KindCombo:
+		case combat.KindHand:
 			// **This is the attack phase's line, and every hand takes it — the High Card
 			// included** *(2026-08-19)*. There used to be a branch here writing an ordinary attack
-			// sentence when `e.Hand` was `HandNone`, on the argument that announcing "COMBO!" over
+			// sentence when `e.Hand` was `HandNone`, on the argument that announcing "HAND!" over
 			// a single Strike empties the word. **It had been unreachable for some time**:
 			// `blowFor` falls back to the catalogue's `high-card` entry, so a turn with an attack
 			// in it always names a hand and the branch could not fire. What the log actually
-			// printed was the combo line, correctly, while the code beside it said otherwise.
+			// printed was the hand line, correctly, while the code beside it said otherwise.
 			//
 			// The High Card is an equal citizen throughout now, on the owner's call, so this is
 			// deliberate rather than merely true.
@@ -398,16 +398,16 @@ func swatchFor(side combat.Side) color.RGBA {
 // does not describe them. What changed is that the description is now a function of the rule
 // rather than a lookup beside it, which is the only version that can cover a deck written in JSON.
 
-// attackVerb is the word a family hits with. **The player's three families are told apart by it** —
+// attackVerb is the word a form hits with. **The player's three forms are told apart by it** —
 // nine attack cards on one ladder, and a card whose text began "Deal" on all nine would leave the
-// corner letter carrying the distinction alone. An enemy card belongs to no family and simply hits.
-func attackVerb(f combat.Family) string {
+// corner letter carrying the distinction alone. An enemy card belongs to no form and simply hits.
+func attackVerb(f combat.Form) string {
 	switch f {
-	case combat.FamilyStab:
+	case combat.FormStab:
 		return "Stabs"
-	case combat.FamilySlash:
+	case combat.FormSlash:
 		return "Slashes"
-	case combat.FamilyCrush:
+	case combat.FormCrush:
 		return "Crushes"
 	default:
 		return "Hits"
@@ -458,7 +458,7 @@ func cardEffect(card combat.Card) string {
 		if c.Target == combat.TargetSelf {
 			return "Costs you " + multiplierText(amount) + " DMG"
 		}
-		return attackVerb(c.Family) + " for " + multiplierText(amount) + " DMG"
+		return attackVerb(c.Form) + " for " + multiplierText(amount) + " DMG"
 	}
 }
 
@@ -604,10 +604,10 @@ const duelistName = "Duelist"
 //
 // **It reads the duelist the round was resolved for, not the side** — see
 // `combat.Duelist.SoloAttacks`. Two things on this screen change with it and both would otherwise
-// have to guess: the feed writes a sentence per attack card because no combo line is coming, and
+// have to guess: the feed writes a sentence per attack card because no hand line is coming, and
 // the table lights one card at a time because no single blow is being assembled.
 //
-// A missing combatant answers false, which is the comboing case: this is asked while drawing, and
+// A missing combatant answers false, which is the hand-forming case: this is asked while drawing, and
 // a half-built scene should read as the ordinary round rather than as an enemy's.
 func (s *CombatScene) soloAttacker(side combat.Side) bool {
 	c := s.fighter
@@ -822,7 +822,7 @@ const (
 // ResolutionOrder returns and never works the order out for itself, which is the whole
 // point of that split.
 //
-// **It no longer has to draw a combo spanning non-adjacent slots**, which was an open problem
+// **It no longer has to draw a hand spanning non-adjacent slots**, which was an open problem
 // for as long as this was the only pane: one row per slot with a single walking highlight has
 // no way to say "these together did a thing". The Resolution pane says it in words instead.
 // The same goes for a slot a chill deleted — this pane still draws it as a row, and the
@@ -867,7 +867,7 @@ func concealedLabel(c combat.Card) string {
 	return fmt.Sprintf("??? (%s)", c.Category())
 }
 
-// comboName is what the attack phase formed, said in words: "Two Pair", "Four of a Kind".
+// handName is what the attack phase formed, said in words: "Two Pair", "Four of a Kind".
 //
 // **A hand carries its whole name** *(2026-08-17)*. The name used to be assembled here from two
 // parts — the element makeup in front of the hand, "Duo Strike Flurry" — and both of those axes
@@ -876,8 +876,8 @@ func concealedLabel(c combat.Card) string {
 // attack; the pane does not announce those, but the trace does.
 //
 // The name comes from the catalogue rather than being written here, so a hand renamed in
-// `data/combos.json` is renamed once.
-func comboName(e combat.Event) string {
+// `data/hands.json` is renamed once.
+func handName(e combat.Event) string {
 	hand, ok := combat.HandByID(e.Hand)
 	if !ok {
 		return "attack"
@@ -885,13 +885,13 @@ func comboName(e combat.Event) string {
 	return hand.Name
 }
 
-// comboMath is the blow written out as the sum it is: `20 x 1.5 = 30`.
+// handMath is the blow written out as the sum it is: `20 x 1.5 = 30`.
 //
 // **Every figure in it comes off the event.** Base, Multiplier and the total are all worked out
 // by the resolver, so the line cannot claim a sum the round did not use — which is the whole
 // reason those fields are on the event rather than being recomputed here.
 //
-// **The cards' damage is one term, not one term each.** The combo dialog is what spells the hand
+// **The cards' damage is one term, not one term each.** The hand dialog is what spells the hand
 // out card by card; the feed is three rows of a sentence, and four identical numbers would be
 // half a line saying what the dialog just showed at four times the size.
 //
@@ -904,17 +904,17 @@ func comboName(e combat.Event) string {
 // It is the blow before the attacker's weight and before anything the defender raised, so the
 // damage that follows on the same line is often smaller. That gap is what a defence is worth,
 // and it is only legible because both figures are shown.
-func comboMath(e combat.Event) string {
-	return fmt.Sprintf("(%d x %s = %d)", e.Base, comboMultiplierText(e.Multiplier), e.Amount)
+func handMath(e combat.Event) string {
+	return fmt.Sprintf("(%d x %s = %d)", e.Base, handMultiplierText(e.Multiplier), e.Amount)
 }
 
-// comboMultiplierText writes a *combo's* percentage multiplier the way the design does: 350 as
+// handMultiplierText writes a *hand's* percentage multiplier the way the design does: 350 as
 // `3.5`, 200 as `2`, 1000 as `10`. Trailing zeros are dropped rather than padded to two places,
 // because `x 10.00` reads as a precision the game does not have.
 //
 // It is not `multiplierText`, which writes a *card's* multiplier and keeps its `x`. The two read
 // almost the same and are printed in different sentences: this one lands inside the arithmetic
 // line, where the `x` is already there as an operator.
-func comboMultiplierText(pct int) string {
+func handMultiplierText(pct int) string {
 	return strconv.FormatFloat(float64(pct)/100, 'f', -1, 64)
 }

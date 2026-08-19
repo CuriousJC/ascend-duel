@@ -48,7 +48,7 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 
 // **The caption box stood here and is gone** *(2026-08-11)*. It was a hand-width box at 48%
 // holding the plan line and its action-point cost; the Resolution feed took the slot and has
-// since left it too *(2026-08-18)*. What stands there now is the band the combo dialog writes
+// since left it too *(2026-08-18)*. What stands there now is the band the hand dialog writes
 // the blow's arithmetic across. See combat_mathbox.go.
 
 // **The character block is gone and the player is a card** *(2026-08-12)*.
@@ -104,7 +104,8 @@ func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
 func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Image) {
 	img := cardImage(gs,
 		duelistSpec(s.fighter, s.sideName(combat.SideA), gs.Run.Vitae(),
-			s.shownLife(combat.SideA, s.fighter.CurrentLife)),
+			s.shownLife(combat.SideA, s.fighter.CurrentLife),
+			s.fighter.ActionPoints()+s.shownBank(combat.SideA)),
 		cards.DuelistStyle)
 	if img == nil {
 		return

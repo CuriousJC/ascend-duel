@@ -130,7 +130,7 @@ func TestThePlayedRowFitsOnScreen(t *testing.T) {
 	// The widest row the rules can produce, asked of the rules rather than written down: a ring
 	// raising the action cap must not be able to push the row off the screen quietly.
 	//
-	// **This measured the yellow combo ring until 2026-08-19**, which stood off the cards and so
+	// **This measured the yellow hand ring until 2026-08-19**, which stood off the cards and so
 	// set the margins. The ring is gone and the cards themselves are what has to fit.
 	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions(), 0)
 	if first.X < 0 {

@@ -4,13 +4,13 @@ package combat
 // colour. They lived on the combat screen as an unexported `element` until then, painting a
 // border and meaning nothing — which is why three separate mechanics were all blocked on the
 // same sentence in MECHANICS.md: *element must cross into `internal/combat`*. This file is that
-// crossing, and it unblocks the element combos, the ring discount and the flip ring together.
+// crossing, and it unblocks the element hands, the ring discount and the flip ring together.
 //
-// **An element does two things.** It is matchable by a combo `Step`, and a landed attack applies
+// **An element does two things.** It is matchable by a hand `Step`, and a landed attack applies
 // its element's status to whoever took the blow. Everything else about an element — its colour,
 // its name on a card — stays presentation and stays in `internal/screens`.
 //
-// **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for combo
+// **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for hand
 // and discount purposes and applies nothing. The alternative was every card applying its status,
 // which would make the 1-AP Jab and the 1-AP Prepare equally good status delivery and turn the
 // prepare phase into the status engine. The cost of the rule chosen: element is mechanically
@@ -176,8 +176,8 @@ func (c Card) Category() Category {
 	return CategoryPlan
 }
 
-// Family is which group of cards this one belongs to. Enemy cards belong to none.
-func (c Card) Family() Family { return c.Spec().Family }
+// Form is which group of cards this one belongs to. Enemy cards belong to none.
+func (c Card) Form() Form { return c.Spec().Form }
 
 // Label is what this card is called on screen and in the Resolution feed.
 func (c Card) Label() string { return c.Spec().Label }

@@ -45,7 +45,7 @@ var deckNames = []string{
 }
 
 func strike(e Element) Spec {
-	return Spec{Name: "Strike", Family: FamilyCrush, Cost: 2, Element: e, Enabled: true}
+	return Spec{Name: "Strike", Form: FormCrush, Cost: 2, Element: e, Enabled: true}
 }
 
 func render(t *testing.T, s Spec, st Style) *image.RGBA {
@@ -190,12 +190,12 @@ func TestLeftColumnDoesNotCollide(t *testing.T) {
 
 	// The mark's box is what the layout names, so it is what has to fit. A letter is centred in
 	// it and a future glyph is clipped to it, so nothing can be drawn outside it either way.
-	familyBottom := st.FamilyTop + st.FamilySize
+	formBottom := st.FormTop + st.FormSize
 	dashBottom := st.DashTop + (maxCost-1)*(st.DashHeight+st.DashGap) + st.DashHeight
 
-	if familyBottom > st.DashTop {
-		t.Errorf("family mark ends at y=%d, %dpx into the dash stack at y=%d",
-			familyBottom, familyBottom-st.DashTop, st.DashTop)
+	if formBottom > st.DashTop {
+		t.Errorf("form mark ends at y=%d, %dpx into the dash stack at y=%d",
+			formBottom, formBottom-st.DashTop, st.DashTop)
 	}
 	if inside := st.Height - st.BorderWidth; dashBottom > inside {
 		t.Errorf("%d dashes end at y=%d, past the inside of the bottom border at y=%d",
@@ -216,15 +216,15 @@ func TestTheCostColumnStaysOutOfTheTextColumn(t *testing.T) {
 	}
 }
 
-func TestTheFamilyMarkClearsTheTextBand(t *testing.T) {
+func TestTheFormMarkClearsTheTextBand(t *testing.T) {
 	// **The mark is deliberately wider than the column it sits above**, so what keeps it off
 	// the text is height rather than width: it sits in the top-left corner and the text band
 	// starts below it. If either moves far enough to overlap, the mark is drawn first and the
 	// first line of text lands on top of it.
 	st := Hand
 
-	if bottom := st.FamilyTop + st.FamilySize; bottom > st.TextBandTop {
-		t.Errorf("the family mark ends at y=%d, %dpx into the text band at y=%d",
+	if bottom := st.FormTop + st.FormSize; bottom > st.TextBandTop {
+		t.Errorf("the form mark ends at y=%d, %dpx into the text band at y=%d",
 			bottom, bottom-st.TextBandTop, st.TextBandTop)
 	}
 }
@@ -234,14 +234,14 @@ func TestAGlyphOffTheCornerDoesNotSquareTheCorner(t *testing.T) {
 	// the image's bounding box rather than at the card's own curve would fill the transparent
 	// rounded corner with glyph pixels and the card would read as having one square corner.
 	st := Hand
-	if st.GlyphInset >= 0 && st.FamilyTop >= 0 {
-		t.Skip("the hand's family mark no longer hangs off the corner")
+	if st.GlyphInset >= 0 && st.FormTop >= 0 {
+		t.Skip("the hand's form mark no longer hangs off the corner")
 	}
 
 	// A defend card, because the kite shield is the widest glyph and reaches furthest into the
 	// corner. Disabled as well as enabled: the fade pass walks the same rectangle.
 	for _, enabled := range []bool{true, false} {
-		s := Spec{Name: "Defend", Family: FamilyPlan, Cost: 3, Element: Ice, Enabled: enabled}
+		s := Spec{Name: "Defend", Form: FormPlan, Cost: 3, Element: Ice, Enabled: enabled}
 		img := render(t, s, st)
 
 		// The outermost corner pixel of the bounding box is outside a 12px radius and must stay
@@ -262,11 +262,11 @@ func TestMiniShowsEverythingButTheText(t *testing.T) {
 	if !Mini.ShowName {
 		t.Error("Mini does not show the name, which is the only thing identifying a concept")
 	}
-	if !Mini.ShowFamily {
-		t.Error("Mini does not show the family mark")
+	if !Mini.ShowForm {
+		t.Error("Mini does not show the form mark")
 	}
-	if markRight := Mini.GlyphInset + Mini.FamilySize; markRight > visible {
-		t.Errorf("the family mark ends at x=%d but only %d pixels show through the overlap",
+	if markRight := Mini.GlyphInset + Mini.FormSize; markRight > visible {
+		t.Errorf("the form mark ends at x=%d but only %d pixels show through the overlap",
 			markRight, visible)
 	}
 	if dashRight := Mini.DashLeft + Mini.DashWidth; dashRight > visible {
@@ -301,7 +301,7 @@ func TestMiniRendersEverythingInsideTheVisibleStrip(t *testing.T) {
 	// visible strip is hidden by the next card in the row, so a layout that drifted right
 	// would silently stop showing what it claims to show.
 	st := Mini
-	s := Spec{Name: "Prepare", Family: FamilyPlan, Cost: 1, Element: Lightning, Enabled: true}
+	s := Spec{Name: "Prepare", Form: FormPlan, Cost: 1, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
 	ink := 0
@@ -335,7 +335,7 @@ func TestMiniIsHalfTheHandCard(t *testing.T) {
 	}
 }
 
-func TestNameClearsTheFamilyMark(t *testing.T) {
+func TestNameClearsTheFormMark(t *testing.T) {
 	// **The name is centred on the card, not on the space left beside the mark.** So a
 	// long enough name reaches back into the corner the mark now occupies. Every concept
 	// in the deck is checked, because the failure is invisible on "Jab" and obvious on the
@@ -346,7 +346,7 @@ func TestNameClearsTheFamilyMark(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	markRight := st.GlyphInset + st.FamilySize
+	markRight := st.GlyphInset + st.FormSize
 
 	for _, n := range deckNames {
 		w := font.MeasureString(face, n).Ceil()
@@ -358,50 +358,50 @@ func TestNameClearsTheFamilyMark(t *testing.T) {
 	}
 }
 
-func TestFamilyMarkIsDrawnAndDiffers(t *testing.T) {
-	// Four families, four marks. If two ever render identically the corner is saying nothing,
+func TestFormMarkIsDrawnAndDiffers(t *testing.T) {
+	// Four forms, four marks. If two ever render identically the corner is saying nothing,
 	// which is worse than leaving it empty — and it is the risk letters carry that silhouettes do
 	// not, since four capitals are far closer to each other than a sword is to a shield.
 	st := Hand
-	seen := map[string]Family{}
+	seen := map[string]Form{}
 
-	for _, fam := range Families() {
+	for _, fam := range Forms() {
 		spec := strike(Fire)
-		spec.Family = fam
+		spec.Form = fam
 		img := render(t, spec, st)
 
 		// Hash the mark's own box rather than the whole card, so the name and dashes
 		// cannot mask a mark that failed to draw.
 		var sum uint64
-		for y := st.FamilyTop; y < st.FamilyTop+st.FamilySize; y++ {
-			for x := st.GlyphInset; x < st.GlyphInset+st.FamilySize; x++ {
+		for y := st.FormTop; y < st.FormTop+st.FormSize; y++ {
+			for x := st.GlyphInset; x < st.GlyphInset+st.FormSize; x++ {
 				p := img.RGBAAt(x, y)
 				sum = sum*31 + uint64(p.R)<<16 + uint64(p.G)<<8 + uint64(p.B)
 			}
 		}
 		key := fmt.Sprintf("%x", sum)
 		if prev, dup := seen[key]; dup {
-			t.Errorf("%s and %s draw the same family mark", prev, fam)
+			t.Errorf("%s and %s draw the same form mark", prev, fam)
 		}
 		seen[key] = fam
 	}
 
-	// And FamilyNone leaves the slot alone, which is what a ring and the opponent's cards need.
+	// And FormNone leaves the slot alone, which is what a ring and the opponent's cards need.
 	spec := strike(Fire)
-	spec.Family = FamilyNone
+	spec.Form = FormNone
 	img := render(t, spec, st)
-	x := st.GlyphInset + st.FamilySize/2
-	y := st.FamilyTop + st.FamilySize/2
+	x := st.GlyphInset + st.FormSize/2
+	y := st.FormTop + st.FormSize/2
 	if got := img.RGBAAt(x, y); got != Surface {
-		t.Errorf("FamilyNone drew something at the mark slot: %v, want the surface %v", got, Surface)
+		t.Errorf("FormNone drew something at the mark slot: %v, want the surface %v", got, Surface)
 	}
 }
 
-func TestEveryFamilyHasItsOwnLetter(t *testing.T) {
+func TestEveryFormHasItsOwnLetter(t *testing.T) {
 	// The pixel test above would also catch this, slowly and by a hash. This says the actual
-	// rule: a family with no letter draws nothing, and two sharing one is the reason Slash is D.
-	seen := map[string]Family{}
-	for _, fam := range Families() {
+	// rule: a form with no letter draws nothing, and two sharing one is the reason Slash is D.
+	seen := map[string]Form{}
+	for _, fam := range Forms() {
 		l := fam.Letter()
 		if l == "" {
 			t.Errorf("%s has no letter, so its corner would be blank", fam)
@@ -412,8 +412,8 @@ func TestEveryFamilyHasItsOwnLetter(t *testing.T) {
 		}
 		seen[l] = fam
 	}
-	if got := FamilyNone.Letter(); got != "" {
-		t.Errorf("FamilyNone is marked %q; it must draw nothing", got)
+	if got := FormNone.Letter(); got != "" {
+		t.Errorf("FormNone is marked %q; it must draw nothing", got)
 	}
 }
 
@@ -455,8 +455,8 @@ func TestRingDrawsArtAndNoCardFurniture(t *testing.T) {
 
 	// And none of the card's own furniture is on it: a ring has no cost and no phase, so
 	// a stray dash or glyph would be claiming something untrue about it.
-	if st.ShowFamily || st.TextLineHeight > 0 {
-		t.Error("the ring style claims to draw a family mark or effect text")
+	if st.ShowForm || st.TextLineHeight > 0 {
+		t.Error("the ring style claims to draw a form mark or effect text")
 	}
 	noCost := Spec{Name: "Fire Ring", Element: Ring, Art: art, Enabled: true, Cost: 0}
 	plain := render(t, noCost, st)
@@ -473,7 +473,7 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 	// pixels, on the longest name in the deck at the widest cost — the case where a
 	// mistake would actually show.
 	st := Hand
-	s := Spec{Name: "Prepare", Family: FamilyPlan, Cost: 4, Element: Lightning, Enabled: true}
+	s := Spec{Name: "Prepare", Form: FormPlan, Cost: 4, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
 	border := systems.ColorToward(BorderOf(Lightning), Surface, borderRestToward)
@@ -495,7 +495,7 @@ func TestTheCostColumnHoldsNothingButDashes(t *testing.T) {
 	// last dash the column is bare surface. This is the pixel half of the geometry test above:
 	// it catches anything drawn into the column that the layout constants do not describe.
 	st := Hand
-	s := Spec{Name: "Cleave", Family: FamilySlash, Cost: 3, Element: Ice, Enabled: true}
+	s := Spec{Name: "Cleave", Form: FormSlash, Cost: 3, Element: Ice, Enabled: true}
 	img := render(t, s, st)
 
 	firstFree := st.DashTop + s.Cost*(st.DashHeight+st.DashGap)
@@ -609,7 +609,7 @@ func abs(n int) int {
 	return n
 }
 
-func TestTheFamilyMarkStaysCornerSized(t *testing.T) {
+func TestTheFormMarkStaysCornerSized(t *testing.T) {
 	// **The bound is the invariant, not the number.** How big the corner mark is stays a design
 	// choice, but one that grows past half of GlyphSize is a full-size shape in a corner slot,
 	// and it walks into both the dash stack under it and the text column beside it.
@@ -617,15 +617,15 @@ func TestTheFamilyMarkStaysCornerSized(t *testing.T) {
 	// The floor matters as much as the ceiling: below about 16 pixels neither a letter nor a
 	// derived rim has anything left to read.
 	for name, st := range map[string]Style{"hand": Hand, "mini": Mini} {
-		if !st.ShowFamily {
+		if !st.ShowForm {
 			continue
 		}
-		if st.FamilySize < 16 || st.FamilySize > systems.GlyphSize/2 {
-			t.Errorf("%s family box is %dpx, want between 16 and half of %d",
-				name, st.FamilySize, systems.GlyphSize)
+		if st.FormSize < 16 || st.FormSize > systems.GlyphSize/2 {
+			t.Errorf("%s form box is %dpx, want between 16 and half of %d",
+				name, st.FormSize, systems.GlyphSize)
 		}
-		if st.FamilyLetterSize <= 0 {
-			t.Errorf("%s shows a family mark with no letter size, so it would draw nothing", name)
+		if st.FormLetterSize <= 0 {
+			t.Errorf("%s shows a form mark with no letter size, so it would draw nothing", name)
 		}
 	}
 }
@@ -977,7 +977,7 @@ func TestBackIsTheSamePictureWhateverTheCard(t *testing.T) {
 	want := render(t, Spec{FaceDown: true}, Hand)
 
 	loud := Spec{
-		Name: "Prepare", Family: FamilyPlan, Cost: 4, Text: "Bank 2 AP",
+		Name: "Prepare", Form: FormPlan, Cost: 4, Text: "Bank 2 AP",
 		Element: Lightning, Enabled: true, Selected: true, FaceDown: true,
 	}
 	got := render(t, loud, Hand)

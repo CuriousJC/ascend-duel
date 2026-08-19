@@ -2,7 +2,7 @@ package combat
 
 import "sort"
 
-// Combos are the layer where a round stops being a pile of cards and starts being a plan.
+// Hands are the layer where a round stops being a pile of cards and starts being a plan.
 // Throwing whatever you drew at the opponent works; *choosing* a shape and building toward it is
 // meant to work better, and this file is the machinery that pays for that choice.
 //
@@ -11,9 +11,15 @@ import "sort"
 // hits, they are one Four of a Kind. Attack cards that do not contribute are ignored outright:
 // `Strike, Jab, Strike` is a Pair and the Jab is not in it.
 //
-// **A hand counts copies of a card, and buys damage and nothing else** *(2026-08-17)*. The ladder
+// **A hand counts cards that agree, and buys damage and nothing else** *(2026-08-17)*. The ladder
 // wears poker's names because it is poker's question — high card, pair, two pair, three of a kind,
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
+//
+// **What "agree" means is the hand's own business** *(2026-08-19)*. Every rung exists three times
+// over, once per `Axis`: two Bashes are a Card Pair, a Bash and a Cleave are a Form Pair only if
+// they share a form — they do not — and an ice Bash beside an ice Thrust is an Elemental Pair
+// though the two agree on nothing else. The three are separate catalogue entries rather than one
+// entry with three readings, so each is priced on how often it can actually be built.
 //
 // **The multiplier multiplies the hand's own cards** *(2026-08-18, owner's call)*. A Pair of Lunges
 // is `(20 + 20) x 1.5`, so what a hand is worth is a proportion of what its cards deal. It used to
@@ -22,13 +28,13 @@ import "sort"
 // 0.6x on Lunges, so the ladder paid least to the decks that had climbed furthest. The High Card
 // carries 100 for the same reason, and it is what makes a lone attack land its own face damage.
 //
-// **That is deliberately narrow.** Combos used to carry a second axis counting the distinct colours
+// **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colours
 // in the formed hand, and a reward vocabulary that could bank action points or take actions off the
 // opponent's next turn. Both are gone: statuses come from **elements and the rings that arm them**,
-// so a combo is one number and there is exactly one place to look for what a hand is worth.
+// so a hand is one number and there is exactly one place to look for what a hand is worth.
 //
 // **Exactly one hand applies.** A hand wins on its multiplier — four Strikes are a Four of a Kind
-// rather than also the pair and the trips inside it — so a turn produces one combo with no ranking
+// rather than also the pair and the trips inside it — so a turn produces one hand with no ranking
 // machinery beyond that comparison.
 //
 // **Matching is on the resolved order, never on the queue.** ResolutionOrder regroups a queue by
@@ -41,30 +47,128 @@ import "sort"
 // damage dealt would mean a plan could be silently invalidated by the opponent's defenses after
 // the player had committed to it.
 //
-// Combos are eventually **discovered rather than given**, persisting on the profile as part of
+// Hands are eventually **discovered rather than given**, persisting on the profile as part of
 // the unlock structure — see MECHANICS.md. No profile exists yet, so everything in the catalogue
 // is always live. When one does, discovery gates the *catalogue*, not the matcher.
 
-// HandID identifies a hand. It travels on the KindCombo event so the screen can name what fired
+// HandID identifies a hand. It travels on the KindHand event so the screen can name what fired
 // without knowing the rule that fired it.
 type HandID int
 
-// HandNone is the zero value and means "no hand". Every real ID is written in combos.json.
+// HandNone is the zero value and means "no hand". Every real ID is written in hands.json.
 const HandNone HandID = 0
 
-// multiplierScale is the denominator the percent multipliers in combos.json are held over. They
+// multiplierScale is the denominator the percent multipliers in hands.json are held over. They
 // are integers because this package is integer arithmetic throughout, and a float in the file
 // would be the one number in the game that rounds differently from every other.
 const multiplierScale = 100
 
-// Hand is one rung of the ladder, after combos.json has been read.
+// Axis is what a hand counts copies *of* *(2026-08-19)*. The same rung exists once per axis —
+// three Bashes are a Card Three of a Kind, three crushes are a Form Three of a Kind, three ice
+// cards are an Elemental Three of a Kind — so each can be priced on its own rarity.
+//
+// **The order is the tie-break, narrowest first, and that is a rule rather than an accident.**
+// A concept fixes a form, so every card hand is also a form hand and two of them can be live at
+// the same multiplier; the narrower one is what the player aimed at, so it wins. Element is
+// independent of both — an ice Bash and a fire Bash are a card hand and not an elemental one.
+//
+// It is safe to order this enum meaningfully because **an axis is never serialized**: hands.json
+// writes `"match": "form"` and `ParseAxis` resolves it, exactly as elements and forms are named
+// rather than numbered. Reordering would change the tie-break and nothing else.
+type Axis int
+
+const (
+	// AxisConcept counts copies of the same card. It is the narrowest axis: four cards can share
+	// a concept only by being its four elemental copies.
+	AxisConcept Axis = iota
+
+	// AxisForm counts cards of the same form — stab, slash or crush. `FormNone` never counts, so
+	// an enemy's formless deck cannot build one.
+	AxisForm
+
+	// AxisElement counts cards of the same colour. `Basic` never counts, for the same reason.
+	AxisElement
+)
+
+// axisNames are the strings hands.json writes. Index by Axis.
+var axisNames = [...]string{
+	AxisConcept: "concept",
+	AxisForm:    "form",
+	AxisElement: "element",
+}
+
+// AllAxes is every axis, in tie-break order. It exists so a test and a reference screen can walk
+// them without knowing how many there are.
+var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement}
+
+func (a Axis) String() string {
+	if int(a) < 0 || int(a) >= len(axisNames) {
+		return "unknown"
+	}
+	return axisNames[a]
+}
+
+// ParseAxis resolves the axis names written in hands.json. It reports failure rather than falling
+// back to a default, for the reason ParseElement does: a hand quietly counting the wrong thing is
+// a balance change nobody made.
+func ParseAxis(name string) (Axis, bool) {
+	for i, n := range axisNames {
+		if n == name {
+			return Axis(i), true
+		}
+	}
+	return AxisConcept, false
+}
+
+// matchValue is what one card counts as on this axis, and whether it counts at all.
+//
+// **`FormNone` and `Basic` are absences rather than values** *(2026-08-19)*, so a card carrying
+// one matches nothing on that axis. Every enemy card is both, which is what stops a formless,
+// colourless deck from reading as a table full of elemental hands — and the player's plans are
+// basic too, though `formsBlow` has already excluded them by the time this is asked.
+func matchValue(c Card, a Axis) (int, bool) {
+	switch a {
+	case AxisForm:
+		f := c.Form()
+		return int(f), f != FormNone
+	case AxisElement:
+		e := c.Element
+		return int(e), e != Basic
+	default:
+		return int(c.Concept), true
+	}
+}
+
+// spread is how many different values a hand can spread its groups across on this axis, or 0 for
+// an axis wide enough that the question cannot bite.
+//
+// It is what refuses a four-group hand on the form axis: only three forms ever reach a blow, since
+// `FormPlan` is filtered out before the matcher sees it, so such an entry is a rung nobody could
+// ever climb. Concepts are hundreds wide once the enemy decks are registered and a turn holds five
+// cards, so that axis is left unchecked rather than tied to a registry that grows.
+func (a Axis) spread() int {
+	switch a {
+	case AxisForm:
+		return len(Forms()) - 1
+	case AxisElement:
+		return ElementCount - 1
+	default:
+		return 0
+	}
+}
+
+// Hand is one rung of the ladder, after hands.json has been read.
 type Hand struct {
 	ID   HandID
 	Key  string
 	Name string
 
-	// Groups is how many cards of each *distinct* concept the hand wants. `[3,2]` is a full
-	// house; the groups naming distinct values is why five of one card can never be one.
+	// Match is the axis this hand counts on.
+	Match Axis
+
+	// Groups is how many cards of each *distinct value on the hand's own axis* the hand wants.
+	// `[3,2]` is a full house; the groups naming distinct values is why five cards sharing one
+	// value can never be one.
 	Groups []int
 
 	// Multiplier is this hand's damage multiplier, in percent, and is the whole of what forming
@@ -81,7 +185,7 @@ func (h Hand) Cards() int {
 	return n
 }
 
-// catalogue is every hand in the game, read from data/combos.json at package init.
+// catalogue is every hand in the game, read from data/hands.json at package init.
 var handTable = loadCatalogue()
 
 // Hands is the live catalogue. It exists so a reference screen can list the ladder without
@@ -119,8 +223,8 @@ func HandByName(name string) (Hand, bool) {
 // **One ID per key, written in the file.** An entry used to produce one hand *per attack concept*
 // with `base + int(concept)` for an ID, which held twelve concepts and could not hold the four
 // hundred a per-enemy deck list produces. It also closes the open question MECHANICS.md recorded
-// against profile discovery: a combo ID no longer derives from a concept's position, so reordering
-// the cards cannot renumber a combo the player has already found.
+// against profile discovery: a hand ID no longer derives from a concept's position, so reordering
+// the cards cannot renumber a hand the player has already found.
 func HandIDForKey(key string) (HandID, bool) {
 	for _, h := range handTable {
 		if h.Key == key {
@@ -144,7 +248,7 @@ type Blow struct {
 	Cards []int
 
 	// Lead is the turn index of the card the hand is named after: the first card of its first
-	// group, or the High Card itself. It is what the combo event reports as the card the blow
+	// group, or the High Card itself. It is what the hand event reports as the card the blow
 	// led with.
 	Lead int
 
@@ -199,7 +303,7 @@ func blowFor(turn []Slot, hands []Hand) Blow {
 	}
 }
 
-// highCardKey is the catalogue entry naming the fallback. **It is in `combos.json` rather than
+// highCardKey is the catalogue entry naming the fallback. **It is in `hands.json` rather than
 // written out here** so the one thing every turn can produce is named and numbered where the rest
 // of the ladder is, and the feed can look it up like any other hand.
 const highCardKey = "high-card"
@@ -217,6 +321,10 @@ func highCard(hands []Hand) Hand {
 }
 
 // matchHand finds the best-paying hand of **two or more cards** the turn can form.
+//
+// **Best is the biggest multiplier, and a tie goes to the narrowest axis** *(2026-08-19)*. Two
+// Bashes satisfy the card pair and the form pair at once, so the comparison needs a second key or
+// it would be decided by file order; `Axis` is written narrowest-first for exactly this.
 //
 // **The one-card hand is skipped rather than matched** *(2026-08-15)*. The High Card is in the
 // catalogue and would match against any attack at all, but counting is the wrong way to pick it:
@@ -239,24 +347,26 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 		if !ok {
 			continue
 		}
-		if !found || h.Multiplier > best.Multiplier {
+		if !found || h.Multiplier > best.Multiplier ||
+			(h.Multiplier == best.Multiplier && h.Match < best.Match) {
 			best, bestCards, bestLead, found = h, cards, lead, true
 		}
 	}
 	return bestCards, best, bestLead, found
 }
 
-// matchCountOf reads the turn as a set: how many cards carry each concept, and whether that
-// satisfies the hand's groups.
+// matchCountOf reads the turn as a set: how many cards carry each value on the hand's own axis,
+// and whether that satisfies its groups. A card with no value on that axis — a formless or
+// colourless one — is skipped rather than tallied under a zero everything else would join.
 //
 // **Only the cards that form a blow are counted, and that is the matcher's rule rather than the
 // catalogue's** *(2026-08-17)*. An entry used to name the categories it counted, but `formsBlow`
 // is strictly narrower than "is an attack" — it also excludes recoil — so the field could never
 // change what was counted and only invited an entry to claim otherwise.
 //
-// **Groups are filled largest-count-first**, and a tie goes to the concept registered first. A
-// full house asked for `[3,2]` against three Jabs and two Strikes has only one reading, but the
-// rule has to be written down for the cases that do not — and it has to be a rule rather than a
+// **Groups are filled largest-count-first**, and a tie goes to the value whose first card was
+// played first. A full house asked for `[3,2]` against three Jabs and two Strikes has only one
+// reading, but the rule has to be written down for the cases that do not — and it has to be a rule rather than a
 // map walk, per the determinism note in CLAUDE.md.
 //
 // **It tallies the turn rather than indexing a fixed-width array** *(2026-08-16)*. The array was
@@ -266,10 +376,10 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 // both smaller and deterministic without depending on how many enemies happen to be loaded.
 //
 // The second return is the turn index of the first card of the *first* group — the concept the
-// hand is named after, and what the combo event reports as the card the blow led with.
+// hand is named after, and what the hand event reports as the card the blow led with.
 func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 	type tally struct {
-		id      ConceptID
+		value   int
 		members []int
 		spent   bool
 	}
@@ -279,15 +389,19 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 		if !s.Card.formsBlow() {
 			continue
 		}
+		v, counts := matchValue(s.Card, h.Match)
+		if !counts {
+			continue
+		}
 		at := -1
 		for j := range tallies {
-			if tallies[j].id == s.Card.Concept {
+			if tallies[j].value == v {
 				at = j
 				break
 			}
 		}
 		if at < 0 {
-			tallies = append(tallies, tally{id: s.Card.Concept})
+			tallies = append(tallies, tally{value: v})
 			at = len(tallies) - 1
 		}
 		tallies[at].members = append(tallies[at].members, i)
@@ -327,7 +441,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 // queued no attacks at all.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
-// blow is. The player's three families ladder identically — a Lunge, a Cleave and a Smash all deal
+// blow is. The player's three forms ladder identically — a Lunge, a Cleave and a Smash all deal
 // double — so ties are common rather than exceptional, and they go to the card queued first. The
 // earliest slot wins, which is deterministic without inventing a rule.
 func biggestAttack(turn []Slot) []int {

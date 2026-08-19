@@ -15,30 +15,30 @@ import (
 
 // These are the narrow kind of screen test CLAUDE.md allows: they create no `ebiten.Image`, need
 // no window and no font, and they guard a cross-package invariant a compiler cannot see — that
-// what the combo dialog writes on the screen is the arithmetic the resolver put on the event.
+// what the hand dialog writes on the screen is the arithmetic the resolver put on the event.
 //
 // **They test `mathScript`, which is the half of the box that has no geometry in it.** Where each
 // figure flies *from* is a question about a row of cards on a screen, and there is no way to check
 // that here; what the figures *say* is checkable, and it is the part that could quietly start
 // lying about the round.
 
-// comboEventFor builds a KindCombo event by hand, standing in for one the resolver produced.
-func comboEvent(hand string, amounts []int, multiplier, total int) combat.Event {
+// handEventFor builds a KindHand event by hand, standing in for one the resolver produced.
+func handEvent(hand string, amounts []int, multiplier, total int) combat.Event {
 	id, ok := combat.HandIDForKey(hand)
 	if !ok {
 		panic("the catalogue has no hand keyed " + hand)
 	}
 
 	e := combat.Event{
-		Kind:       combat.KindCombo,
+		Kind:       combat.KindHand,
 		Hand:       id,
 		Multiplier: multiplier,
 		Amount:     total,
 	}
 	for i, a := range amounts {
-		e.ComboCards[i] = i
-		e.ComboAmounts[i] = a
-		e.ComboCardCount++
+		e.HandCards[i] = i
+		e.HandAmounts[i] = a
+		e.HandCardCount++
 		e.Base += a
 	}
 	return e
@@ -55,8 +55,8 @@ func scriptText(items []mathItem) string {
 
 // **The sum is spelled out card by card.** This is the whole reason the dialog exists: the feed
 // prints the hand's cards as one term, and what a player could not see was which card paid what.
-func TestTheComboScriptSpellsOutEveryCard(t *testing.T) {
-	got := scriptText(mathScript(comboEvent("pair", []int{20, 20}, 150, 60)))
+func TestTheHandScriptSpellsOutEveryCard(t *testing.T) {
+	got := scriptText(mathScript(handEvent("concept-pair", []int{20, 20}, 150, 60)))
 	if want := "20 + 20 x 1.5 = 60"; got != want {
 		t.Errorf("a Pair of Lunges reads %q, want %q", got, want)
 	}
@@ -64,7 +64,7 @@ func TestTheComboScriptSpellsOutEveryCard(t *testing.T) {
 
 // A four-card hand keeps one plus between each pair of figures and gains nothing else.
 func TestAFourCardHandReadsAsFourTerms(t *testing.T) {
-	got := scriptText(mathScript(comboEvent("four-of-a-kind", []int{20, 20, 20, 20}, 500, 400)))
+	got := scriptText(mathScript(handEvent("concept-four-of-a-kind", []int{20, 20, 20, 20}, 500, 400)))
 	if want := "20 + 20 + 20 + 20 x 5 = 400"; got != want {
 		t.Errorf("a Four of a Kind reads %q, want %q", got, want)
 	}
@@ -77,7 +77,7 @@ func TestAFourCardHandReadsAsFourTerms(t *testing.T) {
 // being 1 would make an upgrade read as a new rule rather than as a bigger figure. The log's line
 // says it the same way.
 func TestTheHighCardShowsItsMultiplier(t *testing.T) {
-	got := scriptText(mathScript(comboEvent("high-card", []int{20}, 100, 20)))
+	got := scriptText(mathScript(handEvent("high-card", []int{20}, 100, 20)))
 	if want := "20 x 1 = 20"; got != want {
 		t.Errorf("a High Card reads %q, want %q", got, want)
 	}
@@ -85,32 +85,32 @@ func TestTheHighCardShowsItsMultiplier(t *testing.T) {
 
 // **Every hand the engine names is shouted, the High Card included** *(2026-08-19, owner's call)*.
 // It was silent until then, on the argument that `HIGH CARD!` over a lone attack empties the word
-// the way `COMBO!` over a single Strike does. What changed is that the name is now carried by the
+// the way `HAND!` over a single Strike does. What changed is that the name is now carried by the
 // banner from DUEL! onward — so silence here would not withhold an announcement, it would take a
 // word off the screen at the moment the blow lands.
 //
 // **An event naming no hand at all is still silent.** Nothing emits one, a turn with an attack in
 // it always producing a blow, and a bare `!` at 124 points is what the check is worth.
 func TestEveryNamedHandIsShouted(t *testing.T) {
-	if got := shoutFor(comboEvent("pair", []int{20, 20}, 150, 60)); got != "PAIR!" {
-		t.Errorf("a Pair shouts %q, want %q", got, "PAIR!")
+	if got := shoutFor(handEvent("concept-pair", []int{20, 20}, 150, 60)); got != "CARD PAIR!" {
+		t.Errorf("a Pair shouts %q, want %q", got, "CARD PAIR!")
 	}
-	if got := shoutFor(comboEvent("high-card", []int{20}, 100, 20)); got != "HIGH CARD!" {
+	if got := shoutFor(handEvent("high-card", []int{20}, 100, 20)); got != "HIGH CARD!" {
 		t.Errorf("a High Card shouts %q, want %q", got, "HIGH CARD!")
 	}
-	if got := shoutFor(combat.Event{Kind: combat.KindCombo, Hand: combat.HandNone}); got != "" {
+	if got := shoutFor(combat.Event{Kind: combat.KindHand, Hand: combat.HandNone}); got != "" {
 		t.Errorf("an event naming no hand shouts %q, want silence", got)
 	}
 }
 
 // **Every hand in the catalogue can be shouted and none of them is empty.** A hand added to
-// `data/combos.json` with no name would put a bare `!` on the screen at 124 points.
+// `data/hands.json` with no name would put a bare `!` on the screen at 124 points.
 //
 // **The one-card hand is in the sweep now** rather than skipped: the High Card is shouted like any
 // other since 2026-08-19.
 func TestEveryHandInTheCatalogueHasAShout(t *testing.T) {
 	for _, h := range combat.Hands() {
-		e := combat.Event{Kind: combat.KindCombo, Hand: h.ID}
+		e := combat.Event{Kind: combat.KindHand, Hand: h.ID}
 		got := shoutFor(e)
 		if got == "" || got == "!" {
 			t.Errorf("hand %q shouts %q", h.Key, got)
@@ -122,7 +122,7 @@ func TestEveryHandInTheCatalogueHasAShout(t *testing.T) {
 }
 
 // **Exactly the hand's own cards fly, plus the multiplier.** The flying items are the ones given a
-// launch point in `startComboMath`, and it walks them expecting the cards first and the multiplier
+// launch point in `startHandMath`, and it walks them expecting the cards first and the multiplier
 // last — so a script that flew something else would seat a figure on the wrong card.
 func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 	for _, tc := range []struct {
@@ -130,9 +130,9 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 		e     combat.Event
 		flies int
 	}{
-		{"a Pair", comboEvent("pair", []int{20, 20}, 150, 60), 3},
-		{"a High Card", comboEvent("high-card", []int{20}, 100, 20), 2},
-		{"trips", comboEvent("three-of-a-kind", []int{10, 10, 10}, 200, 60), 4},
+		{"a Pair", handEvent("concept-pair", []int{20, 20}, 150, 60), 3},
+		{"a High Card", handEvent("high-card", []int{20}, 100, 20), 2},
+		{"trips", handEvent("concept-three-of-a-kind", []int{10, 10, 10}, 200, 60), 4},
 	} {
 		items := mathScript(tc.e)
 
@@ -146,14 +146,14 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 			t.Errorf("%s flies %d items, want %d", tc.what, flies, tc.flies)
 		}
 
-		// The first ComboCardCount flying items have to be the cards, in order, or the launch
-		// points in startComboMath are attached to the wrong figures.
+		// The first HandCardCount flying items have to be the cards, in order, or the launch
+		// points in startHandMath are attached to the wrong figures.
 		seen := 0
 		for _, it := range items {
-			if !it.fly || seen >= tc.e.ComboCardCount {
+			if !it.fly || seen >= tc.e.HandCardCount {
 				continue
 			}
-			if want := tc.e.ComboAmounts[seen]; it.text != strconv.Itoa(want) {
+			if want := tc.e.HandAmounts[seen]; it.text != strconv.Itoa(want) {
 				t.Errorf("%s: flying item %d reads %q, want the card's own %d", tc.what, seen, it.text, want)
 			}
 			seen++
@@ -164,7 +164,7 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 // **The script ends with the answer, and the answer is the event's.** Nothing in the box may
 // recompute a total: the figure shown and the figure landed have to be one number.
 func TestTheScriptEndsWithTheEventsOwnTotal(t *testing.T) {
-	e := comboEvent("pair", []int{7, 7}, 150, 21)
+	e := handEvent("concept-pair", []int{7, 7}, 150, 21)
 	items := mathScript(e)
 
 	last := items[len(items)-1]
@@ -209,19 +209,19 @@ func mathTestState(t *testing.T) *state.GlobalState {
 // band, which spans `handBand` and therefore *narrows as the hand empties*: a two-card hand gives
 // about 330px against a widest sum of roughly 640, so the arithmetic would have run off both ends
 // in exactly the rounds a duel is decided in. The box takes the table's width now — see
-// `comboMathRect` — which is a function of the screen alone.
+// `handMathRect` — which is a function of the screen alone.
 func TestTheWidestSumFitsItsBand(t *testing.T) {
 	gs := mathTestState(t)
 
 	var scene CombatScene
-	band := scene.comboMathRect(gs)
+	band := scene.handMathRect(gs)
 
 	// Deliberately over the top: four terms of three digits, a three-digit multiplier written out,
 	// and a five-digit total. Nothing the rules can produce is this wide, which is the point — the
 	// margin is what a later type-size change is spending.
-	e := comboEvent("four-of-a-kind", []int{999, 999, 999, 999}, 500, 19980)
+	e := handEvent("concept-four-of-a-kind", []int{999, 999, 999, 999}, 500, 19980)
 
-	box := comboMathBox{items: mathScript(e)}
+	box := handMathBox{items: mathScript(e)}
 	scene.layOutMath(gs, &box)
 
 	// **Measured to the ink, not to the centres.** Checking the resting *points* passes a line
@@ -248,7 +248,7 @@ func TestTheSumIsLaidOutLeftToRight(t *testing.T) {
 	gs := mathTestState(t)
 
 	var scene CombatScene
-	box := comboMathBox{items: mathScript(comboEvent("four-of-a-kind", []int{20, 20, 20, 20}, 500, 400))}
+	box := handMathBox{items: mathScript(handEvent("concept-four-of-a-kind", []int{20, 20, 20, 20}, 500, 400))}
 	scene.layOutMath(gs, &box)
 
 	for i := 1; i < len(box.items); i++ {
@@ -260,7 +260,7 @@ func TestTheSumIsLaidOutLeftToRight(t *testing.T) {
 	}
 
 	// And every item shares the band's vertical centre: the sum is one line, not a staircase.
-	band := scene.comboMathRect(gs)
+	band := scene.handMathRect(gs)
 	cy := (band.Min.Y + band.Max.Y) / 2
 	for i, it := range box.items {
 		if it.at.Y != cy {
@@ -281,7 +281,7 @@ func TestTheWidestHandNameFitsTheScreen(t *testing.T) {
 
 	widest, name := 0.0, ""
 	for _, hand := range combat.Hands() {
-		w, _ := text.Measure(handShout(hand.Name), mathFace(gs, mathShoutSize), 0)
+		w, _ := text.Measure(handShout(hand.Name), mathFace(gs, mathNameSize), 0)
 		if w > widest {
 			widest, name = w, handShout(hand.Name)
 		}
@@ -289,10 +289,49 @@ func TestTheWidestHandNameFitsTheScreen(t *testing.T) {
 
 	// The breath swells it, and the shout is faux-bold, so what has to fit is the widest it is
 	// ever actually drawn rather than its resting width.
-	widest = widest*(1+mathBreathAmount) + mathBoldStep(mathShoutSize)
+	widest = widest*(1+mathBreathAmount) + mathBoldStep(mathNameSize)
 
 	if widest > float64(gs.ScreenWidth) {
 		t.Errorf("%q is %.0f wide at the shout's %d points, against a %d-wide screen",
-			name, widest, mathShoutSize, gs.ScreenWidth)
+			name, widest, mathNameSize, gs.ScreenWidth)
+	}
+}
+
+// **The name's second line is the sum's own multiplier, said early** *(2026-08-19, owner's call)*.
+// The banner writes `1.15x DMG` under the hand's name from the moment the hand forms, and the same
+// figure flies out of that word into the line when the hand fires — so the two go through one
+// formatting. Two spellings of the same multiplier would read as two numbers, which is exactly the
+// failure `handShout` exists to prevent for the name above it.
+func TestTheHandNameCarriesTheMultiplierTheSumWillShow(t *testing.T) {
+	if got := handMultiplierLine(115); got != "1.15x DMG" {
+		t.Errorf("115%% reads %q, want %q", got, "1.15x DMG")
+	}
+
+	for _, hand := range combat.Hands() {
+		line := handMultiplierLine(hand.Multiplier)
+		term := handMultiplierText(hand.Multiplier)
+		if !strings.HasPrefix(line, term) {
+			t.Errorf("%s is planned as %q and fires as %q", hand.Name, line, term)
+		}
+	}
+}
+
+// **The multiplier sets off at its own size and a card's figure grows into place.** The two are
+// different gestures for a reason and the difference is checkable without a window: a card's
+// figure is appearing — it comes toward the reader out of the card that paid it — while the
+// multiplier has been sitting under the hand's name since DUEL! and is simply travelling. A
+// multiplier that grew on the way would read as a second copy of a figure already on screen.
+func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
+	items := mathScript(handEvent("concept-pair", []int{20, 20}, 150, 60))
+
+	mult := items[len(items)-3]
+	if mult.text != "1.5" {
+		t.Fatalf("the multiplier is item %q, want %q", mult.text, "1.5")
+	}
+	if mult.fromScale != 1 {
+		t.Errorf("the multiplier sets off at %v, want 1", mult.fromScale)
+	}
+	if items[0].fromScale != 0 {
+		t.Errorf("a card's figure sets off at %v, want the flying default", items[0].fromScale)
 	}
 }

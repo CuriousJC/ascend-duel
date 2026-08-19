@@ -60,7 +60,7 @@ type GlyphKind int
 // again. See TODO.md.
 // **Append, never insert.** These are ordinals and the glyph cache keys on them, so
 // adding a kind in the middle silently re-points every existing entry — the same hazard
-// MECHANICS.md records for the concept enum and its combo IDs.
+// MECHANICS.md records for the concept enum and its hand IDs.
 const (
 	// GlyphDamage is a sword: what the action hits for.
 	GlyphDamage GlyphKind = iota

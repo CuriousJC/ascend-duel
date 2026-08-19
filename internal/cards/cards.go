@@ -121,7 +121,7 @@ var borderColors = [...]color.RGBA{
 	// **Darkened on 2026-08-19** from {240,205,55}, which is a fine yellow on a dark ground and
 	// nearly invisible on two of the three light ones this game draws on — the off-white card
 	// surface and the combat screen's cream. It first showed up as an unreadable damage figure in
-	// the combo sum, where the number is drawn straight onto the cream; the border had the same
+	// the hand sum, where the number is drawn straight onto the cream; the border had the same
 	// problem more quietly. This is `screens.attentionYellow`'s value, which took the same
 	// correction for the same reason when the ground went cream.
 	Lightning: {R: 214, G: 152, B: 12, A: 255},
@@ -142,80 +142,80 @@ func BorderOf(e Element) color.RGBA {
 	return borderColors[e]
 }
 
-// Family is which group of cards this one belongs to, and it is drawn in the corner where
+// Form is which group of cards this one belongs to, and it is drawn in the corner where
 // the phase glyph used to sit.
 //
 // **It replaced the category** *(2026-08-15)*. A card used to say which phase it resolved in —
-// prepare, attack, defend — and with the deck rebuilt around three attack families that fact
+// prepare, attack, defend — and with the deck rebuilt around three attack forms that fact
 // became both less useful and derivable: everything in Stab, Slash and Crush is an attack and
 // everything in Plan is not. What a card cannot say any other way is *which of the three ways of
 // hitting* it is, because that is what a pair is counted on.
 //
 // It is its own type rather than the string it used to be so the mapping to art is a
 // switch the compiler can see, not a lookup that fails quietly on a typo. internal/screens
-// converts combat.Family into this.
-type Family int
+// converts combat.Form into this.
+type Form int
 
 const (
-	// FamilyNone draws nothing. Rings and the two fighter cards use it: they belong to no family.
-	FamilyNone Family = iota
-	FamilyStab
-	FamilySlash
-	FamilyCrush
-	FamilyPlan
+	// FormNone draws nothing. Rings and the two fighter cards use it: they belong to no form.
+	FormNone Form = iota
+	FormStab
+	FormSlash
+	FormCrush
+	FormPlan
 )
 
-var familyNames = [...]string{
-	FamilyNone:  "",
-	FamilyStab:  "stab",
-	FamilySlash: "slash",
-	FamilyCrush: "crush",
-	FamilyPlan:  "plan",
+var formNames = [...]string{
+	FormNone:  "",
+	FormStab:  "stab",
+	FormSlash: "slash",
+	FormCrush: "crush",
+	FormPlan:  "plan",
 }
 
-func (f Family) String() string {
-	if int(f) >= len(familyNames) {
+func (f Form) String() string {
+	if int(f) >= len(formNames) {
 		return "?"
 	}
-	return familyNames[f]
+	return formNames[f]
 }
 
-// Families is the four real ones, for the contact sheet.
-func Families() []Family {
-	return []Family{FamilyStab, FamilySlash, FamilyCrush, FamilyPlan}
+// Forms is the four real ones, for the contact sheet.
+func Forms() []Form {
+	return []Form{FormStab, FormSlash, FormCrush, FormPlan}
 }
 
-// familyLetters is what a card carries in its corner until the families have art.
+// formLetters is what a card carries in its corner until the forms have art.
 //
-// **Slash is "D", not "S".** Stab took the S first and two families sharing an initial would
+// **Slash is "D", not "S".** Stab took the S first and two forms sharing an initial would
 // leave the corner saying nothing — which is the one thing the slot may not do. D is for the
 // draw of a blade; it is a placeholder either way, and the letters go the moment glyphs land.
-var familyLetters = [...]string{
-	FamilyNone:  "",
-	FamilyStab:  "S",
-	FamilySlash: "D",
-	FamilyCrush: "C",
-	FamilyPlan:  "P",
+var formLetters = [...]string{
+	FormNone:  "",
+	FormStab:  "S",
+	FormSlash: "D",
+	FormCrush: "C",
+	FormPlan:  "P",
 }
 
-// Letter is the single uppercase character a family is marked with while it has no glyph.
-func (f Family) Letter() string {
-	if int(f) >= len(familyLetters) {
+// Letter is the single uppercase character a form is marked with while it has no glyph.
+func (f Form) Letter() string {
+	if int(f) >= len(formLetters) {
 		return ""
 	}
-	return familyLetters[f]
+	return formLetters[f]
 }
 
-// glyph is the art for this family, and **no family has any yet** *(2026-08-15)*.
+// glyph is the art for this form, and **no form has any yet** *(2026-08-15)*.
 //
 // The three category glyphs it used to return — sword, shield, open book — described phases that
 // no longer exist on a card. A stab, a slash and a crush want three silhouettes of their own and
-// those have not been drawn, so every family falls through to its Letter above.
+// those have not been drawn, so every form falls through to its Letter above.
 //
 // **The lookup stays rather than the letters becoming the design.** Returning a GlyphKind here is
 // the whole of what putting the art back costs; `systems.RenderGlyph` and the glyph sheet are
 // untouched and still hold the machinery.
-func (f Family) glyph() (systems.GlyphKind, bool) {
+func (f Form) glyph() (systems.GlyphKind, bool) {
 	return 0, false
 }
 
@@ -366,7 +366,7 @@ const MaxEffects = 4
 // free of internal/combat, so the only thing it knows about the game is how to draw it.
 type Spec struct {
 	Name    string
-	Family  Family
+	Form    Form
 	Cost    int // action points, drawn as dash marks
 	Element Element
 

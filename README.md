@@ -46,7 +46,7 @@ nothing.
 
 | File | What it holds |
 |---|---|
-| [MECHANICS.md](MECHANICS.md) | what the game *is* — elements, cards, combos, rings, the tower |
+| [MECHANICS.md](MECHANICS.md) | what the game *is* — elements, cards, hands, rings, the tower |
 | [TODO.md](TODO.md) | what to build next — open work only |
 | [ideas.md](ideas.md) | the unfiltered inbox |
 | [CLAUDE.md](CLAUDE.md) | how the code is organised and the conventions it follows |

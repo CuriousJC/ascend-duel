@@ -18,8 +18,8 @@ type Style struct {
 
 	// What this size is big enough to show. A Mini card is 59 pixels wide and cannot
 	// hold a 64-pixel glyph or legible text at any size, so it shows neither — see Mini.
-	ShowName   bool
-	ShowFamily bool
+	ShowName bool
+	ShowForm bool
 
 	TextLeft int
 	NameTop  int
@@ -30,18 +30,18 @@ type Style struct {
 	// left-aligned name to line up with, and it reads as having slipped off centre.
 	NameCentered bool
 
-	// The family mark, above the cost stack: the box it is centred in, and the point size the
+	// The form mark, above the cost stack: the box it is centred in, and the point size the
 	// placeholder letter is set at.
 	//
 	// **The box is a number here rather than `systems.SizeOf`** *(2026-08-15)*. It was, while the
 	// mark was a generated glyph and the glyph's own size was the authority — assuming one was
 	// how a 22-pixel shape got a 64-pixel hole. A letter has no intrinsic size, so the layout has
 	// to name the space it gets, and centring by ink means the letter fills it whatever the font
-	// does. When the families get silhouettes, a glyph bigger than this box overflows it rather
+	// does. When the forms get silhouettes, a glyph bigger than this box overflows it rather
 	// than resizing it, and the box is the one number to change.
-	FamilyTop        int
-	FamilySize       int
-	FamilyLetterSize float64
+	FormTop        int
+	FormSize       int
+	FormLetterSize float64
 
 	// The cost dashes, hamburger-style, below the category glyph.
 	//
@@ -56,7 +56,7 @@ type Style struct {
 	DashHeight int
 	DashGap    int
 
-	// The family mark's left edge, and the scale a glyph would be blown up by.
+	// The form mark's left edge, and the scale a glyph would be blown up by.
 	//
 	// **There is no damage badge at all any more** *(2026-08-14)*. It went in two steps: the
 	// 64-pixel generated sword first, because it said what the corner mark already says
@@ -189,8 +189,8 @@ var Hand = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:   true,
-	ShowFamily: true,
+	ShowName: true,
+	ShowForm: true,
 
 	TextLeft:     12,
 	NameTop:      14,
@@ -206,9 +206,9 @@ var Hand = Style{
 	// S came out as a shape with its top-left quarter missing, which reads as a rendering fault
 	// rather than as a mark. The clip in blitGlyph still applies and is still what a glyph will
 	// want; this is the box moving, not the crop going.
-	FamilyTop:        8,
-	FamilySize:       32,
-	FamilyLetterSize: 40,
+	FormTop:        8,
+	FormSize:       32,
+	FormLetterSize: 40,
 
 	DashLeft:   8,
 	DashTop:    48,
@@ -266,19 +266,19 @@ var Mini = Style{
 	CornerRadius: 6,
 	BorderWidth:  3,
 
-	ShowName:   true,
-	ShowFamily: true,
+	ShowName: true,
+	ShowForm: true,
 
 	TextLeft:     8,
 	NameTop:      8,
 	NameSize:     14,
 	NameCentered: true,
 
-	GlyphScale:       1,
-	GlyphInset:       8,
-	FamilyTop:        36,
-	FamilySize:       32,
-	FamilyLetterSize: 34,
+	GlyphScale:     1,
+	GlyphInset:     8,
+	FormTop:        36,
+	FormSize:       32,
+	FormLetterSize: 34,
 
 	// 72 rather than 66, for the same reason Hand's moved: the drawn glyphs are 32 pixels
 	// and end at y=68. A mini card carries a 32px glyph without shrinking it, because
@@ -313,8 +313,8 @@ var Stack = Style{
 	CornerRadius: 4,
 	BorderWidth:  0,
 
-	ShowName:   false,
-	ShowFamily: false,
+	ShowName: false,
+	ShowForm: false,
 }
 
 // EnemyStyle is the opponent, in the card format *(2026-08-11)*.
@@ -372,8 +372,8 @@ var EnemyStyle = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:   true,
-	ShowFamily: false,
+	ShowName: true,
+	ShowForm: false,
 
 	TextLeft:     12,
 	NameTop:      12,
@@ -431,8 +431,8 @@ var DuelistStyle = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:   true,
-	ShowFamily: false,
+	ShowName: true,
+	ShowForm: false,
 
 	TextLeft:     12,
 	NameTop:      14,
@@ -465,8 +465,8 @@ var RingStyle = Style{
 	CornerRadius: 12,
 	BorderWidth:  6,
 
-	ShowName:   true,
-	ShowFamily: false,
+	ShowName: true,
+	ShowForm: false,
 
 	TextLeft:     12,
 	NameTop:      14,

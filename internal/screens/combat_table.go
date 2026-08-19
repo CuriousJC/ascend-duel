@@ -75,14 +75,20 @@ func tableRowTop(gs *state.GlobalState) int {
 	return gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight - firingGap - cardHeight
 }
 
-// playerTableCentre is the middle of the player's half of the table, on the row's own centre
-// line: **the space their played cards land in**, and empty for the whole of the planning phase
-// that leads up to them landing there.
+// tableCentre is the middle of the whole table — both halves — on the row's own centre line.
 //
 // It is where the planned hand is named — see drawPlannedHand — and it is derived from the row
 // rather than written down, so the name follows the table if the table moves.
-func playerTableCentre(gs *state.GlobalState) image.Point {
-	return image.Pt(tableInset+tableHalfWidth(gs)/2, tableRowTop(gs)+cardHeight/2)
+//
+// **It is centred on the screen and not on the player's half** *(2026-08-19, owner's call)*. The
+// name used to sit over the space the player's own cards fly into, which kept it out of the
+// opponent's row at the cost of putting the loudest word on the screen off to one side; at 80
+// points and growing it was also the half's whole width. **Overlaying the opponent's cards is
+// accepted rather than worked around**: those cards have been read by the time a hand is named,
+// the word is up only while the round is being planned and while it plays back, and the
+// alternative — shrinking the name to fit a half — is the opposite of what the size is for.
+func tableCentre(gs *state.GlobalState) image.Point {
+	return image.Pt(gs.ScreenWidth/2, tableRowTop(gs)+cardHeight/2)
 }
 
 // tableHalfWidth is how much room one hand has: the screen less both insets and the gap in

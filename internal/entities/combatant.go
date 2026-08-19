@@ -136,7 +136,7 @@ func NewEnemyFrom(d data.EnemyData, fight int) *Combatant {
 			Actions: d.Actions,
 			MaxLife: ScaleToFight(d.HP, fight),
 
-			// **Enemies do not combo** *(2026-08-17)*. Their cards resolve one at a time, in the
+			// **Enemies do not form hands** *(2026-08-17)*. Their cards resolve one at a time, in the
 			// order the planner chose them. It is set here because this is the one place an
 			// opponent is built from a record — the same seat `Rings` deliberately leaves at its
 			// zero value for the mirror-image reason.

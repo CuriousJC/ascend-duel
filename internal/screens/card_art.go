@@ -85,7 +85,7 @@ func faces(gs *state.GlobalState) *cards.Faces {
 func cardSpec(c actionCard, cost int, enabled, selected bool) cards.Spec {
 	return cards.Spec{
 		Name:     c.Label(),
-		Family:   family(c.Family()),
+		Form:     form(c.Form()),
 		Cost:     cost,
 		Element:  artFor(c.Element),
 		Text:     cardEffect(c),
@@ -245,13 +245,17 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // card what it deals would make this figure move when that card was retuned.
 //
 // AP is the live budget, `BonusAP` included, so a Prepare banked last round shows up on the
-// card before it is spent. Vitae is passed in rather than read off the combatant because it is
-// run-level state that does not live on a duelist yet — see startingVitae.
+// card before it is spent. **It is passed in rather than asked of the combatant** *(2026-08-19)*,
+// for the reason `life` is: a Prepare resolving mid-round sends its points to this card as a
+// figure, and the line has to move when that figure lands rather than when the round's end state
+// is adopted a whole opposing turn later. `shownBank` is the addition; the model underneath is
+// untouched. Vitae is passed in because it is run-level state that does not live on a duelist
+// yet — see startingVitae.
 //
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
 // `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
-func duelistSpec(c *entities.Combatant, name string, vitae, life int) cards.Spec {
+func duelistSpec(c *entities.Combatant, name string, vitae, life, ap int) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
@@ -260,7 +264,7 @@ func duelistSpec(c *entities.Combatant, name string, vitae, life int) cards.Spec
 		Enabled: true,
 	}
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
-	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(c.ActionPoints())}
+	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
 	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae)}
 	return spec
 }
@@ -335,30 +339,30 @@ func artFor(e combat.Element) cards.Element {
 	}
 }
 
-// family maps the rules' family onto the drawing package's, which is drawn in the card's corner.
+// form maps the rules' form onto the drawing package's, which is drawn in the card's corner.
 //
 // Two enums again, and for the same reason as the elements — internal/cards knows how to
-// draw a card and nothing about how a round resolves. The default is FamilyNone, which
+// draw a card and nothing about how a round resolves. The default is FormNone, which
 // draws no mark at all rather than guessing at one, and it is what the opponent's cards get.
-func family(f combat.Family) cards.Family {
+func form(f combat.Form) cards.Form {
 	switch f {
-	case combat.FamilyStab:
-		return cards.FamilyStab
-	case combat.FamilySlash:
-		return cards.FamilySlash
-	case combat.FamilyCrush:
-		return cards.FamilyCrush
-	case combat.FamilyPlan:
-		return cards.FamilyPlan
+	case combat.FormStab:
+		return cards.FormStab
+	case combat.FormSlash:
+		return cards.FormSlash
+	case combat.FormCrush:
+		return cards.FormCrush
+	case combat.FormPlan:
+		return cards.FormPlan
 	default:
-		return cards.FamilyNone
+		return cards.FormNone
 	}
 }
 
 // Compile-time assurance that a card still answers everything a Spec needs. If combat.Card loses
 // one of these, this fails here rather than in a card that silently renders blank.
 var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
-	return c.Label(), c.Category().String(), c.Family().String(), c.Damage(dmg), c.Cost()
+	return c.Label(), c.Category().String(), c.Form().String(), c.Damage(dmg), c.Cost()
 }
 
 // deckCardCost is what a card out of the run deck costs, discounts included. The post-battle screen
@@ -375,8 +379,8 @@ func deckCardCost(gs *state.GlobalState, c combat.Card) int {
 // it grants.
 //
 // **It borrows `cards.Hand` at the call site rather than taking a style of its own**, because a
-// worm has no cost and no family and that style draws both as nothing — no dashes for a zero cost,
-// no letter for FamilyNone. What is left is exactly the name and the text, which is the whole of
+// worm has no cost and no form and that style draws both as nothing — no dashes for a zero cost,
+// no letter for FormNone. What is left is exactly the name and the text, which is the whole of
 // what a worm has to say. A style of its own is what this wants the day a worm has art.
 //
 // **The border carries the element for the same reason a card's does**: an Ember Worm is red
@@ -386,7 +390,7 @@ func deckCardCost(gs *state.GlobalState, c combat.Card) int {
 func wormSpec(w session.Worm, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:    w.Name,
-		Family:  cards.FamilyNone,
+		Form:    cards.FormNone,
 		Cost:    0,
 		Element: artFor(w.Element),
 		Text:    w.Text,
@@ -403,7 +407,7 @@ func wormSpec(w session.Worm, enabled bool) cards.Spec {
 func vitaeSpec(amount int, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:    "Vitae",
-		Family:  cards.FamilyNone,
+		Form:    cards.FormNone,
 		Element: cards.Basic,
 		Text:    fmt.Sprintf("+%d vitae", amount),
 		Enabled: enabled,

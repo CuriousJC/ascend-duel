@@ -104,25 +104,25 @@ func run(dir string) error {
 		page.Borders = append(page.Borders, row)
 	}
 
-	// Section two: the four family marks, which is the only axis where the *mark* is
+	// Section two: the four form marks, which is the only axis where the *mark* is
 	// what varies rather than a colour or a count.
 	//
 	// **They are letters rather than art** *(2026-08-15)*, so this row is where the placeholder
 	// gets judged: four capitals have to be told apart in a corner at a glance, and S against D
 	// against C is the pairing that decides whether they can be lived with until glyphs land.
-	famRow := row{Label: "family mark"}
-	for _, fam := range cards.Families() {
+	famRow := row{Label: "form mark"}
+	for _, fam := range cards.Forms() {
 		spec := specFor("Strike", cards.Fire)
-		spec.Family = fam
+		spec.Form = fam
 		cell, err := write(dir, faces, spec, cards.Hand,
-			fmt.Sprintf("family-%s.png", fam),
-			fmt.Sprintf("%s — %s", fam, familyNotes[fam]))
+			fmt.Sprintf("form-%s.png", fam),
+			fmt.Sprintf("%s — %s", fam, formNotes[fam]))
 		if err != nil {
 			return err
 		}
 		famRow.Cells = append(famRow.Cells, cell)
 	}
-	page.Families = append(page.Families, famRow)
+	page.Forms = append(page.Forms, famRow)
 
 	// Section three: the states. These are here because the redesign changed how they have
 	// to work — the surface used to be the element colour and dimming it was the whole
@@ -158,7 +158,7 @@ func run(dir string) error {
 	for _, spec := range realCards() {
 		cell, err := write(dir, faces, spec, cards.Hand,
 			fmt.Sprintf("shape-%s.png", spec.Name),
-			fmt.Sprintf("%s · %s · %d AP", spec.Name, spec.Family, spec.Cost))
+			fmt.Sprintf("%s · %s · %d AP", spec.Name, spec.Form, spec.Cost))
 		if err != nil {
 			return err
 		}
@@ -350,20 +350,20 @@ type stack struct {
 }
 
 type page struct {
-	Ground   string
-	Style    map[string]int
-	Borders  []row
-	Families []row
-	States   []row
-	Shapes   []row
-	Backs    []row
-	Deck     []stack
-	Rings    []row
+	Ground  string
+	Style   map[string]int
+	Borders []row
+	Forms   []row
+	States  []row
+	Shapes  []row
+	Backs   []row
+	Deck    []stack
+	Rings   []row
 }
 
 func (p page) count() int {
 	n := 0
-	for _, rs := range [][]row{p.Borders, p.Families, p.States, p.Shapes, p.Backs, p.Rings} {
+	for _, rs := range [][]row{p.Borders, p.Forms, p.States, p.Shapes, p.Backs, p.Rings} {
 		for _, r := range rs {
 			n += len(r.Cells)
 		}

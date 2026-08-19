@@ -23,31 +23,31 @@ import (
 // concepts as of 2026-08-15. If they stop matching the deck it makes the sheet a worse
 // preview but never a wrong one, because every pixel still comes from cards.Render.
 
-// familyNotes says what mark each family actually draws, for the caption. Worth spelling out on
+// formNotes says what mark each form actually draws, for the caption. Worth spelling out on
 // the sheet, because a bare "S" in a corner is obvious to whoever wired it and opaque a month
 // later — and doubly so for Slash, which carries a D.
-var familyNotes = map[cards.Family]string{
-	cards.FamilyStab:  `the letter "S", pending a glyph`,
-	cards.FamilySlash: `the letter "D", pending a glyph`,
-	cards.FamilyCrush: `the letter "C", pending a glyph`,
-	cards.FamilyPlan:  `the letter "P", pending a glyph`,
+var formNotes = map[cards.Form]string{
+	cards.FormStab:  `the letter "S", pending a glyph`,
+	cards.FormSlash: `the letter "D", pending a glyph`,
+	cards.FormCrush: `the letter "C", pending a glyph`,
+	cards.FormPlan:  `the letter "P", pending a glyph`,
 }
 
-// concept is one of the twelve, with the cost, family and effect text the rules give it.
+// concept is one of the twelve, with the cost, form and effect text the rules give it.
 //
 // **No damage figure**: a card does not carry one any more, and what it deals is in the text.
 type concept struct {
-	name   string
-	family cards.Family
-	cost   int
-	text   string
+	name string
+	form cards.Form
+	cost int
+	text string
 }
 
-// The twelve concepts, in duelist_cards.json's order, which is grid order: three attack families
+// The twelve concepts, in duelist_cards.json's order, which is grid order: three attack forms
 // of three tiers, then the plans.
 //
-// **Three families by three tiers, and the tiers cost and hit the same in each** *(2026-08-15)*.
-// 1 AP is half damage, 2 AP is one, 3 AP is two, in Stab and Slash and Crush alike. So a family
+// **Three forms by three tiers, and the tiers cost and hit the same in each** *(2026-08-15)*.
+// 1 AP is half damage, 2 AP is one, 3 AP is two, in Stab and Slash and Crush alike. So a form
 // is *which* pair you are building rather than a stronger or weaker way to build one, and the
 // only thing separating Lunge from Cleave is what it pairs with.
 //
@@ -56,21 +56,21 @@ type concept struct {
 // rules cannot deal. It is the longest strings here that matter — the sheet is where an
 // overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
-	{"Jab", cards.FamilyStab, 1, "Stabs for 0.5x DMG"},
-	{"Thrust", cards.FamilyStab, 2, "Stabs for 1x DMG"},
-	{"Lunge", cards.FamilyStab, 3, "Stabs for 2x DMG"},
+	{"Jab", cards.FormStab, 1, "Stabs for 0.5x DMG"},
+	{"Thrust", cards.FormStab, 2, "Stabs for 1x DMG"},
+	{"Lunge", cards.FormStab, 3, "Stabs for 2x DMG"},
 
-	{"Cut", cards.FamilySlash, 1, "Slashes for 0.5x DMG"},
-	{"Slash", cards.FamilySlash, 2, "Slashes for 1x DMG"},
-	{"Cleave", cards.FamilySlash, 3, "Slashes for 2x DMG"},
+	{"Cut", cards.FormSlash, 1, "Slashes for 0.5x DMG"},
+	{"Slash", cards.FormSlash, 2, "Slashes for 1x DMG"},
+	{"Cleave", cards.FormSlash, 3, "Slashes for 2x DMG"},
 
-	{"Bash", cards.FamilyCrush, 1, "Crushes for 0.5x DMG"},
-	{"Strike", cards.FamilyCrush, 2, "Crushes for 1x DMG"},
-	{"Smash", cards.FamilyCrush, 3, "Crushes for 2x DMG"},
+	{"Bash", cards.FormCrush, 1, "Crushes for 0.5x DMG"},
+	{"Strike", cards.FormCrush, 2, "Crushes for 1x DMG"},
+	{"Smash", cards.FormCrush, 3, "Crushes for 2x DMG"},
 
-	{"Prepare", cards.FamilyPlan, 1, "Bank 2 AP for next round"},
-	{"Plan", cards.FamilyPlan, 2, "Draw 2 cards next round"},
-	{"Defend", cards.FamilyPlan, 3, "Halve damage this turn"},
+	{"Prepare", cards.FormPlan, 1, "Bank 2 AP for next round"},
+	{"Plan", cards.FormPlan, 2, "Draw 2 cards next round"},
+	{"Defend", cards.FormPlan, 3, "Halve damage this turn"},
 }
 
 // realCards is **all twelve concepts at hand size**, one element after another so the row
@@ -98,7 +98,7 @@ func realDeckRow(e cards.Element) []cards.Spec {
 	out := make([]cards.Spec, 0, len(concepts))
 	for _, c := range concepts {
 		out = append(out, cards.Spec{
-			Name: c.name, Family: c.family, Text: c.text,
+			Name: c.name, Form: c.form, Text: c.text,
 			Cost: c.cost, Element: e, Enabled: true,
 		})
 	}
@@ -109,7 +109,7 @@ func specFor(name string, e cards.Element) cards.Spec {
 	for _, c := range concepts {
 		if c.name == name {
 			return cards.Spec{
-				Name: c.name, Family: c.family, Text: c.text,
+				Name: c.name, Form: c.form, Text: c.text,
 				Cost: c.cost, Element: e, Enabled: true,
 			}
 		}

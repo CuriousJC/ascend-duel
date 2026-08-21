@@ -21,8 +21,12 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 - [~] **Rings work and cannot be acquired.** The grammar is built *(2026-08-17)* and sixteen
       rings are authored, but a run opens wearing three and **nothing buys, sells or unequips
       one** — so thirteen of the sixteen are reachable only by editing `session.StartingRings`.
-      - **The shop is what is missing**, and it is a scene rather than a mechanic: vitae is
-        earned and propagates, `Session.Wear` exists and caps at five, and no screen calls it.
+      - **The shop is what is missing, and the seams for it are cut** *(2026-08-21)*. Vitae is
+        earned and propagates, `Session.Wear` exists and caps at five, `Session.SpendVitae` is
+        the one place a purse goes down, and `session.PhaseShop` is already a station of the run
+        loop that nothing draws. **Building it is three edits and one new file**: a scene, an
+        entry in `screens.phaseScreens`, and an entry in the registry in `internal/game`. No
+        existing scene changes, because none of them names its successor any more.
         Unequipping needs a method and a rule about what happens to a growing ring's
         accumulator when its ring comes off — nothing decides that yet.
       - **Two authored names were invented and should be reviewed**: `bulwark-ring` (+25 HP;
@@ -93,6 +97,12 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       exist is any of it in code: no `brands.json`, no acquisition, no seat on the duelist.
       Blocked on `Session` like the rest of the run-level state.
 
+- [ ] **The playback cursor is still seven flat fields on `CombatScene`.** `log`, `cursor`,
+      `ticks`, `round`, `rounds`, `fighterAfter` and `enemyAfter` are one thing — the round being
+      replayed — and could group the way the theatre did *(2026-08-21)*. **Left alone deliberately
+      and it is the weaker case**: those fields already sit together with good names, so what
+      grouping adds is tidiness rather than a guarantee. The theatre was worth doing because it
+      made a *rule* structural; this would not. Revisit if a second screen ever replays anything.
 ## Next — where the game actually starts
 
 - [ ] **A status can be authored and a *kind* of status cannot.** `statuses.json` holds four
@@ -419,7 +429,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 ### Cards and piles — presentation
 
 - [ ] **Long press pulls a card forward.** Every card now carries its effect text — see
-      `cardEffects` in [combat_panes.go](internal/screens/combat_panes.go) — filling the card
+      `cardEffect` in [prose.go](internal/screens/prose.go) — filling the card
       beside the cost column. The hand overlaps, so most of a card can be covered by the one in
       front of it, and long press is the gesture that lifts one clear to be read.
       - **This is long press, not hover.** `MECHANICS.md` §Long press assigns "explains" to long
@@ -441,7 +451,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       very fast*, scaling how quickly the duel event log plays back. Ship "normal" only
       to begin with, but route it through a setting rather than a constant so the other
       four are a data change later.
-      - Today the pacing is `eventDwellTicks` in [combat.go](internal/screens/combat.go) — one
+      - Today the pacing is `beatTicks` in [clock.go](internal/screens/clock.go) — one
         constant, one caller, so this is cheap right now and gets steadily more expensive as
         animation and sound land and each grows its own timing constant.
       - Speed must scale *presentation only*. `combat.ResolveRound` already decided the

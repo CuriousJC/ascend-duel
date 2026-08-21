@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"strings"
 	"testing"
 
@@ -232,12 +233,12 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 	// row over the cap, is the panel quietly lying. The plan row is the one at the cap — three
 	// concepts at four copies — and the element rows hold nine each.
 	counts := make([]int, deckRowCount)
-	for _, e := range startingDeck {
-		row := deckRowFor(e.card)
+	for _, c := range session.StartingDeck() {
+		row := deckRowFor(c)
 		if row < 0 || row >= deckRowCount {
-			t.Fatalf("%v maps to row %d, which does not exist", e.card, row)
+			t.Fatalf("%v maps to row %d, which does not exist", c, row)
 		}
-		counts[row] += e.count
+		counts[row]++
 	}
 
 	for row, n := range counts {
@@ -253,9 +254,9 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 
 	// And the plans are in the plan row rather than in basic, which is the whole point of the
 	// sixth row: they are all basic, and leaving them there overflowed it.
-	for _, e := range startingDeck {
-		if e.card.Category() == combat.CategoryPlan && deckRowFor(e.card) != deckPlanRow {
-			t.Errorf("%v is a plan and sits in row %d", e.card, deckRowFor(e.card))
+	for _, c := range session.StartingDeck() {
+		if c.Category() == combat.CategoryPlan && deckRowFor(c) != deckPlanRow {
+			t.Errorf("%v is a plan and sits in row %d", c, deckRowFor(c))
 		}
 	}
 }

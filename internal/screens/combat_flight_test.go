@@ -49,7 +49,7 @@ func TestSpendingRaisesAFlightForEveryCardThatMoves(t *testing.T) {
 	}
 
 	var out, in int
-	for _, f := range s.flights {
+	for _, f := range s.theatre.flights {
 		if f.outbound {
 			out++
 			// The row it left had five cards in it, and that row is already gone.
@@ -79,8 +79,8 @@ func TestNothingSelectedRaisesNoFlights(t *testing.T) {
 	s := flightScene(selectedHand(handSize, 0))
 	s.spendSelected()
 
-	if len(s.flights) != 0 {
-		t.Errorf("%d flights raised for a hand where nothing moved", len(s.flights))
+	if len(s.theatre.flights) != 0 {
+		t.Errorf("%d flights raised for a hand where nothing moved", len(s.theatre.flights))
 	}
 }
 
@@ -106,23 +106,23 @@ func TestFlightsLandAndStopBeingDrawn(t *testing.T) {
 	s := flightScene(selectedHand(5, 2))
 	s.spendSelected()
 
-	if len(s.flights) == 0 {
+	if len(s.theatre.flights) == 0 {
 		t.Fatal("no flights to advance")
 	}
 
 	// The longest journey is the last card dealt, which waits out its whole stagger first.
 	longest := flightTicks
-	for _, f := range s.flights {
+	for _, f := range s.theatre.flights {
 		if n := f.delay + flightTicks; n > longest {
 			longest = n
 		}
 	}
 	for i := 0; i < longest; i++ {
-		s.updateFlights()
+		s.theatre.tick()
 	}
 
-	if len(s.flights) != 0 {
-		t.Errorf("%d flights still in the air after %d ticks", len(s.flights), longest)
+	if len(s.theatre.flights) != 0 {
+		t.Errorf("%d flights still in the air after %d ticks", len(s.theatre.flights), longest)
 	}
 	// And every slot is drawn again, which is what makes the hand whole.
 	for i := 0; i < len(s.hand); i++ {

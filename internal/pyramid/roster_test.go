@@ -1,4 +1,4 @@
-package screens
+package pyramid
 
 import (
 	"math/rand"
@@ -8,10 +8,8 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 )
 
-// The roster shuffle, which is arithmetic over a list and therefore checkable without a
-// window — the same narrow exception the other tests in this package take. It builds its own
-// records rather than loading `data/enemies.json`, so it is a test of the shuffle and not of
-// whatever the roster happens to hold today.
+// The roster shuffle. It builds its own records rather than loading `data/enemies.json`, so it
+// is a test of the shuffle and not of whatever the roster happens to hold today.
 //
 // What it is defending is the reason the shuffle is banded at all: a run has to open on
 // something a starting fighter can beat. A flat shuffle of all 96 would eventually deal a

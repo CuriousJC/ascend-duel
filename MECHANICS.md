@@ -1477,7 +1477,7 @@ shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 
 **Every room grows the opponent's HP and DMG by 10%, compounding** *(2026-08-17, owner's call)*.
 Floor 1's outer room is the baseline and takes a record's stats unchanged; each fight after it is
-10% harder than the one before. `entities.AscentGrowthPct` is the number, `entities.ScaleToFight`
+10% harder than the one before. `pyramid.AscentGrowthPct` is the number, `pyramid.ScaleToFight`
 is the arithmetic, and `entities.NewEnemyFrom` takes the fight index so an unscaled opponent cannot
 be built by accident.
 
@@ -1676,17 +1676,13 @@ Two kinds, and the distinction matters because there is no Escape key and no rig
 while the playback cursor rests there. Presentation-only, so it cannot touch the outcome, and
 splash length joins the pacing constants destined to become the game-speed setting.
 
-**Two panes, split rather than solved.** **Action Flow** is one row per slot, a walking
-highlight, the plan; **Resolution** takes the wide slot and the job of saying what actually
-happened, in sentences, accumulating rather than flashing.
+**A hand never has to be drawn *across* rows**, because it gets a line of its own, in amber, at
+the moment it forms. So does a chill. The bracket-or-join problem simply stopped existing, which
+is worth recording as the pattern — **one row per slot was being asked to answer two questions at
+once, and the fix was a line of prose, not a cleverer drawing.**
 
-A hand therefore never has to be drawn *across* rows: it gets a line of its own, in amber, at
-the moment it forms. So does a chill. The bracket-or-join problem simply stopped existing,
-which is worth recording as the pattern — **the pane was being asked to answer two questions at
-once, and the fix was a second pane, not a cleverer drawing.**
-
-The **hand splash** above is still wanted and still unbuilt; the pane makes a hand *legible*,
-not *loud*. `dwellFor` freezing the screen for a splash-length `KindHand` remains free.
+The **hand splash** above is still wanted and still unbuilt; a sentence makes a hand *legible*,
+not *loud*. Freezing the screen for a splash-length `KindHand` remains free.
 
 ---
 

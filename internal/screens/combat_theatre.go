@@ -177,12 +177,15 @@ type flightSpec struct {
 	why string
 }
 
-// theatre is every event kind and what it does on screen.
+// choreography is every event kind and what it does on screen.
+//
+// **It is the table, not the stage.** What is currently *moving* is `combatTheatre` below; this
+// says what each kind of event travels out of and into when it does.
 //
 // **Every kind has an entry, including the ones that draw nothing.** An absent entry and a
 // deliberate `anchorNone` read identically and mean completely different things, and the test that
 // walks this table cannot tell them apart unless the silence is written down.
-var theatre = map[combat.EventKind]flightSpec{
+var choreography = map[combat.EventKind]flightSpec{
 	combat.KindRoundStart: {
 		anchorNone, anchorNone, gestureNone,
 		"bookkeeping - nothing has happened to anybody yet",
@@ -236,3 +239,156 @@ var theatre = map[combat.EventKind]flightSpec{
 		"bookkeeping - the round boundary is a moment, not an event with a victim",
 	},
 }
+
+// combatTheatre is everything the combat screen has moving on it.
+//
+// **The screen uses a theatre rather than being one** *(2026-08-21)*: the rules that apply to all
+// of it are in theatre.go and are shared, and what is *in* it is this screen's own. A between-fight
+// screen with things to move declares its own and implements the same three methods.
+//
+// The fields kept their comments when they moved off `CombatScene`, because each one still says
+// something about that particular mover that nothing else does. What they no longer each say is
+// the part that was true of all of them — that it is presentation, that it runs on the game's one
+// speed, and that it is taken down together. That is theatre.go's now.
+type combatTheatre struct {
+	// Cards currently travelling to or from the draw pile. Purely something to look at:
+	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
+	flights []cardFlight
+
+	// Cards currently moving from one slot in the hand to another — a sort, or the row
+	// closing up after cards were spent. Separate from flights rather than a fourth flag on
+	// one, because a slide is the only mover whose journey begins and ends in the row, and it
+	// is the only one that needs a row size at each end.
+	slides []handSlide
+
+	// The player's side of the table: the cards played this round, in resolution order, flying
+	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
+	// moment the round starts — see seatPlayedCards — and what a hand narrows to the cards it
+	// was made of.
+	//
+	// Cleared when the hand is spent, which is the moment those cards actually leave.
+	resolved []resolvedCard
+
+	// The opponent's side of the table: their whole queue for the coming round, flying in from
+	// their own card in the top-right corner and settling into a row on the right.
+	//
+	// **It is laid out when the opponent plans, which is the start of the planning phase**, so
+	// the player picks their round against a hand they can see. Re-seated once per round; see
+	// planEnemyRound.
+	enemyDealt []dealtCard
+
+	// firingSeats and enemyFiringSeats are which cards on each side of the table are resolving
+	// right now, empty for none. **Playback drives which cards are lit, not which cards exist**:
+	// both hands are on the table from the moment DUEL! is pressed.
+	//
+	// Two fields rather than a side-plus-seat pair, because both rows are drawn independently
+	// and each only ever asks about itself. `noteResolved` writes both on every action, so only
+	// one side is ever lit at a time.
+	//
+	// **A list rather than one seat, because the attack phase is one blow** *(2026-08-14)*. The
+	// cards announce one after another and stay up as they do, so the whole hand is raised by the
+	// time the hand lands on it — and the hand then drops whichever of them earned nothing. A
+	// single lit seat could only ever say "this card", which is the reading the one-blow rule
+	// exists to stop.
+	firingSeats      []int
+	enemyFiringSeats []int
+
+	// hits are the damage figures currently travelling into a fighter card, and the reason a
+	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
+	// while one of these is up; what waits is the drawing.
+	hits []hitFlight
+
+	// banks are the `+2 AP` figures a Prepare sends to the fighter card whose budget it raises,
+	// and bankShown is what they have already delivered — the points a card's AP line is drawing
+	// on top of `Duelist.BonusAP`, which the engine does not write until the round's end state is
+	// adopted. Indexed by side. See combat_bank.go.
+	banks     []bankFlight
+	bankShown [2]int
+
+	// banner is the name of the hand the player committed, on its way from the planning seat to
+	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
+	// which is what makes the planned name and the fired one one word that moves rather than two
+	// that appear. See combat_mathbox.go.
+	banner handBanner
+
+	// mathBox is the hand dialog: the blow's arithmetic acted out across the band above the hand
+	// on the beat the hand fires. See combat_mathbox.go.
+	//
+	// **It is the one thing on this screen that can stop the playback cursor.** Every other
+	// animation runs on its own clock beside the log; this one is a beat *of* the log, because a
+	// sum revealed a figure at a time does not fit inside a single event's dwell. It still
+	// decides nothing — `ResolveRound` settled the round before any of it was drawn.
+	mathBox handMathBox
+}
+
+// combatTheatre answers the shared contract. **The assertion is the point of the interface**:
+// nothing takes a `theatre` as a parameter, and what this line buys is that a second scene's
+// theatre cannot quietly implement two of the three.
+var _ theatre = (*combatTheatre)(nil)
+
+// tick advances everything on stage by a frame and drops whatever has finished.
+//
+// **The hand dialog is deliberately not here.** It is the one mover that is a beat *of* playback
+// rather than something running alongside it — the cursor waits for it — so `advancePlayback`
+// drives it and this does not. See mathBox and combat_mathbox.go.
+func (t *combatTheatre) tick() {
+	t.flights = advance(t.flights)
+	t.slides = advance(t.slides)
+	t.hits = advance(t.hits)
+	t.tickBanks()
+
+	// The two rows on the table never expire: cards arrive and stay until the round is spent, so
+	// they are advanced in place rather than filtered.
+	for i := range t.resolved {
+		t.resolved[i].tick()
+	}
+	for i := range t.enemyDealt {
+		t.enemyDealt[i].tick()
+	}
+
+	// The committed hand's name. It sets off at DUEL!, before the first event is reached, and must
+	// not be held up by the dialog that stops the cursor — which is why it ticks here with
+	// everything else rather than inside playback. See handBanner.
+	t.banner.tick()
+}
+
+// tickBanks is the one mover with its own loop, because it does something on the frame a figure
+// *arrives* rather than on the frame it finishes.
+//
+// **The credit happens on arrival**, which is the whole point of the gesture: the number reaching
+// the card is what raises the card's figure. It is kept in `bankShown` rather than read back off
+// the live flights because a flight is dropped when its hold expires and the points have to stay
+// on the card until the round's end state is adopted — see shownBank.
+func (t *combatTheatre) tickBanks() {
+	live := t.banks[:0]
+	for i := range t.banks {
+		b := &t.banks[i]
+		was := b.arrived()
+		b.tick()
+		if !was && b.arrived() {
+			t.bankShown[b.side] += b.amount
+		}
+		if !b.done() {
+			live = append(live, *b)
+		}
+	}
+	t.banks = live
+}
+
+// running reports whether anything the playback cursor waits on is still going.
+//
+// **It is the figures, not the cards.** A card flying to its seat runs alongside playback and never
+// holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
+// the number reaches it. Adding a mover here is deciding that the round should wait for it.
+func (t *combatTheatre) running() bool {
+	return running(t.hits) || running(t.banks)
+}
+
+// clear takes the whole stage down, view state included.
+//
+// **This is the method the grouping exists for.** It used to be six statements and two calls in
+// `Init`, each added after something was found still on screen at the start of the next fight: a
+// figure in the air belongs to the fight that raised it, and a settled duel freezes rather than
+// spending its hand, so anything tidied up only by the end-of-round spend was still there. Zeroing
+// the struct cannot miss one, and a mover added tomorrow is covered without anyone remembering.
+func (t *combatTheatre) clear() { *t = combatTheatre{} }

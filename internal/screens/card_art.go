@@ -413,28 +413,3 @@ func vitaeSpec(amount int, enabled bool) cards.Spec {
 		Enabled: enabled,
 	}
 }
-
-// drawSpecCard draws a card built straight from a spec, for the faces that are not action cards
-// and not worms — the vitae, today. Same cache, same footprint.
-func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
-	img := cardImage(gs, spec, cards.Hand)
-	if img == nil {
-		return
-	}
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(at.X), float64(at.Y))
-	screen.DrawImage(img, op)
-}
-
-// drawWormCard draws one, at the same footprint an action card has.
-func drawWormCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
-	w session.Worm, enabled bool) {
-
-	img := cardImage(gs, wormSpec(w, enabled), cards.Hand)
-	if img == nil {
-		return
-	}
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(at.X), float64(at.Y))
-	screen.DrawImage(img, op)
-}

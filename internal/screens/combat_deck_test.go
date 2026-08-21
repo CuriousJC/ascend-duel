@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -22,12 +23,12 @@ func TestDeckRowRunsFormByForm(t *testing.T) {
 	// Shuffled into a wrong order first so the test exercises the sort and not the input.
 	var row []pileEntry
 	seenConcept := map[combat.ConceptID]bool{}
-	for _, e := range startingDeck {
-		if seenConcept[e.card.Concept] {
+	for _, c := range session.StartingDeck() {
+		if seenConcept[c.Concept] {
 			continue
 		}
-		seenConcept[e.card.Concept] = true
-		row = append(row, pileEntry{e.card, true})
+		seenConcept[c.Concept] = true
+		row = append(row, pileEntry{c, true})
 	}
 	if len(row) == 0 {
 		t.Fatal("the starting deck is empty")
@@ -73,9 +74,9 @@ func TestDeckOrderDoesNotDependOnWhichPileACardIsIn(t *testing.T) {
 	// dims. So the same cards must sort into the same sequence whatever their
 	// availability — otherwise drawing a card would shuffle the row around it.
 	var all, flipped []pileEntry
-	for _, e := range startingDeck {
-		all = append(all, pileEntry{e.card, true})
-		flipped = append(flipped, pileEntry{e.card, false})
+	for _, c := range session.StartingDeck() {
+		all = append(all, pileEntry{c, true})
+		flipped = append(flipped, pileEntry{c, false})
 	}
 
 	sortPileEntries(all)

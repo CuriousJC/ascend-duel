@@ -753,28 +753,6 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 		s.drag.card.actionCard, s.fighter.CardCost(s.drag.card.actionCard), true, s.drag.card.selected)
 }
 
-// drawCard draws one action card at `at`, in the given style.
-//
-// **It no longer draws anything itself.** The picture comes from internal/cards, which
-// renders it into a plain Go image; this function's whole job is to turn the screen's
-// types into a cards.Spec, get the matching image out of the cache, and blit it.
-//
-// **It takes no Strength any more** *(2026-08-14)*. It used to, because the damage figure on
-// the face was `Damage(str)` — the same Strike hits for more in stronger hands, so the wielder
-// was part of the cache key. The face carries effect text instead of a figure now, and a
-// card's picture is a function of the card alone.
-func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
-	c actionCard, cost int, enabled, selected bool) {
-
-	img := cardImage(gs, cardSpec(c, cost, enabled, selected), st)
-	if img == nil {
-		return
-	}
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(at.X), float64(at.Y))
-	screen.DrawImage(img, op)
-}
-
 func abs(n int) int {
 	if n < 0 {
 		return -n

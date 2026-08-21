@@ -1,4 +1,4 @@
-package entities
+package pyramid
 
 import "testing"
 

@@ -9,7 +9,6 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/music"
-	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -90,7 +89,7 @@ func main() {
 	//
 	// Built from the authored starting list. When a title-screen "New Run" arrives this moves
 	// there and becomes one line in that action instead.
-	g.GlobalState.Run = session.New(screens.StartingDeck())
+	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.RunSeed)
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session

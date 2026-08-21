@@ -98,26 +98,9 @@ const (
 
 	// **One capture per event, derived from the dwell rather than written down.** It was a
 	// flat 22 and went stale the moment playback slowed to a second and a quarter a beat —
-	// the same number then took three pictures of every event. Tying it to `eventDwellTicks`
+	// the same number then took three pictures of every event. Tying it to `beatTicks`
 	// means a pacing change cannot leave the harness sampling at the wrong rate.
-	demoShotFor = eventDwellTicks
-
-	// How long to hold after a round settles before sending the next plan, so the settled
-	// screen is on show long enough to be captured rather than passed straight through.
-	//
-	// **It was measured against an absolute tick and therefore did nothing** until 2026-08-12.
-	// The condition was `demo.tick > demoDuelAt+demoBetweenRounds`, which round one's playback
-	// clears by a mile — so from round two on, the next plan was sent on the very tick the
-	// previous round settled, with no hold at all.
-	//
-	// That was invisible while the opponent's row appeared instantly at DUEL!. It stopped being
-	// invisible the moment that row started *arriving*: the enemy's cards for the next round
-	// begin flying in as playback ends, so a zero hold pressed DUEL! while they were still in
-	// the air, and the sequence the table exists to show — their cards land, you choose, both
-	// sides resolve — could not be seen in the one harness that shows it.
-	//
-	// It has to clear the arrival: riseTicks plus a full row's stagger is 16 + 4x4 = 32.
-	demoBetweenRounds = 60
+	demoShotFor = beatTicks
 
 	// How many of one card round one clicks. Named against the hand it is trying to form
 	// rather than written as a 3, so it stays honest if the flurry run length ever changes.
@@ -140,8 +123,27 @@ const (
 	// while the dialogs and the flights it has to survive did not move at all, being on their own
 	// clocks. Sixty events of playback plus half a minute of animation; reaching it still means
 	// something hung, which is the only thing this number is for.
-	demoGiveUpAt = 60*eventDwellTicks + 30*ticksPerSecond
+	demoGiveUpAt = 60*beatTicks + 30*ticksPerSecond
 )
+
+// How long to hold after a round settles before sending the next plan, so the settled
+// screen is on show long enough to be captured rather than passed straight through.
+//
+// **It was measured against an absolute tick and therefore did nothing** until 2026-08-12.
+// The condition was `demo.tick > demoDuelAt+demoBetweenRounds`, which round one's playback
+// clears by a mile — so from round two on, the next plan was sent on the very tick the
+// previous round settled, with no hold at all.
+//
+// That was invisible while the opponent's row appeared instantly at DUEL!. It stopped being
+// invisible the moment that row started *arriving*: the enemy's cards for the next round
+// begin flying in as playback ends, so a zero hold pressed DUEL! while they were still in
+// the air, and the sequence the table exists to show — their cards land, you choose, both
+// sides resolve — could not be seen in the one harness that shows it.
+//
+// It has to clear the arrival: riseTicks plus a full row's stagger is 16 + 4x4 = 32. **Written
+// as a beat so it stays clear of it** — both of those are proportions of the game's speed, so a
+// raw 60 would stop clearing them the day the speed went up. See clock.go.
+var demoBetweenRounds = beat(12, 5)
 
 func (s *CombatScene) demoUpdate(gs *state.GlobalState) {
 	if demo.done {

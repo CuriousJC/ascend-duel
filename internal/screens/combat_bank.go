@@ -93,6 +93,9 @@ type bankFlight struct {
 // arrived reports whether the figure has reached the card, which is the moment the AP figure moves.
 func (b bankFlight) arrived() bool { return b.t.age >= bankFlyTicks }
 
+// tick advances the figure by a frame. See hitFlight.tick for why it is a method.
+func (b *bankFlight) tick() { b.t.tick() }
+
 // done reports whether the whole gesture — flight and hold — is over.
 func (b bankFlight) done() bool { return b.t.age >= bankFlyTicks+bankHoldTicks }
 
@@ -106,7 +109,7 @@ func (s *CombatScene) noteBank(e combat.Event) {
 		return
 	}
 
-	s.banks = append(s.banks, bankFlight{
+	s.theatre.banks = append(s.theatre.banks, bankFlight{
 		amount: e.Amount,
 		side:   e.Side,
 		seat:   s.actingSeat(e.Side),
@@ -120,55 +123,14 @@ func (s *CombatScene) noteBank(e combat.Event) {
 // or a defend on its own, and only an attack hand raises several at once. A prepare is never part
 // of that set, so the first lit seat is the card that banked.
 func (s *CombatScene) actingSeat(side combat.Side) int {
-	seats := s.enemyFiringSeats
+	seats := s.theatre.enemyFiringSeats
 	if side == combat.SideA {
-		seats = s.firingSeats
+		seats = s.theatre.firingSeats
 	}
 	if len(seats) > 0 {
 		return seats[0]
 	}
 	return -1
-}
-
-// banksRunning reports whether any figure is still in the air or being held on a card. The
-// playback cursor waits on this.
-func (s *CombatScene) banksRunning() bool {
-	for _, b := range s.banks {
-		if !b.done() {
-			return true
-		}
-	}
-	return false
-}
-
-// tickBanks advances every figure, credits the ones that have just landed, and drops the ones that
-// have finished.
-//
-// **The credit happens on the frame the figure arrives**, which is the whole point of the gesture:
-// the number reaching the card is what raises the card's figure. It is kept in `bankShown` rather
-// than read back off the live flights because a flight is dropped when its hold expires and the
-// points have to stay on the card until the round's end state is adopted — see shownBank.
-func (s *CombatScene) tickBanks() {
-	live := s.banks[:0]
-	for _, b := range s.banks {
-		was := b.arrived()
-		b.t.tick()
-		if !was && b.arrived() {
-			s.bankShown[b.side] += b.amount
-		}
-		if !b.done() {
-			live = append(live, b)
-		}
-	}
-	s.banks = live
-}
-
-// clearBanks drops every figure and the points they had credited. **`Init` calls it**, for the
-// lesson the frozen last round taught: anything tidied up only at the end of a round assumes every
-// round ends in one, and a settled duel does not.
-func (s *CombatScene) clearBanks() {
-	s.banks = nil
-	s.bankShown = [2]int{}
 }
 
 // shownBank is what to add to a side's AP figure for points banked this round and already landed.
@@ -182,15 +144,15 @@ func (s *CombatScene) clearBanks() {
 // **It is zeroed when that adoption happens**, in `endOfRound`, or the same two points would be
 // counted twice — once by this and once by the `BonusAP` the adoption brings.
 func (s *CombatScene) shownBank(side combat.Side) int {
-	if side < 0 || int(side) >= len(s.bankShown) {
+	if side < 0 || int(side) >= len(s.theatre.bankShown) {
 		return 0
 	}
-	return s.bankShown[side]
+	return s.theatre.bankShown[side]
 }
 
 // drawBanks writes every figure at wherever it has got to.
 func (s *CombatScene) drawBanks(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, b := range s.banks {
+	for _, b := range s.theatre.banks {
 		from, ok := s.bankOrigin(gs, b)
 		if !ok {
 			continue
@@ -227,16 +189,16 @@ func (s *CombatScene) bankOrigin(gs *state.GlobalState, b bankFlight) (image.Poi
 		return image.Point{}, false
 	}
 	if b.side == combat.SideB {
-		if b.seat >= len(s.enemyDealt) {
+		if b.seat >= len(s.theatre.enemyDealt) {
 			return image.Point{}, false
 		}
-		at := lift(enemySeatAt(gs, b.seat, len(s.enemyDealt), s.enemySplit()), true)
+		at := lift(enemySeatAt(gs, b.seat, len(s.theatre.enemyDealt), s.enemySplit()), true)
 		return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 	}
-	if b.seat >= len(s.resolved) {
+	if b.seat >= len(s.theatre.resolved) {
 		return image.Point{}, false
 	}
-	at := lift(playedSeatAt(gs, b.seat, len(s.resolved), s.playedSplit()), true)
+	at := lift(playedSeatAt(gs, b.seat, len(s.theatre.resolved), s.playedSplit()), true)
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }
 

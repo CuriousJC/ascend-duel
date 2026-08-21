@@ -28,7 +28,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
-	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/pyramid"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
@@ -127,7 +127,7 @@ func main() {
 	band := 0
 	for _, name := range data.EnemyOrder(recs) {
 		rec := recs[name]
-		enemy := duelistOf(rec, entities.FirstFightOnFloor(rec.ValidFloors[0]))
+		enemy := duelistOf(rec, pyramid.FirstFightOnFloor(rec.ValidFloors[0]))
 
 		// A blank line each time the lowest valid floor moves, so the table reads as the
 		// tower it describes rather than as ninety-six rows.
@@ -151,7 +151,7 @@ func main() {
 		if !ok {
 			fmt.Printf("\nno enemy record called %q\n", *detail)
 		} else {
-			enemy := duelistOf(rec, entities.FirstFightOnFloor(rec.ValidFloors[0]))
+			enemy := duelistOf(rec, pyramid.FirstFightOnFloor(rec.ValidFloors[0]))
 			fmt.Printf("\n== %s  %d cards, %d life, %d AP, DMG %d\n",
 				rec.Name, len(decks.EnemyCards(*detail)), enemy.MaxLife, enemy.ActionPoints(), enemy.DMG)
 			fmt.Printf("   deck: %s\n", label(decks.EnemyCards(*detail)))
@@ -293,15 +293,15 @@ func outcome(r duelResult) string {
 // would make every number below a measurement of a fight nobody plays.
 //
 // **`fight` is where in the ascent the enemy is met**, and it applies the same curve the game
-// does — see entities.ScaleToFight. The caller maps a record onto the first fight of its lowest
+// does — see pyramid.ScaleToFight. The caller maps a record onto the first fight of its lowest
 // valid floor, which is the shallowest slot the tower could put it in and therefore the kindest
 // version of it the player will ever see. Reporting the record's raw stats instead would describe
 // an opponent that exists nowhere.
 func duelistOf(d data.EnemyData, fight int) combat.Duelist {
 	du := combat.Duelist{
-		DMG:         entities.ScaleToFight(d.DMG, fight),
+		DMG:         pyramid.ScaleToFight(d.DMG, fight),
 		Actions:     d.Actions,
-		MaxLife:     entities.ScaleToFight(d.HP, fight),
+		MaxLife:     pyramid.ScaleToFight(d.HP, fight),
 		SoloAttacks: true,
 	}
 	du.CurrentLife = du.MaxLife

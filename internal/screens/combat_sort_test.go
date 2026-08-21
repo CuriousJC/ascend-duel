@@ -208,7 +208,7 @@ func TestAnInboundFlightPointsAtTheSlotItsCardEndedIn(t *testing.T) {
 	}
 	s.spendSelected()
 
-	for _, f := range s.flights {
+	for _, f := range s.theatre.flights {
 		if f.outbound {
 			continue
 		}
@@ -263,10 +263,10 @@ func TestSortingSendsEveryMovedCardSliding(t *testing.T) {
 	}}
 	s.setSort(sortByCost)
 
-	if len(s.slides) != 2 {
-		t.Fatalf("%d cards slid, want both of them", len(s.slides))
+	if len(s.theatre.slides) != 2 {
+		t.Fatalf("%d cards slid, want both of them", len(s.theatre.slides))
 	}
-	for _, sl := range s.slides {
+	for _, sl := range s.theatre.slides {
 		if sl.fromIndex == sl.toIndex {
 			t.Errorf("a card slid from slot %d to itself", sl.fromIndex)
 		}
@@ -291,8 +291,8 @@ func TestACardThatDoesNotMoveDoesNotSlide(t *testing.T) {
 	}}
 	s.setSort(sortByCost)
 
-	if len(s.slides) != 0 {
-		t.Errorf("%d cards slid over an already-sorted hand", len(s.slides))
+	if len(s.theatre.slides) != 0 {
+		t.Errorf("%d cards slid over an already-sorted hand", len(s.theatre.slides))
 	}
 }
 
@@ -308,7 +308,7 @@ func TestASecondSortReplacesASlideForTheSameSlot(t *testing.T) {
 	s.setSort(sortByElement)
 
 	seen := map[int]bool{}
-	for _, sl := range s.slides {
+	for _, sl := range s.theatre.slides {
 		if seen[sl.toIndex] {
 			t.Errorf("two cards are sliding into slot %d", sl.toIndex)
 		}
@@ -325,10 +325,10 @@ func TestASurvivingCardSlidesAsTheRowClosesUp(t *testing.T) {
 	if len(s.hand) != handSize {
 		t.Fatalf("hand holds %d cards, want it dealt back to %d", len(s.hand), handSize)
 	}
-	if len(s.slides) == 0 {
+	if len(s.theatre.slides) == 0 {
 		t.Fatal("no card slid, though the row went from five cards to eight under them")
 	}
-	for _, sl := range s.slides {
+	for _, sl := range s.theatre.slides {
 		if sl.fromCount != 5 {
 			t.Errorf("a slide sets off from a row of %d, want the 5 that was there", sl.fromCount)
 		}
@@ -379,9 +379,9 @@ func TestASettledDuelFreezesTheScreenAsItStands(t *testing.T) {
 				t.Errorf("the queue went from %d cards to %d, want the round still on screen",
 					queue, len(s.fighterActions))
 			}
-			if len(s.flights)+len(s.slides) != 0 {
+			if len(s.theatre.flights)+len(s.theatre.slides) != 0 {
 				t.Errorf("%d cards are moving, want nothing to move once the duel is over",
-					len(s.flights)+len(s.slides))
+					len(s.theatre.flights)+len(s.theatre.slides))
 			}
 
 			// And it does adopt the end state, which is what duelSettled and the fighter cards

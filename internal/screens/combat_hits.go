@@ -33,7 +33,7 @@ import (
 // **It can stop the playback cursor**, which the hand dialog was the first thing on this screen
 // to do. A figure crossing half the screen does not fit inside one event's dwell, and the
 // alternative is the bar dropping before the number reaches it — which is the picture this exists
-// to remove. `hitsRunning` is what `advancePlayback` waits on.
+// to remove. `combatTheatre.running` is what `advancePlayback` waits on.
 
 // The figure's journey and the pause it takes on the card, **as fractions of the one playback
 // speed** *(2026-08-19)* — see `beat`. They reproduce the 26 and 18 they were tuned to at a speed
@@ -111,6 +111,11 @@ type hitFlight struct {
 // arrived reports whether the figure has reached the card, which is the moment the bar drops.
 func (h hitFlight) arrived() bool { return h.t.age >= hitFlyTicks }
 
+// tick advances the figure by a frame. **A one-line method rather than the caller reaching for
+// `h.t`**, because it is what makes a hitFlight a mover in theatre.go's sense and therefore
+// something `advance` can drive.
+func (h *hitFlight) tick() { h.t.tick() }
+
 // done reports whether the whole gesture — flight and hold — is over.
 func (h hitFlight) done() bool { return h.t.age >= hitFlyTicks+hitHoldTicks }
 
@@ -130,7 +135,7 @@ func (s *CombatScene) noteHit(e combat.Event, held int) {
 		return
 	}
 
-	s.hits = append(s.hits, hitFlight{
+	s.theatre.hits = append(s.theatre.hits, hitFlight{
 		amount: e.Amount,
 		side:   e.Side,
 		target: e.Target,
@@ -155,43 +160,15 @@ func (s *CombatScene) blowSeat(e combat.Event) int {
 	}
 	// The card that is lit is the card that is hitting, for a solo attacker — see noteResolved,
 	// which seats one card at a time for exactly this reason.
-	seats := s.enemyFiringSeats
+	seats := s.theatre.enemyFiringSeats
 	if e.Side == combat.SideA {
-		seats = s.firingSeats
+		seats = s.theatre.firingSeats
 	}
 	if len(seats) > 0 {
 		return seats[0]
 	}
 	return -1
 }
-
-// hitsRunning reports whether any figure is still in the air or being held on a card. The playback
-// cursor waits on this.
-func (s *CombatScene) hitsRunning() bool {
-	for _, h := range s.hits {
-		if !h.done() {
-			return true
-		}
-	}
-	return false
-}
-
-// tickHits advances every figure and drops the ones that have finished.
-func (s *CombatScene) tickHits() {
-	live := s.hits[:0]
-	for _, h := range s.hits {
-		h.t.tick()
-		if !h.done() {
-			live = append(live, h)
-		}
-	}
-	s.hits = live
-}
-
-// clearHits drops every figure. **`Init` calls it**, which is the lesson the frozen last round
-// taught: anything cleaned up only at the end of a round is sitting on the assumption that every
-// round ends in one, and a settled duel does not.
-func (s *CombatScene) clearHits() { s.hits = nil }
 
 // shownLife is the life a fighter card should draw, which is not always the life it has.
 //
@@ -209,7 +186,7 @@ func (s *CombatScene) clearHits() { s.hits = nil }
 // mean this function quietly breaks the day the hold is shortened or a kind starts flying two
 // figures — and it would break as a bar showing a life nobody has, which is hard to attribute.
 func (s *CombatScene) shownLife(side combat.Side, actual int) int {
-	for _, h := range s.hits {
+	for _, h := range s.theatre.hits {
 		if h.target == side && !h.arrived() {
 			return h.held
 		}
@@ -219,7 +196,7 @@ func (s *CombatScene) shownLife(side combat.Side, actual int) int {
 
 // drawHits writes every figure at wherever it has got to.
 func (s *CombatScene) drawHits(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, h := range s.hits {
+	for _, h := range s.theatre.hits {
 		from, ok := s.hitOrigin(gs, h)
 		if !ok {
 			continue
@@ -269,15 +246,15 @@ func (s *CombatScene) hitOrigin(gs *state.GlobalState, h hitFlight) (image.Point
 	// screen keeps. `slotAt` and friends give a card's top-left, so the middle is half a card in.
 	var at image.Point
 	if h.side == combat.SideA {
-		if h.seat >= len(s.resolved) {
+		if h.seat >= len(s.theatre.resolved) {
 			return image.Point{}, false
 		}
-		at = playedSeatAt(gs, h.seat, len(s.resolved), s.playedSplit())
+		at = playedSeatAt(gs, h.seat, len(s.theatre.resolved), s.playedSplit())
 	} else {
-		if h.seat >= len(s.enemyDealt) {
+		if h.seat >= len(s.theatre.enemyDealt) {
 			return image.Point{}, false
 		}
-		at = enemySeatAt(gs, h.seat, len(s.enemyDealt), s.enemySplit())
+		at = enemySeatAt(gs, h.seat, len(s.theatre.enemyDealt), s.enemySplit())
 	}
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2), true
 }

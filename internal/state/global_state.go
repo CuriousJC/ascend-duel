@@ -1,4 +1,3 @@
-// Description: state is the shared state passed to all the other components of the game.
 package state
 
 import (

@@ -12,7 +12,7 @@ import (
 // event kind added in `internal/combat` has to be answered on this screen, and nothing about the
 // two packages compiling says it was.
 
-// TestEveryEventKindIsChoreographed is the point of the theatre table.
+// TestEveryEventKindIsChoreographed is the point of the choreography table.
 //
 // **An event nobody draws is an event the player is never told about**, once the Resolution feed
 // is behind a button. Today a new kind would still narrate itself in the feed and the omission
@@ -20,9 +20,9 @@ import (
 // rather than at the moment somebody notices the screen went quiet.
 func TestEveryEventKindIsChoreographed(t *testing.T) {
 	for k := combat.EventKind(0); k <= combat.KindRoundEnd; k++ {
-		spec, ok := theatre[k]
+		spec, ok := choreography[k]
 		if !ok {
-			t.Errorf("event kind %d has no entry in the theatre table - give it one, "+
+			t.Errorf("event kind %d has no entry in the choreography table - give it one, "+
 				"with anchorNone and a reason if it genuinely draws nothing", k)
 			continue
 		}
@@ -33,9 +33,9 @@ func TestEveryEventKindIsChoreographed(t *testing.T) {
 
 	// The other direction: an entry for a kind that no longer exists is a drawing nothing can
 	// trigger, and it would sit here looking like coverage.
-	for k := range theatre {
+	for k := range choreography {
 		if k < 0 || k > combat.KindRoundEnd {
-			t.Errorf("the theatre table describes event kind %d, which the engine does not emit", k)
+			t.Errorf("the choreography table describes event kind %d, which the engine does not emit", k)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func TestEveryAnchorAndGestureIsNamed(t *testing.T) {
 //     nobody goes, left behind by a drawing that was reconsidered.
 func TestTheChoreographyIsInternallyConsistent(t *testing.T) {
 	for k := combat.EventKind(0); k <= combat.KindRoundEnd; k++ {
-		spec, ok := theatre[k]
+		spec, ok := choreography[k]
 		if !ok {
 			continue // TestEveryEventKindIsChoreographed reports this
 		}
@@ -112,7 +112,7 @@ func TestTheChoreographyIsInternallyConsistent(t *testing.T) {
 // the duelist. The day the screen starts asking "is this SideB" instead, the balance tool — which
 // plays both sides headlessly — has been quietly left behind.
 func TestTheEngineIsTheAuthorityOnDamagesSource(t *testing.T) {
-	spec := theatre[combat.KindDamage]
+	spec := choreography[combat.KindDamage]
 	if spec.from != anchorBlow {
 		t.Errorf("damage flies from %v; it has to come from wherever the turn's figure "+
 			"already is, which differs between a scored hand and a solo attacker", spec.from)

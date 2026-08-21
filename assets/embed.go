@@ -1,5 +1,6 @@
-// embed.go
 package assets
+
+// embed.go
 
 import (
 	"bytes"

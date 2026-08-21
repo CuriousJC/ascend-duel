@@ -17,7 +17,7 @@ func testDeck() []combat.Card {
 }
 
 // TestTheStartingListCannotBeEditedByARun is the counterpart of the same rule on
-// `decks.EnemyCards`. `screens.StartingDeck()` is what a run is built from, and a worm that
+// `decks.EnemyCards`. `StartingDeck()` is what a run is built from, and a worm that
 // reached through into it would be altering what *every* future run opens with.
 func TestTheStartingListCannotBeEditedByARun(t *testing.T) {
 	start := testDeck()

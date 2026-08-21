@@ -1,138 +1,32 @@
 package screens
 
-// The pane machinery — the row model, the placements and colours, and the prose that turns an
-// event into a sentence.
+// **The prose: turning an event the engine has already decided into a sentence.**
 //
-// **Nothing in this file is drawn on the combat screen as of 2026-08-18.** Action Flow is built
-// and unwired, and the Resolution feed is gone; what draws these rows now is the fight log — see
-// combat_log.go. Split out of combat.go on 2026-08-07. **The prose lives here and not in
-// internal/combat** on purpose: the rules package names actions, it does not describe them.
-// Everything here is presentation over a log the engine has already finished deciding, which is
-// what makes it structurally impossible for a panel to disagree with the round it reports.
+// `logRows` is the walk — one line per thing that happened, in the order the resolver produced
+// them — and everything under it is the vocabulary that walk draws on: the verb an attack
+// takes, what a card does said in words, what a status is called while it is ticking.
+//
+// **It lives here and not in internal/combat** on purpose: the rules package names actions, it
+// does not describe them. Everything here is presentation over a log that is already finished,
+// which is what makes it impossible for a panel to disagree with the round it reports. It
+// computes nothing.
+//
+// **It is not the fight log's, either.** The log is one caller. A shop describing what a ring
+// does, and a room choice describing what an affix does, want the same vocabulary — which is
+// why this is its own file rather than a section of combat_log.go.
+//
+// Split out of combat_panes.go on 2026-08-21, which held the prose and the pane widget together.
 
 import (
 	"fmt"
-	"image"
 	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"image/color"
 )
-
-// The band a full-height pane occupies. **Resolution left it on 2026-08-11** and moved down
-// to the strip above the hand — see the feed constants below — so today this describes only
-// Action Flow, which is not drawn. The space between 12% and 46% is deliberately empty and
-// spoken for.
-const (
-	paneTopPct    = 12
-	paneBottomPct = 46
-
-	paneTitleInset = 10 // gap from the pane's top edge to its title
-	paneFirstRow   = 45 // gap from the top edge to the first action row
-	paneRowHeight  = 30
-	paneRowInset   = 10 // gap from the pane's left edge to a row's swatch
-	swatchSize     = 16
-	swatchGap      = 6 // gap between a swatch and its label
-
-	// The Resolution rows are sentences rather than card names, and there are more of them —
-	// a busy round merges to a dozen lines where the flow pane draws at most ten.
-	paneTextRowHeight = 22
-)
-
-// **The band above the hand, which the Resolution feed used to occupy** *(vacated 2026-08-18)*.
-// Nothing is drawn there at rest now; what claims it is the hand dialog, which writes the
-// blow's arithmetic across it, and `drawPlannedHand`, which writes the name of the hand the
-// selection has already formed in the same place. See combat_mathbox.go.
-//
-// The two constants stay because the band does: `tableRowTop` keeps the played cards clear of
-// it, and `handMathRect` is measured from it. Their **values are the feed's** — the sum was
-// laid out and looked at against a box of exactly this height, so keeping the number is what
-// stops removing the feed from quietly re-laying out the arithmetic.
-const (
-	// mathBandHeight is how deep it is: what the feed's collapsed three rows came to.
-	mathBandHeight = 82
-
-	// mathBandGapAboveCards is how far its bottom edge sits above the resting hand row.
-	//
-	// **A selected card lifts by selectedNudge and does overlap it**, by 21 pixels, and that is
-	// accepted rather than overlooked: the band is measured against where the cards live, not
-	// against where one of them goes when it is picked.
-	mathBandGapAboveCards = 5
-)
-
-// panePlacement is one pane's horizontal slot, label and identifying colour. The
-// colours are loud on purpose — these are placeholders for finding the layout, not a
-// palette anyone has chosen yet.
-type panePlacement struct {
-	leftPct, rightPct int
-	title             string
-	color             color.RGBA
-
-	// **A pane carries its own surface and its own ink**, rather than deriving both from one
-	// colour. Resolution went off-white on 2026-08-07 because coloured verb chips on a dim
-	// plum ground were hard to read — three saturated colours competing with a fourth behind
-	// them. A light ground makes the chips the only saturated thing in the pane.
-	//
-	// This is the same exception glyphs are documented under in `CLAUDE.md`: the one-colour
-	// rule governs how a widget responds to hover, press and disable, and it cannot describe
-	// a surface and the thing sitting on it at once. `color` still drives the border and is
-	// what the pane is "named", so the scale-don't-add rule keeps working for state.
-	fill   color.RGBA // the pane's ground
-	ink    color.RGBA // text drawn on that ground
-	nowInk color.RGBA // text of the row playback is on: coloured, bold and underlined
-
-	// rowHeight is the pitch this pane draws its rows at. Carried on the placement rather
-	// than being one constant because the two panes hold different things: card names, and
-	// sentences about what those cards did.
-	rowHeight int
-
-	// firstRow is the gap from the top edge to the first row. A titled pane has to clear its
-	// title; the feed has no title and cannot afford to pretend it does — 45 pixels of
-	// reserved heading out of an 82-pixel box is most of the box.
-	firstRow int
-}
-
-// **Two panes, and they answer different questions at different times** *(2026-08-07)*.
-//
-//   - **Action Flow** is what you *queued*, in play order. It is live while you are planning,
-//     before anything has happened — a prediction, and the thing drag-to-reorder edits.
-//   - **Resolution** is what actually *happened*. It is empty until DUEL! is pressed and fills
-//     as the round plays back — a record.
-//
-// Showing the round twice is only worth the space because of that split. It also retired the
-// open question of how one pane could be both: the flow pane never learned to mark a hand
-// across non-adjacent rows, and no longer has to, because Resolution says it in words.
-//
-// The narrow column and the wide one are **not** interchangeable. Flow rows are short labels
-// (`Strike`, `??? (attack)`) and fit the 15–39% column the Actions pane vacated; Resolution
-// rows are sentences and keep the wide middle slot, which is also what the pane billed as the
-// centrepiece should have.
-var (
-	// Action Flow keeps the dark ground it has always had. It is not drawn today, and it holds
-	// card names rather than sentences with chips in them, so it has none of the problem that
-	// moved Resolution to a light one. **If it comes back beside Resolution the two will want
-	// deciding together** — one light pane and one dark one side by side is not a scheme.
-	actionFlowPane = panePlacement{
-		leftPct: 15, rightPct: 39,
-		title:     "Action Flow",
-		color:     paneEdge,
-		fill:      systems.ColorAtStrength(paneEdge, 25),
-		ink:       color.RGBA{R: 245, G: 245, B: 245, A: 255},
-		nowInk:    color.RGBA{R: 255, G: 158, B: 205, A: 255},
-		rowHeight: paneRowHeight,
-		firstRow:  paneFirstRow,
-	}
-)
-
-// paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
-var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
 // handSwatch marks a line that is not one side acting but something the round did — a hand
 // forming. **It is the yellow the enemy used to be**, freed when the opponent went grey on
@@ -158,36 +52,6 @@ var (
 	playerSwatch = color.RGBA{R: 46, G: 150, B: 70, A: 255}
 	enemySwatch  = color.RGBA{R: 108, G: 110, B: 122, A: 255}
 )
-
-// paneRow is one line in a pane: a label, optionally preceded by a colour swatch
-// saying whose action it is. A zero-alpha swatch means the row has none, in which case
-// the label is centred instead of sitting in a column beside the squares.
-type paneRow struct {
-	// A row is drawn as three runs, so the verb in the middle can be coloured, bolded and
-	// underlined while the words either side of it are not. Rows that are not a sentence —
-	// a card name in Action Flow, a placeholder — put everything in prefix and leave the
-	// other two empty, which is why prefix rather than verb is the one that always has to
-	// be set.
-	prefix, verb, suffix string
-
-	// verbInk is the colour the verb itself is written in. **Zero alpha means "the row's own
-	// ink"**, the same convention Button.BaseColor uses, and it is what the neutral category
-	// takes — see verbInkFor. Storing a colour rather than a category keeps drawPane from
-	// having to know anything about combat.
-	verbInk color.RGBA
-
-	swatch color.RGBA
-
-	// highlighted marks the row as the one happening right now, drawn lit against the
-	// dim pane behind it.
-	highlighted bool
-}
-
-// drawActionFlow shows the two queues merged into play order: the plan, not the outcome.
-func (s *CombatScene) drawActionFlow(gs *state.GlobalState, screen *ebiten.Image) {
-	s.drawPane(gs, screen, actionFlowPane, panePlacementRect(gs, actionFlowPane),
-		s.actionFlowRows(s.fighterActions, s.enemyActions, s.concealEnemy(gs)))
-}
 
 // logRows writes the sentences for a run of events: one line per thing that happened, in the
 // order the resolver produced them.
@@ -641,230 +505,6 @@ func (s *CombatScene) sideName(side combat.Side) string {
 // hidden-information decision — see TODO.md.
 func (s *CombatScene) concealEnemy(gs *state.GlobalState) bool {
 	return !gs.DebugGameplay && s.planning()
-}
-
-// panePlacementRect is the column a full-height pane occupies, from its percentages and the
-// shared band. **Only Action Flow is placed this way now** — Resolution takes its rectangle
-// from the hand instead, so the rect is a parameter rather than something drawPane works out.
-func panePlacementRect(gs *state.GlobalState, p panePlacement) image.Rectangle {
-	return image.Rect(
-		gs.PctX(p.leftPct), gs.PctY(paneTopPct),
-		gs.PctX(p.rightPct), gs.PctY(paneBottomPct),
-	)
-}
-
-// drawPaneFrame draws a pane's fill, border and title in the rectangle given, and reports it
-// back as floats. Split out because the card panes fill themselves rather than drawing text
-// rows.
-func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle) (x, y, w, h float32) {
-	// Not drawBox: a pane names its own ground and its own ink, where drawBox derives a dim
-	// fill from one colour. drawBox still serves the caption and the character strip, which
-	// have no text on a light ground to worry about.
-	x, y = float32(r.Min.X), float32(r.Min.Y)
-	w, h = float32(r.Dx()), float32(r.Dy())
-
-	vector.DrawFilledRect(screen, x, y, w, h, p.fill, false)
-	vector.StrokeRect(screen, x, y, w, h, 2, p.color, false)
-
-	if p.title != "" {
-		titleOp := &text.DrawOptions{}
-		titleOp.GeoM.Translate(float64(x+w/2), float64(y+paneTitleInset))
-		titleOp.PrimaryAlign = text.AlignCenter
-		titleOp.ColorScale.ScaleWithColor(p.ink)
-		text.Draw(screen, p.title, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, titleOp)
-	}
-
-	return x, y, w, h
-}
-
-// drawPane draws a read-only pane: the frame, then a row per action.
-func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle, rows []paneRow) {
-	x, y, w, _ := s.drawPaneFrame(gs, screen, p, r)
-
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
-
-	// **The highlight is centred on the text, not offset from the row's top by a constant.**
-	// It used to be drawn at rowY-4 with height rowHeight-2, numbers picked by eye against a
-	// single 30px pitch. When the Resolution pane arrived at 22 the bar came out 20 tall
-	// against a ~19px line sitting 4px lower, so it clipped the text and the swatch along its
-	// bottom edge. Measuring the line and centring on it works at any pitch, which is the
-	// point — the pane's pitch is now a property of the placement and free to change again.
-	_, lineHeight := text.Measure("Ag", face, 0)
-
-	for i, row := range rows {
-		rowY := y + float32(p.firstRow) + float32(i*p.rowHeight)
-		rowOp := &text.DrawOptions{}
-
-		// **The row playback is on is set in the text itself — coloured, bold and underlined —
-		// rather than sat on a lit bar** *(changed 2026-08-07)*. A full-width bar was a fourth
-		// saturated block in a pane that already carries a swatch, a verb chip and a sentence,
-		// and on a light ground it had to be pale enough to read through, which left it
-		// shouting and saying little. Marking the words is the same signal spent on the thing
-		// the reader is actually looking at.
-		//
-		// Bold is faux — the same run drawn again a pixel right. `text/v2` has no synthetic
-		// weight and kubasta ships one, so this is the only way to get one without a second
-		// font file. At a pixel font's sizes it is exactly what a bold face would do anyway.
-		ink := p.ink
-		if row.highlighted {
-			ink = p.nowInk
-		}
-
-		// A row with no verb is a single centred or left-aligned run and keeps the old path.
-		// One with a verb has to be laid out left to right so the chip can be measured into
-		// place, which rules out centring it — a sentence in a list wants a common left edge
-		// anyway.
-		if row.swatch.A == 0 && row.verb == "" {
-			rowOp.GeoM.Translate(float64(x+w/2), float64(rowY))
-			rowOp.PrimaryAlign = text.AlignCenter
-			rowOp.ColorScale.ScaleWithColor(ink)
-			text.Draw(screen, row.prefix, face, rowOp)
-			continue
-		}
-
-		textX := x + paneRowInset
-		if row.swatch.A != 0 {
-			// A swatch turns the row into a column: square on the left, the line beside it,
-			// so the squares line up down the pane and the alternation is readable as a
-			// pattern rather than as text.
-			//
-			// **Idle swatches fade toward the pane's own ground**, so the lit one is the
-			// strongest thing in the pane whether that ground is dark or light. Scaling
-			// toward black — which is what dimming used to mean here — made idle rows *more*
-			// contrasty than the lit one the moment Resolution went off-white. See
-			// systems.ColorToward.
-			swatch := row.swatch
-			if !row.highlighted {
-				swatch = systems.ColorToward(swatch, p.fill, 45)
-			}
-			// Centred on the line for the same reason the bar is, so the squares sit level
-			// with the text they belong to whatever pitch the pane draws at.
-			swatchTop := rowY + float32(lineHeight)/2 - swatchSize/2
-			vector.DrawFilledRect(screen, x+paneRowInset, swatchTop, swatchSize, swatchSize, swatch, false)
-			textX = x + paneRowInset + swatchSize + swatchGap
-		}
-
-		// Three runs, measured one after the next. The verb is written in its category's own
-		// colour — red for attack, blue for defend, the row's ink for prepare — so a round can
-		// be scanned for what *kind* of thing happened before any of it is read.
-		cursorX := float64(textX)
-		draw := func(str string, tint color.RGBA, bold bool) {
-			if str == "" {
-				return
-			}
-			at := func(dx float64) {
-				op := &text.DrawOptions{}
-				op.GeoM.Translate(cursorX+dx, float64(rowY))
-				op.ColorScale.ScaleWithColor(tint)
-				text.Draw(screen, str, face, op)
-			}
-			at(0)
-			if bold {
-				at(1) // faux bold
-			}
-
-			// Advance by the *unbolded* width, so the second pass thickens the strokes without
-			// walking the runs after it out of place.
-			wRun, _ := text.Measure(str, face, 0)
-			cursorX += wRun
-		}
-
-		draw(row.prefix, ink, row.highlighted)
-		if row.verb != "" {
-			// **The verb is always bold and always underlined, on every row.** That is what makes
-			// it read as the verb rather than as a word that happens to be coloured — one mark
-			// would be ambiguous against a pane that also uses colour for the side and for the
-			// live row, and three together are unmistakable at a glance.
-			verbInk := row.verbInk
-			if verbInk.A == 0 {
-				verbInk = ink
-			}
-
-			verbLeft := float32(cursorX)
-			wVerb, _ := text.Measure(row.verb, face, 0)
-			draw(row.verb, verbInk, true)
-
-			// **Flush with the bottom of the measured line box**, not a constant above it. The
-			// underline used to sit under a chip whose height was fixed at 18 against a 22px
-			// pitch; with no chip the only thing it can be positioned against is the text, and
-			// text.Measure already reports the full line including descent. That is what keeps
-			// it clear of the `p` in "prepares" — a rule three pixels up from the baseline
-			// struck straight through it — and what lets either pane's pitch change again.
-			vector.DrawFilledRect(screen,
-				verbLeft, rowY+float32(lineHeight)-underlineHeight,
-				float32(wVerb), underlineHeight,
-				verbInk, false)
-		}
-		draw(row.suffix, ink, row.highlighted)
-	}
-}
-
-const (
-	// underlineHeight is how thick the verb's underline is. Two pixels rather than one: at
-	// kubasta's weight a single pixel reads as an artefact of the font rather than a mark.
-	underlineHeight = 2
-)
-
-// actionFlowRows lays the two queued sets out in play order, and marks the row for the action
-// currently playing back. Each row is swatched in its side's colour, so who-acts-when reads as
-// a pattern of squares before any of the labels are read.
-//
-// Whichever set is longer keeps going alone once the other runs out — a faster duelist
-// buys more actions, and the tail is exactly where that advantage shows.
-//
-// This layout is the order combat.ResolveRound actually plays, so the highlight walks
-// straight down the pane. Keep the two in step: the pane is the player's model of the
-// round, and effects that reorder resolution will have to move both.
-// concealEnemy replaces the opponent's labels with placeholders while leaving their rows
-// in place, so the interleaving still reads correctly and only the content is withheld.
-//
-// This function needs no change when phase-based resolution lands — it draws whatever
-// ResolutionOrder returns and never works the order out for itself, which is the whole
-// point of that split.
-//
-// **It no longer has to draw a hand spanning non-adjacent slots**, which was an open problem
-// for as long as this was the only pane: one row per slot with a single walking highlight has
-// no way to say "these together did a thing". The Resolution pane says it in words instead.
-// The same goes for a slot a chill deleted — this pane still draws it as a row, and the
-// other one is where it is reported as lost.
-func (s *CombatScene) actionFlowRows(fighter, enemy []combat.Card, concealEnemy bool) []paneRow {
-	order := combat.ResolutionOrder(fighter, enemy)
-	if len(order) == 0 {
-		return []paneRow{{prefix: "(empty)"}}
-	}
-
-	playingSlot, playing := s.currentSlot()
-
-	rows := make([]paneRow, 0, len(order))
-	for i, slot := range order {
-		label, swatch := slot.Card.Label(), playerSwatch
-		if slot.Side == combat.SideB {
-			swatch = enemySwatch
-			if concealEnemy {
-				label = concealedLabel(slot.Card)
-			}
-		}
-
-		rows = append(rows, paneRow{
-			prefix:      label,
-			swatch:      swatch,
-			highlighted: playing && i == playingSlot,
-		})
-	}
-	return rows
-}
-
-// concealedLabel is what a hidden action shows instead of its name. The category is
-// deliberately not hidden: it is what decides where the action sits in the order, so
-// withholding it would make the Resolution pane unreadable rather than merely uncertain —
-// the player could not tell why the rows are arranged as they are. It replaced the
-// initiative number in exactly that job when initiative was removed.
-//
-// This is the first cut at graded reveal rather than the finished scheme. What else
-// leaks per action — whether it damages, whether it applies a status — is still open;
-// see TODO.md.
-func concealedLabel(c combat.Card) string {
-	return fmt.Sprintf("??? (%s)", c.Category())
 }
 
 // handName is what the attack phase formed, said in words: "Two Pair", "Four of a Kind".

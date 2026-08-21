@@ -12,10 +12,10 @@ package screens
 // The mapping is this way round because `session` must not know a screen exists — see
 // session/flow.go.
 //
-// **A phase with no scene is skipped, not drawn blank.** The shop and the room choice are in the
-// loop already and have no scene yet, so `screenFor` reports that it has none and `advance` keeps
-// walking. That is what makes building the shop one entry in this table and nothing else: until it
-// is registered the run walks straight past it, and the day it is registered the loop includes it.
+// **A phase with no scene is skipped, not drawn blank.** The room choice is in the loop already and
+// has no scene yet, so `screenFor` reports that it has none and `advance` keeps walking. **The shop
+// is what that bought** *(2026-08-21)*: it was walked past for four days and joining the loop was
+// one line in the table below, with no existing scene edited.
 
 import (
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -29,6 +29,7 @@ import (
 var phaseScreens = map[session.Phase]state.ActiveScreen{
 	session.PhaseFight:  state.Combat,
 	session.PhaseReward: state.PostBattle,
+	session.PhaseShop:   state.Shop,
 }
 
 // screenFor is the scene that draws a phase, and whether one exists at all.

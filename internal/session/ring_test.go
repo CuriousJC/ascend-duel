@@ -10,7 +10,8 @@ import (
 // The catalogue, the worn set, and the three moments that fire out here rather than in a round.
 
 // bare is a run wearing nothing, which is what most of these want: `New` opens wearing
-// StartingRings, and a test about one ring should not also be a test about those three.
+// StartingRings, which is empty as shipped — so this is belt and braces against the day it is
+// filled in for a look at something.
 func bare(t *testing.T) *Session {
 	t.Helper()
 
@@ -237,9 +238,15 @@ func TestADiscountRingPricesTheRunsOwnCards(t *testing.T) {
 	}
 }
 
-func TestARunOpensWearingTheStartingRings(t *testing.T) {
+func TestARunOpensBare(t *testing.T) {
+	// **A run buys its rings** *(owner's call, 2026-08-21)*. StartingRings is the debug seat for
+	// putting one on without playing to a shop, so this checks both: the shipped value is empty, and
+	// whatever it holds is what a new run is wearing.
 	run := New(testDeck())
 
+	if len(StartingRings) != 0 {
+		t.Errorf("StartingRings ships holding %v; empty is the shipped value", StartingRings)
+	}
 	if got, want := len(run.Worn()), len(StartingRings); got != want {
 		t.Fatalf("a new run wears %d rings, want %d", got, want)
 	}

@@ -55,6 +55,14 @@ type RingData struct {
 	// field added later is a field every existing entry is missing.
 	Text string `json:"Text"`
 
+	// Price is what the shop charges for it, in vitae. **A ring declares its own price**, the way
+	// a card declares its own cost: a concept ring covering four cards and a form ring covering
+	// twelve are not the same object and must not be priced as one — see the `rings` skill.
+	//
+	// **What it sells back for is not a field.** That is a quarter of this, rounded up, and it is
+	// one rule of the shop rather than seventeen numbers to keep in step with these.
+	Price int `json:"Price"`
+
 	// Rules is what wearing this ring actually does. **A list, forced by the growing stat rings**,
 	// which accumulate at one moment and apply at another; it generalises to any ring wanting two.
 	Rules []RingRuleData `json:"Rules"`

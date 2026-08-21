@@ -29,8 +29,9 @@ const (
 	// PhaseReward is the worm and the card it eats: the post-battle screen.
 	PhaseReward
 
-	// PhaseShop is spending what the fight paid. Not built yet; Advance already routes through
-	// it, so the scene arriving is one entry in the screens table rather than a change here.
+	// PhaseShop is spending what the fight paid: rings bought and sold with vitae. Built on
+	// 2026-08-21, and it cost one entry in the screens table and nothing here — which is what the
+	// phase leaving the scenes was for.
 	PhaseShop
 
 	// PhaseChoice is picking the room ahead, which shapes the opponent in it. Not built yet.

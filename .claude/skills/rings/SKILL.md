@@ -227,9 +227,22 @@ wrong moment, a predicate the rules cannot resolve, or a status key that is in n
 comparable, so a worn ring is an ID and its accumulator and the rules themselves live in the
 registry. `WearsRing` takes a `RingID`.
 
-**What is not built: acquisition.** Nothing buys, sells or unequips a ring; a run opens wearing
-`session.StartingRings`. Unequipping also needs a decision nobody has made — what happens to a
-growing ring's accumulator when its ring comes off.
+**Acquisition landed on 2026-08-21.** `internal/session/shop.go` holds the rules — `RingPrice`,
+`SellValue`, `CanBuy`, `Buy`, `Sell` — and `internal/screens/shop.go` is the scene, reached through
+`session.PhaseShop`. **A run opens wearing nothing** *(owner's call, 2026-08-21)*, so every element
+is inert until the first ring is bought; `session.StartingRings` is the debug seat for putting one
+on without playing to a shop and ships empty.
+
+- **A ring carries its own `Price` in `rings.json`**, and a record with none panics at load like
+  every other unresolvable word. A concept ring and a form ring are not priced the same — the file
+  is where that judgement is written down.
+- **Selling is the only way a ring comes off**, and it pays **a quarter of the price, rounded up**.
+  Buying at five worn is refused rather than swapped: the trade is two decisions with a price
+  between them.
+- **A sold ring's accumulator resets to zero** *(owner's call, 2026-08-21)*. `grown` stays keyed by
+  record — a ring put back on is the same ring — but not the same number, so parking a growing ring
+  in the shop between fights buys nothing.
+- **The shelf is three rings the run is not wearing**, drawn off `seeds.ShopStock`, per fight.
 
 ## Discussing a new ring
 

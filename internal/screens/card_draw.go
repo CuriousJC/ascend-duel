@@ -3,6 +3,8 @@ package screens
 import (
 	"image"
 
+	"github.com/curiousjc/ascend-duel/data"
+
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -49,6 +51,15 @@ func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st ca
 // size. The caller has already said what it looks like.
 func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
 	blitCard(gs, screen, at, spec, cards.Hand)
+}
+
+// drawRingCard draws a ring in the card format: the pink border, artwork across the face, and
+// neither a cost nor a form. Both rows that hold rings go through it — the combat screen's worn
+// row and the shop's shelf — which is what keeps a ring one picture rather than two.
+func drawRingCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	r data.RingData, enabled bool) {
+
+	blitCard(gs, screen, at, ringSpec(gs, r, enabled), cards.RingStyle)
 }
 
 // drawWormCard draws a worm as the card it is offered as.

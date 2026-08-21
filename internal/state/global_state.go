@@ -88,8 +88,7 @@ type GlobalState struct {
 
 	// Rings is what the player can equip. **Genuinely global for the same reason the rosters
 	// are** — it is loaded once from data/rings.json and no screen owns it. What is *equipped*
-	// is not here: that is run state and belongs on Run, below. It is still the combat scene's
-	// `startingRings` constant until buying exists.
+	// is not here: that is run state and belongs on Run, below — bought and sold in the shop.
 	Rings map[string]data.RingData
 
 	// Run is what the player is carrying up the tower — the deck today, the worn rings and the
@@ -164,9 +163,12 @@ const (
 	Combat
 
 	// PostBattle is the first of the between-fight scenes: one alteration to the deck, offered
-	// from a hand dealt off it. A shop and a room choice are meant to follow it, and each is an
+	// from a hand dealt off it. The shop follows it and a room choice is to come, and each is an
 	// ordinary scene here rather than a mode of the combat screen.
 	PostBattle
+
+	// Shop is the second between-fight scene: rings on a shelf, bought and sold with vitae.
+	Shop
 
 	Credits
 )
@@ -181,6 +183,8 @@ func (active ActiveScreen) String() string {
 		return "Combat"
 	case PostBattle:
 		return "PostBattle"
+	case Shop:
+		return "Shop"
 	case Credits:
 		return "Credits"
 	default:

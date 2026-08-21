@@ -64,17 +64,18 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.CombatRoll` | run | `CombatScene.combatRNG`, injected into `ResolveRound` | every shock in the run, on any change to draw |
 | `seeds.PlayerDeck` | fight | `CombatScene.rng` | every catalogued hand in `internal/screens/seeds.go` |
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
+| `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
+| `seeds.WormOffer` | fight | `dealWorms` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
+| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which rings are for sale, on any change to the worm catalogue |
 | Loot offers | — | **not built** | — |
 | Floor offers | — | **not built** | — |
-| Between-fights reward hand | — | **not built** | which cards you are offered to alter |
-| Which alterations are offered | — | **not built** | — |
 
-**The last two are the next streams to land**, and they are the first real test of whether one
-stream can answer two questions. The reward hand is a fresh deal off the whole run deck,
-ignoring the fight's own piles, so it must not share the player's shuffle: doing so would make
-the offer a function of how many cards were drawn in the fight just won. Whether the *menu* of
-alterations wants a stream of its own or can ride the same one is undecided — apply the test
-above rather than assuming either way.
+**The three between-fight streams are the worked example of "one stream or two"**, and the question
+was asked each time rather than assumed. The reward hand is a fresh deal off the whole run deck, so
+sharing the player's shuffle would make the offer a function of how many cards were drawn in the
+fight just won. The worm menu is drawn from a *catalogue* rather than from the deck, so sharing the
+reward hand would make authoring a worm change which cards every fight offered. The shop's shelf is
+a third list on a third schedule, and the same argument separates it from both.
 
 **Tower layout draws no randomness.** It is fixed at 8 floors × 3 fights, endless later.
 

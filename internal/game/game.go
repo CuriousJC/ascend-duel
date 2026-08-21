@@ -61,6 +61,7 @@ func NewGame() *Game {
 			state.Ascend:     &screens.AscendScene{},
 			state.Combat:     &screens.CombatScene{},
 			state.PostBattle: &screens.PostBattleScene{},
+			state.Shop:       &screens.ShopScene{},
 			state.Credits:    &screens.CreditsScene{},
 		},
 	}

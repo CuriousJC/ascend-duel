@@ -4,6 +4,7 @@
     "Name": "Fire Ring",
     "Art": "firering_png",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 10% DMG each turn.",
+    "Price": 3,
     "Rules": [
       {
         "When": "attack-lands",
@@ -17,6 +18,7 @@
     "Name": "Frozen Ring",
     "Art": "frozenring_png",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
+    "Price": 3,
     "Rules": [
       {
         "When": "attack-lands",
@@ -30,6 +32,7 @@
     "Name": "Thunder Ring",
     "Art": "thunderring_png",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
+    "Price": 3,
     "Rules": [
       {
         "When": "attack-lands",
@@ -43,6 +46,7 @@
     "Name": "Earth Ring",
     "Art": "earthring_png",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
+    "Price": 3,
     "Rules": [
       {
         "When": "attack-lands",
@@ -56,6 +60,7 @@
     "Name": "Storm Ring",
     "Art": "",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
+    "Price": 5,
     "Rules": [
       {
         "When": "attack-lands",
@@ -72,6 +77,7 @@
     "Name": "Keen Ring",
     "Art": "",
     "Text": "Every slash card deals double DMG.",
+    "Price": 6,
     "Rules": [
       {
         "When": "card-damage",
@@ -85,6 +91,7 @@
     "Name": "Heavy Ring",
     "Art": "",
     "Text": "Every crush card deals double DMG.",
+    "Price": 6,
     "Rules": [
       {
         "When": "card-damage",
@@ -98,6 +105,7 @@
     "Name": "Needle Ring",
     "Art": "",
     "Text": "Every stab card deals double DMG.",
+    "Price": 6,
     "Rules": [
       {
         "When": "card-damage",
@@ -111,6 +119,7 @@
     "Name": "Striker Ring",
     "Art": "",
     "Text": "Every Strike deals double DMG.",
+    "Price": 2,
     "Rules": [
       {
         "When": "card-damage",
@@ -124,6 +133,7 @@
     "Name": "Thrifty Ring",
     "Art": "",
     "Text": "Fire cards cost 1 AP less.",
+    "Price": 5,
     "Rules": [
       {
         "When": "card-cost",
@@ -137,6 +147,7 @@
     "Name": "Frozen Lightning Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an ice card.",
+    "Price": 3,
     "Rules": [
       {
         "When": "deck-built",
@@ -150,6 +161,7 @@
     "Name": "Might Ring",
     "Art": "",
     "Text": "+10 DMG for every fight.",
+    "Price": 5,
     "Rules": [
       {
         "When": "fight-start",
@@ -162,6 +174,7 @@
     "Name": "Bulwark Ring",
     "Art": "",
     "Text": "+25 HP for every fight.",
+    "Price": 4,
     "Rules": [
       {
         "When": "fight-start",
@@ -174,6 +187,7 @@
     "Name": "Heart Ring",
     "Art": "",
     "Text": "+5 HP, and 5 more for every fight won.",
+    "Price": 4,
     "Rules": [
       {
         "When": "fight-start",
@@ -190,6 +204,7 @@
     "Name": "Banker Ring",
     "Art": "",
     "Text": "Vitae propagates twice as fast.",
+    "Price": 4,
     "Rules": [
       {
         "When": "fight-won",
@@ -202,6 +217,7 @@
     "Name": "Soul Taker Ring",
     "Art": "",
     "Text": "The vitae prize card pays 5 more.",
+    "Price": 4,
     "Rules": [
       {
         "When": "prizes-dealt",
@@ -214,6 +230,7 @@
     "Name": "Hungry Ring",
     "Art": "",
     "Text": "Two prizes after a fight instead of one.",
+    "Price": 7,
     "Rules": [
       {
         "When": "prizes-dealt",

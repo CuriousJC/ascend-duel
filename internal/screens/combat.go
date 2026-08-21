@@ -218,6 +218,11 @@ type CombatScene struct {
 	// respond, so reading the deck cannot accidentally re-plan the round.
 	showDeck bool
 
+	// tip is the panel explaining whatever the cursor is resting on — a card's arithmetic, a
+	// ring's rule, a status nobody has anywhere else to read. Aimed once a tick by `hover`, in
+	// combat_hover.go, and hidden by the tick it is not aimed.
+	tip models.Tooltip
+
 	// showLog toggles the fight log. The second dialog in the game, and it obeys the first
 	// one's rules — see combat_log.go.
 	showLog bool
@@ -387,6 +392,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 	s.showDeck = false
 	s.showLog = false
+	s.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
 	// statements, each added after something was found still on screen at the start of the next
@@ -652,6 +658,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	systems.UpdateButton(gs, s.discardButton)
 
 	s.advancePlayback(gs)
+
+	// **Last, after everything that could have moved a card.** The pass reads the same slot
+	// functions the drawing does, so asking before a flight or a re-sort had settled would point at
+	// where a card was rather than where it is.
+	s.hover(gs)
+	systems.UpdateTooltip(gs, &s.tip)
 
 	if trace.Enabled() && len(s.hand) != s.tracedHand {
 		s.tracedHand = len(s.hand)
@@ -1157,6 +1169,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		s.drawLogOverlay(gs, screen)
 		s.drawLogButton(gs, screen)
 	}
+
+	// **Over every overlay, because it explains what is on top.** The deck panel's cards are the
+	// last thing drawn before this and they are the thing being asked about.
+	systems.DrawTooltip(gs, screen, &s.tip)
 
 	// Last of all, so a capture holds the finished frame rather than a half-drawn one.
 	s.demoDraw(gs, screen)

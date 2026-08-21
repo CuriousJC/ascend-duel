@@ -287,7 +287,7 @@ func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
 			float64(from.X)+(float64(to.X)-float64(from.X))*t,
 			float64(from.Y)+(float64(to.Y)-float64(from.Y))*t,
 		)
-		drawFlyingCard(gs, screen, cardSpec(sl.card, s.fighter.CardCost(sl.card), true, sl.selected), cards.Hand, geo)
+		drawFlyingCard(gs, screen, cardSpec(sl.card, heldBy(s.fighter.Duelist, sl.card), true, sl.selected), cards.Hand, geo)
 	}
 }
 
@@ -446,7 +446,7 @@ func (s *CombatScene) drawOutbound(gs *state.GlobalState, screen *ebiten.Image, 
 	geo.Rotate(outboundSpin * t)
 	geo.Translate(x+cardWidth/2, y+cardHeight/2)
 
-	drawFlyingCard(gs, screen, cardSpec(f.card, s.fighter.CardCost(f.card), true, false), cards.Hand, geo)
+	drawFlyingCard(gs, screen, cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false), cards.Hand, geo)
 }
 
 // drawInbound deals a card from the stack into its slot, turning it face up on the way.
@@ -478,7 +478,7 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 	faceDown := raw < 0.5
 	flip := math.Abs(1 - 2*raw)
 
-	style, spec := cards.Hand, cardSpec(f.card, s.fighter.CardCost(f.card), true, false)
+	style, spec := cards.Hand, cardSpec(f.card, heldBy(s.fighter.Duelist, f.card), true, false)
 	if faceDown {
 		spec = s.backSpec()
 	}
@@ -764,6 +764,6 @@ func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Imag
 	split := s.playedSplit()
 	for i, r := range s.theatre.resolved {
 		at := r.at(gs, i, len(s.theatre.resolved), split, lit(s.theatre.firingSeats, i))
-		drawCard(gs, screen, at, cards.Hand, r.card, s.fighter.CardCost(r.card), true, false)
+		drawCard(gs, screen, at, cards.Hand, r.card, heldBy(s.fighter.Duelist, r.card), true, false)
 	}
 }

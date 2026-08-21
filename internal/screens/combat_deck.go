@@ -622,7 +622,13 @@ func deckRowLabel(row int) (string, color.RGBA) {
 // Sorted, never in pile order. The draw pile is shuffled, and drawing it in order would
 // hand the player their next few cards and make the shuffle pointless. This is a picture
 // of what you own, not of the sequence it will arrive in.
-func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, top float32) {
+// pileGrid is where every card in the panel goes, and where each row is named.
+//
+// **One layout, read by the drawing and by the cursor** *(2026-08-21)*. It was inline in
+// drawPileGrid until the tooltip needed to know which card is under the pointer, and a second set
+// of arithmetic saying where a card is drawn is exactly the bug the one-rectangle rule prevents
+// everywhere else on this screen.
+func (s *CombatScene) pileGrid(centerX, top float32) pileGridLayout {
 	entries := make([]pileEntry, 0, len(s.deck)+len(s.discard)+len(s.hand))
 	for _, c := range s.deck {
 		entries = append(entries, pileEntry{c, true})
@@ -643,12 +649,11 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 	// swapped places between looks would be unreadable.
 	rows := make([][]pileEntry, deckRowCount)
 	for _, e := range entries {
-		row := deckRowFor(e.card)
-		rows[row] = append(rows[row], e)
+		rows[deckRowFor(e.card)] = append(rows[deckRowFor(e.card)], e)
 	}
 
+	out := pileGridLayout{rowPitch: cards.Mini.Height + deckRowGap}
 	pitch := deckStackPitch
-	rowPitch := cards.Mini.Height + deckRowGap
 
 	// Widest row sets the left edge, so the rows share one origin and the columns line up
 	// down the panel rather than each row centring on its own count.
@@ -659,48 +664,87 @@ func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, 
 			widest = w
 		}
 	}
-	left := int(centerX) - (deckRowLabelWidth+widest)/2
-	cardsLeft := left + deckRowLabelWidth
+	cardsLeft := int(centerX) - (deckRowLabelWidth+widest)/2 + deckRowLabelWidth
 
 	shown := 0
 	for i, group := range rows {
-		rowTop := int(top) + i*rowPitch
+		rowTop := int(top) + i*out.rowPitch
+		out.labels = append(out.labels, pileRowLabel{
+			row: i,
+			at:  image.Pt(cardsLeft-12, rowTop+cards.Mini.Height/2),
+		})
 
-		// The row's name in the gutter, vertically centred on it. A mini card says its own
-		// concept but nothing about which row it is in, so this is what names the row.
-		name, ink := deckRowLabel(i)
-		labelOp := &text.DrawOptions{}
-		labelOp.GeoM.Translate(float64(cardsLeft-12), float64(rowTop+cards.Mini.Height/2))
-		labelOp.PrimaryAlign = text.AlignEnd
-		labelOp.SecondaryAlign = text.AlignCenter
-		labelOp.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, name,
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, labelOp)
-
-		// **Left to right, so each card is covered on its *right* edge by the next one.**
-		// This was backwards and the screenshot showed it: drawing right to left puts
-		// card 0 on top of card 1, and card 1's left edge is exactly where its glyph and
-		// dashes are — so every row rendered as one complete card followed by eleven
-		// blank slivers.
 		for j, e := range group {
 			if j >= deckMaxPerRow {
 				break
 			}
 			at := image.Pt(cardsLeft+j*pitch, rowTop)
-			// enabled carries "can be drawn", not "can be afforded". Never selected: this
-			// is an inventory, not a choice, and dimming by the round's remaining AP would
-			// say something about a budget that has nothing to do with a pile you cannot
-			// play from.
-			drawCard(gs, screen, at, cards.Mini, e.card, s.fighter.CardCost(e.card), e.available, false)
+			out.slots = append(out.slots, pileSlot{
+				pileEntry: e,
+				at:        image.Rect(at.X, at.Y, at.X+cards.Mini.Width, at.Y+cards.Mini.Height),
+			})
 		}
 		shown += min(len(group), deckMaxPerRow)
 	}
+	out.hidden = len(entries) - shown
+	return out
+}
 
-	if over := len(entries) - shown; over > 0 {
+// pileGridLayout is the panel's geometry: where each card sits, where each row is named, how tall a
+// row is, and how many cards did not fit.
+type pileGridLayout struct {
+	slots    []pileSlot
+	labels   []pileRowLabel
+	rowPitch int
+	hidden   int
+}
+
+// pileSlot is one card and the rectangle it occupies. **The same rectangle is drawn in and
+// hit-tested against**, which is the rule every row of cards in this game follows.
+type pileSlot struct {
+	pileEntry
+	at image.Rectangle
+}
+
+// pileRowLabel is one row's name in the gutter, at the point it is drawn from.
+type pileRowLabel struct {
+	row int
+	at  image.Point
+}
+
+func (s *CombatScene) drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, top float32) {
+	grid := s.pileGrid(centerX, top)
+
+	for _, l := range grid.labels {
+		// A mini card says its own concept but nothing about which row it is in, so this is what
+		// names the row.
+		name, ink := deckRowLabel(l.row)
+		labelOp := &text.DrawOptions{}
+		labelOp.GeoM.Translate(float64(l.at.X), float64(l.at.Y))
+		labelOp.PrimaryAlign = text.AlignEnd
+		labelOp.SecondaryAlign = text.AlignCenter
+		labelOp.ColorScale.ScaleWithColor(ink)
+		text.Draw(screen, name,
+			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, labelOp)
+	}
+
+	// **Left to right, so each card is covered on its *right* edge by the next one.** This was
+	// backwards and the screenshot showed it: drawing right to left puts card 0 on top of card 1,
+	// and card 1's left edge is exactly where its glyph and dashes are — so every row rendered as
+	// one complete card followed by eleven blank slivers.
+	for _, slot := range grid.slots {
+		// available carries "can be drawn", not "can be afforded". Never selected: this is an
+		// inventory, not a choice, and dimming by the round's remaining AP would say something
+		// about a budget that has nothing to do with a pile you cannot play from.
+		drawCard(gs, screen, slot.at.Min, cards.Mini, slot.card,
+			heldBy(s.fighter.Duelist, slot.card), slot.available, false)
+	}
+
+	if grid.hidden > 0 {
 		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(centerX), float64(int(top)+deckRowCount*rowPitch))
+		op.GeoM.Translate(float64(centerX), float64(int(top)+deckRowCount*grid.rowPitch))
 		op.PrimaryAlign = text.AlignCenter
-		text.Draw(screen, fmt.Sprintf("+%d more not shown", over),
+		text.Draw(screen, fmt.Sprintf("+%d more not shown", grid.hidden),
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, op)
 	}
 }

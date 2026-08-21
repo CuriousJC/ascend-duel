@@ -171,10 +171,10 @@ window, by design. Keep it that way: rules go in `combat`, not in screens.
 **"Needs no window" is not the same as "needs no display server", and CI found the
 difference the hard way.** On Linux, `ebiten/internal/ui` calls `glfw.Init()` from a package
 `init()`, so *linking* Ebitengine into a test binary is enough to panic on a missing
-`DISPLAY` — before a single test function runs. Three of the four tested packages link it:
-`internal/screens` directly, and `internal/cards` and `internal/music` because their tests
-import `assets`, which hands back `*ebiten.Image`. Only `internal/combat` is genuinely
-clean. Both workflows therefore run the Linux test step under `xvfb-run -a`, which supplies
+`DISPLAY` — before a single test function runs. Four of the tested packages link it:
+`internal/screens` and `internal/models` directly, and `internal/cards` and `internal/music`
+because their tests import `assets`, which hands back `*ebiten.Image`. `internal/combat`,
+`internal/session` and the rest are genuinely clean. Both workflows therefore run the Linux test step under `xvfb-run -a`, which supplies
 a throwaway X server nothing ever draws to. Windows is unaffected — Ebitengine is pure Go
 there. **If a package's tests start importing `assets`, they have joined that group**; the
 package's own no-Ebitengine rule still holds and is still worth holding, but it no longer
@@ -343,8 +343,12 @@ included. The entire input vocabulary is:
 
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
-- **Long press** — reveal further information about the thing under the cursor. Not
-  built yet.
+- **Hover** — rest the cursor on something and a tooltip explains it *(2026-08-21)*. A card's
+  damage arithmetic term by term, a ring's rule, a status badge's meaning. `models.Tooltip` and
+  `systems.DrawTooltip` are the widget; the wording is `internal/screens/tips.go`.
+- **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
+  rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
+  §Hover and long press, where the record of hover being *rejected* was reversed.
 - **One typed-text field in the whole game** — entering a seed to replay a run. Nothing
   else anywhere accepts keyboard input.
 
@@ -453,9 +457,17 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **There is no damage badge at all.** The 64px generated sword went first — it said what the
   corner mark already says — and then the bare figure, because the text states what the card
   deals and a number beside it was the same fact multiplied out by the wielder's Strength.
-  `cards.Spec` has no `Damage` field and `drawCard` takes no Strength, so **a card's picture is
-  a function of the card alone**. `systems.GlyphDamage` still exists and is still on the glyph
-  sheet; nothing draws it.
+  `cards.Spec` has no `Damage` field and `drawCard` takes no Strength. `systems.GlyphDamage` still
+  exists and is still on the glyph sheet; nothing draws it.
+- **A card's picture is a function of the card *and who is holding it*** *(2026-08-21)*. It was a
+  function of the card alone for a week, and that was the bug: a slash in the hands of someone
+  wearing Keen read "2x DMG" and dealt four times their DMG, because the card's multiplier and the
+  ring's scaling are applied in different places. `screens.held` is the pairing — cost, DMG and
+  worn rings, travelling together — and **the figure a ring has moved is written in the ring
+  pink**, via `Spec.TextInk` and `Spec.TextHighlight`, which colours that run of the line and not
+  the sentence around it: a pink verb would say the ring changed the card rather than the number. The
+  *damage* is still not printed: the face carries the multiplier and the tooltip carries the
+  arithmetic.
 - **The wording is the constraint now, not the space.** The text column is ~128px — a dozen or
   so characters a line — so effect text has to be short words, and `DMG` rather than `damage`.
   `TestNoEffectTextWordIsWiderThanItsColumn` fails on a word that will not fit and

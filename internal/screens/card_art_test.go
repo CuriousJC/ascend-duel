@@ -107,6 +107,14 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 	}
 }
 
+// plainText is a card's face text in nobody's hands: no rings, no strength. **The catalogue tests
+// below are about the wording, not about a pairing**, so they take the figure the concept declares
+// and the ring cases get their own test.
+func plainText(a combat.ConceptID) string {
+	text, _ := cardEffect(combat.Plain(a), held{})
+	return text
+}
+
 func TestEveryConceptHasEffectText(t *testing.T) {
 	// A card with no text draws a name, a cost, a corner mark and nothing that says what it does.
 	//
@@ -114,7 +122,7 @@ func TestEveryConceptHasEffectText(t *testing.T) {
 	// its own cards and the table lays an enemy's queue out as cards, so a verb the generator does
 	// not cover is four hundred blank faces rather than one.
 	for _, a := range combat.AllConcepts() {
-		if cardEffect(combat.Plain(a)) == "" {
+		if plainText(a) == "" {
 			t.Errorf("%v has no effect text — its card would say nothing about what it does",
 				combat.ConceptOf(a).Key)
 		}
@@ -142,13 +150,13 @@ func TestEveryCardTextFitsItsBand(t *testing.T) {
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
 	for _, a := range combat.AllConcepts() {
-		lines, err := cards.WrapText(f, st.TextSize, cardEffect(combat.Plain(a)), width)
+		lines, err := cards.WrapText(f, st.TextSize, plainText(a), width)
 		if err != nil {
 			t.Fatalf("%v: %v", a, err)
 		}
 		if len(lines) > st.TextLines() {
 			t.Errorf("%v's text wraps to %d lines and the band holds %d: %q",
-				combat.ConceptOf(a).Key, len(lines), st.TextLines(), cardEffect(combat.Plain(a)))
+				combat.ConceptOf(a).Key, len(lines), st.TextLines(), plainText(a))
 		}
 	}
 }
@@ -171,7 +179,7 @@ func TestNoEffectTextWordIsWiderThanItsColumn(t *testing.T) {
 	width := st.Width - st.TextColumnLeft - st.TextInset
 
 	for _, a := range combat.AllConcepts() {
-		for _, word := range strings.Fields(cardEffect(combat.Plain(a))) {
+		for _, word := range strings.Fields(plainText(a)) {
 			w, err := cards.TextWidth(f, st.TextSize, word)
 			if err != nil {
 				t.Fatalf("%v: %v", a, err)

@@ -190,6 +190,10 @@ type PostBattleScene struct {
 	// pendingWhat is what the trace line will say once the alteration lands.
 	pendingWhat string
 
+	// tip explains whichever card the cursor is on: what a worm will do and how long it lasts, or
+	// what one of the offered deck cards is worth.
+	tip models.Tooltip
+
 	// picksLeft is how many prizes this visit still owes the player, from `session.Picks` — the
 	// `prizes-dealt` moment, which the Hungry ring is what moves off 1.
 	//
@@ -218,6 +222,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.prizes = dealPrizes(gs)
 	s.offer = dealOffer(gs)
 	s.picksLeft = gs.Run.Picks()
+	s.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	s.place(gs)
 
@@ -369,7 +374,60 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		systems.UpdateButton(gs, s.backButton)
 	}
 
+	s.hover(gs)
+	systems.UpdateTooltip(gs, &s.tip)
 	return nil
+}
+
+// hover points the tooltip at whichever card the cursor is on, in whichever row is live.
+//
+// **Only the row that can be clicked is explained**, which is the same rule the click itself
+// follows: a tooltip on a row that is not the current stage's would be describing a choice the
+// player cannot make yet.
+func (s *PostBattleScene) hover(gs *state.GlobalState) {
+	at := image.Pt(gs.MouseX, gs.MouseY)
+
+	switch s.stage {
+	case pickWorm:
+		for i, p := range s.prizes {
+			seat := s.wormSlot(gs, i)
+			if p.taken || !at.In(seat) {
+				continue
+			}
+			if p.vitae {
+				s.tip.Point(seat, "Vitae", []string{"the currency rings are bought with",
+					"it also earns interest between fights"})
+				return
+			}
+			title, lines := wormTip(p.worm)
+			s.tip.Point(seat, title, lines)
+			return
+		}
+	case pickCard:
+		for i, deckIndex := range s.offer {
+			seat := s.offerSlot(gs, i)
+			card, ok := gs.Run.Card(deckIndex)
+			if !ok || !at.In(seat) {
+				continue
+			}
+			title, lines := cardTip(card, heldByRun(gs, card))
+			s.tip.Point(seat, title, lines)
+			return
+		}
+	case morph:
+		// **Both halves of the preview**, because the question a morph asks is what changed — and
+		// the answer is two cards' worth of arithmetic side by side.
+		beforeAt, afterAt := morphSlots(gs)
+		if at.In(beforeAt) {
+			title, lines := cardTip(s.before, heldByRun(gs, s.before))
+			s.tip.Point(beforeAt, title, lines)
+			return
+		}
+		if !s.removes && at.In(afterAt) {
+			title, lines := cardTip(s.after, heldByRun(gs, s.after))
+			s.tip.Point(afterAt, title, lines)
+		}
+	}
 }
 
 // click is the press on whichever row is live. **Only one row is clickable at a time**, which is
@@ -413,6 +471,7 @@ func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 		return
 	}
 	s.chosen = i
+	s.tip.Forget()
 
 	if !s.prizes[i].vitae {
 		s.stage = pickCard
@@ -606,6 +665,8 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	line(offerTitleTop, heading, s.title())
 	line(offerHintTop, small, s.hint(gs))
 
+	defer systems.DrawTooltip(gs, screen, &s.tip)
+
 	switch s.stage {
 	case morph:
 		s.drawMorph(gs, screen, small)
@@ -631,7 +692,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			// of a click that silently does nothing.
 			worm, _ := s.chosenWorm()
 			usable := gs.Run.CanApply(worm, deckIndex)
-			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, deckCardCost(gs, card), usable, false)
+			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card), usable, false)
 		}
 		systems.DrawButton(gs, screen, s.backButton)
 	}
@@ -660,7 +721,7 @@ func (s *PostBattleScene) drawMorph(gs *state.GlobalState, screen *ebiten.Image,
 
 	beforeAt, afterAt := morphSlots(gs)
 
-	drawCard(gs, screen, beforeAt.Min, cards.Hand, s.before, deckCardCost(gs, s.before), true, false)
+	drawCard(gs, screen, beforeAt.Min, cards.Hand, s.before, heldByRun(gs, s.before), true, false)
 
 	arrow := &text.DrawOptions{}
 	arrow.GeoM.Translate(float64(gs.PctX(50)), float64(beforeAt.Min.Y+cardHeight/2))
@@ -673,7 +734,7 @@ func (s *PostBattleScene) drawMorph(gs *state.GlobalState, screen *ebiten.Image,
 		drawEmptySeat(screen, afterAt)
 		return
 	}
-	drawCard(gs, screen, afterAt.Min, cards.Hand, s.after, deckCardCost(gs, s.after), true, true)
+	drawCard(gs, screen, afterAt.Min, cards.Hand, s.after, heldByRun(gs, s.after), true, true)
 }
 
 // gone is the mark between the two cards. A hyphen and a chevron rather than an em dash: the
@@ -710,7 +771,7 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 		drawSpecCard(gs, screen, at, vitaeSpec(gs.Run.PrizeVitae(vitaeReward), true))
 		return
 	}
-	drawCard(gs, screen, at, cards.Hand, card, deckCardCost(gs, card), true, false)
+	drawCard(gs, screen, at, cards.Hand, card, heldByRun(gs, card), true, false)
 }
 
 func (s *PostBattleScene) title() string {

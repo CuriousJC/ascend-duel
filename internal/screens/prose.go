@@ -308,22 +308,53 @@ func multiplierText(amount int) string {
 // percentage it actually cuts and an altered Prepare says what it actually banks. The wording was
 // already a template over the value; what changed is which value it reads. A card whose face
 // disagreed with its behaviour would be the worst thing an alteration mechanic could produce.
-func cardEffect(card combat.Card) string {
+//
+// **And it reads the holder's rings** *(2026-08-21)*. A slash card in the hands of someone wearing
+// Keen said "Slashes for 2x DMG" and dealt four times its owner's DMG, because the multiplier is the
+// card's and the doubling is the ring's, applied later in `Duelist.CardDamage`. The face said a true
+// thing about the card and a false thing about the attack, which is the same failure the worm
+// scaling above was fixed for.
+//
+// **It hands back the run of text a ring changed, not a flag** *(2026-08-21)*. The caller colours
+// that run and nothing else: painting the verb and the unit with it says a ring changed the card
+// rather than the number. An empty mark means nothing moved and the line is drawn in one colour.
+func cardEffect(card combat.Card, h held) (text, mark string) {
 	c := card.Spec()
 	amount := card.Amount()
+
 	switch c.Verb {
 	case combat.VerbDefend:
-		return "Cuts damage by " + strconv.Itoa(amount) + "%"
+		return "Cuts damage by " + strconv.Itoa(amount) + "%", ""
 	case combat.VerbBank:
-		return "Bank " + strconv.Itoa(amount) + " AP for next round"
+		return "Bank " + strconv.Itoa(amount) + " AP for next round", ""
 	case combat.VerbDraw:
-		return "Draw " + strconv.Itoa(amount) + " cards next round"
-	default:
-		if c.Target == combat.TargetSelf {
-			return "Costs you " + multiplierText(amount) + " DMG"
-		}
-		return attackVerb(c.Form) + " for " + multiplierText(amount) + " DMG"
+		return "Draw " + strconv.Itoa(amount) + " cards next round", ""
 	}
+
+	// Only damage is scaled by a ring today — `scale-damage` is the one verb at `card-damage` — so
+	// only the attacks can say something a ring has changed.
+	scale, boosted := h.damageScale(card)
+	amount = amount * scale / 100
+
+	// The mark is the figure itself: the only part of the line a ring moved.
+	figure := multiplierText(amount)
+	if !boosted {
+		figure = ""
+	}
+
+	if c.Target == combat.TargetSelf {
+		return "Costs you " + figureOr(amount, figure) + " DMG", figure
+	}
+	return attackVerb(c.Form) + " for " + figureOr(amount, figure) + " DMG", figure
+}
+
+// figureOr is the multiplier as it is printed, whether or not a ring moved it. One function so the
+// string a card shows and the run a card colours cannot drift apart by a character.
+func figureOr(amount int, mark string) string {
+	if mark != "" {
+		return mark
+	}
+	return multiplierText(amount)
 }
 
 // actionPhrase is what follows the verb in a Resolution line, and every phrase carries an article

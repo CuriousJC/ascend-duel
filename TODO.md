@@ -439,22 +439,33 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ### Cards and piles — presentation
 
-- [ ] **Long press pulls a card forward.** Every card now carries its effect text — see
-      `cardEffect` in [prose.go](internal/screens/prose.go) — filling the card
-      beside the cost column. The hand overlaps, so most of a card can be covered by the one in
-      front of it, and long press is the gesture that lifts one clear to be read.
-      - **This is long press, not hover.** `MECHANICS.md` §Long press assigns "explains" to long
-        press and records that hover was considered and rejected; CLAUDE.md's input vocabulary
-        has no hover in it. The split to preserve if hover ever returns is **hover un-occludes,
-        long press explains** — printing the text on the face has merged the two, and this task
-        is what is left of both.
-      - The gesture has a designed shape: a press is a three-way decision — past
-        `dragThreshold` is a drag, held past a tick count without moving is a long press,
-        released before either is a click that toggles selection. **The distance and time
-        thresholds must not fight each other.**
-      - The text is 18pt in a ~100px column, centred in the space the cost column leaves, and
-        `TestEveryCardTextFitsItsBand` fails rather than letting a line off the bottom.
-        Anything else the card wants to say needs a bigger card.
+- [ ] **Long press pulls a card forward.** The hand overlaps, so most of a card can be covered by
+      the one in front of it, and long press is the gesture that lifts one clear to be read.
+      - **Hover took the other half of this on 2026-08-21.** MECHANICS.md §Hover and long press
+        now reads *hover explains, long press is the touch equivalent* — the reversal of what was
+        recorded when hover was first rejected. What is left here is **un-occluding**, which is a
+        separate want from explaining: a tooltip says what a card does and still does not let you
+        see the card.
+      - **Long press itself is unbuilt**, and it is what a touchscreen or a controller would use to
+        ask the question hover asks. It needs the three-way press decision — past
+        `dragThreshold` is a drag, held past a tick count without moving is a long press, released
+        before either is a click that toggles selection. **The distance and time thresholds must
+        not fight each other.**
+      - The card's own text is 18pt in a ~100px column and `TestEveryCardTextFitsItsBand` fails
+        rather than letting a line off the bottom. Anything else the card wants to say goes in the
+        tooltip now rather than needing a bigger card.
+
+- [ ] **The tooltip covers four surfaces and not every card on screen** *(2026-08-21)*. Hand cards,
+      the deck overlay, worn rings, the shop's two rows, both fighter cards, the reward screen's
+      prizes and its offered cards all explain themselves. What does not:
+      - **The table's two rows during playback** — the cards actually being resolved. They are the
+        one place a player is watching rather than deciding, which is the argument for leaving them
+        out, but it is also where "why did that hit for 96" is asked.
+      - **Individual status badges.** Hovering the enemy card lists every status on it; hovering one
+        badge does nothing, because `internal/cards` draws the row and no badge rectangle reaches
+        the screen. A per-badge tooltip needs a geometry accessor from that package.
+      - **The AP bar, the discard count, the tower place** and the other figures written straight
+        onto the table. Each is a number with no legend anywhere.
 
 ## Later
 

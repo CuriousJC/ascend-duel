@@ -336,6 +336,31 @@ type Spec struct {
 	// names and costs.
 	Text string
 
+	// TextInk overrides the colour Text is set in. **Zero alpha means the default**, which is the
+	// convention every other optional colour in this codebase follows — so a caller that never
+	// thinks about it gets LabelInk and nothing changes.
+	//
+	// **It exists so a card can say that something else changed what it does** *(2026-08-21)*: a
+	// slash doubled by a worn Keen Ring reads "Slashes for 4x DMG" in the ring pink, because the
+	// figure is no longer the one the concept declares. The state colouring still applies on top,
+	// so a disabled boosted card fades with everything else rather than staying loud.
+	//
+	// **This package still does not know what a ring is.** It is handed a colour and a string; the
+	// decision that the two go together is `internal/screens`, which is where the wording lives.
+	TextInk color.RGBA
+
+	// TextHighlight is the one run of Text that TextInk applies to. **Empty means the whole
+	// string**, so a caller wanting a differently coloured line still gets one.
+	//
+	// It exists because colouring the whole sentence was too loud *(owner's call, 2026-08-21)*: the
+	// changed thing on "Slashes for 4x DMG" is the figure, and painting the verb and the unit with
+	// it says the ring changed the card rather than the number.
+	//
+	// **The first occurrence wins, and it is drawn as a run rather than per glyph.** A card's figure
+	// is one word — 4x — so the wrapper cannot split it across two lines, which is the case a
+	// per-glyph scheme would be needed for. A highlight not found in Text simply does not appear.
+	TextHighlight string
+
 	// Art is optional artwork drawn on the face, scaled to fit and centred. Rings use
 	// it; action cards do not, and their art is the generated glyphs instead.
 	//

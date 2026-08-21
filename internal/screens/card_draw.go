@@ -41,10 +41,14 @@ func blitCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec 
 }
 
 // drawCard draws a card out of a hand or a pile: the run's own card, priced and stateful.
+//
+// **The pairing is passed rather than derived** — see `held`. What a card costs and what its
+// damage figure reads as are both facts about who is holding it, and an enemy's queued card must not
+// be drawn through the player's rings.
 func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
-	c actionCard, cost int, enabled, selected bool) {
+	c actionCard, h held, enabled, selected bool) {
 
-	blitCard(gs, screen, at, cardSpec(c, cost, enabled, selected), st)
+	blitCard(gs, screen, at, cardSpec(c, h, enabled, selected), st)
 }
 
 // drawSpecCard draws a card that is not out of the deck — a prize, a ring, a worm — at hand

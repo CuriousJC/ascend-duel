@@ -250,16 +250,39 @@ this document calls the absence of an element, not a colour of its own. With `ba
 attacks live on multiples of five; without it nothing is plain. The ladder decides it instead: nine
 attack concepts is what three forms by three tiers produces.
 
-### Long press
+### Hover and long press
 
-Long press on a card reveals the whole card, un-occluded by the overlap. This is what the
-recorded input vocabulary already assigns to long press.
+**Hover explains, and long press is the same reveal on a touchscreen** *(owner's call, 2026-08-21;
+built the same day)*. This reverses the split recorded when hover was first considered — *hover
+un-occludes, long press explains* — and the reversal is the point rather than an oversight: the
+thing a player needs from a card is not a bigger picture of it but the arithmetic behind its figure.
 
-Hover was considered and rejected in favour of it. The distinction to preserve if hover ever
-returns: **hover un-occludes, long press explains.**
+**Resting the cursor on something explains it.** A card gives the whole damage chain term by term —
+your DMG, the card's own multiplier, every ring that matches, the result, and a line saying the hand
+multiplier comes after; a ring gives its authored line from `rings.json` and where it fires in the
+worn order; a fighter card gives its figures and every status standing on it, which is the only
+place a badge can be read.
 
-A press therefore becomes a three-way decision — move past `dragThreshold` is a drag, held
-past a tick count without moving is a long press, released before either is a click that
+- **It arrives after a dwell of a beat and a half**, about six tenths of a second, so a cursor
+  crossing the hand on its way to DUEL! does not strobe eight panels. Half a beat was tried first
+  and read as a flicker following the mouse: a panel that appears before you have decided to want
+  it is not answering a question. It is a proportion of the game's one speed like everything else
+  that moves, so a speed setting will carry it.
+- **The hand explains itself only while the queue can be edited.** A played card is still in the
+  hand model during playback while being drawn on the table, so its old seat would otherwise answer
+  for a card that had visibly flown away.
+- **The panel is placed beside the thing, not under the cursor**, so it never covers what it is
+  about and does not slide around inside one card.
+- **Nothing in it recomputes a rule.** Every figure comes off the same walk the engine compounds,
+  `combat.RingContributionsAt`. A tooltip doing its own arithmetic would be a second implementation
+  of the engine printed in a box.
+
+**Long press is what a touchscreen or a controller would use for the same reveal**, and it is not
+built. Un-occluding an overlapped card is still unbuilt too, and is now a separate want from
+explaining one.
+
+A press remains a three-way decision the day long press lands — move past `dragThreshold` is a
+drag, held past a tick count without moving is a long press, released before either is a click that
 toggles selection. The distance and time thresholds must not fight each other.
 
 ---

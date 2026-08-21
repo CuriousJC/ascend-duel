@@ -91,6 +91,15 @@ var thunderring_png []byte
 //go:embed ring/earth-ring.png
 var earthring_png []byte
 
+// The face a ring with no artwork of its own falls back to. Most of `data/rings.json` is
+// rings written since the four elemental ones were drawn — a form multiplier, the two vitae
+// rings, the growing stat rings — and none of them has a picture yet. Without this they draw
+// as a pink border around an empty face, which reads as a card that failed to load rather
+// than as one waiting for art. Same choice as `default-effect.png`, one layer up.
+//
+//go:embed ring/default-ring.png
+var defaultring_png []byte
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
@@ -140,6 +149,7 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["frozenring_png"] = loadImage(frozenring_png)
 	assets["thunderring_png"] = loadImage(thunderring_png)
 	assets["earthring_png"] = loadImage(earthring_png)
+	assets["defaultring_png"] = loadImage(defaultring_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
@@ -190,6 +200,7 @@ func LoadImageData() map[string][]byte {
 	images["frozenring_png"] = frozenring_png
 	images["thunderring_png"] = thunderring_png
 	images["earthring_png"] = earthring_png
+	images["defaultring_png"] = defaultring_png
 
 	// The status badges, for the same reason as the ring art: they are drawn *into* the enemy
 	// card by internal/cards, which has no graphics context.

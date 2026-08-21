@@ -112,6 +112,7 @@ go run ./tools/balance      # what all 96 enemies do to the fighter, one line ea
 go run ./tools/balance -v OgreWarlord   # one enemy, round by round
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
+go run ./tools/ringsheet    # every ring in rings.json to PNGs + a page: art, price, text, rules
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
@@ -591,8 +592,21 @@ and are easy to re-break:
   read this line before authoring one, not a reason for the renderer to clamp.
 
 Rings reuse the whole format with a pink border and artwork instead of glyphs, and no cost
-or category because a ring is neither played from a hand nor resolved in a round. Nothing
-in the game builds one yet — `tools/cardsheet` is the only place they exist.
+or category because a ring is neither played from a hand nor resolved in a round. **A ring card
+names itself in one word to a line, and drops the word "Ring"** *(2026-08-21)* — the border, the
+picture and the row it sits in all say "ring" already, so the noun costs the name its width and
+says nothing. `data.RingData.FaceName` is the trim, `Style.NameWordPerLine` the break, and the
+full name still titles every tooltip. Two lines is what the card has room for above its art;
+`TestEveryRingNameFitsItsCard` fails on a ring named a word too long. **Most of
+them have no artwork and draw `default-ring.png`** — `data.RingData.ArtKey` is the fallback and
+`TestEveryRingDrawsSomething` fails on a key naming no file, so a blank face means art nobody
+has painted rather than a name nobody spelled right.
+
+**`go run ./tools/ringsheet` is how the catalogue gets looked at.** A run wears five and the
+shelf offers three, so seeing all seventeen in a launched game means playing to a shop over and
+over. The sheet draws each with its price, its authored `Text` and its rules side by side —
+which is also the only place the sentence a player reads can be checked against the rules that
+actually fire.
 
 ### Colour: name one colour and scale it — but the rule is narrower than it reads
 

@@ -345,9 +345,9 @@ func duelistSpec(c *entities.Combatant, name string, vitae, life, ap int) cards.
 // No cost, no category, no damage: a ring is not played from a hand and has no phase.
 func ringSpec(gs *state.GlobalState, r data.RingData, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    r.Name,
+		Name:    r.FaceName(),
 		Element: cards.Ring,
-		Art:     artwork(gs, r.Art),
+		Art:     artwork(gs, r.ArtKey()),
 		Enabled: enabled,
 	}
 }

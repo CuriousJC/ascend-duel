@@ -139,14 +139,19 @@ func ringSpecs() ([]cards.Spec, error) {
 	if err != nil {
 		return nil, err
 	}
+	// **"Fire", not "Fire Ring"** *(2026-08-21)*. A ring card drops the noun — the border, the
+	// picture and the row it sits in all say "ring" already — and breaks what is left a word to
+	// a line, so a name written out in full here would draw as two lines saying nothing on the
+	// second. `data.RingData.FaceName` is what the game and tools/ringsheet pass; this tool does
+	// not read the file, so it spells the result rather than deriving it.
 	return []cards.Spec{
-		{Name: "Fire Ring", Element: cards.Ring, Art: art, Enabled: true},
+		{Name: "Fire", Element: cards.Ring, Art: art, Enabled: true},
 
 		// The same ring mid-drag. **Not "not equipped"** — a ring you do not have is not
 		// shown at all, so that state does not exist to draw. Being carried by the cursor
 		// does exist, and it is the one thing a ring in a card format has to look like
 		// besides sitting still.
-		{Name: "Fire Ring", Element: cards.Ring, Art: art, Enabled: true, Dragging: true},
+		{Name: "Fire", Element: cards.Ring, Art: art, Enabled: true, Dragging: true},
 	}, nil
 }
 

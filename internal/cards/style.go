@@ -30,6 +30,22 @@ type Style struct {
 	// left-aligned name to line up with, and it reads as having slipped off centre.
 	NameCentered bool
 
+	// NameWordPerLine breaks the name at every space, one word to a line, and
+	// NameLinePitch is how far apart those lines sit.
+	//
+	// **A break at every space rather than a wrap at the card's width** *(owner's call,
+	// 2026-08-21)*. Rings use it. Their names are one or two words and the two-word ones are
+	// what a width-wrap handles worst: "Frozen Lightning" either fits by a hair and reads as a
+	// sentence squeezed into a card, or misses by a hair and breaks anyway — and which of those
+	// happens depends on the font, so the same catalogue lays out differently for a change
+	// nothing about rings caused. Breaking always is a layout that cannot drift.
+	//
+	// **The style has to leave room for the lines it allows.** Nothing clamps a name to two
+	// words, so a three-word ring runs into whatever is under it; `TestARingNameClearsItsArt`
+	// checks the longest name the file actually holds rather than a hypothetical one.
+	NameWordPerLine bool
+	NameLinePitch   int
+
 	// The form mark, above the cost stack: the box it is centred in, and the point size the
 	// placeholder letter is set at.
 	//
@@ -133,6 +149,27 @@ type Style struct {
 	EffectSize int
 	EffectTop  int
 	EffectGap  int
+}
+
+// NameLinesAbove is how many lines of name this style can draw before its ink would reach
+// `floor` — the top of whatever sits under the name — given a line's height in the font the
+// caller measured.
+//
+// **The line height is passed in rather than derived**, because the only honest source of one
+// is a parsed font at the style's point size, and this package's geometry is deliberately
+// readable without a font in hand. The caller has the Faces; this has the offsets.
+//
+// A style that does not break its name gets 1, which is the truth: it draws one line whatever
+// is under it.
+func (st Style) NameLinesAbove(floor, lineHeight int) int {
+	if !st.NameWordPerLine || st.NameLinePitch <= 0 {
+		return 1
+	}
+	n := 0
+	for st.NameTop+n*st.NameLinePitch+lineHeight <= floor {
+		n++
+	}
+	return n
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
@@ -473,9 +510,21 @@ var RingStyle = Style{
 	NameSize:     20,
 	NameCentered: true,
 
+	// **One word to a line** *(2026-08-21)*, which is what buys the art box below its room:
+	// a two-word ring is two lines of 20pt, and 22 is that size plus the gap that keeps two
+	// capitals from touching.
+	NameWordPerLine: true,
+	NameLinePitch:   22,
+
 	// Scaled with the card, like the enemy's: the artwork is fitted to this box rather than
 	// drawn at its own size, so there is nothing here that a smaller card breaks.
-	ArtTop:   46,
+	//
+	// **The box moved down and shrank when names went to two lines**, from 46..206 to 62..192,
+	// and the art did not move: it is square, so its height was already set by the 130-pixel
+	// width of the box rather than by ArtMaxH, and it was already being centred at about 61.
+	// What changed is that the box now states that, which is what lets a test hold a two-line
+	// name off it.
+	ArtTop:   62,
 	ArtInset: 16,
-	ArtMaxH:  160,
+	ArtMaxH:  130,
 }

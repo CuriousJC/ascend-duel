@@ -4,8 +4,9 @@ package screens
 //
 // **It draws what the run is wearing** *(2026-08-17)*. The worn set lives on `session.Session` —
 // which is what makes it survive a fight — and every rule a ring has is in `data/rings.json` in the
-// `When` / `If` / `Then` grammar. This file is the row; it no longer decides anything. What is still
-// missing is the loop around it: nothing buys a ring and nothing takes one off.
+// `When` / `If` / `Then` grammar. This file is the row; it no longer decides anything. **The loop
+// around it landed on 2026-08-21** — see shop.go, which draws the same ring cards on a shelf and is
+// the only thing that puts one on or takes one off.
 //
 // **It claims the band the full-height panes vacated.** Action Flow is built and not drawn,
 // and Resolution left for the three-line feed above the hand on 2026-08-11, so 12–46% was
@@ -224,15 +225,7 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 
 	worn := wornRings(gs)
 	for i, ring := range worn {
-		img := cardImage(gs, ringSpec(gs, ring), cards.RingStyle)
-		if img == nil {
-			continue // a missing font: drawCard does nothing for the same reason
-		}
-		at := ringSlotAt(r, i, len(worn))
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(at.X), float64(at.Y))
-		screen.DrawImage(img, op)
+		drawRingCard(gs, screen, ringSlotAt(r, i, len(worn)), ring, true)
 	}
 
 	// The rule: the row's whole width, whatever is standing on it. **It is drawn even with no

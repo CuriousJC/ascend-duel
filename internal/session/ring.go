@@ -25,12 +25,22 @@ import (
 
 // StartingRings is what a run opens wearing, in worn order.
 //
-// **Temporary, and it is a live test of the gate as much as of the statuses** — earth is left off on
-// purpose, so an earth attack in a launched game is a plain attack with a brown border. A run will
-// start bare and buy its rings once a shop exists; this constant is the seat that replaces.
+// **Empty since 2026-08-21** *(owner's call)*, the day the shop landed. It held fire, ice and
+// lightning for four days, which was always written down as temporary: it existed because a ring
+// could not otherwise be got at all, and the shop is the thing it was waiting for. A run now opens
+// bare and buys its first ring out of what the first fights pay.
+//
+// **What that means for a launch, said plainly:** every element is inert until the first ring is
+// bought — an ice Strike is a plain Strike with a blue border — so the opening fights carry no
+// statuses at all. That is the intended shape of a run rather than an oversight, and it is the
+// thing to look at first if the early tower reads as flat.
+//
+// **It stays as a list rather than being deleted**, because it is the ring counterpart of
+// `deckSeedName`: filling it in is how a ring gets onto a hand without playing to a shop, which is
+// the only way to look at one in a launched game. Empty is the shipped value.
 //
 // It lived in `internal/screens` until 2026-08-17, where it could not survive a fight.
-var StartingRings = []string{"fire-ring", "frozen-ring", "thunder-ring"}
+var StartingRings []string
 
 // registeredRings is every ring in the catalogue, registered with the rules at package init and
 // indexed by record key.
@@ -38,12 +48,17 @@ var StartingRings = []string{"fire-ring", "frozen-ring", "thunder-ring"}
 // **Walked in sorted key order**, per the determinism rules: `LoadRings` hands back a map, and
 // registering in map order would deal a different set of RingIDs every launch. Nothing may serialize
 // one, but a tool printing them would still tell a different story each run.
-var registeredRings = registerRings()
+var registeredRings, ringPrices = registerRings()
 
-func registerRings() map[string]combat.RingID {
+// registerRings hands back both maps from one walk of the file, rather than reading it twice.
+// **The price is registered here and not with the rules**: `internal/combat` resolves a round and
+// has no purse, so what a ring costs is the run's business in exactly the way its art is a
+// screen's — the same line `RegisterRing` already draws.
+func registerRings() (map[string]combat.RingID, map[string]int) {
 	records := data.LoadRings()
 
 	out := make(map[string]combat.RingID, len(records))
+	prices := make(map[string]int, len(records))
 	for _, key := range data.RingOrder(records) {
 		rules, err := ringRules(records[key])
 		if err != nil {
@@ -53,9 +68,17 @@ func registerRings() map[string]combat.RingID {
 		if err != nil {
 			panic("rings.json: " + err.Error())
 		}
+		// **A ring with no price is refused rather than given away.** Every other word in this
+		// file is resolved rather than trusted, and a missing number is the same failure as a
+		// misspelled one: a ring that reaches the shelf and costs nothing.
+		if records[key].Price <= 0 {
+			panic(fmt.Sprintf("rings.json: %s is priced at %d, which is not a price",
+				key, records[key].Price))
+		}
 		out[key] = id
+		prices[key] = records[key].Price
 	}
-	return out
+	return out, prices
 }
 
 // Rings is every registered record key, sorted. For a tool or a screen that wants the catalogue
@@ -171,16 +194,8 @@ func ringEffect(key string, in data.RingEffectData) (combat.RingEffect, error) {
 // **Worn order is the order rings fire in**, so appending is what makes the row on screen the rule:
 // a ring bought later applies later, and the player can see which.
 func (s *Session) Wear(key string) bool {
-	if _, ok := registeredRings[key]; !ok {
+	if !s.canWear(key) {
 		return false
-	}
-	if len(s.worn) >= combat.MaxWornRings {
-		return false
-	}
-	for _, k := range s.worn {
-		if k == key {
-			return false
-		}
 	}
 	s.worn = append(s.worn, key)
 	return true

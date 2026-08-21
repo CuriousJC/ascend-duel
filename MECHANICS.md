@@ -355,10 +355,10 @@ the engine and a second one needs its argument made from scratch. None of it is 
 lands as plain self-damage, and a self-status with no source is not a status. Eight badges instead
 of four is the art bill when it is.
 
-**Four rings exist and the player starts in three**, `startingRings` in `internal/screens`. Earth
-is deliberately left off so every launch is a live test of the gate rather than of the statuses.
-That list is temporary and is the counterpart of `deckSeedName`: a run will start with no rings
-and buy them, which needs `Session`.
+**A run opens wearing no rings at all** *(owner's call, 2026-08-21)*, so **every element is inert
+until the first one is bought**: an ice Strike is a plain Strike with a blue border. That is what
+makes the shop the first thing a run saves for. `session.StartingRings` is the seat for putting one
+on without playing to a shop — the ring counterpart of `deckSeedName` — and it ships empty.
 
 **A status shows as a badge along the bottom of the enemy card** *(2026-08-16)*, from
 `assets/effect/`. It is the only place a standing status is stated, and it has to be: two of the
@@ -1046,7 +1046,7 @@ than an ever-widening round.
 
 ## Rings
 
-- **Bought after every fight, with vitae.**
+- **Bought after every fight, with vitae.** *(Built 2026-08-21 — see The shop, below.)*
 - **Five at once**, until brands expand capacity. *(ideas.md's "extra fingers bought from a
   shop" is superseded.)*
 - **The cap is never displayed.** It surfaces naturally when you try to buy a sixth.
@@ -1122,9 +1122,8 @@ off each status record's `Badge`. And `StatusID` is append-only, carrying the ha
 ### The rings that are designed
 
 **Every row below is in `data/rings.json` and works** *(2026-08-17)*. **Only the discount and the
-flip predate the grammar**; the rest came out of it. What does not exist is any way to *get* one:
-a run opens wearing three and nothing buys, sells or unequips, so the twelve rings past those three
-are reachable only by editing `StartingRings`.
+flip predate the grammar**; the rest came out of it. **All of them are reachable in a run since
+2026-08-21**, bought and sold in the shop — see The shop, below.
 
 Two names were invented rather than taken from this table, and are the two most worth changing:
 **Bulwark** (+25 HP, since Heart is the skill's own name for the growing one) and **Thrifty** (the
@@ -1165,10 +1164,57 @@ what makes the second and third worth buying.
 burn; it does nothing about fire aimed at you. The alternative would make a ring a liability and
 buying one a decision with a wrong answer.
 
-**The player starts wearing three of the four** — `session.StartingRings`, fire/ice/lightning — with
-earth left off on purpose so a launch tests the gate as well as the statuses. Temporary; a run will
-start bare and buy rings once a shop exists. It moved off the combat screen and onto the run on
-2026-08-17, which is what makes a worn ring survive a fight.
+**A run opens wearing nothing** *(owner's call, 2026-08-21)*. It wore fire, ice and lightning for
+four days, which was always written down as temporary: the list existed because a ring could not
+otherwise be got at all. `session.StartingRings` stays as the seat for putting one on without
+playing to a shop, and ships empty. The worn set moved off the combat screen and onto the run on
+2026-08-17, which is what makes a bought ring survive a fight.
+
+**What that costs, stated rather than discovered:** a run holds 5 vitae and a base ring is 3, so
+**the bare opening lasts exactly one fight** — the first shop can already afford a colour, and the
+first duel is the only one fought with every element inert. That is a much shorter gap than the
+first pricing draft produced, and it is the deliberate consequence of a base ring being cheap.
+
+### The shop *(2026-08-21, owner's call; built the same day)*
+
+**Three rings on a shelf after every fight, and the row you are wearing under them.** Both rows are
+ring cards and both are clicked; the difference is which way the vitae moves. `internal/screens/shop.go`
+draws it, `internal/session/shop.go` holds the rules, and neither knows what comes after the shop —
+`session.PhaseShop` is a station of the run loop and `advanceRun` is what leaves.
+
+- **A ring declares its own price, in `rings.json`.** A concept ring covering four cards and a form
+  ring covering twelve are not the same object and must not be priced as one — the same argument
+  that keeps Striker and Keen apart in the catalogue.
+- **A base ring is 3 vitae and the ladder is scaled off it** *(owner's call, 2026-08-21)*. A base
+  ring is one of the four that give one colour its status: the plainest thing the grammar can say,
+  and the thing every other price is read against. Striker is 2, being four cards where a colour is
+  twelve; a flat stat or an economy ring is 4; two statuses, a cost cut or the big stat is 5; a form
+  doubling twelve cards is 6; Hungry, a whole extra prize every fight, is 7.
+- **That is a full ring or two a fight against an income of roughly 5–10**, so **the purse stops
+  binding once the five fingers are full** — around the fourth or fifth fight, after which vitae has
+  nothing to buy but swaps. The first draft priced a base ring at 20 and made the whole run about
+  affording one; this is deliberately the other side of that, and what it wants next is something
+  else to spend on rather than dearer rings.
+- **Nothing measures whether any of those numbers is right.** `tools/balance` plays postures against
+  the roster and knows nothing about rings, so what a doubling of every slash card is worth in vitae
+  is a judgement. Recorded as a judgement rather than dressed up as a derivation.
+- **Selling pays a quarter of the price, rounded up.** Rounded up so the cheapest ring is still worth
+  something to take off; a quarter so the round trip loses money. A shelf you could try on for free
+  would be a rerolling of your hand every visit rather than a decision.
+- **Selling is the only way a ring comes off, and it is how the sixth ring is bought.** A purchase at
+  five worn is refused rather than swapped, so trading is two decisions with a price between them —
+  never one click that quietly throws a worn ring away.
+- **A sold ring's accumulator resets to zero.** `Session.grown` is keyed by record precisely so a
+  ring taken off and put back on is the *same ring*; the decision is that it is not the same
+  *number*. The growth is what wearing it through fights paid for, so selling forfeits it. It is
+  what stops a Heart Ring being parked in the shop between fights.
+- **What is already worn is off the shelf**, rather than shown and refused: a seat spent saying
+  nothing.
+- **Selling out of the middle of the row changes the firing order**, since rings fire left to right
+  and a re-bought one goes on at the right-hand end. That is a real cost of letting a ring come off
+  and there is no re-ordering control yet — see TODO.md.
+- **The shelf is its own random stream** (`seeds.ShopStock`), per fight, so a defeat and a retry walk
+  into the same shop exactly as they meet the same opponent.
 
 ### Flip rings — the element-transform ring
 
@@ -1212,9 +1258,9 @@ whole bar. Same size as other cards, and **no glyphs**.
 
 **The row is on the screen at full card size, and it is what the player is actually wearing**
 *(2026-08-16)*. It drew every record in `data/rings.json` up to the cap while nothing read a
-ring; it now reads `startingRings`, because a catalogue that equips itself would have put the
-earth ring on the moment the file gained a fourth entry. **Nothing buys or unequips one** — that
-is still `Session`'s job. What made the row possible is that **the vertical problem below solved itself**: the full-height Resolution pane
+ring; it now reads what the run is wearing, because a catalogue that equips itself would have put
+the earth ring on the moment the file gained a fourth entry. **The row starts empty and fills as
+rings are bought** — see The shop. What made the row possible is that **the vertical problem below solved itself**: the full-height Resolution pane
 left the 12–46% band for a three-line feed above the hand, so the band the row needed was
 already empty. The character block shrank into the top-left corner to give it the width.
 
@@ -1429,7 +1475,9 @@ for the `data/` pattern: JSON beside a small Go loader.
 ## Vitae
 
 The currency. Earned from fights, spent on rings. `Session` carries the purse; the post-battle
-screen's third prize card is currently the only thing that adds to it, at +5.
+screen's third prize card and propagation are what add to it, and **the shop is what takes it out**
+*(2026-08-21)* — `Session.SpendVitae` is the one place a purse goes down, and `Session.Buy` is its
+only caller.
 
 ### Propagation — vitae earns interest *(2026-08-17, owner's call; built the same day)*
 

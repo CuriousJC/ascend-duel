@@ -32,9 +32,9 @@ type Session struct {
 	// else. The screen keeps a copy per visit for its draw paths; this is the authority.
 	fight int
 
-	// vitae is the purse. **Run-level and nothing spends it yet** — the shop is the scene that
-	// will — but it is awarded now, by the post-battle screen and by propagation, which is what made
-	// it stop being a constant on the combat screen.
+	// vitae is the purse. **Run-level**: awarded by the post-battle screen and by propagation, and
+	// spent in the shop. It stopped being a constant on the combat screen on 2026-08-17 and gained
+	// something to be spent on four days later.
 	vitae int
 
 	// worn is what the player is wearing, by record key, **in worn order** — which is a rule and not
@@ -59,7 +59,8 @@ type Session struct {
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
 // card. The slice is copied, so the caller's starting list cannot be edited by a worm.
 //
-// **It opens wearing StartingRings**, which is temporary and lives in ring.go beside the reason.
+// **It opens wearing StartingRings**, which is empty as shipped — see ring.go, where the list and
+// the reason live. A run buys its rings.
 func New(deck []combat.Card) *Session {
 	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{}}
 	copy(s.deck, deck)
@@ -135,7 +136,7 @@ func (s *Session) AddVitae(n int) {
 // a caller that does not check the result has bought something for free.
 //
 // **It is the one place a purse goes down**, which is why AddVitae refuses a negative rather than
-// being the same method twice. Nothing calls this yet — the shop is what will.
+// being the same method twice. `Buy` is its only caller.
 func (s *Session) SpendVitae(n int) bool {
 	if n <= 0 || n > s.vitae {
 		return false

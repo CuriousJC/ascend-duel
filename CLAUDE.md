@@ -791,8 +791,9 @@ fight  →  reward  →  shop  →  choice  →  fight ...
 
 - **`session.Phase` is the station** — see `internal/session/flow.go`, which holds the order.
 - **`screens.phaseScreens` is which scene draws it** — see `internal/screens/flow.go`. A phase with
-  no scene registered is walked past rather than drawn blank, which is why the loop can name the
-  shop and the room choice before either exists.
+  no scene registered is walked past rather than drawn blank, which is why the loop could name the
+  shop and the room choice before either existed. The shop landed on 2026-08-21 and cost exactly
+  the three edits below; the room choice is still walked past.
 - **Adding a screen is therefore three edits**: a phase in `session/flow.go`, an entry in
   `screens/flow.go`, and an entry in the registry in `internal/game`. No existing scene changes.
 

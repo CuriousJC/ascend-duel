@@ -22,10 +22,10 @@ func TestEveryRegisteredPhaseNamesAScreenTheGameHas(t *testing.T) {
 	}
 }
 
-func TestTheFightAndTheRewardBothHaveAScene(t *testing.T) {
-	// The two stations that are built. This fails the day one is dropped from the table by
+func TestEveryBuiltStationHasAScene(t *testing.T) {
+	// The three stations that are built. This fails the day one is dropped from the table by
 	// accident, which would otherwise show up as the loop silently skipping a whole screen.
-	for _, p := range []session.Phase{session.PhaseFight, session.PhaseReward} {
+	for _, p := range []session.Phase{session.PhaseFight, session.PhaseReward, session.PhaseShop} {
 		if _, ok := screenFor(p); !ok {
 			t.Errorf("%s has no scene", p)
 		}
@@ -33,16 +33,16 @@ func TestTheFightAndTheRewardBothHaveAScene(t *testing.T) {
 }
 
 func TestAdvanceWalksPastAStationWithNoScene(t *testing.T) {
-	// **This is what lets the loop name the shop and the room choice before either exists.** From
-	// the reward, the next two stations have no scene, so advance has to keep walking and land on
-	// the fight rather than pointing the game at nothing.
+	// **This is what lets the loop name the room choice before it exists.** From the shop, the
+	// next station has no scene, so advance has to keep walking and land on the fight rather than
+	// pointing the game at nothing. The shop was the other one until 2026-08-21.
 	gs := &state.GlobalState{Run: session.New(session.StartingDeck())}
-	gs.Run.SetPhase(session.PhaseReward)
+	gs.Run.SetPhase(session.PhaseShop)
 
 	advanceRun(gs)
 
 	if gs.Run.Phase() != session.PhaseFight {
-		t.Fatalf("advancing from the reward landed on %s", gs.Run.Phase())
+		t.Fatalf("advancing from the shop landed on %s", gs.Run.Phase())
 	}
 	if gs.ActiveScreen != state.Combat {
 		t.Fatalf("the screen went to %s", gs.ActiveScreen)
@@ -61,6 +61,22 @@ func TestAdvanceFromTheFightReachesTheReward(t *testing.T) {
 		t.Fatalf("advancing from the fight landed on %s", gs.Run.Phase())
 	}
 	if gs.ActiveScreen != state.PostBattle {
+		t.Fatalf("the screen went to %s", gs.ActiveScreen)
+	}
+}
+
+func TestAdvanceFromTheRewardReachesTheShop(t *testing.T) {
+	// The station that stopped being walked past on 2026-08-21. A run that took its worm now goes
+	// shopping before the next fight, and this is the entry in phaseScreens that says so.
+	gs := &state.GlobalState{Run: session.New(session.StartingDeck())}
+	gs.Run.SetPhase(session.PhaseReward)
+
+	advanceRun(gs)
+
+	if gs.Run.Phase() != session.PhaseShop {
+		t.Fatalf("advancing from the reward landed on %s", gs.Run.Phase())
+	}
+	if gs.ActiveScreen != state.Shop {
 		t.Fatalf("the screen went to %s", gs.ActiveScreen)
 	}
 }

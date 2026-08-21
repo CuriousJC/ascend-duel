@@ -42,6 +42,15 @@ const (
 	// which *cards* every fight of every run offered, which is a retune of the catalogue silently
 	// changing the game around it. That is the exact failure the salts exist to prevent.
 	WormOffer
+
+	// ShopStock is which rings the shop puts up after a fight. Per fight.
+	//
+	// **Its own stream, and the question was asked.** Sharing WormOffer would draw the shop's
+	// three rings off the same sequence as the two worms, so authoring a new worm would change
+	// which rings every run was ever offered — the catalogue-retune failure this package exists to
+	// prevent, one file over. Sharing RewardHand would make the shelf a function of the run deck's
+	// size, which is a thing the player changes on the screen immediately before the shop.
+	ShopStock
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -72,6 +81,7 @@ var streams = [...]stream{
 	EnemyDeck:   {name: "enemy-deck", salt: 0x5EED_F0E5, perFight: true},
 	RewardHand:  {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
 	WormOffer:   {name: "worm-offer", salt: 0x5EED_7A19, perFight: true},
+	ShopStock:   {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

@@ -18,17 +18,28 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       Migrating health bars onto the plain-Go path would collapse the two, and is the only
       way to get back to one — the reverse is impossible, since the mask path needs a window.
       Low priority, but it is a real inconsistency.
-- [~] **Rings work and cannot be acquired.** The grammar is built *(2026-08-17)* and sixteen
-      rings are authored, but a run opens wearing three and **nothing buys, sells or unequips
-      one** — so thirteen of the sixteen are reachable only by editing `session.StartingRings`.
-      - **The shop is what is missing, and the seams for it are cut** *(2026-08-21)*. Vitae is
-        earned and propagates, `Session.Wear` exists and caps at five, `Session.SpendVitae` is
-        the one place a purse goes down, and `session.PhaseShop` is already a station of the run
-        loop that nothing draws. **Building it is three edits and one new file**: a scene, an
-        entry in `screens.phaseScreens`, and an entry in the registry in `internal/game`. No
-        existing scene changes, because none of them names its successor any more.
-        Unequipping needs a method and a rule about what happens to a growing ring's
-        accumulator when its ring comes off — nothing decides that yet.
+- [~] **Rings are bought and sold; what is left is the row itself.** The grammar is built
+      *(2026-08-17)* and the shop landed *(2026-08-21)*, so all seventeen are reachable in a run.
+      What the shop leaves open:
+      - **A run opens bare, so exactly the first duel has no statuses in it** *(owner's call,
+        2026-08-21)*. 5 vitae against a base ring of 3 means the first shop can already afford a
+        colour. **Nothing has played it**, and the two ends were set a conversation apart.
+      - **Nothing re-orders the worn row, and worn order is the firing order.** Rings fire left to
+        right and compound, a bought ring goes on at the right-hand end, and selling out of the
+        middle shifts everything after it — so the one thing a player cannot choose is the order
+        two rings apply in. Drag-to-reorder on the shop's worn row is the obvious answer, and it
+        is the gesture the action box already has.
+      - **Every price is a judgement and nothing measures one.** 2 to 7 off a base ring of 3,
+        against an income of 5-10 a fight. `tools/balance` cannot see a ring at all, so what a
+        damage ring is worth in vitae has never been checked against what it does to a duel — the
+        entry below, on making a worn set a posture axis, is what would.
+      - **Nothing is rare and nothing rerolls.** The shelf is three off a flat shuffle of what you
+        are not wearing, so a run sees most of the catalogue and no ring is harder to find than
+        another.
+      - **`[?]` The purse stops binding once five rings are on** — around fight four or five at these
+        prices, after which vitae buys nothing but swaps, and propagation is interest on money with
+        no use. Either the shop needs a second thing to sell — cards, a reroll, a sixth finger — or
+        the late run needs a sink. A design question, not a number to nudge.
       - **Two authored names were invented and should be reviewed**: `bulwark-ring` (+25 HP;
         `heart-ring` is the skill's name for the growing one) and `thrifty-ring` (the discount,
         which the design never named). Thirteen of the sixteen also have **no art**, and draw
@@ -39,9 +50,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **The two cost sorts read the card's printed cost, not the wearer's.** `costChainLess`
         in `combat_sort.go` and `sortPileEntries` in `combat_deck.go` are pure functions with
         tests pinning them, so a discount ring would order a hand by a number the cards no
-        longer show. Nothing can equip a discount ring yet, so this bites the day the shop
-        lands — and which of the two numbers a sort *should* use is a real question, not
-        obviously the discounted one.
+        longer show. **The shop landed on 2026-08-21, so a discount ring can be equipped now
+        and this is live** — and which of the two numbers a sort *should* use is a real question,
+        not obviously the discounted one.
       - `Spec.Dragging` was added for the ring preview and is unused by both the row and the
         hand, which does have drag-and-drop and no visual for it.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
@@ -86,10 +97,10 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **No rarity and no weighting.** Every worm is equally likely to be offered.
       - **The catalogue is ten worms across seven targets**, of which four are the same recolour
         in four colours. It wants more *kinds*, not more colours.
-      - **Vitae is awarded, propagates, and is never spent.** The prize card pays into
-        `session.Session`, the purse earns +1 per 5 held after every win *(2026-08-17)*, the combat
-        screen shows it, and there is no shop to spend it in. Rings are what it is meant to buy,
-        and they are all built and unreachable — the two entries are one piece of work.
+      - **Vitae is awarded, propagates, and is spent** *(2026-08-21)*. The prize card pays into
+        `session.Session`, the purse earns +1 per 5 held after every win *(2026-08-17)*, and the
+        shop is what takes it out again. What is unchecked is the rate against the prices: both
+        ends were set by judgement, a fight apart.
 
 - [ ] **Brands need a data file and a way to be acquired.** The mechanic is already decided —
       see `MECHANICS.md`'s Brands section: they alter the container where rings alter the

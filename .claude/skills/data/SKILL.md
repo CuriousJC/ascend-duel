@@ -14,7 +14,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
 | `enemies.json` | `LoadEnemies` | 96 opponents: three stats, their own deck, portrait, valid floors |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
-| `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, and a list of `When`/`If`/`Then` rules |
+| `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the poker hands on each of three matching axes, and what each multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
@@ -136,13 +136,21 @@ border. `Element` is the field that carries it — parsed in `internal/screens` 
 `combat.ParseElement`, because `internal/combat` may not read this file. A name the rules do not
 have is logged rather than dropped.
 
-**What is worn is `startingRings` in `internal/screens`, not the file.** Four rings exist and the
-player starts in three; earth is left off so a launch tests the gate as well as the statuses.
-Temporary, and the counterpart of `deckSeedName` — buying and equipping needs `Session`.
+**What is worn is on the run, not in the file.** A run opens wearing nothing *(2026-08-21)* and
+buys its rings in the shop, so every element is inert until the first one is bought.
+`session.StartingRings` is the debug seat for putting one on without playing to a shop — the ring
+counterpart of `deckSeedName`, and it ships empty.
 
 **`Art` is an assets key, not a path**, and specifically a `LoadImageData` key rather than a
 `LoadAssets` one, because a ring's picture is drawn *into* a card by `internal/cards`, which has
 no graphics context.
+
+**`Price` is what the shop charges** *(2026-08-21)*, and it is a field for the reason a card's cost
+is: a concept ring covering four cards and a form ring covering twelve must not be priced as one.
+**What a ring sells back for is deliberately not a field** — it is a quarter of the price, rounded
+up, computed in `internal/session/shop.go`, so there is one rule rather than seventeen numbers to
+keep in step with seventeen others. A record priced at zero or less **panics at load**, like every
+other word this file gets wrong.
 
 ### Worms
 
@@ -232,9 +240,9 @@ only three forms and four elements ever reach a blow.
 
 The data is about to grow three ways at once, which is why this was carved out of `CLAUDE.md`:
 
-- **More rings.** The grammar is built and sixteen are authored; growing the *vocabulary* — a new
-  moment or a new effect verb — is a Go change, and is meant to be. What does not exist is buying,
-  selling or unequipping.
+- **More rings.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
+  moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
+  2026-08-21, so a new record needs a `Price` as well as its rules.
 - **More worms.** `worms.json` exists and holds ten across seven targets. Growing it is one record
   each; growing the *target vocabulary* is not, and MECHANICS.md says why.
 - **Brands** — permanent for the run, altering the container where rings alter the contents. The

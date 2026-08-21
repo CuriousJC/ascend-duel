@@ -46,3 +46,8 @@ analysis.md
 # Anchored, so a future /internal/cardsheet/ or similar is not swallowed by accident.
 /tools/cardsheet/*.png
 /tools/cardsheet/index.html
+
+# Ring previews written by `go run ./tools/ringsheet`. Same argument as the card sheet above:
+# a PNG per ring plus a page, all regenerated on every run.
+/tools/ringsheet/*.png
+/tools/ringsheet/index.html

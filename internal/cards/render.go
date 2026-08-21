@@ -85,8 +85,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 				return drawTextHCentered(dst, f, size, s, st.Width, y, c)
 			}
 		}
-		if err := draw(img, f, st.NameSize, s.Name, st.TextLeft, st.NameTop, ink(NameInk)); err != nil {
-			return nil, err
+		for i, line := range nameLines(s.Name, st) {
+			y := st.NameTop + i*st.NameLinePitch
+			if err := draw(img, f, st.NameSize, line, st.TextLeft, y, ink(NameInk)); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if err := drawStats(img, s, st, f, ink); err != nil {
@@ -691,6 +694,24 @@ func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int
 			dst.SetRGBA(px, py, c)
 		}
 	}
+}
+
+// nameLines is the name as the style wants it drawn: one line, or one word to a line.
+//
+// **A style that has not asked for the break gets its name back whole**, spaces and all, so
+// this is one call rather than a branch at the draw site and the hand, mini, enemy and duelist
+// cards are provably unchanged by it.
+func nameLines(name string, st Style) []string {
+	if !st.NameWordPerLine {
+		return []string{name}
+	}
+	// Fields rather than Split, so a double space or a stray trailing one does not produce a
+	// blank line and push the rest of the name down the card.
+	lines := strings.Fields(name)
+	if len(lines) == 0 {
+		return []string{name}
+	}
+	return lines
 }
 
 // drawArt scales Spec.Art to fit the style's art box and centres it there.

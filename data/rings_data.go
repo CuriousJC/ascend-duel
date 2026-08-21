@@ -26,6 +26,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"sort"
+	"strings"
 )
 
 //go:embed rings.json
@@ -41,13 +42,14 @@ type RingData struct {
 	// it is the key and not a position in this file.
 	RingRecord string `json:"RingRecord"`
 
-	// Name is what is written across the top of the card.
+	// Name is the ring's full name — what a tooltip says and what this file is read by. **The
+	// card face carries FaceName instead**, which is this without the trailing "Ring".
 	Name string `json:"Name"`
 
-	// Art is the assets.LoadImageData key for the picture on the face. An empty or unknown
-	// name draws a ring with no artwork and logs once — the same choice the enemy portraits
-	// make, and for the same reason: a card with a hole in it gets reported, a game that
-	// refuses to start over a missing picture is worse.
+	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the
+	// default ring face** — see ArtKey; an unknown name draws a ring with no artwork and logs
+	// once, the same choice the enemy portraits make, and for the same reason: a card with a
+	// hole in it gets reported, a game that refuses to start over a missing picture is worse.
 	Art string `json:"Art"`
 
 	// Text is one line saying what the ring does, for the long press that does not exist yet.
@@ -124,6 +126,49 @@ type RingEffectData struct {
 
 	// Element is what `set-element` recolours a matching card to.
 	Element string `json:"Element,omitempty"`
+}
+
+// DefaultRingArt is the face a record with no Art of its own draws.
+//
+// **Most of the file has no art**, and it will stay that way: the four elemental rings were drawn
+// before the grammar existed, and every ring written since — the form multipliers, the two vitae
+// rings, the growing stat rings — is a rule with no picture. A pink border around an empty face
+// reads as a card that failed to load; this reads as one waiting for art.
+const DefaultRingArt = "defaultring_png"
+
+// ArtKey is the picture this ring actually draws: its own if it has one, the default otherwise.
+//
+// **It is here rather than at the one call site** because a ring is drawn in three places — the
+// worn row, the shop shelf and tools/ringsheet — and a fallback living in a screen is a fallback
+// the review tool does not have, which is exactly how a sheet comes to disagree with the game.
+func (r RingData) ArtKey() string {
+	if r.Art == "" {
+		return DefaultRingArt
+	}
+	return r.Art
+}
+
+// FaceName is the name as it is written across the top of a ring card: the record's Name with a
+// trailing "Ring" removed.
+//
+// **The card is already obviously a ring** *(owner's call, 2026-08-21)* — pink border, a picture
+// of a ring, in a row of rings — so the word says nothing and costs the name its width. "Frozen
+// Lightning Ring" is three lines on a 162-pixel card where "Frozen Lightning" is two, and the
+// line that goes is the one carrying no information.
+//
+// **The full name survives everywhere it is read rather than looked at**: the tooltip titles a
+// ring with `Name`, and so does the shop. This is a fact about the face, which is why it is a
+// second method rather than an edit to `rings.json` — a file that spelled the name without its
+// noun would leave nothing able to say "Frozen Lightning Ring" in a sentence.
+//
+// A record named only "Ring" keeps it, since a card with no name on it is worse than a
+// redundant one.
+func (r RingData) FaceName() string {
+	short := strings.TrimSpace(strings.TrimSuffix(r.Name, "Ring"))
+	if short == "" {
+		return r.Name
+	}
+	return short
 }
 
 // LoadRings parses the embedded ring list into a map keyed by RingRecord.

@@ -64,6 +64,21 @@ func (f *Faces) at(size float64) (font.Face, error) {
 	return face, nil
 }
 
+// Measure is how wide a string is at a point size, and how tall one line of it is.
+//
+// **Exported so a caller outside this package can ask whether something fits** without being
+// handed a font.Face and left to get the DPI right. `internal/screens` uses it to check the ring
+// names in `data/rings.json` against the room a ring card leaves above its artwork — the file is
+// read there and the geometry lives here, so the join needs one of the two to be askable.
+func (f *Faces) Measure(size float64, s string) (width, lineHeight int, err error) {
+	face, err := f.at(size)
+	if err != nil {
+		return 0, 0, err
+	}
+	m := face.Metrics()
+	return font.MeasureString(face, s).Ceil(), m.Ascent.Ceil() + m.Descent.Ceil(), nil
+}
+
 // drawText draws a string with its top-left corner at (x, y).
 //
 // font.Drawer positions by *baseline*, not by the top of the line, so the ascent has to

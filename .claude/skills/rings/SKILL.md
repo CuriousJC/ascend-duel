@@ -35,6 +35,12 @@ costs if it does not.
 }
 ```
 
+- **`Name`** — the full name, which is what a tooltip titles. **The card face drops a trailing
+  "Ring" and breaks the rest a word to a line**, via `RingData.FaceName`; two words is what fits,
+  and `TestEveryRingNameFitsItsCard` fails a third.
+- **`Art`** — the assets key for the face. **Empty draws `default-ring.png`** via `RingData.ArtKey`,
+  which is what most of the file does; a key naming no embedded image fails
+  `TestEveryRingDrawsSomething` rather than drawing a blank.
 - **`Text`** — the line a player reads. **It is printed now** *(2026-08-21)*: the hover tooltip on
   every ring card, shelf and worn row alike, shows this and nothing generated from the rules. So a
   rule changed without its `Text` is a ring that lies to the player, and `TestEveryRingHasSomethingToSay`
@@ -218,6 +224,7 @@ Reach for these first when an idea sounds too easy.
 | `deck-built` / `fight-start` / `fight-won` | `session.FightDeck`, `session.Equip`, `session.WonFight` |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_rings.go` — a lookup from worn key to record |
+| the whole catalogue as pictures | `go run ./tools/ringsheet` — card, price, `Text` and rules side by side |
 
 **`rings.json` is parsed in `internal/session`**, which already parses worms and for the same
 reason: a ring belongs to a *run*. It hands `combat` rules types — `RegisterRing(key, name,

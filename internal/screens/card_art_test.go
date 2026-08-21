@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
@@ -298,6 +299,66 @@ func TestEveryStatusHasABadge(t *testing.T) {
 		}
 		if _, ok := assets.LoadImageData()[key]; !ok {
 			t.Errorf("%s's badge is %q, which is not an embedded image", combat.StatusOf(id).Key, key)
+		}
+	}
+}
+
+func TestEveryRingDrawsSomething(t *testing.T) {
+	// A ring's face is either its own picture or the default one, and both are assets keys that
+	// nothing resolves until a card is drawn — so a typo in `rings.json` is a pink border around
+	// an empty face, on a screen nobody reaches until they have played to a shop. `ArtKey` is
+	// what closes the empty case; this closes the misspelled one.
+	//
+	// **It does not fail a ring for having no art of its own.** Most of the catalogue has none
+	// and is meant to draw the default until somebody paints one — see tools/ringsheet, which
+	// says how many that is.
+	records := data.LoadRings()
+	for _, key := range data.RingOrder(records) {
+		art := records[key].ArtKey()
+		if _, ok := assets.LoadImageData()[art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", key, art)
+		}
+	}
+}
+
+func TestEveryRingNameFitsItsCard(t *testing.T) {
+	// A ring card breaks its name a word to a line, and the art starts a fixed distance down —
+	// so how many words a ring may be called is a layout fact, and `rings.json` is where it can
+	// be broken. A three-word ring draws its last word over its own picture, on a screen nobody
+	// reaches until they have played to a shop.
+	//
+	// **It measures the face name, not the record's**, because the face is what is drawn: the
+	// trailing "Ring" is dropped there and keeping it would fail the file for a word it does not
+	// print. And it measures ink rather than counting words, since a single word wider than the
+	// card is the other way this breaks.
+	faces, err := cards.NewFaces(assets.LoadFontData()["kubasta"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	st := cards.RingStyle
+	_, lineHeight, err := faces.Measure(st.NameSize, "Frozen")
+	if err != nil {
+		t.Fatal(err)
+	}
+	room := st.NameLinesAbove(st.ArtTop, lineHeight)
+	usable := st.Width - 2*st.BorderWidth - 4
+
+	records := data.LoadRings()
+	for _, key := range data.RingOrder(records) {
+		words := strings.Fields(records[key].FaceName())
+		if len(words) > room {
+			t.Errorf("%s draws %d lines of name where the card has room for %d — the rest lands "+
+				"on the artwork", key, len(words), room)
+		}
+		for _, w := range words {
+			got, _, err := faces.Measure(st.NameSize, w)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got > usable {
+				t.Errorf("%s's %q is %dpx at %gpt, wider than the %dpx a ring card has",
+					key, w, got, st.NameSize, usable)
+			}
 		}
 	}
 }

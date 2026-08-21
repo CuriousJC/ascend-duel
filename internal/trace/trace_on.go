@@ -1,8 +1,9 @@
 //go:build debugtrace
 
-// The live half of package trace. See trace_off.go for what this is and why it is behind a
-// build tag; that file carries the package doc so it is readable in the default build.
 package trace
+
+// The live half of package trace. See trace_off.go for what this is and why it is behind a
+// build tag; the package doc is in doc.go.
 
 import (
 	"bytes"

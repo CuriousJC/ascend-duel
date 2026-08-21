@@ -21,14 +21,14 @@ import (
 // replaced.
 func TestBankedPointsAreCreditedOnArrival(t *testing.T) {
 	s := &CombatScene{}
-	s.banks = []bankFlight{{amount: 2, side: combat.SideA, seat: 0,
+	s.theatre.banks = []bankFlight{{amount: 2, side: combat.SideA, seat: 0,
 		t: newTravel(0, bankFlyTicks+bankHoldTicks)}}
 
 	for i := 0; i < bankFlyTicks; i++ {
 		if got := s.shownBank(combat.SideA); got != 0 {
 			t.Fatalf("the card gained %d AP after %d of %d ticks in the air", got, i, bankFlyTicks)
 		}
-		s.tickBanks()
+		s.theatre.tick()
 	}
 
 	if got := s.shownBank(combat.SideA); got != 2 {
@@ -41,15 +41,15 @@ func TestBankedPointsAreCreditedOnArrival(t *testing.T) {
 // see endOfRound, which is the one place that zeroes them.
 func TestBankedPointsOutliveTheirFigure(t *testing.T) {
 	s := &CombatScene{}
-	s.banks = []bankFlight{{amount: 2, side: combat.SideA, seat: 0,
+	s.theatre.banks = []bankFlight{{amount: 2, side: combat.SideA, seat: 0,
 		t: newTravel(0, bankFlyTicks+bankHoldTicks)}}
 
 	for i := 0; i < bankFlyTicks+bankHoldTicks+2; i++ {
-		s.tickBanks()
+		s.theatre.tick()
 	}
 
-	if len(s.banks) != 0 {
-		t.Errorf("%d figures still in the air after the whole gesture", len(s.banks))
+	if len(s.theatre.banks) != 0 {
+		t.Errorf("%d figures still in the air after the whole gesture", len(s.theatre.banks))
 	}
 	if got := s.shownBank(combat.SideA); got != 2 {
 		t.Errorf("the card shows %d banked AP once the figure has gone, want 2", got)
@@ -60,26 +60,26 @@ func TestBankedPointsOutliveTheirFigure(t *testing.T) {
 	}
 }
 
-// Two Prepares in one turn are two figures and two credits, and `clearBanks` takes both down —
+// Two Prepares in one turn are two figures and two credits, and taking the theatre down clears both —
 // which `Init` calls, because a fight that ends without a round boundary would otherwise start the
 // next one with points on the card.
 func TestEveryBankedFigureIsCountedAndClearable(t *testing.T) {
 	s := &CombatScene{}
 	for i := 0; i < 2; i++ {
-		s.banks = append(s.banks, bankFlight{amount: 2, side: combat.SideA, seat: i,
+		s.theatre.banks = append(s.theatre.banks, bankFlight{amount: 2, side: combat.SideA, seat: i,
 			t: newTravel(0, bankFlyTicks+bankHoldTicks)})
 	}
 
 	for i := 0; i < bankFlyTicks; i++ {
-		s.tickBanks()
+		s.theatre.tick()
 	}
 	if got := s.shownBank(combat.SideA); got != 4 {
 		t.Errorf("two Prepares showed %d AP, want 4", got)
 	}
 
-	s.clearBanks()
-	if len(s.banks) != 0 || s.shownBank(combat.SideA) != 0 {
-		t.Errorf("after clearBanks: %d figures, %d AP shown, want none of either",
-			len(s.banks), s.shownBank(combat.SideA))
+	s.theatre.clear()
+	if len(s.theatre.banks) != 0 || s.shownBank(combat.SideA) != 0 {
+		t.Errorf("after the theatre cleared: %d figures, %d AP shown, want none of either",
+			len(s.theatre.banks), s.shownBank(combat.SideA))
 	}
 }

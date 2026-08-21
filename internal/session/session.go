@@ -1,21 +1,9 @@
-// Package session holds what belongs to a *run* rather than to a fight or a screen.
-//
-// **It is the hole every run-level feature has been blocked on.** Rings cannot be bought, the
-// deck cannot be altered and vitae cannot be spent for one reason: nothing survives a fight.
-// `CombatScene` is rebuilt on every entry — `Init` is how the next fight starts — so anything
-// kept there is thrown away between rooms. This is where a run keeps its things.
-//
-// **No Ebitengine, ever**, and no screen state. What lands here is what more than one scene
-// needs and what has to outlive a fight: the deck today, the rings and the purse next. If a
-// field is only read by one screen, it belongs on that screen.
-//
-// The package sits below `screens` and above `combat`, and `state.GlobalState` carries a
-// pointer to it — which is why `state` transitively imports `combat` as of 2026-08-17. That
-// reverses a line in CLAUDE.md written to stop *screen* state leaking into global state; a run
-// is not screen state, and it is exactly what `ActiveScreen` and `NewScreen` already sit beside.
 package session
 
-import "github.com/curiousjc/ascend-duel/internal/combat"
+import (
+	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/pyramid"
+)
 
 // startingVitae is what a run opens with. It was a constant on the combat screen, reset on every
 // visit, which is exactly what "run-level state living on a scene" looks like.
@@ -53,6 +41,14 @@ type Session struct {
 	// a presentation detail: rings fire left to right and compound, so the order has to be one the
 	// player can see. See ring.go.
 	worn []string
+
+	// climb is the run's fight order — who stands in each room, in the order they will be met.
+	// Nil on a run built by New, which is a test's run; a real one comes from Start. See climb.go.
+	climb *pyramid.Pyramid
+
+	// phase is where in the loop the run is: the fight, the reward, the shop, the room choice.
+	// See flow.go, which is the one place that moves it.
+	phase Phase
 
 	// grown is each growing ring's accumulator, keyed by record. **Keyed by record rather than by
 	// position**, because it is the first ring state that will have to be serialized and a position
@@ -133,6 +129,19 @@ func (s *Session) AddVitae(n int) {
 		return
 	}
 	s.vitae += n
+}
+
+// SpendVitae takes from the purse, and **reports whether it could**. A run cannot go into debt:
+// a caller that does not check the result has bought something for free.
+//
+// **It is the one place a purse goes down**, which is why AddVitae refuses a negative rather than
+// being the same method twice. Nothing calls this yet — the shop is what will.
+func (s *Session) SpendVitae(n int) bool {
+	if n <= 0 || n > s.vitae {
+		return false
+	}
+	s.vitae -= n
+	return true
 }
 
 // Fight is how far up the tower the run has got, zero-based.

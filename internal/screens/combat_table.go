@@ -191,21 +191,21 @@ func splitOf(cards []combat.Card) int {
 
 // playedSplit and enemySplit are splitOf over the two rows' own card lists.
 func (s *CombatScene) playedSplit() int {
-	for i, r := range s.resolved {
+	for i, r := range s.theatre.resolved {
 		if r.card.Category() == combat.CategoryPlan {
 			return i
 		}
 	}
-	return len(s.resolved)
+	return len(s.theatre.resolved)
 }
 
 func (s *CombatScene) enemySplit() int {
-	for i, d := range s.enemyDealt {
+	for i, d := range s.theatre.enemyDealt {
 		if d.card.Category() == combat.CategoryPlan {
 			return i
 		}
 	}
-	return len(s.enemyDealt)
+	return len(s.theatre.enemyDealt)
 }
 
 // lift raises a seat by tableFireLift, which is how either row says "this is the card
@@ -261,9 +261,9 @@ type dealtCard struct {
 func (s *CombatScene) seatEnemyCards() {
 	queue := s.enemyQueueOrder()
 
-	s.enemyDealt = make([]dealtCard, 0, len(queue))
+	s.theatre.enemyDealt = make([]dealtCard, 0, len(queue))
 	for i, c := range queue {
-		s.enemyDealt = append(s.enemyDealt, dealtCard{
+		s.theatre.enemyDealt = append(s.theatre.enemyDealt, dealtCard{
 			travel: newTravel(i*flightStaggerPer, riseTicks),
 			card:   c,
 		})
@@ -315,8 +315,8 @@ func (s *CombatScene) enemyCardAt(gs *state.GlobalState, d dealtCard, seat, tota
 // rather than a placeholder.
 func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image) {
 	split := s.enemySplit()
-	for i, d := range s.enemyDealt {
-		at := s.enemyCardAt(gs, d, i, len(s.enemyDealt), split, lit(s.enemyFiringSeats, i))
+	for i, d := range s.theatre.enemyDealt {
+		at := s.enemyCardAt(gs, d, i, len(s.theatre.enemyDealt), split, lit(s.theatre.enemyFiringSeats, i))
 		// **The opponent's own cost, not the player's** — a discount ring is the player's and a
 		// queued enemy card printing a discounted price would be the screen telling a lie about
 		// whose ring it is.

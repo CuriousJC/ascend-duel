@@ -1,6 +1,6 @@
 ---
 name: combat-screen
-description: The combat screen's layout, its card/action box widget, hidden information, and the resolution-order rule the screen must obey. Load before touching any of internal/screens/combat.go, combat_deck.go, combat_panes.go, combat_hud.go, combat_actionbox.go, internal/combat, the hand, the cards, the deck overlay, the Resolution or caption panes, the character block, or anything about how a round is drawn or played back.
+description: The combat screen's layout, its card/action box widget, hidden information, and the resolution-order rule the screen must obey. Load before touching any of internal/screens/combat.go, combat_deck.go, combat_hud.go, combat_actionbox.go, internal/combat, the hand, the cards, the deck overlay, the fight log, the character block, or anything about how a round is drawn or played back.
 ---
 
 # The combat screen
@@ -39,10 +39,10 @@ top of, and they are not repeated below:
   side and per fight), and `combatRNG` for the engine's lightning roll from
   `RunSeed ^ combatSalt`. Separate streams, and they must stay separate. `deckSeed` pins the
   two shuffles for debugging — both of them, never one.
-- **Which of the screen's files holds what** — the map is in `CLAUDE.md`'s Package layout
-  section, and it lives there rather than here so there is only one of it. Everything below
-  describes the screen, not a file; they are one package, so a symbol named here may sit in
-  any of them and `Grep` over `internal/screens/` is the way to find it.
+- **Which of the screen's files holds what** — the map is the package doc,
+  `go doc ./internal/screens`, and it lives beside the code rather than here so there is only
+  one of it. Everything below describes the screen, not a file; they are one package, so a symbol
+  named here may sit in any of them and `Grep` over `internal/screens/` is the way to find it.
 
 ## Resolution order
 
@@ -119,7 +119,7 @@ The catalogue is `data/hands.json`, the matcher is `internal/combat/hand.go`, an
 in `MECHANICS.md`; these are what matter to the screen.
 
 - **A hand is a *hand*, and it is a damage multiplier and nothing else** *(2026-08-17)*.
-  `Event.Hand` is a `HandID` and `Event.Multiplier` the percent. `handName` in `combat_panes.go`
+  `Event.Hand` is a `HandID` and `Event.Multiplier` the percent. `handName` in `prose.go`
   looks it up with `HandByID` and prints `Hand.Name` — "Two Pair" — **assembling nothing**. It used
   to join a hand to a *mix* counting the distinct colours, and to fill a `{card}` template from the
   concept that formed the hand, so one hand could print as "Duo Strike Flurry"; both axes are gone
@@ -346,7 +346,7 @@ and the queue was committed at DUEL!.
 
 ### Pacing: one speed, and a table of proportions
 
-*2026-08-19, owner's call, from playing it.* **`eventDwellTicks` is the game's one playback speed
+*2026-08-19, owner's call, from playing it.* **`beatTicks` in `clock.go` is the game's one speed
 — 25 ticks, five twelfths of a second** — and `eventDwells` is a multiplier per event kind, read
 through `eventDwell`. Everything is `1` today: the beats were being tuned against a dwell that was
 itself wrong, so the speed came down and the proportions were flattened to see what that alone
@@ -356,7 +356,7 @@ does.
   than a card firing" is a multiplier. Written as durations the two could not be asked separately —
   every retune of the speed meant re-deriving every entry, and an entry that had drifted out of
   proportion looked exactly like one that had been chosen. **A row that is not 1 needs a sentence
-  saying why**, the way the theatre table's rows carry a reason.
+  saying why**, the way the choreography table's rows carry a reason.
 - **75 → 25 is the feed leaving, not impatience.** The dwell went *up* to 75 on 2026-08-07 because
   the Resolution feed had made every beat a sentence to read. The feed went behind a button on
   2026-08-18 and the round narrates itself in pictures now, so the reason for the long beat left
@@ -404,7 +404,7 @@ between them.
   argument for exactly this reason.
 - **It stops the playback cursor too**, for the dialog's reason: a figure crossing half the screen
   does not fit inside one event's dwell, and the alternative is the bar dropping before the number
-  reaches it. `hitsRunning` is what `advancePlayback` waits on. It changes pacing and cannot change
+  reaches it. `combatTheatre.running` is what `advancePlayback` waits on. It changes pacing and cannot change
   an outcome.
 - **Where it sets off from is a rule, not a rectangle** — `anchorBlow`. The sum line when the turn
   scored a hand, because the total is already on screen there and two figures for one blow would be
@@ -426,7 +426,7 @@ between them.
   30 of 90 drew `60/90` for the length of the flight and then emptied — health visibly going *up*,
   on the killing blow and nowhere else. `applyEvent` reads the life before it overwrites it and
   hands it to `noteHit`.
-- **`clearHits` is called from `Init`**, which is the lesson the frozen last round taught — anything
+- **`Init` takes the whole theatre down**, which is the lesson the frozen last round taught — anything
   tidied up only by the end-of-round spend assumes every round ends in one, and a settled duel does
   not.
 - **`shownLife` walks the list although there is only ever one figure owed.** The cursor holds for a
@@ -438,7 +438,7 @@ between them.
 
 *`combat_bank.go`, 2026-08-19, owner's call.* `+2 AP` flies out of the card that banked it and into
 the fighter card whose budget it raises, and **that card's AP line goes up as the figure lands**.
-It is the `KindGathered` row of the theatre table and the damage figure's argument applied to the
+It is the `KindGathered` row of the choreography table and the damage figure's argument applied to the
 one card in the game whose entire effect is a number changing somewhere else: until this, a Prepare
 resolved with a lift in its own seat, a sentence in a log nobody had open, and a budget that
 silently read two higher at the start of the next round.
@@ -463,7 +463,7 @@ silently read two higher at the start of the next round.
   That is `gestureFly`'s own description, and the hit is the documented exception to it.
 - **The credit outlives its figure.** A flight is dropped when its hold expires and the points stay
   on the card until the adoption; `combat_bank_test.go` pins that, the credit landing on arrival
-  rather than on launch, and `clearBanks` from `Init` taking both down.
+  rather than on launch, and `combatTheatre.clear` from `Init` taking both down.
 - **An enemy banks the same way and its card has no AP line to raise**, so the figure flies to the
   enemy card and lands on nothing. That is the anchors-are-named-by-role rule biting rather than an
   oversight: the alternative is this file growing an opinion about which side is a person.
@@ -512,7 +512,7 @@ different gestures would be more machinery than the nine gestures.
 ### What survives any model
 
 - **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
-  it returns and the Action Flow pane draws what it returns. Neither derives the order
+  it returns and the table draws what it returns. Neither derives the order
   independently, which is what makes it structurally impossible for the pane to lie to the
   player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
   **A chill is the one thing that can remove a slot** rather than reorder it, and the
@@ -549,7 +549,6 @@ bottom. Colours identify the role and are placeholders, not a chosen palette.
 | Enemy card | right edge at 99% x, 2% y | — | the opponent |
 | The table | full width, under the top row | element | both queues as cards, player left, enemy right |
 | The math band | table width, above the hand | — | empty at rest; the previewed hand's name, then the blow's arithmetic |
-| Action Flow | *built, not drawn* | pink | both queues in play order — see below |
 | Fight log | a dialog, 4–96% | pink | every round of the fight, behind the Log button |
 | Hand | centred in what the sort column leaves, 66% y | element | the cards, portrait, in one row |
 | Sort column | band's right edge, centred on the cards | slate | `$` / `T` / `E`, the hand's arrangement |
@@ -758,10 +757,11 @@ of sentences.
   **Ordering that bit once**: in `Init` the plan has to come *after* the life reset — the
   function refuses to plan for a dead duelist, and a screen re-entered after a defeat still has
   a corpse on it until then, so planning first dealt the next fight an opponent with no cards.
-- **The duel is open-information now, on the owner's call.** `concealEnemy` still governs the
-  Action Flow pane, but with the opponent's cards face up on the table there is nothing left for
-  it to hide. **The lever is still built**: `cards.Spec.FaceDown` draws a back and the draw pile
-  is a stack of them, so hiding this row again is a field rather than a second drawing path.
+- **The duel is open-information now, on the owner's call.** `concealEnemy` is still the screen's
+  concealment predicate, and the table deliberately ignores it — with the opponent's cards face up
+  there is nothing left for it to hide. **The lever is still built**: `cards.Spec.FaceDown` draws a
+  back and the draw pile is a stack of them, so hiding this row again is a field rather than a
+  second drawing path.
 - **The opponent's cards fly in from the enemy fighter card** in the top-right corner — the
   opponent itself, and the mirror of the player's cards coming out of their hand. There is no
   enemy draw pile on screen; inventing one would be a second thing to explain, where a card
@@ -823,7 +823,7 @@ re-trying: a hand that loses cards reflows whether or not it is topped back up. 
 is the whole end-of-round movement, which is why this is a branch in `endOfRound` rather than a
 rule inside `drawHand`.
 
-**What the freeze cost, and it is the shape of thing to look for again.** `s.resolved` used to be
+**What the freeze cost, and it is the shape of thing to look for again.** `s.theatre.resolved` used to be
 emptied in exactly two places — `seatPlayedCards` at the start of a round and `spendSelected` at
 the end of one — and that covered every case *only because every round ended in a spend*. With the
 last one frozen, the winning hand was still seated when the next fight started: it drew over the
@@ -946,41 +946,31 @@ the feed could not do — being read back.
   Both are in `TODO.md`. Neither is fixable inside the panel: the first wants a scroll gesture the
   input vocabulary has not got, the second wants the rounds moved onto `session.Session`.
 
-### Neither pane is drawn any more
+### The round narrates itself in pictures; the log holds the sentences
 
-*Split, then narrowed, then emptied.* The old single Resolution pane was renamed **Action Flow**
-and a new **Resolution** took its slot. Flow was **dropped from `Draw` as an experiment** on
-2026-08-07 and Resolution widened to take both columns; **Resolution was removed in turn on
-2026-08-18**, when the log arrived to hold what it had been holding. `drawActionFlow` and
-`actionFlowRows` are deliberately left in place and unwired, so restoring Flow is one line.
-`drawResolution`, `resolutionLines`, `planningLines`, `feedRect` and the long press that expanded
-the box are **deleted**, not unwired — the log is where those rows are read now.
+*Split, then narrowed, then emptied.* The screen carried two live panes at once — one for what you
+had **queued** and one for what had **happened**. The first was dropped from `Draw` on 2026-08-07
+and deleted on 2026-08-21; the second was removed on 2026-08-18, when the fight log arrived to hold
+what it had been holding. What draws these rows now is the log, and nothing else does.
 
-**What is given up, and it is not nothing:** the enemy's queued shape during planning was Flow's
-`??? (attack)` rows, and a running account of the round as it played was Resolution's. The first
-matters less than it did, since the table has drawn the opponent's cards face up since
-2026-08-12; the second is the trade the owner took — the table, the flights, the hand dialog and
-the travelling damage figure narrate a round in pictures, and the sentences are for reading back.
+**What is given up, and it is not nothing:** the enemy's queued shape during planning, and a
+running account of the round as it plays. The first matters less than it did, since the table has
+drawn the opponent's cards face up since 2026-08-12; the second is the trade the owner took — the
+table, the flights, the hand dialog and the travelling damage figure narrate a round in pictures,
+and the sentences are for reading back.
 
 **The prompt went with it.** `(press DUEL!)` was a line in the feed, and nothing carries it now;
 the button says DUEL! on its face, which is what has to be enough. **Nothing on screen says why a
 dark DUEL! button is dark** either — the AP bar going red says something is wrong, not what to do
 about it. That was already true and is now the only thing saying it.
 
-The rest of this section describes the split as designed, and still applies if Flow comes back.
+**A hand never has to be marked across non-adjacent slots**, which was the open problem for as
+long as a walking highlight down one row per slot was the only account of a round: the table keeps
+the cards that earned it raised, and the log says it in words. Same for a slot a chill deleted.
 
-- **Action Flow** is what you **queued**, in play order — live while you plan, before anything
-  has happened. A prediction, and what drag-to-reorder edits.
-- **Resolution** was what actually **happened** — empty until DUEL! was pressed, filling as the
-  round played back. A record, and that is the half the fight log took over.
-
-**Action Flow never learned to mark a hand across non-adjacent slots and does not have to**,
-because the table keeps those cards raised and the log says it in words. Same for a slot a chill deleted: Flow
-draws it as a row, the log reports it lost.
-
-**The narrow column and the wide one are not interchangeable.** Flow rows are short labels
-(`Strike`, `??? (attack)`) and fit the 15–39% column the Actions pane vacated. Sentences want the
-width, which is why the log is a full-screen panel rather than a column.
+**Short labels and sentences are not interchangeable**, which is why the log is a full-screen panel
+rather than a column: `Strike` fits a quarter of the width and "Duelist lands a Card Three of a
+Kind" does not.
 
 Four rules survive into the log, and they are the ones to protect:
 
@@ -1032,7 +1022,7 @@ that is the argument to answer.
 - **Prepare has no hue and inherits the row's ink.** As a chip it needed a pale ground *and* a
   near-black foreground, because white-on-white is invisible. With no ground there is nothing for
   a pale colour to be legible against, so it takes `p.ink` — already the colour that reads on that
-  pane, dark on Resolution and light on Action Flow. Being the category with no colour is also its
+  pane, whichever way round it is painted. Being the category with no colour is also its
   right rank: it is the one that does nothing to the opponent. `verbInkFor` returns **zero alpha**
   to mean this, the same "use the default" convention `Button.BaseColor` uses.
 - **The underline sits flush with the bottom of the measured line box**, never a constant above
@@ -1041,7 +1031,7 @@ that is the argument to answer.
   clears the `p` in "prepares". A rule placed a few pixels above the baseline struck through it.
 - **The prose lives in `internal/screens`, not `internal/combat`.** The rules package names cards;
   it does not describe them. **It is generated from the verb rather than tabulated** *(2026-08-16)*
-  — `actionPhrase` and `cardEffect` in `combat_panes.go`, switching on `Verb` and dropping the
+  — `actionPhrase` and `cardEffect` in `prose.go`, switching on `Verb` and dropping the
   card's own label in as the noun. There were two hand-maintained maps, one string per concept,
   which worked for fourteen concepts and cannot work for the ~400 that per-enemy decks produce: a
   card with no entry drew a blank face. **Every phrase carries an article** so `cardPhrase` can
@@ -1070,7 +1060,7 @@ are wanted, the pane has to get taller or the rows shorter first.
 Two panes, and three others were folded away to get there. Chosen folded into the palette;
 Enemy went because a merged Resolution already shows the opponent's actions in a better order
 than a column of its own; Actions went with the move to the bottom, since the hand has no frame
-and there was nothing left for a placement to hold. **Action Flow claimed the 15–39% column
+and there was nothing left for a placement to hold. **The queued-actions pane claimed the 15–39% column
 those left empty.**
 
 The player's rows carry `playerSwatch` green and the opponent's carry `enemySwatch` yellow, so
@@ -1178,7 +1168,7 @@ The active one latches darker than the other two.
 
 ## Hidden information is gated on `DebugGameplay`
 
-The opponent's queued actions are concealed in the enemy rows of the **Action Flow** pane
+The opponent's queued actions were concealed in the enemy rows of the queued-actions pane
 unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single predicate —
 `!gs.DebugGameplay && s.planning()` — and anything else that becomes secret should join it
 rather than growing a second rule.

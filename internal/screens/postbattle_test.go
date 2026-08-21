@@ -12,7 +12,7 @@ import (
 // this package take. Nothing here creates an ebiten.Image.
 
 func testRun() *state.GlobalState {
-	return &state.GlobalState{RunSeed: 20260817, Run: session.New(StartingDeck())}
+	return &state.GlobalState{RunSeed: 20260817, Run: session.New(session.StartingDeck())}
 }
 
 // TestTheOfferIsAWholeHandOffTheWholeDeck. The offer is a fresh deal, so it may name any card the

@@ -15,6 +15,27 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
+// **The band above the hand, which the Resolution feed used to occupy** *(vacated 2026-08-18)*.
+// Nothing is drawn there at rest now; what claims it is the hand dialog, which writes the
+// blow's arithmetic across it, and `drawPlannedHand`, which writes the name of the hand the
+// selection has already formed in the same place. See combat_mathbox.go.
+//
+// The two constants stay because the band does: `tableRowTop` keeps the played cards clear of
+// it, and `handMathRect` is measured from it. Their **values are the feed's** — the sum was
+// laid out and looked at against a box of exactly this height, so keeping the number is what
+// stops removing the feed from quietly re-laying out the arithmetic.
+const (
+	// mathBandHeight is how deep it is: what the feed's collapsed three rows came to.
+	mathBandHeight = 82
+
+	// mathBandGapAboveCards is how far its bottom edge sits above the resting hand row.
+	//
+	// **A selected card lifts by selectedNudge and does overlap it**, by 21 pixels, and that is
+	// accepted rather than overlooked: the band is measured against where the cards live, not
+	// against where one of them goes when it is picked.
+	mathBandGapAboveCards = 5
+)
+
 // The hand dialog: the blow's arithmetic acted out at the size of the screen, on the beat the
 // hand fires.
 //
@@ -50,7 +71,7 @@ const (
 	// different questions: how long a shout needs to be read, how long a figure takes to cross a
 	// quarter of the screen, and how long an operator needs to register. Tuning one should not
 	// move the others.
-	// **They are proportions of `eventDwellTicks` rather than durations** *(2026-08-19)*, so the
+	// **They are proportions of `beatTicks` rather than durations** *(2026-08-19)*, so the
 	// dialog speeds up and slows down with the round it is part of. The fractions reproduce the
 	// numbers they were tuned to — 35, 22, 10, 25, 40 — at a speed of 25. See beat.
 
@@ -339,15 +360,15 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	// multiplier would fly out of whichever of the two happened to be drawn last. The box keeps
 	// its own shout for a hand it did not carry down — an opponent's, which nothing produces
 	// today but which the engine can still emit.
-	if s.banner.showing(box.shout) {
+	if s.theatre.banner.showing(box.shout) {
 		box.shout = ""
-	} else if s.banner.flying {
+	} else if s.theatre.banner.flying {
 		// **The announcement wins over the banner it disagrees with.** The two can only differ if
 		// the hand that fired is not the hand that was planned — which nothing produces today,
 		// since only a chill can take a queued card away and no enemy can put a status on the
 		// player — but if it ever does, the truth is the event, and two words at one point would
 		// be worse than either alone.
-		s.banner.clear()
+		s.theatre.banner.clear()
 	}
 
 	// **Where each figure sets off from is the screen's business, not the script's.** The script
@@ -378,7 +399,7 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	s.layOutMath(gs, &box)
 	box.shoutAt = s.handShoutAt(gs)
 
-	s.mathBox = box
+	s.theatre.mathBox = box
 }
 
 // mathScript is the sum as a list of things to write, in the order they appear: a figure per card
@@ -544,9 +565,9 @@ func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {
 func (s *CombatScene) handCardCentre(gs *state.GlobalState, side combat.Side, seat int) image.Point {
 	var at image.Point
 	if side == combat.SideB {
-		at = enemySeatAt(gs, seat, len(s.enemyDealt), s.enemySplit())
+		at = enemySeatAt(gs, seat, len(s.theatre.enemyDealt), s.enemySplit())
 	} else {
-		at = playedSeatAt(gs, seat, len(s.resolved), s.playedSplit())
+		at = playedSeatAt(gs, seat, len(s.theatre.resolved), s.playedSplit())
 	}
 	at = lift(at, true)
 	return image.Pt(at.X+cardWidth/2, at.Y+cardHeight/2)
@@ -561,15 +582,15 @@ func (s *CombatScene) handCardCentre(gs *state.GlobalState, side combat.Side, se
 // inventing a colour.
 func (s *CombatScene) handCardInk(side combat.Side, seat int) color.RGBA {
 	if side == combat.SideB {
-		if seat < 0 || seat >= len(s.enemyDealt) {
+		if seat < 0 || seat >= len(s.theatre.enemyDealt) {
 			return groundInk
 		}
-		return cards.BorderOf(artFor(s.enemyDealt[seat].card.Element))
+		return cards.BorderOf(artFor(s.theatre.enemyDealt[seat].card.Element))
 	}
-	if seat < 0 || seat >= len(s.resolved) {
+	if seat < 0 || seat >= len(s.theatre.resolved) {
 		return groundInk
 	}
-	return cards.BorderOf(artFor(s.resolved[seat].card.Element))
+	return cards.BorderOf(artFor(s.theatre.resolved[seat].card.Element))
 }
 
 // handShoutAt is where the hand's name is written when it fires: **across the hand row**, dead
@@ -606,14 +627,14 @@ func (s *CombatScene) handShoutAt(gs *state.GlobalState) image.Point {
 // opponent's, which nothing produces today but which the engine can still emit. There is no second
 // line under that one, so the word is the only thing there to leave.
 func (s *CombatScene) handMultiplierOrigin(gs *state.GlobalState, e combat.Event) image.Point {
-	if s.banner.mult == "" || !s.banner.flying {
+	if s.theatre.banner.mult == "" || !s.theatre.banner.flying {
 		return s.handShoutAt(gs)
 	}
 
 	at := s.handShoutAt(gs)
-	at.Y += int(multLineDrop(gs, s.banner.name, mathNameSize))
+	at.Y += int(multLineDrop(gs, s.theatre.banner.name, mathNameSize))
 
-	line, _ := text.Measure(s.banner.mult, mathFace(gs, mathMultLineSize), 0)
+	line, _ := text.Measure(s.theatre.banner.mult, mathFace(gs, mathMultLineSize), 0)
 	figure, _ := text.Measure(handMultiplierText(e.Multiplier), mathFace(gs, mathMultLineSize), 0)
 	at.X += int(figure/2 - line/2)
 	return at
@@ -693,15 +714,15 @@ func (b *handMathBox) clear() { *b = handMathBox{} }
 // and the real shout can never be on screen together.
 func (s *CombatScene) drawPlannedHand(gs *state.GlobalState, screen *ebiten.Image) {
 	// The committed half: the same word on its way to, or resting in, the hand row.
-	if s.banner.flying {
+	if s.theatre.banner.flying {
 		// **The word travels and does not grow.** The journey is what says it has been committed,
 		// and the alpha coming up to solid says it with it; swelling as well made the size a
 		// second announcement, and the size is the one thing about the name that is the same in
 		// both of its homes. See mathNameSize.
-		t := easeOut(s.banner.flight.progress())
+		t := easeOut(s.theatre.banner.flight.progress())
 		at := lerpPoint(tableCentre(gs), handRowCentre(gs), t)
 		alpha := mathPreviewAlpha + (1-mathPreviewAlpha)*t
-		drawHandName(gs, screen, s.banner.name, s.banner.mult, mathNameSize, at,
+		drawHandName(gs, screen, s.theatre.banner.name, s.theatre.banner.mult, mathNameSize, at,
 			mathBreath(gs), float32(alpha))
 		return
 	}
@@ -777,7 +798,7 @@ func mathBreath(gs *state.GlobalState) float64 {
 // from nothing over the eleven ticks before its turn would make the line look pre-written, which
 // is exactly the impression the box exists to break.
 func (s *CombatScene) drawHandMath(gs *state.GlobalState, screen *ebiten.Image) {
-	b := &s.mathBox
+	b := &s.theatre.mathBox
 	if !b.active {
 		return
 	}
@@ -887,7 +908,7 @@ func mathBoldStep(size float64) float64 {
 	return mathBoldMinStep
 }
 
-// upper is the counterpart of `lower` in combat_panes.go, and it is written out rather than
+// upper is the counterpart of `lower` in prose.go, and it is written out rather than
 // taken from `strings` for no reason beyond that `lower` is: the two sit next to each other in
 // the same sentence-building code and reading one should not send you to a different idiom.
 func upper(s string) string {

@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
@@ -21,78 +20,21 @@ import (
 	"image/color"
 )
 
-// Playback pacing at 60 TPS. Destined to become the game-speed setting, and the one number
-// that setting will scale.
+// Playback pacing. **The speed itself is not here** — it is `beatTicks` in clock.go, which is the
+// game's rather than this screen's, and what lives here is how a round *spends* it: one multiplier
+// per event kind.
 //
-// **Every event holds the screen for exactly this long.** There is deliberately no per-kind
-// table and no dwellFor function to add a case to — the previous version had three dwells
-// selected by a switch with a `default` arm, and the default was the shortest of them. Every
-// event kind added after that switch was written therefore inherited a quarter-second flash
-// without anyone choosing it: KindNegated landed there on 2026-08-06 and a Defend blunting a
-// Heavy — one of the most consequential things that can happen in a round — went past faster
-// than the round-start beat. That is not a tuning mistake, it is a shape that produces
-// tuning mistakes, so the shape is gone.
-//
-// The cost is honest and worth stating: a round-start marker now holds as long as a killing
-// blow, and a round is longer to watch than it was. One constant is the price of never
-// having a new event kind quietly decide its own pacing.
-//
-// History for whoever tunes this. Three seconds per action was the original; halved on
-// 2026-08-02 because a six-action round took twenty seconds and the pause between a move and
-// its consequence read as the game hesitating. Damage was split out on 2026-08-04 for the
-// opposite reason — the announcement held for a second and a half while the number it
-// produced flashed past in a quarter of one. Both of those were real observations about
-// *content*, and both are better answered by one readable dwell than by ranking events.
-const (
-	ticksPerSecond = 60
-
-	// eventDwellTicks is **the game's one playback speed**, and every beat in a round is this
-	// number times its kind's multiplier. See eventDwells: tuning the whole of playback is this
-	// constant, and tuning one kind against the others is a multiplier — which is what makes
-	// "everything is too slow" and "prepares are too slow" two different edits rather than one
-	// argument.
-	//
-	// **Five twelfths of a second since 2026-08-19** *(owner's call, from playing it)*, where it
-	// was a second and a quarter. History, because the number has moved for real reasons twice
-	// before: three seconds an action originally; halved on 2026-08-02 because a six-action round
-	// took twenty seconds; up to 75 on 2026-08-07 because the Resolution feed had made every beat
-	// a sentence to read. **That last reason is gone** — the feed went behind a button on
-	// 2026-08-18 and the round narrates itself in pictures now, which is what a quarter of a
-	// second a beat is for.
-	eventDwellTicks = 25
-)
-
-// beat scales the playback speed by a fraction, and it is **how every clock on this screen that
-// is not the dwell itself is written** *(2026-08-19, owner's call)*: `eventDwellTicks` is the one
-// number, and a card's flight, a figure's journey and each beat of the hand dialog are all
-// proportions of it. Before this they were fifteen independent constants tuned against a dwell of
-// 75, so cutting the speed to 25 sped the round's *account* up and left every animation in it
-// exactly as slow as it was — a round paced by whichever of the two happened to be longer.
-//
-// **Never less than a tick**, or a small enough fraction of a slow enough speed becomes a
-// movement that does not happen. The fractions are written to reproduce the values those fifteen
-// constants had at a speed of 25, so this changed nothing on the day it landed; what it changes is
-// that they move together from here.
-//
-// **What is deliberately not written this way is `mathBreathTicks`** — see it for why.
-func beat(num, den int) int {
-	if ticks := eventDwellTicks * num / den; ticks > 1 {
-		return ticks
-	}
-	return 1
-}
-
 // victoryHoldTicks is how long a won fight sits finished before the post-battle screen takes over
 // by itself. A fraction of the one playback speed like every other clock here, and **the one
 // number to move if the pause reads as too long or too short** — the picture it holds up is the
 // last round of a won duel, cards on the table and an empty enemy bar. See holdVictory.
 var victoryHoldTicks = beat(4, 1)
 
-// eventDwells is each kind's share of the playback speed: a multiplier on `eventDwellTicks`,
+// eventDwells is each kind's share of the playback speed: a multiplier on `beatTicks`,
 // where 1 is the ordinary beat every event gets.
 //
 // **One speed setting and a table of proportions, rather than a table of durations**
-// *(2026-08-19, owner's call)*. Playback as a whole is `eventDwellTicks`; whether a chill should
+// *(2026-08-19, owner's call)*. Playback as a whole is `beatTicks`; whether a chill should
 // hold longer than a card firing is this table. Written as ticks, the two questions could not be
 // asked separately — every retune of the speed meant re-deriving every entry, and an entry that
 // had drifted out of proportion looked exactly like one that had been chosen.
@@ -141,7 +83,7 @@ func eventDwell(kind combat.EventKind) int {
 	if !ok {
 		mult = 1
 	}
-	if ticks := int(math.Round(eventDwellTicks * mult)); ticks > 1 {
+	if ticks := int(math.Round(beatTicks * mult)); ticks > 1 {
 		return ticks
 	}
 	return 1
@@ -152,46 +94,9 @@ func eventDwell(kind combat.EventKind) int {
 // on screen yet, so the lead-in takes the plain beat.
 func (s *CombatScene) dwellForCurrent() int {
 	if s.cursor <= 0 || s.cursor > len(s.log) {
-		return eventDwellTicks
+		return beatTicks
 	}
 	return eventDwell(s.log[s.cursor-1].Kind)
-}
-
-// The order enemies are fought in: **every record in the roster** *(2026-08-11)*, shallowest
-// floor first, where it was a hand-written list of four. Beat one and the next steps up; lose
-// and the same one comes round again.
-//
-// **It is scaffolding and the tower replaces it wholesale.** MECHANICS.md already decides
-// 8 floors x 3 fights with doors between them, so nothing here is a design decision being
-// made early — it is a list standing in for a generator. Sorting by `ValidFloors` is what
-// makes walking it feel like climbing: a floor-one Goblin comes before a floor-eight
-// Bio-Titan because the data says where each belongs, not because someone typed them in that
-// order.
-//
-// **Shuffled inside each floor band since 2026-08-11, so a run opens on a different opponent
-// every launch.** The floor ordering is kept and the order *within* a floor is rolled from the
-// run seed: fight one is some floor-one enemy rather than always the alphabetically first one,
-// and playing over time reaches all 96 by a different route each run.
-//
-// **It shuffles within the bands rather than shuffling the list**, and that is the whole
-// design. A flat shuffle would put a floor-eight Bio-Titan up as the opening fight, which is
-// not a hard first fight but an unwinnable one — the failure `tools/balance` exists because of,
-// and one that looks exactly like losing to bad draws. Sorted-then-shuffled keeps the climb and
-// still varies the group.
-//
-// **It is still not the tower's randomiser.** Floor generation will pick from the records a
-// floor allows off this same stream; this is one shuffle of a stand-in list, and it goes when
-// the generator arrives.
-//
-// Built in Init rather than at package scope: it reads the loaded roster and the run seed out
-// of global state, neither of which exists until main has run. Rolled once per launch — a
-// death and a retry walk the same order, because there is no Session yet to re-roll a seed.
-func (s *CombatScene) roster(gs *state.GlobalState) []string {
-	if s.enemyRoster == nil {
-		s.enemyRoster = shuffleWithinFloors(data.EnemyOrder(gs.Enemies), gs.Enemies,
-			rand.New(rand.NewSource(seeds.For(gs.RunSeed, seeds.EnemySelect))))
-	}
-	return s.enemyRoster
 }
 
 // shuffleSeeds says what the two decks are shuffled from for the fight about to start: the
@@ -217,30 +122,6 @@ func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) 
 	}
 	return seeds.ForFight(gs.RunSeed, seeds.PlayerDeck, s.fightIndex),
 		seeds.ForFight(gs.RunSeed, seeds.EnemyDeck, s.fightIndex)
-}
-
-// shuffleWithinFloors reorders a floor-sorted roster inside each run of equal ValidFloors,
-// leaving the bands themselves where they are.
-//
-// It takes the source rather than reaching for one, so the caller owns which stream is being
-// advanced, and it is a plain function of its arguments so a test can hand it a fake roster
-// and a fixed seed. Never `rand.Shuffle` — the package-level one draws from a global source
-// shared with every other caller and would make a run unreproducible.
-func shuffleWithinFloors(names []string, recs map[string]data.EnemyData, rng *rand.Rand) []string {
-	out := append([]string(nil), names...)
-
-	for start := 0; start < len(out); {
-		end := start + 1
-		for end < len(out) && recs[out[end]].ValidFloors == recs[out[start]].ValidFloors {
-			end++
-		}
-
-		band := out[start:end]
-		rng.Shuffle(len(band), func(i, j int) { band[i], band[j] = band[j], band[i] })
-
-		start = end
-	}
-	return out
 }
 
 // The selection is capped at `s.fighter.MaxActions()` cards **regardless of what they
@@ -273,31 +154,6 @@ func shuffleWithinFloors(names []string, recs map[string]data.EnemyData, rng *ra
 // Four against a hand of eight is deliberately generous for now — a number to play against,
 // not a balanced one.
 const discardsPerRound = 4
-
-// screenGround is what the whole combat screen is painted on, and **it went cream on
-// 2026-08-14**, from the {50,50,50} dark grey it had been since the screen existed.
-//
-// **Everything drawn straight onto it had assumed a dark ground**, which is the cost of the
-// change and the reason it is a named constant now rather than a literal in Draw. Three
-// figures were white and are now `groundInk`; the action-point bar's empty cells were
-// `ColorAtStrength(apBarColor, 20)`, which scales toward black and therefore came out *louder*
-// than the filled cells on a light ground — exactly the failure `systems.ColorToward` was
-// written for; and the ring row's backing had to stop being one step *lighter* than the ground
-// and become one step darker.
-//
-// **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} and the
-// fight log's panel fill is {234,230,224} — because a card, a panel and the table cannot all be
-// the same off-white or the objects stop having edges. The warmth is where the separation
-// comes from: the ground is the yellowest of the three.
-var screenGround = color.RGBA{R: 226, G: 208, B: 176, A: 255}
-
-// groundInk is for text written straight onto the ground rather than onto a card, a pane or a
-// button — the action-point figure, the draw pile's count and the ring row's fraction. Near
-// black and slightly warm, so it belongs to the cream rather than sitting on it.
-//
-// Anything drawn on a surface of its own takes that surface's ink instead; this is only for
-// the three figures with nothing behind them.
-var groundInk = color.RGBA{R: 44, G: 40, B: 34, A: 255}
 
 // apBarColor is the action-point bar's blue. It is deliberately not the palette's green:
 // the bar reports the budget rather than belonging to the cards, and giving it its own
@@ -385,72 +241,21 @@ type CombatScene struct {
 	// say. Events are what the engine produced; everything else is a reading of them.
 	rounds [][]combat.Event
 
-	// Cards currently travelling to or from the draw pile. Purely something to look at:
-	// every one of them is a ghost of a card that has already moved. See combat_flight.go.
-	flights []cardFlight
-
-	// Cards currently moving from one slot in the hand to another — a sort, or the row
-	// closing up after cards were spent. Separate from flights rather than a fourth flag on
-	// one, because a slide is the only mover whose journey begins and ends in the row, and it
-	// is the only one that needs a row size at each end.
-	slides []handSlide
-
-	// The player's side of the table: the cards played this round, in resolution order, flying
-	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
-	// moment the round starts — see seatPlayedCards — and what a hand narrows to the cards it
-	// was made of.
+	// theatre is everything this screen has moving on it: the cards in the air, the two rows on
+	// the table, the damage figures, the banked points, the hand's name and the sum it flies into.
 	//
-	// Cleared when the hand is spent, which is the moment those cards actually leave.
-	resolved []resolvedCard
-
-	// The opponent's side of the table: their whole queue for the coming round, flying in from
-	// their own card in the top-right corner and settling into a row on the right.
-	//
-	// **It is laid out when the opponent plans, which is the start of the planning phase**, so
-	// the player picks their round against a hand they can see. Re-seated once per round; see
-	// planEnemyRound.
-	enemyDealt []dealtCard
-
-	// firingSeats and enemyFiringSeats are which cards on each side of the table are resolving
-	// right now, empty for none. **Playback drives which cards are lit, not which cards exist**:
-	// both hands are on the table from the moment DUEL! is pressed.
-	//
-	// Two fields rather than a side-plus-seat pair, because both rows are drawn independently
-	// and each only ever asks about itself. `noteResolved` writes both on every action, so only
-	// one side is ever lit at a time.
-	//
-	// **A list rather than one seat, because the attack phase is one blow** *(2026-08-14)*. The
-	// cards announce one after another and stay up as they do, so the whole hand is raised by the
-	// time the hand lands on it — and the hand then drops whichever of them earned nothing. A
-	// single lit seat could only ever say "this card", which is the reading the one-blow rule
-	// exists to stop.
-	firingSeats      []int
-	enemyFiringSeats []int
-
-	// hits are the damage figures currently travelling into a fighter card, and the reason a
-	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
-	// while one of these is up; what waits is the drawing.
-	hits []hitFlight
-
-	// banks are the `+2 AP` figures a Prepare sends to the fighter card whose budget it raises,
-	// and bankShown is what they have already delivered — the points a card's AP line is drawing
-	// on top of `Duelist.BonusAP`, which the engine does not write until the round's end state is
-	// adopted. Indexed by side. See combat_bank.go.
-	banks     []bankFlight
-	bankShown [2]int
-
-	// banner is the name of the hand the player committed, on its way from the planning seat to
-	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
-	// which is what makes the planned name and the fired one one word that moves rather than two
-	// that appear. See combat_mathbox.go.
-	banner handBanner
+	// **Eleven flat fields until 2026-08-21**, with the rules that govern all of them repeated as
+	// comments across six files. See theatre.go for those rules and why they are a type now. The
+	// one this grouping actually buys: a theatre is taken down all at once, so `Init` clears it in
+	// a line rather than in six statements that each had to be remembered.
+	theatre combatTheatre
 
 	// The fighter's own resources, drawn in the character block. discardsLeft refills
 	// every round. **Vitae is the run's, not the screen's** *(2026-08-17)* — see session.Session,
 	// which is what the post-battle screen pays into.
 	discardsLeft int
 
-	// fightIndex is how far along enemyRoster the player has got.
+	// fightIndex is which room of the climb the player is in.
 	//
 	// **The run owns this now** *(2026-08-17)* — `session.Session.Fight()` — because the
 	// post-battle screen seeds its offer from it and a number living on one scene is invisible to
@@ -472,11 +277,6 @@ type CombatScene struct {
 	// `won` without anybody pressing anything. See victoryHoldTicks.
 	victoryHeld int
 
-	// enemyRoster is the fight order, built once from the loaded records. On the scene
-	// rather than at package scope because it reads global state, which does not exist
-	// until main has run. See roster.
-	enemyRoster []string
-
 	// tracedHand is the hand size the last layout dump described. The whole bottom band is
 	// a function of that number — the pitch, the row, the AP bar, the caption box — so a
 	// change to it is exactly when the dump is worth repeating. Watching the size rather
@@ -489,15 +289,6 @@ type CombatScene struct {
 	cursor int
 	ticks  int
 	round  int
-
-	// mathBox is the hand dialog: the blow's arithmetic acted out across the band above the hand
-	// on the beat the hand fires. See combat_mathbox.go.
-	//
-	// **It is the one thing on this screen that can stop the playback cursor.** Every other
-	// animation runs on its own clock beside the log; this one is a beat *of* the log, because a
-	// sum revealed a figure at a time does not fit inside a single event's dwell. It still
-	// decides nothing — `ResolveRound` settled the round before any of it was drawn.
-	mathBox handMathBox
 
 	// The authoritative end-of-round state, adopted once playback catches up. Guard
 	// flags in particular only exist here, since no event carries them.
@@ -541,7 +332,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// entered — see nextFight.
 	// The run says which room this is; the scene keeps a copy for the frame. See fightIndex.
 	s.fightIndex = gs.Run.Fight()
-	s.enemy = enemyFromRecord(gs, s.roster(gs)[s.fightIndex%len(s.roster(gs))], s.fightIndex)
+	s.enemy = enemyFromRecord(gs, gs.Run.Enemy(), s.fightIndex)
 
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.
@@ -597,33 +388,15 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.showDeck = false
 	s.showLog = false
 
-	s.flights = nil
-	s.slides = nil
-	s.firingSeats, s.enemyFiringSeats = nil, nil
-	s.mathBox.clear()
-	s.banner.clear()
+	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
+	// statements, each added after something was found still on screen at the start of the next
+	// fight — a figure in the air belongs to the fight that raised it, a Prepare's points are a
+	// fact about one round of one fight, and the played cards drew over the new table and blanked
+	// the hand slots they claimed. All of those are the same bug: a settled duel freezes rather
+	// than spending its hand, so anything tidied up only by the end-of-round spend is still there.
+	// A mover added tomorrow is covered without anybody remembering. See combatTheatre.clear.
+	s.theatre.clear()
 
-	// **A figure in the air belongs to the fight that raised it.** A settled duel freezes rather
-	// than spending its hand, so nothing between rounds clears this — the same trap the note below
-	// records about `s.resolved`: anything tidied up only by the end-of-round spend is still on
-	// screen when the next fight starts.
-	s.clearHits()
-
-	// **The banked figures go with them**, and for the same reason: a Prepare's points are a fact
-	// about one round of one fight, and `bankShown` is a drawing that only the end of a round takes
-	// down.
-	s.clearBanks()
-
-	// **The table is cleared here as well as by the spend** *(2026-08-16)*. `s.resolved` used to
-	// be emptied in exactly two places — `seatPlayedCards` at the start of a round and
-	// `spendSelected` at the end of one — and that covered every case only because every round
-	// ended in a spend. A settled duel now freezes instead (see endOfRound), so the last round's
-	// cards were still seated when the next fight started: they drew over the new table, and
-	// `resolvedInHand` blanked the hand slots they claimed, so the fresh hand came up with holes
-	// in it. `enemyDealt` goes with it — `planEnemyRound` below rebuilds it, and a scene that
-	// clears one half of the table and not the other is a trap for the next change.
-	s.resolved = nil
-	s.enemyDealt = nil
 	s.restart = false
 	s.victoryHeld = 0
 	s.discardsLeft = discardsPerRound
@@ -787,21 +560,21 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	if s.won {
 		s.won = false
 		gs.Run.WonFight()
-		gs.ActiveScreen = state.PostBattle
-		gs.NewScreen = true
+		advanceRun(gs)
 		return nil
 	}
 
-	// Cards in the air, and the pile they come from. Both are outside every branch below on
-	// purpose: a flight that started before the killing blow should still land, and the deck
+	// **Everything moving, and the pile the cards come from. Both are outside every branch below
+	// on purpose**: a flight that started before the killing blow should still land, and the deck
 	// stack is the only control that survives its own overlay — it is what closes it.
-	s.updateFlights()
-	s.updateSlides()
-	s.updateResolved()
-	// The committed hand's name, flying down into the hand row. Here rather than in playback
-	// because it sets off at DUEL!, before the first event is reached, and must not be held up by
-	// the dialog that stops the cursor. See handBanner.
-	s.banner.tick()
+	//
+	// **It is also before advancePlayback and never inside it.** The cursor waits on a figure
+	// still in the air, so a tick that only ran when playback was allowed to advance would leave
+	// the flight frozen at age zero and hang the round on itself. The figures used to tick further
+	// down for that reason, below the settled-duel branch; one call here is strictly earlier and
+	// strictly more often, and it cannot reach a figure that was in the air when the duel settled
+	// because playback does not finish until every figure has landed.
+	s.theatre.tick()
 	// **The pile is dead under the log and the Log button is dead under the deck**, and each
 	// survives its own overlay because it is the only thing that closes one. Neither may be
 	// reachable through the panel the other has put up: a dialog whose exit is not the
@@ -878,11 +651,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	systems.UpdateButton(gs, s.duelButton)
 	systems.UpdateButton(gs, s.discardButton)
 
-	// **Before advancePlayback, not after, and never inside it.** The cursor waits on a figure
-	// still in the air, so a tick that only ran when playback was allowed to advance would leave
-	// the flight frozen at age zero and hang the round on itself.
-	s.tickHits()
-	s.tickBanks()
 	s.advancePlayback(gs)
 
 	if trace.Enabled() && len(s.hand) != s.tracedHand {
@@ -925,9 +693,9 @@ func (s *CombatScene) startRound() {
 	// adopted — so this is the last frame the screen can name what the player built. From here it
 	// is the banner's, and it flies down into the hand row as the cards fly up to the table. See
 	// handBanner.
-	s.banner.clear()
+	s.theatre.banner.clear()
 	if blow, ok := s.previewAttack(); ok {
-		s.banner = handBanner{
+		s.theatre.banner = handBanner{
 			name: handShout(blow.Hand.Name),
 			// The multiplier travels with the name, so what the hand is worth is written down
 			// from the moment it was chosen rather than first met when the figure flies out of
@@ -970,8 +738,8 @@ func (s *CombatScene) startRound() {
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of
 	// the hand by the flights seatPlayedCards raises. Nothing here decides anything — the round
 	// above is already resolved. See combat_table.go.
-	s.firingSeats, s.enemyFiringSeats = nil, nil
-	s.mathBox.clear()
+	s.theatre.firingSeats, s.theatre.enemyFiringSeats = nil, nil
+	s.theatre.mathBox.clear()
 	s.seatPlayedCards()
 
 	// The whole round, not a count of it. ResolveRound already decided every one of these
@@ -1043,32 +811,28 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	//
 	// **It still cannot change an outcome.** The round was decided before a frame of this was
 	// drawn; what waits is the drawing of it.
-	if s.mathBox.running() {
-		s.mathBox.tick()
+	if s.theatre.mathBox.running() {
+		s.theatre.mathBox.tick()
 		// **The banner goes when its own figure sets off** *(2026-08-19, owner's call)*. The
 		// multiplier flies out of the second line under the hand's name and into the sum, so from
 		// that frame the number is in the line and the banner is a copy of something that has
 		// moved. The name goes with it rather than a beat later: it has been carried down, said,
 		// and spent, and leaving it lit over the hand while the sum finishes and the enemy swings
 		// back is a word breathing at the player long after it has anything left to tell them.
-		if s.mathBox.at >= s.mathBox.multAt {
-			s.banner.clear()
+		if s.theatre.mathBox.at >= s.theatre.mathBox.multAt {
+			s.theatre.banner.clear()
 		}
 		return
 	}
 
-	// **A landing figure holds the cursor for the same reason** *(2026-08-18)*. The number crosses
-	// half the screen and the target's health bar is waiting on it, so letting playback run on
-	// would drop the bar before the figure reached it — which is the picture the flight exists to
-	// remove. See combat_hits.go; it changes pacing and cannot change an outcome.
-	if s.hitsRunning() {
-		return
-	}
-
-	// **And a banked figure holds it too**, for the same reason and with the same limits: the AP
-	// line on the fighter card is waiting on the number, so playback running on would raise the
-	// budget before the points got there. See combat_bank.go.
-	if s.banksRunning() {
+	// **A landing figure holds the cursor** *(2026-08-18)*. A damage figure crosses half the screen
+	// with the target's health bar waiting on it, and a banked figure crosses to the fighter card
+	// with its AP line waiting — so letting playback run on would drop the bar, or raise the
+	// budget, before the number got there, which is the picture the flights exist to remove.
+	//
+	// **Which movers hold the round is the theatre's answer, not this function's** — see
+	// combatTheatre.running. It changes pacing and cannot change an outcome.
+	if s.theatre.running() {
 		return
 	}
 
@@ -1091,8 +855,8 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	//
 	// A turn that misses rather than landing clears it the same way, on its `KindMissed`. When the
 	// strike-through arrives that event will want this same handoff, so keep them together.
-	if s.mathBox.active && !s.mathBox.running() {
-		s.mathBox.clear()
+	if s.theatre.mathBox.active && !s.theatre.mathBox.running() {
+		s.theatre.mathBox.clear()
 	}
 
 	s.applyEvent(s.log[s.cursor])
@@ -1130,7 +894,7 @@ func (s *CombatScene) endOfRound() {
 	// **The adoption above is where banked points become `BonusAP`**, so what the cards have been
 	// drawing on top of it since the figures landed is now in the model and has to stop being
 	// added. Before the early return below: a settled duel adopts its end state like any other.
-	s.bankShown = [2]int{}
+	s.theatre.bankShown = [2]int{}
 
 	if s.duelSettled() {
 		return
@@ -1139,7 +903,7 @@ func (s *CombatScene) endOfRound() {
 	// **The banner is usually gone by now**, cleared on the frame its multiplier flew into the sum
 	// — see advancePlayback. This is the round that scored no hand at all: nothing took the name
 	// down because nothing ever asked for it.
-	s.banner.clear()
+	s.theatre.banner.clear()
 
 	// The hand is spent here rather than at resolve time, and the ordering matters:
 	// endRoundHand rebuilds fighterActions from what is left, and the Resolution pane draws
@@ -1183,7 +947,7 @@ func (s *CombatScene) planEnemyRound() {
 	//
 	// **After the alive check, not before it.** A finished duel keeps its last round on the table
 	// with the killing blow still raised; that row is the result the player is looking at.
-	s.firingSeats, s.enemyFiringSeats = nil, nil
+	s.theatre.firingSeats, s.theatre.enemyFiringSeats = nil, nil
 
 	s.enemyActions = s.enemyPile.Plan(s.enemy.Duelist)
 	s.seatEnemyCards()
@@ -1336,15 +1100,6 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// the enemy card, because a box held open reached 12% and the opponent sits at 34%. The
 	// band it left is claimed by the hand dialog and the planned hand's name, both of which
 	// are drawn much later and neither of which is ever held open.
-	//
-	// EXPERIMENT 2026-08-07: Action Flow is not drawn either. drawActionFlow and actionFlowRows
-	// are deliberately left in place and unwired so this is one line to put back — and with the
-	// feed gone it is the only pane the screen still has.
-	//
-	// **What that gives up:** the enemy's queued shape while planning. Those `??? (attack)`
-	// rows are the tell — see the concealment section of the combat-screen skill — though the
-	// table has drawn the opponent's cards face up since 2026-08-12, which is most of what the
-	// pane was hiding.
 	s.drawHandRow(gs, screen)
 
 	// Over the panes and the button it passes across.
@@ -1460,8 +1215,6 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 
 	band := handBand(gs, s.laidOutCount())
 	trace.Rect("handBand", band)
-	trace.Rect("actionFlowPane", panePlacementRect(gs, actionFlowPane))
-
 	// The band above the hand. Nothing is drawn there at rest — the feed left it on
 	// 2026-08-18 — but the hand dialog and the planned hand's name are both laid out
 	// against it, so it is worth a rectangle in the dump.
@@ -1537,7 +1290,7 @@ func planLabel(cards []combat.Card) string {
 }
 
 // enemyFromRecord hydrates an enemy out of global state, **grown to the fight it is met at** —
-// see entities.ScaleToFight. `fightIndex` is the whole of what the ascent curve reads, which is
+// see pyramid.ScaleToFight. `fightIndex` is the whole of what the ascent curve reads, which is
 // the same counter the floor and room under the duelist card are derived from.
 //
 // **No sheet to look up any more** — the enemy is a card, so its picture is a portrait key

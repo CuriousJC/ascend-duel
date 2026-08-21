@@ -38,7 +38,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"image/color"
 )
@@ -116,18 +115,27 @@ const (
 	settled
 )
 
-// settleFlightTicks is how long the won card takes to cross to the middle.
+// This screen's two clocks, **both proportions of the game's one speed** *(2026-08-21)*.
 //
-// **Cards fly to where they are going, everywhere in this game** — see the combat screen's
-// `combat_flight.go`, which is where the idea and the `travel` clock come from. A card that
-// appears in the middle is a card that was never anywhere else, and the whole point of this screen
-// is that a thing was *won* and has come to you.
-const settleFlightTicks = 26
+// They were raw tick counts — 26 and 100 — written before `beat` existed, which meant this screen
+// was outside the setting the duel is paced by: turning the game's speed down would have sped up a
+// round and left the reward screen exactly as slow as it was. See clock.go. The one behaviour
+// change is that the flight is 25 ticks rather than 26, which is a frame and a half.
+//
+// `var` rather than `const` because `beat` is a function, exactly like `victoryHoldTicks`.
+var (
+	// settleFlightTicks is how long the won card takes to cross to the middle.
+	//
+	// **Cards fly to where they are going, everywhere in this game.** A card that appears in the
+	// middle is a card that was never anywhere else, and the whole point of this screen is that a
+	// thing was *won* and has come to you.
+	settleFlightTicks = beat(1, 1)
 
-// morphHoldTicks is how long the finished card is held before the screen leaves. **Long enough to
-// read, short enough not to need a button** — the click that took the worm is the last input the
-// player has to make.
-const morphHoldTicks = 100
+	// morphHoldTicks is how long the finished card is held before the screen leaves. **Long enough
+	// to read, short enough not to need a button** — the click that took the worm is the last
+	// input the player has to make.
+	morphHoldTicks = beat(4, 1)
+)
 
 // PostBattleScene offers one alteration to the run deck.
 type PostBattleScene struct {
@@ -338,8 +346,7 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 			if s.rearm(gs) {
 				return nil
 			}
-			gs.ActiveScreen = state.Combat
-			gs.NewScreen = true
+			advanceRun(gs)
 		}
 		return nil
 	}
@@ -673,13 +680,6 @@ func (s *PostBattleScene) drawMorph(gs *state.GlobalState, screen *ebiten.Image,
 // kubasta font has no U+2014 and draws a missing-glyph box for it.
 const gone = "->"
 
-// drawEmptySeat is where a removed card is not. An outline the size of a card, so the row reads as
-// two seats with one deliberately empty.
-func drawEmptySeat(screen *ebiten.Image, at image.Rectangle) {
-	vector.StrokeRect(screen, float32(at.Min.X), float32(at.Min.Y),
-		float32(at.Dx()), float32(at.Dy()), 3, groundInk, false)
-}
-
 // settledSeat is where the won card comes to rest.
 func settledSeat(gs *state.GlobalState) image.Rectangle {
 	top := gs.PctY(36)
@@ -711,17 +711,6 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 		return
 	}
 	drawCard(gs, screen, at, cards.Hand, card, deckCardCost(gs, card), true, false)
-}
-
-// flyingTo is where a card sits part-way between two seats. **Eased out**, so it leaves quickly
-// and arrives gently — the same shape the combat screen's flights use, because a card decelerating
-// into its seat is what makes it read as landing rather than as stopping.
-func flyingTo(from, to image.Rectangle, t travel) image.Point {
-	p := easeOut(t.progress())
-	return image.Pt(
-		from.Min.X+int(float64(to.Min.X-from.Min.X)*p),
-		from.Min.Y+int(float64(to.Min.Y-from.Min.Y)*p),
-	)
 }
 
 func (s *PostBattleScene) title() string {

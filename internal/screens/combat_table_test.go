@@ -204,18 +204,18 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 		combat.Of(combat.Jab, combat.Earth),
 		combat.Of(combat.Prepare, combat.Ice),
 	}
-	if len(s.resolved) != len(want) {
-		t.Fatalf("%d cards were seated, want %d", len(s.resolved), len(want))
+	if len(s.theatre.resolved) != len(want) {
+		t.Fatalf("%d cards were seated, want %d", len(s.theatre.resolved), len(want))
 	}
 	for i, c := range want {
-		if got := s.resolved[i].card; got != c {
+		if got := s.theatre.resolved[i].card; got != c {
 			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
 
 	// And every seat knows which hand slot it came from, which is what the end-of-round throw
 	// and the hand row's own hiding both read.
-	for i, r := range s.resolved {
+	for i, r := range s.theatre.resolved {
 		if r.handIndex < 0 || r.handIndex >= len(s.hand) {
 			t.Errorf("seat %d came from hand slot %d, which is not in a hand of %d",
 				i, r.handIndex, len(s.hand))
@@ -265,16 +265,16 @@ func TestOnlyOneSideOfTheTableIsLitAtATime(t *testing.T) {
 	// applyEvent before it increments. currentSlot counts inclusively for that reason.
 	s.cursor = 0
 	s.noteResolved(s.log[0])
-	if !sameSeats(s.firingSeats, []int{0}) || len(s.enemyFiringSeats) != 0 {
+	if !sameSeats(s.theatre.firingSeats, []int{0}) || len(s.theatre.enemyFiringSeats) != 0 {
 		t.Errorf("after the player's card: player %v, enemy %v — want [0] and none",
-			s.firingSeats, s.enemyFiringSeats)
+			s.theatre.firingSeats, s.theatre.enemyFiringSeats)
 	}
 
 	s.cursor = 1
 	s.noteResolved(s.log[1])
-	if len(s.firingSeats) != 0 || !sameSeats(s.enemyFiringSeats, []int{0}) {
+	if len(s.theatre.firingSeats) != 0 || !sameSeats(s.theatre.enemyFiringSeats, []int{0}) {
 		t.Errorf("after the opponent's card: player %v, enemy %v — want none and [0]",
-			s.firingSeats, s.enemyFiringSeats)
+			s.theatre.firingSeats, s.theatre.enemyFiringSeats)
 	}
 }
 
@@ -305,8 +305,8 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	// not which card is acting — no single card is.
 	s.cursor = 0
 	s.noteResolved(s.log[0])
-	if !sameSeats(s.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the first announcement raised %v, want all three cards up at once", s.firingSeats)
+	if !sameSeats(s.theatre.firingSeats, []int{0, 1, 2}) {
+		t.Errorf("the first announcement raised %v, want all three cards up at once", s.theatre.firingSeats)
 	}
 
 	// And the rest of the phase names the same set rather than adding to it.
@@ -314,8 +314,8 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 		s.cursor = i
 		s.noteResolved(s.log[i])
 	}
-	if !sameSeats(s.firingSeats, []int{0, 1, 2}) {
-		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.firingSeats)
+	if !sameSeats(s.theatre.firingSeats, []int{0, 1, 2}) {
+		t.Errorf("the attack phase ended with %v raised, want all three cards up", s.theatre.firingSeats)
 	}
 
 	// The Jab built no hand, so the hand takes it back down. **Raising is the whole of what says
@@ -325,8 +325,8 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	hand.HandCards[0], hand.HandCards[1] = 0, 1
 	s.noteHand(hand)
 
-	if !sameSeats(s.firingSeats, []int{0, 1}) {
-		t.Errorf("the hand left %v raised, want only the two cards that formed it", s.firingSeats)
+	if !sameSeats(s.theatre.firingSeats, []int{0, 1}) {
+		t.Errorf("the hand left %v raised, want only the two cards that formed it", s.theatre.firingSeats)
 	}
 }
 
@@ -384,11 +384,11 @@ func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
 	s.seatEnemyCards()
 
 	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Prepare)
-	if len(s.enemyDealt) != len(want) {
-		t.Fatalf("%d cards were seated, want %d", len(s.enemyDealt), len(want))
+	if len(s.theatre.enemyDealt) != len(want) {
+		t.Fatalf("%d cards were seated, want %d", len(s.theatre.enemyDealt), len(want))
 	}
 	for i, c := range want {
-		if got := s.enemyDealt[i].card; got != c {
+		if got := s.theatre.enemyDealt[i].card; got != c {
 			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
@@ -440,11 +440,11 @@ func TestBothRowsUseTheSameArrivalClock(t *testing.T) {
 	s.seatPlayedCards()
 	s.seatEnemyCards()
 
-	if len(s.resolved) != len(s.enemyDealt) {
-		t.Fatalf("%d player seats against %d enemy seats", len(s.resolved), len(s.enemyDealt))
+	if len(s.theatre.resolved) != len(s.theatre.enemyDealt) {
+		t.Fatalf("%d player seats against %d enemy seats", len(s.theatre.resolved), len(s.theatre.enemyDealt))
 	}
-	for i := range s.resolved {
-		if got, want := s.enemyDealt[i].travel, s.resolved[i].travel; got != want {
+	for i := range s.theatre.resolved {
+		if got, want := s.theatre.enemyDealt[i].travel, s.theatre.resolved[i].travel; got != want {
 			t.Errorf("seat %d: enemy clock %+v, player clock %+v", i, got, want)
 		}
 	}
@@ -472,11 +472,11 @@ func TestTheOpponentPlansOnceAndTheTableShowsThatPlan(t *testing.T) {
 	}
 
 	// What is on the table is what was planned, in resolution order.
-	if len(s.enemyDealt) != len(planned) {
-		t.Fatalf("%d cards on the table against a plan of %d", len(s.enemyDealt), len(planned))
+	if len(s.theatre.enemyDealt) != len(planned) {
+		t.Fatalf("%d cards on the table against a plan of %d", len(s.theatre.enemyDealt), len(planned))
 	}
 	for i, c := range s.enemyQueueOrder() {
-		if got := s.enemyDealt[i].card; got != c {
+		if got := s.theatre.enemyDealt[i].card; got != c {
 			t.Errorf("seat %d holds %v, want %v", i, got, c)
 		}
 	}
@@ -621,14 +621,14 @@ func TestANewPlanArrivesWithNothingRaised(t *testing.T) {
 	}
 
 	// Where the last round's playback left them.
-	s.firingSeats = []int{0, 1}
-	s.enemyFiringSeats = []int{1}
+	s.theatre.firingSeats = []int{0, 1}
+	s.theatre.enemyFiringSeats = []int{1}
 
 	s.planEnemyRound()
 
-	if len(s.firingSeats) != 0 || len(s.enemyFiringSeats) != 0 {
+	if len(s.theatre.firingSeats) != 0 || len(s.theatre.enemyFiringSeats) != 0 {
 		t.Errorf("the new plan arrived with %v and %v raised, want nothing lit",
-			s.firingSeats, s.enemyFiringSeats)
+			s.theatre.firingSeats, s.theatre.enemyFiringSeats)
 	}
 }
 
@@ -645,15 +645,15 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 	}
 
 	// The killing blow is still raised, and stays raised.
-	s.enemyFiringSeats = []int{0}
+	s.theatre.enemyFiringSeats = []int{0}
 
 	s.planEnemyRound()
 
-	if len(s.enemyActions) != 0 || len(s.enemyDealt) != 0 {
-		t.Errorf("a dead opponent planned %v and seated %d cards", s.enemyActions, len(s.enemyDealt))
+	if len(s.enemyActions) != 0 || len(s.theatre.enemyDealt) != 0 {
+		t.Errorf("a dead opponent planned %v and seated %d cards", s.enemyActions, len(s.theatre.enemyDealt))
 	}
-	if len(s.enemyFiringSeats) != 1 {
-		t.Errorf("the finished round was cleared off the table: %v", s.enemyFiringSeats)
+	if len(s.theatre.enemyFiringSeats) != 1 {
+		t.Errorf("the finished round was cleared off the table: %v", s.theatre.enemyFiringSeats)
 	}
 }
 

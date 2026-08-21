@@ -28,7 +28,7 @@ import (
 // that has already left. Nothing in this file is consulted by a rule, a predicate or a
 // button's enabled state.
 //
-// It is animated on its own clock rather than through eventDwellTicks. That is deliberate
+// It is animated on its own clock rather than through beatTicks. That is deliberate
 // and recorded in TODO.md: playback pacing is one constant with one caller precisely so a
 // new event kind cannot silently inherit a timing nobody chose, and card movement is not an
 // event.
@@ -175,61 +175,6 @@ var (
 // a fact about the game and an attention colour is a choice about the screen.
 var attentionYellow = color.RGBA{R: 214, G: 152, B: 12, A: 255}
 
-// travel is the clock every moving card on this screen shares: hold for `delay`, then run for
-// `ticks`. Three things embed it — a card flying to or from the draw pile, one of the player's
-// cards going to its seat on the table, and one of the opponent's arriving at theirs.
-//
-// **This is deliberately the clock and not the journey** *(extracted 2026-08-12, when the
-// opponent's row became the fourth mover)*. The obvious unification is a struct holding a start
-// and an end point, and it would be a regression here: **no mover stores its endpoints**. Every
-// one of them recomputes both every frame from a layout function — `slotAt`, `playedSeatAt`,
-// `enemySeatAt`, `deckStackRect` — which is what makes a flight survive the row re-laying out
-// underneath it and survive the window being resized. Caching two coordinates to share a struct
-// would trade that away for nothing.
-//
-// What the four genuinely have in common is a delay, an age, a duration and an eased progress,
-// and that is exactly what is here. What they do *not* share is the gesture: the discard
-// accelerates away while lifting, turning and shrinking; the deal scales up out of the pile and
-// flips face up on the way; the two table rows travel flat. Those are three different drawings
-// and folding them into one parameterised one would be a bigger function than the three.
-type travel struct {
-	// delay holds a card on the launch pad so a handful set off in sequence rather than as a
-	// single sheet. age counts from zero *including* the delay, so one counter is the whole
-	// clock and there is no second field to keep in step.
-	age, delay, ticks int
-}
-
-func newTravel(delay, ticks int) travel { return travel{delay: delay, ticks: ticks} }
-
-// waiting reports whether this card is still on the launch pad.
-func (t travel) waiting() bool { return t.age < t.delay }
-
-// done reports whether it has arrived.
-func (t travel) done() bool { return t.age >= t.delay+t.ticks }
-
-// progress is 0 at the start of the journey and 1 at the end, before easing.
-func (t travel) progress() float64 {
-	if t.ticks <= 0 {
-		return 1
-	}
-	p := float64(t.age-t.delay) / float64(t.ticks)
-	switch {
-	case p < 0:
-		return 0
-	case p > 1:
-		return 1
-	}
-	return p
-}
-
-// tick advances the clock, and stops once the card has landed so a seated card costs one
-// comparison a frame rather than growing a counter forever.
-func (t *travel) tick() {
-	if !t.done() {
-		t.age++
-	}
-}
-
 // cardFlight is one card in the air between the hand and the draw pile. Purely something to
 // look at.
 //
@@ -263,7 +208,7 @@ type cardFlight struct {
 // addFlight queues one. Kept as a method so the two call sites in spendSelected read as
 // what they are rather than as slice manipulation.
 func (s *CombatScene) addFlight(f cardFlight) {
-	s.flights = append(s.flights, f)
+	s.theatre.flights = append(s.theatre.flights, f)
 }
 
 // handSlide is a card moving from one slot in the hand to another: what a sort looks like,
@@ -298,36 +243,20 @@ type handSlide struct {
 // the row's own copy until the later of them finished. The new arrangement is the true one, so
 // the older claim on that slot loses.
 func (s *CombatScene) addSlide(sl handSlide) {
-	kept := s.slides[:0]
-	for _, old := range s.slides {
+	kept := s.theatre.slides[:0]
+	for _, old := range s.theatre.slides {
 		if old.toIndex != sl.toIndex {
 			kept = append(kept, old)
 		}
 	}
-	s.slides = append(kept, sl)
-}
-
-// updateSlides advances every sliding card and drops the ones that have arrived. Called
-// alongside updateFlights, and outside every branch for the same reasons.
-func (s *CombatScene) updateSlides() {
-	if len(s.slides) == 0 {
-		return
-	}
-	kept := s.slides[:0]
-	for _, sl := range s.slides {
-		sl.tick()
-		if !sl.done() {
-			kept = append(kept, sl)
-		}
-	}
-	s.slides = kept
+	s.theatre.slides = append(kept, sl)
 }
 
 // slidingTo reports whether a card is currently sliding into hand slot i, so the row can leave
 // that slot empty until it lands. Exactly like inboundTo, and hiding a drawing rather than a
 // card for exactly the same reason: the hand is already in its new order.
 func (s *CombatScene) slidingTo(i int) bool {
-	for _, sl := range s.slides {
+	for _, sl := range s.theatre.slides {
 		if sl.toIndex == i {
 			return true
 		}
@@ -341,7 +270,7 @@ func (s *CombatScene) slidingTo(i int) bool {
 // three journeys cross the screen and dramatise it; this one is a card shuffling a few inches
 // sideways into place, and anything more would make re-sorting a hand look like an event.
 func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, sl := range s.slides {
+	for _, sl := range s.theatre.slides {
 		if sl.waiting() {
 			continue
 		}
@@ -362,26 +291,6 @@ func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 }
 
-// updateFlights advances every card in the air and drops the ones that have landed.
-//
-// Called unconditionally from Update — before the branches that return early on a settled
-// duel, and outside the guard that stops the deck overlay reaching the action box. A card
-// mid-flight when the killing blow lands should still finish its journey, and the overlay
-// covers the flight rather than cancelling it.
-func (s *CombatScene) updateFlights() {
-	if len(s.flights) == 0 {
-		return
-	}
-	kept := s.flights[:0]
-	for _, f := range s.flights {
-		f.tick()
-		if !f.done() {
-			kept = append(kept, f)
-		}
-	}
-	s.flights = kept
-}
-
 // inboundTo reports whether a card is currently flying into hand slot i, so the row can
 // leave that slot empty until it lands.
 //
@@ -390,7 +299,7 @@ func (s *CombatScene) updateFlights() {
 // is suppressed is the *drawing* of a card that is on screen somewhere else, which is a
 // view concern and lives here.
 func (s *CombatScene) inboundTo(i int) bool {
-	for _, f := range s.flights {
+	for _, f := range s.theatre.flights {
 		if !f.outbound && f.index == i {
 			return true
 		}
@@ -502,7 +411,7 @@ func (s *CombatScene) drawCardBack(gs *state.GlobalState, screen *ebiten.Image, 
 
 // drawFlights draws every card in the air, over the row and the panes and under the overlay.
 func (s *CombatScene) drawFlights(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, f := range s.flights {
+	for _, f := range s.theatre.flights {
 		if f.waiting() {
 			continue
 		}
@@ -594,28 +503,6 @@ func (s *CombatScene) drawInbound(gs *state.GlobalState, screen *ebiten.Image, f
 	drawFlyingCard(gs, screen, spec, style, geo)
 }
 
-// drawFlyingCard blits a card through an arbitrary transform.
-//
-// **This is the whole of what animation needed from the card pipeline.** internal/cards
-// already renders into a plain Go image and card_art.go already caches it as an
-// *ebiten.Image, so a card in flight is the same cached picture the hand draws with a
-// different matrix in front of it — no new renders, and not one extra cache entry, because
-// the transform happens after the lookup.
-//
-// Linear filtering, unlike drawCard, which leaves it at the default. A card being scaled
-// and turned shimmers under nearest-neighbour; a card at rest must not be filtered at all,
-// because the glyphs on it are 1:1 pixel art. Flights land at scale 1 and hand the card
-// back to drawCard, so the smoothing only ever applies while something is moving.
-func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec, st cards.Style, geo ebiten.GeoM) {
-	img := cardImage(gs, spec, st)
-	if img == nil {
-		return
-	}
-	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
-	op.GeoM = geo
-	screen.DrawImage(img, op)
-}
-
 // resolvedCard is one of the player's cards for this round, on its way from the hand to its
 // seat on the table.
 //
@@ -647,7 +534,7 @@ type resolvedCard struct {
 // order regroups by category, so the third card to resolve is not the third card selected, and
 // a row in selection order would be a confident picture of a round that does not happen.
 func (s *CombatScene) seatPlayedCards() {
-	s.resolved = nil
+	s.theatre.resolved = nil
 
 	for _, slot := range combat.ResolutionOrder(s.fighterActions, s.enemyActions) {
 		if slot.Side != combat.SideA {
@@ -668,8 +555,8 @@ func (s *CombatScene) seatPlayedCards() {
 			continue
 		}
 
-		s.resolved = append(s.resolved, resolvedCard{
-			travel:    newTravel(len(s.resolved)*flightStaggerPer, riseTicks),
+		s.theatre.resolved = append(s.theatre.resolved, resolvedCard{
+			travel:    newTravel(len(s.theatre.resolved)*flightStaggerPer, riseTicks),
 			card:      s.hand[hand].actionCard,
 			handIndex: hand,
 			handCount: len(s.hand),
@@ -722,9 +609,9 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		}
 	}
 
-	mine, theirs := &s.firingSeats, &s.enemyFiringSeats
+	mine, theirs := &s.theatre.firingSeats, &s.theatre.enemyFiringSeats
 	if side == combat.SideB {
-		mine, theirs = &s.enemyFiringSeats, &s.firingSeats
+		mine, theirs = &s.theatre.enemyFiringSeats, &s.theatre.firingSeats
 	}
 
 	// **A solo attacker lifts one card at a time, and that is the whole point of it**
@@ -794,11 +681,11 @@ func (s *CombatScene) noteHand(e combat.Event) {
 	seats = append(seats, e.HandCards[:e.HandCardCount]...)
 
 	if e.Side == combat.SideB {
-		s.enemyFiringSeats = seats
+		s.theatre.enemyFiringSeats = seats
 		return
 	}
 
-	s.firingSeats = seats
+	s.theatre.firingSeats = seats
 }
 
 // handIndexForQueue maps a position in the player's queue to the hand slot holding it.
@@ -821,16 +708,6 @@ func (s *CombatScene) handIndexForQueue(n int) (int, bool) {
 	return 0, false
 }
 
-// updateResolved advances the cards that have fired. Its own clock, like the flights.
-func (s *CombatScene) updateResolved() {
-	for i := range s.resolved {
-		s.resolved[i].tick()
-	}
-	for i := range s.enemyDealt {
-		s.enemyDealt[i].tick()
-	}
-}
-
 // resolvedInHand reports whether the card in hand slot i has already fired, so the row can
 // stop drawing it — it is on screen somewhere between the hand and the pile.
 //
@@ -839,7 +716,7 @@ func (s *CombatScene) updateResolved() {
 // fighterActions while the round is still running. This hides a drawing, exactly like
 // inboundTo.
 func (s *CombatScene) resolvedInHand(i int) bool {
-	for _, r := range s.resolved {
+	for _, r := range s.theatre.resolved {
 		if r.handIndex == i {
 			return true
 		}
@@ -850,7 +727,7 @@ func (s *CombatScene) resolvedInHand(i int) bool {
 // playedSeatOf finds the table seat of the card that came from hand slot i, so a card leaving
 // at the end of the round sets off from where it actually is.
 func (s *CombatScene) playedSeatOf(handIndex int) (int, bool) {
-	for i, r := range s.resolved {
+	for i, r := range s.theatre.resolved {
 		if r.handIndex == handIndex {
 			return i, true
 		}
@@ -885,25 +762,8 @@ func (r resolvedCard) at(gs *state.GlobalState, seat, total, split int, firing b
 // already seated rather than sliding underneath them.
 func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Image) {
 	split := s.playedSplit()
-	for i, r := range s.resolved {
-		at := r.at(gs, i, len(s.resolved), split, lit(s.firingSeats, i))
+	for i, r := range s.theatre.resolved {
+		at := r.at(gs, i, len(s.theatre.resolved), split, lit(s.theatre.firingSeats, i))
 		drawCard(gs, screen, at, cards.Hand, r.card, s.fighter.CardCost(r.card), true, false)
 	}
 }
-
-// lerpPoint walks between two points. Integer output because a resolved card is drawn at
-// full size and scale 1 — there is no resampling to hide sub-pixel stepping, and none is
-// needed at this speed.
-func lerpPoint(from, to image.Point, t float64) image.Point {
-	return image.Pt(
-		from.X+int(float64(to.X-from.X)*t),
-		from.Y+int(float64(to.Y-from.Y)*t),
-	)
-}
-
-// easeOut decelerates into the destination: fast off the pile, settling into the slot.
-func easeOut(t float64) float64 { return 1 - (1-t)*(1-t) }
-
-// easeIn accelerates away: a card tossed aside picks up speed rather than drifting off at a
-// constant rate, which reads as being thrown instead of as sliding.
-func easeIn(t float64) float64 { return t * t }

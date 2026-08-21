@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	xdraw "golang.org/x/image/draw"
@@ -457,7 +458,8 @@ func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {
 // same design rather than two.
 //
 // It is set in LabelInk rather than NameInk, the same distinction the stat rows make with
-// colour: the name stays the loudest thing on a card that is now mostly words.
+// colour: the name stays the loudest thing on a card that is now mostly words. **Spec.TextInk
+// overrides that** for a card whose figure something else has changed.
 //
 // **Every wrapped line is drawn, including one past the band.** Clamping to TextLines() would
 // hide an overlong string, and a card that quietly drops half its rules text is the picture
@@ -482,12 +484,70 @@ func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.
 		top = st.TextBandTop
 	}
 
+	// **The override is passed through the state's ink function like every other colour**, so a
+	// boosted card that is also disabled fades with the rest of the face rather than staying lit.
+	base, marked := LabelInk, LabelInk
+	if s.TextInk.A != 0 {
+		marked = s.TextInk
+		if s.TextHighlight == "" {
+			base = s.TextInk
+		}
+	}
+
 	for i, line := range lines {
 		y := top + i*st.TextLineHeight
-		if err := drawTextCenteredIn(dst, f, st.TextSize, line,
-			st.TextColumnLeft, width, y, ink(LabelInk)); err != nil {
+		if err := drawMarkedLine(dst, f, st.TextSize, line, s.TextHighlight,
+			st.TextColumnLeft, width, y, ink(base), ink(marked)); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// drawMarkedLine draws one centred line with a single run of it in a second colour.
+//
+// **Three segments measured and placed rather than one string drawn twice.** Overdrawing the marked
+// run on top of the full line would composite two sets of antialiased edges and read as a smudge at
+// 18pt, which is most of what a card's text is.
+//
+// The cost is kerning across the two joins: each segment is measured on its own, so a pair that
+// would have been kerned together is not. At this size and with a space on either side of the run
+// — the highlight is always a word — that is invisible, and it is the reason this takes a whole
+// run rather than a glyph range.
+func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line, mark string,
+	left, width, y int, ink, marked color.RGBA) error {
+
+	at := -1
+	if mark != "" {
+		at = strings.Index(line, mark)
+	}
+	if at < 0 {
+		return drawTextCenteredIn(dst, f, size, line, left, width, y, ink)
+	}
+
+	before, after := line[:at], line[at+len(mark):]
+
+	total, err := TextWidth(f, size, line)
+	if err != nil {
+		return err
+	}
+	x := left + (width-total)/2
+
+	for _, seg := range []struct {
+		s string
+		c color.RGBA
+	}{{before, ink}, {mark, marked}, {after, ink}} {
+		if seg.s == "" {
+			continue
+		}
+		if err := drawText(dst, f, size, seg.s, x, y, seg.c); err != nil {
+			return err
+		}
+		w, err := TextWidth(f, size, seg.s)
+		if err != nil {
+			return err
+		}
+		x += w
 	}
 	return nil
 }

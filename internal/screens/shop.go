@@ -105,6 +105,11 @@ type ShopScene struct {
 	// which is what lets a flight survive the window being resized. See travel.go.
 	from map[string]image.Rectangle
 	move travel
+
+	// tip explains a ring: what it does, what it costs, and where it would sit in the firing order.
+	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
+	// and nothing at all about slashes.
+	tip models.Tooltip
 }
 
 // Init deals the shelf. **Re-entered on every visit**, because each fight earns its own.
@@ -117,6 +122,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 
 	s.leaving = false
 	s.from, s.move = nil, travel{}
+	s.tip = models.Tooltip{DwellTicks: tipDwell}
 	s.shelf = dealShelf(gs)
 
 	trace.Logf("shop", "after fight %d: %v for sale, %d vitae in hand, wearing %d",
@@ -184,7 +190,41 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 
 	s.leaveButton.ScreenX, s.leaveButton.ScreenY = gs.PctX(50), gs.PctY(offerButtonsPct)
 	systems.UpdateButton(gs, s.leaveButton)
+
+	s.hover(gs)
+	systems.UpdateTooltip(gs, &s.tip)
 	return nil
+}
+
+// hover points the tooltip at whichever ring the cursor is resting on. **The shelf first, then the
+// hand**, which is the order they are drawn and the order they are read.
+func (s *ShopScene) hover(gs *state.GlobalState) {
+	at := image.Pt(gs.MouseX, gs.MouseY)
+
+	for i, item := range s.shelf {
+		seat := s.shelfSlot(gs, i)
+		if item.bought || !at.In(seat) {
+			continue
+		}
+		if record, ok := gs.Rings[item.key]; ok {
+			title, lines := shopRingTip(record)
+			s.tip.Point(seat, title, lines)
+		}
+		return
+	}
+
+	worn := gs.Run.Worn()
+	for i, key := range worn {
+		seat := s.wornSlot(gs, i, len(worn))
+		if !at.In(seat) {
+			continue
+		}
+		if record, ok := gs.Rings[key]; ok {
+			title, lines := ringTip(record, i, len(worn))
+			s.tip.Point(seat, title, lines)
+		}
+		return
+	}
 }
 
 // click is the press on either row. **Both rows are live at once**, unlike the reward screen's two
@@ -234,6 +274,7 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 	}
 	s.shelf[i].bought = true
 	s.start(seats)
+	s.tip.Forget()
 
 	price, _ := session.RingPrice(key)
 	trace.Logf("shop", "bought %s for %d, %d vitae left, wearing %d",
@@ -252,6 +293,7 @@ func (s *ShopScene) sell(gs *state.GlobalState, key string) {
 		return
 	}
 	s.start(seats)
+	s.tip.Forget()
 
 	trace.Logf("shop", "sold %s for %d, %d vitae in hand, wearing %d",
 		key, session.SellValue(key), gs.Run.Vitae(), len(gs.Run.Worn()))
@@ -316,6 +358,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawWorn(gs, screen, small, line)
 
 	systems.DrawButton(gs, screen, s.leaveButton)
+	systems.DrawTooltip(gs, screen, &s.tip)
 }
 
 // drawShelf draws what is for sale, with its price under it.

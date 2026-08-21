@@ -470,7 +470,34 @@ func (d Duelist) WearsRing(id RingID) bool {
 // pass — a rule with a predicate at one of those is refused at registration, so nothing here has to
 // decide what a form means at `fight-start`.
 func RingEffectsAt(worn []WornRing, m Moment, card Card) []RingEffect {
-	var out []RingEffect
+	src := RingContributionsAt(worn, m, card)
+	if len(src) == 0 {
+		return nil
+	}
+
+	out := make([]RingEffect, 0, len(src))
+	for _, c := range src {
+		out = append(out, c.Effect)
+	}
+	return out
+}
+
+// RingContribution is one effect and the worn ring that produced it.
+//
+// **The pair travels together because a screen needs both and can derive neither**, which is the
+// argument appliedStatus already makes one moment over: an effect says a card is doubled, and only
+// the ring says what doubled it. A tooltip explaining where a figure came from is a picture of the
+// second half.
+type RingContribution struct {
+	Ring   RingID
+	Effect RingEffect
+}
+
+// RingContributionsAt is RingEffectsAt with each effect still attached to its ring, in worn order.
+// **This is the walk**, and RingEffectsAt is the view of it that does not care where an effect came
+// from — two walks would be two chances to disagree about which rules fire.
+func RingContributionsAt(worn []WornRing, m Moment, card Card) []RingContribution {
+	var out []RingContribution
 	for _, w := range worn {
 		for _, rule := range RingOf(w.Ring).Rules {
 			if rule.When != m || !rule.If.Matches(card) {
@@ -478,7 +505,7 @@ func RingEffectsAt(worn []WornRing, m Moment, card Card) []RingEffect {
 			}
 			for _, e := range rule.Then {
 				e.Amount += w.Grown
-				out = append(out, e)
+				out = append(out, RingContribution{Ring: w.Ring, Effect: e})
 			}
 		}
 	}

@@ -119,7 +119,7 @@
     "Name": "Striker Ring",
     "Art": "",
     "Text": "Every Strike deals double DMG.",
-    "Price": 2,
+    "Price": 6,
     "Rules": [
       {
         "When": "card-damage",

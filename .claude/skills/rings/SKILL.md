@@ -35,6 +35,11 @@ costs if it does not.
 }
 ```
 
+- **`Text`** — the line a player reads. **It is printed now** *(2026-08-21)*: the hover tooltip on
+  every ring card, shelf and worn row alike, shows this and nothing generated from the rules. So a
+  rule changed without its `Text` is a ring that lies to the player, and `TestEveryRingHasSomethingToSay`
+  only catches an empty one, not a stale one.
+- **`Price`** — what the shop charges, in vitae. A base ring is 3; see the shop section below.
 - **`When`** — which moment wakes the rule. Closed; one Go seat each.
 - **`If`** — what has to be true. Optional; **a rule with no `If` always fires**.
 - **`Then`** — a list, so one rule can do two things. That is what buys a lightning ring that

@@ -559,7 +559,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// has to stay open, and it is the way out of an over-allocation.
 		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
 		drawCard(gs, screen, s.cardSlot(gs, i).Min, cards.Hand,
-			c.actionCard, s.fighter.CardCost(c.actionCard), enabled, c.selected)
+			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected)
 	}
 
 	if s.drag == nil || !s.drag.active || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
@@ -750,7 +750,7 @@ func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Imag
 
 	at := image.Pt(gs.MouseX-s.drag.grabDX, gs.MouseY-s.drag.grabDY)
 	drawCard(gs, screen, at, cards.Hand,
-		s.drag.card.actionCard, s.fighter.CardCost(s.drag.card.actionCard), true, s.drag.card.selected)
+		s.drag.card.actionCard, heldBy(s.fighter.Duelist, s.drag.card.actionCard), true, s.drag.card.selected)
 }
 
 func abs(n int) int {

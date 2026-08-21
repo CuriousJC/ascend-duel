@@ -82,16 +82,81 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // makes it a property of the pairing: the same card costs 2 to a duelist wearing the discount and 3
 // to one who is not. Every caller names the wearer it is drawing for, which is what keeps an enemy's
 // queued card out of the player's discounts.
-func cardSpec(c actionCard, cost int, enabled, selected bool) cards.Spec {
-	return cards.Spec{
+func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
+	text, mark := cardEffect(c, h)
+
+	spec := cards.Spec{
 		Name:     c.Label(),
 		Form:     form(c.Form()),
-		Cost:     cost,
+		Cost:     h.cost,
 		Element:  artFor(c.Element),
-		Text:     cardEffect(c),
+		Text:     text,
 		Enabled:  enabled,
 		Selected: selected,
 	}
+	if mark != "" {
+		// **The figure alone.** `TextHighlight` is the run the colour lands on; without it the whole
+		// sentence goes pink, which says a ring changed the card rather than the number.
+		spec.TextInk, spec.TextHighlight = boostInk, mark
+	}
+	return spec
+}
+
+// boostInk is what a figure a ring has changed is written in. **The ring pink** — `cards.Ring` is
+// the border colour a ring card carries, so the colour already means "a ring did this" everywhere
+// else on screen, and spending a second hue on the same fact would be saying it twice.
+var boostInk = cards.BorderOf(cards.Ring)
+
+// held is the pairing a card is drawn in: what it costs the holder, what the holder hits for, and
+// which rings the holder is wearing.
+//
+// **Cost travelled alone until 2026-08-21 and that was already the same idea** — a discount ring
+// makes a cost a property of the pairing rather than of the card, and a damage ring does exactly
+// that to the figure on the face. Grouping them is what stops the two drifting apart at a call site
+// that remembered one and not the other.
+//
+// **The zero value is a card nobody is holding**: no rings, no strength, and its own printed cost.
+// `tools/cardsheet` and any panel drawing the catalogue want that, and so does an enemy's queued
+// card — rings are the duelist's only.
+type held struct {
+	cost int
+
+	// dmg is the holder's DMG, and **zero means nobody on this screen knows one**. The tooltip says
+	// what an attack is worth when it has a figure and states the multiplier alone when it does not;
+	// the reward and shop screens are the second case, since a run's stats belong to a fight.
+	dmg int
+
+	worn []combat.WornRing
+}
+
+// heldBy is the pairing for a card in a duelist's hands, which is what every call site inside a
+// fight has.
+func heldBy(d combat.Duelist, c actionCard) held {
+	return held{cost: d.CardCost(c), dmg: d.DMG, worn: d.WornRings()}
+}
+
+// heldByRun is the pairing for a card drawn between fights, where there is a run and no duelist:
+// the run's rings price it and no strength is known.
+func heldByRun(gs *state.GlobalState, c actionCard) held {
+	if gs.Run == nil {
+		return held{cost: c.Cost()}
+	}
+	return held{cost: gs.Run.CardCost(c), worn: gs.Run.WornRings()}
+}
+
+// damageScale is how much the holder's rings multiply this card's damage, as a percentage, and
+// whether any of them do at all. 100 is the identity.
+//
+// **Compounded left to right in worn order**, exactly as `Duelist.CardDamage` does it, and off the
+// same walk — a second implementation of the compounding is a face that can disagree with the
+// blow it describes.
+func (h held) damageScale(c actionCard) (pct int, boosted bool) {
+	pct = 100
+	for _, contribution := range combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c) {
+		pct = pct * contribution.Effect.Amount / 100
+		boosted = true
+	}
+	return pct, boosted
 }
 
 // cardImage returns the card for this spec, rendering and caching it on a miss.
@@ -363,16 +428,6 @@ func form(f combat.Form) cards.Form {
 // one of these, this fails here rather than in a card that silently renders blank.
 var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 	return c.Label(), c.Category().String(), c.Form().String(), c.Damage(dmg), c.Cost()
-}
-
-// deckCardCost is what a card out of the run deck costs, discounts included. The post-battle screen
-// draws deck cards with no duelist to ask, and a card whose price changed when it reached the hand
-// would be the screen contradicting itself between two screens.
-func deckCardCost(gs *state.GlobalState, c combat.Card) int {
-	if gs.Run == nil {
-		return c.Cost()
-	}
-	return gs.Run.CardCost(c)
 }
 
 // wormSpec is a worm drawn as a card: a name, a line of what it does, and the colour of whatever

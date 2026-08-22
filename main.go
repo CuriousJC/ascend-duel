@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -100,6 +101,14 @@ func main() {
 
 	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.RunSeed)
 
+	// **A scenario may also open the game somewhere other than the first duel** *(2026-08-22)*.
+	// The run is put in the named room with the named purse, and the phase it lands on decides
+	// which scene draws it — see internal/screens/flow.go, which is the one table mapping the two.
+	// Compiled out with the rest of the package.
+	if scenario.Active() {
+		startScenarioAt(g)
+	}
+
 	// The score is a MIDI file synthesised to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session
 	// across every screen, and there is no way to mute it yet, which wants an
@@ -119,4 +128,36 @@ func main() {
 	if err := ebiten.RunGame(g); err != nil && !errors.Is(err, game.ErrClosing) {
 		log.Fatal(err)
 	}
+}
+
+// startScenarioAt puts a scenario's run where the fixture says, and the game on the screen that
+// draws it. **One function so the guarded call site above stays one line**, which is what keeps the
+// whole feature deletable in a commit.
+//
+// **Life defaults to whatever the duelist has**, because a scenario that only wants to see the shop
+// should not have to say how much life the last fight left. Zero would be a corpse on the card.
+func startScenarioAt(g *game.Game) {
+	gs := g.GlobalState
+
+	life := scenario.Life()
+	if life <= 0 {
+		if d, ok := gs.Duelists["Fighter1"]; ok {
+			life = d.HP
+		}
+	}
+	gs.Run.JumpTo(scenario.Fight(), scenario.Vitae(), life)
+
+	switch scenario.Screen() {
+	case "reward":
+		gs.Run.SetPhase(session.PhaseReward)
+		gs.ActiveScreen = state.PostBattle
+	case "shop":
+		gs.Run.SetPhase(session.PhaseShop)
+		gs.ActiveScreen = state.Shop
+	default:
+		gs.Run.SetPhase(session.PhaseFight)
+		gs.ActiveScreen = state.Combat
+	}
+	log.Printf("scenario %s: opening on the %s screen, room %d",
+		scenario.Name(), scenario.Screen(), scenario.Fight())
 }

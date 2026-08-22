@@ -487,6 +487,52 @@ var DuelistStyle = Style{
 	HealthTextSize:  18,
 }
 
+// WormStyle is a worm, in the card format *(2026-08-22)*.
+//
+// **A picture with its text under it**, which is what the owner asked for and is the shape a
+// creature card wants: the worm is a thing you are catching, so the face is mostly the thing. It
+// borrowed `Hand` until now, which drew a worm as a cost column with no cost and a paragraph
+// beside the empty space where a form mark was not.
+//
+// What it drops is everything describing a *play* — no form mark, no cost dashes — for the reason
+// RingStyle drops them: a worm is not played from a hand and resolves in no phase. What it gains
+// over RingStyle is the text band, because a worm's whole content is the sentence saying what it
+// does to a card.
+//
+// **The art is a placeholder for every worm today.** `Spec.Art` is filled from the shared default
+// image, so the box is the seat the art goes into rather than a box that will have to be invented
+// when there is some.
+var WormStyle = Style{
+	Width: 162, Height: 224,
+
+	CornerRadius: 12,
+	BorderWidth:  6,
+
+	ShowName: true,
+	ShowForm: false,
+
+	TextLeft:     12,
+	NameTop:      14,
+	NameSize:     20,
+	NameCentered: true,
+
+	// Between the name and the text band, and squarer than the ring's: what is left after a line
+	// of name above and three lines of text below is a 96-pixel box.
+	ArtTop:   44,
+	ArtInset: 26,
+	ArtMaxH:  96,
+
+	// The full width, unlike Hand — there is no cost column to leave room for. Centred in the band
+	// under the art for the same reason Hand centres in its own: a one-line worm and a two-line one
+	// should look like the same card.
+	TextColumnLeft: 12,
+	TextInset:      8,
+	TextBandTop:    148,
+	TextBandBottom: 212,
+	TextSize:       17,
+	TextLineHeight: 21,
+}
+
 // RingStyle is a ring, in the card format.
 //
 // Same footprint, corners and border treatment as Hand, so the two read as one game.

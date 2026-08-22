@@ -1563,10 +1563,11 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
 | | |
 |---|---|
 | When | after a won fight, before the next room |
-| Offered | **three cards**: two worms from `data/worms.json`, and **+5 Vitae** |
+| First | the win is **read out**: interest, a tenth of the life kept, what the room pays |
+| Offered | **two cards**: two worms from `data/worms.json` |
 | Then | a hand dealt fresh off the whole run deck, at the combat hand size |
 | Then | a **morph**: the card before and after, side by side, nothing committed |
-| Choice | one prize, and — if it is a worm — one card |
+| Choice | one worm and one card, or **Let them escape** |
 
 - **Worm first, card second, and it turned round to get there** *(2026-08-17)*. The first version
   asked for a card and then offered verbs on it, which made the reward look like a property of the
@@ -1591,13 +1592,21 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   does not start until it lands, so a slower flight is a longer look rather than a card arriving
   late to a countdown already running. **A removal has nothing to fly**: what was won is an
   absence, so the empty seat is drawn and nothing crosses the screen.
-- **There is no decline, because the money is a card** *(2026-08-17)*. Declining used to be a
-  button off to one side, which made it the odd thing out on a screen otherwise made of cards.
-  Taking vitae instead of altering the deck is now a **choice among three with a price**, not an
-  exit — and it means every path through the screen is the same path: **pick a card, watch it fly
-  to the middle.**
-- **The vitae card's seat never moves.** It is appended last rather than shuffled in, so a player
-  who has learned where the money is can take it without reading.
+- **The screen opens by narrating the payout** *(owner's call, 2026-08-22)*. Four sentences type
+  themselves out at the game's speed, and the figure each one names then **flies to the duelist
+  card** and lands in the purse. A win used to change the purse silently while the fight was
+  ending, so what a win is worth was arithmetic nobody ever saw. **A click skips to the end**, and
+  the fast path pays through the same claims as the slow one — presentation may never change an
+  outcome.
+- **Your build is on screen throughout**: the duelist card in its usual corner and the worn rings
+  beside it, so a worm is chosen against the thing it would be changing, and the purse the payout
+  lands in is visible while it climbs.
+- **The vitae card is gone and taking neither worm is a button again** *(owner's call,
+  2026-08-22)*. A third card paying +5 was charging for something the win now pays by itself, and
+  the offer is the two creatures the prose says are fleeing. **The offer is free**, so walking away
+  costs nothing and does not need to look like a card.
+- **The worms fly in from the sides** once the last sentence lands, because the sentence before
+  them says two creatures are fleeing — a card already sitting there would contradict it.
 - **Run-scoped, never persisted.** Two runs from the same seed may hold different decks, because
   an alteration is a *choice*: replay is a seed plus a choice log. See the `randomness` skill.
 
@@ -1724,10 +1733,36 @@ for the `data/` pattern: JSON beside a small Go loader.
 
 ## Vitae
 
-The currency. Earned from fights, spent on rings. `Session` carries the purse; the post-battle
-screen's third prize card and propagation are what add to it, and **the shop is what takes it out**
-*(2026-08-21)* — `Session.SpendVitae` is the one place a purse goes down, and `Session.Buy` is its
-only caller.
+The currency. Earned from fights, spent on rings. `Session` carries the purse; **winning a fight is
+the only thing that adds to it** and **the shop is what takes it out** *(2026-08-21)* —
+`Session.SpendVitae` is the one place a purse goes down, and `Session.Buy` is its only caller.
+
+**Vitae is crimson wherever it is written** *(owner's call, 2026-08-22)* — the purse on the duelist
+card and the word itself in the reward screen's prose. It is the run's only currency and now the
+only red on a cream screen, so a figure in that colour says "money" before it is read.
+
+### What a win pays *(owner's call, 2026-08-22)*
+
+Three separate things, decided by `Session.WonFight` and handed over one at a time by the reward
+screen as it narrates them. See `internal/session/spoils.go`.
+
+| Part | Figure |
+|---|---|
+| **Interest** | propagation, below — on the purse as it stood when the fight ended |
+| **The life you kept** | **a tenth of the life remaining, rounded down**: 65 left pays 6 |
+| **The room** | **3** outer, **4** inner, **5** stairway (the floor's boss), flat for the whole climb |
+
+- **A share of the life *remaining*, not of the maximum.** It is a reward for fighting well rather
+  than a rebate, and a ring that raises max life pays out more here indirectly — which is intended.
+  A win on nine life pays nothing from this part.
+- **The room award does not scale with the floor.** What makes a later fight worth more is the life
+  you manage to keep in it.
+- **Deciding and paying are separate.** The figures are frozen when the fight ends, so nothing
+  about the payout depends on when the player clicks; `Session.Advance` claims whatever was never
+  narrated, which is what makes a win pay in full even when no screen reads it out.
+- **Soul Taker moves the room award** *(retargeted 2026-08-22)*, turning 3/4/5 into 8/9/10. It used
+  to pay the vitae prize card, which no longer exists — same `prizes-dealt` moment, same flat
+  addition, landing on the one figure a win always pays.
 
 ### Propagation — vitae earns interest *(2026-08-17, owner's call; built the same day)*
 
@@ -1748,9 +1783,10 @@ faster.
 - **Order of operations, therefore:** count the fives, clamp to +5, *then* apply every ring that
   scales propagation, left to right in worn order. Two such rings compound, like every other
   ring effect.
-- **It happens in `Session.WonFight`**, before the room counter moves and before the post-battle
-  screen deals its prizes: propagation is interest on what the run walked out of the fight holding,
-  not on what the prize card is about to pay it.
+- **It is decided in `Session.WonFight`**, before the room counter moves and before either award
+  above: interest is on what the run walked out of the fight holding, not on what the win is about
+  to pay it. **The figure is decided there and arrives on the reward screen**, when the sentence
+  naming it has been read.
 
 ---
 

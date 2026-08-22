@@ -733,8 +733,8 @@ and gone by itself rather than holding a window open for the rest of a session.
 
 ### `internal/scenario` is a fifth thing, and it is compiled out too
 
-[internal/scenario](internal/scenario) plugs **a chosen set of rings, a chosen opening hand and a
-chosen enemy** into a launched game.
+[internal/scenario](internal/scenario) plugs **a chosen set of rings, a chosen opening hand, a
+chosen enemy — and a chosen screen** into a launched game.
 
 ```powershell
 go run -tags scenario .                                        # the first entry in the file
@@ -765,6 +765,12 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
   the second hand of the fight is a normal one and the fixture is only the opening.
 - **A misspelled ring, card or enemy fails the launch**, at package init, before a window opens.
   A fixture that quietly tests something else is worse than a game that will not start.
+- **It also opens the game on a named screen** *(owner's call, 2026-08-22)*: `"Screen": "reward"`
+  or `"shop"`, with `Fight`, `Vitae` and `Life` saying what state to arrive in. A between-fights
+  screen was otherwise a twenty-minute question — the reward screen's narration and the shop's
+  shelf both needed a duel played to reach them, every time. It sets the run's *phase* and lets
+  `screens/flow.go` decide the scene, so the run never disagrees with what is on screen.
+  `reward-payout` and `shop-shelf` are the two entries.
 - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
   whose purpose nobody remembers is a fixture that gets deleted.
 

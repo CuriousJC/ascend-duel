@@ -191,8 +191,8 @@ func TestASoldRingLosesItsGrowth(t *testing.T) {
 	if !run.Buy("heart-ring") {
 		t.Fatal("the purchase was refused")
 	}
-	run.WonFight()
-	run.WonFight()
+	run.WonFight(0)
+	run.WonFight(0)
 
 	if got := run.Grown("heart-ring"); got != 10 {
 		t.Fatalf("two wins grew it by %d, want 10", got)

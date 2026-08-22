@@ -113,8 +113,8 @@ func TestOnlyAWinAdvancesTheRun(t *testing.T) {
 	if run.Fight() != 0 {
 		t.Errorf("a new run starts at fight %d, want 0", run.Fight())
 	}
-	run.WonFight()
-	run.WonFight()
+	run.WonFight(0)
+	run.WonFight(0)
 	if run.Fight() != 2 {
 		t.Errorf("two wins left the run at fight %d, want 2", run.Fight())
 	}

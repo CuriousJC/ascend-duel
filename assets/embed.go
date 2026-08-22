@@ -103,6 +103,14 @@ var earthring_png []byte
 //go:embed ring/default-ring.png
 var defaultring_png []byte
 
+// The face every worm draws, until worms have art of their own. **A copy of the ring's default
+// rather than a share of it** *(owner's call, 2026-08-22)*: two files that happen to look alike
+// today are two files that can be replaced one at a time, where one file used by both would have
+// to be forked the moment either gets a real picture.
+//
+//go:embed worm/default-worm.png
+var defaultworm_png []byte
+
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
 
@@ -154,6 +162,7 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["needlering_png"] = loadImage(needlering_png)
 	assets["earthring_png"] = loadImage(earthring_png)
 	assets["defaultring_png"] = loadImage(defaultring_png)
+	assets["defaultworm_png"] = loadImage(defaultworm_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
@@ -206,6 +215,7 @@ func LoadImageData() map[string][]byte {
 	images["needlering_png"] = needlering_png
 	images["earthring_png"] = earthring_png
 	images["defaultring_png"] = defaultring_png
+	images["defaultworm_png"] = defaultworm_png
 
 	// The status badges, for the same reason as the ring art: they are drawn *into* the enemy
 	// card by internal/cards, which has no graphics context.

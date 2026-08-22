@@ -360,8 +360,13 @@ func (s *Session) Picks() int {
 	return picks
 }
 
-// PrizeVitae is what the vitae prize card pays, given what the screen offers as its base. **Flat, not
-// a scaling** — Soul Taker turns 5 into 10 rather than doubling whatever the card happens to say.
+// PrizeVitae is what a win's room award pays, given the room's own base. **Flat, not a scaling** —
+// Soul Taker turns 3, 4, 5 into 8, 9, 10 rather than multiplying whatever the room happens to be
+// worth.
+//
+// **It used to be the vitae prize card's** *(retargeted 2026-08-22)*, which went when the reward
+// screen stopped offering money as a third card. It is the same `prizes-dealt` moment and the same
+// flat addition; what moved is which figure it lands on — the one thing a win always pays.
 func (s *Session) PrizeVitae(base int) int {
 	out := base + combat.AddedPrizeVitae(s.WornRings())
 	if out < 0 {
@@ -374,7 +379,7 @@ func (s *Session) PrizeVitae(base int) int {
 // draws deck cards and has no duelist to ask.
 func (s *Session) CardCost(c combat.Card) int { return combat.CostWith(s.WornRings(), c) }
 
-// propagate is vitae earning interest: **+1 for every 5 held, capped at +5**, then scaled by every
+// propagation is vitae earning interest: **+1 for every 5 held, capped at +5**, then scaled by every
 // ring that scales it.
 //
 // **It is a rule of the run rather than a ring** *(owner's call, 2026-08-17)*, which is what lets
@@ -384,15 +389,18 @@ func (s *Session) CardCost(c combat.Card) int { return combat.CostWith(s.WornRin
 // bare and +10 wearing Banker. An absolute cap on the figure that finally lands would leave the ring
 // doing nothing past 25 held, which is a ring that stops working exactly when a run can afford it.
 // Rounded down, like every other integer rule in the game.
-func (s *Session) propagate() {
+// **It reports the figure rather than adding it** *(2026-08-22)*, because the post-battle screen
+// narrates the interest as its own sentence and the purse has to climb when that sentence lands.
+// See spoils.go: deciding a payout and paying it are separate here.
+func (s *Session) propagation() int {
 	base := s.vitae / 5
 	if base > maxPropagation {
 		base = maxPropagation
 	}
 	if base <= 0 {
-		return
+		return 0
 	}
-	s.AddVitae(combat.ScalePropagation(s.WornRings(), base))
+	return combat.ScalePropagation(s.WornRings(), base)
 }
 
 // maxPropagation is the ceiling on the base rate. **It is what stops it running away**: uncapped,

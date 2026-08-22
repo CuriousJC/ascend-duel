@@ -64,6 +64,19 @@ func (s *Session) Phase() Phase { return s.phase }
 // room counter and pays out; this only says which screen comes next. The two are separate because
 // losing advances the phase without advancing the room — a defeat puts the same opponent back up.
 func (s *Session) Advance() {
+	// **Anything the last win still owes is paid on the way *out* of the reward station**
+	// *(2026-08-22)*. The post-battle screen hands the three parts over one at a time as it reads
+	// them out, and this is what makes a win still pay in full when nothing narrates it — a test, or
+	// a phase with no scene registered.
+	//
+	// **Never on the way in**, which is the bug this comment exists for: winning a fight calls
+	// WonFight and then advances straight from the duel to the reward, so claiming on every Advance
+	// emptied the payout one tick before the screen that reads it out was built. The narration then
+	// said a win paid nothing while the purse held the money.
+	if s.phase != PhaseFight {
+		s.ClaimSpoils()
+	}
+
 	for i, p := range order {
 		if p == s.phase {
 			s.phase = order[(i+1)%len(order)]

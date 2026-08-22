@@ -37,3 +37,11 @@ var screenGround = color.RGBA{R: 226, G: 208, B: 176, A: 255}
 // Anything drawn on a surface of its own takes that surface's ink instead; this is only for what
 // has nothing behind it.
 var groundInk = color.RGBA{R: 44, G: 40, B: 34, A: 255}
+
+// vitaeInk is the crimson vitae is written in, **everywhere it is written** *(owner's call,
+// 2026-08-22)*: the purse on the duelist card, and the word itself in the reward screen's prose.
+//
+// **One colour for one thing.** Vitae is the run's only currency and it is now the only red on a
+// cream screen, so a figure in this colour says "money" before it is read. It is deliberately not
+// `lifeColor` — life is a bar and a fraction on a card, and the two reds never share a surface.
+var vitaeInk = color.RGBA{R: 168, G: 26, B: 42, A: 255}

@@ -59,7 +59,7 @@ func TestTheOfferIsAFunctionOfTheFight(t *testing.T) {
 		t.Errorf("the same fight offered %v then %v", first, again)
 	}
 
-	gs.Run.WonFight()
+	gs.Run.WonFight(0)
 	if next := dealOffer(gs); sameInts(first, next) {
 		t.Errorf("fight 2 offered the same cards as fight 1: %v", next)
 	}
@@ -97,20 +97,18 @@ func TestAnEmptyRunOffersNothing(t *testing.T) {
 	}
 }
 
-// TestThePrizeRowIsTwoWormsAndTheVitae. **Three cards and one of them is always the money** —
-// declining is a card rather than a button, so every path off this screen is the same path.
-func TestThePrizeRowIsTwoWormsAndTheVitae(t *testing.T) {
+// TestThePrizeRowIsTwoWorms. **The money card went on 2026-08-22** — a win pays vitae by itself
+// now, read out at the top of the screen — so the offer is the two creatures and nothing else, and
+// taking neither is a button rather than a third card.
+func TestThePrizeRowIsTwoWorms(t *testing.T) {
 	ps := dealPrizes(testRun())
 
-	if len(ps) != wormsOffered+1 {
-		t.Fatalf("offered %d prizes, want %d", len(ps), wormsOffered+1)
+	if len(ps) != wormsOffered {
+		t.Fatalf("offered %d prizes, want %d", len(ps), wormsOffered)
 	}
-	if !ps[len(ps)-1].vitae {
-		t.Error("the last prize is not the vitae, and its seat must never move")
-	}
-	for _, p := range ps[:len(ps)-1] {
-		if p.vitae {
-			t.Error("a worm seat is holding the vitae")
+	for _, p := range ps {
+		if p.worm.Record == "" {
+			t.Error("a prize seat is holding something that is not a worm")
 		}
 	}
 }
@@ -141,7 +139,7 @@ func TestTheWormOfferIsAFunctionOfTheFight(t *testing.T) {
 		t.Errorf("the same fight offered %v then %v", prizeNames(toPrizes(first)), prizeNames(toPrizes(again)))
 	}
 
-	gs.Run.WonFight()
+	gs.Run.WonFight(0)
 	next := dealWorms(gs)
 	if first[0].Record == next[0].Record && first[1].Record == next[1].Record {
 		t.Errorf("fight 2 offered the same pair as fight 1: %v", prizeNames(toPrizes(next)))

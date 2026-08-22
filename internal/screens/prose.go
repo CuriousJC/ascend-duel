@@ -484,6 +484,11 @@ func lower(s string) string { return strings.ToLower(s) }
 // Name and that is what is normally shown.
 const duelistName = "Duelist"
 
+// playerRecord is the key the playable duelist is filed under in duelists.json. **Two screens
+// hydrate the player now** — the combat screen for the fight and the reward screen for the card it
+// puts up beside the rings — so the key is written once rather than in each of them.
+const playerRecord = "Fighter1"
+
 // sideName is who a Resolution line belongs to, written out beside the swatch that already
 // says it in colour. **Saying it twice is deliberate**: the colours carry the pattern at a
 // glance, but a line that begins "Strike" reads as an instruction rather than a report, and

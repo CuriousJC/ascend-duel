@@ -50,6 +50,15 @@ type Session struct {
 	// See flow.go, which is the one place that moves it.
 	phase Phase
 
+	// lifeLeft is the life the fighter finished the last fight on. **Run-level because a screen
+	// after the fight has to draw the duelist as they came out of it** — the reward screen puts the
+	// player's card up beside their rings, and there is no combatant left to ask by then.
+	lifeLeft int
+
+	// spoils is what the last win still owes the player, decided by WonFight and paid out by the
+	// post-battle screen as it narrates each part. See spoils.go.
+	spoils Spoils
+
 	// grown is each growing ring's accumulator, keyed by record. **Keyed by record rather than by
 	// position**, because it is the first ring state that will have to be serialized and a position
 	// would mean nothing in a save file.
@@ -145,18 +154,26 @@ func (s *Session) SpendVitae(n int) bool {
 	return true
 }
 
+// LifeLeft is the life the fighter walked out of the last fight with.
+func (s *Session) LifeLeft() int { return s.lifeLeft }
+
 // Fight is how far up the tower the run has got, zero-based.
 func (s *Session) Fight() int { return s.fight }
 
 // WonFight advances to the next room. **Losing does not call this**, which is what makes a defeat
 // put the same opponent back up rather than skipping past it.
 //
-// **It is the `fight-won` moment**, so it is also where vitae propagates and where every growing
-// ring takes its step. Both happen before the room counter moves and before the post-battle screen
-// deals its prizes, which is the order MECHANICS.md states: propagation is interest on what the run
-// walked out of the fight holding, not on what the prize card is about to pay it.
-func (s *Session) WonFight() {
-	s.propagate()
+// **It is the `fight-won` moment**, so it is also where the win's payout is decided and where every
+// growing ring takes its step. Both happen before the room counter moves, which is the order
+// MECHANICS.md states: interest is on what the run walked out of the fight holding, not on what the
+// win is about to pay it.
+//
+// **It decides the payout and pays none of it** *(2026-08-22)*. `lifeLeft` is what the fighter
+// finished on — a tenth of it is part of the prize — and the three figures are frozen here and
+// handed over by the post-battle screen a sentence at a time. See spoils.go.
+func (s *Session) WonFight(lifeLeft int) {
+	s.lifeLeft = lifeLeft
+	s.spoils = s.spoilsFor(lifeLeft)
 	s.growRings()
 	s.fight++
 }

@@ -42,6 +42,20 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
     color: var(--dim); font-weight: 600;
     margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
   }
+  h3.tier {
+    font-size: 15px; font-weight: 600; text-transform: capitalize;
+    margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h3.tier span {
+    text-transform: none; font-weight: 400; font-size: 12px; color: var(--dim);
+    margin-left: 10px;
+  }
+  /* The tier is a colour as well as a word, so a card can be placed at a glance while
+     scrolling. Common is the ground itself; rare is the ring pink the game already spends
+     on "a ring did this". */
+  h3.tier.common { border-bottom-color: var(--rule); }
+  h3.tier.uncommon { border-bottom-color: #6c8fb5; }
+  h3.tier.rare { border-bottom-color: var(--pink); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
@@ -96,7 +110,21 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
   player, and this is the only place the two are visible together.
 </p>
 
-<h2>The catalogue</h2>
+<h2>The catalogue, by rarity</h2>
+<p class="note">
+  <strong>Grouped by tier because that is the pricing decision.</strong> A ring is rebalanced by
+  moving it between these three, never by writing a number, so what a review needs is every
+  common side by side. The share is how often a single shelf seat lands in that tier — the
+  tier's tickets over the whole catalogue's.
+</p>
+
+{{range .Tiers}}
+<h3 class="tier {{.Rarity}}">
+  {{.Rarity}}
+  <span>{{.Count}} rings &middot; {{.Price}} vitae, sells for {{.Sell}} &middot;
+    weight {{.Weight}} each &middot; {{.Share}}% of a shelf draw</span>
+</h3>
+{{if not .Rings}}<p class="note">Nothing is authored at this tier.</p>{{end}}
 <div class="plates">
   {{range .Rings}}
     <div class="plate">
@@ -119,6 +147,7 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
     </div>
   {{end}}
 </div>
+{{end}}
 
 <h2>Card states</h2>
 <p class="note">

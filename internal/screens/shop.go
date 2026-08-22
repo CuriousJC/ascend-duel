@@ -137,8 +137,12 @@ func shelfKeys(items []shelfItem) []string {
 	return out
 }
 
-// dealShelf picks which rings are for sale: a shuffle of everything the run is not wearing, cut to
-// three.
+// dealShelf picks which rings are for sale: three weighted draws from everything the run is not
+// wearing.
+//
+// **Rarity is the weight** *(owner's call, 2026-08-22)*. A common ring holds ten tickets to a
+// rare one's, so a rare ring is something a run mostly does not see rather than something it sees
+// and cannot afford — see data.Rarity for why the price ladder is much flatter than that.
 //
 // **Its own stream** (`seeds.ShopStock`), and per fight — so a defeat and a retry walk into the
 // same shop, exactly as they meet the same opponent. Sharing the worm offer's stream would have
@@ -164,17 +168,47 @@ func dealShelf(gs *state.GlobalState) []shelfItem {
 	}
 
 	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.ShopStock, gs.Run.Fight())))
-	rng.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
 
-	if len(pool) > shelfSize {
-		pool = pool[:shelfSize]
-	}
-
-	out := make([]shelfItem, 0, len(pool))
-	for _, key := range pool {
-		out = append(out, shelfItem{key: key})
+	out := make([]shelfItem, 0, shelfSize)
+	for len(out) < shelfSize && len(pool) > 0 {
+		at := drawWeighted(pool, rng)
+		out = append(out, shelfItem{key: pool[at]})
+		pool = append(pool[:at], pool[at+1:]...)
 	}
 	return out
+}
+
+// drawWeighted picks one index out of the pool, each key holding as many tickets as its rarity is
+// worth, and it is where the rarity mechanic actually bites.
+//
+// **Without replacement, which is why it is a draw per seat rather than one weighted shuffle.** A
+// shelf offering the same ring twice would be a seat spent saying nothing; the caller removes what
+// this returns and asks again, so the weights re-normalise over what is left.
+//
+// **A key the catalogue does not weight holds one ticket rather than none.** The registry refuses a
+// bad rarity at load, so reaching here with a zero is a ring the run knows about and the shop does
+// not — and dropping it from every shelf forever is a worse failure than offering it as a common.
+func drawWeighted(pool []string, rng *rand.Rand) int {
+	total := 0
+	for _, key := range pool {
+		total += weightOf(key)
+	}
+
+	ticket := rng.Intn(total)
+	for i, key := range pool {
+		ticket -= weightOf(key)
+		if ticket < 0 {
+			return i
+		}
+	}
+	return len(pool) - 1
+}
+
+func weightOf(key string) int {
+	if w := session.RingWeight(key); w > 0 {
+		return w
+	}
+	return 1
 }
 
 func (s *ShopScene) Update(gs *state.GlobalState) error {
@@ -281,7 +315,7 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 		key, price, gs.Run.Vitae(), len(gs.Run.Worn()))
 }
 
-// sell takes a ring off and pays a quarter of its price back.
+// sell takes a ring off and pays its tier's sell-back figure.
 //
 // **The sold ring has nothing to fly**, which is the documented exception to cards always
 // travelling: what happened is an absence. What does travel is every ring to its right, sliding
@@ -474,4 +508,4 @@ func (s *ShopScene) anyLeft() bool {
 
 // Compile-time assurance that the record the shelf draws still carries what this screen reads off
 // it. A ring losing its price would otherwise be a shelf of free rings rather than a build failure.
-var _ = func(r data.RingData) (string, int) { return r.Name, r.Price }
+var _ = func(r data.RingData) (string, data.Rarity) { return r.Name, r.Rarity }

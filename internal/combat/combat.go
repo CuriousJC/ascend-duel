@@ -128,7 +128,21 @@ func playTurn(
 		events, actor, target = resolvePlan(events, side, actor, target, slot.Card, round)
 	}
 
+	// **The turn is closed after everything in it has resolved**, which is what makes "a turn with
+	// no plan card in it" a question this can answer. A duelist who fell mid-turn returns above and
+	// never reaches this: a streak is a fact about turns taken, and a corpse takes none.
+	actor = actor.TurnTaken(cardsOf(turn))
+
 	return events, actor, target
+}
+
+// cardsOf is a turn's cards without their slots, for the rules that ask about the turn as a whole.
+func cardsOf(turn []Slot) []Card {
+	out := make([]Card, len(turn))
+	for i, slot := range turn {
+		out[i] = slot.Card
+	}
+	return out
 }
 
 // resolvePlan runs one plan card. **The plans are the only cards that still resolve one at a
@@ -412,6 +426,12 @@ func resolveAttackPhase(
 	for _, i := range blow.Cards {
 		blowCards = append(blowCards, turn[i].Card)
 	}
+	// **The accumulator moves before the statuses are handed out and after the damage has landed.**
+	// A growing ring is paid for the blow that just connected, never for the one it is about to
+	// strengthen — otherwise the first fire attack of a fight would already be wearing its own
+	// bonus.
+	actor = actor.GrowOnHit(blowCards)
+
 	for _, a := range actor.statusesFrom(blowCards) {
 		applied, amount, ok := applyStatus(target, a.Status, actor)
 		if !ok {
@@ -635,22 +655,37 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Even
 	// A card past the array's width is dropped from the *bracket* rather than from the sum, which
 	// is the posture HandCards already takes: the arithmetic on screen may be short of a term
 	// before the damage that lands is wrong.
-	for _, i := range blow.Cards {
-		d := actor.CardDamage(turn[i].Card)
-		e.Base += d
-		if e.HandCardCount < len(e.HandCards) {
+	// **An echo seats the lead card again, at a smaller figure, right behind itself** *(2026-08-22,
+	// owner's call)*. It is deliberately a term in this sum rather than a second blow: the turn
+	// still lands once, the hand still multiplies one figure, and what the player sees is the first
+	// card paying three times — "seven cards played, the first one three of them".
+	//
+	// **The echo does not reach the matcher.** `blowFor` has already run, so an echoed Strike does
+	// not turn a Pair into Trips; it pays into the hand the real cards formed.
+	worn := actor.WornRings()
+	for n, i := range blow.Cards {
+		card := turn[i].Card
+		for t, d := range LandingAmounts(worn, card, n == 0, actor.CardDamage(card)) {
+			e.Base += d
+			if e.HandCardCount >= len(e.HandCards) {
+				continue
+			}
 			e.HandCards[e.HandCardCount] = i
 			e.HandAmounts[e.HandCardCount] = d
 			e.HandCardCount++
+			if t > 0 {
+				e.EchoTerms++
+			}
 		}
 	}
+
+	lead := turn[blow.Cards[0]].Card
 
 	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
 	// hand is worth a proportion of what its own cards deal, so a Pair of Lunges is worth more
 	// than a Pair of Jabs by exactly the margin the cards themselves are worth.
 	e.Amount = scaleDamage(e.Base, blow.Multiplier)
 
-	lead := turn[blow.Cards[0]].Card
 	e.Action = lead.Concept
 	e.Element = lead.Element
 

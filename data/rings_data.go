@@ -57,13 +57,15 @@ type RingData struct {
 	// field added later is a field every existing entry is missing.
 	Text string `json:"Text"`
 
-	// Price is what the shop charges for it, in vitae. **A ring declares its own price**, the way
-	// a card declares its own cost: a concept ring covering four cards and a form ring covering
-	// twelve are not the same object and must not be priced as one — see the `rings` skill.
+	// Rarity is how often the shop offers it, and — through that — what it costs. **One word
+	// decides both**: `common`, `uncommon` or `rare`. A ring does not name a price, because a
+	// catalogue where every ring priced itself drifted into seventeen numbers nobody could hold
+	// against each other; three tiers can be read at a glance and a ring can only be moved between
+	// them.
 	//
-	// **What it sells back for is not a field.** That is a quarter of this, rounded up, and it is
-	// one rule of the shop rather than seventeen numbers to keep in step with these.
-	Price int `json:"Price"`
+	// **What it sells back for is not a field either.** That is the tier's own figure — 1, 2 or 3
+	// — and it is one rule of the shop.
+	Rarity Rarity `json:"Rarity"`
 
 	// Rules is what wearing this ring actually does. **A list, forced by the growing stat rings**,
 	// which accumulate at one moment and apply at another; it generalises to any ring wanting two.
@@ -73,7 +75,8 @@ type RingData struct {
 // RingRuleData is one `When` / `If` / `Then`.
 type RingRuleData struct {
 	// When is the moment that wakes this rule: one of `card-cost`, `card-damage`, `attack-lands`,
-	// `deck-built`, `fight-start`, `fight-won` or `prizes-dealt`. Closed, and each has one Go seat.
+	// `deck-built`, `fight-start`, `fight-won`, `prizes-dealt`, `blow-formed` or `turn-taken`.
+	// Closed, and each has one Go seat.
 	When string `json:"When"`
 
 	// If is what has to be true. **Absent means the rule always fires**, which is what the stat
@@ -98,6 +101,16 @@ type RingIfData struct {
 	// Form is `stab`, `slash`, `crush` or `plan`.
 	Form string `json:"Form,omitempty"`
 
+	// Tier is the rung of its form's ladder a card sits on, which is the cost printed on it: 1, 2
+	// or 3. **The declared cost and never the wearer's**, so a discount ring cannot quietly move a
+	// card out of a rule's reach.
+	Tier int `json:"Tier,omitempty"`
+
+	// Lead narrows the rule to the **first attack card of the blow** — the only predicate that is
+	// not a fact about the card. Meaningful at `blow-formed` and refused anywhere else, since no
+	// other moment knows which card leads.
+	Lead bool `json:"Lead,omitempty"`
+
 	// Concept names one card by its label — `Strike`. Resolved at load the way a deck list is,
 	// because a concept's ID is registration-ordered and must never be written in a file.
 	//
@@ -110,7 +123,9 @@ type RingIfData struct {
 // way a card's Amount is read against its verb.
 type RingEffectData struct {
 	// Do is the effect verb: `adjust-cost`, `scale-damage`, `apply-status`, `set-element`, `add-dmg`,
-	// `add-hp`, `grow`, `scale-propagation`, `adjust-picks` or `adjust-prize-vitae`.
+	// `add-hp`, `scale-hp`, `grow-on-win`, `grow-on-hit`, `scale-propagation`, `adjust-picks`,
+	// `adjust-prize-vitae`,
+	// `echo-attack`, `repeat-card`, `demote-card`, `grow-on-hit`, `grow-on-turn` or `reset-growth`.
 	//
 	// **One word carrying both the operation and its subject** *(owner's call, 2026-08-17)*, rather
 	// than an operation crossed with a subject: two lists would buy a grid that is mostly

@@ -233,6 +233,13 @@ func ClearDefenses(d Duelist) Duelist {
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
 const baseMaxActions = 5
 
+// MaxEchoLandings is the most times one card can land inside a blow, echoes and repeats included.
+//
+// **A width rather than a design cap**, exactly like MaxWornRings and MaxStatuses: Event's hand
+// arrays are fixed so an Event stays comparable, and every landing is a term in them. Five is
+// generous against the one echo ring that exists, which lands a card three times.
+const MaxEchoLandings = 5
+
 // MaxActions is the second of the two bounds on a round. **A round is bounded by cost and
 // by count, independently and on purpose**: the budget gates what can be afforded, and this
 // gates how much can happen at all — which still bites when discounts have taken cards to

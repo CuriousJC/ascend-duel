@@ -9,28 +9,16 @@ import "github.com/curiousjc/ascend-duel/internal/combat"
 // each here rather than a scene reaching into `Wear` with a `SpendVitae` beside it and getting the
 // order wrong on the day it fails.
 //
-// **A price is a fact about a ring and lives in `rings.json`** — a concept ring covering four cards
-// and a form ring covering twelve are not the same object. What a ring *sells* for is not a field:
-// it is a quarter of the price, rounded up, and it is one rule of the shop rather than seventeen
-// numbers to keep in step with seventeen others.
-//
-// **A base ring is 3 and the ladder is scaled off it** *(owner's call, 2026-08-21)*. A base ring is
-// one of the four that give a colour its status; everything else is read against that, 2 through 7.
+// **A price is a fact about a ring's rarity** *(owner's call, 2026-08-22)*, not a number the ring
+// writes down: `rings.json` names one of three tiers and `data.Rarity` turns it into both a price
+// and a draw weight. A common ring is 3 — the base, the plainest thing the grammar can say — and the
+// two tiers above it are 5 and 7. What a ring *sells* for comes off the same tier: 1, 2 or 3,
+// written down rather than derived, because a quarter rounded up paid an uncommon and a rare alike.
 //
 // **Nothing prices these numbers but judgement.** `tools/balance` plays postures against the roster
 // and knows nothing about rings, so what a doubling of every slash card is worth in vitae is a guess
 // that has never been measured. Said out loud here because the alternative is a table of figures
 // that looks derived.
-
-// sellDivisor is what a ring sells back for: a quarter of what it cost, rounded up *(owner's call,
-// 2026-08-21)*.
-//
-// **Rounded up so the cheapest ring is still worth something.** At the prices the catalogue actually
-// carries — 2 to 7 — a quarter rounded down would be nothing for most of them, which would make
-// selling a way of throwing a ring away rather than a trade. Rounded up, a base ring of 3 pays 1
-// back. The loss on the round trip is still the point: a swap is meant to cost, or the shelf is a
-// free rerolling of your hand every visit.
-const sellDivisor = 4
 
 // RingPrice is what the shop charges for a ring, and whether the catalogue holds one at all.
 func RingPrice(key string) (int, bool) {
@@ -38,15 +26,16 @@ func RingPrice(key string) (int, bool) {
 	return p, ok
 }
 
-// SellValue is what taking a ring off pays back: a quarter of its price, rounded up. Zero for a
-// ring the catalogue does not hold, which is a ring nothing can be wearing.
-func SellValue(key string) int {
-	price, ok := ringPrices[key]
-	if !ok {
-		return 0
-	}
-	return (price + sellDivisor - 1) / sellDivisor
-}
+// RingWeight is how many tickets a ring holds in the shelf draw, from its rarity. Zero for a ring
+// the catalogue does not hold, which is a ring nothing can offer.
+//
+// **The shelf asks rather than reading a record**, the same line RingPrice draws: what a tier is
+// worth in tickets is the shop's arithmetic, not a screen's.
+func RingWeight(key string) int { return ringWeights[key] }
+
+// SellValue is what taking a ring off pays back: the tier's own figure — 1, 2 or 3. Zero for a ring
+// the catalogue does not hold, which is a ring nothing can be wearing.
+func SellValue(key string) int { return ringSells[key] }
 
 // CanBuy reports whether this run could buy that ring right now: the catalogue holds it, it is not
 // already on, there is a finger free, and the purse covers it.
@@ -100,7 +89,7 @@ func (s *Session) Buy(key string) bool {
 	return s.Wear(key)
 }
 
-// Sell takes a worn ring off and pays a quarter of its price back, rounded up. It reports whether
+// Sell takes a worn ring off and pays its tier's sell-back figure. It reports whether
 // the run was wearing it.
 //
 // **It is the only way a ring comes off** *(owner's call, 2026-08-21)*, which is what makes the

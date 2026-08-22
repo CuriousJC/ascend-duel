@@ -343,7 +343,11 @@ func duelistOfDuelist(d data.DuelistData) combat.Duelist {
 
 // elementalRings is the four whose whole rule is "this colour applies its status", which is what the
 // elemental postures below are measuring.
-var elementalRings = []string{"fire-ring", "frozen-ring", "thunder-ring", "earth-ring"}
+//
+// **They are the status halves, not the colour rings** *(2026-08-22)*. Every colour split into a
+// damage doubler carrying the colour's name and a status ring beside it; what these postures
+// measure is what the statuses do, so the list follows the rule rather than the name.
+var elementalRings = []string{"burning-ring", "chilling-ring", "shocking-ring", "weighted-ring"}
 
 // duelResult is how one posture's duel against one enemy ended.
 //

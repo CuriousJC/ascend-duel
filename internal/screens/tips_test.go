@@ -158,13 +158,13 @@ func TestADiscountRingExplainsThePrice(t *testing.T) {
 		t.Skip("no fire attack in the deck")
 	}
 
-	h := wearing(t, 12, "thrifty-ring")
+	h := wearing(t, 12, "warm-ring")
 	h.cost = combat.CostWith(h.worn, fire)
 
 	_, lines := cardTip(fire, h)
 	joined := strings.Join(lines, " | ")
 
-	if !strings.Contains(joined, "Thrifty Ring") {
+	if !strings.Contains(joined, "Warm Ring") {
 		t.Errorf("a discounted card does not name the ring: %s", joined)
 	}
 }

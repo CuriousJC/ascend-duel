@@ -32,7 +32,7 @@ func priceOf(t *testing.T, key string) int {
 func TestEveryRingIsPricedAndSellsForSomething(t *testing.T) {
 	// **A price is registered rather than trusted** — a record with none panics at load, so
 	// reaching this test is most of the check. What it adds is the floor on the sale: rounding a
-	// quarter *up* is what stops the cheapest ring in the file being worth nothing to take off.
+	// A written per-tier figure is what stops the cheapest ring being worth nothing to take off.
 	for _, key := range Rings() {
 		price, ok := RingPrice(key)
 		if !ok || price <= 0 {
@@ -45,14 +45,25 @@ func TestEveryRingIsPricedAndSellsForSomething(t *testing.T) {
 	}
 }
 
-func TestSellingPaysAQuarterRoundedUp(t *testing.T) {
-	for _, tc := range []struct{ price, want int }{
-		{1, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 2}, {6, 2}, {7, 2}, {8, 2}, {9, 3},
+func TestEachTierPaysBackItsOwnFigure(t *testing.T) {
+	// The three prices and the three rebates, written out, so a change to either is a change to
+	// this table rather than something a run finds out at the shop.
+	for _, tc := range []struct {
+		rarity     data.Rarity
+		price, buy int
+	}{
+		{data.Common, 3, 1}, {data.Uncommon, 5, 2}, {data.Rare, 7, 3},
 	} {
-		// Priced through the same arithmetic the shop uses rather than through a record, so the
-		// table can hold figures no ring in the file happens to carry.
-		if got := (tc.price + sellDivisor - 1) / sellDivisor; got != tc.want {
-			t.Errorf("a %d-vitae ring sells for %d, want %d", tc.price, got, tc.want)
+		if got := tc.rarity.Price(); got != tc.price {
+			t.Errorf("%s costs %d, want %d", tc.rarity, got, tc.price)
+		}
+		if got := tc.rarity.Sell(); got != tc.buy {
+			t.Errorf("%s sells back for %d, want %d", tc.rarity, got, tc.buy)
+		}
+		// The round trip has to lose, or a shelf is free to try on.
+		if tc.rarity.Sell() >= tc.rarity.Price() {
+			t.Errorf("%s sells for %d and costs %d, which is not a loss",
+				tc.rarity, tc.rarity.Sell(), tc.price)
 		}
 	}
 }
@@ -218,14 +229,23 @@ func TestTheRoundTripCosts(t *testing.T) {
 	}
 }
 
-func TestThePriceInTheFileIsThePriceCharged(t *testing.T) {
-	// The shop reads the run and the run reads the record. A screen quoting one number while the
-	// purse pays another is the drift this rules out.
+func TestTheRarityInTheFileIsThePriceCharged(t *testing.T) {
+	// The shop reads the run, the run reads the tier, and the tier is the only place a price is
+	// written. A screen quoting one number while the purse pays another is the drift this rules out.
 	records := data.LoadRings()
 
 	for key, record := range records {
-		if got := priceOf(t, key); got != record.Price {
-			t.Errorf("%s costs %d in the file and %d in the registry", key, record.Price, got)
+		if !record.Rarity.Valid() {
+			t.Errorf("%s has rarity %q, which is not a tier", key, record.Rarity)
+			continue
+		}
+		if got := priceOf(t, key); got != record.Rarity.Price() {
+			t.Errorf("%s is %s and should cost %d, and the registry charges %d",
+				key, record.Rarity, record.Rarity.Price(), got)
+		}
+		if got, want := RingWeight(key), record.Rarity.Weight(); got != want {
+			t.Errorf("%s is %s and should be drawn at %d, and the shop draws it at %d",
+				key, record.Rarity, want, got)
 		}
 	}
 }

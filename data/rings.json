@@ -3,8 +3,22 @@
     "RingRecord": "fire-ring",
     "Name": "Fire Ring",
     "Art": "firering_png",
-    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 10% DMG each turn.",
-    "Price": 3,
+    "Text": "Fire cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "burning-ring",
+    "Name": "Burning Ring",
+    "Art": "",
+    "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "attack-lands",
@@ -14,11 +28,25 @@
     ]
   },
   {
-    "RingRecord": "frozen-ring",
-    "Name": "Frozen Ring",
-    "Art": "frozenring_png",
+    "RingRecord": "ice-ring",
+    "Name": "Ice Ring",
+    "Art": "icering_png",
+    "Text": "Ice cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "chilling-ring",
+    "Name": "Chilling Ring",
+    "Art": "",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
-    "Price": 3,
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "attack-lands",
@@ -28,11 +56,25 @@
     ]
   },
   {
-    "RingRecord": "thunder-ring",
-    "Name": "Thunder Ring",
-    "Art": "thunderring_png",
+    "RingRecord": "lightning-ring",
+    "Name": "Lightning Ring",
+    "Art": "lightningring_png",
+    "Text": "Lightning cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "shocking-ring",
+    "Name": "Shocking Ring",
+    "Art": "",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
-    "Price": 3,
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "attack-lands",
@@ -45,8 +87,22 @@
     "RingRecord": "earth-ring",
     "Name": "Earth Ring",
     "Art": "earthring_png",
+    "Text": "Earth cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "weighted-ring",
+    "Name": "Weighted Ring",
+    "Art": "",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
-    "Price": 3,
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "attack-lands",
@@ -60,7 +116,7 @@
     "Name": "Storm Ring",
     "Art": "",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
-    "Price": 5,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "attack-lands",
@@ -77,7 +133,7 @@
     "Name": "Keen Ring",
     "Art": "",
     "Text": "Every slash card deals double DMG.",
-    "Price": 6,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
@@ -91,7 +147,7 @@
     "Name": "Heavy Ring",
     "Art": "",
     "Text": "Every crush card deals double DMG.",
-    "Price": 6,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
@@ -103,9 +159,9 @@
   {
     "RingRecord": "needle-ring",
     "Name": "Needle Ring",
-    "Art": "",
+    "Art": "needlering_png",
     "Text": "Every stab card deals double DMG.",
-    "Price": 6,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
@@ -119,7 +175,7 @@
     "Name": "Striker Ring",
     "Art": "",
     "Text": "Every Strike deals double DMG.",
-    "Price": 6,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
@@ -129,11 +185,196 @@
     ]
   },
   {
-    "RingRecord": "thrifty-ring",
-    "Name": "Thrifty Ring",
+    "RingRecord": "flurry-ring",
+    "Name": "Flurry Ring",
+    "Art": "",
+    "Text": "Every stab card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "rend-ring",
+    "Name": "Rend Ring",
+    "Art": "",
+    "Text": "Every slash card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "aftershock-ring",
+    "Name": "Aftershock Ring",
+    "Art": "",
+    "Text": "Every crush card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "momentum-ring",
+    "Name": "Momentum Ring",
+    "Art": "",
+    "Text": "Every card gains 0.2x DMG each turn you play no plan card. A plan card resets it.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "turn-taken",
+        "Then": [{ "Do": "grow-on-turn", "Amount": 20 }]
+      },
+      {
+        "When": "turn-taken",
+        "If": { "Form": "plan" },
+        "Then": [{ "Do": "reset-growth" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "enflamed-ring",
+    "Name": "Enflamed Ring",
+    "Art": "",
+    "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "frostbitten-ring",
+    "Name": "Frostbitten Ring",
+    "Art": "",
+    "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "lithium-ring",
+    "Name": "Lithium Ring",
+    "Art": "",
+    "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "granite-ring",
+    "Name": "Granite Ring",
+    "Art": "",
+    "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "echo-ring",
+    "Name": "Echo Ring",
+    "Art": "",
+    "Text": "Your first attack lands 3 times: full DMG, then 2/3, then 1/3.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Lead": true },
+        "Then": [{ "Do": "echo-attack", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "atrophy-ring",
+    "Name": "Atrophy Ring",
+    "Art": "",
+    "Text": "Every 3 AP attack is dealt as its 2 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Tier": 3 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "onslaught-ring",
+    "Name": "Onslaught Ring",
+    "Art": "",
+    "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      },
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "scale-hp", "Amount": 75 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "warm-ring",
+    "Name": "Warm Ring",
     "Art": "",
     "Text": "Fire cards cost 1 AP less.",
-    "Price": 5,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-cost",
@@ -143,11 +384,53 @@
     ]
   },
   {
+    "RingRecord": "cold-ring",
+    "Name": "Cold Ring",
+    "Art": "",
+    "Text": "Ice cards cost 1 AP less.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "static-ring",
+    "Name": "Static Ring",
+    "Art": "",
+    "Text": "Lightning cards cost 1 AP less.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "dirty-ring",
+    "Name": "Dirty Ring",
+    "Art": "",
+    "Text": "Earth cards cost 1 AP less.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "frozen-lightning-ring",
     "Name": "Frozen Lightning Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an ice card.",
-    "Price": 3,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "deck-built",
@@ -157,11 +440,165 @@
     ]
   },
   {
+    "RingRecord": "permafrost-ring",
+    "Name": "Permafrost Ring",
+    "Art": "",
+    "Text": "Every earth card is dealt as an ice card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "frostbite-ring",
+    "Name": "Frostbite Ring",
+    "Art": "",
+    "Text": "Every fire card is dealt as an ice card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "meltdown-ring",
+    "Name": "Meltdown Ring",
+    "Art": "",
+    "Text": "Every ice card is dealt as a fire card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "firestorm-ring",
+    "Name": "Firestorm Ring",
+    "Art": "",
+    "Text": "Every lightning card is dealt as a fire card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "magma-ring",
+    "Name": "Magma Ring",
+    "Art": "",
+    "Text": "Every earth card is dealt as a fire card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "thundersnow-ring",
+    "Name": "Thundersnow Ring",
+    "Art": "",
+    "Text": "Every ice card is dealt as a lightning card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "heat-lightning-ring",
+    "Name": "Heat Lightning Ring",
+    "Art": "",
+    "Text": "Every fire card is dealt as a lightning card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "dust-storm-ring",
+    "Name": "Dust Storm Ring",
+    "Art": "",
+    "Text": "Every earth card is dealt as a lightning card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "glacier-ring",
+    "Name": "Glacier Ring",
+    "Art": "",
+    "Text": "Every ice card is dealt as an earth card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "obsidian-ring",
+    "Name": "Obsidian Ring",
+    "Art": "",
+    "Text": "Every fire card is dealt as an earth card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "fulgurite-ring",
+    "Name": "Fulgurite Ring",
+    "Art": "",
+    "Text": "Every lightning card is dealt as an earth card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
     "RingRecord": "might-ring",
     "Name": "Might Ring",
     "Art": "",
     "Text": "+10 DMG for every fight.",
-    "Price": 5,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "fight-start",
@@ -174,7 +611,7 @@
     "Name": "Bulwark Ring",
     "Art": "",
     "Text": "+25 HP for every fight.",
-    "Price": 4,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "fight-start",
@@ -187,7 +624,7 @@
     "Name": "Heart Ring",
     "Art": "",
     "Text": "+5 HP, and 5 more for every fight won.",
-    "Price": 4,
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "fight-start",
@@ -195,7 +632,7 @@
       },
       {
         "When": "fight-won",
-        "Then": [{ "Do": "grow", "Amount": 5 }]
+        "Then": [{ "Do": "grow-on-win", "Amount": 5 }]
       }
     ]
   },
@@ -204,7 +641,7 @@
     "Name": "Banker Ring",
     "Art": "",
     "Text": "Vitae propagates twice as fast.",
-    "Price": 4,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "fight-won",
@@ -217,7 +654,7 @@
     "Name": "Soul Taker Ring",
     "Art": "",
     "Text": "The vitae prize card pays 5 more.",
-    "Price": 4,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "prizes-dealt",
@@ -230,7 +667,7 @@
     "Name": "Hungry Ring",
     "Art": "",
     "Text": "Two prizes after a fight instead of one.",
-    "Price": 7,
+    "Rarity": "common",
     "Rules": [
       {
         "When": "prizes-dealt",

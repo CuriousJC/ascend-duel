@@ -82,11 +82,14 @@ var portraits embed.FS
 //go:embed ring/fire-ring.png
 var firering_png []byte
 
-//go:embed ring/frozen-ring.png
-var frozenring_png []byte
+//go:embed ring/ice-ring.png
+var icering_png []byte
 
-//go:embed ring/thunder-ring.png
-var thunderring_png []byte
+//go:embed ring/lightning-ring.png
+var lightningring_png []byte
+
+//go:embed ring/needle-ring.png
+var needlering_png []byte
 
 //go:embed ring/earth-ring.png
 var earthring_png []byte
@@ -146,8 +149,9 @@ func LoadAssets() map[string]*ebiten.Image {
 	assets["title_png"] = loadImage(title_png)
 	assets["titleEaster_png"] = loadImage(titleEaster_png)
 	assets["firering_png"] = loadImage(firering_png)
-	assets["frozenring_png"] = loadImage(frozenring_png)
-	assets["thunderring_png"] = loadImage(thunderring_png)
+	assets["icering_png"] = loadImage(icering_png)
+	assets["lightningring_png"] = loadImage(lightningring_png)
+	assets["needlering_png"] = loadImage(needlering_png)
 	assets["earthring_png"] = loadImage(earthring_png)
 	assets["defaultring_png"] = loadImage(defaultring_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
@@ -197,8 +201,9 @@ func LoadImageData() map[string][]byte {
 	images := make(map[string][]byte)
 
 	images["firering_png"] = firering_png
-	images["frozenring_png"] = frozenring_png
-	images["thunderring_png"] = thunderring_png
+	images["icering_png"] = icering_png
+	images["lightningring_png"] = lightningring_png
+	images["needlering_png"] = needlering_png
 	images["earthring_png"] = earthring_png
 	images["defaultring_png"] = defaultring_png
 

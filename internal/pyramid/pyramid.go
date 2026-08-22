@@ -70,3 +70,27 @@ func FirstFightOnFloor(floor int) int {
 	}
 	return (floor - 1) * FightsPerFloor
 }
+
+// Room is which of a floor's rooms a fight index is: outer, inner, or the stairway that is the
+// floor's boss.
+//
+// **It is derived, never stored**, exactly as FloorOf is: the fight counter already says where the
+// run is, and a second field saying the same thing is a second field to keep in step.
+type Room int
+
+const (
+	// RoomOuter is the first room of a floor, RoomInner the second, RoomStairway the third — and
+	// the third is the boss. Ordinals are positions in a floor, so this is not append-only in the
+	// way an ID enum is; it is arithmetic on FightsPerFloor.
+	RoomOuter Room = iota
+	RoomInner
+	RoomStairway
+)
+
+// RoomOf is which room of its floor a fight index falls in.
+func RoomOf(fight int) Room {
+	if fight < 0 {
+		return RoomOuter
+	}
+	return Room(fight % FightsPerFloor)
+}

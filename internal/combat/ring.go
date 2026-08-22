@@ -170,7 +170,9 @@ const (
 	// DoAdjustPicks changes how many post-battle choices are offered.
 	DoAdjustPicks
 
-	// DoAdjustPrizeVitae changes what the vitae prize card pays, flat.
+	// DoAdjustPrizeVitae changes what a won room pays, flat. **It was the vitae prize card's until
+	// 2026-08-22**, when that card was removed and the figure it moved became the room award every
+	// win pays — same moment, same flat addition, a figure that is now always there.
 	DoAdjustPrizeVitae
 
 	// DoEchoAttack makes the blow's **lead attack card** land more than once. Amount is how many
@@ -867,7 +869,7 @@ func AddedHP(worn []WornRing) int { return sumAmounts(worn, MomentFightStart, Do
 // AddedPicks is how many extra post-battle choices a worn set offers.
 func AddedPicks(worn []WornRing) int { return sumAmounts(worn, MomentPrizesDealt, DoAdjustPicks) }
 
-// AddedPrizeVitae is what a worn set adds to the vitae prize card. **Flat, not a percentage** — Soul
+// AddedPrizeVitae is what a worn set adds to a won room's vitae award. **Flat, not a percentage** — Soul
 // Taker turns 5 into 10 rather than doubling whatever the card happens to pay.
 func AddedPrizeVitae(worn []WornRing) int {
 	return sumAmounts(worn, MomentPrizesDealt, DoAdjustPrizeVitae)

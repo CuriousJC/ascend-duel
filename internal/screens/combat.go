@@ -322,7 +322,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	//
 	// Nothing is lost by rebuilding: a duel already restores full life below, and everything else
 	// on the combatant comes out of the record.
-	s.fighter = duelistFromRecord(gs, "Fighter1")
+	s.fighter = duelistFromRecord(gs, playerRecord)
 
 	// **What the player is wearing is part of hydrating them**, not part of resetting a duel:
 	// rings are run-level and a fight does not take them off. **The run puts them on**, which is
@@ -577,7 +577,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// **Before WonFight**, because a `grow-on-hit` ring grew the fighter's own copy during the
 		// duel and this is the last tick that copy exists.
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
-		gs.Run.WonFight()
+		gs.Run.WonFight(s.fighter.CurrentLife)
 		advanceRun(gs)
 		return nil
 	}

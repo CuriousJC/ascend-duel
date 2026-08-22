@@ -70,7 +70,7 @@ func drawRingCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 func drawWormCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	w session.Worm, enabled bool) {
 
-	blitCard(gs, screen, at, wormSpec(w, enabled), cards.Hand)
+	blitCard(gs, screen, at, wormSpec(gs, w, enabled), cards.WormStyle)
 }
 
 // drawFlyingCard draws a card mid-journey, under whatever transform the flight has worked out

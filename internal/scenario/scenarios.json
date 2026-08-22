@@ -1,5 +1,26 @@
 [
   {
+    "ScenarioRecord": "reward-payout",
+    "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
+    "Rings": ["heart-ring"],
+    "Hand": [],
+    "Screen": "reward",
+    "Fight": 3,
+    "Vitae": 22,
+    "Life": 63
+  },
+  {
+    "ScenarioRecord": "shop-shelf",
+    "Note": "The shop with money to spend and two fingers already full. Straight to the shelf without playing three duels to reach it.",
+    "Rings": ["heart-ring", "keen-ring"],
+    "Hand": [],
+    "Screen": "shop",
+    "Fight": 3,
+    "Vitae": 40,
+    "Life": 63
+  },
+
+  {
     "ScenarioRecord": "echo-and-growth",
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
     "Rings": ["echo-ring", "enflamed-ring", "fire-ring"],

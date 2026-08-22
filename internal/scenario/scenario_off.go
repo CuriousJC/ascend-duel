@@ -25,3 +25,11 @@ func Hand() []combat.Card { return nil }
 
 // Enemy is the record key to fight instead of the climb's own. Empty here.
 func Enemy() string { return "" }
+
+// Screen is which scene to open on. Always the duel here.
+func Screen() string { return "combat" }
+
+// Fight, Vitae and Life are the run state a jumped-in screen would need. All zero here.
+func Fight() int { return 0 }
+func Vitae() int { return 0 }
+func Life() int  { return 0 }

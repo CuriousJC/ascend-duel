@@ -283,6 +283,15 @@ var (
 type StatLine struct {
 	Label string
 	Value string
+
+	// ValueInk overrides the colour the figure is set in. **Zero alpha means the default**, the
+	// same convention TextInk follows, so a caller that never thinks about it gets NumberInk.
+	//
+	// **It exists because vitae is crimson everywhere it is written** *(2026-08-22)*: the purse on
+	// the duelist card is the figure the reward screen makes climb, and it is the same red the
+	// word is set in while that screen reads the payout out. The state colouring still applies on
+	// top, so a disabled card fades with everything else.
+	ValueInk color.RGBA
 }
 
 // MaxStatLines is how many stat rows a card can carry.

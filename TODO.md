@@ -12,6 +12,18 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
+- [ ] **The deck view is one screen's, and three screens want it.** The combat screen's deck
+      overlay (`internal/screens/combat_deck.go`) draws and hit-tests off `CombatScene`'s own
+      fields, so no other scene can put it up. The reward screen and the shop both want it — the
+      same modal, behind the same kind of button, so a player choosing a worm or a ring can see
+      what they already own. **Extract it into a widget taking a deck and a rectangle** and have
+      all three call it; do not copy it, which is the failure this entry exists to prevent.
+      *(Owner's call, 2026-08-22: deliberately out of scope of the reward-screen work, so the
+      reward screen currently has no deck view at all.)*
+- [ ] **The shop has no build band.** The reward screen puts the duelist card and the worn rings
+      up while you choose (`internal/screens/buildband.go`, one call); the shop is buying rings
+      and has more reason to. One line, once someone is in that file.
+
 - [ ] **Two rounded-rectangle implementations exist.** Cards rasterise their corners in
       plain Go (`internal/cards/shape.go`) because `internal/cards` must render without a
       graphics context; health bars use `CreateRoundedRecMask` + `ebiten.BlendSourceIn`.

@@ -7,7 +7,13 @@ package screens
 // what keeps `CombatScene` from growing a fourth phase, and it is why the chain is wired as
 // screen changes: win → post-battle → combat.
 //
-// **Two stages, worm first** *(2026-08-17)*. Two worms are drawn from the catalogue and offered
+// **It opens by reading the win out** *(2026-08-22)*. Before anything is offered, the screen types
+// what the fight paid — interest, a tenth of the life you kept, what the room is worth — and each
+// figure flies to the duelist card as its sentence lands. The build is on screen the whole time: the
+// player's card in the corner and their rings beside it, so a worm is chosen against the thing it
+// would be changing. See postbattle_prose.go and buildband.go.
+//
+// **Two stages after that, worm first** *(2026-08-17)*. Two worms are drawn from the catalogue and offered
 // as cards; choosing one deals a hand off the run deck to apply it to. It ran the other way round
 // first — pick a card, then say what to do to it — and the reason it turned is that the *worm* is
 // the reward. What you were given for winning has to be the thing on the screen when you arrive,
@@ -42,53 +48,51 @@ import (
 	"image/color"
 )
 
-// wormsOffered is how many alterations a win puts up, and vitaeReward is what the third card is
-// worth.
+// wormsOffered is how many alterations a win puts up.
 //
-// **Three cards, and one of them is always the vitae** *(2026-08-17)*. Declining used to be a
-// button off to one side, which made it the odd thing out: the reward for a fight was two cards
-// and an escape hatch. It is a *card* now, so every path through the screen is the same path —
-// **you pick a card and it flies to the middle** — and choosing money over a change to the deck is
-// a decision with a price rather than a refusal.
-const (
-	wormsOffered = 2
-	vitaeReward  = 5
-)
+// **Two worms and nothing else** *(owner's call, 2026-08-22)*. A third card paying vitae used to
+// stand beside them, so that declining a change to the deck was a choice among three with a price.
+// The win pays vitae by itself now — read out at the top of this screen — so the money card was
+// charging for something the player had already been given, and the offer is the two creatures the
+// prose says are fleeing. **Taking neither is a button again**, deliberately: the offer is free, so
+// walking away costs nothing and does not need to look like a card.
+const wormsOffered = 2
 
-// prize is one of the three cards on the table: a worm, or the vitae.
-//
-// **A kind rather than a worm with a `vitae` target**, deliberately. A worm targets a *card* and
-// this one does not touch the deck at all — putting it in that vocabulary would mean every worm
-// carrying a target it might not have, which is the shape `Category` was refused for on the action
-// cards.
+// prize is one of the cards on the table. **Every one of them is a worm** since the vitae card went
+// — the struct survives because a prize is a worm *plus what this visit has done with it*, which
+// the catalogue record has no business carrying.
 type prize struct {
-	vitae bool
-
-	// taken is set once this prize has been picked and paid out. **It stays in the row rather than
-	// being removed from it** — a card leaving would move the two beside it, and the vitae's seat
-	// never moving is the whole reason it is always last. Only a ring that adds a pick can produce a
-	// row with a taken card still in it.
+	// taken is set once this prize has been picked. **It stays in the row rather than being removed
+	// from it** — a card leaving would move the one beside it. Only a ring that adds a pick can
+	// produce a row with a taken card still in it.
 	taken bool
 	worm  session.Worm
 }
 
-func (p prize) name() string {
-	if p.vitae {
-		return "Vitae"
-	}
-	return p.worm.Name
-}
+func (p prize) name() string { return p.worm.Name }
 
 // Where the two rows sit and where the controls sit under them. Percentages anchor the groups;
 // offsets inside a group stay in pixels, per CLAUDE.md.
 const (
-	// The worm row sits where the eye lands, and the card row sits lower, so the second stage
-	// reads as "this worm, applied down there" rather than as a new screen.
-	wormRowPct  = 26
-	offerRowPct = 56
+	// **The worms sit under the payout, on the same screen** *(owner's call, 2026-08-22)*. The
+	// narration does not clear when the offer arrives: what a win paid and what it is offering are
+	// one picture, so the row goes below the last sentence rather than replacing it.
+	wormRowPct = 58
 
-	offerTitleTop = 52
-	offerHintTop  = 96
+	// Once a worm is *chosen*, the prose has done its job and the two rows move up into the space
+	// it leaves — the chosen worm where the eye lands, the cards it may eat below it.
+	wormChosenRowPct = 34
+	offerRowPct      = 62
+
+	// The title and the hint belong to the stages that have no prose up. **Nothing is titled while
+	// the payout is on screen** — the sentences are the title.
+	offerTitleTop = 262
+	offerHintTop  = 300
+
+	// proseTop clears the build band, which ends around y=253 — the duelist card and the ring row
+	// are both 224 tall and start at 2%.
+	proseTop     = 296
+	proseLineGap = 42
 
 	offerButtonsPct   = 88
 	offerButtonWidth  = 220
@@ -99,8 +103,12 @@ const (
 type stage int
 
 const (
+	// narrate: the win is being read out and nothing is offered yet. **Every visit starts here**,
+	// because the payout is the first thing that happened and the worms are what it leads to.
+	narrate stage = iota
+
 	// pickWorm: the two worms are up and nothing else is.
-	pickWorm stage = iota
+	pickWorm
 
 	// pickCard: a worm is chosen, and the hand it applies to is dealt.
 	pickCard
@@ -151,11 +159,21 @@ type PostBattleScene struct {
 
 	stage stage
 
-	// **There is no skip button** *(2026-08-17)*. Declining used to be one, off to the side, which
-	// made it the odd thing out on a screen otherwise made of cards. The vitae card is what
-	// replaced it: taking money instead of altering the deck is a choice among three, not an exit.
+	// prose is the payout, typed out a sentence at a time, and the figures it flies to the duelist
+	// card. See postbattle_prose.go.
+	prose typewriter
+
+	// entry is each offered worm's flight in from the side of the screen — one per prize, indexed
+	// alike. **Cards fly; they never appear**, and a worm arriving from off-screen is the picture
+	// the prose has just described: two creatures fleeing the enemy you beat.
+	entry []travel
+
+	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
+	// removed. It takes neither worm and pays nothing extra — the win has already paid — so it is
+	// an exit rather than a third choice, which is exactly why it is not a card.
 	backButton *models.Button
 	takeButton *models.Button
+	skipButton *models.Button
 
 	// aimed is which offered card the worm is pointed at while the morph is shown, and before/after
 	// are what it looks like on each side of the change. **Computed once, when the card is picked**
@@ -171,6 +189,9 @@ type PostBattleScene struct {
 
 	// held counts the settled stage down, and it does not start until the flight has landed.
 	held int
+
+	// skipping is the Skip button's request, consumed by Update for the reason taking is.
+	skipping bool
 
 	// taking is the Take button's request, consumed by Update — a button's OnClick reaches no
 	// global state, and the flight it starts needs the layout.
@@ -212,14 +233,21 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 		s.takeButton = models.NewButton(offerButtonWidth, offerButtonHeight, "Take it",
 			func() { s.taking = true })
 		s.takeButton.BaseColor = color.RGBA{R: 90, G: 170, B: 100, A: 255}
+
+		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "Let them escape",
+			func() { s.skipping = true })
+		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
 	}
 
 	s.chosen, s.aimed = -1, -1
-	s.stage = pickWorm
+	s.stage = narrate
 	s.removes, s.held = false, 0
 	s.arrival, s.arrivedFrom, s.taking = travel{}, image.Rectangle{}, false
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
+	s.entry = make([]travel, len(s.prizes))
+	s.prose.setLines(payoutLines(gs))
+	s.skipping = false
 	s.offer = dealOffer(gs)
 	s.picksLeft = gs.Run.Picks()
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
@@ -238,17 +266,13 @@ func prizeNames(ps []prize) []string {
 	return out
 }
 
-// dealPrizes is the three cards: two worms drawn from the catalogue, then the vitae.
-//
-// **The vitae is last and is not drawn**, so its seat never moves. A player who has learned that
-// the money is on the right can take it without reading, which is the point of a card that is
-// always there.
+// dealPrizes is the offer: two worms drawn from the catalogue.
 func dealPrizes(gs *state.GlobalState) []prize {
-	out := make([]prize, 0, wormsOffered+1)
+	out := make([]prize, 0, wormsOffered)
 	for _, w := range dealWorms(gs) {
 		out = append(out, prize{worm: w})
 	}
-	return append(out, prize{vitae: true})
+	return out
 }
 
 // dealWorms picks which alterations are offered: a shuffle of the catalogue, cut to two.
@@ -318,6 +342,7 @@ func sortInts(v []int) {
 func (s *PostBattleScene) place(gs *state.GlobalState) {
 	y := gs.PctY(offerButtonsPct)
 	s.backButton.ScreenX, s.backButton.ScreenY = gs.PctX(50), y
+	s.skipButton.ScreenX, s.skipButton.ScreenY = gs.PctX(50), y
 	// The morph's two buttons are a pair, so Back moves in beside Take rather than staying where
 	// it sits under the card row. Set at draw time in morphButtons.
 }
@@ -334,6 +359,20 @@ func (s *PostBattleScene) morphButtons(gs *state.GlobalState) {
 }
 
 func (s *PostBattleScene) Update(gs *state.GlobalState) error {
+	// **The narration is the whole screen while it runs.** Nothing is clickable but the click that
+	// skips it, which is what keeps a payout from being half-read while a worm is already being
+	// chosen.
+	if s.stage == narrate {
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			s.prose.skip(gs)
+		}
+		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, i) })
+		if s.prose.finished() {
+			s.beginOffer(gs)
+		}
+		return nil
+	}
+
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
 	if s.stage == settled {
@@ -356,15 +395,32 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
+	if s.skipping {
+		s.skipping = false
+		trace.Logf("postbattle", "caught neither worm")
+		advanceRun(gs)
+		return nil
+	}
+
 	if s.taking {
 		s.taking = false
 		s.take(gs)
 		return nil
 	}
 
+	// The worms' arrival. **They are clickable while they fly** — a card is where its layout
+	// function says it is, and the flight is a ghost over that seat, the same rule the combat
+	// screen's hand follows.
+	for i := range s.entry {
+		s.entry[i].tick()
+	}
+
 	s.click(gs)
 
 	switch s.stage {
+	case pickWorm:
+		s.place(gs)
+		systems.UpdateButton(gs, s.skipButton)
 	case pickCard:
 		s.place(gs)
 		systems.UpdateButton(gs, s.backButton)
@@ -393,11 +449,6 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 			seat := s.wormSlot(gs, i)
 			if p.taken || !at.In(seat) {
 				continue
-			}
-			if p.vitae {
-				s.tip.Point(seat, "Vitae", []string{"the currency rings are bought with",
-					"it also earns interest between fights"})
-				return
 			}
 			title, lines := wormTip(p.worm)
 			s.tip.Point(seat, title, lines)
@@ -461,31 +512,14 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 	}
 }
 
-// takePrize is the click on the prize row.
-//
-// **The two kinds part company here and nowhere else.** A worm goes on to choose a card; the vitae
-// has nothing to choose, so it flies straight to the middle and the screen settles on it. Both
-// paths end the same way — a card in the centre — which is the whole reason the money is a card.
+// takePrize is the click on the prize row: the worm is chosen and the cards it may eat come up.
 func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
 	if i < 0 || i >= len(s.prizes) || s.prizes[i].taken {
 		return
 	}
 	s.chosen = i
 	s.tip.Forget()
-
-	if !s.prizes[i].vitae {
-		s.stage = pickCard
-		return
-	}
-
-	// **What the vitae card pays is the run's business, not this screen's** *(2026-08-17)*. The
-	// `prizes-dealt` moment is where the Soul Taker ring turns 5 into 10, and it is a flat addition
-	// rather than a scaling — see MECHANICS.md, where the two vitae rings are deliberately different
-	// objects.
-	paid := gs.Run.PrizeVitae(vitaeReward)
-	s.applyNow = func(run *session.Session) { run.AddVitae(paid) }
-	s.pendingWhat = fmt.Sprintf("took %d vitae", paid)
-	s.settle(gs, s.wormSlot(gs, i))
+	s.stage = pickCard
 }
 
 // rearm is what a second pick is: the taken prize is struck off, the row stays where it is, and the
@@ -580,6 +614,7 @@ func (s *PostBattleScene) wormSlot(gs *state.GlobalState, i int) image.Rectangle
 	top := gs.PctY(wormRowPct)
 
 	if s.stage == pickCard {
+		top = gs.PctY(wormChosenRowPct)
 		left := gs.PctX(50) - cardWidth/2
 		return image.Rect(left, top, left+cardWidth, top+cardHeight)
 	}
@@ -638,11 +673,10 @@ func (s *PostBattleScene) chosenPrize() (prize, bool) {
 	return s.prizes[s.chosen], true
 }
 
-// chosenWorm is the chosen prize when it is a worm. The vitae card reaches none of the code that
-// asks this, because taking it goes straight to the flight.
+// chosenWorm is the worm the player picked, if they have.
 func (s *PostBattleScene) chosenWorm() (session.Worm, bool) {
 	p, ok := s.chosenPrize()
-	if !ok || p.vitae {
+	if !ok {
 		return session.Worm{}, false
 	}
 	return p.worm, true
@@ -653,6 +687,20 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
+	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 26}
+
+	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
+	// and what a worm is about to change.
+	drawBuildBand(gs, screen, gs.Run.Vitae())
+
+	// **The narration stays up while the offer is made**, and only clears once a worm is chosen.
+	if s.stage == narrate || s.stage == pickWorm {
+		s.drawProse(gs, screen, prose)
+	}
+
+	if s.stage == narrate {
+		return
+	}
 
 	line := func(y int, face *text.GoTextFace, msg string) {
 		op := &text.DrawOptions{}
@@ -662,8 +710,10 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		text.Draw(screen, msg, face, op)
 	}
 
-	line(offerTitleTop, heading, s.title())
-	line(offerHintTop, small, s.hint(gs))
+	if s.stage != pickWorm {
+		line(offerTitleTop, heading, s.title())
+		line(offerHintTop, small, s.hint(gs))
+	}
 
 	defer systems.DrawTooltip(gs, screen, &s.tip)
 
@@ -680,6 +730,10 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	s.drawWorms(gs, screen)
+
+	if s.stage == pickWorm {
+		systems.DrawButton(gs, screen, s.skipButton)
+	}
 
 	if s.stage == pickCard {
 		for i, deckIndex := range s.offer {
@@ -767,10 +821,6 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 	at := flyingTo(s.arrivedFrom, seat, s.arrival)
 
 	card := s.after
-	if p, ok := s.chosenPrize(); ok && p.vitae {
-		drawSpecCard(gs, screen, at, vitaeSpec(gs.Run.PrizeVitae(vitaeReward), true))
-		return
-	}
 	drawCard(gs, screen, at, cards.Hand, card, heldByRun(gs, card), true, false)
 }
 
@@ -779,38 +829,22 @@ func (s *PostBattleScene) title() string {
 	case morph:
 		return "The worm turns"
 	case settled:
-		if p, ok := s.chosenPrize(); ok && p.vitae {
-			return "Taken"
-		}
 		if s.removes {
 			return "Eaten"
 		}
 		return "Changed"
+	case narrate:
+		return ""
 	default:
-		return "A worm turns up"
+		return "Two creatures flee"
 	}
 }
 
-// drawPrizeCard draws whichever kind of prize this is. One function so a caller never has to know,
-// which is what keeps the vitae from being a special case anywhere but here.
+// drawPrizeCard draws one prize where the row says it goes.
 func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	p prize, enabled bool) {
 
-	if p.vitae {
-		drawSpecCard(gs, screen, at, vitaeSpec(prizeVitae(gs), enabled))
-		return
-	}
 	drawWormCard(gs, screen, at, p.worm, enabled)
-}
-
-// prizeVitae is what the money card is worth to this run — the base plus whatever the rings add.
-// **The card says the true figure**, because a card offering 5 that pays 10 would make the ring
-// invisible at exactly the moment it is doing its work.
-func prizeVitae(gs *state.GlobalState) int {
-	if gs.Run == nil {
-		return vitaeReward
-	}
-	return gs.Run.PrizeVitae(vitaeReward)
 }
 
 // drawWorms puts the offer up as cards. **A worm is a card because it is a thing you are given**,
@@ -828,7 +862,7 @@ func (s *PostBattleScene) drawWorms(gs *state.GlobalState, screen *ebiten.Image)
 		return
 	}
 	for i, p := range s.prizes {
-		drawPrizeCard(gs, screen, s.wormSlot(gs, i).Min, p, !p.taken)
+		drawPrizeCard(gs, screen, s.wormArrivingAt(gs, i), p, !p.taken)
 	}
 }
 
@@ -841,9 +875,6 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 		}
 		return w.Name + " makes it this"
 	case settled:
-		if p, ok := s.chosenPrize(); ok && p.vitae {
-			return "spend it in the shop"
-		}
 		if s.removes {
 			return "one fewer card to draw"
 		}

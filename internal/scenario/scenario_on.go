@@ -42,6 +42,30 @@ type record struct {
 	// Enemy is a record key from enemies.json. **Empty means the climb's own**, so a scenario that
 	// is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
+
+	// Screen is which scene to open on: `combat` (the default), `reward` or `shop`.
+	//
+	// **It exists because a between-fights screen is otherwise a twenty-minute question**
+	// *(owner's call, 2026-08-22)*. Looking at the reward screen's narration or the shop's shelf
+	// meant playing a duel to reach it, every time, and a screen under construction is looked at
+	// dozens of times an afternoon. It is the same argument the plugged hand was built on, applied
+	// one station further along the loop.
+	//
+	// **It sets the run's phase, not the scene directly.** The run owns where it is — see
+	// session/flow.go — so a jump that named a scene could put a screen up that the run does not
+	// think it is on, and leaving that screen would advance from the wrong station.
+	Screen string `json:"Screen"`
+
+	// Fight is which room the run has reached: 0 is floor 1's outer room, 2 its stairway. **It is
+	// what makes a jumped-in reward screen pay the right room award**, and what the enemy is scaled
+	// against.
+	Fight int `json:"Fight"`
+
+	// Vitae is the purse to arrive with, and Life the life the last fight is treated as having
+	// ended on — a tenth of which is part of what the reward screen pays out. **Zero means the
+	// run's own**: a fresh purse, and full life.
+	Vitae int `json:"Vitae"`
+	Life  int `json:"Life"`
 }
 
 // handCard is one card of a plugged hand: a concept by its label, and a colour.
@@ -112,8 +136,17 @@ func keysOf(list []record) []string {
 // and this package sits below it — `main` hands the list to `session.StartingRings`, which already
 // refuses a key the catalogue does not hold.
 func check(r *record) error {
-	if len(r.Hand) == 0 {
+	// **A hand is only required of a scenario that opens on a duel.** One jumping straight to the
+	// reward screen or the shop has nothing to deal it to.
+	if len(r.Hand) == 0 && r.Screen == screenCombat {
 		return fmt.Errorf("has no hand, so there is nothing to look at")
+	}
+	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop {
+		return fmt.Errorf("%q is not a screen (want %q, %q or %q)",
+			r.Screen, screenCombat, screenReward, screenShop)
+	}
+	if r.Fight < 0 {
+		return fmt.Errorf("fight %d is before the first room", r.Fight)
 	}
 	if r.Enemy != "" {
 		if _, ok := data.LoadEnemies()[r.Enemy]; !ok {
@@ -156,3 +189,24 @@ func Hand() []combat.Card {
 
 // Enemy is the record key to fight instead of the climb's own, or empty for the climb's.
 func Enemy() string { return current.Enemy }
+
+// The screens a scenario may open on. Written as keys rather than as `state.ActiveScreen` values,
+// because this package sits below `internal/state` and must stay there.
+const (
+	screenCombat = "combat"
+	screenReward = "reward"
+	screenShop   = "shop"
+)
+
+// Screen is which scene to open on, defaulting to the duel.
+func Screen() string {
+	if current.Screen == "" {
+		return screenCombat
+	}
+	return current.Screen
+}
+
+// Fight, Vitae and Life are the run state a jumped-in screen needs to have anything to show.
+func Fight() int { return current.Fight }
+func Vitae() int { return current.Vitae }
+func Life() int  { return current.Life }

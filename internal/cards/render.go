@@ -214,7 +214,11 @@ func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA)
 		if err := drawText(dst, f, st.StatSize, line.Label, st.TextLeft, y, ink(LabelInk)); err != nil {
 			return err
 		}
-		if err := drawTextRightAligned(dst, f, st.StatSize, line.Value, right, y, ink(NumberInk)); err != nil {
+		value := NumberInk
+		if line.ValueInk.A > 0 {
+			value = line.ValueInk
+		}
+		if err := drawTextRightAligned(dst, f, st.StatSize, line.Value, right, y, ink(value)); err != nil {
 			return err
 		}
 	}

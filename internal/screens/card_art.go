@@ -2,7 +2,6 @@ package screens
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	_ "image/png"
 	"log"
@@ -330,7 +329,7 @@ func duelistSpec(c *entities.Combatant, name string, vitae, life, ap int) cards.
 	}
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
-	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae)}
+	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae), ValueInk: vitaeInk}
 	return spec
 }
 
@@ -442,29 +441,26 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 // because what it hands you is red. The ones that take a card away rather than colour it are
 // basic, which is the mid grey `cards.BorderOf` gives that element — deliberately not a fifth hue,
 // since removal is the absence of a colour rather than one of its own.
-func wormSpec(w session.Worm, enabled bool) cards.Spec {
+func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:    w.Name,
 		Form:    cards.FormNone,
 		Cost:    0,
 		Element: artFor(w.Element),
+		Art:     artwork(gs, wormArtKey),
 		Text:    w.Text,
 		Enabled: enabled,
 	}
 }
 
-// vitaeSpec is the money card. **It is a card because everything on that screen is** — the reward
-// for a fight is three cards and you take one, so declining a change to your deck has to look like
-// a choice rather than like leaving.
+// wormArtKey is the picture every worm draws today: `assets/worm/default-worm.png`, a placeholder
+// of its own rather than a borrowed ring.
 //
-// Basic-bordered, since vitae has no element: it is the one prize that is not about the deck at
-// all.
-func vitaeSpec(amount int, enabled bool) cards.Spec {
-	return cards.Spec{
-		Name:    "Vitae",
-		Form:    cards.FormNone,
-		Element: cards.Basic,
-		Text:    fmt.Sprintf("+%d vitae", amount),
-		Enabled: enabled,
-	}
-}
+// **Keys are not file paths** — `LoadImageData` files this under `defaultworm_png`, which is what a
+// lookup has to spell. Writing the filename here is why the first version of this drew nothing and
+// logged `no artwork named "default-ring"`.
+//
+// It is one constant rather than a field on the record because when worms get art it becomes a key
+// per worm, and that change should be a `data/worms.json` field appearing, not a fallback being
+// unpicked.
+const wormArtKey = "defaultworm_png"

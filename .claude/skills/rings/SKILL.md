@@ -21,10 +21,11 @@ costs if it does not.
 
 ```json
 {
-  "RingRecord": "frozen-ring",
-  "Name": "Frozen Ring",
-  "Art": "frozenring_png",
+  "RingRecord": "chilling-ring",
+  "Name": "Chilling Ring",
+  "Art": "",
   "Text": "Ice attacks CHILL the target.",
+  "Rarity": "uncommon",
   "Rules": [
     {
       "When": "attack-lands",
@@ -45,9 +46,12 @@ costs if it does not.
   every ring card, shelf and worn row alike, shows this and nothing generated from the rules. So a
   rule changed without its `Text` is a ring that lies to the player, and `TestEveryRingHasSomethingToSay`
   only catches an empty one, not a stale one.
-- **`Price`** — what the shop charges, in vitae. A base ring is 3; see the shop section below.
+- **`Rarity`** — `common`, `uncommon` or `rare`, and it decides both the price and how often the
+  shelf offers it. There is no `Price` field; see the shop section below.
 - **`When`** — which moment wakes the rule. Closed; one Go seat each.
 - **`If`** — what has to be true. Optional; **a rule with no `If` always fires**.
+- **`Rarity`'s third tier is where a drawback belongs.** Onslaught (2026-08-22) is the first ring
+  that takes something away, and `scale-hp` below 100 is how it says so.
 - **`Then`** — a list, so one rule can do two things. That is what buys a lightning ring that
   shocks *and* chills with no new vocabulary at all.
 
@@ -76,6 +80,8 @@ which is what makes a ring a *run* concept rather than a combat one.
 | `fight-start` | `session` | fight setup | once per fight |
 | `fight-won` | `session` | after the win | once per win |
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
+| `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
+| `blow-formed` | `combat` | `handEvent` | once per blow, as the base sum is added up — **the only moment that sees the blow rather than a card**, and its `If` matches the *lead* card |
 
 **`card-damage` and `card-cost` fire per card, and that is the point.** A form ring doubles
 *every* card that matches, not one of them — three slash cards in a turn are three doublings
@@ -88,7 +94,21 @@ inside the same blow.
 | `Element` | the card's colour | `{ "Element": "ice" }` |
 | `Form` | stab / slash / crush / plan | `{ "Form": "slash" }` |
 | `Concept` | one named card | `{ "Concept": "Strike" }` |
+| `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
+| `Lead` | **the blow's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
 | *(absent)* | always | Banker, Hungry, the stat rings |
+
+**`Tier` reads the declared cost, never the wearer's.** A discount ring makes a Lunge cost 2 to the
+duelist wearing it, and a rule matching `Tier: 3` still has to see a Lunge — otherwise two rings
+worn together would silently switch each other off, and which one won would depend on the order they
+were bought in. Same reading a worm takes.
+
+**`Lead` is the first *positional* predicate, and more are expected** *(owner's call, 2026-08-22)*.
+Element, form and concept ask what a card **is**; `Lead` asks where it **sits in the blow**. When the
+next one of those arrives — last card, lone card, the card that formed the hand — it belongs here as
+a predicate rather than inside a verb. **A verb that names its own scope is the anti-pattern this
+replaced**: `echo-attack` meant "the lead card" until the form repeat rings needed the same
+arithmetic at a different scope, and one predicate covered both.
 
 **`Concept` names a card by its label**, resolved at load the way a deck list is. A concept *ID*
 is registration-ordered and must never be serialized — the label is what is stable.
@@ -107,12 +127,19 @@ not ignored.
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
 | `apply-status` | `attack-lands` | `Status` key | puts a status on the target |
 | `set-element` | `deck-built` | `Element` | the flip: recolours every matching card |
+| `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Lunge is dealt as a 2 AP Thrust. Walks `Neighbour`; a card with no rung below it is left alone |
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
 | `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
-| `grow` | `fight-won` | `Amount` | adds to **this ring's own accumulator** |
+| `scale-hp` | `fight-start` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |
+| `grow-on-win` | `fight-won` | `Amount` | adds to **this ring's own accumulator**, once per win |
+| `grow-on-turn` | `turn-taken` | `Amount` | the same accumulator, once per matching turn — Momentum |
+| `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
+| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching hit** — every landing, echoes and repeats included, so it grows inside a fight and compounds with the rings that multiply landings |
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
+| `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat rings |
+| `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two rings **add** rather than compound; capped at `combat.MaxEchoLandings` |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
 is charged on purpose, exactly as it is for `combat.Verb` and `session.WormTarget`. A file may
@@ -179,13 +206,32 @@ not — it carries a number that lives on the run:
   "Name": "Heart Ring",
   "Rules": [
     { "When": "fight-start", "Then": [{ "Do": "add-hp", "Amount": 5 }] },
-    { "When": "fight-won",   "Then": [{ "Do": "grow",   "Amount": 5 }] }
+    { "When": "fight-won",   "Then": [{ "Do": "grow-on-win", "Amount": 5 }] }
   ]
 }
 ```
 
-- **`grow` writes an accumulator on the worn ring**, and the ring's own effect amounts are read
+- **Both growth verbs name their moment** *(owner's call, 2026-08-22)*: `grow-on-win` and
+  `grow-on-hit`. `grow-on-win` was `grow` until the second one existed, and a verb whose name does
+  not say when it fires reads as the default while the other looks like the special case.
+- **`grow-on-win` writes an accumulator on the worn ring**, and the ring's own effect amounts are read
   as `Amount + accumulator`. So this ring is +5 HP in fight one and +100 by fight twenty.
+- **`grow-on-hit` writes the same accumulator from inside a fight** *(2026-08-22)* — the Enflamed
+  family, +0.1x to their colour on **every matching hit**. A hand with two fire cards is two steps,
+  and a fire card an echo ring seats three times is three: it counts *landings*, which is what makes
+  it compound with `echo-attack` and `repeat-card` rather than ignoring them. Two consequences
+  that `grow-on-win` does not have: the *second* attack of a fight is already stronger than the first, and
+  the growth is on the **duelist's** copy until `Session.AbsorbGrowth` reads it back on the win. A
+  lost fight forfeits it, which needs no rule: a defeat ends the run.
+- **A ring that can reset itself keeps nothing between fights** *(2026-08-22)*. `combat.KeepsGrowth`
+  is the question and `Session.AbsorbGrowth` is what asks it: Momentum's streak is a fact about the
+  turns of one duel, and banking it would make a good fight a permanent bonus that one plan card had
+  once wiped. Heart, the stat rings and the Enflamed family hold no reset and are banked.
+- **A turn-wide predicate is matched with *any*, which is how a negation is avoided.** Momentum is
+  "grow every turn" plus "reset on a turn holding a plan card" — two positive rules where one rule
+  would have needed a `not`. Reach for that shape before proposing negation into the grammar.
+- **A step never reads the accumulator it is stepping.** Both verbs take the effect's raw `Amount`,
+  so growth is linear; `Amount + Grown` there would compound and no growing ring is meant to.
 - **The accumulator lives on `Session`**, keyed by `RingRecord`. It is the first ring state that
   has to survive a fight, and the first that will have to be **serialized** — which is why the
   record key is the identity and not an index.
@@ -224,7 +270,7 @@ Reach for these first when an idea sounds too easy.
 | `deck-built` / `fight-start` / `fight-won` | `session.FightDeck`, `session.Equip`, `session.WonFight` |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_rings.go` — a lookup from worn key to record |
-| the whole catalogue as pictures | `go run ./tools/ringsheet` — card, price, `Text` and rules side by side |
+| the whole catalogue as pictures | `go run ./tools/ringsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |
 
 **`rings.json` is parsed in `internal/session`**, which already parses worms and for the same
 reason: a ring belongs to a *run*. It hands `combat` rules types — `RegisterRing(key, name,
@@ -245,10 +291,14 @@ registry. `WearsRing` takes a `RingID`.
 is inert until the first ring is bought; `session.StartingRings` is the debug seat for putting one
 on without playing to a shop and ships empty.
 
-- **A ring carries its own `Price` in `rings.json`**, and a record with none panics at load like
-  every other unresolvable word. A concept ring and a form ring are not priced the same — the file
-  is where that judgement is written down.
-- **Selling is the only way a ring comes off**, and it pays **a quarter of the price, rounded up**.
+- **A ring carries a `Rarity` in `rings.json`** — `common`, `uncommon` or `rare` — and a record
+  whose tier is missing or misspelled panics at load like every other unresolvable word. The tier is
+  the whole pricing decision *(owner's call, 2026-08-22)*: common 3 vitae, uncommon 5, rare 7, with
+  draw weights of 10 / 4 / 1. A ring is rebalanced by moving it between tiers, never by writing a
+  number.
+- **The shelf's three seats are weighted draws without replacement**, on those tickets, so a rare
+  ring is something a run mostly does not see rather than something it sees and cannot afford.
+- **Selling is the only way a ring comes off**, and it pays **the tier's own figure: 1, 2 or 3**.
   Buying at five worn is refused rather than swapped: the trade is two decisions with a price
   between them.
 - **A sold ring's accumulator resets to zero** *(owner's call, 2026-08-21)*. `grown` stays keyed by

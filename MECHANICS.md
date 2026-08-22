@@ -1148,13 +1148,14 @@ off each status record's `Badge`. And `StatusID` is append-only, carrying the ha
 flip predate the grammar**; the rest came out of it. **All of them are reachable in a run since
 2026-08-21**, bought and sold in the shop — see The shop, below.
 
-Two names were invented rather than taken from this table, and are the two most worth changing:
-**Bulwark** (+25 HP, since Heart is the skill's own name for the growing one) and **Thrifty** (the
-discount, which had no name at all).
+**Bulwark** (+25 HP) is the one name still invented rather than taken from this table — Heart is the
+skill's own name for the growing one. The discount ring was **Thrifty** until 2026-08-22, when it
+became **Warm** and grew three siblings.
 
 | Ring | Moment | Does |
 |---|---|---|
-| Fire / Frozen / Thunder / Earth | `attack-lands` | its element's status — the four that exist today, re-expressed with no special case |
+| **Burning / Chilling / Shocking / Weighted** | `attack-lands` | the four colours' status rings, split off on 2026-08-22 and priced uncommon |
+| **Fire / Ice / Lightning / Earth** | `card-damage` | doubles every card of that colour — *element* multipliers, where Keen/Heavy/Needle are form ones |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
 | **Striker** | `card-damage` | doubles every Strike — a concept ring, 4 cards where a form covers 12, and priced accordingly |
@@ -1162,26 +1163,231 @@ discount, which had no name at all).
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
 | **stat rings** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
-| **discount** | `card-cost` | a matching card costs 1 less |
-| **flip** | `deck-built` | recolours every matching card; see below |
+| **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no plan card in it; a plan card wipes the streak |
+| **Enflamed / Frostbitten / Lithium / Granite** | `card-damage` + `attack-lands` | their colour gains +0.1x DMG per landed hit of that colour, and keeps it while worn |
+| **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
+| **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
+| **Atrophy** | `deck-built` | every 3 AP attack is dealt as its 2 AP version |
+| **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the first ring with a drawback, and the first rare |
+| **Warm / Cold / Static / Dirty** | `card-cost` | every card of that colour costs 1 AP less — one per colour |
+| **flip x12** | `deck-built` | recolours every card of one colour as another — one for each ordered pair; see below |
 
 **A concept ring and a form ring are not the same object** and must not be priced as one.
 Striker covers 4 cards, Keen covers 12.
 
-### What the first four rings are
+### Momentum — a streak that belongs to the duel *(2026-08-22, owner's call)*
+
+**Every card gains +0.2x DMG for each turn played without a plan card, and a plan card wipes it.**
+Uncommon. It scales the *duelist* rather than a colour or a form: the `card-damage` rule carries no
+predicate at all, so the streak is worth the same on every card in the hand.
+
+- **It is written as two positive rules and no negation.** One grows on every turn, one resets on a
+  turn holding a plan card, and **growth is applied before resets** — so a planning turn nets zero
+  rather than depending on which rule the file lists first. The grammar has no `not` and this is the
+  shape that means it does not need one.
+- **`turn-taken` is a new moment**, the first that is about a *turn* rather than a card, a blow or a
+  fight. Its predicate is matched against the turn as a whole: the rule fires when any card of the
+  turn matches it.
+- **An empty turn is still a turn taken**, so a duelist chilled out of their whole turn keeps
+  building. The streak is about not *planning*, not about swinging.
+- **A duelist who falls mid-turn never reaches it**, since `playTurn` returns early on a death — a
+  streak is a fact about turns taken and a corpse takes none.
+- **The streak does not survive the fight**, and that needed a rule: `combat.KeepsGrowth` reports
+  false for any ring holding a `reset-growth`, and `Session.AbsorbGrowth` skips it. Otherwise one
+  good duel would bank a permanent bonus that a single plan card had once wiped.
+- **It is a real argument against Plan and Prepare**, which is the interesting part: the deck's plan
+  cards are how a hand is rebuilt, and this ring prices that. Whether 0.2x a turn is enough to make
+  a player skip a Plan is unmeasured — `tools/balance` wears the status rings only.
+
+### The Enflamed family — growth inside a fight *(2026-08-22, owner's call)*
+
+**Enflamed (fire), Frostbitten (ice), Lithium (lightning), Granite (earth)**: their colour gains
+**+0.1x DMG every time an attack of that colour lands**, and keeps it for as long as the ring is
+worn. Uncommon.
+
+**They are the first accumulator that moves during a fight.** Heart and the growing stat rings step
+once per win, at `fight-won` — `grow-on-win`, renamed from `grow` on 2026-08-22 so both growth verbs
+name their moment; these step at `attack-lands`, so the second fire attack of a duel is
+already stronger than the first. That needed a second verb — `grow-on-hit` — because a verb belongs
+to exactly one moment, and it needed a way home: combat grows the *duelist's* copy of the
+accumulator, and `Session.AbsorbGrowth` reads it back on the win, before the screen throws that
+duelist away.
+
+- **Once per hit** *(owner's call, 2026-08-22)*, where a status is once per blow. Two fire cards in
+  a hand are two steps, and a fire card that Echo seats three times is three — it counts **landings**
+  rather than cards. **That is the combination it exists for**: the rings that multiply landings and
+  the rings that grow per landing are meant to compound into a build, not to politely ignore each
+  other. Echo plus Enflamed is +0.3x off one card.
+- **A blow is paid for after it lands, never during** *(owner's call, 2026-08-22)*. The four fire
+  cards of a Four of a Kind all hit at the ring's old strength and the +0.4x shows up on the next
+  fire attack. A ring that strengthened the blow that grew it would mean the first attack of a fight
+  already wearing its own bonus.
+- **The growth is linear, and deliberately.** The step reads the effect's raw `Amount`, never
+  `Amount + Grown` — a growth that grew would compound, and no growing ring in the game does.
+- **A lost fight forfeits what it earned**, which needs no rule of its own: a defeat ends the run.
+  **Selling forfeits it too**, by the shop's existing rule.
+- **This is the first ring state that changes mid-fight**, so it is also the first thing a mid-fight
+  save would have to write down. Nothing saves yet.
+- **Uncapped, like every other accumulator.** +0.1x a blow across a long fight is a big number by
+  the top of the tower, and nothing measures it — `tools/balance` wears the status rings only.
+
+### Atrophy, and the ladder as a ring *(2026-08-22, owner's call)*
+
+**Every 3 AP attack is dealt as its 2 AP version**: Lunge becomes Thrust, Cleave becomes Slash,
+Smash becomes Strike. Rare.
+
+**It is a `deck-built` swap, so it is the flip's shape applied to the other axis.** A flip changes a
+card's colour as the fight's deck is dealt; Atrophy changes its *concept*, one rung down the same
+form's ladder. Everything downstream — cost, damage, the hand it forms, the card face — follows
+because the card genuinely is a Thrust.
+
+- **What the player buys is a turn with more cards in it.** Three Lunges cost 9 AP and do not fit a
+  6 AP turn; three Thrusts cost 6 and do. It trades damage per card for cards per turn, which is a
+  hand-ladder decision rather than a damage one — a Three of a Kind of Thrusts against one Lunge and
+  a Jab.
+- **`combat.Neighbour` already existed**, built for worms, so the ladder is still a consequence of
+  `duelist_cards.json` rather than a table written twice. A card with no rung below it is left alone.
+- **`Tier` is a new predicate and it reads the *declared* cost.** A discount ring cannot move a card
+  out of Atrophy's reach, which would otherwise make two worn rings switch each other off in an
+  order nobody chose.
+- **Two demoting rings do not chain.** `DemoteConcept` reads the card the run owns and takes the
+  deepest single step, exactly as flips read the original element. A ring wanting two rungs says
+  `Amount: 2`.
+- **Nothing measures it**, and this one is the most likely of the new rings to be badly priced:
+  `tools/handodds` measures which hands a deck can reach, and Atrophy changes that deck.
+
+### Echo, and the one blow a turn *(2026-08-22, owner's call)*
+
+**The Echo Ring makes the blow's first attack card land three times — full DMG, two thirds, one
+third.** Uncommon.
+
+**It is extra *terms in the sum*, not extra blows**, and that is the decision the ring forced. A
+turn lands one blow: every attack card is added up, the hand multiplies the total, and the result
+lands once. Three separate landings would have meant three misses to roll, three sets of defends and
+three status applications — a second shape for a round. So an echo seats the lead card again behind
+itself at a smaller figure, and the turn reads as *seven cards played, the first of them three
+times*.
+
+- **The echo never reaches the matcher.** `blowFor` has already run when `handEvent` adds the
+  echoes, so an echoed Strike does not turn a Pair into Three of a Kind. It pays into the hand the
+  real cards formed — which is also what stops one ring rewriting the hand ladder.
+- **The multiplier therefore multiplies the echoes too**, since they are in the base sum. Echo is
+  worth about two thirds of the lead card, times the hand — strongest in a big hand, which is the
+  opposite of a ring that rescues a bad one.
+- **The player watches it happen.** The echo terms are seated on the lead card, so the sum in the
+  math box shows the first card's figure paying three times and each one flies out of that card.
+  That was the owner's requirement, not a side effect.
+- **`blow-formed` is a new moment and `echo-attack` a new verb**, and this is the first moment that
+  sees a *blow* rather than a card. `MaxEchoLandings` is 5 — a width on `Event`'s hand arrays,
+  which have to stay fixed for an Event to be comparable.
+- **Two echo rings add landings rather than multiplying**: three and three is five, not nine.
+- **A seven-term sum is wider than the box was laid out for**, so `layOutMath` now shrinks a line
+  that will not fit rather than letting a figure hang off the band.
+- **Nothing measures it.** `tools/balance` wears only the status rings.
+
+**Flurry, Rend and Aftershock repeat a whole form** *(2026-08-22, owner's call)*: every stab / slash
+/ crush card in the blow lands **twice, both at full damage**, uncommon. `repeat-card` is the second
+verb at this moment and it is the one that does *not* diminish — an echo is a card ringing on, a
+repeat is the card played again.
+
+- **They deal exactly what Keen, Heavy and Needle deal today, and cost a tier more.** Two
+  full-strength landings and one doubled landing are the same figure inside the same sum. What the
+  repeat buys is **two hits instead of one**, and nothing in the game currently pays for a hit —
+  statuses land once per blow and are deduplicated. **So these three are, right now, a worse buy
+  than the commons they sit beside.** They are written for the hit mechanics that are coming, and
+  that is a deliberate bet rather than an oversight.
+- **`Lead` is a new predicate, and the only one that is not a fact about the card.** It is what lets
+  one pair of verbs cover both scopes: Echo says `{"Lead": true}`, a repeat says `{"Form": "crush"}`.
+  A rule setting `Lead` at any other moment is refused at load, since no other moment knows which
+  card leads.
+- **Repeats resolve before echoes** when a card has both, because an echo of a repeated card would
+  be an echo of something that already happened twice.
+- **The event's term arrays widened from 9 to 25** — every card of a legal turn, each landing up to
+  `MaxEchoLandings` times. A repeat matches on form, so five crush cards is five cards landing
+  twice, where an echo only ever touched one card.
+
+### The discount rings — one per colour *(2026-08-22, owner's call)*
+
+**Warm, Cold, Static and Dirty**: every card of one colour costs **1 AP less**, at `card-cost`. All
+four common. The discount was one ring named Thrifty, matching fire and named after nothing in the
+game; naming it for the *colour it warms* generalises to four and drops a word the design never
+owned.
+
+**They are the third thing a colour ring can be**, after the damage doubler and the status ring, and
+the one that changes what a turn can hold rather than what it does: a 6 AP budget buying four cheap
+cards instead of three is a different hand ladder, not a bigger number. **Nothing measures that** —
+`tools/balance` wears the status rings and nothing else — so what a colour's discount is worth
+against a colour's doubling is unknown, and reads as the bigger of the two.
+
+**`static-ring` is the lightning discount and not the earth→lightning flip.** The flip held that key
+for a few hours on 2026-08-22 and is now **Dust Storm**; the record key moved with the name.
+
+### The colour rings
 
 `data/rings.json` holds them, each as one `attack-lands` rule matching one colour and applying one
 status. **There is no special case for them in the engine** *(2026-08-17)* — they are the plainest
 thing the grammar can say, which is what the grammar was checked against. One ring is one element,
-so wearing fire and swinging a hand of all four colours lands a burn and nothing else — which is
+so wearing one and swinging a hand of all four colours lands one status and nothing else — which is
 what makes the second and third worth buying.
 
 | Ring | Element | What wearing it does |
 |---|---|---|
-| Fire Ring | fire | your fire attacks burn: 10% of your DMG at the end of each round |
-| Frozen Ring | ice | your ice attacks chill: one card off the front of each of their turns |
-| Thunder Ring | lightning | your lightning attacks shock: 25% chance their attack misses |
-| Earth Ring | earth | your earth attacks weigh: they deal 25% less damage |
+| Burning Ring | fire | your fire attacks burn: 50% of your DMG at the end of each round |
+| Chilling Ring | ice | your ice attacks chill: one card off the front of each of their turns |
+| Shocking Ring | lightning | your lightning attacks shock: 25% chance their attack misses |
+| Weighted Ring | earth | your earth attacks weigh: they deal 25% less damage |
+
+### The flip rings — one for every ordered pair *(2026-08-22, owner's call)*
+
+**Twelve rings, each `deck-built` / one colour in / another colour out.** Frozen Lightning was the
+only one for five days; the pattern generalised to every ordered pair of the four colours, and all
+twelve are **common**. The names are thematic rather than mechanical — "Permafrost" says earth into
+ice without saying either word — which is a deliberate cost: the *card* has to be read to know what
+it does, and the tooltip is what says it.
+
+| dealt as → | from fire | from ice | from lightning | from earth |
+|---|---|---|---|---|
+| **fire** | — | Meltdown | Firestorm | Magma |
+| **ice** | Frostbite | — | Frozen Lightning | Permafrost |
+| **lightning** | Heat Lightning | Thundersnow | — | Dust Storm |
+| **earth** | Obsidian | Glacier | Fulgurite | — |
+
+- **A flip is what makes a colour ring worth wearing**, which is the whole point of the pair: Fire
+  Ring doubles fire cards and there are only so many, so Frostbite-and-friends is how a deck is bent
+  toward the colour a run has bought into. It is also how the *status* rings get fed.
+- **Flips do not compose**, and that is enforced rather than emergent — `combat.FlipElement` reads
+  each card's **original** element, so Frostbite (fire→ice) and Meltdown (ice→fire) worn together do
+  not cascade a deck to one colour. See `TestFlipsDoNotCompose`.
+- **Two flips naming the same source is the new case the twelve introduce, and last-worn wins**
+  *(owner's call, 2026-08-22)*. Frostbite and Heat Lightning both claim fire; the later ring in the
+  row takes it, by the same rule that orders every other multiplicative effect. Decided rather than
+  merely observed — nothing warns the player and there is still no way to reorder the row, and both
+  of those are accepted.
+- **They are twelve of thirty-two records, and the dilution is accepted** *(owner's call,
+  2026-08-22)*. The catalogue is now more than a third flips, so a common ring's ten tickets are ten
+  out of a much bigger pot than they were at seventeen rings — and more rings are coming, which is
+  what makes that fine. If the shelf ever does need thinning, the lever is a weight or a tier, not
+  a price.
+
+**Every colour is two rings as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning and Earth**
+are now `card-damage` doublers on their colour — the first *element* multipliers, where Keen, Heavy
+and Needle multiply a form — each common and each keeping the colour's artwork. The status each used
+to apply moved to a second ring — **Burning, Chilling, Shocking, Weighted** — all uncommon and all
+drawing the default ring face. So a colour offers cheap damage or a dearer, rarer status, and eight
+of the seventeen records are now colour rings.
+
+**Two records and two files were renamed with it**: `frozen-ring` → `ice-ring` and `thunder-ring` →
+`lightning-ring`, with `assets/ring/frozen-ring.png` → `ice-ring.png` and `thunder-ring.png` →
+`lightning-ring.png`. The ring naming now matches the element names the rules use. "Frozen" and
+"Thunder" are free again and may come back for something else.
+
+**`tools/balance`'s elemental postures wear the *status* halves**, not the colour rings — what they
+measure is what a status does, so the list follows the rule rather than the name.
+
+**BURNING went from 10% to 50% of the attacker's DMG in the same call**, over the same two rounds.
+That is a fivefold change to a status nothing measures — `tools/balance` plays postures and knows
+nothing about rings — so it is a judgement, and a large one: at 50% over two rounds a burn is
+roughly a whole extra attack, which is what the uncommon tier is meant to be paying for.
 
 **The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire attacks
 burn; it does nothing about fire aimed at you. The alternative would make a ring a liability and
@@ -1205,14 +1411,30 @@ ring cards and both are clicked; the difference is which way the vitae moves. `i
 draws it, `internal/session/shop.go` holds the rules, and neither knows what comes after the shop —
 `session.PhaseShop` is a station of the run loop and `advanceRun` is what leaves.
 
-- **A ring declares its own price, in `rings.json`.** A concept ring covering four cards and a form
-  ring covering twelve are not the same object and must not be priced as one — the same argument
-  that keeps Striker and Keen apart in the catalogue.
-- **A base ring is 3 vitae and the ladder is scaled off it** *(owner's call, 2026-08-21)*. A base
-  ring is one of the four that give one colour its status: the plainest thing the grammar can say,
-  and the thing every other price is read against. Striker is 2, being four cards where a colour is
-  twelve; a flat stat or an economy ring is 4; two statuses, a cost cut or the big stat is 5; a form
-  doubling twelve cards is 6; Hungry, a whole extra prize every fight, is 7.
+- **A ring declares a rarity, and the rarity is the price** *(owner's call, 2026-08-22)*. This
+  replaced a per-ring price. `rings.json` names one of three tiers and `data.Rarity` turns it into
+  both what the shop charges and how often the shelf offers it:
+
+  | Rarity | Price | Sells for | Draw weight |
+  |---|---|---|---|
+  | common | 3 | 1 | 10 |
+  | uncommon | 5 | 2 | 4 |
+  | rare | 7 | 3 | 1 |
+
+  **A common ring is still 3, the base**, so the pacing below is unchanged: one of the four that
+  give a colour its status is the plainest thing the grammar can say and the thing everything else
+  is read against.
+- **Three tiers rather than seventeen numbers.** A per-ring price could only be judged one ring at a
+  time and was drifting; a tier can be read against the whole catalogue at a glance, and rebalancing
+  a ring is moving it rather than inventing a figure. **What that costs, said out loud:** two rings
+  in the same tier cost the same even when one is plainly stronger — the answer to that is which
+  tier it belongs in, not a fourth tier.
+- **Scarcity and price are deliberately different curves.** A rare ring is a tenth as likely to
+  appear as a common one but only a bit over twice the price. The 3 / 5 / 7 ladder *(owner's call,
+  2026-08-22)* spans exactly what the seventeen hand-written prices used to. What makes it rare is that a run mostly
+  does not see it; a price tracking the odds would make it unbuyable on the one visit it turns up.
+- **Every ring is `common` as of 2026-08-22**, which is the migration's starting position and not a
+  judgement about any of them. The tiers are assigned by hand.
 - **That is a full ring or two a fight against an income of roughly 5–10**, so **the purse stops
   binding once the five fingers are full** — around the fourth or fifth fight, after which vitae has
   nothing to buy but swaps. The first draft priced a base ring at 20 and made the whole run about
@@ -1221,8 +1443,10 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
 - **Nothing measures whether any of those numbers is right.** `tools/balance` plays postures against
   the roster and knows nothing about rings, so what a doubling of every slash card is worth in vitae
   is a judgement. Recorded as a judgement rather than dressed up as a derivation.
-- **Selling pays a quarter of the price, rounded up.** Rounded up so the cheapest ring is still worth
-  something to take off; a quarter so the round trip loses money. A shelf you could try on for free
+- **Selling pays the tier's own figure — 1, 2 or 3** *(owner's call, 2026-08-22)*. It was a quarter
+  of the price rounded up, which across three prices paid an uncommon and a rare the same 2: three
+  tiers is three numbers, and writing them down beats arithmetic that has to be argued with. The
+  round trip still loses, and loses more the dearer the ring — a shelf you could try on for free
   would be a rerolling of your hand every visit rather than a decision.
 - **Selling is the only way a ring comes off, and it is how the sixth ring is bought.** A purchase at
   five worn is refused rather than swapped, so trading is two decisions with a price between them —
@@ -1237,7 +1461,9 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   and a re-bought one goes on at the right-hand end. That is a real cost of letting a ring come off
   and there is no re-ordering control yet — see TODO.md.
 - **The shelf is its own random stream** (`seeds.ShopStock`), per fight, so a defeat and a retry walk
-  into the same shop exactly as they meet the same opponent.
+  into the same shop exactly as they meet the same opponent. **It is three weighted draws without
+  replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn ring leaves
+  the pool, so the shelf never offers the same ring twice.
 
 ### Flip rings — the element-transform ring
 
@@ -1317,7 +1543,8 @@ loudest thing in the pane on what you have not got.
 `CombatScene` state does not. The sketch dodges this by equipping everything defined, up to the
 cap, every time the screen initialises.
 
-Art note: `fire-ring.png`, `frozen-ring.png` and `thunder-ring.png` are embedded and now drawn.
+Art note: `fire-ring.png`, `ice-ring.png`, `lightning-ring.png` and `earth-ring.png` are embedded
+and drawn on the four colour rings. The four status rings have no art and draw `default-ring.png`.
 Earth has none, so a fourth ring is art before it is data.
 
 ---

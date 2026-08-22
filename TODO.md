@@ -40,10 +40,10 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         prices, after which vitae buys nothing but swaps, and propagation is interest on money with
         no use. Either the shop needs a second thing to sell — cards, a reroll, a sixth finger — or
         the late run needs a sink. A design question, not a number to nudge.
-      - **Two authored names were invented and should be reviewed**: `bulwark-ring` (+25 HP;
-        `heart-ring` is the skill's name for the growing one) and `thrifty-ring` (the discount,
-        which the design never named). Thirteen of the sixteen also have **no art**, and draw
-        as a ring card with a hole in it.
+      - **One authored name was invented and should be reviewed**: `bulwark-ring` (+25 HP;
+        `heart-ring` is the skill's name for the growing one). The discount ring was named on
+        2026-08-22 — `thrifty-ring` became `warm-ring`, one of four. Twenty-seven of the
+        thirty-five also have **no art**, and draw as a ring card with a hole in it.
       - **`tools/balance` still cannot see a ring.** It wears the four elemental ones and
         nothing else, so a damage, discount or stat ring is unmeasurable — a worn set as a
         posture axis is what that needs.
@@ -454,6 +454,24 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - The card's own text is 18pt in a ~100px column and `TestEveryCardTextFitsItsBand` fails
         rather than letting a line off the bottom. Anything else the card wants to say goes in the
         tooltip now rather than needing a bigger card.
+
+- [ ] **The math band should wrap, not shrink** *(2026-08-22)*. `layOutMath` lays the sum out as one
+      centred line and, since Echo landed, **shrinks every item by a common factor when the line is
+      wider than the band** — floored at `minMathShrink`, 0.6. That is a stopgap: seven terms is
+      reachable now (five cards in a legal turn plus the two extra landings an echo seats behind the
+      first), and the answer to a line that will not fit is a second line, not smaller type.
+      - **Why it is not done yet**: every figure *flies* from the card that paid it into its resting
+        place, so a wrap is not a text-layout change — it is a second row of destinations, and the
+        `x` and `=` have to land somewhere that still reads as one sum.
+      - **What would say it is needed**: a real game showing a shrunk line. `TestTheWidestSumFitsItsBand`
+        proves the deliberately-absurd case fits *after* shrinking; it says nothing about whether the
+        result is readable at 0.6.
+      - It is also the first thing to revisit if `MaxEchoLandings` ever rises above 5.
+      - **The arithmetic behind it is already wide enough** *(owner's call, 2026-08-22)*. The event's
+        term arrays hold 25 landings — every card of a legal turn, each landing up to
+        `MaxEchoLandings` times — so a long repeat-and-echo chain is fully *resolved* today and only
+        the drawing of it is short. Wrapping is what lets the screen show what the rules already
+        compute.
 
 - [ ] **The tooltip covers four surfaces and not every card on screen** *(2026-08-21)*. Hand cards,
       the deck overlay, worn rings, the shop's two rows, both fighter cards, the reward screen's

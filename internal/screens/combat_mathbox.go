@@ -535,13 +535,37 @@ func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
 	r := s.handMathRect(gs)
 
 	widths := make([]float64, len(box.items))
-	total := 0.0
-	for i := range box.items {
-		widths[i], _ = text.Measure(box.items[i].text, mathFace(gs, box.items[i].size), 0)
-		total += widths[i]
+	measure := func() float64 {
+		total := 0.0
+		for i := range box.items {
+			widths[i], _ = text.Measure(box.items[i].text, mathFace(gs, box.items[i].size), 0)
+			total += widths[i]
+		}
+		if len(box.items) > 1 {
+			total += float64(mathItemGap * (len(box.items) - 1))
+		}
+		return total
 	}
-	if len(box.items) > 1 {
-		total += float64(mathItemGap * (len(box.items) - 1))
+
+	total := measure()
+
+	// **A sum too wide for its band is shrunk to fit rather than allowed off the screen**
+	// *(2026-08-22)*. Echo made this reachable: a five-card turn whose lead card lands three times
+	// is seven terms where the band was laid out for five, and a figure hanging off the edge is
+	// worse than a small one — the whole box exists to be read.
+	//
+	// **Every item shrinks by the same factor**, so the multiplier stays smaller than the terms and
+	// the line keeps its shape. Nothing else changes: the script, the colours and the flights are
+	// what they were, and a sum that already fits is untouched.
+	if band := float64(r.Dx()) - mathBandInset; total > band && total > 0 {
+		shrink := band / total
+		if shrink < minMathShrink {
+			shrink = minMathShrink
+		}
+		for i := range box.items {
+			box.items[i].size *= shrink
+		}
+		total = measure()
 	}
 
 	x := float64(r.Min.X+r.Max.X)/2 - total/2
@@ -551,6 +575,15 @@ func (s *CombatScene) layOutMath(gs *state.GlobalState, box *handMathBox) {
 		x += widths[i] + mathItemGap
 	}
 }
+
+// mathBandInset is the breathing room a sum keeps inside its band, so a shrunk line does not rest
+// against the edge it was shrunk away from.
+const mathBandInset = 16
+
+// minMathShrink is as small as the sum will ever be drawn, as a fraction of its authored sizes.
+// **A floor rather than a guarantee**: past this the figures stop being readable, and a line that
+// overflows is a better bug report than one nobody can read.
+const minMathShrink = 0.6
 
 // mathFace is the box's type. One font at four sizes; the screen has exactly one face.
 func mathFace(gs *state.GlobalState, size float64) *text.GoTextFace {

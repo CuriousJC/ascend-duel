@@ -48,17 +48,30 @@ var StartingRings []string
 // **Walked in sorted key order**, per the determinism rules: `LoadRings` hands back a map, and
 // registering in map order would deal a different set of RingIDs every launch. Nothing may serialize
 // one, but a tool printing them would still tell a different story each run.
-var registeredRings, ringPrices = registerRings()
+var registeredRings, ringPrices, ringSells, ringWeights = registerRings()
 
-// registerRings hands back both maps from one walk of the file, rather than reading it twice.
-// **The price is registered here and not with the rules**: `internal/combat` resolves a round and
+// ringKeys is registeredRings the other way round: which record a rules-level ring came from.
+// **Built from the same map rather than from a second walk of the file**, so the two cannot disagree
+// about what a RingID is.
+var ringKeys = func() map[combat.RingID]string {
+	out := make(map[combat.RingID]string, len(registeredRings))
+	for key, id := range registeredRings {
+		out[id] = key
+	}
+	return out
+}()
+
+// registerRings hands back all three maps from one walk of the file, rather than reading it twice.
+// **The price, the sell-back and the draw weight are registered here and not with the rules**: `internal/combat` resolves a round and
 // has no purse, so what a ring costs is the run's business in exactly the way its art is a
 // screen's — the same line `RegisterRing` already draws.
-func registerRings() (map[string]combat.RingID, map[string]int) {
+func registerRings() (map[string]combat.RingID, map[string]int, map[string]int, map[string]int) {
 	records := data.LoadRings()
 
 	out := make(map[string]combat.RingID, len(records))
 	prices := make(map[string]int, len(records))
+	sells := make(map[string]int, len(records))
+	weights := make(map[string]int, len(records))
 	for _, key := range data.RingOrder(records) {
 		rules, err := ringRules(records[key])
 		if err != nil {
@@ -68,17 +81,20 @@ func registerRings() (map[string]combat.RingID, map[string]int) {
 		if err != nil {
 			panic("rings.json: " + err.Error())
 		}
-		// **A ring with no price is refused rather than given away.** Every other word in this
-		// file is resolved rather than trusted, and a missing number is the same failure as a
-		// misspelled one: a ring that reaches the shelf and costs nothing.
-		if records[key].Price <= 0 {
-			panic(fmt.Sprintf("rings.json: %s is priced at %d, which is not a price",
-				key, records[key].Price))
+		// **A ring with no rarity is refused rather than given away.** Every other word in this
+		// file is resolved rather than trusted, and an absent tier is the same failure as a
+		// misspelled one: a ring that reaches the shelf costing nothing and never being offered.
+		rarity := records[key].Rarity
+		if !rarity.Valid() {
+			panic(fmt.Sprintf("rings.json: %s has rarity %q, which is not one of common, "+
+				"uncommon or rare", key, rarity))
 		}
 		out[key] = id
-		prices[key] = records[key].Price
+		prices[key] = rarity.Price()
+		sells[key] = rarity.Sell()
+		weights[key] = rarity.Weight()
 	}
-	return out, prices
+	return out, prices, sells, weights
 }
 
 // Rings is every registered record key, sorted. For a tool or a screen that wants the catalogue
@@ -159,6 +175,13 @@ func ringCondition(key string, in *data.RingIfData) (combat.RingCondition, error
 		}
 		cond.Concept, cond.HasConcept = id, true
 	}
+	if in.Tier != 0 {
+		if in.Tier < 1 {
+			return cond, fmt.Errorf("%s matches tier %d, and a rung is 1 or more", key, in.Tier)
+		}
+		cond.Tier, cond.HasTier = in.Tier, true
+	}
+	cond.Lead = in.Lead
 	return cond, nil
 }
 
@@ -223,6 +246,37 @@ func (s *Session) WornRings() []combat.WornRing {
 	return out
 }
 
+// AbsorbGrowth takes back whatever a fight grew. **The run's accumulators are the duelist's, after
+// the fight** *(2026-08-22)*.
+//
+// A `grow-on-hit` ring is the first accumulator that moves *during* a fight rather than after one:
+// combat bumps the duelist's own copy as each blow lands, so the second fire attack of a fight is
+// already stronger than the first. That copy is thrown away when the screen leaves, which is what
+// this reads before it happens.
+//
+// **It takes the larger of the two figures rather than trusting the duelist outright**, because the
+// duelist is put together by Equip from these same numbers: a caller handing back a duelist that
+// never wore the ring — a test, a screen that rebuilt its fighter — must not be able to wind a
+// run's accumulator backwards.
+//
+// **A ring that resets itself keeps nothing** — see combat.KeepsGrowth. Momentum's streak is a fact
+// about the turns of one duel, and banking it would make it a permanent bonus that one plan card
+// had once wiped.
+//
+// **It is called on a win and not on a defeat**, which needs no rule of its own: a lost fight ends
+// the run.
+func (s *Session) AbsorbGrowth(d combat.Duelist) {
+	for _, w := range d.WornRings() {
+		key, ok := ringKeys[w.Ring]
+		if !ok || !combat.KeepsGrowth(w.Ring) {
+			continue
+		}
+		if w.Grown > s.grown[key] {
+			s.grown[key] = w.Grown
+		}
+	}
+}
+
 // Grown is how far one worn ring's accumulator has got. **Keyed by record rather than by position**,
 // because a ring taken off and put back on is the same ring — and because this is the first ring
 // state that will have to be serialized, where a position would mean nothing.
@@ -245,9 +299,24 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	if hp := combat.AddedHP(worn); hp > 0 {
 		d.MaxLife += hp
 		d.CurrentLife += hp
-		if d.CurrentLife > d.MaxLife {
-			d.CurrentLife = d.MaxLife
+	}
+
+	// **Scaled after the flat adds**, so Bulwark's +25 is worth a quarter less under Onslaught
+	// rather than surviving it whole. The alternative — scale the base, then add — would make the
+	// two rings' order of application a thing to remember, and a drawback nothing else touches is
+	// not a drawback.
+	//
+	// **A duelist never scales below 1 life.** A stack of drawbacks reaching zero is a run that
+	// cannot start a fight, which is a worse failure than a ring being weaker than its text.
+	if pct := combat.HPScale(worn); pct != 100 {
+		d.MaxLife = d.MaxLife * pct / 100
+		if d.MaxLife < 1 {
+			d.MaxLife = 1
 		}
+	}
+
+	if d.CurrentLife > d.MaxLife {
+		d.CurrentLife = d.MaxLife
 	}
 	return d
 }
@@ -267,7 +336,13 @@ func (s *Session) FightDeck() []combat.Card {
 		return deck
 	}
 
+	// **Both deck-built verbs read the card the run owns**, so a demotion and a flip are two facts
+	// about the same original card rather than a pipeline. A demoted Lunge that is also flipped is
+	// a fire Thrust; the order these two loops run in cannot change that.
 	for i, card := range deck {
+		if id, demoted := combat.DemoteConcept(worn, card); demoted {
+			deck[i].Concept = id
+		}
 		if e, flipped := combat.FlipElement(worn, card); flipped {
 			deck[i].Element = e
 		}

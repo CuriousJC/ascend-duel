@@ -82,6 +82,14 @@ const (
 )
 
 // Event is one entry in the replayable log for a single round.
+// maxHandTerms is the width of a hand event's two arrays: **every landing a legal turn can produce**
+// — each of its cards, each landing as many times as an echo or a repeat ring allows.
+//
+// It went from "one echoed card" to "every card" on 2026-08-22, when the form repeat rings landed:
+// a repeat matches on form, so five crush cards under Aftershock is five cards landing twice.
+// Over-long turns still drop terms from the *bracket* rather than from the sum.
+const maxHandTerms = baseMaxActions * MaxEchoLandings
+
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
@@ -165,15 +173,20 @@ type Event struct {
 	//
 	// **A fixed array rather than a slice, because Event has to stay comparable** —
 	// TestHandsDoNotBreakDeterminism compares two logs entry by entry with ==. It is sized to
-	// baseMaxActions, which is every card a legal turn can hold; a balance sim deliberately
-	// queueing more gets its extra cards dropped from the *bracket* rather than from the hand,
-	// the same posture raiseDefend takes on an over-long defend list.
+	// maxHandTerms — every card a legal turn can hold, plus the extra landings an echo ring can
+	// add — and a balance sim deliberately queueing more gets its extra cards dropped from the
+	// *bracket* rather than from the hand, the same posture raiseDefend takes on an over-long
+	// defend list.
+	//
+	// **A term is a landing, not a card** *(2026-08-22)*. An echoed card seats the same index two
+	// or three times with a smaller amount each time, which is what makes the sum on screen read
+	// as the card being played again rather than as one card worth more.
 	//
 	// The indices count the actions that actually resolved, chilled ones already removed,
 	// which is the same sequence as this side's KindAction events — **events that have not
 	// happened yet when this one arrives**, since the hand phase runs first. The screen seats
 	// the whole turn at DUEL! rather than a card at a time, so the cards are there to bracket.
-	HandCards     [baseMaxActions]int
+	HandCards     [maxHandTerms]int
 	HandCardCount int
 
 	// HandAmounts is what each of those cards deals, in the same order and to the same count.
@@ -185,7 +198,12 @@ type Event struct {
 	// event to prevent. `Base` is the sum of the first HandCardCount entries.
 	//
 	// A fixed array for the reason HandCards is one: Event has to stay comparable.
-	HandAmounts [baseMaxActions]int
+	HandAmounts [maxHandTerms]int
+
+	// EchoTerms is how many of those terms are echoes rather than cards — the tail of the list.
+	// Zero on almost every blow. It is here so a screen can say *why* one card paid three terms
+	// without re-deriving the ring that did it.
+	EchoTerms int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits

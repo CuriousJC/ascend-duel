@@ -4,9 +4,9 @@
     "Name": "BURNING",
     "Badge": "fireeffect_png",
     "Effect": "damage-over-time",
-    "Amount": 10,
+    "Amount": 50,
     "Rounds": 2,
-    "Text": "takes 10% of the attacker's DMG at the end of each round"
+    "Text": "takes 50% of the attacker's DMG at the end of each round"
   },
   {
     "StatusRecord": "chilled",

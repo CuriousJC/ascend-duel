@@ -145,12 +145,13 @@ counterpart of `deckSeedName`, and it ships empty.
 `LoadAssets` one, because a ring's picture is drawn *into* a card by `internal/cards`, which has
 no graphics context.
 
-**`Price` is what the shop charges** *(2026-08-21)*, and it is a field for the reason a card's cost
-is: a concept ring covering four cards and a form ring covering twelve must not be priced as one.
-**What a ring sells back for is deliberately not a field** — it is a quarter of the price, rounded
-up, computed in `internal/session/shop.go`, so there is one rule rather than seventeen numbers to
-keep in step with seventeen others. A record priced at zero or less **panics at load**, like every
-other word this file gets wrong.
+**`Rarity` is the price and the odds at once** *(2026-08-22, replacing a per-ring `Price`)*. One of
+`common`, `uncommon` or `rare`; `data.Rarity` turns it into what the shop charges — 3, 5, 7 — and how
+many tickets the ring holds in the shelf draw — 10, 4, 1. Three tiers rather than seventeen numbers,
+because a per-ring price could only be judged one ring at a time. **What a ring sells back for is
+deliberately not a field** — it is the tier's own figure, 1 / 2 / 3, computed in
+`internal/session/shop.go`. A record whose rarity is absent or misspelled **panics at load**, like
+every other word this file gets wrong.
 
 ### Worms
 
@@ -242,7 +243,7 @@ The data is about to grow three ways at once, which is why this was carved out o
 
 - **More rings.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
   moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
-  2026-08-21, so a new record needs a `Price` as well as its rules.
+  2026-08-21, so a new record needs a `Rarity` as well as its rules.
 - **More worms.** `worms.json` exists and holds ten across seven targets. Growing it is one record
   each; growing the *target vocabulary* is not, and MECHANICS.md says why.
 - **Brands** — permanent for the run, altering the container where rings alter the contents. The

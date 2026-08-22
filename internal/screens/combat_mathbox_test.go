@@ -70,6 +70,19 @@ func TestAFourCardHandReadsAsFourTerms(t *testing.T) {
 	}
 }
 
+// **An echo is spelled out as its own terms** *(2026-08-22)*. The whole reason Echo pays into the
+// blow's sum rather than landing a second blow is that the player can watch the first card pay
+// three times — so a hand event carrying echo terms has to read as extra figures, not as one
+// bigger one.
+func TestAnEchoedCardReadsAsExtraTerms(t *testing.T) {
+	e := handEvent("concept-pair", []int{30, 30, 20, 10}, 150, 135)
+	e.EchoTerms = 2
+
+	if got, want := scriptText(mathScript(e)), "30 + 30 + 20 + 10 x 1.5 = 135"; got != want {
+		t.Errorf("an echoed Pair reads %q, want %q", got, want)
+	}
+}
+
 // **Every sum reads the same shape, the identity multiplier included** *(2026-08-19, owner's
 // call)*. The High Card's `x 1` was dropped until then, on the argument that a sum times one says
 // nothing — right about the arithmetic and wrong about the game: **hands are going to be
@@ -216,10 +229,12 @@ func TestTheWidestSumFitsItsBand(t *testing.T) {
 	var scene CombatScene
 	band := scene.handMathRect(gs)
 
-	// Deliberately over the top: four terms of three digits, a three-digit multiplier written out,
-	// and a five-digit total. Nothing the rules can produce is this wide, which is the point — the
-	// margin is what a later type-size change is spending.
-	e := handEvent("concept-four-of-a-kind", []int{999, 999, 999, 999}, 500, 19980)
+	// Deliberately over the top: **seven** terms of three digits, a three-digit multiplier written
+	// out, and a five-digit total. Seven is the widest a blow can read — five cards in a legal turn
+	// plus the two extra landings an echo ring seats behind the first — and three digits each is
+	// past anything the rules produce, which is the point: the margin is what a later type-size
+	// change is spending.
+	e := handEvent("concept-four-of-a-kind", []int{999, 999, 999, 999, 999, 999, 999}, 500, 19980)
 
 	box := handMathBox{items: mathScript(e)}
 	scene.layOutMath(gs, &box)

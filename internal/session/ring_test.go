@@ -81,9 +81,9 @@ func TestWornOrderIsTheOrderTheyWentOn(t *testing.T) {
 	// **Worn order is a rule, not a presentation detail**: rings fire left to right and compound, so
 	// the order has to be one the player can see. Sorting it here would quietly change what two
 	// multiplicative rings come to.
-	run := wearing(t, "thunder-ring", "fire-ring", "frozen-ring")
+	run := wearing(t, "lightning-ring", "fire-ring", "ice-ring")
 
-	want := []string{"thunder-ring", "fire-ring", "frozen-ring"}
+	want := []string{"lightning-ring", "fire-ring", "ice-ring"}
 	got := run.Worn()
 
 	if len(got) != len(want) {
@@ -225,7 +225,7 @@ func TestAFlipRecoloursWhatIsDealtAndNotWhatIsOwned(t *testing.T) {
 func TestADiscountRingPricesTheRunsOwnCards(t *testing.T) {
 	// The post-battle screen draws deck cards with no duelist to ask, and a card whose price changed
 	// when it reached the hand would be the game contradicting itself between two screens.
-	run := wearing(t, "thrifty-ring")
+	run := wearing(t, "warm-ring")
 
 	hot := combat.Card{Concept: combat.Strike, Element: combat.Fire}
 	cold := combat.Card{Concept: combat.Strike, Element: combat.Ice}
@@ -255,5 +255,81 @@ func TestARunOpensBare(t *testing.T) {
 			t.Errorf("a new run wears %v, want %v", run.Worn(), StartingRings)
 			break
 		}
+	}
+}
+
+func TestSellingAtrophyGivesTheCardsBack(t *testing.T) {
+	// **A deck-built ring rewrites the deck a fight is dealt from, never the deck the run owns.**
+	// The question this answers is a player's: take Atrophy off and the Lunges are back. If
+	// FightDeck ever wrote through to the stored deck, selling would leave a run permanently
+	// smaller — a loss no screen would explain and no test but this one would catch.
+	run := wearing(t, "atrophy-ring")
+
+	tops := func(deck []combat.Card) int {
+		n := 0
+		for _, c := range deck {
+			if c.Spec().Verb == combat.VerbAttack && combat.ConceptOf(c.Concept).Tier() == 3 {
+				n++
+			}
+		}
+		return n
+	}
+
+	owned := tops(run.Deck())
+	if owned == 0 {
+		t.Fatal("the starting deck holds no 3 AP attacks, so this test proves nothing")
+	}
+
+	if got := tops(run.FightDeck()); got != 0 {
+		t.Errorf("wearing Atrophy, the fight is dealt %d 3 AP attacks, want none", got)
+	}
+	if got := tops(run.Deck()); got != owned {
+		t.Errorf("the run now owns %d 3 AP attacks, want %d — FightDeck wrote through to the "+
+			"stored deck", got, owned)
+	}
+
+	if !run.Sell("atrophy-ring") {
+		t.Fatal("Atrophy would not come off")
+	}
+	if got := tops(run.FightDeck()); got != owned {
+		t.Errorf("after selling Atrophy the fight is dealt %d 3 AP attacks, want %d back",
+			got, owned)
+	}
+}
+
+func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
+	// The other half of grow-on-hit: combat grows the duelist's own copy, and the run has to read
+	// it back before that copy is thrown away. Without AbsorbGrowth an Enflamed Ring would reset
+	// every fight and the ring's whole sentence would be a lie.
+	run := wearing(t, "enflamed-ring")
+
+	d := run.Equip(combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100})
+	d = d.GrowOnHit([]combat.Card{combat.Of(combat.Strike, combat.Fire)})
+
+	run.AbsorbGrowth(d)
+	if got := run.Grown("enflamed-ring"); got != 10 {
+		t.Errorf("a fire blow left the run at %d, want 10", got)
+	}
+
+	// The next fight is equipped with it, so the growth compounds across fights as well as inside
+	// one.
+	again := run.Equip(combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100})
+	if got := again.WornRings()[0].Grown; got != 10 {
+		t.Errorf("the next fight equips the ring at %d, want 10", got)
+	}
+
+	// **A duelist wearing nothing cannot wind it back**, which is what stops a screen rebuilding
+	// its fighter from erasing a run's growth.
+	run.AbsorbGrowth(combat.Duelist{})
+	if got := run.Grown("enflamed-ring"); got != 10 {
+		t.Errorf("an empty duelist wound the accumulator to %d, want 10", got)
+	}
+
+	// Selling still forfeits it, per the shop's rule.
+	if !run.Sell("enflamed-ring") {
+		t.Fatal("the ring would not come off")
+	}
+	if got := run.Grown("enflamed-ring"); got != 0 {
+		t.Errorf("a sold ring kept %d of its growth, want 0", got)
 	}
 }

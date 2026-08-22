@@ -565,6 +565,9 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// nextFight so the run moves once, on the tick the screen actually leaves.
 	if s.won {
 		s.won = false
+		// **Before WonFight**, because a `grow-on-hit` ring grew the fighter's own copy during the
+		// duel and this is the last tick that copy exists.
+		gs.Run.AbsorbGrowth(s.fighter.Duelist)
 		gs.Run.WonFight()
 		advanceRun(gs)
 		return nil

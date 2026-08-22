@@ -56,12 +56,29 @@ const (
 
 	// MomentPrizesDealt fires once as the post-battle cards go down.
 	MomentPrizesDealt
+
+	// MomentTurnTaken fires once at the end of each of this duelist's own turns, whatever the turn
+	// held — an empty turn is still a turn taken.
+	//
+	// **A rule's `If` is matched against the turn as a whole**: it fires when *any* card of the turn
+	// matches, which is what lets "a turn with a plan card in it" be said without the predicates
+	// needing a negation. See TurnTaken.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentTurnTaken
+
+	// MomentBlowFormed fires once per blow, in handEvent, after the hand is matched and while the
+	// base sum is being added up. **It is the only moment that sees the blow rather than a card**,
+	// which is what an echo needs: which card leads a blow is a fact about the whole turn.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentBlowFormed
 )
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt,
-		MomentFightStart, MomentFightWon, MomentPrizesDealt}
+		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken}
 }
 
 func (m Moment) String() string {
@@ -78,6 +95,10 @@ func (m Moment) String() string {
 		return "fight-won"
 	case MomentPrizesDealt:
 		return "prizes-dealt"
+	case MomentBlowFormed:
+		return "blow-formed"
+	case MomentTurnTaken:
+		return "turn-taken"
 	default:
 		return "card-cost"
 	}
@@ -99,7 +120,8 @@ func ParseMoment(name string) (Moment, bool) {
 // than silently matching everything.
 func (m Moment) readsACard() bool {
 	switch m {
-	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt:
+	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt, MomentBlowFormed,
+		MomentTurnTaken:
 		return true
 	default:
 		return false
@@ -134,9 +156,13 @@ const (
 	// DoAddHP is flat maximum life for the fight.
 	DoAddHP
 
-	// DoGrow adds Amount to **this ring's own accumulator**, which every one of its other effects
-	// then reads on top of its own figure. See WornRing.
-	DoGrow
+	// DoGrowOnWin adds Amount to **this ring's own accumulator** once per fight won, which every one
+	// of its other effects then reads on top of its own figure. See WornRing.
+	//
+	// **Named for its moment, like DoGrowOnHit** *(owner's call, 2026-08-22)*. It was `grow`, from
+	// when there was only one way to grow; a verb whose name does not say when it fires reads as
+	// the default and makes the other one look like the special case.
+	DoGrowOnWin
 
 	// DoScalePropagation scales vitae propagation by Amount percent, *after* its cap.
 	DoScalePropagation
@@ -146,12 +172,71 @@ const (
 
 	// DoAdjustPrizeVitae changes what the vitae prize card pays, flat.
 	DoAdjustPrizeVitae
+
+	// DoEchoAttack makes the blow's **lead attack card** land more than once. Amount is how many
+	// times it lands in total — 3 is full, two thirds, one third — and the echoes are added into
+	// the blow's base sum, so the hand still multiplies one figure and a turn still lands one blow.
+	//
+	// **The ladder is even fractions counting down**, which is what makes one number enough: at
+	// Amount n the k-th landing is worth (n-k+1)/n of the card. See EchoBonus.
+	DoEchoAttack
+
+	// DoRepeatCard makes **every card the rule matches** land Amount times inside the blow, each
+	// landing at full damage. Two is the pair of form rings: a stab card played twice.
+	//
+	// **Full-strength copies where DoEchoAttack diminishes**, and that is the difference between
+	// the two verbs rather than an oversight: an echo is one card ringing on, a repeat is the card
+	// played again. Both seat extra terms in the same sum and neither reaches the hand matcher.
+	DoRepeatCard
+
+	// DoGrowOnTurn adds Amount to **this ring's own accumulator** at the end of a turn the rule
+	// matched — Momentum, which is worth more the longer a duelist keeps swinging.
+	DoGrowOnTurn
+
+	// DoResetGrowth puts this ring's accumulator back to zero at the end of a matching turn. It is
+	// the only verb that takes an Amount of nothing, because it names no quantity.
+	//
+	// **A ring that can reset is a ring whose growth belongs to the fight**, not to the run — see
+	// KeepsGrowth, which is what stops a streak being banked between fights.
+	DoResetGrowth
+
+	// DoGrowOnHit adds Amount to **this ring's own accumulator** every blow that lands with a
+	// matching card in it — where DoGrowOnWin does the same once per fight won.
+	//
+	// **Once per hit** *(owner's call, 2026-08-22)*, where a status is once per blow: two fire cards
+	// in a hand are two hits, and a fire card an echo ring seats three times is three. That is the
+	// point of it — the accumulator measures how many times something connected, so the rings that
+	// multiply landings and the rings that grow per landing are meant to compound.
+	//
+	// **The step reads the effect's raw Amount**, never `Amount + Grown` — a growth that grew would
+	// compound, and every growing ring in the game is linear by decision.
+	DoGrowOnHit
+
+	// DoDemoteCard steps a matching attack card Amount rungs **down its own form's ladder** as the
+	// fight's deck is dealt: a 3 AP Lunge becomes a 2 AP Thrust, same form, one rung cheaper and
+	// half the damage.
+	//
+	// **It walks `Neighbour`, so the ladder stays a consequence of `duelist_cards.json`** rather
+	// than a table here to keep in step with it. A card with no rung below it is left alone — the
+	// bottom of a form is the bottom.
+	DoDemoteCard
+
+	// DoScaleHP scales maximum life for the fight by Amount percent; 75 takes a quarter off.
+	//
+	// **A percentage where DoAddHP is flat**, and both exist on purpose: a flat +25 is worth less
+	// every floor as the duelist's own life grows, where a scaling stays worth the same. It is the
+	// first verb written for a *drawback* — see the Onslaught ring — which is why it is the one
+	// scaling verb an author is expected to send below 100.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoScaleHP
 )
 
 // RingVerbs is every verb in a fixed order.
 func RingVerbs() []RingVerb {
 	return []RingVerb{DoAdjustCost, DoScaleDamage, DoApplyStatus, DoSetElement, DoAddDMG,
-		DoAddHP, DoGrow, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae}
+		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
+		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth}
 }
 
 func (v RingVerb) String() string {
@@ -166,14 +251,28 @@ func (v RingVerb) String() string {
 		return "add-dmg"
 	case DoAddHP:
 		return "add-hp"
-	case DoGrow:
-		return "grow"
+	case DoGrowOnWin:
+		return "grow-on-win"
+	case DoGrowOnHit:
+		return "grow-on-hit"
+	case DoGrowOnTurn:
+		return "grow-on-turn"
+	case DoResetGrowth:
+		return "reset-growth"
 	case DoScalePropagation:
 		return "scale-propagation"
 	case DoAdjustPicks:
 		return "adjust-picks"
 	case DoAdjustPrizeVitae:
 		return "adjust-prize-vitae"
+	case DoScaleHP:
+		return "scale-hp"
+	case DoEchoAttack:
+		return "echo-attack"
+	case DoRepeatCard:
+		return "repeat-card"
+	case DoDemoteCard:
+		return "demote-card"
 	default:
 		return "adjust-cost"
 	}
@@ -198,13 +297,17 @@ func verbMoment(v RingVerb) Moment {
 		return MomentCardCost
 	case DoScaleDamage:
 		return MomentCardDamage
-	case DoApplyStatus:
+	case DoApplyStatus, DoGrowOnHit:
 		return MomentAttackLands
-	case DoSetElement:
+	case DoGrowOnTurn, DoResetGrowth:
+		return MomentTurnTaken
+	case DoSetElement, DoDemoteCard:
 		return MomentDeckBuilt
-	case DoAddDMG, DoAddHP:
+	case DoAddDMG, DoAddHP, DoScaleHP:
 		return MomentFightStart
-	case DoGrow, DoScalePropagation:
+	case DoEchoAttack, DoRepeatCard:
+		return MomentBlowFormed
+	case DoGrowOnWin, DoScalePropagation:
 		return MomentFightWon
 	default:
 		return MomentPrizesDealt
@@ -226,10 +329,31 @@ type RingCondition struct {
 
 	Concept    ConceptID
 	HasConcept bool
+
+	// Tier narrows a rule to cards sitting on one rung of their form's ladder, which for the
+	// player's nine attacks is **the cost printed on the card** — 1, 2 or 3 *(2026-08-22)*.
+	//
+	// **The declared cost, never the wearer's.** A discount ring makes a Lunge cost 2 to its
+	// wearer, and a rule matching `Tier: 3` still has to see a Lunge — otherwise two rings worn
+	// together would silently stop each other working, and which one won would depend on the order
+	// they were bought in. `Concept.Tier` is the same reading a worm takes, and for the same reason.
+	Tier    int
+	HasTier bool
+
+	// Lead narrows a rule to the **first attack card of the blow**, and it is the one predicate
+	// that is not a fact about the card *(2026-08-22)*. It exists because Echo says "your first
+	// attack" where the form rings say "every stab": with it, one verb pair covers both and the
+	// scope is written in the file rather than hidden inside a verb.
+	//
+	// **Only `blow-formed` knows which card leads**, so a rule setting this at any other moment is
+	// refused at registration — see checkRule.
+	Lead bool
 }
 
 // Any reports whether this condition constrains anything at all.
-func (c RingCondition) Any() bool { return c.HasElement || c.HasForm || c.HasConcept }
+func (c RingCondition) Any() bool {
+	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead
+}
 
 // Matches reports whether a card satisfies every predicate that is set. **Every one, not any** — two
 // predicates on one rule narrow it, which is what a "fire slash" ring would want.
@@ -241,6 +365,9 @@ func (c RingCondition) Matches(card Card) bool {
 		return false
 	}
 	if c.HasConcept && card.Concept != c.Concept {
+		return false
+	}
+	if c.HasTier && ConceptOf(card.Concept).Tier() != c.Tier {
 		return false
 	}
 	return true
@@ -318,6 +445,10 @@ func RegisterRing(key, name string, rules []RingRule) (RingID, error) {
 			return NoRing, fmt.Errorf("%s has a %s rule with an If, and %s has no card to match one against",
 				key, rule.When, rule.When)
 		}
+		if rule.If.Lead && rule.When != MomentBlowFormed {
+			return NoRing, fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
+				key, rule.When)
+		}
 		if rule.If.HasConcept && (rule.If.Concept < 0 || int(rule.If.Concept) >= ConceptCount()) {
 			return NoRing, fmt.Errorf("%s names a concept the registry does not hold", key)
 		}
@@ -354,6 +485,8 @@ func checkEffect(key string, e RingEffect) error {
 		if e.Element == Basic {
 			return fmt.Errorf("%s flips cards to basic, which is the absence of an element", key)
 		}
+	case DoResetGrowth:
+		// The one verb that names no quantity: it puts an accumulator to zero.
 	case DoAdjustCost, DoAdjustPicks, DoAdjustPrizeVitae:
 		// Signed on purpose: a discount is negative and a ring with a drawback is expressible.
 		if e.Amount == 0 {
@@ -631,6 +764,103 @@ type appliedStatus struct {
 // together — the stat they add to is the one that has not been set yet.
 func AddedDMG(worn []WornRing) int { return sumAmounts(worn, MomentFightStart, DoAddDMG) }
 
+// HPScale is what every worn ring does to maximum life, as a percentage — 100 when nothing scales
+// it. **Compounding left to right**, like every other multiplicative ring effect, so two rings each
+// taking a quarter off leave 56% rather than half.
+func HPScale(worn []WornRing) int {
+	out := 100
+	for _, e := range RingEffectsAt(worn, MomentFightStart, Card{}) {
+		if e.Do == DoScaleHP {
+			out = out * e.Amount / 100
+		}
+	}
+	return out
+}
+
+// LandingAmounts is what one card of a blow pays, term by term: its own damage first, then a term
+// for every extra landing its rings buy. One entry when nothing repeats or echoes it, which is
+// almost every card in the game.
+//
+// **Two verbs land here and they stack in a fixed order** *(2026-08-22)*: `repeat-card` adds
+// full-strength copies, then `echo-attack` adds its diminishing ladder. Repeats first because they
+// are the card being played again — an echo of a repeated card would be an echo of something that
+// already happened twice, which is a fact about the blow rather than about the card.
+//
+// **Extra landings add rather than compound**, so two rings landing a card three times land it five
+// times, not nine. `MaxEchoLandings` is the ceiling, and it is a width on the event's arrays as much
+// as a rule.
+//
+// `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
+// predicate reads.
+func LandingAmounts(worn []WornRing, card Card, lead bool, damage int) []int {
+	copies, echoes := 0, 0
+	for _, w := range worn {
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentBlowFormed || !rule.If.Matches(card) {
+				continue
+			}
+			if rule.If.Lead && !lead {
+				continue
+			}
+			for _, e := range rule.Then {
+				amount := e.Amount + w.Grown
+				if amount < 2 {
+					continue
+				}
+				switch e.Do {
+				case DoRepeatCard:
+					copies += amount - 1
+				case DoEchoAttack:
+					echoes += amount - 1
+				}
+			}
+		}
+	}
+
+	if copies+echoes == 0 {
+		return []int{damage}
+	}
+
+	if total := 1 + copies + echoes; total > MaxEchoLandings {
+		// Repeats are kept ahead of echoes when the ceiling bites, since a full-strength landing
+		// is the one the player paid for.
+		if copies > MaxEchoLandings-1 {
+			copies = MaxEchoLandings - 1
+		}
+		echoes = MaxEchoLandings - 1 - copies
+	}
+
+	out := make([]int, 0, 1+copies+echoes)
+	out = append(out, damage)
+	for i := 0; i < copies; i++ {
+		out = append(out, damage)
+	}
+
+	n := echoes + 1
+	for k := 2; k <= n; k++ {
+		out = append(out, EchoBonus(damage, k, n))
+	}
+	return out
+}
+
+// EchoBonus is what one echoed landing is worth: the k-th landing of a card that lands n times,
+// where k counts from 1 and k=1 is the full-strength original.
+//
+// **Even fractions counting down** — at n=3 that is the card, two thirds of it, one third of it —
+// which is what lets a ring say the whole ladder with one number. Never below 1, for the reason
+// CardDamage is never below 1: a landing that announces itself and deals nothing is worse than a
+// small figure.
+func EchoBonus(cardDamage, k, n int) int {
+	if k <= 1 || k > n || n < 2 {
+		return 0
+	}
+	d := cardDamage * (n - k + 1) / n
+	if d < 1 {
+		d = 1
+	}
+	return d
+}
+
 // AddedHP is flat maximum life for the fight.
 func AddedHP(worn []WornRing) int { return sumAmounts(worn, MomentFightStart, DoAddHP) }
 
@@ -662,12 +892,133 @@ func Growth(w WornRing) int {
 			continue
 		}
 		for _, e := range rule.Then {
-			if e.Do == DoGrow {
+			if e.Do == DoGrowOnWin {
 				total += e.Amount
 			}
 		}
 	}
 	return total
+}
+
+// TurnTaken is the duelist after one of their own turns has finished: every `turn-taken` rule that
+// the turn matched has grown or reset this ring's accumulator.
+//
+// **A rule fires when any card of the turn matches it**, and a rule with no `If` fires on every
+// turn — including an empty one, which is still a turn taken. That is what lets Momentum be written
+// without a "not" in the predicates: one rule grows on every turn, a second resets on a turn holding
+// a plan card, and the reset is applied second so a planning turn nets zero.
+//
+// **Growth first, then resets**, always. The other order would let a turn both bank and lose the
+// same step depending on which rule the file happened to list first.
+func (d Duelist) TurnTaken(cards []Card) Duelist {
+	for i := 0; i < d.RingCount; i++ {
+		step, reset := 0, false
+		for _, rule := range RingOf(d.Rings[i].Ring).Rules {
+			if rule.When != MomentTurnTaken {
+				continue
+			}
+			if rule.If.Any() && !anyMatches(rule.If, cards) {
+				continue
+			}
+			for _, e := range rule.Then {
+				switch e.Do {
+				case DoGrowOnTurn:
+					step += e.Amount
+				case DoResetGrowth:
+					reset = true
+				}
+			}
+		}
+
+		d.Rings[i].Grown += step
+		if reset {
+			d.Rings[i].Grown = 0
+		}
+	}
+	return d
+}
+
+// anyMatches reports whether any card of a turn satisfies a condition. **Any rather than every**,
+// which is the reading a turn-wide predicate needs: "a turn with a plan card in it".
+func anyMatches(c RingCondition, cards []Card) bool {
+	for _, card := range cards {
+		if c.Matches(card) {
+			return true
+		}
+	}
+	return false
+}
+
+// KeepsGrowth reports whether a ring's accumulator belongs to the **run** rather than to one fight.
+//
+// **A ring that can reset itself does not keep anything** *(2026-08-22)*: Momentum's streak is a
+// fact about the turns of one duel, and banking it between fights would make it a permanent bonus
+// that a single plan card once wiped. Heart, the growing stat rings and the Enflamed family hold no
+// reset and are kept.
+func KeepsGrowth(id RingID) bool {
+	for _, rule := range RingOf(id).Rules {
+		for _, e := range rule.Then {
+			if e.Do == DoResetGrowth {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// GrowOnHit is the attacker after a blow has landed: every ring whose `grow-on-hit` rule matched a
+// card of the blow has taken its step, so the *next* attack of the same fight is already stronger.
+//
+// **It returns a duelist rather than writing through a pointer**, like everything else in this
+// package — a round is resolved by passing duelists along, and an accumulator that moved by side
+// effect would be the one piece of fight state a replay could not reproduce.
+//
+// **What it grows is the copy the fight is holding.** `Session` keeps the run's own figure and reads
+// it back off the duelist when the fight is won — see Session.AbsorbGrowth — which is what makes the
+// growth survive the fight without combat knowing a run exists.
+func (d Duelist) GrowOnHit(cards []Card) Duelist {
+	if len(cards) == 0 {
+		return d
+	}
+
+	// **Landings, not cards** *(owner's call, 2026-08-22)*. A card that an echo or a repeat ring
+	// seats three times *hit* three times, and a per-hit accumulator has to count all three — which
+	// is the combination the rings are for: Echo plus Enflamed is meant to be a build, not two
+	// rings that politely ignore each other.
+	//
+	// The count is the same list `handEvent` seats into the blow's sum, asked for again rather than
+	// passed in: the damage figure does not change how many terms there are, so the two cannot
+	// disagree about how many times a card landed.
+	worn := d.WornRings()
+	hits := make([]int, len(cards))
+	for i, c := range cards {
+		hits[i] = len(LandingAmounts(worn, c, i == 0, 100))
+	}
+
+	for i := 0; i < d.RingCount; i++ {
+		step := 0
+		for _, rule := range RingOf(d.Rings[i].Ring).Rules {
+			if rule.When != MomentAttackLands {
+				continue
+			}
+			landed := 0
+			for n, c := range cards {
+				if rule.If.Matches(c) {
+					landed += hits[n]
+				}
+			}
+			if landed == 0 {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoGrowOnHit {
+					step += e.Amount * landed
+				}
+			}
+		}
+		d.Rings[i].Grown += step
+	}
+	return d
 }
 
 // ScalePropagation applies every propagation-scaling ring to a figure the run's own rule already
@@ -685,6 +1036,28 @@ func ScalePropagation(worn []WornRing, base int) int {
 		}
 	}
 	return base
+}
+
+// DemoteConcept is which concept a card is dealt as, given a worn set. It reports false when no
+// ring steps it, so a caller can leave the card alone.
+//
+// **It reads the card as the run owns it, exactly like FlipElement**, so two demoting rings cannot
+// walk one card two rungs down the ladder between them — the deepest single step wins and worn
+// order decides a tie. A ring wanting two rungs says `Amount: 2`.
+//
+// **A card with no rung below it is left where it is.** Atrophy on a hand of Jabs is a ring doing
+// nothing, which is a fact about that hand rather than a case to special-case.
+func DemoteConcept(worn []WornRing, card Card) (ConceptID, bool) {
+	deepest := 0
+	for _, e := range RingEffectsAt(worn, MomentDeckBuilt, card) {
+		if e.Do == DoDemoteCard && e.Amount > deepest {
+			deepest = e.Amount
+		}
+	}
+	if deepest == 0 {
+		return NoConcept, false
+	}
+	return Neighbour(card.Concept, -deepest)
 }
 
 // FlipElement is what colour a card is dealt as, given a worn set. It reports false when no ring

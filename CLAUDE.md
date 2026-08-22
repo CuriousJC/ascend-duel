@@ -112,7 +112,7 @@ go run ./tools/balance      # what all 96 enemies do to the fighter, one line ea
 go run ./tools/balance -v OgreWarlord   # one enemy, round by round
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
-go run ./tools/ringsheet    # every ring in rings.json to PNGs + a page: art, price, text, rules
+go run ./tools/ringsheet    # every ring to PNGs + a page grouped by rarity: art, price, text, rules
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
@@ -603,10 +603,16 @@ them have no artwork and draw `default-ring.png`** — `data.RingData.ArtKey` is
 has painted rather than a name nobody spelled right.
 
 **`go run ./tools/ringsheet` is how the catalogue gets looked at.** A run wears five and the
-shelf offers three, so seeing all seventeen in a launched game means playing to a shop over and
+shelf offers three, so seeing forty-six in a launched game means playing to a shop over and
 over. The sheet draws each with its price, its authored `Text` and its rules side by side —
 which is also the only place the sentence a player reads can be checked against the rules that
 actually fire.
+
+**It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
+the whole pricing decision — a ring is rebalanced by moving it, never by writing a number — so the
+review question is "does any of these thirty commons belong a tier up", which an alphabetical list
+cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
+because a scarce tier rounds to `0%` and would read as unreachable.
 
 ### Colour: name one colour and scale it — but the rule is narrower than it reads
 

@@ -84,6 +84,7 @@ func run(dir string) error {
 	}
 
 	records := data.LoadRings()
+	var plates []plate
 	page := page{
 		Ground: ground,
 		Style:  styleFacts(cards.RingStyle),
@@ -112,7 +113,7 @@ func run(dir string) error {
 		}
 
 		price, _ := session.RingPrice(key)
-		page.Rings = append(page.Rings, plate{
+		plates = append(plates, plate{
 			Cell:   cell,
 			Record: key,
 			// **The page prints the full name and the card face does not** — the heading beside
@@ -121,6 +122,7 @@ func run(dir string) error {
 			Name:    record.Name,
 			Text:    record.Text,
 			Price:   price,
+			Rarity:  string(record.Rarity),
 			Sell:    session.SellValue(key),
 			Art:     record.Art,
 			Default: record.Art == "",
@@ -130,6 +132,8 @@ func run(dir string) error {
 			page.Undrawn++
 		}
 	}
+
+	page.Tiers = groupByRarity(plates)
 
 	// The three states a ring card is drawn in, on one ring so the card underneath is
 	// provably the same one. **Not "not owned"** — a ring the run has neither bought nor been
@@ -160,7 +164,11 @@ func run(dir string) error {
 	}
 
 	fmt.Printf("wrote %s and %d PNGs — %d of %d rings have art of their own\n",
-		out, len(page.Rings)+len(page.States), page.Count-page.Undrawn, page.Count)
+		out, len(plates)+len(page.States), page.Count-page.Undrawn, page.Count)
+	for _, t := range page.Tiers {
+		fmt.Printf("  %-9s %2d rings at %d vitae, sells for %d — %s%% of a shelf draw\n",
+			t.Rarity, t.Count, t.Price, t.Sell, t.Share)
+	}
 	return nil
 }
 
@@ -296,6 +304,41 @@ func artwork(key string) (image.Image, error) {
 	return img, nil
 }
 
+// groupByRarity splits the catalogue into its three tiers, cheapest first.
+//
+// **In data.Rarities order rather than in whatever the file happens to hold**, so the page reads
+// common → uncommon → rare every time and an empty tier still gets a heading — a tier nobody has
+// authored into is a fact worth seeing, not a section to omit.
+//
+// **Share is the chance a single shelf draw lands in this tier**, as a whole percent: the tier's
+// tickets over every ring's tickets. It is what turns "weight 10" into something reviewable — a
+// tier holding half the catalogue at ten tickets each is a shelf that shows little else.
+func groupByRarity(plates []plate) []tier {
+	total := 0
+	for _, p := range plates {
+		total += data.Rarity(p.Rarity).Weight()
+	}
+
+	out := make([]tier, 0, len(data.Rarities()))
+	for _, r := range data.Rarities() {
+		t := tier{Rarity: string(r), Price: r.Price(), Sell: r.Sell(), Weight: r.Weight()}
+		for _, p := range plates {
+			if p.Rarity == string(r) {
+				t.Rings = append(t.Rings, p)
+			}
+		}
+		t.Count = len(t.Rings)
+		if total > 0 {
+			// **To a tenth of a percent, because the rare tier rounds to nothing otherwise.** Two
+			// rare rings in a catalogue of forty-six is half a percent of a shelf seat, and a page
+			// printing "0%" would say the tier is unreachable when what it is is scarce.
+			t.Share = fmt.Sprintf("%.1f", float64(t.Count*r.Weight())*100/float64(total))
+		}
+		out = append(out, t)
+	}
+	return out
+}
+
 // styleFacts is the numbers the page prints, read off the style rather than typed into the
 // template, so the page cannot quote a card it is not showing.
 func styleFacts(st cards.Style) map[string]int {
@@ -324,10 +367,28 @@ type plate struct {
 	Name    string
 	Text    string
 	Price   int
+	Rarity  string
 	Sell    int
 	Art     string
 	Default bool
 	Rules   []string
+}
+
+// tier is one rarity's worth of the catalogue: every ring at that price, with the tier's own
+// numbers beside them.
+//
+// **The page is grouped by rarity as of 2026-08-22**, because that is the axis a review is actually
+// conducted along: three tiers is the whole pricing decision, so what a reviewer needs to see is
+// every common together and ask whether any of them belongs a tier up. An alphabetical list of
+// forty-six rings answers a different question.
+type tier struct {
+	Rarity string
+	Price  int
+	Sell   int
+	Weight int
+	Count  int
+	Share  string
+	Rings  []plate
 }
 
 type page struct {
@@ -335,6 +396,6 @@ type page struct {
 	Style   map[string]int
 	Count   int
 	Undrawn int
-	Rings   []plate
+	Tiers   []tier
 	States  []cell
 }

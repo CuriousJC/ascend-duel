@@ -29,6 +29,7 @@ import (
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
@@ -51,15 +52,32 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// The shelf sits where the eye lands and the worn row sits under it, in the band the reward
-	// screen puts its deck cards in — so "these are yours" is below "these are for sale" in the
-	// same place a card being altered sits below the worm altering it.
-	shelfRowPct = 22
-	wornRowPct  = 55
+	// **There is one row of rings for sale, and the worn row is the build band's** *(owner's call,
+	// 2026-08-22)*. The shop drew its own row of worn rings until the band arrived; with the band
+	// up they were the same five rings twice, and the screen had no room for both once the hooded
+	// creature started speaking. So the shelf is the only row the shop lays out, and it sits under
+	// the narration where the eye lands after reading it.
+	shelfRowPct = 48
+
+	// The narration clears the band, whose ring row can now carry a sell price under it. The
+	// reward screen's own prose starts at 296 against a band with nothing under the rings.
+	shopProseTop = 310
+
+	// shopHintTop is the line between the narration and the shelf. **It is not a title** — the
+	// creature's two sentences are the title, exactly as the payout's are on the reward screen —
+	// and it is written only when it has something the duelist card does not already say.
+	shopHintTop = 392
 
 	// The figure under a card: what it costs on the shelf, what it pays back in the row.
 	shopFigureGap  = 10
 	shopFigureSize = 22
+
+	// The confirm tab that hangs under an armed ring, in the seat the sell figure was written in.
+	// **Narrower than the card it hangs off**, so it reads as attached to that ring rather than as
+	// a row of its own.
+	sellTabWidth    = 130
+	sellTabHeight   = 30
+	sellTabTextSize = 18
 
 	// shopRowLabelGap is how far the row's own label sits above its cards.
 	shopRowLabelGap  = 34
@@ -87,10 +105,31 @@ type ShopScene struct {
 	// shelf is what this visit offers, drawn from the rings the run is not already wearing.
 	shelf []shelfItem
 
-	// leaveButton is the only control that is not a card. **There is no confirm and no basket** —
-	// a click is a purchase, because the price is on the card and a run cannot go into debt, so
-	// there is nothing a confirmation step would be protecting.
+	// leaveButton is the only control that is not a card or a confirm tab. **There is no basket,
+	// and buying has no confirm** — a click is a purchase, because the price is on the card and a
+	// run cannot go into debt, so there is nothing a confirmation step would be protecting.
+	// **Selling does have one** as of 2026-08-22, and the asymmetry is the point: see `armed`.
 	leaveButton *models.Button
+
+	// armed is the worn ring a confirm tab is hanging under, by record key, and empty for none.
+	//
+	// **Selling is the one thing on this screen that asks twice** *(owner's call, 2026-08-22)*.
+	// Buying does not and should not: it is refused when it cannot be afforded, the price is on
+	// the card, and a run cannot go into debt — so there is nothing a confirmation would protect.
+	// A sale is the opposite. The ring is *already yours*, the row it sits in is the row the whole
+	// screen invites you to read, and a click meant for a tooltip took a ring off your hand for
+	// less than it cost. It is also not symmetric to undo: a growing ring's accumulator goes with
+	// it, and buying it back starts that over.
+	armed string
+
+	// selling is the tab's request, consumed by Update, for the reason `leaving` is: a button's
+	// OnClick reaches no global state and a sale needs the run.
+	selling string
+
+	// sellButton is the tab itself — **one button moved under whichever ring is armed**, not one
+	// per finger. Only one can be armed, so a second button would be a second thing to keep in
+	// step with the row's own re-centring.
+	sellButton *models.Button
 
 	// leaving is the button's request, consumed by Update. A button's OnClick reaches no global
 	// state, and advancing the run needs it.
@@ -106,6 +145,15 @@ type ShopScene struct {
 	from map[string]image.Rectangle
 	move travel
 
+	// prose is the shopkeeper. **Nothing it says has a `pays`**, unlike the reward screen's
+	// payout — this is flavour rather than arithmetic, and the typewriter is reused for the
+	// cadence rather than for the claims.
+	prose typewriter
+
+	// deck is the D button in the corner and the panel behind it. A ring is bought against a deck,
+	// and until 2026-08-22 the deck could not be looked at from here. See deckpanel.go.
+	deck deckToggle
+
 	// tip explains a ring: what it does, what it costs, and where it would sit in the firing order.
 	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
 	// and nothing at all about slashes.
@@ -120,10 +168,22 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 		s.leaveButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
 	}
 
+	if s.sellButton == nil {
+		s.sellButton = models.NewButton(sellTabWidth, sellTabHeight, "",
+			func() { s.selling = s.armed })
+		// **The colour a control that commits something wears**, and the same crimson DUEL!
+		// takes. A sale is the only thing on this screen that cannot be taken back.
+		s.sellButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
+		s.sellButton.TextSize = sellTabTextSize
+	}
+
+	s.armed, s.selling = "", ""
 	s.leaving = false
 	s.from, s.move = nil, travel{}
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
 	s.shelf = dealShelf(gs)
+	s.prose.setLines(shopkeeperLines())
+	s.deck.init()
 
 	trace.Logf("shop", "after fight %d: %v for sale, %d vitae in hand, wearing %d",
 		gs.Run.Fight(), shelfKeys(s.shelf), gs.Run.Vitae(), len(gs.Run.Worn()))
@@ -220,6 +280,35 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
+	// **The greeting is the whole screen while it types.** A click skips it rather than buying
+	// something, which is the reward screen's rule for its payout and for the same reason: a
+	// sentence half-read while a ring is already being bought is two things at once.
+	if !s.prose.finished() {
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			s.prose.skip(gs)
+		}
+		s.prose.tick(gs, func(i int) image.Point { return shopProseLineAt(gs, i) })
+		return nil
+	}
+
+	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
+	// frame the panel closes on as a covered one.
+	if s.deck.update(gs, ownedContents(gs)) {
+		return nil
+	}
+
+	if s.selling != "" {
+		key := s.selling
+		s.selling, s.armed = "", ""
+		s.sell(gs, key)
+		return nil
+	}
+
+	// **The tab runs before the click that might disarm it.** A press on the tab is a press on
+	// nothing the rows own, so `click` leaves it armed and the release lands here — the same
+	// press-then-release split the action box relies on.
+	s.updateSellTab(gs)
+
 	s.click(gs)
 
 	s.leaveButton.ScreenX, s.leaveButton.ScreenY = gs.PctX(50), gs.PctY(offerButtonsPct)
@@ -247,23 +336,19 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	worn := gs.Run.Worn()
-	for i, key := range worn {
-		seat := s.wornSlot(gs, i, len(worn))
-		if !at.In(seat) {
-			continue
-		}
-		if record, ok := gs.Rings[key]; ok {
-			title, lines := ringTip(record, i, len(worn))
-			s.tip.Point(seat, title, lines)
-		}
-		return
-	}
+	hoverBuildRings(gs, at, &s.tip)
 }
 
 // click is the press on either row. **Both rows are live at once**, unlike the reward screen's two
 // stages: buying and selling are not steps of one decision, and needing to be in "sell mode" to
 // free a finger for the ring you are looking at would be a mode where a click would do.
+//
+// **A press on the worn row arms a confirm tab rather than selling** *(owner's call, 2026-08-22)*.
+// The worn row is the build band now, which is the row the player hovers all run to read what they
+// are wearing — so the seat a tooltip is asked for and the seat a sale is committed in are the
+// same pixels, and a click that missed by a frame sold a ring. That is not a mode: nothing else
+// on the screen changes while a tab is up, the other rings stay clickable, and clicking the armed
+// ring again puts it away.
 func (s *ShopScene) click(gs *state.GlobalState) {
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		return
@@ -272,18 +357,86 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 
 	for i := range s.shelf {
 		if !s.shelf[i].bought && at.In(s.shelfSlot(gs, i)) {
+			s.armed = ""
 			s.buy(gs, i)
 			return
 		}
 	}
 
+	// **A click on a ring arms it; it does not sell it.** Clicking the armed one again puts the
+	// tab away, so the gesture that opened the question is the gesture that drops it — the rule
+	// every dialog in this game follows.
 	worn := gs.Run.Worn()
 	for i, key := range worn {
 		if at.In(s.wornSlot(gs, i, len(worn))) {
-			s.sell(gs, key)
+			s.arm(key)
 			return
 		}
 	}
+
+	// A press anywhere else drops the question — except on the tab itself, which is not a click
+	// this screen handles: its own release is what answers.
+	if s.armed != "" && !at.In(s.sellTabRect(gs)) {
+		s.armed = ""
+	}
+}
+
+// arm puts the question under one ring, or takes it away again if that ring is already asking it.
+//
+// **Pulled out of `click` so it can be tested**: the press needs a cursor and a window, and what
+// is worth pinning is that arming a ring changes nothing about the run.
+func (s *ShopScene) arm(key string) {
+	if s.armed == key {
+		s.armed = ""
+		return
+	}
+	s.armed = key
+}
+
+// updateSellTab positions the tab under whichever ring is armed and runs it.
+//
+// **It disarms a ring that is no longer worn**, which is what stops a tab surviving the sale it
+// asked about — or a scenario arriving with a key the run does not hold.
+func (s *ShopScene) updateSellTab(gs *state.GlobalState) {
+	if s.armed == "" {
+		return
+	}
+
+	if _, ok := s.wornSeatOf(gs, s.armed); !ok {
+		s.armed = ""
+		return
+	}
+
+	// The label carries the figure, so the tab is the whole question — the sell figure it replaces
+	// said the same number and asked nothing.
+	s.sellButton.Text = fmt.Sprintf("Sell for %d?", session.SellValue(s.armed))
+	tab := s.sellTabRect(gs)
+	s.sellButton.ScreenX = (tab.Min.X + tab.Max.X) / 2
+	s.sellButton.ScreenY = (tab.Min.Y + tab.Max.Y) / 2
+	systems.UpdateButton(gs, s.sellButton)
+}
+
+// wornSeatOf is where one worn ring is sitting, by key.
+func (s *ShopScene) wornSeatOf(gs *state.GlobalState, key string) (image.Rectangle, bool) {
+	worn := gs.Run.Worn()
+	for i, k := range worn {
+		if k == key {
+			return s.wornSlot(gs, i, len(worn)), true
+		}
+	}
+	return image.Rectangle{}, false
+}
+
+// sellTabRect is where the confirm tab hangs: **the seat the sell figure is written in**, centred
+// under the armed ring. One rectangle, drawn in and hit-tested against.
+func (s *ShopScene) sellTabRect(gs *state.GlobalState) image.Rectangle {
+	seat, ok := s.wornSeatOf(gs, s.armed)
+	if !ok {
+		return image.Rectangle{}
+	}
+	left := (seat.Min.X+seat.Max.X)/2 - sellTabWidth/2
+	top := seat.Max.Y + shopFigureGap
+	return image.Rect(left, top, left+sellTabWidth, top+sellTabHeight)
 }
 
 // buy takes a ring off the shelf and puts it on the hand.
@@ -356,10 +509,15 @@ func (s *ShopScene) shelfSlot(gs *state.GlobalState, i int) image.Rectangle {
 	return rowSlot(gs, i, len(s.shelf), gs.PctY(shelfRowPct))
 }
 
-// wornSlot is where one worn ring is drawn. It takes the count rather than reading it, because the
-// row it is being drawn into may be the one from before a sale.
+// wornSlot is where one worn ring is drawn — **a finger in the build band**, not a row of the
+// shop's own. It takes the count rather than reading it, because the row it is being drawn into
+// may be the one from before a sale.
+//
+// **It is `buildRingRect` and `ringSlotAt`, which is what the combat screen and the reward screen
+// use.** A ring is in the same place on every screen that shows one, so selling is a click on the
+// row the player has been reading all run rather than on a second copy of it.
 func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
-	return rowSlot(gs, i, n, gs.PctY(wornRowPct))
+	return ringSlotRect(buildRingRect(gs), i, n)
 }
 
 // rowSlot is a centred row of cards at a fixed pitch. **Full-size cards at a fixed gap**, not the
@@ -374,8 +532,8 @@ func rowSlot(gs *state.GlobalState, i, n, top int) image.Rectangle {
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	screen.Fill(screenGround)
 
-	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}
+	prose := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 26}
 
 	line := func(y int, face *text.GoTextFace, msg string, ink color.RGBA) {
 		op := &text.DrawOptions{}
@@ -385,14 +543,28 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		text.Draw(screen, msg, face, op)
 	}
 
-	line(offerTitleTop, heading, "The shop", groundInk)
-	line(offerHintTop, small, s.hint(gs), groundInk)
+	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
+	// because a ring here carries a price and moves when the row re-centres. See buildband.go.
+	drawBuildCard(gs, screen, gs.Run.Vitae())
+	s.drawWorn(gs, screen, small)
 
+	s.drawProse(gs, screen, prose)
+
+	// **Nothing else is on screen while the greeting types.** It is the reward screen's rule: the
+	// sentences are the whole of the screen until they are finished.
+	if !s.prose.finished() {
+		return
+	}
+
+	line(shopHintTop, small, s.hint(gs), groundInk)
 	s.drawShelf(gs, screen, small, line)
-	s.drawWorn(gs, screen, small, line)
 
 	systems.DrawButton(gs, screen, s.leaveButton)
 	systems.DrawTooltip(gs, screen, &s.tip)
+
+	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn
+	// on top of it.
+	s.deck.draw(gs, screen, ownedContents(gs))
 }
 
 // drawShelf draws what is for sale, with its price under it.
@@ -435,15 +607,9 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image,
 // so the row is the firing order, and selling out of the middle changes it. That is a real cost of
 // letting a ring come off, and it is visible here rather than hidden.
 func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
-	face *text.GoTextFace, line func(int, *text.GoTextFace, string, color.RGBA)) {
+	face *text.GoTextFace) {
 
 	worn := gs.Run.Worn()
-
-	label := fmt.Sprintf("worn - %d/%d, click one to sell it", len(worn), combat.MaxWornRings)
-	if len(worn) == 0 {
-		label = "worn - nothing"
-	}
-	line(gs.PctY(wornRowPct)-shopRowLabelGap, face, label, groundInk)
 
 	for i, key := range worn {
 		record, ok := gs.Rings[key]
@@ -457,8 +623,26 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 		}
 
 		drawRingCard(gs, screen, at, record, true)
-		s.figure(gs, screen, image.Rectangle{Min: at, Max: at.Add(image.Pt(cardWidth, cardHeight))},
-			fmt.Sprintf("sell +%d", session.SellValue(key)), true)
+
+		// **The price is only offered once the shopkeeper has finished speaking**, like everything
+		// else on this screen — a sell figure under a ring during the greeting would be an offer
+		// standing before it was made.
+		//
+		// **An armed ring shows the tab in that seat instead of the figure**, rather than both:
+		// the tab carries the same number and asks the question the figure only stated, so
+		// drawing the pair would be the price said twice with one of them clickable.
+		if !s.prose.finished() {
+			continue
+		}
+		if s.armed == key {
+			systems.DrawButton(gs, screen, s.sellButton)
+			continue
+		}
+		// **The figure follows the card, not the seat**, so a ring still sliding to its new
+		// finger keeps its price under it.
+		flown := image.Rectangle{Min: at,
+			Max: at.Add(image.Pt(cards.RingStyle.Width, cards.RingStyle.Height))}
+		s.figure(gs, screen, flown, fmt.Sprintf("sell +%d", session.SellValue(key)), true)
 	}
 }
 
@@ -480,19 +664,21 @@ func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image
 	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: shopFigureSize}, op)
 }
 
-// hint is the line under the title: the purse, and whichever of the two things standing between
-// the player and a ring is actually true.
+// hint is the line between the narration and the shelf, and **it is usually empty** *(2026-08-22)*.
 //
 // **The cap surfaces here rather than being displayed as empty slots** — MECHANICS.md's rule is
 // that it is never shown until it binds, and a hand of five with rings still on the shelf is the
-// moment it binds.
+// moment it binds. That is the whole of what this line is for now.
+//
+// It used to open with the purse as well. The duelist card in the build band writes the purse in
+// crimson two hundred pixels above, so saying it again here would be the screen's only sentence
+// spent on a figure already on it.
 func (s *ShopScene) hint(gs *state.GlobalState) string {
-	vitae := gs.Run.Vitae()
-
 	if len(gs.Run.Worn()) >= combat.MaxWornRings && s.anyLeft() {
-		return fmt.Sprintf("%d vitae - every finger is spoken for, sell one to make room", vitae)
+		return fmt.Sprintf("%d vitae - every finger is spoken for, sell one to make room",
+			gs.Run.Vitae())
 	}
-	return fmt.Sprintf("%d vitae in hand", vitae)
+	return ""
 }
 
 // anyLeft reports whether the shelf still holds something to buy — so the cap is only mentioned

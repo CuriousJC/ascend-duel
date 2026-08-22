@@ -7,11 +7,15 @@ package screens
 // *(owner's call, 2026-08-22)*: the payout it narrates lands on the purse written on that card, and
 // choosing a worm is a choice about a deck you can only judge against the build you are holding.
 //
+// **The shop draws it too** *(2026-08-22)*, and it is what took the shop's second ring row away:
+// with the band up, a separate "worn" row was the same five rings drawn twice. The shop calls the
+// two halves separately — `drawBuildCard`, then its own ring row over `buildRingRect` — because a
+// ring there is a thing you can sell.
+//
 // **It is a free function over the run rather than a method on a scene**, which is what lets a
 // second screen draw it. What it deliberately does *not* do is move: the combat screen's own band
 // is still its own — it draws a live fighter, mid-fight life, banked AP and an opponent's card at
-// the far end, none of which exist here. This is the between-fights view of the same thing, and the
-// day the shop wants one too it is one call.
+// the far end, none of which exist here. This is the between-fights view of the same thing.
 //
 // **Rings are laid out by the same functions the combat screen uses** — `ringSlotAt`, `wornRings` —
 // so the row cannot drift between the two screens. The pane rectangle is the only thing computed
@@ -22,6 +26,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/entities"
+	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -61,6 +66,17 @@ func buildBandBottom(gs *state.GlobalState) int {
 // The AP figure is the duelist's own budget with no bank on it, because a bank is a thing that
 // exists inside a round.
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
+	drawBuildCard(gs, screen, vitae)
+	drawBuildRings(gs, screen)
+}
+
+// drawBuildCard is the duelist half of the band on its own.
+//
+// **It is split out for the shop** *(2026-08-22)*, which draws the ring row itself: a ring there is
+// a thing you can sell, so it carries a price under it and it moves when the row re-centres. The
+// row's *geometry* is still `buildRingRect` and `ringSlotAt`, so the two screens cannot disagree
+// about where a finger is — only about what is drawn on it.
+func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 	if gs.Run == nil {
 		return
 	}
@@ -78,6 +94,13 @@ func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 			screen.DrawImage(img, op)
 		}
 	}
+}
+
+// drawBuildRings is the row of worn rings: what is on your fingers, in firing order.
+func drawBuildRings(gs *state.GlobalState, screen *ebiten.Image) {
+	if gs.Run == nil {
+		return
+	}
 
 	row := buildRingRect(gs)
 	worn := wornRings(gs)
@@ -85,6 +108,48 @@ func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		at := ringSlotAt(row, i, len(worn))
 		drawRingCard(gs, screen, at, record, true)
 	}
+}
+
+// hoverBuildRings explains whichever worn ring the cursor is resting on, and reports whether it
+// found one.
+//
+// **The band draws rings on three screens and only one of them explained them** *(2026-08-22)*.
+// The combat screen has `hoverRings`, the shop grew its own loop, and the reward screen had
+// neither — so the row a player reads their build off went silent on exactly the screen where they
+// are choosing what to do to that build. It is one function now, over the same geometry the row is
+// drawn with, so a fourth screen putting the band up cannot forget again.
+//
+// **The tooltip says where a ring sits in the firing order**, which is what `ringTip` is for: worn
+// order is firing order, and the row is the only place that fact is visible.
+func hoverBuildRings(gs *state.GlobalState, at image.Point, tip *models.Tooltip) bool {
+	if gs.Run == nil {
+		return false
+	}
+
+	row := buildRingRect(gs)
+	worn := gs.Run.Worn()
+	for i, key := range worn {
+		seat := ringSlotRect(row, i, len(worn))
+		if !at.In(seat) {
+			continue
+		}
+		record, ok := gs.Rings[key]
+		if !ok {
+			return false
+		}
+		title, lines := ringTip(record, i, len(worn))
+		tip.Point(seat, title, lines)
+		return true
+	}
+	return false
+}
+
+// ringSlotRect is one finger as a rectangle. `ringSlotAt` answers with the point a card is drawn
+// from; **anything hit-testing the row needs the same seat as an area**, and deriving it twice is
+// the drawn-here-clicked-there bug every other row in this game is shaped to avoid.
+func ringSlotRect(row image.Rectangle, i, worn int) image.Rectangle {
+	at := ringSlotAt(row, i, worn)
+	return image.Rect(at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height)
 }
 
 // buildFighter is the player as a combatant, equipped with what they are wearing.

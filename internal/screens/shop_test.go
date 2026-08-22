@@ -124,11 +124,111 @@ func TestTheTwoRowsDoNotOverlapAndStayOnScreen(t *testing.T) {
 	}
 
 	shelf := rowSlot(gs, 0, shelfSize, gs.PctY(shelfRowPct))
-	worn := rowSlot(gs, 0, combat.MaxWornRings, gs.PctY(wornRowPct))
-	if shelf.Max.Y >= worn.Min.Y {
-		t.Errorf("the shelf ends at %d and the worn row starts at %d", shelf.Max.Y, worn.Min.Y)
+	if shelf.Max.Y+shopFigureGap+shopFigureSize >= gs.PctY(offerButtonsPct)-offerButtonHeight/2 {
+		t.Error("the shelf's prices run into the Leave button")
 	}
-	if worn.Max.Y+shopFigureGap+shopFigureSize >= gs.PctY(offerButtonsPct) {
-		t.Error("the worn row's sell figures run into the Leave button")
+	if shelf.Min.Y-shopRowLabelGap <= shopHintTop {
+		t.Errorf("the shelf's label at %d collides with the hint at %d",
+			shelf.Min.Y-shopRowLabelGap, shopHintTop)
 	}
+}
+
+// **The band's ring row is the shop's worn row now**, so what has to be checked is that the sell
+// figure hung under a ring clears the narration that starts below the band — the collision the old
+// two-row layout could not have, and the one the title and hint were silently losing to before
+// this screen had a band at all.
+func TestTheSellFiguresClearTheNarration(t *testing.T) {
+	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+
+	var shop ShopScene
+	for n := 1; n <= combat.MaxWornRings; n++ {
+		seat := shop.wornSlot(gs, n-1, n)
+		if seat.Max.X > gs.ScreenWidth {
+			t.Errorf("a worn row of %d runs to %d", n, seat.Max.X)
+		}
+		if bottom := seat.Max.Y + shopFigureGap + shopFigureSize; bottom >= shopProseTop {
+			t.Errorf("a sell figure ends at %d and the narration starts at %d",
+				bottom, shopProseTop)
+		}
+	}
+}
+
+// The two narrated lines have to fit between the band and the hint under them. **The shopkeeper's
+// wording is authored**, so a third sentence or a longer one is a layout change and this is what
+// says so.
+func TestTheShopkeeperFitsAboveTheShelf(t *testing.T) {
+	lines := shopkeeperLines()
+	bottom := shopProseTop + (len(lines)-1)*proseLineGap + proseLineGap/2
+	if bottom >= shopHintTop {
+		t.Errorf("%d lines of narration reach %d and the hint sits at %d",
+			len(lines), bottom, shopHintTop)
+	}
+}
+
+// **A click on a worn ring arms the tab; it does not sell.** The bug this exists for is a click
+// aimed at a tooltip taking a ring off the player's hand, and it would come back silently — a
+// sale looks exactly like a sale the player meant.
+func TestClickingAWornRingOnlyArmsIt(t *testing.T) {
+	gs := shopState(t)
+	before := gs.Run.Worn()
+
+	var shop ShopScene
+	shop.arm(before[0])
+
+	if got := gs.Run.Worn(); len(got) != len(before) {
+		t.Errorf("arming sold a ring: wearing %v, was %v", got, before)
+	}
+	if shop.armed != before[0] {
+		t.Errorf("armed %q, want %q", shop.armed, before[0])
+	}
+
+	// The same ring again puts the question away, rather than a second click confirming it.
+	shop.arm(before[0])
+	if shop.armed != "" {
+		t.Errorf("a second click left %q armed", shop.armed)
+	}
+	if got := gs.Run.Worn(); len(got) != len(before) {
+		t.Errorf("a second click sold a ring: wearing %v", got)
+	}
+}
+
+// The tab hangs in the seat the sell figure was written in, so it has to clear the narration under
+// the band exactly as that figure does.
+func TestTheSellTabClearsTheNarration(t *testing.T) {
+	gs := shopState(t)
+
+	var shop ShopScene
+	shop.armed = gs.Run.Worn()[0]
+
+	tab := shop.sellTabRect(gs)
+	if tab.Max.Y >= shopProseTop {
+		t.Errorf("the tab ends at %d and the narration starts at %d", tab.Max.Y, shopProseTop)
+	}
+
+	seat, _ := shop.wornSeatOf(gs, shop.armed)
+	if tab.Min.Y < seat.Max.Y {
+		t.Errorf("the tab starts at %d, above the bottom of its ring at %d", tab.Min.Y, seat.Max.Y)
+	}
+	if wide := seat.Dx(); tab.Dx() > wide {
+		t.Errorf("the tab is %d wide against a %d-wide ring", tab.Dx(), wide)
+	}
+}
+
+// shopState is a run wearing a ring, on a 1280x960 screen.
+func shopState(t *testing.T) *state.GlobalState {
+	t.Helper()
+
+	gs := &state.GlobalState{
+		ScreenWidth: 1280, ScreenHeight: 960,
+		Run: session.New(session.StartingDeck()),
+	}
+	for _, key := range session.Rings() {
+		if gs.Run.Wear(key) {
+			break
+		}
+	}
+	if len(gs.Run.Worn()) == 0 {
+		t.Fatal("the fixture could not put a single ring on")
+	}
+	return gs
 }

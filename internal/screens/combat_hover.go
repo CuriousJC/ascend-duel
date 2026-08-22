@@ -30,7 +30,7 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
 	if s.showDeck {
-		s.hoverDeckPanel(gs, at)
+		hoverDeckPanel(gs, at, s.fightContents(), &s.tip)
 		return
 	}
 	if s.showLog {
@@ -41,23 +41,6 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		return
 	}
 	s.hoverFighters(gs, at)
-}
-
-// hoverDeckPanel explains one card in the deck overlay: the same arithmetic the hand gets, for a
-// card you cannot play from here. **Which is the point** — the panel is where a deck is read, and
-// "what would this be worth" is the question a deck is read to answer.
-func (s *CombatScene) hoverDeckPanel(gs *state.GlobalState, at image.Point) {
-	left, top := float32(gs.PctX(deckPanelLeftPct)), float32(gs.PctY(deckPanelTopPct))
-	width := float32(gs.PctX(deckPanelRightPct)) - left
-
-	for _, slot := range s.pileGrid(left+width/2, top+deckGridTop).slots {
-		if !at.In(slot.at) {
-			continue
-		}
-		title, lines := cardTip(slot.card, heldBy(s.fighter.Duelist, slot.card))
-		s.tip.Point(slot.at, title, lines)
-		return
-	}
 }
 
 // hoverHand walks the hand from the right, because the row overlaps and the card drawn last is the

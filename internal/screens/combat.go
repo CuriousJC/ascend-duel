@@ -1169,7 +1169,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// again on top of it. While the deck is open it is the only control that still does
 	// anything, so it is the only one that still looks like it does.
 	if s.showDeck {
-		s.drawDeckOverlay(gs, screen)
+		drawDeckPanel(gs, screen, s.fightContents())
 		s.drawDeckStack(gs, screen)
 	}
 

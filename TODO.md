@@ -12,18 +12,13 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
-- [ ] **The deck view is one screen's, and three screens want it.** The combat screen's deck
-      overlay (`internal/screens/combat_deck.go`) draws and hit-tests off `CombatScene`'s own
-      fields, so no other scene can put it up. The reward screen and the shop both want it — the
-      same modal, behind the same kind of button, so a player choosing a worm or a ring can see
-      what they already own. **Extract it into a widget taking a deck and a rectangle** and have
-      all three call it; do not copy it, which is the failure this entry exists to prevent.
-      *(Owner's call, 2026-08-22: deliberately out of scope of the reward-screen work, so the
-      reward screen currently has no deck view at all.)*
-- [ ] **The shop has no build band.** The reward screen puts the duelist card and the worn rings
-      up while you choose (`internal/screens/buildband.go`, one call); the shop is buying rings
-      and has more reason to. One line, once someone is in that file.
-
+- [ ] **The build band's ring row spreads to both edges, and two rings read as two unrelated
+      things.** `ringSlotAt` puts the first ring flush left and the last flush right, which is
+      right for five and is what closes them up into a hand. On the between-fights band the row
+      runs to 99% with no enemy card ending it, so a run wearing two puts one beside the duelist
+      card and the other in the far corner of an empty screen. **Visible now that the shop hangs a
+      sell price under each one** *(2026-08-22)*. Either the band's row wants its own width, or the
+      pitch wants a maximum. Pre-existing; the shop only made it obvious.
 - [ ] **Two rounded-rectangle implementations exist.** Cards rasterise their corners in
       plain Go (`internal/cards/shape.go`) because `internal/cards` must render without a
       graphics context; health bars use `CreateRoundedRecMask` + `ebiten.BlendSourceIn`.
@@ -39,7 +34,8 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       - **Nothing re-orders the worn row, and worn order is the firing order.** Rings fire left to
         right and compound, a bought ring goes on at the right-hand end, and selling out of the
         middle shifts everything after it — so the one thing a player cannot choose is the order
-        two rings apply in. Drag-to-reorder on the shop's worn row is the obvious answer, and it
+        two rings apply in. Drag-to-reorder on the build band's ring row while standing in the
+        shop is the obvious answer — that row *is* the shop's worn row as of 2026-08-22 — and it
         is the gesture the action box already has.
       - **Every price is a judgement and nothing measures one.** 2 to 7 off a base ring of 3,
         against an income of 5-10 a fight. `tools/balance` cannot see a ring at all, so what a

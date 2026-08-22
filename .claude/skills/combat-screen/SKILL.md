@@ -884,7 +884,18 @@ people playing it.
 - **Discards left lives on the Discard button, not on the duelist card** — see
   `drawDiscardsLeft`. The card holds what is read between rounds, not what is watched during one.
 
-**The deck overlay is a dialog, and one of two in the game** — the fight log below is the other. It fills nearly the screen,
+**The deck overlay is a dialog, and one of two in the game** — the fight log below is the other.
+
+**It is no longer this screen's** *(2026-08-22)*. It lives in `internal/screens/deckpanel.go` as a
+widget over a `deckContents` — cards you can still draw, cards that are spoken for, and who is
+holding them — because the reward screen and the shop both want it. This screen builds one with
+`fightContents`, which is the single place saying how a fight's three piles map onto the panel's
+two; the other two screens open it with a `deckToggle`, a 44px `D` in the bottom-right corner
+built to the Log button's shape and rules. **What did not move is the pile as a control**: clicking
+the stack of card backs is honest here because a draw pile exists, and between fights there is
+none.
+
+Everything below still describes the panel. It fills nearly the screen,
 everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
 overlay so the single live control is the only one that looks live. Pressing it closes it.
 There is no Escape key to fall back on and no right click, so a modal has to make its exit

@@ -168,6 +168,11 @@ type PostBattleScene struct {
 	// the prose has just described: two creatures fleeing the enemy you beat.
 	entry []travel
 
+	// deck is the D button in the corner and the panel behind it. **A worm is a deck edit, and
+	// until 2026-08-22 this screen was the one place a deck could be changed without being able
+	// to look at it** — see deckpanel.go, and TODO.md, which carried the extraction.
+	deck deckToggle
+
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
 	// removed. It takes neither worm and pays nothing extra — the win has already paid — so it is
 	// an exit rather than a third choice, which is exactly why it is not a card.
@@ -256,6 +261,8 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 
 	trace.Logf("postbattle", "after fight %d: prizes %v, %d cards of %d, %d to take",
 		gs.Run.Fight(), prizeNames(s.prizes), len(s.offer), gs.Run.Size(), s.picksLeft)
+
+	s.deck.init()
 }
 
 func prizeNames(ps []prize) []string {
@@ -373,6 +380,15 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
+	// **The deck panel is available from the moment the offer is made**, and while it is up the
+	// screen behind it is frozen — including the settled stage's own countdown, which is the rule
+	// the fight log follows on the combat screen: a screen changing out from under an open panel
+	// is reading material snatched away. It is deliberately not offered during the narration,
+	// which is the whole screen while it runs.
+	if s.deck.update(gs, ownedContents(gs)) {
+		return nil
+	}
+
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
 	if s.stage == settled {
@@ -442,6 +458,14 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 // player cannot make yet.
 func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
+
+	// **The band is live at every stage, so its rings are explained at every stage.** They are not
+	// a choice this screen offers — which is exactly why the rule above does not cover them: a
+	// worn ring is what the choice is being *judged against*, and "what does the one I am wearing
+	// actually do" is the question a worm is picked by.
+	if hoverBuildRings(gs, at, &s.tip) {
+		return
+	}
 
 	switch s.stage {
 	case pickWorm:
@@ -701,6 +725,11 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	if s.stage == narrate {
 		return
 	}
+
+	// **Deferred before the tooltip, so it is drawn after it.** The panel covers the screen and
+	// carries a tooltip of its own; anything of this screen's drawn on top of it would be a
+	// control the player could believe was live.
+	defer s.deck.draw(gs, screen, ownedContents(gs))
 
 	line := func(y int, face *text.GoTextFace, msg string) {
 		op := &text.DrawOptions{}

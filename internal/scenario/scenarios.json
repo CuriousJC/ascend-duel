@@ -1,0 +1,40 @@
+[
+  {
+    "ScenarioRecord": "echo-and-growth",
+    "Note": "Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
+    "Rings": ["echo-ring", "enflamed-ring", "fire-ring"],
+    "Hand": [
+      { "Card": "Lunge", "Element": "fire" },
+      { "Card": "Strike", "Element": "fire" },
+      { "Card": "Strike", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Prepare", "Element": "basic" }
+    ],
+    "Enemy": "GiantRat"
+  },
+  {
+    "ScenarioRecord": "seven-term-sum",
+    "Note": "The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.",
+    "Rings": ["echo-ring", "aftershock-ring"],
+    "Hand": [
+      { "Card": "Smash", "Element": "fire" },
+      { "Card": "Strike", "Element": "ice" },
+      { "Card": "Strike", "Element": "lightning" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Bash", "Element": "fire" }
+    ],
+    "Enemy": "GiantRat"
+  },
+  {
+    "ScenarioRecord": "momentum-and-atrophy",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
+    "Rings": ["atrophy-ring", "momentum-ring"],
+    "Hand": [
+      { "Card": "Lunge", "Element": "fire" },
+      { "Card": "Cleave", "Element": "ice" },
+      { "Card": "Smash", "Element": "earth" },
+      { "Card": "Plan", "Element": "basic" }
+    ],
+    "Enemy": "OgreWarlord"
+  }
+]

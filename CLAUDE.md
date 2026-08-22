@@ -108,6 +108,8 @@ gofmt -l .          # list unformatted files
 go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.png
 go run -tags idleexit .     # closes itself after two minutes with nobody at the controls
 go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
+go run -tags scenario .     # a chosen set of rings, a chosen opening hand, a chosen enemy
+ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .   # a named one
 go run ./tools/balance      # what all 96 enemies do to the fighter, one line each
 go run ./tools/balance -v OgreWarlord   # one enemy, round by round
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
@@ -143,12 +145,13 @@ finds it. **A hand wanting five copies of a concept cannot be dealt at all**, si
 exists more than four times — so check the arithmetic before concluding either way. A hand the tool
 reports as unfindable usually means the search was too short, but not always.
 
-**Three build tags, and they compose.** Each selects a different file in its package, so one
+**Four build tags, and they compose.** Each selects a different file in its package, so one
 configuration can compile while another does not. Vet and build every one you might have
 broken:
 
 ```powershell
-go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...; go vet -tags demoplay ./...
+go vet ./...; go vet -tags debugtrace ./...; go vet -tags idleexit ./...
+go vet -tags demoplay ./...; go vet -tags scenario ./...
 go run -tags "debugtrace idleexit" .    # traced and self-closing: the unattended run
 ```
 
@@ -728,6 +731,43 @@ and gone by itself rather than holding a window open for the rest of a session.
   path as the window's close button and there is only one way the game ends.
 - **It may never change an outcome.** It closes a window; it does not touch a duel.
 
+### `internal/scenario` is a fifth thing, and it is compiled out too
+
+[internal/scenario](internal/scenario) plugs **a chosen set of rings, a chosen opening hand and a
+chosen enemy** into a launched game.
+
+```powershell
+go run -tags scenario .                                        # the first entry in the file
+ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .    # a named one
+go run .                                                       # nothing: every function is a zero value
+```
+
+It exists because an interaction between rings is currently a twenty-minute question. A ring is
+bought from a shelf of three, a hand is dealt from a shuffled deck, and an enemy is whoever the
+climb put in the room — so "does Echo actually multiply Enflamed's growth" cannot be *looked at*
+without playing towards it. The rules are unit-tested; what no test can answer is what the
+combination looks like on screen. It is the ring-and-hand counterpart of `deckSeedName` and
+`session.StartingRings`, which each do one axis of the same job.
+
+- **`scenarios.json` lives beside the package, not in `data/`.** Everything in `data/` is the
+  game's own catalogue, loaded by every build. A scenario describes a thing being *tested*, and
+  filing it with the cards would embed a debug fixture in a release binary.
+- **A build tag for the reason trace and idle have one**, and the same two-file `_on`/`_off`
+  shape. This hands the player a chosen hand and a chosen row of rings; it must not ship, and it
+  has to stay deletable in one commit. The `//go:embed` is in the `_on` file, so an untagged build
+  carries neither the fixture nor the reader.
+- **It deliberately changes outcomes, unlike everything else that is compiled out.** `trace`,
+  `idle`, the demo and both debug flags are views and may never alter a result. This is a
+  *fixture* — which is exactly the argument for the build tag rather than a runtime flag.
+- **Three call sites, each one guarded line**: `main` sets `session.StartingRings`, `Init` picks
+  the enemy, `resetDeck` plugs the hand. Nothing else in the game knows the package exists.
+- **The hand is dealt over the shuffle rather than through it.** The draw pile is untouched, so
+  the second hand of the fight is a normal one and the fixture is only the opening.
+- **A misspelled ring, card or enemy fails the launch**, at package init, before a window opens.
+  A fixture that quietly tests something else is worse than a game that will not start.
+- **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
+  whose purpose nobody remembers is a fixture that gets deleted.
+
 ## Architecture — and how to navigate it
 
 **Every package's story lives in its own `doc.go`, and that is the navigation rubric.** This
@@ -767,7 +807,9 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 
 | Package | imports, of ours |
 |---|---|
-| `data` `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
+| `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
+| `data` | *nothing* |
+| `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
 | `pyramid` | data |
 | `combat` | data |
 | `decks` | data, combat |
@@ -777,7 +819,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `systems` | assets, models, state |
 | `cards` | systems |
 | `actions` | state |
-| `screens` | all of the above |
+| `screens` | all of the above, plus `scenario` |
 | `game` | screens, state, systems, models, music, idle, trace |
 | `main` | game, session, assets, data, music |
 

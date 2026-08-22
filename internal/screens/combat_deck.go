@@ -14,6 +14,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -258,9 +259,34 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 	s.shuffleDeck()
 	s.drawHand()
 
+	// **A scenario's hand is dealt over the shuffle, not through it** — the draw pile is left
+	// exactly as it was, so the second hand of the fight is a normal one and the fixture is only
+	// the opening. Compiled out of every normal build; see internal/scenario.
+	if scenario.Active() {
+		s.plugHand(scenario.Hand())
+	}
+
 	// An opening hand arrives sorted, exactly as a refilled one does. The default is cost, so
 	// this is true of a scene that has never had a sort button pressed on it.
 	s.sortHand()
+}
+
+// plugHand replaces the hand with an authored one. **A debug seat and nothing else** — it is
+// called from one place, behind `scenario.Active()`, and it is a no-op in every build that has not
+// asked for the tag.
+//
+// **The replaced cards go nowhere.** They are not discarded and not put back: the draw pile is
+// untouched, so the round after this one refills from a deck that never knew. A fixture is meant
+// to be one hand, not a rewritten deck.
+func (s *CombatScene) plugHand(cards []combat.Card) {
+	if len(cards) == 0 {
+		return
+	}
+
+	s.hand = s.hand[:0]
+	for _, c := range cards {
+		s.hand = append(s.hand, paletteCard{actionCard: c})
+	}
 }
 
 // shuffleDeck shuffles the draw pile using the scene's own source. Never rand.Shuffle,

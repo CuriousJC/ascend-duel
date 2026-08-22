@@ -84,6 +84,35 @@
 //   - postbattle.go — pick a worm, then pick the card it eats. The first of the between-fight
 //     scenes; a shop and a room choice come after it, and each is an ordinary scene rather than a
 //     mode of the combat screen. It is also the prizes-dealt ring moment.
+//   - postbattle_prose.go, postbattle_payout.go — the typewriter and the payout it types. The
+//     typewriter is general: a block of lines, a character clock, a pause between sentences, and
+//     an optional `pays` per line. The shop reuses it with no claims on any line.
+//   - shop.go, shop_prose.go — three rings on a shelf, and the hooded creature who greets you.
+//     **The shop has no worn row of its own** (2026-08-22): the build band's ring row is the row
+//     that is clicked to sell, so a ring is in the same place on every screen that shows one —
+//     and that is why selling asks twice. A click arms a crimson "Sell for N?" tab under the ring
+//     and the tab commits it, because the seat a tooltip is asked for and the seat a sale is
+//     committed in are now the same pixels. Buying still has no confirm and should not: it is
+//     refused when it cannot be afforded, and it is not the click that costs you something you
+//     already had.
+//   - buildband.go — the duelist card and the worn rings, for a screen that is not a fight.
+//     drawBuildBand is both halves; drawBuildCard and drawBuildRings are the halves, split because
+//     the shop draws its own rings with a price under them. hoverBuildRings is the row's tooltip
+//     for every screen that draws it — the reward screen had none for a day, which is a row a
+//     player reads their build off going silent on the screen where they change that build.
+//   - deckpanel.go — the deck overlay, as a widget over a `deckContents` rather than a method on
+//     the combat scene (2026-08-22, TODO.md). Three screens put it up: a fight through its draw
+//     pile, and the reward screen and the shop through `deckToggle` — a 44px `D` in the
+//     bottom-right corner, the Log button's shape and rules. The panel shows every card you own,
+//     in four colour rows plus a row of plans, at cards.Mini overlapped so all but six pixels of
+//     each shows. Two rules govern it and both have been broken once: a card does not move when it
+//     is played, it only dims — so the hand is included rather than excluded, and availability is
+//     the last sort key, never the first — and the pitch is a constant sized for a full row, never
+//     derived from how many cards are currently in one. Rows sort stab, slash, crush, plan,
+//     cheapest first; formRank is written out rather than read off the enum, because the enum's
+//     order is what an expanded hand ID is derived from and that is a rule. It sorts on form
+//     rather than category because category has two values now, and sorting by it would put nine
+//     cards in one undifferentiated block.
 //
 // The combat screen, grouped by what a change is usually about:
 //
@@ -94,17 +123,11 @@
 //     itself is clock.go's), playback (advancePlayback, applyEvent, currentSlot), the caption
 //     text, nextFight, and the trace layout dump.
 //   - combat_deck.go — the cards and the piles: actionCard, the deck seed, the shuffle and draw,
-//     spendSelected, and the deck overlay. actionCard is an alias for combat.Card — elements are
+//     spendSelected, and fightContents. actionCard is an alias for combat.Card — elements are
 //     rules, so the hand, the queue and the round are one type and a card is never converted
-//     between them. The overlay shows every card you own, in four colour rows plus a row of plans,
-//     at cards.Mini overlapped so all but six pixels of each shows. Two rules govern it and both
-//     have been broken once: a card does not move when it is played, it only dims — so the hand is
-//     included rather than excluded, and availability is the last sort key, never the first — and
-//     the pitch is a constant sized for a full row, never derived from how many cards are
-//     currently in one. Rows sort stab, slash, crush, plan, cheapest first; formRank is written
-//     out rather than read off the enum, because the enum's order is what an expanded hand ID is
-//     derived from and that is a rule. It sorts on form rather than category because category has
-//     two values now, and sorting by it would put nine cards in one undifferentiated block.
+//     between them. The panel that draws the deck left for deckpanel.go on 2026-08-22, because
+//     three screens want it; what stayed is the piles, which are a fact about a fight, and
+//     fightContents, which is the one place saying how three piles map onto the panel's two.
 //   - combat_hud.go — everything around the round: the two fighter cards, drawBox, and the
 //     discards badge. Both duelists are cards, in opposite top corners, each holding
 //     name / DMG / AP / Vitae over a health bar and a fraction. duelistCardRect and enemyCardRect

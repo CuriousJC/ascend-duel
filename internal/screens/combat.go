@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/decks"
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
@@ -337,7 +338,15 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// entered — see nextFight.
 	// The run says which room this is; the scene keeps a copy for the frame. See fightIndex.
 	s.fightIndex = gs.Run.Fight()
-	s.enemy = enemyFromRecord(gs, gs.Run.Enemy(), s.fightIndex)
+
+	// **A scenario may name who is standing in the room**, so an interaction can be looked at
+	// against a chosen enemy rather than whoever the climb dealt. Compiled out of every normal
+	// build; see internal/scenario.
+	enemyKey := gs.Run.Enemy()
+	if scenario.Active() && scenario.Enemy() != "" {
+		enemyKey = scenario.Enemy()
+	}
+	s.enemy = enemyFromRecord(gs, enemyKey, s.fightIndex)
 
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.

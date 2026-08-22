@@ -9,6 +9,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/music"
+	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -89,6 +90,14 @@ func main() {
 	//
 	// Built from the authored starting list. When a title-screen "New Run" arrives this moves
 	// there and becomes one line in that action instead.
+	// **A scenario dresses the run before it starts.** Compiled out unless `-tags scenario`, in
+	// which case this is the seat that puts a chosen set of rings on — `StartingRings` is the same
+	// debug seat a hand-edited list would use, so nothing new has to be able to force a worn row.
+	// See internal/scenario.
+	if scenario.Active() {
+		session.StartingRings = scenario.Rings()
+	}
+
 	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.RunSeed)
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a

@@ -2,11 +2,13 @@ package cards
 
 // Style is a card's geometry at one size.
 //
-// **A glyph cannot be made smaller.** systems.GlyphSize is 64 and CardGlyphScale is 1:
-// the art is authored at exactly the size it is displayed, and a fractional scale drops
-// pixels out of a rim that is one pixel thick. GlyphScale must stay a whole number, and 1
-// is already the floor. That makes 64 pixels the hard floor on a card that shows a glyph
-// at all — which is why Mini shows none.
+// **A *generated* glyph cannot be made smaller**, and that is still true: its rim is derived one
+// pixel thick, so a fractional scale drops pixels out of the only edge it has. GlyphScale must
+// stay a whole number and 1 is the floor.
+//
+// **Drawn art is the exception** *(2026-08-23)*, which is what lets Mini carry a form mark at all.
+// A painting has interior detail to average, so `systems.RenderGlyphAt` will halve one — and the
+// four form marks are drawings. See that function for the line between the two.
 type Style struct {
 	Width, Height int
 
@@ -16,8 +18,7 @@ type Style struct {
 	CornerRadius int
 	BorderWidth  int
 
-	// What this size is big enough to show. A Mini card is 59 pixels wide and cannot
-	// hold a 64-pixel glyph or legible text at any size, so it shows neither — see Mini.
+	// What this size is big enough to show.
 	ShowName bool
 	ShowForm bool
 
@@ -46,18 +47,16 @@ type Style struct {
 	NameWordPerLine bool
 	NameLinePitch   int
 
-	// The form mark, above the cost stack: the box it is centred in, and the point size the
-	// placeholder letter is set at.
+	// The form mark, above the cost stack: the box its art is centred in.
 	//
 	// **The box is a number here rather than `systems.SizeOf`** *(2026-08-15)*. It was, while the
 	// mark was a generated glyph and the glyph's own size was the authority — assuming one was
-	// how a 22-pixel shape got a 64-pixel hole. A letter has no intrinsic size, so the layout has
-	// to name the space it gets, and centring by ink means the letter fills it whatever the font
-	// does. When the forms get silhouettes, a glyph bigger than this box overflows it rather
-	// than resizing it, and the box is the one number to change.
-	FormTop        int
-	FormSize       int
-	FormLetterSize float64
+	// how a 22-pixel shape got a 64-pixel hole. The layout names the space instead, and centring
+	// by ink means the mark fills it whatever the drawing leaves as margin. A glyph bigger than
+	// this box overflows it rather than resizing it, so the box is the one number to change —
+	// see `systems.formArtSize`, which is the size the four marks are authored at to match.
+	FormTop  int
+	FormSize int
 
 	// The cost dashes, hamburger-style, below the category glyph.
 	//
@@ -243,9 +242,8 @@ var Hand = Style{
 	// S came out as a shape with its top-left quarter missing, which reads as a rendering fault
 	// rather than as a mark. The clip in blitGlyph still applies and is still what a glyph will
 	// want; this is the box moving, not the crop going.
-	FormTop:        8,
-	FormSize:       32,
-	FormLetterSize: 40,
+	FormTop:  8,
+	FormSize: 32,
 
 	DashLeft:   8,
 	DashTop:    48,
@@ -276,57 +274,81 @@ func (st Style) TextLines() int {
 	return (st.TextBandBottom - st.TextBandTop) / st.TextLineHeight
 }
 
-// Mini is the deck overlay's card: half the hand's size, kept to the same proportions.
+// Scaled is this style at a fraction of its size: every measurement multiplied by num/den,
+// every flag carried across unchanged.
 //
-// **Half of the new Hand since 2026-08-11** — 81x112, down from 90x132. `deckStackPitch` in
-// internal/screens came down with it, because the pitch is the width less the overlap and a
-// pitch wider than the card is a row with gaps in it.
+// **It exists so a smaller card is the same card** *(2026-08-23)*. Mini was authored by hand
+// beside Hand and drifted from it field by field — a name at 14 where half of 20 is 10, dashes
+// at 7x4 where half of 13x8 is 6x4, a form box left at the full 32 on a card half the size, and
+// a mark that consequently sat a third of the way down the face instead of in the corner. Every
+// one of those was defensible on its own and together they made the overlay a second design of a
+// card rather than a small copy of one. **The owner's call was that the deck panel shows exactly
+// the hand's card, only smaller**, and a derivation is the only way that stays true: a field
+// added to Hand now reaches Mini without anyone remembering to halve it.
 //
-// **It shows the name now, and that was the last thing missing.** The overlay's rows
-// group by element and the glyph and dashes give phase and cost, so the only fact a card
-// was not stating was which concept it is. At 14pt the longest name in the deck —
-// "Prepare" — measures 35 pixels against the usable width, so it was never a question of
-// room; it was a question of the cards being overlapped so tightly that only 29 pixels
-// showed. Widening the row (see deckStackPitch) is what made the space real.
+// **Rational rather than a float**, so the arithmetic is exact and reviewable: half of 224 is 112
+// and not 111.99. Rounding is to nearest, which is what keeps a 13px dash at 6 rather than at 7.
 //
-// The one thing still absent is the effect text, and that is forced: an 81-pixel card less a
-// cost column leaves about 55 pixels of measure, which is four or five characters a line at
-// any size legible here. What a card does is a function of the concept, so a named card
-// implies it — and the overlay is a list of what you own, not a place you play from.
-//
-// The reading order matches Hand deliberately — name centred across the top, then the
-// glyph, then the dashes under it — so the two sizes are the same card and not two
-// designs.
-var Mini = Style{
-	Width: 81, Height: 112,
+// **It is a geometry scale and cannot judge legibility.** Halving TextSize gives a real number
+// that a font may not be able to set readably; that is a question for whoever looks at the sheet,
+// not something this can decide. What it guarantees is proportion.
+func (st Style) Scaled(num, den int) Style {
+	i := func(v int) int {
+		if v == 0 {
+			return 0
+		}
+		// Rounded to nearest rather than truncated: a truncating scale walks every offset
+		// upward and to the left, so the whole face creeps off centre as the factor shrinks.
+		return (v*num*2 + den) / (den * 2)
+	}
+	f := func(v float64) float64 { return v * float64(num) / float64(den) }
 
-	CornerRadius: 6,
-	BorderWidth:  3,
+	out := st
+	out.Width, out.Height = i(st.Width), i(st.Height)
+	out.CornerRadius, out.BorderWidth = i(st.CornerRadius), i(st.BorderWidth)
 
-	ShowName: true,
-	ShowForm: true,
+	out.TextLeft, out.NameTop, out.NameSize = i(st.TextLeft), i(st.NameTop), f(st.NameSize)
+	out.NameLinePitch = i(st.NameLinePitch)
 
-	TextLeft:     8,
-	NameTop:      8,
-	NameSize:     14,
-	NameCentered: true,
+	out.FormTop, out.FormSize = i(st.FormTop), i(st.FormSize)
 
-	GlyphScale:     1,
-	GlyphInset:     8,
-	FormTop:        36,
-	FormSize:       32,
-	FormLetterSize: 34,
+	out.DashLeft, out.DashTop = i(st.DashLeft), i(st.DashTop)
+	out.DashWidth, out.DashHeight, out.DashGap = i(st.DashWidth), i(st.DashHeight), i(st.DashGap)
 
-	// 72 rather than 66, for the same reason Hand's moved: the drawn glyphs are 32 pixels
-	// and end at y=68. A mini card carries a 32px glyph without shrinking it, because
-	// GlyphScale is whole-number only and 1 is the floor — the overlay's cards are half
-	// size and their glyphs are not.
-	DashLeft:   8,
-	DashTop:    72,
-	DashWidth:  7,
-	DashHeight: 4,
-	DashGap:    3,
+	out.GlyphInset = i(st.GlyphInset)
+
+	out.TextColumnLeft, out.TextInset = i(st.TextColumnLeft), i(st.TextInset)
+	out.TextBandTop, out.TextBandBottom = i(st.TextBandTop), i(st.TextBandBottom)
+	out.TextSize, out.TextLineHeight = f(st.TextSize), i(st.TextLineHeight)
+
+	out.ArtTop, out.ArtInset, out.ArtMaxH = i(st.ArtTop), i(st.ArtInset), i(st.ArtMaxH)
+
+	out.StatsTop, out.StatRowPitch, out.StatSize = i(st.StatsTop), i(st.StatRowPitch), f(st.StatSize)
+
+	out.HealthBarInset, out.HealthBarTop = i(st.HealthBarInset), i(st.HealthBarTop)
+	out.HealthBarHeight, out.HealthTextTop = i(st.HealthBarHeight), i(st.HealthTextTop)
+	out.HealthTextSize = f(st.HealthTextSize)
+
+	out.EffectSize, out.EffectTop, out.EffectGap = i(st.EffectSize), i(st.EffectTop), i(st.EffectGap)
+
+	// GlyphScale is a whole-number pixel repeat, not a measurement. Scaling it would ask for a
+	// fractional repeat, which is the one thing a derived rim cannot survive.
+	return out
 }
+
+// Mini is the deck overlay's card: **Hand at exactly half size**, 81x112.
+//
+// **It is derived rather than authored** *(2026-08-23)*. See Scaled for what that fixed and why
+// the owner asked for it. The consequence to know: there is no longer a place to tune the small
+// card on its own. A change wanted here is a change to Hand, or it is a second field on Style —
+// which is the right cost, because the last version of this comment spent four paragraphs
+// explaining differences that turned out to be drift rather than design.
+//
+// **What half size does not fix is legibility, and one thing is genuinely marginal**: the effect
+// text lands at 9pt in a 64-pixel measure. The panel is a list of what you own rather than a
+// place cards are played from, so the name and the mark carry it; look at `tools/cardsheet`
+// before assuming the sentence can be read.
+var Mini = Hand.Scaled(1, 2)
 
 // Stack is the draw pile's card: a back, and nothing else, at the size the screen has room
 // for rather than at any proportion of Hand.

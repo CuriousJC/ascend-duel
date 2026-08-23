@@ -252,11 +252,23 @@ func TestAGlyphOffTheCornerDoesNotSquareTheCorner(t *testing.T) {
 	}
 }
 
-func TestMiniShowsEverythingButTheText(t *testing.T) {
-	// **What the overlay can say is set by what fits in the visible strip.** At a third
-	// size, 29 pixels showed and only dashes fit; at half with the row widened, 84 of the
-	// 90 show and the name, glyph and dashes all fit. This pins that, because the tempting
-	// regression is to re-tighten the pitch for a longer row and silently lose the name.
+func TestMiniIsHandAtHalfSize(t *testing.T) {
+	// **The whole of Mini's definition, pinned as one equality** *(2026-08-23)*. Mini used to be
+	// authored beside Hand and had drifted field by field — a full-size form box on a half-size
+	// card being the one that showed — so this replaces a list of individual assertions with the
+	// rule the owner actually asked for: the deck panel draws the hand's card, only smaller.
+	//
+	// A field added to Hand and forgotten here is now impossible rather than merely unlikely.
+	if got, want := Mini, Hand.Scaled(1, 2); got != want {
+		t.Errorf("Mini is not Hand at half size:\n got %+v\nwant %+v", got, want)
+	}
+}
+
+func TestMiniSaysWhatItNeedsToInsideTheVisibleStrip(t *testing.T) {
+	// **What the overlay can say is set by what fits in the visible strip**, because the rows
+	// overlap and only the left of each card shows. The name and the form mark are what identify
+	// a card here, so both have to land inside it; the tempting regression is to re-tighten the
+	// pitch for a longer row and silently lose one.
 	visible := deckVisibleWidth
 
 	if !Mini.ShowName {
@@ -271,14 +283,6 @@ func TestMiniShowsEverythingButTheText(t *testing.T) {
 	}
 	if dashRight := Mini.DashLeft + Mini.DashWidth; dashRight > visible {
 		t.Errorf("the dashes end at x=%d but only %d pixels show", dashRight, visible)
-	}
-
-	// The effect text is the one thing that does not fit. A mini card is 81 wide, and taking a
-	// cost column out of that leaves about 55 pixels of measure — four or five characters a
-	// line at any size legible on a card half this one's height.
-	if Mini.TextLineHeight > 0 {
-		t.Errorf("Mini claims to draw effect text; it has %dpx of measure to do it in",
-			Mini.Width-Mini.TextColumnLeft-Mini.TextInset)
 	}
 
 	// Every name in the deck has to fit the card at the size Mini asks for.
@@ -315,23 +319,6 @@ func TestMiniRendersEverythingInsideTheVisibleStrip(t *testing.T) {
 	if ink > 0 {
 		t.Errorf("%d pixels of content sit past x=%d, where the next card covers them",
 			ink, deckVisibleWidth)
-	}
-}
-
-func TestMiniIsHalfTheHandCard(t *testing.T) {
-	// Same proportions, half the size. The deck overlay's row arithmetic assumes it, and
-	// a mini card at a different aspect would read as a different object rather than a
-	// smaller one.
-	for _, c := range []struct {
-		name       string
-		mini, hand int
-	}{
-		{"width", Mini.Width, Hand.Width},
-		{"height", Mini.Height, Hand.Height},
-	} {
-		if want := c.hand / 2; c.mini != want {
-			t.Errorf("mini %s is %d, want %d (half of %d)", c.name, c.mini, want, c.hand)
-		}
 	}
 }
 
@@ -397,23 +384,24 @@ func TestFormMarkIsDrawnAndDiffers(t *testing.T) {
 	}
 }
 
-func TestEveryFormHasItsOwnLetter(t *testing.T) {
+func TestEveryFormHasItsOwnGlyph(t *testing.T) {
 	// The pixel test above would also catch this, slowly and by a hash. This says the actual
-	// rule: a form with no letter draws nothing, and two sharing one is the reason Slash is D.
-	seen := map[string]Form{}
+	// rule: every form has a mark, no two forms share one, and FormNone has none at all — a ring
+	// and both fighter cards belong to no form and the slot must stay empty for them.
+	seen := map[systems.GlyphKind]Form{}
 	for _, fam := range Forms() {
-		l := fam.Letter()
-		if l == "" {
-			t.Errorf("%s has no letter, so its corner would be blank", fam)
+		k, ok := fam.glyph()
+		if !ok {
+			t.Errorf("%s has no glyph, so its corner would be blank", fam)
 			continue
 		}
-		if prev, dup := seen[l]; dup {
-			t.Errorf("%s and %s both mark themselves %q", prev, fam, l)
+		if prev, dup := seen[k]; dup {
+			t.Errorf("%s and %s both mark themselves with glyph %d", prev, fam, k)
 		}
-		seen[l] = fam
+		seen[k] = fam
 	}
-	if got := FormNone.Letter(); got != "" {
-		t.Errorf("FormNone is marked %q; it must draw nothing", got)
+	if _, ok := FormNone.glyph(); ok {
+		t.Error("FormNone has a glyph; it must draw nothing")
 	}
 }
 
@@ -623,9 +611,6 @@ func TestTheFormMarkStaysCornerSized(t *testing.T) {
 		if st.FormSize < 16 || st.FormSize > systems.GlyphSize/2 {
 			t.Errorf("%s form box is %dpx, want between 16 and half of %d",
 				name, st.FormSize, systems.GlyphSize)
-		}
-		if st.FormLetterSize <= 0 {
-			t.Errorf("%s shows a form mark with no letter size, so it would draw nothing", name)
 		}
 	}
 }

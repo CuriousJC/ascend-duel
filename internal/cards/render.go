@@ -99,9 +99,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		drawArt(img, s, st)
 	}
 	if st.ShowForm {
-		if err := drawForm(img, s, st, f, ink); err != nil {
-			return nil, err
-		}
+		drawForm(img, s, st)
 	}
 
 	drawDashes(img, s, st, border)
@@ -259,71 +257,48 @@ func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.R
 
 func identity(c color.RGBA) color.RGBA { return c }
 
-// drawForm marks the card's form in the corner above the cost stack: an uppercase letter
-// today — S, D, C, P — and a silhouette once the forms have one.
+// drawForm marks the card's form in the corner above the cost stack: a spear, a sword, an axe
+// or a bulb, for stab, slash, crush and plan.
 //
 // **It replaced the phase glyph** *(2026-08-15)*. The sword, shield and open book named which
 // phase a card resolved in, and with the deck rebuilt on three attack forms that fact became
 // derivable from the form itself. What the corner says now is the thing a pair is counted on.
 //
-// **The letters are scaffolding and the glyph path is why they can be.** `Form.glyph()` returns
-// nothing for every form, so every card falls through to `Form.Letter()`; drawing the art
-// instead is one return value and no change here. See the comment on that method.
+// **The uppercase letters that stood here in the meantime went on 2026-08-23**, along with the
+// typesetting that placed them. They were scaffolding from the moment the phase glyphs left, and
+// the reason the slot could not keep them is that two forms shared an initial: Stab took the S
+// and Slash was marked D "for the draw of a blade", which is a legend, not a mark.
 //
 // **Placed by its ink, not by its canvas** *(2026-08-14)*. Every glyph is drawn on a square
 // canvas and none of them fills it: the sword's ink started 7 across and 9 down, the shield's 7
 // and 5, and each was a different size inside it. Anchoring the canvas therefore put three
-// different shapes in three different places from one pair of constants. A typeset letter is
-// worse again — a "C" and a "P" have different bearings and different heights — so the letter
-// goes through exactly the same centring.
+// different shapes in three different places from one pair of constants.
 //
 // **Its offsets may be negative, and blitGlyph crops to the card's curve** so a mark placed hard
 // into the corner cannot square it off.
-func drawForm(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA) color.RGBA) error {
-	if s.Form == FormNone || st.FormSize <= 0 {
-		return nil
+func drawForm(dst *image.RGBA, s Spec, st Style) {
+	if st.FormSize <= 0 {
+		return
+	}
+	kind, ok := s.Form.glyph()
+	if !ok {
+		return
 	}
 
 	box := image.Rect(st.GlyphInset, st.FormTop,
 		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
 
-	if kind, ok := s.Form.glyph(); ok {
-		glyph := systems.RenderGlyph(kind, systems.PaletteWhite)
-		at := placeInk(dst, glyph, box, st.GlyphScale, st)
-		if !s.Enabled && !at.Empty() {
-			// Glyphs carry a five-value palette that cannot be dimmed by choosing a duller ink,
-			// so a disabled card fades one in place. A letter needs none of that — it is drawn in
-			// the state's ink to begin with.
-			fadeRegion(dst, at, glyphDisabledToward)
-		}
-		return nil
+	// **At the box's size, not the art's** *(2026-08-23)*. The mark used to come back at whatever
+	// size it was authored at and be centred in whatever box the style named, which is how the
+	// overlay's half-size card ended up carrying a full-size mark. Drawn art can be halved; see
+	// systems.RenderGlyphAt for why a generated silhouette still cannot.
+	glyph := systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize)
+	at := placeInk(dst, glyph, box, st.GlyphScale, st)
+	if !s.Enabled && !at.Empty() {
+		// A mark carries its own colours rather than a state ink, so a disabled card fades one
+		// in place instead of choosing a duller one to draw it with.
+		fadeRegion(dst, at, glyphDisabledToward)
 	}
-
-	letter := s.Form.Letter()
-	if letter == "" || st.FormLetterSize <= 0 {
-		return nil
-	}
-	img, err := letterImage(f, st.FormLetterSize, letter, ink(NameInk), st.FormSize)
-	if err != nil {
-		return err
-	}
-	placeInk(dst, img, box, 1, st)
-	return nil
-}
-
-// letterImage typesets one character onto a transparent square, for placeInk to position.
-//
-// **The canvas is generous rather than tight**, because where a letter's ink lands inside a line
-// box is the font's business: an offset that fits "S" clips the descender off something else.
-// placeInk throws the margin away, so the only cost of being generous is a wider bounds scan on
-// an image the card cache renders once.
-func letterImage(f *Faces, size float64, s string, c color.RGBA, box int) (*image.RGBA, error) {
-	canvas := box * 3
-	img := image.NewRGBA(image.Rect(0, 0, canvas, canvas))
-	if err := drawText(img, f, size, s, box, box, c); err != nil {
-		return nil, err
-	}
-	return img, nil
 }
 
 // placeInk composites src so its *inked* bounds come out centred in box, clipped to the card's

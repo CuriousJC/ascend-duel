@@ -136,38 +136,27 @@ func Forms() []Form {
 	return []Form{FormStab, FormSlash, FormCrush, FormPlan}
 }
 
-// formLetters is what a card carries in its corner until the forms have art.
+// formGlyphs is the picture each form carries in the card's corner.
 //
-// **Slash is "D", not "S".** Stab took the S first and two forms sharing an initial would
-// leave the corner saying nothing — which is the one thing the slot may not do. D is for the
-// draw of a blade; it is a placeholder either way, and the letters go the moment glyphs land.
-var formLetters = [...]string{
-	FormNone:  "",
-	FormStab:  "S",
-	FormSlash: "D",
-	FormCrush: "C",
-	FormPlan:  "P",
+// **The four marks landed on 2026-08-23 and the letters went with them.** From the deck rework
+// until then a card wrote an uppercase S, D, C or P here, because the three category glyphs it
+// used to carry described phases a card no longer has. That was always a placeholder and it was
+// a poor one: Stab took the S, so Slash had to be marked D "for the draw of a blade", which is a
+// thing nobody can read off a card. A spear, a sword, an axe and a bulb say it without a legend.
+//
+// **FormNone is absent on purpose**, so the lookup below reports it as having no glyph — a ring
+// and both fighter cards belong to no form, and the slot has to stay empty for them.
+var formGlyphs = map[Form]systems.GlyphKind{
+	FormStab:  systems.GlyphFormStab,
+	FormSlash: systems.GlyphFormSlash,
+	FormCrush: systems.GlyphFormCrush,
+	FormPlan:  systems.GlyphFormPlan,
 }
 
-// Letter is the single uppercase character a form is marked with while it has no glyph.
-func (f Form) Letter() string {
-	if int(f) >= len(formLetters) {
-		return ""
-	}
-	return formLetters[f]
-}
-
-// glyph is the art for this form, and **no form has any yet** *(2026-08-15)*.
-//
-// The three category glyphs it used to return — sword, shield, open book — described phases that
-// no longer exist on a card. A stab, a slash and a crush want three silhouettes of their own and
-// those have not been drawn, so every form falls through to its Letter above.
-//
-// **The lookup stays rather than the letters becoming the design.** Returning a GlyphKind here is
-// the whole of what putting the art back costs; `systems.RenderGlyph` and the glyph sheet are
-// untouched and still hold the machinery.
+// glyph is the art for this form, and whether it has any.
 func (f Form) glyph() (systems.GlyphKind, bool) {
-	return 0, false
+	k, ok := formGlyphs[f]
+	return k, ok
 }
 
 // Surface is every card's face, whatever its element. One constant, deliberately: the

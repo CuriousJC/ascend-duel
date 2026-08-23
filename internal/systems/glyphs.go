@@ -96,6 +96,22 @@ const (
 	// second silhouette renderer would be the thing worth avoiding.
 	GlyphSound
 	GlyphMuted
+
+	// The four form marks a card carries in its corner: a spear, a sword, an axe, a bulb.
+	//
+	// **These replaced the uppercase letters on 2026-08-23.** A letter was always a
+	// placeholder — the deck rework took the three category glyphs away and left the corner
+	// with a fact and no picture — and it cost the corner its one job: Stab took the S, so
+	// Slash had to be marked D "for the draw of a blade", which is a legend rather than a mark.
+	//
+	// **Drawn rather than generated, and authored at 32.** The span language above describes a
+	// silhouette well and a spear's socket badly; and at 32 pixels the derived rim these would
+	// otherwise have got is exactly the one-pixel outline a downsample destroys, which is why
+	// they carry their own instead.
+	GlyphFormStab
+	GlyphFormSlash
+	GlyphFormCrush
+	GlyphFormPlan
 )
 
 // GlyphKinds is every glyph, in a fixed order. The contact sheet walks this rather than
@@ -105,6 +121,7 @@ func GlyphKinds() []GlyphKind {
 		GlyphDamage, GlyphActionPoints,
 		GlyphAttack, GlyphDefend, GlyphPrepare,
 		GlyphSound, GlyphMuted,
+		GlyphFormStab, GlyphFormSlash, GlyphFormCrush, GlyphFormPlan,
 	}
 }
 
@@ -445,8 +462,25 @@ type glyphArtwork struct {
 	// key is the assets.LoadImageData key, not a path. Same indirection as everywhere
 	// else: a file can be refiled without touching this.
 	key string
-	// size is the glyph's size on screen. It must divide artCanvas exactly.
+	// size is the glyph's size on screen. It must divide canvas exactly.
 	size int
+	// canvas is the size the file is authored at. **Zero means artCanvas**, so the Sherman
+	// pair reads as it always did.
+	//
+	// It exists because the halving described above is a property of art with interior detail
+	// to average, not a universal rule *(2026-08-23)*. The form marks are authored at their
+	// drawn size and must not be resampled at all: their outline is one pixel, and a 2x2
+	// average of half rim and half surface is a grey pixel where the shape's only edge was.
+	// Setting canvas equal to size gives a factor of one, which downsample returns untouched.
+	canvas int
+}
+
+// canvasOf is the size this artwork is authored at, defaulting to artCanvas.
+func (a glyphArtwork) canvasOf() int {
+	if a.canvas > 0 {
+		return a.canvas
+	}
+	return artCanvas
 }
 
 // artCanvas is the size the drawn glyphs are authored at.
@@ -458,9 +492,18 @@ const artCanvas = 64
 // TestLeftColumnDoesNotCollide fails rather than letting the stack overlap.
 const categoryArtSize = artCanvas / 2
 
+// formArtSize is the form marks' size, authored and drawn. It is Style.FormSize on both card
+// styles; a mark that did not match its box would be centred in a hole rather than filling one.
+const formArtSize = 32
+
 var glyphArt = map[GlyphKind]glyphArtwork{
 	GlyphAttack: {key: "shermansword_png", size: categoryArtSize},
 	GlyphDefend: {key: "shermanshield_png", size: categoryArtSize},
+
+	GlyphFormStab:  {key: "formstab_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormSlash: {key: "formslash_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormCrush: {key: "formcrush_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormPlan:  {key: "formplan_png", size: formArtSize, canvas: formArtSize},
 }
 
 // glyphCache holds rendered images, keyed by what was asked for. Building one walks a
@@ -490,14 +533,29 @@ func Glyph(kind GlyphKind, name PaletteName) *ebiten.Image {
 // contact-sheet tool in cmd/glyphsheet has no window. Keeping the renderer pure is what
 // lets the art be inspected without launching the game.
 func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
+	return RenderGlyphAt(kind, name, SizeOf(kind))
+}
+
+// RenderGlyphAt draws a glyph at a size the caller names.
+//
+// **Only drawn art can honour it, and that is the whole distinction** *(2026-08-23)*. A painting
+// carries interior detail, so halving it averages a block down to a pixel and the picture
+// survives; a generated silhouette's rim is derived one pixel thick and averaging it away is
+// exactly the failure the author-it-small rule exists for. A generated kind therefore ignores the
+// size and comes back at its own — a caller that gave it a smaller box gets a glyph that overflows
+// the box rather than a shape with its outline eaten, which is the honest failure of the two.
+//
+// The size must divide the art's canvas exactly, so 32 and 16 are what a 32px form mark offers.
+func RenderGlyphAt(kind GlyphKind, name PaletteName, size int) *image.RGBA {
 	if art, ok := glyphArt[kind]; ok {
-		return renderArt(kind, art)
+		return renderArt(kind, art, size)
 	}
 
 	pal := PaletteOf(name)
 	shp := glyphShapes[kind]
-	size := shp.canvas()
-	img := image.NewRGBA(image.Rect(0, 0, size, size))
+	// A generated glyph ignores the size asked for; see the note above.
+	canvas := shp.canvas()
+	img := image.NewRGBA(image.Rect(0, 0, canvas, canvas))
 
 	mask := map[image.Point]bool{}
 	for y, spans := range shp.fill {
@@ -558,7 +616,12 @@ func RenderGlyph(kind GlyphKind, name PaletteName) *image.RGBA {
 
 // artCache holds decoded and downsampled artwork. Decoding a PNG and averaging it down is
 // far more work than walking a silhouette, and neither depends on anything that changes.
-var artCache = map[GlyphKind]*image.RGBA{}
+type artKey struct {
+	kind GlyphKind
+	size int
+}
+
+var artCache = map[artKey]*image.RGBA{}
 
 // renderArt decodes a drawn glyph and halves it to the size the card wants.
 //
@@ -566,8 +629,9 @@ var artCache = map[GlyphKind]*image.RGBA{}
 // there is no runtime condition under which this can fail on one machine and not another —
 // it means the file is not a PNG, which is a build problem to fix and not a case to fall
 // back from with a blank corner on every attack card.
-func renderArt(kind GlyphKind, art glyphArtwork) *image.RGBA {
-	if img, ok := artCache[kind]; ok {
+func renderArt(kind GlyphKind, art glyphArtwork, size int) *image.RGBA {
+	key := artKey{kind, size}
+	if img, ok := artCache[key]; ok {
 		return img
 	}
 
@@ -586,16 +650,17 @@ func renderArt(kind GlyphKind, art glyphArtwork) *image.RGBA {
 	full := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
 	draw.Draw(full, full.Bounds(), src, b.Min, draw.Src)
 
-	if b.Dx() != artCanvas || b.Dy() != artCanvas {
-		log.Fatalf("glyph art %q is %dx%d, want %dx%d", art.key, b.Dx(), b.Dy(), artCanvas, artCanvas)
+	canvas := art.canvasOf()
+	if b.Dx() != canvas || b.Dy() != canvas {
+		log.Fatalf("glyph art %q is %dx%d, want %dx%d", art.key, b.Dx(), b.Dy(), canvas, canvas)
 	}
-	if art.size <= 0 || artCanvas%art.size != 0 {
+	if size <= 0 || canvas%size != 0 {
 		log.Fatalf("glyph art %q asks for %dpx, which does not divide the %dpx canvas",
-			art.key, art.size, artCanvas)
+			art.key, size, canvas)
 	}
 
-	img := downsample(full, artCanvas/art.size)
-	artCache[kind] = img
+	img := downsample(full, canvas/size)
+	artCache[key] = img
 	return img
 }
 

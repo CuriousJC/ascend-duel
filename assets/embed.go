@@ -51,6 +51,33 @@ var shermansword_png []byte
 //go:embed game/sherman-shield.png
 var shermanshield_png []byte
 
+// FORM MARKS
+//
+// The four form marks an action card carries in its corner — stab, slash, crush, plan.
+// Drawn as pixel art rather than described in code, for the reason the two Sherman glyphs
+// above are: a spear with a socket and a shoulder is a drawing, and the span language in
+// internal/systems/glyphs.go is a poor way to write one.
+//
+// **Authored at 32 and drawn at 32.** Unlike the Sherman pair these are not halved, because
+// their outline is one pixel: averaging a 2x2 block that is half rim and half surface turns a
+// black edge into a grey one, and at this size that edge is the whole of what holds the shape
+// against an off-white card. See glyphArtwork.canvas in internal/systems/glyphs.go.
+//
+// Provenance: cut down by the owner from a spritesheet authored for this game, so there is
+// nothing to clear and nothing to attribute to a third party.
+//
+//go:embed form/stab.png
+var formstab_png []byte
+
+//go:embed form/slash.png
+var formslash_png []byte
+
+//go:embed form/crush.png
+var formcrush_png []byte
+
+//go:embed form/plan.png
+var formplan_png []byte
+
 // CREATURES
 //
 // One portrait per enemy: the vendor's 2048x2048 facing portrait, cropped to its subject and
@@ -230,6 +257,13 @@ func LoadImageData() map[string][]byte {
 	// sheets can be built with no window.
 	images["shermansword_png"] = shermansword_png
 	images["shermanshield_png"] = shermanshield_png
+
+	// The four form marks, for the same reason again: internal/cards draws them into a card
+	// and has no graphics context.
+	images["formstab_png"] = formstab_png
+	images["formslash_png"] = formslash_png
+	images["formcrush_png"] = formcrush_png
+	images["formplan_png"] = formplan_png
 
 	// The enemy portraits, keyed by filename stem: `enemy/ogrewarlord-portrait.png` is
 	// `ogrewarlord-portrait`, which is what `data/enemies.json` writes in its Portrait

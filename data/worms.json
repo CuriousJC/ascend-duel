@@ -16,28 +16,28 @@
     "Name": "Ember Worm",
     "Target": "element",
     "Value": "fire",
-    "Text": "make one card FIRE"
+    "Text": "make one card\nFIRE"
   },
   {
     "WormRecord": "rime-worm",
     "Name": "Rime Worm",
     "Target": "element",
     "Value": "ice",
-    "Text": "make one card ICE"
+    "Text": "make one card\nICE"
   },
   {
     "WormRecord": "arc-worm",
     "Name": "Arc Worm",
     "Target": "element",
     "Value": "lightning",
-    "Text": "make one card BOLT"
+    "Text": "make one card\nLIGHTNING"
   },
   {
     "WormRecord": "loam-worm",
     "Name": "Loam Worm",
     "Target": "element",
     "Value": "earth",
-    "Text": "make one card EARTH"
+    "Text": "make one card\nEARTH"
   },
   {
     "WormRecord": "whetworm",

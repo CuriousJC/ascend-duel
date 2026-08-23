@@ -1,0 +1,654 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — card sheet</title>
+<style>
+  :root {
+    --ground: #323232;
+    --ink: #e8e8ea;
+    --dim: #9a9aa2;
+    --rule: #4a4a4a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--dim); font-weight: 600;
+    margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note {
+    color: var(--dim); font-size: 12.5px; max-width: 62ch;
+    margin: 12px 0 0;
+  }
+  .row { margin-top: 22px; }
+  .row-label {
+    color: var(--dim); font-size: 12px; letter-spacing: .04em;
+    margin-bottom: 10px;
+  }
+  .cells { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+   
+  .stack { display: flex; align-items: flex-start; padding-left: 4px; }
+  .stack img + img { margin-left: calc(var(--overlap) - 90px); }
+  .stack-label {
+    color: var(--dim); font-size: 12px; width: 90px; flex: none;
+    padding-top: 30px; text-align: right; padding-right: 14px;
+  }
+  .stack-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
+  figure { margin: 0; }
+   
+  img { display: block; image-rendering: pixelated; }
+  figcaption {
+    color: var(--dim); font-size: 11.5px; margin-top: 7px;
+    max-width: 180px;
+  }
+</style>
+
+<h1>Card sheet</h1>
+<p class="facts">
+  Hand card <code>162&times;224</code>,
+  corner radius <code>12</code>,
+  border <code>6</code>,
+  dashes <code>13&times;8</code>
+  on a <code>5</code> gap.
+  Shown at 1:1 on the combat screen's own background.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/cardsheet</code> and refresh. Every image here is
+  drawn by <code>internal/cards</code>, the same code the game blits, so what is on this
+  page is what the game draws.
+</p>
+
+<h2>Border colour &times; action-point cost</h2>
+
+  <div class="row">
+    <div class="row-label">basic</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="card-basic-ap1.png" width="162" height="224" alt="basic · 1 AP">
+          <figcaption>basic · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-basic-ap2.png" width="162" height="224" alt="basic · 2 AP">
+          <figcaption>basic · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-basic-ap3.png" width="162" height="224" alt="basic · 3 AP">
+          <figcaption>basic · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-basic-ap4.png" width="162" height="224" alt="basic · 4 AP">
+          <figcaption>basic · 4 AP</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">fire</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="card-fire-ap1.png" width="162" height="224" alt="fire · 1 AP">
+          <figcaption>fire · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-fire-ap2.png" width="162" height="224" alt="fire · 2 AP">
+          <figcaption>fire · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-fire-ap3.png" width="162" height="224" alt="fire · 3 AP">
+          <figcaption>fire · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-fire-ap4.png" width="162" height="224" alt="fire · 4 AP">
+          <figcaption>fire · 4 AP</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">ice</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="card-ice-ap1.png" width="162" height="224" alt="ice · 1 AP">
+          <figcaption>ice · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-ice-ap2.png" width="162" height="224" alt="ice · 2 AP">
+          <figcaption>ice · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-ice-ap3.png" width="162" height="224" alt="ice · 3 AP">
+          <figcaption>ice · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-ice-ap4.png" width="162" height="224" alt="ice · 4 AP">
+          <figcaption>ice · 4 AP</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">lightning</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="card-lightning-ap1.png" width="162" height="224" alt="lightning · 1 AP">
+          <figcaption>lightning · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-lightning-ap2.png" width="162" height="224" alt="lightning · 2 AP">
+          <figcaption>lightning · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-lightning-ap3.png" width="162" height="224" alt="lightning · 3 AP">
+          <figcaption>lightning · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-lightning-ap4.png" width="162" height="224" alt="lightning · 4 AP">
+          <figcaption>lightning · 4 AP</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">earth</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="card-earth-ap1.png" width="162" height="224" alt="earth · 1 AP">
+          <figcaption>earth · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-earth-ap2.png" width="162" height="224" alt="earth · 2 AP">
+          <figcaption>earth · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-earth-ap3.png" width="162" height="224" alt="earth · 3 AP">
+          <figcaption>earth · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="card-earth-ap4.png" width="162" height="224" alt="earth · 4 AP">
+          <figcaption>earth · 4 AP</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+
+<h2>Card state</h2>
+<p class="note">
+  State used to be carried by dimming the element-coloured surface. With the surface now
+  constant, it is the border moving toward that surface instead — away from it for
+  selected, toward it for disabled. Note that scaling a colour down (the usual rule) would
+  do the wrong thing here: on a light card a darker border reads as <em>louder</em>, not
+  quieter.
+</p>
+
+  <div class="row">
+    <div class="row-label">card state</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="state-enabled.png" width="162" height="224" alt="enabled — affordable, not queued">
+          <figcaption>enabled — affordable, not queued</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="state-selected.png" width="162" height="224" alt="selected — queued this round">
+          <figcaption>selected — queued this round</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="state-disabled.png" width="162" height="224" alt="disabled — cannot afford it">
+          <figcaption>disabled — cannot afford it</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+
+<h2>Form mark</h2>
+<p class="note">
+  The glyph sits in the top-left corner, cropped by the card's own curve, and
+  <em>replaced the category word</em> that used to run under the name. Attack reuses the same
+  sword the damage badge was drawn from — the badge is gone, so on a card this is now the only
+  sword there is.
+</p>
+
+  <div class="row">
+    <div class="row-label">form mark</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="form-stab.png" width="162" height="224" alt="stab — the letter &#34;S&#34;, pending a glyph">
+          <figcaption>stab — the letter &#34;S&#34;, pending a glyph</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="form-slash.png" width="162" height="224" alt="slash — the letter &#34;D&#34;, pending a glyph">
+          <figcaption>slash — the letter &#34;D&#34;, pending a glyph</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="form-crush.png" width="162" height="224" alt="crush — the letter &#34;C&#34;, pending a glyph">
+          <figcaption>crush — the letter &#34;C&#34;, pending a glyph</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="form-plan.png" width="162" height="224" alt="plan — the letter &#34;P&#34;, pending a glyph">
+          <figcaption>plan — the letter &#34;P&#34;, pending a glyph</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+
+<h2>Real cards</h2>
+<p class="note">
+  The two grids above hold the card constant, which hides the things that only go wrong on
+  a specific card: a long name against the cost dashes, and a card with no damage leaving
+  the glyph column empty.
+</p>
+
+  <div class="row">
+    <div class="row-label">real cards</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="shape-Jab.png" width="162" height="224" alt="Jab · stab · 1 AP">
+          <figcaption>Jab · stab · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Thrust.png" width="162" height="224" alt="Thrust · stab · 2 AP">
+          <figcaption>Thrust · stab · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Lunge.png" width="162" height="224" alt="Lunge · stab · 3 AP">
+          <figcaption>Lunge · stab · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Cut.png" width="162" height="224" alt="Cut · slash · 1 AP">
+          <figcaption>Cut · slash · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Slash.png" width="162" height="224" alt="Slash · slash · 2 AP">
+          <figcaption>Slash · slash · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Cleave.png" width="162" height="224" alt="Cleave · slash · 3 AP">
+          <figcaption>Cleave · slash · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Bash.png" width="162" height="224" alt="Bash · crush · 1 AP">
+          <figcaption>Bash · crush · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Strike.png" width="162" height="224" alt="Strike · crush · 2 AP">
+          <figcaption>Strike · crush · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Smash.png" width="162" height="224" alt="Smash · crush · 3 AP">
+          <figcaption>Smash · crush · 3 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Prepare.png" width="162" height="224" alt="Prepare · plan · 1 AP">
+          <figcaption>Prepare · plan · 1 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Plan.png" width="162" height="224" alt="Plan · plan · 2 AP">
+          <figcaption>Plan · plan · 2 AP</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="shape-Defend.png" width="162" height="224" alt="Defend · plan · 3 AP">
+          <figcaption>Defend · plan · 3 AP</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+
+<h2>The back</h2>
+<p class="note">
+  What the draw pile is a stack of, and what a card shows through the first half of a flip.
+  <strong>The same silhouette as a face</strong> &mdash; same footprint, same corner radius
+  &mdash; because these are one object seen from two sides; the face on the right is there to
+  check that against. No border, because the border is where the element is said and a back
+  that carried one would be naming the card underneath it. The mark is sized as a proportion
+  of the card rather than from <code>Style</code>, so both sizes are the same drawing.
+</p>
+
+  <div class="row">
+    <div class="row-label">card back</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="back-triangle-hand.png" width="162" height="224" alt="triangle — hand size">
+          <figcaption>triangle — hand size</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="back-diamond-hand.png" width="162" height="224" alt="diamond — hand size">
+          <figcaption>diamond — hand size</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="back-chevron-hand.png" width="162" height="224" alt="chevron — hand size">
+          <figcaption>chevron — hand size</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="back-triangle-stack.png" width="40" height="54" alt="triangle — draw pile">
+          <figcaption>triangle — draw pile</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="back-diamond-stack.png" width="40" height="54" alt="diamond — draw pile">
+          <figcaption>diamond — draw pile</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="back-chevron-stack.png" width="40" height="54" alt="chevron — draw pile">
+          <figcaption>chevron — draw pile</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="back-face.png" width="162" height="224" alt="a face, for the silhouette">
+          <figcaption>a face, for the silhouette</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+
+<h2>Deck overlay — half size, stacked</h2>
+<p class="note">
+  One row per element, twelve concepts each: the whole 60-card deck, which the old 8&times;3
+  grid of half-size cards could not do — it held 24 and printed &ldquo;+N more not
+  shown&rdquo; on every look. <strong>A third-size card shows no glyph and no text</strong>,
+  and that is forced rather than chosen: 64-pixel art cannot be scaled to fit 59 pixels
+  without destroying a one-pixel rim, and text at a third size is unreadable. What survives
+  is the border colour and the count of dashes, so a row says how many of an element you
+  hold and at what costs &mdash; but no longer <em>which concepts</em>. That is the real
+  loss and the thing to judge here.
+</p>
+
+  <div class="stack-row">
+    <div class="stack-label">basic</div>
+    <div class="stack" style="--overlap: 75px">
+      
+        <img src="mini-basic-Jab.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Thrust.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Lunge.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Cut.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Slash.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Cleave.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Bash.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Strike.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Smash.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Prepare.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Plan.png" width="81" height="112" alt="">
+      
+        <img src="mini-basic-Defend.png" width="81" height="112" alt="">
+      
+    </div>
+  </div>
+
+  <div class="stack-row">
+    <div class="stack-label">fire</div>
+    <div class="stack" style="--overlap: 75px">
+      
+        <img src="mini-fire-Jab.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Thrust.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Lunge.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Cut.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Slash.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Cleave.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Bash.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Strike.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Smash.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Prepare.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Plan.png" width="81" height="112" alt="">
+      
+        <img src="mini-fire-Defend.png" width="81" height="112" alt="">
+      
+    </div>
+  </div>
+
+  <div class="stack-row">
+    <div class="stack-label">ice</div>
+    <div class="stack" style="--overlap: 75px">
+      
+        <img src="mini-ice-Jab.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Thrust.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Lunge.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Cut.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Slash.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Cleave.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Bash.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Strike.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Smash.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Prepare.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Plan.png" width="81" height="112" alt="">
+      
+        <img src="mini-ice-Defend.png" width="81" height="112" alt="">
+      
+    </div>
+  </div>
+
+  <div class="stack-row">
+    <div class="stack-label">lightning</div>
+    <div class="stack" style="--overlap: 75px">
+      
+        <img src="mini-lightning-Jab.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Thrust.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Lunge.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Cut.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Slash.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Cleave.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Bash.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Strike.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Smash.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Prepare.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Plan.png" width="81" height="112" alt="">
+      
+        <img src="mini-lightning-Defend.png" width="81" height="112" alt="">
+      
+    </div>
+  </div>
+
+  <div class="stack-row">
+    <div class="stack-label">earth</div>
+    <div class="stack" style="--overlap: 75px">
+      
+        <img src="mini-earth-Jab.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Thrust.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Lunge.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Cut.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Slash.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Cleave.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Bash.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Strike.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Smash.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Prepare.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Plan.png" width="81" height="112" alt="">
+      
+        <img src="mini-earth-Defend.png" width="81" height="112" alt="">
+      
+    </div>
+  </div>
+
+
+<h2>Rings — the same format, pink border</h2>
+<p class="note">
+  Same footprint, corners and border treatment as a card, so the two read as one game. No
+  cost dashes, no category glyph, no effect text: a ring is not played from a hand and has
+  no phase. <strong>Not wired into the game</strong> &mdash; nothing builds one of these yet.
+</p>
+<p class="note">
+  The artwork is <code>assets/fire-ring.png</code> &mdash; the one thing on this page that is
+  not generated, and first-party work, so it ships without a licence question. Only the
+  sheets prefixed <code>tyrian_</code> come from the Tyrian set that CLAUDE.md names as a
+  release blocker; this is not one of them.
+</p>
+
+  <div class="row">
+    <div class="row-label">rings — same format, pink border</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="ring-Fire-false.png" width="162" height="224" alt="Fire — at rest">
+          <figcaption>Fire — at rest</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="ring-Fire-true.png" width="162" height="224" alt="Fire — being dragged">
+          <figcaption>Fire — being dragged</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">enemies — portrait, name, health</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="enemy-Giant%20Rat.png" width="162" height="224" alt="Giant Rat — 50/50">
+          <figcaption>Giant Rat — 50/50</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="enemy-Dragonfly.png" width="162" height="224" alt="Dragonfly — 33/60">
+          <figcaption>Dragonfly — 33/60</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="enemy-Ogre%20Warlord.png" width="162" height="224" alt="Ogre Warlord — 4/160">
+          <figcaption>Ogre Warlord — 4/160</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="enemy-Bio-Titan%20Omega.png" width="162" height="224" alt="Bio-Titan Omega — 137/200">
+          <figcaption>Bio-Titan Omega — 137/200</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">duelists — name, figures, health</div>
+    <div class="cells">
+      
+        <figure>
+          <img src="duelist-Duelist-120.png" width="162" height="224" alt="Duelist — 120/120">
+          <figcaption>Duelist — 120/120</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="duelist-Duelist-74.png" width="162" height="224" alt="Duelist — 74/120">
+          <figcaption>Duelist — 74/120</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="duelist-Stormcaller-96.png" width="162" height="224" alt="Stormcaller — 96/180">
+          <figcaption>Stormcaller — 96/180</figcaption>
+        </figure>
+      
+        <figure>
+          <img src="duelist-Duelist-6.png" width="162" height="224" alt="Duelist — 6/120">
+          <figcaption>Duelist — 6/120</figcaption>
+        </figure>
+      
+    </div>
+  </div>
+

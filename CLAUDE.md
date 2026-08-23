@@ -113,11 +113,27 @@ ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .   # a named one
 go run ./tools/balance      # what all 96 enemies do to the fighter, one line each
 go run ./tools/balance -v OgreWarlord   # one enemy, round by round
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
+go run ./tools/sheets       # regenerate every review sheet and the index that links them
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
 go run ./tools/ringsheet    # every ring to PNGs + a page grouped by rarity: art, price, text, rules
+go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it changes about a card
+go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by ascending multiplier
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
+
+**The four sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
+there rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone
+opens to see every card, ring, worm and hand in the game. That reverses the older rule that a
+regenerated artefact is not worth committing: the argument it left out is the audience, since a
+sheet needing a Go toolchain and four remembered commands is a sheet only ever seen by whoever
+just changed the thing it shows.
+
+**The cost is history weight, so regenerate deliberately.** About 1.7 MB across 150 binary files
+is rewritten by a full run, and a sheet rebuilt in a commit that changed nothing about it is pure
+weight. **`go run ./tools/sheets` is the one command** — it runs all four and rewrites the index,
+because four commands remembered in the right order is how three end up current and one ends up
+lying. A stale sheet is worse than none: it is a picture of a catalogue that no longer exists.
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
 holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-plans` — so a
@@ -478,6 +494,13 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   `TestEveryCardTextFitsItsBand` on a string that wraps past the band;
   `TestLeftColumnDoesNotCollide` and `TestTheCostColumnStaysOutOfTheTextColumn` hold the column
   against its neighbours.
+- **A `\n` in effect text is an authored line break** *(2026-08-23)*, honoured by
+  `cards.WrapText` before the width is measured, and split back into lines by the tooltip.
+  It exists because width-wrapping cannot make a *set* of cards break in the same place: the
+  four elemental worms differ only in the element they name, and `FIRE` sits comfortably on
+  the line where `LIGHTNING` all but fills it, so left to the measurer the four read as four
+  layouts of one card. **A break can only ever add a line** — an authored line too wide for
+  the band still wraps — so it is not a way past the column.
 - **A glyph may be placed at a negative offset** to hang off an edge. `blitGlyph` clips it to
   the rounded silhouette via `insideRounded`, and `fadeRegion` skips transparent pixels — both
   so a corner glyph cannot fill in the transparent corner and square the card off.
@@ -610,6 +633,17 @@ shelf offers three, so seeing forty-six in a launched game means playing to a sh
 over. The sheet draws each with its price, its authored `Text` and its rules side by side —
 which is also the only place the sentence a player reads can be checked against the rules that
 actually fire.
+
+**`tools/wormsheet` and `tools/handsheet` are the same idea on the other two catalogues**
+*(2026-08-23)*. A worm is offered two at a time after a won fight, so the whole catalogue is five
+fights away; the sheet draws all ten grouped by what each one changes about a card, with the
+authored `Text` against the rule that fires, exactly as the ring sheet does. The hand sheet draws
+every rung of the ladder as an *actual hand of real cards* — cheapest set the shipping deck can
+form — ordered by ascending multiplier across all three axes at once, which is the comparison
+`hands.json`'s axis-by-axis layout hides. **It does not sample**: the AP figure beside a rung is
+what the cheapest copy costs once you hold the cards, and how often you hold them is
+`tools/handodds`. Two tools reporting the same probability by different methods would be two
+numbers that can disagree.
 
 **It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
 the whole pricing decision — a ring is rebalanced by moving it, never by writing a number — so the

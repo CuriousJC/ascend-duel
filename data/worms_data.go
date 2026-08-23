@@ -50,6 +50,13 @@ type WormData struct {
 
 	// Text is what the card says it does, in the same clipped register the action cards use —
 	// the column is about a dozen characters wide.
+	//
+	// **A `\n` is an authored line break** *(2026-08-23)*, honoured by `cards.WrapText` before the
+	// width is measured and split back into lines by the tooltip. The four elemental worms carry
+	// one, because they differ only in the element they name and FIRE sits comfortably on the line
+	// where LIGHTNING all but fills it — so left to the measurer the four read as four layouts of
+	// the same card. A break is the author saying where it goes; it can only ever add a line,
+	// since a too-wide authored line still wraps.
 	Text string `json:"Text"`
 }
 

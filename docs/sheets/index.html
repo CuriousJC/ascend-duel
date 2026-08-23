@@ -1,0 +1,64 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — review sheets</title>
+<style>
+  :root { --ground: #e2d0b0; --ink: #2c2822; --dim: #6b6355; --rule: #c4b294; --panel: #ede0c8; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 28px 64px; background: var(--ground); color: var(--ink);
+    font: 15px/1.6 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 6px; font-weight: 600; }
+  p.note { color: var(--dim); font-size: 13px; margin: 0 0 6px; }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px 18px; margin-top: 14px;
+  }
+  a.card:hover { border-color: var(--ink); }
+  a.card .title { font-size: 17px; font-weight: 600; }
+  a.card .blurb { color: var(--dim); font-size: 13.5px; margin-top: 4px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+</style>
+
+<div class="wrap">
+  <h1>Review sheets</h1>
+  <p class="note">
+    Generated pictures of what the game's catalogues actually hold. They are committed, so this
+    page opens from a bare clone with no Go toolchain — but that also means they are only as
+    current as the last run of <code>go run ./tools/sheets</code>. Regenerate after changing a
+    catalogue, and not otherwise.
+  </p>
+  <p class="note">
+    Every card on every sheet is drawn by <code>internal/cards</code>, the same code the game
+    blits, so a sheet cannot show a card the game would draw differently.
+  </p>
+
+  
+    <a class="card" href="cardsheet/index.html">
+      <div class="title">Card sheet</div>
+      <div class="blurb">Every card variation, plus the backs, the states and the deck rows. **A drawing-board rather than a report** — it writes its own contents out, so it can show cards the rules cannot deal yet.</div>
+    </a>
+  
+    <a class="card" href="ringsheet/index.html">
+      <div class="title">Ring sheet</div>
+      <div class="blurb">Every ring, grouped by rarity, with its price, the sentence it prints and the rules that actually fire side by side. The only place the authored line and the rule can be read against each other.</div>
+    </a>
+  
+    <a class="card" href="wormsheet/index.html">
+      <div class="title">Worm sheet</div>
+      <div class="blurb">Every worm, grouped by what it changes about a card. Two are offered after a won fight, so this is the whole catalogue a run sees a fifth of.</div>
+    </a>
+  
+    <a class="card" href="handsheet/index.html">
+      <div class="title">Hand sheet</div>
+      <div class="blurb">Every rung of the hand ladder drawn as an actual hand of real cards, ordered by multiplier across all three axes at once — which is the comparison hands.json&#39;s axis-by-axis layout hides.</div>
+    </a>
+  
+
+  <a class="card" href="../../tools/glyphsheet/glyphs.png">
+    <div class="title">Glyph sheet</div>
+    <div class="blurb">Every generated glyph by every palette, drawn at the scale a card uses it and again enlarged. One committed PNG, so a change to a silhouette shows up in review as a picture.</div>
+  </a>
+</div>

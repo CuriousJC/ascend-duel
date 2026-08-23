@@ -81,6 +81,7 @@ func main() {
 	g.GlobalState.FontData = assets.LoadFontData()
 	g.GlobalState.ImageData = assets.LoadImageData()
 	g.GlobalState.Enemies = data.LoadEnemies()
+	g.GlobalState.Bosses = data.LoadBosses()
 	g.GlobalState.Duelists = data.LoadDuelists()
 	g.GlobalState.Rings = data.LoadRings()
 
@@ -99,7 +100,7 @@ func main() {
 		session.StartingRings = scenario.Rings()
 	}
 
-	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.RunSeed)
+	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.Bosses, g.GlobalState.RunSeed)
 
 	// **A scenario may also open the game somewhere other than the first duel** *(2026-08-22)*.
 	// The run is put in the named room with the named purse, and the phase it lands on decides

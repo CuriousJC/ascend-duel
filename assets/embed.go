@@ -106,6 +106,17 @@ var formplan_png []byte
 //go:embed enemy/*-portrait.png
 var portraits embed.FS
 
+// The thirty boss portraits, globbed for the same reason and keyed the same way — the stem,
+// so `boss/bayaz-boss.png` is `bayaz-boss`, which is what `data/bosses.json` writes in its
+// Portrait field. **The `-boss` suffix is what keeps the two families out of each other's key
+// space**: the map is flat, and a boss called `Sentry` beside a creature portrait of the same
+// name would otherwise be one lookup with two answers.
+//
+// Their provenance is the same PVGames bundle as the creature portraits.
+//
+//go:embed boss/*-boss.png
+var bossPortraits embed.FS
+
 //go:embed ring/fire-ring.png
 var firering_png []byte
 
@@ -280,6 +291,19 @@ func LoadImageData() map[string][]byte {
 		raw, err := portraits.ReadFile("enemy/" + e.Name())
 		if err != nil {
 			log.Fatal("failed to read embedded portrait: ", err)
+		}
+		images[strings.TrimSuffix(e.Name(), ".png")] = raw
+	}
+
+	// The boss portraits, read the same way out of their own directory.
+	bosses, err := bossPortraits.ReadDir("boss")
+	if err != nil {
+		log.Fatal("failed to read the embedded boss portraits: ", err)
+	}
+	for _, e := range bosses {
+		raw, err := bossPortraits.ReadFile("boss/" + e.Name())
+		if err != nil {
+			log.Fatal("failed to read embedded boss portrait: ", err)
 		}
 		images[strings.TrimSuffix(e.Name(), ".png")] = raw
 	}

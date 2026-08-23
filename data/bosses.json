@@ -1,0 +1,1502 @@
+[
+  {
+    "BossRecord": "Jerry",
+    "Name": "Jerry the Toll-Taker",
+    "Portrait": "jerry-boss",
+    "DMG": 11,
+    "Actions": 6,
+    "HP": 200,
+    "Floor": 1,
+    "AvailableAffixes": [
+      "earth",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Shove",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Cudgel",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Toll",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Collector's Due",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Braced",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Sam",
+    "Name": "Sam of the Low Steps",
+    "Portrait": "sam-boss",
+    "DMG": 11,
+    "Actions": 6,
+    "HP": 200,
+    "Floor": 1,
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Prod",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Hook",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Haul Down",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Step Toll",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Set Feet",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Dodge",
+    "Name": "Dodge the Cutpurse",
+    "Portrait": "dodge-boss",
+    "DMG": 11,
+    "Actions": 6,
+    "HP": 200,
+    "Floor": 1,
+    "AvailableAffixes": [
+      "ice",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Nick",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Slit",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Backstab",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Purse Cut",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Slip Aside",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Callie",
+    "Name": "Callie of the First Gate",
+    "Portrait": "callie-boss",
+    "DMG": 11,
+    "Actions": 6,
+    "HP": 200,
+    "Floor": 1,
+    "AvailableAffixes": [
+      "fire",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Rap",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Gate Bar",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Portcullis",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Gate Slam",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Shutter",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Boris",
+    "Name": "Boris the Stairbreaker",
+    "Portrait": "boris-boss",
+    "DMG": 13,
+    "Actions": 6,
+    "HP": 280,
+    "Floor": 2,
+    "AvailableAffixes": [
+      "earth",
+      "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Stomp",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Maul",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Stair Break",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Landslide",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Hunker",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Troy",
+    "Name": "Troy the Watchman",
+    "Portrait": "troy-boss",
+    "DMG": 13,
+    "Actions": 6,
+    "HP": 280,
+    "Floor": 2,
+    "AvailableAffixes": [
+      "ice",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Baton",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Lantern Swing",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Watch Call",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Night Sweep",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Shield Wall",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Harrold",
+    "Name": "Harrold the Hoarder",
+    "Portrait": "harrold-boss",
+    "DMG": 13,
+    "Actions": 6,
+    "HP": 280,
+    "Floor": 2,
+    "AvailableAffixes": [
+      "earth",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Clout",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Hoard Fling",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Coin Storm",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Miser's Grip",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Barricade",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Jack",
+    "Name": "Jack of the Second Bell",
+    "Portrait": "jack-boss",
+    "DMG": 13,
+    "Actions": 6,
+    "HP": 280,
+    "Floor": 2,
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Clapper",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Bell Toll",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Peal",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Second Bell",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Muffle",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Aimee",
+    "Name": "Aimee the Bloodletter",
+    "Portrait": "aimee-boss",
+    "DMG": 16,
+    "Actions": 6,
+    "HP": 360,
+    "Floor": 3,
+    "AvailableAffixes": [
+      "fire",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Lance",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Open Vein",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Bleed Out",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Red Harvest",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Staunch",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Charles",
+    "Name": "Charles the Warden",
+    "Portrait": "charles-boss",
+    "DMG": 16,
+    "Actions": 6,
+    "HP": 360,
+    "Floor": 3,
+    "AvailableAffixes": [
+      "earth",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Truncheon",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Iron Bar",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Lockdown",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Warden's Word",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Cell Door",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Duke",
+    "Name": "Duke of the Third Landing",
+    "Portrait": "duke-boss",
+    "DMG": 16,
+    "Actions": 6,
+    "HP": 360,
+    "Floor": 3,
+    "AvailableAffixes": [
+      "fire",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Riposte",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Rapier",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Duelling Thrust",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Noble Right",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Parry",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Meglan",
+    "Name": "Meglan the Hexwright",
+    "Portrait": "meglan-boss",
+    "DMG": 16,
+    "Actions": 6,
+    "HP": 360,
+    "Floor": 3,
+    "AvailableAffixes": [
+      "ice",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Sigil",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Hexbolt",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Witherbrand",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Written Curse",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Ward",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Lanton",
+    "Name": "Lanton the Pyre-Keeper",
+    "Portrait": "lanton-boss",
+    "DMG": 19,
+    "Actions": 6,
+    "HP": 450,
+    "Floor": 4,
+    "AvailableAffixes": [
+      "fire",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Ember",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Brand",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Pyre",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Ashfall",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Smother",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Pallant",
+    "Name": "Pallant the Pale",
+    "Portrait": "pallant-boss",
+    "DMG": 19,
+    "Actions": 6,
+    "HP": 450,
+    "Floor": 4,
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Chill Touch",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Frost Grip",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Killing Cold",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Pale Hour",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Rimeguard",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Rockard",
+    "Name": "Rockard the Unmoved",
+    "Portrait": "rockard-boss",
+    "DMG": 19,
+    "Actions": 6,
+    "HP": 450,
+    "Floor": 4,
+    "AvailableAffixes": [
+      "earth",
+      "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Knuckle",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Boulder",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Avalanche",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Unmoving",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Stonehide",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Sentry",
+    "Name": "The Fourth Sentry",
+    "Portrait": "sentry-boss",
+    "DMG": 19,
+    "Actions": 6,
+    "HP": 450,
+    "Floor": 4,
+    "AvailableAffixes": [
+      "lightning",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Pike Jab",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Halberd",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Execution",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Standing Order",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Lock Ranks",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Anndal",
+    "Name": "Anndal the Stormcaller",
+    "Portrait": "anndal-boss",
+    "DMG": 22,
+    "Actions": 6,
+    "HP": 540,
+    "Floor": 5,
+    "AvailableAffixes": [
+      "lightning",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Spark",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Arc",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Thunderhead",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Called Storm",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Earth Line",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Feld",
+    "Name": "Feld the Grave-Digger",
+    "Portrait": "feld-boss",
+    "DMG": 22,
+    "Actions": 6,
+    "HP": 540,
+    "Floor": 5,
+    "AvailableAffixes": [
+      "earth",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Spade",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Grave Cut",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Six Feet",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Last Rites",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Packed Dirt",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Thera",
+    "Name": "Thera of the Thorn",
+    "Portrait": "thera-boss",
+    "DMG": 22,
+    "Actions": 6,
+    "HP": 540,
+    "Floor": 5,
+    "AvailableAffixes": [
+      "earth",
+      "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Barb",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Bramble Lash",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Thornfall",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Briar Crown",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Thicket",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Raul",
+    "Name": "Raul the Flensing Blade",
+    "Portrait": "raul-boss",
+    "DMG": 22,
+    "Actions": 6,
+    "HP": 540,
+    "Floor": 5,
+    "AvailableAffixes": [
+      "fire",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Skinner",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Flense",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Carve",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Blade Storm",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Turned Edge",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Gideon",
+    "Name": "Gideon the Oathbreaker",
+    "Portrait": "gideon-boss",
+    "DMG": 26,
+    "Actions": 6,
+    "HP": 640,
+    "Floor": 6,
+    "AvailableAffixes": [
+      "fire",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Broken Word",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Oath Cut",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Perjury",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Sworn Ruin",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Recant",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Mangat",
+    "Name": "Mangat the Bonebinder",
+    "Portrait": "mangat-boss",
+    "DMG": 26,
+    "Actions": 6,
+    "HP": 640,
+    "Floor": 6,
+    "AvailableAffixes": [
+      "ice",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Rib Snap",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Bone Whip",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Marrow Draw",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Bound Bones",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Ossify",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Shen",
+    "Name": "Shen of the Still Blade",
+    "Portrait": "shen-boss",
+    "DMG": 26,
+    "Actions": 6,
+    "HP": 640,
+    "Floor": 6,
+    "AvailableAffixes": [
+      "ice",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Draw Cut",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Still Blade",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Iai",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "One Stroke",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "No Stance",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Zither",
+    "Name": "Zither the Discordant",
+    "Portrait": "zither-boss",
+    "DMG": 26,
+    "Actions": 6,
+    "HP": 640,
+    "Floor": 6,
+    "AvailableAffixes": [
+      "lightning",
+      "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Pluck",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Dissonance",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Shattering Chord",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Final Note",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Damping",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Feyd",
+    "Name": "Feyd the Serpent Prince",
+    "Portrait": "feyd-boss",
+    "DMG": 30,
+    "Actions": 6,
+    "HP": 740,
+    "Floor": 7,
+    "AvailableAffixes": [
+      "fire",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Fang",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Coil",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Venom Strike",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Prince's Poison",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Scale Guard",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Neytiri",
+    "Name": "Neytiri the Skyhunter",
+    "Portrait": "neytiri-boss",
+    "DMG": 30,
+    "Actions": 6,
+    "HP": 740,
+    "Floor": 7,
+    "AvailableAffixes": [
+      "lightning",
+      "ice"
+    ],
+    "Cards": [
+      {
+        "Label": "Loose Arrow",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Diving Shot",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Skyfall",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Hunter's Mark",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Windbreak",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Zeran",
+    "Name": "Zeran the Voidtouched",
+    "Portrait": "zeran-boss",
+    "DMG": 30,
+    "Actions": 6,
+    "HP": 740,
+    "Floor": 7,
+    "AvailableAffixes": [
+      "ice",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Rift",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Unmaking",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Collapse",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Void Bloom",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Fold Space",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Bayaz",
+    "Name": "Bayaz, First of the Magi",
+    "Portrait": "bayaz-boss",
+    "DMG": 35,
+    "Actions": 6,
+    "HP": 860,
+    "Floor": 8,
+    "AvailableAffixes": [
+      "fire",
+      "lightning"
+    ],
+    "Cards": [
+      {
+        "Label": "Whisper",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Art of Making",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Divine Fire",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "The Seed",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Warded Circle",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Maw",
+    "Name": "The Maw",
+    "Portrait": "maw-boss",
+    "DMG": 35,
+    "Actions": 6,
+    "HP": 860,
+    "Floor": 8,
+    "AvailableAffixes": [
+      "earth",
+      "fire"
+    ],
+    "Cards": [
+      {
+        "Label": "Gnash",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Swallow",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Devour",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "All-Consuming",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "Gorge",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  },
+  {
+    "BossRecord": "Zaheel",
+    "Name": "Zaheel the Crownless",
+    "Portrait": "zaheel-boss",
+    "DMG": 35,
+    "Actions": 6,
+    "HP": 860,
+    "Floor": 8,
+    "AvailableAffixes": [
+      "fire",
+      "earth"
+    ],
+    "Cards": [
+      {
+        "Label": "Sceptre",
+        "Verb": "attack",
+        "Amount": 60,
+        "Cost": 1,
+        "Copies": 3
+      },
+      {
+        "Label": "Ruined Crown",
+        "Verb": "attack",
+        "Amount": 120,
+        "Cost": 2,
+        "Copies": 4
+      },
+      {
+        "Label": "Tyranny",
+        "Verb": "attack",
+        "Amount": 250,
+        "Cost": 3,
+        "Copies": 3
+      },
+      {
+        "Label": "Last Decree",
+        "Verb": "attack",
+        "Amount": 300,
+        "Cost": 3,
+        "Copies": 2
+      },
+      {
+        "Label": "King's Guard",
+        "Verb": "defend",
+        "Amount": 60,
+        "Cost": 2,
+        "Copies": 2
+      }
+    ]
+  }
+]

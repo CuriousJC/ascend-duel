@@ -18,6 +18,11 @@ import (
 // nothing else.
 type Pyramid struct {
 	order []string
+
+	// bosses is one record per floor, the stairway protectors. Separate from `order` because
+	// they are drawn from their own pool and stand only in the third room of a floor; see
+	// bosses.go.
+	bosses []string
 }
 
 // New builds a run's fight order from the loaded enemy records, shuffled within each floor band.
@@ -25,21 +30,34 @@ type Pyramid struct {
 // It takes the source rather than reaching for one, so the caller owns which stream is being
 // advanced, and it is a plain function of its arguments so a test can hand it a fake roster and
 // a fixed seed.
-func New(recs map[string]data.EnemyData, rng *rand.Rand) *Pyramid {
-	return &Pyramid{order: shuffleWithinFloors(data.EnemyOrder(recs), recs, rng)}
+func New(recs map[string]data.EnemyData, bosses map[string]data.BossData, rng *rand.Rand) *Pyramid {
+	return &Pyramid{
+		order:  shuffleWithinFloors(data.EnemyOrder(recs), recs, rng),
+		bosses: pickBosses(bosses, rng),
+	}
 }
 
 // EnemyAt is the record key of whoever stands in a given room, wrapping past the end of the
 // roster. It returns the empty string only for an empty pyramid, which a loaded game cannot
 // produce — data's loader panics on an empty roster long before this.
+//
+// **Every third room is the floor's stairway and answers from the boss pool instead**
+// *(2026-08-23)*. The roster index skips those rooms rather than counting them, so a boss
+// standing in one does not consume a creature: `fight - fight/FightsPerFloor` is how many
+// ordinary rooms came before this one.
 func (p *Pyramid) EnemyAt(fight int) string {
-	if len(p.order) == 0 {
-		return ""
-	}
 	if fight < 0 {
 		fight = 0
 	}
-	return p.order[fight%len(p.order)]
+	if RoomOf(fight) == RoomStairway {
+		if boss := p.BossAt(FloorOf(fight)); boss != "" {
+			return boss
+		}
+	}
+	if len(p.order) == 0 {
+		return ""
+	}
+	return p.order[(fight-fight/FightsPerFloor)%len(p.order)]
 }
 
 // Rooms is how many opponents the order holds.

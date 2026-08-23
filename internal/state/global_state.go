@@ -83,7 +83,12 @@ type GlobalState struct {
 	// the opponents stopped sharing a struct — an enemy has a plan style, a portrait and an
 	// affix pool, a duelist has a card back — so one map would have been a map of records
 	// where most fields were empty. See data/duelists_data.go.
-	Enemies  map[string]data.EnemyData
+	Enemies map[string]data.EnemyData
+
+	// Bosses is the stairway protectors, in their own map for the reason data/bosses_data.go
+	// gives: they are placed by a different rule and must not be shuffled into an ordinary
+	// room. A screen hydrating an opponent looks here when the roster does not know the record.
+	Bosses   map[string]data.BossData
 	Duelists map[string]data.DuelistData
 
 	// Rings is what the player can equip. **Genuinely global for the same reason the rosters

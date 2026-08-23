@@ -1,6 +1,6 @@
 ---
 name: data
-description: The game's static data - the seven JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or rings, or writing a loader.
+description: The game's static data - the eight JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or rings, or writing a loader.
 ---
 
 # The data files
@@ -13,6 +13,7 @@ is what lets every layer above read it, and it **must never import upward**.
 |---|---|---|
 | `duelists.json` | `LoadDuelists` | who the player can be: three stats and their card back |
 | `enemies.json` | `LoadEnemies` | 96 opponents: three stats, their own deck, portrait, valid floors |
+| `bosses.json` | `LoadBosses` | 30 stairway protectors: the enemy shape, with one floor instead of a band |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
@@ -127,6 +128,29 @@ on floor one. Nothing generates floors yet, so today it only sorts the fight ord
 **A portrait's key is its filename stem**, unlike every other asset: 96 of them come in through
 one `//go:embed enemy/*-portrait.png` glob, so renaming a file means editing the JSON. That is
 the price of not hand-maintaining 192 lines nobody could review.
+
+### Bosses
+
+`bosses.json` is **the enemy record with `ValidFloors` replaced by a single `Floor`**, because a
+boss guards the stairway of exactly one floor. `BossData.Enemy()` converts, so `internal/decks`,
+`internal/entities` and `internal/cards` read one shape and never learn which pool an opponent came
+from — the only two places that tell them apart are `pyramid.EnemyAt`, which answers a stairway
+room from the boss pool, and the screen's `enemyFromRecord`.
+
+**A separate file rather than an `IsBoss` column** *(2026-08-23)*: the two are placed by different
+rules, and a flag would let a record be both while making every selection read it before it could
+trust the floors.
+
+- **Its portrait key ends `-boss`**, and the files live in `assets/boss/`. Both portrait families
+  are globbed into one flat map keyed by filename stem, so the suffix is the whole of what stops a
+  boss called `Sentry` from colliding with a creature of the same name.
+- **Stats are pitched above the enemies of its own floor** — roughly 1.6x HP, and DMG above the
+  hardest hitter in every band that reaches the floor — and the deck is dearer than a roster deck:
+  60/120/250/300 against 50/100/200, and a 60% guard against 50%. `TestABossIsToughAgainstTheFloorItGuards`
+  in `internal/pyramid` fails on a boss the floor below it could out-hit.
+- **A record whose deck is empty panics** exactly as an enemy's does, and one whose record name
+  collides with an enemy's panics too — the deck registry is keyed by record and would otherwise be
+  ambiguous.
 
 ### Rings
 

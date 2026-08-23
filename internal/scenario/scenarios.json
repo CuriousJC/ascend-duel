@@ -21,6 +21,20 @@
   },
 
   {
+    "ScenarioRecord": "stairway-boss",
+    "Note": "A stairway protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first stairway a run reaches is fight 2, which is where this opens.",
+    "Rings": ["heart-ring"],
+    "Hand": [
+      { "Card": "Strike", "Element": "fire" },
+      { "Card": "Jab", "Element": "ice" },
+      { "Card": "Lunge", "Element": "basic" },
+      { "Card": "Defend", "Element": "basic" },
+      { "Card": "Prepare", "Element": "basic" }
+    ],
+    "Enemy": "Bayaz",
+    "Fight": 2
+  },
+  {
     "ScenarioRecord": "echo-and-growth",
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
     "Rings": ["echo-ring", "enflamed-ring", "fire-ring"],

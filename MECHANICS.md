@@ -1619,9 +1619,19 @@ faster.
 **8 floors × 3 fights.** Fixed layout, drawing no randomness — what is *in* it is random, the
 shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 
-- **Every third fight is a floor boss.** Bosses are durable — high `HP`, and earth on them if
-  a boss should also blunt damage — with one strong attribute. They cannot spawn enemies, which
-  implies normal enemies can, a mechanic recorded nowhere else and otherwise undefined.
+- **Every third fight is a floor boss, and the bosses are their own catalogue** *(2026-08-23)*.
+  `data/bosses.json` holds thirty named stairway protectors, three or four authored per floor, and
+  a run draws one for each floor when the climb is rolled — so a floor's stairway is a face the
+  player can be told about rather than a creature from the same roster with bigger numbers. They
+  never stand in an outer or inner room, and a stairway does not consume a roster entry.
+- **A boss is pitched above the floor it guards**: more HP than the toughest enemy that can appear
+  there and more DMG than the hardest hitter, on top of the ascent curve, which scales it like
+  anything else. Bosses are durable — high `HP`, and earth on them if a boss should also blunt
+  damage — with one strong attribute. They cannot spawn enemies, which implies normal enemies can,
+  a mechanic recorded nowhere else and otherwise undefined.
+- `[?]` Whether a boss should carry an affix of its own by default, and whether the several bosses
+  authored for one floor should differ in shape rather than only in name and picture — today their
+  decks are one template at five rungs.
 - **After fights 1 and 2: a choice of two doors.** After the boss: **a choice of stairwell.**
   Captured as two concepts even though the mechanic is likely the same, because one is "next
   fight on this floor" and the other is "next floor" — a real difference to hang divergence on.

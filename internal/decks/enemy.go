@@ -29,9 +29,25 @@ var enemyDecks = buildEnemyDecks()
 // than an enemy that turns out to be harmless three floors in.
 func buildEnemyDecks() map[string][]combat.Card {
 	records := data.LoadEnemies()
+
+	// **The bosses join the same map, converted to enemy records.** They are a separate pool
+	// because they are *placed* differently — see data/bosses_data.go — but a deck is a deck,
+	// and a second registry keyed the same way would mean every caller asking twice. They are
+	// registered after the roster and in their own sorted order, so adding a boss cannot
+	// renumber a creature's concepts.
+	bosses := data.LoadBosses()
+	order := data.EnemyOrder(records)
+	for _, name := range data.BossOrder(bosses) {
+		if _, clash := records[name]; clash {
+			panic("bosses.json: " + name + " is also an enemy record, so its deck would be ambiguous")
+		}
+		records[name] = bosses[name].Enemy()
+		order = append(order, name)
+	}
+
 	out := make(map[string][]combat.Card, len(records))
 
-	for _, name := range data.EnemyOrder(records) {
+	for _, name := range order {
 		rec := records[name]
 		if len(rec.Cards) == 0 {
 			panic(fmt.Sprintf("enemies.json: %s has no cards, so it cannot fight", name))

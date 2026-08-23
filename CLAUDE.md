@@ -993,6 +993,12 @@ one means editing the JSON. That is the price of not hand-maintaining 192 lines 
 could review. Reach for the glob only when a *set* of files is being added; a one-off asset
 still gets its own var.
 
+**The thirty boss portraits are a second family, in `assets/boss/`**, globbed the same way and
+keyed by stem — so `boss/bayaz-boss.png` is `bayaz-boss`, which is what `data/bosses.json` writes.
+The `-boss` suffix is load-bearing: both families land in one flat map, and a boss whose key
+collided with a creature's would silently draw that creature.
+`TestNoBossPortraitIsAnEnemyPortrait` fails on it.
+
 They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a card by
 `internal/cards`, which has no graphics context, and decoding 96 at startup would cost
 ~20 MB of resident memory for pictures most runs never show.

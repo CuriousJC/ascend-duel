@@ -7,6 +7,11 @@
 // on and rebuilt every time you entered it. Anything headless needs the same arithmetic and
 // cannot import a screen, which is the other half of why this is a package.
 //
+// **Two pools, not one.** The roster fills a floor's outer and inner rooms, shuffled inside floor
+// bands; the stairway — every third room — is answered from data/bosses.json instead, one boss
+// drawn per floor when the climb is rolled. See bosses.go, and MECHANICS.md's tower section for
+// why a boss is a face rather than a creature with bigger numbers.
+//
 // **No Ebitengine, ever**, for that reason, and no randomness of its own: New takes the source
 // it shuffles with, so the caller owns which stream is being advanced. See the randomness skill.
 //

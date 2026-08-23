@@ -1322,7 +1322,13 @@ func planLabel(cards []combat.Card) string {
 //
 // **No sheet to look up any more** — the enemy is a card, so its picture is a portrait key
 // that internal/cards decodes when it draws one.
+// **A stairway record comes from the boss pool** *(2026-08-23)*, which is the one place the two
+// pools have to be told apart on this side: `data.BossData.Enemy()` hands back the enemy shape, so
+// nothing below this line knows which one it got.
 func enemyFromRecord(gs *state.GlobalState, record string, fight int) *entities.Combatant {
+	if boss, ok := gs.Bosses[record]; ok {
+		return entities.NewEnemyFrom(boss.Enemy(), fight)
+	}
 	return entities.NewEnemyFrom(gs.Enemies[record], fight)
 }
 

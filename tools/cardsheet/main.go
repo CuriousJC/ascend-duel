@@ -108,9 +108,8 @@ func run(dir string) error {
 	// Section two: the four form marks, which is the only axis where the *mark* is
 	// what varies rather than a colour or a count.
 	//
-	// **They are letters rather than art** *(2026-08-15)*, so this row is where the placeholder
-	// gets judged: four capitals have to be told apart in a corner at a glance, and S against D
-	// against C is the pairing that decides whether they can be lived with until glyphs land.
+	// This row is where the four are judged against each other: they have to be told apart in a
+	// corner at a glance, at the size a card actually draws them.
 	famRow := row{Label: "form mark"}
 	for _, fam := range cards.Forms() {
 		spec := specFor("Strike", cards.Fire)

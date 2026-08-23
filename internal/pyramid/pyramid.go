@@ -57,10 +57,10 @@ func FloorOf(fight int) int {
 // FightsPerFloor is how many fights a floor holds — outer room, inner room, stairway — and the
 // third of them is its boss. See the tower section of MECHANICS.md.
 //
-// **It lives here rather than in `internal/screens` because two things outside that screen need
-// it**: the combat screen names the room under the duelist card, and `tools/balance` maps an
-// enemy's lowest valid floor onto the fight it would first be met at. A tool that cannot import a
-// screen still has to agree with it about how deep a floor is.
+// **It lives here rather than in `internal/screens`** because the combat screen names the room
+// under the duelist card and the ascent curve counts rooms off the same number, and anything
+// headless that maps a floor band onto a fight index has to agree with the screen about how deep
+// a floor is without being able to import it.
 const FightsPerFloor = 3
 
 // FirstFightOnFloor is the fight index of a floor's outer room, counting floors from one.

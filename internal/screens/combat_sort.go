@@ -66,10 +66,9 @@ const (
 
 // sortButtonSpecs is the column, top to bottom, with the symbol each button carries.
 //
-// **One character each, because the button is 44 pixels square** and the input vocabulary has
-// no tooltip yet — long press is the planned way to explain one and is not built. `$` is cost,
-// `T` is type, `E` is element; none of them collides with the S/D/C/P a card's own corner mark
-// uses, which is the one place in the game a single letter already means something.
+// **One character each, because the button is 44 pixels square.** `$` is cost, `T` is type, `E`
+// is element. **They carry no tooltip yet**, though the widget landed on 2026-08-21 — see the
+// tooltip entry in TODO.md, which names the figures written straight onto the table as the gap.
 var sortButtonSpecs = []struct {
 	mode  handSort
 	label string

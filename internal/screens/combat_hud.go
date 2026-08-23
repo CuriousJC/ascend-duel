@@ -133,9 +133,8 @@ const (
 	// fightsPerFloor is how many fights a floor holds, and the third of them is its boss.
 	//
 	// **It is `pyramid.FightsPerFloor` rather than a 3 of this screen's own**, because the ascent
-	// curve that grows an enemy per room reads the same number and `tools/balance` reads it to map
-	// a floor band onto a fight index. Two copies would let the label and the difficulty disagree
-	// about how deep a floor is.
+	// curve that grows an enemy per room reads the same number. Two copies would let the label and
+	// the difficulty disagree about how deep a floor is.
 	fightsPerFloor = pyramid.FightsPerFloor
 
 	towerLineGap   = 10 // gap from the card's bottom edge to the first line

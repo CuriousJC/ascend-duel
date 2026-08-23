@@ -27,10 +27,10 @@ import (
 // the sheet, because a bare "S" in a corner is obvious to whoever wired it and opaque a month
 // later — and doubly so for Slash, which carries a D.
 var formNotes = map[cards.Form]string{
-	cards.FormStab:  `the letter "S", pending a glyph`,
-	cards.FormSlash: `the letter "D", pending a glyph`,
-	cards.FormCrush: `the letter "C", pending a glyph`,
-	cards.FormPlan:  `the letter "P", pending a glyph`,
+	cards.FormStab:  `a spear, tinted by the card's element`,
+	cards.FormSlash: `a sword, tinted by the card's element`,
+	cards.FormCrush: `an axe, tinted by the card's element`,
+	cards.FormPlan:  `a bulb, tinted by the card's element`,
 }
 
 // concept is one of the twelve, with the cost, form and effect text the rules give it.

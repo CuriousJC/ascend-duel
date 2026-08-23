@@ -80,8 +80,10 @@ type Style struct {
 	// of twice. `systems.GlyphDamage` still exists and is still on the glyph sheet; nothing on
 	// a card draws it.
 	//
-	// GlyphScale is unread while the mark is a letter — a typeface scales by asking for a bigger
-	// size, not by repeating pixels — and is kept for the glyph path it was written for.
+	// GlyphScale is the whole-number pixel repeat a mark is blitted at, applied by placeInk on
+	// top of whatever size the art came back at. It is 1 on every style: a form mark is already
+	// rendered to FormSize, so the repeat has nothing left to do and a fractional one would drop
+	// pixels out of a one-pixel rim. See the note at the top of this file.
 	GlyphScale int
 	GlyphInset int
 
@@ -233,15 +235,12 @@ var Hand = Style{
 	NameSize:     20,
 	NameCentered: true,
 
-	// 40pt in a 32px box: the letter is centred on its ink, so the point size only has to be
-	// large enough to fill the box and the box is what the layout tests hold.
+	// The mark is centred on its ink in this box, so the box is what the layout tests hold.
 	//
-	// **It sits inside the card rather than hanging off the corner** *(2026-08-15)*. The glyph
-	// before it was placed at 0,0 and deliberately cropped by the card's own curve — a
-	// silhouette loses a corner and still reads as itself. A letter does not: clipped at 0,0 the
-	// S came out as a shape with its top-left quarter missing, which reads as a rendering fault
-	// rather than as a mark. The clip in blitGlyph still applies and is still what a glyph will
-	// want; this is the box moving, not the crop going.
+	// **It sits inside the card rather than hanging off the corner** *(2026-08-15)*. A glyph
+	// placed at 0,0 is cropped by the card's own curve, which a silhouette survives — it loses a
+	// corner and still reads as itself — but which costs a mark carrying detail its top-left
+	// quarter. The clip in blitGlyph still applies; this is the box moving, not the crop going.
 	FormTop:  8,
 	FormSize: 32,
 

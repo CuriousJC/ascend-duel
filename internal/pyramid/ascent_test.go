@@ -6,7 +6,7 @@ import "testing"
 // winning is what makes the next fight harder. See ScaleToFight.
 //
 // This package has no test file until now and needs no window — it imports `data` and
-// `internal/combat` and nothing else, which is the property that also lets `tools/balance` read
+// `internal/combat` and nothing else, which is the property that lets anything headless read
 // the curve.
 
 func TestTheFirstFightIsTheBaseline(t *testing.T) {

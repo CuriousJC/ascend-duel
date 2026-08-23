@@ -71,8 +71,8 @@ leads to a second stat and stops there is a step the player must learn and can n
 
 **Every enemy's HP doubled in the same change**, at the owner's call: the roster was written
 against a game where a turn landed several small blows, and one blow per turn with hand
-multipliers made every fight far shorter than the numbers read. See *Enemies* below for what
-`tools/balance` says about the result, which is not yet a balanced game.
+multipliers made every fight far shorter than the numbers read. **Nothing has measured the result**
+— see *Enemies* below.
 
 **The AP floor went with it.** `ActionPoints` clamped to a minimum of 1 because a chill
 subtracted from it; nothing subtracts now, every term is non-negative, and the clamp was
@@ -145,24 +145,21 @@ a hand's multiplier applies to the cards that formed it, not to a reference swin
 than a fallthrough: forms are the *player's* deck axis, and an enemy card claiming to be a crush
 would be claiming membership of a deck the player can build hands against. They draw with a blank corner.
 
-**What the three forms do not yet have is a reason to be three.** They cost the same, hit the
-same, and differ only in which cards pair with which. That is enough to make a hand a *choice* —
-holding two Cleaves is not the same as holding a Cleave and a Smash — and it is deliberately the
-whole of it for now. Riders that differ in *kind* per form are the shape to reach for next, and
-the grid's old rule applies: a form that is only a different word is three cards and one
-decision.
+**The three forms cost the same and hit the same, and differ only in which cards pair with which.**
+That is enough to make a hand a *choice* — holding two Cleaves is not the same as holding a Cleave
+and a Smash — and it is deliberately the whole of it.
 
 **Every card carries its effect in words on its face**, verb first, filling the card beside the
 cost column. The attack text names the form's verb — "Stabs for 2x DMG" — rather than opening
-"Deal" on all nine, so the corner letter is not carrying the distinction alone. The wording is
+"Deal" on all nine, so the corner mark is not carrying the distinction alone. The wording is
 `cardEffects` in `internal/screens`, beside the prose the fight log uses: the rules package
 names actions and never describes them. **Short words are a hard constraint** — the column is about
 a dozen characters wide — and two tests hold the wording to it.
 
-**The corner mark is a letter, and that is scaffolding** *(2026-08-15)*. S for stab, **D for
-slash** — Stab took the S first, and two forms sharing an initial would leave the corner saying
-nothing — C for crush, P for plan. The glyph machinery is untouched underneath: `cards.Form.glyph()`
-returns nothing for every form today, and putting silhouettes back is one return value.
+**The corner mark is drawn art** *(2026-08-23)*: a spear for stab, a sword for slash, an axe for
+crush, a bulb for plan, in `assets/form/`. **It is tinted by the card's element** rather than
+repainted, so the drawing keeps its outline and its bevel — which is where the element is said
+now, the border having stopped saying it the same day.
 
 ### Every raised plan answers the blow, and they multiply
 
@@ -278,11 +275,8 @@ place a badge can be read.
   of the engine printed in a box.
 
 **Long press is what a touchscreen or a controller would use for the same reveal**, and it is not
-built. Un-occluding an overlapped card is still unbuilt too, and is now a separate want from
-explaining one.
-
-A press remains a three-way decision the day long press lands — move past `dragThreshold` is a
-drag, held past a tick count without moving is a long press, released before either is a click that
+built. A press becomes a three-way decision the day it lands — move past `dragThreshold` is a drag,
+held past a tick count without moving is a long press, released before either is a click that
 toggles selection. The distance and time thresholds must not fight each other.
 
 ---
@@ -371,13 +365,6 @@ decision belongs to the source and not to the card. See *The card language*.
 card before an affix can gate it would hand it a free status, which is exactly what this rule
 forbids.
 
-**A self-side status is designed and unbuilt.** Each of the four statuses is what a colour does to
-an *opponent*; aimed at yourself each has a mirror — fire enflames, ice focuses, lightning charges,
-earth wards. **Lightning-on-self must not be a roll**, because a shock is the only randomness in
-the engine and a second one needs its argument made from scratch. None of it is built, and there is
-no card that could carry one: a self-status with no source is not a status. Eight badges instead of
-four is the art bill when it is, and a way to aim a card inward is the rules bill.
-
 **A run opens wearing no rings at all** *(owner's call, 2026-08-21)*, so **every element is inert
 until the first one is bought**: an ice Strike is a plain Strike with a blue border. That is what
 makes the shop the first thing a run saves for. `session.StartingRings` is the seat for putting one
@@ -452,7 +439,7 @@ being "no" is what leaves it somewhere to go. The two caps went with it: `shockM
 `weightCapPct` existed to stop four stacks reaching a certainty, and there is no longer a fourth
 stack to cap.
 
-Per-element tuning is one constant each away. Run `tools/balance` before moving one.
+Per-element tuning is one constant each away, and **nothing measures what moving one does**.
 
 #### Lightning is a roll, and it is the only one in the rules
 
@@ -475,27 +462,20 @@ stacks; with stacking gone the ceiling is the number itself.
 - `internal/combat` is no longer pure integer arithmetic. It takes an injected `*rand.Rand` on
   `ResolveRound` — never a package global, per the determinism rules — and a nil source means
   "no rolls", which is how tests and previews stay exact.
-- `tools/balance` becomes a **distribution rather than an exact answer**. It currently plays one
-  fixed-seed sample per matchup, which is reproducible but is one draw of many; multi-sample
-  reporting is open work.
 - The stream advances **per attack phase**, so a change early in a duel reshuffles every roll
   after it. That is the cost `MECHANICS.md` predicted when it argued against the roll; it is
   real and it is now paid.
 - It breaks the rule hands otherwise follow — *what you committed to cannot be silently undone*.
   Lightning is the deliberate exception, and it is the only one.
 
-#### The rest, and what each cost
+#### Ice, fire and earth in detail
 
-- **Ice takes a card, not a point** *(2026-08-16)*. It cut the budget by 1 AP until then, which is
-  the quietest status the game could have had: a duelist a point short queued a cheaper card and
-  lost nothing they could name. A chilled duelist loses a card off the front of its turn instead,
-  and the front of a turn is its attacks — so ice costs a swing. What that cost: an AP cut was
-  felt while the player was still choosing, and a card taken off a committed turn is felt after
-  they have.
-  - **It is the only thing in the game that takes an action** *(2026-08-17)*. Hands could until
-    then, and the machinery was shared; hands buy damage alone now, so the chill is read straight
-    off the status and `Duelist` carries no separate counter. The action points are **not**
-    refunded: a chill is tempo *and* economy.
+- **Ice takes a card, not a point.** A chilled duelist loses a card off the front of its turn,
+  and the front of a turn is its attacks — so ice costs a swing, and it is felt after the player
+  has committed rather than while they are still choosing.
+  - **It is the only thing in the game that takes an action.** The chill is read straight off the
+    status and `Duelist` carries no separate counter. The action points are **not** refunded: a
+    chill is tempo *and* economy.
   - **It bites on every turn it outlives**, rather than being spent when it bites — the status
     counting down is what ends it, and a second hit resets the clock rather than deepening it.
   - **The asymmetry phases impose is carried by the status.** Side A acts first, so ice A lands
@@ -510,55 +490,22 @@ stacks; with stacking gone the ceiling is the number itself.
   once and frozen onto the victim — a duelist whose DMG changes later does not retroactively burn
   harder. It floors at 1, the same rule Jab's damage follows, so a duelist under 10 DMG lights a
   burn that does something.
-  - Fire needed state that outlives an action and got it. `KindBurned` fires from `endRound`,
-    side A then side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a
-    burn changes a life total with nobody acting. **A burn can kill**, and produces a
+  - **A burn is state that outlives an action.** `KindBurned` fires from `endRound`, side A then
+    side B, and the screen's `applyEvent` reads it alongside `KindDamage` because a burn changes a
+    life total with nobody acting. **A burn can kill**, and produces a
     `KindDefeated` when it does.
 - **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
   so the order is: the hand's own cards, the hand multiplier, the attacker's weight, then every
   raised plan card. Everything the defender does therefore happens to a blow that has already been
   blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
-  predictable from the reductions already in the game. **25% rather than the 10% it was**, because
-  10% that cannot stack is a status nobody notices landing.
-- **Statuses got a home**, and it is `Duelist.Statuses [ElementCount]Status` — an array indexed
-  by element, not four named fields. That is what makes *"consume the status this element
+  predictable from the reductions already in the game. **It is 25%**, because a smaller cut that
+  cannot stack is a status nobody notices landing.
+- **Statuses live in `Duelist.Statuses [ElementCount]Status`** — an array indexed by element,
+  not four named fields. That is what makes *"consume the status this element
   applies"* expressible and is the difference between a system and four ad-hoc fields. The
   price: **`Element` is append-only**, like `GlyphKind`. The raised-defence set
   stays where it is — those are card effects, and filing them in a table indexed by colour would
   say they were not.
-
-#### The balance numbers are gone and have not been retaken
-
-`tools/balance` carries four element postures — all-out in a colour, same concepts and same
-6 AP, so a coloured row read against `all-out` is what the element is worth. **Every figure it
-has ever produced was measured against the multi-blow model and none of them survive the
-rewrite.** Damage now runs through a hand multiplier, defends reduce instead of negating, and
-lightning rolls, so the old table would be a picture that lies — the same reason a stale glyph
-sheet is worse than none. It is deleted rather than annotated.
-
-What has to be re-measured before anything is tuned, and roughly what to expect:
-
-- **Damage is much larger and enemy HP has not moved.** Two Strikes at DMG 10 is `20 × 1.5` = 30
-  where it used to be 20, and four Lunges are `80 × 5` = **400**. Retuning enemy life totals is the
-  owner's call and is expected, not a bug report. *(The figures here were `20 + 10×1.5 = 35` and
-  `10×5 = 50` on top of the cards until 2026-08-18, when the swing term went; see the damage
-  formula above.)*
-- **And the postures changed again on 2026-08-15.** The deck rework replaced every row: `trips`
-  and `cheap-trips` are what the tool now reads a build against, and the old defend-column rows
-  have no cards behind them. `defending` wins 16 of 96 and `planning` 1, both at the shallow end.
-- **Shock's `[?]` is reopened, not answered.** It used to beat the entire roster by cancelling
-  attacks for free; a 25%-per-stack roll capped at 75% is a different card and its price is
-  unknown. `shockMissPct` and `shockMissCapPct` are the levers now, not `shockPerHit`.
-- **The tool is a distribution now.** One fixed-seed sample per matchup is reproducible but is
-  one draw; a posture that wins 51% of the time and one that wins 100% currently look identical.
-- **`[?]` Every element beats plain, and the gap narrowed on 2026-08-17 without closing.** A fire
-  Strike costs what a Strike costs and does strictly more. Distinct colours used to pay a damage
-  multiplier on top of that, which widened the gap; with the mix axis cut, a coloured card is ahead
-  only by the status it leaves — and only if the attacker wears the ring. That is a consequence of
-  cost being per concept, which is deliberate and is what the ring discount is designed around.
-  Worth deciding whether basic is a *cheaper* card or simply the thing an affix transforms.
-
----
 
 ## Resolution — phases
 
@@ -630,34 +577,15 @@ and still loses its guard in it.
 
 ### Initiative is gone
 
-There is no initiative. With one contiguous turn per side there is no exchange for a faster
-action to lead, so initiative was a number on every card reporting a distinction the resolver
-had stopped making. `Spd` still buys action points and still never buys priority.
+There is no initiative. With one contiguous turn per side there is no exchange for a faster action
+to lead, so a number on every card would report a distinction the resolver does not make. `Spd`
+buys action points and never buys priority.
 
-Ordering *within* a category is queue order, and **as of 2026-08-14 nothing reads it.** See
-`TODO.md` for what would have to be true to bring initiative back — and for the same problem
-arriving from the other direction, now that dragging has no mechanical effect at all.
-
-### What this cost, recorded honestly
-
-- **It reverses an earlier decision**, which replaced volley-per-side with alternation
-  on the grounds that *"two monolithic volleys gave the player nothing to manipulate."*
-  Phase-based is not the same as volley-per-side — it groups by category within a turn — but
-  it is closer to the rejected thing than to what alternation was.
-- **Cross-phase reordering means nothing.** A defense cannot be dragged ahead of an attack. This
-  entry used to say within-phase ordering still mattered and mattered more than before; **that
-  is no longer true.** Counted hands read the turn as a set and defends compose without an order,
-  so as of 2026-08-14 **dragging a card changes nothing the engine can see**. That is a genuine
-  loss of a designed interaction and it is tracked in `TODO.md`, not written off here.
-- **Guard persistence dissolved**, as predicted. The old *"a raised Guard lasts until its
-  owner's next action"* and the deliberate quirk that an idle duelist kept its guard are both
-  gone. Guard itself went on 2026-08-15; Defend is what does its job now, as a plan card that is
-  spent on the blow it answered rather than a flag that survived it.
-- **It changes what makes a chill rare** — see the ice status under *Elements*.
-
-`ResolutionOrder` being one pure function is what made this cheap, exactly as hoped: one
-function body plus its tests, and both consumers followed without being touched. Three other
-candidate models are recorded in `TODO.md`; this is a fourth.
+**Order within a category is queue order, and one thing reads it**: `groupsOf` fills
+largest-count-first and breaks a tie by whose first card was played first, so the lead card — the
+one that names the hand and carries its element — is chosen by where the player put it. Nothing
+else does. A defense cannot be dragged ahead of an attack, a counted hand reads the turn as a set,
+and defends compose without an order.
 
 ---
 
@@ -811,11 +739,10 @@ formed hand each land their status, gated on the attacker wearing that element's
 not a colour and never counts, so two basic Strikes and an ice Strike show one colour. That list
 is all that survives of the second axis.
 
-### What the axis cost, recorded honestly
+### What the axis costs
 
 - **Counted matching only.** A hand reads the turn as a set, so a Jab between two Strikes does
-  not break the pair. The **run** match kind — N consecutive cards, which a sequence hand needs
-  — is gone. The consequence is below, under *Sequences*.
+  not break the pair, and no hand can ask for an *ordered* run of cards.
 - **A hand cut short still pays out.** Nothing can interrupt it — a turn's attacks resolve as one
   event — so this is true by construction rather than by rule.
 - **The bottom rung fires constantly**, and as of 2026-08-19 it is priced as such: the form and
@@ -828,37 +755,10 @@ is all that survives of the second axis.
   13 ranks; here a concept has 4 copies and a colour and a form 12 each since the plans were
   coloured, and the turn is bounded by AP rather than by the draw. See *The multipliers come from how often a hand can actually be built*
   above for the model and the table.
-- **Narrowing to damage alone cost ten enemies, measured** *(2026-08-17)*. `tools/balance` goes
-  from 74 walls out of 96 to **84**, and every one of the ten is a hand posture — `trips` lost
-  eleven wins and `cheap-trips` five, while the four coloured postures lost none. **What was doing
-  the work was the lost action, not the lost colour multiplier**: a Three of a Kind used to take an
-  action off the opponent's next turn, every round, which is what those postures were winning on.
-  Cutting the colour multiplier flipped no outcome in the sample at all. The ladder's own numbers
-  were kept unchanged through the cut on purpose, so this figure is the size of the hole before any
-  retuning.
-- **Dropping the swing term flipped no outcome either, and that is a fact about the tool as much as
-  about the change** *(2026-08-18)*. `tools/balance` prints the same 84 walls and a byte-identical
-  roster table before and after. The damage genuinely moved — `trips` deals 50 → **60** a round and
-  `cheap-trips` 35 → **30**, so `cheap-trips` now takes four rounds to kill a Giant Rat where it
-  took three — but the tool reports **who won, not how fast**, so a posture that still wins and a
-  posture that now wins with a quarter of its life left print the same line. Read the unchanged
-  table as "no posture crossed the win/lose line", never as "nothing changed", and treat
-  multi-sample or rounds-to-kill reporting as the thing the tool needs before this ladder is tuned
-  against it.
-- **The three axes are a broad buff, measured** *(2026-08-19)*. `tools/balance` goes from **84
-  walls out of 96 to 76**, and the roster table moves everywhere rather than at the margin: Clear
-  Pod falls to `all-out` in 4 rounds where it took 6, and to `cheap-trips` in 2 where it took 4.
-  Almost none of that is the multipliers. Two things did it — a turn's mismatched attacks now
-  *sum* instead of the biggest one landing alone, and `cheap-trips` (Bash Bash Bash Strike, four
-  crush cards) stopped being a concept Three of a Kind at 200 and became a **form Four of a Kind at
-  320**. **Nothing on the enemy side was retuned to absorb it**; the ascent curve and the roster are
-  exactly what they were, so this is the size of the shift before any answer to it.
-- **The change is a buff at the top and a nerf at the bottom.** A hand of the dearest cards gains
-  and a hand of the cheapest loses, because the fixed term it replaced was worth proportionally
-  more to small cards. At DMG 10: four Lunges go 130 → **400**, four Jabs 70 → **100**, three Bashes
-  35 → **30**. **Nothing in the ladder was retuned to absorb that** — the percents are exactly what
-  they were — so the numbers above are the size of the shift before any tuning, and the tuning is
-  one file.
+- **A turn's mismatched attacks sum**, rather than the biggest one landing alone, so a hand is
+  worth more the dearer its cards are: at DMG 10 four Lunges are **400** where four Jabs are
+  **100** and three Bashes are **30**. **Nothing on the enemy side is tuned against that** — the
+  ladder, the ascent curve and the roster are independent, and the ladder is one file.
 
 ### The catalogue's shape
 
@@ -938,10 +838,8 @@ carried, and that rung got slightly easier when four Prepares became a way to bu
 the constant rather than keeping it is what holds the concept ladder recognisably where it was.
 
 **Every multiplier fell, most of them a long way**, because plans made every axis easier: an
-Elemental Four of a Kind went 375 to 285 and an Elemental Full House 365 to 280. `tools/balance`
-reads **81 walls out of 96 where it read 80** before the change, measured on the same seed either
-side — so the re-pricing very nearly absorbed the buff, and what is left is a hair harder rather
-than easier. Read that as one sample per the tool's own caveat, not as a settled figure.
+Elemental Four of a Kind went 375 to 285 and an Elemental Full House 365 to 280 — so the re-pricing
+was meant to absorb the buff rather than to add to it. **Whether it did is unmeasured.**
 
 **Two numbers in the table are judgement rather than measurement, and both are the same two as
 before:**
@@ -986,15 +884,6 @@ Three things fall out of it and are worth keeping:
   deck rather than the file** — pricing them apart when they are equally hard would be a number
   with nothing behind it.
 
-`[?]` **Two Pair is rarer than Three of a Kind on the form and element axes** — 52.6% against 76.1%
-on both, since the two axes are the same width now — because the binding constraint here is cards and
-AP, not draws: two pair needs four cards across two values where trips needs three of one. Rarity
-alone would price two pair *above* trips and invert the poker ordering the names promise. The ladders
-are forced to climb instead, so those two rungs are the least rarity-honest numbers in the table, and
-the forcing is doing more work than it was: the raw curve puts both wide Two Pairs at 140 and both
-wide Three of a Kinds at **115**, and only the climb rule lifts trips to 145. Fixing it properly means
-either accepting the inversion or renaming the rungs.
-
 **The best hand is chosen on multiplier, not on what it would deal, and that is now a decision**
 *(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
 plans joining hands made them disagree by everything, and the answer is to leave the matcher alone.
@@ -1004,16 +893,6 @@ because any two plans share `FormPlan` and the pair beats the High Card's 100 �
 announced and lands nothing, where the Strike alone would have landed its face damage. Playing plans
 beside a single attack can cost you the blow, and **reading the board to avoid that is part of the
 game** rather than a bug to design out.
-
-What was considered and declined: scoring each formable hand as `scaleDamage(base, multiplier)` and
-taking the largest, tie-breaking on multiplier. It is one comparison, it generalises to the next
-zero-damage card, and it makes "best hand" mean what the phrase claims — but it also means the hand
-you are *named* as forming is not the highest rung you actually built, which reads worse in the log
-than the case it fixes.
-
-**Nothing on screen explains the zero yet**, and that is the part left open. A player queuing a
-Strike and two Prepares sees the Strike announced, sees "Form Pair", and sees no damage; the
-arithmetic is right and the presentation does not say why.
 
 **Hand IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
 be the base in `hands.json` plus the card's enum value, so inserting a card mid-enum shifted every
@@ -1040,24 +919,6 @@ time an elemental five-of-a-kind has been affordable without banking. It used to
 colour held one card per form per tier and nothing cheaper. The Prepare pays nothing into the 5.65x;
 what it does is take the place of the second 2 AP attack the hand used to need, so it is a rung the
 plans *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
-
-### Sequences — the capability the rewrite dropped
-
-**There are no ordered hands, and there is no longer a way to write one.** The schema's `run`
-match kind went with the rewrite, so `ice Strike then fire Strike` cannot be expressed at all.
-
-Two entries were recorded here as buildable and are **not**: *Burnt Icecube* (ice then fire,
-doubling the DoT) and *Extinguishing Strike* (fire then ice, firing the DoT as one critical hit).
-They are kept as a note rather than a table because they are the only argument on record for
-order meaning anything, and **order now means nothing anywhere in the game** — see *What this
-cost* under Resolution, and the defend section under Cards.
-
-`[?]` **This is the open question the rewrite created.** Either drag-to-reorder is decoration and
-should stop being presented as a decision, or something has to read order again. Sequences are
-the obvious candidate and would need the run matcher rebuilt against the one-blow model — a
-sequence is a shape *within* the hand, not a second blow. Extinguishing Strike additionally needs
-a reward that *consumes* a status — and since a hand now pays damage and nothing else, that is a
-larger change than it was: it would mean reopening the reward vocabulary this narrowing closed.
 
 ### Requirements
 
@@ -1178,10 +1039,8 @@ language does not need.
   is the identity rather than an index. **Uncapped, by decision** — a +5 HP ring is +100 by the
   top of the tower and that is the intent. **One numeric effect per growing ring**, so the
   accumulator never has to say which of two it feeds.
-- **`tools/balance` still cannot see any of this.** It puts the four elemental rings on its fighter
-  and nothing else, so a damage ring, a discount ring or a stat ring changes every number it prints
-  and none of them are worn. **A ring's balance is unmeasurable until a worn set is a posture axis** —
-  say so rather than guessing at a multiplier.
+- **Nothing measures any of this**, so **a ring's balance is unknown** — say so rather than guessing
+  at a multiplier.
 
 ### Statuses are their own collection, and no longer an element *(2026-08-17, owner's call)*
 
@@ -1258,7 +1117,7 @@ predicate at all, so the streak is worth the same on every card in the hand.
   good duel would bank a permanent bonus that a single plan card had once wiped.
 - **It is a real argument against Plan and Prepare**, which is the interesting part: the deck's plan
   cards are how a hand is rebuilt, and this ring prices that. Whether 0.2x a turn is enough to make
-  a player skip a Plan is unmeasured — `tools/balance` wears the status rings only.
+  a player skip a Plan is unmeasured, like every other ring.
 
 ### The Enflamed family — growth inside a fight *(2026-08-22, owner's call)*
 
@@ -1290,7 +1149,7 @@ duelist away.
 - **This is the first ring state that changes mid-fight**, so it is also the first thing a mid-fight
   save would have to write down. Nothing saves yet.
 - **Uncapped, like every other accumulator.** +0.1x a blow across a long fight is a big number by
-  the top of the tower, and nothing measures it — `tools/balance` wears the status rings only.
+  the top of the tower, and nothing measures it.
 
 ### Atrophy, and the ladder as a ring *(2026-08-22, owner's call)*
 
@@ -1344,7 +1203,7 @@ times*.
 - **Two echo rings add landings rather than multiplying**: three and three is five, not nine.
 - **A seven-term sum is wider than the box was laid out for**, so `layOutMath` now shrinks a line
   that will not fit rather than letting a figure hang off the band.
-- **Nothing measures it.** `tools/balance` wears only the status rings.
+- **Nothing measures it**, like every other ring.
 
 **Flurry, Rend and Aftershock repeat a whole form** *(2026-08-22, owner's call)*: every stab / slash
 / crush card in the blow lands **twice, both at full damage**, uncommon. `repeat-card` is the second
@@ -1376,9 +1235,9 @@ owned.
 
 **They are the third thing a colour ring can be**, after the damage doubler and the status ring, and
 the one that changes what a turn can hold rather than what it does: a 6 AP budget buying four cheap
-cards instead of three is a different hand ladder, not a bigger number. **Nothing measures that** —
-`tools/balance` wears the status rings and nothing else — so what a colour's discount is worth
-against a colour's doubling is unknown, and reads as the bigger of the two.
+cards instead of three is a different hand ladder, not a bigger number. **Nothing measures that**, so
+what a colour's discount is worth against a colour's doubling is unknown, and reads as the bigger of
+the two.
 
 **`static-ring` is the lightning discount and not the earth→lightning flip.** The flip held that key
 for a few hours on 2026-08-22 and is now **Dust Storm**; the record key moved with the name.
@@ -1442,12 +1301,8 @@ of the seventeen records are now colour rings.
 `lightning-ring.png`. The ring naming now matches the element names the rules use. "Frozen" and
 "Thunder" are free again and may come back for something else.
 
-**`tools/balance`'s elemental postures wear the *status* halves**, not the colour rings — what they
-measure is what a status does, so the list follows the rule rather than the name.
-
 **BURNING went from 10% to 50% of the attacker's DMG in the same call**, over the same two rounds.
-That is a fivefold change to a status nothing measures — `tools/balance` plays postures and knows
-nothing about rings — so it is a judgement, and a large one: at 50% over two rounds a burn is
+That is a fivefold change to a status nothing measures, so it is a judgement, and a large one: at 50% over two rounds a burn is
 roughly a whole extra attack, which is what the uncommon tier is meant to be paying for.
 
 **The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire attacks
@@ -1501,9 +1356,8 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   nothing to buy but swaps. The first draft priced a base ring at 20 and made the whole run about
   affording one; this is deliberately the other side of that, and what it wants next is something
   else to spend on rather than dearer rings.
-- **Nothing measures whether any of those numbers is right.** `tools/balance` plays postures against
-  the roster and knows nothing about rings, so what a doubling of every slash card is worth in vitae
-  is a judgement. Recorded as a judgement rather than dressed up as a derivation.
+- **Nothing measures whether any of those numbers is right.** Nothing in the repo measures what a
+  ring does to a duel, so what a doubling of every slash card is worth in vitae is a judgement. Recorded as a judgement rather than dressed up as a derivation.
 - **Selling pays the tier's own figure — 1, 2 or 3** *(owner's call, 2026-08-22)*. It was a quarter
   of the price rounded up, which across three prices paid an uncommon and a rare the same 2: three
   tiers is three numbers, and writing them down beats arithmetic that has to be argued with. The
@@ -1519,98 +1373,13 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
 - **What is already worn is off the shelf**, rather than shown and refused: a seat spent saying
   nothing.
 - **Selling out of the middle of the row changes the firing order**, since rings fire left to right
-  and a re-bought one goes on at the right-hand end. That is a real cost of letting a ring come off
-  and there is no re-ordering control yet — see TODO.md.
+  and a re-bought one goes on at the right-hand end. That is a real cost of letting a ring come off,
+  and **there is no re-ordering control**: the one thing a player cannot choose is the order two
+  rings apply in.
 - **The shelf is its own random stream** (`seeds.ShopStock`), per fight, so a defeat and a retry walk
   into the same shop exactly as they meet the same opponent. **It is three weighted draws without
   replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn ring leaves
   the pool, so the shelf never offers the same ring twice.
-
-### Flip rings — the element-transform ring
-
-**A ring that maps one element onto another across the whole deck**. A
-"frozen lightning" ring turns every lightning card into an ice card, so a deck holding 12 of
-each now holds 24 ice and no lightning.
-
-**This is the ring the five-of-an-element hand needs to exist.** At 12 cards per element in a
-60-card deck, drawing five of one in a hand of eight is a fluke you cannot build toward. A flip
-doubles the pool and turns the hand into a deck you assembled — which is the whole stated
-purpose of hands.
-
-- **It is deliberately more powerful than a discount ring**, and that is accepted. The primary
-  engine-building of this game is the interaction of rings, brands and how the deck has been
-  altered; rings having very different magnitudes is what makes mixing them an act of judgement
-  rather than an ordering.
-- **It is the same primitive as an enemy affix.** An affix already maps `basic → fire` across an
-  enemy's deck (see *Enemies*). One transform mechanism, pointed at either side — build it once.
-- **It is cheaper to implement than the discount ring.** A flip is a pure transform on a card's
-  element and never touches `Cost()`, so it does not require the "cost becomes a property of the
-  pairing" rewrite. It still needs element to reach `internal/combat` for the hand to *match* on
-  it.
-- **Flips do not compose.** Every flip reads the card's *original* element, so lightning→ice and
-  fire→ice both land on their own sources and cannot chain. Without that rule two flips could
-  cascade a deck to a single colour and the order they were bought in would change the result.
-- `[?]` Whether a flip's source element can be one that another equipped flip targets — allowed
-  under the no-compose rule above, but it means two rings can both feed the same colour, which is
-  a 36-of-60 monochrome deck. Watch it before deciding whether the cap is the ring slots or a
-  rule.
-
-**Discounting matching cards is built** *(2026-08-17)*. Cost is a property of the **pairing**:
-`Duelist.CardCost` and `Duelist.CostOf` are what the engine, the planner, the AP bar and the
-over-budget check all read, and `Card.Cost()` is only the card's own printed figure. Every card face
-on every screen is drawn at the wearer's cost — the hand, the deck overlay, the flights, and the
-post-battle offer through `session.CardCost` — because a card showing three dashes while the budget
-charges two is the screen contradicting the engine. **An enemy's queued card is priced by the
-enemy**, never by the player's rings.
-
-**Rings are drawn as cards**, in a horizontal row across the top, not necessarily spanning the
-whole bar. Same size as other cards, and **no glyphs**.
-
-**The row is on the screen at full card size, and it is what the player is actually wearing**
-*(2026-08-16)*. It drew every record in `data/rings.json` up to the cap while nothing read a
-ring; it now reads what the run is wearing, because a catalogue that equips itself would have put
-the earth ring on the moment the file gained a fourth entry. **The row starts empty and fills as
-rings are bought** — see The shop. What made the row possible is that **the vertical problem below solved itself**: the full-height Resolution pane
-left the 12–46% band for a three-line feed above the hand, so the band the row needed was
-already empty. The character block shrank into the top-left corner to give it the width.
-
-- **The row spreads to fill its width and closes up as it fills**: first card flush left, last
-  flush right, so three rings stand well apart and five sit shoulder to shoulder. The row runs
-  to 79% because the enemy card is past 81%, which leaves about 825px — and five cards is 810
-  since **the whole card set is 162x224** (a tenth off the width, 15%
-  off the height, at the owner's request). At the old 180 it overlapped by 26px each, and it
-  will again if the row ever narrows. Overlap rather than shrink is the accepted answer, the
-  same idiom as the deck overlay — a card cannot be scaled, so a smaller ring is a different
-  drawing and there is no smaller ring style.
-- **The row is not a box**. No fill, no frame, no title: a pink panel around five
-  pink-bordered cards read as cards trapped in a container. What marks it is a **rule under the
-  cards**, the width of the row, with the fraction on its right end — and the cards align flush
-  with the top of the character block rather than each sitting inset in a frame.
-- **It fits vertically**, for the reason above: the full-height Resolution pane's departure
-  is what freed the band.
-- Dropping the glyphs is exactly what *would* free the height: the glyph column is the floor on
-  card size. `[?]` Same width and shorter is the escape if the band is ever wanted back.
-- `internal/cards` draws a ring already — `RingStyle`, pink border, artwork instead of glyphs —
-  so the drawer question is answered: rings share the frame and colour logic and skip the glyph
-  column. The screen builds it through `ringSpec`.
-
-**The cap is written down after all, as a fraction**. `worn/5` sits on the
-right-hand end of the rule under the row, the same shape as the deck pile's `left/owned` and the
-AP figure. That **softens "the cap is never displayed"** above, deliberately: a number in a corner
-is read without being looked for, where five slots of which two are empty frames would spend the
-loudest thing in the pane on what you have not got.
-
-**Rings are the first thing that genuinely needs `Session`.** They survive fights;
-`CombatScene` state does not. The sketch dodges this by equipping everything defined, up to the
-cap, every time the screen initialises.
-
-Art note: `fire-ring.png`, `ice-ring.png`, `lightning-ring.png` and `earth-ring.png` are embedded
-and drawn on the four colour rings. The four status rings have no art and draw `default-ring.png`.
-Earth has none, so a fourth ring is art before it is data.
-
----
-
----
 
 ## Worms — altering the deck between fights
 
@@ -1740,18 +1509,11 @@ being the best of what is on the table is only sometimes the question. **`duplic
 most likely to need a cost** — copies are the sharpest dial in the game, since four of one concept
 in a turn is a Four of a Kind.
 
-### `[?]` The deck overlay stops being able to show the deck
+### Where the deck lives, and why a card has no identity
 
-Rows in the deck panel cap at twelve, and `element` worms *migrate* cards between colour rows — so
-building toward fire pushes that row past the cap and the panel starts hiding exactly what was
-built. **Owner's call (2026-08-17): defer.** The replacement is not a bigger cap: the panel wants
-counts — attacks, plans, how many of each colour — rather than every card drawn at once.
-
-### What it needed that did not exist
-
-**The run.** `internal/session` holds the deck now, because the combat screen rebuilds its piles
-on every `Init` and `Init` is how the next fight starts — so anything held on that scene is thrown
-away between rooms. It is the same hole rings, vitae and brands are blocked on.
+**`internal/session` holds the deck**, because the combat screen rebuilds its piles on every
+`Init` and `Init` is how the next fight starts — so anything held on that scene is thrown away
+between rooms.
 
 **No card identity, and that is a consequence of *when* alteration happens.** Between fights no
 pile is live, so an offer is a list of positions in the run deck and a position is unambiguous for
@@ -1762,9 +1524,10 @@ event, since the log rebuilds a card from what an event carries.
 
 Post-battle is the first of several scenes between one room and the next: **alteration**, then a
 **shop** where vitae is spent, then a **room or stairway choice** between two doors. Each is an
-ordinary scene in the registry rather than a mode of the combat screen. What is missing is
-whatever decides the order they run in — today the chain is hard-wired, win → post-battle →
-combat.
+ordinary scene in the registry rather than a mode of the combat screen, and **`session.Phase` is
+what decides the order** — see `internal/session/flow.go` for the chain and
+`internal/screens/flow.go` for which scene draws each station. The room choice has no scene yet
+and is walked past.
 
 ---
 
@@ -1863,8 +1626,7 @@ shape is not. *(ideas.md's "one enemy per level" is superseded.)*
   Captured as two concepts even though the mechanic is likely the same, because one is "next
   fight on this floor" and the other is "next floor" — a real difference to hang divergence on.
 - **Doors hint at what is behind them.** Cold coming off the door for an ice enemy, smoke for
-  fire. This is graded reveal one level up from `concealedLabel`, and probably wants the same
-  answer as the in-combat version.
+  fire — the shape of what is coming without its name.
 - **Generate both doors, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 
@@ -1894,7 +1656,7 @@ be built by accident.
 **It doubles a curve that is already in the data, and that is deliberate but worth stating.**
 `ValidFloors` already sorts the roster from an 80 HP / DMG 5 Giant Bat to a 400 HP / DMG 22
 Bio-Titan, roughly a fivefold climb; the ascent curve multiplies on top of that, reaching about
-×8.9 by floor 8's stairway. The measured cost is in the balance table below.
+×8.9 by floor 8's stairway. **What that costs a player is unmeasured.**
 
 `[?]` Whether the curve should be flatter now that it stacks on the roster's own progression, or
 whether the roster should flatten instead and let the curve carry the climb.
@@ -1912,15 +1674,6 @@ are one screen or two, and in which order.
 call)*. `data/enemies.json` holds a `Cards` array per record, written in the card language above:
 three attacks on the 0.5x / 1x / 2x rungs plus one non-attack, named to the creature. A Clear Slime
 oozes, engulfs, dissolves and congeals.
-
-**This deleted `PlanStyle` and the four planners.** An opponent's behaviour used to be a string on
-its record picking one of `brute`, `swarm`, `warden` or `tactician`, and every enemy in the game
-drew from one shared list of `Attack` and `Heavy`. Three consequences, all now moot:
-
-- A Dragon and a Slime differed by a label rather than by anything the player could read.
-- **Three of the four styles were unreachable.** The warden asked for a Defend by name and the
-  tactician for a Prepare; the shared list held neither, so *every* enemy fought as a brute.
-- Affixes, which *transform* a deck, had almost nothing to transform.
 
 An enemy holding four cheap copies of one card is a swarm. One holding four expensive ones is a
 brute. One holding shields is a warden. The player learns a deck.
@@ -1945,7 +1698,7 @@ before pressing DUEL!.
   card would change what the status means and would advance the package's one random stream a
   different number of times each round.
 - **It is a flag on the duelist, never a rule about side B.** The engine has no idea which side is a
-  person and must not learn: the balance tool plays both sides headlessly.
+  person and must not learn — a headless simulation plays both sides.
 - **`[?]` Whether a boss or an affix can give an enemy hands back.** The flag is per duelist, so
   nothing in the rules forbids it.
 
@@ -1971,46 +1724,16 @@ is simply *how many cards a turn holds*. What sharpened instead is **variety**: 
 different attacks used to land only the biggest of them, because distinct concepts formed no hand
 and fell through to the High Card. It now lands all three.
 
-### Balance after the rework — measured, and not yet good
+### The deep tower is meant to need a build *(2026-08-16, owner's call)*
 
-`tools/balance` plays every posture against every enemy through the real `ResolveRound`. As of
-2026-08-16, against a fighter of DMG 10 / 6 AP / 60 HP wearing all four rings:
+Per-enemy decks, doubled enemy HP, enemies no longer forming hands and the 10% ascent curve all
+landed on top of each other and **none of them was absorbed by a retune**, which put the deep floors
+out of reach of a duelist wearing nothing. **That is the intent rather than a regression**: the
+player's ceiling is *supposed* to move and rings are how, so a bare fighter is not who those floors
+are priced against and **the whole ascension is not expected to be winnable yet**.
 
-| | walls (beaten by no posture) |
-|---|---|
-| before this change | 12 of 96 |
-| enemy decks, HP left alone | 15 of 96 |
-| **enemy decks and HP doubled** | **44 of 96** |
-| enemies stopped hand-forming *(2026-08-17)* | 45 of 96 |
-| **the 10% ascent curve — what ships** *(2026-08-17)* | **74 of 96** |
-
-So **the per-enemy decks cost three walls, the HP doubling twenty-nine, the hand removal one, and
-the ascent curve another twenty-nine**. Floors 1–2 are untouched — floor 1's outer room is the
-curve's baseline — and everything from floor 3 up is now a wall.
-
-**The curve is measured at the shallowest slot each enemy can occupy**, the first fight of its
-lowest valid floor, so those are the kindest numbers a player will ever meet it with.
-
-**Taking hands off the enemies moved the total by one and the roster underneath it a lot**, in
-both directions, which is worth knowing before reading the total as "no change". Floors 1–2 got
-markedly easier — several enemies went from being beaten by two postures to being beaten by eight —
-and floors 2–5 got harder, because an enemy holding three *different* attacks used to land only the
-biggest of them and now lands all three. The tool is one draw rather than a distribution, so a
-±1 movement in the total is inside its noise; the per-band movement is not.
-
-**Forty-four walls is accepted, not a regression to fix** *(2026-08-16, owner's call)*. The
-objection was that the doubling overshot against a player whose own ceiling has not moved. The
-answer is that the ceiling is *supposed* to move, and rings are how: a duelist wearing nothing is
-not the duelist those floors are priced against, and the deep tower is meant to need a build. **The
-whole ascension is not expected to be winnable yet** and reading these numbers as though it should
-be is what would produce the wrong tuning.
-
-What this does mean is that **the wall count stops being a bug signal and becomes a progression
-signal**, which is a different thing to measure — and the thing to measure it with is a player who
-has been built up, not the bare fighter this tool uses. Two figures still deserve reading: a wall
-on a *shallow* floor is the old failure and is still a failure, and the tool being one draw rather
-than a distribution makes every number here softer than it looks.
-
+**A wall on a *shallow* floor is a different thing**, and is still a failure — the player has bought
+nothing by then.
 
 ### The count bound moved into the rules
 
@@ -2038,11 +1761,6 @@ so a balance tweak invalidates every stored seed. The implementation short-circu
 attacker carries no shock, so the stream only advances when lightning is in play. **Nothing
 depends on stored seeds yet**, which is why this is recorded rather than fixed; it has to be
 settled before the save format lands, because a choice log replays through this.
-
-**`tools/balance` is a sample, not an answer.** It plays one fixed-seed draw per matchup, so a
-posture winning half the time and one winning always currently look identical. Multi-sample
-reporting is open work and is what the tool needs before any number it prints can be tuned
-against.
 
 **Deck shuffles use a seed derived per encounter, not a running stream:**
 `hash(runSeed, floor, fightIndex)`.
@@ -2085,36 +1803,16 @@ not *loud*. Freezing the screen for a splash-length `KindHand` remains free.
 
 Collected from above.
 
-- `[?]` **Nothing reads within-phase order any more**, so drag-to-reorder has no mechanical
-  effect. Either it stops being presented as a decision, or something reads order again.
-- `[?]` **Nothing tests what Plan is worth.** `tools/balance` deals no cards, so a wider hand is a
-  wider hand of nothing and the `planning` row measures 2 AP of pure loss. Pricing it needs the sim
-  to draw, which needs a seventh stream — see the entry under *Determinism*.
-- `[?]` **The three attack forms differ only in which cards pair with which.** Same costs,
-  same damage, no riders — enough to make a hand a choice, not enough to make a form one.
-- `[?]` **Draw variance is answered by two levers now** — the Discard button and Plan — and neither
-  has been priced against the other.
-- `[?]` **Pair fires on most turns**, which makes the bottom rung a permanent global multiplier
-  favouring whoever repeats themselves — currently the AI planners.
 - `[?]` **Every same-concept hand shows all-distinct colours**, because the deck holds one copy per
   concept per colour. It no longer costs a multiplier, but it does mean a built hand always lands
   every status the player is ringed for — the colours are not a choice.
 - `[?]` **The shock roll is conditional**, against a written rule that it should be unconditional.
   Settle it before the save format lands.
-- `[?]` **Enemy life totals have not been retuned** against the new damage curve, and
-  `tools/balance` is a single-sample tool that cannot yet answer whether they should be.
 - `[?]` Duration, stacking and refresh for every status.
 - `[?]` Whether ring cards may be shorter than action cards, given they have no glyphs.
 - `[?]` What distinguishes one stairwell from another.
 - `[?]` Whether the shop and door choice are one screen or two.
 - `[?]` Whether earth becomes a floor affix.
-- `[?]` How a player is shown that an attack card contributed nothing. The pane no longer draws a
-  line per attack card, so a card outside the hand is silent there; the table says it, by raising
-  every attack card and then lowering the ones the hand did not name. Whether that is legible at
-  playback speed is unanswered.
 - `[?]` Earth's green collides with `playerSwatch`. One of the two schemes has to give, and
   what is holding it off is that a border and a swatch are never seen side by side.
-- `[?]` Whether the attack/plan categories are the same axis as the *role* taxonomy the
-  initiate/respond model in `TODO.md` asks for, or orthogonal to it — and whether the *forms*
-  are the axis that taxonomy actually wanted.
 - `[?]` How enemies scale up the tower.

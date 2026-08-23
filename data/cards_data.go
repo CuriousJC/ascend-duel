@@ -59,7 +59,7 @@ type CardData struct {
 
 	// Form is which group of cards this concept belongs to — stab, slash, crush or plan. Empty
 	// means none, which is what every enemy card is: a form is the player's deck axis, the thing
-	// a pair is counted on and the letter in the card's corner, and an enemy card claiming to be a
+	// a pair is counted on and the mark in the card's corner, and an enemy card claiming to be a
 	// crush would be saying something untrue about a deck the player cannot build hands against.
 	Form string `json:"Form"`
 

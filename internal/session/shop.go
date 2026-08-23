@@ -15,10 +15,9 @@ import "github.com/curiousjc/ascend-duel/internal/combat"
 // two tiers above it are 5 and 7. What a ring *sells* for comes off the same tier: 1, 2 or 3,
 // written down rather than derived, because a quarter rounded up paid an uncommon and a rare alike.
 //
-// **Nothing prices these numbers but judgement.** `tools/balance` plays postures against the roster
-// and knows nothing about rings, so what a doubling of every slash card is worth in vitae is a guess
-// that has never been measured. Said out loud here because the alternative is a table of figures
-// that looks derived.
+// **Nothing prices these numbers but judgement.** Nothing in the repo measures what a ring does to a
+// duel, so what a doubling of every slash card is worth in vitae is a guess that has never been
+// checked. Said out loud here because the alternative is a table of figures that looks derived.
 
 // RingPrice is what the shop charges for a ring, and whether the catalogue holds one at all.
 func RingPrice(key string) (int, bool) {

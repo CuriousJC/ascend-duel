@@ -319,9 +319,8 @@ The questions to put to an idea, in order:
 4. **Does it hold state?** If it grows, it needs the accumulator and it needs saving.
 5. **Does it collide with a ring that exists?** Banker, Soul Taker and Hungry all reached for the
    post-battle screen and two of them nearly did the same job.
-6. **What does it cost the player, and does anything price it?** `tools/balance` measures postures
-   against the roster and knows nothing about rings — so a damage ring is currently unmeasurable.
-   Say that rather than guessing at a number.
+6. **What does it cost the player, and does anything price it?** Nothing in the repo measures what
+   a ring does to a duel, so every price is judgement. Say that rather than guessing at a number.
 
 **Do not grow the vocabulary ahead of the rings.** A moment or a verb with no ring behind it is
 `CostTier` again — see the `data` skill. Ship the rows that have an entry.

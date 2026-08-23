@@ -287,7 +287,7 @@ func TestEveryPlanIsInThePlanFormAndViceVersa(t *testing.T) {
 func TestEveryPlayerCardHasAForm(t *testing.T) {
 	// **FormNone is a real answer, not a fallthrough**, and after 2026-08-16 it belongs entirely
 	// to the enemies: a form is the player's deck axis, the thing a pair is counted on and the
-	// letter in the card's corner. A player's card landing there would draw with a blank corner and
+	// mark in the card's corner. A player's card landing there would draw with a blank corner and
 	// be excluded from the deck panel's sort.
 	//
 	// It used to name the two shared enemy concepts as the permitted exceptions. There is no shared

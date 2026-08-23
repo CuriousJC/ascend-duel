@@ -187,12 +187,12 @@ var maxCards = combat.Duelist{}.MaxActions()
 
 // budgetOf is the fighter's action points. **Named, never the first entry of the map** — the
 // roster is keyed and Go randomises map order, so taking whichever came out first would make the
-// page depend on nothing. tools/balance and tools/handodds name the same record.
+// page depend on nothing. tools/handodds names the same record.
 func budgetOf() int { return data.LoadDuelists()["Fighter1"].Actions }
 
 // startingDeck is what a run opens with, built the way the combat screen builds it. It is not
 // imported from there: internal/screens links Ebitengine and this tool has no window, which is
-// the same wall tools/balance and tools/handodds run into.
+// the same wall tools/handodds runs into.
 func startingDeck() []combat.Card {
 	var out []combat.Card
 	for _, rec := range data.LoadDuelistCards() {

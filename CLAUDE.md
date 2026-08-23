@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Ascending Duel — a roguelike where you duel your way up a tower, collecting rings, brands of power, and pets. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
+Ascending Duel — a roguelike where you duel your way up a tower, collecting rings and brands of power. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
 ## Where things are written down
 
@@ -23,6 +23,12 @@ Five streams, each with one job. Reach for the right one rather than searching a
   and the phase-based resolution experiment.
 - **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
   says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
+- **Never add an entry to `TODO.md` unless the owner asks for that specific thing to be tracked**
+  *(owner's call, 2026-08-23)*. Noticing something during a change is not a reason to file it.
+  Say it in the reply and let the owner decide — the list is theirs to grow, and a list that
+  accumulates every observation anybody had is one nobody reads. The same goes for `[?]` entries
+  in `MECHANICS.md`: an open question is filed because the owner wants it open, not because the
+  work turned one up.
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
 - **Cut means deleted, not tombstoned.** When something is taken out of the design, remove
   every trace of it rather than leaving a note saying it was removed and why. These files are
@@ -110,8 +116,6 @@ go run -tags idleexit .     # closes itself after two minutes with nobody at the
 go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
 go run -tags scenario .     # a chosen set of rings, a chosen opening hand, a chosen enemy
 ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .   # a named one
-go run ./tools/balance      # what all 96 enemies do to the fighter, one line each
-go run ./tools/balance -v OgreWarlord   # one enemy, round by round
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 go run ./tools/sheets       # regenerate every review sheet and the index that links them
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
@@ -175,10 +179,9 @@ go run -tags "debugtrace idleexit" .    # traced and self-closing: the unattende
 
 **`demoplay` is how the combat screen gets looked at without anybody sitting at it.** It plays
 a scripted round or two — selection, DUEL!, playback — and writes the screen to `demo/*.png`,
-then closes. It exists because the screen is the one thing `go test` cannot check and
-`tools/balance` cannot either: a hand line, a marked verb, a highlight on the right row are all
-things you have to *see*. It is the `tools/glyphsheet` idea applied to a live screen, and the
-same rule applies — a stale picture is worse than none, so regenerate rather than trust an old
+then closes. It exists because the screen is the one thing `go test` cannot check: a hand line, a
+marked verb, a highlight on the right row are all things you have to *see*. It is the
+`tools/glyphsheet` idea applied to a live screen, and the same rule applies — a stale picture is worse than none, so regenerate rather than trust an old
 capture. `demo/` is gitignored; fifty near-identical PNGs are not a diff anyone wants.
 
 ```powershell
@@ -202,25 +205,15 @@ there. **If a package's tests start importing `assets`, they have joined that gr
 package's own no-Ebitengine rule still holds and is still worth holding, but it no longer
 buys a display-free test run.
 
-**What cannot be unit-tested gets a tool instead.** `internal/screens` needs a window, so
-anything it decides is checked by launching the game; anything the *rules* decide about
-balance is checked by `tools/balance`, which plays whole duels through the real
-`ResolveRound` and prints who wins. It exists because an unwinnable enemy shipped and was
-invisible — losing slowly looks exactly like losing to bad draws. Run it after touching a
-cost, a stat line, or a planner.
+**What cannot be unit-tested gets a tool instead.** `internal/screens` needs a window, so anything
+it decides is checked by launching the game, and the sheets under `docs/sheets/` are how the
+catalogues get reviewed.
 
-**The roster table says how fast, not only who** *(2026-08-18)*. A winning posture is written
-`trips:2` and a wall names the posture that came closest and what the enemy had left —
-`NOTHING - a wall (closest trips, enemy 3% left)`. It printed win-or-lose alone until then, and a
-whole damage-formula change came out byte-identical in it: a table of verdicts only moves when a
-posture crosses that line, which is the last and coarsest thing a balance change touches. **A
-figure to tune against has to be in the table, not only under `-v`.**
-
-**It is a sample rather than an exact answer as of 2026-08-14**, because combat rolls for
-lightning. It seeds one fixed source (`balanceSeed`) per run so a result is reproducible, but a
-posture that wins half its duels and one that wins all of them currently print the same line.
-**Read a single run as one draw**, and treat multi-sample reporting as the next thing the tool
-needs before its numbers can be tuned against.
+**Nothing simulates a duel.** An unwinnable enemy is invisible while playing, because losing slowly
+looks exactly like losing to bad draws — so a cost, a stat line or a planner can be changed today
+without anything catching what it did. `internal/combat`, `internal/decks` and `internal/pyramid`
+are all free of Ebitengine, which is what would let a headless simulation be written. Keep them
+that way.
 
 ## Releasing — `.github/workflows`
 
@@ -417,12 +410,17 @@ The action box is a *game* widget, not a UI widget: draggable action cards with 
 action-point validation. General-purpose toolkits are weakest at exactly that, so
 hand-rolling costs little and buys full control.
 
-### Glyphs are generated, not drawn — and not scaled from one colour
+### Glyphs are mostly generated, and drawn art is the exception
 
 [internal/systems/glyphs.go](internal/systems/glyphs.go) generates the pixel-art
-glyphs on the action cards, drawn at 1:1 — 64x64 for the damage sword and the runner, 32x32
-for the three category glyphs. **Generated art has no provenance question**, which is the
-whole reason to prefer this pattern for interface art in a game that will be sold.
+glyphs, drawn at 1:1 — 64x64 for the damage sword and the runner, 32x32 for the small ones.
+**Generated art has no provenance question**, which is the whole reason to prefer this pattern
+for interface art in a game that will be sold.
+
+**A `GlyphKind` has two possible backings, and `RenderGlyphAt` dispatches between them.** Most are
+a generated silhouette; the four **form marks are authored PNGs** in `assets/form/`, listed in
+`glyphArt` and loaded by key like the ring and effect art. A caller asks for a kind and does not
+know which it got, which is what let drawn art in without a second drawing path.
 
 It is a **generator, not a bitmap**. A glyph is a filled silhouette described by horizontal
 spans; the rim is *derived* by asking which filled pixels touch empty space, and the
@@ -433,13 +431,11 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   one pixel off each side, so a three-pixel crossguard renders as two rows of outline
   around one row of metal and reads as a scratch. This is the main constraint the technique
   imposes and it drives every span in the file.
-- **Nothing on a card is a glyph as of 2026-08-15.** The three category glyphs said which phase a
-  card resolved in, and the deck rework replaced that fact with a *form* — stab, slash, crush,
-  plan — which has no art yet. A card's corner therefore carries an **uppercase letter**: S, **D**
-  for slash (Stab took the S), C, P. `cards.Form.glyph()` is the seat the art goes back into and
-  returns nothing for every form today; `internal/systems` is untouched and the glyph sheet
-  still renders everything. The paragraphs below describe the generator, which is still the
-  pattern for interface art and is still what the mute button uses.
+- **A card's corner carries a drawn form mark** *(2026-08-23)*: a spear, a sword, an axe and a
+  bulb for stab, slash, crush and plan, from `assets/form/`. `cards.Form.glyph()` maps a form to
+  its kind and reports `FormNone` as having none, so a ring and both fighter cards leave the slot
+  empty. **The mark is tinted by the card's element** — see the card section below, which is where
+  the element is said now.
 - **Glyphs are the deliberate exception to the colour rule below.** They carry a five-value
   `Palette` — outline, specular, highlight, mid, shade, accent — because a bevel cannot be
   made from one colour scaled down. They are drawn untinted; a disabled card dims them by
@@ -460,8 +456,8 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **Glyphs are not all one size, and `systems.SizeOf(kind)` is the authority.** The damage
   sword and the runner are 64; the retired category glyphs were **22**. Never assume
   `GlyphSize` at a call site — a small glyph centred in a 64-pixel hole is the failure. **The
-  card is now the exception and says so**: `Style.FormSize` names the box, because a letter has
-  no intrinsic size and centring by ink is what makes it fill one.
+  card is now the exception and says so**: `Style.FormSize` names the box, and the mark is
+  centred on its ink so that it fills one.
 - **A glyph cannot be resized, so a smaller one is a *different drawing*.** `CardGlyphScale`
   is 1 and integer-only: the rim is derived one pixel thick, so a third-size copy of a 64px
   shape is a third-size copy of its outline with nothing inside. The 22px category glyphs
@@ -473,8 +469,9 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   mid-enum silently re-points every existing entry — the same hazard `combat.ConceptID` carries,
   which is why an ID is never serialized.
 - **The card is 162x224, and it is a column and a paragraph.** The form mark sits in a 32px
-  box at (10,8) — **inside the card, not hanging off the corner**, because a clipped letter
-  reads as a rendering fault where a clipped silhouette reads as itself; under it the cost dashes
+  box at (10,8) — **inside the card, not hanging off the corner**, because a mark carrying
+  detail loses it to the card's curve where a plain silhouette would survive the crop; under it
+  the cost dashes
   make a **26px column**; and **the effect text takes everything right of that**, centred in it
   both ways, at 18pt. `blitGlyph` still clips to the rounded shape, which is what a future glyph
   will want back.
@@ -899,9 +896,9 @@ Six facts about it that are load-bearing:
 - **`seeds` imports nothing and `combat` deliberately does not import it.** The rules take an
   injected `*rand.Rand` and stay ignorant of where it came from.
 - **`decks` sits above `combat` and `data` and below `screens`**, which is the whole reason it is
-  a package: it is the one place allowed to turn a JSON card list into rules types, and
-  `tools/balance` imports it without importing a screen. `pyramid` exists for the same reason on
-  the other axis — the climb is arithmetic the balance tool needs and a screen must not own.
+  a package: it is the one place allowed to turn a JSON card list into rules types, reachable
+  without importing a screen. `pyramid` exists for the same reason on the other axis — the climb is
+  arithmetic a headless caller needs and a screen must not own.
 - **`state` importing `session` is the one documented bend**, and it is what makes `state` reach
   `combat` transitively. The rule it bends was written to stop *screen* state leaking into global
   state; a run is not screen state.

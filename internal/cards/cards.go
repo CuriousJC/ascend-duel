@@ -136,13 +136,8 @@ func Forms() []Form {
 	return []Form{FormStab, FormSlash, FormCrush, FormPlan}
 }
 
-// formGlyphs is the picture each form carries in the card's corner.
-//
-// **The four marks landed on 2026-08-23 and the letters went with them.** From the deck rework
-// until then a card wrote an uppercase S, D, C or P here, because the three category glyphs it
-// used to carry described phases a card no longer has. That was always a placeholder and it was
-// a poor one: Stab took the S, so Slash had to be marked D "for the draw of a blade", which is a
-// thing nobody can read off a card. A spear, a sword, an axe and a bulb say it without a legend.
+// formGlyphs is the picture each form carries in the card's corner: a spear, a sword, an axe and
+// a bulb, which say the form without a legend.
 //
 // **FormNone is absent on purpose**, so the lookup below reports it as having no glyph — a ring
 // and both fighter cards belong to no form, and the slot has to stay empty for them.
@@ -159,9 +154,10 @@ func (f Form) glyph() (systems.GlyphKind, bool) {
 	return k, ok
 }
 
-// Surface is every card's face, whatever its element. One constant, deliberately: the
-// border is now the only thing saying which element a card is, and a surface that also
-// shifted would be saying it twice and leaving nothing for the next distinction.
+// Surface is every card's face, whatever its element. One constant, deliberately: the left
+// column — the tinted form mark and the cost ticks under it — is what says which element a card
+// is, and a surface that also shifted would be saying it twice and leaving nothing for the next
+// distinction.
 //
 // It is off-white rather than white so the card reads as a card rather than as a hole in
 // the screen, and so a pure-white glyph Specular still has somewhere to go.

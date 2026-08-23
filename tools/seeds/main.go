@@ -14,8 +14,8 @@
 // asked for. The re-check at the top is there to make that loud — a demo testing a Flurry
 // against a hand that no longer holds three Strikes is worse than no demo, because it passes.
 //
-// It is a tool rather than a test for the same reason `tools/balance` is: the answer is a
-// table to read and act on, not a pass or a fail. What *would* make a reasonable test one day
+// It is a tool rather than a test because the answer is a table to read and act on, not a pass
+// or a fail. What *would* make a reasonable test one day
 // is the re-check alone.
 package main
 

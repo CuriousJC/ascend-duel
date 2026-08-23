@@ -49,10 +49,10 @@ const (
 	// one widget.
 	logButtonToDeckGap = 18
 
-	// **One character on a square**, exactly as the sort column is and for the same reason —
-	// there is no tooltip in the input vocabulary yet. `L` collides with neither the `$`/`T`/`E`
-	// of the sort column nor the S/D/C/P a card's corner mark uses, which are the only other
-	// single letters on this screen that already mean something.
+	// **One character on a square**, exactly as the sort column is and for the same reason — the
+	// button is too small for a word. `L` does not collide with the `$`/`T`/`E` of the sort
+	// column, which is the only other place a single character on this screen means something.
+	// **It carries no tooltip yet**, though the widget exists; see the tooltip entry in TODO.md.
 	logButtonLabel    = "L"
 	logButtonTextSize = 30
 )

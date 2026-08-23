@@ -360,8 +360,8 @@ func (d Duelist) missChance() int { return capPct(d.totalOf(EffectMissChance)) }
 //
 // **This is the only randomness in `internal/combat` and it arrives the way CLAUDE.md requires**: an
 // injected `*rand.Rand` on `ResolveRound`, never a package-level source. The costs are real and were
-// accepted — `tools/balance` becomes a distribution rather than an exact answer, and the stream is
-// advanced per attack phase, so a change early in a duel reshuffles every roll after it.
+// accepted — the stream is advanced per attack phase, so a change early in a duel reshuffles every
+// roll after it.
 //
 // A nil source means "no rolls", which is what keeps a caller that has no business being random — a
 // preview, a test pinning the deterministic parts — from silently getting one.

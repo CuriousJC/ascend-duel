@@ -91,8 +91,8 @@ func EnemyRecords() []string {
 // sometimes cannot find what it wants.
 const EnemyHandSize = 7
 
-// **This package declares no seed.** `EnemySeed` lived here until 2026-08-17, only because
-// `tools/balance` cannot import `internal/screens` and the pinned opponent shuffle had to sit
+// **This package declares no seed.** `EnemySeed` lived here until 2026-08-17, only because a
+// headless caller could not import `internal/screens` and the pinned opponent shuffle had to sit
 // somewhere both could reach. That pressure is what produced `internal/seeds`, so it is
 // `seeds.EnemyDeckPin` now — and a package whose job is turning card data into rules types is
 // better for owning no randomness at all. `NewEnemyPile` still takes its seed as a parameter,
@@ -104,7 +104,7 @@ const EnemyHandSize = 7
 // an oversight.** Persisting it was the first thing tried and it deadlocked: a planner only ever
 // takes what it can spend, so every card it could not use stayed in hand. By round three the hand
 // was seven dead cards, nothing could be drawn on top of them, and the opponent stood still for
-// the rest of the duel. `tools/balance` showed it as a roster nothing could lose to.
+// the rest of the duel — a roster nothing could lose to.
 //
 // The player's hand may persist because Discard exists — since 2026-08-06 it is the *only*
 // way an unwanted card leaves a hand, which is exactly the lever an enemy does not have.

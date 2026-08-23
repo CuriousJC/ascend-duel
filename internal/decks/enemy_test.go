@@ -8,8 +8,8 @@ import (
 )
 
 // This package needs no window — it is `data` plus `internal/combat`, neither of which
-// imports Ebitengine — which is the same property that lets tools/balance run headlessly and
-// the reason the enemy decks live here rather than on the combat screen.
+// imports Ebitengine — which is the reason the enemy decks live here rather than on the
+// combat screen.
 
 func testEnemy() combat.Duelist {
 	d := combat.Duelist{DMG: 10, Actions: 5}
@@ -63,11 +63,10 @@ func TestAnEnemyKeepsActingForAWholeDuel(t *testing.T) {
 	// **The bug this was written for.** The first version kept the opponent's hand between
 	// rounds, the way the player's does. The planner only ever takes what it can spend, so
 	// everything it could not use stayed put: by round three the hand was seven dead cards,
-	// nothing could be drawn on top of them, and the enemy stood still for the rest of the duel.
-	// tools/balance reported it as a roster nothing could lose to, which is exactly the kind of
-	// silent balance failure that tool exists to catch.
+	// nothing could be drawn on top of them, and the enemy stood still for the rest of the duel:
+	// a roster nothing could lose to, and the kind of balance failure that is silent in play.
 	//
-	// Forty rounds is the balance tool's stalemate bound, so this covers a whole duel.
+	// Forty rounds is longer than any duel runs, so this covers a whole one.
 	for _, name := range sampleRecords(t) {
 		p := NewEnemyPile(name, seeds.EnemyDeckPin, EnemyHandSize)
 		d := testEnemy()

@@ -4,7 +4,7 @@
 // **It is tower generation, not a rule about resolving a round**, which is why it is not in
 // internal/combat, and it is not a screen's either — the combat screen used to own the fight
 // order on its own scene, which meant the shape of the run was decided by the screen you fight
-// on and rebuilt every time you entered it. `tools/balance` needs the same arithmetic and
+// on and rebuilt every time you entered it. Anything headless needs the same arithmetic and
 // cannot import a screen, which is the other half of why this is a package.
 //
 // **No Ebitengine, ever**, for that reason, and no randomness of its own: New takes the source

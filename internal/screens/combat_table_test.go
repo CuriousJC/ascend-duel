@@ -555,17 +555,36 @@ func TestOneAttackIsTheHighCard(t *testing.T) {
 	}
 }
 
-func TestAQueueWithNoAttackNamesNothing(t *testing.T) {
-	// **A hand is an attack.** Plans build the round rather than land it, so there is nothing for a
-	// hand to be made of and nothing to name — which is the line the High Card arriving in the
-	// preview must not blur.
+func TestAQueueOfPlansNamesAHandThatLandsNothing(t *testing.T) {
+	// **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Plans carry
+	// an element and a form now, so two of them build a hand like anything else — this was
+	// `TestAQueueWithNoAttackNamesNothing` and asserted the opposite until they joined.
+	//
+	// **The preview naming one is the point, not a leak.** A player queuing two Prepares is forming
+	// a Form Pair; what they are not doing is dealing damage with it, and the two facts have to be
+	// visible together or the multiplier looks like it went missing.
 	s := selecting(
-		combat.Of(combat.Prepare, combat.Basic),
-		combat.Of(combat.Plan, combat.Basic),
+		combat.Of(combat.Prepare, combat.Fire),
+		combat.Of(combat.Plan, combat.Ice),
 	)
 
-	if _, ok := s.previewAttack(); ok {
-		t.Error("a queue of plans previewed a hand")
+	blow, turn, ok := s.previewBlow()
+	if !ok {
+		t.Fatal("two plans previewed no hand at all")
+	}
+	if blow.Hand.Match != combat.AxisForm {
+		t.Errorf("two plans of different concepts and colours formed a %v hand, want a form hand",
+			blow.Hand.Match)
+	}
+	// The blow is real and worth nothing: `Card.Damage` is zero for every verb that is not an
+	// attack, so the multiplier multiplies nothing. That is the accepted cost of plans joining
+	// hands, and it is worth pinning rather than leaving to be rediscovered.
+	base := 0
+	for _, i := range blow.Cards {
+		base += combat.Duelist{DMG: 10}.CardDamage(turn[i].Card)
+	}
+	if base != 0 {
+		t.Errorf("a hand of plans carries %d damage, want 0", base)
 	}
 }
 

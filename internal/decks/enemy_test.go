@@ -49,12 +49,12 @@ func TestEveryEnemyHasADeck(t *testing.T) {
 
 		attacks := 0
 		for _, c := range deck {
-			if c.Spec().Verb == combat.VerbAttack && c.Spec().Target == combat.TargetOpponent {
+			if c.Spec().Verb == combat.VerbAttack {
 				attacks++
 			}
 		}
 		if attacks == 0 {
-			t.Errorf("%s holds no attack aimed at anyone, so it can never win", name)
+			t.Errorf("%s holds no attack at all, so it can never win", name)
 		}
 	}
 }

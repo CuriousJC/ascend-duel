@@ -94,9 +94,9 @@ switch statements over a closed `ActionKind` enum with a `CostTier` in the JSON 
 ~400 a per-enemy deck list produces, so the card became a record and both went.
 
 What is checked now: a verb the vocabulary has, a cost that can be paid, an amount that does
-something, a defence under 100% (**nothing may stop a blow outright**), and no bank or draw
-aimed at the opponent — drain and mill are designed and unbuilt, so they are refused rather than
-accepted and silently applied to the wrong duelist.
+something, and a defence under 100% (**nothing may stop a blow outright**). **A card does not say
+who it lands on** — the verb decides, an attack on the opponent and everything else on its own
+duelist, and there is no field to disagree with.
 
 **A bad record panics at package init**, so it fails on launch rather than mid-duel. A deck list
 or a catalogue naming something the rules cannot resolve is the same failure and takes the same
@@ -206,8 +206,9 @@ the plain budget cannot reach.
 
 **A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
 reward vocabulary to extend, no mix axis counting distinct colours, and no `scope` field — statuses
-come from elements and rings, and the matcher counts attacks aimed at the opponent because that is
-what `formsBlow` says, not because an entry asked it to. **Adding a rung is one entry in the JSON**;
+come from elements and rings, and the matcher counts every card in the turn because that is what it
+does, not because an entry asked it to — what a card is worth to a hand is decided by the axis it is
+counted on. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.
 
 **The multiplier multiplies the hand's own cards, and `100` is the identity** *(2026-08-18)*. A

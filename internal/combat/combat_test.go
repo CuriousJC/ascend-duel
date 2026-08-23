@@ -3,8 +3,6 @@ package combat
 import (
 	"math/rand"
 	"testing"
-
-	"github.com/curiousjc/ascend-duel/data"
 )
 
 // duelist builds a full-health duelist for tests.
@@ -788,20 +786,4 @@ func TestThePlannerPrefersAShieldToABank(t *testing.T) {
 		}
 	}
 	t.Errorf("planned %v with 3 spare AP and a Defend in hand", planKey(plan))
-}
-
-func TestThePlannerNeverSpendsAnAttackOnItself(t *testing.T) {
-	// Recoil costs its owner life and contributes nothing to the hand, so a planner reaching for
-	// one would be choosing to hurt itself for no gain. Nothing reads recoil yet — see MECHANICS.md
-	// — and this is what pins that the search does not stumble into it.
-	recoil := mustTestConcept("PlannerRecoil", data.CardData{
-		Label: "PlannerRecoil", Verb: "attack", Amount: 200, Cost: 1, Target: "self",
-	})
-
-	d := duelist(10, 5, 100)
-	for _, c := range PlanFor(d, PlainCards(recoil, Strike)) {
-		if c.Concept == recoil {
-			t.Error("the planner queued a recoil card, which only costs it life")
-		}
-	}
 }

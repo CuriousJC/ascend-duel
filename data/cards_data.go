@@ -57,13 +57,6 @@ type CardData struct {
 	// Cost is action points out of the round's budget.
 	Cost int `json:"Cost"`
 
-	// Target is who the card lands on: `opponent` or `self`. Empty means the obvious one for the
-	// verb — an attack hits the opponent, everything else acts on its own duelist.
-	//
-	// **An attack aimed at self is recoil**, and it is the reason this field is not merely
-	// derivable from the verb. It costs its owner life.
-	Target string `json:"Target"`
-
 	// Form is which group of cards this concept belongs to — stab, slash, crush or plan. Empty
 	// means none, which is what every enemy card is: a form is the player's deck axis, the thing
 	// a pair is counted on and the letter in the card's corner, and an enemy card claiming to be a

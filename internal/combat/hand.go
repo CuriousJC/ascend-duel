@@ -15,6 +15,16 @@ import "sort"
 // wears poker's names because it is poker's question — high card, pair, two pair, three of a kind,
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
 //
+// **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Plans carry an
+// element now, so they are counted like anything else: two Prepares are a Card Pair, and a turn of
+// four fire cards is an Elemental Four of a Kind whether any of them swung. They bring no damage
+// into the sum, since a plan's `Damage` is zero — so a hand of nothing but plans multiplies nothing
+// and lands nothing, and a plan beside two attacks raises the rung the two attacks are paid at.
+// That last case is the whole of what the change buys, and the whole of what it costs.
+//
+// **The colours a hand shows include its plans**, so a fire Prepare arms a burn on a turn with no
+// fire attack in it. That follows from the same decision and is the sharper half of it.
+//
 // **What "agree" means is the hand's own business** *(2026-08-19)*. Every rung exists three times
 // over, once per `Axis`: two Bashes are a Card Pair, a Bash and a Cleave are a Form Pair only if
 // they share a form — they do not — and an ice Bash beside an ice Thrust is an Elemental Pair
@@ -82,8 +92,11 @@ const (
 	// a concept only by being its four elemental copies.
 	AxisConcept Axis = iota
 
-	// AxisForm counts cards of the same form — stab, slash or crush. `FormNone` never counts, so
-	// an enemy's formless deck cannot build one.
+	// AxisForm counts cards of the same form — stab, slash, crush or plan. `FormNone` never
+	// counts, so an enemy's formless deck cannot build one.
+	//
+	// **Plan is a fourth form as of 2026-08-23**, since plans join hands now. Twelve of the
+	// player's forty-eight cards share it, which makes it the commonest value on this axis.
 	AxisForm
 
 	// AxisElement counts cards of the same colour. `Basic` never counts, for the same reason.
@@ -124,8 +137,11 @@ func ParseAxis(name string) (Axis, bool) {
 //
 // **`FormNone` and `Basic` are absences rather than values** *(2026-08-19)*, so a card carrying
 // one matches nothing on that axis. Every enemy card is both, which is what stops a formless,
-// colourless deck from reading as a table full of elemental hands — and the player's plans are
-// basic too, though `formsBlow` has already excluded them by the time this is asked.
+// colourless deck from reading as a table full of elemental hands.
+//
+// **The player has no basic card left** *(2026-08-23)*. The plans used to be the exception and
+// were excluded before this was asked anyway; they now ship in the four colours like every attack,
+// so `FormPlan` and every element are live values here and the absences belong to the enemies.
 func matchValue(c Card, a Axis) (int, bool) {
 	switch a {
 	case AxisForm:
@@ -142,14 +158,15 @@ func matchValue(c Card, a Axis) (int, bool) {
 // spread is how many different values a hand can spread its groups across on this axis, or 0 for
 // an axis wide enough that the question cannot bite.
 //
-// It is what refuses a four-group hand on the form axis: only three forms ever reach a blow, since
-// `FormPlan` is filtered out before the matcher sees it, so such an entry is a rung nobody could
-// ever climb. Concepts are hundreds wide once the enemy decks are registered and a turn holds five
-// cards, so that axis is left unchecked rather than tied to a registry that grows.
+// It is what refuses a hand asking for more distinct values than the axis has. **Every form now
+// reaches a blow** *(2026-08-23)* — `FormPlan` used to be filtered out before the matcher saw it,
+// which is why this was `len(Forms()) - 1` — so the form axis is as wide as the enum. Concepts are
+// hundreds wide once the enemy decks are registered and a turn holds five cards, so that axis is
+// left unchecked rather than tied to a registry that grows.
 func (a Axis) spread() int {
 	switch a {
 	case AxisForm:
-		return len(Forms()) - 1
+		return len(Forms())
 	case AxisElement:
 		return ElementCount - 1
 	default:
@@ -359,10 +376,14 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 // and whether that satisfies its groups. A card with no value on that axis — a formless or
 // colourless one — is skipped rather than tallied under a zero everything else would join.
 //
-// **Only the cards that form a blow are counted, and that is the matcher's rule rather than the
-// catalogue's** *(2026-08-17)*. An entry used to name the categories it counted, but `formsBlow`
-// is strictly narrower than "is an attack" — it also excludes recoil — so the field could never
-// change what was counted and only invited an entry to claim otherwise.
+// **Which cards are counted is the matcher's rule rather than the catalogue's** *(2026-08-17)*. An
+// entry used to name the categories it counted, and it could never change what was counted — it
+// only invited an entry to claim otherwise.
+//
+// **It counts every card in the turn** *(2026-08-23)*. Plans are in, so a pair of Prepares is a Card
+// Pair and a turn of one colour is an elemental hand whether it swung or not; they bring no damage
+// with them, since `Card.Damage` is zero for every verb that is not an attack. What is left out is
+// decided by `matchValue` — a card with no value on the hand's own axis — and by nothing else.
 //
 // **Groups are filled largest-count-first**, and a tie goes to the value whose first card was
 // played first. A full house asked for `[3,2]` against three Jabs and two Strikes has only one
@@ -386,9 +407,6 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 
 	var tallies []tally
 	for i, s := range turn {
-		if !s.Card.formsBlow() {
-			continue
-		}
 		v, counts := matchValue(s.Card, h.Match)
 		if !counts {
 			continue
@@ -462,14 +480,13 @@ func biggestAttack(turn []Slot) []int {
 	return []int{best}
 }
 
-// formsBlow reports whether this card contributes to its side's one attack.
+// formsBlow reports whether this card contributes damage to its side's one attack.
 //
-// **Recoil is an attack that does not** *(2026-08-16)*. It resolves in the attack phase and is
-// announced like any other card, but it is aimed at its own owner — so counting it toward a hand
-// would let a duelist earn a Four of a Kind by hurting themselves four times.
+// **It is about damage, not about membership** *(2026-08-23)*. Every card a duelist can queue is
+// counted toward a hand — see `matchCountOf` — and this is the narrower question `biggestAttack`
+// asks: which of them can be the High Card. A plan cannot, because it deals nothing.
 func (c Card) formsBlow() bool {
-	s := c.Spec()
-	return s.Verb == VerbAttack && s.Target == TargetOpponent
+	return c.Spec().Verb == VerbAttack
 }
 
 // damageRankDMG is the DMG `biggestAttack` ranks concepts at. It never reaches a life total

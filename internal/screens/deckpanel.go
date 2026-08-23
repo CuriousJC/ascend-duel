@@ -10,7 +10,7 @@ package screens
 //
 // **So the panel takes a `deckContents` rather than a scene.** Which cards are in which pile,
 // what the counts line says and how the dialog is closed are all the caller's; what is here is
-// the arrangement — five rows, one per colour plus the plans, sorted so that a card does not move
+// the arrangement — four rows, one per colour, sorted so that a card does not move
 // when it is spent, it only dims.
 //
 // **The extraction was the point, not a side effect.** TODO.md carried this as an entry whose own
@@ -255,8 +255,9 @@ const (
 	// Offsets down from the panel's top edge.
 	//
 	// **Everything under the title came up by eight on 2026-08-15**, for a grid that briefly had
-	// six rows. It is back to five — four colours and the plans — and the clearance is simply
-	// spare now. TestDeckPitchMatchesTheCard is what holds the arithmetic either way.
+	// six rows. It is four now — one per colour, the plans folded in beside them on 2026-08-23 —
+	// so the clearance is spare twice over. TestDeckPitchMatchesTheCard holds the arithmetic
+	// either way.
 	deckTitleTop  = 40
 	deckCountsTop = 70
 	deckLegendTop = 92
@@ -410,28 +411,25 @@ func deckRowElements() []cards.Element {
 	return out
 }
 
-// deckRowCount is how many rows the overlay draws: one per colour, then the plans.
+// deckRowCount is how many rows the overlay draws: one per colour, and that is all.
 //
-// **The plans get a row of their own rather than sitting with the basics** *(2026-08-15)*. Every
-// plan card is basic and no attack card is, so the alternative was a row holding nothing but the
-// plans under a label reading "basic" — which names the colour rather than the thing, on the one
-// row where the colour is the least interesting fact about the cards in it.
-var deckRowCount = len(deckRowElements()) + 1
-
-// deckPlanRow is the index of that row, and where a card goes when it is a plan. It is
-// deliberately not a `cards.Element` — a plan is basic and saying otherwise would put a colour
-// on a card that has none.
-var deckPlanRow = deckRowCount - 1
-
-// deckRowFor is which row a card belongs to: its colour, or the plan row.
+// **The plans lost their own row on 2026-08-23**, when they stopped being basic. They had one
+// because every plan was colourless and no attack was, so the alternative then was a row labelled
+// "basic" holding nothing but plans — naming the colour rather than the thing, on the one row
+// where the colour was the least interesting fact about the cards in it. Now a Prepare is a fire
+// card, and the row that says "fire" is where a player looks for it.
 //
-// **A basic attack has nowhere to go and lands in the first row**, which is the deck list being
-// wrong rather than this being lenient — `data/duelist_cards.json` ships no basic attacks and
-// TestEveryCardLandsInExactlyOneDeckRow is what would catch one arriving.
+// A row therefore holds twelve — nine attacks and three plans — which is the width the grid was
+// already sized against, since the old plan row held twelve too.
+var deckRowCount = len(deckRowElements())
+
+// deckRowFor is which row a card belongs to: its colour, and nothing else decides.
+//
+// **A basic card has nowhere to go and lands in the first row**, which is the deck list being
+// wrong rather than this being lenient — `data/duelist_cards.json` ships no basic card of any kind
+// since the plans were coloured, and TestEveryCardLandsInExactlyOneDeckRow is what would catch one
+// arriving.
 func deckRowFor(c actionCard) int {
-	if c.Category() == combat.CategoryPlan {
-		return deckPlanRow
-	}
 	for i, e := range deckRowElements() {
 		if e == artFor(c.Element) {
 			return i
@@ -440,19 +438,15 @@ func deckRowFor(c actionCard) int {
 	return 0
 }
 
-// deckRowLabel is what the gutter says beside a row, and the colour it says it in.
+// deckRowLabel is what the gutter says beside a row, and the colour it says it in. Every row is a
+// colour now, so there is no longer a case for the one that was not.
 func deckRowLabel(row int) (string, color.RGBA) {
-	if row == deckPlanRow {
-		// Neutral, because the plan row is the one row that is not a colour. It borrows the
-		// basic border rather than inventing a fifth hue for a row that means "no element".
-		return "plan", cards.BorderOf(cards.Basic)
-	}
 	e := deckRowElements()[row]
 	return e.String(), cards.BorderOf(e)
 }
 
-// drawPileGrid lays **every card you own** into rows by element, plus a row of plans,
-// centred on centerX.
+// drawPileGrid lays **every card you own** into rows by element, centred on centerX. `formRank`
+// puts the plans at the end of their colour's row, after stab, slash and crush.
 //
 // It used to show only what was outside the hand, under the heading "What is left". That
 // made the panel change *shape* as a round went on: eight cards vanished at the start of

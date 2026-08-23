@@ -35,18 +35,12 @@ func TestTheRegistryRefusesACardTheRulesCannotResolve(t *testing.T) {
 	}{
 		{"no label", data.CardData{Verb: "attack", Amount: 100, Cost: 1}},
 		{"unknown verb", data.CardData{Label: "Bad1", Verb: "smite", Amount: 100, Cost: 1}},
-		{"unknown target", data.CardData{Label: "Bad2", Verb: "attack", Amount: 100, Cost: 1, Target: "everyone"}},
 		{"unknown form", data.CardData{Label: "Bad3", Verb: "attack", Amount: 100, Cost: 1, Form: "punch"}},
 		{"zero amount", data.CardData{Label: "Bad4", Verb: "attack", Amount: 0, Cost: 1}},
 		{"negative cost", data.CardData{Label: "Bad5", Verb: "attack", Amount: 100, Cost: -1}},
 
 		// Nothing reduces a blow to zero — a card that did would delete a whole opposing turn.
 		{"total defence", data.CardData{Label: "Bad6", Verb: "defend", Amount: 100, Cost: 3}},
-
-		// Draining and milling are designed and unbuilt. A card asking for one would silently act
-		// on its own duelist instead, which is the quiet failure this refuses.
-		{"bank at the opponent", data.CardData{Label: "Bad7", Verb: "bank", Amount: 2, Cost: 1, Target: "opponent"}},
-		{"draw at the opponent", data.CardData{Label: "Bad8", Verb: "draw", Amount: 2, Cost: 2, Target: "opponent"}},
 	}
 
 	for _, c := range cases {

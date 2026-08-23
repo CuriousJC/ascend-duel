@@ -237,7 +237,8 @@ func resolveWorm(r data.WormData) (Worm, error) {
 		}
 		if e == combat.Basic {
 			// A worm that greyed a card out would be a way to *lose* a colour rather than choose
-			// one, and no attack card in the deck is drab.
+			// one, and no card in the player's deck is drab — the plans stopped being the
+			// exception on 2026-08-23.
 			return Worm{}, fmt.Errorf("%s turns a card basic, which takes a colour away", r.WormRecord)
 		}
 		w.Element = e

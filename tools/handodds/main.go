@@ -23,7 +23,9 @@
 //     pile and keep what was not spent, which this does not model.
 //   - The real budget and the real bound: `Actions` from data/duelists.json, and five cards. `-ap`
 //     overrides the budget, for the one rung the plain one cannot reach at all — see the flag.
-//   - Attacks only, since a plan can never join a hand.
+//   - **Every card counts, including plans** *(2026-08-23)*. They carry an element and a form now
+//     and join hands like anything else — bringing no damage, which this tool does not measure
+//     anyway. It is reachability, and a hand of plans is as reachable as any other.
 //
 // It is not a test. There is nothing here to assert — the output is a table to tune against, and
 // the tuning is a judgement call about how much a rarer hand should pay.
@@ -179,15 +181,13 @@ func countAttacks(deck []combat.Card) int {
 	return n
 }
 
-// perValue is how many attack cards share the commonest value on an axis — 4 per concept, 12 per
-// form, 9 per element in the shipping deck, which is the whole reason the three ladders are priced
-// apart.
+// perValue is how many cards share the commonest value on an axis, which is the whole reason the
+// three ladders are priced apart. **It counts plans now** *(2026-08-23)*, which is most of the
+// change: the element axis went from nine cards a colour to twelve, and the form axis gained a
+// fourth value twelve cards wide.
 func perValue(deck []combat.Card, a combat.Axis) int {
 	counts := map[int]int{}
 	for _, c := range deck {
-		if c.Category() != combat.CategoryAttack {
-			continue
-		}
 		v, ok := valueOf(c, a)
 		if !ok {
 			continue
@@ -204,12 +204,13 @@ func perValue(deck []combat.Card, a combat.Axis) int {
 }
 
 // valueOf mirrors the matcher's own rule: a card with `FormNone` or `Basic` carries no value on
-// that axis and cannot be counted on it.
+// that axis and cannot be counted on it. The player's deck has neither since the plans were
+// coloured, so every one of the forty-eight counts on all three axes.
 func valueOf(c combat.Card, a combat.Axis) (int, bool) {
 	switch a {
 	case combat.AxisForm:
 		f := c.Form()
-		return int(f), f != combat.FormNone && f != combat.FormPlan
+		return int(f), f != combat.FormNone
 	case combat.AxisElement:
 		return int(c.Element), c.Element != combat.Basic
 	default:
@@ -231,9 +232,6 @@ func minCost(hand []combat.Card, h combat.Hand) int {
 	// costs by value on this hand's axis, each list sorted so a prefix sum is the cheapest N.
 	byValue := map[int][]int{}
 	for _, c := range hand {
-		if c.Category() != combat.CategoryAttack {
-			continue
-		}
 		v, ok := valueOf(c, h.Match)
 		if !ok {
 			continue

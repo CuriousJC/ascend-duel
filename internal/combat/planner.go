@@ -72,7 +72,7 @@ func bestAttacks(d Duelist, hand []Card, budget, slots int, hands []Hand) ([]Car
 	var offence []int
 	for i, c := range hand {
 		s := c.Spec()
-		if s.Verb == VerbAttack && s.Target == TargetOpponent {
+		if s.Verb == VerbAttack {
 			offence = append(offence, i)
 		}
 	}

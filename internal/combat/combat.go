@@ -319,38 +319,6 @@ func resolveAttackPhase(
 		return events, actor, target
 	}
 
-	// **Recoil is paid before the blow, and it is not part of it.** An attack aimed at self costs
-	// its owner life and contributes nothing to the hand — `formsBlow` is what keeps it out of the
-	// matcher, so a Blood Rite beside two Strikes is a Strike Pair rather than a Strike Flurry.
-	//
-	// It resolves first because it is the wind-up rather than the follow-through: a duelist who
-	// tears themselves open to swing has already paid when the swing lands, and a recoil that
-	// killed its owner after their blow connected would read as a corpse having hit something.
-	for _, slot := range turn {
-		if !slot.Card.Spec().Recoils() {
-			continue
-		}
-		actor.CurrentLife = reduce(actor.CurrentLife, actor.CardDamage(slot.Card))
-		events = append(events, Event{
-			Kind:    KindDamage,
-			Side:    side,
-			Target:  side,
-			Element: slot.Card.Element,
-			Amount:  actor.CardDamage(slot.Card),
-			Life:    actor.CurrentLife,
-			Round:   round,
-		})
-	}
-	if !actor.Alive() {
-		events = append(events, Event{
-			Kind:   KindDefeated,
-			Side:   side,
-			Target: side,
-			Round:  round,
-		})
-		return events, actor, target
-	}
-
 	blow := blowFor(turn, hands)
 	if len(blow.Cards) == 0 {
 		return events, actor, target
@@ -543,29 +511,8 @@ func resolveSoloAttacks(
 			Round:   round,
 		})
 
-		// **Recoil is the card hurting its own owner**, and it is not a blow: it lands whatever the
-		// shock did, because a duelist tearing themselves open has already paid by the time the
-		// swing would have missed.
-		if slot.Card.Spec().Recoils() {
-			actor.CurrentLife = reduce(actor.CurrentLife, actor.CardDamage(slot.Card))
-			events = append(events, Event{
-				Kind:    KindDamage,
-				Side:    side,
-				Target:  side,
-				Element: slot.Card.Element,
-				Amount:  actor.CardDamage(slot.Card),
-				Life:    actor.CurrentLife,
-				Round:   round,
-			})
-			if !actor.Alive() {
-				events = append(events, Event{Kind: KindDefeated, Side: side, Target: side, Round: round})
-				return events, actor, target
-			}
-			continue
-		}
-
 		// The roll happens on the first card that could actually swing, and once only. Rolling
-		// before the loop would advance the stream for a turn of nothing but recoil.
+		// before the loop would advance the stream for a turn that never reaches one.
 		if !rolled {
 			missed, rolled = attackMisses(actor, rng), true
 		}

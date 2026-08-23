@@ -34,8 +34,7 @@ import (
 type Verb int
 
 const (
-	// VerbAttack deals damage. Aimed at the opponent it is every attack card in the game; aimed
-	// at self it is recoil.
+	// VerbAttack deals damage, and it is every attack card in the game.
 	VerbAttack Verb = iota
 
 	// VerbDefend reduces the one blow it answers, by Amount percent.
@@ -75,48 +74,6 @@ func ParseVerb(name string) (Verb, bool) {
 	return VerbAttack, false
 }
 
-// Target is who a card lands on.
-//
-// **It is not merely derivable from the verb, and recoil is why.** Every other pairing in the grid
-// is the obvious one — a defend shields its own duelist, a bank fills its own budget — so without
-// an attack that can be aimed inward this field would carry no information and no rule would read
-// it. Recoil is what makes it decide something.
-type Target int
-
-const (
-	TargetOpponent Target = iota
-	TargetSelf
-)
-
-func (t Target) String() string {
-	if t == TargetSelf {
-		return "self"
-	}
-	return "opponent"
-}
-
-// ParseTarget resolves a target from its name. An empty name is not an error — it means the
-// obvious target for the verb, which `defaultTarget` decides.
-func ParseTarget(name string) (Target, bool) {
-	switch name {
-	case "opponent":
-		return TargetOpponent, true
-	case "self":
-		return TargetSelf, true
-	default:
-		return TargetOpponent, false
-	}
-}
-
-// defaultTarget is where a card with no declared target lands: an attack on the opponent,
-// everything else on its own duelist.
-func defaultTarget(v Verb) Target {
-	if v == VerbAttack {
-		return TargetOpponent
-	}
-	return TargetSelf
-}
-
 // ConceptID identifies a registered concept. It is an index into the registry, so it is cheap to
 // compare, cheap to count with, and meaningless outside the process that assigned it.
 type ConceptID int
@@ -139,12 +96,8 @@ type Concept struct {
 	Verb   Verb
 	Amount int
 	Cost   int
-	Target Target
 	Form   Form
 }
-
-// Recoils reports whether this concept turns its damage on its own owner.
-func (c Concept) Recoils() bool { return c.Verb == VerbAttack && c.Target == TargetSelf }
 
 // registry is every concept the process knows, in registration order, plus the key index.
 //
@@ -191,22 +144,6 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 		return NoConcept, fmt.Errorf("%s names verb %q, which is not one of %s", key, c.Verb, verbList())
 	}
 
-	target := defaultTarget(verb)
-	if c.Target != "" {
-		t, ok := ParseTarget(c.Target)
-		if !ok {
-			return NoConcept, fmt.Errorf("%s names target %q, want \"opponent\" or \"self\"", key, c.Target)
-		}
-		target = t
-	}
-
-	// **The unbuilt half of the grid is refused rather than accepted and ignored.** Banking or
-	// drawing against an opponent is designed — drain and mill — and nothing resolves either, so a
-	// card asking for one would silently act on its own duelist instead. See MECHANICS.md.
-	if verb != VerbAttack && target != TargetSelf {
-		return NoConcept, fmt.Errorf("%s is a %s aimed at the opponent, which nothing resolves yet", key, verb)
-	}
-
 	form := FormNone
 	if c.Form != "" {
 		f, ok := ParseForm(c.Form)
@@ -236,7 +173,6 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 		Verb:   verb,
 		Amount: c.Amount,
 		Cost:   c.Cost,
-		Target: target,
 		Form:   form,
 	})
 	registryBy[key] = id

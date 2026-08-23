@@ -149,8 +149,10 @@ func check(r *record) error {
 		return fmt.Errorf("fight %d is before the first room", r.Fight)
 	}
 	if r.Enemy != "" {
-		if _, ok := data.LoadEnemies()[r.Enemy]; !ok {
-			return fmt.Errorf("%q is in no enemy record", r.Enemy)
+		_, enemy := data.LoadEnemies()[r.Enemy]
+		_, boss := data.LoadBosses()[r.Enemy]
+		if !enemy && !boss {
+			return fmt.Errorf("%q is in no enemy or boss record", r.Enemy)
 		}
 	}
 	for _, c := range r.Hand {

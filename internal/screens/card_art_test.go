@@ -533,3 +533,40 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 		}
 	}
 }
+
+func TestEveryBossDrawsItsPortrait(t *testing.T) {
+	// The same failure as the ring above, one catalogue over, and worse: a boss has no default
+	// picture to fall back on, so a mistyped `Portrait` is a stairway fight against a card with a
+	// hole in it — and the earliest one of those is three fights into a run.
+	//
+	// **The key is the filename stem, unlike almost every other asset** — see the //go:embed in
+	// assets/embed.go — so renaming a file is exactly what this catches.
+	records := data.LoadBosses()
+	if len(records) == 0 {
+		t.Fatal("no bosses loaded — this test is checking nothing")
+	}
+	for _, key := range data.BossOrder(records) {
+		art := records[key].Portrait
+		if _, ok := assets.LoadImageData()[art]; !ok {
+			t.Errorf("%s draws %q, which is not an embedded image", key, art)
+		}
+	}
+}
+
+func TestNoBossPortraitIsAnEnemyPortrait(t *testing.T) {
+	// The two families share one flat map of images, so the `-boss` suffix is the whole of what
+	// keeps them apart. A boss whose portrait key collided with a creature's would draw that
+	// creature, silently and correctly as far as every lookup is concerned.
+	enemies := data.LoadEnemies()
+	taken := make(map[string]string, len(enemies))
+	for _, key := range data.EnemyOrder(enemies) {
+		taken[enemies[key].Portrait] = key
+	}
+
+	bosses := data.LoadBosses()
+	for _, key := range data.BossOrder(bosses) {
+		if other, clash := taken[bosses[key].Portrait]; clash {
+			t.Errorf("%s and the enemy %s both draw %q", key, other, bosses[key].Portrait)
+		}
+	}
+}

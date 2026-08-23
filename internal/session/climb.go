@@ -27,9 +27,11 @@ import (
 //
 // **The climb is rolled once, here.** A defeat and a retry meet the same opponent again, because
 // nothing re-rolls it; see the randomness skill on why the enemy stream is its own.
-func Start(enemies map[string]data.EnemyData, runSeed int64) *Session {
+// **The bosses come in as a second pool rather than merged into the first**, because the climb
+// places them differently: a boss stands on a floor's stairway and nowhere else.
+func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, runSeed int64) *Session {
 	s := New(StartingDeck())
-	s.climb = pyramid.New(enemies, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
+	s.climb = pyramid.New(enemies, bosses, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
 	return s
 }
 

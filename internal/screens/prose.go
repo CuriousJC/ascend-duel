@@ -264,7 +264,7 @@ func swatchFor(side combat.Side) color.RGBA {
 
 // attackVerb is the word a form hits with. **The player's three forms are told apart by it** —
 // nine attack cards on one ladder, and a card whose text began "Deal" on all nine would leave the
-// corner letter carrying the distinction alone. An enemy card belongs to no form and simply hits.
+// corner mark carrying the distinction alone. An enemy card belongs to no form and simply hits.
 func attackVerb(f combat.Form) string {
 	switch f {
 	case combat.FormStab:

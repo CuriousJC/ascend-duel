@@ -190,13 +190,13 @@ func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
 	xdraw.CatmullRom.Scale(dst, at, src, b, xdraw.Over, nil)
 }
 
-// needsFont reports whether this style draws any text at all. A Mini card does not, and
-// requiring a parsed font to render one would make the deck overlay depend on something
-// it never uses.
-// **ShowForm is in the list now** *(2026-08-15)*: the corner mark is a typeset letter until the
-// forms have glyphs, so a style that draws one needs a font exactly as a name does.
+// needsFont reports whether this style draws any text at all. A style that draws none must not
+// need a parsed font, so that a caller with no text on screen does not depend on something it
+// never uses.
+//
+// **ShowForm is deliberately not in the list.** The corner mark is drawn art, not type.
 func (st Style) needsFont() bool {
-	return st.ShowName || st.ShowForm ||
+	return st.ShowName ||
 		st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0
 }
 
@@ -289,11 +289,6 @@ func identity(c color.RGBA) color.RGBA { return c }
 // **It replaced the phase glyph** *(2026-08-15)*. The sword, shield and open book named which
 // phase a card resolved in, and with the deck rebuilt on three attack forms that fact became
 // derivable from the form itself. What the corner says now is the thing a pair is counted on.
-//
-// **The uppercase letters that stood here in the meantime went on 2026-08-23**, along with the
-// typesetting that placed them. They were scaffolding from the moment the phase glyphs left, and
-// the reason the slot could not keep them is that two forms shared an initial: Stab took the S
-// and Slash was marked D "for the draw of a blade", which is a legend, not a mark.
 //
 // **Placed by its ink, not by its canvas** *(2026-08-14)*. Every glyph is drawn on a square
 // canvas and none of them fills it: the sword's ink started 7 across and 9 down, the shield's 7

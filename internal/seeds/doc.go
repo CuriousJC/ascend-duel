@@ -1,7 +1,7 @@
 // Package seeds derives every random stream in the game from the one run seed.
 //
 // **It exists because there was nowhere neutral to put a salt.** Four lived in
-// `internal/screens` and one in `internal/decks`, the latter only because `tools/balance`
+// `internal/screens` and one in `internal/decks`, the latter only because a headless caller
 // cannot import a screen — so no single place saw them all, and nothing could check that two
 // consumers had not been given the same one. This package imports nothing but the standard
 // library and sits at the bottom of the graph beside `internal/state`, which is what lets the

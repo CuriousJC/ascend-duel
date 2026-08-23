@@ -434,7 +434,7 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 //
 // **It borrows `cards.Hand` at the call site rather than taking a style of its own**, because a
 // worm has no cost and no form and that style draws both as nothing — no dashes for a zero cost,
-// no letter for FormNone. What is left is exactly the name and the text, which is the whole of
+// no mark for FormNone. What is left is exactly the name and the text, which is the whole of
 // what a worm has to say. A style of its own is what this wants the day a worm has art.
 //
 // **The border carries the element for the same reason a card's does**: an Ember Worm is red

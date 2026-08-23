@@ -14,7 +14,7 @@ import (
 // What it is defending is the reason the shuffle is banded at all: a run has to open on
 // something a starting fighter can beat. A flat shuffle of all 96 would eventually deal a
 // floor-eight opponent as fight one, and losing to one of those looks exactly like losing to
-// bad draws — the failure that put `tools/balance` in the repo.
+// bad draws, which is what makes it invisible in play.
 
 func testRoster() map[string]data.EnemyData {
 	recs := map[string]data.EnemyData{}

@@ -139,8 +139,7 @@ func builtHands() []combat.Hand {
 }
 
 // startingDeck is what a run opens with, built the way the combat screen builds it. It is not
-// imported from there: `internal/screens` links Ebitengine and this tool has no window, which is
-// the same wall `tools/balance` runs into.
+// imported from there: `internal/screens` links Ebitengine and this tool has no window.
 func startingDeck() []combat.Card {
 	var out []combat.Card
 	for _, rec := range data.LoadDuelistCards() {
@@ -168,7 +167,7 @@ func handSizeOf() int { return 8 }
 
 // budgetOf is the fighter's action points. **Named, never the first entry of the map** — the roster
 // is keyed and Go randomises map order, so taking whichever came out first would make the table
-// depend on nothing. tools/balance names the same record.
+// depend on nothing. tools/handsheet names the same record.
 func budgetOf() int { return data.LoadDuelists()["Fighter1"].Actions }
 
 func countAttacks(deck []combat.Card) int {

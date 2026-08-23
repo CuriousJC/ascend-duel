@@ -33,7 +33,7 @@
 // exist are a deliberate narrow exception: they compare constants and walk switch statements,
 // create no images, and guard cross-package invariants a compiler cannot see. They are not licence
 // to test the rest of the screen, and nothing here should reach for a window to keep one alive.
-// What cannot be unit-tested gets a tool instead — see tools/balance and the demoplay build tag.
+// What cannot be unit-tested gets a tool instead — see the demoplay build tag.
 //
 // # The files
 //

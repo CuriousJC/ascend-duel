@@ -17,5 +17,5 @@
 // rather than a measure of how hard one hits.
 //
 // The curve itself is not here. It moved to internal/pyramid, which is tower generation rather
-// than hydration, and which tools/balance reads without needing this package at all.
+// than hydration, and which a caller can read without needing this package at all.
 package entities

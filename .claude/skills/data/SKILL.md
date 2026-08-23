@@ -42,7 +42,7 @@ pictures.
 `enemies.json` beside portraits and floor bands, so `internal/combat` reading that file directly
 would cross the line above — and `data` may not import the rules to hand them over. `decks` sits
 between the two and is the only package allowed to turn a JSON card list into rules types. It
-registers every enemy concept. **No Ebitengine in it, ever**, because `tools/balance` imports it
+registers every enemy concept. **No Ebitengine in it, ever**, so an enemy deck can be built
 headlessly.
 
 ## The loader pattern

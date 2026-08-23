@@ -99,11 +99,6 @@ const (
 
 	// The four form marks a card carries in its corner: a spear, a sword, an axe, a bulb.
 	//
-	// **These replaced the uppercase letters on 2026-08-23.** A letter was always a
-	// placeholder — the deck rework took the three category glyphs away and left the corner
-	// with a fact and no picture — and it cost the corner its one job: Stab took the S, so
-	// Slash had to be marked D "for the draw of a blade", which is a legend rather than a mark.
-	//
 	// **Drawn rather than generated, and authored at 32.** The span language above describes a
 	// silhouette well and a spear's socket badly; and at 32 pixels the derived rim these would
 	// otherwise have got is exactly the one-pixel outline a downsample destroys, which is why

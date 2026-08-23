@@ -98,7 +98,7 @@ reroll.**
 ### Why it is a package *(2026-08-17)*
 
 The salts used to live in three packages — four in `internal/screens`, one in `internal/decks`,
-one in `tools/balance` — and `decks` held one **only** because the tool cannot import a screen.
+one in a tool — and `decks` held one **only** because a tool cannot import a screen.
 So no single place saw them all and **nothing could check that two consumers had not been given
 the same salt**. `TestEverySaltIsDistinct` is that check, and it could not be written before the
 package existed.
@@ -126,8 +126,7 @@ off by default**, because a pinned game is not the game.
 |---|---|---|
 | `fixedRunSeed` (`main.go`) | 0 — rolled from the clock | the whole run: enemies, shocks, both shuffles |
 | `deckSeedName` / `deckSeed` (`combat_deck.go`) | `""` — unpinned | the player's hand *and* the opponent's, together |
-| `seeds.EnemyDeckPin` | always used by `tools/balance` | the opponent's shuffle |
-| `balanceSeed` (`tools/balance`) | always | the lightning rolls in a balance run |
+| `seeds.EnemyDeckPin` | only while `deckSeed` pins the player's hand | the opponent's shuffle |
 | `oddsSeed` (`tools/handodds`) | always | which hands the rarity sample deals |
 
 **`deckSeed` pins both sides or neither.** Half a reproducible duel is worse than none: the
@@ -155,8 +154,8 @@ same argument made from scratch**, in `MECHANICS.md`, not an appeal to lightning
 What a roll costs, using the one that exists as the measure — both of these were predicted
 before it landed and both are now paid:
 
-- `tools/balance` became a distribution rather than an exact answer. A posture winning half its
-  duels and one winning all of them still print the same line.
+- **A single-sample verdict stopped meaning anything.** One duel winning half the time and one
+  winning always read identically, so anything measuring balance has to report a distribution.
 - The stream advances per attack phase, so a change early in a duel reshuffles every roll
   after it.
 
@@ -179,10 +178,10 @@ before it landed and both are now paid:
   source is a `*rand.Rand` parameter on `ResolveRound`; a nil one means no rolls, which is what
   every test and every headless caller passes.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of the
-  rules package is what preserves its purity, its tests and the headless balance sim. Moving
-  draw into `combat` is a real option later, but it has to arrive as an injected source
-  parameter on `ResolveRound` and it changes `TestRoundIsDeterministic` — see the deckbuilder
-  entry in `TODO.md` first.
+  rules package is what preserves its purity, its tests and any headless caller. Moving draw into
+  `combat` is a real option later, but it has to arrive as its **own** injected source parameter on
+  `ResolveRound` — never the lightning source, since a shuffle and a miss-roll are different
+  concerns — and it changes `TestRoundIsDeterministic`.
 - **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is an
   infinite deterministic list, and the planned endless tower gives no worst case to size an
   array against. A reroll simply advances the cursor.

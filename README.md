@@ -1,6 +1,6 @@
 # Ascending Duel
 
-Ascending Duel is a roguelike game where you must duel up a tower and build your skills while collecting magical rings, brands of power, and pets to aid you.
+Ascending Duel is a roguelike game where you must duel up a tower and build your skills while collecting magical rings and brands of power to aid you.
 
 It is an early prototype. The duel itself plays — a hand of cards, an action-point
 budget, an order you choose, and four opponents that each punish a different habit — but

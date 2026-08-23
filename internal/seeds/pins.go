@@ -6,20 +6,18 @@ package seeds
 // somebody forgot to salt.
 //
 // **Only shared pins live here.** A pin owned by one caller stays with that caller:
-// `fixedRunSeed` is `main`'s, `deckSeedName`/`deckSeed` belong to `internal/screens` because
-// they name an entry in that package's own hand catalogue, and `balanceSeed` is
-// `tools/balance` choosing its own fixed source. What lands in this package is a pin two
-// packages have to agree on.
+// `fixedRunSeed` is `main`'s, and `deckSeedName`/`deckSeed` belong to `internal/screens` because
+// they name an entry in that package's own hand catalogue. What lands in this package is a pin
+// two packages have to agree on.
 
-// EnemyDeckPin is the pinned opponent shuffle, so every balance run deals the same cards.
+// EnemyDeckPin is the pinned opponent shuffle, so a pinned duel deals the same cards both sides.
 //
 // **The game does not read it by default.** A fight seeds the opponent's pile from the run seed
 // — see `shuffleSeeds` in `internal/screens` — and falls back to this only while `deckSeed` pins
-// the player's hand, because pinning half a duel reproduces nothing. `tools/balance` uses it
-// unconditionally: a balance number that moved because the shuffle moved is not a balance number.
+// the player's hand, because pinning half a duel reproduces nothing.
 //
-// **It moved out of `internal/decks` on 2026-08-17**, where it had lived only because
-// `tools/balance` cannot import `internal/screens` and the constant had to sit somewhere both
+// **It moved out of `internal/decks` on 2026-08-17**, where it had lived only because a headless
+// caller cannot import `internal/screens` and the constant had to sit somewhere both
 // could reach. That is the same pressure that produced this package, so it belongs here now —
 // and `internal/decks` no longer declares a seed at all, which is right for a package whose job
 // is turning card data into rules types.

@@ -93,9 +93,10 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 - **Dragging a card changes nothing the engine can see** *(2026-08-14)*. Cross-category
   reordering never did — the drag lands the card in a queue that is then regrouped — and the two
   things that read *within*-category order are both gone: hands are counted, so a turn is a set,
-  and every raised defend answers the one blow regardless of when it went up. **The row is still
-  draggable and the gesture still costs the player attention.** That is a design hole, tracked in
-  `TODO.md`; do not paper over it on the screen, and do not invent a rule to justify it.
+  and every raised defend answers the one blow regardless of when it went up. **What order still
+  decides is the hand's tie-break** — `groupsOf` breaks a tie by whose first card was played first,
+  so the lead card that names the hand and carries its element is chosen by where the player put it.
+  Do not paper over the rest on the screen, and do not invent a rule to justify it.
 - **`Duelist.Defends` is a set, not a queue.** One card reaches it as of 2026-08-15 — Defend, at
   50% — and several compose multiplicatively. Nothing about the order they were raised in reaches
   the outcome, and **nothing reduces a blow to zero**: something always lands.
@@ -1191,9 +1192,8 @@ secret. There is no way for it to leak the rest of the round because it has not 
 
 - **Concealment lifts once playback starts**, for the same reason.
 - **Concealed rows keep their real count**, so the opponent's AP spend stays readable even
-  when the actions do not. Deliberate, and recorded as open in `TODO.md`: collapsing the
-  rows would hide the spend and destroy the pane's account of who acts when, which is the
-  one thing that pane exists to show.
+  when the actions do not. Deliberate: collapsing the rows would hide the spend and destroy the
+  pane's account of who acts when, which is the one thing that pane exists to show.
 - Debug is a *view*, never a rule. `ResolveRound` never sees the flag, so turning debug on
   or off cannot change an outcome — the same constraint that applies to playback speed.
 

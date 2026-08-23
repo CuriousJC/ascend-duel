@@ -193,8 +193,8 @@ func TestLeftColumnDoesNotCollide(t *testing.T) {
 
 	st := Hand
 
-	// The mark's box is what the layout names, so it is what has to fit. A letter is centred in
-	// it and a future glyph is clipped to it, so nothing can be drawn outside it either way.
+	// The mark's box is what the layout names, so it is what has to fit. The mark is centred in
+	// it and clipped to it, so nothing can be drawn outside it.
 	formBottom := st.FormTop + st.FormSize
 	dashBottom := st.DashTop + (maxCost-1)*(st.DashHeight+st.DashGap) + st.DashHeight
 
@@ -351,9 +351,8 @@ func TestNameClearsTheFormMark(t *testing.T) {
 }
 
 func TestFormMarkIsDrawnAndDiffers(t *testing.T) {
-	// Four forms, four marks. If two ever render identically the corner is saying nothing,
-	// which is worse than leaving it empty — and it is the risk letters carry that silhouettes do
-	// not, since four capitals are far closer to each other than a sword is to a shield.
+	// Four forms, four marks. If two ever render identically the corner is saying nothing, which
+	// is worse than leaving it empty — so this holds the four drawings apart from each other.
 	st := Hand
 	seen := map[string]Form{}
 
@@ -607,8 +606,8 @@ func TestTheFormMarkStaysCornerSized(t *testing.T) {
 	// choice, but one that grows past half of GlyphSize is a full-size shape in a corner slot,
 	// and it walks into both the dash stack under it and the text column beside it.
 	//
-	// The floor matters as much as the ceiling: below about 16 pixels neither a letter nor a
-	// derived rim has anything left to read.
+	// The floor matters as much as the ceiling: below about 16 pixels a drawn mark has nothing
+	// left to read.
 	for name, st := range map[string]Style{"hand": Hand, "mini": Mini} {
 		if !st.ShowForm {
 			continue

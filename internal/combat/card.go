@@ -50,8 +50,8 @@ func Plain(id ConceptID) Card { return Card{Concept: id} }
 // Of is a card of a named element.
 func Of(id ConceptID, e Element) Card { return Card{Concept: id, Element: e} }
 
-// PlainCards lifts a list of concepts into elementless cards. It exists for tools/balance and
-// for tests, which reason about concepts and have nothing to say about colour.
+// PlainCards lifts a list of concepts into elementless cards. It exists for tests, which reason
+// about concepts and have nothing to say about colour.
 func PlainCards(ids ...ConceptID) []Card {
 	out := make([]Card, len(ids))
 	for i, id := range ids {

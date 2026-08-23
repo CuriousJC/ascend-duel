@@ -101,7 +101,7 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 	}
 
 	// **FormNone has to survive the crossing too.** The opponent's cards carry it, and one that
-	// mapped onto a real form would draw a letter claiming membership of a deck the player
+	// mapped onto a real form would draw a mark claiming membership of a deck the player
 	// cannot build hands against.
 	if got := form(combat.FormNone); got != cards.FormNone {
 		t.Errorf("the rules' FormNone maps to cards.%v, want FormNone", got)

@@ -201,8 +201,7 @@ type CombatScene struct {
 	combatRNG *rand.Rand
 
 	// The opponent's deck, in the same three piles. It lives in internal/decks rather than
-	// here because tools/balance plays whole duels headlessly and cannot import this
-	// package — see that package's header.
+	// here so an enemy deck can be built without a window — see that package's header.
 	//
 	// **It carries its own shuffle source, separate from s.rng above**, and the reason is
 	// the seed catalogue. CLAUDE.md names "card shuffles" as one determinism stream; sharing

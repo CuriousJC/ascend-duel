@@ -167,7 +167,7 @@ func hoverDeckPanel(gs *state.GlobalState, at image.Point, d deckContents, tip *
 	width := float32(gs.PctX(deckPanelRightPct)) - left
 	top := float32(gs.PctY(deckPanelTopPct))
 
-	for _, slot := range d.grid(left+width/2, top+deckGridTop).slots {
+	for _, slot := range d.grid(left+width/2, width, top+deckGridTop).slots {
 		if !at.In(slot.at) {
 			continue
 		}
@@ -180,8 +180,10 @@ func hoverDeckPanel(gs *state.GlobalState, at image.Point, d deckContents, tip *
 // Deck overlay geometry. The panel is nearly the whole screen and stops above the button
 // band, so the Deck button that closes it stays outside the panel as well as on top of it.
 //
-// The panel holds **every card you own**, in five rows, and nothing in it moves as cards shift
-// between piles — a played card dims where it stands rather than leaving.
+// The panel holds **every card you own**, one row per element, and nothing in it moves as cards
+// shift between piles — a played card dims where it stands rather than leaving. A card arriving
+// or leaving the *deck* does move the row it is in, because the row's pitch is a function of how
+// many cards are in it; see rowPitchFor.
 const (
 	deckPanelLeftPct  = 4
 	deckPanelRightPct = 96
@@ -198,54 +200,51 @@ const (
 	// sit outside the hand — so "+N more not shown" fired on every single look. That line
 	// was written when the deck was 30 and could not fire, deliberately, so that growing
 	// the deck would produce a visible shortfall rather than a panel that quietly lied.
-	// It did its job and then kept firing.
+	// It did its job, then kept firing, and **went altogether on 2026-08-23** when the owner
+	// ruled that the panel never hides a card. See rowPitchFor.
 	//
 	// A half-size card (cards.Mini) overlapped to show only its left half needs 45 pixels
-	// of width instead of 146. Twelve concepts per element is 585 pixels a row, five rows
-	// is 684 tall, and **the whole deck now fits** — the overflow line is still there and
-	// can no longer fire.
+	// of width instead of 146. Twelve concepts per element is 585 pixels a row, four rows
+	// is 684 tall, and the whole deck fits with room over.
 	//
 	// Half rather than a third: a third-size card was 59 pixels wide and could carry
-	// neither a glyph nor text, so a row was a line of coloured slivers. At 90 the
-	// 22-pixel category glyph fits, and the visible left 45 pixels are exactly the glyph
-	// and the cost dashes under it. A row now says what phase each card resolves in and
-	// what it costs. What it still cannot say is which *concept* each card is.
+	// neither a mark nor text, so a row was a line of coloured slivers. At 81 the 16-pixel
+	// form mark fits, and the visible strip is exactly that mark and the cost ticks under
+	// it — so a row says which form each card is, which element it is, and what it costs.
+	// What it still cannot say is which *concept* each card is.
 	//
-	// **Five rows of 132 is a tight fit and the gap is what absorbs it.** The panel gives
-	// about 691 pixels between the legend and the closing hint; five rows plus four
-	// 8-pixel gaps is 692, so deckGridTop moved up to 120 to buy the clearance back. A
-	// sixth element would not fit and would need a different arrangement, not a smaller
-	// gap.
+	// **Height is the dimension with no give.** The panel gives about 691 pixels between the
+	// legend and the closing hint, which is what deckGridTop was moved up to 112 to buy back.
+	// Width now absorbs a busy row by tightening; height cannot, so a fifth row would need a
+	// different arrangement rather than a smaller gap. TestDeckPitchMatchesTheCard holds it.
 	deckRowGap = 6
 
-	// deckStackPitch is how far apart the cards in a row sit. **It is a constant sized for
-	// a full row, never derived from how many cards are actually in one** — the overlay's
-	// governing idea is that a card does not move when it is discarded, it only dims, and
-	// a pitch that adapted to the count would shuffle the whole row on every draw.
+	// deckStackPitch is how far apart the cards in a row sit **when the row has room for it**.
 	//
-	// Twelve concepts at 75 is 906 pixels plus the 104-pixel label gutter, inside the
-	// panel's 1177 with margin. At Mini's full 81 the cards would not overlap at all, so the
-	// six pixels of overlap are what buys the row its slack — the stacking is load-bearing
-	// arithmetic, not a look.
+	// **It stopped being the only pitch on 2026-08-23** *(owner's call)*. It was a constant sized
+	// for a full row and deliberately never derived from how many cards were in one, on the
+	// grounds that a card should not move when it is discarded — and the price of that was a cap
+	// on the row and a "+N more not shown" line, which is the panel declining to show you your own
+	// deck. A run that recolours nine cards into one element hits that cap immediately. The
+	// owner's call is that the panel never hides a card: a busy row overlaps harder instead. See
+	// rowPitchFor.
 	//
-	// It was Mini.Width/2, which showed 45 pixels of each card and left no room for a
-	// name. Widening it to width-less-six is what let the name go on at all.
+	// Twelve concepts at 75 is 906 pixels plus the 104-pixel label gutter, inside the panel's 1177
+	// with margin. At Mini's full 81 the cards would not overlap at all, so the six pixels of
+	// overlap are what buys the row its slack — the stacking is load-bearing arithmetic, not a
+	// look.
+	//
+	// It was Mini.Width/2, which showed 45 pixels of each card and left no room for a name.
+	// Widening it to width-less-six is what let the name go on at all.
 	//
 	// **75 since 2026-08-11**, down from 84 with the card itself — the overlap is what is
 	// held constant, not the pitch, so a pitch left behind at 84 would have opened gaps
-	// between cards in an 81-pixel row. TestDeckRowFitsThePanel is what catches that.
+	// between cards in an 81-pixel row. TestDeckPitchMatchesTheCard is what catches that.
 	deckStackPitch = 75
 
-	// deckMaxPerRow caps a row so it cannot run off the panel. Twelve is what the longest row
-	// holds — the plans, at 3 concepts x 4 copies — and what deckStackPitch is sized against.
-	// The four colour rows hold nine each.
-	//
-	// **The cap is what gives the overflow line something to report.** Without it a row
-	// simply drew every card it had and ran off the edge, and the "+N more not shown"
-	// message below could never fire because nothing was ever not shown. A thirteenth
-	// concept should produce a visible, honest shortfall rather than a card halfway off
-	// the panel.
-	deckMaxPerRow = 12
+	// deckRowMargin is the air left at both ends of the widest row, so a row that has had to
+	// tighten stops short of the panel's edge rather than running up against it.
+	deckRowMargin = 24
 
 	// deckRowLabelWidth is the gutter the element name sits in, to the left of each row.
 	// The cards no longer carry any text, so without this a row would be an anonymous
@@ -320,7 +319,7 @@ func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, d deckContents) 
 		line(deckLegendTop, "dimmed cards are in your hand or the discard - the rest are still to draw")
 	}
 
-	drawPileGrid(gs, screen, left+width/2, top+deckGridTop, d)
+	drawPileGrid(gs, screen, left+width/2, width, top+deckGridTop, d)
 
 	hint := &text.DrawOptions{}
 	hint.GeoM.Translate(float64(left+width/2), float64(top+height-deckHintUp))
@@ -468,7 +467,7 @@ func deckRowLabel(row int) (string, color.RGBA) {
 // drawPileGrid until the tooltip needed to know which card is under the pointer, and a second set
 // of arithmetic saying where a card is drawn is exactly the bug the one-rectangle rule prevents
 // everywhere else on this screen.
-func (d deckContents) grid(centerX, top float32) pileGridLayout {
+func (d deckContents) grid(centerX, width, top float32) pileGridLayout {
 	entries := make([]pileEntry, 0, len(d.draw)+len(d.spent))
 	for _, c := range d.draw {
 		entries = append(entries, pileEntry{c, true})
@@ -490,20 +489,25 @@ func (d deckContents) grid(centerX, top float32) pileGridLayout {
 	}
 
 	out := pileGridLayout{rowPitch: cards.Mini.Height + deckRowGap}
-	pitch := deckStackPitch
+	room := int(width) - deckRowLabelWidth - deckRowMargin
 
-	// Widest row sets the left edge, so the rows share one origin and the columns line up
-	// down the panel rather than each row centring on its own count.
+	// Each row gets its own pitch, so a row that has collected extra cards closes up without
+	// dragging the quiet rows in with it.
+	pitches := make([]int, deckRowCount)
 	widest := 0
-	for _, group := range rows {
-		n := min(len(group), deckMaxPerRow)
-		if w := (n-1)*pitch + cards.Mini.Width; w > widest {
+	for i, group := range rows {
+		pitches[i] = rowPitchFor(len(group), room)
+		if w := rowWidth(len(group), pitches[i]); w > widest {
 			widest = w
 		}
 	}
+
+	// The widest row sets the left edge and every row starts there, so the labels line up in one
+	// gutter and the block sits centred on the panel. **Rows do not each centre on their own
+	// count** — that would move a row sideways as cards were added to it, and the panel's whole
+	// idea is that a card stays where it is.
 	cardsLeft := int(centerX) - (deckRowLabelWidth+widest)/2 + deckRowLabelWidth
 
-	shown := 0
 	for i, group := range rows {
 		rowTop := int(top) + i*out.rowPitch
 		out.labels = append(out.labels, pileRowLabel{
@@ -512,28 +516,61 @@ func (d deckContents) grid(centerX, top float32) pileGridLayout {
 		})
 
 		for j, e := range group {
-			if j >= deckMaxPerRow {
-				break
-			}
-			at := image.Pt(cardsLeft+j*pitch, rowTop)
+			at := image.Pt(cardsLeft+j*pitches[i], rowTop)
 			out.slots = append(out.slots, pileSlot{
 				pileEntry: e,
 				at:        image.Rect(at.X, at.Y, at.X+cards.Mini.Width, at.Y+cards.Mini.Height),
 			})
 		}
-		shown += min(len(group), deckMaxPerRow)
 	}
-	out.hidden = len(entries) - shown
 	return out
 }
 
-// pileGridLayout is the panel's geometry: where each card sits, where each row is named, how tall a
-// row is, and how many cards did not fit.
+// rowWidth is how much of the panel n cards at this pitch occupy: the last card is drawn whole,
+// every earlier one contributes only its pitch.
+func rowWidth(n, pitch int) int {
+	if n <= 0 {
+		return 0
+	}
+	return (n-1)*pitch + cards.Mini.Width
+}
+
+// rowPitchFor is how far apart a row of n cards sits, given the room it has.
+//
+// **The panel never hides a card** *(owner's call, 2026-08-23)*, so this is where a row that has
+// outgrown the comfortable pitch pays for it: the cards overlap harder rather than the extras
+// being dropped with a "+N more not shown" line under the grid. That line existed because a
+// twelve-card cap could be exceeded, and it fired for real the moment a run recoloured most of
+// the deck into one element — at which point the panel was hiding exactly the cards the player
+// had gone looking for.
+//
+// **It tightens and never loosens.** deckStackPitch is the ceiling, so a short row is laid out
+// exactly as it always was and only a row that does not fit is touched. What a tightened row
+// costs is the card's name, then its cost column: at deckStackPitch a card shows 75 of its 81
+// pixels, and the strip narrows from the right as the pitch falls.
+//
+// **There is no floor.** A pitch of one pixel is unreadable, but it fits — and a floor would put
+// the cap back under another name, with a row running off the panel instead of being clamped.
+// Sixty cards in one row is about seventeen pixels each, which still shows the form mark that
+// now carries the element.
+func rowPitchFor(n, room int) int {
+	if n <= 1 || rowWidth(n, deckStackPitch) <= room {
+		return deckStackPitch
+	}
+	pitch := (room - cards.Mini.Width) / (n - 1)
+	if pitch < 1 {
+		pitch = 1
+	}
+	return pitch
+}
+
+// pileGridLayout is the panel's geometry: where each card sits, where each row is named, and how
+// tall a row is. **There is no count of what did not fit**, because nothing does not fit — see
+// rowPitchFor.
 type pileGridLayout struct {
 	slots    []pileSlot
 	labels   []pileRowLabel
 	rowPitch int
-	hidden   int
 }
 
 // pileSlot is one card and the rectangle it occupies. **The same rectangle is drawn in and
@@ -549,10 +586,10 @@ type pileRowLabel struct {
 	at  image.Point
 }
 
-func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, top float32,
+func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, width, top float32,
 	d deckContents) {
 
-	grid := d.grid(centerX, top)
+	grid := d.grid(centerX, width, top)
 
 	for _, l := range grid.labels {
 		// A mini card says its own concept but nothing about which row it is in, so this is what
@@ -579,11 +616,4 @@ func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, top floa
 			heldBy(d.holder, slot.card), slot.available, false)
 	}
 
-	if grid.hidden > 0 {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(centerX), float64(int(top)+deckRowCount*grid.rowPitch))
-		op.PrimaryAlign = text.AlignCenter
-		text.Draw(screen, fmt.Sprintf("+%d more not shown", grid.hidden),
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, op)
-	}
 }

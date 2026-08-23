@@ -104,11 +104,12 @@
 //     the combat scene (2026-08-22, TODO.md). Three screens put it up: a fight through its draw
 //     pile, and the reward screen and the shop through `deckToggle` — a 44px `D` in the
 //     bottom-right corner, the Log button's shape and rules. The panel shows every card you own,
-//     in four colour rows plus a row of plans, at cards.Mini overlapped so all but six pixels of
-//     each shows. Two rules govern it and both have been broken once: a card does not move when it
-//     is played, it only dims — so the hand is included rather than excluded, and availability is
-//     the last sort key, never the first — and the pitch is a constant sized for a full row, never
-//     derived from how many cards are currently in one. Rows sort stab, slash, crush, plan,
+//     in four colour rows plus a row of plans, at cards.Mini overlapped. **It never hides a card**
+//     (owner's call, 2026-08-23): a row that has outgrown the comfortable pitch overlaps harder,
+//     per row, rather than dropping the extras under a "+N more not shown" line — see rowPitchFor.
+//     The rule that survives is that a card does not move when it is played, it only dims, so the
+//     hand is included rather than excluded and availability is the last sort key, never the
+//     first. Rows sort stab, slash, crush, plan,
 //     cheapest first; formRank is written out rather than read off the enum, because the enum's
 //     order is what an expanded hand ID is derived from and that is a rule. It sorts on form
 //     rather than category because category has two values now, and sorting by it would put nine

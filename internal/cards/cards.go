@@ -443,3 +443,22 @@ type Spec struct {
 	// of a flip.
 	FaceDown bool
 }
+
+// borderBase is the colour a card's border is actually drawn from, and it is deliberately
+// *not* BorderOf.
+//
+// **The element moved off the border and onto the form mark on 2026-08-23** *(owner's call)*.
+// The border said the element from 2026-08-09, when the surface stopped carrying it; what that
+// left was a card whose loudest feature named the one thing about it that a player already knows
+// from the row it is sitting in, while the corner mark — the thing a hand is actually counted on
+// — was painted in one hueless palette. Swapping them spends the colour on the mark and gives the
+// border back to state, which is what borderRestToward and the rest were always about.
+//
+// **Ring keeps its pink**, because pink was never an element. It is the "this is not something
+// you can play" signal, and it has to survive a change that is about elements.
+func borderBase(e Element) color.RGBA {
+	if e == Ring {
+		return borderColors[Ring]
+	}
+	return borderColors[Basic]
+}

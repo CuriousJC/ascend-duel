@@ -212,11 +212,18 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 	pctX := func(p int) int { return screenW * p / 100 }
 	pctY := func(p int) int { return screenH * p / 100 }
 
-	// A full row plus its label gutter has to fit the panel it is drawn in. The cap is what a
-	// row may hold, so it is what has to fit — the plan row is the one that reaches it.
-	row := (deckMaxPerRow-1)*deckStackPitch + cards.Mini.Width + deckRowLabelWidth
-	if panel := pctX(deckPanelRightPct) - pctX(deckPanelLeftPct); row > panel-24 {
-		t.Errorf("a full row is %dpx wide against a %dpx panel", row, panel)
+	// The comfortable pitch has to fit the row the shipping deck actually deals, which is the
+	// case the constant is sized for. A row past that tightens rather than overflowing — see
+	// rowPitchFor — so what this pins is that the *normal* deck is never tightened.
+	longest := 0
+	for _, n := range deckRowCounts() {
+		if n > longest {
+			longest = n
+		}
+	}
+	row := rowWidth(longest, deckStackPitch) + deckRowLabelWidth
+	if panel := pctX(deckPanelRightPct) - pctX(deckPanelLeftPct); row > panel-deckRowMargin {
+		t.Errorf("the deck's longest row is %dpx wide against a %dpx panel", row, panel)
 	}
 
 	// And every row has to fit between the legend above and the closing hint below.
@@ -238,26 +245,19 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 }
 
 func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
-	// **The panel's whole claim is that it shows the deck**, so a card with nowhere to go, or a
-	// row over the cap, is the panel quietly lying. The plan row is the one at the cap — three
-	// concepts at four copies — and the element rows hold nine each.
-	counts := make([]int, deckRowCount)
+	// **The panel's whole claim is that it shows the deck**, so a card with nowhere to go is the
+	// panel quietly lying. There is no cap to exceed any more — a busy row tightens instead — so
+	// what is left to check is that every card lands somewhere and no row is empty.
+	counts := deckRowCounts()
 	for _, c := range session.StartingDeck() {
-		row := deckRowFor(c)
-		if row < 0 || row >= deckRowCount {
+		if row := deckRowFor(c); row < 0 || row >= deckRowCount {
 			t.Fatalf("%v maps to row %d, which does not exist", c, row)
 		}
-		counts[row]++
 	}
 
 	for row, n := range counts {
-		name, _ := deckRowLabel(row)
-		if n == 0 {
+		if name, _ := deckRowLabel(row); n == 0 {
 			t.Errorf("the %q row is empty", name)
-		}
-		if n > deckMaxPerRow {
-			t.Errorf("the %q row holds %d cards against a cap of %d — %d would be hidden",
-				name, n, deckMaxPerRow, n-deckMaxPerRow)
 		}
 	}
 
@@ -461,5 +461,75 @@ func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
 	}
 	if want == 0 {
 		t.Error("no worm targets an element — this test is checking nothing")
+	}
+}
+
+// deckRowCounts is how many cards of the shipping deck land in each row of the overlay. Shared by
+// the two tests above rather than counted twice: they ask different questions of the same tally.
+func deckRowCounts() []int {
+	counts := make([]int, deckRowCount)
+	for _, c := range session.StartingDeck() {
+		if row := deckRowFor(c); row >= 0 && row < deckRowCount {
+			counts[row]++
+		}
+	}
+	return counts
+}
+
+// TestTheDeckPanelHidesNothing is the 2026-08-23 rule in a test: however many cards land in one
+// row, the panel draws all of them and every one of them stays on the panel.
+//
+// **The failure it exists for is silent.** The old cap dropped the overflow and wrote a line
+// under the grid saying so, which is at least honest; a pitch that clamps wrongly instead draws a
+// card off the right-hand edge of the panel, where nothing reports it and nothing is visible.
+func TestTheDeckPanelHidesNothing(t *testing.T) {
+	const screenW = 1280
+	pctX := func(p int) int { return screenW * p / 100 }
+	width := pctX(deckPanelRightPct) - pctX(deckPanelLeftPct)
+	room := width - deckRowLabelWidth - deckRowMargin
+
+	// Well past anything a run can produce: 48 cards is the whole starting deck, and a flip ring
+	// recolouring every one of them into a single element is the worst case the panel has.
+	for n := 1; n <= 64; n++ {
+		pitch := rowPitchFor(n, room)
+		if pitch < 1 {
+			t.Fatalf("%d cards got a pitch of %d, which would stack them on one spot", n, pitch)
+		}
+		if pitch > deckStackPitch {
+			t.Errorf("%d cards got a pitch of %d, wider than the %d ceiling — a short row must be laid out as it always was",
+				n, pitch, deckStackPitch)
+		}
+		if w := rowWidth(n, pitch); w > room {
+			t.Errorf("%d cards at pitch %d is %dpx against %dpx of room — the row runs off the panel",
+				n, pitch, w, room)
+		}
+	}
+}
+
+// TestTheDeckPanelDrawsEveryCardItIsGiven checks the layout itself rather than the arithmetic:
+// hand the grid a deck and count the slots that come back.
+func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
+	deck := session.StartingDeck()
+	d := deckContents{draw: deck}
+
+	// Every card recoloured into one element, which is what a flip ring does and what used to
+	// overflow the row cap by a factor of four.
+	oneRow := make([]combat.Card, 0, len(deck))
+	for _, c := range deck {
+		c.Element = combat.Fire
+		oneRow = append(oneRow, c)
+	}
+
+	for _, tc := range []struct {
+		name string
+		d    deckContents
+	}{
+		{"the shipping deck", d},
+		{"every card in one element", deckContents{draw: oneRow}},
+	} {
+		grid := tc.d.grid(640, 1177, 120)
+		if got, want := len(grid.slots), len(tc.d.draw); got != want {
+			t.Errorf("%s: the panel laid out %d of %d cards", tc.name, got, want)
+		}
 	}
 }

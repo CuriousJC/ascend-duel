@@ -94,11 +94,12 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       grammar is a target plus a value across seven targets, and `session.Apply` is the one place a
       deck is altered.
       What is left:
-      - **The deck overlay hides cards as you build.** Rows cap at `deckMaxPerRow = 12` and an
-        `element` worm migrates cards between colour rows, so building toward a colour pushes that
-        row past the cap. **The replacement is not a bigger cap**: the panel wants counts —
-        attacks, plans, how many of each colour — rather than every card drawn at once. Owner's
-        ideas, owner's call, deferred.
+      - **The deck overlay no longer hides cards** *(owner's call, 2026-08-23)*. The row cap and
+        the "+N more not shown" line are gone; a row that outgrows the comfortable pitch overlaps
+        harder instead, per row. What is still open is what a heavily overlapped row is *worth*
+        reading — at forty cards a row the visible strip is the form mark and little else, so the
+        counts idea (attacks, plans, how many of each colour) is still the thing that would answer
+        "what is my deck" better than pictures do. Owner's ideas, owner's call, deferred.
       - **Worms have no art.** They draw as `cards.Hand` with a zero cost and no form, so what
         shows is the name and the text. A style of their own is what this wants once there is a
         picture to put on one.

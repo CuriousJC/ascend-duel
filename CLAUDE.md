@@ -445,10 +445,12 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   made from one colour scaled down. They are drawn untinted; a disabled card dims them by
   *alpha*, so the shading survives and only the weight changes. Tinting one toward the card
   colour would collapse it back to a flat silhouette.
-- **Every glyph uses one hueless palette, `white`, and they should stay that way.** Colour
-  means "element", and the element is carried by the card's *border* (see the colour section
-  below). A coloured glyph on a coloured card says it twice and leaves nothing for the next
-  distinction.
+- **Every glyph is *generated* in one hueless palette, `white`, and should stay that way.** The
+  form marks are the exception and they are drawn art rather than generated: `cards.tintInk`
+  colours one by the card's element on its way onto the face, which is where the element is said
+  now (see the card section below). The palette itself stays hueless — the tint is applied to the
+  rendered image, so the generator has no opinion about colour and the glyph sheet still shows
+  every mark in one neutral set.
 - **A hueless glyph on an off-white card loses most of its bevel, and that is accepted.**
   `Specular` is pure white and `Highlight` is `{232,236,242}`, so against the off-white
   surface the lit side of a bevel largely disappears and a glyph reads as outline plus
@@ -598,22 +600,45 @@ square in the bottom-left corner of every screen, carrying a generated speaker g
   silhouette, because a bar merged into a solid shape is only visible where it leaves it.
   The glyph says the **state**, not the action: a crossed speaker means the score is off.
 
-### Cards: the border carries the element, not the surface
+### Cards: the left column carries the element, the border carries state
 
-A card is a **constant off-white surface** (`cards.Surface`) with a **thick coloured border**
-carrying the element, and the whole card is drawn by `internal/cards`. Three things follow
-and are easy to re-break:
+A card is a **constant off-white surface** (`cards.Surface`) with a **neutral grey border**, and
+the element is said by **the left column — the tinted form mark and the cost ticks under it**
+*(owner's call, 2026-08-23)*. The whole card is drawn by `internal/cards`. Five things follow and
+are easy to re-break:
 
+- **The border was the element from 2026-08-09 until the swap, and must not drift back.**
+  `cards.borderBase` is what a border is actually drawn from and it returns the same grey for
+  every element; `cards.BorderOf` still holds the element colours and is still what the mark, the
+  deck panel's row labels and the arithmetic panel read. `TestTheBorderIsTheSameWhateverTheElement`
+  fails if an element gets its border back. The argument for the swap: a border is the loudest
+  thing on a card and it was naming the one fact the player already knows from the row the card is
+  in, while the corner mark — the thing a hand is counted on — was hueless.
+- **Ring keeps its pink border.** Pink was never an element; it is the "you cannot play this"
+  signal, and `TestARingStillBordersPink` holds it against a change that neutralises the four.
+- **The ticks are the element too, and share the border's state.** `Spec.atState` is the one
+  switch carrying a colour from full strength to whatever the card's state wants — the border
+  passes it the neutral grey and the ticks pass it the element, so selection, dragging and
+  unaffordable move both together. A second copy of that switch is how a selected card ends up
+  with a lit border and resting ticks; `TestTheTicksAndTheBorderShareOneState` fails on it.
+- **The mark is tinted, not repainted.** `cards.tintInk` maps each pixel's own brightness onto a
+  ramp between a dark and a light version of the element's colour, so the drawing keeps its
+  outline and its bevel. A flat silhouette in the element colour throws away the interior detail
+  that is the entire reason the form marks are drawn art rather than generated glyphs.
 - **A near-white border on an off-white card is invisible.** `basic` is therefore a mid grey
-  in `cards.BorderOf`, and a test fails if it is set to a near-white.
+  in `cards.BorderOf`, and a test fails if it is set to a near-white. It is also the colour every
+  card's border now draws in.
 - **`ColorAtStrength` is the wrong tool on a light card.** It scales toward *black*, which
   reads as quieter only against a dark ground. On
   an off-white card a border scaled down comes out darker than the surface and therefore
   *louder* than the live card beside it, which is how a pane's idle rows end up in front of
   its lit one. Use `systems.ColorToward(c, ground, pct)`, which moves a colour
   toward whatever it actually sits on. Card state is expressed as distance to the surface.
-- **Cost is dash marks and the form is a corner mark**, not text and not a numeral. Every
-  card in the game runs 1..3, the player's and every enemy's; a fourth dash grows the stack
+- **Cost is tick marks and the form is a corner mark**, not text and not a numeral. **The ticks
+  are 16x4 as of 2026-08-23** *(owner's call)*, down from 13x8 — half the height and a quarter
+  longer, so four of them stack in 31 pixels rather than 47 and the cost column ends higher up the
+  face without its top edge moving. Every
+  card in the game runs 1..3, the player's and every enemy's; a fourth tick grows the stack
   further down the card and is a layout change, not just a bigger number.
   `TestLeftColumnDoesNotCollide` fails rather than rendering it. **A card declares its own
   cost now** *(2026-08-16)*, so nothing stops a data file writing 5 — which is a reason to

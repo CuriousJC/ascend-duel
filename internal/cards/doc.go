@@ -13,21 +13,30 @@
 //
 // # What a card looks like, and what changed
 //
-// The surface is a constant off-white for every card and **a thick coloured border
-// carries the element**. That reverses the decision recorded in CLAUDE.md's colour
-// section on 2026-08-03, where the surface was the element and the border was
-// incidental. Two things follow from the reversal:
+// The surface is a constant off-white for every card and **the left column carries the
+// element** — the tinted form mark in the corner and the cost ticks under it *(owner's
+// call, 2026-08-23)*. The border carried it from
+// 2026-08-09 until then, which itself reversed the decision recorded in CLAUDE.md's
+// colour section on 2026-08-03, where the surface was the element. Three things follow
+// from where it has landed:
 //
-//   - **A near-white border on an off-white card is invisible.** The elementless card
-//     used to be near-white surface and that read fine; as a border it would vanish.
-//     BorderOf therefore gives Basic a mid grey rather than the {235,235,235} the screen
-//     uses for its surface today.
-//   - **The glyphs are hueless near-white by design.** Their Specular is pure white and
-//     their Highlight is {232,236,242}, so on an off-white surface the lit side of every
-//     bevel largely disappears and a glyph reads as outline-plus-shading. The near-black
-//     Outline carries legibility, so nothing is broken, but the bevel that glyphs.go
-//     exists to produce is mostly spent. Surface is a named constant so this is one edit
-//     to test.
+//   - **The border is state and nothing else now.** Every card of every element draws the
+//     same neutral grey, and rest, selected, dragging and disabled are distances from it
+//     toward the surface. See borderBase for why the swap was made: the corner mark is the
+//     thing a hand is counted on, so it is what the one remaining colour channel buys the
+//     most on. BorderOf still holds the element colours and is still what the mark, the
+//     row labels and the arithmetic panel read.
+//   - **The border and the ticks share one state switch.** Spec.atState carries a colour
+//     from full strength to whatever the card's state wants; the border hands it the
+//     neutral grey and the ticks hand it the element. They are different colours and the
+//     same mark, so they must dim and light together.
+//   - **Ring keeps its pink.** Pink was never an element — it is the "you cannot play
+//     this" signal — so it survives a change that neutralises the four element borders.
+//   - **The form marks are drawn art, tinted rather than repainted.** tintInk maps each
+//     pixel's own brightness onto a ramp between a dark and a light version of the
+//     element's colour, so the drawing keeps its outline and its bevel and only the hue
+//     moves. A flat silhouette in the element colour would throw away the interior detail
+//     that made drawn marks worth having over generated ones.
 //
 // # Rounded corners are rasterised here, not masked
 //

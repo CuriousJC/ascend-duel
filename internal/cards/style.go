@@ -245,10 +245,18 @@ var Hand = Style{
 	FormTop:  8,
 	FormSize: 32,
 
+	// **Half the height and a quarter longer, 2026-08-23** *(owner's call)*. 13x8 was a bar; 16x4
+	// is a tick, and four of them stack in 31 pixels where they used to take 47 — so the cost
+	// column ends higher up the face without its top edge moving. The gap holds at 5, which is
+	// what keeps four ticks reading as four rather than as a hatched block.
+	//
+	// **16 is the width the column has, not a round number.** DashLeft is 8 and TextColumnLeft is
+	// 26, so 18 is the wall; TestTheCostColumnStaysOutOfTheTextColumn is what fails on a wider
+	// one, and widening past it means moving the text column rather than nudging this.
 	DashLeft:   8,
 	DashTop:    48,
-	DashWidth:  13,
-	DashHeight: 8,
+	DashWidth:  16,
+	DashHeight: 4,
 	DashGap:    5,
 
 	GlyphScale: 1,

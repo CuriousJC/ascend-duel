@@ -98,13 +98,16 @@ func TestCornersAreTransparentAndEdgesAreNot(t *testing.T) {
 	}
 }
 
-func TestBorderIsTheElementColourAtItsDeclaredWidth(t *testing.T) {
+// The border stopped naming the element on 2026-08-23 — the form mark does that now, and
+// borderBase says why. What this still pins is the width and the resting state, which is what
+// the border is for.
+func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
 	st := Hand
 	mid := st.Height / 2
 
 	for _, e := range Elements() {
 		img := render(t, strike(e), st)
-		want := systems.ColorToward(BorderOf(e), Surface, borderRestToward)
+		want := systems.ColorToward(borderBase(e), Surface, borderRestToward)
 
 		// Walk in from the left edge at the card's waist, where there is no curvature.
 		for x := 0; x < st.BorderWidth; x++ {
@@ -162,11 +165,13 @@ func TestCostDrawsOneDashPerPoint(t *testing.T) {
 		s.Cost = cost
 		img := render(t, s, st)
 
-		border := systems.ColorToward(BorderOf(Fire), Surface, borderRestToward)
+		// The element colour, not the border's: the ticks carry the element and the border does
+		// not. See Spec.atState, which is what keeps the two in the same state.
+		tick := systems.ColorToward(BorderOf(Fire), Surface, borderRestToward)
 		count := 0
 		for i := 0; i < 6; i++ {
 			y := st.DashTop + i*(st.DashHeight+st.DashGap) + st.DashHeight/2
-			if img.RGBAAt(x, y) == border {
+			if img.RGBAAt(x, y) == tick {
 				count++
 			}
 		}
@@ -448,9 +453,9 @@ func TestRingDrawsArtAndNoCardFurniture(t *testing.T) {
 	}
 	noCost := Spec{Name: "Fire Ring", Element: Ring, Art: art, Enabled: true, Cost: 0}
 	plain := render(t, noCost, st)
-	border := systems.ColorToward(BorderOf(Ring), Surface, borderRestToward)
+	tick := systems.ColorToward(BorderOf(Ring), Surface, borderRestToward)
 	for y := 0; y < 40; y++ {
-		if plain.RGBAAt(st.DashLeft, y) == border && st.DashWidth > 0 {
+		if plain.RGBAAt(st.DashLeft, y) == tick && st.DashWidth > 0 {
 			t.Errorf("a cost dash was drawn on a ring at y=%d", y)
 		}
 	}
@@ -464,15 +469,15 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 	s := Spec{Name: "Prepare", Form: FormPlan, Cost: 4, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
-	border := systems.ColorToward(BorderOf(Lightning), Surface, borderRestToward)
+	tick := systems.ColorToward(BorderOf(Lightning), Surface, borderRestToward)
 
 	// Every dash must be intact across its full width: no ink from the name in it.
 	for i := 0; i < s.Cost; i++ {
 		y := st.DashTop + i*(st.DashHeight+st.DashGap) + st.DashHeight/2
 		for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
-			if got := img.RGBAAt(x, y); got != border {
-				t.Fatalf("dash %d is broken at x=%d: %v, want the border colour %v — the name is printing over it",
-					i, x, got, border)
+			if got := img.RGBAAt(x, y); got != tick {
+				t.Fatalf("tick %d is broken at x=%d: %v, want the element colour %v — the name is printing over it",
+					i, x, got, tick)
 			}
 		}
 	}
@@ -530,8 +535,8 @@ func TestSelectedIsTheColourNamedInTheSource(t *testing.T) {
 		s := strike(e)
 		s.Selected = true
 		got := render(t, s, st).RGBAAt(st.BorderWidth/2, st.Height/2)
-		if got != BorderOf(e) {
-			t.Errorf("%s selected border is %v, want the named colour %v", e, got, BorderOf(e))
+		if got != borderBase(e) {
+			t.Errorf("%s selected border is %v, want the named colour %v", e, got, borderBase(e))
 		}
 	}
 }
@@ -630,8 +635,8 @@ func TestDraggingKeepsItsBorderAndGhostsItsFace(t *testing.T) {
 
 	dragImg, deadImg := render(t, drag, st), render(t, dead, st)
 
-	if got := dragImg.RGBAAt(st.BorderWidth/2, mid); got != BorderOf(Fire) {
-		t.Errorf("dragged border is %v, want full strength %v", got, BorderOf(Fire))
+	if got := dragImg.RGBAAt(st.BorderWidth/2, mid); got != borderBase(Fire) {
+		t.Errorf("dragged border is %v, want full strength %v", got, borderBase(Fire))
 	}
 	if dragImg.RGBAAt(st.BorderWidth/2, mid) == deadImg.RGBAAt(st.BorderWidth/2, mid) {
 		t.Error("dragged and disabled draw the same border — they mean opposite things")
@@ -1059,5 +1064,179 @@ func TestAnAuthoredLineStillWraps(t *testing.T) {
 	}
 	if lines[0] != "one" {
 		t.Errorf("the authored break moved: got %q", lines)
+	}
+}
+
+// TestTheBorderIsTheSameWhateverTheElement is the other half of the 2026-08-23 swap: the border
+// used to be the element signal and is now the state signal, so two cards of different elements
+// in the same state must be indistinguishable at the edge. Without this the old behaviour could
+// come back one element at a time and each card would still look defensible on its own.
+func TestTheBorderIsTheSameWhateverTheElement(t *testing.T) {
+	st := Hand
+	mid := st.Height / 2
+
+	want := render(t, strike(Basic), st).RGBAAt(st.BorderWidth/2, mid)
+	for _, e := range Elements() {
+		if got := render(t, strike(e), st).RGBAAt(st.BorderWidth/2, mid); got != want {
+			t.Errorf("%s border is %v, want the same neutral %v every other element draws", e, got, want)
+		}
+	}
+}
+
+// TestARingStillBordersPink guards the one colour the swap deliberately kept. Pink was never an
+// element — it is the "you cannot play this" signal — so a change that neutralises the four
+// element borders must not take it with them.
+func TestARingStillBordersPink(t *testing.T) {
+	if got := borderBase(Ring); got != BorderOf(Ring) {
+		t.Errorf("ring border base is %v, want the pink %v", got, BorderOf(Ring))
+	}
+	for _, e := range Elements() {
+		if borderBase(e) == borderBase(Ring) {
+			t.Errorf("%s borders in the ring pink — a card and a ring must not look alike", e)
+		}
+	}
+}
+
+// TestTheFormMarkCarriesTheElement is where the colour went. Every pair of elements must draw a
+// different mark, which is the property the swap was for — if two elements paint the same corner
+// then the border was neutralised and nothing took over from it.
+//
+// **It asks for difference rather than for a particular colour**, because the mark's pixels come
+// off a ramp between a dark and a light version of the hue and the brightest of them is genuinely
+// not the colour in borderColors. Which hue a ramp is built from is tintInk's question and
+// TestTintInkFollowsTheHue asks it directly; this one asks the card's.
+func TestTheFormMarkCarriesTheElement(t *testing.T) {
+	st := Hand
+	box := image.Rect(st.GlyphInset, st.FormTop,
+		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
+
+	marks := map[Element][]color.RGBA{}
+	for _, e := range Elements() {
+		img := render(t, strike(e), st)
+		var px []color.RGBA
+		for y := box.Min.Y; y < box.Max.Y; y++ {
+			for x := box.Min.X; x < box.Max.X; x++ {
+				px = append(px, img.RGBAAt(x, y))
+			}
+		}
+		marks[e] = px
+	}
+
+	same := func(a, b []color.RGBA) bool {
+		for i := range a {
+			if a[i] != b[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	for i, e := range Elements() {
+		for _, other := range Elements()[i+1:] {
+			if same(marks[e], marks[other]) {
+				t.Errorf("%s and %s draw an identical form mark — the element is not reaching it",
+					e, other)
+			}
+		}
+	}
+}
+
+// TestTintInkFollowsTheHue is the direct question: hand the ramp a neutral grey and the colour
+// that comes back must be nearer the hue it was built from than any other element's.
+//
+// A flat grey rather than the real artwork, because the art's own outline and specular are what
+// make the rendered mark hard to compare — see the test above. What is being pinned here is that
+// tintInk moves a colour toward the hue it was given and not toward some average of the palette.
+func TestTintInkFollowsTheHue(t *testing.T) {
+	grey := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	grey.SetRGBA(0, 0, color.RGBA{R: 128, G: 128, B: 128, A: 255})
+
+	for _, e := range Elements() {
+		if e == Basic {
+			// Basic is the neutral the border already draws in, so "nearer its own hue than any
+			// other" is not a question with an answer for it.
+			continue
+		}
+		got := tintInk(grey, BorderOf(e)).RGBAAt(0, 0)
+
+		mine := distance(atPeakOf(got, BorderOf(e)), BorderOf(e))
+		for _, other := range Elements() {
+			if other == e || other == Basic {
+				continue
+			}
+			if d := distance(atPeakOf(got, BorderOf(other)), BorderOf(other)); d < mine {
+				t.Errorf("a grey tinted %s came back %v, which is nearer %s (%d) than %s (%d)",
+					e, got, other, d, e, mine)
+			}
+		}
+	}
+}
+
+// atPeakOf rescales c so its brightest channel matches want's, which is what lets two colours of
+// different brightness be compared for hue alone. See TestTheFormMarkCarriesTheElement.
+func atPeakOf(c, want color.RGBA) color.RGBA {
+	peak := max(int(c.R), max(int(c.G), int(c.B)))
+	target := max(int(want.R), max(int(want.G), int(want.B)))
+	if peak == 0 {
+		return c
+	}
+	scale := func(v uint8) uint8 {
+		out := int(v) * target / peak
+		if out > 255 {
+			out = 255
+		}
+		return uint8(out)
+	}
+	return color.RGBA{R: scale(c.R), G: scale(c.G), B: scale(c.B), A: c.A}
+}
+
+// TestTheCostTicksCarryTheElement is the tick half of the 2026-08-23 swap. The mark in the corner
+// and the ticks under it are the whole of the left column, and both say the element — a column
+// where only the top of it is coloured was the first cut and the owner sent it back.
+func TestTheCostTicksCarryTheElement(t *testing.T) {
+	st := Hand
+	at := image.Pt(st.DashLeft+st.DashWidth/2, st.DashTop+st.DashHeight/2)
+
+	for _, e := range Elements() {
+		s := strike(e)
+		s.Cost = 2
+		if got, want := render(t, s, st).RGBAAt(at.X, at.Y), systems.ColorToward(BorderOf(e), Surface, borderRestToward); got != want {
+			t.Errorf("%s cost tick is %v, want the element at rest %v", e, got, want)
+		}
+	}
+}
+
+// TestTheTicksAndTheBorderShareOneState is why atState exists. The two are drawn from different
+// base colours and must move together: a selected card with a lit border and resting ticks is the
+// failure a second copy of the state switch produces, and it looks like a rendering glitch rather
+// than like a bug.
+func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
+	st := Hand
+	tick := image.Pt(st.DashLeft+st.DashWidth/2, st.DashTop+st.DashHeight/2)
+	mid := st.Height / 2
+
+	for _, tc := range []struct {
+		name  string
+		shape func(*Spec)
+	}{
+		{"resting", func(*Spec) {}},
+		{"selected", func(s *Spec) { s.Selected = true }},
+		{"dragging", func(s *Spec) { s.Dragging = true }},
+		{"disabled", func(s *Spec) { s.Enabled = false }},
+	} {
+		s := strike(Fire)
+		s.Cost = 2
+		tc.shape(&s)
+		img := render(t, s, st)
+
+		gotBorder := img.RGBAAt(st.BorderWidth/2, mid)
+		gotTick := img.RGBAAt(tick.X, tick.Y)
+
+		if want := s.atState(borderBase(Fire)); gotBorder != want {
+			t.Errorf("%s border is %v, want %v", tc.name, gotBorder, want)
+		}
+		if want := s.atState(BorderOf(Fire)); gotTick != want {
+			t.Errorf("%s tick is %v, want %v", tc.name, gotTick, want)
+		}
 	}
 }

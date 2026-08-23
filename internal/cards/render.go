@@ -34,6 +34,12 @@ const (
 	// border. Lower than the disabled figure on purpose: dragging is a lighter state and
 	// has to stay clearly apart from unavailable.
 	surfaceDraggingToward = 34
+
+	// The two ends of the form mark's colour ramp: see tintInk. Named here beside the other
+	// state figures because they are the same kind of number — a distance, in percent, that
+	// decides how loud something is against the card's surface.
+	tintDarkPct     = 34
+	tintLightToward = 30
 )
 
 // SurfaceDisabled is the face of a card the fighter cannot afford. It is duller and a
@@ -102,7 +108,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		drawForm(img, s, st)
 	}
 
-	drawDashes(img, s, st, border)
+	// **The ticks carry the element, like the form mark above them, and unlike the border**
+	// *(owner's call, 2026-08-23)*. They are the other thing in the left column, so leaving them
+	// the border's neutral grey would have made the corner the only coloured mark on an
+	// otherwise monochrome column. Same state treatment as the border, different base colour.
+	drawDashes(img, s, st, s.atState(BorderOf(s.Element)))
 
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
 		return nil, err
@@ -230,28 +240,44 @@ func drawStats(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.RGBA)
 // them move the same distance toward the same ground. Passing the rule rather than the
 // results keeps that a single number.
 func (s Spec) colors() (border, surface color.RGBA, ink func(color.RGBA) color.RGBA) {
-	base := BorderOf(s.Element)
+	border = s.atState(borderBase(s.Element))
 
 	switch {
 	case !s.Enabled:
-		return systems.ColorToward(base, SurfaceDisabled, borderDisabledToward),
-			SurfaceDisabled,
-			func(c color.RGBA) color.RGBA {
-				return systems.ColorToward(c, SurfaceDisabled, inkDisabledToward)
-			}
+		return border, SurfaceDisabled, func(c color.RGBA) color.RGBA {
+			return systems.ColorToward(c, SurfaceDisabled, inkDisabledToward)
+		}
 	case s.Dragging:
 		// **The border stays at full strength and only the face ghosts.** A card in the
 		// air is not unavailable — it is the one thing you are currently doing — so
-		// dimming its element would say the opposite. Ghosting the surface alone reads as
+		// dimming it would say the opposite. Ghosting the surface alone reads as
 		// lifted, and keeps it distinguishable from the disabled card next to it, whose
 		// border is dimmed too.
-		return base,
-			systems.ColorToward(Surface, SurfaceDisabled, surfaceDraggingToward),
-			identity
-	case s.Selected:
-		return base, Surface, identity
+		return border, systems.ColorToward(Surface, SurfaceDisabled, surfaceDraggingToward), identity
 	default:
-		return systems.ColorToward(base, Surface, borderRestToward), Surface, identity
+		return border, Surface, identity
+	}
+}
+
+// atState is how far a colour is carried from full strength for the card's current state.
+//
+// **It is shared by the border and the cost ticks** *(2026-08-23)*, which is why it is its own
+// function. The two are drawn in different colours now — the border is neutral and the ticks carry
+// the element — but they are the same *kind* of mark and must respond to selection and to being
+// unaffordable identically. Two copies of this switch is how a selected card ends up with a lit
+// border and resting ticks.
+//
+// Selected and dragging are full strength, which is what "the widget names the colour it wants at
+// full strength" means here. Everything else is some distance toward the ground the card is
+// sitting on — the surface, or the duller surface a disabled card draws.
+func (s Spec) atState(base color.RGBA) color.RGBA {
+	switch {
+	case !s.Enabled:
+		return systems.ColorToward(base, SurfaceDisabled, borderDisabledToward)
+	case s.Dragging, s.Selected:
+		return base
+	default:
+		return systems.ColorToward(base, Surface, borderRestToward)
 	}
 }
 
@@ -292,7 +318,8 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	// size it was authored at and be centred in whatever box the style named, which is how the
 	// overlay's half-size card ended up carrying a full-size mark. Drawn art can be halved; see
 	// systems.RenderGlyphAt for why a generated silhouette still cannot.
-	glyph := systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize)
+	glyph := tintInk(systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize),
+		BorderOf(s.Element))
 	at := placeInk(dst, glyph, box, st.GlyphScale, st)
 	if !s.Enabled && !at.Empty() {
 		// A mark carries its own colours rather than a state ink, so a disabled card fades one
@@ -725,4 +752,71 @@ func fadeRegion(dst *image.RGBA, r image.Rectangle, pct int) {
 			dst.SetRGBA(x, y, systems.ColorToward(c, SurfaceDisabled, pct))
 		}
 	}
+}
+
+// tintInk recolours a glyph to one hue, keeping its own light and shade.
+//
+// **This is where the element is said now** *(owner's call, 2026-08-23)*. It used to be the
+// border, and the swap is argued in `borderBase`: the corner mark is the thing a hand is counted
+// on, so it is the thing worth spending the only colour channel left on.
+//
+// **A ramp between a dark and a light version of the hue, not a multiply.** Multiplying each
+// channel by the pixel's brightness is the obvious recolour and it fails on this art: the four
+// form marks are drawn with a near-black outline, so a multiply leaves the loudest part of every
+// mark near-black and the element shows only in the interior. Mapping brightness onto a ramp
+// instead keeps the *ordering* of the art's own shading — outline darkest, specular lightest —
+// while putting the hue in both ends, so the mark reads as coloured at a glance rather than as a
+// grey drawing with a tinted middle.
+//
+// **Premultiplied throughout.** image.RGBA is alpha-premultiplied and the art arrives
+// downsampled, so its edge pixels are partly transparent; brightness is therefore taken from the
+// *unpremultiplied* value and the result is multiplied back by alpha, or every soft edge would
+// come out darker than the ink it belongs to.
+//
+// It returns a fresh image rather than writing through the one it was handed: `systems` caches
+// what RenderGlyphAt returns, so tinting in place would paint the first element drawn onto every
+// card that asked afterwards.
+func tintInk(src *image.RGBA, hue color.RGBA) *image.RGBA {
+	b := src.Bounds()
+	out := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+
+	// The two ends of the ramp. The dark end is the hue at a third strength rather than black,
+	// which is what keeps an outline coloured; the light end stops well short of white, because a
+	// mark that reached it would have a colourless highlight on a near-white card and lose its
+	// edge against the surface.
+	dark := systems.ColorAtStrength(hue, tintDarkPct)
+	light := systems.ColorToward(hue, color.RGBA{R: 255, G: 255, B: 255, A: 255}, tintLightToward)
+
+	for y := 0; y < b.Dy(); y++ {
+		for x := 0; x < b.Dx(); x++ {
+			c := src.RGBAAt(b.Min.X+x, b.Min.Y+y)
+			if c.A == 0 {
+				continue
+			}
+			a := int(c.A)
+
+			// Unpremultiply to 0..255 and take the brightest channel as the pixel's own light.
+			// The brightest rather than a luminance average: the art is nearly hueless already,
+			// and an average would take a near-white specular down to a mid grey.
+			lum := int(c.R)
+			if int(c.G) > lum {
+				lum = int(c.G)
+			}
+			if int(c.B) > lum {
+				lum = int(c.B)
+			}
+			if lum = lum * 255 / a; lum > 255 {
+				lum = 255
+			}
+
+			mix := func(d, l uint8) uint8 {
+				v := int(d) + (int(l)-int(d))*lum/255
+				return uint8(v * a / 255) // back into premultiplied space
+			}
+			out.SetRGBA(x, y, color.RGBA{
+				R: mix(dark.R, light.R), G: mix(dark.G, light.G), B: mix(dark.B, light.B), A: c.A,
+			})
+		}
+	}
+	return out
 }

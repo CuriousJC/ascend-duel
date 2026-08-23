@@ -4,7 +4,6 @@
     "Verb": "attack",
     "Amount": 50,
     "Cost": 1,
-    "Target": "opponent",
     "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -14,7 +13,6 @@
     "Verb": "attack",
     "Amount": 100,
     "Cost": 2,
-    "Target": "opponent",
     "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -24,7 +22,6 @@
     "Verb": "attack",
     "Amount": 200,
     "Cost": 3,
-    "Target": "opponent",
     "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -35,7 +32,6 @@
     "Verb": "attack",
     "Amount": 50,
     "Cost": 1,
-    "Target": "opponent",
     "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -45,7 +41,6 @@
     "Verb": "attack",
     "Amount": 100,
     "Cost": 2,
-    "Target": "opponent",
     "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -55,7 +50,6 @@
     "Verb": "attack",
     "Amount": 200,
     "Cost": 3,
-    "Target": "opponent",
     "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -66,7 +60,6 @@
     "Verb": "attack",
     "Amount": 50,
     "Cost": 1,
-    "Target": "opponent",
     "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -76,7 +69,6 @@
     "Verb": "attack",
     "Amount": 100,
     "Cost": 2,
-    "Target": "opponent",
     "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -86,7 +78,6 @@
     "Verb": "attack",
     "Amount": 200,
     "Cost": 3,
-    "Target": "opponent",
     "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
@@ -97,29 +88,26 @@
     "Verb": "bank",
     "Amount": 2,
     "Cost": 1,
-    "Target": "self",
     "Form": "plan",
-    "Elements": ["basic"],
-    "Copies": 4
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 1
   },
   {
     "Label": "Plan",
     "Verb": "draw",
     "Amount": 2,
     "Cost": 2,
-    "Target": "self",
     "Form": "plan",
-    "Elements": ["basic"],
-    "Copies": 4
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 1
   },
   {
     "Label": "Defend",
     "Verb": "defend",
     "Amount": 50,
     "Cost": 3,
-    "Target": "self",
     "Form": "plan",
-    "Elements": ["basic"],
-    "Copies": 4
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 1
   }
 ]

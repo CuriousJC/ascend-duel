@@ -228,9 +228,6 @@ func countAttacks(deck []combat.Card) int {
 func perValue(deck []combat.Card, a combat.Axis) int {
 	counts := map[int]int{}
 	for _, c := range deck {
-		if c.Category() != combat.CategoryAttack {
-			continue
-		}
 		if v, ok := valueOf(c, a); ok {
 			counts[v]++
 		}
@@ -245,7 +242,9 @@ func perValue(deck []combat.Card, a combat.Axis) int {
 }
 
 // valueOf mirrors the matcher's own rule: a card with FormNone or Basic carries no value on that
-// axis and cannot be counted on it. It is the same function tools/handodds has, and the
+// axis and cannot be counted on it. **The player's deck has neither since the plans were coloured**
+// *(2026-08-23)*, so all forty-eight count on all three axes — which is why an example hand may now
+// be built out of plans. It is the same function tools/handodds has, and the
 // duplication is deliberate — a second copy of *the matcher* would be a rules fork, but this is
 // three lines of the matcher's vocabulary, and importing a tool from a tool is not a thing Go
 // does.
@@ -253,7 +252,7 @@ func valueOf(c combat.Card, a combat.Axis) (int, bool) {
 	switch a {
 	case combat.AxisForm:
 		f := c.Form()
-		return int(f), f != combat.FormNone && f != combat.FormPlan
+		return int(f), f != combat.FormNone
 	case combat.AxisElement:
 		return int(c.Element), c.Element != combat.Basic
 	default:
@@ -275,9 +274,6 @@ func valueOf(c combat.Card, a combat.Axis) (int, bool) {
 func cheapestExample(deck []combat.Card, h combat.Hand) ([]combat.Card, int, bool) {
 	byValue := map[int][]combat.Card{}
 	for _, c := range deck {
-		if c.Category() != combat.CategoryAttack {
-			continue
-		}
 		if v, ok := valueOf(c, h.Match); ok {
 			byValue[v] = append(byValue[v], c)
 		}

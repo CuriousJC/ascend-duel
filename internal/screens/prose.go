@@ -342,9 +342,6 @@ func cardEffect(card combat.Card, h held) (text, mark string) {
 		figure = ""
 	}
 
-	if c.Target == combat.TargetSelf {
-		return "Costs you " + figureOr(amount, figure) + " DMG", figure
-	}
 	return attackVerb(c.Form) + " for " + figureOr(amount, figure) + " DMG", figure
 }
 
@@ -373,9 +370,6 @@ func actionPhrase(id combat.ConceptID) string {
 	case combat.VerbDraw:
 		return "and looks ahead with a " + name
 	default:
-		if c.Target == combat.TargetSelf {
-			return "with a " + name + ", at their own cost"
-		}
 		return "with a " + name
 	}
 }

@@ -231,9 +231,9 @@ Eight fields, and the player's twelve are written in the same language as every 
 - **A key is scoped to its owner** (`ClearSlime1.Engulf`). Forty creatures want a card called
   `Bite` and they do not all want it at the same multiplier; the label collides freely, the key
   must not.
-- **`Verb × Target` is a grid, and only recoil is new.** An attack aimed at `self` costs its owner
-  life and forms no hand. Banking or drawing at the opponent — drain and mill — is designed and
-  **refused at registration** rather than accepted and silently redirected.
+- **A card does not say who it lands on; its verb does.** An attack lands on the opponent and
+  everything else on its own duelist, and there is no field to disagree with — so a card cannot be
+  aimed anywhere the rules do not resolve, and nothing has to be validated to stop it.
 - **Validation replaced the cross-check.** `CheckCostTiers` compared a declared cost against the
   rules and had nothing left to compare once the file became the rules. `combat.RegisterConcept`
   refuses an unknown verb, a defence of 100% or more, a zero amount, and the unbuilt half of the
@@ -374,9 +374,9 @@ forbids.
 **A self-side status is designed and unbuilt.** Each of the four statuses is what a colour does to
 an *opponent*; aimed at yourself each has a mirror — fire enflames, ice focuses, lightning charges,
 earth wards. **Lightning-on-self must not be a roll**, because a shock is the only randomness in
-the engine and a second one needs its argument made from scratch. None of it is built: recoil
-lands as plain self-damage, and a self-status with no source is not a status. Eight badges instead
-of four is the art bill when it is.
+the engine and a second one needs its argument made from scratch. None of it is built, and there is
+no card that could carry one: a self-status with no source is not a status. Eight badges instead of
+four is the art bill when it is, and a way to aim a card inward is the rules bill.
 
 **A run opens wearing no rings at all** *(owner's call, 2026-08-21)*, so **every element is inert
 until the first one is bought**: an ice Strike is a plain Strike with a blue border. That is what
@@ -752,11 +752,11 @@ announced, is not in the hand, adds no damage and carries no colour. That is a s
 than a consequence — it is what makes *choosing a shape* pay more than throwing everything you
 drew.
 
-**Only attacks aimed at the opponent are counted, and that is the matcher's rule rather than the
-catalogue's** *(2026-08-17)*. An entry used to name the categories it counted; the matcher's own
-test is strictly narrower — it also excludes recoil — so the field could never change what was
-counted and only invited an entry to claim otherwise. Plan cards are not counted, and a Prepare
-cannot join a hand.
+**Every card in the turn is counted, and that is the matcher's rule rather than the catalogue's**
+*(2026-08-17, widened 2026-08-23)*. An entry used to name the categories it counted and could never
+change what was counted, so the field only invited an entry to claim otherwise. What is left out is
+decided by the axis — a card with no value on it — and by nothing else. **A Prepare joins a hand**
+and brings no damage into it.
 
 ### Damage: one blow, one multiplier
 
@@ -825,8 +825,8 @@ is all that survives of the second axis.
   bottom of the ladder legible.
 - **Poker's ranking does not transfer to this deck, and the ladders are now priced off measured
   rarity rather than off poker** *(2026-08-19)*. Poker's ordering comes from 52 cards, 4 suits and
-  13 ranks; here a concept has 4 copies, a colour 9 and a form 12, and the turn is bounded by AP
-  rather than by the draw. See *The multipliers come from how often a hand can actually be built*
+  13 ranks; here a concept has 4 copies and a colour and a form 12 each since the plans were
+  coloured, and the turn is bounded by AP rather than by the draw. See *The multipliers come from how often a hand can actually be built*
   above for the model and the table.
 - **Narrowing to damage alone cost ten enemies, measured** *(2026-08-17)*. `tools/balance` goes
   from 74 walls out of 96 to **84**, and every one of the ten is a hand posture — `trips` lost
@@ -870,8 +870,9 @@ is why `[3,2]` is a full house and can never be satisfied by five cards sharing 
 **`match` is required and never defaulted.** An entry that landed on the wrong axis by omission
 would be a balance change nobody made, so a missing or unknown one is refused at init like any other
 malformed record. Two further refusals live beside it: a hand wanting more cards than a turn holds,
-and one wanting more groups than its axis has values — only three forms and four elements ever reach
-a blow, so a four-group form hand is a rung nobody could climb and would otherwise fail silently.
+and one wanting more groups than its axis has values — four forms and four elements reach a blow, so
+a five-group form hand is a rung nobody could climb and would otherwise fail silently. It was
+*three* forms until 2026-08-23, when `plan` joined them.
 
 **A hand names one axis, not one per group.** A mixed hand — three ice cards *and* a pair of
 Bashes — is deliberately not expressible; reopening it is a schema change and should be argued for
@@ -891,10 +892,31 @@ what that shape is worth.
 
 ### The multipliers come from how often a hand can actually be built *(2026-08-19)*
 
-The three ladders are **not** the same numbers, because the axes are nowhere near equally hard. The
-starting deck is 36 attack cards — **4 per concept, 12 per form, 9 per element** — dealt into a hand
-of eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is priced against
-rather than poker's.
+**Plans carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the forty-eight
+cards is now one of the four colours — the three plans ship one copy per colour where they used to
+ship four basic copies, so the deck size did not move — and the matcher counts them like anything
+else. A hand is **what you played, not what you hit with**.
+
+What that changed, in order of how much it matters:
+
+- **The element axis went from nine cards a colour to twelve**, which is exactly as wide as the form
+  axis. The two ladders are now priced identically at every rung, because they are now equally hard.
+- **`plan` became a fourth countable form.** Any two plans are a Form Pair regardless of concept or
+  colour, and twelve of forty-eight cards carry it.
+- **A plan brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
+  not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Prepare
+  beside two fire Strikes turns a Card Pair into an Elemental Three of a Kind and pays it on the two
+  Strikes' damage. That is the whole of what the change buys.
+- **A plan's colour arms a status.** `elementsOf` reads the formed hand, so a fire Prepare shows fire
+  and lands a burn on a turn with no fire attack in it. That is the sharper half of the same
+  decision.
+- **A hand of nothing but plans is real and lands nothing**, which is the accepted cost — see the
+  decision below the table.
+
+The three ladders are still **not** the same numbers on the concept axis, because a concept is far
+narrower than either of the other two. The starting deck is 48 cards — **4 per concept, 12 per form,
+12 per element** — dealt into a hand of eight against a 6 AP, 5-card turn, and that arithmetic is
+what the ladder is priced against rather than poker's.
 
 Reachability, from a two-million-hand simulation of round one — *can this turn afford some set
 forming this rung* — with the multiplier each was given:
@@ -902,36 +924,48 @@ forming this rung* — with the multiplier each was given:
 | Rung | concept | | form | | element | |
 |---|---|---|---|---|---|---|
 | | reach | pays | reach | pays | reach | pays |
-| Pair | 78.9% | 115 | 99.5% | 110 | 98.4% | 110 |
-| Two Pair | 10.8% | 230 | 31.3% | 170 | 23.6% | 185 |
-| Three of a Kind | 7.1% | 255 | 60.7% | 180 | 42.3% | 195 |
-| Full House | 0.39% | 425 | 2.7% | 310 | 1.1% | 365 |
-| Four of a Kind | 0.11% | 500 | 5.2% | 320 | 1.8% | 375 |
-| Five of a Kind | — | 745 | 0.036% | 565 | — | 665 |
+| Pair | 91.4% | 115 | 100% | 110 | 100% | 110 |
+| Two Pair | 18.9% | 200 | 52.6% | 140 | 52.6% | 140 |
+| Three of a Kind | 9.4% | 245 | 76.1% | 145 | 76.1% | 145 |
+| Full House | 0.77% | 400 | 5.3% | 280 | 5.4% | 280 |
+| Four of a Kind | 0.15% | 500 | 6.9% | 285 | 6.9% | 285 |
+| Five of a Kind | — | 745 | 0.049% | 565 | 0.047% | 565 |
 
-The rule that produced them: **`100 + 58.6 × ln(1/P)`, floored at 110, rounded to five, then forced
-to climb within each ladder.** The constant is set by anchoring the rarest hand in the game — a
-concept Four of a Kind, one turn in a thousand — at the 500 it already carried, so the concept
-ladder is recognisably the tuned one it was and the other two are priced off the same curve.
+The rule that produced them is unchanged: **`100 + K x ln(1/P)`, floored at 110, rounded to five,
+then forced to climb within each ladder.** **K is 61.2 where it was 58.6**, because the constant is
+*defined* by anchoring the rarest measurable hand — a concept Four of a Kind — at the 500 it already
+carried, and that rung got slightly easier when four Prepares became a way to build one. Re-deriving
+the constant rather than keeping it is what holds the concept ladder recognisably where it was.
+
+**Every multiplier fell, most of them a long way**, because plans made every axis easier: an
+Elemental Four of a Kind went 375 to 285 and an Elemental Full House 365 to 280. `tools/balance`
+reads **81 walls out of 96 where it read 80** before the change, measured on the same seed either
+side — so the re-pricing very nearly absorbed the buff, and what is left is a hair harder rather
+than easier. Read that as one sample per the tool's own caveat, not as a settled figure.
+
+**Two numbers in the table are judgement rather than measurement, and both are the same two as
+before:**
+
+- **The concept Pair keeps 115 rather than the 110 the floor gives it.** At 91.4% the curve floors
+  out, and letting it sit at 110 would make the narrowest axis pay exactly what the two wide ones do
+  at the bottom rung — the nesting problem the ladder exists to avoid.
+- **Card Five of a Kind, 745, still has no probability behind it.** The deck ships four copies of a
+  concept, so nothing can deal a fifth; the rung exists for the `duplicate` worm. It keeps the
+  +180 premium over the form rung that the ladder already shows.
+
+**The element five-of-a-kind stopped being an estimate** *(2026-08-23)*. It was 665 on a curve fitted
+at 8 AP, because five cards of one colour used to cost 7 AP and a round holds 6 — a colour held one
+card per form per tier and nothing cheaper. A colour now holds three plans as well, so five fire
+cards can be had for 6 AP and the rung is measurable at the real budget. It is priced off its own
+number like every other row.
 
 **The five-of-a-kind row is the one that is not all measurement** *(2026-08-19)*, and it is written
 out because a number that came from somewhere else must not read as one that came from the tool:
 
-- **Form Five of a Kind, 565, is straight off the curve.** 0.036% is one turn in 2,774 — five cards
-  of one form is four 1 AP copies plus a 2 AP one, exactly the 6 AP budget — which makes it the
-  rarest thing a round-one hand can actually build, rarer than a Card Four of a Kind, and it is
-  paid accordingly.
-- **Elemental Five of a Kind, 665, is an estimate.** Five cards of one colour cost 7 AP at the
-  cheapest, since a colour holds one card per form per tier, so its round-one reachability is
-  **zero** and `ln(1/P)` has nothing to work with. It was measured at 8 AP instead — the turn after
-  a Prepare — where form five is 0.859% and element five 0.160%, a gap of 98.5 on the curve, and
-  that step was added to the form rung's price. `go run ./tools/handodds -ap 8` is the run.
-- **Card Five of a Kind, 745, is a judgement.** The starting deck ships four copies of a concept,
-  so nothing can deal a fifth: the rung exists for the `duplicate` worm and cannot be measured
-  against any deck the tool models. It carries the concept-over-form premium the ladder already
-  shows — +75 at trips, +115 at the full house, +180 at four of a kind — applied once more at
-  +180 over the form rung. **It is the one number in the table with no probability behind it**, and
-  the thing to re-derive first if the worm ever makes five copies common.
+- **Both wide five-of-a-kind rungs are now straight off the curve**, at 0.049% and 0.047% — one turn
+  in about two thousand, and still the rarest thing a round-one hand can build on either axis.
+- **Card Five of a Kind is the one row with no probability behind it**, and the thing to re-derive
+  first if the `duplicate` worm ever makes five copies common.
 
 Three things fall out of it and are worth keeping:
 
@@ -942,24 +976,44 @@ Three things fall out of it and are worth keeping:
   concept ladder dead content: a card hand is always also a form hand, so if the form rung paid the
   same, nobody would ever have a reason to build the narrower one.
   `TestANarrowerAxisPaysMore` holds it.
-- **The ladders cross, and that is intended.** A form Three of a Kind (180) pays less than a card
-  Two Pair (230) though it uses fewer cards, because it is eight times as easy to build.
+- **The ladders cross, and that is intended.** A form Three of a Kind (145) pays less than a card
+  Two Pair (200) though it uses fewer cards, because it is eight times as easy to build.
+- **The form and element ladders are the same numbers as of 2026-08-23**, because the two axes are
+  now the same width — twelve cards share the commonest value on each. They are kept as separate
+  entries rather than merged: the *tie-break* still prefers form, so an elemental hand is only ever
+  named when no form hand of the same rung is live, and what an elemental hand carries into
+  `elementsOf` is different. **If the two are meant to feel different, the thing to change is the
+  deck rather than the file** — pricing them apart when they are equally hard would be a number
+  with nothing behind it.
 
-`[?]` **Two Pair is rarer than Three of a Kind on the form and element axes** — 31% against 61%,
-23% against 42% — because the binding constraint here is cards and AP, not draws: two pair needs
-four cards across two values where trips needs three of one. Rarity alone would price two pair
-*above* trips and invert the poker ordering the names promise. The ladders are forced to climb
-instead, so those two rungs are the least rarity-honest numbers in the table. Fixing it properly
-means either accepting the inversion or renaming the rungs.
+`[?]` **Two Pair is rarer than Three of a Kind on the form and element axes** — 52.6% against 76.1%
+on both, since the two axes are the same width now — because the binding constraint here is cards and
+AP, not draws: two pair needs four cards across two values where trips needs three of one. Rarity
+alone would price two pair *above* trips and invert the poker ordering the names promise. The ladders
+are forced to climb instead, so those two rungs are the least rarity-honest numbers in the table, and
+the forcing is doing more work than it was: the raw curve puts both wide Two Pairs at 140 and both
+wide Three of a Kinds at **115**, and only the climb rule lifts trips to 145. Fixing it properly means
+either accepting the inversion or renaming the rungs.
 
-`[?]` **The best hand is chosen on multiplier, not on what it would deal**, and now that the
-multipliers no longer climb with card count across axes, those two can disagree. A turn of
-`Jab Jab Jab Cut Cut` has a card Three of a Kind (255, three cards) and a card Two Pair (230, four
-cards); the matcher takes the trips at 382 damage where the two pair was worth 460. **This predates
-the three axes** — the old ladder had the same hole at 200 against 175 — but it is easier to hit
-now. The fix is to pick on the resulting blow and tie-break on multiplier, which is knowable before
-resolution and stays deterministic; it is not done, because it is a rules change beyond the axis
-work.
+**The best hand is chosen on multiplier, not on what it would deal, and that is now a decision**
+*(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
+plans joining hands made them disagree by everything, and the answer is to leave the matcher alone.
+
+The case that forced it: a turn of `Strike + two plans` forms a **Form Pair at 110 on zero damage**,
+because any two plans share `FormPlan` and the pair beats the High Card's 100 — so the Strike is
+announced and lands nothing, where the Strike alone would have landed its face damage. Playing plans
+beside a single attack can cost you the blow, and **reading the board to avoid that is part of the
+game** rather than a bug to design out.
+
+What was considered and declined: scoring each formable hand as `scaleDamage(base, multiplier)` and
+taking the largest, tie-breaking on multiplier. It is one comparison, it generalises to the next
+zero-damage card, and it makes "best hand" mean what the phrase claims — but it also means the hand
+you are *named* as forming is not the highest rung you actually built, which reads worse in the log
+than the case it fixes.
+
+**Nothing on screen explains the zero yet**, and that is the part left open. A player queuing a
+Strike and two Prepares sees the Strike announced, sees "Form Pair", and sees no damage; the
+arithmetic is right and the presentation does not say why.
 
 **Hand IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
 be the base in `hands.json` plus the card's enum value, so inserting a card mid-enum shifted every
@@ -979,6 +1033,13 @@ a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable onl
 whole round on Prepares — and five *Strikes* is not even dealable, the deck holding four. That
 trade is the hand working as intended, and it is why the five-of-a-kind rungs are the cheapest
 cards of a form or a colour rather than of a concept.
+
+**A colour's cheapest five now includes a plan** *(2026-08-23)* — fire Jab, Cut, Bash and Prepare at
+1 AP each plus a fire Thrust at 2 is **6 AP**, which is a plain round's whole budget and the first
+time an elemental five-of-a-kind has been affordable without banking. It used to be 7 AP, because a
+colour held one card per form per tier and nothing cheaper. The Prepare pays nothing into the 5.65x;
+what it does is take the place of the second 2 AP attack the hand used to need, so it is a rung the
+plans *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
 
 ### Sequences — the capability the rewrite dropped
 

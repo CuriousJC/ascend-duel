@@ -261,11 +261,16 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 		}
 	}
 
-	// And the plans are in the plan row rather than in basic, which is the whole point of the
-	// sixth row: they are all basic, and leaving them there overflowed it.
+	// And a plan sits in its colour's row like everything else *(2026-08-23)*. It used to be
+	// checked into a row of its own, which was right while every plan was basic; now a fire
+	// Prepare belongs under "fire", and the failure this guards against is a plan quietly routed
+	// somewhere on the strength of its category.
 	for _, c := range session.StartingDeck() {
-		if c.Category() == combat.CategoryPlan && deckRowFor(c) != deckPlanRow {
-			t.Errorf("%v is a plan and sits in row %d", c, deckRowFor(c))
+		if c.Category() != combat.CategoryPlan {
+			continue
+		}
+		if got, want := deckRowFor(c), deckRowFor(combat.Of(combat.Strike, c.Element)); got != want {
+			t.Errorf("%v sits in row %d and an attack of the same colour sits in row %d", c, got, want)
 		}
 	}
 }

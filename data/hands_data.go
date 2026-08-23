@@ -35,9 +35,9 @@ type handFile struct {
 //
 // **A hand names what it counts copies *of*** *(2026-08-19)*. `match` is one of three axes —
 // `concept`, `form`, `element` — so the same rung exists three times over and each can be priced
-// on its own rarity. There is still no category filter: the matcher only ever sees attack cards
-// aimed at the opponent, so a hand saying which categories it counts would be repeating a rule it
-// cannot change.
+// on its own rarity. There is still no category filter: the matcher counts every card in the turn
+// and the axis decides what a card is worth, so a hand saying which categories it counts would be
+// repeating a rule it cannot change.
 type HandData struct {
 	// Key is a stable slug — `pair`, `four-of-a-kind`. It is how a caller asks for a rung without
 	// knowing its number, and it is deliberately independent of Name so a hand can be renamed

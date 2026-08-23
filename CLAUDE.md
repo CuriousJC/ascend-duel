@@ -141,12 +141,14 @@ hand that demonstrates something can be asked for by name instead of found by re
 `deckSeedName` picks which one a launch deals.
 
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
-prints.** The ladder is priced off how reachable each rung is — a form pair is a 99% hand and pays
-110, a concept Four of a Kind is a 0.1% hand and pays 500 — and every one of those figures is a fact
+prints.** The ladder is priced off how reachable each rung is — a form pair is a 100% hand and pays
+110, a concept Four of a Kind is a 0.15% hand and pays 500 — and every one of those figures is a fact
 about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the ladder is
 tuned against a deck that no longer exists, silently, because nothing fails. The tool measures
 **reachability** rather than what the matcher picks: whether a hand of eight can afford some set
-forming the rung, which is the question the player is actually answering. MECHANICS.md holds the
+forming the rung, which is the question the player is actually answering. **It counts every card,
+plans included** *(2026-08-23)* — they carry an element and a form now and join hands like anything
+else, bringing no damage with them. MECHANICS.md holds the
 table and the rule that turned it into multipliers.
 
 **Re-run `tools/seeds` after touching `data/duelist_cards.json`, `startingDeck` or `handSize`.** A seed is

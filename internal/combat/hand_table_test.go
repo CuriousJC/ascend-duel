@@ -201,10 +201,11 @@ func TestAMalformedHandIsRefused(t *testing.T) {
 		{"no axis", data.HandData{Key: "k", ID: 1, Name: "x", Groups: []int{2}, Multiplier: 150}},
 		{"an axis the rules do not have", data.HandData{
 			Key: "k", ID: 1, Name: "x", Match: "suit", Groups: []int{2}, Multiplier: 150}},
-		// Only three forms ever reach a blow, so a hand wanting four groups of them is a rung
-		// nobody could climb — and it would fail silently rather than loudly without the check.
+		// **Four forms reach a blow as of 2026-08-23**, since plans join hands, so a five-group form
+		// hand is the rung nobody could climb — and it would fail silently rather than loudly
+		// without the check. It was four groups while `FormPlan` was filtered out of the matcher.
 		{"more groups than the axis has values", data.HandData{
-			Key: "k", ID: 1, Name: "x", Match: "form", Groups: []int{1, 1, 1, 1}, Multiplier: 150}},
+			Key: "k", ID: 1, Name: "x", Match: "form", Groups: []int{1, 1, 1, 1, 1}, Multiplier: 150}},
 	} {
 		if _, err := validateHand(tc.rec); err == nil {
 			t.Errorf("%s: should have been refused", tc.what)

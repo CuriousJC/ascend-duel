@@ -174,13 +174,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         about the incoming hand — its element, whether it forms a hand — rather than a slot.
       - What is definitely gone is the ordering half. See the drag entry above; this is the same
         hole.
-- [ ] **`[?]` Nothing reads recoil, so no enemy deck should hold one yet.** An attack aimed at
-      `self` is built and resolves — plain self-damage, before the blow, forming no hand — and the
-      planner will never queue one, because it costs life and buys nothing. That is correct as far
-      as it goes and it means recoil is currently unauthored content.
-      - **What would make it worth playing is a rider**: a self-status (see below), a discount, or
-        a hand that pays more for having been bought with blood.
-      - `TestThePlannerNeverSpendsAnAttackOnItself` pins that the search does not stumble into one.
 - [ ] **The eight statuses are four.** `MECHANICS.md` §Elements now designs a self-side mirror for
       each element — enflame, focus, charge, ward — and none is built.
       - **Blocked on the source rule having an enemy half**, which is affixes. A self-status needs

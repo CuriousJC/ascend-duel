@@ -37,17 +37,15 @@ analysis.md
 # near-identical PNGs.
 /demo/
 
-# Card previews written by `go run ./tools/cardsheet`. Nearly forty PNGs plus a page, all
-# regenerated on every run — the same argument as /demo/ above, and the reason this does
-# *not* follow tools/glyphsheet, which commits its single glyphs.png so GitHub can render
-# an image diff in review. If a committed review artefact turns out to be wanted, the
-# answer is one composite PNG beside these rather than committing all of them.
+# Tool sheets are committed, and live in docs/sheets/ *(owner's call, 2026-08-23)*.
 #
-# Anchored, so a future /internal/cardsheet/ or similar is not swallowed by accident.
-/tools/cardsheet/*.png
-/tools/cardsheet/index.html
-
-# Ring previews written by `go run ./tools/ringsheet`. Same argument as the card sheet above:
-# a PNG per ring plus a page, all regenerated on every run.
-/tools/ringsheet/*.png
-/tools/ringsheet/index.html
+# They used to be ignored, on the argument that a run regenerates all of them and the diff is
+# only ever near-identical binaries. What that argument left out is the audience: the sheets are
+# how the catalogues get *reviewed*, and requiring a Go toolchain and four commands to see them
+# means they are only ever looked at by whoever just changed the thing. Committed, a clone opens
+# docs/sheets/index.html and sees every card, ring, worm and hand in the game.
+#
+# The price is real and accepted: about 1.7 MB and 150 binary files rewritten whenever the sheets
+# are regenerated. **Regenerate deliberately rather than reflexively** — a sheet rebuilt in a
+# commit that changed nothing about it is pure history weight. tools/glyphsheet already commits
+# its picture for the review-diff reason; this is the same trade taken wider.

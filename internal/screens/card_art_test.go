@@ -372,3 +372,89 @@ func TestEveryStatusTheRulesHoldFitsTheDuelistArray(t *testing.T) {
 		t.Fatalf("%d statuses against an array of %d", combat.StatusCount(), combat.MaxStatuses)
 	}
 }
+
+func TestEveryWormTextFitsItsCard(t *testing.T) {
+	// **The gap this closes** *(2026-08-23)*: the two tests above hold the *duelist* cards against
+	// their band, and nothing held a worm against WormStyle's. A worm's line is the whole of what
+	// the card says, and it was one string away from overrunning — "make one card LIGHTNING" is
+	// 135px in a 142px band — with nothing to fail if the next element name were longer.
+	//
+	// It checks both halves, because they fail differently: too many lines runs off the bottom of
+	// the card, and one word wider than the band overruns the side silently, since wrapping breaks
+	// on spaces only.
+	ttf := assets.LoadFontData()["kubasta"]
+	if len(ttf) == 0 {
+		t.Fatal("no kubasta font data embedded")
+	}
+	f, err := cards.NewFaces(ttf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := cards.WormStyle
+	width := st.Width - st.TextColumnLeft - st.TextInset
+
+	for _, w := range session.Worms() {
+		lines, err := cards.WrapText(f, st.TextSize, w.Text, width)
+		if err != nil {
+			t.Fatalf("%s: %v", w.Record, err)
+		}
+		if len(lines) > st.TextLines() {
+			t.Errorf("%s's text wraps to %d lines and the band holds %d: %q",
+				w.Record, len(lines), st.TextLines(), w.Text)
+		}
+		for _, word := range strings.Fields(w.Text) {
+			got, err := cards.TextWidth(f, st.TextSize, word)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got > width {
+				t.Errorf("%s's %q is %dpx at %gpt, wider than the %dpx band — it will overrun",
+					w.Record, word, got, st.TextSize, width)
+			}
+		}
+	}
+}
+
+func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
+	// **Why the authored break exists**, pinned so it cannot be quietly undone by deleting a `\n`
+	// from worms.json. The four recolouring worms differ only in the element they name, and the
+	// names differ in width — FIRE sits comfortably on the line where LIGHTNING all but fills it —
+	// so left to the measurer the four read as four layouts of one card.
+	ttf := assets.LoadFontData()["kubasta"]
+	if len(ttf) == 0 {
+		t.Fatal("no kubasta font data embedded")
+	}
+	f, err := cards.NewFaces(ttf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := cards.WormStyle
+	width := st.Width - st.TextColumnLeft - st.TextInset
+
+	want := 0
+	for _, w := range session.Worms() {
+		if w.Target != session.TargetElement {
+			continue
+		}
+		lines, err := cards.WrapText(f, st.TextSize, w.Text, width)
+		if err != nil {
+			t.Fatalf("%s: %v", w.Record, err)
+		}
+		if want == 0 {
+			want = len(lines)
+		}
+		if len(lines) != want {
+			t.Errorf("%s draws on %d lines where another elemental worm draws on %d: %q",
+				w.Record, len(lines), want, w.Text)
+		}
+		if len(lines) < 2 {
+			t.Errorf("%s draws on one line — the authored break in worms.json has been lost: %q",
+				w.Record, w.Text)
+		}
+	}
+	if want == 0 {
+		t.Error("no worm targets an element — this test is checking nothing")
+	}
+}

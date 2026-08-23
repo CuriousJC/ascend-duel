@@ -35,9 +35,13 @@
 //
 // # Output
 //
-// Loose PNGs plus an index.html beside them, all written into this directory and all
-// gitignored, for the same reason tools/cardsheet's are: they are regenerated wholesale on
-// every run and would only ever produce a diff of near-identical binaries.
+// Loose PNGs plus an index.html, written into `docs/sheets/ringsheet/` and **committed**
+// *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
+// Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
+// `docs/sheets/index.html`.
+//
+// The price is a directory of near-identical binaries rewritten on every run, so **regenerate
+// deliberately** — `go run ./tools/sheets` does all of them and rewrites the index.
 package main
 
 import (
@@ -64,7 +68,7 @@ import (
 const ground = "#e2d0b0"
 
 func main() {
-	dir := flag.String("dir", filepath.Join("tools", "ringsheet"),
+	dir := flag.String("dir", filepath.Join("docs", "sheets", "ringsheet"),
 		"directory to write the PNGs and index.html into")
 	flag.Parse()
 

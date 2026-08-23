@@ -166,6 +166,15 @@ func TextWidth(f *Faces, size float64, s string) (int, error) {
 // It breaks on spaces only. A single word longer than the line is left whole and overruns,
 // rather than being hyphenated at an arbitrary point: the strings on the cards are written
 // here in the repo, so an overrun is an authoring mistake to fix and not a case to handle.
+//
+// **A newline in the source is an authored break** *(2026-08-23)*, honoured before the width is
+// consulted and never joined back up. It exists because width-wrapping alone cannot make a *set*
+// of cards break in the same place: the four elemental worms differ only in the element they
+// name, and FIRE fits the line where LIGHTNING all but fills it, so the four would read as four
+// different layouts of one card. Which is a thing the author knows and the measurer cannot.
+//
+// **It is a break, not a paragraph.** An authored line still wraps if it is too wide for the
+// band, so a break can only ever add lines — it cannot be used to overrun one.
 func WrapText(f *Faces, size float64, s string, width int) ([]string, error) {
 	face, err := f.at(size)
 	if err != nil {
@@ -173,21 +182,23 @@ func WrapText(f *Faces, size float64, s string, width int) ([]string, error) {
 	}
 
 	var lines []string
-	line := ""
-	for _, word := range strings.Fields(s) {
-		try := word
+	for _, authored := range strings.Split(s, "\n") {
+		line := ""
+		for _, word := range strings.Fields(authored) {
+			try := word
+			if line != "" {
+				try = line + " " + word
+			}
+			if line != "" && font.MeasureString(face, try).Ceil() > width {
+				lines = append(lines, line)
+				line = word
+				continue
+			}
+			line = try
+		}
 		if line != "" {
-			try = line + " " + word
-		}
-		if line != "" && font.MeasureString(face, try).Ceil() > width {
 			lines = append(lines, line)
-			line = word
-			continue
 		}
-		line = try
-	}
-	if line != "" {
-		lines = append(lines, line)
 	}
 	return lines, nil
 }

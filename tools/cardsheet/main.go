@@ -19,16 +19,17 @@
 //
 // # Output
 //
-// Loose PNGs plus an index.html beside them, all written into this directory and all
-// gitignored. Loose files rather than one composite because the border colours and the
-// card's parts are still moving — the expectation is that some of these become sprites
-// and some stay generated, and that sorting is easier when each piece is its own file.
+// Loose PNGs plus an index.html, written into `docs/sheets/cardsheet/` and **committed**
+// *(owner's call, 2026-08-23)*: the sheets are how the catalogues get reviewed, and requiring a
+// Go toolchain to see one meant only whoever just changed something ever looked. A clone opens
+// `docs/sheets/index.html`.
 //
-// This differs from glyphsheet, which commits a single glyphs.png so GitHub renders an
-// image diff in review. Twenty-odd regenerated binaries would not produce a diff anyone
-// wants, which is the same reason /demo/ is ignored. If a committed review artefact
-// turns out to be wanted, the fix is one composite PNG alongside these, not committing
-// all of them.
+// The price is a directory of near-identical binaries rewritten on every run, so **regenerate
+// deliberately** — `go run ./tools/sheets` does all of them and rewrites the index.
+//
+// Loose files rather than one composite because the border colours and the card's parts are still
+// moving — the expectation is that some of these become sprites and some stay generated, and that
+// sorting is easier when each piece is its own file.
 package main
 
 import (
@@ -61,7 +62,7 @@ const deckStackPitch = 75
 const ground = "#323232"
 
 func main() {
-	dir := flag.String("dir", filepath.Join("tools", "cardsheet"),
+	dir := flag.String("dir", filepath.Join("docs", "sheets", "cardsheet"),
 		"directory to write the PNGs and index.html into")
 	flag.Parse()
 

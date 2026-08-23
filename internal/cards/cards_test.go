@@ -1046,3 +1046,33 @@ func TestBackRendersWithNoFont(t *testing.T) {
 			img.RGBAAt(Hand.Width/2, Hand.Height/2), BackInk)
 	}
 }
+
+func TestAnAuthoredBreakSurvivesWrapping(t *testing.T) {
+	// **A newline is a break the author asked for** *(2026-08-23)*, and the measurer may not undo
+	// it: a line that fits is exactly the case width-wrapping would join back up, and it is the
+	// case the feature exists for.
+	f := faces(t)
+	lines, err := WrapText(f, WormStyle.TextSize, "make one card\nFIRE", 400)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lines) != 2 || lines[0] != "make one card" || lines[1] != "FIRE" {
+		t.Errorf("an authored break was not honoured: got %q", lines)
+	}
+}
+
+func TestAnAuthoredLineStillWraps(t *testing.T) {
+	// **A break can only add lines.** Honouring one must not become a way to overrun the band, so
+	// an authored line too wide for the column is wrapped like any other.
+	f := faces(t)
+	lines, err := WrapText(f, Hand.TextSize, "one\nthe second line is far too wide for this", 60)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lines) < 3 {
+		t.Errorf("an authored line was not wrapped: got %q", lines)
+	}
+	if lines[0] != "one" {
+		t.Errorf("the authored break moved: got %q", lines)
+	}
+}

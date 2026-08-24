@@ -202,25 +202,56 @@ func TestSoulTakerPaysFlatAndHungryAddsAPick(t *testing.T) {
 	}
 }
 
-func TestAFlipRecoloursWhatIsDealtAndNotWhatIsOwned(t *testing.T) {
-	// The deck the fight is dealt from is a transform of the run's own, applied fresh every time.
-	// That is what makes a flip non-composing by construction and what makes one bought mid-run
-	// apply from the next fight without rewriting anything.
+func TestAFlipRecoloursTheDrawnCardAndNotWhatIsOwned(t *testing.T) {
+	// **A flip fires as a card is drawn, not as the deck is built** *(2026-08-24)*. The pile a
+	// fight opens with therefore holds the run's own colours, and the recolour lands one card at a
+	// time on the way into the hand — which is what every one of these rings' text has always said.
 	run := wearing(t, "frozen-lightning-ring")
 	run.deck = []combat.Card{
 		{Concept: combat.Strike, Element: combat.Lightning},
 		{Concept: combat.Strike, Element: combat.Fire},
 	}
 
-	dealt := run.FightDeck()
-	if dealt[0].Element != combat.Ice {
-		t.Errorf("a lightning card was dealt as %v, want ice", dealt[0].Element)
+	for i, want := range []combat.Element{combat.Lightning, combat.Fire} {
+		if got := run.FightDeck()[i].Element; got != want {
+			t.Errorf("the draw pile holds card %d as %v, want %v — a flip is not a deck-built rule",
+				i, got, want)
+		}
 	}
-	if dealt[1].Element != combat.Fire {
-		t.Errorf("a fire card was dealt as %v, want fire", dealt[1].Element)
+
+	if got := run.DrawnAs(run.Deck()[0]).Element; got != combat.Ice {
+		t.Errorf("a lightning card was drawn as %v, want ice", got)
+	}
+	if got := run.DrawnAs(run.Deck()[1]).Element; got != combat.Fire {
+		t.Errorf("a fire card was drawn as %v, want fire", got)
 	}
 	if owned := run.Deck(); owned[0].Element != combat.Lightning {
 		t.Errorf("the flip wrote back into the run: %v", owned[0].Element)
+	}
+}
+
+func TestTwoFlipsCannotChainThroughOneCard(t *testing.T) {
+	// **The failure this guards is a redraw.** Every flip reads the card's *original* colour, which
+	// was true for free while the whole deck was recoloured once — nothing had been flipped yet.
+	// Firing per draw, a card that has been through the hand and the discard is holding a colour a
+	// ring made, so handing that card back to DrawnAs is asking the second flip to read the first
+	// one's answer: lightning to ice to fire, and a deck walked to one colour by two rings that
+	// each claim to touch one.
+	run := wearing(t, "frozen-lightning-ring", "meltdown-ring")
+	owned := combat.Card{Concept: combat.Strike, Element: combat.Lightning}
+
+	drawn := run.DrawnAs(owned)
+	if drawn.Element != combat.Ice {
+		t.Fatalf("a lightning card was drawn as %v, want ice", drawn.Element)
+	}
+	if again := run.DrawnAs(owned); again.Element != combat.Ice {
+		t.Errorf("drawn a second time from the run's own card it came up %v, want ice",
+			again.Element)
+	}
+	if chained := run.DrawnAs(drawn); chained.Element != combat.Fire {
+		t.Errorf("feeding a drawn card back in came up %v; ice-to-fire is expected here, and it "+
+			"is why the draw pile has to hold the run's colours - see screens.restoreToDeck",
+			chained.Element)
 	}
 }
 

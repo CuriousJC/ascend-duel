@@ -24,6 +24,15 @@ type Session struct {
 	// long as a caller holds it.
 	deck []combat.Card
 
+	// nextCardID is the counter behind every card's identity. **It only ever goes up**, so a
+	// number is never handed out twice inside one run and an id belonging to a removed card is
+	// never quietly reused by a card added later.
+	//
+	// Identity is the run's to give: the rules have no idea a run exists, and every card outside
+	// one — an enemy's deck, a test literal — keeps the zero id and is none the worse for it. See
+	// combat.Card.ID for what the number buys.
+	nextCardID int
+
 	// fight is how many rooms in the run has got: zero on the first fight, incremented on a win.
 	//
 	// **It lives here rather than on the combat screen because two scenes read it** — the screen
@@ -73,6 +82,13 @@ type Session struct {
 func New(deck []combat.Card) *Session {
 	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{}}
 	copy(s.deck, deck)
+
+	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a
+	// list of descriptions — four copies of a fire Strike are four equal values — and a run is
+	// where they stop being interchangeable.
+	for i := range s.deck {
+		s.deck[i].ID = s.mintCardID()
+	}
 
 	for _, key := range StartingRings {
 		s.Wear(key)
@@ -180,6 +196,39 @@ func (s *Session) WonFight(lifeLeft int) {
 
 // Add puts a card into the run. Nothing offers this yet — REMOVE and MODIFY are the two worms
 // that exist — but the third one named in the design is "add", and it is one line.
+//
+// **The card is given a fresh identity, whatever it arrived carrying.** A caller handing over a
+// copy of a card the run already owns would otherwise put two cards with one id into the deck, and
+// everything that looks a card up by id would find whichever came first.
 func (s *Session) Add(c combat.Card) {
+	c.ID = s.mintCardID()
 	s.deck = append(s.deck, c)
+}
+
+// mintCardID hands out the next identity.
+func (s *Session) mintCardID() int {
+	s.nextCardID++
+	return s.nextCardID
+}
+
+// CardByID is the card the run owns under an identity — **what a card looked like before any ring
+// touched it**, which is the question a drawn card cannot answer for itself.
+//
+// It reports false for an id the run has not got, which covers the two honest cases: a card with
+// no identity at all (an enemy's, a test's) and a card whose original has since been eaten by a
+// worm. A caller that cannot find the original should draw the card it actually has.
+//
+// **A linear walk, deliberately.** The deck is fifty-odd cards and this is asked while a panel is
+// open, so an index would be a second structure to keep in step with `Remove` for no measurable
+// gain.
+func (s *Session) CardByID(id int) (combat.Card, bool) {
+	if id == 0 {
+		return combat.Card{}, false
+	}
+	for _, c := range s.deck {
+		if c.ID == id {
+			return c, true
+		}
+	}
+	return combat.Card{}, false
 }

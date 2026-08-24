@@ -27,10 +27,12 @@
 //     rather than during one.
 //   - worm.go — the deck alterations offered after a fight.
 //
-// # Three of the seven ring moments fire here
+// # Four of the ten ring moments are answered here
 //
 // deck-built in FightDeck, fight-start in Equip, and fight-won in WonFight — which is also where
-// vitae propagates and where a growing ring takes its step. The order matters and MECHANICS.md
+// vitae propagates and where a growing ring takes its step. The fourth, card-drawn, is answered by
+// DrawnAs and *fired* by the combat screen, once per card as it deals one: the flip belongs to a run
+// and the draw pile belongs to a fight. The order matters and MECHANICS.md
 // states it: propagation is interest on what the run walked out of the fight holding, not on what
 // the prize card is about to pay it.
 //

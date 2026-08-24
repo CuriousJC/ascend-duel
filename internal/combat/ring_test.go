@@ -364,12 +364,12 @@ func TestFlipsDoNotCompose(t *testing.T) {
 	// their own sources and cannot chain. Without it, two flips could cascade a deck to one colour
 	// and the order they were bought in would change the result.
 	toIce := ring(t, "lightning to ice", RingRule{
-		When: MomentDeckBuilt,
+		When: MomentCardDrawn,
 		If:   RingCondition{Element: Lightning, HasElement: true},
 		Then: []RingEffect{{Do: DoSetElement, Element: Ice}},
 	})
 	toEarth := ring(t, "ice to earth", RingRule{
-		When: MomentDeckBuilt,
+		When: MomentCardDrawn,
 		If:   RingCondition{Element: Ice, HasElement: true},
 		Then: []RingEffect{{Do: DoSetElement, Element: Earth}},
 	})

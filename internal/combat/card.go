@@ -42,6 +42,31 @@ type Card struct {
 	// TestRoundIsDeterministic and the screen's render cache both need.
 	CostDelta int
 	AmountPct int
+
+	// ID is which card in the run this is, and it is the card's identity rather than its
+	// description.
+	//
+	// **Two cards that look identical are still two cards** *(owner's call, 2026-08-24)*. Every
+	// other field says what a card *is*; this says *which one*. A run assigns one to every card it
+	// owns and the number survives the shuffle, the hand, the discard and the reshuffle — so
+	// something holding a card in a pile can always ask the run what that same card looked like
+	// before a ring got to it.
+	//
+	// **That is what the element flip needs.** A flip fires as a card is drawn and the drawn card
+	// carries only the colour it became — it does not remember what it was, because a rule reading
+	// what a card *used* to be is exactly the ordering the owner ruled out. The original is not
+	// gone, it simply lives where it always did: on the card the run owns, reachable by this
+	// number. The deck panel draws either face from it; see screens/deckpanel.go.
+	//
+	// **Zero means no identity, and that is the common case in this package.** Every enemy card,
+	// every card a test writes as a literal and every `Plain`/`Of` has ID 0 — an enemy wears no
+	// rings and a test deck has no run behind it. Nothing here may *require* an ID; it is a handle
+	// the layers above use, and the rules go on resolving a card that has none.
+	//
+	// **It does not make a card less comparable.** The screen's face cache keys on `cards.Spec`,
+	// which is built from what a card looks like and never from this, so two cards that differ
+	// only by ID still share one rendered face.
+	ID int
 }
 
 // Plain is a card with no element, which is what an enemy draws and what most tests want.

@@ -113,7 +113,22 @@
 //     cheapest first; formRank is written out rather than read off the enum, because the enum's
 //     order is what an expanded hand ID is derived from and that is a rule. It sorts on form
 //     rather than category because category has two values now, and sorting by it would put nine
-//     cards in one undifferentiated block.
+//     cards in one undifferentiated block. Identity is the last key of all (2026-08-24): a card
+//     carries an ID now, so two entries equal on every visible key would otherwise be left in
+//     whatever order the piles handed them over.
+//     The panel carries no words at the top at all (2026-08-24, owner's call): the title, the
+//     counts line and the legend all went, and the grid starts at modalBareBodyTop, which clears
+//     the close button and nothing else.
+//   - deckpanel_view.go — how the panel is being *read*: two latched buttons along its bottom edge
+//     and the three tallies under the grid (2026-08-24, owner's call). ALTERATIONS / AS OWNED picks
+//     which face every card is drawn in — what the rings will deal, or what the run owns — and is
+//     on by default, because a run wearing a flip ring never draws the deck it owns. FULL / PLAYED
+//     picks which half the tallies count and which half is lit; it inverts the dimming and moves
+//     nothing, which is the panel's governing idea applied to a second toggle, and it is not drawn
+//     between fights, where there is one pile. The tallies are by form, by form and AP, and by
+//     element, all three at once rather than behind a third toggle, and they count the laid-out
+//     grid rather than the piles so both toggles reach them for free. Neither button can change
+//     anything: this is a reading preference, the same standing as the hand's sort column.
 //
 // The combat screen, grouped by what a change is usually about:
 //

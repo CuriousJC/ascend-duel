@@ -148,8 +148,12 @@ var formGlyphs = map[Form]systems.GlyphKind{
 	FormPlan:  systems.GlyphFormPlan,
 }
 
-// glyph is the art for this form, and whether it has any.
-func (f Form) glyph() (systems.GlyphKind, bool) {
+// Glyph is the art for this form, and whether it has any.
+//
+// **Exported for the deck panel** *(2026-08-24)*, which counts a deck by form and marks each row
+// with the same drawing the card's own corner carries. A second table over there would be a second
+// place for a fifth form to have to be remembered.
+func (f Form) Glyph() (systems.GlyphKind, bool) {
 	k, ok := formGlyphs[f]
 	return k, ok
 }

@@ -35,7 +35,7 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		return
 	}
 	if s.showDeck {
-		hoverDeckPanel(gs, at, s.fightContents(), &s.tip)
+		hoverDeckPanel(gs, at, s.deckView, s.fightContents(), &s.tip)
 		return
 	}
 	if s.showLog {

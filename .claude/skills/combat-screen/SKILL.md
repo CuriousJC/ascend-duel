@@ -902,6 +902,58 @@ overlay so the single live control is the only one that looks live. Pressing it 
 There is no Escape key to fall back on and no right click, so a modal has to make its exit
 the brightest thing on screen or it is a trap.
 
+**There are no words at the top of it at all** *(owner's call, 2026-08-24)*. It had a title, a
+counts line reporting the three piles, and a legend explaining the dimming; all three are gone and
+the grid starts where they were — `modalBareBodyTop`, which clears the close button and nothing
+else, because the X is the only thing left up there. The panel is a picture of a deck and the cards
+say what they are, so a title naming what the player has just clicked to open, a total they can see
+laid out in front of them, and a sentence captioning the dimming were three captions on something
+that needed none. `modalHead` is a title or nothing now, and the hands panel is the only caller that
+still passes one.
+
+**Two toggles along its bottom edge, and three tallies under the grid** *(owner's call,
+2026-08-24)*. Both live in `internal/screens/deckpanel_view.go` on a `deckView`, which the panel's
+owner holds — `deckToggle` for the two screens between fights, `CombatScene.deckView` for this one.
+**Neither can change anything**: this is a reading preference over a picture of a deck, the same
+standing as the hand's sort column, so it was safe to build without asking what it does to the
+engine.
+
+- **`ALTERATIONS` / `AS OWNED` picks which face every card is drawn in**, and **alterations are the
+  default**. A run wearing a flip ring never draws a lightning card, so a panel opening on the list
+  the run owns would be showing a deck that does not exist for the length of that run. Both faces
+  are computed from the *owned* card, looked up by `combat.Card.ID` — the card in your hand carries
+  only the colour it became, deliberately, so the way back to the original is identity rather than
+  memory. See `deckContents.faceOf`.
+- **`AS OWNED` contradicts the screen around it, and that is accepted** *(owner's call)*. With a
+  flip ring worn, a card in your hand is drawn on this panel as lightning and two inches below on
+  the hand row as ice. It is inherent — the deck you own and the deck you play with are two
+  different decks, which is the whole reason the toggle exists. A legend said so for an afternoon
+  and went with the rest of the words; the latched button is what names the view now.
+- **`FULL` / `PLAYED` picks which half the tallies count and which half is lit.** It **inverts the
+  dimming and moves nothing**, which is the panel's governing idea applied to a second toggle: a
+  card does not move when it is played, it only dims. It is not drawn between fights, where there
+  is one pile and both states would be the same picture — `deckContents.inFight`.
+- **Each button names the state it is in, not the state pressing would reach.** A latched button
+  already says "this is on", so a label naming the other side would have the two contradicting each
+  other.
+- **The alterations button is live and latching even when it does nothing** *(owner's call)*. Most
+  runs wear no altering ring; a button that vanished then would be a control nobody learned
+  existed, and would leave a player unable to confirm that a ring they have just bought is doing
+  anything.
+- **Three tallies at once rather than a fourth toggle**: by form, by form and AP, and by element.
+  The question this panel is opened to answer is a comparison, and a player made to cycle between
+  the three has to hold two answers in their head while looking at the third. The middle one is the
+  block the other two cannot say — a form's row across the AP columns reads as a curve, and four
+  cheap stabs is a different deck from one dear one.
+- **The tallies count the laid-out grid, not the piles**, so both toggles reach them for free and
+  there is no second answer to "which cards is this panel about" to keep in step. `tallyOf` walks
+  `pileGridLayout.slots` and counts `lit`.
+- **The form marks are drawn untinted**, in `PaletteWhite`. A card's corner tints the same art by
+  the card's element; a tally row is about the form, and a coloured mark there would be claiming
+  one.
+- **A zero is written and faded, never left blank.** A blank cell reads as a column that does not
+  exist, and "I own no 4 AP crush" is exactly what a player opens this panel to find out.
+
 - **It draws the cards, not a table of counts.** A count cannot say which of six Strikes
   are fire, and with elements on the cards that is most of what the panel is for.
 - **One grid holding both piles, discarded cards dimmed.** Sorting by kind and element

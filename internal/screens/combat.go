@@ -13,6 +13,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -187,6 +188,21 @@ type CombatScene struct {
 	hand    []paletteCard
 	discard []actionCard
 
+	// run is the run these piles were dealt out of, or nil for the callers that deal a hand
+	// without one — `OpeningHand`, `tools/seeds` and the flight tests.
+	//
+	// **It is here for the element flip and for the panel that shows it.** A flip fires as a card
+	// is drawn, and the two things that needs are the worn rings and the card as the run owns it:
+	// the first so the draw knows what to recolour, the second so a card coming back out of the
+	// discard is put back the way it was found instead of being flipped a second time. The deck
+	// panel reads it for the same reason — the alterations toggle is a choice between two faces of
+	// one card, and only the run holds the other one.
+	//
+	// **Nothing else on this screen may reach through it.** The scene takes the deck it is handed
+	// and the run does not change while a fight is on; a rule read off it mid-fight would be a
+	// second opinion about a fight the engine has already been given.
+	run *session.Session
+
 	// The shuffle source. Explicit and carried on state rather than the math/rand
 	// package-level functions, which draw from a global shared with every other caller
 	// and would make a run unreproducible. Seeded once in Init.
@@ -213,6 +229,12 @@ type CombatScene struct {
 
 	// The card currently being dragged, if any. See combat_actionbox.go.
 	drag *dragState
+
+	// deckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
+	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
+	// not a fact about a duel, and snapping back every fight would make it something the player
+	// re-presses.
+	deckView deckView
 
 	// showDeck toggles the deck overlay. While it is up the cards underneath do not
 	// respond, so reading the deck cannot accidentally re-plan the round.
@@ -612,6 +634,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		s.updateDeckStack(gs)
 	}
 	s.updateLogButton(gs)
+
+	// The deck panel's own two toggles, live only while it is up. They are a view over a picture
+	// of the deck and can change nothing about the round underneath — see deckView.
+	if s.showDeck {
+		s.deckView.update(gs, s.fightContents())
+	}
 
 	// The X, run while either of the two older dialogs is up. The hands panel closes itself.
 	if s.showDeck || s.showLog {
@@ -1198,7 +1226,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// two are mutually exclusive rather than stacked — neither opener is live while the other's
 	// panel is up — so they share one closing button.
 	if s.showDeck {
-		drawDeckPanel(gs, screen, s.fightContents())
+		drawDeckPanel(gs, screen, &s.deckView, s.fightContents())
 	}
 	if s.showLog {
 		s.drawLogOverlay(gs, screen)

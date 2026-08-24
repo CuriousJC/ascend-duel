@@ -21,7 +21,6 @@ package screens
 // facts about a fight. See combat_deck.go.
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"sort"
@@ -29,6 +28,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -50,10 +50,23 @@ type deckContents struct {
 	spent  []combat.Card
 	holder combat.Duelist
 
-	// counts is the line under the title. **It is the caller's words**, because what there is to
-	// count depends on the screen the panel is standing on: a fight has three piles and a total
-	// nobody holds in their head at 48 cards, and a screen between fights has one number.
-	counts string
+	// run is where a card's *original* lives, looked up by ID.
+	//
+	// **It is what the alterations toggle is made of** *(2026-08-24)*. A card in the hand or the
+	// discard has been through a draw and carries only the colour a flip ring made it; it does not
+	// remember what it was, deliberately, because a rule reading what a card used to be is an
+	// ordering the owner ruled out. The original is not gone — it is on the card the run owns, and
+	// the ID is the way back to it. See combat.Card.ID.
+	//
+	// **Nil is honest and common.** A panel with no run behind it has no alterations to show and no
+	// originals to show them against; every card is drawn as it is and the toggle latches over a
+	// deck that does not move.
+	run *session.Session
+
+	// inFight says whether some of these cards have been played. **It is what FULL/PLAYED is
+	// gated on**: a screen between fights has one pile, so both states of that button would be the
+	// same picture and it is not drawn at all.
+	inFight bool
 }
 
 // ownedContents is the panel between fights: the run's whole deck, none of it spent, priced by
@@ -63,15 +76,45 @@ type deckContents struct {
 // own and what a flip ring would deal you next fight. This panel answers the first question — it
 // is what a worm is about to edit and what a ring is being bought against.
 func ownedContents(gs *state.GlobalState) deckContents {
-	d := deckContents{}
+	d := deckContents{run: gs.Run}
 	if gs.Run != nil {
 		d.draw = gs.Run.Deck()
 		if f := buildFighter(gs); f != nil {
 			d.holder = f.Duelist
 		}
 	}
-	d.counts = fmt.Sprintf("%d cards owned", len(d.draw))
 	return d
+}
+
+// ownedOf is a card as the run owns it: what it was before a demoting or flipping ring got to it.
+//
+// **The card itself when there is no original to find**, which covers a panel with no run behind
+// it, a card with no identity, and a card whose original a worm has since eaten. Drawing the card
+// actually in hand is the honest answer to all three.
+func (d deckContents) ownedOf(c combat.Card) combat.Card {
+	if d.run == nil {
+		return c
+	}
+	owned, ok := d.run.CardByID(c.ID)
+	if !ok {
+		return c
+	}
+	return owned
+}
+
+// faceOf is the card the panel draws, which is a question about the view rather than about the
+// card: the one the run owns, or the one the rings will hand over.
+//
+// **Both faces are computed from the owned card**, never from the card in the pile. That is what
+// makes the two views agree for a card wherever it happens to be sitting: an ice card in the
+// discard and the lightning card it came from are one card, so the panel must not draw them as one
+// thing on the draw row and another in the hand.
+func (d deckContents) faceOf(c combat.Card, unaltered bool) combat.Card {
+	owned := d.ownedOf(c)
+	if unaltered || d.run == nil {
+		return owned
+	}
+	return d.run.AlteredAs(owned)
 }
 
 // deckToggle is the deck panel behind a button: the shared modal chrome, plus the one thing this
@@ -86,6 +129,11 @@ func ownedContents(gs *state.GlobalState) deckContents {
 // a pile drawn where there is nothing to draw from would be a picture claiming a rule.
 type deckToggle struct {
 	modalToggle
+
+	// view is how this panel is being read — the two toggles along its bottom edge. **It lives on
+	// the toggle rather than on the scene**, so a reading preference survives the panel being
+	// closed and reopened without every screen that puts one up having to hold the same two fields.
+	view deckView
 }
 
 // init wires the button into the corner it stands in.
@@ -98,24 +146,29 @@ func (t *deckToggle) init() {
 // is covered.
 func (t *deckToggle) update(gs *state.GlobalState, d deckContents) bool {
 	return t.modalToggle.update(gs, func(at image.Point, tip *models.Tooltip) {
-		hoverDeckPanel(gs, at, d, tip)
+		// **The view's buttons run before the tooltip is pointed**, and only while the panel is up,
+		// which is what this closure already guarantees.
+		t.view.update(gs, d)
+		hoverDeckPanel(gs, at, t.view, d, tip)
 	})
 }
 
 // draw puts the panel up if it is open, and the button on top of it either way.
 func (t *deckToggle) draw(gs *state.GlobalState, screen *ebiten.Image, d deckContents) {
-	t.modalToggle.draw(gs, screen, func() { drawDeckPanel(gs, screen, d) })
+	t.modalToggle.draw(gs, screen, func() { drawDeckPanel(gs, screen, &t.view, d) })
 }
 
 // hoverDeckPanel explains one card in the panel: the same arithmetic the hand gets, for a card
 // you cannot play from here. **Which is the point** — the panel is where a deck is read, and
 // "what would this be worth" is the question a deck is read to answer.
-func hoverDeckPanel(gs *state.GlobalState, at image.Point, d deckContents, tip *models.Tooltip) {
+func hoverDeckPanel(gs *state.GlobalState, at image.Point, v deckView, d deckContents,
+	tip *models.Tooltip) {
+
 	left := float32(gs.PctX(modalPanelLeftPct))
 	width := float32(gs.PctX(modalPanelRightPct)) - left
 	top := float32(gs.PctY(modalPanelTopPct))
 
-	for _, slot := range d.grid(left+width/2, width, top+modalBodyTop).slots {
+	for _, slot := range d.grid(v, left+width/2, width, top+modalBareBodyTop).slots {
 		if !at.In(slot.at) {
 			continue
 		}
@@ -153,7 +206,8 @@ const (
 	// What it still cannot say is which *concept* each card is.
 	//
 	// **Height is the dimension with no give.** The panel gives about 691 pixels between the
-	// legend and the closing hint, which is what modalBodyTop was moved up to 112 to buy back.
+	// tally band and the toggles under it — see modalBareBodyTop, which is where the grid starts now
+	// that there are no words above it.
 	// Width now absorbs a busy row by tightening; height cannot, so a fifth row would need a
 	// different arrangement rather than a smaller gap. TestDeckPitchMatchesTheCard holds it.
 	deckRowGap = 6
@@ -202,26 +256,23 @@ const (
 // those cards are coming back — a reshuffle folds the pile in, so "what is left" honestly
 // means both piles — and merging them is what lets a card stay in place and simply dim
 // when it is spent. See drawPileGrid.
-func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, d deckContents) {
-	// **The legend is only written when something is dimmed.** Between fights nothing is, and a
-	// sentence explaining a state no card on the panel is in would be the panel describing a
-	// screen it is not standing on.
-	legend := ""
-	if len(d.spent) > 0 {
-		legend = "dimmed cards are in your hand or the discard - the rest are still to draw"
-	}
+func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, v *deckView, d deckContents) {
+	// **No words at the top at all** *(owner's call, 2026-08-24)*. There was a title, a counts line
+	// and a legend; all three are gone and the grid starts where they were. The panel is a picture
+	// of a deck and the cards say what they are — a title naming what the player has just clicked
+	// to open, a total they can see laid out in front of them, and a sentence explaining the
+	// dimming were three captions on something that needed none. What is left up here is the X.
+	r := drawModalFrame(gs, screen, modalHead{})
 
-	// **The counts line is the caller's**, because what there is to count depends on the screen:
-	// a fight has three piles and a total nobody holds in their head at 48 cards, and a screen
-	// between fights has one number.
-	r := drawModalFrame(gs, screen, modalHead{
-		title:  "Your deck",
-		counts: d.counts,
-		legend: legend,
-	})
+	grid := drawPileGrid(gs, screen, *v, float32(r.Min.X+r.Dx()/2), float32(r.Dx()),
+		float32(r.Min.Y+modalBareBodyTop), d)
 
-	drawPileGrid(gs, screen, float32(r.Min.X+r.Dx()/2), float32(r.Dx()),
-		float32(r.Min.Y+modalBodyTop), d)
+	// The tallies sit under the last row of cards, which is where the grid ends rather than a
+	// constant: the rows are one per element and a fifth colour would push the band down with them.
+	drawTallies(gs, screen, r, r.Min.Y+modalBareBodyTop+deckRowCount*grid.rowPitch+tallyTop,
+		tallyOf(grid.slots, d.holder))
+
+	v.draw(gs, screen, d)
 }
 
 // **Attacks, then defends, then prepares; within each, cheapest first.** The rows are
@@ -251,7 +302,15 @@ func sortPileEntries(entries []pileEntry) {
 		if a.card.Element != b.card.Element {
 			return a.card.Element < b.card.Element
 		}
-		return a.available && !b.available
+		if a.available != b.available {
+			return a.available && !b.available
+		}
+		// **Identity is the last word** *(2026-08-24)*, so that two cards the player cannot tell
+		// apart still land in a fixed order. Without it the sort is not total any more — a card now
+		// carries an ID and two entries equal on every visible key would be left in whatever order
+		// the piles happened to hand them over, so a card could swap places with its twin between
+		// one look and the next.
+		return a.card.ID < b.card.ID
 	})
 }
 
@@ -280,10 +339,21 @@ func formRank(f combat.Form) int {
 	}
 }
 
-// pileEntry is one card in the overlay and whether it can still be drawn.
+// pileEntry is one card in the overlay, in the face the view asked for, and whether it can still be
+// drawn.
 type pileEntry struct {
 	card      actionCard
 	available bool
+
+	// lit is whether this card is one of the ones the view is *about* — full strength rather than
+	// dimmed, and counted in the tallies under the grid.
+	//
+	// **It is `available` under FULL and its opposite under PLAYED** *(owner's call, 2026-08-24)*,
+	// which is why it is a second field rather than the same one read twice. The panel's governing
+	// idea is that a card does not move when it is spent, it only dims — so the FULL/PLAYED toggle
+	// inverts which half is dimmed and moves nothing at all. Between fights nothing is spent and
+	// everything is lit.
+	lit bool
 }
 
 // deckRowElements is the colours the overlay gives a row to, in the fixed order internal/cards
@@ -364,15 +434,15 @@ func deckRowLabel(row int) (string, color.RGBA) {
 // drawPileGrid until the tooltip needed to know which card is under the pointer, and a second set
 // of arithmetic saying where a card is drawn is exactly the bug the one-rectangle rule prevents
 // everywhere else on this screen.
-func (d deckContents) grid(centerX, width, top float32) pileGridLayout {
+func (d deckContents) grid(v deckView, centerX, width, top float32) pileGridLayout {
 	entries := make([]pileEntry, 0, len(d.draw)+len(d.spent))
 	for _, c := range d.draw {
-		entries = append(entries, pileEntry{c, true})
+		entries = append(entries, d.entry(v, c, true))
 	}
 	// The hand dims the same way the discard does. They are different piles but the same
 	// fact from this panel's point of view — this card is not one you can still draw.
 	for _, c := range d.spent {
-		entries = append(entries, pileEntry{c, false})
+		entries = append(entries, d.entry(v, c, false))
 	}
 
 	sortPileEntries(entries)
@@ -421,6 +491,19 @@ func (d deckContents) grid(centerX, width, top float32) pileGridLayout {
 		}
 	}
 	return out
+}
+
+// entry is one card turned into a grid entry: the face the alterations toggle asked for, and
+// whether the FULL/PLAYED toggle is lighting it.
+//
+// **Nothing is lit between fights except everything.** `inFight` is false there, so PLAYED cannot
+// be reached and this reduces to what the panel has always drawn.
+func (d deckContents) entry(v deckView, c combat.Card, available bool) pileEntry {
+	lit := available
+	if d.inFight && v.played {
+		lit = !available
+	}
+	return pileEntry{card: d.faceOf(c, v.unaltered), available: available, lit: lit}
 }
 
 // rowWidth is how much of the panel n cards at this pitch occupy: the last card is drawn whole,
@@ -483,10 +566,10 @@ type pileRowLabel struct {
 	at  image.Point
 }
 
-func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, width, top float32,
-	d deckContents) {
+func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, v deckView,
+	centerX, width, top float32, d deckContents) pileGridLayout {
 
-	grid := d.grid(centerX, width, top)
+	grid := d.grid(v, centerX, width, top)
 
 	for _, l := range grid.labels {
 		// A mini card says its own concept but nothing about which row it is in, so this is what
@@ -509,8 +592,14 @@ func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, centerX, width, t
 		// available carries "can be drawn", not "can be afforded". Never selected: this is an
 		// inventory, not a choice, and dimming by the round's remaining AP would say something
 		// about a budget that has nothing to do with a pile you cannot play from.
+		// **`lit` rather than `available`**, because the FULL/PLAYED toggle inverts which half of
+		// the deck the panel is about. It still carries "can be drawn" under FULL, which is what it
+		// has always meant; never "can be afforded", since dimming by the round's remaining AP
+		// would say something about a budget that has nothing to do with a pile you cannot play
+		// from.
 		drawCard(gs, screen, slot.at.Min, cards.Mini, slot.card,
-			heldBy(d.holder, slot.card), slot.available, false)
+			heldBy(d.holder, slot.card), slot.lit, false)
 	}
 
+	return grid
 }

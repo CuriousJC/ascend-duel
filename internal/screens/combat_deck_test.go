@@ -28,7 +28,7 @@ func TestDeckRowRunsFormByForm(t *testing.T) {
 			continue
 		}
 		seenConcept[c.Concept] = true
-		row = append(row, pileEntry{c, true})
+		row = append(row, pileEntry{card: c, available: true, lit: true})
 	}
 	if len(row) == 0 {
 		t.Fatal("the starting deck is empty")
@@ -75,8 +75,8 @@ func TestDeckOrderDoesNotDependOnWhichPileACardIsIn(t *testing.T) {
 	// availability — otherwise drawing a card would shuffle the row around it.
 	var all, flipped []pileEntry
 	for _, c := range session.StartingDeck() {
-		all = append(all, pileEntry{c, true})
-		flipped = append(flipped, pileEntry{c, false})
+		all = append(all, pileEntry{card: c, available: true, lit: true})
+		flipped = append(flipped, pileEntry{card: c, available: false})
 	}
 
 	sortPileEntries(all)

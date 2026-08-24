@@ -29,9 +29,11 @@ func TestDeckStackClearsTheAPBarAndTheScreen(t *testing.T) {
 	// What the stack has to live below: the hand row, then the AP figure, then the bar.
 	barBottom := gs.PctY(handTopPct) + cardHeight + apBarBelow + apBarHeight
 
-	// The ring is the outermost thing drawn, and it is what has to fit — the stroke is
-	// centred on the rectangle's edge, so it reaches half its width beyond.
-	ring := deckStackBounds(gs).Inset(-deckHighlightInset).Inset(-deckHighlightWidth / 2)
+	// **The pile is the outermost thing drawn** *(2026-08-24)*. It used to wear a yellow ring
+	// while the overlay was open, because the pile was then the only live control on a covered
+	// screen; the panel carries a red X now, so the highlight said "press me" about a control
+	// that no longer does anything.
+	ring := deckStackBounds(gs)
 
 	if ring.Min.Y < barBottom {
 		t.Errorf("the deck stack's highlight starts at y=%d, which is inside the AP bar ending at y=%d",

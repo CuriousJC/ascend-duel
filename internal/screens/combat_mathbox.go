@@ -188,7 +188,7 @@ var (
 // handNameInk is the colour the hand's name is written in, planned and shouted alike, and the
 // colour the multiplier that comes out of it is written in with it.
 //
-// **Pink since 2026-08-19** *(owner's call)*, where it was `attentionYellow`. The yellow had just
+// **Pink since 2026-08-19** *(owner's call)*, where it was the screen's attention yellow. The yellow had just
 // become the lightning element's colour as well — see cards.BorderOf — so the loudest word on the
 // screen was wearing a hue that also means "this card is lightning", and a lightning figure flying
 // up out of a card into the sum was arriving in the name's own colour.

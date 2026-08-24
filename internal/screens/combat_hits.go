@@ -78,7 +78,8 @@ const (
 // **The attack red the log's verbs are marked in, asked for rather than restated.** `verbInkFor`
 // decides what an attack is coloured in this screen, and a figure that lands damage is the same
 // meaning as the verb it marks — so it takes the same answer, and a change to one is a change
-// to both. It is deliberately not `attentionYellow`: that belongs to the hand, and reusing it
+// to both. It is deliberately not the screen's old attention yellow: that belonged to the hand,
+// and reusing it
 // would say the hand fired twice.
 func hitInk() color.RGBA { return verbInkFor(combat.CategoryAttack) }
 

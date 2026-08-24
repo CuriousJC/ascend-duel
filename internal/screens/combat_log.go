@@ -10,8 +10,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // The fight log: every round of this fight in sentences, behind a button beside the draw pile.
@@ -96,18 +94,17 @@ func (s *CombatScene) toggleLog() {
 // control on this screen has to go dead for both and the failure is silent: a button left live
 // under a dialog is a round edited through a panel the player is only reading.
 func (s *CombatScene) modalUp() bool {
-	return s.showDeck || s.showLog
+	return s.showDeck || s.showLog || s.combos.open
 }
 
 // updateLogButton runs the button.
 //
-// **It runs whether or not the log is up**, because it is the only thing that closes one — the
-// same rule the deck pile lives under, and the reason Draw renders it a second time on top of the
-// overlay. It does go dead under the *other* dialog, whose own rule is that the pile is the only
-// live control on the screen until it is pressed again.
+// **It is dead while any dialog is up** *(owner's call, 2026-08-24)*, the log's own included. It
+// used to run under its own overlay because it was the only thing that closed one; the panels
+// carry a red X now, so an opener only ever opens.
 func (s *CombatScene) updateLogButton(gs *state.GlobalState) {
 	s.logButton.Latched = s.showLog
-	setEnabled(s.logButton, !s.showDeck)
+	setEnabled(s.logButton, !s.modalUp())
 	systems.UpdateButton(gs, s.logButton)
 }
 
@@ -137,12 +134,7 @@ var logPane = panePlacement{
 // **Two dialogs at two sizes would read as two kinds of thing.** They are the same kind of thing —
 // a panel covering the screen, closed by the control that opened it — so they take the same
 // rectangle and the player learns one shape.
-func logPanelRect(gs *state.GlobalState) image.Rectangle {
-	return image.Rect(
-		gs.PctX(deckPanelLeftPct), gs.PctY(deckPanelTopPct),
-		gs.PctX(deckPanelRightPct), gs.PctY(deckPanelBottomPct),
-	)
-}
+func logPanelRect(gs *state.GlobalState) image.Rectangle { return modalPanelRect(gs) }
 
 // logHintReserve is the room kept at the bottom for the closing hint, so a full log cannot write
 // its last line over the one sentence saying how to get out.
@@ -208,12 +200,8 @@ func (s *CombatScene) drawLogOverlay(gs *state.GlobalState, screen *ebiten.Image
 		return
 	}
 
-	// A scrim over everything, so the panel reads as covering the screen rather than floating on
-	// it, and so the cards underneath look as inert as they now are.
-	bounds := screen.Bounds()
-	vector.DrawFilledRect(screen, 0, 0,
-		float32(bounds.Dx()), float32(bounds.Dy()),
-		color.RGBA{A: 190}, false)
+	// The scrim every modal puts up; see modal.go.
+	modalScrim(screen)
 
 	r := logPanelRect(gs)
 	rows := s.fightLogRows()
@@ -224,11 +212,4 @@ func (s *CombatScene) drawLogOverlay(gs *state.GlobalState, screen *ebiten.Image
 	}
 
 	s.drawPane(gs, screen, logPane, r, rows)
-
-	hint := &text.DrawOptions{}
-	hint.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Max.Y-deckHintUp))
-	hint.PrimaryAlign = text.AlignCenter
-	hint.ColorScale.ScaleWithColor(logPane.ink)
-	text.Draw(screen, "Log again to close",
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, hint)
 }

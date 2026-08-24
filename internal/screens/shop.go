@@ -154,6 +154,11 @@ type ShopScene struct {
 	// and until 2026-08-22 the deck could not be looked at from here. See deckpanel.go.
 	deck deckToggle
 
+	// combos is the C button beside it: every hand the deck can build, and what each pays. A ring
+	// is bought against a deck for the hands that deck can make, which is the question this
+	// answers and the shelf does not. See combopanel.go.
+	combos comboToggle
+
 	// tip explains a ring: what it does, what it costs, and where it would sit in the firing order.
 	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
 	// and nothing at all about slashes.
@@ -184,6 +189,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.shelf = dealShelf(gs)
 	s.prose.setLines(shopkeeperLines())
 	s.deck.init()
+	s.combos.init(combosCornerPlace)
 
 	trace.Logf("shop", "after fight %d: %v for sale, %d vitae in hand, wearing %d",
 		gs.Run.Fight(), shelfKeys(s.shelf), gs.Run.Vitae(), len(gs.Run.Worn()))
@@ -293,7 +299,12 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 
 	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
 	// frame the panel closes on as a covered one.
+	s.deck.block(s.combos.open)
+	s.combos.block(s.deck.open)
 	if s.deck.update(gs, ownedContents(gs)) {
+		return nil
+	}
+	if s.combos.update(gs) {
 		return nil
 	}
 
@@ -565,6 +576,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// Last, and over everything: the panel covers the screen, so nothing of this one may be drawn
 	// on top of it.
 	s.deck.draw(gs, screen, ownedContents(gs))
+	s.combos.draw(gs, screen, ownedCombos(gs))
 }
 
 // drawShelf draws what is for sale, with its price under it.

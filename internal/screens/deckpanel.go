@@ -30,10 +30,8 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // deckContents is what a panel is asked to show: the cards still to draw, the cards that are
@@ -52,12 +50,10 @@ type deckContents struct {
 	spent  []combat.Card
 	holder combat.Duelist
 
-	// counts is the line under the title, and hint is the sentence at the bottom saying how to
-	// get out. **Both are the caller's words**, because both are facts about the screen the panel
-	// is standing on: a fight has three piles to report and a control that is a draw pile, a shop
-	// has a deck size and a button marked D.
+	// counts is the line under the title. **It is the caller's words**, because what there is to
+	// count depends on the screen the panel is standing on: a fight has three piles and a total
+	// nobody holds in their head at 48 cards, and a screen between fights has one number.
 	counts string
-	hint   string
 }
 
 // ownedContents is the panel between fights: the run's whole deck, none of it spent, priced by
@@ -67,7 +63,7 @@ type deckContents struct {
 // own and what a flip ring would deal you next fight. This panel answers the first question — it
 // is what a worm is about to edit and what a ring is being bought against.
 func ownedContents(gs *state.GlobalState) deckContents {
-	d := deckContents{hint: "D again to close"}
+	d := deckContents{}
 	if gs.Run != nil {
 		d.draw = gs.Run.Deck()
 		if f := buildFighter(gs); f != nil {
@@ -78,96 +74,48 @@ func ownedContents(gs *state.GlobalState) deckContents {
 	return d
 }
 
-// The D button: a square in the bottom-right corner, on every screen that is not a fight.
+// deckToggle is the deck panel behind a button: the shared modal chrome, plus the one thing this
+// panel needs that the chrome does not know — which cards to show.
 //
-// **It is the Log button's shape, deliberately** — 44 pixels, one character, the slate a control
-// that changes nothing wears, and the same rule that the button opening a dialog is the button
-// closing it. There is no Escape key and no right click, so a modal has to make its exit the
-// brightest thing on screen or it is a trap.
+// **It is a thin wrapper as of 2026-08-24**, when the chrome it used to own moved to modal.go for
+// the combos panel to share. What is left is the pairing of a toggle with a `deckContents`, so a
+// scene still says `s.deck.update(gs, ownedContents(gs))` and no call site changed.
 //
-// **It is not a draw pile.** The combat screen opens this panel by clicking the stack of card
-// backs, which is honest there because a draw pile exists. Between fights there is none, and a
-// pile drawn where there is nothing to draw from would be a picture claiming a rule.
-const (
-	deckToggleLabel = "D"
-
-	// The corner it stands in, matching the mute button's inset on the other side so the two
-	// bottom corners share a line. See internal/game/chrome.go.
-	deckToggleInset = 10
-)
-
-// deckToggle is the button, whether the panel is up, and the tooltip the panel needs.
-//
-// **A struct rather than three fields on each scene**, because the three go together and the
-// failure of letting them drift apart is silent: a scene that forgets `gs.ModalOpen` leaves the
-// frame's mute button live on top of a dialog whose whole design is that one control is lit.
+// **The button is not a draw pile.** The combat screen opens this panel by clicking the stack of
+// card backs, which is honest there because a draw pile exists. Between fights there is none, and
+// a pile drawn where there is nothing to draw from would be a picture claiming a rule.
 type deckToggle struct {
-	open   bool
-	button *models.Button
-	tip    models.Tooltip
+	modalToggle
 }
 
-// init wires the button. **The button survives a re-entry and the state does not** — a scene's
-// Init runs again on every visit, and arriving at a shop with the deck already open would be a
-// dialog nobody asked for.
+// init wires the button into the corner it stands in.
 func (t *deckToggle) init() {
-	if t.button == nil {
-		t.button = models.NewButton(logButtonSize, logButtonSize, deckToggleLabel,
-			func() { t.open = !t.open })
-		t.button.BaseColor = sortButtonColor
-		t.button.TextSize = logButtonTextSize
-	}
-	t.open = false
-	t.tip = models.Tooltip{DwellTicks: tipDwell}
+	t.modalToggle.init(deckToggleLabel, logButtonSize, logButtonSize, logButtonTextSize,
+		cornerSlot(0))
 }
 
-// update runs the button and, while the panel is up, the tooltip over its cards.
-//
-// **It returns whether the panel is covering the screen**, which is the caller's cue to stop
-// running everything else: the scene's own rows are still where they were, and a click reaching
-// one through a dialog would be a ring bought while reading a deck.
+// update runs the button and the tooltip over the panel's cards, and reports whether the screen
+// is covered.
 func (t *deckToggle) update(gs *state.GlobalState, d deckContents) bool {
-	// **The frame the panel is closed on is still a covered frame.** The press that closes it is
-	// the same press the scene's rows would see, so a scene told the panel is down on that frame
-	// takes a click the player spent on the exit — the failure `modalUp` prevents on the combat
-	// screen by being read before anything else.
-	was := t.open
-
-	t.button.ScreenX = gs.PctX(100) - deckToggleInset - logButtonSize/2
-	t.button.ScreenY = gs.PctY(100) - deckToggleInset - logButtonSize/2
-	t.button.Latched = t.open
-	systems.UpdateButton(gs, t.button)
-
-	// **The tooltip is pointed only while the panel is up.** UpdateTooltip releases it by itself
-	// on any frame nothing was pointed at, so a closed panel needs no clearing of its own.
-	if t.open {
-		gs.ModalOpen = true
-		hoverDeckPanel(gs, image.Pt(gs.MouseX, gs.MouseY), d, &t.tip)
-	}
-	systems.UpdateTooltip(gs, &t.tip)
-	return was || t.open
+	return t.modalToggle.update(gs, func(at image.Point, tip *models.Tooltip) {
+		hoverDeckPanel(gs, at, d, tip)
+	})
 }
 
 // draw puts the panel up if it is open, and the button on top of it either way.
 func (t *deckToggle) draw(gs *state.GlobalState, screen *ebiten.Image, d deckContents) {
-	if t.open {
-		drawDeckPanel(gs, screen, d)
-	}
-	systems.DrawButton(gs, screen, t.button)
-	if t.open {
-		systems.DrawTooltip(gs, screen, &t.tip)
-	}
+	t.modalToggle.draw(gs, screen, func() { drawDeckPanel(gs, screen, d) })
 }
 
 // hoverDeckPanel explains one card in the panel: the same arithmetic the hand gets, for a card
 // you cannot play from here. **Which is the point** — the panel is where a deck is read, and
 // "what would this be worth" is the question a deck is read to answer.
 func hoverDeckPanel(gs *state.GlobalState, at image.Point, d deckContents, tip *models.Tooltip) {
-	left := float32(gs.PctX(deckPanelLeftPct))
-	width := float32(gs.PctX(deckPanelRightPct)) - left
-	top := float32(gs.PctY(deckPanelTopPct))
+	left := float32(gs.PctX(modalPanelLeftPct))
+	width := float32(gs.PctX(modalPanelRightPct)) - left
+	top := float32(gs.PctY(modalPanelTopPct))
 
-	for _, slot := range d.grid(left+width/2, width, top+deckGridTop).slots {
+	for _, slot := range d.grid(left+width/2, width, top+modalBodyTop).slots {
 		if !at.In(slot.at) {
 			continue
 		}
@@ -177,23 +125,14 @@ func hoverDeckPanel(gs *state.GlobalState, at image.Point, d deckContents, tip *
 	}
 }
 
-// Deck overlay geometry. The panel is nearly the whole screen and stops above the button
-// band, so the Deck button that closes it stays outside the panel as well as on top of it.
+// Deck overlay geometry. The panel's footprint is the shared modal one — see modal.go; what is
+// here is the grid inside it.
 //
 // The panel holds **every card you own**, one row per element, and nothing in it moves as cards
 // shift between piles — a played card dims where it stands rather than leaving. A card arriving
 // or leaving the *deck* does move the row it is in, because the row's pitch is a function of how
 // many cards are in it; see rowPitchFor.
 const (
-	deckPanelLeftPct  = 4
-	deckPanelRightPct = 96
-	deckPanelTopPct   = 4
-	// 92 rather than 86: at 86 the panel stopped short of the hand, so the tops of the cards
-	// and the whole AP line sat below it, dimmed by the scrim but still visibly outside the
-	// dialog. It still ends above the button band, which is what keeps the Deck button that
-	// closes it outside the panel as well as drawn on top of it.
-	deckPanelBottomPct = 92
-
 	// **The grid became five overlapping rows, one per element, on 2026-08-09.**
 	//
 	// It was an 8x3 grid of half-size cards, which held 24 of the up-to-52 cards that can
@@ -214,7 +153,7 @@ const (
 	// What it still cannot say is which *concept* each card is.
 	//
 	// **Height is the dimension with no give.** The panel gives about 691 pixels between the
-	// legend and the closing hint, which is what deckGridTop was moved up to 112 to buy back.
+	// legend and the closing hint, which is what modalBodyTop was moved up to 112 to buy back.
 	// Width now absorbs a busy row by tightening; height cannot, so a fifth row would need a
 	// different arrangement rather than a smaller gap. TestDeckPitchMatchesTheCard holds it.
 	deckRowGap = 6
@@ -250,18 +189,6 @@ const (
 	// The cards no longer carry any text, so without this a row would be an anonymous
 	// line of coloured slivers.
 	deckRowLabelWidth = 104
-
-	// Offsets down from the panel's top edge.
-	//
-	// **Everything under the title came up by eight on 2026-08-15**, for a grid that briefly had
-	// six rows. It is four now — one per colour, the plans folded in beside them on 2026-08-23 —
-	// so the clearance is spare twice over. TestDeckPitchMatchesTheCard holds the arithmetic
-	// either way.
-	deckTitleTop  = 40
-	deckCountsTop = 70
-	deckLegendTop = 92
-	deckGridTop   = 112
-	deckHintUp    = 22 // hint's distance up from the panel's bottom edge
 )
 
 // drawDeckPanel covers the screen with the deck.
@@ -276,56 +203,25 @@ const (
 // means both piles — and merging them is what lets a card stay in place and simply dim
 // when it is spent. See drawPileGrid.
 func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, d deckContents) {
-	// A scrim over everything, so the panel reads as covering the screen rather than
-	// floating on it, and so the cards underneath look as inert as they now are.
-	bounds := screen.Bounds()
-	vector.DrawFilledRect(screen, 0, 0,
-		float32(bounds.Dx()), float32(bounds.Dy()),
-		color.RGBA{A: 190}, false)
-
-	left, top := float32(gs.PctX(deckPanelLeftPct)), float32(gs.PctY(deckPanelTopPct))
-	width := float32(gs.PctX(deckPanelRightPct)) - left
-	height := float32(gs.PctY(deckPanelBottomPct)) - top
-
-	// Raised for the reason the fight log's panel is: it is in front of the game, over a scrim.
-	systems.BevelRect(screen, int(left), int(top), int(width), int(height),
-		systems.PaneBevelWidth, color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
-	vector.StrokeRect(screen, left, top, width, height, 2, apBarColor, false)
-
-	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}
-	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}
-
-	title := &text.DrawOptions{}
-	title.GeoM.Translate(float64(left+width/2), float64(top+deckTitleTop))
-	title.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, "Your deck", heading, title)
-
-	// Hyphens, not em dashes. The kubasta font has no U+2014 and draws a missing-glyph box
-	// for it — the middle dot is in the font, the dash is not.
-	line := func(y float32, s string) {
-		op := &text.DrawOptions{}
-		op.GeoM.Translate(float64(left+width/2), float64(top+y))
-		op.PrimaryAlign = text.AlignCenter
-		text.Draw(screen, s, small, op)
-	}
-	// **The counts line is the caller's**, because what there is to count depends on the screen:
-	// a fight has three piles and a total nobody holds in their head at 48 cards, and a screen
-	// between fights has one number.
-	line(deckCountsTop, d.counts)
-
 	// **The legend is only written when something is dimmed.** Between fights nothing is, and a
 	// sentence explaining a state no card on the panel is in would be the panel describing a
 	// screen it is not standing on.
+	legend := ""
 	if len(d.spent) > 0 {
-		line(deckLegendTop, "dimmed cards are in your hand or the discard - the rest are still to draw")
+		legend = "dimmed cards are in your hand or the discard - the rest are still to draw"
 	}
 
-	drawPileGrid(gs, screen, left+width/2, width, top+deckGridTop, d)
+	// **The counts line is the caller's**, because what there is to count depends on the screen:
+	// a fight has three piles and a total nobody holds in their head at 48 cards, and a screen
+	// between fights has one number.
+	r := drawModalFrame(gs, screen, modalHead{
+		title:  "Your deck",
+		counts: d.counts,
+		legend: legend,
+	})
 
-	hint := &text.DrawOptions{}
-	hint.GeoM.Translate(float64(left+width/2), float64(top+height-deckHintUp))
-	hint.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, d.hint, small, hint)
+	drawPileGrid(gs, screen, float32(r.Min.X+r.Dx()/2), float32(r.Dx()),
+		float32(r.Min.Y+modalBodyTop), d)
 }
 
 // **Attacks, then defends, then prepares; within each, cheapest first.** The rows are

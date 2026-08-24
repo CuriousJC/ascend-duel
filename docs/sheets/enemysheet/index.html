@@ -1,0 +1,5727 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — Enemy sheet</title>
+<style>
+  :root {
+    --ground: #e2d0b0;
+    --ink: #2c2822;
+    --dim: #6b6355;
+    --rule: #c4b294;
+    --panel: #ede0c8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2.floor {
+    font-size: 15px; font-weight: 600;
+    margin: 40px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h2.floor span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 12px;
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 74ch; margin: 12px 0 0; }
+  .plate {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px; margin-top: 18px;
+  }
+  .head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+   
+  .named { display: inline-block; }
+  .name { font-size: 16px; font-weight: 600; display: block; }
+  .title { font-size: 12.5px; color: var(--dim); display: block; margin-top: 1px; }
+  .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
+  .stats { margin-left: auto; font-size: 13px; }
+  .stats b { font-weight: 600; }
+  .stats span { color: var(--dim); margin-left: 14px; }
+   
+  .strip { overflow-x: auto; margin: 12px 0 0; }
+  img { display: block; image-rendering: pixelated; }
+  table { border-collapse: collapse; margin: 12px 0 0; font-size: 12.5px; }
+  th, td { text-align: left; padding: 3px 16px 3px 0; }
+  th { color: var(--dim); font-weight: 600; font-size: 11px;
+       text-transform: uppercase; letter-spacing: .06em; }
+  td.num { text-align: right; padding-right: 22px; font-variant-numeric: tabular-nums; }
+  td.effect { color: var(--dim); }
+  .affix { color: var(--dim); font-size: 12px; margin: 10px 0 0; }
+</style>
+
+<h1>Enemy sheet</h1>
+<p class="facts">
+  96 records, grouped by floor band ·
+  card <code>162x224</code>,
+  portrait box <code>112</code> tall,
+  name at <code>20pt</code>
+</p>
+<p class="note">Every creature in the roster, grouped by the floors it may appear on: its card as the game draws it, its stat line, and the deck it fights with. The roster is hand-assigned, so the question this page answers is whether a floor&#39;s creatures are actually dearer than the floor below it.</p>
+<p class="note">
+  Every card here is drawn by <code>internal/cards</code>, the same code the game blits, so this
+  page cannot show a card the game would draw differently. The leftmost card on each strip is the
+  opponent as it appears in the corner of the combat screen; the rest are its deck, one card per
+  concept — the <em>copies</em> column says how many of each the pile holds.
+</p>
+
+
+  <h2 class="floor">
+    Floors 1–2
+    <span>7 records · HP 80–120 · DMG 5–6 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clear Pod</span>
+          
+        </span>
+        <span class="record">ClearPod1</span>
+        <span class="stats">
+          <b>HP 120</b><span>DMG 5</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clearpod1.png" width="886" height="224"
+             alt="Clear Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spore</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Burst</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Harden</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clear Slime</span>
+          
+        </span>
+        <span class="record">ClearSlime1</span>
+        <span class="stats">
+          <b>HP 100</b><span>DMG 5</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clearslime1.png" width="886" height="224"
+             alt="Clear Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Dissolve</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clear Slime II</span>
+          
+        </span>
+        <span class="record">ClearSlime2</span>
+        <span class="stats">
+          <b>HP 120</b><span>DMG 6</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clearslime2.png" width="886" height="224"
+             alt="Clear Slime II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Dissolve</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Scout Drone</span>
+          
+        </span>
+        <span class="record">Drone1</span>
+        <span class="stats">
+          <b>HP 90</b><span>DMG 6</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-drone1.png" width="886" height="224"
+             alt="Scout Drone and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ping</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Volley</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Overload</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Recharge</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Giant Bat</span>
+          
+        </span>
+        <span class="record">GiantBat</span>
+        <span class="stats">
+          <b>HP 80</b><span>DMG 5</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-giantbat.png" width="886" height="224"
+             alt="Giant Bat and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Swoop</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Drain</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Roost</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Giant Rat</span>
+          
+        </span>
+        <span class="record">GiantRat</span>
+        <span class="stats">
+          <b>HP 100</b><span>DMG 6</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-giantrat.png" width="886" height="224"
+             alt="Giant Rat and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Gnaw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Maul</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Skitter</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Goblin</span>
+          
+        </span>
+        <span class="record">Goblin</span>
+        <span class="stats">
+          <b>HP 90</b><span>DMG 6</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-goblin.png" width="886" height="224"
+             alt="Goblin and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Poke</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Stab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Cleaver</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Cower</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 1–3
+    <span>5 records · HP 120–140 · DMG 6–9 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Blue Slime</span>
+          
+        </span>
+        <span class="record">BlueSlime1</span>
+        <span class="stats">
+          <b>HP 120</b><span>DMG 6</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-blueslime1.png" width="886" height="224"
+             alt="Blue Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Drown</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clear Cube</span>
+          
+        </span>
+        <span class="record">ClearCube1</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 6</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clearcube1.png" width="886" height="224"
+             alt="Clear Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nudge</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Crush</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Set</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Dragonfly</span>
+          
+        </span>
+        <span class="record">Dragonfly</span>
+        <span class="stats">
+          <b>HP 120</b><span>DMG 8</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-dragonfly.png" width="886" height="224"
+             alt="Dragonfly and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Flit</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Skewer</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Dive</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Hover</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Frogman</span>
+          
+        </span>
+        <span class="record">Frogman</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 9</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-frogman.png" width="886" height="224"
+             alt="Frogman and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Tongue</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Spear</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Leap Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Croak</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Green Slime</span>
+          
+        </span>
+        <span class="record">GreenSlime1</span>
+        <span class="stats">
+          <b>HP 130</b><span>DMG 6</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-greenslime1.png" width="886" height="224"
+             alt="Green Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Digest</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 2–3
+    <span>3 records · HP 110–150 · DMG 7–8 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Blue Slime II</span>
+          
+        </span>
+        <span class="record">BlueSlime2</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 7</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-blueslime2.png" width="886" height="224"
+             alt="Blue Slime II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Drown</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Hunter Drone</span>
+          
+        </span>
+        <span class="record">Drone2</span>
+        <span class="stats">
+          <b>HP 110</b><span>DMG 8</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-drone2.png" width="886" height="224"
+             alt="Hunter Drone and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ping</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Volley</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Overload</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Recharge</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Green Pod</span>
+          
+        </span>
+        <span class="record">GreenPod1</span>
+        <span class="stats">
+          <b>HP 150</b><span>DMG 7</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-greenpod1.png" width="886" height="224"
+             alt="Green Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spore</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Vine Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bloom Burst</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Harden</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 2–4
+    <span>16 records · HP 110–220 · DMG 7–9 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Amber Slime</span>
+          
+        </span>
+        <span class="record">AmberSlime1</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 8</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-amberslime1.png" width="886" height="224"
+             alt="Amber Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Encase</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Android Mk I</span>
+          
+        </span>
+        <span class="record">Android1</span>
+        <span class="stats">
+          <b>HP 150</b><span>DMG 9</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-android1.png" width="886" height="224"
+             alt="Android Mk I and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jolt</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Servo Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Piston Drive</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reboot</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Blue Cube</span>
+          
+        </span>
+        <span class="record">BlueCube1</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 7</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-bluecube1.png" width="886" height="224"
+             alt="Blue Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nudge</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Crush</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Set</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clear Humanoid</span>
+          
+        </span>
+        <span class="record">ClearHumanoid1</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 8</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clearhumanoid1.png" width="886" height="224"
+             alt="Clear Humanoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Punch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Brace</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Dire Wolf</span>
+          
+        </span>
+        <span class="record">DireWolf</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 8</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-direwolf.png" width="886" height="224"
+             alt="Dire Wolf and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Snap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Rend</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Circle</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Giant Spider</span>
+          
+        </span>
+        <span class="record">GiantSpider</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 9</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-giantspider.png" width="886" height="224"
+             alt="Giant Spider and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Fang</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Web Crush</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Spin</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Gore Bat</span>
+          
+        </span>
+        <span class="record">GoreBat</span>
+        <span class="stats">
+          <b>HP 110</b><span>DMG 8</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-gorebat.png" width="886" height="224"
+             alt="Gore Bat and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Swoop</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Gore</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Roost</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Green Cube</span>
+          
+        </span>
+        <span class="record">GreenCube1</span>
+        <span class="stats">
+          <b>HP 180</b><span>DMG 8</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-greencube1.png" width="886" height="224"
+             alt="Green Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nudge</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Crush</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Set</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Green Slime II</span>
+          
+        </span>
+        <span class="record">GreenSlime2</span>
+        <span class="stats">
+          <b>HP 150</b><span>DMG 8</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-greenslime2.png" width="886" height="224"
+             alt="Green Slime II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Digest</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Rot Hound</span>
+          
+        </span>
+        <span class="record">Hound1</span>
+        <span class="stats">
+          <b>HP 130</b><span>DMG 9</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-hound1.png" width="886" height="224"
+             alt="Rot Hound and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Snap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rend</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Circle</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Hungry Plant</span>
+          
+        </span>
+        <span class="record">HungryPlant</span>
+        <span class="stats">
+          <b>HP 220</b><span>DMG 9</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-hungryplant.png" width="886" height="224"
+             alt="Hungry Plant and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Thorn</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Vine Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Snap Trap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Root</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mutant</span>
+          
+        </span>
+        <span class="record">Mutant1</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 9</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-mutant1.png" width="886" height="224"
+             alt="Mutant and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rampage</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Twitch</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Red Slime</span>
+          
+        </span>
+        <span class="record">RedSlime1</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 9</span><span>AP 4</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-redslime1.png" width="886" height="224"
+             alt="Red Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Scald</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Sken</span>
+          
+        </span>
+        <span class="record">Sken</span>
+        <span class="stats">
+          <b>HP 130</b><span>DMG 8</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-sken.png" width="886" height="224"
+             alt="Sken and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Slice</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Gash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Rip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Skulk</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Specimen A</span>
+          
+        </span>
+        <span class="record">Specimen1</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 8</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-specimen1.png" width="886" height="224"
+             alt="Specimen A and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Probe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Convulse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Adapt</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Yellow Pod</span>
+          
+        </span>
+        <span class="record">YellowPod1</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 8</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-yellowpod1.png" width="886" height="224"
+             alt="Yellow Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Pollen</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Seed Burst</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Harden</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 3–5
+    <span>15 records · HP 150–200 · DMG 9–12 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Amber Cube</span>
+          
+        </span>
+        <span class="record">AmberCube1</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 9</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-ambercube1.png" width="886" height="224"
+             alt="Amber Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nudge</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Encase</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Set</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Amber Slime II</span>
+          
+        </span>
+        <span class="record">AmberSlime2</span>
+        <span class="stats">
+          <b>HP 190</b><span>DMG 10</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-amberslime2.png" width="886" height="224"
+             alt="Amber Slime II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Encase</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Android Mk II</span>
+          
+        </span>
+        <span class="record">Android2</span>
+        <span class="stats">
+          <b>HP 180</b><span>DMG 11</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-android2.png" width="886" height="224"
+             alt="Android Mk II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jolt</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Servo Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Piston Drive</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reboot</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Blood Eye</span>
+          
+        </span>
+        <span class="record">BloodEye</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 10</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-bloodeye.png" width="886" height="224"
+             alt="Blood Eye and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Gaze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Beam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Burn Ray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Blink</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Blue Humanoid</span>
+          
+        </span>
+        <span class="record">BlueHumanoid1</span>
+        <span class="stats">
+          <b>HP 190</b><span>DMG 10</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-bluehumanoid1.png" width="886" height="224"
+             alt="Blue Humanoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Punch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Brace</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Bugbear</span>
+          
+        </span>
+        <span class="record">Bugbear</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 12</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-bugbear.png" width="886" height="224"
+             alt="Bugbear and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Swipe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Club</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Crush</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Snarl</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clot Slime</span>
+          
+        </span>
+        <span class="record">ClotSlime1</span>
+        <span class="stats">
+          <b>HP 180</b><span>DMG 9</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clotslime1.png" width="886" height="224"
+             alt="Clot Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Clot</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Smother</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Coagulate</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Thicken</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Frogman Veteran</span>
+          
+        </span>
+        <span class="record">FrogmanVeteran</span>
+        <span class="stats">
+          <b>HP 180</b><span>DMG 11</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-frogmanveteran.png" width="886" height="224"
+             alt="Frogman Veteran and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Tongue</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Spear</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Leap Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Croak</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Bone Hound</span>
+          
+        </span>
+        <span class="record">Hound2</span>
+        <span class="stats">
+          <b>HP 150</b><span>DMG 10</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-hound2.png" width="886" height="224"
+             alt="Bone Hound and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Snap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rend</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Circle</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Warped Mutant</span>
+          
+        </span>
+        <span class="record">Mutant2</span>
+        <span class="stats">
+          <b>HP 190</b><span>DMG 11</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-mutant2.png" width="886" height="224"
+             alt="Warped Mutant and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rampage</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Twitch</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Purple Pod</span>
+          
+        </span>
+        <span class="record">PurplePod1</span>
+        <span class="stats">
+          <b>HP 160</b><span>DMG 9</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-purplepod1.png" width="886" height="224"
+             alt="Purple Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spore</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bruise Burst</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Steep</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Red Pod</span>
+          
+        </span>
+        <span class="record">RedPod1</span>
+        <span class="stats">
+          <b>HP 170</b><span>DMG 10</span><span>AP 4</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-redpod1.png" width="886" height="224"
+             alt="Red Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ember</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Blood Burst</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Harden</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Red Slime II</span>
+          
+        </span>
+        <span class="record">RedSlime2</span>
+        <span class="stats">
+          <b>HP 170</b><span>DMG 11</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-redslime2.png" width="886" height="224"
+             alt="Red Slime II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ooze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Engulf</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Scald</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Congeal</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Specimen B</span>
+          
+        </span>
+        <span class="record">Specimen2</span>
+        <span class="stats">
+          <b>HP 170</b><span>DMG 10</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-specimen2.png" width="886" height="224"
+             alt="Specimen B and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Probe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Convulse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Adapt</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Woodwose</span>
+          
+        </span>
+        <span class="record">Woodwose</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 10</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-woodwose.png" width="886" height="224"
+             alt="Woodwose and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Branch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Bough</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Uproot</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Bark Skin</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 3–6
+    <span>1 records · HP 140–140 · DMG 9–9 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Winged Eye</span>
+          
+        </span>
+        <span class="record">WingedEye</span>
+        <span class="stats">
+          <b>HP 140</b><span>DMG 9</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-wingedeye.png" width="886" height="224"
+             alt="Winged Eye and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Gaze</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Beam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Burn Ray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Blink</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 4–6
+    <span>12 records · HP 180–260 · DMG 10–14 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Android Mk III</span>
+          
+        </span>
+        <span class="record">Android3</span>
+        <span class="stats">
+          <b>HP 210</b><span>DMG 13</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-android3.png" width="886" height="224"
+             alt="Android Mk III and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jolt</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Servo Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Piston Drive</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reboot</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Basilisk</span>
+          
+        </span>
+        <span class="record">Basilisk</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 13</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-basilisk.png" width="886" height="224"
+             alt="Basilisk and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Petrify</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Coil</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Doomsday Beast</span>
+          
+        </span>
+        <span class="record">Beast1</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 14</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-beast1.png" width="886" height="224"
+             alt="Doomsday Beast and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Gore</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Trample</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Devour</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bellow</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Clot Slime II</span>
+          
+        </span>
+        <span class="record">ClotSlime2</span>
+        <span class="stats">
+          <b>HP 210</b><span>DMG 11</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-clotslime2.png" width="886" height="224"
+             alt="Clot Slime II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Clot</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Smother</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Coagulate</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Thicken</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Flesh Pod</span>
+          
+        </span>
+        <span class="record">FleshPod1</span>
+        <span class="stats">
+          <b>HP 220</b><span>DMG 11</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-fleshpod1.png" width="886" height="224"
+             alt="Flesh Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Sinew</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Rupture</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Knit</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Green Humanoid</span>
+          
+        </span>
+        <span class="record">GreenHumanoid1</span>
+        <span class="stats">
+          <b>HP 210</b><span>DMG 11</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-greenhumanoid1.png" width="886" height="224"
+             alt="Green Humanoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Punch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Brace</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Meat Spider</span>
+          
+        </span>
+        <span class="record">MeatSpider1</span>
+        <span class="stats">
+          <b>HP 180</b><span>DMG 11</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-meatspider1.png" width="886" height="224"
+             alt="Meat Spider and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Fang</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Web Crush</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Spin</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant</span>
+          
+        </span>
+        <span class="record">MegaMutant1</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 13</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant1.png" width="886" height="224"
+             alt="Mega Mutant and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rampage</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Twitch</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mineral Slime</span>
+          
+        </span>
+        <span class="record">MineralSlime1</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 10</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-mineralslime1.png" width="886" height="224"
+             alt="Mineral Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Grit</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Grind</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Avalanche</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Calcify</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Ogre Grunt</span>
+          
+        </span>
+        <span class="record">OgreGrunt</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 13</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-ogregrunt.png" width="886" height="224"
+             alt="Ogre Grunt and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Cuff</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Club</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Overhead</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Roar</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Red Cube</span>
+          
+        </span>
+        <span class="record">RedCube1</span>
+        <span class="stats">
+          <b>HP 220</b><span>DMG 12</span><span>AP 4</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-redcube1.png" width="886" height="224"
+             alt="Red Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nudge</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Scald</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Set</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Specimen C</span>
+          
+        </span>
+        <span class="record">Specimen3</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 12</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-specimen3.png" width="886" height="224"
+             alt="Specimen C and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Probe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Convulse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Adapt</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 5–7
+    <span>15 records · HP 200–280 · DMG 11–16 ·
+      AP 4–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Abomination</span>
+          
+        </span>
+        <span class="record">Abomination1</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 15</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-abomination1.png" width="886" height="224"
+             alt="Abomination and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Flail</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Grasp</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rupture</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Knit</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Amber Humanoid</span>
+          
+        </span>
+        <span class="record">AmberHumanoid1</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 13</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-amberhumanoid1.png" width="886" height="224"
+             alt="Amber Humanoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Punch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Brace</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Android Mk IV</span>
+          
+        </span>
+        <span class="record">Android4</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 15</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-android4.png" width="886" height="224"
+             alt="Android Mk IV and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jolt</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Servo Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Piston Drive</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reboot</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Dracolisk</span>
+          
+        </span>
+        <span class="record">Dracolisk</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 14</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-dracolisk.png" width="886" height="224"
+             alt="Dracolisk and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Tail Sweep</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Coil</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Flesh Pod II</span>
+          
+        </span>
+        <span class="record">FleshPod2</span>
+        <span class="stats">
+          <b>HP 250</b><span>DMG 13</span><span>AP 4</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-fleshpod2.png" width="886" height="224"
+             alt="Flesh Pod II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Sinew</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Rupture</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Knit</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Iridescent Slime</span>
+          
+        </span>
+        <span class="record">IridescentSlime1</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 12</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-iridescentslime1.png" width="886" height="224"
+             alt="Iridescent Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Glint</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Refract</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Prism Beam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Phase</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Meat Cube</span>
+          
+        </span>
+        <span class="record">MeatCube1</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 13</span><span>AP 4</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-meatcube1.png" width="886" height="224"
+             alt="Meat Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Slap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Pulp</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Clench</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant Torch</span>
+          
+        </span>
+        <span class="record">MegaMutant1Flamethrower</span>
+        <span class="stats">
+          <b>HP 250</b><span>DMG 13</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant1flamethrower.png" width="886" height="224"
+             alt="Mega Mutant Torch and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Singe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Flame Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Firestorm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Stoke</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant Fist</span>
+          
+        </span>
+        <span class="record">MegaMutant1Melee</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 15</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant1melee.png" width="886" height="224"
+             alt="Mega Mutant Fist and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Hook</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Guard Up</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant Gun</span>
+          
+        </span>
+        <span class="record">MegaMutant1MiniGun</span>
+        <span class="stats">
+          <b>HP 220</b><span>DMG 11</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant1minigun.png" width="886" height="224"
+             alt="Mega Mutant Gun and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Salvo</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Suppress</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Reload</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant II</span>
+          
+        </span>
+        <span class="record">MegaMutant2</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 14</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant2.png" width="886" height="224"
+             alt="Mega Mutant II and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rampage</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Twitch</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant II Torch</span>
+          
+        </span>
+        <span class="record">MegaMutant2Flamethrower</span>
+        <span class="stats">
+          <b>HP 270</b><span>DMG 14</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant2flamethrower.png" width="886" height="224"
+             alt="Mega Mutant II Torch and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Singe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Flame Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Firestorm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Stoke</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant II Fist</span>
+          
+        </span>
+        <span class="record">MegaMutant2Melee</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 16</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant2melee.png" width="886" height="224"
+             alt="Mega Mutant II Fist and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Hook</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Guard Up</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant II Gun</span>
+          
+        </span>
+        <span class="record">MegaMutant2Minigun</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 12</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant2minigun.png" width="886" height="224"
+             alt="Mega Mutant II Gun and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Salvo</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Suppress</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Reload</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Ogre Warrior</span>
+          
+        </span>
+        <span class="record">OgreWarrior</span>
+        <span class="stats">
+          <b>HP 270</b><span>DMG 15</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-ogrewarrior.png" width="886" height="224"
+             alt="Ogre Warrior and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Cuff</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Club</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Overhead</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Roar</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 6–8
+    <span>12 records · HP 220–340 · DMG 13–18 ·
+      AP 5–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Greater Abomination</span>
+          
+        </span>
+        <span class="record">Abomination2</span>
+        <span class="stats">
+          <b>HP 310</b><span>DMG 17</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-abomination2.png" width="886" height="224"
+             alt="Greater Abomination and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Flail</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Grasp</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rupture</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Knit</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Entropic Cube</span>
+          
+        </span>
+        <span class="record">EntropicCube1</span>
+        <span class="stats">
+          <b>HP 300</b><span>DMG 14</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-entropiccube1.png" width="886" height="224"
+             alt="Entropic Cube and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Fray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Collapse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reform</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Entropic Slime</span>
+          
+        </span>
+        <span class="record">EntropicSlime1</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 15</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-entropicslime1.png" width="886" height="224"
+             alt="Entropic Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Fray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Unravel</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Collapse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reform</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Entropic Spider</span>
+          
+        </span>
+        <span class="record">EntropicSpider1</span>
+        <span class="stats">
+          <b>HP 220</b><span>DMG 14</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-entropicspider1.png" width="886" height="224"
+             alt="Entropic Spider and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Fray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Fang</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Collapse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Spin</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Ettin</span>
+          
+        </span>
+        <span class="record">Ettin</span>
+        <span class="stats">
+          <b>HP 340</b><span>DMG 16</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-ettin.png" width="886" height="224"
+             alt="Ettin and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Left Club</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Right Club</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Double Smash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bicker</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant III</span>
+          
+        </span>
+        <span class="record">MegaMutant3</span>
+        <span class="stats">
+          <b>HP 290</b><span>DMG 16</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant3.png" width="886" height="224"
+             alt="Mega Mutant III and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rampage</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Twitch</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant III Torch</span>
+          
+        </span>
+        <span class="record">MegaMutant3Flamethrower</span>
+        <span class="stats">
+          <b>HP 300</b><span>DMG 16</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant3flamethrower.png" width="886" height="224"
+             alt="Mega Mutant III Torch and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Singe</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Flame Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Firestorm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Stoke</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant III Fist</span>
+          
+        </span>
+        <span class="record">MegaMutant3Melee</span>
+        <span class="stats">
+          <b>HP 310</b><span>DMG 18</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant3melee.png" width="886" height="224"
+             alt="Mega Mutant III Fist and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Hook</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Guard Up</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Mutant III Gun</span>
+          
+        </span>
+        <span class="record">MegaMutant3Minigun</span>
+        <span class="stats">
+          <b>HP 260</b><span>DMG 13</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutant3minigun.png" width="886" height="224"
+             alt="Mega Mutant III Gun and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Salvo</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Suppress</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Reload</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Ogre Warlord</span>
+          
+        </span>
+        <span class="record">OgreWarlord</span>
+        <span class="stats">
+          <b>HP 320</b><span>DMG 18</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-ogrewarlord.png" width="886" height="224"
+             alt="Ogre Warlord and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Cuff</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Club</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Overhead</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Roar</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Prismatic Pod</span>
+          
+        </span>
+        <span class="record">PrismaticPod1</span>
+        <span class="stats">
+          <b>HP 240</b><span>DMG 14</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-prismaticpod1.png" width="886" height="224"
+             alt="Prismatic Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Glint</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Refract</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Prism Burst</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Phase</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Red Humanoid</span>
+          
+        </span>
+        <span class="record">RedHumanoid1</span>
+        <span class="stats">
+          <b>HP 270</b><span>DMG 15</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-redhumanoid1.png" width="886" height="224"
+             alt="Red Humanoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Punch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Haymaker</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Brace</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floors 7–8
+    <span>9 records · HP 280–380 · DMG 16–21 ·
+      AP 5–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Bio-Titan Plagueborn</span>
+          
+        </span>
+        <span class="record">BioTitanPlagueborn</span>
+        <span class="stats">
+          <b>HP 330</b><span>DMG 18</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-biotitanplagueborn.png" width="886" height="224"
+             alt="Bio-Titan Plagueborn and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Blight</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Pound</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Pandemic</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Regrow</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Bio-Titan Toxoid</span>
+          
+        </span>
+        <span class="record">BioTitanToxoid</span>
+        <span class="stats">
+          <b>HP 340</b><span>DMG 17</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-biotitantoxoid.png" width="886" height="224"
+             alt="Bio-Titan Toxoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Sting</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Pound</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Toxin Flood</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Regrow</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Dragon</span>
+          
+        </span>
+        <span class="record">Dragon</span>
+        <span class="stats">
+          <b>HP 360</b><span>DMG 19</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-dragon.png" width="886" height="224"
+             alt="Dragon and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Breath</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Wing Guard</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Blue Dragon</span>
+          
+        </span>
+        <span class="record">DragonBlue</span>
+        <span class="stats">
+          <b>HP 340</b><span>DMG 18</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-dragonblue.png" width="886" height="224"
+             alt="Blue Dragon and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Frost Breath</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Wing Guard</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Red Dragon</span>
+          
+        </span>
+        <span class="record">DragonRed</span>
+        <span class="stats">
+          <b>HP 380</b><span>DMG 21</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-dragonred.png" width="886" height="224"
+             alt="Red Dragon and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Claw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Bite</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Fire Breath</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Wing Guard</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Entropic Humanoid</span>
+          
+        </span>
+        <span class="record">EntropicHumanoid1</span>
+        <span class="stats">
+          <b>HP 320</b><span>DMG 18</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-entropichumanoid1.png" width="886" height="224"
+             alt="Entropic Humanoid and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Fray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Punch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Collapse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Reform</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Entropic Pod</span>
+          
+        </span>
+        <span class="record">EntropicPod1</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 16</span><span>AP 5</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-entropicpod1.png" width="886" height="224"
+             alt="Entropic Pod and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Fray</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Collapse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Reform</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Galaxy Slime</span>
+          
+        </span>
+        <span class="record">GalaxySlime1</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 16</span><span>AP 6</span>
+          <span>11-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-galaxyslime1.png" width="886" height="224"
+             alt="Galaxy Slime and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Mote</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Gravity Well</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Starfall</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Drift</td>
+            <td>bank</td>
+            <td class="effect">Bank 2 AP for next round</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mega Brute</span>
+          
+        </span>
+        <span class="record">MegaMutantBrute</span>
+        <span class="stats">
+          <b>HP 360</b><span>DMG 20</span><span>AP 5</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-megamutantbrute.png" width="886" height="224"
+             alt="Mega Brute and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Cuff</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Pulverise</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Brace</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 8
+    <span>1 records · HP 400–400 · DMG 22–22 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Bio-Titan Omega</span>
+          
+        </span>
+        <span class="record">BioTitanOmega</span>
+        <span class="stats">
+          <b>HP 400</b><span>DMG 22</span><span>AP 6</span>
+          <span>10-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-biotitanomega.png" width="886" height="224"
+             alt="Bio-Titan Omega and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.5x DMG</td>
+            <td class="num">1</td>
+            <td class="num">1</td>
+          </tr>
+        
+          <tr>
+            <td>Pound</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1x DMG</td>
+            <td class="num">2</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Cataclysm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2x DMG</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Regrow</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 50%</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+

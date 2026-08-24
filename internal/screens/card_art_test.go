@@ -570,3 +570,51 @@ func TestNoBossPortraitIsAnEnemyPortrait(t *testing.T) {
 		}
 	}
 }
+
+// TestEveryOpponentNameFitsItsCard holds both opponent pools against the width of the card they
+// are drawn on.
+//
+// **`EnemyStyle` sets a name as one centred line and never wraps it** — `NameWordPerLine` is off,
+// so `nameLines` hands the whole string back — which means a name too wide is not a name that
+// spills onto a second line, it is a name with a letter clipped off each end. That is what
+// `Jerry the Toll-Taker` did to half the boss roster until the title moved into its own field on
+// 2026-08-24, and it was invisible until `tools/bosssheet` drew all thirty on one page.
+//
+// It measures the whole string rather than the longest word, because there is nowhere for a
+// second word to go.
+func TestEveryOpponentNameFitsItsCard(t *testing.T) {
+	faces, err := cards.NewFaces(assets.LoadFontData()["kubasta"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	st := cards.EnemyStyle
+	usable := st.Width - 2*st.BorderWidth - 4
+
+	fits := func(kind, key, name string) {
+		t.Helper()
+		got, _, err := faces.Measure(st.NameSize, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got > usable {
+			t.Errorf("%s %s is called %q, %dpx at %gpt against the %dpx the card has — the card "+
+				"clips it at both ends rather than wrapping", kind, key, name, got, st.NameSize, usable)
+		}
+	}
+
+	// **The roster is deliberately not checked yet, and that is an open decision rather than an
+	// oversight.** Five creatures are over the line today — Mega Mutant II Torch, Mega Mutant III
+	// Torch, Mega Mutant III Fist, Greater Abomination and Bio-Titan Plagueborn, by 4 to 16px —
+	// and every one of them is a member of a family whose other members fit. Trimming a subset of
+	// "Mega Mutant III Torch" and leaving "Mega Mutant III Gun" alone would make a naming scheme
+	// that reads as a mistake, so the fix is an owner's call between renaming the family, dropping
+	// NameSize on EnemyStyle, and letting a long name wrap. Widen this loop to the roster when it
+	// is made.
+	bosses := data.LoadBosses()
+	for _, key := range data.BossOrder(bosses) {
+		// **The name alone, which is what the card carries.** `FullName` is for the hover that
+		// will print the title, and measuring it here would fail the file for a string the card
+		// never draws.
+		fits("boss", key, bosses[key].Name)
+	}
+}

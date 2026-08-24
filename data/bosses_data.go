@@ -34,10 +34,26 @@ type BossData struct {
 	// thirty out of the enemy portraits' key space; see the //go:embed in assets/embed.go.
 	BossRecord string `json:"BossRecord"`
 
-	// Name is what the boss is called on screen, and unlike an enemy's it is a name plus a
-	// title — `Jerry the Toll-Taker`. A stairway protector is met once and remembered; a
-	// creature from the roster is one of ninety-six.
+	// Name is what the boss is called on screen, and it is the bare first name — `Jerry`, `Thera`.
+	//
+	// **The title moved into its own field on 2026-08-24** *(owner's call)*. It was one string,
+	// `Jerry the Toll-Taker`, and the card could not hold it: `EnemyStyle` centres a name on one
+	// line without wrapping, so half the thirty rendered with a letter clipped off each end. The
+	// card takes the name; the title is what a hover will say.
 	Name string `json:"Name"`
+
+	// Title is the rest of what the boss is called — `the Toll-Taker`, `of the Low Steps` — and
+	// it is written to follow the name with a space between, so the two concatenate into the one
+	// string this used to be.
+	//
+	// **Nothing in the game reads it yet.** It is here for the hover the input vocabulary already
+	// has a widget for, and it is a separate field rather than something split off the name at
+	// render time because there is no rule that finds the seam: `Bayaz, First of the Magi` breaks
+	// at a comma and `The Maw` has no title at all.
+	//
+	// An empty title is a boss called only by its name, and is drawn as one rather than as a name
+	// with a trailing space.
+	Title string `json:"Title"`
 
 	Portrait string `json:"Portrait"`
 
@@ -52,6 +68,16 @@ type BossData struct {
 	AvailableAffixes []string `json:"AvailableAffixes"`
 
 	Cards []CardData `json:"Cards"`
+}
+
+// FullName is the name and the title as one string — `Jerry the Toll-Taker`, and just `The Maw`
+// for a boss with no title. One function, so the two halves cannot be joined differently by the
+// hover and by a review sheet.
+func (b BossData) FullName() string {
+	if b.Title == "" {
+		return b.Name
+	}
+	return b.Name + " " + b.Title
 }
 
 // Enemy is this boss as an enemy record, so everything downstream — the deck builder, the

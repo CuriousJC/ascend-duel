@@ -122,22 +122,27 @@ go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then 
 go run ./tools/ringsheet    # every ring to PNGs + a page grouped by rarity: art, price, text, rules
 go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by ascending multiplier
+go run ./tools/enemysheet   # all 96 creatures by floor band: card, stat line, whole deck
+go run ./tools/bosssheet    # the 30 stairway protectors, the same way, by floor
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
-**The four sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
+**The six sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
 there rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone
-opens to see every card, ring, worm and hand in the game. That reverses the older rule that a
-regenerated artefact is not worth committing: the argument it left out is the audience, since a
-sheet needing a Go toolchain and four remembered commands is a sheet only ever seen by whoever
-just changed the thing it shows.
+opens to see every card, ring, worm, hand, creature and boss in the game. That reverses the older
+rule that a regenerated artefact is not worth committing: the argument it left out is the
+audience, since a sheet needing a Go toolchain and six remembered commands is a sheet only ever
+seen by whoever just changed the thing it shows.
 
-**The cost is history weight, so regenerate deliberately.** About 1.7 MB across 150 binary files
+**The cost is history weight, so regenerate deliberately.** About 4.4 MB across 280 binary files
 is rewritten by a full run, and a sheet rebuilt in a commit that changed nothing about it is pure
-weight. **`go run ./tools/sheets` is the one command** — it runs all four and rewrites the index,
-because four commands remembered in the right order is how three end up current and one ends up
-lying. A stale sheet is worse than none: it is a picture of a catalogue that no longer exists.
+weight. **Three quarters of that is the two roster sheets**, which carry 126 photographic
+portraits between them — so a commit touching only `rings.json` should regenerate the ring sheet
+alone rather than reaching for the one command out of habit. **`go run ./tools/sheets` is the one
+command** — it runs all six and rewrites the index, because six commands remembered in the right
+order is how five end up current and one ends up lying. A stale sheet is worse than none: it is a
+picture of a catalogue that no longer exists.
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
 holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-plans` — so a
@@ -668,6 +673,27 @@ form — ordered by ascending multiplier across all three axes at once, which is
 what the cheapest copy costs once you hold the cards, and how often you hold them is
 `tools/handodds`. Two tools reporting the same probability by different methods would be two
 numbers that can disagree.
+
+**`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools** *(2026-08-23)*. A
+creature is met one at a time, three rooms to a floor, and its whole personality is a deck the
+player only ever sees the played half of — so "is floor five dearer than floor four" was a
+question answered by reading JSON. Each page groups its pool by floor, prints the band's HP, DMG
+and AP spread in the heading, and draws every record as **one composite strip**: the opponent's
+own card as the combat screen draws it, then its deck, one card per concept with the copy count
+in the table under it.
+
+- **A strip rather than a file per card**, because a file per card is about five hundred binaries
+  rewritten on every full run against a hundred and twenty-six, for the same pixels. These two
+  sheets are three quarters of the committed weight; see the note above about regenerating only
+  what changed.
+- **Both are one tool over two pools.** `tools/roster` holds the whole page and the two commands
+  are a `Pool` plus a `main`, which is the deliberate exception to `tools/sheets`'s "no shared
+  library" argument — the other four sheets share nothing, and these two are the *same sheet*
+  read against each other. A boss sheet that had not learned about a new column would show the
+  game as it was.
+- **The deck size is read off `internal/decks`**, not added up from `Copies` in a template, and
+  importing that package registers every concept at init — so a card naming a verb the rules do
+  not have fails the sheet exactly as it fails a launch.
 
 **It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
 the whole pricing decision — a ring is rebalanced by moving it, never by writing a number — so the

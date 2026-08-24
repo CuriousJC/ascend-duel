@@ -70,6 +70,22 @@ var sheets = []sheet{
 			"fight, so this is the whole catalogue a run sees a fifth of.",
 	},
 	{
+		Dir:   "enemysheet",
+		Tool:  "./tools/enemysheet",
+		Title: "Enemy sheet",
+		Blurb: "All ninety-six creatures, grouped by the floors they may appear on: the card the " +
+			"game draws, the stat line, and the whole deck each one fights with. The only place " +
+			"a floor's roster can be read against the floor below it.",
+	},
+	{
+		Dir:   "bosssheet",
+		Tool:  "./tools/bosssheet",
+		Title: "Boss sheet",
+		Blurb: "The thirty stairway protectors, the same way. Read against the enemy sheet's band " +
+			"of the same number — a boss is pitched above the creatures of its own floor, and " +
+			"this is where that claim can be checked.",
+	},
+	{
 		Dir:   "handsheet",
 		Tool:  "./tools/handsheet",
 		Title: "Hand sheet",

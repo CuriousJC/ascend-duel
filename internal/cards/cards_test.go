@@ -101,6 +101,9 @@ func TestCornersAreTransparentAndEdgesAreNot(t *testing.T) {
 // The border stopped naming the element on 2026-08-23 — the form mark does that now, and
 // borderBase says why. What this still pins is the width and the resting state, which is what
 // the border is for.
+//
+// **Its outer BorderBevel pixels are the card's light** *(2026-08-24)*, so the walk starts inside
+// them; the bevel has its own test below.
 func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
 	st := Hand
 	mid := st.Height / 2
@@ -110,7 +113,7 @@ func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
 		want := systems.ColorToward(borderBase(e), Surface, borderRestToward)
 
 		// Walk in from the left edge at the card's waist, where there is no curvature.
-		for x := 0; x < st.BorderWidth; x++ {
+		for x := BorderBevel; x < st.BorderWidth; x++ {
 			if got := img.RGBAAt(x, mid); got != want {
 				t.Errorf("%s border at x=%d is %v, want %v", e, x, got, want)
 				break
@@ -122,6 +125,37 @@ func TestBorderIsTheNeutralColourAtItsDeclaredWidth(t *testing.T) {
 			t.Errorf("%s: pixel just inside the %dpx border is %v, want the surface %v",
 				e, st.BorderWidth, got, Surface)
 		}
+	}
+}
+
+// **The card is lit from the top left, like every bevelled thing on screen.** The left edge at the
+// waist is lit and the right edge is shadowed, and neither is the border's own colour — a bevel
+// that had quietly become two copies of the fill would draw identically to no bevel at all.
+func TestTheCardBorderIsLitOnTheTopLeftAndShadowedOnTheBottomRight(t *testing.T) {
+	st := Hand
+	img := render(t, strike(Fire), st)
+	mid := st.Height / 2
+
+	face := systems.ColorToward(borderBase(Fire), Surface, borderRestToward)
+	light, shade := systems.BevelEdges(face)
+
+	if got := img.RGBAAt(0, mid); got != light {
+		t.Errorf("the left edge is %v, want the lit %v", got, light)
+	}
+	if got := img.RGBAAt(st.Width-1, mid); got != shade {
+		t.Errorf("the right edge is %v, want the shadowed %v", got, shade)
+	}
+	if got := img.RGBAAt(st.Width/2, 0); got != light {
+		t.Errorf("the top edge is %v, want the lit %v", got, light)
+	}
+	if got := img.RGBAAt(st.Width/2, st.Height-1); got != shade {
+		t.Errorf("the bottom edge is %v, want the shadowed %v", got, shade)
+	}
+
+	// **The bevel is the outside of the border, not the whole of it.** Four of the six pixels are
+	// still the state colour, which is the signal the border exists to carry.
+	if got := img.RGBAAt(BorderBevel, mid); got != face {
+		t.Errorf("the pixel just inside the bevel is %v, want the border's own %v", got, face)
 	}
 }
 
@@ -313,9 +347,17 @@ func TestMiniRendersEverythingInsideTheVisibleStrip(t *testing.T) {
 	s := Spec{Name: "Prepare", Form: FormPlan, Cost: 1, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
+	// **Inside the rounded surface, not inside its bounding box.** A rectangle inset by the
+	// border width still clips the four curves, so the border's own pixels near a corner would
+	// be counted as content — which is what a thinner border made visible.
+	iw, ih := st.Width-2*st.BorderWidth, st.Height-2*st.BorderWidth
 	ink := 0
 	for y := st.BorderWidth; y < st.Height-st.BorderWidth; y++ {
 		for x := deckVisibleWidth; x < st.Width-st.BorderWidth; x++ {
+			if !insideRounded(iw, ih, st.CornerRadius-st.BorderWidth,
+				x-st.BorderWidth, y-st.BorderWidth) {
+				continue
+			}
 			if c := img.RGBAAt(x, y); c != Surface {
 				ink++
 			}

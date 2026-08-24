@@ -225,7 +225,7 @@ var Hand = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
-	BorderWidth:  6,
+	BorderWidth:  3,
 
 	ShowName: true,
 	ShowForm: true,
@@ -436,7 +436,7 @@ var EnemyStyle = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
-	BorderWidth:  6,
+	BorderWidth:  3,
 
 	ShowName: true,
 	ShowForm: false,
@@ -495,7 +495,7 @@ var DuelistStyle = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
-	BorderWidth:  6,
+	BorderWidth:  3,
 
 	ShowName: true,
 	ShowForm: false,
@@ -535,7 +535,7 @@ var WormStyle = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
-	BorderWidth:  6,
+	BorderWidth:  3,
 
 	ShowName: true,
 	ShowForm: false,
@@ -575,7 +575,7 @@ var RingStyle = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
-	BorderWidth:  6,
+	BorderWidth:  3,
 
 	ShowName: true,
 	ShowForm: false,

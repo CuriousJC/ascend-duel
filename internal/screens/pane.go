@@ -123,7 +123,11 @@ func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image,
 	x, y = float32(r.Min.X), float32(r.Min.Y)
 	w, h = float32(r.Dx()), float32(r.Dy())
 
-	vector.DrawFilledRect(screen, x, y, w, h, p.fill, false)
+	// **Raised, because a pane floats over a scrim.** It is a panel in front of the game rather
+	// than a tray cut into it, so the light stays on the top-left edge where a button's is —
+	// see systems.BevelRect for why a pane takes two pixels of it and a control takes three.
+	systems.BevelRect(screen, r.Min.X, r.Min.Y, r.Dx(), r.Dy(),
+		systems.PaneBevelWidth, p.fill, false)
 	vector.StrokeRect(screen, x, y, w, h, 2, p.color, false)
 
 	if p.title != "" {

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -83,5 +84,56 @@ func TestTheRingSeatIsDrawnWhereItIsClicked(t *testing.T) {
 					n, i, got, want)
 			}
 		}
+	}
+}
+
+// **The row is centred and grows outwards, rather than pinned to both edges.** A run wearing two
+// rings on a band with no enemy card to end it put one beside the duelist card and the other in
+// the far corner; the pitch is capped now, so the slack sits at the two ends of the row.
+func TestTheRingRowIsCentredAndGrowsOutwards(t *testing.T) {
+	gs := bandState(t)
+	row := buildRingRect(gs)
+
+	var last int
+	for n := 1; n <= maxRings; n++ {
+		left := ringSlotAt(row, 0, n).X
+		right := ringSlotRect(row, n-1, n).Max.X
+
+		if l, r := left-row.Min.X, row.Max.X-right; l-r > 1 || r-l > 1 {
+			t.Errorf("a row of %d leaves %dpx on the left and %dpx on the right", n, l, r)
+		}
+		if width := right - left; n > 1 && width <= last {
+			t.Errorf("a row of %d is %dpx wide, no wider than the %dpx row of %d",
+				n, width, last, n-1)
+		}
+		last = right - left
+	}
+}
+
+// The pitch never leaves more than ringSlotMaxGap of bare table between two rings, which is the
+// cap that makes the row above grow rather than spread.
+func TestTwoRingsSitBesideEachOtherRatherThanApart(t *testing.T) {
+	row := buildRingRect(bandState(t))
+
+	for n := 2; n <= maxRings; n++ {
+		if gap := ringSlotPitch(row, n) - cards.RingStyle.Width; gap > ringSlotMaxGap {
+			t.Errorf("a row of %d leaves %dpx between rings, past the %dpx cap",
+				n, gap, ringSlotMaxGap)
+		}
+	}
+}
+
+// **A full row on the combat screen is drawn exactly where it always was.** The cap is the gap
+// five rings leave in that pane, so the change cannot have moved the layout it was derived from.
+func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
+	gs := testState()
+	s := &CombatScene{}
+	pane := s.ringPaneRect(gs)
+
+	if got, want := ringSlotAt(pane, 0, maxRings).X, pane.Min.X; got != want {
+		t.Errorf("the first of five rings sits at x=%d, not at the pane's left edge x=%d", got, want)
+	}
+	if got := ringSlotRect(pane, maxRings-1, maxRings).Max.X; got > pane.Max.X {
+		t.Errorf("the last of five rings ends at x=%d, past the pane's x=%d", got, pane.Max.X)
 	}
 }

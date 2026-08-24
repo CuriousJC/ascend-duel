@@ -759,3 +759,22 @@ func abs(n int) int {
 	}
 	return n
 }
+
+// comboButtonUp is the air between the combos button and the top of the hand — enough that the
+// button reads as standing above the row rather than as part of it.
+const comboButtonUp = 12
+
+// comboButtonPlace is where the combos button stands on the combat screen: **left edge aligned
+// with the left edge of a full hand**, sitting just above the row *(owner's call, 2026-08-24)*.
+//
+// **A full hand, never the hand as dealt.** `handBand` narrows and re-centres as cards are spent,
+// so a button hung off the current row would slide sideways under the cursor every time a card was
+// played — the same reason the AP figure is measured from `handBand(gs, handSize)` rather than from
+// the laid-out count.
+func comboButtonPlace(gs *state.GlobalState) image.Point {
+	band := handBand(gs, handSize)
+	return image.Pt(
+		band.Min.X+combosButtonWidth/2,
+		band.Min.Y-comboButtonUp-logButtonSize/2,
+	)
+}

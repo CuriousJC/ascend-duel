@@ -54,6 +54,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/decks"
 )
 
 // ground is the combat screen's table — screens.screenGround — because a hand is laid out on it.
@@ -124,7 +125,7 @@ func run(dir string) error {
 			Pays:       fmt.Sprintf("%d.%02dx", h.Multiplier/100, h.Multiplier%100),
 		}
 
-		example, cost, ok := cheapestExample(deck, h)
+		example, cost, ok := decks.CheapestExample(deck, h)
 		r.Buildable = ok
 		if ok {
 			r.Cost = cost
@@ -228,7 +229,7 @@ func countAttacks(deck []combat.Card) int {
 func perValue(deck []combat.Card, a combat.Axis) int {
 	counts := map[int]int{}
 	for _, c := range deck {
-		if v, ok := valueOf(c, a); ok {
+		if v, ok := decks.MatchValue(c, a); ok {
 			counts[v]++
 		}
 	}
@@ -239,102 +240,6 @@ func perValue(deck []combat.Card, a combat.Axis) int {
 		}
 	}
 	return most
-}
-
-// valueOf mirrors the matcher's own rule: a card with FormNone or Basic carries no value on that
-// axis and cannot be counted on it. **The player's deck has neither since the plans were coloured**
-// *(2026-08-23)*, so all forty-eight count on all three axes — which is why an example hand may now
-// be built out of plans. It is the same function tools/handodds has, and the
-// duplication is deliberate — a second copy of *the matcher* would be a rules fork, but this is
-// three lines of the matcher's vocabulary, and importing a tool from a tool is not a thing Go
-// does.
-func valueOf(c combat.Card, a combat.Axis) (int, bool) {
-	switch a {
-	case combat.AxisForm:
-		f := c.Form()
-		return int(f), f != combat.FormNone
-	case combat.AxisElement:
-		return int(c.Element), c.Element != combat.Basic
-	default:
-		return int(c.Concept), true
-	}
-}
-
-// cheapestExample is the cheapest set of real cards forming this rung, or ok=false if the deck
-// holds no such set.
-//
-// **Cheapest, because the budget is what actually binds.** The deck holds the cards for a form
-// pair many times over; what decides whether one can be *played* is whether the two cheapest of
-// them fit the round's action points. Showing the dearest copies would illustrate a hand nobody
-// would ever queue.
-//
-// **It searches the whole deck rather than a dealt hand**, which is the difference from
-// tools/handodds: that tool asks how often eight cards contain a rung, and this one asks what the
-// rung looks like when they do.
-func cheapestExample(deck []combat.Card, h combat.Hand) ([]combat.Card, int, bool) {
-	byValue := map[int][]combat.Card{}
-	for _, c := range deck {
-		if v, ok := valueOf(c, h.Match); ok {
-			byValue[v] = append(byValue[v], c)
-		}
-	}
-
-	// A sorted walk, never a map walk — the values decide what the page draws. Same rule that
-	// governs EnemyOrder; see the randomness skill.
-	values := make([]int, 0, len(byValue))
-	for v := range byValue {
-		values = append(values, v)
-	}
-	sort.Ints(values)
-
-	// Within a value, cheapest first and then by concept, so a prefix of the list is both the
-	// cheapest N copies and the same N on every run.
-	for _, v := range values {
-		cs := byValue[v]
-		sort.SliceStable(cs, func(i, j int) bool {
-			if cs[i].Cost() != cs[j].Cost() {
-				return cs[i].Cost() < cs[j].Cost()
-			}
-			if cs[i].Concept != cs[j].Concept {
-				return cs[i].Concept < cs[j].Concept
-			}
-			return cs[i].Element < cs[j].Element
-		})
-	}
-
-	var best []combat.Card
-	bestCost := -1
-
-	var fill func(group int, used []bool, picked []combat.Card, spent int)
-	fill = func(group int, used []bool, picked []combat.Card, spent int) {
-		if group == len(h.Groups) {
-			if bestCost < 0 || spent < bestCost {
-				bestCost = spent
-				best = append([]combat.Card(nil), picked...)
-			}
-			return
-		}
-		want := h.Groups[group]
-		for i, v := range values {
-			cs := byValue[v]
-			if used[i] || len(cs) < want {
-				continue
-			}
-			cost := 0
-			for _, c := range cs[:want] {
-				cost += c.Cost()
-			}
-			used[i] = true
-			fill(group+1, used, append(picked, cs[:want]...), spent+cost)
-			used[i] = false
-		}
-	}
-	fill(0, make([]bool, len(values)), nil, 0)
-
-	if bestCost < 0 {
-		return nil, 0, false
-	}
-	return best, bestCost, true
 }
 
 // sharedValues names what the example's groups actually agree on, in the axis's own words —

@@ -73,8 +73,8 @@ var borderColors = [...]color.RGBA{
 	// nearly invisible on two of the three light ones this game draws on — the off-white card
 	// surface and the combat screen's cream. It first showed up as an unreadable damage figure in
 	// the hand sum, where the number is drawn straight onto the cream; the border had the same
-	// problem more quietly. This is `screens.attentionYellow`'s value, which took the same
-	// correction for the same reason when the ground went cream.
+	// problem more quietly. The combat screen's attention yellow took the same correction on the
+	// same day, for the same reason, and to the same value; it has since been cut.
 	Lightning: {R: 214, G: 152, B: 12, A: 255},
 	Earth:     {R: 76, G: 140, B: 52, A: 255},
 

@@ -3,7 +3,6 @@ package screens
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"math"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -12,7 +11,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // The draw pile made visible, and the cards travelling to and from it.
@@ -43,9 +41,8 @@ const (
 	// percentage says where a thing sits relative to the whole, and what this actually wants
 	// to say is "against the edge, with a margin".
 	//
-	// The margin is to the card's own edge. The highlight ring reaches
-	// deckHighlightInset + deckHighlightWidth/2 = 8 further, which still clears the screen,
-	// and TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting it not.
+	// The margin is to the card's own edge, and TestDeckStackClearsTheAPBarAndTheScreen holds
+	// it against the screen.
 	//
 	// **It was 10 until 2026-08-11**, when the pile took over stating its own count. The
 	// margin is now the strip that count is written in, and it is *derived* from the three
@@ -87,21 +84,9 @@ const (
 	// four pixels reads as one line and chasing it exactly would mean taking the strip off
 	// percentages for no other reason.
 	//
-	// It also has to leave room for the highlight ring, which reaches
-	// deckHighlightInset + deckHighlightWidth/2 = 8 further down — so ten is two pixels of
-	// slack, and TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting the ring
-	// run off the bottom.
+	// TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting the pile run off the
+	// bottom.
 	deckStackBottomInset = 10
-
-	// deckHighlightWidth is the ring drawn round the stack while the overlay is open, in
-	// attentionYellow.
-	//
-	// **The overlay is the only dialog in the game and it has no other exit** — no Escape
-	// key, no right click — so the one live control has to be the most obvious thing on
-	// screen. The Deck button used to get that for free by being a lit button on a dead
-	// screen; a stack of dark card backs does not, which is what this replaces it with.
-	deckHighlightWidth = 4
-	deckHighlightInset = 6
 
 	// outboundDriftUp is how far a discarded card rises as it leaves, and outboundSpin how
 	// far it turns. A card tossed flat off the side of the table reads as a bug; a little
@@ -148,32 +133,6 @@ var (
 	// than as deliberate.
 	slideTicks = beat(1, 2)
 )
-
-// attentionYellow is the screen's "look here" colour, and **it has one user left**: the ring round
-// the deck stack while its overlay is open. The hand's name and its multiplier wore it until
-// 2026-08-19 and are pink now — see handNameInk, which records why.
-//
-// **One colour, one meaning.** It says "this is the thing right now", and a screen with two
-// different attention colours has neither — so this stays a single value rather than becoming two
-// that happen to match. If a second caller wants it, the question to answer first is whether it
-// means the same thing.
-//
-// **It is never drawn on a card.** A card's border is its element and nothing else may claim
-// it, so what wears this colour is drawn on the bare ground.
-//
-// **Darkened on 2026-08-14 when the ground went cream.** It was {255,214,0}, which is a fine
-// ring on {50,50,50} and nearly invisible on {226,208,176} — a yellow and a cream are close in
-// brightness whatever the hue does. The amber below reads on both, which it has to: this ring
-// is drawn on the bare ground around the table cards *and* on the dimmed screen behind the
-// deck overlay.
-// **It is now the same value as `cards.BorderOf(cards.Lightning)`** *(2026-08-19)*, which took
-// this correction on the same day and for the same reason. That is a collision worth knowing
-// about rather than a shared constant: the two mean different things — "look here" and "this card
-// is lightning" — and a lightning card's border therefore reads in the attention colour. It is
-// what moved the hand's name to pink, since the loudest word on the screen should not be wearing
-// an element. **If one of them has to move again, it is this one**, because an element's colour is
-// a fact about the game and an attention colour is a choice about the screen.
-var attentionYellow = color.RGBA{R: 214, G: 152, B: 12, A: 255}
 
 // cardFlight is one card in the air between the hand and the draw pile. Purely something to
 // look at.
@@ -368,13 +327,6 @@ func (s *CombatScene) updateDeckStack(gs *state.GlobalState) {
 // exactly the moment it is worth reading.
 func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image) {
 	front := deckStackRect(gs)
-
-	if s.showDeck {
-		b := deckStackBounds(gs).Inset(-deckHighlightInset)
-		vector.StrokeRect(screen,
-			float32(b.Min.X), float32(b.Min.Y), float32(b.Dx()), float32(b.Dy()),
-			deckHighlightWidth, attentionYellow, false)
-	}
 
 	// Back to front, so the front card is the one on top and the one the click tests.
 	for i := deckStackDepth - 1; i >= 0; i-- {

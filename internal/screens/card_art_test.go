@@ -222,15 +222,15 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 		}
 	}
 	row := rowWidth(longest, deckStackPitch) + deckRowLabelWidth
-	if panel := pctX(deckPanelRightPct) - pctX(deckPanelLeftPct); row > panel-deckRowMargin {
+	if panel := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct); row > panel-deckRowMargin {
 		t.Errorf("the deck's longest row is %dpx wide against a %dpx panel", row, panel)
 	}
 
 	// And every row has to fit between the legend above and the closing hint below.
 	// Derived from the panel constants rather than written down, because the last time it
-	// was a hardcoded number it went stale the moment deckGridTop moved.
-	top := pctY(deckPanelTopPct) + deckGridTop
-	bottom := pctY(deckPanelBottomPct) - deckHintUp
+	// was a hardcoded number it went stale the moment modalBodyTop moved.
+	top := pctY(modalPanelTopPct) + modalBodyTop
+	bottom := pctY(modalPanelBottomPct) - modalBodyBottom
 	rows := deckRowCount*(cards.Mini.Height+deckRowGap) - deckRowGap
 	if budget := bottom - top; rows > budget {
 		t.Errorf("%d rows of %d is %dpx tall against a %dpx budget (y=%d..%d)",
@@ -239,8 +239,8 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 
 	// The grid must also start below the legend it sits under, which is what the six-row
 	// squeeze most easily breaks.
-	if deckGridTop <= deckLegendTop {
-		t.Errorf("the grid starts at y=%d, at or above the legend at y=%d", deckGridTop, deckLegendTop)
+	if modalBodyTop <= modalLegendTop {
+		t.Errorf("the grid starts at y=%d, at or above the legend at y=%d", modalBodyTop, modalLegendTop)
 	}
 }
 
@@ -485,7 +485,7 @@ func deckRowCounts() []int {
 func TestTheDeckPanelHidesNothing(t *testing.T) {
 	const screenW = 1280
 	pctX := func(p int) int { return screenW * p / 100 }
-	width := pctX(deckPanelRightPct) - pctX(deckPanelLeftPct)
+	width := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct)
 	room := width - deckRowLabelWidth - deckRowMargin
 
 	// Well past anything a run can produce: 48 cards is the whole starting deck, and a flip ring

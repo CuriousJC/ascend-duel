@@ -1,7 +1,8 @@
 [
   {
     "BossRecord": "Jerry",
-    "Name": "Jerry the Toll-Taker",
+    "Name": "Jerry",
+    "Title": "the Toll-Taker",
     "Portrait": "jerry-boss",
     "DMG": 11,
     "Actions": 6,
@@ -51,7 +52,8 @@
   },
   {
     "BossRecord": "Sam",
-    "Name": "Sam of the Low Steps",
+    "Name": "Sam",
+    "Title": "of the Low Steps",
     "Portrait": "sam-boss",
     "DMG": 11,
     "Actions": 6,
@@ -101,7 +103,8 @@
   },
   {
     "BossRecord": "Dodge",
-    "Name": "Dodge the Cutpurse",
+    "Name": "Dodge",
+    "Title": "the Cutpurse",
     "Portrait": "dodge-boss",
     "DMG": 11,
     "Actions": 6,
@@ -151,7 +154,8 @@
   },
   {
     "BossRecord": "Callie",
-    "Name": "Callie of the First Gate",
+    "Name": "Callie",
+    "Title": "of the First Gate",
     "Portrait": "callie-boss",
     "DMG": 11,
     "Actions": 6,
@@ -201,7 +205,8 @@
   },
   {
     "BossRecord": "Boris",
-    "Name": "Boris the Stairbreaker",
+    "Name": "Boris",
+    "Title": "the Stairbreaker",
     "Portrait": "boris-boss",
     "DMG": 13,
     "Actions": 6,
@@ -251,7 +256,8 @@
   },
   {
     "BossRecord": "Troy",
-    "Name": "Troy the Watchman",
+    "Name": "Troy",
+    "Title": "the Watchman",
     "Portrait": "troy-boss",
     "DMG": 13,
     "Actions": 6,
@@ -301,7 +307,8 @@
   },
   {
     "BossRecord": "Harrold",
-    "Name": "Harrold the Hoarder",
+    "Name": "Harrold",
+    "Title": "the Hoarder",
     "Portrait": "harrold-boss",
     "DMG": 13,
     "Actions": 6,
@@ -351,7 +358,8 @@
   },
   {
     "BossRecord": "Jack",
-    "Name": "Jack of the Second Bell",
+    "Name": "Jack",
+    "Title": "of the Second Bell",
     "Portrait": "jack-boss",
     "DMG": 13,
     "Actions": 6,
@@ -401,7 +409,8 @@
   },
   {
     "BossRecord": "Aimee",
-    "Name": "Aimee the Bloodletter",
+    "Name": "Aimee",
+    "Title": "the Bloodletter",
     "Portrait": "aimee-boss",
     "DMG": 16,
     "Actions": 6,
@@ -451,7 +460,8 @@
   },
   {
     "BossRecord": "Charles",
-    "Name": "Charles the Warden",
+    "Name": "Charles",
+    "Title": "the Warden",
     "Portrait": "charles-boss",
     "DMG": 16,
     "Actions": 6,
@@ -501,7 +511,8 @@
   },
   {
     "BossRecord": "Duke",
-    "Name": "Duke of the Third Landing",
+    "Name": "Duke",
+    "Title": "of the Third Landing",
     "Portrait": "duke-boss",
     "DMG": 16,
     "Actions": 6,
@@ -551,7 +562,8 @@
   },
   {
     "BossRecord": "Meglan",
-    "Name": "Meglan the Hexwright",
+    "Name": "Meglan",
+    "Title": "the Hexwright",
     "Portrait": "meglan-boss",
     "DMG": 16,
     "Actions": 6,
@@ -601,7 +613,8 @@
   },
   {
     "BossRecord": "Lanton",
-    "Name": "Lanton the Pyre-Keeper",
+    "Name": "Lanton",
+    "Title": "the Pyre-Keeper",
     "Portrait": "lanton-boss",
     "DMG": 19,
     "Actions": 6,
@@ -651,7 +664,8 @@
   },
   {
     "BossRecord": "Pallant",
-    "Name": "Pallant the Pale",
+    "Name": "Pallant",
+    "Title": "the Pale",
     "Portrait": "pallant-boss",
     "DMG": 19,
     "Actions": 6,
@@ -701,7 +715,8 @@
   },
   {
     "BossRecord": "Rockard",
-    "Name": "Rockard the Unmoved",
+    "Name": "Rockard",
+    "Title": "the Unmoved",
     "Portrait": "rockard-boss",
     "DMG": 19,
     "Actions": 6,
@@ -751,7 +766,8 @@
   },
   {
     "BossRecord": "Sentry",
-    "Name": "The Fourth Sentry",
+    "Name": "Sentry",
+    "Title": "the Fourth",
     "Portrait": "sentry-boss",
     "DMG": 19,
     "Actions": 6,
@@ -801,7 +817,8 @@
   },
   {
     "BossRecord": "Anndal",
-    "Name": "Anndal the Stormcaller",
+    "Name": "Anndal",
+    "Title": "the Stormcaller",
     "Portrait": "anndal-boss",
     "DMG": 22,
     "Actions": 6,
@@ -851,7 +868,8 @@
   },
   {
     "BossRecord": "Feld",
-    "Name": "Feld the Grave-Digger",
+    "Name": "Feld",
+    "Title": "the Grave-Digger",
     "Portrait": "feld-boss",
     "DMG": 22,
     "Actions": 6,
@@ -901,7 +919,8 @@
   },
   {
     "BossRecord": "Thera",
-    "Name": "Thera of the Thorn",
+    "Name": "Thera",
+    "Title": "of the Thorn",
     "Portrait": "thera-boss",
     "DMG": 22,
     "Actions": 6,
@@ -951,7 +970,8 @@
   },
   {
     "BossRecord": "Raul",
-    "Name": "Raul the Flensing Blade",
+    "Name": "Raul",
+    "Title": "the Flensing Blade",
     "Portrait": "raul-boss",
     "DMG": 22,
     "Actions": 6,
@@ -1001,7 +1021,8 @@
   },
   {
     "BossRecord": "Gideon",
-    "Name": "Gideon the Oathbreaker",
+    "Name": "Gideon",
+    "Title": "the Oathbreaker",
     "Portrait": "gideon-boss",
     "DMG": 26,
     "Actions": 6,
@@ -1051,7 +1072,8 @@
   },
   {
     "BossRecord": "Mangat",
-    "Name": "Mangat the Bonebinder",
+    "Name": "Mangat",
+    "Title": "the Bonebinder",
     "Portrait": "mangat-boss",
     "DMG": 26,
     "Actions": 6,
@@ -1101,7 +1123,8 @@
   },
   {
     "BossRecord": "Shen",
-    "Name": "Shen of the Still Blade",
+    "Name": "Shen",
+    "Title": "of the Still Blade",
     "Portrait": "shen-boss",
     "DMG": 26,
     "Actions": 6,
@@ -1151,7 +1174,8 @@
   },
   {
     "BossRecord": "Zither",
-    "Name": "Zither the Discordant",
+    "Name": "Zither",
+    "Title": "the Discordant",
     "Portrait": "zither-boss",
     "DMG": 26,
     "Actions": 6,
@@ -1201,7 +1225,8 @@
   },
   {
     "BossRecord": "Feyd",
-    "Name": "Feyd the Serpent Prince",
+    "Name": "Feyd",
+    "Title": "the Serpent Prince",
     "Portrait": "feyd-boss",
     "DMG": 30,
     "Actions": 6,
@@ -1251,7 +1276,8 @@
   },
   {
     "BossRecord": "Neytiri",
-    "Name": "Neytiri the Skyhunter",
+    "Name": "Neytiri",
+    "Title": "the Skyhunter",
     "Portrait": "neytiri-boss",
     "DMG": 30,
     "Actions": 6,
@@ -1301,7 +1327,8 @@
   },
   {
     "BossRecord": "Zeran",
-    "Name": "Zeran the Voidtouched",
+    "Name": "Zeran",
+    "Title": "the Voidtouched",
     "Portrait": "zeran-boss",
     "DMG": 30,
     "Actions": 6,
@@ -1351,7 +1378,8 @@
   },
   {
     "BossRecord": "Bayaz",
-    "Name": "Bayaz, First of the Magi",
+    "Name": "Bayaz",
+    "Title": "First of the Magi",
     "Portrait": "bayaz-boss",
     "DMG": 35,
     "Actions": 6,
@@ -1402,6 +1430,7 @@
   {
     "BossRecord": "Maw",
     "Name": "The Maw",
+    "Title": "",
     "Portrait": "maw-boss",
     "DMG": 35,
     "Actions": 6,
@@ -1451,7 +1480,8 @@
   },
   {
     "BossRecord": "Zaheel",
-    "Name": "Zaheel the Crownless",
+    "Name": "Zaheel",
+    "Title": "the Crownless",
     "Portrait": "zaheel-boss",
     "DMG": 35,
     "Actions": 6,

@@ -131,7 +131,8 @@ the price of not hand-maintaining 192 lines nobody could review.
 
 ### Bosses
 
-`bosses.json` is **the enemy record with `ValidFloors` replaced by a single `Floor`**, because a
+`bosses.json` is **the enemy record with `ValidFloors` replaced by a single `Floor`, plus a
+`Title`**, because a
 boss guards the stairway of exactly one floor. `BossData.Enemy()` converts, so `internal/decks`,
 `internal/entities` and `internal/cards` read one shape and never learn which pool an opponent came
 from — the only two places that tell them apart are `pyramid.EnemyAt`, which answers a stairway
@@ -148,6 +149,17 @@ trust the floors.
   hardest hitter in every band that reaches the floor — and the deck is dearer than a roster deck:
   60/120/250/300 against 50/100/200, and a 60% guard against 50%. `TestABossIsToughAgainstTheFloorItGuards`
   in `internal/pyramid` fails on a boss the floor below it could out-hit.
+- **`Name` is the bare first name and `Title` is the rest** *(owner's call, 2026-08-24)* — `Jerry`
+  and `the Toll-Taker`. They were one string, and the card could not hold it: `EnemyStyle` centres
+  a name on one unwrapped line, so half the thirty rendered with a letter clipped off each end.
+  The card takes `Name`; `Title` is for a hover nothing has built yet, and **nothing in the game
+  reads it today**. `BossData.FullName()` joins them, so the hover and a review sheet cannot join
+  them differently. It is a stored field rather than a split at render time because no rule finds
+  the seam — `Bayaz, First of the Magi` breaks at a comma and `The Maw` has no title at all.
+  `TestEveryOpponentNameFitsItsCard` in `internal/screens` holds the pool against the card's width.
+  **The roster is not in that test yet**: five creatures are over the line and each belongs to a
+  family whose other members fit, so trimming a subset would read as a mistake — see the test's
+  comment.
 - **A record whose deck is empty panics** exactly as an enemy's does, and one whose record name
   collides with an enemy's panics too — the deck registry is keyed by record and would otherwise be
   ambiguous.

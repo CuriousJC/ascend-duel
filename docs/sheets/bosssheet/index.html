@@ -1,0 +1,2115 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — Boss sheet</title>
+<style>
+  :root {
+    --ground: #e2d0b0;
+    --ink: #2c2822;
+    --dim: #6b6355;
+    --rule: #c4b294;
+    --panel: #ede0c8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2.floor {
+    font-size: 15px; font-weight: 600;
+    margin: 40px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h2.floor span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 12px;
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 74ch; margin: 12px 0 0; }
+  .plate {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px; margin-top: 18px;
+  }
+  .head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+   
+  .named { display: inline-block; }
+  .name { font-size: 16px; font-weight: 600; display: block; }
+  .title { font-size: 12.5px; color: var(--dim); display: block; margin-top: 1px; }
+  .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
+  .stats { margin-left: auto; font-size: 13px; }
+  .stats b { font-weight: 600; }
+  .stats span { color: var(--dim); margin-left: 14px; }
+   
+  .strip { overflow-x: auto; margin: 12px 0 0; }
+  img { display: block; image-rendering: pixelated; }
+  table { border-collapse: collapse; margin: 12px 0 0; font-size: 12.5px; }
+  th, td { text-align: left; padding: 3px 16px 3px 0; }
+  th { color: var(--dim); font-weight: 600; font-size: 11px;
+       text-transform: uppercase; letter-spacing: .06em; }
+  td.num { text-align: right; padding-right: 22px; font-variant-numeric: tabular-nums; }
+  td.effect { color: var(--dim); }
+  .affix { color: var(--dim); font-size: 12px; margin: 10px 0 0; }
+</style>
+
+<h1>Boss sheet</h1>
+<p class="facts">
+  30 records, grouped by floor ·
+  card <code>162x224</code>,
+  portrait box <code>112</code> tall,
+  name at <code>20pt</code>
+</p>
+<p class="note">The thirty stairway protectors, one of whom stands in the third room of every floor: the card, the stat line and the deck. A boss is pitched above the creatures of its own floor — roughly 1.6x their HP and 1.3x their DMG — so this page is read against the enemy sheet&#39;s band of the same number.</p>
+<p class="note">
+  Every card here is drawn by <code>internal/cards</code>, the same code the game blits, so this
+  page cannot show a card the game would draw differently. The leftmost card on each strip is the
+  opponent as it appears in the corner of the combat screen; the rest are its deck, one card per
+  concept — the <em>copies</em> column says how many of each the pile holds.
+</p>
+
+
+  <h2 class="floor">
+    Floor 1
+    <span>4 records · HP 200–200 · DMG 11–11 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Callie</span>
+          <span class="title">of the First Gate</span>
+        </span>
+        <span class="record">Callie</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 11</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-callie.png" width="1062" height="224"
+             alt="Callie and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Rap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Gate Bar</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Portcullis</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Gate Slam</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Shutter</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Dodge</span>
+          <span class="title">the Cutpurse</span>
+        </span>
+        <span class="record">Dodge</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 11</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-dodge.png" width="1062" height="224"
+             alt="Dodge and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Nick</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Slit</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Backstab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Purse Cut</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Slip Aside</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Jerry</span>
+          <span class="title">the Toll-Taker</span>
+        </span>
+        <span class="record">Jerry</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 11</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-jerry.png" width="1062" height="224"
+             alt="Jerry and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Shove</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Cudgel</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Toll</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Collector&#39;s Due</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Braced</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Sam</span>
+          <span class="title">of the Low Steps</span>
+        </span>
+        <span class="record">Sam</span>
+        <span class="stats">
+          <b>HP 200</b><span>DMG 11</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-sam.png" width="1062" height="224"
+             alt="Sam and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Prod</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Hook</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Haul Down</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Step Toll</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Set Feet</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 2
+    <span>4 records · HP 280–280 · DMG 13–13 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Boris</span>
+          <span class="title">the Stairbreaker</span>
+        </span>
+        <span class="record">Boris</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 13</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-boris.png" width="1062" height="224"
+             alt="Boris and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Stomp</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Maul</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Stair Break</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Landslide</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Hunker</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Harrold</span>
+          <span class="title">the Hoarder</span>
+        </span>
+        <span class="record">Harrold</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 13</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-harrold.png" width="1062" height="224"
+             alt="Harrold and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Clout</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Hoard Fling</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Coin Storm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Miser&#39;s Grip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Barricade</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Jack</span>
+          <span class="title">of the Second Bell</span>
+        </span>
+        <span class="record">Jack</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 13</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-jack.png" width="1062" height="224"
+             alt="Jack and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Clapper</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Bell Toll</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Peal</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Second Bell</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Muffle</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Troy</span>
+          <span class="title">the Watchman</span>
+        </span>
+        <span class="record">Troy</span>
+        <span class="stats">
+          <b>HP 280</b><span>DMG 13</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-troy.png" width="1062" height="224"
+             alt="Troy and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Baton</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Lantern Swing</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Watch Call</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Night Sweep</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Shield Wall</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 3
+    <span>4 records · HP 360–360 · DMG 16–16 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Aimee</span>
+          <span class="title">the Bloodletter</span>
+        </span>
+        <span class="record">Aimee</span>
+        <span class="stats">
+          <b>HP 360</b><span>DMG 16</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-aimee.png" width="1062" height="224"
+             alt="Aimee and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Lance</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Open Vein</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Bleed Out</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Red Harvest</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Staunch</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Charles</span>
+          <span class="title">the Warden</span>
+        </span>
+        <span class="record">Charles</span>
+        <span class="stats">
+          <b>HP 360</b><span>DMG 16</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-charles.png" width="1062" height="224"
+             alt="Charles and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Truncheon</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Iron Bar</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Lockdown</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Warden&#39;s Word</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Cell Door</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Duke</span>
+          <span class="title">of the Third Landing</span>
+        </span>
+        <span class="record">Duke</span>
+        <span class="stats">
+          <b>HP 360</b><span>DMG 16</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-duke.png" width="1062" height="224"
+             alt="Duke and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Riposte</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Rapier</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Duelling Thrust</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Noble Right</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Parry</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Meglan</span>
+          <span class="title">the Hexwright</span>
+        </span>
+        <span class="record">Meglan</span>
+        <span class="stats">
+          <b>HP 360</b><span>DMG 16</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-meglan.png" width="1062" height="224"
+             alt="Meglan and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Sigil</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Hexbolt</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Witherbrand</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Written Curse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Ward</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 4
+    <span>4 records · HP 450–450 · DMG 19–19 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Lanton</span>
+          <span class="title">the Pyre-Keeper</span>
+        </span>
+        <span class="record">Lanton</span>
+        <span class="stats">
+          <b>HP 450</b><span>DMG 19</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-lanton.png" width="1062" height="224"
+             alt="Lanton and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Ember</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Brand</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Pyre</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Ashfall</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Smother</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Pallant</span>
+          <span class="title">the Pale</span>
+        </span>
+        <span class="record">Pallant</span>
+        <span class="stats">
+          <b>HP 450</b><span>DMG 19</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-pallant.png" width="1062" height="224"
+             alt="Pallant and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Chill Touch</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Frost Grip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Killing Cold</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Pale Hour</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Rimeguard</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Rockard</span>
+          <span class="title">the Unmoved</span>
+        </span>
+        <span class="record">Rockard</span>
+        <span class="stats">
+          <b>HP 450</b><span>DMG 19</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-rockard.png" width="1062" height="224"
+             alt="Rockard and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Knuckle</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Boulder</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Avalanche</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Unmoving</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Stonehide</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Sentry</span>
+          <span class="title">the Fourth</span>
+        </span>
+        <span class="record">Sentry</span>
+        <span class="stats">
+          <b>HP 450</b><span>DMG 19</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-sentry.png" width="1062" height="224"
+             alt="Sentry and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Pike Jab</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Halberd</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Execution</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Standing Order</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Lock Ranks</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, ice</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 5
+    <span>4 records · HP 540–540 · DMG 22–22 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Anndal</span>
+          <span class="title">the Stormcaller</span>
+        </span>
+        <span class="record">Anndal</span>
+        <span class="stats">
+          <b>HP 540</b><span>DMG 22</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-anndal.png" width="1062" height="224"
+             alt="Anndal and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spark</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Arc</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Thunderhead</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Called Storm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Earth Line</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Feld</span>
+          <span class="title">the Grave-Digger</span>
+        </span>
+        <span class="record">Feld</span>
+        <span class="stats">
+          <b>HP 540</b><span>DMG 22</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-feld.png" width="1062" height="224"
+             alt="Feld and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Spade</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Grave Cut</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Six Feet</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Last Rites</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Packed Dirt</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Raul</span>
+          <span class="title">the Flensing Blade</span>
+        </span>
+        <span class="record">Raul</span>
+        <span class="stats">
+          <b>HP 540</b><span>DMG 22</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-raul.png" width="1062" height="224"
+             alt="Raul and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Skinner</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Flense</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Carve</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Blade Storm</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Turned Edge</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Thera</span>
+          <span class="title">of the Thorn</span>
+        </span>
+        <span class="record">Thera</span>
+        <span class="stats">
+          <b>HP 540</b><span>DMG 22</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-thera.png" width="1062" height="224"
+             alt="Thera and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Barb</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Bramble Lash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Thornfall</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Briar Crown</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Thicket</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, fire</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 6
+    <span>4 records · HP 640–640 · DMG 26–26 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Gideon</span>
+          <span class="title">the Oathbreaker</span>
+        </span>
+        <span class="record">Gideon</span>
+        <span class="stats">
+          <b>HP 640</b><span>DMG 26</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-gideon.png" width="1062" height="224"
+             alt="Gideon and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Broken Word</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Oath Cut</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Perjury</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Sworn Ruin</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Recant</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Mangat</span>
+          <span class="title">the Bonebinder</span>
+        </span>
+        <span class="record">Mangat</span>
+        <span class="stats">
+          <b>HP 640</b><span>DMG 26</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-mangat.png" width="1062" height="224"
+             alt="Mangat and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Rib Snap</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Bone Whip</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Marrow Draw</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Bound Bones</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Ossify</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, earth</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Shen</span>
+          <span class="title">of the Still Blade</span>
+        </span>
+        <span class="record">Shen</span>
+        <span class="stats">
+          <b>HP 640</b><span>DMG 26</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-shen.png" width="1062" height="224"
+             alt="Shen and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Draw Cut</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Still Blade</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Iai</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>One Stroke</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>No Stance</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Zither</span>
+          <span class="title">the Discordant</span>
+        </span>
+        <span class="record">Zither</span>
+        <span class="stats">
+          <b>HP 640</b><span>DMG 26</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-zither.png" width="1062" height="224"
+             alt="Zither and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Pluck</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Dissonance</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Shattering Chord</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Final Note</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Damping</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, fire</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 7
+    <span>3 records · HP 740–740 · DMG 30–30 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Feyd</span>
+          <span class="title">the Serpent Prince</span>
+        </span>
+        <span class="record">Feyd</span>
+        <span class="stats">
+          <b>HP 740</b><span>DMG 30</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-feyd.png" width="1062" height="224"
+             alt="Feyd and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Fang</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Coil</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Venom Strike</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Prince&#39;s Poison</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Scale Guard</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Neytiri</span>
+          <span class="title">the Skyhunter</span>
+        </span>
+        <span class="record">Neytiri</span>
+        <span class="stats">
+          <b>HP 740</b><span>DMG 30</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-neytiri.png" width="1062" height="224"
+             alt="Neytiri and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Loose Arrow</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Diving Shot</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Skyfall</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Hunter&#39;s Mark</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Windbreak</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: lightning, ice</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Zeran</span>
+          <span class="title">the Voidtouched</span>
+        </span>
+        <span class="record">Zeran</span>
+        <span class="stats">
+          <b>HP 740</b><span>DMG 30</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-zeran.png" width="1062" height="224"
+             alt="Zeran and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Rift</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Unmaking</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Collapse</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Void Bloom</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Fold Space</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: ice, lightning</p>
+    </div>
+  
+
+  <h2 class="floor">
+    Floor 8
+    <span>3 records · HP 860–860 · DMG 35–35 ·
+      AP 6–6</span>
+  </h2>
+
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Bayaz</span>
+          <span class="title">First of the Magi</span>
+        </span>
+        <span class="record">Bayaz</span>
+        <span class="stats">
+          <b>HP 860</b><span>DMG 35</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-bayaz.png" width="1062" height="224"
+             alt="Bayaz and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Whisper</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Art of Making</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Divine Fire</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>The Seed</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Warded Circle</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, lightning</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">The Maw</span>
+          
+        </span>
+        <span class="record">Maw</span>
+        <span class="stats">
+          <b>HP 860</b><span>DMG 35</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-maw.png" width="1062" height="224"
+             alt="The Maw and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Gnash</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Swallow</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Devour</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>All-Consuming</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>Gorge</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: earth, fire</p>
+    </div>
+  
+    <div class="plate">
+      <div class="head">
+        <span class="named">
+          <span class="name">Zaheel</span>
+          <span class="title">the Crownless</span>
+        </span>
+        <span class="record">Zaheel</span>
+        <span class="stats">
+          <b>HP 860</b><span>DMG 35</span><span>AP 6</span>
+          <span>14-card deck</span>
+        </span>
+      </div>
+
+      <div class="strip">
+        <img src="strip-zaheel.png" width="1062" height="224"
+             alt="Zaheel and its deck">
+      </div>
+
+      <table>
+        <tr><th>Card</th><th>Verb</th><th>Effect</th><th>AP</th><th>Copies</th></tr>
+        
+          <tr>
+            <td>Sceptre</td>
+            <td>attack</td>
+            <td class="effect">Hits for 0.6x DMG</td>
+            <td class="num">1</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Ruined Crown</td>
+            <td>attack</td>
+            <td class="effect">Hits for 1.2x DMG</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+          </tr>
+        
+          <tr>
+            <td>Tyranny</td>
+            <td>attack</td>
+            <td class="effect">Hits for 2.5x DMG</td>
+            <td class="num">3</td>
+            <td class="num">3</td>
+          </tr>
+        
+          <tr>
+            <td>Last Decree</td>
+            <td>attack</td>
+            <td class="effect">Hits for 3x DMG</td>
+            <td class="num">3</td>
+            <td class="num">2</td>
+          </tr>
+        
+          <tr>
+            <td>King&#39;s Guard</td>
+            <td>defend</td>
+            <td class="effect">Cuts damage by 60%</td>
+            <td class="num">2</td>
+            <td class="num">2</td>
+          </tr>
+        
+      </table>
+
+      <p class="affix">Affixes it may be themed with: fire, earth</p>
+    </div>
+  
+

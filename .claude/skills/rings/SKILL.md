@@ -68,7 +68,7 @@ new one.
 
 ### `When` — the moments
 
-Every one has a seat that already exists. **Three of the seven fire outside `internal/combat`**,
+Every one has a seat that already exists. **Four of the ten fire outside `internal/combat`**,
 which is what makes a ring a *run* concept rather than a combat one.
 
 | `When` | Package | Seat | Fires |
@@ -76,12 +76,29 @@ which is what makes a ring a *run* concept rather than a combat one.
 | `card-cost` | `combat` | `Card.Cost()` | per card, whenever a cost is asked for |
 | `card-damage` | `combat` | `Card.Damage()` | per card, inside the blow's base sum |
 | `attack-lands` | `combat` | `resolveAttackPhase` | once per landed blow |
-| `deck-built` | `session` | run deck assembly | once, when the deck is made |
+| `deck-built` | `session` | `session.FightDeck` | once, as the fight's draw pile is built out of the run's deck |
+| `card-drawn` | `screens` | `CombatScene.drawHand` | **per card, as it leaves the draw pile for the hand** |
 | `fight-start` | `session` | fight setup | once per fight |
 | `fight-won` | `session` | after the win | once per win |
 | `prizes-dealt` | `screens` | `dealPrizes` | once, as the post-battle cards go down |
 | `turn-taken` | `combat` | `playTurn` | once at the end of each of this duelist's own turns, **including an empty one**. Its `If` is matched against the turn as a whole: the rule fires when *any* card of the turn matches |
 | `blow-formed` | `combat` | `handEvent` | once per blow, as the base sum is added up — **the only moment that sees the blow rather than a card**, and its `If` matches the *lead* card |
+
+**`card-drawn` is the only moment a screen owns, and the invariant it costs is worth knowing**
+*(2026-08-24)*. Every flip reads the card's **original** element, so that two of them cannot chain a
+deck to one colour between them — lightning to ice to fire. While the flip fired at `deck-built`
+that was true for free, because the fight deck was built out of the run's own cards once and nothing
+had recoloured anything yet. Firing per draw, the discard pile is full of cards a flip has already
+been through, so **the draw pile has to hold cards in the colours the run owns**: `drawHand`
+restores a discarded card before folding it back in, and `session.DrawnAs` must never be handed a
+card that has already been drawn. `TestTwoFlipsCannotChainThroughOneCard` is what holds it.
+
+**A drawn card does not remember what it was** *(owner's call, 2026-08-24)*. It carries the colour it
+became and nothing else, so a later rule — a `card-damage` ring keyed on ice — matches the card in
+the hand rather than the card in the run. The original is still reachable, but only through
+`combat.Card.ID` and `session.CardByID`, which are a handle for the layers *above* the rules; **no
+rule may read them**. The deck panel is the one caller, and it uses them to draw either face of a
+card the player already owns.
 
 **`card-damage` and `card-cost` fire per card, and that is the point.** A form ring doubles
 *every* card that matches, not one of them — three slash cards in a turn are three doublings
@@ -126,7 +143,7 @@ not ignored.
 | `adjust-cost` | `card-cost` | `Amount` delta | makes a matching card cheaper or dearer |
 | `scale-damage` | `card-damage` | `Amount` percent | 200 is double |
 | `apply-status` | `attack-lands` | `Status` key | puts a status on the target |
-| `set-element` | `deck-built` | `Element` | the flip: recolours every matching card |
+| `set-element` | `card-drawn` | `Element` | the flip: recolours a matching card as it is drawn |
 | `demote-card` | `deck-built` | `Amount` rungs | steps a matching attack **down its own form's ladder** — a 3 AP Lunge is dealt as a 2 AP Thrust. Walks `Neighbour`; a card with no rung below it is left alone |
 | `add-dmg` | `fight-start` | `Amount` | flat DMG for the fight |
 | `add-hp` | `fight-start` | `Amount` | flat HP for the fight |
@@ -268,6 +285,7 @@ Reach for these first when an idea sounds too easy.
 | parsing `rings.json` into rules, and registering it | `internal/session/ring.go` |
 | what a run wears, and its accumulators | `session.Session` — `Wear`, `Worn`, `WornRings`, `Grown` |
 | `deck-built` / `fight-start` / `fight-won` | `session.FightDeck`, `session.Equip`, `session.WonFight` |
+| `card-drawn` | `session.DrawnAs`, called per card by `screens.CombatScene.drawHand` |
 | `prizes-dealt` | `session.Picks` and `session.PrizeVitae`, read by `postbattle.go` |
 | the row on screen | `internal/screens/combat_rings.go` — a lookup from worn key to record |
 | the whole catalogue as pictures | `go run ./tools/ringsheet` — **grouped by rarity**, card, price, `Text` and rules side by side, and each tier's share of a shelf draw |

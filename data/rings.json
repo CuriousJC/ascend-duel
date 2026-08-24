@@ -433,7 +433,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "lightning" },
         "Then": [{ "Do": "set-element", "Element": "ice" }]
       }
@@ -447,7 +447,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "earth" },
         "Then": [{ "Do": "set-element", "Element": "ice" }]
       }
@@ -461,7 +461,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "fire" },
         "Then": [{ "Do": "set-element", "Element": "ice" }]
       }
@@ -475,7 +475,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "ice" },
         "Then": [{ "Do": "set-element", "Element": "fire" }]
       }
@@ -489,7 +489,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "lightning" },
         "Then": [{ "Do": "set-element", "Element": "fire" }]
       }
@@ -503,7 +503,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "earth" },
         "Then": [{ "Do": "set-element", "Element": "fire" }]
       }
@@ -517,7 +517,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "ice" },
         "Then": [{ "Do": "set-element", "Element": "lightning" }]
       }
@@ -531,7 +531,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "fire" },
         "Then": [{ "Do": "set-element", "Element": "lightning" }]
       }
@@ -545,7 +545,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "earth" },
         "Then": [{ "Do": "set-element", "Element": "lightning" }]
       }
@@ -559,7 +559,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "ice" },
         "Then": [{ "Do": "set-element", "Element": "earth" }]
       }
@@ -573,7 +573,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "fire" },
         "Then": [{ "Do": "set-element", "Element": "earth" }]
       }
@@ -587,7 +587,7 @@
     "Rarity": "common",
     "Rules": [
       {
-        "When": "deck-built",
+        "When": "card-drawn",
         "If": { "Element": "lightning" },
         "Then": [{ "Do": "set-element", "Element": "earth" }]
       }

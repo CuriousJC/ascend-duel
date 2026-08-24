@@ -1,11 +1,15 @@
 package session
 
-// Rings: the catalogue, what the run is wearing, and the three moments that fire outside combat.
+// Rings: the catalogue, what the run is wearing, and the moments that fire outside combat.
 //
 // **`rings.json` is parsed here for the reason the worms are** — a ring belongs to a *run*. Three of
-// its seven moments are `deck-built`, `fight-start` and `fight-won`, none of which happen inside
+// its ten moments are `deck-built`, `fight-start` and `fight-won`, none of which happen inside
 // `internal/combat` at all, and the accumulator a growing ring carries has to survive a fight. This
 // package is what survives one.
+//
+// **A fourth, `card-drawn`, is fired by a screen and answered here.** The flip belongs to a run and
+// the draw pile belongs to a fight, so `DrawnAs` is what the combat screen calls once per card as it
+// deals one. See combat.MomentCardDrawn.
 //
 // **What crosses the edge is a rules type, never a record.** `data.RingData` holds an art key and a
 // long-press line; `combat.RegisterRing` takes a key, a name and `[]combat.RingRule`. So the engine
@@ -321,13 +325,21 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	return d
 }
 
-// FightDeck is the deck this fight is dealt from: every card the run owns, with every `deck-built`
-// flip applied.
+// FightDeck is the draw pile this fight opens with: every card the run owns, with every
+// `deck-built` rule applied.
 //
-// **The stored deck is untouched**, which is what makes flips non-composing by construction: each
-// card's colour is read off what the run actually owns, so two flips both land on their own sources
-// and the order they were bought in cannot chain a deck to one colour. It also means a ring bought
+// **It is the demotions and nothing else as of 2026-08-24.** The element flip used to be applied
+// here too and now fires per card at `card-drawn` — see combat.MomentCardDrawn for why. The cards
+// a fight ends up playing are unchanged; what changed is that this pile holds them in the colours
+// the run owns, and the flip lands on the way into the hand.
+//
+// **The stored deck is untouched.** Each card is read as the run owns it, so two demoting rings
+// land on their own sources rather than walking one card two rungs between them, and a ring bought
 // mid-run applies from the next fight without rewriting anything.
+//
+// **Identity survives**, which is what lets the screen put a drawn card back the way it found it
+// when the discard is reshuffled: a card here is the run's card with its concept possibly stepped
+// down, carrying the same ID.
 func (s *Session) FightDeck() []combat.Card {
 	deck := s.Deck()
 
@@ -336,18 +348,53 @@ func (s *Session) FightDeck() []combat.Card {
 		return deck
 	}
 
-	// **Both deck-built verbs read the card the run owns**, so a demotion and a flip are two facts
-	// about the same original card rather than a pipeline. A demoted Lunge that is also flipped is
-	// a fire Thrust; the order these two loops run in cannot change that.
 	for i, card := range deck {
 		if id, demoted := combat.DemoteConcept(worn, card); demoted {
 			deck[i].Concept = id
 		}
-		if e, flipped := combat.FlipElement(worn, card); flipped {
-			deck[i].Element = e
-		}
 	}
 	return deck
+}
+
+// AlteredAs is a card the run owns, shown as the rings will actually hand it over: the
+// `deck-built` demotion and the `card-drawn` flip, both read off the owned card.
+//
+// **It is a preview, and the only caller is the deck panel.** Nothing in a fight goes through it —
+// the demotion is applied once as the draw pile is built and the flip once as a card is drawn, each
+// at its own moment, by the code that owns that moment. This is what those two would produce, asked
+// ahead of time, so that a player can see the deck they are about to be dealt rather than the list
+// they happen to own.
+//
+// **The card handed in must be the run's own.** Both verbs read the original, so a card that has
+// already been through a draw would have the flip read the flip's own answer.
+func (s *Session) AlteredAs(c combat.Card) combat.Card {
+	worn := s.WornRings()
+	if len(worn) == 0 {
+		return c
+	}
+
+	out := c
+	if id, demoted := combat.DemoteConcept(worn, c); demoted {
+		out.Concept = id
+	}
+	if e, flipped := combat.FlipElement(worn, c); flipped {
+		out.Element = e
+	}
+	return out
+}
+
+// DrawnAs is what a card is dealt as: the colour the worn flips make it, or the card unchanged
+// when none of them match it.
+//
+// **It is the `card-drawn` moment, and the run is where it lives** because the fight's piles are a
+// screen's and the worn rings are the run's. The caller passes the card *as the run owns it* — see
+// combat.FlipElement, which reads the original element and would chain if handed a card it had
+// already recoloured.
+func (s *Session) DrawnAs(c combat.Card) combat.Card {
+	if e, flipped := combat.FlipElement(s.WornRings(), c); flipped {
+		c.Element = e
+	}
+	return c
 }
 
 // Picks is how many prizes the post-battle screen offers, at the `prizes-dealt` moment. One, plus

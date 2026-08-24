@@ -210,7 +210,15 @@ func TestApplyDoesWhatTheTargetSays(t *testing.T) {
 		if run.Size() != 5 {
 			t.Fatalf("deck is %d after a copy, want 5", run.Size())
 		}
-		if got, _ := run.Card(4); got != want {
+		// **A copy is a different card, and its identity says so** *(2026-08-24)*. Everything
+		// describing the card has to match; the ID must not, or two cards in one deck would answer
+		// to one number and anything looking an original up would find whichever came first.
+		got, _ := run.Card(4)
+		if got.ID == want.ID {
+			t.Errorf("the copy carries the original's id %d", got.ID)
+		}
+		got.ID, want.ID = 0, 0
+		if got != want {
 			t.Errorf("copied %v, want %v", got, want)
 		}
 	})

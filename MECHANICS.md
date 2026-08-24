@@ -1105,7 +1105,7 @@ became **Warm** and grew three siblings.
 | **Atrophy** | `deck-built` | every 3 AP attack is dealt as its 2 AP version |
 | **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the first ring with a drawback, and the first rare |
 | **Warm / Cold / Static / Dirty** | `card-cost` | every card of that colour costs 1 AP less — one per colour |
-| **flip x12** | `deck-built` | recolours every card of one colour as another — one for each ordered pair; see below |
+| **flip x12** | `card-drawn` | recolours a card of one colour as another **as it is drawn** — one for each ordered pair; see below |
 
 **A concept ring and a form ring are not the same object** and must not be priced as one.
 Striker covers 4 cards, Keen covers 12.
@@ -1171,9 +1171,10 @@ duelist away.
 **Every 3 AP attack is dealt as its 2 AP version**: Lunge becomes Thrust, Cleave becomes Slash,
 Smash becomes Strike. Rare.
 
-**It is a `deck-built` swap, so it is the flip's shape applied to the other axis.** A flip changes a
-card's colour as the fight's deck is dealt; Atrophy changes its *concept*, one rung down the same
-form's ladder. Everything downstream — cost, damage, the hand it forms, the card face — follows
+**It is the flip's shape applied to the other axis, at the other moment.** A flip changes a card's
+colour as that card is *drawn*; Atrophy changes its *concept* as the fight's draw pile is built, one
+rung down the same form's ladder. The two moments matter for how the deck panel shows a card and for
+nothing else in play — see the flip rings below. Everything downstream — cost, damage, the hand it forms, the card face — follows
 because the card genuinely is a Thrust.
 
 - **What the player buys is a turn with more cards in it.** Three Lunges cost 9 AP and do not fit a
@@ -1274,7 +1275,7 @@ what makes the second and third worth buying.
 
 ### The flip rings — one for every ordered pair *(2026-08-22, owner's call)*
 
-**Twelve rings, each `deck-built` / one colour in / another colour out.** Frozen Lightning was the
+**Twelve rings, each `card-drawn` / one colour in / another colour out.** Frozen Lightning was the
 only one for five days; the pattern generalised to every ordered pair of the four colours, and all
 twelve are **common**. The names are thematic rather than mechanical — "Permafrost" says earth into
 ice without saying either word — which is a deliberate cost: the *card* has to be read to know what
@@ -1286,6 +1287,21 @@ it does, and the tooltip is what says it.
 | **ice** | Frostbite | — | Frozen Lightning | Permafrost |
 | **lightning** | Heat Lightning | Thundersnow | — | Dust Storm |
 | **earth** | Obsidian | Glacier | Fulgurite | — |
+
+**They fire as a card is drawn, not as the deck is built** *(owner's call, 2026-08-24)*. Every one of
+them is worded "every X card is dealt as a Y card", and the dealing is the draw. The cards a fight
+plays are identical either way — a flip is unconditional over a colour, so recolouring the whole pile
+once and recolouring each card on its way out produce the same hand — so what this buys is not an
+outcome but a **place**: the draw pile holds the deck the run owns, and the alteration is something
+that happens to a card, at a moment, on its way to the hand. That is the shape the next kind of
+alteration will need, and it is what the deck panel's ALTERATIONS toggle is a picture of.
+
+**A drawn card does not remember what it was.** It carries the colour it became; a `card-damage` ring
+keyed on ice fires on a card that is ice *now*, and never on one that used to be. That was the
+owner's call and it is what stops an alteration turning every later rule into a question about
+history. What the original is still reachable from is the card's **identity** — every card a run owns
+carries an ID, so the deck panel can show either face of a card wherever it is sitting. **No rule may
+read that ID**; it is a handle for the screens.
 
 - **A flip is what makes a colour ring worth wearing**, which is the whole point of the pair: Fire
   Ring doubles fire cards and there are only so many, so Frostbite-and-friends is how a deck is bent

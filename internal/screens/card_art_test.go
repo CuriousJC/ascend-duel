@@ -226,10 +226,10 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 		t.Errorf("the deck's longest row is %dpx wide against a %dpx panel", row, panel)
 	}
 
-	// And every row has to fit between the legend above and the closing hint below.
-	// Derived from the panel constants rather than written down, because the last time it
-	// was a hardcoded number it went stale the moment modalBodyTop moved.
-	top := pctY(modalPanelTopPct) + modalBodyTop
+	// And every row has to fit inside the panel. Derived from the panel constants rather than
+	// written down, because the last time it was a hardcoded number it went stale the moment the
+	// body's top edge moved.
+	top := pctY(modalPanelTopPct) + modalBareBodyTop
 	bottom := pctY(modalPanelBottomPct) - modalBodyBottom
 	rows := deckRowCount*(cards.Mini.Height+deckRowGap) - deckRowGap
 	if budget := bottom - top; rows > budget {
@@ -237,10 +237,13 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 			deckRowCount, cards.Mini.Height, rows, budget, top, bottom)
 	}
 
-	// The grid must also start below the legend it sits under, which is what the six-row
-	// squeeze most easily breaks.
-	if modalBodyTop <= modalLegendTop {
-		t.Errorf("the grid starts at y=%d, at or above the legend at y=%d", modalBodyTop, modalLegendTop)
+	// **The grid starts below the close button**, which is the only thing left at the top of the
+	// panel now that the title, the counts line and the legend are gone. A tightened row reaches
+	// almost the panel's right edge, so a grid starting any higher would run a row under the one
+	// control that closes the dialog.
+	if modalBareBodyTop < modalCloseInset+modalCloseSize {
+		t.Errorf("the grid starts at y=%d and the close button ends at y=%d",
+			modalBareBodyTop, modalCloseInset+modalCloseSize)
 	}
 }
 
@@ -527,7 +530,7 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 		{"the shipping deck", d},
 		{"every card in one element", deckContents{draw: oneRow}},
 	} {
-		grid := tc.d.grid(640, 1177, 120)
+		grid := tc.d.grid(deckView{}, 640, 1177, 120)
 		if got, want := len(grid.slots), len(tc.d.draw); got != want {
 			t.Errorf("%s: the panel laid out %d of %d cards", tc.name, got, want)
 		}

@@ -436,7 +436,7 @@ func TestEveryFormHasItsOwnGlyph(t *testing.T) {
 	// and both fighter cards belong to no form and the slot must stay empty for them.
 	seen := map[systems.GlyphKind]Form{}
 	for _, fam := range Forms() {
-		k, ok := fam.glyph()
+		k, ok := fam.Glyph()
 		if !ok {
 			t.Errorf("%s has no glyph, so its corner would be blank", fam)
 			continue
@@ -446,7 +446,7 @@ func TestEveryFormHasItsOwnGlyph(t *testing.T) {
 		}
 		seen[k] = fam
 	}
-	if _, ok := FormNone.glyph(); ok {
+	if _, ok := FormNone.Glyph(); ok {
 		t.Error("FormNone has a glyph; it must draw nothing")
 	}
 }

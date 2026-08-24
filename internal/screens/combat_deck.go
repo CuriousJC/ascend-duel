@@ -12,8 +12,6 @@ package screens
 // one place that says how a fight's three piles map onto the two the panel draws.
 
 import (
-	"fmt"
-
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -239,10 +237,13 @@ func (s *CombatScene) toggleDeck() {
 // seeds.go, `tools/seeds`, and the flight tests. A named seed is a fact about the *starting*
 // deck, so those must not read a run even when one exists.
 func (s *CombatScene) resetDeck(run *session.Session) {
+	s.run = run
 	s.deck = s.deck[:0]
 	if run != nil {
-		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a flip ring recolours
-		// what is dealt without touching what the run owns. See session.FightDeck.
+		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a demoting ring steps
+		// what is dealt without touching what the run owns. The element flips are *not* here — they
+		// fire per card in drawHand — so this pile holds cards in the colours the run owns. See
+		// session.FightDeck and combat.MomentCardDrawn.
 		s.deck = append(s.deck, run.FightDeck()...)
 	} else {
 		s.deck = append(s.deck, session.StartingDeck()...)
@@ -317,21 +318,71 @@ func (s *CombatScene) handTarget() int {
 // drawHand fills the hand up to handTarget, reshuffling the discard back into the draw pile
 // when it runs dry. A hand can come up short only if every card the player owns is already
 // in it, which cannot happen with a deck larger than the hand.
+//
+// **This is the `card-drawn` moment** *(2026-08-24)*. A flip ring recolours a card here, one card
+// at a time on its way out of the pile, which is what its text has always said — "every earth card
+// is dealt as a fire card". It used to recolour the whole fight deck in one pass at `deck-built`;
+// the cards dealt are the same either way, since a flip is unconditional over an element.
+//
+// **The invariant that makes it safe: the draw pile holds cards as the run owns them.** A flip
+// reads a card's original colour, so a discarded ice-that-was-lightning card folded back into the
+// pile and drawn again would be read as ice — and a second flip keyed on ice would fire, chaining
+// two rings into a deck of one colour, which is exactly what firing at `deck-built` prevented for
+// free. `restoreToDeck` is what pays for it now.
 func (s *CombatScene) drawHand() {
 	for len(s.hand) < s.handTarget() {
 		if len(s.deck) == 0 {
 			if len(s.discard) == 0 {
 				return
 			}
-			s.deck = append(s.deck, s.discard...)
+			// **Put back the way they were found.** See restoreToDeck.
+			for _, c := range s.discard {
+				s.deck = append(s.deck, s.restoreToDeck(c))
+			}
 			s.discard = s.discard[:0]
 			s.shuffleDeck()
 		}
 
 		last := len(s.deck) - 1
-		s.hand = append(s.hand, paletteCard{actionCard: s.deck[last]})
+		s.hand = append(s.hand, paletteCard{actionCard: s.drawnAs(s.deck[last])})
 		s.deck = s.deck[:last]
 	}
+}
+
+// drawnAs is the card as it is dealt into the hand: the worn flips applied, or the card untouched
+// when the scene has no run behind it.
+//
+// **The card it is handed is a draw-pile card**, which the invariant above says is a card in the
+// colour the run owns — so the flip reads the original, as combat.FlipElement requires.
+func (s *CombatScene) drawnAs(c actionCard) actionCard {
+	if s.run == nil {
+		return c
+	}
+	return s.run.DrawnAs(c)
+}
+
+// restoreToDeck undoes a draw: a card going back into the draw pile is put back in the colour the
+// run owns it in, so the next flip that reads it reads the original rather than the last flip's
+// answer.
+//
+// **It restores the colour and nothing else.** The concept is deliberately left as it is: a
+// demotion is a `deck-built` rule, applied once as this pile was built, and a card that came out of
+// this pile as a 2 AP Thrust is a 2 AP Thrust for the whole fight. Only the flip fires per draw, so
+// only the flip has anything to undo.
+//
+// **A card the run has never heard of is left alone.** That covers a scene dealt with no run and a
+// card whose original a worm has since eaten; drawing what is actually in hand is the honest
+// answer to both.
+func (s *CombatScene) restoreToDeck(c actionCard) actionCard {
+	if s.run == nil {
+		return c
+	}
+	owned, ok := s.run.CardByID(c.ID)
+	if !ok {
+		return c
+	}
+	c.Element = owned.Element
+	return c
 }
 
 // endRoundHand spends what was played and refills. **Only the cards that were actually
@@ -361,11 +412,16 @@ func (s *CombatScene) endRoundHand() {
 // is and simply dim when it is played.
 func (s *CombatScene) fightContents() deckContents {
 	d := deckContents{
-		draw:   s.deck,
-		spent:  make([]combat.Card, 0, len(s.discard)+len(s.hand)),
+		draw:  s.deck,
+		spent: make([]combat.Card, 0, len(s.discard)+len(s.hand)),
+
+		// **The run, so the panel can find a card's original.** A card in the hand or the discard
+		// has been through a draw and holds only the colour a flip ring made it; the ID is the way
+		// back to what the run owns. See deckContents.run.
+		run:     s.run,
+		inFight: true,
+
 		holder: s.fighter.Duelist,
-		counts: fmt.Sprintf("draw %d  ·  discard %d  ·  %d in hand  ·  %d owned",
-			len(s.deck), len(s.discard), len(s.hand), s.deckSize()),
 	}
 	d.spent = append(d.spent, s.discard...)
 	for _, c := range s.hand {

@@ -73,12 +73,36 @@ const (
 	//
 	// **Appended, because the enum is append-only.**
 	MomentBlowFormed
+
+	// MomentCardDrawn fires per card as it leaves the draw pile for the hand: the combat screen's
+	// drawHand.
+	//
+	// **It is the element flip's moment, and the flip is all it holds** *(owner's call,
+	// 2026-08-24)*. It used to be a `deck-built` verb, recolouring the whole fight deck once as it
+	// came out of the run — which deals the same cards, since a flip is unconditional over an
+	// element, and says the wrong thing about *when*. Every one of these rings is worded "every X
+	// card is dealt as a Y card", and dealing is what a draw is.
+	//
+	// **The draw pile therefore holds cards as the run owns them**, and the flip is applied on the
+	// way into the hand. That is the invariant the reshuffle has to keep: a discarded card is put
+	// back as the run owns it, or a second flip would land on the colour the first one made and two
+	// rings would chain a deck to one colour between them. See screens/combat_deck.go.
+	//
+	// **A card drawn under a flip does not remember what it was.** It carries the colour it became
+	// and nothing else, so a rule firing later — a card-damage ring keyed on ice — matches the card
+	// in the hand rather than the card in the run. What the original is still reachable *from* is
+	// the card's ID, which is a handle for the layers above the rules and never something a rule
+	// reads.
+	//
+	// **Appended, because the enum is append-only.**
+	MomentCardDrawn
 )
 
 // Moments is every moment in a fixed order, for anything that walks them.
 func Moments() []Moment {
 	return []Moment{MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt,
-		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken}
+		MomentFightStart, MomentFightWon, MomentPrizesDealt, MomentBlowFormed, MomentTurnTaken,
+		MomentCardDrawn}
 }
 
 func (m Moment) String() string {
@@ -99,6 +123,8 @@ func (m Moment) String() string {
 		return "blow-formed"
 	case MomentTurnTaken:
 		return "turn-taken"
+	case MomentCardDrawn:
+		return "card-drawn"
 	default:
 		return "card-cost"
 	}
@@ -121,7 +147,7 @@ func ParseMoment(name string) (Moment, bool) {
 func (m Moment) readsACard() bool {
 	switch m {
 	case MomentCardCost, MomentCardDamage, MomentAttackLands, MomentDeckBuilt, MomentBlowFormed,
-		MomentTurnTaken:
+		MomentTurnTaken, MomentCardDrawn:
 		return true
 	default:
 		return false
@@ -147,7 +173,12 @@ const (
 	// DoApplyStatus puts a status on whoever took the blow.
 	DoApplyStatus
 
-	// DoSetElement is the flip: it recolours every matching card as the fight's deck is dealt.
+	// DoSetElement is the flip: it recolours a matching card **as that card is drawn**.
+	//
+	// **The only verb at MomentCardDrawn**, and it moved there on 2026-08-24 from `deck-built`,
+	// where it recoloured the whole fight deck in one pass. The cards dealt are the same either way
+	// — a flip is unconditional over an element — so what changed is what the game *says*: these
+	// rings are all worded "every X card is dealt as a Y card", and a draw is the dealing.
 	DoSetElement
 
 	// DoAddDMG is flat DMG for the fight.
@@ -303,7 +334,9 @@ func verbMoment(v RingVerb) Moment {
 		return MomentAttackLands
 	case DoGrowOnTurn, DoResetGrowth:
 		return MomentTurnTaken
-	case DoSetElement, DoDemoteCard:
+	case DoSetElement:
+		return MomentCardDrawn
+	case DoDemoteCard:
 		return MomentDeckBuilt
 	case DoAddDMG, DoAddHP, DoScaleHP:
 		return MomentFightStart
@@ -1068,9 +1101,17 @@ func DemoteConcept(worn []WornRing, card Card) (ConceptID, bool) {
 // **Every flip reads the card's original element**, which is what stops two of them chaining a deck
 // to one colour: the later ring matches on what the card *is*, not on what the earlier ring made it.
 // The last matching flip wins, and worn order is what decides which that is.
+//
+// **"Original" is now a duty the caller carries** *(2026-08-24)*. While this fired at `deck-built`
+// it was true by construction — the fight deck was built out of the run's own cards, once, and
+// nothing had flipped anything yet. Firing per draw, the discard pile holds cards that have already
+// been through here, so a caller that folds the discard back into the draw pile and hands those
+// cards to this function is asking the second flip to read the first one's answer. The combat
+// screen restores a card to the face the run owns before it can be drawn again; see
+// screens/combat_deck.go.
 func FlipElement(worn []WornRing, card Card) (Element, bool) {
 	out, flipped := Basic, false
-	for _, e := range RingEffectsAt(worn, MomentDeckBuilt, card) {
+	for _, e := range RingEffectsAt(worn, MomentCardDrawn, card) {
 		if e.Do == DoSetElement {
 			out, flipped = e.Element, true
 		}

@@ -2,7 +2,9 @@
   {
     "ScenarioRecord": "reward-payout",
     "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
-    "Rings": ["heart-ring"],
+    "Rings": [
+      "heart-ring"
+    ],
     "Hand": [],
     "Screen": "reward",
     "Fight": 3,
@@ -12,24 +14,43 @@
   {
     "ScenarioRecord": "shop-shelf",
     "Note": "The shop with money to spend and two fingers already full. Straight to the shelf without playing three duels to reach it.",
-    "Rings": ["heart-ring", "keen-ring"],
+    "Rings": [
+      "heart-ring",
+      "keen-ring"
+    ],
     "Hand": [],
     "Screen": "shop",
     "Fight": 3,
     "Vitae": 40,
     "Life": 63
   },
-
   {
     "ScenarioRecord": "stairway-boss",
     "Note": "A stairway protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first stairway a run reaches is fight 2, which is where this opens.",
-    "Rings": ["heart-ring"],
+    "Rings": [
+      "heart-ring"
+    ],
     "Hand": [
-      { "Card": "Strike", "Element": "fire" },
-      { "Card": "Jab", "Element": "ice" },
-      { "Card": "Lunge", "Element": "basic" },
-      { "Card": "Defend", "Element": "basic" },
-      { "Card": "Prepare", "Element": "basic" }
+      {
+        "Card": "Strike",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Lunge",
+        "Element": "basic"
+      },
+      {
+        "Card": "Defend",
+        "Element": "basic"
+      },
+      {
+        "Card": "Prepare",
+        "Element": "basic"
+      }
     ],
     "Enemy": "Bayaz",
     "Fight": 2
@@ -37,39 +58,105 @@
   {
     "ScenarioRecord": "echo-and-growth",
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
-    "Rings": ["echo-ring", "enflamed-ring", "fire-ring"],
+    "Rings": [
+      "echo-ring",
+      "enflamed-ring",
+      "fire-ring"
+    ],
     "Hand": [
-      { "Card": "Lunge", "Element": "fire" },
-      { "Card": "Strike", "Element": "fire" },
-      { "Card": "Strike", "Element": "fire" },
-      { "Card": "Jab", "Element": "ice" },
-      { "Card": "Prepare", "Element": "basic" }
+      {
+        "Card": "Lunge",
+        "Element": "fire"
+      },
+      {
+        "Card": "Strike",
+        "Element": "fire"
+      },
+      {
+        "Card": "Strike",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Prepare",
+        "Element": "basic"
+      }
     ],
     "Enemy": "GiantRat"
   },
   {
     "ScenarioRecord": "seven-term-sum",
     "Note": "The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.",
-    "Rings": ["echo-ring", "aftershock-ring"],
+    "Rings": [
+      "echo-ring",
+      "aftershock-ring"
+    ],
     "Hand": [
-      { "Card": "Smash", "Element": "fire" },
-      { "Card": "Strike", "Element": "ice" },
-      { "Card": "Strike", "Element": "lightning" },
-      { "Card": "Bash", "Element": "earth" },
-      { "Card": "Bash", "Element": "fire" }
+      {
+        "Card": "Smash",
+        "Element": "fire"
+      },
+      {
+        "Card": "Strike",
+        "Element": "ice"
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Bash",
+        "Element": "fire"
+      }
     ],
     "Enemy": "GiantRat"
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
-    "Rings": ["atrophy-ring", "momentum-ring"],
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u2014 which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
+    "Rings": [
+      "atrophy-ring",
+      "momentum-ring"
+    ],
     "Hand": [
-      { "Card": "Lunge", "Element": "fire" },
-      { "Card": "Cleave", "Element": "ice" },
-      { "Card": "Smash", "Element": "earth" },
-      { "Card": "Plan", "Element": "basic" }
+      {
+        "Card": "Lunge",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "ice"
+      },
+      {
+        "Card": "Smash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Plan",
+        "Element": "basic"
+      }
     ],
     "Enemy": "OgreWarlord"
+  },
+  {
+    "ScenarioRecord": "altered-deck",
+    "Note": "Two flips and a demotion, so the deck panel's ALTERATIONS toggle has something to show. Open the draw pile: earth and lightning are dealt as fire, the 3 AP attacks are dealt a rung down, and AS OWNED puts all of it back. FULL/PLAYED after a round or two.",
+    "Rings": [
+      "magma-ring",
+      "firestorm-ring",
+      "atrophy-ring"
+    ],
+    "Hand": [],
+    "Screen": "",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
   }
 ]

@@ -301,7 +301,7 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	if st.FormSize <= 0 {
 		return
 	}
-	kind, ok := s.Form.glyph()
+	kind, ok := s.Form.Glyph()
 	if !ok {
 		return
 	}

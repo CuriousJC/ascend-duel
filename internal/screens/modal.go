@@ -40,15 +40,20 @@ const (
 
 	// Offsets down from the panel's top edge, and the air kept clear at the bottom.
 	modalTitleTop   = 40
-	modalCountsTop  = 70
-	modalLegendTop  = 92
-	modalBodyTop    = 112
 	modalBodyBottom = 22
 
-	// modalTitleOnlyBodyTop is where a panel with nothing but a title starts its body. The hands
-	// panel is the one: it says what it has to say in cards, so the two lines under the heading
-	// are 40 pixels it can spend on rungs instead.
+	// modalTitleOnlyBodyTop is where a panel with a title and nothing else starts its body. The
+	// hands panel is the one: it says what it has to say in cards.
 	modalTitleOnlyBodyTop = 72
+
+	// modalBareBodyTop is where a panel with **no words at the top at all** starts its body
+	// *(owner's call, 2026-08-24)*. The deck panel is the one.
+	//
+	// **It clears the close button and nothing else**, because the X is the only thing left up
+	// there — see modalCloseInset and modalCloseSize. A long row of cards reaches almost the
+	// panel's right edge once it has had to tighten, so a body starting above the X's bottom edge
+	// would run a row under the one control that closes the dialog.
+	modalBareBodyTop = modalCloseInset + modalCloseSize + 10
 )
 
 // modalPanelRect is the dialog's footprint. Every modal takes it.
@@ -67,26 +72,28 @@ func modalScrim(screen *ebiten.Image) {
 		color.RGBA{A: 190}, false)
 }
 
-// modalHead is the words at the top of a panel: what it is, the figure under that, and an optional
-// line explaining a state.
+// modalHead is the words at the top of a panel, which is now **a title or nothing**.
 //
-// **All three are the caller's**, because all three are facts about the screen the panel is
-// standing on: a fight has three piles to report and a screen between fights has one number.
+// **It carried a counts line and a legend under it until 2026-08-24** *(owner's call)*, both the
+// caller's words, because what there was to count depended on the screen the panel stood on. The
+// deck panel was the only user of either and it stopped wanting them: the picture says what the
+// deck is, and three lines of prose over a grid of cards is a caption on something nobody needed
+// captioned.
 //
-// **There is no closing hint any more** *(owner's call, 2026-08-24)*. Every panel carries a red X
-// in its top-right corner, so the exit is a control rather than a sentence naming a control
-// somewhere off the panel — see modalCloser.
+// **There is no closing hint either.** Every panel carries a red X in its top-right corner, so the
+// exit is a control rather than a sentence naming a control somewhere off the panel — see
+// modalCloser.
+//
+// **An empty title draws nothing and starts the body higher** — modalBareBodyTop.
 type modalHead struct {
-	title  string
-	counts string
-	legend string
+	title string
 }
 
 // drawModalFrame puts up the scrim, the panel and the heading block, and hands back the rectangle
 // the body is to be drawn inside.
 //
-// The returned rectangle is the whole panel; `modalBodyTop` is where content starts under the
-// heading, and `modalBodyBottom` is what it has to stop short of at the bottom.
+// The returned rectangle is the whole panel; a caller starts its body at `modalTitleOnlyBodyTop`
+// or, with no title at all, at `modalBareBodyTop`, and stops short of `modalBodyBottom`.
 func drawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head modalHead) image.Rectangle {
 	modalScrim(screen)
 
@@ -98,32 +105,16 @@ func drawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head modalHead)
 	vector.StrokeRect(screen, float32(r.Min.X), float32(r.Min.Y),
 		float32(r.Dx()), float32(r.Dy()), 2, apBarColor, false)
 
-	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}
-	title := &text.DrawOptions{}
-	title.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+modalTitleTop))
-	title.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, head.title, heading, title)
-
-	if head.counts != "" {
-		modalLine(gs, screen, r, modalCountsTop, head.counts)
-	}
-	// **A legend is only written when there is a state to explain.** A sentence describing
-	// something nothing on the panel is in would be the panel describing a screen it is not
-	// standing on.
-	if head.legend != "" {
-		modalLine(gs, screen, r, modalLegendTop, head.legend)
+	// **A panel with no title writes nothing at all up here**, rather than a blank line's worth of
+	// air. The body starts higher instead; see modalBareBodyTop.
+	if head.title != "" {
+		heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}
+		title := &text.DrawOptions{}
+		title.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+modalTitleTop))
+		title.PrimaryAlign = text.AlignCenter
+		text.Draw(screen, head.title, heading, title)
 	}
 	return r
-}
-
-// modalLine writes one centred small line, at a distance down from the panel's top edge.
-//
-// Hyphens, not em dashes. The kubasta font has no U+2014 and draws a missing-glyph box for it.
-func modalLine(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, down int, s string) {
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+down))
-	op.PrimaryAlign = text.AlignCenter
-	text.Draw(screen, s, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, op)
 }
 
 // The close button: a white X on red, in the panel's top-right corner.

@@ -45,10 +45,14 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
-// maxCost is how many action points the sheet sweeps up to. Costs run 1 to 4 in
-// internal/combat today; the sheet goes to that and no further, because a row of
-// impossible cards would be reviewing a card the game cannot deal.
-const maxCost = 4
+// minCost and maxCost are the action-point range the sheet sweeps. Costs run 0 to 4 in
+// internal/combat today — 0 both because Whetworm can drive a card free and because the ladder
+// grew a 0 AP rung — and the sheet goes to that and no further, because a row of impossible cards
+// would be reviewing a card the game cannot deal.
+const (
+	minCost = 0
+	maxCost = 4
+)
 
 // deckStackPitch mirrors the constant of the same name in internal/screens: how far apart
 // the deck overlay lays its cards, and so how much of each one shows. The sheet has to use
@@ -91,7 +95,7 @@ func run(dir string) error {
 	// with an empty right-hand side would be showing a layout the game never draws.
 	for _, e := range cards.Elements() {
 		row := row{Label: e.String()}
-		for cost := 1; cost <= maxCost; cost++ {
+		for cost := minCost; cost <= maxCost; cost++ {
 			spec := specFor("Strike", e)
 			spec.Cost = cost
 			cell, err := write(dir, faces, spec, cards.Hand,

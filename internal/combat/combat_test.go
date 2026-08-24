@@ -504,14 +504,20 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 		Jab:    CategoryAttack,
 		Thrust: CategoryAttack,
 		Lunge:  CategoryAttack,
+		Poke:   CategoryAttack,
+		Impale: CategoryAttack,
 
 		Cut:    CategoryAttack,
 		Slash:  CategoryAttack,
 		Cleave: CategoryAttack,
+		Nick:   CategoryAttack,
+		Sever:  CategoryAttack,
 
-		Bash:   CategoryAttack,
-		Strike: CategoryAttack,
-		Smash:  CategoryAttack,
+		Bash:      CategoryAttack,
+		Strike:    CategoryAttack,
+		Smash:     CategoryAttack,
+		Tap:       CategoryAttack,
+		Pulverize: CategoryAttack,
 
 		Prepare: CategoryPlan,
 		Plan:    CategoryPlan,

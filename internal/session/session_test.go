@@ -286,12 +286,17 @@ func TestTheLadderWormsMoveOneRung(t *testing.T) {
 	}
 
 	// The bottom of a ladder cannot be demoted, and CanApply is what stops the screen offering it.
-	bottom := New([]combat.Card{{Concept: combat.Jab}})
+	// **The bottom is the zero-copy Poke now**, not the Jab — which is the change the new rungs
+	// bought: every card a run actually deals can be walked in both directions.
+	bottom := New([]combat.Card{{Concept: combat.Poke}})
 	if bottom.CanApply(Worm{Target: TargetDemote}, 0) {
-		t.Error("CanApply said a Jab could be demoted")
+		t.Error("CanApply said a Poke could be demoted")
 	}
 	if bottom.Apply(Worm{Target: TargetDemote}, 0) {
-		t.Error("demoting a Jab claimed to work")
+		t.Error("demoting a Poke claimed to work")
+	}
+	if !New([]combat.Card{{Concept: combat.Jab}}).CanApply(Worm{Target: TargetDemote}, 0) {
+		t.Error("a Jab could not be demoted, and the ladder now has a rung under it")
 	}
 }
 

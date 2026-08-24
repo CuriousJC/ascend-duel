@@ -19,8 +19,8 @@ import (
 // a fifth cost tier, a ring, a border colour nothing uses. It is a drawing-board, not a
 // report.
 //
-// The cost of that is drift: the names and costs below are a snapshot of the twelve
-// concepts as of 2026-08-15. If they stop matching the deck it makes the sheet a worse
+// The cost of that is drift: the names and costs below are a snapshot of the eighteen
+// concepts as of 2026-08-24. If they stop matching the deck it makes the sheet a worse
 // preview but never a wrong one, because every pixel still comes from cards.Render.
 
 // formNotes says what mark each form actually draws, for the caption. Worth spelling out on
@@ -33,7 +33,7 @@ var formNotes = map[cards.Form]string{
 	cards.FormPlan:  `a bulb, tinted by the card's element`,
 }
 
-// concept is one of the twelve, with the cost, form and effect text the rules give it.
+// concept is one of the eighteen, with the cost, form and effect text the rules give it.
 //
 // **No damage figure**: a card does not carry one any more, and what it deals is in the text.
 type concept struct {
@@ -43,37 +43,47 @@ type concept struct {
 	text string
 }
 
-// The twelve concepts, in duelist_cards.json's order, which is grid order: three attack forms
-// of three tiers, then the plans.
+// The eighteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
+// of five tiers, then the plans.
 //
-// **Three forms by three tiers, and the tiers cost and hit the same in each** *(2026-08-15)*.
-// 1 AP is half damage, 2 AP is one, 3 AP is two, in Stab and Slash and Crush alike. So a form
-// is *which* pair you are building rather than a stronger or weaker way to build one, and the
-// only thing separating Lunge from Cleave is what it pairs with.
+// **Three forms by five tiers, and the tiers cost and hit the same in each** *(2026-08-24)*.
+// 0 AP is a quarter, 1 AP is half, 2 AP is one, 3 AP is two, 4 AP is four, in Stab and Slash and
+// Crush alike. So a form is *which* pair you are building rather than a stronger or weaker way to
+// build one, and the only thing separating Lunge from Cleave is what it pairs with.
+//
+// **The outer two rungs ship at zero copies**, so they are on this sheet and not in any deck. This
+// is where they get looked at, and there are two specific things to look for: a 0 AP card draws an
+// empty cost column, and a 4 AP card is the only one that stacks four ticks.
 //
 // **The effect text is a snapshot of `cardEffects` in internal/screens**, under the same rule
 // as the names and costs above it: the tool does not import the game so it can draw cards the
 // rules cannot deal. It is the longest strings here that matter — the sheet is where an
 // overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
+	{"Poke", cards.FormStab, 0, "Stabs for 0.25x DMG"},
 	{"Jab", cards.FormStab, 1, "Stabs for 0.5x DMG"},
 	{"Thrust", cards.FormStab, 2, "Stabs for 1x DMG"},
 	{"Lunge", cards.FormStab, 3, "Stabs for 2x DMG"},
+	{"Impale", cards.FormStab, 4, "Stabs for 4x DMG"},
 
+	{"Nick", cards.FormSlash, 0, "Slashes for 0.25x DMG"},
 	{"Cut", cards.FormSlash, 1, "Slashes for 0.5x DMG"},
 	{"Slash", cards.FormSlash, 2, "Slashes for 1x DMG"},
 	{"Cleave", cards.FormSlash, 3, "Slashes for 2x DMG"},
+	{"Sever", cards.FormSlash, 4, "Slashes for 4x DMG"},
 
+	{"Tap", cards.FormCrush, 0, "Crushes for 0.25x DMG"},
 	{"Bash", cards.FormCrush, 1, "Crushes for 0.5x DMG"},
 	{"Strike", cards.FormCrush, 2, "Crushes for 1x DMG"},
 	{"Smash", cards.FormCrush, 3, "Crushes for 2x DMG"},
+	{"Pulverize", cards.FormCrush, 4, "Crushes for 4x DMG"},
 
 	{"Prepare", cards.FormPlan, 1, "Bank 2 AP for next round"},
 	{"Plan", cards.FormPlan, 2, "Draw 2 cards next round"},
 	{"Defend", cards.FormPlan, 3, "Halve damage this turn"},
 }
 
-// realCards is **all twelve concepts at hand size**, one element after another so the row
+// realCards is **all eighteen concepts at hand size**, one element after another so the row
 // also walks the border colours.
 //
 // **It was a spread of six until 2026-08-14**, chosen to break the layout: the longest name,
@@ -92,8 +102,9 @@ func realCards() []cards.Spec {
 	return out
 }
 
-// realDeckRow is one element's worth of the deck: all twelve concepts, which is exactly
-// what the overlay's row for that element holds when nothing has been drawn yet.
+// realDeckRow is one element's worth of the deck: every concept, which is a rung wider each end
+// than the overlay's row for that element holds when nothing has been drawn yet — the zero-copy
+// ends are on the sheet precisely because no deck starts with them.
 func realDeckRow(e cards.Element) []cards.Spec {
 	out := make([]cards.Spec, 0, len(concepts))
 	for _, c := range concepts {

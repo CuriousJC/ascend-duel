@@ -199,7 +199,12 @@ const (
 
 	// handsButtonWidth is what the word needs. Height stays the square buttons' 44, so the two
 	// read as the same kind of control at different lengths.
-	handsButtonWidth = 100
+	//
+	// **88 rather than 100** *(owner's call, 2026-08-24)*, since the combat screen stands this
+	// button against the left edge of the sort column and the column is pinned 44 in from the
+	// band's right edge — so at 100 the word overhung the screen. The word had margin to give:
+	// five characters at 18pt do not fill 88 either.
+	handsButtonWidth = 88
 	handsButtonText  = 18
 
 	// The corner they stand in on a screen with no hand, matching the mute button's inset on the

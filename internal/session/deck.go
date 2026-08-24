@@ -10,6 +10,11 @@ package session
 // **It is data, not a Go expression** *(2026-08-08)*: nine attack concepts x four colours, plus
 // three plans at four copies = 48 cards, read out of data/duelist_cards.json. The deck's size is a
 // consequence of a file the designer can read and edit.
+//
+// **The file holds more concepts than the deck holds cards** *(2026-08-24)*. The 0 AP and 4 AP rung
+// of each attack form ship at `Copies: 0`, so they are registered with the rules — which is what
+// lets a Shrink or a Grow worm step a card onto them — and expand to nothing here. A zero-copy
+// record is a rung, not a card.
 
 import (
 	"github.com/curiousjc/ascend-duel/data"

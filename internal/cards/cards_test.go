@@ -1281,3 +1281,49 @@ func TestTheTicksAndTheBorderShareOneState(t *testing.T) {
 		}
 	}
 }
+
+// **A token says the three things a hand is counted on, and nothing else.** Element is the
+// border colour of its mark and its ticks, form is the mark, cost is the ticks — so a style that
+// stopped drawing one of them would be a row of tokens that cannot be read as a hand.
+func TestATokenSaysElementFormAndCost(t *testing.T) {
+	st := Token
+	if !st.ShowForm {
+		t.Error("Token draws no form mark, which is one of the three things it is for")
+	}
+	if st.ShowName {
+		t.Error("Token draws a name, which does not fit 40 pixels and is not counted on")
+	}
+	if st.TextLineHeight > 0 {
+		t.Error("Token draws effect text, which cannot be read at this size")
+	}
+	if st.DashWidth <= 0 || st.DashHeight <= 0 {
+		t.Error("Token draws no cost ticks")
+	}
+}
+
+// **Four ticks fit inside the border**, because drawDashes drops a tick that would run off the
+// card rather than complaining — so a cost the layout cannot hold is a card that silently
+// understates what it costs. Every card in the game runs 1..3 today; a fourth is what this holds.
+func TestATokenHoldsFourTicks(t *testing.T) {
+	st := Token
+	bottom := st.DashTop + 3*(st.DashHeight+st.DashGap) + st.DashHeight
+	if inside := st.Height - st.BorderWidth; bottom > inside {
+		t.Errorf("a four-point token's ticks reach y=%d against an inside edge at %d",
+			bottom, inside)
+	}
+	if top := st.FormTop + st.FormSize; st.DashTop < top {
+		t.Errorf("the ticks start at y=%d, inside the form mark that ends at %d", st.DashTop, top)
+	}
+}
+
+// **The mark and the ticks are centred**, because there is no text column to their right for a
+// left-aligned column to line up with — the same reason a ring centres its name.
+func TestATokenCentresItsColumn(t *testing.T) {
+	st := Token
+	if want := (st.Width - st.FormSize) / 2; st.GlyphInset != want {
+		t.Errorf("the form mark sits at x=%d against a centred %d", st.GlyphInset, want)
+	}
+	if want := (st.Width - st.DashWidth) / 2; st.DashLeft != want {
+		t.Errorf("the ticks sit at x=%d against a centred %d", st.DashLeft, want)
+	}
+}

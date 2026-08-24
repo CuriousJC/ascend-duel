@@ -29,9 +29,9 @@ import (
 func (s *CombatScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
-	// **The combos panel explains itself in words**, so there is nothing under it to point at —
+	// **The hands panel explains itself in words**, so there is nothing under it to point at —
 	// and a hand card's tooltip drawn through a dialog is the failure this branch exists to stop.
-	if s.combos.open {
+	if s.hands.open {
 		return
 	}
 	if s.showDeck {

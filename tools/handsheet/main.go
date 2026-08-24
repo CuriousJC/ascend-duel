@@ -91,7 +91,6 @@ func run(dir string) error {
 		DeckSize:  len(deck),
 		Attacks:   countAttacks(deck),
 		PerValue:  map[string]int{},
-		Unbuilt:   0,
 		TooManyAP: 0,
 	}
 	for _, a := range []combat.Axis{combat.AxisConcept, combat.AxisForm, combat.AxisElement} {
@@ -125,24 +124,19 @@ func run(dir string) error {
 			Pays:       fmt.Sprintf("%d.%02dx", h.Multiplier/100, h.Multiplier%100),
 		}
 
-		example, cost, ok := decks.CheapestExample(deck, h)
-		r.Buildable = ok
-		if ok {
-			r.Cost = cost
-			r.Affordable = cost <= budget && h.Cards() <= maxCards
-			r.Shares = sharedValues(example, h.Match)
-			for _, c := range example {
-				cell, err := cardOnce(dir, faces, drawn, c)
-				if err != nil {
-					return err
-				}
-				r.Cells = append(r.Cells, cell)
+		example, cost := decks.Example(deck, h)
+		r.Cost = cost
+		r.Affordable = cost <= budget && h.Cards() <= maxCards
+		r.Shares = sharedValues(example, h.Match)
+		for _, c := range example {
+			cell, err := cardOnce(dir, faces, drawn, c)
+			if err != nil {
+				return err
 			}
-			if !r.Affordable {
-				page.TooManyAP++
-			}
-		} else {
-			page.Unbuilt++
+			r.Cells = append(r.Cells, cell)
+		}
+		if !r.Affordable {
+			page.TooManyAP++
 		}
 
 		page.Rows = append(page.Rows, r)
@@ -159,20 +153,18 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d hands, %d the deck cannot form, %d a round cannot play\n",
-		out, len(drawn), len(page.Rows), page.Unbuilt, page.TooManyAP)
+	fmt.Printf("wrote %s and %d PNGs — %d hands, %d a round cannot play\n",
+		out, len(drawn), len(page.Rows), page.TooManyAP)
 	for _, r := range page.Rows {
 		fmt.Printf("  %6s  %-28s %-8s %-6s %s\n", r.Pays, r.Name, r.Match, r.Groups, verdict(r, budget))
 	}
 	return nil
 }
 
-// verdict is the one-line answer for the terminal: what the cheapest copy of this rung costs, and
-// whether a round can pay it.
+// verdict is the one-line answer for the terminal: what this rung's example costs, and whether a
+// round can pay it.
 func verdict(r row, budget int) string {
 	switch {
-	case !r.Buildable:
-		return "the deck cannot form it at all"
 	case !r.Affordable && r.Cards > maxCards:
 		return fmt.Sprintf("%d cards — over the %d-card cap", r.Cards, maxCards)
 	case !r.Affordable:
@@ -391,12 +383,8 @@ type row struct {
 	Multiplier int
 	Pays       string
 
-	// Buildable is whether the shipping deck holds the cards at all. **False is a finding, not an
-	// error** — a rung wanting five copies of a concept cannot be built from a deck with four.
-	Buildable bool
-
-	// Affordable is whether a round can play the cheapest copy: inside the action points and
-	// inside the card cap.
+	// Affordable is whether a round can play the example: inside the action points and inside
+	// the card cap.
 	Affordable bool
 
 	Cost   int
@@ -413,7 +401,6 @@ type page struct {
 	Attacks  int
 	PerValue map[string]int
 
-	Unbuilt   int
 	TooManyAP int
 
 	Rows []row

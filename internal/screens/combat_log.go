@@ -94,7 +94,7 @@ func (s *CombatScene) toggleLog() {
 // control on this screen has to go dead for both and the failure is silent: a button left live
 // under a dialog is a round edited through a panel the player is only reading.
 func (s *CombatScene) modalUp() bool {
-	return s.showDeck || s.showLog || s.combos.open
+	return s.showDeck || s.showLog || s.hands.open
 }
 
 // updateLogButton runs the button.

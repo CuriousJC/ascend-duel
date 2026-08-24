@@ -374,20 +374,20 @@ func (s *CombatScene) fightContents() deckContents {
 	return d
 }
 
-// fightCombos is the ladder as a fight sees it: **every card you own, whichever pile it is in**,
+// fightHands is the ladder as a fight sees it: **every card you own, whichever pile it is in**,
 // and the duelist holding them.
 //
 // **The piles are merged rather than reported**, which is the opposite of fightContents and is
-// deliberate. The deck panel is about where your cards are right now; the combos panel is about
+// deliberate. The deck panel is about where your cards are right now; the hands panel is about
 // what your cards can build, and a rung that has gone out of reach because three of its cards are
 // in the discard this round is not a fact about your deck. The piles are conserved, so their sum
 // is the run's deck for as long as the fight lasts.
-func (s *CombatScene) fightCombos() comboContents {
+func (s *CombatScene) fightHands() handsContents {
 	deck := make([]combat.Card, 0, s.deckSize())
 	deck = append(deck, s.deck...)
 	deck = append(deck, s.discard...)
 	for _, c := range s.hand {
 		deck = append(deck, c.actionCard)
 	}
-	return comboContents{deck: deck, holder: s.fighter.Duelist}
+	return handsContents{deck: deck, holder: s.fighter.Duelist}
 }

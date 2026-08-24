@@ -3,7 +3,7 @@ package screens
 // **What every modal in this game has in common**, pulled out of the deck panel on 2026-08-24 so
 // that the third one did not start life as a copy of the first.
 //
-// There are three now — the deck, the fight log and the combos ladder — and the parts they share
+// There are three now — the deck, the fight log and the hands ladder — and the parts they share
 // are not incidental: the footprint, the scrim, the raised panel, the heading block, the closing
 // hint, and the rule that the button which opened a dialog is the button that closes it. **The
 // player learns one shape.** Two dialogs at two sizes would read as two kinds of thing, and there
@@ -44,6 +44,11 @@ const (
 	modalLegendTop  = 92
 	modalBodyTop    = 112
 	modalBodyBottom = 22
+
+	// modalTitleOnlyBodyTop is where a panel with nothing but a title starts its body. The hands
+	// panel is the one: it says what it has to say in cards, so the two lines under the heading
+	// are 40 pixels it can spend on rungs instead.
+	modalTitleOnlyBodyTop = 72
 )
 
 // modalPanelRect is the dialog's footprint. Every modal takes it.
@@ -125,7 +130,7 @@ func modalLine(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, d
 //
 // **It replaced "press the button again to close" on 2026-08-24** *(owner's call)*. The old rule
 // was that the control which opened a dialog closed it, which worked while every opener was
-// visible — and stopped working the moment a panel covered its own button. The combos button sits
+// visible — and stopped working the moment a panel covered its own button. The hands button sits
 // above the hand, under the panel, so the only instruction on screen named a control the player
 // could not see. An X on the panel itself cannot go missing, and it is the one shape every player
 // already knows means "close".
@@ -185,17 +190,17 @@ func (c *modalCloser) draw(gs *state.GlobalState, screen *ebiten.Image) {
 // for a word. The letters may not collide with each other or with the combat screen's `L`, `$`,
 // `T` and `E`.
 const (
-	// **D is a letter and COMBOS is a word** *(owner's call, 2026-08-24)*. The corner buttons are
+	// **D is a letter and HANDS is a word** *(owner's call, 2026-08-24)*. The corner buttons are
 	// squares because they stand beside the mute button and the sort column, where there is no
-	// room for a word; the combos button stands above the hand with the whole band to itself, and
-	// a single `C` there said nothing to anybody who had not already opened it once.
-	deckToggleLabel   = "D"
-	combosToggleLabel = "COMBOS"
+	// room for a word; the hands button stands above the hand with the whole band to itself, and
+	// a single `H` there said nothing to anybody who had not already opened it once.
+	deckToggleLabel  = "D"
+	handsToggleLabel = "HANDS"
 
-	// combosButtonWidth is what the word needs. Height stays the square buttons' 44, so the two
+	// handsButtonWidth is what the word needs. Height stays the square buttons' 44, so the two
 	// read as the same kind of control at different lengths.
-	combosButtonWidth = 116
-	combosButtonText  = 18
+	handsButtonWidth = 100
+	handsButtonText  = 18
 
 	// The corner they stand in on a screen with no hand, matching the mute button's inset on the
 	// other side so the two bottom corners share a line. See internal/game/chrome.go.
@@ -267,12 +272,12 @@ func cornerSlot(n int) func(*state.GlobalState) image.Point {
 	}
 }
 
-// combosCornerPlace is where the combos button stands on a screen with no hand: to the left of the
+// handsCornerPlace is where the hands button stands on a screen with no hand: to the left of the
 // deck button, sharing its bottom line. **Measured from the corner rather than from a slot index**,
 // because the two buttons are different widths and a slot walk would assume they are not.
-func combosCornerPlace(gs *state.GlobalState) image.Point {
+func handsCornerPlace(gs *state.GlobalState) image.Point {
 	right := gs.PctX(100) - modalToggleInset - logButtonSize - modalToggleGap
-	return image.Pt(right-combosButtonWidth/2,
+	return image.Pt(right-handsButtonWidth/2,
 		gs.PctY(100)-modalToggleInset-logButtonSize/2)
 }
 

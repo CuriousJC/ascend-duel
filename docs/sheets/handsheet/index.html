@@ -72,8 +72,8 @@
   layout hides.
 </p>
 <p class="note">
-  <strong>The AP figure is not the difficulty.</strong> It is what the cheapest copy of the rung
-  costs <em>once you hold the cards</em>. How often you hold them is
+  <strong>The AP figure is not the difficulty.</strong> It is what the example above costs
+  <em>once you hold the cards</em>. How often you hold them is
   <code>go run ./tools/handodds</code>, which deals two million hands and prints the
   reachability the multipliers are actually priced against. Two tools reporting the same
   probability by different methods would be two numbers that can disagree, so this one does not
@@ -81,10 +81,9 @@
 </p>
 
 <p class="note">
-  <strong>1 rungs the deck cannot form at all.</strong> A hand wanting five copies of
-  one value needs five in the deck.
+  <strong>6 rungs a plain round cannot pay for</strong>, on action points or on the
+  card cap. Banking is what makes those real — a Prepare carries AP into the next round.
 </p>
-
 
 
 <h2>The ladder</h2>
@@ -95,11 +94,9 @@
         <div class="mult">1.00x</div>
         <div class="name">High Card</div>
         <div class="axis">concept [1] &middot; 1 cards &middot; high-card</div>
-        
-          <div class="cost">
-            1 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          1 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -120,11 +117,9 @@
         <div class="mult">1.10x</div>
         <div class="name">Elemental Pair</div>
         <div class="axis">element [2] &middot; 2 cards &middot; element-pair</div>
-        
-          <div class="cost">
-            2 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          3 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -132,7 +127,7 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
+              <img src="card-slash-fire.png" width="81" height="112" alt="Slash — fire, 2 AP">
             
           </div>
           <div class="shares">
@@ -147,11 +142,9 @@
         <div class="mult">1.10x</div>
         <div class="name">Form Pair</div>
         <div class="axis">form [2] &middot; 2 cards &middot; form-pair</div>
-        
-          <div class="cost">
-            2 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          3 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -159,7 +152,7 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+              <img src="card-thrust-ice.png" width="81" height="112" alt="Thrust — ice, 2 AP">
             
           </div>
           <div class="shares">
@@ -174,11 +167,9 @@
         <div class="mult">1.15x</div>
         <div class="name">Card Pair</div>
         <div class="axis">concept [2] &middot; 2 cards &middot; concept-pair</div>
-        
-          <div class="cost">
-            2 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          2 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -201,11 +192,9 @@
         <div class="mult">1.40x</div>
         <div class="name">Elemental Two Pair</div>
         <div class="axis">element [2,2] &middot; 4 cards &middot; element-two-pair</div>
-        
-          <div class="cost">
-            4 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          6 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -213,11 +202,11 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
+              <img src="card-slash-fire.png" width="81" height="112" alt="Slash — fire, 2 AP">
             
               <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
             
-              <img src="card-cut-ice.png" width="81" height="112" alt="Cut — ice, 1 AP">
+              <img src="card-slash-ice.png" width="81" height="112" alt="Slash — ice, 2 AP">
             
           </div>
           <div class="shares">
@@ -232,11 +221,9 @@
         <div class="mult">1.40x</div>
         <div class="name">Form Two Pair</div>
         <div class="axis">form [2,2] &middot; 4 cards &middot; form-two-pair</div>
-        
-          <div class="cost">
-            4 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          6 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -244,11 +231,11 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+              <img src="card-thrust-ice.png" width="81" height="112" alt="Thrust — ice, 2 AP">
             
               <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
             
-              <img src="card-cut-ice.png" width="81" height="112" alt="Cut — ice, 1 AP">
+              <img src="card-slash-ice.png" width="81" height="112" alt="Slash — ice, 2 AP">
             
           </div>
           <div class="shares">
@@ -263,11 +250,9 @@
         <div class="mult">1.45x</div>
         <div class="name">Elemental Three of a Kind</div>
         <div class="axis">element [3] &middot; 3 cards &middot; element-three-of-a-kind</div>
-        
-          <div class="cost">
-            3 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          6 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -275,9 +260,9 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
+              <img src="card-slash-fire.png" width="81" height="112" alt="Slash — fire, 2 AP">
             
-              <img src="card-bash-fire.png" width="81" height="112" alt="Bash — fire, 1 AP">
+              <img src="card-smash-fire.png" width="81" height="112" alt="Smash — fire, 3 AP">
             
           </div>
           <div class="shares">
@@ -292,11 +277,9 @@
         <div class="mult">1.45x</div>
         <div class="name">Form Three of a Kind</div>
         <div class="axis">form [3] &middot; 3 cards &middot; form-three-of-a-kind</div>
-        
-          <div class="cost">
-            3 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          6 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -304,9 +287,9 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+              <img src="card-thrust-ice.png" width="81" height="112" alt="Thrust — ice, 2 AP">
             
-              <img src="card-jab-lightning.png" width="81" height="112" alt="Jab — lightning, 1 AP">
+              <img src="card-lunge-lightning.png" width="81" height="112" alt="Lunge — lightning, 3 AP">
             
           </div>
           <div class="shares">
@@ -321,11 +304,9 @@
         <div class="mult">2.00x</div>
         <div class="name">Card Two Pair</div>
         <div class="axis">concept [2,2] &middot; 4 cards &middot; concept-two-pair</div>
-        
-          <div class="cost">
-            4 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          4 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -352,11 +333,9 @@
         <div class="mult">2.45x</div>
         <div class="name">Card Three of a Kind</div>
         <div class="axis">concept [3] &middot; 3 cards &middot; concept-three-of-a-kind</div>
-        
-          <div class="cost">
-            3 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          3 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -381,11 +360,9 @@
         <div class="mult">2.80x</div>
         <div class="name">Elemental Full House</div>
         <div class="axis">element [3,2] &middot; 5 cards &middot; element-full-house</div>
-        
-          <div class="cost">
-            5 AP at its cheapest
-          </div>
-        
+        <div class="cost over">
+          9 AP — more than a round can play
+        </div>
       </div>
       <div class="hand">
         
@@ -393,13 +370,13 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
+              <img src="card-slash-fire.png" width="81" height="112" alt="Slash — fire, 2 AP">
             
-              <img src="card-bash-fire.png" width="81" height="112" alt="Bash — fire, 1 AP">
+              <img src="card-smash-fire.png" width="81" height="112" alt="Smash — fire, 3 AP">
             
               <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
             
-              <img src="card-cut-ice.png" width="81" height="112" alt="Cut — ice, 1 AP">
+              <img src="card-slash-ice.png" width="81" height="112" alt="Slash — ice, 2 AP">
             
           </div>
           <div class="shares">
@@ -414,11 +391,9 @@
         <div class="mult">2.80x</div>
         <div class="name">Form Full House</div>
         <div class="axis">form [3,2] &middot; 5 cards &middot; form-full-house</div>
-        
-          <div class="cost">
-            5 AP at its cheapest
-          </div>
-        
+        <div class="cost over">
+          9 AP — more than a round can play
+        </div>
       </div>
       <div class="hand">
         
@@ -426,13 +401,13 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+              <img src="card-thrust-ice.png" width="81" height="112" alt="Thrust — ice, 2 AP">
             
-              <img src="card-jab-lightning.png" width="81" height="112" alt="Jab — lightning, 1 AP">
+              <img src="card-lunge-lightning.png" width="81" height="112" alt="Lunge — lightning, 3 AP">
             
               <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
             
-              <img src="card-cut-ice.png" width="81" height="112" alt="Cut — ice, 1 AP">
+              <img src="card-slash-ice.png" width="81" height="112" alt="Slash — ice, 2 AP">
             
           </div>
           <div class="shares">
@@ -447,11 +422,9 @@
         <div class="mult">2.85x</div>
         <div class="name">Elemental Four of a Kind</div>
         <div class="axis">element [4] &middot; 4 cards &middot; element-four-of-a-kind</div>
-        
-          <div class="cost">
-            4 AP at its cheapest
-          </div>
-        
+        <div class="cost over">
+          7 AP — more than a round can play
+        </div>
       </div>
       <div class="hand">
         
@@ -459,9 +432,9 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
+              <img src="card-slash-fire.png" width="81" height="112" alt="Slash — fire, 2 AP">
             
-              <img src="card-bash-fire.png" width="81" height="112" alt="Bash — fire, 1 AP">
+              <img src="card-smash-fire.png" width="81" height="112" alt="Smash — fire, 3 AP">
             
               <img src="card-prepare-fire.png" width="81" height="112" alt="Prepare — fire, 1 AP">
             
@@ -478,11 +451,9 @@
         <div class="mult">2.85x</div>
         <div class="name">Form Four of a Kind</div>
         <div class="axis">form [4] &middot; 4 cards &middot; form-four-of-a-kind</div>
-        
-          <div class="cost">
-            4 AP at its cheapest
-          </div>
-        
+        <div class="cost over">
+          7 AP — more than a round can play
+        </div>
       </div>
       <div class="hand">
         
@@ -490,9 +461,9 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+              <img src="card-thrust-ice.png" width="81" height="112" alt="Thrust — ice, 2 AP">
             
-              <img src="card-jab-lightning.png" width="81" height="112" alt="Jab — lightning, 1 AP">
+              <img src="card-lunge-lightning.png" width="81" height="112" alt="Lunge — lightning, 3 AP">
             
               <img src="card-jab-earth.png" width="81" height="112" alt="Jab — earth, 1 AP">
             
@@ -509,11 +480,9 @@
         <div class="mult">4.00x</div>
         <div class="name">Card Full House</div>
         <div class="axis">concept [3,2] &middot; 5 cards &middot; concept-full-house</div>
-        
-          <div class="cost">
-            5 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          5 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -542,11 +511,9 @@
         <div class="mult">5.00x</div>
         <div class="name">Card Four of a Kind</div>
         <div class="axis">concept [4] &middot; 4 cards &middot; concept-four-of-a-kind</div>
-        
-          <div class="cost">
-            4 AP at its cheapest
-          </div>
-        
+        <div class="cost">
+          4 AP
+        </div>
       </div>
       <div class="hand">
         
@@ -573,11 +540,9 @@
         <div class="mult">5.65x</div>
         <div class="name">Elemental Five of a Kind</div>
         <div class="axis">element [5] &middot; 5 cards &middot; element-five-of-a-kind</div>
-        
-          <div class="cost">
-            6 AP at its cheapest
-          </div>
-        
+        <div class="cost over">
+          8 AP — more than a round can play
+        </div>
       </div>
       <div class="hand">
         
@@ -585,13 +550,13 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
+              <img src="card-slash-fire.png" width="81" height="112" alt="Slash — fire, 2 AP">
             
-              <img src="card-bash-fire.png" width="81" height="112" alt="Bash — fire, 1 AP">
+              <img src="card-smash-fire.png" width="81" height="112" alt="Smash — fire, 3 AP">
             
               <img src="card-prepare-fire.png" width="81" height="112" alt="Prepare — fire, 1 AP">
             
-              <img src="card-thrust-fire.png" width="81" height="112" alt="Thrust — fire, 2 AP">
+              <img src="card-cut-fire.png" width="81" height="112" alt="Cut — fire, 1 AP">
             
           </div>
           <div class="shares">
@@ -606,11 +571,9 @@
         <div class="mult">5.65x</div>
         <div class="name">Form Five of a Kind</div>
         <div class="axis">form [5] &middot; 5 cards &middot; form-five-of-a-kind</div>
-        
-          <div class="cost">
-            6 AP at its cheapest
-          </div>
-        
+        <div class="cost over">
+          8 AP — more than a round can play
+        </div>
       </div>
       <div class="hand">
         
@@ -618,13 +581,13 @@
             
               <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
             
-              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+              <img src="card-thrust-ice.png" width="81" height="112" alt="Thrust — ice, 2 AP">
             
-              <img src="card-jab-lightning.png" width="81" height="112" alt="Jab — lightning, 1 AP">
+              <img src="card-lunge-lightning.png" width="81" height="112" alt="Lunge — lightning, 3 AP">
             
               <img src="card-jab-earth.png" width="81" height="112" alt="Jab — earth, 1 AP">
             
-              <img src="card-thrust-fire.png" width="81" height="112" alt="Thrust — fire, 2 AP">
+              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
             
           </div>
           <div class="shares">
@@ -639,13 +602,28 @@
         <div class="mult">7.45x</div>
         <div class="name">Card Five of a Kind</div>
         <div class="axis">concept [5] &middot; 5 cards &middot; concept-five-of-a-kind</div>
-        
-          <div class="cost over">the deck cannot form it</div>
-        
+        <div class="cost">
+          5 AP
+        </div>
       </div>
       <div class="hand">
         
-          <div class="missing">no example — no set of cards in the deck forms this rung</div>
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
+            
+              <img src="card-jab-ice.png" width="81" height="112" alt="Jab — ice, 1 AP">
+            
+              <img src="card-jab-lightning.png" width="81" height="112" alt="Jab — lightning, 1 AP">
+            
+              <img src="card-jab-earth.png" width="81" height="112" alt="Jab — earth, 1 AP">
+            
+              <img src="card-jab-fire.png" width="81" height="112" alt="Jab — fire, 1 AP">
+            
+          </div>
+          <div class="shares">
+            5× Jab
+          </div>
         
       </div>
     </div>

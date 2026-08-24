@@ -667,10 +667,14 @@ actually fire.
 *(2026-08-23)*. A worm is offered two at a time after a won fight, so the whole catalogue is five
 fights away; the sheet draws all ten grouped by what each one changes about a card, with the
 authored `Text` against the rule that fires, exactly as the ring sheet does. The hand sheet draws
-every rung of the ladder as an *actual hand of real cards* — cheapest set the shipping deck can
-form — ordered by ascending multiplier across all three axes at once, which is the comparison
-`hands.json`'s axis-by-axis layout hides. **It does not sample**: the AP figure beside a rung is
-what the cheapest copy costs once you hold the cards, and how often you hold them is
+every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
+that best *illustrates* the rung — ordered by ascending multiplier across all three axes at once,
+which is the comparison `hands.json`'s axis-by-axis layout hides. **The example varies everything
+the rung does not count** *(owner's call, 2026-08-24)*: a form pair is a 1 AP stab beside a 3 AP
+one, because cheapest-set picked two identical cards and made a form pair, a card pair and an
+elemental pair the same picture. `decks.Example` is the one answer, shared with the hands panel;
+cost is the tie-break among equally illustrative sets. **It does not sample**: the AP figure beside
+a rung is what that example costs once you hold the cards, and how often you hold them is
 `tools/handodds`. Two tools reporting the same probability by different methods would be two
 numbers that can disagree.
 

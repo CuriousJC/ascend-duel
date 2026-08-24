@@ -229,14 +229,14 @@ type CombatScene struct {
 
 	// closer is the red X on whichever of this screen's two older dialogs is up — the deck overlay
 	// or the fight log. **One between them**, because only one can be open at a time and two
-	// buttons in the same corner is one too many. The combos panel carries its own, inside its
+	// buttons in the same corner is one too many. The hands panel carries its own, inside its
 	// toggle.
 	closer modalCloser
 
-	// combos is the third dialog: every rung of the hand ladder, written as a sum. It carries
+	// hands is the third dialog: every rung of the hand ladder, written as a sum. It carries
 	// its own button and its own open flag, because it arrived after the shared modal chrome
 	// existed and there was no reason to give the screen a fourth pair of fields by hand.
-	combos comboToggle
+	hands handsToggle
 
 	// logButton opens and closes it. Held on the scene rather than built in Draw because it
 	// is a widget with hover and press state, like every other button here.
@@ -411,7 +411,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 	s.showDeck = false
 	s.showLog = false
-	s.combos.init(comboButtonPlace)
+	s.hands.init(handsButtonPlace)
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
@@ -613,18 +613,18 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	}
 	s.updateLogButton(gs)
 
-	// The X, run while either of the two older dialogs is up. The combos panel closes itself.
+	// The X, run while either of the two older dialogs is up. The hands panel closes itself.
 	if s.showDeck || s.showLog {
 		if s.closer.update(gs) {
 			s.showDeck, s.showLog = false, false
 		}
 	}
 
-	// **The combos button is dead under the other two dialogs**, for the reason each of them is
+	// **The hands button is dead under the other two dialogs**, for the reason each of them is
 	// dead under the other: a dialog whose exit is not the brightest thing on screen is a trap,
 	// and two live exits is two.
-	s.combos.block(s.showDeck || s.showLog)
-	s.combos.update(gs)
+	s.hands.block(s.showDeck || s.showLog)
+	s.hands.update(gs)
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
 	// live on top of it. Written unconditionally from what the screen already knows, never
@@ -1189,10 +1189,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// the table for the reason those are: a figure leaving a card has to be on top of it.
 	s.drawBanks(gs, screen)
 
-	// The combos panel, under the other two: they are mutually exclusive, and this is drawn
+	// The hands panel, under the other two: they are mutually exclusive, and this is drawn
 	// first so that opening either of the others covers this one's button along with everything
 	// else. Its own draw puts its button back on top of its own panel.
-	s.combos.draw(gs, screen, s.fightCombos())
+	s.hands.draw(gs, screen, s.fightHands())
 
 	// The overlay covers everything, card in flight included, and the X goes on top of it. The
 	// two are mutually exclusive rather than stacked — neither opener is live while the other's

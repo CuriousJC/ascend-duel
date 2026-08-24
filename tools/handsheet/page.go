@@ -85,19 +85,13 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
   layout hides.
 </p>
 <p class="note">
-  <strong>The AP figure is not the difficulty.</strong> It is what the cheapest copy of the rung
-  costs <em>once you hold the cards</em>. How often you hold them is
+  <strong>The AP figure is not the difficulty.</strong> It is what the example above costs
+  <em>once you hold the cards</em>. How often you hold them is
   <code>go run ./tools/handodds</code>, which deals two million hands and prints the
   reachability the multipliers are actually priced against. Two tools reporting the same
   probability by different methods would be two numbers that can disagree, so this one does not
   sample.
 </p>
-{{if .Unbuilt}}
-<p class="note">
-  <strong>{{.Unbuilt}} rungs the deck cannot form at all.</strong> A hand wanting five copies of
-  one value needs five in the deck.
-</p>
-{{end}}
 {{if .TooManyAP}}
 <p class="note">
   <strong>{{.TooManyAP}} rungs a plain round cannot pay for</strong>, on action points or on the
@@ -113,13 +107,9 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
         <div class="mult">{{.Pays}}</div>
         <div class="name">{{.Name}}</div>
         <div class="axis">{{.Match}} {{.Groups}} &middot; {{.Cards}} cards &middot; {{.Key}}</div>
-        {{if .Buildable}}
-          <div class="cost{{if not .Affordable}} over{{end}}">
-            {{.Cost}} AP at its cheapest{{if not .Affordable}} — more than a round can play{{end}}
-          </div>
-        {{else}}
-          <div class="cost over">the deck cannot form it</div>
-        {{end}}
+        <div class="cost{{if not .Affordable}} over{{end}}">
+          {{.Cost}} AP{{if not .Affordable}} — more than a round can play{{end}}
+        </div>
       </div>
       <div class="hand">
         {{if .Cells}}

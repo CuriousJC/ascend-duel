@@ -173,9 +173,9 @@ type PostBattleScene struct {
 	// to look at it** — see deckpanel.go, and TODO.md, which carried the extraction.
 	deck deckToggle
 
-	// combos is the C button beside it. A worm changes what hands the deck can build, which is the
-	// thing this screen is asking the player to decide about. See combopanel.go.
-	combos comboToggle
+	// hands is the C button beside it. A worm changes what hands the deck can build, which is the
+	// thing this screen is asking the player to decide about. See handspanel.go.
+	hands handsToggle
 
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
 	// removed. It takes neither worm and pays nothing extra — the win has already paid — so it is
@@ -267,7 +267,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 		gs.Run.Fight(), prizeNames(s.prizes), len(s.offer), gs.Run.Size(), s.picksLeft)
 
 	s.deck.init()
-	s.combos.init(combosCornerPlace)
+	s.hands.init(handsCornerPlace)
 }
 
 func prizeNames(ps []prize) []string {
@@ -390,12 +390,12 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	// the fight log follows on the combat screen: a screen changing out from under an open panel
 	// is reading material snatched away. It is deliberately not offered during the narration,
 	// which is the whole screen while it runs.
-	s.deck.block(s.combos.open)
-	s.combos.block(s.deck.open)
+	s.deck.block(s.hands.open)
+	s.hands.block(s.deck.open)
 	if s.deck.update(gs, ownedContents(gs)) {
 		return nil
 	}
-	if s.combos.update(gs) {
+	if s.hands.update(gs) {
 		return nil
 	}
 
@@ -740,7 +740,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// carries a tooltip of its own; anything of this screen's drawn on top of it would be a
 	// control the player could believe was live.
 	defer s.deck.draw(gs, screen, ownedContents(gs))
-	defer s.combos.draw(gs, screen, ownedCombos(gs))
+	defer s.hands.draw(gs, screen, ownedHands(gs))
 
 	line := func(y int, face *text.GoTextFace, msg string) {
 		op := &text.DrawOptions{}

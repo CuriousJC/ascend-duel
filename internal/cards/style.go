@@ -603,3 +603,48 @@ var RingStyle = Style{
 	ArtInset: 16,
 	ArtMaxH:  130,
 }
+
+// Token is a card reduced to the three things a hand is counted on: its **element**, its
+// **form** and what it **costs**. 40x56 — a quarter of Hand in each dimension, a sixteenth of
+// its area — and it carries no name, no effect text and no picture.
+//
+// **It is authored rather than derived, and that is the one place it departs from Mini's rule**
+// *(2026-08-24)*. `Hand.Scaled(1, 4)` gives an 8px form mark and a 4x1 tick, which is a mark
+// with its detail averaged away and a tick that reads as a scratch — the same floor the glyph
+// rules describe. The mark therefore stays at Mini's 16, which the drawn art can be halved to
+// twice and still be read, and the ticks stay at Hand's own 16x4. **So this is not a small card;
+// it is a different object**, which is why deriving it would be claiming something untrue.
+//
+// **The left column, standing on its own.** Everything it draws — a tinted form mark with the
+// cost ticks under it — is exactly what a Hand card puts down its left edge, so a row of these
+// is the same reading in the same colours, and nothing here can drift from the card it stands
+// for except by that column moving.
+//
+// The hands panel is the caller: nineteen rungs, each shown as the cards that build it, is a
+// hundred-odd cards on one screen, and at Mini's 81x112 that is a panel of cards with no room
+// left for the ladder.
+var Token = Style{
+	Width: 40, Height: 56,
+
+	CornerRadius: 6,
+	BorderWidth:  2,
+
+	ShowName: false,
+	ShowForm: true,
+
+	// Centred rather than in the corner: with no text column to the right of it there is
+	// nothing for a left-aligned mark to line up with, the same reason a ring centres its name.
+	FormTop:    6,
+	FormSize:   16,
+	GlyphInset: (40 - 16) / 2,
+	GlyphScale: 1,
+
+	// Hand's own tick, centred under the mark. The gap is 3 rather than 5 so a four-point card
+	// still lands its fourth tick inside the border — TestATokenHoldsFourTicks is what fails if
+	// it stops doing that, and drawDashes would otherwise drop the tick silently.
+	DashLeft:   (40 - 16) / 2,
+	DashTop:    26,
+	DashWidth:  16,
+	DashHeight: 4,
+	DashGap:    3,
+}

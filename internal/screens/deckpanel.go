@@ -78,7 +78,7 @@ func ownedContents(gs *state.GlobalState) deckContents {
 // panel needs that the chrome does not know — which cards to show.
 //
 // **It is a thin wrapper as of 2026-08-24**, when the chrome it used to own moved to modal.go for
-// the combos panel to share. What is left is the pairing of a toggle with a `deckContents`, so a
+// the hands panel to share. What is left is the pairing of a toggle with a `deckContents`, so a
 // scene still says `s.deck.update(gs, ownedContents(gs))` and no call site changed.
 //
 // **The button is not a draw pile.** The combat screen opens this panel by clicking the stack of

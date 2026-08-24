@@ -105,31 +105,46 @@ resolves and has two values; `combat.Form` says *what kind of card it is* and ha
 is the coarser and is derivable from the form — everything outside Plan is an attack — so the
 **form is what a card puts on its face** and what a hand is counted on.
 
-**The attack set is a 3x3 ladder: three forms by three cost tiers, filled**, and the tiers are
+**The attack set is a 3x5 ladder: three forms by five cost tiers, filled**, and the tiers are
 identical across the forms. A form is *which* pair you are building toward, never a stronger
 or weaker way to build one.
 
-| Form | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× |
-|---|---|---|---|
-| **stab** | Jab | Thrust | Lunge |
-| **slash** | Cut | Slash | Cleave |
-| **crush** | Bash | Strike | Smash |
+**The middle three rungs are the deck; the two ends ship at zero copies** *(owner's call,
+2026-08-24)*. A run opens holding 1/2/3 AP cards and can never buy anything else, so the only way
+to hold a Poke or an Impale is a **Shrink** or a **Grow** worm walking a card off the end of the
+three. They are real registered concepts all the same, because `combat.Neighbour` derives the
+ladder from the registry — a rung that does not exist is a rung a worm cannot step onto, which is
+what used to make Shrink dead on every 1 AP card and Grow dead on every 3 AP one.
+
+| Form | 0 AP · 0.25× | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× | 4 AP · 4× |
+|---|---|---|---|---|---|
+| **stab** | Poke | Jab | Thrust | Lunge | Impale |
+| **slash** | Nick | Cut | Slash | Cleave | Sever |
+| **crush** | Tap | Bash | Strike | Smash | Pulverize |
 
 | Form | Concept | AP | Effect |
 |---|---|---|---|
-| **stab** | Jab / Thrust / Lunge | 1 / 2 / 3 | Stabs for `DMG/2` (min 1) / `DMG` / `DMG × 2` |
-| **slash** | Cut / Slash / Cleave | 1 / 2 / 3 | Slashes for the same three figures |
-| **crush** | Bash / Strike / Smash | 1 / 2 / 3 | Crushes for the same three figures |
+| **stab** | Poke / Jab / Thrust / Lunge / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 2` / `DMG × 4` |
+| **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
+| **crush** | Tap / Bash / Strike / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
 | **plan** | Prepare | 1 | Banks +2 AP for the next round |
 | | Plan | 2 | Draws **2 extra cards** into the next round's hand |
 | | Defend | 3 | Takes **50%** off the blow aimed at you next |
 
 **Nine attack concepts × four colours = 36 cards; three plans × four copies = 12.** A **48-card
-deck**. **No card in the player's deck is drab** *(2026-08-15)*: every attack ships in one of the
+deck** — the six zero-copy rungs are in the file and not in the pile. **No card in the player's deck
+is drab** *(2026-08-15)*: every attack ships in one of the
 four primary elements and the only basic cards are the plans, because nothing a plan does is
 elemental and a coloured Defend would be a colour that meant nothing.
 
-**The plans sit on the same 1/2/3 ladder as the attacks**, so nothing in the game costs four. What
+**A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
+already took deliberately when Whetworm could drive a card to free: a turn is capped at
+`MaxActions` cards however cheap they are. **A 4 AP card is the first single card that beats a
+whole cheap turn**, at 2× a Lunge for 1.33× the price — the reason it is a worm's prize rather
+than something a run can stock.
+
+**The plans sit on the dealt 1/2/3 ladder as the attacks do**, and there is no plan at either
+end — the two outer rungs are an attack's ladder only. What
 each buys is a different currency at a rising price: Prepare pays in points, Plan pays in cards,
 Defend pays in survival.
 
@@ -173,8 +188,8 @@ of a four-to-six point budget is most of a round, which is what a halving is mea
 Multiplying rather than adding is what stops several cards reaching past zero by accident: two
 Defends take three quarters and a third takes seven eighths, a curve that never arrives.
 
-**The plan form is three cards where the attack ladder is nine**, and it is deliberately not a
-3x3 grid of its own. Prepare is the cheapest card in the game and Defend the dearest; what sits
+**The plan form is three cards where the attack ladder is nine dealt**, and it is deliberately not
+a grid of its own. Prepare is the cheapest card in the game and Defend the dearest; what sits
 between them is one card rather than a rung, because a grid filled with cards that differ only by a
 number is the trap this deck was rebuilt to avoid.
 
@@ -245,7 +260,7 @@ to decide.
 playing-card instinct argues for 13 ranks × 4 suits, and the fifth "suit" here is `basic` — which
 this document calls the absence of an element, not a colour of its own. With `basic` a variant the
 attacks live on multiples of five; without it nothing is plain. The ladder decides it instead: nine
-attack concepts is what three forms by three tiers produces.
+*dealt* attack concepts is what three forms by three dealt tiers produces.
 
 ### Hover and long press
 

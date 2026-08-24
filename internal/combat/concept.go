@@ -266,8 +266,14 @@ func registerPlayerConcepts() map[string]ConceptID {
 	return out
 }
 
-// The player's twelve, named so the rules' own tests, the balance tool and the screen can say
+// The player's eighteen, named so the rules' own tests, the balance tool and the screen can say
 // `combat.Strike` rather than looking a string up.
+//
+// **Six of them ship at zero copies** *(2026-08-24)* — the 0 AP and 4 AP rung of each attack form.
+// They are not in the starting deck and cannot be bought; the only way to hold one is a Shrink or a
+// Grow worm walking a card off the end of the middle three. They are registered concepts all the
+// same, because `Neighbour` derives the ladder from this registry and a rung that does not exist is
+// a rung a worm cannot step onto.
 //
 // **They are resolved from the file rather than defining it.** Renaming a card in
 // `duelist_cards.json` fails here, at startup, with the name that went missing — which is the loud
@@ -277,19 +283,25 @@ func registerPlayerConcepts() map[string]ConceptID {
 // package-level variable after everything its initialiser references.
 var (
 	// Stab.
+	Poke   = mustPlayer("Poke")
 	Jab    = mustPlayer("Jab")
 	Thrust = mustPlayer("Thrust")
 	Lunge  = mustPlayer("Lunge")
+	Impale = mustPlayer("Impale")
 
 	// Slash.
+	Nick   = mustPlayer("Nick")
 	Cut    = mustPlayer("Cut")
 	Slash  = mustPlayer("Slash")
 	Cleave = mustPlayer("Cleave")
+	Sever  = mustPlayer("Sever")
 
 	// Crush.
-	Bash   = mustPlayer("Bash")
-	Strike = mustPlayer("Strike")
-	Smash  = mustPlayer("Smash")
+	Tap       = mustPlayer("Tap")
+	Bash      = mustPlayer("Bash")
+	Strike    = mustPlayer("Strike")
+	Smash     = mustPlayer("Smash")
+	Pulverize = mustPlayer("Pulverize")
 
 	// Plan. The concept named Plan is one card of the form named plan, which is a collision of
 	// words rather than of meanings: the form is what the card's corner says and this is the

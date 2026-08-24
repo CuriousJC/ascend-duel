@@ -200,9 +200,11 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	}
 }
 
-func TestTheAttackLadderIsThreeFormsByThreeTiers(t *testing.T) {
+func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 	// One concept per form per tier, and **the tiers are identical across the forms** — same
-	// cost, same damage. That is the structural claim MECHANICS.md makes about the deck: a form
+	// cost, same damage. **Five rungs, not three** *(2026-08-24)*: the 0 AP and 4 AP ends ship at
+	// zero copies and exist only for a worm to walk a card onto, but they are rungs of the same
+	// ladder and have to match across the forms exactly as the dealt three do. That is the structural claim MECHANICS.md makes about the deck: a form
 	// is which pair you are building, never a better or worse way to build one. It is also the
 	// thing that quietly breaks the first time somebody makes a Cleave hit harder than a Lunge.
 	//
@@ -218,8 +220,8 @@ func TestTheAttackLadderIsThreeFormsByThreeTiers(t *testing.T) {
 		if Plain(a).Category() != CategoryAttack || fam == FormNone {
 			continue
 		}
-		if ConceptOf(a).Cost < 1 || ConceptOf(a).Cost > 3 {
-			t.Errorf("%v costs %d, outside the 1-3 tiers the ladder is built on", a, ConceptOf(a).Cost)
+		if ConceptOf(a).Cost < 0 || ConceptOf(a).Cost > 4 {
+			t.Errorf("%v costs %d, outside the 0-4 tiers the ladder is built on", a, ConceptOf(a).Cost)
 		}
 		if tiers[fam] == nil {
 			tiers[fam] = map[int]ConceptID{}
@@ -231,13 +233,13 @@ func TestTheAttackLadderIsThreeFormsByThreeTiers(t *testing.T) {
 	}
 
 	for _, fam := range attackForms {
-		if len(tiers[fam]) != 3 {
-			t.Errorf("%v has %d of 3 tiers filled", fam, len(tiers[fam]))
+		if len(tiers[fam]) != 5 {
+			t.Errorf("%v has %d of 5 tiers filled", fam, len(tiers[fam]))
 		}
 	}
 
 	// Every form's rung deals what Stab's rung deals.
-	for tier := 1; tier <= 3; tier++ {
+	for tier := 0; tier <= 4; tier++ {
 		want, ok := tiers[FormStab][tier]
 		if !ok {
 			continue
@@ -382,7 +384,7 @@ func TestAWormsBoundsHold(t *testing.T) {
 func TestTheLadderWalksItsOwnForm(t *testing.T) {
 	up, ok := Neighbour(Jab, 1)
 	if !ok {
-		t.Fatal("Jab cannot be promoted, and it is the bottom of its ladder")
+		t.Fatal("Jab cannot be promoted, and it is a middle rung of its ladder")
 	}
 	if ConceptOf(up).Form != ConceptOf(Jab).Form {
 		t.Errorf("promoting a %v produced a %v", ConceptOf(Jab).Form, ConceptOf(up).Form)
@@ -395,10 +397,20 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 		t.Errorf("demoting the promotion gave %v, want Jab", down)
 	}
 
-	// Both ends stop. A card at the top of its form cannot be promoted, and the screen asks
-	// before it offers so the player is never shown a worm that would do nothing.
-	if _, ok := Neighbour(Jab, -1); ok {
+	// A Jab now demotes, because the ladder grew an end below it. That is the whole point of the
+	// zero-copy rungs: the worm reaches a card it used to be refused on.
+	if down, ok := Neighbour(Jab, -1); !ok || down != Poke {
+		t.Errorf("demoting a Jab gave %v, want Poke", down)
+	}
+
+	// Both ends still stop, one rung further out than they used to. A card at the top of its form
+	// cannot be promoted, and the screen asks before it offers so the player is never shown a worm
+	// that would do nothing.
+	if _, ok := Neighbour(Poke, -1); ok {
 		t.Error("the bottom of a ladder was demoted")
+	}
+	if _, ok := Neighbour(Impale, 1); ok {
+		t.Error("the top of a ladder was promoted")
 	}
 
 	// A plan has no form and therefore no ladder, and neither has any enemy card.

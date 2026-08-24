@@ -1,5 +1,14 @@
 [
   {
+    "Label": "Poke",
+    "Verb": "attack",
+    "Amount": 25,
+    "Cost": 0,
+    "Form": "stab",
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 0
+  },
+  {
     "Label": "Jab",
     "Verb": "attack",
     "Amount": 50,
@@ -26,7 +35,25 @@
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
+  {
+    "Label": "Impale",
+    "Verb": "attack",
+    "Amount": 400,
+    "Cost": 4,
+    "Form": "stab",
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 0
+  },
 
+  {
+    "Label": "Nick",
+    "Verb": "attack",
+    "Amount": 25,
+    "Cost": 0,
+    "Form": "slash",
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 0
+  },
   {
     "Label": "Cut",
     "Verb": "attack",
@@ -54,7 +81,25 @@
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
   },
+  {
+    "Label": "Sever",
+    "Verb": "attack",
+    "Amount": 400,
+    "Cost": 4,
+    "Form": "slash",
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 0
+  },
 
+  {
+    "Label": "Tap",
+    "Verb": "attack",
+    "Amount": 25,
+    "Cost": 0,
+    "Form": "crush",
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 0
+  },
   {
     "Label": "Bash",
     "Verb": "attack",
@@ -81,6 +126,15 @@
     "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth"],
     "Copies": 1
+  },
+  {
+    "Label": "Pulverize",
+    "Verb": "attack",
+    "Amount": 400,
+    "Cost": 4,
+    "Form": "crush",
+    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Copies": 0
   },
 
   {

@@ -760,21 +760,27 @@ func abs(n int) int {
 	return n
 }
 
-// handsButtonUp is the air between the hands button and the top of the hand — enough that the
-// button reads as standing above the row rather than as part of it.
-const handsButtonUp = 12
+// handsButtonDown is the air between the bottom of the sort column and the top of the hands
+// button — the same 8 the three sort buttons keep between each other, so the button reads as a
+// fourth rung of the column rather than as something parked under it.
+const handsButtonDown = sortButtonGap
 
 // handsButtonPlace is where the hands button stands on the combat screen: **left edge aligned
-// with the left edge of a full hand**, sitting just above the row *(owner's call, 2026-08-24)*.
+// with the sort column, sitting under it** *(owner's call, 2026-08-24)*.
 //
-// **A full hand, never the hand as dealt.** `handBand` narrows and re-centres as cards are spent,
-// so a button hung off the current row would slide sideways under the cursor every time a card was
-// played — the same reason the AP figure is measured from `handBand(gs, handSize)` rather than from
-// the laid-out count.
+// **Measured off sortColumnRect rather than off a percentage**, so the button follows the column
+// if the card row moves — which it has done three times, and each time everything measured off
+// the row followed and everything measured off a percentage did not. The column is centred on
+// the cards and pinned to the band's right edge, so this button stands still while the hand is
+// spent, which was the whole reason the old placement was measured from a full hand rather than
+// the row as dealt.
+//
+// **The button is wider than the column**, because the word is wider than one character, so it
+// overhangs to the right by the difference.
 func handsButtonPlace(gs *state.GlobalState) image.Point {
-	band := handBand(gs, handSize)
+	col := sortColumnRect(gs)
 	return image.Pt(
-		band.Min.X+handsButtonWidth/2,
-		band.Min.Y-handsButtonUp-logButtonSize/2,
+		col.Min.X+handsButtonWidth/2,
+		col.Max.Y+handsButtonDown+logButtonSize/2,
 	)
 }

@@ -14,19 +14,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
-- [ ] **The build band's ring row spreads to both edges, and two rings read as two unrelated
-      things.** `ringSlotAt` puts the first ring flush left and the last flush right, which is
-      right for five and is what closes them up into a hand. On the between-fights band the row
-      runs to 99% with no enemy card ending it, so a run wearing two puts one beside the duelist
-      card and the other in the far corner of an empty screen. **Visible now that the shop hangs a
-      sell price under each one** *(2026-08-22)*. Either the band's row wants its own width, or the
-      pitch wants a maximum. Pre-existing; the shop only made it obvious.
-- [ ] **Two rounded-rectangle implementations exist.** Cards rasterise their corners in
-      plain Go (`internal/cards/shape.go`) because `internal/cards` must render without a
-      graphics context; health bars use `CreateRoundedRecMask` + `ebiten.BlendSourceIn`.
-      Migrating health bars onto the plain-Go path would collapse the two, and is the only
-      way to get back to one — the reverse is impossible, since the mask path needs a window.
-      Low priority, but it is a real inconsistency.
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the
@@ -34,17 +21,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       loop that is not its full length — an intro bar played once, say —
       `audio.NewInfiniteLoopWithIntro` already supports it and the loop point would need
       to come from the file (a marker meta-event) rather than from arithmetic.
-- [ ] **Bevel the widgets, not just the glyphs.** Buttons, cards and the resolution panes all
-      want the treatment the glyphs got — a palette with an outline, a lit edge and a shadowed
-      one, rather than a single colour scaled up and down. The "name one colour and scale it"
-      rule is really about how a surface responds to hover, press and disable, and it has been
-      doing duty as a rule about what a surface may look like, which is further than it needs
-      to go.
-      - `systems.Palette` already exists and is the obvious thing to widen to.
-      - Do the buttons first: they have three states to show, so the payoff is visible
-        immediately and the state-versus-surface split gets tested by something real.
-      - The panes are the least urgent and the largest areas, so a heavy bevel there will
-        read as chrome. Worth doing last and lightly.
 - [ ] **Brands need a data file and a way to be acquired.** The mechanic is already decided —
       see `MECHANICS.md`'s Brands section: they alter the container where rings alter the
       contents, they are permanent *for the run*, and nothing takes one off. What does not

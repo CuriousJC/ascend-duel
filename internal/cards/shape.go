@@ -3,14 +3,17 @@ package cards
 import (
 	"image"
 	"image/color"
+
+	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // Rounded-rectangle rasterising, in plain Go.
 //
-// This is the piece CLAUDE.md's "reuse CreateRoundedRecMask" instruction could not
-// cover, for the reason set out in the package comment: that function needs a graphics
-// context and this package must not have one. What is here is deliberately the smallest
-// thing that draws the same shape.
+// **The whole game's rounded corners come from here**, for the reason set out in the
+// package comment: the screen's old mask-and-blend rounding needed a graphics context and
+// this package must not have one, so when the fighters became cards that path lost its
+// last caller and went. What is here is deliberately the smallest thing that draws the
+// shape.
 //
 // **Hard-edged, no antialiasing.** The cards were already drawn that way and the glyphs
 // on them are 1:1 pixel art, so a soft card edge would put two different rendering
@@ -74,12 +77,26 @@ func insideRounded(w, h, radius, px, py int) bool {
 	return dx*dx+dy*dy <= radius*radius
 }
 
+// BorderBevel is how much of the border is given over to its light and its shade.
+//
+// **Two pixels of a six-pixel border**, so four are still the border's own colour: the border is
+// what says the card's *state* — resting, selected, unaffordable — and a bevel eating the whole
+// ring would leave that signal being read off a lit edge and a shadowed one that are different
+// colours from each other. The depth goes on the outside, where the card meets the table.
+const BorderBevel = 1
+
 // roundedBorder draws a rounded rectangle of `border` with a `fill` one inset inside it,
 // which is a border because the inner shape covers everything but the edge.
 //
 // Drawing it as two filled shapes rather than as a stroked outline is what keeps the
 // inner corner concentric with the outer one. Stroking a path would need the same corner
 // arithmetic twice and would leave the two able to disagree.
+//
+// **The outer BorderBevel pixels are then lit and shadowed** *(2026-08-24)*, from the same
+// `systems.BevelEdges` a button's face uses, so a card and a button are lit from the same corner.
+// It is done as a pass over the finished ring rather than as two more rounded rects, because the
+// light does not follow the rectangle — it follows the *diagonal*, and no stack of concentric
+// shapes can put light on a top-left corner and shade on the bottom-right one.
 func roundedBorder(dst *image.RGBA, x, y, w, h, radius, width int, border, fill color.RGBA) {
 	roundedRect(dst, x, y, w, h, radius, border)
 	if width <= 0 {
@@ -89,10 +106,44 @@ func roundedBorder(dst *image.RGBA, x, y, w, h, radius, width int, border, fill 
 	if iw <= 0 || ih <= 0 {
 		return
 	}
+	bevelRing(dst, x, y, w, h, radius, border)
 	// The inner radius shrinks by the border width so the two curves stay parallel. A
 	// constant radius would leave the border visibly thicker at the corners than along
 	// the edges, which is the usual giveaway of a hand-rolled rounded rect.
 	roundedRect(dst, x+width, y+width, iw, ih, radius-width, fill)
+}
+
+// bevelRing lights the outer BorderBevel pixels of a shape already filled with `border`: the
+// top-left side of the card's diagonal takes the lit colour and the bottom-right side the shade.
+//
+// **The split is the anti-diagonal, not the four edges.** Deciding by edge — top is light, right is
+// shade — has to answer for the corners, and every answer is a straight seam somewhere on the
+// curve. Comparing a pixel's position across the card against its position down it puts the
+// changeover exactly on the two corners the light does not reach, which is where a real bevel's
+// is.
+func bevelRing(dst *image.RGBA, x, y, w, h, radius int, border color.RGBA) {
+	if BorderBevel <= 0 || w <= 2*BorderBevel || h <= 2*BorderBevel {
+		return
+	}
+	light, shade := systems.BevelEdges(border)
+	inner := clampRadius(w, h, radius) - BorderBevel
+
+	for py := 0; py < h; py++ {
+		for px := 0; px < w; px++ {
+			if !insideRounded(w, h, clampRadius(w, h, radius), px, py) {
+				continue
+			}
+			// Anything further in than the bevel is the border proper and keeps its colour.
+			if insideRounded(w-2*BorderBevel, h-2*BorderBevel, inner, px-BorderBevel, py-BorderBevel) {
+				continue
+			}
+			c := shade
+			if px*h+py*w < w*h {
+				c = light
+			}
+			dst.SetRGBA(x+px, y+py, c)
+		}
+	}
 }
 
 // clampRadius keeps a radius inside the rectangle it is rounding. A radius past half the

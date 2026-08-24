@@ -190,14 +190,33 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	// Clear before repainting. The fill below is opaque and covers the whole face, but a
 	// shorter label would otherwise leave the tail of a longer one behind it.
 	button.Image.Clear()
-	vector.DrawFilledRect(button.Image, 0, 0,
-		float32(button.Width), float32(button.Height), buttonStateColor(button), false)
+
+	// **The face is bevelled, and pressed and latched are drawn sunken rather than merely
+	// darker** *(2026-08-24)*. Both of those states mean "in", which brightness alone cannot say
+	// on a ramp whose bright end already belongs to hover. Disabled stays flat on purpose: no
+	// light on it at all is what makes it read as unavailable before it reads as a button.
+	fill := buttonStateColor(button)
+	if button.State == models.ButtonStateDisabled {
+		vector.DrawFilledRect(button.Image, 0, 0,
+			float32(button.Width), float32(button.Height), fill, false)
+	} else {
+		BevelFace(button.Image, button.Width, button.Height, fill, buttonSunken(button))
+	}
 
 	// Text is centred by alignment against the button's midpoint rather than by a fixed
 	// offset. The old hardcoded Translate(50, 50) only landed correctly on a button of
 	// one particular size and put the label off the bottom edge of a shorter one.
+	// A sunken face moves its label with it. One pixel, because the bevel it is following is
+	// three: a label that travelled the whole depth would read as a second animation rather than
+	// as the same surface going down.
+	nudge := 0.0
+	if button.State != models.ButtonStateDisabled && buttonSunken(button) {
+		nudge = 1
+	}
+
 	centerButtonTextOp := &text.DrawOptions{}
-	centerButtonTextOp.GeoM.Translate(float64(button.Width)/2, float64(button.Height)/2)
+	centerButtonTextOp.GeoM.Translate(
+		float64(button.Width)/2+nudge, float64(button.Height)/2+nudge)
 	centerButtonTextOp.PrimaryAlign = text.AlignCenter
 	centerButtonTextOp.SecondaryAlign = text.AlignCenter
 	text.Draw(button.Image, button.Text,
@@ -208,6 +227,13 @@ func paintButton(gs *state.GlobalState, button *models.Button) {
 	button.PaintedText = button.Text
 	button.PaintedTextSize = button.TextSize
 	button.PaintedColor = button.BaseColor
+}
+
+// buttonSunken reports whether a state is one the face is pushed in for: pressed, and latched,
+// which is a button that has been pressed and stayed down. Hover is not — the cursor resting on
+// something does not move it — and disabled never gets a bevel to sink.
+func buttonSunken(button *models.Button) bool {
+	return button.State == models.ButtonStatePressed || button.State == models.ButtonStateLatched
 }
 
 // defaultButtonTextSize is what a button that names no size draws its label at, which is

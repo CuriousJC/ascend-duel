@@ -142,6 +142,19 @@ func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
 	return r
 }
 
+// ringSlotMaxGap is the most bare table ever left between two ring cards.
+//
+// **A row's pitch is capped and then the row is centred** *(2026-08-24)*. Without the cap the row
+// spread to whatever pane it was handed, so a run wearing two rings put one against the duelist
+// card and the other in the far corner of an empty screen — two rings reading as two unrelated
+// things rather than as one build. The cap is what makes a growing row *grow*: rings sit at a
+// fixed pitch and the row widens outwards from the middle as one is added, up to the point where
+// five of them fill the pane and the pitch has to close up again.
+//
+// 22 is the gap five rings leave in the combat screen's pane, so the fullest row on the screen the
+// pitch was originally derived from is drawn exactly where it always was.
+const ringSlotMaxGap = 22
+
 // ringSlotPitch is how far apart two ring cards start, **for the number actually worn**.
 //
 // **The row spreads to fill the pane and closes up as it fills** *(2026-08-11)*. Three rings
@@ -153,21 +166,37 @@ func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
 // accepted failure mode, not shrinking: a card cannot be scaled, a smaller ring is a
 // *different drawing*, and there is no ring style below this one.
 //
-// Pitch is always first-card-flush-left to last-card-flush-right, so the row's edges are fixed
-// and only the spacing inside them moves. One ring sits at the left edge, since with a single
-// card the two anchors are the same one and the left is where a growing row starts.
+// **The spread is capped at ringSlotMaxGap and the row is centred in the pane by ringSlotAt**, so
+// a pane wider than the rings in it leaves its slack at both ends rather than between the cards.
 func ringSlotPitch(r image.Rectangle, worn int) int {
 	if worn < 2 {
 		return 0
 	}
-	return (r.Dx() - cards.RingStyle.Width) / (worn - 1)
+	pitch := (r.Dx() - cards.RingStyle.Width) / (worn - 1)
+	if max := cards.RingStyle.Width + ringSlotMaxGap; pitch > max {
+		return max
+	}
+	return pitch
+}
+
+// ringSlotRowWidth is how much of the pane the row actually occupies: every pitch but the last,
+// plus the card that sits on the final one.
+func ringSlotRowWidth(r image.Rectangle, worn int) int {
+	if worn < 1 {
+		return 0
+	}
+	return (worn-1)*ringSlotPitch(r, worn) + cards.RingStyle.Width
 }
 
 // ringSlotAt is where the i'th ring card's top-left corner sits. **Flush with the pane's top**,
 // which is the top of the character block beside it — the two are aligned directly rather than
 // each being inset inside a frame of its own.
+//
+// **Horizontally the row is centred on the pane**, which is only visible once the pitch is capped:
+// a full row still starts where it always did, because there is no slack left to share out.
 func ringSlotAt(r image.Rectangle, i, worn int) image.Point {
-	return image.Pt(r.Min.X+i*ringSlotPitch(r, worn), r.Min.Y)
+	left := r.Min.X + (r.Dx()-ringSlotRowWidth(r, worn))/2
+	return image.Pt(left+i*ringSlotPitch(r, worn), r.Min.Y)
 }
 
 // wornRings is what the player is wearing, as records, in worn order.
@@ -219,6 +248,13 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 
 	// The surface first, so everything else stands on it.
 	back := s.ringPaneBackRect(gs)
+
+	// **Flat, where the deck panel and the fight log are bevelled** *(owner's call, 2026-08-24)*.
+	// It was sunken for an afternoon, on the argument that the ring cards stand *in* it. What that
+	// misses is what is standing there: five bevelled cards on a bevelled tray on a bevelled
+	// screen is three depths in one corner, and the cards are the thing meant to be read. The two
+	// panels that keep their bevel are overlays — they cover the game, so a lit edge is what says
+	// they are in front of it. This backing covers nothing.
 	vector.DrawFilledRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
 		ringPaneBackColor, false)

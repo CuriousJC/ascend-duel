@@ -420,11 +420,10 @@ var (
 
 // drawHealth draws the bar and the "42/60" line beneath it.
 //
-// **The bar is square-cornered where the screen's other one is rounded**, which is a real
-// inconsistency and the same one the package header already records: rounding on the screen
-// goes through an Ebitengine mask and a GPU blend mode, neither of which exists here. A
-// hard-edged bar matches the cost dashes and the card's own corner rasterisation, so it is
-// at least consistent within the card.
+// **The bar is square-cornered**, which matches the cost ticks and the card's own hard-edged
+// corners. It read as an inconsistency while the screen still rounded its own health bar
+// through a GPU mask; that bar is gone, so a square one is now the only shape a bar has ever
+// had here rather than the poorer half of a pair.
 //
 // A zero or negative MaxLife draws the empty bar and no fraction rather than dividing by it.
 func drawHealth(dst *image.RGBA, s Spec, st Style, f *Faces) error {

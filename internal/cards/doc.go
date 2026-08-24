@@ -40,17 +40,18 @@
 //
 // # Rounded corners are rasterised here, not masked
 //
-// CLAUDE.md points at `CreateRoundedRecMask` + `ebiten.BlendSourceIn` as the repo's one
-// rounding approach. **That approach cannot be used here**: it takes an `*ebiten.Image`,
-// its body is `vector.DrawFilledCircle`, and `BlendSourceIn` is a GPU blend mode — none
-// of which exist without a graphics context. Being window-free is the requirement that
-// makes the review tool possible at all, so it wins, and corners are rasterised in plain
-// Go below.
+// **This is the only rounding approach in the tree** *(2026-08-24)*. The screen used to
+// round with `CreateRoundedRecMask` + `ebiten.BlendSourceIn`, and for a while the two
+// coexisted — that path could never be used here, since it takes an `*ebiten.Image`, its
+// body is `vector.DrawFilledCircle`, and `BlendSourceIn` is a GPU blend mode, none of
+// which exist without a graphics context. Being window-free is the requirement that makes
+// the review tool possible at all, so it wins.
 //
-// This does leave two rounding approaches in the tree: cards here, health bars still on
-// the mask-and-blend path in `combat_hud.go`. That is a real inconsistency rather than an
-// oversight. Migrating health bars onto this one is possible later and is not this
-// change.
+// The mask path went when both fighters became cards and their health bars came in here
+// with them, so nothing on screen needs it any more. **A new rounded shape belongs in
+// shape.go**, whatever is drawing it: a second GPU-side rasteriser would put two
+// silhouettes of the same corner back in the tree, and the one that cannot be reached
+// without a window is the one that would spread.
 //
 // Corners are hard-edged — no antialiasing — because the cards were already drawn that
 // way (`vector.DrawFilledRect(..., false)`) and because the glyphs sitting on them are

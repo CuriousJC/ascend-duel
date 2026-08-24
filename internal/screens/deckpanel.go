@@ -287,8 +287,9 @@ func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, d deckContents) 
 	width := float32(gs.PctX(deckPanelRightPct)) - left
 	height := float32(gs.PctY(deckPanelBottomPct)) - top
 
-	vector.DrawFilledRect(screen, left, top, width, height,
-		color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
+	// Raised for the reason the fight log's panel is: it is in front of the game, over a scrim.
+	systems.BevelRect(screen, int(left), int(top), int(width), int(height),
+		systems.PaneBevelWidth, color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
 	vector.StrokeRect(screen, left, top, width, height, 2, apBarColor, false)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 28}

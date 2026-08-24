@@ -701,19 +701,33 @@ review question is "does any of these thirty commons belong a tier up", which an
 cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
 because a scarce tier rounds to `0%` and would read as unreachable.
 
-### Colour: name one colour and scale it — but the rule is narrower than it reads
+### Colour: name one colour and scale it — and the light comes off that colour too
 
-**This applies to widget *state*, not to widget *surfaces*.** A button naming crimson and
-brightening toward it on press is the rule working. A button that can never have a lit top
-edge and a shadowed bottom one is the rule overreaching, and it does currently overreach:
-glyphs are written down as an exception when the only real problem is that a bevel needs more
-than one value.
+**The rule governs widget *state*; the bevel is the surface's own light** *(2026-08-24)*. Those are
+different questions and separating them is what let bevelling land without every widget in the game
+being handed a palette: a button naming crimson and brightening toward it on press is state, and
+the lit top edge it has whatever state it is in is surface.
 
-The intended direction: **buttons, cards and the resolution panes all want bevelling**, from
-palettes like the ones in [glyphs.go](internal/systems/glyphs.go). When that lands, the rule
-below should be rewritten as what it actually is — how a surface responds to hover, press and
-disable — with the surface's own light and shade coming from a palette. Until then it governs
-everything that has not been given one.
+**`systems.BevelEdges` derives both edges from the fill itself** — `ColorToward` toward white for
+the light, because a saturated colour has nowhere to climb by scaling, and `ColorAtStrength` for
+the shade. So a widget still names one colour. The six-value `systems.Palette` stays where it is
+genuinely needed: a *glyph's* light has to be drawn, because a silhouette has no fill to compute
+it from.
+
+- **`BevelFace` for a control, `BevelRect` for anything else**, and the depth differs on purpose:
+  `BevelWidth` is 3 for a button, `PaneBevelWidth` is 2 for a panel, which is the largest surface
+  on screen and the one where a heavy bevel reads as chrome rather than as a surface.
+- **Sunken is a meaning, not a variant.** A pressed or latched button swaps its two edges, which is
+  how a face says "in" — brightness could not, since hover already owns the bright end of the ramp.
+  The deck panel and the fight log are raised because they cover the game; **the ring pane is flat**
+  *(owner's call)*, because it covers nothing and the bevelled cards standing on it are what should
+  be read.
+- **Disabled has no bevel at all.** Unavailable first, itself second — the same argument that makes
+  it ignore `BaseColor`.
+- **`internal/cards` bevels the outer 2px of a card's 3px border**, rasterised in plain Go since
+  that package has no graphics context, and splits light from shade on the *anti-diagonal* rather
+  than by edge — a per-edge rule has to answer for the corners and every answer leaves a seam on
+  the curve. It shares `BevelEdges` with the widgets so both are lit from the same corner.
 
 **And it assumes the thing being dimmed sits on a dark ground.** `ColorAtStrength` scales
 toward black, so on a light surface it makes things louder rather than quieter — see the card
@@ -989,15 +1003,16 @@ fight  →  reward  →  shop  →  choice  →  fight ...
 
 - Sprites are drawn via `colorm.DrawImage` so a `colorm.ColorM` can tint/hue-shift them; buttons and shapes use `vector.DrawFilled*` into a scratch `ebiten.NewImage`.
 - Positioning convention: translate by `-w/2, -h/2` first to center the origin, then translate to the target coordinate. Buttons store `ScreenX`/`ScreenY` as their *center*, and both `UpdateButton` (hit testing) and `DrawButton` re-derive the top-left from it.
-- **Rounded rectangles are done two ways, and that is a known inconsistency.** Health bars
-  draw an opaque mask and composite it with `ebiten.BlendSourceIn` — see `DrawHealthBar`
-  and `CreateRoundedRecMask` in [combat_hud.go](internal/screens/combat_hud.go). **Cards
-  cannot use that**: it takes an `*ebiten.Image`, its body is `vector.DrawFilledCircle`,
-  and `BlendSourceIn` is a GPU blend mode, none of which exist without a graphics context —
-  and `internal/cards` must render without one so the review tool can call it. Cards
-  therefore rasterise their corners in plain Go (`cards/shape.go`), hard-edged, because the
-  glyphs on them are 1:1 pixel art. Migrating health bars onto that path would collapse the
-  two; it has not been done.
+- **Rounded rectangles are done one way: `internal/cards/shape.go`, in plain Go**
+  *(2026-08-24)*. There were two for a while — health bars drew an opaque mask and composited
+  it with `ebiten.BlendSourceIn`, which cards could never use, since that path takes an
+  `*ebiten.Image`, its body is `vector.DrawFilledCircle`, and `BlendSourceIn` is a GPU blend
+  mode, none of which exist without a graphics context. `internal/cards` must render without
+  one so the review tools can call it, so the window-free rasteriser is the one that survived:
+  the mask lost its last caller when both fighters became cards and their bars moved into
+  `internal/cards`. Corners are hard-edged there, because the glyphs on them are 1:1 pixel art.
+  **A new rounded shape goes in `shape.go` whatever is drawing it** — a GPU-side rasteriser
+  would put the second silhouette back, and it is the one a review tool cannot reach.
 
 ## Art
 

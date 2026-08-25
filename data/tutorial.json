@@ -40,7 +40,7 @@
     },
     {
       "StepRecord": "take-them-all",
-      "Text": "Now look closer. Four of those cards burn the same red. Cards that match make a hand, and a hand multiplies the whole blow - so take the other three.",
+      "Text": "Now look closer. Select all the same color cards. Cards that match make a hand, and a hand multiplies the whole blow - so take the other three.",
       "Anchor": "matching-cards",
       "Until": "matching-queued"
     },
@@ -52,7 +52,7 @@
     },
     {
       "StepRecord": "watch",
-      "Text": "Now your hand calculates.",
+      "Text": "Now your hand calculates.  Each attack multiplies your DMG and your hand has its own multiplier.",
       "Anchor": "math-band",
       "Until": "phase-reward"
     },

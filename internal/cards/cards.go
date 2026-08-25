@@ -17,12 +17,16 @@ type Element int
 const (
 	Basic Element = iota
 
-	// The four primaries, which is all of them. `data/cards.json` deals
-	// 12 concepts x 5 borders (these four plus Basic) = the 60-card deck.
+	// The five primaries, which is all of them.
 	Fire
 	Ice
 	Lightning
 	Earth
+
+	// Arcane is the fifth, appended on 2026-08-25. Purple, and it sits after Earth for the reason
+	// combat.Element's does: anything indexed by one of these would be silently re-pointed by an
+	// insertion.
+	Arcane
 
 	// Ring is not an element and never appears on an action card. Rings reuse the whole
 	// card format — same size, same corners, same border treatment — with a pink border
@@ -40,7 +44,7 @@ const (
 //
 // Ring is not in it. See the constant.
 func Elements() []Element {
-	return []Element{Basic, Fire, Ice, Lightning, Earth}
+	return []Element{Basic, Fire, Ice, Lightning, Earth, Arcane}
 }
 
 var elementNames = [...]string{
@@ -49,6 +53,7 @@ var elementNames = [...]string{
 	Ice:       "ice",
 	Lightning: "lightning",
 	Earth:     "earth",
+	Arcane:    "arcane",
 	Ring:      "ring",
 }
 
@@ -77,6 +82,12 @@ var borderColors = [...]color.RGBA{
 	// same day, for the same reason, and to the same value; it has since been cut.
 	Lightning: {R: 214, G: 152, B: 12, A: 255},
 	Earth:     {R: 76, G: 140, B: 52, A: 255},
+
+	// Purple, and deliberately deeper than the ring pink it sits next to in this table — the two
+	// are the only two magenta-ish entries and the one thing that must never happen is an arcane
+	// card reading as a ring. It is dark enough to hold its own against the off-white surface,
+	// which is the constraint that pushed lightning down in 2026-08-19.
+	Arcane: {R: 138, G: 84, B: 200, A: 255},
 
 	// Pink, and deliberately unlike any of the four above — a ring has to be
 	// unmistakable at a glance, because the one thing that must never happen is reaching
@@ -294,18 +305,19 @@ const MaxStatLines = 3
 
 // MaxEffects is how many status badges a card can show at once.
 //
-// **Four, because `statuses.json` holds four and a duelist carries at most one of each.** This
+// **Five, because `statuses.json` holds five and a duelist carries at most one of each.** This
 // package does not know that — it holds pictures — so the number is stated here as the width of the
 // row the bottom band fits, and checked against the rules by
 // `TestTheCardHoldsAsManyEffectsAsThereAreStatuses` in internal/screens, which is the layer that can
 // see both.
 //
 // **It stopped being "one per element" on 2026-08-17**, when statuses became their own collection.
-// The two were the same number only because a status *was* an element. Authoring a fifth status is
-// therefore a layout change as well as a file edit, exactly as a fourth stat row is — though a cheap
-// one: at 20px badges and a 6px gap the row fits six inside the borders, so the fix is this number
-// rather than a redesign.
-const MaxEffects = 4
+// The two were the same number only because a status *was* an element. Authoring a status is
+// therefore a layout change as well as a file edit, exactly as a fourth stat row is — and WEAKENED
+// spent the prediction on 2026-08-25: it cost this one number and nothing else, because at 20px
+// badges and a 6px gap the row fits six inside the borders. **The sixth is the last one that is
+// free**; a seventh status is a redesign of the band.
+const MaxEffects = 5
 
 // Spec is everything about one card that changes what it looks like.
 //

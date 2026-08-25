@@ -45,8 +45,8 @@ type StatusData struct {
 	// nobody has learned rather than nothing at all.
 	Badge string `json:"Badge"`
 
-	// Effect is which of four closed kinds this status is: `damage-over-time`, `lose-actions`,
-	// `miss-chance` or `damage-reduction`.
+	// Effect is which of five closed kinds this status is: `damage-over-time`, `lose-actions`,
+	// `miss-chance`, `damage-reduction` or `damage-amplification`.
 	//
 	// **A status is a file entry; a *kind* of status is a Go change.** The same posture the card
 	// verbs and the ring effects take, and for the same reason: a vocabulary that could express
@@ -59,6 +59,8 @@ type StatusData struct {
 	//   - lose-actions:     cards off the front of every turn it lasts.
 	//   - miss-chance:      percentage points of chance that an attack does not land.
 	//   - damage-reduction: percentage points off the damage the carrier deals.
+	//   - damage-amplification: percentage points *added* to the damage the carrier takes, blows and
+	//     burn ticks alike. 100 is double. It is the only kind read off the duelist being hit.
 	Amount int `json:"Amount"`
 
 	// Rounds is how many round-ends a freshly applied status survives.

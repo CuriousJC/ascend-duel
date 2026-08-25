@@ -316,6 +316,8 @@ func artFor(e combat.Element) cards.Element {
 		return cards.Lightning
 	case combat.Earth:
 		return cards.Earth
+	case combat.Arcane:
+		return cards.Arcane
 	default:
 		return cards.Basic
 	}

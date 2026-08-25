@@ -156,16 +156,16 @@ func (v *deckView) draw(gs *state.GlobalState, screen *ebiten.Image, d deckConte
 // the answers in their head while looking at the third.
 const (
 	// tallyTop is how far under the grid the band starts.
-	tallyTop = 20
+	tallyTop = 14
 
 	tallyTitleSize = 15
 	tallyTextSize  = 17
-	tallyRowHeight = 30
+	tallyRowHeight = 28
 
 	// tallyHeadDrop is where a block's first row of figures starts, measured from the block's own
 	// top. It clears two lines: the block's heading, and the AP headings the middle block writes
 	// under its own. Both are written at tallyTitleSize, so this is two of those plus air.
-	tallyHeadDrop = 46
+	tallyHeadDrop = 40
 
 	// tallyColumnHead is where the middle block writes its AP headings — between the block's
 	// heading and its first row of figures.

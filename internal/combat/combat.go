@@ -230,7 +230,10 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 		if !d.Alive() {
 			break
 		}
-		tick := d.Statuses[id].Amount
+		// **A tick is amplified by whatever the carrier is vulnerable to**, exactly as a blow is. A
+		// burn is damage this duelist takes, and a rule that exempted it would be "damage, except the
+		// kind that arrives at the end of the round" — see EffectDamageAmplification.
+		tick := amplify(d.Statuses[id].Amount, d.vulnerability())
 		d.CurrentLife = reduce(d.CurrentLife, tick)
 
 		// Side and Target are both this duelist, because nobody acted. The status was applied by an
@@ -275,9 +278,11 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 // Jab is not in it, so it adds nothing to the figure.
 //
 // The order inside the blow is: shock roll, base damage from the hand's own cards, the hand
-// multiplier, the attacker's earth weight, then the defender's raised cards. **Weight sits where
-// it does because it is a property of the attacker** — it says how hard they can still swing — so
-// everything the defender does happens to a blow that has already been blunted.
+// multiplier, the attacker's earth weight, the defender's arcane vulnerability, then the
+// defender's raised cards. **Weight sits where it does because it is a property of the attacker** —
+// it says how hard they can still swing — and vulnerability follows it because it is a property of
+// the body being hit, so everything the defender actively *does* happens to a blow that both
+// statuses have already shaped.
 func resolveAttackPhase(
 	events []Event,
 	side Side,
@@ -361,6 +366,13 @@ func resolveAttackPhase(
 	// That sum is the announcement's `Amount`, taken rather than repeated: the feed prints the
 	// arithmetic, and a second copy of it here is the one way the printed sum could be wrong.
 	dmg := blunt(swung.Amount, actor.weight())
+
+	// **Then the target's own vulnerability**, which is the one modifier read off the duelist being
+	// hit rather than the one swinging — see EffectDamageAmplification. It sits after weight and
+	// before the defences for the same reason weight sits before both: weight says how hard the
+	// attacker can still swing and vulnerability says how hard this body takes it, and a card
+	// raised in answer to the blow is spent on the figure the two of them produced.
+	dmg = amplify(dmg, target.vulnerability())
 
 	events, dmg = applyDefends(events, side, target, dmg, round)
 
@@ -480,9 +492,9 @@ func applyDefends(events []Event, side Side, target Duelist, dmg, round int) ([]
 //     rolling per card would both change what the status means and advance the one random stream in
 //     the package a different number of times per round. A shocked solo attacker misses with
 //     everything and says so on each card.
-//   - **Weight, then defences, then statuses**, in that order, for the reason the other phase gives:
-//     weight is a property of the attacker, so everything the defender does happens to a blow that
-//     has already been blunted.
+//   - **Weight, vulnerability, then defences, then statuses**, in that order, for the reason the
+//     other phase gives: weight is a property of the attacker and vulnerability of the target, so
+//     everything the defender actively does happens to a blow both of them have already shaped.
 func resolveSoloAttacks(
 	events []Event,
 	side Side,
@@ -529,6 +541,7 @@ func resolveSoloAttacks(
 		}
 
 		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())
+		dmg = amplify(dmg, target.vulnerability())
 		events, dmg = applyDefends(events, side, target, dmg, round)
 
 		target.CurrentLife = reduce(target.CurrentLife, dmg)

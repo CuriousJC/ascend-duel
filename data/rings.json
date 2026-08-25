@@ -112,6 +112,34 @@
     ]
   },
   {
+    "RingRecord": "arcane-ring",
+    "Name": "Arcane Ring",
+    "Art": "",
+    "Text": "Arcane cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "weakening-ring",
+    "Name": "Weakening Ring",
+    "Art": "",
+    "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "apply-status", "Status": "weakened" }]
+      }
+    ]
+  },
+  {
     "RingRecord": "storm-ring",
     "Name": "Storm Ring",
     "Art": "",
@@ -325,6 +353,25 @@
     ]
   },
   {
+    "RingRecord": "unravelled-ring",
+    "Name": "Unravelled Ring",
+    "Art": "",
+    "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "echo-ring",
     "Name": "Echo Ring",
     "Art": "",
@@ -421,6 +468,20 @@
       {
         "When": "card-cost",
         "If": { "Element": "earth" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "eerie-ring",
+    "Name": "Eerie Ring",
+    "Art": "",
+    "Text": "Arcane cards cost 1 AP less.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "arcane" },
         "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
       }
     ]
@@ -589,6 +650,118 @@
       {
         "When": "card-drawn",
         "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "witchfire-ring",
+    "Name": "Witchfire Ring",
+    "Art": "",
+    "Text": "Every fire card is dealt as an arcane card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "runefrost-ring",
+    "Name": "Runefrost Ring",
+    "Art": "",
+    "Text": "Every ice card is dealt as an arcane card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "spellbolt-ring",
+    "Name": "Spellbolt Ring",
+    "Art": "",
+    "Text": "Every lightning card is dealt as an arcane card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "leyline-ring",
+    "Name": "Leyline Ring",
+    "Art": "",
+    "Text": "Every earth card is dealt as an arcane card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hexfire-ring",
+    "Name": "Hexfire Ring",
+    "Art": "",
+    "Text": "Every arcane card is dealt as a fire card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hexfrost-ring",
+    "Name": "Hexfrost Ring",
+    "Art": "",
+    "Text": "Every arcane card is dealt as a ice card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hexbolt-ring",
+    "Name": "Hexbolt Ring",
+    "Art": "",
+    "Text": "Every arcane card is dealt as a lightning card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hexstone-ring",
+    "Name": "Hexstone Ring",
+    "Art": "",
+    "Text": "Every arcane card is dealt as a earth card.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
         "Then": [{ "Do": "set-element", "Element": "earth" }]
       }
     ]

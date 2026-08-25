@@ -140,7 +140,7 @@ func ParseAxis(name string) (Axis, bool) {
 // colourless deck from reading as a table full of elemental hands.
 //
 // **The player has no basic card left** *(2026-08-23)*. The plans used to be the exception and
-// were excluded before this was asked anyway; they now ship in the four colours like every attack,
+// were excluded before this was asked anyway; they now ship in the five colours like every attack,
 // so `FormPlan` and every element are live values here and the absences belong to the enemies.
 func matchValue(c Card, a Axis) (int, bool) {
 	switch a {

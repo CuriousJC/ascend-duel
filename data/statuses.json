@@ -34,5 +34,14 @@
     "Amount": 25,
     "Rounds": 2,
     "Text": "deals 25% less DMG"
+  },
+  {
+    "StatusRecord": "weakened",
+    "Name": "WEAKENED",
+    "Badge": "defaulteffect_png",
+    "Effect": "damage-amplification",
+    "Amount": 100,
+    "Rounds": 2,
+    "Text": "takes double DMG from everything, burns included"
   }
 ]

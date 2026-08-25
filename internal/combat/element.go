@@ -31,16 +31,22 @@ const (
 	Ice
 	Lightning
 	Earth
+
+	// Arcane is the fifth colour *(owner's call, 2026-08-25)*, appended rather than inserted for the
+	// reason above. It is a primary like the other four — cards, a colour and a status — and the one
+	// thing that makes it a different shape is what its status does: WEAKENED reaches forward into
+	// what happens *to* its carrier rather than what its carrier does. See status.go.
+	Arcane
 )
 
 // ElementCount is how many elements exist, and the width of the status array. Deriving it from
 // the last constant is what stops the two drifting when an element is appended.
-const ElementCount = int(Earth) + 1
+const ElementCount = int(Arcane) + 1
 
 // AllElements is every element in declaration order. A slice rather than a range over the
 // constants so callers walking it get a fixed order — the determinism rules apply here exactly
 // as they do to AllActions.
-var AllElements = []Element{Basic, Fire, Ice, Lightning, Earth}
+var AllElements = []Element{Basic, Fire, Ice, Lightning, Earth, Arcane}
 
 var elementNames = [...]string{
 	Basic:     "basic",
@@ -48,6 +54,7 @@ var elementNames = [...]string{
 	Ice:       "ice",
 	Lightning: "lightning",
 	Earth:     "earth",
+	Arcane:    "arcane",
 }
 
 func (e Element) String() string {

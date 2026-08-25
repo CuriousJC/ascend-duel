@@ -195,20 +195,21 @@ number is the trap this deck was rebuilt to avoid.
 
 ### Concepts and deck composition
 
-**An attack concept ships as four cards: one per primary element.** That is the rule for adding an
-attack, not just a description of the starting deck. **A plan ships as four basics** — one concept,
-four copies — because a plan has no elemental behaviour to carry.
+**An attack concept ships as five cards: one per primary element.** That is the rule for adding an
+attack, not just a description of the starting deck. **A plan ships in the same five**, because a
+plan carries a colour for the ring discount and for the hand axis even though nothing it does is
+elemental.
 
-36 + 12 = **48 cards**, implemented. A hand of eight against that is 17% of the deck, against 27%
-when the deck was 30. What answers draw variance is the Discard button and now Plan.
+45 + 15 = **60 cards** *(2026-08-25, up from 48 when arcane landed)*. A hand of eight against that
+is 13% of the deck, against 17% at 48 and 27% when the deck was 30. What answers draw variance is
+the Discard button and Plan.
 
-**Four copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
-No attack concept ships more than four times, so **a Card Four of a Kind necessarily shows all four
-colours** — four copies of a concept are four different elements, so it is also the hand that lands
-every status the player is ringed for. **The ladder still goes to five** *(2026-08-19)*: five of one
-*form* is a 1-in-2700 turn off the starting deck and five of one *colour* is reachable once a
-Prepare has banked, while a Card Five of a Kind needs a fifth copy of a concept and so exists only
-after a `duplicate` worm. See the reachability table below.
+**Five copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
+No attack concept ships more than five times, so **a Card Four of a Kind necessarily shows four of
+the five colours** — copies of a concept are all different elements, so it is also the hand that
+lands most of the statuses the player is ringed for. **A Card Five of a Kind became dealable on
+2026-08-25** and is the whole colour set in one concept; it was reachable only after a `duplicate`
+worm while the deck held four copies. See the reachability table below.
 
 **The deck list is data.** `data/duelist_cards.json` holds the twelve concepts, the form and
 category each declares, the elements each ships in, and how many copies. `startingDeck` is built
@@ -256,11 +257,11 @@ decided by the source of that colour on the card's owner, and a ring may later d
 a fire card applies. A card that named its own status would be deciding something that is not its
 to decide.
 
-**52 was considered and rejected**, and the arithmetic changed but the answer did not. The
-playing-card instinct argues for 13 ranks × 4 suits, and the fifth "suit" here is `basic` — which
-this document calls the absence of an element, not a colour of its own. With `basic` a variant the
-attacks live on multiples of five; without it nothing is plain. The ladder decides it instead: nine
-*dealt* attack concepts is what three forms by three dealt tiers produces.
+**52 was considered and rejected**, and the arithmetic has changed twice since without changing the
+answer. The playing-card instinct argues for 13 ranks × 4 suits; the ladder decides it instead, and
+nine *dealt* attack concepts by however many colours exist is what three forms by three dealt tiers
+produces. `basic` is still the absence of an element rather than a suit, and arcane is a suit rather
+than a variant of nothing.
 
 ### Hover and long press
 
@@ -302,11 +303,28 @@ toggles selection. The distance and time thresholds must not fight each other.
 
 | Tier | Elements |
 |---|---|
-| **primary** | ice, fire, lightning, earth |
+| **primary** | ice, fire, lightning, earth, arcane |
 
-**There are four elements and no more** *(decided 2026-08-14)*. Every one of them has cards, a
-colour and a status, so an element is a complete thing rather than a name waiting for rules.
-Anything wanting a fifth has to arrive with all three.
+**There are five elements and no more** *(arcane added by the owner, 2026-08-25)*. Every one of
+them has cards, a colour and a status, so an element is a complete thing rather than a name waiting
+for rules. **Arcane arrived with all three and nothing was waived**: twelve cards, purple, and
+WEAKENED. Anything wanting a sixth has to do the same.
+
+**What a fifth colour cost, so a sixth can be priced before it is proposed.** None of it was the
+cards; the cards were one line of JSON.
+
+- **Every elemental hand got harder and the whole ladder was re-derived.** A colour is now one in
+  five rather than one in four, so an Elemental Four of a Kind fell from 6.9% to 3.7% reachable.
+  See the reachability table.
+- **A Card Five of a Kind became dealable**, at about one hand in 22,000, because a concept ships
+  one card per colour and there are now five. The rung had no probability behind it since it was
+  written; it has one now.
+- **The deck overlay ran out of room.** Five rows of cards plus the tally band did not fit the
+  modal, and the fix came out of three places at once — see `internal/screens/deckpanel.go`. The
+  card itself could not shrink: the form mark is pixel art on a 32px canvas.
+- **Twelve rings, not one.** Each colour carries four of its own — damage, status, discount, growth
+  — and the flip rings are a full cross-product, which went from 12 to 20.
+- **Every catalogued deck seed had to be re-checked**, and two of the five were re-found.
 
 `basic` is the absence of an element, not a fifth colour. It replaced `none`/`plain` in the
 code's naming.
@@ -320,6 +338,7 @@ code's naming.
 | ice | medium blue |
 | lightning | yellow |
 | earth | green |
+| arcane | purple |
 
 `cards.BorderOf` is the live table; this one says what the colours are *for*. Basic is a mid
 grey rather than the near-white it used to be, because the surface went off-white and a
@@ -343,6 +362,25 @@ took the blow** — **and only if the attacker is wearing that element's ring**:
 | **ice** | chill | one card off the front of every turn it outlives |
 | **lightning** | shock | 25% chance the victim's attack misses, rolled every attack |
 | **earth** | weight | the victim deals 25% less damage |
+| **arcane** | weakened | the victim takes double damage from everything, burn ticks included |
+
+**WEAKENED is a different shape from the other four, and that is worth knowing before a sixth is
+designed** *(owner's call, 2026-08-25)*. Every other status modifies what its carrier *does* — how
+hard they swing, how often they connect, how many cards their turn holds — so it is read off
+whoever is acting. WEAKENED modifies what its carrier *takes*, so it is read off whoever is being
+acted upon, and it is the first thing in the damage pipeline to be read off the victim. Two
+consequences follow and both are intended:
+
+- **A ring applying it is worth more against a slow opponent than a fast one**, because the value
+  is in the blows that land during its two rounds rather than in the ones you throw.
+- **It amplifies a burn tick as well as a blow.** A tick is damage the carrier takes, and exempting
+  it would have made the rule *"damage, except the kind that arrives at the end of the round"* —
+  which is a sentence no card face can carry. Fire plus arcane is therefore the sharpest pair of
+  statuses in the game, and it is a build rather than an oversight.
+- **It does not stack and it is capped**, like everything else here: a second application refreshes
+  the clock, and `combat.maxAmplifyPct` holds any sum at 300. Amplification is the one percentage
+  with no natural ceiling — a miss chance and a weight both stop at *nothing reduces a blow to
+  zero*, and this one stops nowhere at all.
 
 **Statuses are off by default, and the ring is what switches one on** *(2026-08-16)*. An
 unringed fire attack is a plain attack with a red border: it forms hands exactly as any other
@@ -483,7 +521,7 @@ stacks; with stacking gone the ceiling is the number itself.
 - It breaks the rule hands otherwise follow — *what you committed to cannot be silently undone*.
   Lightning is the deliberate exception, and it is the only one.
 
-#### Ice, fire and earth in detail
+#### Ice, fire, earth and arcane in detail
 
 - **Ice takes a card, not a point.** A chilled duelist loses a card off the front of its turn,
   and the front of a turn is its attacks — so ice costs a swing, and it is felt after the player
@@ -515,12 +553,21 @@ stacks; with stacking gone the ceiling is the number itself.
   blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
   predictable from the reductions already in the game. **It is 25%**, because a smaller cut that
   cannot stack is a status nobody notices landing.
-- **Statuses live in `Duelist.Statuses [ElementCount]Status`** — an array indexed by element,
-  not four named fields. That is what makes *"consume the status this element
-  applies"* expressible and is the difference between a system and four ad-hoc fields. The
-  price: **`Element` is append-only**, like `GlyphKind`. The raised-defence set
-  stays where it is — those are card effects, and filing them in a table indexed by colour would
-  say they were not.
+- **Arcane applies victim-side, after the weight and before any defence.** Vulnerability says how
+  hard *this body* takes a blow, so the order is: the hand's own cards, the hand multiplier, the
+  attacker's weight, the target's vulnerability, then every raised plan card. A card raised in
+  answer to the blow is therefore spent on the figure both statuses have already produced.
+  **Rounding is toward zero**, matching blunt and every other percentage, so the two halves of one
+  sum round the same way. **It is 100%** — double — and unlike the other four it is capped
+  centrally as well as per record, at `combat.maxAmplifyPct`.
+  - **It reaches the burn tick too**, in `endRound` rather than in the attack phase, which is the
+    one place a status modifies damage nobody threw.
+- **Statuses live in `Duelist.Statuses [MaxStatuses]Status`** — an array indexed by **status**,
+  not by element and not as named fields. That is what makes *"consume the status this card
+  applies"* expressible and is the difference between a system and a handful of ad-hoc fields. The
+  price: **`StatusID` is append-only and the file decides the order**, the hazard `Element` and
+  `GlyphKind` also carry. The raised-defence set stays where it is — those are card effects, and
+  filing them in this table would say they were not.
 
 ## Resolution — phases
 
@@ -828,10 +875,10 @@ What that changed, in order of how much it matters:
 - **A hand of nothing but plans is real and lands nothing**, which is the accepted cost — see the
   decision below the table.
 
-The three ladders are still **not** the same numbers on the concept axis, because a concept is far
-narrower than either of the other two. The starting deck is 48 cards — **4 per concept, 12 per form,
-12 per element** — dealt into a hand of eight against a 6 AP, 5-card turn, and that arithmetic is
-what the ladder is priced against rather than poker's.
+The three ladders are **not** the same numbers, and as of 2026-08-25 no two of them are. The
+starting deck is 60 cards — **5 per concept, 15 per form, 12 per element** — dealt into a hand of
+eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is priced against rather
+than poker's.
 
 Reachability, from a two-million-hand simulation of round one — *can this turn afford some set
 forming this rung* — with the multiplier each was given:
@@ -839,38 +886,46 @@ forming this rung* — with the multiplier each was given:
 | Rung | concept | | form | | element | |
 |---|---|---|---|---|---|---|
 | | reach | pays | reach | pays | reach | pays |
-| Pair | 91.4% | 115 | 100% | 110 | 100% | 110 |
-| Two Pair | 18.9% | 200 | 52.6% | 140 | 52.6% | 140 |
-| Three of a Kind | 9.4% | 245 | 76.1% | 145 | 76.1% | 145 |
-| Full House | 0.77% | 400 | 5.3% | 280 | 5.4% | 280 |
-| Four of a Kind | 0.15% | 500 | 6.9% | 285 | 6.9% | 285 |
-| Five of a Kind | — | 745 | 0.049% | 565 | 0.047% | 565 |
+| Pair | 92.4% | 115 | 100% | 110 | 100% | 110 |
+| Two Pair | 19.9% | 210 | 52.2% | 145 | 43.3% | 155 |
+| Three of a Kind | 11.3% | 250 | 76.1% | 150 | 60.1% | 160 |
+| Full House | 0.95% | 415 | 5.9% | 290 | 3.1% | 335 |
+| Four of a Kind | 0.27% | 500 | 7.7% | 295 | 3.7% | 340 |
+| Five of a Kind | 0.004% | 785 | 0.093% | 575 | 0.019% | 680 |
 
 The rule that produced them is unchanged: **`100 + K x ln(1/P)`, floored at 110, rounded to five,
-then forced to climb within each ladder.** **K is 61.2 where it was 58.6**, because the constant is
+then forced to climb within each ladder.** **K is 67.7 where it was 61.2**, because the constant is
 *defined* by anchoring the rarest measurable hand — a concept Four of a Kind — at the 500 it already
-carried, and that rung got slightly easier when four Prepares became a way to build one. Re-deriving
-the constant rather than keeping it is what holds the concept ladder recognisably where it was.
+carried. Re-deriving the constant rather than keeping it is what holds the concept ladder
+recognisably where it was through a change that moved everything under it.
 
-**Every multiplier fell, most of them a long way**, because plans made every axis easier: an
-Elemental Four of a Kind went 375 to 285 and an Elemental Full House 365 to 280 — so the re-pricing
-was meant to absorb the buff rather than to add to it. **Whether it did is unmeasured.**
+**The form and element ladders came apart, and that is the headline** *(2026-08-25)*. They were
+priced identically at every rung on 2026-08-23 because they were then equally hard — twelve cards
+share a form and twelve share a colour. Arcane broke the symmetry in both directions at once: a
+form now gathers fifteen cards where it gathered twelve, and a colour still gathers twelve out of a
+deck a quarter bigger. So **elemental hands got harder and form hands got easier**, and the element
+ladder now pays more than the form ladder at every rung above the pair. An Elemental Four of a Kind
+went from 6.9% to 3.7% reachable and from 285 to 340.
 
-**Two numbers in the table are judgement rather than measurement, and both are the same two as
-before:**
+**Nothing measures whether the re-pricing lands.** The curve says what a rung is worth relative to
+the others; it has never said whether the whole ladder is worth the right amount, and there is
+still no simulation of a duel to ask.
 
-- **The concept Pair keeps 115 rather than the 110 the floor gives it.** At 91.4% the curve floors
+**One number in the table is judgement rather than measurement, and it is the same one as before:**
+
+- **The concept Pair keeps 115 rather than the 110 the floor gives it.** At 92.4% the curve floors
   out, and letting it sit at 110 would make the narrowest axis pay exactly what the two wide ones do
   at the bottom rung — the nesting problem the ladder exists to avoid.
-- **Card Five of a Kind, 745, still has no probability behind it.** The deck ships four copies of a
-  concept, so nothing can deal a fifth; the rung exists for the `duplicate` worm. It keeps the
-  +180 premium over the form rung that the ladder already shows.
 
-**The element five-of-a-kind stopped being an estimate** *(2026-08-23)*. It was 665 on a curve fitted
-at 8 AP, because five cards of one colour used to cost 7 AP and a round holds 6 — a colour held one
-card per form per tier and nothing cheaper. A colour now holds three plans as well, so five fire
-cards can be had for 6 AP and the rung is measurable at the real budget. It is priced off its own
-number like every other row.
+**Card Five of a Kind stopped being an estimate** *(2026-08-25)*, which leaves every other row in
+the table straight off the tool. It was 745 by judgement for as long as the deck shipped four copies
+of a concept and nothing could deal a fifth — the rung existed for the `duplicate` worm. Arcane made
+a concept five cards, so the rung is dealable at about one hand in 22,000 and is priced off its own
+number at 785. It is still the rarest thing a round-one hand can build, by an order of magnitude.
+
+**The element five-of-a-kind stopped being an estimate on 2026-08-23**, for a different reason: a
+colour gained three plans, so five cards of one colour came down to 6 AP and the rung became
+measurable at the real budget.
 
 **The five-of-a-kind row is the one that is not all measurement** *(2026-08-19)*, and it is written
 out because a number that came from somewhere else must not read as one that came from the tool:
@@ -924,9 +979,11 @@ consecutive in.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
-whole round on Prepares — and five *Strikes* is not even dealable, the deck holding four. That
-trade is the hand working as intended, and it is why the five-of-a-kind rungs are the cheapest
-cards of a form or a colour rather than of a concept.
+whole round on Prepares. **Five Strikes is dealable as of 2026-08-25** — the deck holds five, one
+per colour — which is what turned the concept five-of-a-kind from a worm's rung into the rarest
+measurable hand in the game. Being dealable and being affordable are still two different questions,
+which is why the wide five-of-a-kind rungs are the cheapest cards of a form or a colour rather than
+of a concept.
 
 **A colour's cheapest five now includes a plan** *(2026-08-23)* — fire Jab, Cut, Bash and Prepare at
 1 AP each plus a fire Thrust at 2 is **6 AP**, which is a plain round's whole budget and the first
@@ -1089,26 +1146,40 @@ became **Warm** and grew three siblings.
 
 | Ring | Moment | Does |
 |---|---|---|
-| **Burning / Chilling / Shocking / Weighted** | `attack-lands` | the four colours' status rings, split off on 2026-08-22 and priced uncommon |
-| **Fire / Ice / Lightning / Earth** | `card-damage` | doubles every card of that colour — *element* multipliers, where Keen/Heavy/Needle are form ones |
+| **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colours' status rings, split off on 2026-08-22 and priced uncommon |
+| **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that colour — *element* multipliers, where Keen/Heavy/Needle are form ones |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
-| **Striker** | `card-damage` | doubles every Strike — a concept ring, 4 cards where a form covers 12, and priced accordingly |
+| **Striker** | `card-damage` | doubles every Strike — a concept ring, 5 cards where a form covers 15, and priced accordingly |
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
 | **stat rings** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
 | **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no plan card in it; a plan card wipes the streak |
-| **Enflamed / Frostbitten / Lithium / Granite** | `card-damage` + `attack-lands` | their colour gains +0.1x DMG per landed hit of that colour, and keeps it while worn |
+| **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their colour gains +0.1x DMG per landed hit of that colour, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
 | **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
 | **Atrophy** | `deck-built` | every 3 AP attack is dealt as its 2 AP version |
 | **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the first ring with a drawback, and the first rare |
-| **Warm / Cold / Static / Dirty** | `card-cost` | every card of that colour costs 1 AP less — one per colour |
-| **flip x12** | `card-drawn` | recolours a card of one colour as another **as it is drawn** — one for each ordered pair; see below |
+| **Warm / Cold / Static / Dirty / Eerie** | `card-cost` | every card of that colour costs 1 AP less — one per colour |
+| **flip x20** | `card-drawn` | recolours a card of one colour as another **as it is drawn** — one for each ordered pair; see below |
 
 **A concept ring and a form ring are not the same object** and must not be priced as one.
-Striker covers 4 cards, Keen covers 12.
+Striker covers 5 cards, Keen covers 15.
+
+**Arcane brought twelve rings, not one** *(2026-08-25)*, and that is the number to expect from a
+sixth colour rather than the one a card list suggests. Four are the colour's own seats in families
+that already existed — **Arcane** (2x DMG), **Weakening** (applies WEAKENED), **Eerie** (1 AP off),
+**Unravelled** (grows +0.1x per landed arcane hit). The other eight are the flip cross-product,
+which is quadratic: **Witchfire / Runefrost / Spellbolt / Leyline** turn fire, ice, lightning and
+earth into arcane, and **Hexfire / Hexfrost / Hexbolt / Hexstone** turn arcane into each of them.
+Twelve ordered pairs became twenty. **A sixth colour would bring fourteen**, ten of them flips.
+
+**Weakening is the strongest of the five status rings and is priced the same as the others.** That
+is deliberate rather than unexamined: WEAKENED doubles everything the target takes for two rounds,
+where a weight blunts a quarter and a chill takes one card, so its tier is the thing to move first
+if the arcane build turns out to dominate. Nothing in the repo measures what a ring does to a duel,
+so the price is judgement — see the rings skill.
 
 ### Momentum — a streak that belongs to the duel *(2026-08-22, owner's call)*
 
@@ -1275,18 +1346,26 @@ what makes the second and third worth buying.
 
 ### The flip rings — one for every ordered pair *(2026-08-22, owner's call)*
 
-**Twelve rings, each `card-drawn` / one colour in / another colour out.** Frozen Lightning was the
-only one for five days; the pattern generalised to every ordered pair of the four colours, and all
-twelve are **common**. The names are thematic rather than mechanical — "Permafrost" says earth into
+**Twenty rings, each `card-drawn` / one colour in / another colour out.** Frozen Lightning was the
+only one for five days; the pattern generalised to every ordered pair, and all twenty are **common**.
+**It is a cross-product, so it grows quadratically**: four colours were twelve rings and five are
+twenty. That is the cost line to read before proposing a sixth colour — it would be thirty. The names are thematic rather than mechanical — "Permafrost" says earth into
 ice without saying either word — which is a deliberate cost: the *card* has to be read to know what
 it does, and the tooltip is what says it.
 
-| dealt as → | from fire | from ice | from lightning | from earth |
-|---|---|---|---|---|
-| **fire** | — | Meltdown | Firestorm | Magma |
-| **ice** | Frostbite | — | Frozen Lightning | Permafrost |
-| **lightning** | Heat Lightning | Thundersnow | — | Dust Storm |
-| **earth** | Obsidian | Glacier | Fulgurite | — |
+| dealt as → | from fire | from ice | from lightning | from earth | from arcane |
+|---|---|---|---|---|---|
+| **fire** | — | Meltdown | Firestorm | Magma | Hexfire |
+| **ice** | Frostbite | — | Frozen Lightning | Permafrost | Hexfrost |
+| **lightning** | Heat Lightning | Thundersnow | — | Dust Storm | Hexbolt |
+| **earth** | Obsidian | Glacier | Fulgurite | — | Hexstone |
+| **arcane** | Witchfire | Runefrost | Spellbolt | Leyline | — |
+
+**The eight arcane names are placeholders the owner may replace** *(2026-08-25)*. They follow a
+convention the original twelve do not: everything *out of* arcane is a Hex-, and everything *into*
+it is a spell word grafted onto the source's phenomenon. That was chosen because sixteen thematic
+one-off names is more than a player can hold, and a legible half-convention is worth more than
+another eight inventions.
 
 **They fire as a card is drawn, not as the deck is built** *(owner's call, 2026-08-24)*. Every one of
 them is worded "every X card is dealt as a Y card", and the dealing is the draw. The cards a fight
@@ -1314,18 +1393,18 @@ read that ID**; it is a handle for the screens.
   row takes it, by the same rule that orders every other multiplicative effect. Decided rather than
   merely observed — nothing warns the player and there is still no way to reorder the row, and both
   of those are accepted.
-- **They are twelve of thirty-two records, and the dilution is accepted** *(owner's call,
-  2026-08-22)*. The catalogue is now more than a third flips, so a common ring's ten tickets are ten
+- **They are twenty of fifty-eight records, and the dilution is accepted** *(owner's call,
+  2026-08-22, unchanged by arcane)*. The catalogue is now more than a third flips, so a common ring's ten tickets are ten
   out of a much bigger pot than they were at seventeen rings — and more rings are coming, which is
   what makes that fine. If the shelf ever does need thinning, the lever is a weight or a tier, not
   a price.
 
-**Every colour is two rings as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning and Earth**
-are now `card-damage` doublers on their colour — the first *element* multipliers, where Keen, Heavy
+**Every colour is two rings as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning, Earth and
+Arcane** are now `card-damage` doublers on their colour — the first *element* multipliers, where Keen, Heavy
 and Needle multiply a form — each common and each keeping the colour's artwork. The status each used
-to apply moved to a second ring — **Burning, Chilling, Shocking, Weighted** — all uncommon and all
-drawing the default ring face. So a colour offers cheap damage or a dearer, rarer status, and eight
-of the seventeen records are now colour rings.
+to apply moved to a second ring — **Burning, Chilling, Shocking, Weighted, Weakening** — all uncommon
+and all drawing the default ring face. So a colour offers cheap damage or a dearer, rarer status, and
+ten of the fifty-eight records are now colour rings.
 
 **Two records and two files were renamed with it**: `frozen-ring` → `ice-ring` and `thunder-ring` →
 `lightning-ring`, with `assets/ring/frozen-ring.png` → `ice-ring.png` and `thunder-ring.png` →
@@ -1478,7 +1557,7 @@ and `internal/session/worm.go`, which is where a record is validated.
 
 | Target | Value | What it does |
 |---|---|---|
-| `element` | a colour | recolours one card |
+| `element` | a colour | recolours one card — **one worm per colour, five since 2026-08-25** |
 | `remove` | — | takes one card out of the run |
 | `duplicate` | — | puts a second copy of one card into the run |
 | `cost` | a signed delta | changes what one card costs |
@@ -1532,9 +1611,17 @@ this was not deferred.
 **A worm may not recolour a card to basic.** That would be a way to *lose* a colour rather than
 choose one, and no attack card in the deck is drab.
 
+**The recolour worms are one per colour, and the set has to stay complete** *(owner's call,
+2026-08-25)*. **Hex Worm** landed with arcane for that reason: four recolour worms against five
+colours is a hole a player can see — every other colour can be built toward out of the post-battle
+offer and one cannot. The catalogue goes eleven, so the two seats a fight offers are drawn from a
+slightly bigger pot and every individual worm is a little rarer; that dilution is the same one the
+flip rings took and it is accepted for the same reason.
+
 ### REMOVE is the strongest option, and that is accepted
 
-Thinning a 48-card deck against a fixed hand of eight raises consistency every time. It is
+Thinning a 60-card deck against a fixed hand of eight raises consistency every time — **more so
+since arcane**, which added twelve cards without adding a card to the hand. It is
 deliberate rather than unnoticed: the offer is two worms out of a growing catalogue, so removal
 being the best of what is on the table is only sometimes the question. **`duplicate` is the one
 most likely to need a cost** — copies are the sharpest dial in the game, since four of one concept

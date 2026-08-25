@@ -66,7 +66,7 @@ const NoStatus StatusID = -1
 // row, and `internal/screens` holds the check that every registered status has a seat in it.
 const MaxStatuses = 8
 
-// StatusEffect is what carrying a status does. **Four kinds, closed** — the same posture Verb and
+// StatusEffect is what carrying a status does. **Five kinds, closed** — the same posture Verb and
 // the ring effects take. A status is a file entry; a kind of status is a Go change here plus the one
 // place reading it.
 type StatusEffect int
@@ -85,11 +85,32 @@ const (
 	// EffectDamageReduction is percentage points off the damage the carrier deals. It is the only
 	// kind that reaches forward into what its victim does rather than what happens to them.
 	EffectDamageReduction
+
+	// EffectDamageAmplification is percentage points *added* to the damage the carrier takes. 100 is
+	// double.
+	//
+	// **It is the only kind read off the victim rather than the attacker** *(owner's call,
+	// 2026-08-25)*, and that is the shape worth knowing before reaching for it again: every other
+	// effect modifies what the afflicted duelist *does*, so it is read off whoever is acting. This
+	// one is read off whoever is being acted upon, which is a second site in the damage pipeline and
+	// the reason a ring applying it is worth more against a slow opponent than a fast one.
+	//
+	// **It amplifies a burn tick as well as a blow** *(owner's call, 2026-08-25)*. A tick is damage
+	// the carrier takes, and exempting it would have made the rule "damage, except the kind that
+	// arrives at the end of the round" — which is a sentence no card face can carry. The consequence
+	// is intended: fire plus arcane is the sharpest pair of statuses in the game.
+	EffectDamageAmplification
 )
 
 // StatusEffects is every effect kind in a fixed order, for anything that walks them.
 func StatusEffects() []StatusEffect {
-	return []StatusEffect{EffectDamageOverTime, EffectLoseActions, EffectMissChance, EffectDamageReduction}
+	return []StatusEffect{
+		EffectDamageOverTime,
+		EffectLoseActions,
+		EffectMissChance,
+		EffectDamageReduction,
+		EffectDamageAmplification,
+	}
 }
 
 func (e StatusEffect) String() string {
@@ -100,6 +121,8 @@ func (e StatusEffect) String() string {
 		return "miss-chance"
 	case EffectDamageReduction:
 		return "damage-reduction"
+	case EffectDamageAmplification:
+		return "damage-amplification"
 	default:
 		return "damage-over-time"
 	}
@@ -183,6 +206,14 @@ func registerStatus(s data.StatusData) error {
 	}
 	if effect == EffectDamageReduction && s.Amount >= 100 {
 		return fmt.Errorf("%s blunts damage by %d%%, and nothing may reduce a blow to zero", s.StatusRecord, s.Amount)
+	}
+
+	// Amplification is the one percentage with no natural ceiling — the others all approach an
+	// outcome the game refuses, and this one just keeps growing. maxAmplifyPct is where the growth
+	// is stopped, and a single record is held to it here so the sum below is never the first thing
+	// that notices.
+	if effect == EffectDamageAmplification && s.Amount > maxAmplifyPct {
+		return fmt.Errorf("%s amplifies damage by %d%%, and the ceiling is %d%%", s.StatusRecord, s.Amount, maxAmplifyPct)
 	}
 
 	statusBy[s.StatusRecord] = StatusID(len(statusRegistry))
@@ -347,6 +378,36 @@ func blunt(dmg, pct int) int {
 		return dmg
 	}
 	return dmg * (100 - pct) / 100
+}
+
+// maxAmplifyPct is the ceiling on how much extra damage a duelist can be made to take. 300 is four
+// times through, which is already past anything the game deals out; the cap exists because
+// amplification is the one status percentage that does not approach a line the rules already hold —
+// a miss chance and a weight are both bounded by "nothing stops a blow outright", and this is
+// bounded by nothing at all.
+const maxAmplifyPct = 300
+
+// vulnerability is the percentage this duelist's *incoming* damage is raised by.
+//
+// **Read off the target, not the actor** — the mirror of weight, and the only query in this file
+// that is. See EffectDamageAmplification.
+func (d Duelist) vulnerability() int {
+	pct := d.totalOf(EffectDamageAmplification)
+	if pct > maxAmplifyPct {
+		return maxAmplifyPct
+	}
+	return pct
+}
+
+// amplify raises one incoming figure by a vulnerability.
+//
+// **Rounding is toward zero**, matching blunt and every other percentage in the package, so the two
+// halves of the same sum round the same way.
+func amplify(dmg, pct int) int {
+	if pct <= 0 {
+		return dmg
+	}
+	return dmg * (100 + pct) / 100
 }
 
 // missChance is how likely this duelist's attack is to come to nothing, in percentage points.

@@ -189,10 +189,18 @@ never assert a verb into existence.
 }
 ```
 
-**Four effect kinds, closed**: `damage-over-time`, `lose-actions`, `miss-chance`,
-`damage-reduction`. A status is a file entry; a *kind* of status is a Go change.
+**Five effect kinds, closed**: `damage-over-time`, `lose-actions`, `miss-chance`,
+`damage-reduction`, `damage-amplification`. A status is a file entry; a *kind* of status is a Go
+change.
 
-**Fully decoupled means fire does not burn on its own** — including for the four rings that ship.
+**`damage-amplification` is the odd one and the shape to know before adding a sixth**
+*(2026-08-25)*. Every other kind modifies what its carrier *does*, so it is read off whoever is
+acting; this one modifies what its carrier *takes*, so it is read off whoever is being acted upon —
+a second site in the damage pipeline, and it reaches the burn tick as well as the blow. It is also
+the only percentage with no natural ceiling, so `combat.maxAmplifyPct` caps it where the others are
+bounded by *nothing reduces a blow to zero*. WEAKENED is the one record.
+
+**Fully decoupled means fire does not burn on its own** — including for the five rings that ship.
 There is no default status per element. This is the 2026-08-16 position held rather than
 reversed: the statuses being free is what left rings with nothing to be, and giving a ring a
 second fire status later is only possible if the first one was never inherent.
@@ -203,9 +211,10 @@ second fire status later is only possible if the first one was never inherent.
   width rather than a design cap, since a duelist must stay comparable. Registration refuses a
   record past it rather than dropping it.
 - `Duelist.Rings` is a fixed array of `WornRing` plus a count, not a bool per element.
-- `cards.MaxEffects` is **4 because the file holds four statuses**, checked by
-  `TestTheCardHoldsAsManyEffectsAsThereAreStatuses`. The badge row fits six at the current pitch,
-  so a fifth status is a one-number layout change.
+- `cards.MaxEffects` is **5 because the file holds five statuses**, checked by
+  `TestTheCardHoldsAsManyEffectsAsThereAreStatuses`. The badge row fits six at the current pitch, so
+  the fifth cost exactly that one number on 2026-08-25 — **and the sixth is the last one that is
+  free.** A seventh is a redesign of the band.
 - The badge is read off each record's `Badge`; `card_art.go` no longer keys anything by element.
 - `StatusID` is append-only, and it is the *file* that decides the order — inserting a record
   mid-file re-points every status a duelist is carrying.

@@ -151,7 +151,7 @@ hand that demonstrates something can be asked for by name instead of found by re
 
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
 prints.** The ladder is priced off how reachable each rung is — a form pair is a 100% hand and pays
-110, a concept Four of a Kind is a 0.15% hand and pays 500 — and every one of those figures is a fact
+110, a concept Four of a Kind is a 0.27% hand and pays 500 — and every one of those figures is a fact
 about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the ladder is
 tuned against a deck that no longer exists, silently, because nothing fails. The tool measures
 **reachability** rather than what the matcher picks: whether a hand of eight can afford some set
@@ -166,10 +166,11 @@ something else. The tool re-checks the catalogue before it searches and says whi
 longer match — a change to the deck size has invalidated every entry at once before. A demo
 testing a Three of a Kind against a hand with two Strikes in it is worse than no demo, because it passes.
 
-**A rarer hand needs a bigger search, and some hands are impossible.** `four-strikes` is four of
-the four Strikes in a hand of eight from 48 cards and turns up around seed 900; the default 20,000
-finds it. **A hand wanting five copies of a concept cannot be dealt at all**, since no attack card
-exists more than four times — so check the arithmetic before concluding either way. A hand the tool
+**A rarer hand needs a bigger search, and the impossible ones are worth re-checking.** `four-strikes` is four of
+four of the five Strikes in a hand of eight from 60 cards and turns up around seed 900; the default 20,000
+finds it. **A hand wanting five copies of a concept became dealable on 2026-08-25**, when arcane made a
+concept five cards where it had been four — so check the arithmetic against the current deck before
+concluding either way, because that sentence was true for nine days. A hand the tool
 reports as unfindable usually means the search was too short, but not always.
 
 **Four build tags, and they compose.** Each selects a different file in its package, so one
@@ -503,7 +504,7 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **A `\n` in effect text is an authored line break** *(2026-08-23)*, honoured by
   `cards.WrapText` before the width is measured, and split back into lines by the tooltip.
   It exists because width-wrapping cannot make a *set* of cards break in the same place: the
-  four elemental worms differ only in the element they name, and `FIRE` sits comfortably on
+  five elemental worms differ only in the element they name, and `FIRE` sits comfortably on
   the line where `LIGHTNING` all but fills it, so left to the measurer the four read as four
   layouts of one card. **A break can only ever add a line** — an authored line too wide for
   the band still wraps — so it is not a way past the column.
@@ -665,7 +666,7 @@ actually fire.
 
 **`tools/wormsheet` and `tools/handsheet` are the same idea on the other two catalogues**
 *(2026-08-23)*. A worm is offered two at a time after a won fight, so the whole catalogue is five
-fights away; the sheet draws all ten grouped by what each one changes about a card, with the
+fights away; the sheet draws all eleven grouped by what each one changes about a card, with the
 authored `Text` against the rule that fires, exactly as the ring sheet does. The hand sheet draws
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
 that best *illustrates* the rung — ordered by ascending multiplier across all three axes at once,
@@ -701,7 +702,7 @@ in the table under it.
 
 **It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
 the whole pricing decision — a ring is rebalanced by moving it, never by writing a number — so the
-review question is "does any of these thirty commons belong a tier up", which an alphabetical list
+review question is "does any of these forty-odd commons belong a tier up", which an alphabetical list
 cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
 because a scarce tier rounds to `0%` and would read as unreachable.
 

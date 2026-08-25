@@ -30,6 +30,8 @@ func statusOf(e Element) StatusID {
 		return MustStatus("shocked")
 	case Earth:
 		return MustStatus("weighted")
+	case Arcane:
+		return MustStatus("weakened")
 	default:
 		return NoStatus
 	}
@@ -42,15 +44,16 @@ func chillPct() int     { return StatusOf(statusOf(Ice)).Amount }
 func shockPct() int     { return StatusOf(statusOf(Lightning)).Amount }
 func statusRounds() int { return StatusOf(statusOf(Fire)).Rounds }
 func weightPct() int    { return StatusOf(statusOf(Earth)).Amount }
+func amplifyPct() int   { return StatusOf(statusOf(Arcane)).Amount }
 
-// testRings is the four elemental rings, registered once for the whole test binary. **Registered
+// testRings is the five elemental rings, registered once for the whole test binary. **Registered
 // rather than faked**, so what the tests exercise is the same `RegisterRing` path the game loads
 // through — a rule the registry would refuse fails here too.
 var testRings = registerTestRings()
 
 func registerTestRings() map[Element]RingID {
 	out := map[Element]RingID{}
-	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
+	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		id, err := RegisterRing("test."+e.String(), "Test "+e.String(), []RingRule{{
 			When: MomentAttackLands,
 			If:   RingCondition{Element: e, HasElement: true},
@@ -74,8 +77,9 @@ func wearing(d Duelist, es ...Element) Duelist {
 	return d
 }
 
-// ringed is a duelist wearing all four, for tests about the lifecycle rather than about rings.
-func ringed(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth) }
+// ringed is a duelist wearing all five, for tests about the lifecycle rather than about rings.
+// **Five is exactly MaxWornRings**, so an element added past arcane cannot join this hand.
+func ringed(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth, Arcane) }
 
 // statusEvents returns the KindStatus events for the status one colour's ring applies.
 func statusEvents(events []Event, e Element) []Event {
@@ -103,7 +107,7 @@ func countKind(events []Event, k EventKind) int {
 func TestAnElementAppliesNothingWithoutItsRing(t *testing.T) {
 	// **The headline rule** *(2026-08-16)*. A coloured attack from a duelist wearing no ring is a
 	// plain attack: it still counts toward the mix multiplier, and it leaves nothing behind.
-	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
+	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		a, b := duelist(10, 5, 500), duelist(10, 5, 500)
 
 		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
@@ -185,7 +189,7 @@ func TestARingNotWornDoesNothing(t *testing.T) {
 func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 	// The trigger rule: an attack that connects applies its element, given the ring, and nothing
 	// else does.
-	for _, e := range []Element{Fire, Ice, Lightning, Earth} {
+	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
 
@@ -738,5 +742,103 @@ func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 		if a2 != a1 || b2 != b1 {
 			t.Fatalf("run %d ended in a different state", i)
 		}
+	}
+}
+
+// --- arcane ------------------------------------------------------------------------------------
+
+func TestArcaneDoublesWhatItsVictimTakes(t *testing.T) {
+	// Arcane is the only status read off the duelist being *hit*. Everything else in this file is
+	// a fact about whoever is acting, so this is the test that would catch it being read off the
+	// attacker instead — which would look identical in a mirror match and wrong in every real one.
+	a, b := wearing(duelist(10, 5, 5000), Arcane), duelist(10, 5, 5000)
+
+	plain, _, _ := resolve(a, b, []Card{Plain(Strike)}, nil, 1)
+	base := firstDamage(t, plain, SideA).Amount
+
+	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Arcane)}, nil, 1)
+	if !b1.Statuses[statusOf(Arcane)].Active() {
+		t.Fatal("the arcane hand left no WEAKENED, so this test proves nothing")
+	}
+
+	weakened, _, _ := resolve(a1, b1, []Card{Plain(Strike)}, nil, 2)
+	got := firstDamage(t, weakened, SideA).Amount
+	want := amplify(base, amplifyPct())
+	if got != want {
+		t.Errorf("a Strike into WEAKENED dealt %d, want %d (%d amplified by %d%%)",
+			got, want, base, amplifyPct())
+	}
+	if got <= base {
+		t.Errorf("a Strike into WEAKENED dealt %d against an unweakened %d — arcane did nothing",
+			got, base)
+	}
+}
+
+func TestWeakenedAmplifiesABurnTick(t *testing.T) {
+	// **A tick is damage the carrier takes**, so it is amplified like a blow *(owner's call,
+	// 2026-08-25)*. The alternative — blows only — would have made the rule "damage, except the
+	// kind that arrives at the end of the round", which is a sentence no card face can carry.
+	a := wearing(duelist(10, 5, 5000), Fire, Arcane)
+	b := duelist(10, 5, 5000)
+
+	_, _, burnt := resolve(a, b, []Card{Of(Strike, Fire)}, nil, 1)
+	bare := burnt.Statuses[statusOf(Fire)].Amount
+	if bare <= 0 {
+		t.Fatal("the fire hand lit no burn, so this test proves nothing")
+	}
+
+	// The same fire card, plus an arcane one to weaken with. **Both have to be Strikes**: only the
+	// cards that formed the hand carry colour, so a Jab beside a Strike is a High Card and the
+	// arcane card would land nothing. A burn is a share of the attacker's DMG rather than of the
+	// blow, so the tick is lit from the same figure either way and only its *arrival* differs.
+	events, _, _ := resolve(a, b, []Card{Of(Strike, Fire), Of(Strike, Arcane)}, nil, 1)
+
+	var tick int
+	for _, e := range events {
+		if e.Kind == KindBurned && e.Status == statusOf(Fire) {
+			tick = e.Amount
+			break
+		}
+	}
+	if tick == 0 {
+		t.Fatal("no burn ticked at the end of the round")
+	}
+	if tick <= bare {
+		t.Errorf("a burn ticked %d on a WEAKENED duelist, against %d bare — arcane skipped the tick",
+			tick, bare)
+	}
+}
+
+func TestWeakenedDoesNotStack(t *testing.T) {
+	// The lifecycle rule, checked on the one effect where stacking would compound rather than add:
+	// two applications of 100% would be four times through if the amount accumulated.
+	d := duelist(10, 5, 5000)
+	by := duelist(10, 5, 5000)
+
+	d, _, _ = applyStatus(d, statusOf(Arcane), by)
+	once := d.vulnerability()
+	d, _, _ = applyStatus(d, statusOf(Arcane), by)
+	if got := d.vulnerability(); got != once {
+		t.Errorf("a second WEAKENED took the vulnerability to %d%% from %d%% — it stacked", got, once)
+	}
+}
+
+func TestVulnerabilityIsCapped(t *testing.T) {
+	// Amplification is the one status percentage with no natural ceiling: a miss chance and a
+	// weight both stop at "nothing reduces a blow to zero", and this one stops nowhere at all.
+	d := duelist(10, 5, 5000)
+	d.Statuses[statusOf(Arcane)] = Status{Amount: maxAmplifyPct * 10, Rounds: 2}
+	if got := d.vulnerability(); got != maxAmplifyPct {
+		t.Errorf("vulnerability reached %d%%, want it held at %d%%", got, maxAmplifyPct)
+	}
+}
+
+func TestAmplifyingRoundsTowardZeroLikeEveryOtherPercentage(t *testing.T) {
+	// The same rule blunt follows, so the two halves of one sum round the same way.
+	if got, want := amplify(15, 10), 16; got != want { // 16.5
+		t.Errorf("15 amplified by 10%% = %d, want %d", got, want)
+	}
+	if got := amplify(20, 0); got != 20 {
+		t.Errorf("an unamplified blow was changed to %d", got)
 	}
 }

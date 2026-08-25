@@ -108,7 +108,7 @@ func validateHand(r data.HandData) (Axis, error) {
 	}
 
 	// **Nor for more distinct values than its axis has** *(2026-08-19)*. Three forms reach a blow
-	// and four elements do, so a hand wanting four groups on the form axis is unclimbable — the
+	// and five elements do, so a hand wanting four groups on the form axis is unclimbable — the
 	// same class of typo as one wanting six cards, and invisible without the check because the
 	// matcher would simply never find it.
 	axis, ok := ParseAxis(r.Match)

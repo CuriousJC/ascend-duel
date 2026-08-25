@@ -258,7 +258,7 @@ file is the opposite of what the narrowing was for.
 A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
 engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
 wanting more cards than a turn holds, and one wanting more groups than its axis has values, since
-only three forms and four elements ever reach a blow.
+only three forms and five elements ever reach a blow.
 
 ## Adding a file, or a field
 

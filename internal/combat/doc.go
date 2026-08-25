@@ -35,7 +35,7 @@
 //     fourteen constants with cost, damage and category as switch statements over it, which held
 //     twelve player cards and could not hold the several hundred that per-enemy decks produce. IDs
 //     are registration-ordered and must never be serialized.
-//   - element.go — the four colours plus Basic, which is the absence of one rather than a fifth.
+//   - element.go — the five colours plus Basic, which is the absence of one rather than a sixth.
 //   - status.go — a status is a record in statuses.json rather than an element: a key, a name, a
 //     badge, one of four closed effect kinds, an amount and a duration. They share one lifecycle
 //     and nothing stacks; a second hit resets the clock. A status only happens if a worn ring says

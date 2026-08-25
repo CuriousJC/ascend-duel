@@ -23,7 +23,7 @@
       "name": "Card Two Pair",
       "match": "concept",
       "groups": [2, 2],
-      "multiplier": 200
+      "multiplier": 210
     },
     {
       "key": "concept-three-of-a-kind",
@@ -31,7 +31,7 @@
       "name": "Card Three of a Kind",
       "match": "concept",
       "groups": [3],
-      "multiplier": 245
+      "multiplier": 250
     },
     {
       "key": "concept-full-house",
@@ -39,7 +39,7 @@
       "name": "Card Full House",
       "match": "concept",
       "groups": [3, 2],
-      "multiplier": 400
+      "multiplier": 415
     },
     {
       "key": "concept-four-of-a-kind",
@@ -55,7 +55,7 @@
       "name": "Card Five of a Kind",
       "match": "concept",
       "groups": [5],
-      "multiplier": 745
+      "multiplier": 785
     },
 
     {
@@ -72,7 +72,7 @@
       "name": "Form Two Pair",
       "match": "form",
       "groups": [2, 2],
-      "multiplier": 140
+      "multiplier": 145
     },
     {
       "key": "form-three-of-a-kind",
@@ -80,7 +80,7 @@
       "name": "Form Three of a Kind",
       "match": "form",
       "groups": [3],
-      "multiplier": 145
+      "multiplier": 150
     },
     {
       "key": "form-full-house",
@@ -88,7 +88,7 @@
       "name": "Form Full House",
       "match": "form",
       "groups": [3, 2],
-      "multiplier": 280
+      "multiplier": 290
     },
     {
       "key": "form-four-of-a-kind",
@@ -96,7 +96,7 @@
       "name": "Form Four of a Kind",
       "match": "form",
       "groups": [4],
-      "multiplier": 285
+      "multiplier": 295
     },
     {
       "key": "form-five-of-a-kind",
@@ -104,7 +104,7 @@
       "name": "Form Five of a Kind",
       "match": "form",
       "groups": [5],
-      "multiplier": 565
+      "multiplier": 575
     },
 
     {
@@ -121,7 +121,7 @@
       "name": "Elemental Two Pair",
       "match": "element",
       "groups": [2, 2],
-      "multiplier": 140
+      "multiplier": 155
     },
     {
       "key": "element-three-of-a-kind",
@@ -129,7 +129,7 @@
       "name": "Elemental Three of a Kind",
       "match": "element",
       "groups": [3],
-      "multiplier": 145
+      "multiplier": 160
     },
     {
       "key": "element-full-house",
@@ -137,7 +137,7 @@
       "name": "Elemental Full House",
       "match": "element",
       "groups": [3, 2],
-      "multiplier": 280
+      "multiplier": 335
     },
     {
       "key": "element-four-of-a-kind",
@@ -145,7 +145,7 @@
       "name": "Elemental Four of a Kind",
       "match": "element",
       "groups": [4],
-      "multiplier": 285
+      "multiplier": 340
     },
     {
       "key": "element-five-of-a-kind",
@@ -153,7 +153,7 @@
       "name": "Elemental Five of a Kind",
       "match": "element",
       "groups": [5],
-      "multiplier": 565
+      "multiplier": 680
     }
   ]
 }

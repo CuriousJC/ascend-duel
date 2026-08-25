@@ -35,6 +35,14 @@ type namedSeed struct {
 // day when the drab attacks were cut and the deck fell to 48. Every re-check failed at once each
 // time, which is exactly what the re-check exists for — a seed is a fact about one particular
 // deck, and changing the deck silently re-deals every catalogued hand.
+//
+// **Arcane took the deck back to 60 on 2026-08-25 and only two entries fell over**, which is worth
+// knowing rather than surprising: a fifth colour adds a card to every concept without changing what
+// a concept *is*, so the hands described in terms of concepts — three Strikes, four Strikes — were
+// re-dealt to the same shape by a different shuffle. What broke was the two that wanted a specific
+// combination of concepts. **A Card Five of a Kind is dealable for the first time**, at one hand in
+// about 22,000, because five copies of a concept now exist; there is no catalogued seed for it and
+// the default 20,000-seed search is too short to expect one.
 
 var seedCatalog = []namedSeed{
 	// 1xThrust 1xLunge 1xCut 1xCleave 1xBash 3xStrike. Three Strikes is 6 AP, exactly the opening
@@ -45,24 +53,24 @@ var seedCatalog = []namedSeed{
 
 	// 1xThrust 1xCut 1xSlash 1xBash 4xStrike. **The biggest hand the deck can deal**: four copies is
 	// every Strike there is, so this is the top of the ladder. Eight AP, so it needs a banked round,
-	// and it necessarily shows all four colours — four copies of a concept are four elements.
+	// and it draws four of the five colours — four copies of a concept are four different elements.
 	{"four-strikes", 904, "four Strikes: a Four of a Kind, the top of the ladder"},
 
-	// 1xLunge 2xCleave 3xSmash 1xPrepare 1xPlan. The same shape one form over and at the top of
+	// 1xThrust 1xSlash 2xCleave 3xSmash 1xPrepare. The same shape one form over and at the top of
 	// the ladder: three Smashes is 9 AP and cannot be paid for out of an opening budget, so this is
 	// the hand that shows a hand you can see and cannot afford.
-	{"three-smashes", 21, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
+	{"three-smashes", 152, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
 
 	// 1xJab 1xThrust 2xSlash 2xStrike 2xDefend. Both verbs in one round, which is what the two
 	// categories have to be told apart by: a plan card and an attack, so a blue "plans" and a red
 	// "attacks" appear in the same feed.
 	{"both-verbs", 1, "a plan card and an attack: both verbs in one round"},
 
-	// 1xLunge 1xSlash 1xCleave 1xStrike 1xSmash 1xPrepare 1xPlan 1xDefend — eight distinct
+	// 1xJab 1xCut 1xSlash 1xStrike 1xSmash 1xPrepare 1xPlan 1xDefend — eight distinct
 	// concepts, which is the widest hand in the catalogue and the best look at the deck. It holds
 	// all three plans, which is what the demo wants: the plan phase has never been seen on screen.
 	// Prepare and Plan and Defend together are 6 AP, so the whole plan vocabulary is one round.
-	{"all-plans", 3, "a Prepare, a Plan and a Defend: the whole plan vocabulary in hand"},
+	{"all-plans", 6, "a Prepare, a Plan and a Defend: the whole plan vocabulary in hand"},
 }
 
 // seedFor looks a catalogued seed up by name. **It panics on an unknown name**, which is the

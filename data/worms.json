@@ -40,6 +40,13 @@
     "Text": "make one card\nEARTH"
   },
   {
+    "WormRecord": "hex-worm",
+    "Name": "Hex Worm",
+    "Target": "element",
+    "Value": "arcane",
+    "Text": "make one card\nARCANE"
+  },
+  {
     "WormRecord": "whetworm",
     "Name": "Whetworm",
     "Target": "cost",

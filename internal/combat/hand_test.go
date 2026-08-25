@@ -427,9 +427,10 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 		{"ice and fire", []Card{Of(Strike, Ice), Of(Strike, Fire)}, []Element{Ice, Fire}},
 		{"ice, fire and a basic", []Card{Of(Strike, Ice), Of(Strike, Fire), Plain(Strike)},
 			[]Element{Ice, Fire}},
-		{"four colours", []Card{
+		{"five colours", []Card{
 			Of(Strike, Ice), Of(Strike, Fire), Of(Strike, Earth), Of(Strike, Lightning),
-		}, []Element{Ice, Fire, Earth, Lightning}},
+			Of(Strike, Arcane),
+		}, []Element{Ice, Fire, Earth, Lightning, Arcane}},
 	} {
 		a, b := ringed(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 		_, _, bAfter := resolve(a, b, tc.turn, nil, 1)

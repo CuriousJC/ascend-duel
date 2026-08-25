@@ -199,7 +199,8 @@ func enemySpecs() ([]cards.Spec, error) {
 		{"Ogre Warlord", "ogrewarlord-portrait", 4, 160, []string{
 			"fireeffect_png", "frozeneffect_png"}},
 		{"Bio-Titan Omega", "biotitan-omega-portrait", 137, 200, []string{
-			"fireeffect_png", "frozeneffect_png", "thundereffect_png", "eartheffect_png"}},
+			"fireeffect_png", "frozeneffect_png", "thundereffect_png", "eartheffect_png",
+			"defaulteffect_png"}},
 	}
 
 	var specs []cards.Spec

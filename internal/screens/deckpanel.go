@@ -208,9 +208,14 @@ const (
 	// **Height is the dimension with no give.** The panel gives about 691 pixels between the
 	// tally band and the toggles under it — see modalBareBodyTop, which is where the grid starts now
 	// that there are no words above it.
-	// Width now absorbs a busy row by tightening; height cannot, so a fifth row would need a
-	// different arrangement rather than a smaller gap. TestDeckPitchMatchesTheCard holds it.
-	deckRowGap = 6
+	// Width absorbs a busy row by tightening; height cannot, so the fifth row arcane brought on
+	// 2026-08-25 was paid for out of four places at once rather than out of this one: the panel
+	// grew three percent (modalPanelBottomPct), this gap gave up two pixels, and the tally band
+	// under the grid tightened by fourteen. **The card itself could not help** — Mini is Hand
+	// halved, and the form mark is pixel art on a 32px canvas, so the only scales that keep a legal
+	// mark are a half and a quarter. A *sixth* colour is a redesign of the grid rather than another
+	// round of this. TestTheTallyBandFitsBetweenTheGridAndTheButtons is what says so.
+	deckRowGap = 4
 
 	// deckStackPitch is how far apart the cards in a row sit **when the row has room for it**.
 	//
@@ -360,7 +365,7 @@ type pileEntry struct {
 // declares them.
 //
 // **Basic is not among them as of 2026-08-15**, because no attack card is basic any more — every
-// attack ships in one of the four colours, and the only basic cards in the deck are the plans,
+// attack ships in one of the five colours, and the only basic cards in the deck are the plans,
 // which have their own row. A basic row would draw an empty gutter label over nothing at all.
 //
 // A function rather than a package-level slice so nothing can append to it, and derived from
@@ -377,7 +382,9 @@ func deckRowElements() []cards.Element {
 	return out
 }
 
-// deckRowCount is how many rows the overlay draws: one per colour, and that is all.
+// deckRowCount is how many rows the overlay draws: one per colour, and that is all. **Five since
+// 2026-08-25**, and the number is derived rather than written, so arcane arrived here without an
+// edit — what it did cost was the card's size. See cards.Mini.
 //
 // **The plans lost their own row on 2026-08-23**, when they stopped being basic. They had one
 // because every plan was colourless and no attack was, so the alternative then was a row labelled

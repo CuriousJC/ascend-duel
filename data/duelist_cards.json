@@ -5,7 +5,7 @@
     "Amount": 25,
     "Cost": 0,
     "Form": "stab",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 0
   },
   {
@@ -14,7 +14,7 @@
     "Amount": 50,
     "Cost": 1,
     "Form": "stab",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -23,7 +23,7 @@
     "Amount": 100,
     "Cost": 2,
     "Form": "stab",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -32,7 +32,7 @@
     "Amount": 200,
     "Cost": 3,
     "Form": "stab",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -41,7 +41,7 @@
     "Amount": 400,
     "Cost": 4,
     "Form": "stab",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 0
   },
 
@@ -51,7 +51,7 @@
     "Amount": 25,
     "Cost": 0,
     "Form": "slash",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 0
   },
   {
@@ -60,7 +60,7 @@
     "Amount": 50,
     "Cost": 1,
     "Form": "slash",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -69,7 +69,7 @@
     "Amount": 100,
     "Cost": 2,
     "Form": "slash",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -78,7 +78,7 @@
     "Amount": 200,
     "Cost": 3,
     "Form": "slash",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -87,7 +87,7 @@
     "Amount": 400,
     "Cost": 4,
     "Form": "slash",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 0
   },
 
@@ -97,7 +97,7 @@
     "Amount": 25,
     "Cost": 0,
     "Form": "crush",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 0
   },
   {
@@ -106,7 +106,7 @@
     "Amount": 50,
     "Cost": 1,
     "Form": "crush",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -115,7 +115,7 @@
     "Amount": 100,
     "Cost": 2,
     "Form": "crush",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -124,7 +124,7 @@
     "Amount": 200,
     "Cost": 3,
     "Form": "crush",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -133,7 +133,7 @@
     "Amount": 400,
     "Cost": 4,
     "Form": "crush",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 0
   },
 
@@ -143,7 +143,7 @@
     "Amount": 2,
     "Cost": 1,
     "Form": "plan",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -152,7 +152,7 @@
     "Amount": 2,
     "Cost": 2,
     "Form": "plan",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
@@ -161,7 +161,7 @@
     "Amount": 50,
     "Cost": 3,
     "Form": "plan",
-    "Elements": ["fire", "ice", "lightning", "earth"],
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   }
 ]

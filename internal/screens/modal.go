@@ -32,11 +32,18 @@ import (
 // 92 rather than 86 at the bottom: at 86 the panel stopped short of the hand, so the tops of the
 // cards and the whole AP line sat below it, dimmed by the scrim but still visibly outside the
 // dialog.
+//
+// **95 rather than 92 since 2026-08-25**, and this one was forced rather than chosen: arcane made
+// the deck overlay's grid five colour rows where it was four, and the panel is what those rows,
+// the tally band and the toggles all have to fit inside. It moves the frame for every dialog
+// rather than the one that needed it, which is the price of one footprint — and it moves it the
+// way the previous change already argued for, so the panel covers more of the hand rather than
+// less. See deckpanel.go, where the rest of the fifth row was paid for.
 const (
 	modalPanelLeftPct   = 4
 	modalPanelRightPct  = 96
 	modalPanelTopPct    = 4
-	modalPanelBottomPct = 92
+	modalPanelBottomPct = 95
 
 	// Offsets down from the panel's top edge, and the air kept clear at the bottom.
 	modalTitleTop   = 40

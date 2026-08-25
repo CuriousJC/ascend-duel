@@ -66,7 +66,7 @@
 
 <h1>Ring sheet</h1>
 <p class="facts">
-  46 rings, 41 of them drawing the default face.
+  58 rings, 53 of them drawing the default face.
   Ring card <code>162&times;224</code>,
   corner radius <code>12</code>,
   border <code>3</code>,
@@ -101,11 +101,28 @@
 
 <h3 class="tier common">
   common
-  <span>30 rings &middot; 3 vitae, sells for 1 &middot;
-    weight 10 each &middot; 83.8% of a shelf draw</span>
+  <span>40 rings &middot; 3 vitae, sells for 1 &middot;
+    weight 10 each &middot; 85.8% of a shelf draw</span>
 </h3>
 
 <div class="plates">
+  
+    <div class="plate">
+      <img src="ring-arcane-ring.png" width="162" height="224"
+           alt="Arcane Ring">
+      <div class="about">
+        <p class="name">Arcane Ring</p>
+        <div class="record">arcane-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Arcane cards deal 2x DMG.</p>
+        <ul class="rules">
+          <li>when card-damage, if arcane → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
   
     <div class="plate">
       <img src="ring-banker-ring.png" width="162" height="224"
@@ -184,7 +201,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every earth card is dealt as a lightning card.</p>
         <ul class="rules">
-          <li>when deck-built, if earth → set-element lightning</li>
+          <li>when card-drawn, if earth → set-element lightning</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -205,6 +222,23 @@
         </ul>
         
           <p class="art">art: <code>earthring_png</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-eerie-ring.png" width="162" height="224"
+           alt="Eerie Ring">
+      <div class="about">
+        <p class="name">Eerie Ring</p>
+        <div class="record">eerie-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Arcane cards cost 1 AP less.</p>
+        <ul class="rules">
+          <li>when card-cost, if arcane → adjust-cost -1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
         
       </div>
     </div>
@@ -235,7 +269,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every lightning card is dealt as a fire card.</p>
         <ul class="rules">
-          <li>when deck-built, if lightning → set-element fire</li>
+          <li>when card-drawn, if lightning → set-element fire</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -252,7 +286,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every fire card is dealt as an ice card.</p>
         <ul class="rules">
-          <li>when deck-built, if fire → set-element ice</li>
+          <li>when card-drawn, if fire → set-element ice</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -269,7 +303,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every lightning card is dealt as an ice card.</p>
         <ul class="rules">
-          <li>when deck-built, if lightning → set-element ice</li>
+          <li>when card-drawn, if lightning → set-element ice</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -286,7 +320,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every lightning card is dealt as an earth card.</p>
         <ul class="rules">
-          <li>when deck-built, if lightning → set-element earth</li>
+          <li>when card-drawn, if lightning → set-element earth</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -303,7 +337,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every ice card is dealt as an earth card.</p>
         <ul class="rules">
-          <li>when deck-built, if ice → set-element earth</li>
+          <li>when card-drawn, if ice → set-element earth</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -320,7 +354,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every fire card is dealt as a lightning card.</p>
         <ul class="rules">
-          <li>when deck-built, if fire → set-element lightning</li>
+          <li>when card-drawn, if fire → set-element lightning</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -338,6 +372,74 @@
         <p class="text">Every crush card deals double DMG.</p>
         <ul class="rules">
           <li>when card-damage, if crush → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-hexbolt-ring.png" width="162" height="224"
+           alt="Hexbolt Ring">
+      <div class="about">
+        <p class="name">Hexbolt Ring</p>
+        <div class="record">hexbolt-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every arcane card is dealt as a lightning card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element lightning</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-hexfire-ring.png" width="162" height="224"
+           alt="Hexfire Ring">
+      <div class="about">
+        <p class="name">Hexfire Ring</p>
+        <div class="record">hexfire-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every arcane card is dealt as a fire card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element fire</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-hexfrost-ring.png" width="162" height="224"
+           alt="Hexfrost Ring">
+      <div class="about">
+        <p class="name">Hexfrost Ring</p>
+        <div class="record">hexfrost-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every arcane card is dealt as a ice card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element ice</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-hexstone-ring.png" width="162" height="224"
+           alt="Hexstone Ring">
+      <div class="about">
+        <p class="name">Hexstone Ring</p>
+        <div class="record">hexstone-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every arcane card is dealt as a earth card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element earth</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -397,6 +499,23 @@
     </div>
   
     <div class="plate">
+      <img src="ring-leyline-ring.png" width="162" height="224"
+           alt="Leyline Ring">
+      <div class="about">
+        <p class="name">Leyline Ring</p>
+        <div class="record">leyline-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every earth card is dealt as an arcane card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if earth → set-element arcane</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
       <img src="ring-lightning-ring.png" width="162" height="224"
            alt="Lightning Ring">
       <div class="about">
@@ -422,7 +541,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every earth card is dealt as a fire card.</p>
         <ul class="rules">
-          <li>when deck-built, if earth → set-element fire</li>
+          <li>when card-drawn, if earth → set-element fire</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -439,7 +558,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every ice card is dealt as a fire card.</p>
         <ul class="rules">
-          <li>when deck-built, if ice → set-element fire</li>
+          <li>when card-drawn, if ice → set-element fire</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -490,7 +609,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every fire card is dealt as an earth card.</p>
         <ul class="rules">
-          <li>when deck-built, if fire → set-element earth</li>
+          <li>when card-drawn, if fire → set-element earth</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -507,7 +626,24 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every earth card is dealt as an ice card.</p>
         <ul class="rules">
-          <li>when deck-built, if earth → set-element ice</li>
+          <li>when card-drawn, if earth → set-element ice</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-runefrost-ring.png" width="162" height="224"
+           alt="Runefrost Ring">
+      <div class="about">
+        <p class="name">Runefrost Ring</p>
+        <div class="record">runefrost-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every ice card is dealt as an arcane card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if ice → set-element arcane</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -525,6 +661,23 @@
         <p class="text">A won room pays 5 more vitae.</p>
         <ul class="rules">
           <li>when prizes-dealt → adjust-prize-vitae &#43;5</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-spellbolt-ring.png" width="162" height="224"
+           alt="Spellbolt Ring">
+      <div class="about">
+        <p class="name">Spellbolt Ring</p>
+        <div class="record">spellbolt-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every lightning card is dealt as an arcane card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if lightning → set-element arcane</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -592,7 +745,7 @@
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">Every ice card is dealt as a lightning card.</p>
         <ul class="rules">
-          <li>when deck-built, if ice → set-element lightning</li>
+          <li>when card-drawn, if ice → set-element lightning</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-ring.png</p>
@@ -617,12 +770,29 @@
       </div>
     </div>
   
+    <div class="plate">
+      <img src="ring-witchfire-ring.png" width="162" height="224"
+           alt="Witchfire Ring">
+      <div class="about">
+        <p class="name">Witchfire Ring</p>
+        <div class="record">witchfire-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every fire card is dealt as an arcane card.</p>
+        <ul class="rules">
+          <li>when card-drawn, if fire → set-element arcane</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
 </div>
 
 <h3 class="tier uncommon">
   uncommon
-  <span>14 rings &middot; 5 vitae, sells for 2 &middot;
-    weight 4 each &middot; 15.6% of a shelf draw</span>
+  <span>16 rings &middot; 5 vitae, sells for 2 &middot;
+    weight 4 each &middot; 13.7% of a shelf draw</span>
 </h3>
 
 <div class="plates">
@@ -849,6 +1019,40 @@
     </div>
   
     <div class="plate">
+      <img src="ring-unravelled-ring.png" width="162" height="224"
+           alt="Unravelled Ring">
+      <div class="about">
+        <p class="name">Unravelled Ring</p>
+        <div class="record">unravelled-ring</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.</p>
+        <ul class="rules">
+          <li>when card-damage, if arcane → scale-damage &#43;100</li><li>when attack-lands, if arcane → grow-on-hit &#43;10</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="ring-weakening-ring.png" width="162" height="224"
+           alt="Weakening Ring">
+      <div class="about">
+        <p class="name">Weakening Ring</p>
+        <div class="record">weakening-ring</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status weakened</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-ring.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
       <img src="ring-weighted-ring.png" width="162" height="224"
            alt="Weighted Ring">
       <div class="about">
@@ -870,7 +1074,7 @@
 <h3 class="tier rare">
   rare
   <span>2 rings &middot; 7 vitae, sells for 3 &middot;
-    weight 1 each &middot; 0.6% of a shelf draw</span>
+    weight 1 each &middot; 0.4% of a shelf draw</span>
 </h3>
 
 <div class="plates">

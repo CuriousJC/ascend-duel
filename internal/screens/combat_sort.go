@@ -224,13 +224,13 @@ func categoryRank(c combat.Category) int {
 	}
 }
 
-// elementRank is the order the element sort runs in: fire, ice, lightning, earth, then the
+// elementRank is the order the element sort runs in: fire, ice, lightning, earth, arcane, then the
 // colourless cards.
 //
 // **Basic is last and the enum has it first**, which is the whole reason this is written out.
 // `combat.Basic` is the zero value because a card that names no element is a plain card — a
 // rules decision — but on screen the colourless cards are the plans, and the player is reading
-// the four colours to see what a mix is worth. So the run of colours leads and the drab tail
+// the five colours to see what a mix is worth. So the run of colours leads and the drab tail
 // follows, which also puts the plans at the same end of the row as the type sort does.
 func elementRank(e combat.Element) int {
 	switch e {
@@ -242,10 +242,12 @@ func elementRank(e combat.Element) int {
 		return 2
 	case combat.Earth:
 		return 3
-	case combat.Basic:
+	case combat.Arcane:
 		return 4
-	default:
+	case combat.Basic:
 		return 5
+	default:
+		return 6
 	}
 }
 

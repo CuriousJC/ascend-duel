@@ -7,8 +7,8 @@ package session
 // `main` had to import `internal/screens` to start a run at all. The shop and the worms both edit
 // this list; none of them should have to know which screen built it.
 //
-// **It is data, not a Go expression** *(2026-08-08)*: nine attack concepts x four colours, plus
-// three plans at four copies = 48 cards, read out of data/duelist_cards.json. The deck's size is a
+// **It is data, not a Go expression** *(2026-08-08)*: nine attack concepts x five colours, plus
+// three plans in the same five = 60 cards, read out of data/duelist_cards.json. The deck's size is a
 // consequence of a file the designer can read and edit.
 //
 // **The file holds more concepts than the deck holds cards** *(2026-08-24)*. The 0 AP and 4 AP rung
@@ -21,9 +21,13 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// startingDeck is the deck the player opens a run with: **nine attack concepts x four colours,
-// plus three plans at four copies = 48 cards**, built from `data/duelist_cards.json` rather than
+// startingDeck is the deck the player opens a run with: **nine attack concepts x five colours,
+// plus three plans in the same five = 60 cards**, built from `data/duelist_cards.json` rather than
 // written out here.
+//
+// **48 until arcane landed on 2026-08-25.** Adding a colour adds a card to every concept at once,
+// which is why one line in a JSON file moved the deck by a quarter — and why `tools/handodds` and
+// `tools/seeds` both have to be re-run after it. See MECHANICS.md for what it did to the ladder.
 //
 // It became data on 2026-08-08, at the same time the concept grid was filled. The shape it
 // replaced was a `concat` of `conceptDeck` calls — fine for six concepts, and a list nobody

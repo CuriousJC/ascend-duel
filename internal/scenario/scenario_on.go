@@ -93,10 +93,11 @@ type record struct {
 
 	// Teach starts the tutorial on this run.
 	//
-	// **It is here rather than being its own trigger because there is no profile** — see TODO.md.
-	// Whether a given player has already been taught is the one question a tutorial trigger has to
-	// answer and nothing in the game can answer it yet, so the script is started by a fixture
-	// until something can. A real trigger calls `session.Teach` and this field goes.
+	// **The real trigger is the profile now** — a player it has not recorded as taught is taught on
+	// the first fight of a fresh run, see main.teachThisRun. **This field stayed rather than being
+	// replaced by it**, because once the profile records a player as taught this is the only way to
+	// see the lesson again: it forces the script whatever the profile says, and it is why the
+	// tutorial can still be worked on after it has been finished once.
 	Teach bool `json:"Teach"`
 }
 

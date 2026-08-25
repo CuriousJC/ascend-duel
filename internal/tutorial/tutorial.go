@@ -56,7 +56,8 @@ const (
 	// The shop.
 	AnchorShopShelf
 
-	// AnchorMatchingCards is the largest set of cards in the hand that share a concept — the
+	// AnchorMatchingCards is the largest set of cards in the hand that match on the script's
+	// [MatchAxis] — the
 	// five Jabs of the opening lesson — as one rectangle over the seats they occupy.
 	//
 	// **It names a set the player has to find, which no other anchor does.** Every other anchor
@@ -327,8 +328,84 @@ type Facts struct {
 	RoundsPlayed int
 }
 
-// Script is a parsed `data/tutorial.json`.
-type Script []Step
+// MatchAxis is which axis [AnchorMatchingCards] counts a set on — the same three axes a hand is
+// scored on, because a "set" the tutorial points at has to be a set the matcher would pay for.
+//
+// **It is authored rather than derived** *(2026-08-25)*. The anchor counted concepts and nothing
+// else while the lesson was five Jabs; teaching an elemental four of a kind meant the square and
+// the sentence had to agree about which axis they were talking about, and no rule in the script
+// says which one a lesson is about. It is one word in the file.
+//
+// **Closed and not defaulted**, like every other vocabulary here: a script that uses the matching
+// anchor without naming an axis is refused at load, because an axis silently defaulting to concept
+// is a lesson pointing confidently at the wrong cards.
+type MatchAxis int
+
+const (
+	// MatchNone is a script that never points at a matching set.
+	MatchNone MatchAxis = iota
+	MatchConcept
+	MatchForm
+	MatchElement
+)
+
+var matchNames = map[MatchAxis]string{
+	MatchConcept: "concept",
+	MatchForm:    "form",
+	MatchElement: "element",
+}
+
+func (m MatchAxis) String() string {
+	if n, ok := matchNames[m]; ok {
+		return n
+	}
+	return "none"
+}
+
+// ParseMatchAxis resolves the word a script writes. Empty is [MatchNone], which is legal only for
+// a script with no matching step in it — Parse is what enforces that.
+func ParseMatchAxis(s string) (MatchAxis, error) {
+	if s == "" {
+		return MatchNone, nil
+	}
+	for m, n := range matchNames {
+		if n == s {
+			return m, nil
+		}
+	}
+	return MatchNone, fmt.Errorf("%q is not an axis a hand is scored on: concept, form or element", s)
+}
+
+// Script is a parsed `data/tutorial.json`: the steps, and the run the lesson needs to be true.
+//
+// **A script carries its own preconditions** *(2026-08-25)*. Bob promises a hand of five matching
+// cards and a fight ended in one blow, and neither is a fact about the game — they are facts about
+// one deal against one creature. They were pinned by `internal/scenario` while a fixture was the
+// only way to start the tutorial, and the day the profile became a real trigger the lesson ran on
+// whatever the clock had rolled and promised five Jabs over a hand holding two. A promise and the
+// thing that makes it true have to travel together.
+//
+// **This package resolves neither of them.** A seed is `internal/seeds`' business and an opponent
+// is the climb's; both are strings here and `main` and `internal/session` are what act on them —
+// the same line every other vocabulary in this file draws between naming a thing and being it.
+type Script struct {
+	// Seed is the run code the lesson is written against, or empty for a lesson that does not care
+	// what it is dealt.
+	Seed string
+
+	// Enemy is the record key the first room should stand, or empty for whoever the climb put there.
+	Enemy string
+
+	// Match is the axis [AnchorMatchingCards] counts on. Required by any script that uses that
+	// anchor or [CondMatchQueued]; see Parse.
+	Match MatchAxis
+
+	// Steps is what Bob says, in order.
+	Steps []Step
+}
+
+// Len is how many steps the script holds.
+func (s Script) Len() int { return len(s.Steps) }
 
 // Load parses and validates the script, and **panics on anything it cannot resolve**.
 //
@@ -346,34 +423,41 @@ func Load() Script {
 
 // Parse is Load without the panic, so a test can assert on a bad record rather than recover from
 // one.
-func Parse(records []data.TutorialStepData) (Script, error) {
+func Parse(in data.TutorialData) (Script, error) {
+	records := in.Steps
 	if len(records) == 0 {
-		return nil, fmt.Errorf("the script is empty")
+		return Script{}, fmt.Errorf("the script is empty")
 	}
 
-	out := make(Script, 0, len(records))
+	axis, err := ParseMatchAxis(in.Match)
+	if err != nil {
+		return Script{}, fmt.Errorf("Match: %w", err)
+	}
+
+	out := Script{Seed: in.Seed, Enemy: in.Enemy, Match: axis, Steps: make([]Step, 0, len(records))}
 	seen := map[string]bool{}
+	usesMatching := false
 
 	for i, r := range records {
 		if r.StepRecord == "" {
-			return nil, fmt.Errorf("step %d has no StepRecord", i)
+			return Script{}, fmt.Errorf("step %d has no StepRecord", i)
 		}
 		if seen[r.StepRecord] {
-			return nil, fmt.Errorf("step %q appears twice", r.StepRecord)
+			return Script{}, fmt.Errorf("step %q appears twice", r.StepRecord)
 		}
 		seen[r.StepRecord] = true
 
 		if r.Text == "" {
-			return nil, fmt.Errorf("step %q says nothing", r.StepRecord)
+			return Script{}, fmt.Errorf("step %q says nothing", r.StepRecord)
 		}
 
 		anchor, err := ParseAnchor(r.Anchor)
 		if err != nil {
-			return nil, fmt.Errorf("step %q: %w", r.StepRecord, err)
+			return Script{}, fmt.Errorf("step %q: %w", r.StepRecord, err)
 		}
 		until, err := ParseCondition(r.Until)
 		if err != nil {
-			return nil, fmt.Errorf("step %q: %w", r.StepRecord, err)
+			return Script{}, fmt.Errorf("step %q: %w", r.StepRecord, err)
 		}
 
 		lock := lockFor(until)
@@ -382,14 +466,27 @@ func Parse(records []data.TutorialStepData) (Script, error) {
 		// rather than downgraded: silently turning it into a fully locked step would leave the
 		// player with no legal click at all and a condition only they could satisfy.
 		if lock == LockToAnchor && anchor == AnchorNone {
-			return nil, fmt.Errorf(
+			return Script{}, fmt.Errorf(
 				"step %q waits for the player to click something but names nothing to click",
 				r.StepRecord)
 		}
 
-		out = append(out, Step{
+		if anchor == AnchorMatchingCards || until == CondMatchQueued {
+			usesMatching = true
+		}
+
+		out.Steps = append(out.Steps, Step{
 			Key: r.StepRecord, Text: r.Text, Anchor: anchor, Lock: lock, Until: until,
 		})
+	}
+
+	// **A matching step with no axis is refused rather than defaulted.** The square the player is
+	// shown and the condition that lets them past it are the same set of cards, and which cards
+	// those are depends entirely on the axis — so a script that does not say is a script whose two
+	// halves could disagree.
+	if usesMatching && axis == MatchNone {
+		return Script{}, fmt.Errorf(
+			"the script points at a matching set but names no Match axis: concept, form or element")
 	}
 	return out, nil
 }
@@ -413,14 +510,36 @@ type Run struct {
 func NewRun(s Script) *Run { return &Run{script: s} }
 
 // Active reports whether there is still a step to show.
-func (r *Run) Active() bool { return r != nil && !r.done && r.step < len(r.script) }
+func (r *Run) Active() bool { return r != nil && !r.done && r.step < r.script.Len() }
 
 // Current is the step being shown.
 func (r *Run) Current() (Step, bool) {
 	if !r.Active() {
 		return Step{}, false
 	}
-	return r.script[r.step], true
+	return r.script.Steps[r.step], true
+}
+
+// Enemy is the opponent the script asks for, or empty — for a run that is not being taught, for a
+// script that does not care, and for a nil receiver, which is the ordinary case.
+//
+// **It does not stop answering when the script ends**, deliberately. A player who skips the lesson
+// mid-fight must not have the creature in front of them swapped out, and a defeat re-enters the
+// same room and should meet the same opponent — which is the rule everywhere else in the climb.
+func (r *Run) Enemy() string {
+	if r == nil {
+		return ""
+	}
+	return r.script.Enemy
+}
+
+// Match is the axis this run's script counts a matching set on, or [MatchNone] for a run that is
+// not being taught — which is the ordinary case, and why the nil receiver answers.
+func (r *Run) Match() MatchAxis {
+	if r == nil {
+		return MatchNone
+	}
+	return r.script.Match
 }
 
 // Skip ends the tutorial outright. It is what the Skip button does, and it is deliberately
@@ -439,7 +558,7 @@ func (r *Run) Advance(f Facts) {
 	}
 	r.step++
 	r.baseRounds = f.RoundsPlayed
-	if r.step >= len(r.script) {
+	if r.step >= r.script.Len() {
 		r.done = true
 	}
 }

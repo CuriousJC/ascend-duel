@@ -663,8 +663,9 @@ and the rings that arm them**, and that split is the whole reason this section i
 there is one axis, one number per rung, and one place to look for what a hand is worth.
 
 Hands are **discovered**, not given, and discovery persists on the **profile** — part of the
-roguelike unlock structure, not the run. No profile exists yet, so every hand is currently
-live; when one does, discovery gates the *table* and nothing else changes.
+roguelike unlock structure, not the run. **The profile exists as of 2026-08-25 and does not gate
+this yet** — `profile.Profile.HandsDiscovered` is the field waiting for it, and every hand is still
+live. Gating the *table* is the whole of the change when it lands; nothing else moves.
 
 ### The catalogue is data
 
@@ -1871,6 +1872,55 @@ by the screen was a cap the enemy ignored. A method rather than a constant, so a
 it has somewhere to bite — which is what this file asked for.
 
 ---
+
+## The profile — what survives a run
+
+**A run dies; a profile does not.** The tower is the run — the deck, the purse, the worn rings, the
+room you are in — and the profile is the thin layer that outlives it: whether the tutorial has been
+watched, what has been achieved, what has been unlocked. Standard roguelike shape, and the reason
+the two are separate files on disk rather than one.
+
+**Two files, in the platform's config directory** *(owner's call, 2026-08-25)* — `profile.json` and
+`run.json`, under `os.UserConfigDir()`. Never beside the executable: the game is meant to be sold on
+Steam, which installs into a tree a normal user process cannot write to, and a per-executable
+directory is also per-install rather than per-user. `internal/profile`'s doc comment holds the full
+argument.
+
+**Achievements and unlocks are different animals, and the file keeps them apart.** An *unlock*
+changes the game — it is an input to the rules, so something in the rules reads it. An *achievement*
+changes nothing; it is a record, and it is the thing that will eventually be mirrored to Steam,
+which makes its key an external contract that cannot be renamed once shipped. They share a file and
+never a field.
+
+**`first-steps` is the first achievement: defeat an enemy.** It fires on every win and the profile
+keeps one, so it means the first enemy the player ever beats rather than the first of a run — a
+player who loses room one fifty times gets it on the fifty-first. Nothing shows it yet; see TODO.md.
+
+**A run is saved at every phase transition and never inside a duel** *(owner's call, 2026-08-25)*.
+Between stations the run is quiescent — no piles dealt, no queued actions, no hidden hand — so the
+snapshot is a dozen fields rather than the whole combat screen's working state. The cost is stated
+rather than discovered: quitting mid-duel loses that duel and resumes at the top of the room, which
+is what `Retry` already does after a defeat.
+
+**Resuming is not replaying, and the distinction is load-bearing.** A run is *not* replayable from
+its seed alone — a deck edit is a choice, so replay would need a seed plus a choice log — but
+resuming does not need the path, only the state. So the snapshot is state, and it may never be used
+as a replay. See the Randomness section below, which is unchanged by this.
+
+**The climb is not saved; it is rebuilt from the run code.** The fight order is a function of the
+run seed, so storing the seed keeps one answer to "who stands in room four". **This stops being true
+the day the room-choice screen lets a player pick what is ahead**, at which point the climb becomes a
+choice and has to be written down. `TestTheClimbIsRebuiltFromTheSeed` is what fails on that day.
+
+**Nothing about the profile is ever fatal.** A missing file is a new player, a corrupt file is a new
+player, an unwritable directory is a session whose progress is not recorded — the same rule the audio
+device is under. A game that refused to launch over a save file would be a worse bug than any it
+could prevent. A file written by a newer build is read but never written over, which is the one
+mistake that cannot be repaired afterwards.
+
+**What is written down is a name, never a number.** Every ordinal in this game is append-only and
+index-shaped — `ConceptID`, `Element`, `StatusID`, `GlyphKind`, `Phase` — so an ordinal in a file
+that outlives its build is an ordinal that will eventually mean something else.
 
 ## Randomness
 

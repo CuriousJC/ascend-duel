@@ -38,8 +38,18 @@ func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, r
 		deck = append([]combat.Card(nil), StartingDeckList...)
 	}
 	s := New(deck)
-	s.climb = pyramid.New(enemies, bosses, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
+	s.climb = newClimb(enemies, bosses, runSeed)
 	return s
+}
+
+// newClimb is the fight order a run seed produces.
+//
+// **One function so a resumed run and a new one cannot roll it differently** *(2026-08-25)*. The
+// climb is not saved — it is rebuilt from the run code — which is only safe while there is exactly
+// one expression that turns a seed into an order. Two would be two towers that agree until one of
+// them is edited.
+func newClimb(enemies map[string]data.EnemyData, bosses map[string]data.BossData, runSeed int64) *pyramid.Pyramid {
+	return pyramid.New(enemies, bosses, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
 }
 
 // Enemy is the record key of whoever stands in the room the run is currently in.
@@ -48,6 +58,19 @@ func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, r
 // been handed a session that was never started, which is a wiring mistake rather than a state the
 // game can reach.
 func (s *Session) Enemy() string {
+	// **A taught run's first room is the one the lesson was written against** *(2026-08-25)*. Bob
+	// promises a fight ended in one blow, which is a fact about the taught hand's damage against one
+	// creature's HP — so the opponent is part of the script, exactly as the seed is. It applies to
+	// room zero only: the lesson is over long before room one, and a tutorial that rewrote the whole
+	// climb would be teaching a tower nobody else plays.
+	//
+	// **It is here rather than in the climb** because the pyramid is a function of the seed and must
+	// stay one — see newClimb, and the note in profile/run.go about what depends on that.
+	if s.fight == 0 {
+		if key := s.tutorial.Enemy(); key != "" {
+			return key
+		}
+	}
 	if s.climb == nil {
 		return ""
 	}

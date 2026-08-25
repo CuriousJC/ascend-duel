@@ -128,21 +128,26 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       `Layout`. **The `Session` third of this already landed** — `internal/session` holds the deck,
       the fight index, the purse, the worn rings in worn order, and the run's phase — so what is
       left is the read-only half. Deferred: the remaining fields are not crowding anything.
-- [ ] **Profile — persistent unlocks across runs.** The standard roguelike shape where the
-      tower is the run and the profile is what survives it.
-      - **A different lifetime from `session.Session`**, which holds the deck, the fight index,
-        the purse and the worn rings, and dies with the run. A profile spans every run and is the
-        only thing that does.
-      - **It is the first thing in the game that must be serialized as real state.** The save
-        format decided below is a seed plus a choice log, which works precisely because a run
-        is replayable from its inputs. Accumulated unlocks are not derivable from anything —
-        they are the residue of runs already thrown away — so a profile needs an actual file
-        format with a version stamp and does not get the replay trick for free.
-      - **One profile, implicit, for now.** No slot picker and no naming, because naming
-        needs a text field and the one text field in the game is spoken for by the seed.
-      - What actually unlocks is undecided: cards for the starting deck, enemies in the pool,
-        floors, whole alternate decks. Worth answering alongside the loot loop, since an
-        unlock and a reward are the same object with different lifetimes.
+- [ ] **What actually unlocks.** The profile exists and holds an `unlocks` set — `internal/profile`
+      — and nothing writes to it. Undecided: cards for the starting deck, enemies in the pool,
+      floors, whole alternate decks. Worth answering alongside the loot loop, since an unlock and a
+      reward are the same object with different lifetimes.
+      - **Hand discovery is the one already specified** — MECHANICS.md has hands discovered rather
+        than given, and `profile.Profile.HandsDiscovered` is the field waiting for it. Gating the
+        table is a balance change and belongs in a commit where its effect can be seen, not in the
+        one that added the file.
+- [ ] **An achievement the player can see.** `first-steps` is awarded on a won duel and lands in
+      `profile.json` silently: there is no toast and no achievements screen. `Profile.Award` already
+      reports whether an award was new, which is what a toast would hang off.
+      - A toast is a new widget and the frame in `internal/game/chrome.go` is the only thing that
+        outlives a scene, so it is the natural home and the bar for joining it is high — see
+        CLAUDE.md. Worth deciding whether this is a toast at all or a line on a between-fights
+        screen.
+      - Steam's overlay draws its own popup when that lands, so this may turn out to be a thing
+        only the non-Steam build needs.
+- [ ] **A run that ends.** Delete-on-death is decided and has nowhere to fire from: a defeat
+      currently offers `Retry` and puts the same opponent back up, so no run ever ends.
+      `profile.DeleteRun` is written and uncalled, waiting for whatever ends one.
 - [ ] **Several profiles, and the second text screen.** Explicitly a later problem, split out
       so that "one profile for now" does not quietly become "one profile forever". Multiple
       profiles need naming, naming needs typing, and typing makes the one-text-field rule in

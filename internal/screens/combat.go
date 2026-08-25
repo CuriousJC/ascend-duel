@@ -616,6 +616,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// duel and this is the last tick that copy exists.
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
 		gs.Run.WonFight(s.fighter.CurrentLife)
+
+		// **The first duel ever won, recorded on the profile.** It fires on every win and the
+		// profile keeps one — see save.go, and profile.AchievementFirstSteps for why the key is
+		// fixed from here on.
+		awardFirstSteps(gs)
+
 		advanceRun(gs)
 		return nil
 	}

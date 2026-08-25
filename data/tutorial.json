@@ -1,90 +1,95 @@
-[
-  {
-    "StepRecord": "hello",
-    "Text": "Welcome duelist. I am Bob. I climbed this tower once, and lived. Let me show you one round of it.",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "where-you-are",
-    "Text": "Eight floors, three rooms each.",
-    "Anchor": "tower-place",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "the-opponent",
-    "Text": "And that is what is in the way.",
-    "Anchor": "enemy-card",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "yourself",
-    "Text": "You. DMG is how hard your hits start out.  AP determines how much you can do.  Vitae I'll cover later.  Last is your life, drop to zero and you're done ascending.",
-    "Anchor": "duelist-card",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "the-hand",
-    "Text": "Your dealt hand. Click that one to queue it.",
-    "Anchor": "first-card",
-    "Until": "cards-queued"
-  },
-  {
-    "StepRecord": "the-budget",
-    "Text": "Jabs cost 1 AP. You are allowed five cards but they can't exceed your AP total.",
-    "Anchor": "ap-bar",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "take-them-all",
-    "Text": "Now look closer. There are five Jabs, and cards that match make a hand. A hand multiplies the whole blow, so take the other four.",
-    "Anchor": "matching-cards",
-    "Until": "matching-queued"
-  },
-  {
-    "StepRecord": "swing",
-    "Text": "Five of a kind. Hands are made with similar cards.",
-    "Anchor": "duel-button",
-    "Until": "duel-pressed"
-  },
-  {
-    "StepRecord": "watch",
-    "Text": "Now your hand calculates.",
-    "Anchor": "math-band",
-    "Until": "phase-reward"
-  },
-  {
-    "StepRecord": "the-vitae",
-    "Text": "Dead in one blow. It's vitae is yours, the only coin in this tower.",
-    "Anchor": "build-card",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "the-worm",
-    "Text": "Every enemy has parasites you can use.",
-    "Anchor": "reward-worms",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "choose-a-worm",
-    "Text": "Choose a worm to change your deck.",
-    "Anchor": "reward-worms",
-    "Until": "phase-shop"
-  },
-  {
-    "StepRecord": "the-shelf",
-    "Text": "Now your jewelry.  You won't survive without them.  Spend your vitae wisely.",
-    "Anchor": "shop-shelf",
-    "Until": "next"
-  },
-  {
-    "StepRecord": "leave-the-shop",
-    "Text": "Now proceed into the next room.",
-    "Anchor": "shop-leave",
-    "Until": "phase-fight"
-  },
-  {
-    "StepRecord": "farewell",
-    "Text": "Go ahead, duelist, it's time to climb.",
-    "Until": "next"
-  }
-]
+{
+  "Seed": "0000HX",
+  "Enemy": "GiantBat",
+  "Match": "element",
+  "Steps": [
+    {
+      "StepRecord": "hello",
+      "Text": "Welcome duelist. I am Bob. I climbed this tower once, and lived. Let me show you one round of it.",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "where-you-are",
+      "Text": "Eight floors, three rooms each.",
+      "Anchor": "tower-place",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "the-opponent",
+      "Text": "And that is what is in the way.",
+      "Anchor": "enemy-card",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "yourself",
+      "Text": "You. DMG is how hard your hits start out.  AP determines how much you can do.  Vitae I'll cover later.  Last is your life, drop to zero and you're done ascending.",
+      "Anchor": "duelist-card",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "the-hand",
+      "Text": "Your dealt hand. Click that one to queue it.",
+      "Anchor": "first-card",
+      "Until": "cards-queued"
+    },
+    {
+      "StepRecord": "the-budget",
+      "Text": "That Jab cost 1 AP. You may play five cards a round, but never more AP than you have.",
+      "Anchor": "ap-bar",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "take-them-all",
+      "Text": "Now look closer. Four of those cards burn the same red. Cards that match make a hand, and a hand multiplies the whole blow - so take the other three.",
+      "Anchor": "matching-cards",
+      "Until": "matching-queued"
+    },
+    {
+      "StepRecord": "swing",
+      "Text": "Elemental Four of a Kind. Matching colours count, not just matching cards.",
+      "Anchor": "duel-button",
+      "Until": "duel-pressed"
+    },
+    {
+      "StepRecord": "watch",
+      "Text": "Now your hand calculates.",
+      "Anchor": "math-band",
+      "Until": "phase-reward"
+    },
+    {
+      "StepRecord": "the-vitae",
+      "Text": "Dead in one blow. Its vitae is yours, the only coin in this tower.",
+      "Anchor": "build-card",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "the-worm",
+      "Text": "Every enemy has parasites you can use.",
+      "Anchor": "reward-worms",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "choose-a-worm",
+      "Text": "Choose a worm to change your deck.",
+      "Anchor": "reward-worms",
+      "Until": "phase-shop"
+    },
+    {
+      "StepRecord": "the-shelf",
+      "Text": "Now your jewelry.  You won't survive without them.  Spend your vitae wisely.",
+      "Anchor": "shop-shelf",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "leave-the-shop",
+      "Text": "Now proceed into the next room.",
+      "Anchor": "shop-leave",
+      "Until": "phase-fight"
+    },
+    {
+      "StepRecord": "farewell",
+      "Text": "Go ahead, duelist, it's time to climb.",
+      "Until": "next"
+    }
+  ]
+}

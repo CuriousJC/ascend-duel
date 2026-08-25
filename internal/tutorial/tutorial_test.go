@@ -14,7 +14,7 @@ func TestTheShippedScriptLoads(t *testing.T) {
 	if err != nil {
 		t.Fatalf("data/tutorial.json does not parse: %v", err)
 	}
-	if len(s) == 0 {
+	if s.Len() == 0 {
 		t.Fatal("the shipped script is empty")
 	}
 }
@@ -79,7 +79,7 @@ func TestNothingPublishedSatisfiesNothingButNext(t *testing.T) {
 		if c == CondNext {
 			continue
 		}
-		run := &Run{script: Script{{Key: "x", Text: "x", Until: c}}}
+		run := &Run{script: Script{Steps: []Step{{Key: "x", Text: "x", Until: c}}}}
 		run.Update(Facts{}, false)
 		if !run.Active() {
 			t.Errorf("condition %q advanced on an empty Facts", name)
@@ -90,9 +90,9 @@ func TestNothingPublishedSatisfiesNothingButNext(t *testing.T) {
 // A step asking for a click with nothing named to click would leave the player no legal click at
 // all and a condition only they could satisfy. Refused rather than quietly downgraded.
 func TestAnActionStepWithNothingToClickIsRefused(t *testing.T) {
-	_, err := Parse([]data.TutorialStepData{
+	_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "bad", Text: "click it", Until: "cards-queued"},
-	})
+	}})
 	if err == nil {
 		t.Fatal("an action step with no anchor was accepted")
 	}
@@ -110,7 +110,7 @@ func TestAnInventedWordIsRefused(t *testing.T) {
 		{"anchor", data.TutorialStepData{StepRecord: "a", Text: "t", Until: "next", Anchor: "the-kitchen"}},
 		{"condition", data.TutorialStepData{StepRecord: "a", Text: "t", Until: "whenever"}},
 	} {
-		if _, err := Parse([]data.TutorialStepData{tc.rec}); err == nil {
+		if _, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{tc.rec}}); err == nil {
 			t.Errorf("an invented %s was accepted", tc.name)
 		}
 	}
@@ -124,18 +124,18 @@ func TestAnInventedWordIsRefused(t *testing.T) {
 // Lock. The bug it replaced was a step about which room you are standing in leaving the screen
 // live while the player queued cards it had not mentioned.
 func TestTheLockIsDerivedFromTheCondition(t *testing.T) {
-	s, err := Parse([]data.TutorialStepData{
+	s, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "read", Text: "t", Until: "next", Anchor: "duel-button"},
 		{StepRecord: "bare-read", Text: "t", Until: "next"},
 		{StepRecord: "click", Text: "t", Until: "duel-pressed", Anchor: "duel-button"},
 		{StepRecord: "wait", Text: "t", Until: "phase-shop", Anchor: "duel-button"},
-	})
+	}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	for i, want := range []Lock{LockAll, LockAll, LockToAnchor, LockNone} {
-		if s[i].Lock != want {
-			t.Errorf("step %q locks %v, wanted %v", s[i].Key, s[i].Lock, want)
+		if s.Steps[i].Lock != want {
+			t.Errorf("step %q locks %v, wanted %v", s.Steps[i].Key, s.Steps[i].Lock, want)
 		}
 	}
 }
@@ -143,25 +143,25 @@ func TestTheLockIsDerivedFromTheCondition(t *testing.T) {
 // A read step locks the screen even though it points at something. That is this turn's bug stated
 // as a test: pointing and permitting are different, and only Bob's buttons are live.
 func TestAReadStepLocksTheScreen(t *testing.T) {
-	s, err := Parse([]data.TutorialStepData{
+	s, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 		{StepRecord: "rooms", Text: "eight floors", Until: "next", Anchor: "tower-place"},
-	})
+	}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s[0].Lock != LockAll {
-		t.Errorf("a step that only wants reading locks %v", s[0].Lock)
+	if s.Steps[0].Lock != LockAll {
+		t.Errorf("a step that only wants reading locks %v", s.Steps[0].Lock)
 	}
 }
 
 // One step per frame. `phase-shop` is true for every frame the shop is up, so a script whose next
 // step also waited on it would never be seen at all if a satisfied step fell straight through.
 func TestOnlyOneStepAdvancesPerFrame(t *testing.T) {
-	run := &Run{script: Script{
+	run := &Run{script: Script{Steps: []Step{
 		{Key: "a", Text: "a", Until: CondPhaseShop},
 		{Key: "b", Text: "b", Until: CondPhaseShop},
 		{Key: "c", Text: "c", Until: CondPhaseShop},
-	}}
+	}}}
 	run.Update(Facts{Phase: "shop"}, false)
 
 	step, ok := run.Current()
@@ -173,10 +173,10 @@ func TestOnlyOneStepAdvancesPerFrame(t *testing.T) {
 // round-done must measure a round the step actually watched. A step that arrives mid-playback
 // would otherwise count the round it did not start and vanish on its first frame.
 func TestRoundDoneIgnoresTheRoundItArrivedDuring(t *testing.T) {
-	run := &Run{script: Script{
+	run := &Run{script: Script{Steps: []Step{
 		{Key: "watch", Text: "w", Until: CondRoundDone},
 		{Key: "after", Text: "a", Until: CondNext},
-	}}
+	}}}
 	// Arriving with three rounds already played and one under way.
 	run.Advance(Facts{RoundsPlayed: 3, Resolving: true})
 	run.step = 0 // Advance moved the cursor; the baseline is what is being tested.
@@ -224,14 +224,14 @@ func TestEveryAnchorAndConditionHasAName(t *testing.T) {
 // the screen live, because that is not a thing the file can say any more.
 func TestEveryActionConditionLocksToItsAnchor(t *testing.T) {
 	for _, until := range []string{"cards-queued", "hand-emptied", "matching-queued", "duel-pressed"} {
-		s, err := Parse([]data.TutorialStepData{
+		s, err := Parse(data.TutorialData{Match: "concept", Steps: []data.TutorialStepData{
 			{StepRecord: "do-it", Text: "do it", Until: until, Anchor: "hand"},
-		})
+		}})
 		if err != nil {
 			t.Fatalf("%q: %v", until, err)
 		}
-		if s[0].Lock != LockToAnchor {
-			t.Errorf("%q locks %v, wanted to-anchor", until, s[0].Lock)
+		if s.Steps[0].Lock != LockToAnchor {
+			t.Errorf("%q locks %v, wanted to-anchor", until, s.Steps[0].Lock)
 		}
 	}
 }
@@ -241,9 +241,9 @@ func TestEveryActionConditionLocksToItsAnchor(t *testing.T) {
 // against its own condition.
 func TestAnOutcomeStepMayLeaveTheScreenAlone(t *testing.T) {
 	for _, until := range []string{"round-done", "phase-fight", "phase-reward", "phase-shop"} {
-		if _, err := Parse([]data.TutorialStepData{
+		if _, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
 			{StepRecord: "waiting", Text: "hold on", Until: until},
-		}); err != nil {
+		}}); err != nil {
 			t.Errorf("an ungated %q step was refused: %v", until, err)
 		}
 	}
@@ -252,7 +252,7 @@ func TestAnOutcomeStepMayLeaveTheScreenAlone(t *testing.T) {
 // The shipped script has to obey its own rule. Parse enforces it, so this is really a guard against
 // the rule being loosened later without the script being re-read.
 func TestEveryActionStepInTheScriptGates(t *testing.T) {
-	for _, step := range Load() {
+	for _, step := range Load().Steps {
 		if step.Until.isAction() && step.Lock != LockToAnchor {
 			t.Errorf("step %q waits on %q but locks %v", step.Key, step.Until, step.Lock)
 		}
@@ -264,7 +264,7 @@ func TestEveryActionStepInTheScriptGates(t *testing.T) {
 // for.
 func TestTheFirstCardStepPointsAtOneCard(t *testing.T) {
 	var found bool
-	for _, step := range Load() {
+	for _, step := range Load().Steps {
 		if step.Until != CondCardsQueued {
 			continue
 		}
@@ -284,11 +284,11 @@ func TestTheFirstCardStepPointsAtOneCard(t *testing.T) {
 // why the fact is named for what is *unqueued* rather than for the hand's length. A step waiting
 // on the hand's length waits forever.
 func TestHandEmptiedCountsWhatIsUnqueuedNotWhatIsHeld(t *testing.T) {
-	run := &Run{script: Script{
+	run := &Run{script: Script{Steps: []Step{
 		{Key: "all", Text: "take them all", Anchor: AnchorHand,
 			Lock: LockToAnchor, Until: CondHandEmptied},
 		{Key: "after", Text: "done", Until: CondNext},
-	}}
+	}}}
 
 	// Four of five picked: not yet.
 	run.Update(Facts{Queued: 4, Unqueued: 1}, false)
@@ -300,5 +300,40 @@ func TestHandEmptiedCountsWhatIsUnqueuedNotWhatIsHeld(t *testing.T) {
 	run.Update(Facts{Queued: 5, Unqueued: 0}, false)
 	if step, _ := run.Current(); step.Key != "after" {
 		t.Fatal("hand-emptied did not fire once every card was queued")
+	}
+}
+
+// **An axis is required by any script that points at a matching set, and refused when absent.** The
+// lit square and the condition that lets the player past it are the same cards, and which cards
+// those are depends entirely on the axis — so defaulting it would be a lesson pointing confidently
+// at the wrong ones.
+func TestAMatchingStepWithoutAnAxisIsRefused(t *testing.T) {
+	_, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
+		{StepRecord: "take", Text: "take them", Until: "matching-queued", Anchor: "matching-cards"},
+	}})
+	if err == nil {
+		t.Fatal("a matching step with no Match axis was accepted")
+	}
+	if !strings.Contains(err.Error(), "Match axis") {
+		t.Errorf("unhelpful error: %v", err)
+	}
+}
+
+// A script that never points at a set does not need one, which is what keeps the axis a property of
+// the lesson rather than a field every script has to carry.
+func TestAScriptWithNoMatchingStepNeedsNoAxis(t *testing.T) {
+	if _, err := Parse(data.TutorialData{Steps: []data.TutorialStepData{
+		{StepRecord: "hello", Text: "hello", Until: "next"},
+	}}); err != nil {
+		t.Errorf("a script with no matching step should not need an axis: %v", err)
+	}
+}
+
+// The axis vocabulary is closed like the other three, and an invented word does not exist.
+func TestAnInventedAxisIsRefused(t *testing.T) {
+	if _, err := Parse(data.TutorialData{Match: "colour", Steps: []data.TutorialStepData{
+		{StepRecord: "hello", Text: "hello", Until: "next"},
+	}}); err == nil {
+		t.Error("an invented axis was accepted")
 	}
 }

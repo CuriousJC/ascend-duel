@@ -91,6 +91,23 @@ func StartingDeck() []combat.Card {
 	return out
 }
 
+// StartingDeckList replaces the authored deck for one run, when something has set it.
+//
+// **The deck counterpart of StartingRings**, and it exists for the same narrow reason: there is
+// otherwise no way to put a *chosen* set of cards in a player's hands without playing to it. Nil
+// is the shipped value and means the authored deck, so a normal launch never sees this.
+//
+// **The tutorial is what wanted it** *(2026-08-25)*. A first lesson has to be able to promise what
+// the player is holding — "these five all match, play them all" is a lie the moment a sixth card
+// they were not told about is dealt beside them — and the scenario fixture's `Hand` could not do
+// it, because that deals *over* a shuffle and leaves the rest of the deck behind it. What a
+// lesson needs is a deck with nothing else in it.
+//
+// It is a package var rather than an argument to Start for exactly the reason StartingRings is:
+// every other caller would have to pass nil, and a debug seat that changes a signature is a debug
+// seat that spreads.
+var StartingDeckList []combat.Card
+
 // deckEntry is one line of a deck list: a card and how many copies of it.
 type deckEntry struct {
 	card  combat.Card

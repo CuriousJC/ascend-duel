@@ -1,6 +1,8 @@
 package state
 
 import (
+	"image"
+
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -73,6 +75,26 @@ type GlobalState struct {
 	// would otherwise leave this stuck on and the chrome invisible for the rest of the
 	// session, on screens that have never heard of a modal.
 	ModalOpen bool
+
+	// InputFocus is the one rectangle still accepting clicks, and InputGated is whether the
+	// restriction is on at all. Together they are the tutorial's shield: while a step says "press
+	// this", the cursor anywhere else clicks nothing.
+	//
+	// **It lives here for the reason ModalOpen does** — it is a thing a scene and the frame around
+	// it have to agree on, and the mute button in the corner is exactly the control that would
+	// otherwise stay live under a lesson telling the player there is only one thing to press.
+	//
+	// **It gates on the cursor, not on the widget.** Every click in this game starts as a point:
+	// `systems.UpdateButton` hit-tests one, and the handful of places in `internal/screens` that
+	// read the mouse directly all build one first. So one predicate over the cursor position
+	// covers every control there is, where a per-widget rule would be a list that a newly added
+	// widget is missing from — and a control that is silently *not* covered by the shield is the
+	// failure this is built to prevent.
+	//
+	// **The frame clears it every tick and the tutorial re-asserts it**, the same discipline
+	// ModalOpen keeps: a screen left mid-step must not leave the rest of the session unclickable.
+	InputFocus image.Rectangle
+	InputGated bool
 
 	//Layout
 	ScreenWidth  int
@@ -195,4 +217,25 @@ func (active ActiveScreen) String() string {
 	default:
 		return "Unknown"
 	}
+}
+
+// InputAllowed reports whether a click at this point may do anything.
+//
+// **The one question every input site asks**, and the reason the tutorial's gating did not have
+// to be written into each of them separately. With no gate up it is always true, so a caller that
+// adds the check costs nothing in the ordinary case.
+//
+// A caller that has a rectangle rather than a point — a hover band, a drag target — asks about the
+// cursor, because that is what the player is actually pointing with.
+func (gs *GlobalState) InputAllowed(at image.Point) bool {
+	if !gs.InputGated {
+		return true
+	}
+	return at.In(gs.InputFocus)
+}
+
+// CursorAllowed is InputAllowed asked about wherever the cursor is right now, which is what
+// almost every caller means.
+func (gs *GlobalState) CursorAllowed() bool {
+	return gs.InputAllowed(image.Pt(gs.MouseX, gs.MouseY))
 }

@@ -32,6 +32,22 @@ var title_png []byte
 //go:embed game/title-easter-egg.png
 var titleEaster_png []byte
 
+// THE GUIDE
+//
+// Bob, the guide: the face on the tutorial's speech bubble. **A named one-off rather than a
+// member of either portrait family**, because he is not an opponent — nothing places him on a
+// floor, nothing fights him, and filing him under `boss/` would put him in the glob that
+// `data/bosses.json` is read against, where a portrait with no record behind it is a record
+// somebody has lost.
+//
+// 256x256, the same canvas the boss portraits are cut to, so he sits in a card's art box on the
+// same terms as everything else drawn into one.
+//
+// Provenance: the same set the thirty boss portraits came from.
+//
+//go:embed game/guide.png
+var guide_png []byte
+
 // GLYPH ART
 //
 // The attack and defend category glyphs on an action card. These two are the exception to
@@ -254,6 +270,10 @@ func LoadImageData() map[string][]byte {
 	images["earthring_png"] = earthring_png
 	images["defaultring_png"] = defaultring_png
 	images["defaultworm_png"] = defaultworm_png
+
+	// Bob's face, for the reason the ring art is here: the tutorial draws him into a card
+	// through internal/cards, which has no graphics context.
+	images["guide_png"] = guide_png
 
 	// The status badges, for the same reason as the ring art: they are drawn *into* the enemy
 	// card by internal/cards, which has no graphics context.

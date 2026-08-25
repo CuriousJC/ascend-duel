@@ -1,5 +1,40 @@
 [
   {
+    "ScenarioRecord": "tutorial",
+    "Note": "Bob, from the top, on a pinned seed: a deck of exactly five Jabs against a GiantBat, so the taught round is a Card Five of a Kind for 196 against 80 HP and the first fight ends in one blow. The only way to start the tutorial until there is a profile to remember whether a player has seen it.",
+    "Rings": [],
+    "Hand": [],
+    "Screen": "combat",
+    "Teach": true,
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0,
+    "Seed": 20260825,
+    "Enemy": "GiantBat",
+    "Deck": [
+      {
+        "Card": "Jab",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Jab",
+        "Element": "arcane"
+      }
+    ]
+  },
+  {
     "ScenarioRecord": "reward-payout",
     "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
     "Rings": [
@@ -120,7 +155,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u2014 which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
     "Rings": [
       "atrophy-ring",
       "momentum-ring"

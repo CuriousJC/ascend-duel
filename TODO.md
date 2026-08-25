@@ -52,11 +52,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         reports the rest as `... N earlier`, which is honest and is the wrong shape for a thing
         built to be read back. The input vocabulary has no wheel and no keyboard; **a drag on the
         panel is the gesture that exists and is unclaimed**.
-- [ ] **Preview the hand while the player is still planning.** `combat.BlowFor` is exported and
-      is the same function the resolver calls, so a previewed hand would be the hand that fires
-      by construction rather than by two pieces of code agreeing. Nothing calls it from the
-      screen. This is what makes *building toward a shape* legible before DUEL! is pressed rather
-      than after.
 
 ### Cards and piles — presentation
 
@@ -103,8 +98,8 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         whole round before playback starts, so speed can never change an outcome — worth
         protecting, since "fast mode plays differently" is a classic bug in this shape of
         game.
-      - Belongs to whatever settings screen eventually backs `SettingsButtonAction`,
-        which currently only prints.
+      - Belongs to a settings screen, which does not exist — there is no settings button
+        and nothing to hang the option off yet.
 - [ ] **Show the run seed, and allow entering one.** `GlobalState.RunSeed` is set once by
       `main` and logged; enemy selection is the first stream reading it. Without a way to see a
       seed and type one back, replayable runs are invisible to the player.

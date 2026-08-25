@@ -227,6 +227,14 @@ func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
 		return
 	}
 
+	// **A tutorial step holding input elsewhere takes the hand with it.** Cancelling rather than
+	// simply returning, for the reason the branch above cancels: a gate coming up mid-press would
+	// otherwise leave a card stuck to the cursor with no release that can put it down.
+	if !gs.CursorAllowed() {
+		s.cancelDrag()
+		return
+	}
+
 	if s.drag == nil {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			s.beginPress(gs)

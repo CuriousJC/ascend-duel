@@ -874,8 +874,56 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
   shelf both needed a duel played to reach them, every time. It sets the run's *phase* and lets
   `screens/flow.go` decide the scene, so the run never disagrees with what is on screen.
   `reward-payout` and `shop-shelf` are the two entries.
+- **It can also pin the seed and replace the whole deck** *(2026-08-25)*. `"Seed"` outranks
+  `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather than dealing over the shuffle
+  the way `"Hand"` does — through `session.StartingDeckList`, which is the deck counterpart of
+  `StartingRings`. The tutorial is what wanted both: a first lesson has to be able to promise what
+  the player is holding, and "these five all match, play them all" stops being true the moment a
+  refill deals a sixth card nobody mentioned.
+- **`"Teach": true` starts the tutorial on the run**, and is the only way to start it today — see
+  the tutorial section below.
 - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
   whose purpose nobody remembers is a fixture that gets deleted.
+
+### The tutorial is a sixth thing, and it is *not* compiled out
+
+[internal/tutorial](internal/tutorial) is the teaching run: which step is up, what it points at,
+and what has to happen before it moves on. `data/tutorial.json` is the script and
+`internal/screens/tutorial.go` is Bob's bubble, the red square and the leader line to it.
+
+**It ships.** Unlike trace, idle, the demo and the scenario fixture, a tutorial is a feature the
+player is meant to meet — so there is no build tag and it is in every binary. What is missing is a
+*trigger*: whether a given player has already been taught is a profile question and there is no
+profile, so the only way to start it today is `"Teach": true` in a scenario. When a real trigger
+arrives it calls `session.Teach` and nothing else changes.
+
+- **The state machine is free of Ebitengine**, like `internal/combat` and for the same payoff: the
+  whole script is walked end to end in a test rather than by playing to the end of it.
+- **A scene publishes `tutorial.Facts` once a frame; it does not fire events.** A condition is a
+  predicate over what is true now. The alternative — a `Did("duel-pressed")` call at every site
+  where something can happen — fails silently when one is forgotten, where a scene that forgets to
+  publish reports the zero value and stalls immediately.
+- **Three vocabularies, all closed and none defaulted**: anchors, conditions, and the lock derived
+  from the condition. See the `data` skill.
+- **The lit square and the one legal click are the same rectangle**, computed once. A lit hole the
+  player cannot click, or a clickable region that is not lit, would each be worse than no tutorial.
+- **`gs.InputGated` / `gs.InputFocus` is the shield**, and it gates on the *cursor* rather than per
+  widget — one predicate in `systems.UpdateButton` plus the handful of places in `internal/screens`
+  that read the mouse directly. A per-widget rule is a list a new widget is missing from.
+- **`internal/game` clears the gate every tick and the tutorial re-asserts it**, exactly as
+  `state.ModalOpen` works, so a screen left mid-step cannot leave the session unclickable.
+- **It is deliberately not a `modalToggle`.** Every other dialog takes one footprint and scrims the
+  whole screen; a thing whose job is to point at what is underneath cannot be the thing covering it.
+  That is a second dialog shape, decided on purpose *(owner's call, 2026-08-25)*.
+- **`TestTheTutorialsBlowKillsTheTutorialsEnemy` in `internal/combat` is the one to keep.** The
+  lesson promises a kill in one blow, and four files tuned for their own reasons can break that
+  promise silently — Jab's `Amount`, the ladder's multiplier, the duelist's `DMG`, the bat's `HP`.
+
+**The machinery refuses the mistakes it can detect** — an ungated action step, a click with nothing
+named to click, a lock disagreeing with its condition. **What it cannot check is whether an anchor
+shows the player how to satisfy the step's condition**, and that is where every bug in this feature
+so far has been: a step pointing at the shop shelf while waiting for the player to press *Leave*
+reads as a lock-up. Read each new step against its own condition.
 
 ## Architecture — and how to navigate it
 
@@ -921,9 +969,10 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
 | `pyramid` | data |
 | `combat` | data |
+| `tutorial` | data |
 | `decks` | data, combat |
 | `entities` | data, combat, pyramid |
-| `session` | data, combat, pyramid, seeds |
+| `session` | data, combat, pyramid, seeds, tutorial |
 | `state` | data, session |
 | `systems` | assets, models, state |
 | `cards` | systems |
@@ -938,6 +987,11 @@ Six facts about it that are load-bearing:
   registered by `internal/decks` rather than handed over by `data`: enemy cards live in
   `enemies.json` beside portraits and floor bands, so the rules reading that file directly would
   cross the who-consumes-it line.
+- **`tutorial` sits beside `combat` at the bottom and imports only `data`.** It is a state machine
+  over a script — which step is up, what it points at, what advances it — and it is free of
+  Ebitengine for the reason `combat` is: the whole script can be walked in a test rather than by
+  playing to the end of it. `session` holds the cursor, because a lesson outlives a fight; the
+  rectangle behind an anchor is `screens`, because a rectangle is a fact about a layout.
 - **`seeds` imports nothing and `combat` deliberately does not import it.** The rules take an
   injected `*rand.Rand` and stay ignorant of where it came from.
 - **`decks` sits above `combat` and `data` and below `screens`**, which is the whole reason it is

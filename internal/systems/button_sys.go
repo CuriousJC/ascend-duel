@@ -22,7 +22,14 @@ func UpdateButton(gs *state.GlobalState, button *models.Button) {
 	centerX := button.ScreenX - button.Width/2
 	centerY := button.ScreenY - button.Height/2
 	buttonLocation := button.Image.Bounds().Add(image.Pt(centerX, centerY))
-	mouseOver := image.Pt(gs.MouseX, gs.MouseY).In(buttonLocation)
+
+	// **The tutorial's shield, applied to every button in the game from one place.** While a step
+	// holds input to one rectangle, a cursor outside it is over nothing — so the button neither
+	// hovers, presses nor fires. Folding it into `mouseOver` rather than returning early is what
+	// makes the button fall back to its resting face on its own: an early return would freeze
+	// whatever state it was in when the gate went up, leaving a lit hover on a control that has
+	// stopped working.
+	mouseOver := image.Pt(gs.MouseX, gs.MouseY).In(buttonLocation) && gs.CursorAllowed()
 
 	// A click is a press and a release on the same button.  inpututil reports the
 	// tick the state changed, where ebiten.IsMouseButtonPressed reports the button

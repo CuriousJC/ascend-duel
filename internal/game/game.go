@@ -125,6 +125,12 @@ func (g *Game) Update() error {
 	// See state.ModalOpen.
 	g.GlobalState.ModalOpen = false
 
+	// **The tutorial's input shield, cleared on the same terms and for the same reason.** A
+	// screen left mid-step — a scene change, a skipped tutorial — must not leave the rest of the
+	// session shielded around a rectangle nothing is drawing. Whoever still wants it re-asserts
+	// it below. See state.InputGated.
+	g.GlobalState.InputGated = false
+
 	// Scene errors propagate rather than being discarded. Ebitengine stops the loop
 	// on any non-nil error from Update, so a scene returning one is fatal by design —
 	// which is the only sensible reading of an error a scene cannot handle itself.

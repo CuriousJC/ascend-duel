@@ -26,6 +26,15 @@ func Hand() []combat.Card { return nil }
 // Enemy is the record key to fight instead of the climb's own. Empty here.
 func Enemy() string { return "" }
 
+// Teach reports whether this scenario starts the tutorial. Always false here.
+func Teach() bool { return false }
+
+// Seed is the run seed to pin. Zero here, so the clock decides.
+func Seed() int64 { return 0 }
+
+// Deck is the replacement deck. Nil here, so the authored one is used.
+func Deck() []combat.Card { return nil }
+
 // Screen is which scene to open on. Always the duel here.
 func Screen() string { return "combat" }
 

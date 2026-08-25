@@ -66,12 +66,51 @@ type record struct {
 	// run's own**: a fresh purse, and full life.
 	Vitae int `json:"Vitae"`
 	Life  int `json:"Life"`
+
+	// Deck replaces the run's whole deck, rather than dealing over the shuffle the way Hand does.
+	//
+	// **Empty means the authored deck**, which is what almost every fixture wants: a scenario about
+	// one interaction should not have to restate sixty cards.
+	//
+	// **It exists because a lesson has to be able to promise what the player is holding**
+	// *(2026-08-25)*. `Hand` deals over the top of a normal shuffle, so the cards behind it are
+	// still the ordinary deck — fine for looking at an interaction, useless for "these five all
+	// match, play them all", which stops being true the moment the refill deals a sixth card
+	// nobody mentioned.
+	Deck []deckLine `json:"Deck"`
+
+	// Seed pins the run seed, so the same fixture deals the same cards and meets the same
+	// opponents every launch. **Zero means the clock**, which is the ordinary case.
+	//
+	// It is the per-scenario counterpart of `fixedRunSeed` in main.go and takes precedence over
+	// it: a fixture that is *about* a particular deal cannot be at the mercy of whether somebody
+	// left that constant at zero.
+	Seed int64 `json:"Seed"`
+
+	// Teach starts the tutorial on this run.
+	//
+	// **It is here rather than being its own trigger because there is no profile** — see TODO.md.
+	// Whether a given player has already been taught is the one question a tutorial trigger has to
+	// answer and nothing in the game can answer it yet, so the script is started by a fixture
+	// until something can. A real trigger calls `session.Teach` and this field goes.
+	Teach bool `json:"Teach"`
 }
 
 // handCard is one card of a plugged hand: a concept by its label, and a colour.
 type handCard struct {
 	Card    string `json:"Card"`
 	Element string `json:"Element"`
+}
+
+// deckLine is one line of a replacement deck: a card, a colour, and how many copies.
+//
+// **Copies rather than repeating the line**, because a deck list is read to be counted and five
+// identical lines is a list nobody checks. Absent or zero is one copy, so the common case writes
+// nothing.
+type deckLine struct {
+	Card    string `json:"Card"`
+	Element string `json:"Element"`
+	Copies  int    `json:"Copies"`
 }
 
 var current = resolve()
@@ -138,8 +177,22 @@ func keysOf(list []record) []string {
 func check(r *record) error {
 	// **A hand is only required of a scenario that opens on a duel.** One jumping straight to the
 	// reward screen or the shop has nothing to deal it to.
-	if len(r.Hand) == 0 && r.Screen == screenCombat {
-		return fmt.Errorf("has no hand, so there is nothing to look at")
+	// **A replacement deck counts as having something to look at.** A fixture that hands over a
+	// five-card deck has said exactly what the player will be holding; requiring it to restate the
+	// same five as a Hand would be two lists to keep in step.
+	if len(r.Hand) == 0 && len(r.Deck) == 0 && r.Screen == screenCombat {
+		return fmt.Errorf("has no hand and no deck, so there is nothing to look at")
+	}
+	for _, c := range r.Deck {
+		if _, ok := combat.ConceptByKey(c.Card); !ok {
+			return fmt.Errorf("deck: %q is not a card in the player's deck", c.Card)
+		}
+		if _, ok := combat.ParseElement(c.Element); !ok {
+			return fmt.Errorf("deck: %q is not an element", c.Element)
+		}
+		if c.Copies < 0 {
+			return fmt.Errorf("deck: %q has %d copies", c.Card, c.Copies)
+		}
 	}
 	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop {
 		return fmt.Errorf("%q is not a screen (want %q, %q or %q)",
@@ -191,6 +244,32 @@ func Hand() []combat.Card {
 
 // Enemy is the record key to fight instead of the climb's own, or empty for the climb's.
 func Enemy() string { return current.Enemy }
+
+// Teach reports whether this scenario starts the tutorial.
+func Teach() bool { return current.Teach }
+
+// Seed is the run seed to pin, or zero for the clock.
+func Seed() int64 { return current.Seed }
+
+// Deck is the replacement deck, resolved into real cards, or nil for the authored one.
+func Deck() []combat.Card {
+	if len(current.Deck) == 0 {
+		return nil
+	}
+	out := make([]combat.Card, 0, len(current.Deck))
+	for _, line := range current.Deck {
+		id, _ := combat.ConceptByKey(line.Card)
+		e, _ := combat.ParseElement(line.Element)
+		n := line.Copies
+		if n == 0 {
+			n = 1
+		}
+		for i := 0; i < n; i++ {
+			out = append(out, combat.Of(id, e))
+		}
+	}
+	return out
+}
 
 // The screens a scenario may open on. Written as keys rather than as `state.ActiveScreen` values,
 // because this package sits below `internal/state` and must stay there.

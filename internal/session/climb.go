@@ -14,6 +14,7 @@ import (
 	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/pyramid"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 )
@@ -30,7 +31,13 @@ import (
 // **The bosses come in as a second pool rather than merged into the first**, because the climb
 // places them differently: a boss stands on a floor's stairway and nowhere else.
 func Start(enemies map[string]data.EnemyData, bosses map[string]data.BossData, runSeed int64) *Session {
-	s := New(StartingDeck())
+	deck := StartingDeck()
+	if StartingDeckList != nil {
+		// A chosen deck, for a fixture or a lesson. Copied, so the caller's slice cannot be
+		// aliased by a run that then edits it with a worm.
+		deck = append([]combat.Card(nil), StartingDeckList...)
+	}
+	s := New(deck)
 	s.climb = pyramid.New(enemies, bosses, rand.New(rand.NewSource(seeds.For(runSeed, seeds.EnemySelect))))
 	return s
 }

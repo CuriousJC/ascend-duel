@@ -3,6 +3,7 @@ package session
 import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/pyramid"
+	"github.com/curiousjc/ascend-duel/internal/tutorial"
 )
 
 // startingVitae is what a run opens with. It was a constant on the combat screen, reset on every
@@ -72,6 +73,10 @@ type Session struct {
 	// position**, because it is the first ring state that will have to be serialized and a position
 	// would mean nothing in a save file.
 	grown map[string]int
+
+	// tutorial is the teaching run, or nil for a run nobody is being taught. See tutorial.go for
+	// why a step cursor belongs to the run rather than to the screen that happens to be up.
+	tutorial *tutorial.Run
 }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per

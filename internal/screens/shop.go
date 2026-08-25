@@ -111,6 +111,9 @@ type ShopScene struct {
 	// **Selling does have one** as of 2026-08-22, and the asymmetry is the point: see `armed`.
 	leaveButton *models.Button
 
+	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
+	tut tutorialOverlay
+
 	// armed is the worn ring a confirm tab is hanging under, by record key, and empty for none.
 	//
 	// **Selling is the one thing on this screen that asks twice** *(owner's call, 2026-08-22)*.
@@ -278,6 +281,9 @@ func weightOf(key string) int {
 }
 
 func (s *ShopScene) Update(gs *state.GlobalState) error {
+	// Before this screen's own input; see combat.go's Update.
+	s.tut.update(gs, s)
+
 	s.move.tick()
 
 	if s.leaving {
@@ -290,7 +296,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	// something, which is the reward screen's rule for its payout and for the same reason: a
 	// sentence half-read while a ring is already being bought is two things at once.
 	if !s.prose.finished() {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
 			s.prose.skip(gs)
 		}
 		s.prose.tick(gs, func(i int) image.Point { return shopProseLineAt(gs, i) })
@@ -335,6 +341,11 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 func (s *ShopScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	// A gated step takes the tooltips with the clicks; see the combat screen's hover.
+	if !gs.CursorAllowed() {
+		return
+	}
+
 	for i, item := range s.shelf {
 		seat := s.shelfSlot(gs, i)
 		if item.bought || !at.In(seat) {
@@ -361,7 +372,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 // on the screen changes while a tab is up, the other rings stay clickable, and clicking the armed
 // ring again puts it away.
 func (s *ShopScene) click(gs *state.GlobalState) {
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
 		return
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
@@ -577,6 +588,10 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// on top of it.
 	s.deck.draw(gs, screen, ownedContents(gs))
 	s.hands.draw(gs, screen, ownedHands(gs))
+
+	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
+	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
+	s.tut.draw(gs, screen, s)
 }
 
 // drawShelf draws what is for sale, with its price under it.

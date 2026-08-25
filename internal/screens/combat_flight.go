@@ -301,7 +301,7 @@ func deckStackBounds(gs *state.GlobalState) image.Rectangle {
 // one. That is the same rule the Deck button lived under, and the reason Draw renders the
 // stack a second time on top of the overlay.
 func (s *CombatScene) updateDeckStack(gs *state.GlobalState) {
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
 		return
 	}
 	if image.Pt(gs.MouseX, gs.MouseY).In(deckStackBounds(gs)) {

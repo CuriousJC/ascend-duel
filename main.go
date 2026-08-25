@@ -12,6 +12,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/tutorial"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -70,6 +71,15 @@ func main() {
 	// The seed is logged either way, because there will eventually be a field to type one
 	// back into and a seed nobody can see is a run nobody can ask about.
 	g.GlobalState.RunSeed = fixedRunSeed
+
+	// **A scenario's own seed outranks the constant above.** A fixture that is about a particular
+	// deal — the tutorial is, since it promises the player what they are holding — cannot be at
+	// the mercy of whether `fixedRunSeed` was left at zero. Compiled out with the rest of the
+	// package; see internal/scenario.
+	if scenario.Active() && scenario.Seed() != 0 {
+		g.GlobalState.RunSeed = scenario.Seed()
+	}
+
 	if g.GlobalState.RunSeed == 0 {
 		g.GlobalState.RunSeed = time.Now().UnixNano()
 	}
@@ -98,6 +108,10 @@ func main() {
 	// See internal/scenario.
 	if scenario.Active() {
 		session.StartingRings = scenario.Rings()
+
+		// **A chosen deck, where the rings are a chosen row.** Nil unless the fixture says
+		// otherwise, so this is the authored deck for every scenario that does not care.
+		session.StartingDeckList = scenario.Deck()
 	}
 
 	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.Bosses, g.GlobalState.RunSeed)
@@ -159,6 +173,15 @@ func startScenarioAt(g *game.Game) {
 		gs.Run.SetPhase(session.PhaseFight)
 		gs.ActiveScreen = state.Combat
 	}
+	// **The tutorial's only trigger today.** Whether a player has already been taught is a profile
+	// question and there is no profile — see TODO.md — so the script is started by a fixture until
+	// something can answer it. When a real trigger arrives it makes this same call and this block
+	// goes; nothing else about the feature changes.
+	if scenario.Teach() {
+		gs.Run.Teach(tutorial.Load())
+		log.Printf("scenario %s: teaching the run", scenario.Name())
+	}
+
 	log.Printf("scenario %s: opening on the %s screen, room %d",
 		scenario.Name(), scenario.Screen(), scenario.Fight())
 }

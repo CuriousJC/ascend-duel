@@ -1,6 +1,6 @@
 ---
 name: data
-description: The game's static data - the eight JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or rings, or writing a loader.
+description: The game's static data - the nine JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or rings or tutorial steps, or writing a loader.
 ---
 
 # The data files
@@ -19,6 +19,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the poker hands on each of three matching axes, and what each multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
+| `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
 ## Who may read what, and why it is not "whether it is data"
 
@@ -210,6 +211,23 @@ make the argument in MECHANICS.md again before adding one.
 
 **`amount` reaches every card with one worm**, because what the figure means depends on the verb.
 That is the card language paying off, and it is the shape to reach for before adding a target.
+
+### The tutorial script
+
+`tutorial.json` is **an ordered list, like `duelist_cards.json`** — a script is a sequence, file
+order is play order, and a map would put the run's first lesson wherever Go's hashing felt like it.
+
+- **Two closed vocabularies, both enforced in `internal/tutorial` rather than here**: an `Anchor`
+  (what to point at) and an `Until` (what advances the step). Neither is defaulted — a misspelled
+  anchor would draw a spotlight round the empty rectangle at the origin and a misspelled condition
+  would produce a step nothing can satisfy, and both look like a hung tutorial rather than a typo.
+- **How much of the screen a step locks is *not* a field.** It is derived from `Until`: a step
+  that wants reading locks everything, one that wants a click locks all but its anchor, and one
+  waiting on an outcome locks nothing. It was a field for a few hours on 2026-08-25 and a step
+  about which room you are standing in used it to leave the screen live while the player queued
+  two cards nobody had mentioned. A field could only ever disagree with the condition.
+- **An anchor names the control, never the region around it.** `first-card` exists because `hand`
+  let a step that asked for one card accept five.
 
 ### Hands
 

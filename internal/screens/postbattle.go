@@ -184,6 +184,9 @@ type PostBattleScene struct {
 	takeButton *models.Button
 	skipButton *models.Button
 
+	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
+	tut tutorialOverlay
+
 	// aimed is which offered card the worm is pointed at while the morph is shown, and before/after
 	// are what it looks like on each side of the change. **Computed once, when the card is picked**
 	// rather than every frame: `preview` runs the worm against a throwaway copy of the run, and
@@ -371,11 +374,15 @@ func (s *PostBattleScene) morphButtons(gs *state.GlobalState) {
 }
 
 func (s *PostBattleScene) Update(gs *state.GlobalState) error {
+	// **Before this screen's own input**, for the reason combat.go runs it first: the gate it
+	// sets is what every widget below reads.
+	s.tut.update(gs, s)
+
 	// **The narration is the whole screen while it runs.** Nothing is clickable but the click that
 	// skips it, which is what keeps a payout from being half-read while a worm is already being
 	// chosen.
 	if s.stage == narrate {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
 			s.prose.skip(gs)
 		}
 		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, i) })
@@ -469,6 +476,11 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	// A gated step takes the tooltips with the clicks; see the combat screen's hover.
+	if !gs.CursorAllowed() {
+		return
+	}
+
 	// **The band is live at every stage, so its rings are explained at every stage.** They are not
 	// a choice this screen offers — which is exactly why the rule above does not cover them: a
 	// worn ring is what the choice is being *judged against*, and "what does the one I am wearing
@@ -519,7 +531,7 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 // what keeps the two stages honest: a card cannot be chosen before a worm names what would happen
 // to it.
 func (s *PostBattleScene) click(gs *state.GlobalState) {
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
 		return
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
@@ -790,6 +802,10 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		}
 		systems.DrawButton(gs, screen, s.backButton)
 	}
+
+	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
+	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
+	s.tut.draw(gs, screen, s)
 }
 
 // morphSlots is where the before and after cards sit: side by side, centred, with room between

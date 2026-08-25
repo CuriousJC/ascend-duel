@@ -341,6 +341,11 @@ type CombatScene struct {
 	// reset: it is a reading preference rather than a fact about a duel.
 	sortMode    handSort
 	sortButtons []*models.Button
+
+	// tut is Bob, when a run is being taught. **A field on the scene rather than global state**,
+	// because the widget is this screen's — the two buttons and where the bubble last sat. What
+	// survives a fight is the step cursor, and that is on the run. See tutorial.go.
+	tut tutorialOverlay
 }
 
 // Init prepares a fresh duel. Safe to re-enter: the combatants and the button are
@@ -625,6 +630,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// down for that reason, below the settled-duel branch; one call here is strictly earlier and
 	// strictly more often, and it cannot reach a figure that was in the air when the duel settled
 	// because playback does not finish until every figure has landed.
+	// **The tutorial runs before anything on this screen it might close.** The gate it sets is
+	// what every widget below reads, so running it afterwards would hand the player one live
+	// frame per step on controls the lesson has shut. It is after the two exits above because
+	// those change screen and there is nothing to point at on the way out.
+	s.tut.update(gs, s)
+
 	s.theatre.tick()
 	// **Every opener is inert while any dialog is up, and the X on the panel is the exit**
 	// *(owner's call, 2026-08-24)*. It used to be the other way round — each control survived its
@@ -1238,6 +1249,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// **Over every overlay, because it explains what is on top.** The deck panel's cards are the
 	// last thing drawn before this and they are the thing being asked about.
 	systems.DrawTooltip(gs, screen, &s.tip)
+
+	// **Bob goes over all of it, and the spotlight with him.** The scrim dims what is already on
+	// the screen, so anything drawn after this would sit on top of the dimming and read as the
+	// one lit thing — which is the job of the anchor and nothing else.
+	s.tut.draw(gs, screen, s)
 
 	// Last of all, so a capture holds the finished frame rather than a half-drawn one.
 	s.demoDraw(gs, screen)

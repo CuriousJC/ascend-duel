@@ -29,6 +29,12 @@ import (
 func (s *CombatScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	// **A gated step takes the tooltips with the clicks.** A tooltip is an invitation to look at
+	// something, and the whole of a gating step is that there is one thing to look at.
+	if !gs.CursorAllowed() {
+		return
+	}
+
 	// **The hands panel explains itself in words**, so there is nothing under it to point at —
 	// and a hand card's tooltip drawn through a dialog is the failure this branch exists to stop.
 	if s.hands.open {

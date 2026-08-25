@@ -2,9 +2,16 @@
 
 Ascending Duel is a roguelike game where you must duel up a tower and build your skills while collecting magical rings and brands of power to aid you.
 
-It is an early prototype. The duel itself plays — a hand of cards, an action-point
-budget, an order you choose, and four opponents that each punish a different habit — but
-the tower around it does not exist yet.
+It is still a prototype, but the shape of a run is there. A duel is a hand of cards, an
+action-point budget and an order you choose; cards that match make a *hand*, and a hand
+multiplies the whole blow. Win and you take a **worm** that rewrites a card in your deck,
+spend **vitae** in the shop on one of forty-odd **rings**, and climb — eight floors of
+three rooms, every third one a named stairway boss. Picking the room ahead is the one
+station of that loop still to be built.
+
+A first-time player is taught the game by a short scripted tutorial on their opening
+fight, and a run is written to disk between rooms, so quitting and relaunching picks the
+climb back up.
 
 ## Play it
 
@@ -16,6 +23,14 @@ Grab a build from [Releases](https://github.com/CuriousJC/ascend-duel/releases).
 - **Linux** — download the `.tar.gz` and extract it. It ships as a tar because GitHub
   release assets carry no file permissions, so a bare binary would arrive without its
   execute bit.
+
+Saves live in your platform's config directory — `%APPDATA%\ascend-duel` on Windows,
+`~/.config/ascend-duel` on Linux — never beside the executable. `profile.json` is you
+(tutorial seen, achievements); `run.json` is the climb in progress. Deleting either is
+safe: a missing file is a new player.
+
+Every run has a **six-character code** you can write down. The alphabet is Crockford
+base32, so there is no `I`, `L`, `O` or `U` to mistype.
 
 ## Build it
 
@@ -33,6 +48,22 @@ On Linux, [Ebitengine](https://ebitengine.org/) needs cgo and a few development 
 [.github/workflows/ci.yml](.github/workflows/ci.yml). On Windows it is pure Go and needs
 nothing.
 
+## What is in it
+
+| | |
+|---|---|
+| 18 duelist cards | four forms — stab, slash, crush and plan — across five elements |
+| 19 hands | three axes: concept, form and element, wearing poker's names |
+| 58 rings | bought and sold in the shop, priced by rarity |
+| 11 worms | each rewrites one card in your deck after a win |
+| 96 creatures | sorted into floor bands, each with its own deck |
+| 30 bosses | three or four authored per floor, guarding the stairway |
+
+**Every catalogue is browsable without launching the game.** [docs/sheets/](docs/sheets/)
+holds a rendered page per catalogue — every card, ring, worm, hand, creature and boss, as
+the game actually draws them, with the rules that fire beside the text a player reads.
+Open [docs/sheets/index.html](docs/sheets/index.html).
+
 ## What it is built from
 
 - **[Ebitengine v2](https://ebitengine.org/)** for the window, input and drawing. No UI
@@ -41,6 +72,9 @@ nothing.
   the score is a Standard MIDI file synthesised to audio at startup rather than a shipped
   recording. Both choices are about provenance as much as size: generated output has no
   licence question attached to it.
+- **No `math/rand` globals, no `time.Now()` in the rules.** A run is meant to be
+  reproducible from its code, so every roll comes off an explicit stream salted from the
+  run seed.
 
 ## Where things are written down
 
@@ -76,8 +110,8 @@ Art by: CuriousJC and KingSherman1820
 
 ### Third-party assets
 
-- **Enemy sprites** — [PVGames](https://pvgames.itch.io/), from the Humble *Isometric
-  Assets Galore* bundle. Licensed for use inside a game; they may not be redistributed
+- **Creature and boss portraits** — [PVGames](https://pvgames.itch.io/), from the Humble
+  *Isometric Assets Galore* bundle. Licensed for use inside a game; they may not be redistributed
   as assets, so please do not lift them out of this repository for your own project.
 - **Fonts** — `Kubasta.ttf` (CC0, via FontStruct), Fira Sans, and Roboto Flex.
 

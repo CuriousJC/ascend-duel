@@ -29,8 +29,8 @@ func Enemy() string { return "" }
 // Teach reports whether this scenario starts the tutorial. Always false here.
 func Teach() bool { return false }
 
-// Seed is the run seed to pin. Zero here, so the clock decides.
-func Seed() int64 { return 0 }
+// Seed is the run code to pin. Empty here, so the clock decides.
+func Seed() string { return "" }
 
 // Deck is the replacement deck. Nil here, so the authored one is used.
 func Deck() []combat.Card { return nil }

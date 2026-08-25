@@ -38,7 +38,38 @@ name a run.
 seed is the one place a run is allowed to be unpredictable; it happens once, outside the rules,
 in `main`. Everything downstream derives from the number it picked.
 
-`fixedRunSeed` is the debugging toggle — zero rolls a new run, anything else pins one.
+`fixedRunSeed` is the debugging toggle — empty rolls a new run, anything else pins one.
+
+### A seed is a six-character code *(2026-08-25)*
+
+`internal/seeds/code.go` is the only place the alphabet exists: **Crockford base32** — the ten
+digits and the twenty-six letters, less `I`, `L`, `O` and `U`. Six characters, so `seeds.Space`
+is 32^6 — 1,073,741,824 runs.
+
+- **`RunSeed` stays an `int64`** and every stream still derives from it by arithmetic. What
+  changed is its *range*: `main` folds the clock in with `seeds.Normalize` so every run is one
+  that can be written down, and logs `seeds.Code` rather than the number.
+- **Shrinking the seed space does not weaken the derivation.** Each stream XORs a salt spread
+  across the full int64, so two adjacent codes do not produce neighbouring shuffles.
+- **Case is not information.** `Parse` accepts either and trims surrounding space; `Code` only
+  ever emits upper case. Compare parsed numbers, never strings.
+- **`Code` panics outside the space rather than folding.** Quietly rendering a number that will
+  not round-trip is how a shared code comes to name a different run than the one it was copied
+  from. `Normalize` is called at the one place a seed is chosen.
+- **Zero is `000000`, a real run, not "unset".** `main` carries its own `pinned` flag; anything
+  else that used a zero check is wrong now.
+- **`fixedRunSeed` and a scenario's `Seed` are both code strings**, and one that is not a code
+  is a `log.Fatalf` before the window opens — a pin nobody notices is off is worse than no pin.
+- **The four dropped characters are the point, and dropping them is only half of it.** `0`/`O`
+  and `1`/`I`/`L` are what a person reads wrong off a screen, and the failure is the quiet one —
+  a different, perfectly *valid* run rather than an error message. So `Code` never emits them
+  **and `Parse` folds them anyway**: `O`→`0`, `I`/`L`→`1`, because someone typing the letter
+  that looks like the digit is holding the right code. `U` is excluded for a different reason —
+  it is the letter that turns a random six-character code into a word — and it does **not**
+  fold, because it is not a mistake for anything.
+- **The alphabet may never be reordered, and nothing may be added to it or taken out.** Its
+  order *is* the numeral system — the same append-only hazard the enum ordinals carry, one layer
+  down. Either change re-points every code ever written down at a different run.
 
 ## The streams
 

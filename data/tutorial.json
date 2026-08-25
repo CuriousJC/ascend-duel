@@ -1,90 +1,90 @@
 [
   {
     "StepRecord": "hello",
-    "Text": "I am Bob. I climbed this tower once, and lived. Let me show you one round of it.",
+    "Text": "Welcome duelist. I am Bob. I climbed this tower once, and lived. Let me show you one round of it.",
     "Until": "next"
   },
   {
     "StepRecord": "where-you-are",
-    "Text": "Eight floors, three rooms each. That says how far up you have got. You are at the bottom.",
+    "Text": "Eight floors, three rooms each.",
     "Anchor": "tower-place",
     "Until": "next"
   },
   {
     "StepRecord": "the-opponent",
-    "Text": "And that is what is in the way. Take its life to nothing and the room is yours.",
+    "Text": "And that is what is in the way.",
     "Anchor": "enemy-card",
     "Until": "next"
   },
   {
     "StepRecord": "yourself",
-    "Text": "You. DMG is how hard you hit, AP is what you may spend this round, and the bar is your life.",
+    "Text": "You. DMG is how hard your hits start out.  AP determines how much you can do.  Vitae I'll cover later.  Last is your life, drop to zero and you're done ascending.",
     "Anchor": "duelist-card",
     "Until": "next"
   },
   {
     "StepRecord": "the-hand",
-    "Text": "Five cards, and I have made sure they are the only five you carry. Click that one to queue it.",
+    "Text": "Your dealt hand. Click that one to queue it.",
     "Anchor": "first-card",
     "Until": "cards-queued"
   },
   {
     "StepRecord": "the-budget",
-    "Text": "One action point gone. Every card costs; spend past the bar and you cannot duel at all.",
+    "Text": "Jabs cost 1 AP. You are allowed five cards but they can't exceed your AP total.",
     "Anchor": "ap-bar",
     "Until": "next"
   },
   {
     "StepRecord": "take-them-all",
-    "Text": "Now look closer. All five are Jabs, and cards that match make a hand. A hand multiplies the whole blow, so take the other four.",
-    "Anchor": "hand",
-    "Until": "hand-emptied"
+    "Text": "Now look closer. There are five Jabs, and cards that match make a hand. A hand multiplies the whole blow, so take the other four.",
+    "Anchor": "matching-cards",
+    "Until": "matching-queued"
   },
   {
     "StepRecord": "swing",
-    "Text": "Five of a kind. There is no bigger hand in the game and you are holding it. Press it.",
+    "Text": "Five of a kind. Hands are made with similar cards.",
     "Anchor": "duel-button",
     "Until": "duel-pressed"
   },
   {
     "StepRecord": "watch",
-    "Text": "Watch the sum. The round was decided before a pixel of it moved; this is only it being shown to you.",
+    "Text": "Now your hand calculates.",
     "Anchor": "math-band",
     "Until": "phase-reward"
   },
   {
     "StepRecord": "the-vitae",
-    "Text": "Dead in one blow. What it was carrying is yours: vitae, the only coin in this tower. It buys rings, and it is the figure on your card.",
+    "Text": "Dead in one blow. It's vitae is yours, the only coin in this tower.",
     "Anchor": "build-card",
     "Until": "next"
   },
   {
     "StepRecord": "the-worm",
-    "Text": "Every enemy you fell also has a creature in it. Take one and consume it, and it eats a card of your deck and changes it for good.",
+    "Text": "Every enemy has parasites you can use.",
     "Anchor": "reward-worms",
     "Until": "next"
   },
   {
     "StepRecord": "choose-a-worm",
-    "Text": "Take one, then the card you want it to eat, then confirm. Or take neither and leave — the win has already paid.",
+    "Text": "Choose a worm to change your deck.",
     "Anchor": "reward-worms",
     "Until": "phase-shop"
   },
   {
     "StepRecord": "the-shelf",
-    "Text": "And this is what the vitae is for. A ring is what makes an element do anything at all, so buy early and buy cheap.",
+    "Text": "Now your jewelry.  You won't survive without them.  Spend your vitae wisely.",
     "Anchor": "shop-shelf",
     "Until": "next"
   },
   {
     "StepRecord": "leave-the-shop",
-    "Text": "Spend what you like. When you are done, that is the way back to the tower.",
+    "Text": "Now proceed into the next room.",
     "Anchor": "shop-leave",
     "Until": "phase-fight"
   },
   {
     "StepRecord": "farewell",
-    "Text": "That is the whole of it: build a hand, swing it, take what falls out. Eight floors above you. I will not follow. Climb.",
+    "Text": "Go ahead, duelist, it's time to climb.",
     "Until": "next"
   }
 ]

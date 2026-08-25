@@ -1,7 +1,7 @@
 [
   {
     "ScenarioRecord": "tutorial",
-    "Note": "Bob, from the top, on a pinned seed: a deck of exactly five Jabs against a GiantBat, so the taught round is a Card Five of a Kind for 196 against 80 HP and the first fight ends in one blow. The only way to start the tutorial until there is a profile to remember whether a player has seen it.",
+    "Note": "Bob, from the top, on the real starting deck: seed 00H602 deals all five Jabs in the opening eight, so the taught round is a Card Five of a Kind for 196 against a GiantBat's 80 HP and the first fight ends in one blow. The other three cards are a Cleave, a Smash and a Prepare - three different forms, none of them stab, so the Jabs are the only set in the hand. The only way to start the tutorial until there is a profile to remember whether a player has seen it.",
     "Rings": [],
     "Hand": [],
     "Screen": "combat",
@@ -9,30 +9,8 @@
     "Fight": 0,
     "Vitae": 0,
     "Life": 0,
-    "Seed": 20260825,
-    "Enemy": "GiantBat",
-    "Deck": [
-      {
-        "Card": "Jab",
-        "Element": "fire"
-      },
-      {
-        "Card": "Jab",
-        "Element": "ice"
-      },
-      {
-        "Card": "Jab",
-        "Element": "lightning"
-      },
-      {
-        "Card": "Jab",
-        "Element": "earth"
-      },
-      {
-        "Card": "Jab",
-        "Element": "arcane"
-      }
-    ]
+    "Seed": "00H602",
+    "Enemy": "GiantBat"
   },
   {
     "ScenarioRecord": "reward-payout",

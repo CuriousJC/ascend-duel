@@ -56,6 +56,20 @@ const (
 	// The shop.
 	AnchorShopShelf
 
+	// AnchorMatchingCards is the largest set of cards in the hand that share a concept — the
+	// five Jabs of the opening lesson — as one rectangle over the seats they occupy.
+	//
+	// **It names a set the player has to find, which no other anchor does.** Every other anchor
+	// is a control at a known place; this one is a fact about the hand that was dealt, so the
+	// scene computes it from the cards rather than from the layout. That is what lets a step say
+	// "cards that match make a hand" against a *real* hand instead of against a fixture deck
+	// holding nothing else — see the tutorial section of CLAUDE.md.
+	//
+	// **Pairing it with [CondMatchQueued] is what makes the lesson true by construction**: the
+	// lock leaves only these cards clickable, so the hand the player builds is the hand Bob just
+	// described. An empty hand, or one with nothing matching in it, reports no rectangle.
+	AnchorMatchingCards
+
 	// AnchorShopLeave is the button that ends the shop visit.
 	//
 	// **A step waiting on an outcome still has to say how to reach it** *(owner's call,
@@ -71,21 +85,22 @@ const (
 // **One table read in both directions**, by [ParseAnchor] and by [Anchor.String], so a name
 // cannot parse as one thing and print as another.
 var anchorNames = map[Anchor]string{
-	AnchorNone:        "",
-	AnchorEnemyCard:   "enemy-card",
-	AnchorDuelistCard: "duelist-card",
-	AnchorHand:        "hand",
-	AnchorFirstCard:   "first-card",
-	AnchorAPBar:       "ap-bar",
-	AnchorDuelButton:  "duel-button",
-	AnchorHandsButton: "hands-button",
-	AnchorDeckStack:   "deck-stack",
-	AnchorTowerPlace:  "tower-place",
-	AnchorMathBand:    "math-band",
-	AnchorRewardWorms: "reward-worms",
-	AnchorBuildCard:   "build-card",
-	AnchorShopShelf:   "shop-shelf",
-	AnchorShopLeave:   "shop-leave",
+	AnchorNone:          "",
+	AnchorEnemyCard:     "enemy-card",
+	AnchorDuelistCard:   "duelist-card",
+	AnchorHand:          "hand",
+	AnchorFirstCard:     "first-card",
+	AnchorAPBar:         "ap-bar",
+	AnchorDuelButton:    "duel-button",
+	AnchorHandsButton:   "hands-button",
+	AnchorDeckStack:     "deck-stack",
+	AnchorTowerPlace:    "tower-place",
+	AnchorMathBand:      "math-band",
+	AnchorRewardWorms:   "reward-worms",
+	AnchorBuildCard:     "build-card",
+	AnchorShopShelf:     "shop-shelf",
+	AnchorMatchingCards: "matching-cards",
+	AnchorShopLeave:     "shop-leave",
 }
 
 func (a Anchor) String() string {
@@ -146,6 +161,15 @@ const (
 	// duel is settled or not.
 	CondRoundDone
 
+	// CondMatchQueued is every card of [AnchorMatchingCards] sitting in the action box.
+	//
+	// **It is `hand-emptied` for a hand with other cards in it** *(2026-08-25)*. That condition
+	// wants the *whole* hand queued, which only a fixture deck dealt to exactly the lesson can
+	// ever reach: a real hand of eight against a five-card cap and a six-point budget leaves
+	// cards behind by the rules of the game, so the step waited forever. This one asks for the
+	// set the step is pointing at, which is what it was always asking for.
+	CondMatchQueued
+
 	// The three phase conditions: the run has reached that station. They are how a step waits out
 	// something open-ended — a fight that takes as many rounds as it takes — without the script
 	// having to describe it.
@@ -158,6 +182,7 @@ var conditionNames = map[Condition]string{
 	CondNext:        "next",
 	CondCardsQueued: "cards-queued",
 	CondHandEmptied: "hand-emptied",
+	CondMatchQueued: "matching-queued",
 	CondDuelPressed: "duel-pressed",
 	CondRoundDone:   "round-done",
 	CondPhaseFight:  "phase-fight",
@@ -187,8 +212,8 @@ func ParseCondition(s string) (Condition, error) {
 // isAction reports whether a condition is satisfied by the player clicking something on the
 // screen, as opposed to by the game arriving somewhere.
 //
-// **An action condition must gate** — see the check in [Parse]. `cards-queued`, `hand-emptied` and
-// `duel-pressed` are all satisfied by a click, so a step waiting on one is asking the player to do
+// **An action condition must gate** — see the check in [Parse]. `cards-queued`, `hand-emptied`,
+// `matching-queued` and `duel-pressed` are all satisfied by a click, so a step waiting on one is asking the player to do
 // a specific thing; leaving the rest of the screen live lets them do *more* than the step
 // describes, and every step after it is then narrating a game that is no longer on screen.
 //
@@ -197,7 +222,7 @@ func ParseCondition(s string) (Condition, error) {
 // no business naming.
 func (c Condition) isAction() bool {
 	switch c {
-	case CondCardsQueued, CondHandEmptied, CondDuelPressed:
+	case CondCardsQueued, CondHandEmptied, CondMatchQueued, CondDuelPressed:
 		return true
 	}
 	return false
@@ -284,6 +309,14 @@ type Facts struct {
 	// [CondHandEmptied] reads this and Queued together, so that a hand with nothing in it because
 	// nothing was ever dealt does not read as one the player has finished queueing.
 	Unqueued int
+
+	// Matching is how many cards of the hand form its largest matching set, and MatchingQueued
+	// how many of those the player has put in the queue. [CondMatchQueued] reads both.
+	//
+	// **Two fields rather than a bool**, so the condition is a comparison a test can drive to
+	// either side, and so a scene that publishes neither reports the zero value and satisfies
+	// nothing — the same property the rest of Facts has.
+	Matching, MatchingQueued int
 
 	// Resolving is whether a round is playing back rather than being planned.
 	Resolving bool
@@ -436,6 +469,8 @@ func (r *Run) satisfied(c Condition, f Facts, nextPressed bool) bool {
 		return f.Queued > 0
 	case CondHandEmptied:
 		return f.Queued > 0 && f.Unqueued == 0
+	case CondMatchQueued:
+		return f.Matching > 0 && f.MatchingQueued == f.Matching
 	case CondDuelPressed:
 		return f.Resolving
 	case CondRoundDone:

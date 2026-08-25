@@ -80,12 +80,16 @@ type record struct {
 	Deck []deckLine `json:"Deck"`
 
 	// Seed pins the run seed, so the same fixture deals the same cards and meets the same
-	// opponents every launch. **Zero means the clock**, which is the ordinary case.
+	// opponents every launch. **Empty means the clock**, which is the ordinary case.
+	//
+	// It is a **run code** — six Crockford base32 characters — the same spelling the game prints and a
+	// player will one day type in, so a fixture and a bug report name a run the same way. A
+	// string that is not a code fails the launch; see main.go.
 	//
 	// It is the per-scenario counterpart of `fixedRunSeed` in main.go and takes precedence over
 	// it: a fixture that is *about* a particular deal cannot be at the mercy of whether somebody
 	// left that constant at zero.
-	Seed int64 `json:"Seed"`
+	Seed string `json:"Seed"`
 
 	// Teach starts the tutorial on this run.
 	//
@@ -180,7 +184,13 @@ func check(r *record) error {
 	// **A replacement deck counts as having something to look at.** A fixture that hands over a
 	// five-card deck has said exactly what the player will be holding; requiring it to restate the
 	// same five as a Hand would be two lists to keep in step.
-	if len(r.Hand) == 0 && len(r.Deck) == 0 && r.Screen == screenCombat {
+	//
+	// **So does a pinned seed** *(2026-08-25)*. A seed *is* an opening hand, the shuffle being
+	// deterministic, so a fixture naming one has said what the player will be holding just as
+	// exactly as a Deck has — by reference rather than by list. The tutorial is what wanted it:
+	// its lesson has to happen on the real deck and the real shuffle, so the fixture pins the run
+	// that deals the hand rather than replacing the deck that cannot.
+	if len(r.Hand) == 0 && len(r.Deck) == 0 && r.Seed == "" && r.Screen == screenCombat {
 		return fmt.Errorf("has no hand and no deck, so there is nothing to look at")
 	}
 	for _, c := range r.Deck {
@@ -248,8 +258,8 @@ func Enemy() string { return current.Enemy }
 // Teach reports whether this scenario starts the tutorial.
 func Teach() bool { return current.Teach }
 
-// Seed is the run seed to pin, or zero for the clock.
-func Seed() int64 { return current.Seed }
+// Seed is the run code to pin, or empty for the clock.
+func Seed() string { return current.Seed }
 
 // Deck is the replacement deck, resolved into real cards, or nil for the authored one.
 func Deck() []combat.Card {

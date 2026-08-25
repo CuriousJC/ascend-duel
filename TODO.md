@@ -104,6 +104,10 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       `main` and logged; enemy selection is the first stream reading it. Without a way to see a
       seed and type one back, replayable runs are invisible to the player.
       - **This is the one typed-text field in the whole game**, per the input vocabulary.
+      - **The spelling is done** *(2026-08-25)*: a seed is a six-character Crockford base32
+        code, `seeds.Code` / `seeds.Parse` — case-insensitive in, upper case out, with `O`/`I`/`L`
+        folded to the digits they look like — and `main` prints it every launch. What is left is
+        somewhere to show it and a field to type it into.
       - Both card shuffles read `RunSeed` now, salted per side and per fight by
         `CombatScene.shuffleSeeds`, so a typed seed already reaches the cards. `deckSeed` is
         the debugging pin over the top of it.

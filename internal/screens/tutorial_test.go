@@ -4,6 +4,7 @@ import (
 	"image"
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -244,6 +245,7 @@ func TestEveryConditionInTheVocabularyHasAWaitingLine(t *testing.T) {
 		tutorial.CondNext:        false, // has a button
 		tutorial.CondCardsQueued: true,
 		tutorial.CondHandEmptied: true,
+		tutorial.CondMatchQueued: true,
 		tutorial.CondDuelPressed: true,
 		tutorial.CondRoundDone:   true,
 		tutorial.CondPhaseFight:  true,
@@ -398,5 +400,61 @@ func TestTheWaitingLineClearsTheSkipButton(t *testing.T) {
 	}
 	if hintRight <= overlay.panel.Min.X+tutorialPad+tutorialCardW {
 		t.Errorf("the hint at %d runs back over Bob's card", hintRight)
+	}
+}
+
+// The matching set is the one anchor computed from the cards rather than from the layout, and
+// both the lit square and the condition read it, so it gets its own tests.
+
+func handOf(concepts ...combat.ConceptID) []paletteCard {
+	out := make([]paletteCard, 0, len(concepts))
+	for _, c := range concepts {
+		out = append(out, paletteCard{actionCard: combat.Card{Concept: c}})
+	}
+	return out
+}
+
+func TestTheMatchingSetIsTheLargestOne(t *testing.T) {
+	var s CombatScene
+	s.hand = handOf(combat.Jab, combat.Jab, combat.Jab, combat.Cleave, combat.Cleave)
+
+	got := s.matchingCards()
+	want := []int{0, 1, 2}
+	if len(got) != len(want) {
+		t.Fatalf("matchingCards() = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("matchingCards() = %v, want %v", got, want)
+		}
+	}
+}
+
+// A tie has to resolve the same way every launch of the same seed, or the tutorial points at a
+// different pair of cards each time. Ranging the tally would be map order; the walk is the hand.
+func TestATiedMatchingSetGoesToTheConceptThatAppearsFirst(t *testing.T) {
+	var s CombatScene
+	s.hand = handOf(combat.Cleave, combat.Cleave, combat.Jab, combat.Jab)
+
+	for i := 0; i < 50; i++ {
+		got := s.matchingCards()
+		if len(got) != 2 || got[0] != 0 || got[1] != 1 {
+			t.Fatalf("matchingCards() = %v, want the first pair every time", got)
+		}
+	}
+}
+
+// One card matches nothing. A step gating the screen down to a single card and then waiting on a
+// condition already satisfied is worse than no step.
+func TestAHandWithNothingMatchingHasNoSet(t *testing.T) {
+	var s CombatScene
+	s.hand = handOf(combat.Jab, combat.Cleave, combat.Smash)
+	if got := s.matchingCards(); got != nil {
+		t.Fatalf("matchingCards() = %v, want none", got)
+	}
+
+	s.hand = nil
+	if got := s.matchingCards(); got != nil {
+		t.Fatalf("an empty hand reported %v", got)
 	}
 }

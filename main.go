@@ -10,6 +10,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
@@ -31,9 +32,13 @@ import (
 var version = "dev"
 
 // fixedRunSeed pins the run seed for a debugging session, where the same enemies in the same
-// order is the point. **Zero means roll a new one from the clock every launch**, which is the
+// order is the point. **Empty means roll a new one from the clock every launch**, which is the
 // shipping behaviour and the default.
-const fixedRunSeed int64 = 0
+//
+// It is written as a **run code** — six Crockford base32 characters, the same spelling a player reads off
+// the screen and will one day type back in. A code that is not one fails the launch rather than
+// silently rolling a fresh run, because a pin nobody notices is off is worse than no pin.
+const fixedRunSeed = ""
 
 func main() {
 	// The window opens at the internal resolution; Layout keeps that resolution fixed
@@ -70,20 +75,33 @@ func main() {
 	// The clock is read exactly once, at the one moment a run is allowed to be unpredictable.
 	// The seed is logged either way, because there will eventually be a field to type one
 	// back into and a seed nobody can see is a run nobody can ask about.
-	g.GlobalState.RunSeed = fixedRunSeed
+	// `pinned` rather than a zero check on the seed itself: zero is the perfectly good run
+	// `000000` now, so "unset" needs saying separately.
+	pinned := false
+	if fixedRunSeed != "" {
+		seed, err := seeds.Parse(fixedRunSeed)
+		if err != nil {
+			log.Fatalf("fixedRunSeed %q: %v", fixedRunSeed, err)
+		}
+		g.GlobalState.RunSeed, pinned = seed, true
+	}
 
 	// **A scenario's own seed outranks the constant above.** A fixture that is about a particular
 	// deal — the tutorial is, since it promises the player what they are holding — cannot be at
 	// the mercy of whether `fixedRunSeed` was left at zero. Compiled out with the rest of the
 	// package; see internal/scenario.
-	if scenario.Active() && scenario.Seed() != 0 {
-		g.GlobalState.RunSeed = scenario.Seed()
+	if scenario.Active() && scenario.Seed() != "" {
+		seed, err := seeds.Parse(scenario.Seed())
+		if err != nil {
+			log.Fatalf("scenario %s: seed %q: %v", scenario.Name(), scenario.Seed(), err)
+		}
+		g.GlobalState.RunSeed, pinned = seed, true
 	}
 
-	if g.GlobalState.RunSeed == 0 {
-		g.GlobalState.RunSeed = time.Now().UnixNano()
+	if !pinned {
+		g.GlobalState.RunSeed = seeds.Normalize(time.Now().UnixNano())
 	}
-	log.Printf("run seed %d", g.GlobalState.RunSeed)
+	log.Printf("run code %s", seeds.Code(g.GlobalState.RunSeed))
 
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()

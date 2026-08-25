@@ -42,6 +42,12 @@ type GlobalState struct {
 	// be replayable from a seed typed into a field; this is that number, generated from the
 	// clock for now because there is no field to type it into and no Session to hold it.
 	//
+	// **It is always in `seeds.Space` — a six-character Crockford base32 run code** *(2026-08-25)*, so every
+	// run can be written down and typed back. `main` folds the clock into that range with
+	// `seeds.Normalize` and prints `seeds.Code`; nothing downstream widens it again. Zero is
+	// a legitimate run (`000000`) rather than "unset", so anything meaning "no seed chosen"
+	// has to say so with its own flag.
+	//
 	// **Reading the clock here does not break "no time.Now() in game rules".** That rule is
 	// about decisions taken *during* a run — a rule that consults the wall clock cannot be
 	// replayed. Choosing the seed is the one place a run is allowed to be unpredictable,

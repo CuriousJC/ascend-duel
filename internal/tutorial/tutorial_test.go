@@ -55,6 +55,8 @@ func satisfying(t *testing.T, c Condition, baseRounds int) (Facts, bool) {
 		return Facts{Queued: 1}, false
 	case CondHandEmptied:
 		return Facts{Queued: 5, Unqueued: 0}, false
+	case CondMatchQueued:
+		return Facts{Queued: 5, Matching: 5, MatchingQueued: 5}, false
 	case CondDuelPressed:
 		return Facts{Resolving: true}, false
 	case CondRoundDone:
@@ -221,7 +223,7 @@ func TestEveryAnchorAndConditionHasAName(t *testing.T) {
 // Every action condition locks to its anchor. A script cannot ask for a click and leave the rest of
 // the screen live, because that is not a thing the file can say any more.
 func TestEveryActionConditionLocksToItsAnchor(t *testing.T) {
-	for _, until := range []string{"cards-queued", "hand-emptied", "duel-pressed"} {
+	for _, until := range []string{"cards-queued", "hand-emptied", "matching-queued", "duel-pressed"} {
 		s, err := Parse([]data.TutorialStepData{
 			{StepRecord: "do-it", Text: "do it", Until: until, Anchor: "hand"},
 		})

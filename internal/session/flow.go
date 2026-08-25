@@ -94,3 +94,18 @@ func (s *Session) SetPhase(p Phase) { s.phase = p }
 // PhaseCount is how many stations the loop has. It is the bound a caller walking the loop uses,
 // so that a station nothing draws cannot turn a walk into a spin.
 var PhaseCount = len(order)
+
+// ParsePhase is the phase a name means, and whether it is one.
+//
+// **Names, not ordinals, are what leaves this process** — see internal/profile. A phase is a
+// candidate for a save file, and this is the half of that rule that reads one back: an unknown name
+// is refused rather than defaulted, so a snapshot written by a build with a station this one has
+// not got fails loudly instead of resuming somewhere arbitrary.
+func ParsePhase(name string) (Phase, bool) {
+	for i, n := range phaseNames {
+		if n == name {
+			return Phase(i), true
+		}
+	}
+	return PhaseFight, false
+}

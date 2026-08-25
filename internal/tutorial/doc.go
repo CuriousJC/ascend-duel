@@ -36,7 +36,9 @@
 // `TestEveryAnchorHasARectangle` over there is what stops the two drifting apart — the same
 // tripwire an `EventKind` has with its choreography entry.
 //
-// **No persistence.** Whether a given player has seen the tutorial is a profile question, and
-// `TODO.md` says the profile does not exist. Today the script is started by hand — see the
-// `tutorial` entries in `internal/scenario`.
+// **No persistence.** Whether a given player has seen the tutorial is a profile question, and the
+// answer lives in `internal/profile` rather than here — this package walks a script and has no
+// opinion about who has already walked it. `main` reads the profile and calls `session.Teach`; the
+// combat screen's overlay marks it seen when the script ends or is skipped. The `tutorial` entries
+// in `internal/scenario` still force it regardless, which is the only way to see it twice.
 package tutorial

@@ -103,15 +103,29 @@ func Seeds() (names []string, values []int64, wants []string) {
 // drift from what a launch actually deals. Nothing here touches Ebitengine, which is what
 // lets a windowless tool call it.
 func OpeningHand(seed int64) []combat.ConceptID {
+	out := make([]combat.ConceptID, 0, handSize)
+	for _, c := range OpeningCards(seed) {
+		out = append(out, c.Concept)
+	}
+	return out
+}
+
+// OpeningCards is the same deal as whole cards, so a caller can see the colours as well as the
+// concepts.
+//
+// **The tutorial's seed is chosen on the element axis**, which the concept list above cannot
+// answer — see TestTheTutorialsSeedDealsTheHandTheLessonDescribes. Both go through one `resetDeck`
+// so a tool and a launch cannot deal differently.
+func OpeningCards(seed int64) []combat.Card {
 	var s CombatScene
 	s.rng = rand.New(rand.NewSource(seed))
 	// A nil run: a named seed is a fact about the *starting* deck, so the catalogue must not
 	// read whatever a run has been altered into.
 	s.resetDeck(nil)
 
-	out := make([]combat.ConceptID, 0, len(s.hand))
+	out := make([]combat.Card, 0, len(s.hand))
 	for _, c := range s.hand {
-		out = append(out, c.actionCard.Concept)
+		out = append(out, c.actionCard)
 	}
 	return out
 }

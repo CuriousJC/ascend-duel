@@ -1,16 +1,14 @@
 [
   {
     "ScenarioRecord": "tutorial",
-    "Note": "Bob, from the top, on the real starting deck: seed 00H602 deals all five Jabs in the opening eight, so the taught round is a Card Five of a Kind for 196 against a GiantBat's 80 HP and the first fight ends in one blow. The other three cards are a Cleave, a Smash and a Prepare - three different forms, none of them stab, so the Jabs are the only set in the hand. The only way to start the tutorial until there is a profile to remember whether a player has seen it.",
+    "Note": "Bob, from the top, on the real starting deck. The seed and the opening creature are not here: they are in data/tutorial.json, because the lesson's promises - five matching cards, a fight ended in one blow - are facts about that deal against that creature, and a second copy of them here is a second copy to drift. This entry now says only 'teach it whatever the profile thinks', which is the one thing the real trigger cannot do and the only way to see the tutorial twice.",
     "Rings": [],
     "Hand": [],
     "Screen": "combat",
     "Teach": true,
     "Fight": 0,
     "Vitae": 0,
-    "Life": 0,
-    "Seed": "00H602",
-    "Enemy": "GiantBat"
+    "Life": 0
   },
   {
     "ScenarioRecord": "reward-payout",

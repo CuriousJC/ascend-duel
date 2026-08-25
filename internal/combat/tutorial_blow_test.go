@@ -8,12 +8,19 @@ import (
 
 // **The tutorial promises a kill in one blow, and four separate files can quietly break it.**
 //
-// The lesson `data/tutorial.json` teaches is a deck of five Jabs, one per element, swung at a
-// GiantBat: a Card Five of a Kind against the gentlest opponent on floor one. Nothing about that
-// is enforced by the things it depends on — Jab's Amount in `duelist_cards.json`, the ladder's
-// multiplier in `hands.json`, the duelist's DMG in `duelists.json`, and the bat's HP in
-// `enemies.json` are each tuned for their own reasons — so a balance pass anywhere would leave
-// Bob telling a new player to swing a killing blow that does not kill.
+// The lesson `data/tutorial.json` teaches is four cards of one colour — a Jab, a Cut, a Thrust and
+// a Strike, all fire — swung at a GiantBat: an Elemental Four of a Kind against the gentlest
+// opponent on floor one. Nothing about that is enforced by the things it depends on — those cards'
+// Amounts in `duelist_cards.json`, the ladder's multiplier in `hands.json`, the duelist's DMG in
+// `duelists.json`, and the bat's HP in `enemies.json` are each tuned for their own reasons — so a
+// balance pass anywhere would leave Bob telling a new player to swing a killing blow that does not
+// kill.
+//
+// **This checks the rules; `internal/screens` checks the deal.** The turn below is written out
+// rather than read from the shuffle, because the shuffle needs a scene and this package must stay
+// window-free. `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` over there is the other half:
+// it takes the script's own seed, works out what the hand actually holds, and fails if these four
+// cards are not what the lesson deals. Neither test alone is enough.
 //
 // **It fails here rather than in front of the one player who cannot tell it is broken**, which is
 // the whole argument: a tutorial is read by someone with no idea what the game is supposed to do.
@@ -22,11 +29,19 @@ import (
 // with no window. It is deliberately *not* in `internal/scenario`, which is compiled out of every
 // ordinary build and so would take the check with it.
 func TestTheTutorialsBlowKillsTheTutorialsEnemy(t *testing.T) {
-	const (
-		enemyRecord = "GiantBat"
-		conceptKey  = "Jab"
-		duelist     = "Fighter1"
-	)
+	const duelist = "Fighter1"
+
+	// The taught turn, as `data/tutorial.json`'s seed deals it: four fire cards, 6 AP exactly.
+	taught := []string{"Jab", "Cut", "Thrust", "Strike"}
+	const taughtElement = Fire
+
+	// **The opponent is read off the script rather than written here** *(2026-08-25)*, since
+	// `data/tutorial.json` is where the lesson now pins the room it is fought in. Two copies of the
+	// creature's name would let the test go on passing against a bat the tutorial no longer meets.
+	enemyRecord := data.LoadTutorial().Enemy
+	if enemyRecord == "" {
+		t.Fatal("data/tutorial.json names no enemy, so the lesson promises a kill against nobody")
+	}
 
 	me, ok := data.LoadDuelists()[duelist]
 	if !ok {
@@ -36,17 +51,14 @@ func TestTheTutorialsBlowKillsTheTutorialsEnemy(t *testing.T) {
 	if !ok {
 		t.Fatalf("no enemy record %q", enemyRecord)
 	}
-	id, ok := ConceptByKey(conceptKey)
-	if !ok {
-		t.Fatalf("no concept %q", conceptKey)
-	}
-
-	// The taught turn: one Jab of every colour, which is the whole of the tutorial's deck.
-	els := []Element{Fire, Ice, Lightning, Earth, Arcane}
-	turn := make([]Slot, len(els))
+	turn := make([]Slot, len(taught))
 	spent := 0
-	for i, e := range els {
-		turn[i] = Slot{Card: Of(id, e), Index: i}
+	for i, key := range taught {
+		id, ok := ConceptByKey(key)
+		if !ok {
+			t.Fatalf("no concept %q", key)
+		}
+		turn[i] = Slot{Card: Of(id, taughtElement), Index: i}
 		spent += ConceptOf(id).Cost
 	}
 
@@ -55,9 +67,9 @@ func TestTheTutorialsBlowKillsTheTutorialsEnemy(t *testing.T) {
 	}
 
 	blow := BlowFor(turn)
-	if len(blow.Cards) != len(els) {
+	if len(blow.Cards) != len(taught) {
 		t.Fatalf("the hand took %d of the %d cards; the lesson says all of them",
-			len(blow.Cards), len(els))
+			len(blow.Cards), len(taught))
 	}
 
 	base := 0

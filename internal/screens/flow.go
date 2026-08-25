@@ -55,6 +55,13 @@ func advanceRun(gs *state.GlobalState) {
 		if next, ok := screenFor(gs.Run.Phase()); ok {
 			gs.ActiveScreen = next
 			gs.NewScreen = true
+
+			// **The run is written down here and nowhere else** *(2026-08-25)*. This is the one
+			// place a run changes station, and a station boundary is the only moment the run is
+			// quiescent enough to snapshot — see save.go. Putting it after the scene is chosen
+			// rather than before means a phase walked past for having no scene does not produce a
+			// save nobody can resume into.
+			saveRun(gs)
 			return
 		}
 	}

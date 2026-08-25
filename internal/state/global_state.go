@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -136,6 +137,26 @@ type GlobalState struct {
 	//
 	// Nil until main builds it. Scenes must not create one: two would be two runs.
 	Run *session.Session
+
+	// Store is the directory the player's two files live in, and Profile is what has been read
+	// out of the first of them. **Genuinely global for the reason Run is**: the profile outlives
+	// every screen, is written from three different scenes, and no scene owns it.
+	//
+	// **Profile is never nil once main has run**, even on a machine that cannot save — an inert
+	// store hands back a fresh profile rather than nothing, so a caller awards an achievement
+	// without first asking whether the filesystem cooperated. See internal/profile.
+	Store   profile.Store
+	Profile *profile.Profile
+
+	// Resumed is whether this session picked a run up off the disk rather than starting one.
+	// **Read once, by the tutorial's trigger**: a lesson that opens by describing the hand the
+	// player is holding cannot begin halfway up a tower.
+	Resumed bool
+
+	// ProfileWritable is whether what was read may be written back. False for a corrupt file and
+	// for one written by a newer build — see profile.LoadProfile, which holds the whole migration
+	// policy. Awards still land in memory for the session; nothing reaches the disk.
+	ProfileWritable bool
 
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct

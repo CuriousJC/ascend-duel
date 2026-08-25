@@ -187,6 +187,7 @@ func (t *tutorialOverlay) update(gs *state.GlobalState, host tutorialHost) {
 
 	if t.skipPressed {
 		run.Skip()
+		markTutorialSeen(gs)
 		gs.InputGated = false
 		return
 	}
@@ -198,6 +199,7 @@ func (t *tutorialOverlay) update(gs *state.GlobalState, host tutorialHost) {
 	// leave the screen shielded around a rectangle nothing is drawing any more.
 	if !run.Active() {
 		gs.InputGated = false
+		markTutorialSeen(gs)
 	}
 }
 

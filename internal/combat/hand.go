@@ -58,8 +58,9 @@ import "sort"
 // the player had committed to it.
 //
 // Hands are eventually **discovered rather than given**, persisting on the profile as part of
-// the unlock structure — see MECHANICS.md. No profile exists yet, so everything in the catalogue
-// is always live. When one does, discovery gates the *catalogue*, not the matcher.
+// the unlock structure — see MECHANICS.md. **The profile exists as of 2026-08-25 and does not gate
+// this**: `profile.Profile.HandsDiscovered` is the field waiting for it, and everything in the
+// catalogue is still always live. When it does, discovery gates the *catalogue*, not the matcher.
 
 // HandID identifies a hand. It travels on the KindHand event so the screen can name what fired
 // without knowing the rule that fired it.

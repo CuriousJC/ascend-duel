@@ -9,6 +9,7 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/game"
 	"github.com/curiousjc/ascend-duel/internal/music"
+	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -101,7 +102,6 @@ func main() {
 	if !pinned {
 		g.GlobalState.RunSeed = seeds.Normalize(time.Now().UnixNano())
 	}
-	log.Printf("run code %s", seeds.Code(g.GlobalState.RunSeed))
 
 	//Load assets into memory one time at startup
 	g.GlobalState.Assets = assets.LoadAssets()
@@ -132,7 +132,24 @@ func main() {
 		session.StartingDeckList = scenario.Deck()
 	}
 
-	g.GlobalState.Run = session.Start(g.GlobalState.Enemies, g.GlobalState.Bosses, g.GlobalState.RunSeed)
+	// **The profile is opened before the run, because it can decide what the run is.** A run in
+	// progress is resumed rather than started, and a player who has never been taught is taught.
+	//
+	// Nothing here is fatal: a missing, corrupt or unwritable profile is a new player, and a
+	// machine that cannot write still plays the game. See internal/profile.
+	g.GlobalState.Store = profile.Open()
+	prof, writable, err := profile.LoadProfile(g.GlobalState.Store)
+	if err != nil {
+		log.Printf("profile: %v — carrying on as a new player", err)
+	}
+	g.GlobalState.Profile, g.GlobalState.ProfileWritable = prof, writable
+
+	g.GlobalState.Run = startRun(g)
+
+	// **Logged after the run is built, not before it.** A resumed run brings its own seed and a
+	// taught one brings the script's, so a code printed at the moment one was rolled would name a
+	// tower nobody is playing.
+	log.Printf("run code %s", seeds.Code(g.GlobalState.RunSeed))
 
 	// **A scenario may also open the game somewhere other than the first duel** *(2026-08-22)*.
 	// The run is put in the named room with the named purse, and the phase it lands on decides
@@ -191,15 +208,96 @@ func startScenarioAt(g *game.Game) {
 		gs.Run.SetPhase(session.PhaseFight)
 		gs.ActiveScreen = state.Combat
 	}
-	// **The tutorial's only trigger today.** Whether a player has already been taught is a profile
-	// question and there is no profile — see TODO.md — so the script is started by a fixture until
-	// something can answer it. When a real trigger arrives it makes this same call and this block
-	// goes; nothing else about the feature changes.
-	if scenario.Teach() {
-		gs.Run.Teach(tutorial.Load())
-		log.Printf("scenario %s: teaching the run", scenario.Name())
-	}
-
 	log.Printf("scenario %s: opening on the %s screen, room %d",
 		scenario.Name(), scenario.Screen(), scenario.Fight())
+}
+
+// startRun is the run the game opens on: the one saved on disk if there is one, otherwise a new
+// one from the seed chosen above.
+//
+// **A snapshot that cannot be read starts a fresh run rather than failing the launch**, and says so
+// in the log. The saved run is left where it is rather than deleted, so a file worth recovering by
+// hand still exists after the game has been opened once.
+//
+// **A scenario never resumes.** A fixture describes a run it is putting together itself, and a
+// saved tower would be the one thing it could not override.
+func startRun(g *game.Game) *session.Session {
+	gs := g.GlobalState
+
+	if !scenario.Active() {
+		if snap, ok, err := profile.LoadRun(gs.Store); err != nil {
+			log.Printf("saved run: %v — starting a new one", err)
+		} else if ok {
+			run, seed, err := session.Resume(gs.Enemies, gs.Bosses, snap)
+			if err != nil {
+				log.Printf("saved run: %v — starting a new one", err)
+			} else {
+				// **The saved run's seed wins outright.** Everything random in a run derives from
+				// it, the climb included, so resuming under the seed rolled at the top of main
+				// would put a different tower under the same deck.
+				gs.RunSeed = seed
+				gs.Resumed = true
+				log.Printf("resuming run %s at room %d, %s", snap.Seed, snap.Fight, snap.Phase)
+				return run
+			}
+		}
+	}
+
+	// **A taught run is dealt the script's own seed, and that has to happen before the run is
+	// built** *(2026-08-25)*. Bob's lesson describes the hand the player is holding and promises a
+	// kill in one blow; both are facts about one deal against one creature, so the script carries
+	// the run code and `session.Enemy` reads the opponent off it. **Teaching on whatever the clock
+	// rolled is exactly the bug this fixes** — the lesson said five matching cards over a hand
+	// holding two.
+	script, teaching := tutorialForThisRun(g)
+	if teaching && script.Seed != "" {
+		seed, err := seeds.Parse(script.Seed)
+		if err != nil {
+			// A script naming a seed that is not a run code is a broken lesson, and the tutorial
+			// is the one feature whose audience cannot tell a bug from the game. It fails the
+			// launch, exactly as an unresolvable step does.
+			log.Fatalf("tutorial.json: seed %q: %v", script.Seed, err)
+		}
+		gs.RunSeed = seed
+	}
+
+	run := session.Start(gs.Enemies, gs.Bosses, gs.RunSeed)
+	if teaching {
+		run.Teach(script)
+		log.Printf("teaching this run: %d steps, seed %s, first room %s",
+			script.Len(), script.Seed, script.Enemy)
+	}
+	return run
+}
+
+// tutorialForThisRun is the script to teach and whether to teach it, which is a question about the
+// profile and about how this particular run started.
+//
+// **A scenario answers no**, because it has its own switch — one that forces the lesson whatever
+// the profile says, which is the only way to see it twice — and because a fixture that jumped the
+// run to the shop cannot also be teaching a lesson that opens in a duel.
+//
+// **A resumed run answers no** for the same reason: a lesson that opens by describing the hand you
+// are holding cannot start halfway up a tower. A player who quits during the tutorial is taught
+// again next launch, because nothing has marked it seen — the intended answer rather than a gap.
+func tutorialForThisRun(g *game.Game) (tutorial.Script, bool) {
+	gs := g.GlobalState
+
+	// **A fixture forces the lesson whatever the profile says**, and it is the only way to see the
+	// tutorial a second time. It answers for the whole question when one is active: a fixture that
+	// jumped the run to the shop cannot also be teaching a lesson that opens in a duel.
+	if scenario.Active() {
+		if scenario.Teach() {
+			return tutorial.Load(), true
+		}
+		return tutorial.Script{}, false
+	}
+
+	// **A resumed run is never taught**: a lesson that opens by describing the hand you are holding
+	// cannot start halfway up a tower. A player who quits during the tutorial is taught again next
+	// launch, because nothing has marked it seen — the intended answer rather than a gap.
+	if gs.Resumed || gs.Profile == nil || gs.Profile.TutorialSeen {
+		return tutorial.Script{}, false
+	}
+	return tutorial.Load(), true
 }

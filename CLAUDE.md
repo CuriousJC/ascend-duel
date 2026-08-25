@@ -896,17 +896,56 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
 - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
   whose purpose nobody remembers is a fixture that gets deleted.
 
-### The tutorial is a sixth thing, and it is *not* compiled out
+### `internal/profile` is what survives a run, and it is the only thing that touches the disk
+
+[internal/profile](internal/profile) owns the two files the game writes: `profile.json` (the
+player — the tutorial watched, achievements, unlocks) and `run.json` (the run in progress). See
+MECHANICS.md §The profile for what they mean; what matters here is where they go and what may never
+happen to them.
+
+- **They live under `os.UserConfigDir()`, never beside the executable** — `%APPDATA%scend-duel` on
+  Windows, `~/.config/ascend-duel` on Linux. Steam installs into a tree a normal process cannot
+  write to, where a write either fails or is silently redirected into `%LOCALAPPDATA%\VirtualStore`,
+  which is worse because it works in testing. A per-executable directory is also per-install rather
+  than per-user. `ASCEND_DUEL_PROFILE` overrides the **directory**, moving both files together.
+- **Nothing here may ever be fatal.** Missing, corrupt or unwritable are all "a new player, and this
+  session is not recorded" — the same rule the audio device is under. A launch refused over a save
+  file would be a worse bug than any it prevents.
+- **A file from a newer build is read and never written over.** It is the one mistake that cannot
+  be repaired afterwards, so `LoadProfile` reports writability separately and the game respects it.
+  Unrecognised fields are carried through a save verbatim for the same reason.
+- **What is written down is a name, never a number.** `ConceptID`, `Element`, `StatusID`,
+  `GlyphKind` and `session.Phase` are all append-only ordinals indexing arrays and caches. A file
+  outlives the build that wrote it, so an ordinal in one will eventually mean something else. This
+  is where that rule stops being theoretical.
+- **The three call sites are `internal/screens/save.go` and nothing else.** A run is saved by
+  `advanceRun` at each phase transition, the achievement is awarded where a fight is won, and the
+  tutorial is marked seen where the overlay ends. Persistence is deliberately not something a scene
+  does.
+- **The climb is not saved — it is rebuilt from the run code.** True only while the fight order is a
+  function of the seed; `TestTheClimbIsRebuiltFromTheSeed` fails the day the room choice makes it a
+  decision, which is when it has to go into the snapshot.
+- **A run is snapshotted between phases, never inside a duel.** `session.Session` is snapshotted and
+  is still not *replayable* — the replay story is a seed plus a choice log, because a deck edit is a
+  choice. Resume wants state, replay wants a path; do not let a snapshot be used as a replay.
+
+### The tutorial is a seventh thing, and it is *not* compiled out
 
 [internal/tutorial](internal/tutorial) is the teaching run: which step is up, what it points at,
 and what has to happen before it moves on. `data/tutorial.json` is the script and
 `internal/screens/tutorial.go` is Bob's bubble, the red square and the leader line to it.
 
 **It ships.** Unlike trace, idle, the demo and the scenario fixture, a tutorial is a feature the
-player is meant to meet — so there is no build tag and it is in every binary. What is missing is a
-*trigger*: whether a given player has already been taught is a profile question and there is no
-profile, so the only way to start it today is `"Teach": true` in a scenario. When a real trigger
-arrives it calls `session.Teach` and nothing else changes.
+player is meant to meet — so there is no build tag and it is in every binary.
+
+**It fires on its own as of 2026-08-25**, off the profile: a player `profile.json` has not recorded
+as taught gets taught, on the first fight of a fresh run. `main.teachThisRun` is the whole trigger,
+and it declines for a resumed run and for a scenario — a lesson that opens by describing the hand you
+are holding cannot begin halfway up a tower. **A launch on a clean machine therefore opens into the
+tutorial**, which is a thing to know before wondering why Bob turned up. `"Teach": true` in a
+scenario still forces it whatever the profile says, and is the only way to see it a second time; the
+counterpart is `ASCEND_DUEL_PROFILE` pointed at an empty directory, which makes any launch a new
+player's.
 
 - **The state machine is free of Ebitengine**, like `internal/combat` and for the same payoff: the
   whole script is walked end to end in a test rather than by playing to the end of it.
@@ -922,17 +961,30 @@ arrives it calls `session.Teach` and nothing else changes.
   *(2026-08-25)*. It was a fixture deck of exactly five Jabs, so the lesson's "take them all" step
   could wait on `hand-emptied` — a condition only a hand with nothing else in it can ever reach,
   since a real hand of eight against a five-card cap and a six-point budget leaves cards behind by
-  the rules of the game. The anchor is the largest set of cards in the hand sharing a concept and
-  `matching-queued` is its condition; because the lock leaves only those cards clickable, the hand
-  the player builds is the hand Bob just described. **It is the one anchor computed from the cards
-  rather than from a layout** — `CombatScene.matchingCards` is the single answer both the square
-  and the condition read.
-- **The scenario pins run code `00H602`**, which deals all five Jabs in the opening eight off the
-  shipping deck; the other three are a Cleave, a Smash and a Prepare, three different forms and
-  none of them stab, so the Jabs are the only set in the hand. **Nothing checks that** — change
-  `data/duelist_cards.json`, `startingDeck` or `handSize` and the code silently deals something
-  else, exactly as it does for `tools/seeds`. The lesson's promise of a kill in one blow still has
-  `TestTheTutorialsBlowKillsTheTutorialsEnemy`; the promise of five matching cards has nothing.
+  the rules of the game. The anchor is the largest matching set in the hand and `matching-queued` is
+  its condition; because the lock leaves only those cards clickable, the hand the player builds is
+  the hand Bob just described. **It is the one anchor computed from the cards rather than from a
+  layout** — `CombatScene.matchingCards` is the single answer both the square and the condition read.
+- **Which axis a set is counted on is authored, not assumed** *(owner's call, 2026-08-25)*.
+  `data/tutorial.json`'s `Match` is `concept`, `form` or `element`, and a script that points at a
+  matching set without naming one is **refused at load** — an axis that defaulted would be a lesson
+  pointing confidently at the wrong cards. The lesson matches on `element`.
+- **The script carries the run it needs: `Seed`, `Enemy` and `Match`** *(2026-08-25)*. They used to
+  be pinned by `internal/scenario`, which was fine while a fixture was the only way to start the
+  lesson and became a bug the moment the profile became a real trigger — the tutorial ran on
+  whatever the clock had rolled and described a hand it had not dealt. **A promise and the thing
+  that makes it true belong in one file.** The scenario entry keeps only `"Teach": true`.
+- **Run code `0000HX` deals `Jab Cut Thrust Strike`, all fire, for exactly 6 AP and 102 damage
+  against a GiantBat's 80.** The other four cards are two earth, an ice and a lightning, so there is
+  no competing set, and the first card dealt is one of the four — which the opening step needs,
+  since it queues `first-card` and a stray would break both the budget and the hand.
+- **Both halves of the promise are now tested, and they check each other.**
+  `TestTheTutorialsBlowKillsTheTutorialsEnemy` in `internal/combat` proves the rules resolve that
+  turn lethally; `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` in `internal/screens` proves
+  the seed actually deals it — the set's size, that it is the only one that size, that the first
+  card belongs to it, that it is affordable and lethal, and that its four cards are the four the
+  combat test writes out by hand. **If either goes red the answer is a new seed, not a weaker
+  check**; `go run ./tools/seeds` is the search.
 - **`gs.InputGated` / `gs.InputFocus` is the shield**, and it gates on the *cursor* rather than per
   widget — one predicate in `systems.UpdateButton` plus the handful of places in `internal/screens`
   that read the mouse directly. A per-widget rule is a list a new widget is missing from.
@@ -991,14 +1043,14 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | Package | imports, of ours |
 |---|---|
 | `seeds` `models` `assets` `idle` `trace` `music` | *nothing* |
-| `data` | *nothing* |
+| `data` `profile` | *nothing* |
 | `scenario` | data, combat *(compiled out unless `-tags scenario`)* |
 | `pyramid` | data |
 | `combat` | data |
 | `tutorial` | data |
 | `decks` | data, combat |
 | `entities` | data, combat, pyramid |
-| `session` | data, combat, pyramid, seeds, tutorial |
+| `session` | data, combat, pyramid, profile, seeds, tutorial |
 | `state` | data, session |
 | `systems` | assets, models, state |
 | `cards` | systems |
@@ -1013,6 +1065,10 @@ Six facts about it that are load-bearing:
   registered by `internal/decks` rather than handed over by `data`: enemy cards live in
   `enemies.json` beside portraits and floor bands, so the rules reading that file directly would
   cross the who-consumes-it line.
+- **`profile` imports nothing of ours, like `seeds`, and that is what makes saving possible at
+  all.** It owns the two files on disk and knows nothing about a run: `session` converts itself to
+  and from a plain snapshot struct, so the persistence layer never learns what a card is and the
+  arrow points down like every other. `state` carries the loaded profile beside the run.
 - **`tutorial` sits beside `combat` at the bottom and imports only `data`.** It is a state machine
   over a script — which step is up, what it points at, what advances it — and it is free of
   Ebitengine for the reason `combat` is: the whole script can be walked in a test rather than by

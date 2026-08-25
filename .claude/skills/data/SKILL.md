@@ -214,8 +214,21 @@ That is the card language paying off, and it is the shape to reach for before ad
 
 ### The tutorial script
 
-`tutorial.json` is **an ordered list, like `duelist_cards.json`** — a script is a sequence, file
-order is play order, and a map would put the run's first lesson wherever Go's hashing felt like it.
+`tutorial.json` is **an ordered list of steps wrapped in the run the lesson needs** — the steps are
+a sequence like `duelist_cards.json`, since file order is play order and a map would put the run's
+first lesson wherever Go's hashing felt like it.
+
+- **`Seed`, `Enemy` and `Match` sit above the steps** *(2026-08-25)*. Bob promises four matching
+  cards and a fight ended in one blow, and both are facts about one deal against one creature rather
+  than about the game. They were pinned by `internal/scenario` while a fixture was the only way to
+  start the lesson; the day the profile became a real trigger, the tutorial ran on whatever the clock
+  rolled and described a hand it had not dealt. **A promise and the thing that makes it true belong
+  in the same file.**
+- **`Match` is a fourth closed vocabulary** — `concept`, `form` or `element`, the three axes a hand
+  is scored on — and a script that points at a matching set without naming one is refused at load.
+  The lit square and the condition that lets the player past it are the same cards, and which cards
+  those are depends entirely on the axis, so a default would be a lesson pointing confidently at the
+  wrong ones.
 
 - **Two closed vocabularies, both enforced in `internal/tutorial` rather than here**: an `Anchor`
   (what to point at) and an `Until` (what advances the step). Neither is defaulted — a misspelled

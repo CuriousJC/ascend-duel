@@ -12,9 +12,12 @@ const startingVitae = 5
 
 // Session is one run: everything the player is carrying up the tower.
 //
-// **It is deliberately not persisted.** Two runs from the same seed may end up holding
-// different decks, because a deck edit is a *choice* rather than something derived from the
-// seed — the replay story is a seed plus a choice log. See the `randomness` skill.
+// **It is snapshotted, not replayed** *(owner's call, 2026-08-25)*. Two runs from the same seed may
+// end up holding different decks, because a deck edit is a *choice* rather than something derived
+// from the seed — so *replaying* a run means a seed plus a choice log, and that is still true. See
+// the `randomness` skill. **Resuming is a different question**: it wants the state the player is in
+// rather than the path they took to it, which is what save.go writes down. The two do not conflict
+// and the distinction is worth keeping: a snapshot is not a replay and cannot be used as one.
 type Session struct {
 	// deck is every card the player owns, in no particular order, including the ones currently
 	// sitting in a pile on the combat screen. **The piles are copies of this**, dealt fresh at

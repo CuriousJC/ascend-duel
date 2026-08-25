@@ -22,6 +22,12 @@ import (
 func TestEveryAnchorHasARectangle(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
 
+	// **The run is taught the shipped script**, because `matching-cards` counts on the script's
+	// axis and an untaught run has none — so without this the anchor would report no rectangle for
+	// the honest reason that there is no lesson, and the test would read as a missing case.
+	gs.Run = session.New(nil)
+	gs.Run.Teach(tutorial.Load())
+
 	// Each scene is asked with the fields its rect functions read already filled, since a rect
 	// that reports false only because a row is empty would hide a missing case.
 	combat := stubCombat()
@@ -76,6 +82,8 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 // would need the script to declare its screen, which is a field nothing needs yet.
 func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs.Run = session.New(nil)
+	gs.Run.Teach(tutorial.Load())
 
 	combat := stubCombat()
 	hosts := []tutorialHost{
@@ -84,7 +92,7 @@ func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 		&ShopScene{shelf: make([]shelfItem, shelfSize)},
 	}
 
-	for _, step := range tutorial.Load() {
+	for _, step := range tutorial.Load().Steps {
 		if step.Anchor == tutorial.AnchorNone {
 			continue
 		}
@@ -227,7 +235,7 @@ func onBorder(r image.Rectangle, p image.Point) bool {
 // The table has no default arm, so a condition added without a line here would silently inherit
 // nothing and print an empty hint. This is that table's tripwire.
 func TestEveryConditionSaysWhatItIsWaitingFor(t *testing.T) {
-	for _, step := range tutorial.Load() {
+	for _, step := range tutorial.Load().Steps {
 		if step.Until == tutorial.CondNext {
 			continue // it has a button
 		}
@@ -302,10 +310,10 @@ func TestACoveredSceneIsNotPointedAt(t *testing.T) {
 func TestACoveredSceneDropsTheGate(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
 	gs.Run = session.New(nil)
-	gs.Run.Teach(tutorial.Script{
+	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
 		{Key: "press", Text: "press it", Anchor: tutorial.AnchorDuelButton,
 			Lock: tutorial.LockToAnchor, Until: tutorial.CondDuelPressed},
-	})
+	}})
 
 	s := stubCombat()
 
@@ -340,10 +348,10 @@ func stubCombat() *CombatScene {
 func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
 	gs.Run = session.New(nil)
-	gs.Run.Teach(tutorial.Script{
+	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
 		{Key: "rooms", Text: "eight floors", Anchor: tutorial.AnchorTowerPlace,
 			Lock: tutorial.LockAll, Until: tutorial.CondNext},
-	})
+	}})
 
 	var overlay tutorialOverlay
 	focus, gated := overlay.focus(gs, stubCombat())
@@ -369,10 +377,10 @@ func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
 func TestAnOutcomeStepLeavesTheScreenLive(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
 	gs.Run = session.New(nil)
-	gs.Run.Teach(tutorial.Script{
+	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
 		{Key: "win", Text: "again and again", Lock: tutorial.LockNone,
 			Until: tutorial.CondPhaseReward},
-	})
+	}})
 
 	var overlay tutorialOverlay
 	if _, gated := overlay.focus(gs, stubCombat()); gated {
@@ -414,11 +422,24 @@ func handOf(concepts ...combat.ConceptID) []paletteCard {
 	return out
 }
 
+// taughtOn is a global state whose run is being taught a one-step script on a given axis, which is
+// all matchingCards reads.
+func taughtOn(axis string) *state.GlobalState {
+	gs := &state.GlobalState{}
+	gs.Run = session.New(nil)
+	m, _ := tutorial.ParseMatchAxis(axis)
+	gs.Run.Teach(tutorial.Script{Match: m, Steps: []tutorial.Step{
+		{Key: "take", Text: "take them", Anchor: tutorial.AnchorMatchingCards,
+			Lock: tutorial.LockToAnchor, Until: tutorial.CondMatchQueued},
+	}})
+	return gs
+}
+
 func TestTheMatchingSetIsTheLargestOne(t *testing.T) {
 	var s CombatScene
 	s.hand = handOf(combat.Jab, combat.Jab, combat.Jab, combat.Cleave, combat.Cleave)
 
-	got := s.matchingCards()
+	got := s.matchingCards(taughtOn("concept"))
 	want := []int{0, 1, 2}
 	if len(got) != len(want) {
 		t.Fatalf("matchingCards() = %v, want %v", got, want)
@@ -437,7 +458,7 @@ func TestATiedMatchingSetGoesToTheConceptThatAppearsFirst(t *testing.T) {
 	s.hand = handOf(combat.Cleave, combat.Cleave, combat.Jab, combat.Jab)
 
 	for i := 0; i < 50; i++ {
-		got := s.matchingCards()
+		got := s.matchingCards(taughtOn("concept"))
 		if len(got) != 2 || got[0] != 0 || got[1] != 1 {
 			t.Fatalf("matchingCards() = %v, want the first pair every time", got)
 		}
@@ -449,12 +470,43 @@ func TestATiedMatchingSetGoesToTheConceptThatAppearsFirst(t *testing.T) {
 func TestAHandWithNothingMatchingHasNoSet(t *testing.T) {
 	var s CombatScene
 	s.hand = handOf(combat.Jab, combat.Cleave, combat.Smash)
-	if got := s.matchingCards(); got != nil {
+	if got := s.matchingCards(taughtOn("concept")); got != nil {
 		t.Fatalf("matchingCards() = %v, want none", got)
 	}
 
 	s.hand = nil
-	if got := s.matchingCards(); got != nil {
+	if got := s.matchingCards(taughtOn("concept")); got != nil {
 		t.Fatalf("an empty hand reported %v", got)
+	}
+}
+
+// **The axis decides what a set is, which is the whole reason it is authored.** The same hand holds
+// a concept pair and an elemental four of a kind, and a lesson about colours must not point at the
+// two cards that happen to share a name.
+func TestTheAxisDecidesWhichCardsAreTheSet(t *testing.T) {
+	var s CombatScene
+	s.hand = []paletteCard{
+		{actionCard: combat.Card{Concept: combat.Jab, Element: combat.Fire}},
+		{actionCard: combat.Card{Concept: combat.Cleave, Element: combat.Fire}},
+		{actionCard: combat.Card{Concept: combat.Smash, Element: combat.Fire}},
+		{actionCard: combat.Card{Concept: combat.Strike, Element: combat.Fire}},
+		{actionCard: combat.Card{Concept: combat.Jab, Element: combat.Ice}},
+	}
+
+	if got := s.matchingCards(taughtOn("element")); len(got) != 4 {
+		t.Errorf("on the element axis the set is the four fire cards, got %v", got)
+	}
+	if got := s.matchingCards(taughtOn("concept")); len(got) != 2 {
+		t.Errorf("on the concept axis the set is the two Jabs, got %v", got)
+	}
+}
+
+// A run nobody is teaching has no axis, so there is no set to point at. It is the ordinary case and
+// must not be a concept set by accident.
+func TestAnUntaughtRunHasNoMatchingSet(t *testing.T) {
+	var s CombatScene
+	s.hand = handOf(combat.Jab, combat.Jab, combat.Jab)
+	if got := s.matchingCards(&state.GlobalState{}); got != nil {
+		t.Errorf("a run with no tutorial reported a set: %v", got)
 	}
 }

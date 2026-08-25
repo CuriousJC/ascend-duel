@@ -33,7 +33,7 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		Resolving:    !s.planning() && !s.duelSettled(),
 		RoundsPlayed: s.round,
 	}
-	match := s.matchingCards()
+	match := s.matchingCards(gs)
 	f.Matching = len(match)
 	for _, i := range match {
 		if s.hand[i].selected {
@@ -82,7 +82,7 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 		// side whichever key leads. The union is taken over the seats rather than assumed to be a
 		// span, so a sort that ever broke them apart would light a wider square rather than the
 		// wrong one.
-		match := s.matchingCards()
+		match := s.matchingCards(gs)
 		if len(match) == 0 {
 			return image.Rectangle{}, false
 		}
@@ -124,28 +124,49 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 // bug this method exists to fix.
 func (s *CombatScene) tutorialCovered(*state.GlobalState) bool { return s.modalUp() }
 
-// matchingCards is the largest set of cards in the hand sharing a concept, as hand indices in
-// order. It is what [tutorial.AnchorMatchingCards] points at and what [tutorial.CondMatchQueued]
-// counts, and both read this one function so the square and the condition cannot describe
-// different cards.
+// matchingCards is the largest set of cards in the hand matching on the script's axis, as hand
+// indices in order. It is what [tutorial.AnchorMatchingCards] points at and what
+// [tutorial.CondMatchQueued] counts, and both read this one function so the square and the
+// condition cannot describe different cards.
 //
-// **A tie goes to whichever concept appears first in the hand**, which is a rule rather than a
+// **The axis comes from the script** *(2026-08-25)*. It counted concepts and nothing else while the
+// lesson was five Jabs; the taught hand is now four cards of one colour, and a set is only a set
+// relative to the axis it is counted on — see tutorial.MatchAxis, which is refused rather than
+// defaulted for exactly this reason.
+//
+// **A tie goes to whichever value appears first in the hand**, which is a rule rather than a
 // preference: ranging the tally would be map order, and the tutorial would point at a different
 // pair of cards on different launches of the same seed. See the determinism rules in CLAUDE.md.
 //
 // **Fewer than two is no set at all.** One card matches nothing, and a step asking the player to
 // find a hand in a hand that has not got one would gate the screen down to a single card and then
 // wait for a condition that is already satisfied.
-func (s *CombatScene) matchingCards() []int {
-	counts := make(map[combat.ConceptID]int, len(s.hand))
-	for _, c := range s.hand {
-		counts[c.actionCard.Concept]++
+func (s *CombatScene) matchingCards(gs *state.GlobalState) []int {
+	axis := runOf(gs).Match()
+	if axis == tutorial.MatchNone {
+		return nil
 	}
 
-	best, bestN := combat.ConceptID(0), 0
+	key := func(c combat.Card) int {
+		switch axis {
+		case tutorial.MatchElement:
+			return int(c.Element)
+		case tutorial.MatchForm:
+			return int(combat.ConceptOf(c.Concept).Form)
+		default:
+			return int(c.Concept)
+		}
+	}
+
+	counts := make(map[int]int, len(s.hand))
 	for _, c := range s.hand {
-		if n := counts[c.actionCard.Concept]; n > bestN {
-			best, bestN = c.actionCard.Concept, n
+		counts[key(c.actionCard)]++
+	}
+
+	best, bestN := 0, 0
+	for _, c := range s.hand {
+		if n := counts[key(c.actionCard)]; n > bestN {
+			best, bestN = key(c.actionCard), n
 		}
 	}
 	if bestN < 2 {
@@ -154,7 +175,7 @@ func (s *CombatScene) matchingCards() []int {
 
 	var out []int
 	for i, c := range s.hand {
-		if c.actionCard.Concept == best {
+		if key(c.actionCard) == best {
 			out = append(out, i)
 		}
 	}

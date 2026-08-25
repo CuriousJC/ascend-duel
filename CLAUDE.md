@@ -320,6 +320,17 @@ deciding whether a mechanic should be random at all.**
 Four things stay here, because they are the tripwire — the failure is not knowing the skill
 exists:
 
+- **A run seed is a six-character code** *(owner's call, 2026-08-25)* — `internal/seeds/code.go`,
+  the only place the alphabet exists. `GlobalState.RunSeed` is still an `int64` because every
+  stream derives from it by arithmetic, but it is always inside `seeds.Space` (32^6, about 1.07
+  billion runs) so it can be written down. **The alphabet is Crockford base32** — no `I`, `L`,
+  `O` or `U` — because a code is transcribed by eye and `0`/`O` and `1`/`I`/`L` fail *quietly*,
+  landing on a different valid run rather than an error; `U` goes so a random code cannot spell
+  something. **`Parse` still folds `O`→`0` and `I`/`L`→`1`**, since a person typing those meant
+  the digit; `U` does not fold. Case is not information: `Parse` takes either, `Code` emits
+  upper. **`fixedRunSeed` and a scenario's `Seed` are both written as codes**, and one that is
+  not a code fails the launch rather than quietly rolling a fresh run. **Zero is the run
+  `000000`, not "unset"** — anything that used to check `RunSeed == 0` is now wrong.
 - **Never call the `math/rand` package-level functions** (`rand.Intn`, `rand.Shuffle`, …).
   They draw from a global source shared with every other caller, which makes a run
   unreproducible. Randomness comes from an explicit `*rand.Rand` carried on state.
@@ -874,8 +885,8 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
   shelf both needed a duel played to reach them, every time. It sets the run's *phase* and lets
   `screens/flow.go` decide the scene, so the run never disagrees with what is on screen.
   `reward-payout` and `shop-shelf` are the two entries.
-- **It can also pin the seed and replace the whole deck** *(2026-08-25)*. `"Seed"` outranks
-  `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather than dealing over the shuffle
+- **It can also pin the seed and replace the whole deck** *(2026-08-25)*. `"Seed"` is a six-character
+  Crockford base32 run code and outranks `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather than dealing over the shuffle
   the way `"Hand"` does — through `session.StartingDeckList`, which is the deck counterpart of
   `StartingRings`. The tutorial is what wanted both: a first lesson has to be able to promise what
   the player is holding, and "these five all match, play them all" stops being true the moment a
@@ -907,6 +918,21 @@ arrives it calls `session.Teach` and nothing else changes.
   from the condition. See the `data` skill.
 - **The lit square and the one legal click are the same rectangle**, computed once. A lit hole the
   player cannot click, or a clickable region that is not lit, would each be worse than no tutorial.
+- **The tutorial runs on the real deck, and `matching-cards` is what pays for that**
+  *(2026-08-25)*. It was a fixture deck of exactly five Jabs, so the lesson's "take them all" step
+  could wait on `hand-emptied` — a condition only a hand with nothing else in it can ever reach,
+  since a real hand of eight against a five-card cap and a six-point budget leaves cards behind by
+  the rules of the game. The anchor is the largest set of cards in the hand sharing a concept and
+  `matching-queued` is its condition; because the lock leaves only those cards clickable, the hand
+  the player builds is the hand Bob just described. **It is the one anchor computed from the cards
+  rather than from a layout** — `CombatScene.matchingCards` is the single answer both the square
+  and the condition read.
+- **The scenario pins run code `00H602`**, which deals all five Jabs in the opening eight off the
+  shipping deck; the other three are a Cleave, a Smash and a Prepare, three different forms and
+  none of them stab, so the Jabs are the only set in the hand. **Nothing checks that** — change
+  `data/duelist_cards.json`, `startingDeck` or `handSize` and the code silently deals something
+  else, exactly as it does for `tools/seeds`. The lesson's promise of a kill in one blow still has
+  `TestTheTutorialsBlowKillsTheTutorialsEnemy`; the promise of five matching cards has nothing.
 - **`gs.InputGated` / `gs.InputFocus` is the shield**, and it gates on the *cursor* rather than per
   widget — one predicate in `systems.UpdateButton` plus the handful of places in `internal/screens`
   that read the mouse directly. A per-widget rule is a list a new widget is missing from.

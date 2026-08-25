@@ -11,6 +11,7 @@ package screens
 import (
 	"image"
 
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
 )
@@ -31,6 +32,13 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		Unqueued:     len(s.hand) - s.selectedCount(),
 		Resolving:    !s.planning() && !s.duelSettled(),
 		RoundsPlayed: s.round,
+	}
+	match := s.matchingCards()
+	f.Matching = len(match)
+	for _, i := range match {
+		if s.hand[i].selected {
+			f.MatchingQueued++
+		}
 	}
 	if gs.Run != nil {
 		f.Phase = gs.Run.Phase().String()
@@ -63,6 +71,27 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 			return image.Rectangle{}, false
 		}
 		return s.cardSlot(gs, 0), true
+	case tutorial.AnchorMatchingCards:
+		// **The seats the matching cards occupy, as one rectangle.** The lit square and the one
+		// legal click are the same rectangle here as everywhere else, which is what makes the
+		// lesson true by construction: the only cards the player can reach are the ones Bob just
+		// said match.
+		//
+		// **They are contiguous because the hand is sorted**, and every sort mode ends in the
+		// same key chain — cards sharing a concept differ only by element, so they land side by
+		// side whichever key leads. The union is taken over the seats rather than assumed to be a
+		// span, so a sort that ever broke them apart would light a wider square rather than the
+		// wrong one.
+		match := s.matchingCards()
+		if len(match) == 0 {
+			return image.Rectangle{}, false
+		}
+		r := s.cardSlot(gs, match[0])
+		for _, i := range match[1:] {
+			r = r.Union(s.cardSlot(gs, i))
+		}
+		return r, true
+
 	case tutorial.AnchorDeckStack:
 		return deckStackBounds(gs), true
 	case tutorial.AnchorMathBand:
@@ -94,3 +123,40 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 // same three — a spotlight that kept pointing after a fourth dialog was added would be exactly the
 // bug this method exists to fix.
 func (s *CombatScene) tutorialCovered(*state.GlobalState) bool { return s.modalUp() }
+
+// matchingCards is the largest set of cards in the hand sharing a concept, as hand indices in
+// order. It is what [tutorial.AnchorMatchingCards] points at and what [tutorial.CondMatchQueued]
+// counts, and both read this one function so the square and the condition cannot describe
+// different cards.
+//
+// **A tie goes to whichever concept appears first in the hand**, which is a rule rather than a
+// preference: ranging the tally would be map order, and the tutorial would point at a different
+// pair of cards on different launches of the same seed. See the determinism rules in CLAUDE.md.
+//
+// **Fewer than two is no set at all.** One card matches nothing, and a step asking the player to
+// find a hand in a hand that has not got one would gate the screen down to a single card and then
+// wait for a condition that is already satisfied.
+func (s *CombatScene) matchingCards() []int {
+	counts := make(map[combat.ConceptID]int, len(s.hand))
+	for _, c := range s.hand {
+		counts[c.actionCard.Concept]++
+	}
+
+	best, bestN := combat.ConceptID(0), 0
+	for _, c := range s.hand {
+		if n := counts[c.actionCard.Concept]; n > bestN {
+			best, bestN = c.actionCard.Concept, n
+		}
+	}
+	if bestN < 2 {
+		return nil
+	}
+
+	var out []int
+	for i, c := range s.hand {
+		if c.actionCard.Concept == best {
+			out = append(out, i)
+		}
+	}
+	return out
+}

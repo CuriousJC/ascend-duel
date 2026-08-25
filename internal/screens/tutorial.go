@@ -514,6 +514,7 @@ var waitingWords = map[tutorial.Condition]string{
 	tutorial.CondNext:        "", // has a button; this is never read
 	tutorial.CondCardsQueued: "take a card",
 	tutorial.CondHandEmptied: "take them all",
+	tutorial.CondMatchQueued: "take them all",
 	tutorial.CondDuelPressed: "press it",
 	tutorial.CondRoundDone:   "watching",
 	tutorial.CondPhaseFight:  "back to the tower",

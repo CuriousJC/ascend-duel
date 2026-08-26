@@ -65,9 +65,9 @@ func buildBandBottom(gs *state.GlobalState) int {
 //
 // The AP figure is the duelist's own budget with no bank on it, because a bank is a thing that
 // exists inside a round.
-func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
+func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag) {
 	drawBuildCard(gs, screen, vitae)
-	drawBuildRings(gs, screen)
+	drawBuildRings(gs, screen, drag)
 }
 
 // drawBuildCard is the duelist half of the band on its own.
@@ -97,16 +97,43 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 }
 
 // drawBuildRings is the row of worn rings: what is on your fingers, in firing order.
-func drawBuildRings(gs *state.GlobalState, screen *ebiten.Image) {
+//
+// **`drag` is the press in progress over it**, and it may be nil for a caller that does not let the
+// row be reordered. Nothing passes nil today; the parameter is there so that a screen putting the
+// band up to be *read* does not have to invent a controller nobody drives.
+func drawBuildRings(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag) {
 	if gs.Run == nil {
 		return
 	}
 
 	row := buildRingRect(gs)
 	worn := wornRings(gs)
+	counters := runCounters(gs)
 	for i, record := range worn {
+		// The seat a dragged ring left stays empty; see the combat screen's row.
+		if drag != nil && drag.dragging() && i == drag.origin() {
+			continue
+		}
 		at := ringSlotAt(row, i, len(worn))
-		drawRingCard(gs, screen, at, record, true)
+		drawRingCard(gs, screen, at, record, counters[record.RingRecord], true, false)
+	}
+
+	if drag != nil {
+		drawDraggedRing(gs, screen, drag, counters)
+	}
+}
+
+// buildRingRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.
+//
+// **There is no live duelist on either screen**, so the run is the only copy of the row and
+// moveWornRing is the whole move. The combat screen's is the one with more to do — see
+// CombatScene.moveRing.
+func buildRingRow(gs *state.GlobalState, click func(i int)) ringRow {
+	return ringRow{
+		rect:  buildRingRect(gs),
+		worn:  len(wornRings(gs)),
+		click: click,
+		move:  func(from, to int) { moveWornRing(gs, from, to) },
 	}
 }
 

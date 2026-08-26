@@ -71,6 +71,18 @@ func faces(gs *state.GlobalState) *cards.Faces {
 
 // cardSpec turns the screen's own types into the plain data internal/cards draws from.
 //
+// **The face says what the *card* does and nothing about who is holding it** *(owner's call,
+// 2026-08-26)*, damage-wise. A ring's multiplier was written into the figure and coloured pink from
+// 2026-08-21 until today; what took it off is that the figure stopped being stable. A growing ring
+// steps between the cards of one blow, so the same Strike is worth one thing queued first and
+// another queued third — and a face stating either would be wrong somewhere. The owner's call went
+// further than the accumulator: **no ring reaches the printed damage at all**, growing or not, so a
+// Strike reads `1x DMG` whatever is on the fingers. What the rings did is shown where it happens,
+// in the sum — see the hand dialog, `combat.GrowthScale` and `Event.HandGrowth`.
+//
+// **Cost is the exception and stays the pairing's** — see below. A discount is not order-dependent
+// and the face must agree with the AP bar.
+//
 // **The card carries no damage figure** *(2026-08-14)*. It used to resolve `Damage(str)` here,
 // because the number a card deals is a property of the pairing rather than of the concept —
 // and that is exactly what made it worth removing once the effect text arrived: "Deal 2x DMG"
@@ -82,23 +94,15 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // to one who is not. Every caller names the wearer it is drawing for, which is what keeps an enemy's
 // queued card out of the player's discounts.
 func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
-	text, mark := cardEffect(c, h)
-
-	spec := cards.Spec{
+	return cards.Spec{
 		Name:     c.Label(),
 		Form:     form(c.Form()),
 		Cost:     h.cost,
 		Element:  artFor(c.Element),
-		Text:     text,
+		Text:     cardEffect(c),
 		Enabled:  enabled,
 		Selected: selected,
 	}
-	if mark != "" {
-		// **The figure alone.** `TextHighlight` is the run the colour lands on; without it the whole
-		// sentence goes pink, which says a ring changed the card rather than the number.
-		spec.TextInk, spec.TextHighlight = boostInk, mark
-	}
-	return spec
 }
 
 // boostInk is what a figure a ring has changed is written in. **The ring pink** — `cards.Ring` is
@@ -131,7 +135,32 @@ type held struct {
 // heldBy is the pairing for a card in a duelist's hands, which is what every call site inside a
 // fight has.
 func heldBy(d combat.Duelist, c actionCard) held {
-	return held{cost: d.CardCost(c), dmg: d.DMG, worn: d.WornRings()}
+	return held{cost: d.CardCost(c), dmg: d.DMG, worn: ungrown(d.WornRings())}
+}
+
+// ungrown is a worn set with every accumulator at zero.
+//
+// **The tooltip explains a card's rings at their record, never at how far one has counted**
+// *(owner's call, 2026-08-26)*. The card's *face* carries no ring at all now — see cardSpec — and
+// what is left reading a worn set is the hover, which is the one place a player can ask what their
+// rings do to a card before committing it. The accumulator is kept out of that answer for the reason
+// it was kept off the face: it depends on where in the turn the card is counted, so any figure
+// quoted before the turn is resolved would be wrong somewhere. The growth is said in the sum, beside
+// the term it priced — see combat.GrowthScale and the hand dialog.
+//
+// **Cost is untouched by this**, because no growing ring adjusts a cost and a discount does not move
+// with the queue.
+func ungrown(worn []combat.WornRing) []combat.WornRing {
+	if len(worn) == 0 {
+		return nil
+	}
+
+	out := make([]combat.WornRing, len(worn))
+	for i, w := range worn {
+		w.Grown = 0
+		out[i] = w
+	}
+	return out
 }
 
 // heldByRun is the pairing for a card drawn between fights, where there is a run and no duelist:
@@ -140,22 +169,7 @@ func heldByRun(gs *state.GlobalState, c actionCard) held {
 	if gs.Run == nil {
 		return held{cost: c.Cost()}
 	}
-	return held{cost: gs.Run.CardCost(c), worn: gs.Run.WornRings()}
-}
-
-// damageScale is how much the holder's rings multiply this card's damage, as a percentage, and
-// whether any of them do at all. 100 is the identity.
-//
-// **Compounded left to right in worn order**, exactly as `Duelist.CardDamage` does it, and off the
-// same walk — a second implementation of the compounding is a face that can disagree with the
-// blow it describes.
-func (h held) damageScale(c actionCard) (pct int, boosted bool) {
-	pct = 100
-	for _, contribution := range combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c) {
-		pct = pct * contribution.Effect.Amount / 100
-		boosted = true
-	}
-	return pct, boosted
+	return held{cost: gs.Run.CardCost(c), worn: ungrown(gs.Run.WornRings())}
 }
 
 // cardImage returns the card for this spec, rendering and caching it on a miss.
@@ -342,12 +356,14 @@ func duelistSpec(c *entities.Combatant, name string, vitae, life, ap int) cards.
 // a colour, and it has nowhere to be read yet.
 //
 // No cost, no category, no damage: a ring is not played from a hand and has no phase.
-func ringSpec(gs *state.GlobalState, r data.RingData, enabled bool) cards.Spec {
+func ringSpec(gs *state.GlobalState, r data.RingData, counter string, enabled, lit bool) cards.Spec {
 	return cards.Spec{
-		Name:    r.FaceName(),
-		Element: cards.Ring,
-		Art:     artwork(gs, r.ArtKey()),
-		Enabled: enabled,
+		Name:     r.FaceName(),
+		Element:  cards.Ring,
+		Art:      artwork(gs, r.ArtKey()),
+		Counter:  counter,
+		Enabled:  enabled,
+		Selected: lit,
 	}
 }
 

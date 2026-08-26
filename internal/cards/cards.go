@@ -415,6 +415,20 @@ type Spec struct {
 	// draws a wounded enemy without the tool having to reimplement a bar.
 	Life, MaxLife int
 
+	// Counter is a short figure drawn as a badge in the bottom-right corner — the growing
+	// rings' accumulators, which is the only thing that has one today.
+	//
+	// **A string rather than a number, because the unit is not this package's to know.** Heart
+	// grows flat life and Enflamed grows a multiplier, so one of them wants "+50" and the other
+	// "1.5x"; a figure here would make the drawing package decide which, the way an element enum
+	// on Effects would have given it an opinion about the rules. The caller formats and this
+	// draws.
+	//
+	// **Empty draws nothing**, so a card that has no counter is the card that always was — and a
+	// style with no CounterHeight draws none whatever the Spec says, which is every style but
+	// RingStyle.
+	Counter string
+
 	// Enabled is whether the fighter can currently afford it. Disabled reads as
 	// unavailable first and as itself second.
 	Enabled bool

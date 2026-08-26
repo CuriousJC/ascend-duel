@@ -43,58 +43,47 @@ func aSlash(t *testing.T) combat.Card {
 	return combat.Card{}
 }
 
-func TestARingDoublesWhatTheFaceSays(t *testing.T) {
-	// **The bug this whole pass exists for** *(2026-08-21)*: a slash in the hands of someone wearing
-	// Keen read "2x DMG" and dealt four times their DMG, because the card's multiplier and the
-	// ring's scaling are applied in different places. The face said a true thing about the card and
-	// a false thing about the attack.
+func TestNoRingReachesWhatTheFaceSays(t *testing.T) {
+	// **The face says what the card does, whatever is on the fingers** *(owner's call, 2026-08-26)*.
+	//
+	// This test is the reverse of the one it replaced. From 2026-08-21 the face carried the ring's
+	// multiplier, written pink, because a card reading "2x DMG" while dealing four times DMG was a
+	// face telling the truth about the card and a lie about the attack. What changed is that there
+	// is no longer one figure to tell the truth *with*: a growing ring steps between the cards of a
+	// single blow, so the same Strike is worth one thing queued first and another queued third. The
+	// face states the stable half and the sum states what it came to — see the hand dialog.
 	card := aSlash(t)
 
-	bare, mark := cardEffect(card, held{})
-	if mark != "" {
-		t.Errorf("an unringed card marked %q for colouring", mark)
+	bare := cardEffect(card)
+	keen := cardEffect(card)
+
+	if keen != bare {
+		t.Fatalf("the face reads %q in one pairing and %q in another", bare, keen)
 	}
 
-	keen, mark := cardEffect(card, wearing(t, 12, "keen-ring"))
-	if keen == bare {
-		t.Fatalf("the face says %q either way", bare)
+	// The figure is the card's own multiplier, undoubled, even wearing the ring that doubles it.
+	want := multiplierText(card.Amount())
+	if !strings.Contains(bare, want) {
+		t.Errorf("%s reads %q, want the card's own %s in it", card.Label(), bare, want)
 	}
-
-	// The figure itself: the card's own multiplier, doubled.
-	want := multiplierText(card.Amount() * 2)
-	if !strings.Contains(keen, want) {
-		t.Errorf("a doubled %s reads %q, want %s in it", card.Label(), keen, want)
-	}
-
-	// **The mark is the figure and nothing else** — it is what the renderer colours, so a mark of
-	// the whole sentence would paint the verb and the unit pink along with the number.
-	if mark != want {
-		t.Errorf("the coloured run is %q, want just %q", mark, want)
-	}
-	if !strings.Contains(keen, mark) {
-		t.Errorf("the coloured run %q is not in the line %q, so nothing would be coloured", mark, keen)
+	if doubled := multiplierText(card.Amount() * 2); strings.Contains(bare, doubled) {
+		t.Errorf("%s reads %q, which carries the ring's %s", card.Label(), bare, doubled)
 	}
 }
 
-func TestARingThatDoesNotMatchChangesNothing(t *testing.T) {
-	// Keen is a *form* ring, so a stab card wearing it must read exactly as it does bare. The
-	// predicate is the engine's; this is what says the face asks it.
-	var stab combat.Card
-	for _, id := range combat.AllConcepts() {
-		if c := combat.Plain(id); c.Spec().Verb == combat.VerbAttack && c.Form() == combat.FormStab {
-			stab = c
-			break
-		}
-	}
-	if stab.Spec().Verb != combat.VerbAttack {
-		t.Skip("no stab attack in the deck")
-	}
+// **The pairing still prices the card**, and that is the one thing a ring does reach on a face: a
+// cost is not order-dependent and the face must agree with the AP bar.
+func TestADiscountRingStillReachesTheCost(t *testing.T) {
+	card := aSlash(t)
 
-	bare, _ := cardEffect(stab, held{})
-	keen, mark := cardEffect(stab, wearing(t, 12, "keen-ring"))
+	bare := held{}
+	worn := wearing(t, 12, "onslaught-ring")
 
-	if keen != bare || mark != "" {
-		t.Errorf("a stab wearing the slash ring reads %q (marking %q) against %q", keen, mark, bare)
+	if worn.cost == bare.cost {
+		t.Skip("onslaught-ring does not discount this card")
+	}
+	if spec := cardSpec(card, worn, true, false); spec.Cost != worn.cost {
+		t.Errorf("the face is priced at %d where the pairing says %d", spec.Cost, worn.cost)
 	}
 }
 

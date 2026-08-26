@@ -108,12 +108,11 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 	}
 }
 
-// plainText is a card's face text in nobody's hands: no rings, no strength. **The catalogue tests
-// below are about the wording, not about a pairing**, so they take the figure the concept declares
-// and the ring cases get their own test.
+// plainText is a card's face text, which is now the only face text there is: **a face says what the
+// card does and no ring reaches it** *(owner's call, 2026-08-26)*. The pairing is still passed around
+// for the cost.
 func plainText(a combat.ConceptID) string {
-	text, _ := cardEffect(combat.Plain(a), held{})
-	return text
+	return cardEffect(combat.Plain(a))
 }
 
 func TestEveryConceptHasEffectText(t *testing.T) {

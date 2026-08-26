@@ -318,40 +318,20 @@ func multiplierText(amount int) string {
 // **It hands back the run of text a ring changed, not a flag** *(2026-08-21)*. The caller colours
 // that run and nothing else: painting the verb and the unit with it says a ring changed the card
 // rather than the number. An empty mark means nothing moved and the line is drawn in one colour.
-func cardEffect(card combat.Card, h held) (text, mark string) {
+func cardEffect(card combat.Card) string {
 	c := card.Spec()
 	amount := card.Amount()
 
 	switch c.Verb {
 	case combat.VerbDefend:
-		return "Cuts damage by " + strconv.Itoa(amount) + "%", ""
+		return "Cuts damage by " + strconv.Itoa(amount) + "%"
 	case combat.VerbBank:
-		return "Bank " + strconv.Itoa(amount) + " AP for next round", ""
+		return "Bank " + strconv.Itoa(amount) + " AP for next round"
 	case combat.VerbDraw:
-		return "Draw " + strconv.Itoa(amount) + " cards next round", ""
+		return "Draw " + strconv.Itoa(amount) + " cards next round"
 	}
 
-	// Only damage is scaled by a ring today — `scale-damage` is the one verb at `card-damage` — so
-	// only the attacks can say something a ring has changed.
-	scale, boosted := h.damageScale(card)
-	amount = amount * scale / 100
-
-	// The mark is the figure itself: the only part of the line a ring moved.
-	figure := multiplierText(amount)
-	if !boosted {
-		figure = ""
-	}
-
-	return attackVerb(c.Form) + " for " + figureOr(amount, figure) + " DMG", figure
-}
-
-// figureOr is the multiplier as it is printed, whether or not a ring moved it. One function so the
-// string a card shows and the run a card colours cannot drift apart by a character.
-func figureOr(amount int, mark string) string {
-	if mark != "" {
-		return mark
-	}
-	return multiplierText(amount)
+	return attackVerb(c.Form) + " for " + multiplierText(amount) + " DMG"
 }
 
 // actionPhrase is what follows the verb in a Resolution line, and every phrase carries an article

@@ -337,11 +337,11 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 	run := wearing(t, "enflamed-ring")
 
 	d := run.Equip(combat.Duelist{DMG: 10, Actions: 5, MaxLife: 100, CurrentLife: 100})
-	d = d.GrowOnHit([]combat.Card{combat.Of(combat.Strike, combat.Fire)})
+	d = d.GrowOnLanding(combat.Of(combat.Strike, combat.Fire))
 
 	run.AbsorbGrowth(d)
 	if got := run.Grown("enflamed-ring"); got != 10 {
-		t.Errorf("a fire blow left the run at %d, want 10", got)
+		t.Errorf("a fire landing left the run at %d, want 10", got)
 	}
 
 	// The next fight is equipped with it, so the growth compounds across fights as well as inside
@@ -364,5 +364,63 @@ func TestGrowthEarnedInAFightSurvivesIt(t *testing.T) {
 	}
 	if got := run.Grown("enflamed-ring"); got != 0 {
 		t.Errorf("a sold ring kept %d of its growth, want 0", got)
+	}
+}
+
+// **Worn order is the order rings fire in**, so the row being draggable makes this a rules change
+// the run has to record. See MoveRing, and combat.Duelist.MoveRing for the copy a fight holds.
+func TestMovingAWornRingReordersTheRow(t *testing.T) {
+	run := wearing(t, "keen-ring", "heart-ring", "banker-ring")
+
+	if !run.MoveRing(2, 0) {
+		t.Fatal("the move was refused")
+	}
+
+	want := []string{"banker-ring", "keen-ring", "heart-ring"}
+	got := run.Worn()
+	if len(got) != len(want) {
+		t.Fatalf("wearing %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("seat %d holds %s, want %s", i, got[i], want[i])
+		}
+	}
+}
+
+// A drop resolved against a row that changed underneath it must be a no-op, not a panic: this is
+// driven by a drag.
+func TestMovingAWornRingOutOfRangeIsRefused(t *testing.T) {
+	run := wearing(t, "keen-ring", "heart-ring")
+
+	for _, move := range [][2]int{{-1, 0}, {0, -1}, {2, 0}, {0, 2}, {1, 1}} {
+		if run.MoveRing(move[0], move[1]) {
+			t.Errorf("MoveRing(%d, %d) reported a change", move[0], move[1])
+		}
+	}
+	if got := run.Worn(); got[0] != "keen-ring" || got[1] != "heart-ring" {
+		t.Errorf("the row moved anyway: %v", got)
+	}
+}
+
+// **Accumulators are keyed by record and not by position**, so a ring dragged along the row is the
+// same ring with the same number. Growth following the finger instead would hand one ring's run to
+// another.
+func TestAMovedWornRingKeepsItsGrowth(t *testing.T) {
+	run := wearing(t, "heart-ring", "keen-ring")
+	run.grown["heart-ring"] = 45
+
+	if !run.MoveRing(0, 1) {
+		t.Fatal("the move was refused")
+	}
+
+	if got := run.Grown("heart-ring"); got != 45 {
+		t.Errorf("heart-ring has grown %d after the move, want 45", got)
+	}
+	for _, w := range run.WornRings() {
+		key := combat.RingOf(w.Ring).Key
+		if key == "heart-ring" && w.Grown != 45 {
+			t.Errorf("the worn heart-ring reports %d, want 45", w.Grown)
+		}
 	}
 }

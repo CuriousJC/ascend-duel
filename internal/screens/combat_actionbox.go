@@ -10,7 +10,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -165,23 +164,38 @@ type paletteCard struct {
 	selected bool
 }
 
-// dragState is the press currently in progress. Nil when the button is up.
+// handRow is the hand as a draggable row of cards. **The lifecycle is carddrag.go's**; this is the
+// half of it that knows what a card in the hand is.
 //
-// A press starts inactive and only becomes a drag once the cursor has moved past
-// dragThreshold; until then it is still a candidate click. The card leaves the list at
-// that moment rather than on release, so the gap closes under the cursor and the drop
-// index is measured against the list the card actually lands in.
-type dragState struct {
-	card        paletteCard
-	originIndex int
-	active      bool
+// **Lifting really does take the card out of `s.hand`**, unlike the ring row, which only remembers
+// which seat is empty. The list is the hand — nothing else holds it — so removing the card is what
+// makes the gap close under the cursor, and `syncQueue` keeps the round's queue reading off it the
+// whole time.
+type handRow struct{ s *CombatScene }
 
-	pressX, pressY int
+func (r handRow) rowLen() int { return len(r.s.hand) }
 
-	// grabDX/grabDY keep the cursor where it landed on the card, so picking one up does
-	// not snap it to the cursor.
-	grabDX, grabDY int
+func (r handRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle { return r.s.cardSlot(gs, i) }
+
+func (r handRow) rowZone(gs *state.GlobalState) image.Rectangle { return handZone(gs) }
+
+func (r handRow) rowDropIndex(gs *state.GlobalState) int { return r.s.dropIndex(gs) }
+
+func (r handRow) rowLift(i int) {
+	r.s.lifted = r.s.hand[i]
+	r.s.hand = append(append([]paletteCard{}, r.s.hand[:i]...), r.s.hand[i+1:]...)
+
+	trace.Logf("drag", "lifted card[%d] %s", i, cardLabel(r.s.lifted.actionCard))
 }
+
+func (r handRow) rowReturn(from, to int) {
+	r.s.insertCard(to, r.s.lifted)
+
+	trace.Logf("drag", "dropped %s, index %d -> %d", cardLabel(r.s.lifted.actionCard), from, to)
+	r.s.lifted = paletteCard{}
+}
+
+func (r handRow) rowClick(i int) { r.s.toggle(i) }
 
 // planning reports whether the player may edit the queue: only between rounds, and only
 // while both duelists are standing.
@@ -220,10 +234,12 @@ func (s *CombatScene) syncQueue() {
 
 // updateActionBox runs the click and drag lifecycle. Called every tick from Update.
 func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
+	row := handRow{s}
+
 	// A round starting mid-press puts whatever is in hand back rather than letting it
 	// land on a list that is no longer editable.
 	if !s.planning() {
-		s.cancelDrag()
+		s.drag.cancel(row)
 		return
 	}
 
@@ -231,92 +247,11 @@ func (s *CombatScene) updateActionBox(gs *state.GlobalState) {
 	// simply returning, for the reason the branch above cancels: a gate coming up mid-press would
 	// otherwise leave a card stuck to the cursor with no release that can put it down.
 	if !gs.CursorAllowed() {
-		s.cancelDrag()
+		s.drag.cancel(row)
 		return
 	}
 
-	if s.drag == nil {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-			s.beginPress(gs)
-		}
-		return
-	}
-
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		s.endPress(gs)
-		return
-	}
-
-	s.promoteToDrag(gs)
-}
-
-// beginPress records a press over a card without yet committing to what it means.
-//
-// Backwards through the hand, because overlapping cards are drawn front to back in index
-// order: the last card that covers a point is the one visibly on top of it, and that is the
-// one the click has to mean.
-func (s *CombatScene) beginPress(gs *state.GlobalState) {
-	at := image.Pt(gs.MouseX, gs.MouseY)
-
-	for i := len(s.hand) - 1; i >= 0; i-- {
-		slot := s.cardSlot(gs, i)
-		if !at.In(slot) {
-			continue
-		}
-		s.drag = &dragState{
-			card:        s.hand[i],
-			originIndex: i,
-			pressX:      gs.MouseX,
-			pressY:      gs.MouseY,
-			grabDX:      gs.MouseX - slot.Min.X,
-			grabDY:      gs.MouseY - slot.Min.Y,
-		}
-		return
-	}
-}
-
-// promoteToDrag turns a held press into a drag once the cursor has moved far enough,
-// lifting the card out of the list as it does.
-func (s *CombatScene) promoteToDrag(gs *state.GlobalState) {
-	if s.drag.active {
-		return
-	}
-	if abs(gs.MouseX-s.drag.pressX) < dragThreshold && abs(gs.MouseY-s.drag.pressY) < dragThreshold {
-		return
-	}
-
-	s.drag.active = true
-	s.hand = append(
-		append([]paletteCard{}, s.hand[:s.drag.originIndex]...),
-		s.hand[s.drag.originIndex+1:]...)
-
-	trace.Logf("drag", "lifted card[%d] %s at %d,%d",
-		s.drag.originIndex, cardLabel(s.drag.card.actionCard), gs.MouseX, gs.MouseY)
-}
-
-// endPress resolves the press: a drag lands the card at a new position, a click toggles
-// whether the card is queued.
-func (s *CombatScene) endPress(gs *state.GlobalState) {
-	drag := s.drag
-	s.drag = nil
-
-	if !drag.active {
-		s.toggle(drag.originIndex)
-		return
-	}
-
-	// Released outside the list, the card goes back where it came from. There is no
-	// discard gesture any more — clicking a card off is how it leaves the queue, and that
-	// is visible on screen in a way that dragging into empty space never was.
-	at := drag.originIndex
-	inside := image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs))
-	if inside {
-		at = s.dropIndex(gs)
-	}
-	s.insertCard(at, drag.card)
-
-	trace.Logf("drag", "dropped %s at %d,%d inside=%v, index %d -> %d",
-		cardLabel(drag.card.actionCard), gs.MouseX, gs.MouseY, inside, drag.originIndex, at)
+	s.drag.update(gs, row)
 }
 
 // toggle selects or deselects the card at i. Deselecting always works; selecting is refused
@@ -360,14 +295,6 @@ func overSuffix(s *CombatScene) string {
 	return ""
 }
 
-// cancelDrag puts any in-flight card back and forgets the press.
-func (s *CombatScene) cancelDrag() {
-	if s.drag != nil && s.drag.active {
-		s.insertCard(s.drag.originIndex, s.drag.card)
-	}
-	s.drag = nil
-}
-
 // insertCard puts a card back into the list at index at, clamped to the list's length.
 func (s *CombatScene) insertCard(at int, card paletteCard) {
 	if at < 0 {
@@ -388,7 +315,7 @@ func (s *CombatScene) insertCard(at int, card paletteCard) {
 // otherwise the whole hand would slide half a card sideways the moment one was lifted.
 func (s *CombatScene) laidOutCount() int {
 	n := len(s.hand)
-	if s.drag != nil && s.drag.active {
+	if s.drag.dragging() {
 		n++
 	}
 	return n
@@ -570,7 +497,7 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected)
 	}
 
-	if s.drag == nil || !s.drag.active || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
+	if !s.drag.dragging() || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {
 		return
 	}
 
@@ -752,13 +679,13 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 
 // drawDraggedCard draws the card in flight. Called last so it rides over everything.
 func (s *CombatScene) drawDraggedCard(gs *state.GlobalState, screen *ebiten.Image) {
-	if s.drag == nil || !s.drag.active {
+	if !s.drag.dragging() {
 		return
 	}
 
-	at := image.Pt(gs.MouseX-s.drag.grabDX, gs.MouseY-s.drag.grabDY)
+	at := s.drag.at(gs)
 	drawCard(gs, screen, at, cards.Hand,
-		s.drag.card.actionCard, heldBy(s.fighter.Duelist, s.drag.card.actionCard), true, s.drag.card.selected)
+		s.lifted.actionCard, heldBy(s.fighter.Duelist, s.lifted.actionCard), true, s.lifted.selected)
 }
 
 func abs(n int) int {

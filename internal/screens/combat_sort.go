@@ -15,11 +15,18 @@ import (
 
 // How the hand is arranged, and the three buttons that choose it.
 //
-// **The hand's order is not a rule and never has been.** Cross-category order is regrouped
-// away by `combat.ResolutionOrder`, a hand is counted rather than read in sequence, and
-// defends are a set — so nothing here can change what a round does. This is entirely about
-// being able to read eight overlapping cards: cost tells you what you can afford, type tells
-// you what the round is made of, element tells you what a mix is worth.
+// **The order of the queue is a rule as of 2026-08-26** *(owner's call)*. It was not one for the
+// first three months of this screen, and this file was written under the old rule: cross-category
+// order is still regrouped by `combat.ResolutionOrder` and a hand is still *counted* rather than
+// read in sequence, but a growing ring now steps between the cards of a single blow, so the card
+// that goes first pays for the card behind it. Sorting a queued hand therefore re-prices it.
+//
+// **That is accepted rather than guarded** *(owner's call)*. These buttons stay live and a bad sort
+// can cost the player damage — the intent is that the order of the cards is something worth paying
+// attention to, and a control that went dead the moment it mattered would be teaching the opposite.
+//
+// What the buttons are still *for* is reading eight overlapping cards: cost tells you what you can
+// afford, type tells you what the round is made of, element tells you what a mix is worth.
 //
 // **The sort re-applies on every refill**, not only when a button is pressed, so a hand dealt
 // at the end of a round arrives already arranged and a newly drawn card lands where it belongs
@@ -290,8 +297,9 @@ func (s *CombatScene) buildSortButtons() {
 
 // sortButtonColor is a muted slate, quieter than either button on the strip below.
 //
-// **Deliberately not crimson or the Discard yellow**: those two commit a round, and these
-// three cannot change what a round does at all. The base is light enough to leave the latched
+// **Deliberately not crimson or the Discard yellow**: those two commit a round and these three only
+// rearrange one — which is no longer the same as saying they change nothing, since 2026-08-26. They
+// are still the quieter control of the two kinds. The base is light enough to leave the latched
 // state somewhere to go — the active mode is drawn *darker* than the two beside it, so the
 // bright end of the ramp stays with hover and press.
 var sortButtonColor = color.RGBA{R: 110, G: 125, B: 155, A: 255}

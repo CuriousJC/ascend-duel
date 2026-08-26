@@ -151,7 +151,7 @@ not ignored.
 | `grow-on-win` | `fight-won` | `Amount` | adds to **this ring's own accumulator**, once per win |
 | `grow-on-turn` | `turn-taken` | `Amount` | the same accumulator, once per matching turn — Momentum |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
-| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching hit** — every landing, echoes and repeats included, so it grows inside a fight and compounds with the rings that multiply landings |
+| `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching landing, inside the blow's own sum** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count |
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
@@ -242,13 +242,24 @@ not — it carries a number that lives on the run:
   not say when it fires reads as the default while the other looks like the special case.
 - **`grow-on-win` writes an accumulator on the worn ring**, and the ring's own effect amounts are read
   as `Amount + accumulator`. So this ring is +5 HP in fight one and +100 by fight twenty.
-- **`grow-on-hit` writes the same accumulator from inside a fight** *(2026-08-22)* — the Enflamed
-  family, +0.1x to their colour on **every matching hit**. A hand with two fire cards is two steps,
-  and a fire card an echo ring seats three times is three: it counts *landings*, which is what makes
-  it compound with `echo-attack` and `repeat-card` rather than ignoring them. Two consequences
-  that `grow-on-win` does not have: the *second* attack of a fight is already stronger than the first, and
-  the growth is on the **duelist's** copy until `Session.AbsorbGrowth` reads it back on the win. A
-  lost fight forfeits it, which needs no rule: a defeat ends the run.
+- **`grow-on-hit` writes the same accumulator from inside a *blow*** *(2026-08-22, moved inside the
+  sum 2026-08-26)* — the Enflamed family, +0.1x to their colour on **every matching landing**. A hand
+  with two fire cards is two steps and the second card is counted at the first one's step, so **the
+  order the cards are queued in decides what they are worth**; a fire card an echo ring seats three
+  times is three steps, each landing counted at the last one's figure. It counts *landings*, which is
+  what makes it compound with `echo-attack` and `repeat-card` rather than ignoring them. Three
+  consequences `grow-on-win` does not have: the *second card of the first attack* is already
+  stronger than the first, the growth is on the **duelist's** copy until `Session.AbsorbGrowth` reads
+  it back on the win, and a blow that misses pays nothing. A lost fight forfeits it, which needs no
+  rule: a defeat ends the run.
+- **No ring reaches a card's printed damage** *(owner's call, 2026-08-26)*. A face says what the card
+  does — `1x DMG` — whatever is worn: a growing ring's multiplier depends on where in the turn the
+  card is counted, so no printed figure is right in every queue position, and the flat rings came off
+  with it rather than leaving half the arithmetic on the card and half in the sum. Every ring that
+  fires says its own multiplier beside the term it priced in the hand dialog, in firing order, and
+  its card bounces and lights on that beat. `combat.CardScaleBySeat` is the only place those figures
+  are worked out. **Cost is the exception** and stays on the face, because a discount does not move
+  with the queue and the face must agree with the AP bar.
 - **A ring that can reset itself keeps nothing between fights** *(2026-08-22)*. `combat.KeepsGrowth`
   is the question and `Session.AbsorbGrowth` is what asks it: Momentum's streak is a fact about the
   turns of one duel, and banking it would make a good fight a permanent bonus that one plan card had

@@ -716,6 +716,13 @@ func (s *CombatScene) drawPlayedCards(gs *state.GlobalState, screen *ebiten.Imag
 	split := s.playedSplit()
 	for i, r := range s.theatre.resolved {
 		at := r.at(gs, i, len(s.theatre.resolved), split, lit(s.theatre.firingSeats, i))
+
+		// **The card rattles as its own figure is written into the sum** *(owner's call,
+		// 2026-08-26)*. Sideways, where the lift above is vertical: the lift says this card built
+		// the hand and stays for the whole blow, and the shake says this card is paying *now*. Two
+		// vocabularies on one card, which is why the shake could not also be a jump.
+		at.X += s.playedCardShake(i)
+
 		drawCard(gs, screen, at, cards.Hand, r.card, heldBy(s.fighter.Duelist, r.card), true, false)
 	}
 }

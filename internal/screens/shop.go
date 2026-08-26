@@ -125,6 +125,12 @@ type ShopScene struct {
 	// it, and buying it back starts that over.
 	armed string
 
+	// ringDrag is the press in progress over the worn row. **A press there is now two gestures
+	// sharing one button**: a click still arms the sell tab, and a press that travels reorders the
+	// row instead. The threshold in carddrag.go is what tells them apart, and it is the same
+	// threshold the hand has used since the action box was built.
+	ringDrag cardDrag
+
 	// selling is the tab's request, consumed by Update, for the reason `leaving` is: a button's
 	// OnClick reaches no global state and a sale needs the run.
 	selling string
@@ -327,6 +333,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	s.updateSellTab(gs)
 
 	s.click(gs)
+	s.updateRingRow(gs)
 
 	s.leaveButton.ScreenX, s.leaveButton.ScreenY = gs.PctX(50), gs.PctY(offerButtonsPct)
 	systems.UpdateButton(gs, s.leaveButton)
@@ -385,13 +392,13 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 	}
 
-	// **A click on a ring arms it; it does not sell it.** Clicking the armed one again puts the
-	// tab away, so the gesture that opened the question is the gesture that drops it — the rule
-	// every dialog in this game follows.
+	// **A press on a worn ring is not this function's** *(2026-08-26)*. It became two gestures when
+	// the row became reorderable — a click arms the sale, a drag moves the ring — and only the
+	// release knows which it was, so it is answered by the shared drag's rowClick. Leaving the
+	// press here as well would arm a ring on the way into a drag.
 	worn := gs.Run.Worn()
-	for i, key := range worn {
+	for i := range worn {
 		if at.In(s.wornSlot(gs, i, len(worn))) {
-			s.arm(key)
 			return
 		}
 	}
@@ -623,7 +630,10 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image,
 		affordable := gs.Run.CanBuy(item.key)
 		price, _ := session.RingPrice(item.key)
 
-		drawRingCard(gs, screen, at.Min, record, affordable)
+		// **No badge on the shelf**, whatever the ring is: an accumulator belongs to a worn ring,
+		// and a shelf ring is one nobody has ever put on. A ring the run once wore and sold has
+		// had its number reset, so there is nothing to show there either.
+		drawRingCard(gs, screen, at.Min, record, "", affordable, false)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", price), affordable)
 	}
 }
@@ -637,10 +647,15 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace) {
 
 	worn := gs.Run.Worn()
+	counters := runCounters(gs)
 
 	for i, key := range worn {
 		record, ok := gs.Rings[key]
 		if !ok {
+			continue
+		}
+		// The seat a dragged ring left stays empty; see the combat screen's row.
+		if s.ringDrag.dragging() && i == s.ringDrag.origin() {
 			continue
 		}
 		seat := s.wornSlot(gs, i, len(worn))
@@ -649,7 +664,7 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 			at = flyingTo(was, seat, s.move)
 		}
 
-		drawRingCard(gs, screen, at, record, true)
+		drawRingCard(gs, screen, at, record, counters[key], true, false)
 
 		// **The price is only offered once the shopkeeper has finished speaking**, like everything
 		// else on this screen — a sell figure under a ring during the greeting would be an offer
@@ -671,6 +686,32 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 			Max: at.Add(image.Pt(cards.RingStyle.Width, cards.RingStyle.Height))}
 		s.figure(gs, screen, flown, fmt.Sprintf("sell +%d", session.SellValue(key)), true)
 	}
+
+	// Last, so the ring riding the cursor rides over the sell figures too.
+	drawDraggedRing(gs, screen, &s.ringDrag, counters)
+}
+
+// updateRingRow runs the drag over the worn row.
+//
+// **A click here arms the sell tab**, which is the one screen where a press on a ring means
+// something besides reordering it — see click, which no longer handles that row.
+//
+// **The row is dead while the shopkeeper is still speaking and under either panel**, exactly as
+// buying and selling are: the greeting is the whole screen while it runs.
+func (s *ShopScene) updateRingRow(gs *state.GlobalState) {
+	worn := gs.Run.Worn()
+	row := buildRingRow(gs, func(i int) {
+		if i >= 0 && i < len(worn) {
+			s.arm(worn[i])
+		}
+	})
+
+	if !gs.CursorAllowed() {
+		s.ringDrag.cancel(row)
+		return
+	}
+
+	s.ringDrag.update(gs, row)
 }
 
 // figure writes the number under a card, centred on it. Dimmed toward the ground rather than

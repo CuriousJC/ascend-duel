@@ -643,11 +643,15 @@ There is no initiative. With one contiguous turn per side there is no exchange f
 to lead, so a number on every card would report a distinction the resolver does not make. `Spd`
 buys action points and never buys priority.
 
-**Order within a category is queue order, and one thing reads it**: `groupsOf` fills
-largest-count-first and breaks a tie by whose first card was played first, so the lead card — the
-one that names the hand and carries its element — is chosen by where the player put it. Nothing
-else does. A defense cannot be dragged ahead of an attack, a counted hand reads the turn as a set,
-and defends compose without an order.
+**Order within a category is queue order, and two things read it** *(the second added 2026-08-26)*.
+`groupsOf` fills largest-count-first and breaks a tie by whose first card was played first, so the
+lead card — the one that names the hand and carries its element — is chosen by where the player put
+it. And **a growing ring steps between the cards of the blow**, so the order the attacks are queued
+in decides what each of them is worth: the first fire card is counted bare, steps the ring, and the
+second is counted at the bigger multiplier. See *Growing rings step inside the blow* below.
+
+A defense still cannot be dragged ahead of an attack, a counted hand still reads the turn as a set
+for the purpose of *naming* it, and defends still compose without an order.
 
 ---
 
@@ -1100,6 +1104,39 @@ language does not need.
   is intended** — two slash rings are ×4.
 - **A ring may only bend a rule the game already has.** Banker scales vitae propagation, so
   propagation had to be designed first. This is the test to apply to any new ring.
+
+#### Growing rings step inside the blow *(owner's call, 2026-08-26)*
+
+A `grow-on-hit` ring used to take one step after the whole blow had landed, so every fire card of a
+turn was counted at the figure the ring opened the turn with. **It now steps on every landing, inside
+the sum**, and each landing is counted at the accumulator the one before it left.
+
+- **The order of the queue is therefore a rule.** The card that goes first pays for the card behind
+  it. This replaces "the hand's order is not a rule", which was true until this landed and is the one
+  thing to unlearn — the sort buttons and the hand's drag are no longer guaranteed to be
+  presentation, and they stay live anyway: paying attention to the order is the point.
+- **Landings, not cards.** A card an echo or a repeat seats three times steps the ring three times,
+  and each of those landings is itself counted at the figure the previous one left — so an echo
+  ladder compounds inside itself.
+- **The shape is settled per card and the figures are asked per landing.** How many times a card
+  lands is fixed when the card is reached; what each landing is worth is not. See
+  `combat.LandingShape`.
+- **A miss pays nothing.** The growth is worked out with the sum and adopted only after the shock
+  roll, so a blow that never connected leaves the ring where it was.
+- **Every ring's figure moved off the card and into the sum** *(owner's call, 2026-08-26)*. A card
+  face now says what the *card* does and nothing else — `1x DMG` whatever is on the fingers — because
+  a growing ring's multiplier depends on where in the turn the card is counted and no printed figure
+  could be right in every queue position. The owner's call took the flat rings with it: a fire ring
+  doubling every fire card was invisible in the term's figure with nothing accounting for it.
+  So the sum is where the rings are read. **Every figure flies out of the card that produced it and
+  that card shakes as it lands, one at a time, in the order the engine applied them** — the card's
+  damage from the played card, each ring's multiplier from its own ring, and an echo's extra term
+  shaking the ring that bought the landing even though it puts no figure on the line. The ring's
+  badge steps as the sum is read. `combat.CardScaleBySeat` is the multiplier per worn seat,
+  `combat.LandingSeats` is who bought an extra landing, and `Event.HandRingScale` /
+  `Event.HandLanding` / `Event.HandGrown` carry them.
+- **Cost is the exception and stays on the face.** A discount is not order-dependent, and a card face
+  disagreeing with the AP bar is the failure that rule has always existed to prevent.
 
 **What the grammar cost, and every item was real work:**
 

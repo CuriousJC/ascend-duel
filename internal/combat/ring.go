@@ -828,6 +828,97 @@ func HPScale(worn []WornRing) int {
 // `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
 // predicate reads.
 func LandingAmounts(worn []WornRing, card Card, lead bool, damage int) []int {
+	shape := LandingsOf(worn, card, lead)
+
+	out := make([]int, 0, shape.Count())
+	for j := 0; j < shape.Count(); j++ {
+		out = append(out, shape.Amount(j, damage))
+	}
+	return out
+}
+
+// LandingShape is how many times one card lands inside a blow and how those landings are priced:
+// full-strength copies from `repeat-card`, then the diminishing ladder from `echo-attack`.
+//
+// **It is separate from the figures as of 2026-08-26**, because the figures are no longer decided
+// once. A growing ring now steps between the landings of a blow, so each landing's base damage is
+// asked for again at the accumulator the previous one left behind — where the *shape* is settled
+// when the card is reached and does not move under it. Splitting the two is what lets the sum walk
+// forward without an echo ladder that changes length halfway down.
+type LandingShape struct {
+	// Copies is how many extra full-strength landings, and Echoes how many diminishing ones. Both
+	// are already clamped against MaxEchoLandings.
+	Copies, Echoes int
+}
+
+// Count is how many times the card lands in total, the original included.
+func (s LandingShape) Count() int { return 1 + s.Copies + s.Echoes }
+
+// Amount is what the j-th landing pays, counting from zero, given what the card is worth at the
+// moment that landing is counted.
+//
+// **The original and every repeat are full strength; the echoes count down.** j is a position in the
+// blow rather than a rung of the ladder, so the echo index is measured from the end of the repeats.
+func (s LandingShape) Amount(j, damage int) int {
+	if j <= s.Copies {
+		return damage
+	}
+	return EchoBonus(damage, j-s.Copies+1, s.Echoes+1)
+}
+
+// LandingSeats reports which worn seats are the reason a card lands more than once — the rings whose
+// `repeat-card` or `echo-attack` rules matched it.
+//
+// **It is what makes an extra landing attributable** *(owner's call, 2026-08-26)*. Every figure in a
+// blow's sum is accompanied by the card that produced it shaking; a card's own damage comes from the
+// card and a multiplier comes from its ring, but an echo's extra *term* is produced by a ring that
+// contributes no multiplier at all — so without this the Echo Ring would sit still through the three
+// terms it is single-handedly responsible for.
+//
+// **Every contributing seat, not one.** Extra landings add across rings, so two echo rings are both
+// the reason and both shake.
+func LandingSeats(worn []WornRing, card Card, lead bool) [MaxWornRings]bool {
+	var out [MaxWornRings]bool
+
+	for seat, w := range worn {
+		if seat >= MaxWornRings {
+			break
+		}
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentBlowFormed || !rule.If.Matches(card) {
+				continue
+			}
+			if rule.If.Lead && !lead {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Amount+w.Grown < 2 {
+					continue
+				}
+				switch e.Do {
+				case DoRepeatCard, DoEchoAttack:
+					out[seat] = true
+				}
+			}
+		}
+	}
+	return out
+}
+
+// LandingsOf is how many times a card lands, and how, given what its wearer has on.
+//
+// **Two verbs land here and they stack in a fixed order** *(2026-08-22)*: `repeat-card` adds
+// full-strength copies, then `echo-attack` adds its diminishing ladder. Repeats first because they
+// are the card being played again — an echo of a repeated card would be an echo of something that
+// already happened twice, which is a fact about the blow rather than about the card.
+//
+// **Extra landings add rather than compound**, so two rings landing a card three times land it five
+// times, not nine. `MaxEchoLandings` is the ceiling, and it is a width on the event's arrays as much
+// as a rule.
+//
+// `lead` says whether this is the blow's first attack card, which is the only thing the `Lead`
+// predicate reads.
+func LandingsOf(worn []WornRing, card Card, lead bool) LandingShape {
 	copies, echoes := 0, 0
 	for _, w := range worn {
 		for _, rule := range RingOf(w.Ring).Rules {
@@ -852,10 +943,6 @@ func LandingAmounts(worn []WornRing, card Card, lead bool, damage int) []int {
 		}
 	}
 
-	if copies+echoes == 0 {
-		return []int{damage}
-	}
-
 	if total := 1 + copies + echoes; total > MaxEchoLandings {
 		// Repeats are kept ahead of echoes when the ceiling bites, since a full-strength landing
 		// is the one the player paid for.
@@ -865,17 +952,7 @@ func LandingAmounts(worn []WornRing, card Card, lead bool, damage int) []int {
 		echoes = MaxEchoLandings - 1 - copies
 	}
 
-	out := make([]int, 0, 1+copies+echoes)
-	out = append(out, damage)
-	for i := 0; i < copies; i++ {
-		out = append(out, damage)
-	}
-
-	n := echoes + 1
-	for k := 2; k <= n; k++ {
-		out = append(out, EchoBonus(damage, k, n))
-	}
-	return out
+	return LandingShape{Copies: copies, Echoes: echoes}
 }
 
 // EchoBonus is what one echoed landing is worth: the k-th landing of a card that lands n times,
@@ -1001,8 +1078,18 @@ func KeepsGrowth(id RingID) bool {
 	return true
 }
 
-// GrowOnHit is the attacker after a blow has landed: every ring whose `grow-on-hit` rule matched a
-// card of the blow has taken its step, so the *next* attack of the same fight is already stronger.
+// GrowOnLanding is the attacker after **one landing of one card** has been counted into the blow.
+//
+// **It steps inside the sum as of 2026-08-26** *(owner's call)*, where it used to be one step taken
+// after the whole blow had landed. The rule the change buys is that the order of the cards in a turn
+// decides what they are worth: two fire cards no longer both fire at the ring's opening figure — the
+// first fires bare, steps the ring, and the second fires at the bigger multiplier. That makes the
+// queue an ordering decision the player is meant to make, which is the whole point of it.
+//
+// **Landings, not cards** *(owner's call, 2026-08-22, and it survives the move)*. A card that an
+// echo or a repeat seats three times *hit* three times, so it steps three times — and each of those
+// landings is counted at the figure the one before it left, so the ladder compounds inside itself.
+// That is the combination the rings are for: Echo plus Enflamed is meant to be a build.
 //
 // **It returns a duelist rather than writing through a pointer**, like everything else in this
 // package — a round is resolved by passing duelists along, and an accumulator that moved by side
@@ -1011,48 +1098,89 @@ func KeepsGrowth(id RingID) bool {
 // **What it grows is the copy the fight is holding.** `Session` keeps the run's own figure and reads
 // it back off the duelist when the fight is won — see Session.AbsorbGrowth — which is what makes the
 // growth survive the fight without combat knowing a run exists.
-func (d Duelist) GrowOnHit(cards []Card) Duelist {
-	if len(cards) == 0 {
-		return d
-	}
-
-	// **Landings, not cards** *(owner's call, 2026-08-22)*. A card that an echo or a repeat ring
-	// seats three times *hit* three times, and a per-hit accumulator has to count all three — which
-	// is the combination the rings are for: Echo plus Enflamed is meant to be a build, not two
-	// rings that politely ignore each other.
-	//
-	// The count is the same list `handEvent` seats into the blow's sum, asked for again rather than
-	// passed in: the damage figure does not change how many terms there are, so the two cannot
-	// disagree about how many times a card landed.
-	worn := d.WornRings()
-	hits := make([]int, len(cards))
-	for i, c := range cards {
-		hits[i] = len(LandingAmounts(worn, c, i == 0, 100))
-	}
-
+func (d Duelist) GrowOnLanding(card Card) Duelist {
 	for i := 0; i < d.RingCount; i++ {
 		step := 0
 		for _, rule := range RingOf(d.Rings[i].Ring).Rules {
-			if rule.When != MomentAttackLands {
-				continue
-			}
-			landed := 0
-			for n, c := range cards {
-				if rule.If.Matches(c) {
-					landed += hits[n]
-				}
-			}
-			if landed == 0 {
+			if rule.When != MomentAttackLands || !rule.If.Matches(card) {
 				continue
 			}
 			for _, e := range rule.Then {
 				if e.Do == DoGrowOnHit {
-					step += e.Amount * landed
+					step += e.Amount
 				}
 			}
 		}
 		d.Rings[i].Grown += step
 	}
+	return d
+}
+
+// CardScaleBySeat is what **each worn ring** is multiplying one card's damage by right now, as a
+// percent per worn seat, and 0 for a seat that does not touch the card at all.
+//
+// **It is per seat rather than a product** *(owner's call, 2026-08-26)*, because the sum shows the
+// rings one at a time: each contributing ring says its own figure beside the term and the ring's own
+// card bounces on the beat. A combined multiplier would say what the term came to and leave the
+// player to work out which of five fingers produced it.
+//
+// **Every damage ring, not only the growing ones.** A first pass showed growth alone and the fire
+// ring's doubling stayed invisible — baked into the term's figure with nothing on screen accounting
+// for it. Nothing reaches a card's printed damage any more, so the sum is the only place any of it
+// can be seen, and a ring that fires without saying so is a rule the player has to take on trust.
+//
+// **Zero is "did not fire", which is why the identity is not stored.** A ring whose rule does not
+// match the card contributes nothing and has no beat; a ring contributing exactly 100 has fired and
+// changed nothing, which no ring in the file does but which the grammar allows.
+func CardScaleBySeat(worn []WornRing, card Card) [MaxWornRings]int {
+	var out [MaxWornRings]int
+
+	for seat, w := range worn {
+		if seat >= MaxWornRings {
+			break
+		}
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentCardDamage || !rule.If.Matches(card) {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do != DoScaleDamage {
+					continue
+				}
+				if out[seat] == 0 {
+					out[seat] = 100
+				}
+				out[seat] = out[seat] * (e.Amount + w.Grown) / 100
+			}
+		}
+	}
+	return out
+}
+
+// MoveRing slides the ring at `from` to sit at `to`, shuffling everything between them along.
+//
+// **Worn order is firing order**, so this changes what the duelist's rings do — see WornRings. It is
+// the live counterpart of Session.MoveRing: a reorder made during a fight has to reach the duelist
+// the fight is holding, or the row on screen and the rules would disagree until the next fight.
+//
+// **Accumulators travel with their rings**, because the number belongs to the ring and not to the
+// finger. An out-of-range index is a no-op rather than a panic: this is driven by a drag, and a drop
+// resolved against a row that has changed underneath it must not take the frame with it.
+func (d Duelist) MoveRing(from, to int) Duelist {
+	n := len(d.WornRings())
+	if from < 0 || from >= n || to < 0 || to >= n || from == to {
+		return d
+	}
+
+	w := d.Rings[from]
+	if from < to {
+		copy(d.Rings[from:to], d.Rings[from+1:to+1])
+	} else {
+		for i := from; i > to; i-- {
+			d.Rings[i] = d.Rings[i-1]
+		}
+	}
+	d.Rings[to] = w
 	return d
 }
 
@@ -1117,4 +1245,64 @@ func FlipElement(worn []WornRing, card Card) (Element, bool) {
 		}
 	}
 	return out, flipped
+}
+
+// Grows reports whether a ring holds an accumulator at all — a rule with any of the three growth
+// verbs on it.
+//
+// **It is the question a badge asks**, and it is deliberately separate from KeepsGrowth: that one
+// says whether the number survives the fight, this one says whether there is a number.
+func Grows(id RingID) bool {
+	for _, rule := range RingOf(id).Rules {
+		for _, e := range rule.Then {
+			switch e.Do {
+			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit:
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Scaling reports whether a verb's Amount is a percentage rather than a flat figure. The three
+// scaling verbs read 100 as "unchanged"; everything else reads 0 as "nothing".
+//
+// **It exists so a screen can say what a figure means without a second table of verbs.** A badge
+// printing `50` where the ring is doing 1.5x, or `1.5x` where it is doing +150 HP, is a screen
+// contradicting the engine — the same failure a cost on a card face is guarded against.
+func Scaling(do RingVerb) bool {
+	switch do {
+	case DoScaleDamage, DoScaleHP, DoScalePropagation:
+		return true
+	}
+	return false
+}
+
+// GrowthEffect is the one numeric effect a growing ring's accumulator feeds, **at the size the
+// accumulator has reached**: the effect's own Amount plus Grown, with the verb still attached so the
+// caller knows whether that figure is a percentage.
+//
+// **A growing ring holds exactly one numeric effect** *(owner's call, 2026-08-17)*, which is what
+// makes this answerable at all — there is never a question of which figure the accumulator feeds.
+// The growth verbs themselves are skipped: `grow-on-hit 10` is the *step*, not the effect, and a
+// badge showing the step would print the same number all run.
+//
+// It reports false for a ring that does not grow, and for one whose only effects carry no figure —
+// a status or a flip. Neither exists today; refusing is what stops a badge inventing a number.
+func GrowthEffect(w WornRing) (RingEffect, bool) {
+	if !Grows(w.Ring) {
+		return RingEffect{}, false
+	}
+	for _, rule := range RingOf(w.Ring).Rules {
+		for _, e := range rule.Then {
+			switch e.Do {
+			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoResetGrowth,
+				DoApplyStatus, DoSetElement:
+				continue
+			}
+			e.Amount += w.Grown
+			return e, true
+		}
+	}
+	return RingEffect{}, false
 }

@@ -58,12 +58,19 @@ func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, s
 }
 
 // drawRingCard draws a ring in the card format: the pink border, artwork across the face, and
-// neither a cost nor a form. Both rows that hold rings go through it — the combat screen's worn
-// row and the shop's shelf — which is what keeps a ring one picture rather than two.
+// neither a cost nor a form. Every row that holds rings goes through it — the combat screen's worn
+// row, the build band and the shop's two — which is what keeps a ring one picture rather than four.
+//
+// **`counter` is the badge in the corner and an empty one draws nothing**, which is what a ring that
+// does not grow passes and what the shop's shelf passes for every ring on it: a ring nobody is
+// wearing has no accumulator to show. See ringCounter for what the figure means.
+// **`lit` is the toast**: a ring drawn while it is firing into a blow's sum. It reuses the card
+// format's selected state — a brighter border — because that is already what "this card is the one
+// doing something" looks like everywhere else in the game.
 func drawRingCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
-	r data.RingData, enabled bool) {
+	r data.RingData, counter string, enabled, lit bool) {
 
-	blitCard(gs, screen, at, ringSpec(gs, r, enabled), cards.RingStyle)
+	blitCard(gs, screen, at, ringSpec(gs, r, counter, enabled, lit), cards.RingStyle)
 }
 
 // drawWormCard draws a worm as the card it is offered as.

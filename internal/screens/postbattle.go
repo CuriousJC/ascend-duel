@@ -168,6 +168,11 @@ type PostBattleScene struct {
 	// the prose has just described: two creatures fleeing the enemy you beat.
 	entry []travel
 
+	// ringDrag is the press in progress over the worn ring row in the build band. **The row is
+	// reorderable here like everywhere else** — worn order is a rule, and between fights is when a
+	// player is thinking about their build.
+	ringDrag cardDrag
+
 	// deck is the D button in the corner and the panel behind it. **A worm is a deck edit, and
 	// until 2026-08-22 this screen was the one place a deck could be changed without being able
 	// to look at it** — see deckpanel.go, and TODO.md, which carried the extraction.
@@ -405,6 +410,12 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	if s.hands.update(gs) {
 		return nil
 	}
+
+	// **The ring row is live from the moment the narration ends**, under the panels rather than
+	// over them: a drag started behind an open deck panel would be a card moving where the player
+	// cannot see it. It runs before the stage branches below, because the settled stage returns
+	// early and the row is still on screen through it.
+	s.updateRingRow(gs)
 
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
@@ -737,7 +748,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what a worm is about to change.
-	drawBuildBand(gs, screen, gs.Run.Vitae())
+	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.ringDrag)
 
 	// **The narration stays up while the offer is made**, and only clears once a worm is chosen.
 	if s.stage == narrate || s.stage == pickWorm {
@@ -946,4 +957,20 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 		return fmt.Sprintf("take one - %d cards in your deck, %d vitae in hand",
 			gs.Run.Size(), gs.Run.Vitae())
 	}
+}
+
+// updateRingRow runs the drag over the worn row in the build band.
+//
+// **A click on a ring does nothing here**, as on the combat screen: this screen's clicks belong to
+// the worms it is offering, and a ring that did something on a press would be a second meaning for
+// the gesture that reorders it.
+func (s *PostBattleScene) updateRingRow(gs *state.GlobalState) {
+	row := buildRingRow(gs, nil)
+
+	if !gs.CursorAllowed() {
+		s.ringDrag.cancel(row)
+		return
+	}
+
+	s.ringDrag.update(gs, row)
 }

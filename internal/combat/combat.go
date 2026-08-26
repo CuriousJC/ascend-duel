@@ -339,7 +339,7 @@ func resolveAttackPhase(
 	// points or take actions off the opponent's next turn, which is why there was a phase here
 	// paying those out before the blow landed. Statuses come from elements and rings now, so the
 	// multiplier is the whole reward and there is nothing to pay before the roll.
-	swung := handEvent(side, blow, turn, actor, round)
+	swung, grown := handEvent(side, blow, turn, actor, round)
 	events = append(events, swung)
 
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
@@ -406,11 +406,11 @@ func resolveAttackPhase(
 	for _, i := range blow.Cards {
 		blowCards = append(blowCards, turn[i].Card)
 	}
-	// **The accumulator moves before the statuses are handed out and after the damage has landed.**
-	// A growing ring is paid for the blow that just connected, never for the one it is about to
-	// strengthen — otherwise the first fire attack of a fight would already be wearing its own
-	// bonus.
-	actor = actor.GrowOnHit(blowCards)
+	// **The accumulator was moved inside the sum**, term by term, and this is where it is adopted:
+	// after the miss check above, so a blow that never connected pays no ring, and after the damage
+	// has landed, so the first attack of a fight is never already wearing its own bonus. See
+	// handEvent and Duelist.GrowOnLanding.
+	actor = grown
 
 	for _, a := range actor.statusesFrom(blowCards) {
 		applied, amount, ok := applyStatus(target, a.Status, actor)
@@ -598,7 +598,7 @@ func resolveSoloAttacks(
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
-func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Event {
+func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) (Event, Duelist) {
 	e := Event{
 		Kind:       KindHand,
 		Side:       side,
@@ -622,20 +622,48 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Even
 	//
 	// **The echo does not reach the matcher.** `blowFor` has already run, so an echoed Strike does
 	// not turn a Pair into Trips; it pays into the hand the real cards formed.
-	worn := actor.WornRings()
+	// **The accumulator moves inside this loop as of 2026-08-26** *(owner's call)*. It used to step
+	// once, after the whole blow had landed, so every fire card of a turn was counted at the figure
+	// the ring opened the turn with. It now steps on every landing, which makes the order of the
+	// cards a decision: the first fire card fires bare and pays for the second one to fire bigger.
+	//
+	// **The shape is settled per card and the figures are asked for per landing.** How many times a
+	// card lands is a fact about the rings when the card is reached; what each landing is worth is
+	// asked again at the accumulator the landing before it left. See LandingShape.
 	for n, i := range blow.Cards {
 		card := turn[i].Card
-		for t, d := range LandingAmounts(worn, card, n == 0, actor.CardDamage(card)) {
+		shape := LandingsOf(actor.WornRings(), card, n == 0)
+
+		for t := 0; t < shape.Count(); t++ {
+			d := shape.Amount(t, actor.CardDamage(card))
 			e.Base += d
-			if e.HandCardCount >= len(e.HandCards) {
+
+			if e.HandCardCount < len(e.HandCards) {
+				at := e.HandCardCount
+				e.HandCards[at] = i
+				e.HandAmounts[at] = d
+				e.HandRingScale[at] = CardScaleBySeat(actor.WornRings(), card)
+				e.HandCardCount++
+				if t > 0 {
+					e.EchoTerms++
+					// **Only the extra landings are attributed to a ring.** The card's own first
+					// landing is the card being played, which needed no ring to seat it.
+					e.HandLanding[at] = LandingSeats(actor.WornRings(), card, n == 0)
+				}
+
+				// **After the step, not before**, so the row of badges reads as the number this
+				// term has just earned rather than as the number it was counted at.
+				actor = actor.GrowOnLanding(card)
+				for seat, w := range actor.WornRings() {
+					e.HandGrown[at][seat] = w.Grown
+				}
 				continue
 			}
-			e.HandCards[e.HandCardCount] = i
-			e.HandAmounts[e.HandCardCount] = d
-			e.HandCardCount++
-			if t > 0 {
-				e.EchoTerms++
-			}
+
+			// A term past the array's width is dropped from the *bracket* rather than from the sum,
+			// which is the posture HandCards already takes: the arithmetic on screen may be short
+			// of a term before the damage that lands is wrong. The growth still happens.
+			actor = actor.GrowOnLanding(card)
 		}
 	}
 
@@ -649,7 +677,10 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) Even
 	e.Action = lead.Concept
 	e.Element = lead.Element
 
-	return e
+	// **The grown duelist goes back with the event and is adopted by the caller, not here.** A blow
+	// that misses is not paid for — see resolveAttackPhase, where the miss check sits between the
+	// two — so the growth has to be something the caller can decline.
+	return e, actor
 }
 
 // reduce takes damage off a life total without letting it go negative.

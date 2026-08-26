@@ -89,7 +89,12 @@ const (
 	// stands a pixel and a half past the band top and bottom. It clears its neighbours either way
 	// (`firingGap` above, `mathBandGapAboveCards` below), so this is a note rather than a bug: the
 	// next increase is the one that has to move the band rather than only the type.
-	mathTermSize   = 76
+	mathTermSize = 76
+
+	// mathGrowthSize is the growing ring's multiplier written beside a term. **Well under
+	// mathTermSize**, because it annotates the figure rather than joining the sum: at anything
+	// close to a term's size the box reads as having an extra number in it.
+	mathGrowthSize = 30
 	mathSymbolSize = 60
 	mathTotalSize  = 100
 
@@ -176,6 +181,7 @@ var (
 	mathShoutTicks  = beat(7, 5)  // the hand's name popping in
 	mathTermTicks   = beat(9, 10) // one card's figure flying down into the row
 	mathSymbolTicks = beat(2, 5)  // a +, an x or an = appearing in place
+	mathRingTicks   = beat(7, 10) // one ring's multiplier flying out of its own card
 	mathTotalTicks  = beat(1, 1)  // the answer landing
 	mathHoldTicks   = beat(8, 5)  // the finished sum held before the box clears
 
@@ -227,6 +233,20 @@ type mathItem struct {
 	// been on the screen under the hand's name since DUEL!, and it flies out of that line at the
 	// size it was already being read at. See mathMultLineSize.
 	fromScale float64
+
+	// ringSeat is the worn seat this item's figure flies out of, plus one, and 0 for an item that
+	// is not a ring's multiplier. **Plus one so the zero value means "not a ring"**, which is what
+	// lets every other item in the script leave the field alone.
+	ringSeat int
+
+	// cardSeat is the played card this item's figure flies out of, plus one, on the same
+	// convention. Filled by `startHandMath`, which is the half of the box that knows the table.
+	cardSeat int
+
+	// shakeRings are worn seats that shake as this item runs without their figure being the one
+	// flying: the echo ring behind an extra landing, which buys a *term* rather than a multiplier
+	// and so has no number of its own in the line.
+	shakeRings [combat.MaxWornRings]bool
 
 	// at is the item's resting centre, filled by layOutMath.
 	at image.Point
@@ -335,6 +355,69 @@ type handMathBox struct {
 
 	// hold is the pause on the finished sum, before the box clears and playback resumes.
 	hold travel
+
+	// side is whose blow this is, and grown[t] is what that duelist's worn rings had accumulated
+	// after term t was counted — both copied straight off the event.
+	//
+	// **This is what makes the ring badges move while the sum is read** *(2026-08-26)*. A growing
+	// ring now steps between the terms of one blow, so the row has a different number to show at
+	// each beat, and the alternative to carrying the figures here is the ring row re-deriving which
+	// ring grew — a resolver in a screen, which is the thing the whole event exists to prevent.
+	side  combat.Side
+	grown [][combat.MaxWornRings]int
+
+	// termOf[i] is how many card terms have been counted by the time item i is up. Punctuation and
+	// the annotations share the count of the term they follow, so the row holds still through them
+	// and steps on the beat a figure lands.
+	termOf []int
+}
+
+// termsShown is how many of the blow's terms have been counted so far, which is what the ring row
+// reads to know which accumulators to draw.
+func (b handMathBox) termsShown() int {
+	if !b.active || len(b.termOf) == 0 {
+		return 0
+	}
+	at := b.at
+	if at >= len(b.termOf) {
+		at = len(b.termOf) - 1
+	}
+	return b.termOf[at]
+}
+
+// shaking is what the item the box is running **right now** sets moving: the worn seats whose cards
+// shake, and the played card that does, if any.
+//
+// **Every figure in the sum is accompanied by its own card shaking** *(owner's call, 2026-08-26)*.
+// A card's damage shakes the card, a ring's multiplier shakes that ring, and an echo's extra term
+// shakes the ring that bought the landing even though it has no figure of its own on the line. They
+// read off the box's item cursor rather than the term cursor, so they happen one at a time in the
+// order the engine applied them — which is the whole point of the sequence.
+func (b handMathBox) shaking(side combat.Side) (rings [combat.MaxWornRings]bool, card int, ok bool) {
+	if !b.active || b.side != side || b.at >= len(b.items) {
+		return rings, 0, false
+	}
+
+	it := b.items[b.at]
+	rings = it.shakeRings
+	if seat := it.ringSeat; seat > 0 && seat-1 < len(rings) {
+		rings[seat-1] = true
+	}
+	return rings, it.cardSeat, true
+}
+
+// growthNow is the accumulators one side's rings have reached at this point in the sum, and false
+// when the box is not running that side's blow or has not reached a term yet.
+func (b handMathBox) growthNow(side combat.Side) ([combat.MaxWornRings]int, bool) {
+	if !b.active || b.side != side {
+		return [combat.MaxWornRings]int{}, false
+	}
+
+	t := b.termsShown()
+	if t < 1 || t > len(b.grown) {
+		return [combat.MaxWornRings]int{}, false
+	}
+	return b.grown[t-1], true
 }
 
 // startHandMath builds the dialog for one KindHand event and starts it running.
@@ -352,6 +435,8 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		shoutT: newTravel(0, mathShoutTicks),
 		hold:   newTravel(0, mathHoldTicks),
 		items:  mathScript(e),
+		side:   e.Side,
+		grown:  append([][combat.MaxWornRings]int{}, e.HandGrown[:e.HandCardCount]...),
 	}
 
 	// **The banner is already saying it, so the box does not say it again** *(2026-08-19)*. The
@@ -379,7 +464,16 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		if !box.items[i].fly {
 			continue
 		}
+		// **A ring's figure sets off from the ring**, and is skipped by the term counter: these are
+		// interleaved with the cards' own figures, and counting them would pair every figure after
+		// the first ring with the wrong card.
+		if seat := box.items[i].ringSeat; seat > 0 {
+			box.items[i].from = s.ringCardCentre(gs, seat-1)
+			continue
+		}
 		if term < e.HandCardCount {
+			box.items[i].cardSeat = e.HandCards[term] + 1
+			box.items[i].shakeRings = e.HandLanding[term]
 			// **A figure is drawn in the colour of whatever produced it** *(2026-08-19, owner's
 			// call)*, and a card's figure is produced by the card — so it wears that card's
 			// element, which is the colour of its border. It leaves the card in the card's own
@@ -394,6 +488,17 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 		// The only flying item past the hand's own cards is the multiplier.
 		box.items[i].from = s.handMultiplierOrigin(gs, e)
 		box.multAt = i
+	}
+
+	// **After the walk, because it needs multAt.** Every flying item but the multiplier is one card's
+	// figure, in order, so counting them is what turns an item index into a term index.
+	box.termOf = make([]int, len(box.items))
+	counted := 0
+	for i := range box.items {
+		if box.items[i].fly && i != box.multAt {
+			counted++
+		}
+		box.termOf[i] = counted
 	}
 
 	s.layOutMath(gs, &box)
@@ -427,6 +532,13 @@ func mathScript(e combat.Event) []mathItem {
 			fly:  true,
 			t:    newTravel(0, mathTermTicks),
 		})
+		// **One note per ring that fired, in worn order**, which is firing order. A product would
+		// say what the term came to and leave the player to work out which of five fingers did it.
+		for seat, pct := range e.HandRingScale[i] {
+			if g := ringNote(pct, seat); g != nil {
+				items = append(items, *g)
+			}
+		}
 	}
 
 	// **The multiplier is always shown, the identity included** *(2026-08-19, owner's call)*. It
@@ -455,6 +567,49 @@ func mathScript(e combat.Event) []mathItem {
 		tint: verbInkFor(combat.CategoryAttack),
 		t:    newTravel(0, mathTotalTicks),
 	})
+}
+
+// ringNote is the little multiplier one ring put on one term, or nil when that ring did not fire.
+//
+// **It is here rather than on the card** *(owner's call, 2026-08-26)*. Nothing a ring does reaches a
+// card's printed damage any more: a growing ring's figure moves between the cards of a single blow —
+// the first fire card steps it and the second is counted at the bigger number — so a figure printed
+// on the card would be right in one queue position and wrong in every other. The sum is where every
+// ring is accounted for, on the beat the term lands, and the ring's own card bounces with it.
+//
+// **In the ring pink and smaller than the figure it annotates.** The pink already means "a ring did
+// this" everywhere else on screen — see boostInk — and the size is what keeps it a label on the term
+// rather than a second term in the sum.
+//
+// **It flies out of its own ring's card** *(owner's call, 2026-08-26)*, like a card's figure flies
+// out of the card. Every figure in this box comes from the thing that produced it, and a ring's
+// multiplier appearing beside a term it had no visible part in was the one number on the line with
+// no source. `startHandMath` fills in where from — it is the half of the box that knows where a row
+// is laid out — and `ringSeat` is how it tells these apart from the cards' own figures, which it
+// pairs with `HandCards` in order.
+//
+// **One at a time, in worn order.** The box already runs its items strictly in sequence, so putting
+// these in the script *is* the sequencing: the card's figure lands, then the first ring's, then the
+// second's, which is the order the engine applied them in.
+func ringNote(pct, seat int) *mathItem {
+	// **Zero is "did not fire", and it is the only thing that draws nothing.** A ring firing at the
+	// identity still fired — a fresh Enflamed is 1x — and its card bounces on this beat, so leaving
+	// the figure out would be a card jumping with nothing to show for it. It is also how the player
+	// watches a growing ring climb off 1x.
+	if pct <= 0 {
+		return nil
+	}
+	return &mathItem{
+		fly:      true,
+		ringSeat: seat + 1,
+		// **The `x` is on the number here**, where the sum's own multiplier has it as a separate
+		// operator. That is the difference being drawn: `x 1.5` is something the sum does to the
+		// figure beside it, and `1.1x` is a label saying what this figure was already counted at.
+		text: handMultiplierText(pct) + "x",
+		size: mathGrowthSize,
+		tint: boostInk,
+		t:    newTravel(0, mathRingTicks),
+	}
 }
 
 // mathOperator is a `+`, an `x` or an `=`: punctuation, so it pops in place rather than flying.

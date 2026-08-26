@@ -150,6 +150,22 @@ type Style struct {
 	EffectSize int
 	EffectTop  int
 	EffectGap  int
+
+	// Spec.Counter drawn as a badge in the bottom-right corner. A zero CounterHeight means the
+	// style shows none, which is every style but RingStyle.
+	//
+	// **It is measured from the card's own right and bottom edges**, unlike everything else here,
+	// which is measured from the top-left. The badge belongs to the corner: a top-left offset
+	// would have to be recomputed by hand every time the card's size changed, and the one thing
+	// this badge must never do is drift off the card it is counting.
+	//
+	// **CounterHeight is the band the figure is centred in, not a box drawn around it.** There is
+	// nothing behind the text; the height is fixed so a two-character figure and a four-character
+	// one sit on the same line, which is what lets a row of rings be read across.
+	CounterHeight int
+	CounterRight  int
+	CounterBottom int
+	CounterSize   float64
 }
 
 // NameLinesAbove is how many lines of name this style can draw before its ink would reach
@@ -602,6 +618,17 @@ var RingStyle = Style{
 	ArtTop:   62,
 	ArtInset: 16,
 	ArtMaxH:  130,
+
+	// The accumulator figure, in the bottom-right corner of the strip the art leaves: the art box
+	// ends at 192 and the inside of the bottom border is 218, so a 22-pixel band on a small margin
+	// sits in the 26 pixels between them without touching either.
+	//
+	// **Only rings have one**, because only rings grow. Nothing else on the card is displaced by
+	// it: the corner it takes was empty on every ring in the file.
+	CounterHeight: 22,
+	CounterRight:  12,
+	CounterBottom: 7,
+	CounterSize:   15,
 }
 
 // Token is a card reduced to the three things a hand is counted on: its **element**, its

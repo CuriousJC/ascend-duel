@@ -123,7 +123,43 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		}
 	}
 	drawEffects(img, s, st)
+	if err := drawCounter(img, s, st, f, border); err != nil {
+		return nil, err
+	}
 	return img, nil
+}
+
+// drawCounter puts Spec.Counter in the bottom-right corner.
+//
+// **Last, over everything**, because it is the one thing on the face that says how far a ring has
+// got rather than what the ring is — a figure painted over by the artwork underneath it would be
+// the one part of the card the player cannot read.
+//
+// **No badge behind it** *(owner's call, 2026-08-26)*. It was a filled pill for an afternoon, which
+// is a second surface on a card that already has one and reads as a sticker applied to the ring
+// rather than as something the ring says. What carries it instead is the colour: the figure is
+// drawn in the card's own border ink, taken *after* state, so a ring's counter is the same pink as
+// its border and fades with the rest of the card rather than staying the loudest thing on one you
+// cannot act on.
+//
+// **Right-aligned to the corner and top-aligned in its band**, so a figure that grows a character
+// wider grows leftwards into empty card. Nothing clamps that width — a style whose counter could
+// reach halfway across the card is a style, not a renderer, problem, and
+// TestARingCounterStaysInItsCorner is what fails on one.
+func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) error {
+	if st.CounterHeight <= 0 || s.Counter == "" {
+		return nil
+	}
+
+	_, lineHeight, err := f.Measure(st.CounterSize, s.Counter)
+	if err != nil {
+		return err
+	}
+
+	right := st.Width - st.CounterRight
+	top := st.Height - st.CounterBottom - st.CounterHeight + (st.CounterHeight-lineHeight)/2
+
+	return drawTextRightAligned(dst, f, st.CounterSize, s.Counter, right, top, ink)
 }
 
 // drawEffects lays the status badges out in a centred row along the bottom of the card.
@@ -197,7 +233,8 @@ func fitInto(dst *image.RGBA, src image.Image, box image.Rectangle) {
 // **ShowForm is deliberately not in the list.** The corner mark is drawn art, not type.
 func (st Style) needsFont() bool {
 	return st.ShowName ||
-		st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0
+		st.HealthBarHeight > 0 || st.StatRowPitch > 0 || st.TextLineHeight > 0 ||
+		st.CounterHeight > 0
 }
 
 // drawStats writes the labelled figures down the face: label against the left margin,

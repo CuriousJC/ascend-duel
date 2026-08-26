@@ -1184,16 +1184,32 @@ it again to take it out, drag sideways to move it along the row.
 column against the band's right edge, centred on the cards: **`$` cost, `T` type, `E` element**.
 The active one latches darker than the other two.
 
-- **Nothing here can change a round.** Cross-category order is regrouped away by
-  `ResolutionOrder`, a hand is counted rather than read in sequence, and defends are a set. This
-  is entirely about reading eight overlapping cards, and it is the reason the feature could be
-  taken without asking what it does to the engine.
+- **Sorting a queued hand re-prices it** *(owner's call, 2026-08-26)*. Cross-category order is still
+  regrouped away by `ResolutionOrder` and a hand is still counted rather than read in sequence, but a
+  growing ring now steps between the cards of one blow — so the order of the queue decides what the
+  cards are worth. The buttons stay live and a bad sort can cost damage; that is the intent, not an
+  oversight. This paragraph used to say the opposite and it is the one thing to unlearn about the
+  file.
 - **Cost is the default, and every mode ends with it.** Each arrangement is the deck overlay's
   own key chain — cost, form, concept, element — with one key promoted to the front, so a row
   of cards means the same thing in the hand as in the panel. Only the leading key differs.
 - **The sort re-applies on every refill**, in `spendSelected` *before* anything is animated, so a
   dealt card flies to the slot it will actually occupy. A drag still works and survives until the
   next deal, at which point the sort reclaims the row.
+- **Every figure in the hand dialog's sum comes from a card, and that card shakes as it is written**
+  *(owner's call, 2026-08-26)*. A card's damage flies out of the played card, a ring's multiplier out
+  of that ring's card, and an echo's extra term shakes the ring that bought the landing even though
+  it puts no figure on the line. The box runs its items strictly one at a time, so putting the ring
+  figures *in* the script is the whole of the sequencing — there is no second clock. `mathItem`'s
+  `ringSeat` / `cardSeat` / `shakeRings` are the marks, and `handMathBox.shaking` is what the screen
+  reads each tick.
+- **Sideways, never a jump.** Vertical is spoken for twice already — a selected card lifts in the
+  hand, and a card that built the hand lifts on the table for the whole blow. The shake says "this
+  one is paying *now*", so it needed a direction nothing else uses.
+- **The drag runs on the shared controller in `carddrag.go`** *(2026-08-26)*, which the worn ring
+  row also uses on all three screens that draw it. The hand's adapter is `handRow`; it really does
+  remove the card from `s.hand`, where the ring row's removes nothing and lets the run stay the
+  authority.
 - **`sortHand` returns the permutation it applied** — for each new position, the index that card
   came from — and that is why it sorts a slice of indices and rebuilds rather than sorting the
   cards in place. Two identical cards cannot be told apart after the fact by looking at them, and

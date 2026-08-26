@@ -228,6 +228,36 @@ func (s *Session) Wear(key string) bool {
 	return true
 }
 
+// MoveRing slides the worn ring at `from` to sit at `to`, shuffling everything between them along.
+// It reports whether the row actually changed.
+//
+// **Worn order is the order rings fire in**, so this is a rule change and not a tidy-up — left to
+// right, and multiplicative effects compound in the order they are applied. It is the run's half of
+// a reorder; a fight already under way is holding its own copy of the row, so the caller has to move
+// that too. See combat.Duelist.MoveRing.
+//
+// **Accumulators are untouched, because they are keyed by record and not by position** — a ring
+// moved along the row is the same ring with the same number, which is the same property that lets
+// one be taken off and put back on.
+//
+// An out-of-range index is a no-op rather than a panic: this is driven by a drag, and a drop
+// resolved against a row that changed underneath it must not take the frame with it.
+func (s *Session) MoveRing(from, to int) bool {
+	n := len(s.worn)
+	if from < 0 || from >= n || to < 0 || to >= n || from == to {
+		return false
+	}
+
+	key := s.worn[from]
+	if from < to {
+		copy(s.worn[from:to], s.worn[from+1:to+1])
+	} else {
+		copy(s.worn[to+1:from+1], s.worn[to:from])
+	}
+	s.worn[to] = key
+	return true
+}
+
 // Worn is what the run is wearing, in worn order, by record key. The ring row draws this and looks
 // each record up for its art.
 func (s *Session) Worn() []string {

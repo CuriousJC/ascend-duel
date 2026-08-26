@@ -204,6 +204,43 @@ type Event struct {
 	// Zero on almost every blow. It is here so a screen can say *why* one card paid three terms
 	// without re-deriving the ring that did it.
 	EchoTerms int
+
+	// HandRingScale[i][seat] is what the ring on that worn seat multiplied term i by, as a percent,
+	// and 0 for a seat that did not touch it.
+	//
+	// **Every ring's figure moved off the card and into the sum on 2026-08-26** *(owner's call)*.
+	// Nothing a ring does reaches a card's printed damage any more: the face says what the card does,
+	// because a growing ring steps between the cards of one blow and the same card is worth different
+	// things in different queue positions. So the sum is where the rings are accounted for — each one
+	// says its own figure beside the term it priced, and its card bounces on that beat. See
+	// combat.CardScaleBySeat, which is the only place these are worked out.
+	//
+	// **Per seat, so the screen knows which ring to bounce.** A product would say what the term came
+	// to and leave five fingers unaccounted for.
+	HandRingScale [maxHandTerms][MaxWornRings]int
+
+	// HandLanding[i][seat] reports whether the ring on that seat is why term i exists at all: an
+	// extra landing bought by `repeat-card` or `echo-attack`. False on a card's own first landing,
+	// which no ring had to seat.
+	//
+	// **It is separate from HandRingScale because those rings contribute no multiplier.** An echo
+	// ring buys a *term*, not a figure, so it has nothing to say beside the number — and without
+	// this it would be the one thing in the sum with no card accounting for it while the player
+	// watches three terms it alone is responsible for. See combat.LandingSeats.
+	HandLanding [maxHandTerms][MaxWornRings]bool
+
+	// HandGrown[i][seat] is what the ring on that worn seat had accumulated **after** term i was
+	// counted. The ring row reads it to step each badge on the beat the term lands, so the player
+	// watches the number that is about to price the next card go up.
+	//
+	// **Indexed by worn seat**, which is stable for the length of a blow: the row can be reordered
+	// between rounds and not inside one. A screen that wants a ring's identity has the row itself.
+	//
+	// It is the widest thing on an Event by some way — a hand of five, each landing five times, over
+	// five fingers. That is affordable because a KindHand event happens once per turn, and the
+	// alternative is a screen re-deriving which ring grew, which is the resolver-in-the-screen this
+	// whole block of fields exists to prevent.
+	HandGrown [maxHandTerms][MaxWornRings]int
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits

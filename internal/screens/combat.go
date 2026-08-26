@@ -227,8 +227,22 @@ type CombatScene struct {
 	// deck alone.
 	enemyPile *decks.EnemyPile
 
-	// The card currently being dragged, if any. See combat_actionbox.go.
-	drag *dragState
+	// The press in progress over the hand, and the card it has lifted out of the row. See
+	// carddrag.go for the lifecycle and combat_actionbox.go for the row it runs on.
+	drag   cardDrag
+	lifted paletteCard
+
+	// The press in progress over the worn ring row. **Its own controller rather than the hand's**,
+	// because the two rows are live at once and under different conditions: the hand is dead while
+	// a round resolves and the ring row is not.
+	ringDrag cardDrag
+
+	// ringShake is each worn seat's shake and cardShake each played card's, with shakeItem the item
+	// of the hand dialog's script that was running when the last one was started — which is how one
+	// beat starts one shake rather than a new one every frame the box sits on the same figure.
+	ringShake [combat.MaxWornRings]travel
+	cardShake []travel
+	shakeItem int
 
 	// deckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
 	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
@@ -464,7 +478,9 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// The queue starts empty every visit and is derived from what is selected in hand.
 	// DUEL! is disabled until something is in it.
 	s.fighterActions = nil
-	s.drag = nil
+	s.drag = cardDrag{}
+	s.ringDrag = cardDrag{}
+	s.ringShake, s.cardShake, s.shakeItem = [combat.MaxWornRings]travel{}, nil, 0
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
@@ -681,6 +697,9 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	if !s.modalUp() {
 		s.updateActionBox(gs)
 	}
+
+	s.updateRingRow(gs)
+	s.tickShakes(gs)
 
 	// Above the branch below, because the column is live under exactly one condition and it is
 	// its own: the hand may be rearranged whenever it may be edited. It goes dead once the duel

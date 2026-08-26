@@ -650,34 +650,34 @@ func TestAGrowOnHitRingGetsStrongerInsideOneFight(t *testing.T) {
 		t.Errorf("an ungrown Enflamed deals %d where a plain card deals %d", got, want)
 	}
 
-	// A blow with a fire card in it steps the accumulator; an ice-only blow does not.
-	d = d.GrowOnHit([]Card{ice})
+	// A landing of a fire card steps the accumulator; an ice one does not.
+	d = d.GrowOnLanding(ice)
 	if got := d.WornRings()[0].Grown; got != 0 {
-		t.Errorf("an ice blow grew a fire ring to %d, want 0", got)
+		t.Errorf("an ice landing grew a fire ring to %d, want 0", got)
 	}
 
-	d = d.GrowOnHit([]Card{fire, ice})
+	d = d.GrowOnLanding(fire)
 	if got := d.WornRings()[0].Grown; got != 10 {
-		t.Errorf("one fire blow grew the ring to %d, want 10", got)
+		t.Errorf("one fire landing grew the ring to %d, want 10", got)
 	}
 
-	// **Once per hit, not once per blow** *(owner's call, 2026-08-22)*: two fire cards in one hand
-	// are two hits, where a status would land once.
-	d = d.GrowOnHit([]Card{fire, fire})
+	// **Once per landing** *(owner's call, 2026-08-22, and per card inside the blow since
+	// 2026-08-26)*: two fire cards in one hand are two steps, where a status would land once.
+	d = d.GrowOnLanding(fire).GrowOnLanding(fire)
 	if got := d.WornRings()[0].Grown; got != 30 {
-		t.Errorf("a two-fire-card blow grew the ring to %d, want 30 — it paid per blow", got)
+		t.Errorf("three fire landings left the ring at %d, want 30", got)
 	}
 
-	// Three hits in, fire cards are worth 1.3x and nothing else has moved.
+	// Three landings in, fire cards are worth 1.3x and nothing else has moved.
 	if got, want := d.CardDamage(fire), d.CardDamage(ice)*130/100; got != want {
-		t.Errorf("after three fire hits a fire card deals %d, want %d", got, want)
+		t.Errorf("after three fire landings a fire card deals %d, want %d", got, want)
 	}
 
 	// **The growth does not itself grow.** Reading the step as Amount+Grown would compound it.
 	before := d.WornRings()[0].Grown
-	d = d.GrowOnHit([]Card{fire})
+	d = d.GrowOnLanding(fire)
 	if got := d.WornRings()[0].Grown - before; got != 10 {
-		t.Errorf("the third fire blow stepped the ring by %d, want 10 — the step is compounding", got)
+		t.Errorf("the fourth fire landing stepped the ring by %d, want 10 — the step is compounding", got)
 	}
 }
 
@@ -699,15 +699,19 @@ func TestEchoAndAGrowOnHitRingCompound(t *testing.T) {
 
 	fire := Of(Strike, Fire)
 
+	// **Through the real round**, because the echo's extra landings are seated by the sum: they are
+	// terms of one blow rather than cards of a turn, so nothing below the round can see them.
 	alone := duelist(100, 5, 100).Wearing(WornRing{Ring: enflamed})
-	if got := alone.GrowOnHit([]Card{fire}).WornRings()[0].Grown; got != 10 {
+	_, grown, _ := resolve(alone, duelist(10, 5, 100000), []Card{fire}, nil, 1)
+	if got := grown.WornRings()[0].Grown; got != 10 {
 		t.Errorf("one fire card without Echo grew the ring by %d, want 10", got)
 	}
 
 	both := duelist(100, 5, 100).
 		Wearing(WornRing{Ring: enflamed}).
 		Wearing(WornRing{Ring: echo})
-	if got := both.GrowOnHit([]Card{fire}).WornRings()[0].Grown; got != 30 {
+	_, grown, _ = resolve(both, duelist(10, 5, 100000), []Card{fire}, nil, 1)
+	if got := grown.WornRings()[0].Grown; got != 30 {
 		t.Errorf("one echoed fire card grew the ring by %d, want 30 — the echo's landings are "+
 			"not being counted", got)
 	}

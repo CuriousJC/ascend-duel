@@ -22,7 +22,10 @@ import (
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"math"
+
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -227,6 +230,297 @@ func wornRings(gs *state.GlobalState) []data.RingData {
 	return out
 }
 
+// ringRow is the worn row as a draggable row of cards. **The lifecycle is carddrag.go's**; this is
+// the half that knows the row's geometry and what a drop means.
+//
+// **Worn order is the order rings fire in**, so a drop here changes what a duel does — this is the
+// one draggable row in the game where the gesture is a rule and not an arrangement. See
+// Session.MoveRing.
+//
+// **Nothing is lifted out of anything.** The run is the authority on what is worn and it is not
+// touched until the drop, so `rowLift` does nothing at all and the drawing skips the seat the drag
+// says is empty. The hand's row does remove its card, because there the list *is* the hand — see
+// handRow, and dragRow for why the two are allowed to differ.
+//
+// **Every screen that shows the row builds one of these**, with its own rectangle and its own idea
+// of what a click means: the combat screen's click does nothing, the shop's arms a sale.
+type ringRow struct {
+	rect  image.Rectangle
+	worn  int
+	click func(i int)
+	move  func(from, to int)
+}
+
+func (r ringRow) rowLen() int { return r.worn }
+
+func (r ringRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle {
+	at := ringSlotAt(r.rect, i, r.worn)
+	return image.Rect(at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height)
+}
+
+// rowZone is the row's own rectangle. **Tighter than the hand's band**, deliberately: the hand
+// stands alone at the bottom of the screen with nothing beside it, where this row has a duelist
+// card at one end and an enemy card or a margin at the other. A zone spanning the width would make
+// a drop on the duelist card a reorder.
+func (r ringRow) rowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
+
+// rowDropIndex is which seat the cursor is over, measured in pitches from the row's left edge and
+// from the middle of a step rather than its edge — the hand's arithmetic, over the ring row's
+// pitch, because once five rings are worn these overlap too.
+//
+// **Clamped to a seat that exists**, unlike the hand's, which may land one past the end: nothing is
+// being inserted here. Five rings reordered are still five rings.
+func (r ringRow) rowDropIndex(gs *state.GlobalState) int {
+	if r.worn < 2 {
+		return 0
+	}
+
+	pitch := ringSlotPitch(r.rect, r.worn)
+	idx := (gs.MouseX - ringSlotAt(r.rect, 0, r.worn).X + pitch/2) / pitch
+	if idx < 0 {
+		idx = 0
+	}
+	if idx > r.worn-1 {
+		idx = r.worn - 1
+	}
+	return idx
+}
+
+// rowLift is deliberately empty. See the type comment.
+func (r ringRow) rowLift(int) {}
+
+func (r ringRow) rowReturn(from, to int) {
+	if r.move != nil {
+		r.move(from, to)
+	}
+}
+
+func (r ringRow) rowClick(i int) {
+	if r.click != nil {
+		r.click(i)
+	}
+}
+
+// moveWornRing is the run's half of a reorder, and the half every screen shares. A screen holding a
+// live duelist has a second half — see CombatScene.moveRing.
+func moveWornRing(gs *state.GlobalState, from, to int) bool {
+	if gs.Run == nil {
+		return false
+	}
+	return gs.Run.MoveRing(from, to)
+}
+
+// drawDraggedRing draws the ring riding the cursor, over everything else on the row.
+//
+// **It is drawn from the run rather than from anything the drag is carrying**, which is what the
+// empty rowLift buys: there is only ever one copy of what is worn, so a card in flight cannot
+// disagree with the row it came out of.
+func drawDraggedRing(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag,
+	counters map[string]string) {
+
+	if !drag.dragging() {
+		return
+	}
+	worn := wornRings(gs)
+	if drag.origin() >= len(worn) {
+		return
+	}
+
+	record := worn[drag.origin()]
+	drawRingCard(gs, screen, drag.at(gs), record, counters[record.RingRecord], true, true)
+}
+
+// ringCounter is one worn ring's accumulator, formatted for the badge in the corner of its card.
+//
+// **The figure is what the ring is doing, not how far it has counted** *(owner's call,
+// 2026-08-26)*. Enflamed's accumulator is 50 when the ring is doing 1.5x damage, and a badge
+// reading `50` would be a number in units nothing on screen explains. `combat.GrowthEffect` is what
+// resolves the one numeric effect the accumulator feeds and `combat.Scaling` says whether that
+// figure is a percentage — so a multiplier reads as a multiplier and flat life reads as life.
+//
+// **A ring that does not grow has no badge**, which is most of the catalogue: an empty string draws
+// nothing. That is the whole distinction the badge is for — a card carrying one is a card whose
+// number is still moving.
+func ringCounter(w combat.WornRing) string {
+	e, ok := combat.GrowthEffect(w)
+	if !ok {
+		return ""
+	}
+	if combat.Scaling(e.Do) {
+		return fmt.Sprintf("%.1fx", float64(e.Amount)/100)
+	}
+	return fmt.Sprintf("%+d", e.Amount)
+}
+
+// ringCounters is a badge per worn ring, by record key.
+//
+// **Keyed by record and not by position**, exactly as the accumulator itself is: the row is about
+// to become something the player can drag into a different order, and a badge indexed by seat would
+// follow the finger rather than the ring.
+func ringCounters(worn []combat.WornRing) map[string]string {
+	out := make(map[string]string, len(worn))
+	for _, w := range worn {
+		if c := ringCounter(w); c != "" {
+			out[combat.RingOf(w.Ring).Key] = c
+		}
+	}
+	return out
+}
+
+// runCounters is the badges as the run holds them: what a ring has banked between fights.
+//
+// **The two callers are the screens with no duel on them** — the reward screen's build band and the
+// shop. The combat screen reads the duelist instead, and mid-blow the sum: see countersNow.
+func runCounters(gs *state.GlobalState) map[string]string {
+	if gs.Run == nil {
+		return nil
+	}
+	return ringCounters(gs.Run.WornRings())
+}
+
+// countersNow is the badges as the *round being played back* has got to.
+//
+// **A growing ring steps between the terms of one blow as of 2026-08-26** *(owner's call)*, so the
+// duelist the screen is holding is a round behind while the sum is being read: `endOfRound` adopts
+// the resolved duelist only once playback is finished. The hand dialog carries the accumulator each
+// term left behind, so the row can step its badges on the beat the figure lands — which is the whole
+// point of moving the growth into the sum. The player watches the number that is about to price the
+// next card go up.
+//
+// **It reads figures the resolver produced and computes none**, exactly like the sum itself. Off the
+// dialog it falls back to the duelist, which is every frame outside a blow.
+func (s *CombatScene) countersNow() map[string]string {
+	worn := s.fighter.Duelist.WornRings()
+	if grown, ok := s.theatre.mathBox.growthNow(combat.SideA); ok {
+		worn = withGrown(worn, grown)
+	}
+	return ringCounters(worn)
+}
+
+// withGrown is a worn set with the accumulators one beat of a sum reached, as a copy.
+//
+// **A copy, because the duelist it came from is the fight's own** — this is a picture of a number
+// part way through a round, and writing it back would be presentation changing an outcome.
+func withGrown(worn []combat.WornRing, grown [combat.MaxWornRings]int) []combat.WornRing {
+	out := make([]combat.WornRing, len(worn))
+	copy(out, worn)
+	for i := range out {
+		if i < len(grown) {
+			out[i].Grown = grown[i]
+		}
+	}
+	return out
+}
+
+// The shake a card makes on the beat it does its work.
+//
+// **A card that does work should be seen doing it** *(owner's call, 2026-08-26)*. The figures leave
+// the cards and land in the sum; without the card moving, the number appears to come from nowhere
+// and the row of rings sits inert through the one moment it is earning its place.
+//
+// **Side to side rather than a jump** *(owner's call)*. A card that leaps reads as being *picked*,
+// which is what the selected-card lift already means in the hand and what the played row's lift
+// means on the table — two vertical vocabularies already spoken for. Sideways is unused and reads as
+// a thing rattling as it fires.
+var (
+	// ringShakeTicks is how long one shake lasts. **Under a term's own flight**, because the figures
+	// arrive one after another and a shake still running when the next one starts would smear the
+	// beats together.
+	ringShakeTicks = beat(3, 5)
+
+	// ringShakeSwings is how many times the card crosses its own centre. Three reads as a rattle;
+	// one reads as a nudge and five as a wobble.
+	ringShakeSwings = 3.0
+
+	// ringShakeWidth is how far it travels either side at the start. **It decays to nothing** over
+	// the shake, so the card settles rather than stopping mid-swing.
+	ringShakeWidth = 7
+)
+
+// shakeOffset is how far sideways a card sits this frame: a decaying oscillation that ends where it
+// started.
+//
+// **A decaying sine rather than an ease**, because the card has to come back to where it was and be
+// still when it gets there. Every other movement in the game is a journey from one seat to another
+// and eases into its destination; this one has no destination.
+func shakeOffset(t travel) int {
+	if t.done() {
+		return 0
+	}
+	p := t.progress()
+	return int(math.Sin(p*math.Pi*2*ringShakeSwings) * (1 - p) * float64(ringShakeWidth))
+}
+
+// tickShakes starts a shake on whatever the sum has just reached, and advances the ones already
+// running. Called every tick from Update.
+//
+// **It fires on the beat one figure of the sum is written**, watching the hand dialog's own item
+// cursor rather than keeping a second clock: the number leaving a card and the card rattling are the
+// same event, and two clocks would eventually disagree about when it happened.
+//
+// **It may not change an outcome**, like every other thing on this screen that moves.
+func (s *CombatScene) tickShakes(gs *state.GlobalState) {
+	for i := range s.ringShake {
+		s.ringShake[i].tick()
+	}
+	for i := range s.cardShake {
+		s.cardShake[i].tick()
+	}
+
+	at := s.theatre.mathBox.at
+	if at == s.shakeItem {
+		return
+	}
+	s.shakeItem = at
+
+	rings, card, ok := s.theatre.mathBox.shaking(combat.SideA)
+	if !ok {
+		return
+	}
+	for seat, shaking := range rings {
+		if shaking && seat < len(s.ringShake) {
+			s.ringShake[seat] = newTravel(0, ringShakeTicks)
+		}
+	}
+	if card > 0 {
+		s.shakePlayedCard(card - 1)
+	}
+}
+
+// shakePlayedCard starts one played card rattling, growing the row of clocks if the table is holding
+// more cards than it has seen before.
+//
+// **A slice rather than a fixed array**, unlike the rings: a worn row is capped at five by a rule,
+// and the number of cards on the table is capped by an action budget that a ring can make cheaper.
+func (s *CombatScene) shakePlayedCard(seat int) {
+	if seat < 0 {
+		return
+	}
+	for len(s.cardShake) <= seat {
+		s.cardShake = append(s.cardShake, travel{})
+	}
+	s.cardShake[seat] = newTravel(0, ringShakeTicks)
+}
+
+// playedCardShake is how far sideways the played card in one seat sits this frame.
+func (s *CombatScene) playedCardShake(seat int) int {
+	if seat < 0 || seat >= len(s.cardShake) {
+		return 0
+	}
+	return shakeOffset(s.cardShake[seat])
+}
+
+// ringCardCentre is the middle of one worn seat's card, which is where that ring's multiplier sets
+// off from on its way into the sum.
+//
+// **It reads the same two functions the row is drawn with** — `ringPaneRect` and `ringSlotAt` — so a
+// figure cannot set off from a seat the card is not in. That is the rule every origin on this screen
+// follows; see `handCardCentre`.
+func (s *CombatScene) ringCardCentre(gs *state.GlobalState, seat int) image.Point {
+	at := ringSlotAt(s.ringPaneRect(gs), seat, len(wornRings(gs)))
+	return image.Pt(at.X+cards.RingStyle.Width/2, at.Y+cards.RingStyle.Height/2)
+}
+
 // drawRingPane draws the backing, the rings, a rule under them, and the cap as a fraction on
 // its right end.
 //
@@ -260,8 +554,22 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 		ringPaneBackColor, false)
 
 	worn := wornRings(gs)
+	counters := s.countersNow()
 	for i, ring := range worn {
-		drawRingCard(gs, screen, ringSlotAt(r, i, len(worn)), ring, true)
+		// **The seat a dragged ring left is drawn empty rather than closed up**, which is the
+		// hand's rule too: the row keeps its width and its pitch while a card is up, so nothing
+		// slides sideways under the cursor mid-drag.
+		if s.ringDrag.dragging() && i == s.ringDrag.origin() {
+			continue
+		}
+
+		// **The shake and the toast go together**: the card rattles and its border lights, which is
+		// what says the ring is working rather than merely moving.
+		at := ringSlotAt(r, i, len(worn))
+		shake := shakeOffset(s.ringShake[i])
+		at.X += shake
+
+		drawRingCard(gs, screen, at, ring, counters[ring.RingRecord], true, !s.ringShake[i].done())
 	}
 
 	// The rule: the row's whole width, whatever is standing on it. **It is drawn even with no
@@ -281,4 +589,67 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 	op.ColorScale.ScaleWithColor(groundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", len(worn), maxRings),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
+
+	// Last, so the ring riding the cursor is over the rule and the fraction as well as the row.
+	drawDraggedRing(gs, screen, &s.ringDrag, counters)
+}
+
+// updateRingRow runs the drag over the worn row. Called every tick from Update.
+//
+// **The row is live while a round resolves, unlike the hand** *(owner's call, 2026-08-26)*. The
+// hand goes dead there because a queue being replayed is not a queue you may edit; the ring row has
+// no such reason. A round is decided in full by `combat.ResolveRound` before a frame of it is
+// drawn, so a reorder made while it plays back cannot reach it — it lands on the next one, which is
+// exactly what the player is told by watching the row move.
+//
+// **The one thing it must not leave behind is a disagreement.** See moveRing.
+func (s *CombatScene) updateRingRow(gs *state.GlobalState) {
+	row := s.ringRow(gs)
+
+	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
+	// it — cancelling rather than returning, for the reason the action box cancels.
+	if s.modalUp() || !gs.CursorAllowed() {
+		s.ringDrag.cancel(row)
+		return
+	}
+
+	s.ringDrag.update(gs, row)
+}
+
+// ringRow is this screen's worn row, addressed by the shared drag.
+//
+// **A click on a ring does nothing here.** The shop is where a ring is bought and sold; on the
+// combat screen the row is a thing you read and now a thing you can reorder, and a click that did
+// something would be a third meaning for the same press.
+func (s *CombatScene) ringRow(gs *state.GlobalState) ringRow {
+	return ringRow{
+		rect: s.ringPaneRect(gs),
+		worn: len(wornRings(gs)),
+		move: func(from, to int) { s.moveRing(gs, from, to) },
+	}
+}
+
+// moveRing commits a reorder to every copy of the row that exists.
+//
+// **There are three, and missing one is silent** *(2026-08-26)*. The run holds what is worn; the
+// duelist in the fight holds their own copy with the accumulators this fight has grown; and, from
+// DUEL! until the round finishes playing back, `fighterAfter` holds the duelist the round is going
+// to end as — which `endOfRound` assigns over the live one. Moving only the first two would look
+// right for the rest of the round and then snap back the moment it ended.
+//
+// **What it deliberately does not do is re-Equip.** `Session.Equip` adds a ring's stats for the
+// fight, so putting the row through it again would pay every `add-hp` and `add-dmg` a second time.
+// A reorder is a permutation and nothing else; `MoveRing` moves the accumulators with their rings.
+//
+// **The round already resolved is not touched**, which is the whole rule this feature is under: the
+// blow being played back was decided against the order the row was in when DUEL! was pressed.
+func (s *CombatScene) moveRing(gs *state.GlobalState, from, to int) {
+	if !moveWornRing(gs, from, to) {
+		return
+	}
+
+	s.fighter.Duelist = s.fighter.Duelist.MoveRing(from, to)
+	s.fighterAfter = s.fighterAfter.MoveRing(from, to)
+
+	trace.Logf("rings", "reordered %d -> %d, worn %v", from, to, gs.Run.Worn())
 }

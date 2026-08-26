@@ -165,7 +165,10 @@
 //     And the pitch is a function of how many rings are worn, first card flush left and last flush
 //     right, so three stand apart and five close up and overlap by ~26px. Overlap rather than
 //     shrink, because a card cannot be scaled and there is no ring style below this one.
-//   - combat_actionbox.go — the hand and its drag-to-reorder.
+//   - combat_actionbox.go — the hand and its drag-to-reorder, over the shared controller in
+//     carddrag.go. Reordering a queued hand re-prices it; see combat_sort.go below.
+//   - carddrag.go — the press-and-drag lifecycle every reorderable row of cards shares: the hand,
+//     and the worn ring row on all three screens that draw it. dragRow is what a row supplies.
 //   - combat_sort.go — how the hand is arranged, and the three square buttons that choose it:
 //     $ cost, T type, E element, stacked in a column against the band's right edge and centred on
 //     the cards. Cost is the default and every mode ends with it — each is the deck overlay's own
@@ -173,8 +176,9 @@
 //     hand as in the panel. Three things about it: the sort re-applies on every refill, so a drawn
 //     card lands where it belongs rather than on the right-hand end and a drag survives only until
 //     the next deal; sortMode is the one field Init does not reset, because it is a reading
-//     preference rather than a fact about a duel; and it cannot change an outcome, since nothing
-//     in internal/combat reads the order of a hand. sortHand returns the permutation it applied —
+//     preference rather than a fact about a duel; and it *can* change an outcome as of 2026-08-26,
+//     since a growing ring steps between the cards of one blow and the queue's order therefore
+//     prices them. The buttons stay live anyway — owner's call. sortHand returns the permutation it applied —
 //     it sorts a slice of indices and rebuilds rather than sorting in place — because a card
 //     sliding to its new seat has to know where it set off from and two identical cards cannot be
 //     told apart after the fact. elementRank and categoryRank are written out rather than read off

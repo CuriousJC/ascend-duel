@@ -57,7 +57,7 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 // hoverHand walks the hand from the right, because the row overlaps and the card drawn last is the
 // one on top. Same order `beginPress` takes, and for the same reason.
 func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
-	if s.drag != nil && s.drag.active {
+	if s.drag.dragging() {
 		return false // a card in the air is being moved, not read
 	}
 

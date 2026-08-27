@@ -98,10 +98,19 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
 | `seeds.WormOffer` | fight | `dealWorms` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
 | `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which rings are for sale, on any change to the worm catalogue |
+| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the ring shelf |
+| `seeds.CanStock` | fight | `dealCanWorms` and `dealCanOffer` (`internal/screens/shop_goods.go`) | which four worms a can holds, on any change to the free offer |
 | Loot offers | — | **not built** | — |
 | Floor offers | — | **not built** | — |
 
-**The three between-fight streams are the worked example of "one stream or two"**, and the question
+**`CanStock` is the sharpest case in the table** *(2026-08-27)*: it draws worms from the same
+catalogue `WormOffer` does, at the same station of the loop, and it still gets its own stream. Two
+draws off one sequence would make the shop's four a *function* of the two the reward screen had
+already put up — so buying the can could guarantee, or rule out, the pair the player had just turned
+down. A rule nobody designed, arriving out of an implementation detail. **Same catalogue is not the
+question; same decision is.**
+
+**The between-fight streams are the worked example of "one stream or two"**, and the question
 was asked each time rather than assumed. The reward hand is a fresh deal off the whole run deck, so
 sharing the player's shuffle would make the offer a function of how many cards were drawn in the
 fight just won. The worm menu is drawn from a *catalogue* rather than from the deck, so sharing the

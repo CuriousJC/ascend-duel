@@ -2,6 +2,7 @@ package screens
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	_ "image/png"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -482,3 +484,67 @@ func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 // per worm, and that change should be a `data/worms.json` field appearing, not a fallback being
 // unpicked.
 const wormArtKey = "defaultworm_png"
+
+// stoneSpec is a stone drawn as a card: a name, the rung it raises, and what it is worth.
+//
+// **The figure is computed rather than authored** *(2026-08-27)*. What a stone adds is a tenth of
+// its rung's catalogue multiplier, so `+11` written into `data/stones.json` would be a number that
+// went stale the first time `hands.json` was tuned — silently, since nothing reads a card's text.
+// The record carries the sentence and this carries the arithmetic, which is the same split a
+// card's face already makes between its label and its damage.
+//
+// **The picture is a generated glyph rather than a file**, which is the pattern this game reaches
+// for first: no provenance question, and no asset to licence in a product that will be sold. See
+// `systems.GlyphStone`, authored at 96 so it lands in the art box at 1:1.
+//
+// **Basic, not an element.** A stone raises a rung of the ladder, and a rung is not a colour — the
+// axis a hand counts on is not one of the five. So its border is the mid grey `cards.BorderOf`
+// gives `basic`, exactly as a Devour worm's is.
+func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec {
+	return cards.Spec{
+		Name:    st.Name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: artFor(combat.Basic),
+		Art:     stoneArt(),
+		Text:    fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand)),
+		Enabled: enabled,
+	}
+}
+
+// goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the can of worms.
+//
+// **A sealed good is a card that says what is inside without saying which.** The name and the line
+// under it are the whole of what a player can know before paying, which is the mechanic rather
+// than a gap in the design — so the text states the *shape* of the offer ("4 stones, keep 1") and
+// nothing about the four.
+//
+// **They borrow the two catalogues' own pictures**: the bag draws the boulder every stone card
+// draws, the can draws the placeholder every worm card draws. A third picture would be a third
+// thing to recognise for no gain — what is in the bag is exactly what the picture shows.
+func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {
+	return cards.Spec{
+		Name:    name,
+		Form:    cards.FormNone,
+		Cost:    0,
+		Element: artFor(combat.Basic),
+		Art:     art,
+		Text:    line,
+		Enabled: enabled,
+	}
+}
+
+// stoneArt is the boulder, rendered once.
+//
+// **Cached because `cards.Spec` is the render cache's key.** A `Spec` is compared by value and an
+// `image.Image` in it compares by pointer, so calling `systems.RenderGlyph` per frame would hand
+// every card a key nothing had drawn before — a cache that grows without bound and never hits.
+// The same reason `artworkCache` exists one screen over.
+var stoneArtOnce image.Image
+
+func stoneArt() image.Image {
+	if stoneArtOnce == nil {
+		stoneArtOnce = systems.RenderGlyph(systems.GlyphStone, systems.PaletteWhite)
+	}
+	return stoneArtOnce
+}

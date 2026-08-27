@@ -324,7 +324,10 @@ func resolveAttackPhase(
 		return events, actor, target
 	}
 
-	blow := blowFor(turn, hands)
+	// **The ladder is read through the actor's own stones**, so a run that has bought a Card Pair
+	// stone plays a different ladder from the one its opponent does. A duelist holding none reads
+	// the table handed in, unchanged and uncopied — see stone.go.
+	blow := blowFor(turn, actor.handsFrom(hands))
 	if len(blow.Cards) == 0 {
 		return events, actor, target
 	}

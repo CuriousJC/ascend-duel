@@ -103,3 +103,19 @@ func drawEmptySeat(screen *ebiten.Image, at image.Rectangle) {
 	vector.StrokeRect(screen, float32(at.Min.X), float32(at.Min.Y),
 		float32(at.Dx()), float32(at.Dy()), 3, groundInk, false)
 }
+
+// drawStoneCard draws a stone as the card it is offered as. Same style as a worm — a picture with
+// its text under it — because they are the same kind of thing to a player: one card, taken out of
+// a set, that changes the run rather than being played in it.
+func drawStoneCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	st session.Stone, enabled bool) {
+
+	blitCard(gs, screen, at, stoneSpec(gs, st, enabled), cards.WormStyle)
+}
+
+// drawGoodCard draws one of the shop's two sealed goods.
+func drawGoodCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	name, line string, art image.Image, enabled bool) {
+
+	blitCard(gs, screen, at, goodSpec(gs, name, line, art, enabled), cards.WormStyle)
+}

@@ -67,6 +67,11 @@ type handsRow struct {
 	name  string
 	mult  string
 	cards []combat.Card
+
+	// raised is whether a stone has moved this rung, which is what the figure is written in the
+	// ring pink for. **A colour rather than a second number**: the panel says what a hand pays
+	// this run, and the pink is what stops that reading as the catalogue having changed.
+	raised bool
 }
 
 // handsRows is the whole ladder, in the order it is drawn.
@@ -76,7 +81,12 @@ type handsRow struct {
 // would pick between them, and the ID is the last key so the order cannot depend on how the
 // catalogue happens to be filed.
 func handsRows(c handsContents) []handsRow {
-	hands := combat.Hands()
+	// **The holder's ladder, not the catalogue's** *(2026-08-27)*. A stone raises one rung for one
+	// run, and a panel showing the shipped figure would be the one place in the game where what a
+	// hand pays is stated wrongly — the resolver, the preview and this all read
+	// `Duelist.HandTable` now, so they cannot come to three answers.
+	hands := c.holder.HandTable()
+	base := combat.Hands()
 	sort.SliceStable(hands, func(i, j int) bool {
 		a, b := hands[i], hands[j]
 		if a.Multiplier != b.Multiplier {
@@ -91,9 +101,10 @@ func handsRows(c handsContents) []handsRow {
 	out := make([]handsRow, 0, len(hands))
 	for _, h := range hands {
 		out = append(out, handsRow{
-			name:  h.Name,
-			mult:  multiplierText(h.Multiplier),
-			cards: handsExample(c, h),
+			name:   h.Name,
+			mult:   multiplierText(h.Multiplier),
+			cards:  handsExample(c, h),
+			raised: h.Multiplier != catalogueMultiplier(base, h.Key),
 		})
 	}
 	return out
@@ -269,8 +280,17 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 	}
 	// Beside the last card and centred against the band, so the figure reads as belonging to the
 	// hand rather than to the column.
+	// **A raised rung is written in `boostInk`, which is the ring pink.** It is reused rather than
+	// given a hue of its own: on a card it means "a ring moved this figure", and here it means "a
+	// stone did" — the shared reading is *something you bought moved this number*, which is the
+	// thing a player needs to see. A second pink-ish hue for the second source would be two
+	// colours a player has to tell apart to learn the same fact.
+	multInk := handsMultInk
+	if row.raised {
+		multInk = boostInk
+	}
 	write(left+handsCardsWidth(len(row.cards))+handsMultGap,
-		top+handsCardsTop+handsMultDrop(handsMultSize), handsMultSize, handsMultInk, row.mult)
+		top+handsCardsTop+handsMultDrop(handsMultSize), handsMultSize, multInk, row.mult)
 
 	vector.StrokeLine(screen, float32(left), float32(top+handsRuleDrop),
 		float32(left+width), float32(top+handsRuleDrop), 1, handsRuleInk, false)
@@ -317,4 +337,16 @@ func ownedHands(gs *state.GlobalState) handsContents {
 		}
 	}
 	return c
+}
+
+// catalogueMultiplier is what one rung pays as shipped, by key. It is the figure a raised rung is
+// compared against, and it is looked up rather than remembered so that the comparison cannot drift
+// from what `hands.json` actually says.
+func catalogueMultiplier(base []combat.Hand, key string) int {
+	for _, h := range base {
+		if h.Key == key {
+			return h.Multiplier
+		}
+	}
+	return 0
 }

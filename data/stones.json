@@ -1,0 +1,119 @@
+[
+  {
+    "StoneRecord": "pebble",
+    "Name": "Pebble",
+    "Hand": "high-card",
+    "Text": "raise\nHIGH CARD"
+  },
+
+  {
+    "StoneRecord": "agate",
+    "Name": "Agate",
+    "Hand": "concept-pair",
+    "Text": "raise\nCARD PAIR"
+  },
+  {
+    "StoneRecord": "banded-agate",
+    "Name": "Banded Agate",
+    "Hand": "concept-two-pair",
+    "Text": "raise\nCARD 2 PAIR"
+  },
+  {
+    "StoneRecord": "jasper",
+    "Name": "Jasper",
+    "Hand": "concept-three-of-a-kind",
+    "Text": "raise\nCARD TRIPS"
+  },
+  {
+    "StoneRecord": "bloodstone",
+    "Name": "Bloodstone",
+    "Hand": "concept-full-house",
+    "Text": "raise\nCARD HOUSE"
+  },
+  {
+    "StoneRecord": "onyx",
+    "Name": "Onyx",
+    "Hand": "concept-four-of-a-kind",
+    "Text": "raise\nCARD QUADS"
+  },
+  {
+    "StoneRecord": "obsidian",
+    "Name": "Obsidian",
+    "Hand": "concept-five-of-a-kind",
+    "Text": "raise\nCARD FIVE"
+  },
+
+  {
+    "StoneRecord": "flint",
+    "Name": "Flint",
+    "Hand": "form-pair",
+    "Text": "raise\nFORM PAIR"
+  },
+  {
+    "StoneRecord": "chert",
+    "Name": "Chert",
+    "Hand": "form-two-pair",
+    "Text": "raise\nFORM 2 PAIR"
+  },
+  {
+    "StoneRecord": "slate",
+    "Name": "Slate",
+    "Hand": "form-three-of-a-kind",
+    "Text": "raise\nFORM TRIPS"
+  },
+  {
+    "StoneRecord": "basalt",
+    "Name": "Basalt",
+    "Hand": "form-full-house",
+    "Text": "raise\nFORM HOUSE"
+  },
+  {
+    "StoneRecord": "granite",
+    "Name": "Granite",
+    "Hand": "form-four-of-a-kind",
+    "Text": "raise\nFORM QUADS"
+  },
+  {
+    "StoneRecord": "gabbro",
+    "Name": "Gabbro",
+    "Hand": "form-five-of-a-kind",
+    "Text": "raise\nFORM FIVE"
+  },
+
+  {
+    "StoneRecord": "opal",
+    "Name": "Opal",
+    "Hand": "element-pair",
+    "Text": "raise\nELEM PAIR"
+  },
+  {
+    "StoneRecord": "moonstone",
+    "Name": "Moonstone",
+    "Hand": "element-two-pair",
+    "Text": "raise\nELEM 2 PAIR"
+  },
+  {
+    "StoneRecord": "amber",
+    "Name": "Amber",
+    "Hand": "element-three-of-a-kind",
+    "Text": "raise\nELEM TRIPS"
+  },
+  {
+    "StoneRecord": "garnet",
+    "Name": "Garnet",
+    "Hand": "element-full-house",
+    "Text": "raise\nELEM HOUSE"
+  },
+  {
+    "StoneRecord": "topaz",
+    "Name": "Topaz",
+    "Hand": "element-four-of-a-kind",
+    "Text": "raise\nELEM QUADS"
+  },
+  {
+    "StoneRecord": "zircon",
+    "Name": "Zircon",
+    "Hand": "element-five-of-a-kind",
+    "Text": "raise\nELEM FIVE"
+  }
+]

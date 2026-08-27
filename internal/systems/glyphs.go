@@ -114,6 +114,20 @@ const (
 	GlyphFormSlash
 	GlyphFormCrush
 	GlyphFormPlan
+
+	// GlyphStone is a boulder, and it is the picture on a stone card and on the bag of rocks the
+	// shop sells them in.
+	//
+	// **Authored at 96 rather than at 64 and scaled**, because a card's art box is 96 tall: a
+	// 64px glyph fitted to it is a 1.5x resample, and a derived one-pixel rim does not survive a
+	// non-integer scale. The rule that a glyph wanted at another size is a different drawing is
+	// what makes the size a parameter of the drawing rather than of the caller.
+	//
+	// **Its spans are computed rather than listed.** A boulder is an ellipse with a flat base and
+	// nothing else, so ninety rows of hand-written pairs would be ninety chances to typo a shape
+	// that has no features to get wrong — see boulderShape, which is still the same span language
+	// and still goes through the same rim derivation as every glyph above.
+	GlyphStone
 )
 
 // GlyphKinds is every glyph, in a fixed order. The contact sheet walks this rather than
@@ -124,6 +138,7 @@ func GlyphKinds() []GlyphKind {
 		GlyphAttack, GlyphDefend, GlyphPrepare,
 		GlyphSound, GlyphMuted, GlyphGear,
 		GlyphFormStab, GlyphFormSlash, GlyphFormCrush, GlyphFormPlan,
+		GlyphStone,
 	}
 }
 
@@ -495,6 +510,102 @@ var glyphShapes = map[GlyphKind]shape{
 	GlyphSound:        speakerShape,
 	GlyphMuted:        mutedSpeakerShape,
 	GlyphGear:         gearShape,
+	GlyphStone:        boulderShape(stoneGlyphSize),
+}
+
+// stoneGlyphSize is the boulder's canvas: **96, which is `cards.WormStyle.ArtMaxH`**. The art box
+// on a stone card is that tall, and a glyph drawn at its own size lands in it at 1:1 rather than
+// being resampled to fit. The two numbers are the same on purpose and this is the comment saying
+// so; there is no import between the packages to make it literal, because `systems` may not
+// depend on `cards`.
+const stoneGlyphSize = 96
+
+// boulderShape builds a rock: an ellipse, squashed, with its bottom third cut flat so it sits on
+// the ground rather than floating, and one facet lit across the upper left.
+//
+// **Computed spans, and it is the first shape here that is.** The span language is for silhouettes
+// with features — a crossguard, a socket, a tooth — and every one of those is worth writing out
+// because getting it wrong is how a sword reads as a scratch. A boulder has no features: it is one
+// convex outline, and a row of it is fully described by an arithmetic that cannot be off by a
+// pixel in the way a typed pair can.
+//
+// **The narrow rows are dropped rather than drawn.** The rim is derived one pixel from each side,
+// so a row under five pixels wide renders as outline with nothing inside it — the same floor every
+// hand-authored shape here is sized against. Cutting them squares off the very top and bottom of
+// the ellipse, which is what makes it read as a rock rather than as an egg.
+func boulderShape(size int) shape {
+	// The outline, as fractions of the canvas: a lumpy seven-sided rock with a broad flat base, a
+	// high left shoulder and a shorter right one. **Asymmetric on purpose** — a symmetrical rock
+	// reads as a ball, which is what the ellipse this replaced actually drew.
+	outline := []point{
+		{0.46, 0.14}, {0.74, 0.28}, {0.90, 0.56}, {0.84, 0.85},
+		{0.18, 0.85}, {0.09, 0.58}, {0.22, 0.32},
+	}
+
+	// The lit facet: the plane running down from the peak toward the left shoulder. It is the one
+	// piece of interior detail the shape has, and it is what says the rock has flat faces rather
+	// than a surface.
+	facet := []point{{0.45, 0.20}, {0.28, 0.36}, {0.36, 0.68}, {0.53, 0.44}}
+
+	return shape{
+		size:   size,
+		fill:   scanFill(outline, size, 5),
+		accent: scanFill(facet, size, 5),
+	}
+}
+
+// point is a vertex in canvas fractions, so one polygon describes the shape at any size it is
+// authored for.
+type point struct{ x, y float64 }
+
+// scanFill turns a polygon into the row spans the glyph renderer draws, dropping any row narrower
+// than min.
+//
+// **The narrow rows are dropped rather than drawn**, which is the five-pixel floor every
+// hand-authored shape here is sized against: the rim is derived one pixel from each side, so a
+// three-pixel row renders as two pixels of outline around one of fill and reads as a scratch.
+// Cutting them blunts the polygon's sharpest corners, which is what a rock has anyway.
+//
+// It handles convex outlines only — one run per row, from the leftmost crossing to the rightmost.
+// That is all a rock needs, and a shape wanting two runs on a row is one to write out by hand in
+// the span language above rather than to generalise this into.
+func scanFill(poly []point, size, min int) map[int][]span {
+	out := map[int][]span{}
+	for y := 0; y < size; y++ {
+		fy := (float64(y) + 0.5) / float64(size)
+
+		lo, hi, hit := 0.0, 0.0, false
+		for i := range poly {
+			a, b := poly[i], poly[(i+1)%len(poly)]
+			if (a.y > fy) == (b.y > fy) {
+				continue
+			}
+			x := a.x + (fy-a.y)/(b.y-a.y)*(b.x-a.x)
+			if !hit || x < lo {
+				lo = x
+			}
+			if !hit || x > hi {
+				hi = x
+			}
+			hit = true
+		}
+		if !hit {
+			continue
+		}
+
+		x0, x1 := int(lo*float64(size)+0.5), int(hi*float64(size)+0.5)
+		if x0 < 0 {
+			x0 = 0
+		}
+		if x1 > size-1 {
+			x1 = size - 1
+		}
+		if x1-x0 < min {
+			continue
+		}
+		out[y] = []span{{x0, x1}}
+	}
+	return out
 }
 
 // glyphArt is the hand-drawn half of the set: a kind whose picture is a PNG rather than a

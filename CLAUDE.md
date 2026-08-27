@@ -149,6 +149,13 @@ holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-plans
 hand that demonstrates something can be asked for by name instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
+**Stones raise a rung for one run and never touch the catalogue** *(2026-08-27)*. `data/stones.json`
+holds one per hand, a run's counts ride on `combat.Duelist.HandStones`, and `handTable` is read
+*through* them — so the ladder every tool and test sees is the shipped one. See MECHANICS.md
+§Stones and `internal/combat/stone.go`, which owns the arithmetic. **The corollary for tuning:**
+`tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
+that has been buying rocks.
+
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
 prints.** The ladder is priced off how reachable each rung is — a form pair is a 100% hand and pays
 110, a concept Four of a Kind is a 0.27% hand and pays 500 — and every one of those figures is a fact
@@ -336,7 +343,7 @@ exists:
   unreproducible. Randomness comes from an explicit `*rand.Rand` carried on state.
 - **Every consumer gets its own salted stream off `GlobalState.RunSeed`**, and a stream is
   only ever advanced by its own concern. Sharing one means a change to either silently rerolls
-  the other. Four are live; the skill's table says which.
+  the other. Seven are live; the skill's table says which.
 - **No `time.Now()` in game rules, and never let map iteration order decide anything.** Go
   randomises map order deliberately; iterate a sorted key slice.
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before

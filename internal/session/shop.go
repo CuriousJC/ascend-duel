@@ -117,3 +117,58 @@ func (s *Session) Sell(key string) bool {
 	s.AddVitae(SellValue(key))
 	return true
 }
+
+// The two sealed goods: **a bag of rocks and a can of worms.**
+//
+// A ring on the shelf is a thing you can read before you buy it. These are not: what is inside is
+// four of something, drawn when the bag is opened, and the choice is which one to keep. That is
+// the whole design — the price buys the *choice*, and the three that are not chosen are gone.
+//
+// **Both cost the same and both offer four** *(owner's call, 2026-08-27)*. They are the same
+// bargain pointed at the two catalogues the run can alter — the ladder and the deck — and pricing
+// or sizing them differently would be saying one of those is worth more without anything to say it
+// with.
+
+// bagPrice and canPrice are what the two sealed goods cost.
+//
+// **Five vitae, which is a ring's middle tier** *(owner's call, 2026-08-27)*. A win pays three to
+// five from the room plus a tenth of the life left, so a good is about a fight's takings — bought
+// instead of a ring rather than alongside one.
+const (
+	bagPrice = 5
+	canPrice = 5
+)
+
+// bagSize and canSize are how many are drawn from inside.
+//
+// **Four, against the reward screen's two worms.** The free offer after a fight is a choice
+// between two; this is what five vitae buys over that, and it is why the can is worth opening at
+// all when a worm arrives free every fight.
+const (
+	bagSize = 4
+	canSize = 4
+)
+
+// BagPrice, CanPrice, BagSize and CanSize are the figures a screen writes on the cards. **Asked
+// rather than repeated**: a price printed on a face and charged by a method are two numbers that
+// can disagree, and the shop is where that has already been avoided once for rings.
+func BagPrice() int { return bagPrice }
+func CanPrice() int { return canPrice }
+func BagSize() int  { return bagSize }
+func CanSize() int  { return canSize }
+
+// CanAffordBag and CanAffordCan report whether the purse covers one. **The question, not the
+// guard** — `BuyBag` and `BuyCan` check the purse themselves, exactly as `CanBuy` sits beside
+// `Buy`. They exist so a shelf can dim a card rather than swallow a click.
+func (s *Session) CanAffordBag() bool { return s.vitae >= bagPrice }
+func (s *Session) CanAffordCan() bool { return s.vitae >= canPrice }
+
+// BuyBag and BuyCan pay for a sealed good and report whether they could.
+//
+// **The purse moves and nothing else does.** What is inside is drawn by the screen from its own
+// seeded stream and applied by `UseStone` or `Apply` when the player picks one, so a purchase
+// interrupted by a quit costs the vitae and hands back nothing — which is the same deal a shop
+// makes anywhere. Rolling the contents here would put the offer in the run's state and mean
+// snapshotting a bag nobody has opened yet.
+func (s *Session) BuyBag() bool { return s.SpendVitae(bagPrice) }
+func (s *Session) BuyCan() bool { return s.SpendVitae(canPrice) }

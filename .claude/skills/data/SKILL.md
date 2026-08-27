@@ -1,6 +1,6 @@
 ---
 name: data
-description: The game's static data - the nine JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or rings or tutorial steps, or writing a loader.
+description: The game's static data - the ten JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or rings or tutorial steps, or writing a loader.
 ---
 
 # The data files
@@ -19,6 +19,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the poker hands on each of three matching axes, and what each multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
+| `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
 ## Who may read what, and why it is not "whether it is data"
@@ -211,6 +212,30 @@ make the argument in MECHANICS.md again before adding one.
 
 **`amount` reaches every card with one worm**, because what the figure means depends on the verb.
 That is the card language paying off, and it is the shape to reach for before adding a target.
+
+### Stones
+
+`stones.json` is **the worms' shape pointed at the hand ladder instead of at a card**: a record
+names a rung by its `hands.json` key, and using one raises that rung's multiplier by a tenth of the
+catalogue figure for the rest of the run.
+
+**Parsed and validated in `internal/session`, like the worms and for the same reason** — a stone is
+held by a *run*. `internal/combat` owns the arithmetic and the seat a count sits in
+(`combat/stone.go`), because what a rung pays is a rule.
+
+**One stone per rung and one rung per stone, and every rung must have one.** A second stone on a
+rung, or a rung with none, panics at load: a rung with no stone can never be raised and nothing
+else would notice.
+
+**No amount field, on purpose.** A record could carry `"Percent": 10` and it would be the `CostTier`
+mistake again — a rules vocabulary declared in JSON ahead of the rules. The tenth is one decision
+about the whole mechanic and it lives in Go. It becomes a field the day two stones want to be worth
+different amounts, and not before.
+
+**The figure is not in the `Text` either.** What a stone is worth depends on its rung's multiplier,
+so `+11` written into the file goes stale the first time `hands.json` is tuned — silently, since
+nothing reads a card's text. The record carries the sentence and `screens.stoneSpec` carries the
+arithmetic.
 
 ### The tutorial script
 

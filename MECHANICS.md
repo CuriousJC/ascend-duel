@@ -1503,7 +1503,8 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   binding once the five fingers are full** — around the fourth or fifth fight, after which vitae has
   nothing to buy but swaps. The first draft priced a base ring at 20 and made the whole run about
   affording one; this is deliberately the other side of that, and what it wants next is something
-  else to spend on rather than dearer rings.
+  else to spend on rather than dearer rings. **That arrived on 2026-08-27**: the two sealed goods
+  below.
 - **Nothing measures whether any of those numbers is right.** Nothing in the repo measures what a
   ring does to a duel, so what a doubling of every slash card is worth in vitae is a judgement. Recorded as a judgement rather than dressed up as a derivation.
 - **Selling pays the tier's own figure — 1, 2 or 3** *(owner's call, 2026-08-22)*. It was a quarter
@@ -1528,6 +1529,69 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   into the same shop exactly as they meet the same opponent. **It is three weighted draws without
   replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn ring leaves
   the pool, so the shelf never offers the same ring twice.
+
+### The two sealed goods: a bag of rocks and a can of worms *(owner's call, 2026-08-27)*
+
+**The shelf is five seats now: three rings, a bag of rocks and a can of worms.** Both goods cost
+**5 vitae**, both hold **four of something**, and both give the player **exactly one of the four** —
+the other three are gone.
+
+- **What is bought is the choice, not the thing.** A ring is read and then paid for; a good is paid
+  for and then read. That is the whole design, and it is why neither card names its contents: the
+  face says the shape of the offer ("4 stones, keep 1") and nothing about which four.
+- **A bag holds four stones; a can holds four worms.** See the stones section below. The can is the
+  reward screen's mechanic bought rather than won — pick one of four, then pick the card it eats —
+  and what five vitae buys over the free offer of two is twice the choice, at the shop rather than
+  at the end of a fight.
+- **One of each per visit, restocked next fight.** It bounds what a rich run does in one stop and
+  keeps the shop a short offer rather than a vending machine, which is the argument the three-ring
+  shelf is already under.
+- **They are the answer to "vitae has nothing to buy but swaps"**, which the shop section above
+  records as the thing it wanted next. A run with five fingers full now has somewhere for its purse
+  to go that is not a ring it will sell back at a loss.
+- **Each draws from its own seeded stream** — `seeds.BagStock` and `seeds.CanStock`, both per fight.
+  The can's is deliberately not the reward screen's `WormOffer`: sharing would make the shop's four
+  a function of which two had just been offered free, so buying the can could guarantee — or rule
+  out — the pair the player had turned down. A rule nobody designed, arriving out of an
+  implementation detail.
+- **The dialog has no close button, and that is deliberate.** Every other modal in the game is a
+  look at something; this one stands between a purchase and what it bought, so an exit that
+  forfeited five vitae would be a trap wearing the same red X that means "close" everywhere else.
+  Every card in it is an exit.
+- **The row is five seats rather than two rows, and the screen decided that.** A ring is worn and a
+  good is opened, so two rows would have read better — but the shop is 960 tall with a build band,
+  two sentences of narration and the Leave button at 88%, and a card is 224. There is room for one
+  row of cards, not two.
+
+## Stones — altering the hand ladder *(owner's call, 2026-08-27)*
+
+**A worm alters a card; a stone alters a rung.** One stone raises one hand's multiplier by **a tenth
+of the figure `hands.json` writes down**, for the rest of the run.
+
+- **There is a stone for every rung**, all nineteen, and `data/stones.json` is refused at load if one
+  is missing — a rung with no stone is a rung that can never be raised, and nothing would fail.
+- **Ten percent of the base, per stone, additive, floored.** Card Pair is 115, so a stone is worth
+  11 and two stones are worth 22 — never 11.5 rounded up, and never a tenth of the number the
+  previous stone produced. The tenth stone is worth exactly what the first was. Integer arithmetic
+  throughout, like the rest of the damage path.
+- **Using it is the whole of owning it.** There is no inventory: the click that picks a rock out of
+  the bag is the click that puts it on the ladder. A run holds counts per rung, not stones.
+- **It belongs to the run, not to the profile.** Stones are gone when the run is — the same lifetime
+  as rings, worms and the deck — and they are written into `run.json` by hand *key*, so a rung this
+  build has not got refuses the resume rather than being dropped.
+- **The bump rides on the duelist, never on the catalogue.** `combat.handTable` is package state
+  shared by every fight, every review tool and every test, so a run raising a rung in place would
+  raise it for the enemy planner and for `tools/handsheet`. A duelist carries a count per rung and
+  the ladder is read *through* it; a duelist with no stones reads the shipped table untouched.
+- **The hands panel shows what a hand pays this run**, with a raised figure written in the ring pink
+  — the same colour a ring-moved figure takes on a card. The shared reading is *something you bought
+  moved this number*; a second hue for the second source would be two colours to learn one fact.
+- **A stone has no rarity and the bag is a flat draw.** Every rung is worth a tenth of itself, so a
+  Card Five stone is not a better rock than a Card Pair stone — it is a rock for a rung you may
+  never build. Weighting them would be pricing the *hand*, which the ladder already does.
+- **Nothing measures whether a tenth is the right number**, on the same terms as every price in the
+  shop section above. What it is worth in practice depends on which rung a run keeps hitting, which
+  `tools/handodds` measures for the shipped deck and not for a run that has been worming it.
 
 ## Worms — altering the deck between fights
 
@@ -1713,9 +1777,10 @@ for the `data/` pattern: JSON beside a small Go loader.
 
 ## Vitae
 
-The currency. Earned from fights, spent on rings. `Session` carries the purse; **winning a fight is
-the only thing that adds to it** and **the shop is what takes it out** *(2026-08-21)* —
-`Session.SpendVitae` is the one place a purse goes down, and `Session.Buy` is its only caller.
+The currency. Earned from fights, spent in the shop. `Session` carries the purse; **winning a fight
+is the only thing that adds to it** and **the shop is what takes it out** *(2026-08-21)* —
+`Session.SpendVitae` is the one place a purse goes down. Its callers are `Session.Buy`, and since
+2026-08-27 `BuyBag` and `BuyCan`, the two sealed goods.
 
 **Vitae is crimson wherever it is written** *(owner's call, 2026-08-22)* — the purse on the duelist
 card and the word itself in the reward screen's prose. It is the run's only currency and now the
@@ -1958,7 +2023,9 @@ mistake that cannot be repaired afterwards.
 
 **What is written down is a name, never a number.** Every ordinal in this game is append-only and
 index-shaped — `ConceptID`, `Element`, `StatusID`, `GlyphKind`, `Phase` — so an ordinal in a file
-that outlives its build is an ordinal that will eventually mean something else.
+that outlives its build is an ordinal that will eventually mean something else. **The stones are the
+newest case** *(2026-08-27)*: a run's raised rungs are saved by hand *key*, never by the seat the
+count actually sits in, because a seat is a position in the catalogue this build happened to load.
 
 ### Settings *(owner's call, 2026-08-27)*
 

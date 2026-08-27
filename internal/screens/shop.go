@@ -168,6 +168,17 @@ type ShopScene struct {
 	// answers and the shelf does not. See handspanel.go.
 	hands handsToggle
 
+	// bagBought and canBought are whether this visit's two sealed goods have been taken.
+	//
+	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
+	// rich run can do in one stop and keeps the shop a short offer rather than a vending machine —
+	// the same argument the three-ring shelf is under.
+	bagBought, canBought bool
+
+	// good is the dialog a purchase opens: the four that were inside, and which one is taken. See
+	// shop_goods.go.
+	good goods
+
 	// tip explains a ring: what it does, what it costs, and where it would sit in the firing order.
 	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
 	// and nothing at all about slashes.
@@ -195,6 +206,8 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.leaving = false
 	s.from, s.move = nil, travel{}
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
+	s.bagBought, s.canBought = false, false
+	s.good.reset()
 	s.shelf = dealShelf(gs)
 	s.prose.setLines(shopkeeperLines())
 	s.deck.init()
@@ -309,6 +322,13 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
+	// **The goods dialog runs before anything else and swallows the frame.** It stands between a
+	// purchase and what it bought, so nothing behind it may be clickable — including the two
+	// panels, whose buttons would otherwise sit live under a dialog with no exit but a card.
+	if s.good.update(gs) {
+		return nil
+	}
+
 	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
 	// frame the panel closes on as a covered one.
 	s.deck.block(s.hands.open)
@@ -365,6 +385,16 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
+	for _, kind := range []goodKind{goodBag, goodCan} {
+		seat := s.goodSlot(gs, kind)
+		if s.goodTaken(kind) || !at.In(seat) {
+			continue
+		}
+		title, lines := goodTip(kind)
+		s.tip.Point(seat, title, lines)
+		return
+	}
+
 	hoverBuildRings(gs, at, &s.tip)
 }
 
@@ -390,6 +420,17 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 			s.buy(gs, i)
 			return
 		}
+	}
+
+	if at.In(s.goodSlot(gs, goodBag)) {
+		s.armed = ""
+		s.openGood(gs, goodBag)
+		return
+	}
+	if at.In(s.goodSlot(gs, goodCan)) {
+		s.armed = ""
+		s.openGood(gs, goodCan)
+		return
 	}
 
 	// **A press on a worn ring is not this function's** *(2026-08-26)*. It became two gestures when
@@ -535,7 +576,7 @@ func (s *ShopScene) start(from map[string]image.Rectangle) {
 // for both**, the same rule every other row in the game follows: a card hit-tested against a
 // rectangle it is not drawn in is exactly the bug this shape prevents.
 func (s *ShopScene) shelfSlot(gs *state.GlobalState, i int) image.Rectangle {
-	return rowSlot(gs, i, len(s.shelf), gs.PctY(shelfRowPct))
+	return rowSlot(gs, i, s.rowWidth(), gs.PctY(shelfRowPct))
 }
 
 // wornSlot is where one worn ring is drawn — **a finger in the build band**, not a row of the
@@ -587,6 +628,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	line(shopHintTop, small, s.hint(gs), groundInk)
 	s.drawShelf(gs, screen, small, line)
+	s.drawGoods(gs, screen, small, line)
 
 	systems.DrawButton(gs, screen, s.leaveButton)
 	systems.DrawTooltip(gs, screen, &s.tip)
@@ -595,6 +637,10 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// on top of it.
 	s.deck.draw(gs, screen, ownedContents(gs))
 	s.hands.draw(gs, screen, ownedHands(gs))
+
+	// The sealed good's dialog, over both panels: it is the one dialog on this screen that a
+	// purchase has already been made for, so nothing may be drawn on top of it but the tutorial.
+	s.good.draw(gs, screen)
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
@@ -609,11 +655,9 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace, line func(int, *text.GoTextFace, string, color.RGBA)) {
 
-	if len(s.shelf) == 0 {
-		line(gs.PctY(shelfRowPct)+cardHeight/2, face, "nothing left to sell you", groundInk)
-		return
-	}
-
+	// **The row is never empty now**, because the two sealed goods are always in it — so the old
+	// "nothing left to sell you" line went with the day the shelf stopped being rings alone. A run
+	// wearing every ring in the catalogue still has a bag and a can to spend on.
 	line(gs.PctY(shelfRowPct)-shopRowLabelGap, face, "for sale", groundInk)
 
 	for i, item := range s.shelf {
@@ -763,3 +807,152 @@ func (s *ShopScene) anyLeft() bool {
 // Compile-time assurance that the record the shelf draws still carries what this screen reads off
 // it. A ring losing its price would otherwise be a shelf of free rings rather than a build failure.
 var _ = func(r data.RingData) (string, data.Rarity) { return r.Name, r.Rarity }
+
+// The sealed goods on the shelf: where they sit, what a click on one does, and what they say.
+//
+// **They are a row of their own under the rings** — see goodsRowPct, and shop_goods.go for the
+// dialog a purchase opens.
+
+// goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centred**,
+// so the row reads as a pair rather than as two things that happen to be near each other.
+func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectangle {
+	i := len(s.shelf)
+	if kind == goodCan {
+		i++
+	}
+	return rowSlot(gs, i, s.rowWidth(), gs.PctY(shelfRowPct))
+}
+
+// rowWidth is how many seats the shelf has: the rings, plus the two sealed goods.
+//
+// **One row rather than two, and the screen decided it** *(2026-08-27)*. A second row of cards
+// under the rings would have read better — a ring is worn and a good is opened, which are not the
+// same kind of thing — but the shop is 960 tall with a build band at the top, two sentences of
+// narration under it and the Leave button at 88%, and a card is 224. There is room for one row of
+// cards between the narration and the button and there is no room for two. So the goods stand at
+// the right-hand end of the shelf, told apart by their faces and by the label under them rather
+// than by where they are.
+func (s *ShopScene) rowWidth() int { return len(s.shelf) + 2 }
+
+// goodTaken is whether this visit's copy has already been opened.
+func (s *ShopScene) goodTaken(kind goodKind) bool {
+	if kind == goodBag {
+		return s.bagBought
+	}
+	return s.canBought
+}
+
+// goodAffordable is whether the purse covers one. **Asked of the run rather than compared here**,
+// which is the line RingPrice already draws: what a thing costs is the shop's arithmetic and this
+// file only decides where it is drawn.
+func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
+	if gs.Run == nil {
+		return false
+	}
+	if kind == goodBag {
+		return gs.Run.CanAffordBag()
+	}
+	return gs.Run.CanAffordCan()
+}
+
+// openGood pays for a sealed good and opens it.
+//
+// **The purse moves first and the dialog opens second**, exactly as `Buy` wears the ring after
+// spending: a refusal has to leave the run as it was, and `SpendVitae` is the one place that
+// refuses. A dialog opened before the payment would be four cards the player could take for free
+// if the purse turned out to be short.
+func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
+	if gs.Run == nil || s.goodTaken(kind) || !goodAffordable(gs, kind) {
+		return
+	}
+
+	paid := false
+	if kind == goodBag {
+		paid = gs.Run.BuyBag()
+	} else {
+		paid = gs.Run.BuyCan()
+	}
+	if !paid {
+		return
+	}
+
+	if kind == goodBag {
+		s.bagBought = true
+	} else {
+		s.canBought = true
+	}
+	s.good.open(gs, kind)
+	s.tip.Forget()
+
+	trace.Logf("shop", "opened %s, %d vitae left", goodName(kind), gs.Run.Vitae())
+}
+
+// drawGoods draws the two sealed goods with their price under them, on the same terms as the
+// shelf: an unaffordable one is dimmed rather than hidden, and one already opened leaves an empty
+// seat rather than closing the row up.
+func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image,
+	face *text.GoTextFace, line func(int, *text.GoTextFace, string, color.RGBA)) {
+
+	for _, kind := range []goodKind{goodBag, goodCan} {
+		at := s.goodSlot(gs, kind)
+		if s.goodTaken(kind) {
+			drawEmptySeat(screen, at)
+			continue
+		}
+
+		lit := goodAffordable(gs, kind)
+		drawGoodCard(gs, screen, at.Min, goodName(kind), goodLine(kind), goodArt(gs, kind), lit)
+		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", goodPrice(kind)), lit)
+	}
+}
+
+// goodName, goodLine, goodPrice and goodArt are what one of the two says on its face.
+//
+// **The line states the shape of the offer and never its contents** — "4 stones, keep 1" — because
+// what is inside is drawn when the bag is opened. A face that could name the four would make these
+// shelf items rather than sealed ones, which is the whole mechanic.
+func goodName(kind goodKind) string {
+	if kind == goodBag {
+		return bagName
+	}
+	return canName
+}
+
+func goodLine(kind goodKind) string {
+	if kind == goodBag {
+		return fmt.Sprintf("%d stones\nkeep 1", session.BagSize())
+	}
+	return fmt.Sprintf("%d worms\nkeep 1", session.CanSize())
+}
+
+func goodPrice(kind goodKind) int {
+	if kind == goodBag {
+		return session.BagPrice()
+	}
+	return session.CanPrice()
+}
+
+func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
+	if kind == goodBag {
+		return stoneArt()
+	}
+	return artwork(gs, wormArtKey)
+}
+
+// goodTip is what resting on one says. **It explains what a stone and a worm each are**, since the
+// face has room for neither and a player meeting the bag on floor one has never seen a stone.
+func goodTip(kind goodKind) (string, []string) {
+	if kind == goodBag {
+		return bagName, []string{
+			fmt.Sprintf("%d stones, and you keep one", session.BagSize()),
+			"a stone raises one hand's multiplier",
+			"by a tenth of it, for the rest of the run",
+			fmt.Sprintf("%d vitae", session.BagPrice()),
+		}
+	}
+	return canName, []string{
+		fmt.Sprintf("%d worms, and you keep one", session.CanSize()),
+		"a worm changes one card of your deck",
+		fmt.Sprintf("%d vitae", session.CanPrice()),
+	}
+}

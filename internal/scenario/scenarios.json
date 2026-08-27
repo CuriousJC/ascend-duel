@@ -131,7 +131,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u2014 which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
     "Rings": [
       "atrophy-ring",
       "momentum-ring"
@@ -166,6 +166,23 @@
     ],
     "Hand": [],
     "Screen": "",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "bucket-of-parasites",
+    "Note": "The board piece: a bucket holding one of each shape a parasite can take, opened with the P button above the fight log. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic turns one into a Strike, and Hoard needs no target at all and so is taken on the click.",
+    "Rings": [],
+    "Hand": [],
+    "Parasites": [
+      "leech",
+      "gnaw",
+      "mimic",
+      "hoard"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
     "Fight": 0,
     "Vitae": 0,
     "Life": 0

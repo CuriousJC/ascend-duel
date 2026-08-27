@@ -156,6 +156,25 @@ holds one per hand, a run's counts ride on `combat.Duelist.HandStones`, and `han
 `tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
 that has been buying rocks.
 
+**Parasites alter the deck *during* a fight, and they are the one mechanic allowed near a live
+round** *(owner's call, 2026-08-27)*. `data/parasites.json` is the catalogue,
+`internal/session/parasite.go` validates and applies, `internal/combat/rider.go` holds the one
+vocabulary the rules have to read, and `internal/screens/combat_parasite.go` is the board piece —
+the `P` button above the fight log. See MECHANICS.md §Parasites. Three things to know before
+touching any of it:
+
+- **Between turns, never inside one.** The dialog is gated on `planning()`, because `ResolveRound`
+  decides a whole round before playback starts and a card altered mid-playback would show a face
+  disagreeing with a blow already computed. This is the presentation-may-never-change-an-outcome
+  rule meeting the one mechanic that wanted to break it.
+- **A rider is a rule carried by one card**, and `combat.Card.Riders` is a **fixed array** because
+  a card must stay comparable — the screen's face cache and `TestRoundIsDeterministic` both depend
+  on it. A slice there would end both, exactly as it would on `Duelist.Rings`.
+- **Targets are card identities, not deck positions.** A parasite may name two cards and is spent
+  while three piles hold copies of the same cards, so `combat.Card.ID` is what makes it possible.
+  The note in MECHANICS.md saying mid-fight alteration would need one is now satisfied rather than
+  outstanding.
+
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
 prints.** The ladder is priced off how reachable each rung is — a form pair is a 100% hand and pays
 110, a concept Four of a Kind is a 0.27% hand and pays 500 — and every one of those figures is a fact

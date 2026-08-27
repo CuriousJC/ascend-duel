@@ -28,6 +28,7 @@ import (
 	"image"
 	"image/color"
 	"math/rand"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -48,14 +49,23 @@ const (
 	goodNone goodKind = iota
 	goodBag
 	goodCan
+
+	// goodBucket is the third, and the one whose contents leave the shop with the player rather
+	// than being applied in the dialog. A stone and a worm are both spent the moment they are
+	// chosen; a parasite goes into the bucket and is spent mid-fight. See combat_parasite.go.
+	goodBucket
 )
+
+// goodKinds is the shelf's goods in the order they stand, for anything that walks them.
+func goodKinds() []goodKind { return []goodKind{goodBag, goodCan, goodBucket} }
 
 // The two goods as cards. **The name is what it is and the line is the shape of the offer**, never
 // what is inside: a bag that named its four rocks on the face would be a shelf item you could read
 // before paying for, which is the one thing these are not.
 const (
-	bagName = "Bag of Rocks"
-	canName = "Can of Worms"
+	bagName    = "Bag of Rocks"
+	canName    = "Can of Worms"
+	bucketName = "Bucket of Parasites"
 )
 
 // Where the goods row sits, and how the dialog lays its cards out.
@@ -93,9 +103,10 @@ type goods struct {
 	kind  goodKind
 	stage goodsStage
 
-	// stones and worms are what was drawn, and only the one matching kind is filled.
-	stones []session.Stone
-	worms  []session.Worm
+	// stones, worms and parasites are what was drawn, and only the one matching kind is filled.
+	stones    []session.Stone
+	worms     []session.Worm
+	parasites []session.Parasite
 
 	// chosen is which of the four was taken, for the can's second stage. -1 before one is.
 	chosen int
@@ -117,7 +128,7 @@ type goods struct {
 // bag.
 func (g *goods) open(gs *state.GlobalState, kind goodKind) {
 	g.kind, g.stage, g.chosen = kind, goodsPick, -1
-	g.stones, g.worms, g.offer = nil, nil, nil
+	g.stones, g.worms, g.parasites, g.offer = nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	switch kind {
@@ -125,6 +136,8 @@ func (g *goods) open(gs *state.GlobalState, kind goodKind) {
 		g.stones = dealStones(gs)
 	case goodCan:
 		g.worms = dealCanWorms(gs)
+	case goodBucket:
+		g.parasites = dealBucketParasites(gs)
 	}
 }
 
@@ -134,7 +147,7 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 // close puts it away.
 func (g *goods) reset() {
 	g.kind, g.stage, g.chosen = goodNone, goodsClosed, -1
-	g.stones, g.worms, g.offer = nil, nil, nil
+	g.stones, g.worms, g.parasites, g.offer = nil, nil, nil, nil
 	g.tip.Forget()
 }
 
@@ -145,6 +158,8 @@ func (g *goods) count() int {
 		return len(g.offer)
 	case g.kind == goodBag:
 		return len(g.stones)
+	case g.kind == goodBucket:
+		return len(g.parasites)
 	default:
 		return len(g.worms)
 	}
@@ -185,6 +200,38 @@ func dealCanWorms(gs *state.GlobalState) []session.Worm {
 		all = all[:session.CanSize()]
 	}
 	return all
+}
+
+// dealBucketParasites is what a bucket holds: four of the catalogue, without repeats.
+//
+// **Its own stream** (`seeds.BucketStock`), separate from both other goods and from the reward
+// screen's worms — see internal/seeds. **Flat, not weighted**, on the bag's argument: a parasite
+// has no rarity, and weighting them would be pricing the effect, which nothing has decided yet.
+//
+// **A catalogue shorter than the bucket is not an error.** Four parasites ship and the bucket holds
+// four, so it currently offers the whole file; the cut is what keeps that true as the list grows.
+func dealBucketParasites(gs *state.GlobalState) []session.Parasite {
+	all := session.Parasites()
+	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.BucketStock, gs.Run.Fight())))
+	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
+
+	if len(all) > session.BucketSize() {
+		all = all[:session.BucketSize()]
+	}
+	return all
+}
+
+// parasiteTipLines is what resting on a parasite says: what it does, and when it can be spent.
+//
+// **The "when" is the half the card cannot say.** A parasite's face is a name and a clipped line,
+// and the thing that makes it a different object from a worm is not on it — so the tooltip is where
+// a player finds out that this one is carried into a fight rather than used now.
+func parasiteTipLines(p session.Parasite) []string {
+	// **The card's own text, unwrapped.** A `\n` on a face is an authored line break and a tooltip
+	// draws its own lines, so the two are the same sentence written for two widths — the same
+	// treatment wormTip gives a worm.
+	lines := strings.Split(p.Text, "\n")
+	return append(lines, "spent between the turns of a fight")
 }
 
 // dealCanOffer is which cards the chosen worm may be applied to: a shuffle of every position in
@@ -273,6 +320,9 @@ func (g *goods) hover(gs *state.GlobalState) {
 		case g.kind == goodBag:
 			st := g.stones[i]
 			g.tip.Point(g.slot(gs, i), st.Name, stoneTipLines(gs, st))
+		case g.kind == goodBucket:
+			p := g.parasites[i]
+			g.tip.Point(g.slot(gs, i), p.Name, parasiteTipLines(p))
 		default:
 			title, lines := wormTip(g.worms[i])
 			g.tip.Point(g.slot(gs, i), title, lines)
@@ -311,6 +361,17 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		if gs.Run.UseStone(stone.Record) {
 			trace.Logf("shop", "bag of rocks: %s, %s now at %d stones",
 				stone.Record, stone.Hand, gs.Run.StonesOn(stone.Hand))
+		}
+		g.reset()
+
+	case g.kind == goodBucket:
+		// **A parasite is not applied here — it goes into the bucket.** That is the whole
+		// difference between this good and the other two: a stone and a worm are spent on the
+		// spot, and a parasite is carried into the next fight and spent between its turns.
+		p := g.parasites[i]
+		if gs.Run.Hold(p.Record) {
+			trace.Logf("shop", "bucket of parasites: %s held, %d in the bucket",
+				p.Record, gs.Run.HoldCount())
 		}
 		g.reset()
 
@@ -358,6 +419,8 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 			drawCard(gs, screen, at, cards.Hand, card, heldByRun(gs, card), true, false)
 		case g.kind == goodBag:
 			drawStoneCard(gs, screen, at, g.stones[i], true)
+		case g.kind == goodBucket:
+			drawSpecCard(gs, screen, at, parasiteSpec(gs, g.parasites[i], true, false))
 		default:
 			drawWormCard(gs, screen, at, g.worms[i], true)
 		}
@@ -369,10 +432,14 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 // title names what is open, and hint says what to do with it. **Two short lines rather than a
 // paragraph**: the cards say what they are, and this says how many of them the player gets.
 func (g *goods) title() string {
-	if g.kind == goodBag {
+	switch g.kind {
+	case goodBag:
 		return bagName
+	case goodBucket:
+		return bucketName
+	default:
+		return canName
 	}
-	return canName
 }
 
 func (g *goods) hint() string {
@@ -381,6 +448,8 @@ func (g *goods) hint() string {
 		return "and the card it changes"
 	case g.kind == goodBag:
 		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.stones))
+	case g.kind == goodBucket:
+		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.parasites))
 	default:
 		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.worms))
 	}

@@ -101,7 +101,7 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 		Form:     form(c.Form()),
 		Cost:     h.cost,
 		Element:  artFor(c.Element),
-		Text:     cardEffect(c),
+		Text:     cardEffect(c) + riderText(c),
 		Enabled:  enabled,
 		Selected: selected,
 	}

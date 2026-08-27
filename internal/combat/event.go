@@ -78,6 +78,15 @@ const (
 	// because nobody acted.
 	KindBurned
 
+	// KindHealed is a rider restoring life to the duelist who played the card. Action is the card
+	// that carried it, Amount is the life restored — **after the cap**, so a heal on full life
+	// reports zero rather than the figure the rider names.
+	//
+	// **Its own kind rather than a negative KindDamage.** The two travel in opposite directions on
+	// screen and read as opposite things in the log, and a feed that had to check the sign of an
+	// amount to know which it was looking at is a feed one missing minus sign away from lying.
+	KindHealed
+
 	KindRoundEnd
 )
 

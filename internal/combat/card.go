@@ -67,6 +67,15 @@ type Card struct {
 	// which is built from what a card looks like and never from this, so two cards that differ
 	// only by ID still share one rendered face.
 	ID int
+
+	// Riders are the rules this one card carries, and they are what a parasite leaves behind.
+	//
+	// **A fixed array, because a card must stay comparable** — the screen's face cache and
+	// TestRoundIsDeterministic both depend on it, and a slice here would end both. Empty seats are
+	// RiderNone, so an unridden card is still the zero value and every `Card{Concept: x}` literal
+	// in this package keeps working. See rider.go for what a rider is and why its vocabulary is a
+	// Go enum rather than a data record.
+	Riders [MaxCardRiders]Rider
 }
 
 // Plain is a card with no element, which is what an enemy draws and what most tests want.

@@ -234,6 +234,10 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorActorBadges, anchorActorCard, gestureFly,
 		"a burn is resident on its victim: off their own flame badge into their own bar",
 	},
+	combat.KindHealed: {
+		anchorActorSeat, anchorActorCard, gestureFly,
+		"a rider is a property of the card, so the life flies out of that card's seat into the bar it fills",
+	},
 	combat.KindRoundEnd: {
 		anchorNone, anchorNone, gestureNone,
 		"bookkeeping - the round boundary is a moment, not an event with a victim",

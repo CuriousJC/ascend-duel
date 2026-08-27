@@ -69,6 +69,12 @@ type RunSnapshot struct {
 	// in the catalogue this build loaded, and a file outlives the build that wrote it.
 	Stones map[string]int `json:"stones"`
 
+	// Held is the bucket of parasites the run is carrying, by record key, **in acquisition
+	// order** — which is the order the board piece draws them in, and so the only order the
+	// player can see. A list rather than a count per key, because two of the same parasite are
+	// two things to spend.
+	Held []string `json:"held,omitempty"`
+
 	// Spoils is what the last win still owes, unclaimed. A run saved at the reward station has a
 	// payout part-narrated, and dropping it would pay the player less for quitting.
 	Spoils SpoilsSnapshot `json:"spoils"`
@@ -109,6 +115,11 @@ type CardSnapshot struct {
 	// unmodified. Omitted when empty, so an unaltered deck reads as a plain list.
 	CostDelta int `json:"costDelta,omitempty"`
 	AmountPct int `json:"amountPct,omitempty"`
+
+	// Riders are the lasting rules a parasite has attached to this card, in the order they were
+	// attached — which is the order they fire. Omitted when empty, so an unridden deck reads as a
+	// plain list.
+	Riders []RiderSnapshot `json:"riders,omitempty"`
 }
 
 // LoadRun reads the run in progress, and reports whether there was one.
@@ -142,3 +153,13 @@ func SaveRun(s Store, r *RunSnapshot) error {
 // is no moment at which a save should be dropped. When a death exists this is what it calls; until
 // then a resumed loss lands at the start of the room it was lost in, which is what Retry does.
 func DeleteRun(s Store) error { return s.remove(runFile) }
+
+// RiderSnapshot is one rule attached to one card.
+//
+// **The kind is its name, never combat.RiderKind's number.** The enum is append-only and indexes
+// nothing today, but a file outlives the build that wrote it — the same rule that keeps a concept
+// key, an element name and a phase name in here rather than their ordinals.
+type RiderSnapshot struct {
+	Kind   string `json:"kind"`
+	Amount int    `json:"amount"`
+}

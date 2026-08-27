@@ -39,6 +39,15 @@ type record struct {
 	// Hand is the opening hand, dealt over whatever the shuffle produced.
 	Hand []handCard `json:"Hand"`
 
+	// Parasites is what the run opens with in its bucket, by record key.
+	//
+	// **The board piece is otherwise two shops away.** A parasite is bought from the shelf and
+	// spent between the turns of the fight after it, so seeing the dialog at all meant playing to
+	// a shop, buying the bucket, taking one of four, winning the room and opening it — which is
+	// the twenty-minute question this package exists to answer. Keys are checked by the caller,
+	// exactly as Rings are: a parasite key is internal/session's to resolve.
+	Parasites []string `json:"Parasites"`
+
 	// Enemy is a record key from enemies.json. **Empty means the climb's own**, so a scenario that
 	// is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
@@ -241,6 +250,10 @@ func Note() string { return current.Note }
 
 // Rings is what the run should open wearing, in worn order.
 func Rings() []string { return current.Rings }
+
+// Parasites is what the run opens holding in its bucket, by record key. The caller resolves them,
+// for the reason it resolves the rings.
+func Parasites() []string { return current.Parasites }
 
 // Hand is the opening hand to deal, resolved into real cards.
 func Hand() []combat.Card {

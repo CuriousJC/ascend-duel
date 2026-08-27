@@ -70,6 +70,15 @@ const (
 	// turned down, or to guarantee it could not appear — a rule nobody designed, arriving out of
 	// an implementation detail.
 	CanStock
+
+	// BucketStock is which four parasites a bucket of parasites holds. Per fight.
+	//
+	// **Its own stream, on exactly the argument CanStock is under.** A parasite catalogue and a
+	// worm catalogue grow on different schedules and are drawn at the same station, so sharing
+	// either of the other two goods' streams would make one good's contents a function of the
+	// other's — and authoring a parasite would silently reroll every bag every run has ever
+	// opened.
+	BucketStock
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -103,6 +112,7 @@ var streams = [...]stream{
 	ShopStock:   {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
 	BagStock:    {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
 	CanStock:    {name: "can-stock", salt: 0x5EED_CA07, perFight: true},
+	BucketStock: {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

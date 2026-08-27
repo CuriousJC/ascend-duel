@@ -1751,6 +1751,130 @@ and is walked past.
 
 ---
 
+## Parasites — altering the deck *during* a fight *(owner's call, 2026-08-27)*
+
+**A parasite is a consumable you carry into a duel and spend between its turns.** It is bought
+from the shop in a **bucket of parasites**, held in the run, and spent from a board piece on the
+combat screen — the `P` button above the fight log.
+
+**They overlap with worms on purpose** *(owner's call)*. Several parasites do what a worm already
+does. What makes them a different thing is *when* you spend one: a worm is won after a fight and
+applied on the spot, and a parasite is carried and spent in the gap between one turn and the next.
+The overlap is accepted rather than designed around; the two catalogues are separate files with
+separate grammars.
+
+| | |
+|---|---|
+| Bought | the shop's sixth seat, a **bucket of parasites** — 5 vitae, holds 4, keep 1 |
+| Held | in the run's bucket, uncapped, across fights and across a save |
+| Spent | on the combat screen, **between turns only** — never while a round is playing back |
+| Targets | cards **in the hand**, by identity, one or two of them |
+| Lasts | the rest of the run |
+
+### Why between turns, and never inside one
+
+`ResolveRound` decides a whole round before a frame of playback runs, so a card altered
+mid-playback would put a face on screen that disagrees with a blow already computed. The board
+piece is gated on `planning()`, which is the screen's existing predicate for "the player may edit
+the queue". **This is the same constraint that governs playback speed, the debug flags and every
+card in flight**, arriving at the one mechanic that genuinely wanted to break it.
+
+**Card identity is what makes it possible at all.** MECHANICS used to say mid-fight alteration
+would need a real card ID; `combat.Card.ID` landed on 2026-08-24 for the element flip, and a
+parasite's targets are identities rather than deck positions. That matters more here than it does
+for a worm: a parasite may name two cards, and it is spent while a hand, a draw pile and a discard
+pile are all live holding copies of the same cards, so a position would be meaningless by the time
+the player confirmed.
+
+### The grammar: a target, a count and a value
+
+A parasite record is the worm record's shape plus the one field a worm never needed — **how many
+cards it takes**. See `data/parasites.json` and `internal/session/parasite.go`, where a record is
+validated.
+
+| Target | Value | Count | What it does |
+|---|---|---|---|
+| `rider` | a figure, plus a `Rider` name | 1–2 | attaches a lasting rule to a card |
+| `remove` | — | 1–2 | takes cards out of the run |
+| `swap` | a concept key | 1–2 | turns a card into a different card the game already defines |
+| `vitae` | a figure | **0** | fills the purse and touches no card |
+
+**The vocabulary is closed**, the posture every other one in the game takes. A bad record — an
+unknown target, a rider the rules lack, a concept this build has not registered, a `vitae` asking
+for a card — **panics at init**.
+
+**A `swap` keeps the card's identity, and so keeps its riders.** A card the player has already
+spent two parasites on stays the card they invested in; what changes is which card it is. Minting
+a fresh identity would take the investment with it.
+
+**`MaxParasiteTargets` is 2**, because the picker shows the targets side by side and a picker that
+scrolled would be a menu to read rather than a decision to make — the two-worm offer's argument.
+
+### Riders: a rule carried by one card
+
+**A ring waits on a finger and fires for every card that matches it; a rider is the same idea
+aimed the other way.** It belongs to one card of the run, travels with it through the shuffle, the
+hand and the discard, and fires only when that card is played.
+
+| Rider | Fires | Does |
+|---|---|---|
+| `heal-on-play` | as the card is played, **after a chill has taken what it takes** | restores life, capped at full |
+
+- **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
+  parasite does happens to the run; a rider is the one thing read while a round resolves, and that
+  package is at the bottom of the graph and reads no JSON. The *amount* rides on the card, so the
+  rules need no lookup table and nothing to keep in step with a catalogue.
+- **A card carries at most `MaxCardRiders` — three** — and the number is a layout constraint as
+  much as a rules one: a card whose face cannot say what it carries is the failure the whole
+  alteration mechanic exists to avoid.
+- **`Card.Riders` is a fixed array, and it has to be.** `combat.Card` must stay comparable — the
+  screen's face cache and `TestRoundIsDeterministic` both depend on it — so a slice would end
+  both. Same constraint that made `Duelist.Rings` an array.
+- **Riders stack rather than merge.** Two ten-point heals are two riders of ten, which is what
+  keeps the badge honest about how many parasites have been spent on a card.
+- **A card a chill ate heals nothing**, which is why riders fire after the chill and before the
+  blow. A rider on the front card of a turn is exposed to the one thing that can delete it.
+- **A heal that restores nothing is silent.** The cap is applied first and the event carries what
+  actually landed, so the log never reports life that the bar cannot show.
+
+### The card says what the card carries
+
+Effect text reads the card, so a ridden card prints an extra line — `+10 LIFE` — under its own.
+The band holds seven lines at that pitch and no card writes more than three, so three riders still
+fit. **It is not written in the ring pink**: that colour means "a ring did this" everywhere else,
+and a parasite is not a ring.
+
+*(Open: whether a badge row would be better than a line of text. The line is the cheap honest
+answer and the owner has not ruled on the alternative.)*
+
+### Targets come out of the hand *(taken while building it, and the one most worth revisiting)*
+
+The picker offers the **hand**, not the whole deck. Two arguments for it: a mid-fight consumable
+aimed at the card you are about to play is a decision about *this* turn, where one aimed at a card
+somewhere in a pile of forty is the reward screen's decision taken in a worse place; and the hand
+is already on screen. **What it costs is reach** — a card in the draw pile cannot be touched until
+it is drawn.
+
+### The bucket, on the shelf
+
+The bucket is the shop's **third sealed good** and takes the bag's and the can's shape exactly: 5
+vitae, four inside, keep one, its own per-fight stream (`seeds.BucketStock`), one per visit. It
+differs in one way and it is the interesting one — **a stone and a worm are spent the moment they
+are chosen, and a parasite goes into the bucket to be spent later.**
+
+**The shelf is six seats now.** `rowSlot`'s fixed pitch puts six cards in 1172 pixels of 1280, so
+it fits with about 54 clear at each end and a seventh would not. The next good has to narrow the
+pitch or find a second row.
+
+### Run-scoped, and saved
+
+The bucket and every rider are written into `run.json`, **by name and never by ordinal** — the
+rule every other vocabulary in a snapshot is under. A parasite the catalogue no longer holds, or a
+rider the rules lack, is **refused on resume rather than dropped**: a run that came back one
+consumable lighter is a run the player would have to work out had changed.
+
+---
+
 ## Brands
 
 **Brands alter the container; rings alter the contents**. That is the

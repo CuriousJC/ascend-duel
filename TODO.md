@@ -14,6 +14,20 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
+- [?] **Six parasites from the owner's list still need a design decision before they can be
+      written as data** *(owner asked for this to be tracked, 2026-08-27)*. The grammar and the
+      board piece are built — see `MECHANICS.md`'s Parasites section — and the rest of the list
+      is either already expressible or a known extension. These six are not, because what they
+      mean is not settled: **lucky card**; **one card into two** (is that `duplicate`, or a split
+      into two different cards?); **pump up cards by 1** (cost, damage, or a rung up the ladder?);
+      **random generation of upgrade cards / whetstones** (does it make *stones*, or a new
+      consumable?); **chance to increase a ring** (which ring, and increase what?); **wild card**
+      (matches any axis, or any one axis you name?). Two of them are also random, which needs its
+      own stream and its own argument in `MECHANICS.md` per the `randomness` skill.
+      Separately and already known: **changing a card's form** is blocked — form is concept-wide,
+      so a form parasite would change every copy of that card in the deck. Making `combat.Card`
+      carry its own form is a field, the hand matcher, the card face and the form mark.
+
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the

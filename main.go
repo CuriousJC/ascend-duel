@@ -131,6 +131,10 @@ func main() {
 		// **A chosen deck, where the rings are a chosen row.** Nil unless the fixture says
 		// otherwise, so this is the authored deck for every scenario that does not care.
 		session.StartingDeckList = scenario.Deck()
+
+		// **A chosen bucket, on the same terms.** The board piece is otherwise a shop and a fight
+		// away from any launch; see internal/scenario.
+		session.StartingParasites = scenario.Parasites()
 	}
 
 	// **The profile is opened before the run, because it can decide what the run is.** A run in

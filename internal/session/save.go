@@ -41,6 +41,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Worn:       s.Worn(),
 		Grown:      map[string]int{},
 		Stones:     s.StoneCounts(),
+		Held:       s.Held(),
 		NextCardID: s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
@@ -59,12 +60,22 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 	}
 
 	for _, c := range s.deck {
+		// **Riders are written as names, never as the enum's numbers.** RiderKind is append-only
+		// and indexes nothing today, but a save file outlives the build that wrote it and an
+		// ordinal in an old one will eventually mean something else — the same rule every other
+		// vocabulary in a snapshot is under.
+		riders := make([]profile.RiderSnapshot, 0, combat.MaxCardRiders)
+		for _, r := range c.RiderList() {
+			riders = append(riders, profile.RiderSnapshot{Kind: r.Kind.String(), Amount: r.Amount})
+		}
+
 		out.Deck = append(out.Deck, profile.CardSnapshot{
 			ID:        c.ID,
 			Concept:   combat.ConceptOf(c.Concept).Key,
 			Element:   c.Element.String(),
 			CostDelta: c.CostDelta,
 			AmountPct: c.AmountPct,
+			Riders:    riders,
 		})
 	}
 	return out
@@ -108,13 +119,29 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		if !ok {
 			return nil, 0, fmt.Errorf("card %q is %q, which is not an element", c.Concept, c.Element)
 		}
-		deck = append(deck, combat.Card{
+		card := combat.Card{
 			ID:        c.ID,
 			Concept:   concept,
 			Element:   element,
 			CostDelta: c.CostDelta,
 			AmountPct: c.AmountPct,
-		})
+		}
+		// **A rider this build has not got is refused rather than dropped.** A card resumed
+		// without the parasite spent on it is the one mistake that cannot be repaired afterwards,
+		// and it would look like a rider that had simply stopped working.
+		for _, r := range c.Riders {
+			kind, ok := combat.ParseRiderKind(r.Kind)
+			if !ok {
+				return nil, 0, fmt.Errorf("card %q carries rider %q, which the rules do not have",
+					c.Concept, r.Kind)
+			}
+			card, ok = card.AddRider(combat.Rider{Kind: kind, Amount: r.Amount})
+			if !ok {
+				return nil, 0, fmt.Errorf("card %q carries more than %d riders",
+					c.Concept, combat.MaxCardRiders)
+			}
+		}
+		deck = append(deck, card)
 	}
 
 	// **Built bare rather than through New or Start.** Both of those mint fresh card identities and
@@ -142,6 +169,15 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 			return nil, 0, fmt.Errorf("ring %q is not one this build can wear", key)
 		}
 	}
+	// **A parasite the catalogue no longer holds is refused rather than dropped**, on the terms a
+	// ring is: a run resumed one consumable lighter is a run the player would have to work out had
+	// changed. Order is acquisition order and is kept, because it is the order the bucket draws.
+	for _, key := range snap.Held {
+		if !s.Hold(key) {
+			return nil, 0, fmt.Errorf("parasite %q is not one this build has", key)
+		}
+	}
+
 	// **A stone naming a rung this build has not got is refused rather than dropped**, exactly as a
 	// ring the catalogue no longer holds is: a run resumed quietly paying less for its Card Pairs is
 	// a run the player would have to work out had changed.

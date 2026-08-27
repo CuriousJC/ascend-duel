@@ -334,6 +334,31 @@ func cardEffect(card combat.Card) string {
 	return attackVerb(c.Form) + " for " + multiplierText(amount) + " DMG"
 }
 
+// riderText is the lines a card's riders add under its own, one line each.
+//
+// **The face has to say what a parasite did to a card.** CLAUDE.md's rule about an altered card
+// printing what it actually does is the whole reason effect text reads the card rather than the
+// concept, and a rider is the largest thing a card can carry that the concept knows nothing about.
+// An extra line is the cheapest honest answer: the band holds seven lines at this pitch and no card
+// in the deck writes more than three, so three riders still fit inside it.
+//
+// **Each line is an authored break**, honoured by cards.WrapText before the width is measured — the
+// same mechanism the elemental worms use to stop four cards reading as four layouts of one.
+//
+// **It is not written in the ring pink.** That colour means "a ring did this" everywhere else on
+// screen, and a parasite is not a ring; borrowing it would say something untrue about where the
+// figure came from.
+func riderText(card combat.Card) string {
+	out := ""
+	for _, r := range card.RiderList() {
+		switch r.Kind {
+		case combat.RiderHealOnPlay:
+			out += "\n+" + strconv.Itoa(r.Amount) + " LIFE"
+		}
+	}
+	return out
+}
+
 // actionPhrase is what follows the verb in a Resolution line, and every phrase carries an article
 // so cardPhrase can slot an element into it.
 //

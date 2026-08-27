@@ -39,18 +39,18 @@ type Game struct {
 	// the other silently did nothing — and now cannot.
 	scenes map[state.ActiveScreen]screens.Scene
 
-	// muteButton is the game's chrome, and the only widget not owned by a scene.
+	// settingsButton is the game's chrome, and the only widget not owned by a scene.
 	//
 	// **CLAUDE.md's rule is that scenes build their own widgets, and this is deliberately
 	// outside it rather than an exception to it.** The score is started once in main and
-	// loops across every screen for the whole session, so the control that silences it
-	// belongs at the same level. The alternative was the same button on four scenes, four
+	// loops across every screen for the whole session, and the game's one clock is the same
+	// number on every screen, so the control that opens both belongs at the same level. The alternative was the same button on four scenes, four
 	// placements to keep in step and four callbacks into one package — which is a worse
 	// answer to "who owns this" than admitting the game has a frame.
 	//
 	// Built lazily in Update, because it needs nothing from a scene and nothing from a
 	// window, and NewGame runs before assets and fonts are loaded.
-	muteButton *models.Button
+	settingsButton *models.Button
 }
 
 func NewGame() *Game {
@@ -63,6 +63,7 @@ func NewGame() *Game {
 			state.PostBattle: &screens.PostBattleScene{},
 			state.Shop:       &screens.ShopScene{},
 			state.Credits:    &screens.CreditsScene{},
+			state.Settings:   &screens.SettingsScene{},
 		},
 	}
 }

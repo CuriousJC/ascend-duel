@@ -97,6 +97,13 @@ const (
 	GlyphSound
 	GlyphMuted
 
+	// GlyphGear is the settings control: a cog, in the game's chrome corner.
+	//
+	// **It replaced the mute button there on 2026-08-27.** A mute latch and a volume bar are two
+	// controls over one number, so the corner stopped being a switch and became a door — the
+	// score's level is a bar on the settings screen and zero on it is the only silence there is.
+	GlyphGear
+
 	// The four form marks a card carries in its corner: a spear, a sword, an axe, a bulb.
 	//
 	// **Drawn rather than generated, and authored at 32.** The span language above describes a
@@ -115,7 +122,7 @@ func GlyphKinds() []GlyphKind {
 	return []GlyphKind{
 		GlyphDamage, GlyphActionPoints,
 		GlyphAttack, GlyphDefend, GlyphPrepare,
-		GlyphSound, GlyphMuted,
+		GlyphSound, GlyphMuted, GlyphGear,
 		GlyphFormStab, GlyphFormSlash, GlyphFormCrush, GlyphFormPlan,
 	}
 }
@@ -429,12 +436,65 @@ var mutedSpeakerShape = shape{
 	},
 }
 
+// A cog: a ring with a square hole and eight teeth, at the chrome size.
+//
+// **Eight teeth, four on the axes and four on the diagonals** *(owner's call, 2026-08-27)*. Four
+// was tried first and read as a compass rose rather than a cog — at this size a gear is recognised
+// by the *count* of the teeth around it before any one of them is legible, so four is too few
+// whatever they look like individually.
+//
+// **Each tooth is six pixels, which is the floor and not a choice.** The rim is derived one pixel
+// thick, so a tooth narrower than about five renders as two rows of outline around one row of
+// metal and reads as a scratch — the constraint every silhouette in this file is written against.
+// Six by six is what fits eight of them on a 32-pixel canvas: the four diagonal ones are squares
+// standing off the body's shoulders rather than wedges, because a wedge tapers and the taper is
+// exactly the part that falls under the floor.
+//
+// **The hole is what makes it a cog rather than a flower.** It is 8x8 in the middle, leaving a
+// seven-pixel rim on each side — again the five-pixel floor, measured rather than guessed.
+var gearShape = shape{
+	size: chromeGlyphSize,
+	fill: map[int][]span{
+		// The top tooth, then the two upper diagonals joining it.
+		0: {{13, 18}}, 1: {{13, 18}}, 2: {{13, 18}},
+		3: {{3, 8}, {13, 18}, {23, 28}},
+		4: {{3, 8}, {13, 18}, {23, 28}},
+
+		// The body's upper curve, widening out to meet the diagonals.
+		5: {{3, 8}, {12, 19}, {23, 28}},
+		6: {{3, 8}, {10, 21}, {23, 28}},
+		7: {{3, 8}, {9, 22}, {23, 28}},
+		8: {{3, 28}},
+		9: {{7, 24}}, 10: {{6, 25}}, 11: {{6, 25}},
+
+		// The waist: the hole opens, and the two side teeth run out of the rim either side of it.
+		12: {{5, 11}, {20, 26}},
+		13: {{0, 11}, {20, 31}}, 14: {{0, 11}, {20, 31}},
+		15: {{0, 11}, {20, 31}}, 16: {{0, 11}, {20, 31}},
+		17: {{0, 11}, {20, 31}}, 18: {{0, 11}, {20, 31}},
+		19: {{5, 11}, {20, 26}},
+
+		// The body's lower curve, mirroring the upper one.
+		20: {{6, 25}}, 21: {{6, 25}}, 22: {{7, 24}},
+		23: {{3, 28}},
+		24: {{3, 8}, {9, 22}, {23, 28}},
+		25: {{3, 8}, {10, 21}, {23, 28}},
+		26: {{3, 8}, {12, 19}, {23, 28}},
+
+		// The two lower diagonals, and the bottom tooth.
+		27: {{3, 8}, {13, 18}, {23, 28}},
+		28: {{3, 8}, {13, 18}, {23, 28}},
+		29: {{13, 18}}, 30: {{13, 18}}, 31: {{13, 18}},
+	},
+}
+
 var glyphShapes = map[GlyphKind]shape{
 	GlyphDamage:       swordShape,
 	GlyphActionPoints: runShape,
 	GlyphPrepare:      smallBookShape,
 	GlyphSound:        speakerShape,
 	GlyphMuted:        mutedSpeakerShape,
+	GlyphGear:         gearShape,
 }
 
 // glyphArt is the hand-drawn half of the set: a kind whose picture is a PNG rather than a

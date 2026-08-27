@@ -340,7 +340,7 @@ exists:
 - **No `time.Now()` in game rules, and never let map iteration order decide anything.** Go
   randomises map order deliberately; iterate a sorted key slice.
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before
-  playback begins, so animation speed, a game-speed setting and any skip button may alter
+  playback begins, so animation speed, the player's game-speed setting and any skip button may alter
   pacing and must not alter results. Same constraint as the debug flags, `internal/trace`,
   `internal/idle` and the scripted demo.
 
@@ -389,6 +389,34 @@ that feels like it wants one needs a different design.
 
 - **Wanting a text field is a design smell.** Find the click or drag version instead.
   A settings value is a row of buttons or a slider, never a number you type.
+
+### The settings screen, and the second widget in the game
+
+[internal/screens/settings.go](internal/screens/settings.go) is the program's own screen: a music
+volume bar, a game-speed bar, and Back. `models.Slider` + `systems.UpdateSlider`/`DrawSlider` is
+the widget, built the same way `models.Button` is and following the same rules — one named colour,
+a bevelled face, a cached image repainted only when something visible changed.
+
+- **It is reached from the cog in the game's chrome, from any screen**, so it is the only screen
+  that cannot name its successor: `state.ReturnScreen` is where Back goes, recorded by whoever
+  opened it. **It never touches `session.Phase`** — settings is not a station of a run, so opening
+  it mid-climb is a look at a dialog rather than a decision.
+- **Adding it was the usual three edits minus one.** No `session.Phase` and no entry in
+  `screens/flow.go`, because it is not part of the run loop; just the `ActiveScreen` and the
+  registry in `internal/game`.
+- **A slider is 0..1 and knows nothing about what it is setting.** The scene maps that onto the
+  range — `speedFor`/`speedValue` against `profile.SpeedMin`..`SpeedMax`. A widget carrying its
+  own bounds would put a game decision inside something every screen shares.
+- **`OnChange` fires while dragging and `OnCommit` once on release.** That split is what makes a
+  volume bar audible under the cursor while costing one write to disk rather than a hundred.
+- **The travel is inset by half a knob at each end.** Without it a value of 1 needs the cursor
+  past the control's own right edge, so a full-width bar can never be turned all the way up —
+  `TestBothEndsOfTheTravelAreReachable`.
+- **`models.Slider.Ink` exists because the game has two grounds.** The near-white default is for a
+  dark screen; this one is painted on `screenGround` and passes `groundInk`. Same reason
+  `ColorToward` exists beside `ColorAtStrength`.
+- **The sounds bar is deliberately absent.** There is no sound system yet, and a slider setting a
+  number nothing reads is a control that lies about what it does.
 ### Cards fly; they never appear
 
 **A card that changes where it is on screen travels there** *(2026-08-17)*. Drawn, discarded,
@@ -577,27 +605,38 @@ is no build step.**
 - **No `math/rand`**, per the determinism rules. The drum noise is a 15-bit shift
   register seeded from each note's start frame, so two renders cannot differ.
 - **Failing to open the audio device is logged, never fatal.** A machine with no sound
-  card still plays the game — and `music.Available()` reports it, so the mute button
-  disables itself rather than silently doing nothing.
-- **Mute is a button, never a hotkey** — the input vocabulary has no keyboard. It lives in
-  the game's chrome; see the section below. `SetMuted` takes the volume to zero rather than
-  pausing, so the score keeps running underneath and unmuting lands where it would have got
-  to rather than resuming a phrase already heard.
-- **The game boots muted** — `music.muted` starts true and `Start` reads it when it opens the
-  device, so the score is running but silent until the button is pressed. There is no settings
-  screen to turn music off from, and music that begins on its own is the first thing a new
-  player reaches for a control to stop.
+  card still plays the game — and `music.Available()` reports it, so the volume bar on the
+  settings screen disables itself rather than silently doing nothing.
+- **There is no mute, only a level** *(owner's call, 2026-08-27)*. `SetLevel(0..1)` is the whole
+  control and zero is the only silence there is; the mute latch went because a latch and a bar
+  are two controls over one number that then have to be kept from disagreeing. The bar is on the
+  settings screen — a control, never a hotkey, since the input vocabulary has no keyboard.
+- **`fullVolume` is the ceiling the bar's 1 actually means**, and it is a third of the device's
+  range because this is background music under combat sounds that do not exist yet. "How loud is
+  the score allowed to get" stays one decision in `internal/music` rather than a figure typed
+  into a scene.
+- **Volume, not Pause.** Pausing would hold the score at the bar it was on, so coming back from
+  silence mid-duel would drop the player into a phrase they had already heard. A track that keeps
+  running underneath puts them wherever the music would have got to.
+- **The game boots silent for a new player** — a fresh `profile.Settings` has `MusicVolume: 0`,
+  and `main` applies the saved settings *before* `Start` opens the device, so a returning player
+  gets back the level they chose rather than a moment of the wrong one. Music that begins on its
+  own is the first thing a new player reaches for a control to stop.
 
 ### The frame: one control that belongs to no screen
 
-[internal/game/chrome.go](internal/game/chrome.go) draws the **mute button** — a 44px
-square in the bottom-left corner of every screen, carrying a generated speaker glyph.
+[internal/game/chrome.go](internal/game/chrome.go) draws the **settings button** — a 44px
+square in the bottom-left corner of every screen, carrying a generated cog.
+
+**It was the mute button until 2026-08-27** and is now the door to the settings screen. What the
+corner lost is one-click silence; what it gained is somewhere to put the game speed, which had no
+control at all.
 
 - **It is deliberately outside "scenes own their own widgets" rather than an exception to
   it.** The score is started once in `main` and loops for the whole session across every
-  screen, so the control that silences it belongs at the same level. The alternative was
-  the same button on four scenes: four placements to keep in step and four callbacks into
-  one package.
+  screen, and the game's one clock is the same number on every screen, so the control that
+  opens both belongs at the same level. The alternative was the same button on six scenes:
+  six placements to keep in step and six callbacks into one package.
 - **The bar for joining the frame is high, and the file says so.** Something true for the
   whole session, on every screen, owned by no scene. A frame is easy to grow by accident.
 - **`state.ModalOpen` is what it cost.** A scene sets it while it has a dialog up and the
@@ -605,14 +644,28 @@ square in the bottom-left corner of every screen, carrying a generated speaker g
   overlay, whose whole design is that the control closing it is the only lit thing on
   screen. **The frame clears the flag each tick and the scene re-asserts it**, so leaving a
   screen with its overlay open cannot hide the chrome for the rest of the session.
+- **It also stands down on the settings screen itself**, which is the one screen where the corner
+  would be a door into the room the player is already standing in. `chromeShowing` is the one
+  predicate both halves ask; that screen carries its own Back button.
+- **Never disabled.** The mute button it replaced was, on a machine whose audio device would not
+  open. This one opens a screen, which always works — it is the *volume bar* on that screen that
+  goes dead, and it says why underneath itself rather than merely going grey.
 - **Square and iconic because the corner is 52 pixels wide** on the combat screen — the hand
   band starts at x=52 and the action-point figure sits on its left edge, so a labelled
   button does not fit beside them.
-- **`GlyphSound` and `GlyphMuted` are the only glyphs that are not about a card**, at a
-  third size, 32px. They are generated for the same reason everything else is — no
-  provenance question — and the muted one's bar is an `accent` rather than part of the
-  silhouette, because a bar merged into a solid shape is only visible where it leaves it.
-  The glyph says the **state**, not the action: a crossed speaker means the score is off.
+- **`GlyphSound`, `GlyphMuted` and `GlyphGear` are the only glyphs that are not about a card**,
+  at a third size, 32px. They are generated for the same reason everything else is — no
+  provenance question. **`GlyphGear` is what the corner draws now**; the two speakers are kept
+  because they are still on the contact sheet and are the obvious art for a volume readout, and
+  because `GlyphKind` is append-only whatever stops drawing.
+- **The cog has eight teeth: four on the axes, four on the diagonals** *(owner's call,
+  2026-08-27)*. Four was tried first and read as a compass rose — at this size a gear is
+  recognised by the *count* of the teeth before any one of them is legible. Each is six pixels,
+  which is the floor rather than a choice: the rim is derived one pixel thick, so anything under
+  about five renders as two rows of outline around one row of metal. The four diagonal teeth are
+  squares standing off the body's shoulders rather than wedges, because a wedge tapers and the
+  taper is the part that falls under the floor. The 8x8 hole is what makes it a cog rather than a
+  flower, and it leaves a seven-pixel rim.
 
 ### Cards: the left column carries the element, the border carries state
 
@@ -899,7 +952,7 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
 ### `internal/profile` is what survives a run, and it is the only thing that touches the disk
 
 [internal/profile](internal/profile) owns the two files the game writes: `profile.json` (the
-player — the tutorial watched, achievements, unlocks) and `run.json` (the run in progress). See
+player — the tutorial watched, achievements, unlocks, and the settings) and `run.json` (the run in progress). See
 MECHANICS.md §The profile for what they mean; what matters here is where they go and what may never
 happen to them.
 
@@ -918,7 +971,11 @@ happen to them.
   `GlyphKind` and `session.Phase` are all append-only ordinals indexing arrays and caches. A file
   outlives the build that wrote it, so an ordinal in one will eventually mean something else. This
   is where that rule stops being theoretical.
-- **The three call sites are `internal/screens/save.go` and nothing else.** A run is saved by
+- **A setting's zero value is not its default, and that is the one trap in the file.** An older
+  profile has no settings block at all, so both fields read as zero — and a speed of zero would
+  stop every clock in the game. `LoadProfile` normalises and clamps; nothing about a save file may
+  ever fail a launch, so an out-of-range number is brought into range rather than rejected.
+- **The call sites are `internal/screens/save.go` and nothing else.** A run is saved by
   `advanceRun` at each phase transition, the achievement is awarded where a fight is won, and the
   tutorial is marked seen where the overlay ends. Persistence is deliberately not something a scene
   does.
@@ -1122,8 +1179,9 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   screen look right — say which of the two is wrong and let the owner decide. That is a
   game-design call and it ripples into the tests and the balance.
 - **Presentation may never change an outcome.** `ResolveRound` decides a whole round before
-  playback begins, so animation speed, a game-speed setting, a dialog that pauses the cursor, the
-  debug flags, `internal/trace`, `internal/idle` and the scripted demo may all alter pacing and
+  playback begins, so playback speed, **the player's game-speed setting** — live since
+  2026-08-27, `screens.SetSpeed` scaling `clock.go`'s one beat — a dialog that pauses the cursor,
+  the debug flags, `internal/trace`, `internal/idle` and the scripted demo may all alter pacing and
   none of them may alter results.
 - **Working state belongs to the narrowest thing that needs it.** One screen reads it → the scene.
   It has to outlive a fight → `internal/session`. Every screen genuinely needs it →

@@ -16,11 +16,13 @@ func GoToCombat(gs *state.GlobalState) {
 	gs.Debug2 = gs.ActiveScreen.String()
 }
 
-// OpenSettings is a stub. There is no settings screen yet, and deliberately no
-// NewScreen here — setting it without changing screen would cost a skipped Draw and
-// a pointless re-Init of the screen already showing.
+// OpenSettings goes to the settings screen, remembering where the player was so Back can put
+// them there. The chrome's cog does the same thing from every other screen — see game/chrome.go,
+// which cannot call this because actions sits below it and the frame is not a scene.
 func OpenSettings(gs *state.GlobalState) {
-	fmt.Println("Settings Button Clicked!")
+	gs.ReturnScreen = gs.ActiveScreen
+	gs.ActiveScreen = state.Settings
+	gs.NewScreen = true
 }
 
 // QuitGame asks the loop to stop. game.Update turns this into game.ErrClosing.

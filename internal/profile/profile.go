@@ -48,9 +48,78 @@ type Profile struct {
 	// own commit where its effect can be seen.
 	HandsDiscovered []string `json:"handsDiscovered"`
 
+	// Settings is what the player has chosen about the program rather than about a run: how loud
+	// the score is and how fast the game moves. **They are on the profile rather than in a file
+	// of their own** *(owner's call, 2026-08-27)* — the profile is already the per-user file the
+	// game writes, and a second one would double the migration policy above for two numbers.
+	//
+	// **Its zero value is not its default**, which is the one thing to know before reading it: a
+	// speed of 0 would stop every clock in the game. LoadProfile normalises, and Defaults says
+	// what a fresh player gets.
+	Settings Settings `json:"settings"`
+
 	// unknown is every field this build did not recognise, kept byte-for-byte so that saving a
 	// profile written by a newer build cannot delete what that build recorded. See loadProfile.
 	unknown map[string]any
+}
+
+// Settings is the pair of preferences the settings screen owns.
+//
+// **Both are stored as the thing the player set, not as the thing the game uses.** Music is 0..1
+// against whatever ceiling internal/music decides is full; speed is a multiplier on the game's one
+// clock. Storing a tick count or a device volume would put a tuning decision in a file that
+// outlives the build that made it.
+type Settings struct {
+	// MusicVolume is how loud the score is, 0 (silent) to 1.
+	//
+	// **A fresh profile is silent.** Music that begins on its own is the first thing a new player
+	// reaches for a control to stop, and that rule predates there being anywhere to stop it from.
+	MusicVolume float64 `json:"musicVolume"`
+
+	// Speed is the game-speed multiplier: 1 is the speed every duration in the game was tuned at,
+	// above 1 is faster, below is slower. See internal/screens/clock.go, which is the one clock it
+	// scales.
+	//
+	// **It may never change an outcome.** A whole round is resolved before playback begins, so
+	// this moves pictures and nothing else — the same constraint the debug flags are under.
+	Speed float64 `json:"speed"`
+}
+
+// Speed limits. **A slider that can reach zero would stop the game**, and one that can reach ten
+// would make a duel unreadable, so the travel is bounded here rather than by whichever scene draws
+// the bar.
+const (
+	SpeedMin = 0.5
+	SpeedMax = 2.0
+)
+
+// Defaults is what a player who has never opened the settings screen is playing at.
+func Defaults() Settings { return Settings{MusicVolume: 0, Speed: 1} }
+
+// normalise brings a settings block read off disk into range.
+//
+// **A missing field reads as zero, and zero speed is not a speed.** An older profile has no
+// settings block at all, so this is the path every existing profile takes; a hand-edited or
+// corrupt one takes it too. Clamping rather than rejecting keeps the rule that nothing about a
+// save file may ever fail a launch.
+func (s Settings) normalise() Settings {
+	if s.Speed == 0 {
+		s.Speed = Defaults().Speed
+	}
+	s.Speed = clamp(s.Speed, SpeedMin, SpeedMax)
+	s.MusicVolume = clamp(s.MusicVolume, 0, 1)
+	return s
+}
+
+func clamp(v, lo, hi float64) float64 {
+	switch {
+	case v < lo:
+		return lo
+	case v > hi:
+		return hi
+	default:
+		return v
+	}
 }
 
 // AchievementFirstSteps is awarded for winning a duel — the first enemy of any run, at which point
@@ -118,28 +187,32 @@ func LoadProfile(s Store) (*Profile, bool, error) {
 	// hand-written UnmarshalJSON that has to be kept in step with the struct above it.
 	var raw map[string]any
 	if _, err := s.read(profileFile, &raw); err != nil {
-		return &Profile{Version: Version}, false, err
+		return freshProfile(), false, err
 	}
 
 	var p Profile
 	found, err := s.read(profileFile, &p)
 	if err != nil {
-		return &Profile{Version: Version}, false, err
+		return freshProfile(), false, err
 	}
 	if !found {
 		// **An inert store is not writable**, even though there is nothing there to conflict with:
 		// "writable" is what a caller checks before spending effort saving, and a store with
 		// nowhere to write would otherwise fail every save and log a line each time.
-		return &Profile{Version: Version}, s.Dir() != "", nil
+		return freshProfile(), s.Dir() != "", nil
 	}
 
 	p.unknown = unrecognised(raw)
+	p.Settings = p.Settings.normalise()
 	if p.Version > Version {
 		return &p, false, nil
 	}
 	p.Version = Version
 	return &p, true, nil
 }
+
+// freshProfile is the profile of a player the game has never met.
+func freshProfile() *Profile { return &Profile{Version: Version, Settings: Defaults()} }
 
 // SaveProfile writes the profile.
 func SaveProfile(s Store, p *Profile) error {
@@ -159,6 +232,7 @@ func (p *Profile) merged() map[string]any {
 	out["achievements"] = nonNil(p.Achievements)
 	out["unlocks"] = nonNil(p.Unlocks)
 	out["handsDiscovered"] = nonNil(p.HandsDiscovered)
+	out["settings"] = p.Settings
 	return out
 }
 
@@ -166,6 +240,7 @@ func (p *Profile) merged() map[string]any {
 var known = map[string]bool{
 	"version": true, "tutorialSeen": true,
 	"achievements": true, "unlocks": true, "handsDiscovered": true,
+	"settings": true,
 }
 
 func unrecognised(raw map[string]any) map[string]any {

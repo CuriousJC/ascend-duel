@@ -135,8 +135,9 @@ func (s *Session) Sell(key string) bool {
 // five from the room plus a tenth of the life left, so a good is about a fight's takings — bought
 // instead of a ring rather than alongside one.
 const (
-	bagPrice = 5
-	canPrice = 5
+	bagPrice    = 5
+	canPrice    = 5
+	bucketPrice = 5
 )
 
 // bagSize and canSize are how many are drawn from inside.
@@ -145,8 +146,9 @@ const (
 // between two; this is what five vitae buys over that, and it is why the can is worth opening at
 // all when a worm arrives free every fight.
 const (
-	bagSize = 4
-	canSize = 4
+	bagSize    = 4
+	canSize    = 4
+	bucketSize = 4
 )
 
 // BagPrice, CanPrice, BagSize and CanSize are the figures a screen writes on the cards. **Asked
@@ -157,11 +159,16 @@ func CanPrice() int { return canPrice }
 func BagSize() int  { return bagSize }
 func CanSize() int  { return canSize }
 
+// BucketPrice and BucketSize are the third good's, on the same terms.
+func BucketPrice() int { return bucketPrice }
+func BucketSize() int  { return bucketSize }
+
 // CanAffordBag and CanAffordCan report whether the purse covers one. **The question, not the
 // guard** — `BuyBag` and `BuyCan` check the purse themselves, exactly as `CanBuy` sits beside
 // `Buy`. They exist so a shelf can dim a card rather than swallow a click.
-func (s *Session) CanAffordBag() bool { return s.vitae >= bagPrice }
-func (s *Session) CanAffordCan() bool { return s.vitae >= canPrice }
+func (s *Session) CanAffordBag() bool    { return s.vitae >= bagPrice }
+func (s *Session) CanAffordCan() bool    { return s.vitae >= canPrice }
+func (s *Session) CanAffordBucket() bool { return s.vitae >= bucketPrice }
 
 // BuyBag and BuyCan pay for a sealed good and report whether they could.
 //
@@ -172,3 +179,9 @@ func (s *Session) CanAffordCan() bool { return s.vitae >= canPrice }
 // snapshotting a bag nobody has opened yet.
 func (s *Session) BuyBag() bool { return s.SpendVitae(bagPrice) }
 func (s *Session) BuyCan() bool { return s.SpendVitae(canPrice) }
+
+// BuyBucket is the third good, and the one whose contents go *into* the run rather than being
+// applied on the spot. **It still only moves the purse**: what is drawn is the screen's, and
+// `Hold` is what puts the chosen parasite in the bucket — so a purchase interrupted by a quit
+// costs the vitae and hands back nothing, the same deal the other two make.
+func (s *Session) BuyBucket() bool { return s.SpendVitae(bucketPrice) }

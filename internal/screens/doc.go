@@ -272,6 +272,9 @@
 //     planned. The opponent's cards are drawn face up and that is temporary — concealEnemy is the
 //     screen's concealment predicate and this row deliberately ignores it, on the owner's call,
 //     with cards.Spec.FaceDown already built as the lever for putting it back.
+//   - combat_parasite.go — the bucket: the board piece a parasite is spent from, behind the P
+//     button above the fight log. Two stages — pick a parasite, pick the cards out of the hand —
+//     and live only while planning(), because a round is resolved before it is drawn.
 //   - combat_log.go — the fight log, and the button beside the draw pile that opens it
 //     (2026-08-18). Every round of the fight in sentences, on the deck overlay's own footprint. It
 //     replaced a live feed rather than joining it: that feed held one round, cleared at the start

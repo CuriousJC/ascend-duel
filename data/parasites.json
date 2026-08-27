@@ -1,0 +1,34 @@
+[
+  {
+    "ParasiteRecord": "leech",
+    "Name": "Leech",
+    "Target": "rider",
+    "Rider": "heal-on-play",
+    "Value": "10",
+    "Count": 1,
+    "Text": "one card\nheals 10"
+  },
+  {
+    "ParasiteRecord": "hoard",
+    "Name": "Hoard",
+    "Target": "vitae",
+    "Value": "20",
+    "Count": 0,
+    "Text": "gain 20\nvitae"
+  },
+  {
+    "ParasiteRecord": "gnaw",
+    "Name": "Gnaw",
+    "Target": "remove",
+    "Count": 2,
+    "Text": "eat two\ncards"
+  },
+  {
+    "ParasiteRecord": "mimic",
+    "Name": "Mimic",
+    "Target": "swap",
+    "Value": "Strike",
+    "Count": 1,
+    "Text": "make one card\na STRIKE"
+  }
+]

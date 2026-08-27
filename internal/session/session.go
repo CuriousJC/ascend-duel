@@ -82,6 +82,11 @@ type Session struct {
 	// for the rung and the rung is what the ladder is actually read against. See stone.go.
 	stones map[string]int
 
+	// held is the bucket: every parasite the run is carrying, by record key, in the order they
+	// were acquired. **A list rather than a count per key** — two of the same are two things to
+	// spend, and the board piece draws a card for each. See parasite.go.
+	held []string
+
 	// tutorial is the teaching run, or nil for a run nobody is being taught. See tutorial.go for
 	// why a step cursor belongs to the run rather than to the screen that happens to be up.
 	tutorial *tutorial.Run
@@ -106,6 +111,12 @@ func New(deck []combat.Card) *Session {
 
 	for _, key := range StartingRings {
 		s.Wear(key)
+	}
+	// **The bucket is filled the same way the fingers are**, and a key the catalogue has not got is
+	// dropped rather than held — `Hold` is what refuses it. See StartingParasites, which is empty
+	// as shipped.
+	for _, key := range StartingParasites {
+		s.Hold(key)
 	}
 	return s
 }

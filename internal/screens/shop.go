@@ -168,12 +168,13 @@ type ShopScene struct {
 	// answers and the shelf does not. See handspanel.go.
 	hands handsToggle
 
-	// bagBought and canBought are whether this visit's two sealed goods have been taken.
+	// bagBought, canBought and bucketBought are whether this visit's three sealed goods have been
+	// taken.
 	//
 	// **Once each per visit** *(owner's call, 2026-08-27)*, restocked on the next. It bounds what a
 	// rich run can do in one stop and keeps the shop a short offer rather than a vending machine —
 	// the same argument the three-ring shelf is under.
-	bagBought, canBought bool
+	bagBought, canBought, bucketBought bool
 
 	// good is the dialog a purchase opens: the four that were inside, and which one is taken. See
 	// shop_goods.go.
@@ -206,7 +207,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.leaving = false
 	s.from, s.move = nil, travel{}
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
-	s.bagBought, s.canBought = false, false
+	s.bagBought, s.canBought, s.bucketBought = false, false, false
 	s.good.reset()
 	s.shelf = dealShelf(gs)
 	s.prose.setLines(shopkeeperLines())
@@ -385,7 +386,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	for _, kind := range []goodKind{goodBag, goodCan} {
+	for _, kind := range goodKinds() {
 		seat := s.goodSlot(gs, kind)
 		if s.goodTaken(kind) || !at.In(seat) {
 			continue
@@ -422,15 +423,12 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 	}
 
-	if at.In(s.goodSlot(gs, goodBag)) {
-		s.armed = ""
-		s.openGood(gs, goodBag)
-		return
-	}
-	if at.In(s.goodSlot(gs, goodCan)) {
-		s.armed = ""
-		s.openGood(gs, goodCan)
-		return
+	for _, kind := range goodKinds() {
+		if at.In(s.goodSlot(gs, kind)) {
+			s.armed = ""
+			s.openGood(gs, kind)
+			return
+		}
 	}
 
 	// **A press on a worn ring is not this function's** *(2026-08-26)*. It became two gestures when
@@ -817,8 +815,11 @@ var _ = func(r data.RingData) (string, data.Rarity) { return r.Name, r.Rarity }
 // so the row reads as a pair rather than as two things that happen to be near each other.
 func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectangle {
 	i := len(s.shelf)
-	if kind == goodCan {
+	switch kind {
+	case goodCan:
 		i++
+	case goodBucket:
+		i += 2
 	}
 	return rowSlot(gs, i, s.rowWidth(), gs.PctY(shelfRowPct))
 }
@@ -832,14 +833,22 @@ func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectang
 // cards between the narration and the button and there is no room for two. So the goods stand at
 // the right-hand end of the shelf, told apart by their faces and by the label under them rather
 // than by where they are.
-func (s *ShopScene) rowWidth() int { return len(s.shelf) + 2 }
+// **Six seats since the bucket** *(2026-08-27)*. `rowSlot` is a fixed pitch of `cardWidth + 40`,
+// so six is 1172 pixels of 1280 — it fits, with about 54 clear at each end, and a seventh would
+// not. The next good has to narrow the pitch or find a second row, which is the constraint the
+// paragraph above already describes.
+func (s *ShopScene) rowWidth() int { return len(s.shelf) + len(goodKinds()) }
 
 // goodTaken is whether this visit's copy has already been opened.
 func (s *ShopScene) goodTaken(kind goodKind) bool {
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		return s.bagBought
+	case goodBucket:
+		return s.bucketBought
+	default:
+		return s.canBought
 	}
-	return s.canBought
 }
 
 // goodAffordable is whether the purse covers one. **Asked of the run rather than compared here**,
@@ -849,10 +858,14 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 	if gs.Run == nil {
 		return false
 	}
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		return gs.Run.CanAffordBag()
+	case goodBucket:
+		return gs.Run.CanAffordBucket()
+	default:
+		return gs.Run.CanAffordCan()
 	}
-	return gs.Run.CanAffordCan()
 }
 
 // openGood pays for a sealed good and opens it.
@@ -867,18 +880,24 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 	}
 
 	paid := false
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		paid = gs.Run.BuyBag()
-	} else {
+	case goodBucket:
+		paid = gs.Run.BuyBucket()
+	default:
 		paid = gs.Run.BuyCan()
 	}
 	if !paid {
 		return
 	}
 
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		s.bagBought = true
-	} else {
+	case goodBucket:
+		s.bucketBought = true
+	default:
 		s.canBought = true
 	}
 	s.good.open(gs, kind)
@@ -893,7 +912,7 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace, line func(int, *text.GoTextFace, string, color.RGBA)) {
 
-	for _, kind := range []goodKind{goodBag, goodCan} {
+	for _, kind := range goodKinds() {
 		at := s.goodSlot(gs, kind)
 		if s.goodTaken(kind) {
 			drawEmptySeat(screen, at)
@@ -912,10 +931,14 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image,
 // what is inside is drawn when the bag is opened. A face that could name the four would make these
 // shelf items rather than sealed ones, which is the whole mechanic.
 func goodName(kind goodKind) string {
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		return bagName
+	case goodBucket:
+		return bucketName
+	default:
+		return canName
 	}
-	return canName
 }
 
 func goodLine(kind goodKind) string {
@@ -926,12 +949,19 @@ func goodLine(kind goodKind) string {
 }
 
 func goodPrice(kind goodKind) int {
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		return session.BagPrice()
+	case goodBucket:
+		return session.BucketPrice()
+	default:
+		return session.CanPrice()
 	}
-	return session.CanPrice()
 }
 
+// **The bucket borrows the worm's picture**, for the reason a parasite card does: there is no
+// parasite art, and a placeholder its sibling already wears is better than a blank face. The two
+// goods are told apart by their names and their lines until one of them gets a drawing.
 func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
 	if kind == goodBag {
 		return stoneArt()

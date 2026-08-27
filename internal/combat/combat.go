@@ -106,6 +106,13 @@ func playTurn(
 	}
 	turn = turn[lost:]
 
+	// **Riders fire here: after the chill, before the blow.** A rider belongs to one card rather
+	// than to the duelist, so the moment it wants is "this card was played" — and a card a chill
+	// ate was never played. Putting it in front of the attack phase is what makes a heal arrive in
+	// time to matter to the turn it was spent in, rather than after the round it was meant to
+	// survive. See rider.go.
+	events, actor = playRiders(events, side, actor, turn, round)
+
 	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
 	// announced, then the hand they form is announced, then a single figure of damage lands. Five
 	// Strikes are not five hits; they are one Four of a Kind.
@@ -687,6 +694,51 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) (Eve
 }
 
 // reduce takes damage off a life total without letting it go negative.
+// playRiders fires every rider on every card of a turn, in queue order.
+//
+// **One event per rider that did something.** A heal on a duelist already at full life is a rider
+// that fired and changed nothing, and emitting a zero would put a line in the feed saying life was
+// restored when none was — so the cap is applied first and a no-op is silent. The rider is still
+// spent, because it is a property of the card rather than a charge.
+func playRiders(events []Event, side Side, actor Duelist, turn []Slot, round int) ([]Event, Duelist) {
+	for _, slot := range turn {
+		heal := slot.Card.HealOnPlay()
+		if heal <= 0 {
+			continue
+		}
+
+		before := actor.CurrentLife
+		actor.CurrentLife = restore(actor.CurrentLife, heal, actor.MaxLife)
+		if actor.CurrentLife == before {
+			continue
+		}
+
+		events = append(events, Event{
+			Kind:    KindHealed,
+			Side:    side,
+			Target:  side,
+			Action:  slot.Card.Concept,
+			Element: slot.Card.Element,
+			Amount:  actor.CurrentLife - before,
+			Life:    actor.CurrentLife,
+			Round:   round,
+		})
+	}
+	return events, actor
+}
+
+// restore is reduce's opposite, and it caps at the duelist's maximum.
+//
+// **Nothing in the game heals above full**, which is a rules decision rather than an arithmetic
+// one: a life total above the bar the card draws would be a number with nowhere to be shown.
+func restore(life, heal, max int) int {
+	life += heal
+	if life > max {
+		return max
+	}
+	return life
+}
+
 func reduce(life, dmg int) int {
 	life -= dmg
 	if life < 0 {

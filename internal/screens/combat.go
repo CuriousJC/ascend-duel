@@ -71,6 +71,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindStatus:     1,
 	combat.KindMissed:     1,
 	combat.KindBurned:     1,
+	combat.KindHealed:     1,
 	combat.KindRoundEnd:   1,
 }
 
@@ -274,6 +275,10 @@ type CombatScene struct {
 	// existed and there was no reason to give the screen a fourth pair of fields by hand.
 	hands handsToggle
 
+	// parasites is the bucket dialog: the board piece a consumable is spent from. See
+	// combat_parasite.go, and MECHANICS.md for what a parasite is.
+	parasites parasiteToggle
+
 	// logButton opens and closes it. Held on the scene rather than built in Draw because it
 	// is a widget with hover and press state, like every other button here.
 	logButton *models.Button
@@ -453,6 +458,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.showDeck = false
 	s.showLog = false
 	s.hands.init(handsButtonPlace)
+	s.initParasites()
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
@@ -684,8 +690,13 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// **The hands button is dead under the other two dialogs**, for the reason each of them is
 	// dead under the other: a dialog whose exit is not the brightest thing on screen is a trap,
 	// and two live exits is two.
-	s.hands.block(s.showDeck || s.showLog)
+	s.hands.block(s.showDeck || s.showLog || s.parasites.open)
 	s.hands.update(gs)
+
+	// **The bucket is the fourth dialog and obeys the same rule**: dead under any of the other
+	// three, and taken out of the frame entirely when there is nothing to spend or the round is
+	// playing back. See combat_parasite.go.
+	s.updateParasites(gs)
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
 	// live on top of it. Written unconditionally from what the screen already knows, never
@@ -890,6 +901,9 @@ func eventLabel(e combat.Event) string {
 	case combat.KindBurned:
 		return fmt.Sprintf("burned      %v takes %d from %v, leaving %d",
 			e.Target, e.Amount, combat.StatusOf(e.Status).Key, e.Life)
+	case combat.KindHealed:
+		return fmt.Sprintf("healed      %v restores %d from %v, leaving %d",
+			e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
 	case combat.KindGathered:
 		return fmt.Sprintf("prepared    %v banks %d AP for next round", e.Side, e.Amount)
 	case combat.KindNegated:
@@ -1257,6 +1271,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// first so that opening either of the others covers this one's button along with everything
 	// else. Its own draw puts its button back on top of its own panel.
 	s.hands.draw(gs, screen, s.fightHands())
+
+	// The bucket, beside the hands panel and under the other two, for the same reason: its own
+	// draw puts its button back on top of its own panel.
+	s.drawParasites(gs, screen)
 
 	// The overlay covers everything, card in flight included, and the X goes on top of it. The
 	// two are mutually exclusive rather than stacked — neither opener is live while the other's

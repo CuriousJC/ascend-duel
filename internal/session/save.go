@@ -40,6 +40,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		LifeLeft:   s.lifeLeft,
 		Worn:       s.Worn(),
 		Grown:      map[string]int{},
+		Stones:     s.StoneCounts(),
 		NextCardID: s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
@@ -127,6 +128,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		lifeLeft:   snap.LifeLeft,
 		phase:      phase,
 		grown:      map[string]int{},
+		stones:     map[string]int{},
 		spoils: Spoils{
 			Propagated: snap.Spoils.Propagated,
 			FromLife:   snap.Spoils.FromLife,
@@ -140,6 +142,18 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 			return nil, 0, fmt.Errorf("ring %q is not one this build can wear", key)
 		}
 	}
+	// **A stone naming a rung this build has not got is refused rather than dropped**, exactly as a
+	// ring the catalogue no longer holds is: a run resumed quietly paying less for its Card Pairs is
+	// a run the player would have to work out had changed.
+	for hand, n := range snap.Stones {
+		if _, ok := combat.HandSlot(hand); !ok {
+			return nil, 0, fmt.Errorf("hand %q has stones on it, and is not a rung this build has", hand)
+		}
+		if n > 0 {
+			s.stones[hand] = n
+		}
+	}
+
 	for key, n := range snap.Grown {
 		if _, ok := registeredRings[key]; !ok {
 			return nil, 0, fmt.Errorf("ring %q has grown, and is not in the catalogue", key)

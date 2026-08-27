@@ -168,6 +168,23 @@ type Duelist struct {
 	// couples two things that are not the same thing: affixes are designed to *transform* an
 	// enemy deck, and a card that gained a form would silently gain hands with it.
 	SoloAttacks bool
+
+	// HandStones is how many stones this duelist holds for each rung of the hand ladder, indexed
+	// by the rung's seat in the catalogue — see stone.go, which owns the seats and the arithmetic.
+	//
+	// **A run's opinion about the ladder, carried by the fighter rather than by the catalogue.**
+	// `handTable` is package state shared by every fight and every tool, so a run raising a rung in
+	// place would raise it for the enemy planner and for the review sheets. Equipping is where a
+	// run's stones reach a duelist, which is the same seat `Rings` arrives in.
+	//
+	// **A fixed array rather than a map**, exactly like the defend set and the ring row above and
+	// for the same reason: Duelist has to stay comparable, and `TestRoundIsDeterministic` compares
+	// two resolved duelists with `==`.
+	//
+	// **Enemies never hold one.** Nothing sets it for them, so the zero value is a duelist reading
+	// the catalogue as written — and an enemy has `SoloAttacks` anyway, so it forms no hands to
+	// raise.
+	HandStones [MaxHandSlots]int
 }
 
 // Alive reports whether this duelist can still fight.

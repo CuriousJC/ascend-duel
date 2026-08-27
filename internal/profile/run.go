@@ -64,6 +64,11 @@ type RunSnapshot struct {
 	// nothing in a file.
 	Grown map[string]int `json:"grown"`
 
+	// Stones is how many stones the run has put on each rung of the hand ladder, by **hand key**.
+	// A name rather than a seat, on the same terms `Worn` names a ring record: a seat is a position
+	// in the catalogue this build loaded, and a file outlives the build that wrote it.
+	Stones map[string]int `json:"stones"`
+
 	// Spoils is what the last win still owes, unclaimed. A run saved at the reward station has a
 	// payout part-narrated, and dropping it would pay the player less for quitting.
 	Spoils SpoilsSnapshot `json:"spoils"`

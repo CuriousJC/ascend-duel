@@ -51,6 +51,25 @@ const (
 	// prevent, one file over. Sharing RewardHand would make the shelf a function of the run deck's
 	// size, which is a thing the player changes on the screen immediately before the shop.
 	ShopStock
+
+	// BagStock is which four stones a bag of rocks holds. Per fight.
+	//
+	// **Its own stream, and the question is the one ShopStock already answered.** Sharing
+	// ShopStock would draw the bag off the same sequence as the shelf, so authoring a stone would
+	// change which rings every run was ever offered. It is also drawn from a different list on a
+	// different schedule: `data/stones.json` grows a record per hand, and `hands.json` is tuned
+	// far more often than the rings are.
+	BagStock
+
+	// CanStock is which four worms a can of worms holds. Per fight.
+	//
+	// **Separate from WormOffer even though both draw worms from one catalogue**, which is the
+	// case worth stating: they are two draws that happen in one run at two different stations, and
+	// sharing the stream would make the shop's four a function of which two the reward screen had
+	// already put up. Buying the can would then be able to *guarantee* the pair you had just
+	// turned down, or to guarantee it could not appear — a rule nobody designed, arriving out of
+	// an implementation detail.
+	CanStock
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -82,6 +101,8 @@ var streams = [...]stream{
 	RewardHand:  {name: "reward-hand", salt: 0x5EED_A17E, perFight: true},
 	WormOffer:   {name: "worm-offer", salt: 0x5EED_7A19, perFight: true},
 	ShopStock:   {name: "shop-stock", salt: 0x5EED_5403, perFight: true},
+	BagStock:    {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
+	CanStock:    {name: "can-stock", salt: 0x5EED_CA07, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

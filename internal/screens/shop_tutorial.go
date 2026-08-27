@@ -40,6 +40,10 @@ func (s *ShopScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (imag
 	if a != tutorial.AnchorShopShelf {
 		return image.Rectangle{}, false
 	}
+	// **The rings only, not the two sealed goods beside them** *(2026-08-27)*. The shelf became a
+	// five-seat row that day and the anchor deliberately did not grow with it: the lock leaves only
+	// what is lit clickable, so a lesson about buying a ring cannot be answered by opening a bag of
+	// rocks — and a first shop is not where a player should meet the stones.
 	return rowUnion(shelfSize, func(i int) image.Rectangle { return s.shelfSlot(gs, i) })
 }
 

@@ -549,7 +549,10 @@ func (s *CombatScene) previewBlow() (combat.Blow, []combat.Slot, bool) {
 		return combat.Blow{}, nil, false
 	}
 	turn := combat.ResolutionOrder(s.fighterActions, nil)
-	blow := combat.BlowFor(turn)
+	// **The fighter's own ladder**, so a rung a stone has raised previews at what it will actually
+	// pay. `combat.BlowFor` reads the catalogue as shipped and is the right answer only for a
+	// duelist holding no stones — see combat/stone.go.
+	blow := s.fighter.BlowFor(turn)
 	if len(blow.Cards) == 0 {
 		return combat.Blow{}, nil, false
 	}

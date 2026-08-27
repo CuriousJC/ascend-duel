@@ -200,3 +200,49 @@ func TestEveryPhaseNameParsesBack(t *testing.T) {
 		t.Error("an unknown station must be refused rather than defaulted to the fight")
 	}
 }
+
+// **A raised rung survives a quit**, which is the half of the mechanic a run-scoped upgrade can
+// lose silently: everything still works, the numbers are simply back where they started.
+func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
+	s := New(nil)
+
+	agate, ok := StoneForHand("concept-pair")
+	if !ok {
+		t.Fatal("no stone raises concept-pair")
+	}
+	flint, _ := StoneForHand("form-pair")
+
+	s.UseStone(agate.Record)
+	s.UseStone(agate.Record)
+	s.UseStone(flint.Record)
+
+	want, _ := s.HandMultiplier("concept-pair")
+
+	back, _, err := Resume(nil, nil, s.Snapshot(0))
+	if err != nil {
+		t.Fatalf("the run would not resume: %v", err)
+	}
+
+	if n := back.StonesOn("concept-pair"); n != 2 {
+		t.Errorf("the resumed run holds %d stones on concept-pair, want 2", n)
+	}
+	if n := back.StonesOn("form-pair"); n != 1 {
+		t.Errorf("the resumed run holds %d stones on form-pair, want 1", n)
+	}
+	if got, _ := back.HandMultiplier("concept-pair"); got != want {
+		t.Errorf("the resumed run pays %d for a card pair, want %d", got, want)
+	}
+}
+
+// A snapshot naming a rung this build has not got is refused rather than dropped, on the terms a
+// ring the catalogue no longer holds is: a run quietly paying less than it did is worse than a run
+// that says it cannot be resumed.
+func TestASnapshotNamingARungThisBuildHasNotGotIsRefused(t *testing.T) {
+	s := New(nil)
+	snap := s.Snapshot(0)
+	snap.Stones = map[string]int{"no-such-rung": 1}
+
+	if _, _, err := Resume(nil, nil, snap); err == nil {
+		t.Error("a run resumed holding stones on a rung that does not exist")
+	}
+}

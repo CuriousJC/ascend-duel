@@ -77,6 +77,11 @@ type Session struct {
 	// would mean nothing in a save file.
 	grown map[string]int
 
+	// stones is how many stones the run has put on each rung of the hand ladder, keyed by hand key.
+	// **Keyed by hand rather than by stone record** — one stone per rung, so the record is a name
+	// for the rung and the rung is what the ladder is actually read against. See stone.go.
+	stones map[string]int
+
 	// tutorial is the teaching run, or nil for a run nobody is being taught. See tutorial.go for
 	// why a step cursor belongs to the run rather than to the screen that happens to be up.
 	tutorial *tutorial.Run
@@ -88,7 +93,8 @@ type Session struct {
 // **It opens wearing StartingRings**, which is empty as shipped — see ring.go, where the list and
 // the reason live. A run buys its rings.
 func New(deck []combat.Card) *Session {
-	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{}}
+	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{},
+		stones: map[string]int{}}
 	copy(s.deck, deck)
 
 	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a

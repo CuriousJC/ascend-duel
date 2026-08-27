@@ -123,7 +123,9 @@ func TestTheTwoRowsDoNotOverlapAndStayOnScreen(t *testing.T) {
 		}
 	}
 
-	shelf := rowSlot(gs, 0, shelfSize, gs.PctY(shelfRowPct))
+	// **The row is five seats now**, not three: the three rings plus the bag of rocks and the can
+	// of worms. See ShopScene.rowWidth for why they share one row rather than taking a second.
+	shelf := rowSlot(gs, 0, shelfSize+2, gs.PctY(shelfRowPct))
 	if shelf.Max.Y+shopFigureGap+shopFigureSize >= gs.PctY(offerButtonsPct)-offerButtonHeight/2 {
 		t.Error("the shelf's prices run into the Leave button")
 	}

@@ -352,7 +352,12 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	if d.CurrentLife > d.MaxLife {
 		d.CurrentLife = d.MaxLife
 	}
-	return d
+
+	// **The stones go on last, and they touch nothing above.** Rings move DMG, life and what a card
+	// costs; a stone moves a rung of the hand ladder, which is read at the moment a blow is scored
+	// rather than mixed into the figures here. So the order between the two is not a decision
+	// anybody has to remember. See stone.go.
+	return s.equipStones(d)
 }
 
 // FightDeck is the draw pile this fight opens with: every card the run owns, with every

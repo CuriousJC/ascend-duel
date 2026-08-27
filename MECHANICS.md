@@ -1914,8 +1914,9 @@ it has somewhere to bite — which is what this file asked for.
 
 **A run dies; a profile does not.** The tower is the run — the deck, the purse, the worn rings, the
 room you are in — and the profile is the thin layer that outlives it: whether the tutorial has been
-watched, what has been achieved, what has been unlocked. Standard roguelike shape, and the reason
-the two are separate files on disk rather than one.
+watched, what has been achieved, what has been unlocked, **and what the player has chosen about the
+program** — how loud the score is and how fast the game moves. Standard roguelike shape, and the
+reason the two are separate files on disk rather than one.
 
 **Two files, in the platform's config directory** *(owner's call, 2026-08-25)* — `profile.json` and
 `run.json`, under `os.UserConfigDir()`. Never beside the executable: the game is meant to be sold on
@@ -1958,6 +1959,34 @@ mistake that cannot be repaired afterwards.
 **What is written down is a name, never a number.** Every ordinal in this game is append-only and
 index-shaped — `ConceptID`, `Element`, `StatusID`, `GlyphKind`, `Phase` — so an ordinal in a file
 that outlives its build is an ordinal that will eventually mean something else.
+
+### Settings *(owner's call, 2026-08-27)*
+
+**Two numbers, on the profile rather than in a file of their own**: `musicVolume`, 0 to 1, and
+`speed`, a multiplier between 0.5x and 2x on the game's one clock. The profile is already the
+per-user file the game writes, and a second one would double the migration policy above for two
+numbers.
+
+**They live on a settings screen reached from a cog in the corner of every screen**, which is where
+the mute button used to be. Both are drag bars — CLAUDE.md's rule is that a settings value is a row
+of buttons or a slider and never a number typed in, and a bar is the honest shape for "anywhere
+along here".
+
+**Mute is gone, and zero on the music bar is the only silence there is.** A latch and a bar are two
+controls over one number that then have to be kept from disagreeing. What the corner lost is
+one-click silence; what it gained is somewhere to put the game speed, which had no control at all.
+**A new player still boots silent** — a fresh profile is at zero, because music that begins on its
+own is the first thing a new player reaches for a control to stop.
+
+**The speed setting may never change an outcome, and that is what makes it safe to offer.** A whole
+round is resolved before playback begins, so scaling the beat moves pictures and nothing else — the
+same constraint the debug flags, `internal/trace` and the scripted demo are under. It scales
+`clock.go`'s single beat, which every duration in the game is a fraction of; a duration written as a
+raw number rather than as a fraction of it is one the setting cannot reach, which is what
+`TestNoClockIsWrittenAsARawNumber` has been guarding since before there was a setting.
+
+**A sounds bar is expected and is deliberately not there yet.** There is no sound system, and a
+slider setting a number nothing reads would be a control that lies about what it does.
 
 ## Randomness
 

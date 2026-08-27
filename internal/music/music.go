@@ -7,10 +7,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 )
 
-// volume is the score's resting level. It is low on purpose: this is background music
-// under a game that will eventually have combat sounds over it, and the player has no
-// way to turn it down yet.
-const volume = 0.35
+// fullVolume is what a slider at the top of its travel actually sets the player to.
+//
+// **The scale is not linear from 0 to 1 because the ceiling is not 1.** This is background
+// music under a game that will eventually have combat sounds over it, so the loudest the score
+// is ever meant to be is a third of the device's range. The settings screen offers 0..1 and
+// this is the number it is multiplied by, which is what keeps "how loud is the music allowed to
+// get" one decision in one place rather than a figure typed into a scene.
+const fullVolume = 0.35
 
 // player is held at package level so the garbage collector cannot reach it. An
 // audio.Player carries a finalizer that stops playback, so a player kept only in a
@@ -46,55 +50,64 @@ func Start(midi []byte) error {
 	if err != nil {
 		return fmt.Errorf("music: opening the audio device: %w", err)
 	}
-	if muted {
-		p.SetVolume(0)
-	} else {
-		p.SetVolume(volume)
-	}
+	p.SetVolume(level * fullVolume)
 	p.Play()
 
 	player = p
 	return nil
 }
 
-// muted is whether the score is currently silenced. Package state alongside the player,
-// because it is a property of the one thing this package owns.
+// level is how loud the score is, from 0 (silent) to 1 (fullVolume). Package state alongside
+// the player, because it is a property of the one thing this package owns.
 //
-// **It starts true: the game boots silent and the player turns the score on.** Music that
-// begins on its own is the first thing a new player reaches for a control to stop, and there
-// is no settings screen to stop it from — the mute button in the chrome is the whole vocabulary.
-// Start reads this when it opens the device, so nothing is heard before the button is touched.
-var muted = true
+// **It starts at zero: the game boots silent and the player turns the score up.** Music that
+// begins on its own is the first thing a new player reaches for a control to stop. Start reads
+// this when it opens the device, so nothing is heard before the setting is touched — and the
+// settings screen writes the saved level in before the device is opened, so a returning player
+// gets back the level they chose rather than silence.
+//
+// **There is no separate mute flag** *(owner's call, 2026-08-27)*. A mute latch and a volume bar
+// are two controls over one number that have to be kept from disagreeing; zero on the bar is
+// silence, and it is the only way to be silent.
+var level float64
 
-// Available reports whether there is anything to mute.
+// Available reports whether there is anything to hear.
 //
 // **Opening the audio device is allowed to fail** — a machine with no sound card still plays
-// the game — and when it does, `player` is nil and every call below is a no-op. A mute
+// the game — and when it does, `player` is nil and every call below is a no-op. A volume
 // control that silently did nothing would be worse than none, so the caller asks this and
 // disables it instead.
 func Available() bool { return player != nil }
 
-// Muted reports whether the score is silenced.
-func Muted() bool { return muted }
+// Level reports how loud the score is, from 0 to 1.
+func Level() float64 { return level }
 
-// SetMuted silences the score or restores it.
+// SetLevel sets how loud the score is, clamped to 0..1.
 //
-// **Volume, not Pause, and the difference is what a mute button means.** Pausing would hold
-// the score at the bar it was on and resume from there, so unmuting halfway through a duel
-// would drop the player back into a phrase they had already heard. Muting a track that keeps
+// **Volume, not Pause, and the difference is what turning the music down means.** Pausing would
+// hold the score at the bar it was on and resume from there, so coming back from silence halfway
+// through a duel would drop the player into a phrase they had already heard. A track that keeps
 // running puts them wherever the music would have got to, which is the behaviour every other
-// mute control in the world has.
+// volume control in the world has.
 //
-// The flag is set whether or not there is a player, so the state survives a machine with no
-// audio device — see Available.
-func SetMuted(m bool) {
-	muted = m
+// The level is recorded whether or not there is a player, so the setting survives a machine with
+// no audio device — see Available — and so that a level restored from the profile before Start
+// is what Start opens the device at.
+func SetLevel(l float64) {
+	level = clamp01(l)
 	if player == nil {
 		return
 	}
-	if m {
-		player.SetVolume(0)
-		return
+	player.SetVolume(level * fullVolume)
+}
+
+func clamp01(v float64) float64 {
+	switch {
+	case v < 0:
+		return 0
+	case v > 1:
+		return 1
+	default:
+		return v
 	}
-	player.SetVolume(volume)
 }

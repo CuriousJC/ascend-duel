@@ -158,6 +158,17 @@ type GlobalState struct {
 	// policy. Awards still land in memory for the session; nothing reaches the disk.
 	ProfileWritable bool
 
+	// ReturnScreen is where the settings screen goes back to.
+	//
+	// **The settings screen is the only one that can be entered from anywhere**, so it is the only
+	// one that cannot name its successor the way every other screen does — `advance` walks the run
+	// forward, and settings is not a station of a run. Whoever opens it records where the player
+	// was; Back puts them there.
+	//
+	// It deliberately does not touch `session.Phase`. The run stays exactly where it was standing,
+	// which is what makes opening settings mid-duel a look at a dialog rather than a decision.
+	ReturnScreen ActiveScreen
+
 	//Assets
 	Assets map[string]*ebiten.Image          // Store images as a map in the Game struct
 	Fonts  map[string]*text.GoTextFaceSource //Store fonts as a map in the Game struct
@@ -225,6 +236,13 @@ const (
 	Shop
 
 	Credits
+
+	// Settings is the program's own screen: how loud the score is and how fast the game moves.
+	//
+	// **It is reachable from everywhere, so it is the one screen that has to remember where it
+	// came from** — see ReturnScreen. Appended rather than filed next to Title because
+	// ActiveScreen is append-only like every other ordinal in the game.
+	Settings
 )
 
 func (active ActiveScreen) String() string {
@@ -239,6 +257,8 @@ func (active ActiveScreen) String() string {
 		return "PostBattle"
 	case Shop:
 		return "Shop"
+	case Settings:
+		return "Settings"
 	case Credits:
 		return "Credits"
 	default:

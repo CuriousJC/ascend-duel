@@ -85,7 +85,7 @@ func eventDwell(kind combat.EventKind) int {
 	if !ok {
 		mult = 1
 	}
-	if ticks := int(math.Round(beatTicks * mult)); ticks > 1 {
+	if ticks := int(math.Round(float64(speedTicks()) * mult)); ticks > 1 {
 		return ticks
 	}
 	return 1
@@ -96,7 +96,7 @@ func eventDwell(kind combat.EventKind) int {
 // on screen yet, so the lead-in takes the plain beat.
 func (s *CombatScene) dwellForCurrent() int {
 	if s.cursor <= 0 || s.cursor > len(s.log) {
-		return beatTicks
+		return speedTicks()
 	}
 	return eventDwell(s.log[s.cursor-1].Kind)
 }

@@ -202,26 +202,34 @@ func TestRejectsWhatItCannotPlay(t *testing.T) {
 	}
 }
 
-func TestMutingSurvivesHavingNoAudioDevice(t *testing.T) {
+func TestTheLevelSurvivesHavingNoAudioDevice(t *testing.T) {
 	// **Start is allowed to fail** — a machine with no sound card still plays the game — and
-	// then `player` is nil. The mute state has to be recorded anyway rather than dropped on
-	// the floor, or a control that comes back with the device would disagree with what it
-	// shows. Tests never call Start, so this is that case exactly.
+	// then `player` is nil. The level has to be recorded anyway rather than dropped on the
+	// floor: it is what Start opens the device at when there is one, so a level set before the
+	// device came up has to still be there when it does. Tests never call Start, so this is that
+	// case exactly.
 	if Available() {
 		t.Skip("an audio device was opened; this covers the case where none was")
 	}
 
-	defer SetMuted(true)
+	defer SetLevel(0)
 
-	if !Muted() {
-		t.Fatal("the score no longer starts muted")
+	if Level() != 0 {
+		t.Fatal("the score no longer starts silent")
 	}
-	SetMuted(false)
-	if Muted() {
-		t.Error("unmuting with no player did not record the state")
+	SetLevel(0.5)
+	if Level() != 0.5 {
+		t.Errorf("setting the level with no player recorded %v, want 0.5", Level())
 	}
-	SetMuted(true)
-	if !Muted() {
-		t.Error("muting with no player did not record the state")
+
+	// **Clamped rather than refused**, because the caller is a slider and a slider's arithmetic
+	// can land a hair outside its own travel.
+	SetLevel(4)
+	if Level() != 1 {
+		t.Errorf("a level above 1 recorded %v, want it clamped to 1", Level())
+	}
+	SetLevel(-1)
+	if Level() != 0 {
+		t.Errorf("a level below 0 recorded %v, want it clamped to 0", Level())
 	}
 }

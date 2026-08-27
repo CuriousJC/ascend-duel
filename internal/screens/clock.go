@@ -18,9 +18,11 @@ package screens
 // `eventDwells` in combat.go: a multiplier per event kind on top of this number, so "everything is
 // too slow" and "prepares are too slow" stay two different edits.
 //
-// **This is the game-speed setting when there is one.** Scaling this one constant scales
-// everything that moves, which is exactly what such a setting has to do — and none of it may
-// change an outcome. A whole round is resolved before playback begins, so pacing is something to
+// **The game-speed setting landed on 2026-08-27 and it scales exactly this.** `speedScale` is the
+// player's multiplier and `speedTicks()` is the number everything reads; `beatTicks` stayed a
+// constant because it is the *tuned* speed — the one every duration in the game was written
+// against — and a setting that overwrote it would leave nothing to return to. None of it may
+// change an outcome: a whole round is resolved before playback begins, so pacing is something to
 // look at.
 
 const (
@@ -46,6 +48,40 @@ const (
 	beatTicks = 25
 )
 
+// speedScale is the player's game-speed multiplier: 1 is the tuned speed, above 1 is faster,
+// below is slower. It is bounded by profile.SpeedMin and profile.SpeedMax.
+//
+// **Package state rather than a field on GlobalState**, because `beat(num, den)` is called from
+// forty places that have no `gs` to hand and threading one through all of them would be a large
+// change for a number that is the same everywhere. It is written by exactly one function.
+var speedScale = 1.0
+
+// SetSpeed sets the game-speed multiplier. Called when the profile is loaded and whenever the
+// settings screen's bar is moved; a value of zero or less is ignored, because a game speed of zero
+// is not a speed.
+func SetSpeed(scale float64) {
+	if scale <= 0 {
+		return
+	}
+	speedScale = scale
+}
+
+// Speed reports the current multiplier, so the settings screen can draw the bar where the player
+// left it without keeping a second copy of the number.
+func Speed() float64 { return speedScale }
+
+// speedTicks is the beat at the player's chosen speed: **the number every clock in the game is
+// actually a fraction of.**
+//
+// Faster means *fewer* ticks, which is why this divides. Never less than one — a fast enough
+// setting would otherwise turn a short beat into a movement that does not happen.
+func speedTicks() int {
+	if ticks := int(float64(beatTicks)/speedScale + 0.5); ticks > 1 {
+		return ticks
+	}
+	return 1
+}
+
 // beat scales the game's speed by a fraction, and it is **how every clock in the game that is not
 // the speed itself is written** *(2026-08-19, owner's call; made the game's rather than the combat
 // screen's on 2026-08-21)*.
@@ -55,7 +91,7 @@ const (
 //
 // **What is deliberately not written this way is `mathBreathTicks`** — see it for why.
 func beat(num, den int) int {
-	if ticks := beatTicks * num / den; ticks > 1 {
+	if ticks := speedTicks() * num / den; ticks > 1 {
 		return ticks
 	}
 	return 1

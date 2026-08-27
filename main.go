@@ -11,6 +11,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/scenario"
+	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -144,6 +145,12 @@ func main() {
 	}
 	g.GlobalState.Profile, g.GlobalState.ProfileWritable = prof, writable
 
+	// **What the player chose about the program, put into force before anything reads it.** The
+	// music level has to be in before Start opens the device, or a returning player gets a moment
+	// of the wrong volume; the speed has to be in before the first scene's Init, since a screen
+	// can compute a duration in it. See internal/screens/settings.go.
+	screens.ApplySettings(prof.Settings)
+
 	g.GlobalState.Run = startRun(g)
 
 	// **Logged after the run is built, not before it.** A resumed run brings its own seed and a
@@ -161,8 +168,9 @@ func main() {
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a
 	// recorded track — see internal/music for why. It loops for the whole session
-	// across every screen, and there is no way to mute it yet, which wants an
-	// on-screen button rather than a hotkey: the input vocabulary has no keyboard.
+	// across every screen. How loud it is comes off the profile above — see the settings screen,
+	// which is reached from the cog in the game's chrome. That is a button rather than a hotkey:
+	// the input vocabulary has no keyboard.
 	//
 	// Not having a sound device is not a reason to refuse to run, so a failure here is
 	// reported and stepped over. Nothing below this line depends on it.

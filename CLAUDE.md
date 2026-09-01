@@ -124,25 +124,27 @@ go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it cha
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by ascending multiplier
 go run ./tools/enemysheet   # all 96 creatures by floor band: card, stat line, whole deck
 go run ./tools/bosssheet    # the 30 stairway protectors, the same way, by floor
+go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
+go run ./tools/parasitesheet # every parasite: the line it prints against the rule that fires
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
-**The six sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
+**The eight sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
 there rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone
-opens to see every card, ring, worm, hand, creature and boss in the game. That reverses the older
-rule that a regenerated artefact is not worth committing: the argument it left out is the
-audience, since a sheet needing a Go toolchain and six remembered commands is a sheet only ever
-seen by whoever just changed the thing it shows.
+opens to see every card, ring, worm, hand, stone, parasite, creature and boss in the game. That
+reverses the older rule that a regenerated artefact is not worth committing: the argument it left
+out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
+only ever seen by whoever just changed the thing it shows.
 
-**The cost is history weight, so regenerate deliberately.** About 4.4 MB across 280 binary files
+**The cost is history weight, so regenerate deliberately.** About 4.9 MB across 423 binary files
 is rewritten by a full run, and a sheet rebuilt in a commit that changed nothing about it is pure
 weight. **Three quarters of that is the two roster sheets**, which carry 126 photographic
 portraits between them — so a commit touching only `rings.json` should regenerate the ring sheet
 alone rather than reaching for the one command out of habit. **`go run ./tools/sheets` is the one
-command** — it runs all six and rewrites the index, because six commands remembered in the right
-order is how five end up current and one ends up lying. A stale sheet is worse than none: it is a
-picture of a catalogue that no longer exists.
+command** — it runs all eight and rewrites the index, because eight commands remembered in the
+right order is how seven end up current and one ends up lying. A stale sheet is worse than none:
+it is a picture of a catalogue that no longer exists.
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
 holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-shields` — so a
@@ -792,6 +794,20 @@ cost is the tie-break among equally illustrative sets. **It does not sample**: t
 a rung is what that example costs once you hold the cards, and how often you hold them is
 `tools/handodds`. Two tools reporting the same probability by different methods would be two
 numbers that can disagree.
+
+**`tools/stonesheet` and `tools/parasitesheet` do it for the two consumable catalogues**
+*(2026-09-01)*. Both arrive four at a time inside a sealed good, so the whole of either is several
+shop visits and a lot of luck away in a launched game. The stone sheet is **walked by rung rather
+than by stone** — the catalogue is one stone per rung, so walking the ladder orders the page for
+free *and* makes a rung nobody authored a stone for show as a gap rather than as an absence nobody
+notices. It is grouped by axis, which is deliberately not the hand sheet's layout: that one
+interleaves all three by multiplier because a player forming a hand chooses among all of them at
+once, where a stone is bought against one rung. **It is also the only place the ladder and the +N
+are visible together**, and the +N is computed from `hands.json` rather than authored, so a retuned
+rung moves the card's face with nothing edited in `stones.json`. The parasite sheet is ring-sheet
+shaped — the authored line against the resolved rule — and earns a page at four records because a
+parasite is the least readable record in `data/`: which of `Rider`, `Value` and `Count` the rules
+read depends entirely on the target.
 
 **`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools** *(2026-08-23)*. A
 creature is met one at a time, three rooms to a floor, and its whole personality is a deck the

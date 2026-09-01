@@ -1,0 +1,223 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — parasite sheet</title>
+<style>
+  :root {
+    --ground: #e2d0b0;
+    --ink: #2c2822;
+    --dim: #6b6355;
+    --rule: #c4b294;
+    --panel: #ede0c8;
+    --pink: #c8508c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--dim); font-weight: 600;
+    margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  h3.group {
+    font-size: 15px; font-weight: 600; text-transform: capitalize;
+    margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h3.group span {
+    text-transform: none; font-weight: 400; font-size: 12px; color: var(--dim);
+    margin-left: 10px;
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
+  .plates { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 22px; }
+  .plate {
+    display: flex; gap: 18px; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px; width: 480px;
+  }
+   
+  img { display: block; image-rendering: pixelated; }
+  .about { min-width: 0; }
+  .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
+  .text { margin: 10px 0 0; font-size: 13px; white-space: pre-line; }
+  .rule {
+    margin: 10px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; color: var(--dim);
+  }
+  .cards { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
+  .art { margin: 6px 0 0; font-size: 11.5px; color: var(--pink); }
+  figure { margin: 0; }
+  figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
+</style>
+
+<h1>Parasite sheet</h1>
+<p class="facts">
+  4 parasites. A sealed bucket costs <code>5</code> vitae and draws
+  <code>4</code>, keep one — 100.0% of the catalogue gets a seat. One parasite
+  may name at most <code>2</code> cards.
+  Card <code>162&times;224</code>,
+  corner radius <code>12</code>,
+  border <code>3</code>,
+  art box inset <code>26</code> from
+  <code>y=44</code> at most <code>96</code> tall,
+  text band from <code>y=148</code>.
+  Shown at 1:1.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/parasitesheet</code> and refresh. Every card here is drawn
+  by <code>internal/cards</code>, the same code the game blits, and every word beside it is read
+  out of <code>data/parasites.json</code> through <code>internal/session</code>'s own validation —
+  so a parasite this page refuses to draw is a parasite the game refuses to start with.
+</p>
+<p class="note">
+  <strong>Read the sentence against the rule.</strong> The line under each name is the
+  <code>Text</code> field, which is what the card prints verbatim; the monospace line under it is
+  the rule that actually fires. Nothing in the codebase checks one against the other, and this is
+  the least readable record in <code>data/</code> — which of <code>Rider</code>,
+  <code>Value</code> and <code>Count</code> the rules read depends entirely on the target.
+</p>
+<p class="note">
+  <strong>They are spent between the turns of a fight, never inside one.</strong> That is the
+  thing about this catalogue no card can show: the bucket is gated on planning, because
+  <code>ResolveRound</code> decides a whole round before playback starts and a card altered
+  mid-playback would show a face disagreeing with a blow already computed.
+</p>
+<p class="note">
+  <strong>Every parasite draws the worm's placeholder.</strong> <code>default-worm.png</code> is
+  borrowed rather than a fallback that has gone wrong — so what is being reviewed here is the
+  wording and the numbers, not the picture.
+</p>
+
+<h2>The catalogue, by target</h2>
+<p class="note">
+  <strong>Grouped by what a parasite does</strong>, because that is the design axis and the
+  vocabulary is closed. A target with nothing under it is a mechanic built and never authored
+  into — a design question rather than a bug.
+</p>
+
+
+<h3 class="group">
+  rider
+  <span>1 parasites</span>
+</h3>
+
+<div class="plates">
+  
+    <div class="plate">
+      <img src="parasite-leech.png" width="162" height="224"
+           alt="Leech">
+      <div class="about">
+        <p class="name">Leech</p>
+        <div class="record">leech</div>
+        <p class="text">one card
+heals 10</p>
+        <p class="rule">rider heal-on-play, value 10</p>
+        <p class="cards">cards asked for: 1</p>
+        <p class="art">no art of its own — borrowing default-worm.png</p>
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="group">
+  remove
+  <span>1 parasites</span>
+</h3>
+
+<div class="plates">
+  
+    <div class="plate">
+      <img src="parasite-gnaw.png" width="162" height="224"
+           alt="Gnaw">
+      <div class="about">
+        <p class="name">Gnaw</p>
+        <div class="record">gnaw</div>
+        <p class="text">eat two
+cards</p>
+        <p class="rule">removes 2 card(s) from the run</p>
+        <p class="cards">cards asked for: 2</p>
+        <p class="art">no art of its own — borrowing default-worm.png</p>
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="group">
+  swap
+  <span>1 parasites</span>
+</h3>
+
+<div class="plates">
+  
+    <div class="plate">
+      <img src="parasite-mimic.png" width="162" height="224"
+           alt="Mimic">
+      <div class="about">
+        <p class="name">Mimic</p>
+        <div class="record">mimic</div>
+        <p class="text">make one card
+a STRIKE</p>
+        <p class="rule">becomes Strike</p>
+        <p class="cards">cards asked for: 1</p>
+        <p class="art">no art of its own — borrowing default-worm.png</p>
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="group">
+  vitae
+  <span>1 parasites</span>
+</h3>
+
+<div class="plates">
+  
+    <div class="plate">
+      <img src="parasite-hoard.png" width="162" height="224"
+           alt="Hoard">
+      <div class="about">
+        <p class="name">Hoard</p>
+        <div class="record">hoard</div>
+        <p class="text">gain 20
+vitae</p>
+        <p class="rule">&#43;20 vitae, touching no card</p>
+        <p class="cards">cards asked for: none — touches no card</p>
+        <p class="art">no art of its own — borrowing default-worm.png</p>
+      </div>
+    </div>
+  
+</div>
+
+
+<h2>Card states</h2>
+<p class="note">
+  The three states a parasite card is drawn in — one more than a worm has.
+  <strong>Selected is a state here and is not one there</strong>: a parasite is armed first and
+  aimed second, so the board piece has to say which one is in hand while the player picks what it
+  eats.
+</p>
+<div class="plates">
+  
+    <figure>
+      <img src="state-rest.png" width="162" height="224" alt="Gnaw — in the bucket">
+      <figcaption>Gnaw — in the bucket</figcaption>
+    </figure>
+  
+    <figure>
+      <img src="state-selected.png" width="162" height="224" alt="Gnaw — armed, picking its targets">
+      <figcaption>Gnaw — armed, picking its targets</figcaption>
+    </figure>
+  
+    <figure>
+      <img src="state-disabled.png" width="162" height="224" alt="Gnaw — unusable this turn">
+      <figcaption>Gnaw — unusable this turn</figcaption>
+    </figure>
+  
+</div>

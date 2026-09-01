@@ -3,21 +3,21 @@
 //	go run ./tools/sheets
 //
 // It exists because the sheets are committed *(owner's call, 2026-08-23)* and a committed
-// artefact has to be regenerable by one command. Four commands remembered in the right order is
-// how three of them end up current and one of them ends up lying, and a stale sheet is worse than
-// no sheet — it is a picture of a catalogue that no longer exists.
+// artefact has to be regenerable by one command. A command per sheet, remembered in the right
+// order, is how most of them end up current and one of them ends up lying, and a stale sheet is
+// worse than no sheet — it is a picture of a catalogue that no longer exists.
 //
 // # It shells out rather than importing
 //
 // Each sheet is its own `package main`, so there is nothing to import: Go has no way for one
 // command to call another's `run`. The alternative was a shared library package under tools/ with
-// four thin mains over it, and that is a worse trade than it looks — the sheets have almost
+// a thin main per sheet over it, and that is a worse trade than it looks — the sheets have almost
 // nothing in common but the words `png.Encode`, and a library would exist to be a seam this file
 // already is. So this runs `go run ./tools/<name>` and reports what each one said.
 //
 // **A failing sheet fails the whole run**, and the rest are still attempted first. A tool that
-// stopped at the first error would leave the index claiming four sheets and the directory holding
-// two.
+// stopped at the first error would leave the index claiming every sheet and the directory holding
+// a handful.
 //
 // # The index
 //
@@ -42,9 +42,9 @@ const root = "docs/sheets"
 
 // sheet is one review page: the tool that writes it, and what a reader should open it for.
 //
-// **The blurb is what the index is for.** A directory listing of four names tells a reader
+// **The blurb is what the index is for.** A directory listing of bare names tells a reader
 // nothing about which one answers their question, and the questions are genuinely different —
-// one is a drawing-board, three are reports on the real catalogues.
+// one is a drawing-board and the rest are reports on the real catalogues.
 var sheets = []sheet{
 	{
 		Dir:   "cardsheet",
@@ -92,6 +92,22 @@ var sheets = []sheet{
 		Blurb: "Every rung of the hand ladder drawn as an actual hand of real cards, ordered by " +
 			"multiplier across all three axes at once — which is the comparison hands.json's " +
 			"axis-by-axis layout hides.",
+	},
+	{
+		Dir:   "stonesheet",
+		Tool:  "./tools/stonesheet",
+		Title: "Stone sheet",
+		Blurb: "Every stone, grouped by the axis its rung counts on, with the rung's multiplier " +
+			"and what one rock adds to it. The only place the ladder and what a purchase does to " +
+			"it are visible together, and the only place a rung with no stone shows as a gap.",
+	},
+	{
+		Dir:   "parasitesheet",
+		Tool:  "./tools/parasitesheet",
+		Title: "Parasite sheet",
+		Blurb: "Every parasite, grouped by what it does, with the sentence it prints against the " +
+			"rule that fires. The least readable record in data/ — which fields the rules read " +
+			"depends entirely on the target — so this page is the review from the first record.",
 	},
 }
 
@@ -176,7 +192,7 @@ type index struct {
 	Glyphs link
 }
 
-// The index page. Deliberately the plainest thing here — it is a list of four links, and every
+// The index page. Deliberately the plainest thing here — it is a list of links, and every
 // pixel of design on it is a pixel not spent on the sheets it points at.
 var tmpl = template.Must(template.New("index").Parse(`<!doctype html>
 <meta charset="utf-8">

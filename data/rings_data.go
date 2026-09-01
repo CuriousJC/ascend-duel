@@ -98,7 +98,7 @@ type RingIfData struct {
 	// Element is the card's colour: `fire`, `ice`, `lightning`, `earth` or `basic`.
 	Element string `json:"Element,omitempty"`
 
-	// Form is `stab`, `slash`, `crush` or `plan`.
+	// Form is `stab`, `slash`, `crush` or `defend`.
 	Form string `json:"Form,omitempty"`
 
 	// Tier is the rung of its form's ladder a card sits on, which is the cost printed on it: 1, 2

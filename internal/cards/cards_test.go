@@ -41,7 +41,7 @@ var deckNames = []string{
 	"Jab", "Thrust", "Lunge",
 	"Cut", "Slash", "Cleave",
 	"Bash", "Strike", "Smash",
-	"Prepare", "Plan", "Defend",
+	"Ward", "Brace", "Guard",
 }
 
 func strike(e Element) Spec {

@@ -173,9 +173,12 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
 - **A duelist holds at most five shields**, which is `MaxActions` — the most attacks a turn can
   throw — and is also what the pip row on the duelist card can draw. The cap is in
   `Duelist.raiseShields` and the row inherits it; do not clamp in the screen.
-- **The deck shape did not move**: 3 concepts × 5 elements × 1 copy, exactly what the plan cards
-  were, so `data/hands.json` needed no edit and `tools/handodds` prints the same figures. **Keep it
-  that way** — deviating makes any change here a balance change as well.
+- **The deck shape moved on 2026-09-01** *(owner's call)*: Guard went to zero copies, so the
+  defences are 2 concepts × 5 elements and the starting deck is 55 cards rather than 60. That is a
+  balance change and was taken as one — `tools/handodds` and `tools/seeds` were both re-run, four
+  catalogued seeds were repointed and the tutorial's seed was replaced. **Re-run both after any
+  further edit here**, and read MECHANICS.md §The deck is a starting position before drawing a
+  conclusion from either: they describe fight one of a ringless run and nothing else.
 
 **Parasites alter the deck *during* a fight, and they are the one mechanic allowed near a live
 round** *(owner's call, 2026-08-27)*. `data/parasites.json` is the catalogue,

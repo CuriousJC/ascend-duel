@@ -3,7 +3,7 @@
 //
 //	go run ./tools/handodds
 //	go run ./tools/handodds -n 200000        # a quicker, noisier sample
-//	go run ./tools/handodds -ap 8            # what a turn with a banked Prepare can afford
+//	go run ./tools/handodds -ap 8            # a turn holding cost discounts, priced as a bigger budget
 //
 // **It exists for the reason tools/seeds does: the numbers are facts about one particular deck.**
 // A hand's rarity is a function of how many cards share a concept, a form and an element, so
@@ -23,9 +23,9 @@
 //     pile and keep what was not spent, which this does not model.
 //   - The real budget and the real bound: `Actions` from data/duelists.json, and five cards. `-ap`
 //     overrides the budget, for the one rung the plain one cannot reach at all — see the flag.
-//   - **Every card counts, including plans** *(2026-08-23)*. They carry an element and a form now
+//   - **Every card counts, defences included** *(2026-08-23)*. They carry an element and a form now
 //     and join hands like anything else — bringing no damage, which this tool does not measure
-//     anyway. It is reachability, and a hand of plans is as reachable as any other.
+//     anyway. It is reachability, and a hand of defences is as reachable as any other.
 //
 // It is not a test. There is nothing here to assert — the output is a table to tune against, and
 // the tuning is a judgement call about how much a rarer hand should pay.
@@ -48,13 +48,18 @@ const oddsSeed = 20260819
 
 func main() {
 	trials := flag.Int("n", 2000000, "how many hands to deal")
-	// **-ap is for the rung the fighter's own budget cannot reach at all.** Five cards of one
-	// colour cost 7 AP at the cheapest — the colour has one card per form per tier — so an
-	// elemental five of a kind is a 0% row against the 6 AP a round-one turn has, and a rung
-	// measured at zero cannot be priced off `ln(1/P)`. Banking makes it real: a Prepare carries 2
-	// AP into the next round, so `-ap 8` is what that turn can afford. **A number taken from a
-	// run of this is a number about a banked turn and has to be labelled as one** — the ladder
-	// itself is priced against the plain budget.
+	// **-ap models a turn holding discounts, and it is a proxy rather than a stat.** Nothing in
+	// the game raises the budget; what a run buys is cheaper *cards* — a `card-cost` ring at -1,
+	// a worm's `CostDelta`, Atrophy demoting a card a rung — and a turn playing five cards each a
+	// point cheaper spends what a five-point-larger budget would. It is exact for a discount every
+	// card in the set qualifies for and generous for one that only some do, so a number taken from
+	// a run of it is a number about a *kitted* turn and has to be labelled as one.
+	//
+	// **It is not needed to reach any rung of the ladder**, which was the reason it was added and
+	// stopped being true. Every rung has a build a 6 AP round can pay for — an elemental five of a
+	// kind is Jab, Cut, Bash, Ward and Thrust in one colour, 6 AP exactly, since the defences carry
+	// a colour and join hands. What `-ap` answers now is how much a discount widens the *set* of
+	// hands that reach a rung, which is a different and still useful question.
 	budget := flag.Int("ap", budgetOf(), "action points a turn may spend")
 	flag.Parse()
 
@@ -181,7 +186,7 @@ func countAttacks(deck []combat.Card) int {
 }
 
 // perValue is how many cards share the commonest value on an axis, which is the whole reason the
-// three ladders are priced apart. **It counts plans now** *(2026-08-23)*, which is most of the
+// three ladders are priced apart. **It counts defences now** *(2026-08-23)*, which is most of the
 // change: the element axis went from nine cards a colour to twelve, and the form axis gained a
 // fourth value twelve cards wide.
 func perValue(deck []combat.Card, a combat.Axis) int {
@@ -203,7 +208,7 @@ func perValue(deck []combat.Card, a combat.Axis) int {
 }
 
 // valueOf mirrors the matcher's own rule: a card with `FormNone` or `Basic` carries no value on
-// that axis and cannot be counted on it. The player's deck has neither since the plans were
+// that axis and cannot be counted on it. The player's deck has neither since the defences were
 // coloured, so every one of the forty-eight counts on all three axes.
 func valueOf(c combat.Card, a combat.Axis) (int, bool) {
 	switch a {

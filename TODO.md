@@ -101,19 +101,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Later
 
-- [ ] **Game speed setting.** User-facing options: *very slow · slow · normal · fast ·
-      very fast*, scaling how quickly the duel event log plays back. Ship "normal" only
-      to begin with, but route it through a setting rather than a constant so the other
-      four are a data change later.
-      - Today the pacing is `beatTicks` in [clock.go](internal/screens/clock.go) — one
-        constant, one caller, so this is cheap right now and gets steadily more expensive as
-        animation and sound land and each grows its own timing constant.
-      - Speed must scale *presentation only*. `combat.ResolveRound` already decided the
-        whole round before playback starts, so speed can never change an outcome — worth
-        protecting, since "fast mode plays differently" is a classic bug in this shape of
-        game.
-      - Belongs to a settings screen, which does not exist — there is no settings button
-        and nothing to hang the option off yet.
 - [ ] **Show the run seed, and allow entering one.** `GlobalState.RunSeed` is set once by
       `main` and logged; enemy selection is the first stream reading it. Without a way to see a
       seed and type one back, replayable runs are invisible to the player.

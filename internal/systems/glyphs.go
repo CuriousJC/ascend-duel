@@ -84,8 +84,6 @@ const (
 	GlyphAttack
 	// GlyphDefend is a kite shield.
 	GlyphDefend
-	// GlyphPrepare is an open book.
-	GlyphPrepare
 
 	// The two states of the mute control: a speaker, and the same speaker struck through.
 	//
@@ -135,7 +133,7 @@ const (
 func GlyphKinds() []GlyphKind {
 	return []GlyphKind{
 		GlyphDamage, GlyphActionPoints,
-		GlyphAttack, GlyphDefend, GlyphPrepare,
+		GlyphAttack, GlyphDefend,
 		GlyphSound, GlyphMuted, GlyphGear,
 		GlyphFormStab, GlyphFormSlash, GlyphFormCrush, GlyphFormDefend,
 		GlyphStone,
@@ -312,82 +310,9 @@ var runShape = shape{
 	},
 }
 
-// The category glyphs are small — half a damage badge — because they sit in a card's corner
-// above the cost dashes, in a column a full badge would fill.
-//
-// **All three are one size, and that is the point of tying this to categoryArtSize.** The book
-// was authored at 22 while the drawn sword and shield were 32, and the card placed all three by
-// the same top-left — so the book sat higher, further left and read as a smaller class of
-// object beside the other two. A set that is told apart by *proportion* cannot afford one
-// member drawn at two-thirds the scale of its siblings.
-//
-// **A generated one is a separate drawing, not a big one shrunk.** Nothing generated here
-// can be scaled: the rim is derived one pixel thick, so a smaller copy of a shape is a smaller
-// copy of its outline and the interior disappears. Going from 22 to 32 was therefore a
-// redrawing of every span, not a constant.
-//
-// Only the book is still generated. The sword and the shield are drawn art now and are
-// downsampled rather than authored small, which is a thing a *painting* survives and a
-// derived-rim silhouette does not — see glyphArt.
-const categoryGlyphSize = categoryArtSize
-
-// The generated 22px sword and shield that used to sit here went when Sherman's art
-// arrived — see glyphArt below. Both are one `git show` away if the drawn versions are
-// ever wanted back.
-
-// An open book, seen end-on: **the two covers form a V**, splayed wide at the top and
-// meeting at the spine, with the page block filling the body below.
-//
-// The first attempt drew it face-on — a wide slab with a gutter line down it — and it read
-// as an envelope or a folded card, because face-on the only thing saying "book" is a detail
-// too fine to survive at this size. End-on, the V *is* the silhouette, and a silhouette is
-// what survives.
-//
-// **Redrawn at 32 on 2026-08-14**, span by span, because a glyph cannot be scaled. What the
-// ten extra pixels buy is not detail — it is still outline plus one stroke a side — but
-// *presence*: at 22 it was 12 pixels of ink tall against the kite shield's 21 and read as a
-// smaller kind of thing rather than as the third member of a set.
-//
-// The notch between the covers runs ten pixels wide at the top down to two at the spine,
-// which is as deep a V as fits without the two halves becoming separate objects. Each arm
-// stays six pixels or wider, so the derived rim leaves something inside it.
-var smallBookShape = shape{
-	size: categoryGlyphSize,
-	fill: map[int][]span{
-		// The covers, splaying apart upward. Each thickens toward the spine, the way a
-		// page block does.
-		6:  {{5, 10}, {21, 26}},
-		7:  {{5, 10}, {21, 26}},
-		8:  {{5, 11}, {20, 26}},
-		9:  {{5, 11}, {20, 26}},
-		10: {{5, 12}, {19, 26}},
-		11: {{5, 12}, {19, 26}},
-		12: {{5, 13}, {18, 26}},
-		13: {{5, 13}, {18, 26}},
-		14: {{5, 14}, {17, 26}},
-		15: {{5, 14}, {17, 26}},
-
-		// Below the spine the two halves are one mass: the closed part of the book.
-		16: {{5, 26}}, 17: {{5, 26}}, 18: {{5, 26}},
-		19: {{5, 26}}, 20: {{5, 26}}, 21: {{5, 26}},
-
-		// A short taper off the bottom, so the block reads as a page stack rather than as a
-		// brick with a V cut into it.
-		22: {{6, 25}},
-		23: {{7, 24}},
-		24: {{9, 22}},
-	},
-	accent: map[int][]span{
-		// A page inside each cover, drawn parallel to the splay. One stroke a side is all
-		// there is room for, and it is what turns a V into a V *with something between it*.
-		9:  {{7, 9}, {22, 24}},
-		10: {{7, 10}, {21, 24}},
-		11: {{8, 10}, {21, 23}},
-		12: {{8, 11}, {20, 23}},
-		13: {{9, 11}, {20, 22}},
-		14: {{9, 12}, {19, 22}},
-	},
-}
+// The generated category glyphs that used to sit here are all gone: the 22px sword and shield
+// when Sherman's art arrived — see glyphArt below — and the book with the prepare category it
+// belonged to. Every one is a `git show` away if a generated version is ever wanted back.
 
 // chromeGlyphSize is what the mute control's glyphs are authored at: big enough for a
 // silhouette with a derived rim to hold together, small enough for a 44-pixel button.
@@ -506,7 +431,6 @@ var gearShape = shape{
 var glyphShapes = map[GlyphKind]shape{
 	GlyphDamage:       swordShape,
 	GlyphActionPoints: runShape,
-	GlyphPrepare:      smallBookShape,
 	GlyphSound:        speakerShape,
 	GlyphMuted:        mutedSpeakerShape,
 	GlyphGear:         gearShape,

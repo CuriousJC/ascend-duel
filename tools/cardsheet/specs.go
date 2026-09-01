@@ -229,7 +229,7 @@ func enemySpecs() ([]cards.Spec, error) {
 //
 // **The figures are the only thing on this card that moves**, so the spread is chosen to
 // stretch them rather than to be typical: the starting duelist, one that has taken damage and
-// banked a Prepare, a long name against a two-digit column, and a nearly-dead one to put the
+// spent less of its budget, a long name against a two-digit column, and a nearly-dead one to put the
 // health bar near empty beside a full one. The last is where a bar's arithmetic goes wrong.
 //
 // Same caveat as the concepts above: these numbers are illustrative and not read from

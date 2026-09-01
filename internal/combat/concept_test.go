@@ -100,7 +100,7 @@ func TestTheDamageLadderIsTheCardsMultiplier(t *testing.T) {
 	}
 }
 
-func TestAPlanCardDealsNothing(t *testing.T) {
+func TestADefenceDealsNothing(t *testing.T) {
 	for _, id := range []ConceptID{Brace, Ward, testGuard} {
 		if got := Plain(id).Damage(100); got != 0 {
 			t.Errorf("%v deals %d", ConceptOf(id).Label, got)

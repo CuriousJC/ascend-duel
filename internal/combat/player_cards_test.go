@@ -303,15 +303,15 @@ func TestTheAttackLadderIsThreeFormsByFiveTiers(t *testing.T) {
 	}
 }
 
-func TestPlanCardsDealNothingAndAttacksDoNot(t *testing.T) {
+func TestDefencesDealNothingAndAttacksDoNot(t *testing.T) {
 	// The two categories are what a card *is*, so each has to hold on its own side of the line. A
-	// plan that dealt damage would be an attack wearing the wrong verb in the feed.
+	// defence that dealt damage would be an attack wearing the wrong verb in the feed.
 	const dmg = 10
 	for _, a := range PlayerConcepts() {
 		switch Plain(a).Category() {
 		case CategoryDefend:
 			if d := Plain(a).Damage(dmg); d != 0 {
-				t.Errorf("%v is a plan and deals %d damage", a, d)
+				t.Errorf("%v is a defence and deals %d damage", a, d)
 			}
 		case CategoryAttack:
 			if d := Plain(a).Damage(dmg); d <= 0 {

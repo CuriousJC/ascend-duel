@@ -78,12 +78,12 @@ const (
 	// anchorAPFigure is the action-point figure on the button strip, under the left end of the AP
 	// bar: **this round's budget being spent**.
 	//
-	// **Nothing targets it, and a Prepare deliberately does not** *(2026-08-19, owner's call)*. It
-	// was this row's target on the reasoning that banked points should land on the AP number — but
-	// there are two, and the one they change is the fighter card's, which is the budget with
-	// `BonusAP` in it. A figure arriving here would be a number landing on a total that does not
-	// move. It stays in the enum because it is a real place and the next thing that raises or
-	// spends *this* round's budget belongs on it.
+	// **Nothing targets it** *(2026-08-19, owner's call)*. It was the target for the points a
+	// banking card carried, on the reasoning that they should land on the AP number — but there
+	// were two, and the one they changed was the fighter card's rather than this one, so a figure
+	// arriving here would have been a number landing on a total that does not move. It stays in
+	// the enum because it is a real place and the next thing that raises or spends *this* round's
+	// budget belongs on it.
 	anchorAPFigure
 
 	// anchorHandRow is the hand band itself.

@@ -143,7 +143,7 @@ func ParseAxis(name string) (Axis, bool) {
 //
 // **The player has no basic card left** *(2026-08-23)*. The defences used to be the exception and
 // were excluded before this was asked anyway; they now ship in the five colours like every attack,
-// so `FormPlan` and every element are live values here and the absences belong to the enemies.
+// so `FormDefend` and every element are live values here and the absences belong to the enemies.
 func matchValue(c Card, a Axis) (int, bool) {
 	switch a {
 	case AxisForm:
@@ -161,7 +161,7 @@ func matchValue(c Card, a Axis) (int, bool) {
 // an axis wide enough that the question cannot bite.
 //
 // It is what refuses a hand asking for more distinct values than the axis has. **Every form now
-// reaches a blow** *(2026-08-23)* — `FormPlan` used to be filtered out before the matcher saw it,
+// reaches a blow** *(2026-08-23)* — `FormDefend` used to be filtered out before the matcher saw it,
 // which is why this was `len(Forms()) - 1` — so the form axis is as wide as the enum. Concepts are
 // hundreds wide once the enemy decks are registered and a turn holds five cards, so that axis is
 // left unchecked rather than tied to a registry that grows.

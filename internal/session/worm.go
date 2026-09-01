@@ -55,7 +55,7 @@ const (
 
 	// TargetAmount scales a card's figure, as a percentage — 150 is half again. What the figure
 	// *is* depends on the verb, which is what makes one worm reach every card in the deck: a
-	// defence percentage, points banked, cards drawn, or a damage multiplier. A defence is clamped
+	// defence percentage, a shield count, or a damage multiplier. A defence is clamped
 	// under 100 by `Card.Amount`, because nothing stops a blow outright.
 	TargetAmount
 
@@ -237,7 +237,7 @@ func resolveWorm(r data.WormData) (Worm, error) {
 		}
 		if e == combat.Basic {
 			// A worm that greyed a card out would be a way to *lose* a colour rather than choose
-			// one, and no card in the player's deck is drab — the plans stopped being the
+			// one, and no card in the player's deck is drab — the defences stopped being the
 			// exception on 2026-08-23.
 			return Worm{}, fmt.Errorf("%s turns a card basic, which takes a colour away", r.WormRecord)
 		}

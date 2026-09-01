@@ -386,14 +386,14 @@ func deckRowElements() []cards.Element {
 // 2026-08-25**, and the number is derived rather than written, so arcane arrived here without an
 // edit — what it did cost was the card's size. See cards.Mini.
 //
-// **The plans lost their own row on 2026-08-23**, when they stopped being basic. They had one
-// because every plan was colourless and no attack was, so the alternative then was a row labelled
-// "basic" holding nothing but plans — naming the colour rather than the thing, on the one row
-// where the colour was the least interesting fact about the cards in it. Now a Prepare is a fire
-// card, and the row that says "fire" is where a player looks for it.
+// **The defences lost their own row on 2026-08-23**, when they stopped being basic. They had one
+// because every defence was colourless and no attack was, so the alternative then was a row
+// labelled "basic" holding nothing but defences — naming the colour rather than the thing, on the
+// one row where the colour was the least interesting fact about the cards in it. Now a Ward is a
+// fire card, and the row that says "fire" is where a player looks for it.
 //
-// A row therefore holds twelve — nine attacks and three plans — which is the width the grid was
-// already sized against, since the old plan row held twelve too.
+// A row therefore holds a colour's whole share of the deck — the nine attacks and the defences —
+// which is inside the width the grid was already sized against.
 var deckRowCount = len(deckRowElements())
 
 // deckRowFor is which row a card belongs to: its colour, and nothing else decides.

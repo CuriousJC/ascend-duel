@@ -63,8 +63,8 @@ var (
 // own**, because they are not something a card did — folding a hand into the line of the card
 // that happened to start it would bury the one thing worth reading.
 //
-// **The attack phase is one line, and it is the hand's** *(2026-08-14)*. Prepares and defends
-// still write a line each; the attack cards write none. A turn lands one blow, so five sentences
+// **The attack phase is one line, and it is the hand's** *(2026-08-14)*. The defences write a
+// line each; the attack cards write none. A turn lands one blow, so five sentences
 // saying "Duelist attacks with an earth strike" described a round that does not happen, and the
 // line that mattered — what the five cards came to — was the sixth. **Every hand takes that line,
 // the High Card included** *(2026-08-19)* — a lone attack is the catalogue's one-card hand and is
@@ -314,7 +314,7 @@ func multiplierText(amount int) string {
 // whether to play the thing.
 // **It reads the card, not the concept** *(2026-08-17)*. Every figure printed here comes from
 // `Card.Amount()`, which is where a worm's scaling is applied — so an altered Defend says the
-// percentage it actually cuts and an altered Prepare says what it actually banks. The wording was
+// percentage it actually cuts and an altered shield card says how many it actually raises. The wording was
 // already a template over the value; what changed is which value it reads. A card whose face
 // disagreed with its behaviour would be the worst thing an alteration mechanic could produce.
 //
@@ -394,9 +394,9 @@ func actionPhrase(id combat.ConceptID) string {
 // the four attacks are all "with a …" — so the insertion lands correctly on exactly the cards
 // where it matters most.
 //
-// A phrase with no article gets the element in brackets: "and gathers their strength (fire)".
-// That is deliberately the plainer half of the rule. An elemental prepare is a real card and
-// currently does nothing mechanical, so a line that reads slightly like a note is honest about
+// A phrase with no article gets the element in brackets: "and raises two shields (fire)".
+// That is deliberately the plainer half of the rule. An elemental defence is a real card whose
+// colour does nothing mechanical, so a line that reads slightly like a note is honest about
 // what it is — and it is better than a sentence bent around a word that does not fit it.
 func cardPhrase(c combat.Card) string {
 	phrase := actionPhrase(c.Concept)
@@ -454,10 +454,10 @@ func tickVerb(id combat.StatusID) string {
 
 // verbFor is the verb a category is spoken with.
 //
-// **"defends" covers a shield, a guard and a bank alike**, which is a small stretch on the last of
-// those and the right one: the word is a *scanning* aid saying which half of the turn a line
-// belongs to, not a description of the card. A third verb would be a third colour on a pane that
-// is read by colour before it is read at all.
+// **"defends" covers a guard and a shield alike**, which is a small stretch on the second and the
+// right one: the word is a *scanning* aid saying which half of the turn a line belongs to, not a
+// description of the card. A third verb would be a third colour on a pane that is read by colour
+// before it is read at all.
 func verbFor(c combat.Category) string {
 	if c == combat.CategoryDefend {
 		return "defends"
@@ -475,10 +475,9 @@ func verbFor(c combat.Category) string {
 // retired the full-width highlight bar a day earlier — this is the same mistake one scale
 // smaller.
 //
-// **The defend phase keeps the blue** *(2026-08-15)*, rather than the no-hue the prepare phase had.
-// With two categories the second colour is the whole distinction, and a category rendered in the
-// row's own ink would leave "attacks" as the only marked verb — which is a highlight, not a
-// scheme.
+// **The defend phase keeps the blue** *(2026-08-15)*. With two categories the second colour is the
+// whole distinction, and a category rendered in the row's own ink would leave "attacks" as the
+// only marked verb — which is a highlight, not a scheme.
 func verbInkFor(c combat.Category) color.RGBA {
 	if c == combat.CategoryDefend {
 		return color.RGBA{R: 52, G: 104, B: 196, A: 255}

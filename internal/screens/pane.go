@@ -209,7 +209,7 @@ func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p pa
 		}
 
 		// Three runs, measured one after the next. The verb is written in its category's own
-		// colour — red for attack, blue for defend, the row's ink for prepare — so a round can
+		// colour — red for attack, blue for defend — so a round can
 		// be scanned for what *kind* of thing happened before any of it is read.
 		cursorX := float64(textX)
 		draw := func(str string, tint color.RGBA, bold bool) {
@@ -252,8 +252,8 @@ func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p pa
 			// underline used to sit under a chip whose height was fixed at 18 against a 22px
 			// pitch; with no chip the only thing it can be positioned against is the text, and
 			// text.Measure already reports the full line including descent. That is what keeps
-			// it clear of the `p` in "prepares" — a rule three pixels up from the baseline
-			// struck straight through it — and what lets either pane's pitch change again.
+			// it clear of a descender — a rule three pixels up from the baseline strikes
+			// straight through one — and what lets either pane's pitch change again.
 			vector.DrawFilledRect(screen,
 				verbLeft, rowY+float32(lineHeight)-underlineHeight,
 				float32(wVerb), underlineHeight,

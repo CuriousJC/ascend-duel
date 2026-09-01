@@ -75,14 +75,15 @@ enemies'. Eight fields:
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
   attacks ship one per colour; its defences ship one per colour too; an enemy — all `basic`
   — has only `Copies`, so that field carries its whole deck size.
-- **Deck size is a consequence of a file you can read**: 9 attacks × 5 colours plus 3 defences × 5
-  colours = **60**.
+- **Deck size is a consequence of a file you can read**: 9 attacks × 5 colours plus 2 defences × 5
+  colours = **55** *(Guard went to zero copies on 2026-09-01)*. That is the deck a run *starts*
+  with — see MECHANICS.md §The deck is a starting position, because worms and rings change it.
 - **There is no `Category` column.** Which phase a card is in falls out of the verb. Carrying both would
   let a file say a card is an attack that raises shields.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
   card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
 - **No player card is drab** *(2026-08-25)*. Every card in the deck ships in one of the five
-  elements, the three defences included — a colour is worth a hand axis and a ring discount even
+  elements, the defences included — a colour is worth a hand axis and a ring discount even
   where nothing the card does is elemental.
 - **Enemy cards are all `basic` and `FormNone`**, and that is deliberate rather than sloppy.
   The colour is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
@@ -288,8 +289,8 @@ colour and two of another.
 The five-of-a-kind rungs did exactly that on 2026-08-19, landing as 15, 25 and 35.
 
 **The three ladders are priced apart and are meant to be.** They come from measured reachability
-against the real 48-card deck rather than from poker's ordering: a form pair is a 99% hand at 110
-and a concept Four of a Kind a 0.1% hand at 500. The model is in MECHANICS.md; do not "fix" the
+against the real starting deck rather than from poker's ordering: a form pair is a 100% hand at 110
+and a concept Four of a Kind a 0.4% hand at 500. The model is in MECHANICS.md; do not "fix" the
 ladders into agreement.
 
 **Two of the three five-of-a-kind rungs could not be measured, and MECHANICS.md says so entry by

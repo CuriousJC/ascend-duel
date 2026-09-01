@@ -37,7 +37,7 @@ cards, free cards, and stats too, since a stat is just another rule to bend. Eve
 below is a candidate for something to bend.
 
 The consequence for the code: rules cannot stay `const`. **Most of them already stopped being
-constants** *(2026-08-16)* — a card's cost, damage, defence percentage, bank and draw are fields on
+constants** *(2026-08-16)* — a card's cost, damage, defence percentage and shield count are fields on
 its record, so retuning one is a file edit. What is left as a compile-time constant is the
 actions-per-round cap and the status magnitudes, read by functions with no access to the run. They need a **carrier** — a modifier set
 passed alongside the duelists that `internal/combat` reads instead of the constants. Cost
@@ -55,7 +55,7 @@ move with playtesting. **There is no conversion left to freeze** *(2026-08-16)* 
 
 **Three stats, and every one of them is the number it sounds like** *(2026-08-16)*: `DMG`,
 `Actions` and `HP` on `Duelist`, all three straight out of `data/duelists.json` and
-`data/enemies.json`. Life is HP. The action-point budget is `Actions + BonusAP`. Damage is
+`data/enemies.json`. Life is HP. The action-point budget is `Actions`. Damage is
 `DMG × the card's own multiplier ÷ 100`.
 
 **All three conversions were removed over two days, and each for the same reason: a stat that
@@ -80,7 +80,7 @@ arithmetic that could not fire. A future subtraction brings its own floor.
 
 **Damage reduction is percentages all the way down, and no attribute is one of them.** Three
 things cut a blow and they are all the same shape: the **earth status** blunts what the attacker
-deals, the four **defend cards** each take a percentage off what arrives, and `guardDivisor`
+deals, the four **guard cards** each take a percentage off what arrives, and `guardDivisor`
 halves whatever is left. A durable combatant is one with high `HP` or earth on it. Anything
 that should reduce damage extends one of those three rather than arriving as a fourth system —
 two mechanics quietly stacking is the failure to avoid.
@@ -102,7 +102,7 @@ suggested. Nothing scales with floor today.
 
 **Two axes, and they are not the same one** *(2026-08-15)*. `combat.Category` says *when* a card
 resolves and has two values; `combat.Form` says *what kind of card it is* and has four. Category
-is the coarser and is derivable from the form — everything outside Plan is an attack — so the
+is the coarser and is derivable from the form — everything outside Defend is an attack — so the
 **form is what a card puts on its face** and what a hand is counted on.
 
 **The attack set is a 3x5 ladder: three forms by five cost tiers, filled**, and the tiers are
@@ -127,15 +127,13 @@ what used to make Shrink dead on every 1 AP card and Grow dead on every 3 AP one
 | **stab** | Poke / Jab / Thrust / Lunge / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 2` / `DMG × 4` |
 | **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
 | **crush** | Tap / Bash / Strike / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
-| **plan** | Prepare | 1 | Banks +2 AP for the next round |
-| | Plan | 2 | Draws **2 extra cards** into the next round's hand |
-| | Defend | 3 | Takes **50%** off the blow aimed at you next |
+| **defend** | Ward | 1 | Raises **1 shield** |
+| | Brace | 2 | Raises **2 shields** |
+| | Guard | 3 | Raises **3 shields** |
 
-**Nine attack concepts × four colours = 36 cards; three plans × four copies = 12.** A **48-card
+**Nine attack concepts × five colours = 45 cards; three defences × five colours = 15.** A **60-card
 deck** — the six zero-copy rungs are in the file and not in the pile. **No card in the player's deck
-is drab** *(2026-08-15)*: every attack ships in one of the
-four primary elements and the only basic cards are the plans, because nothing a plan does is
-elemental and a coloured Defend would be a colour that meant nothing.
+is drab** *(2026-08-25)*: every card ships in one of the five elements, the defences included.
 
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
 already took deliberately when Whetworm could drive a card to free: a turn is capped at
@@ -143,10 +141,17 @@ already took deliberately when Whetworm could drive a card to free: a turn is ca
 whole cheap turn**, at 2× a Lunge for 1.33× the price — the reason it is a worm's prize rather
 than something a run can stock.
 
-**The plans sit on the dealt 1/2/3 ladder as the attacks do**, and there is no plan at either
-end — the two outer rungs are an attack's ladder only. What
-each buys is a different currency at a rising price: Prepare pays in points, Plan pays in cards,
-Defend pays in survival.
+**The defences sit on the dealt 1/2/3 ladder as the attacks do**, and there is no defence at
+either end — the two outer rungs are an attack's ladder only. **The price is the count**: one AP
+buys one shield, and that is the whole of the pricing decision. It is the flattest rung in the game
+on purpose — three attack tiers buy 0.5x, 1x and 2x, where three defend tiers buy one, two and
+three — because a shield is *a hit you do not take* rather than a figure, and a curve on it would
+make the top card the only one worth holding.
+
+**`combat.Neighbour` refuses to walk this ladder**, so a Grow or a Shrink worm cannot promote a
+Ward or demote a Guard. That is deliberate rather than an omission *(owner's call, 2026-08-31)*:
+the worms step a card along a *damage* ladder, and a worm handing out a free shield is a worm
+changing how many hits a run takes for the rest of the tower.
 
 **`Strike` is the 1× reference the ladder is written against**, and that is why the crush form
 holds the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, so the figure the player reads
@@ -172,37 +177,71 @@ names actions and never describes them. **Short words are a hard constraint** �
 a dozen characters wide — and two tests hold the wording to it.
 
 **The corner mark is drawn art** *(2026-08-23)*: a spear for stab, a sword for slash, an axe for
-crush, a bulb for plan, in `assets/form/`. **It is tinted by the card's element** rather than
+crush, a shield for defend, in `assets/form/`. **It is tinted by the card's element** rather than
 repainted, so the drawing keeps its outline and its bevel — which is where the element is said
 now, the border having stopped saying it the same day.
 
-### Every raised plan answers the blow, and they multiply
+### Shields
 
-**The plan cards a duelist has up are a set, not a queue.** The opponent's turn produces one
-attack, so *every* raised card meets it and each takes its percentage off what is left. **Order is
-not read**, and every card is spent on the one attack it answered. They all expire together at the
-start of their owner's next turn.
+**A shield eats one incoming attack, whole** *(owner's call, 2026-08-31)*. No damage and no partial
+figure: the attack lands nothing at all, and the feed says so in a line of its own because there is
+no damage line for it to hang off. Ward, Brace and Guard raise one, two and three shields for one,
+two and three AP.
 
-**Defend halves, and it is the only card that reduces a blow at all** *(2026-08-15)*. Three points
-of a four-to-six point budget is most of a round, which is what a halving is meant to cost.
-Multiplying rather than adding is what stops several cards reaching past zero by accident: two
-Defends take three quarters and a third takes seven eighths, a curve that never arrives.
+**The point is that the player decides how many hits they take.** A creature turn is a known number
+of attacks, so shields turn "how much is this going to hurt" from an estimate into arithmetic —
+which is what a percentage guard could never do, since half of an unknown figure is still unknown.
 
-**The plan form is three cards where the attack ladder is nine dealt**, and it is deliberately not
-a grid of its own. Prepare is the cheapest card in the game and Defend the dearest; what sits
-between them is one card rather than a rung, because a grid filled with cards that differ only by a
-number is the trap this deck was rebuilt to avoid.
+**They last exactly the turn after they were played**: raised at the end of your turn, standing
+through the opponent's whole turn, gone before you act again. That is the schedule a raised guard is
+already on, and `expireDefenses` is the one function that says when. **An unspent shield lapses**,
+and is announced when it does — a stockpile carried through quiet rounds and cashed at a boss is
+the banking mechanic these cards replaced.
+
+**A duelist holds at most five.** That is `MaxActions`, the most attacks an opposing turn can
+contain, so a sixth could never be spent by anything; it is also what the pip row on the duelist
+card can draw, and the two agree on purpose.
+
+#### The asymmetry is the mechanic, not a gap in it
+
+**Only the player raises shields, and only creatures raise percentage guards.** The two answer
+different offences and neither survives being pointed the other way:
+
+- **A creature is a solo attacker.** Its turn resolves card by card with a figure each, so a count
+  buys one blow out of several — a real decision about how much of a turn to absorb.
+- **The player forms hands and lands one figure a turn.** A single shield facing that would delete
+  the whole turn, which is exactly what `maxDefendPct` and "nothing may stop a blow outright" exist
+  to forbid. So the ninety guard cards in `enemies.json` and `bosses.json` stay percentages.
+
+The rules do not enforce this — `VerbShield` would work on either side — and it is written down
+rather than guarded against, because the day an enemy forms hands is the day this becomes a dominant
+strategy, and a silent branch would not say so. `blockedByShield` carries the note.
+
+**Banking and drawing are both gone from the game** *(owner's call, 2026-08-31)*. `VerbDraw` had no
+user but the card shields replaced. `VerbBank` had thirty-six — one creature card apiece, all 2 AP
+for 1 — and every one of them was deleted from `enemies.json` rather than converted, because the
+owner wanted the concept gone rather than relocated. `GatheredAP`, `BonusAP` and `KindGathered` went
+with them, and `Duelist.ActionPoints()` is now the stat and nothing else.
+
+**What that costs, stated:** those thirty-six creatures have pure-attack decks now, so they spend
+their whole budget swinging every turn where they used to occasionally bank — which is a weak play,
+so they are modestly stronger and more predictable. Their decks drop from ten or eleven cards to
+eight or nine, and none falls below eight cards or three distinct concepts.
+
+**What it buys is a budget the player can plan against for a whole fight.** A round's action points
+were a number that could silently be two higher than the stat on the card; they are the stat.
 
 ### Concepts and deck composition
 
 **An attack concept ships as five cards: one per primary element.** That is the rule for adding an
-attack, not just a description of the starting deck. **A plan ships in the same five**, because a
-plan carries a colour for the ring discount and for the hand axis even though nothing it does is
+attack, not just a description of the starting deck. **A defence ships in the same five**, because
+it carries a colour for the ring discount and for the hand axis even though nothing it does is
 elemental.
 
 45 + 15 = **60 cards** *(2026-08-25, up from 48 when arcane landed)*. A hand of eight against that
-is 13% of the deck, against 17% at 48 and 27% when the deck was 30. What answers draw variance is
-the Discard button and Plan.
+is 13% of the deck, against 17% at 48 and 27% when the deck was 30. **What answers draw variance is
+the Discard button, and only that** *(2026-08-31)*: a card drew two extra into the next hand until
+shields replaced it, so the hand is a constant eight again.
 
 **Five copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
 No attack concept ships more than five times, so **a Card Four of a Kind necessarily shows four of
@@ -228,18 +267,18 @@ Eight fields, and the player's twelve are written in the same language as every 
 | Field | Means |
 |---|---|
 | `Label` | what the card face says, and — scoped by its owner — the rules identity |
-| `Verb` | **attack · defend · bank · draw**. A closed vocabulary; a fifth is a Go change |
-| `Amount` | read against the verb: % of DMG, % off the blow, points banked, cards drawn |
+| `Verb` | **attack · defend · shield**. A closed vocabulary; a fourth is a Go change |
+| `Amount` | read against the verb: % of DMG, % off the blow, or shields raised |
 | `Cost` | action points |
 | `Target` | **opponent · self** |
-| `Form` | stab / slash / crush / plan, or none — the player's deck axis |
+| `Form` | stab / slash / crush / defend, or none — the player's deck axis |
 | `Elements` | which colours the concept ships in |
 | `Copies` | how many of each |
 
-- **There is no `Category` column.** Attack-or-plan falls out of the verb, and carrying both would
-  let a file say a card is an attack that banks points.
+- **There is no `Category` column.** Which phase a card is in falls out of the verb, and carrying both would
+  let a file say a card is an attack that raises shields.
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
-  attacks ship one per colour and its plans four of one colour — the same four cards reached along
+  attacks ship one per colour and its defences one per colour — the same cards reached along
   different axes. An enemy's cards are all `basic`, so `Copies` carries its whole deck size.
 - **A key is scoped to its owner** (`ClearSlime1.Engulf`). Forty creatures want a card called
   `Bite` and they do not all want it at the same multiplier; the label collides freely, the key
@@ -448,10 +487,10 @@ is what everything that spends or checks a budget reads.
 The rings match against **the cards that formed the attack**, and each `apply-status` they fire lands
 once however many cards matched it — so the four elemental rings still read as "one status per
 distinct non-basic colour", and a form or concept ring reaches the same moment by the same route.
-An all-basic hand lands nothing, because no elemental rule matches a colourless card. A plan card
+An all-basic hand lands nothing, because no elemental rule matches a colourless card. A defend card
 carries its element for the ring discount and applies nothing itself;
-the alternative — every card applying its status — would make a 1-AP Prepare as good a delivery as
-a 1-AP Jab and turn the plan phase into the status engine. (The plans are all basic today, so this
+the alternative — every card applying its status — would make a 1-AP Ward as good a delivery as
+a 1-AP Jab and turn the defend phase into the status engine. (This
 is a rule waiting for a card rather than one currently biting.)
 
 **This is the whole of what colour does to a blow** *(2026-08-17)*. Distinct colours used to pay a
@@ -466,10 +505,10 @@ Three consequences, all of them changes from the per-card version:
 - **Cards outside the hand carry no colour at all.** `Strike, Jab, Strike` in fire, ice, fire is a
   fire Pair — one burn — and the ice Jab contributes neither damage nor a chill.
 - **The status lands because the hand formed, not because the blow hurt.** A hand halved by a
-  Defend still connected, and making the status conditional on the final figure would let a
+  guard still connected, and making the status conditional on the final figure would let a
   defensive card silently un-apply an element the attacker had already paid for.
 
-The cost, stated: **element is mechanically inert on the three plan cards**, and they are all
+The cost, stated: **element is mechanically inert on the three defend cards**, and they are all
 basic, so today it is inert on nothing that exists.
 
 **Magnitude is per hit, not per card.** A fire Jab and a fire Smash apply the same burn, so the
@@ -549,13 +588,13 @@ stacks; with stacking gone the ceiling is the number itself.
     `KindDefeated` when it does.
 - **Earth applies attacker-side, before any defence.** Weight says how hard you can still swing,
   so the order is: the hand's own cards, the hand multiplier, the attacker's weight, then every
-  raised plan card. Everything the defender does therefore happens to a blow that has already been
+  raised guard. Everything the defender does therefore happens to a blow that has already been
   blunted. **Rounding is toward zero**, matching the defend reductions and `scaleDamage`, so it is
   predictable from the reductions already in the game. **It is 25%**, because a smaller cut that
   cannot stack is a status nobody notices landing.
 - **Arcane applies victim-side, after the weight and before any defence.** Vulnerability says how
   hard *this body* takes a blow, so the order is: the hand's own cards, the hand multiplier, the
-  attacker's weight, the target's vulnerability, then every raised plan card. A card raised in
+  attacker's weight, the target's vulnerability, then every raised guard. A card raised in
   answer to the blow is therefore spent on the figure both statuses have already produced.
   **Rounding is toward zero**, matching blunt and every other percentage, so the two halves of one
   sum round the same way. **It is 100%** — double — and unlike the other four it is capped
@@ -578,21 +617,20 @@ A round is **a whole turn each**. Everything one side queued resolves before the
 does anything, and within a turn the two categories go in order:
 
 1. that side's **attack** — *one* blow, whatever it was assembled from
-2. that side's **plans**, one card at a time: banks taken, defences raised
+2. that side's **defences**, one card at a time: shields raised, guards put up
 3. then the other side, the same way
 
-**Plans come last** *within a turn* because the opponent moves next, so a defence raised at the
-end of your turn is up when their blow arrives. A Prepare banks for the round after and does not
-care where it sits; resolving plans first would mean every defence expired before anything could
-be aimed at it.
+**Defences come last** *within a turn* because the opponent moves next, so anything raised at the
+end of your turn is up when their blow arrives. Resolving them first would mean every defence
+expired before anything could be aimed at it.
 
 **The combat screen lays a turn out in exactly this order**, and leaves a gap at the boundary — the
-row on the table reads attacks, break, plans. That is not decoration: it is the round's two phases
+row on the table reads attacks, break, defences. That is not decoration: it is the round's two phases
 made visible in the one place the round is a picture rather than a list.
 
 **The attack phase is a single event, and that is the 2026-08-14 change.** Every attack card
 queued is announced, the hand they form is announced, and then one figure of damage lands. The
-plans are now the only cards that still resolve one at a time, because each does something to
+defences are now the only cards that still resolve one at a time, because each does something to
 its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
@@ -612,11 +650,11 @@ rather than one the player had built. **It says nothing the event does not carry
 nothing**, and the one thing it changes is pacing — playback holds while it runs. See the
 `combat-screen` skill.
 
-**The prepare phase is gone and its card moved** *(2026-08-15)*. Prepares used to run *before* the
-attack, on the grounds that nothing they did reached it. With three categories collapsed to two,
-Prepare joined the defences at the end of the turn — which changes nothing, because banking pays
-next round either way. A plan that *did* feed the hand would need the phase order reopened, and
-that is the argument to make rather than to quietly reorder.
+**The prepare phase is gone** *(2026-08-15, and the last card in it went on 2026-08-31)*. Banks
+used to run *before* the attack, on the grounds that nothing they did reached it; with three
+categories collapsed to two they joined the defences at the end of the turn, and nothing banks at
+all now. A card that *did* feed the hand would need the phase order reopened, and that is the
+argument to make rather than to quietly reorder.
 
 **Why:** the interleaving may not be possible for players to grok. That is the whole reason.
 It also simplifies — actions are gathered into their categories inside `ResolutionOrder`, and
@@ -720,7 +758,7 @@ tie-break and the multiplier ordering below both exist to answer.
 **A card with no value on an axis matches nothing on it.** `FormNone` and `Basic` are absences
 rather than values, so an enemy's formless colourless deck cannot build a form or an elemental hand
 at all — its whole ladder is the concept axis, which is what its `Copies` field was always buying.
-The player's plans are basic too, though they have already been excluded for being plans.
+The player's defences carry a colour like everything else, and it is inert for the same reason.
 
 **Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Bashes satisfy the
 Card Pair and the Form Pair at once; the narrower one is what the player aimed at, so `concept`
@@ -750,7 +788,7 @@ drew.
 **Every card in the turn is counted, and that is the matcher's rule rather than the catalogue's**
 *(2026-08-17, widened 2026-08-23)*. An entry used to name the categories it counted and could never
 change what was counted, so the field only invited an entry to claim otherwise. What is left out is
-decided by the axis — a card with no value on it — and by nothing else. **A Prepare joins a hand**
+decided by the axis — a card with no value on it — and by nothing else. **A Ward joins a hand**
 and brings no damage into it.
 
 ### Damage: one blow, one multiplier
@@ -819,7 +857,7 @@ is all that survives of the second axis.
   bottom of the ladder legible.
 - **Poker's ranking does not transfer to this deck, and the ladders are now priced off measured
   rarity rather than off poker** *(2026-08-19)*. Poker's ordering comes from 52 cards, 4 suits and
-  13 ranks; here a concept has 4 copies and a colour and a form 12 each since the plans were
+  13 ranks; here a concept has 5 copies and a colour and a form 12 each since the defences were
   coloured, and the turn is bounded by AP rather than by the draw. See *The multipliers come from how often a hand can actually be built*
   above for the model and the table.
 - **A turn's mismatched attacks sum**, rather than the biggest one landing alone, so a hand is
@@ -839,7 +877,7 @@ would be a balance change nobody made, so a missing or unknown one is refused at
 malformed record. Two further refusals live beside it: a hand wanting more cards than a turn holds,
 and one wanting more groups than its axis has values — four forms and four elements reach a blow, so
 a five-group form hand is a rung nobody could climb and would otherwise fail silently. It was
-*three* forms until 2026-08-23, when `plan` joined them.
+*three* forms until 2026-08-23, when the fourth joined them.
 
 **A hand names one axis, not one per group.** A mixed hand — three ice cards *and* a pair of
 Bashes — is deliberately not expressible; reopening it is a schema change and should be argued for
@@ -859,8 +897,8 @@ what that shape is worth.
 
 ### The multipliers come from how often a hand can actually be built *(2026-08-19)*
 
-**Plans carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the forty-eight
-cards is now one of the four colours — the three plans ship one copy per colour where they used to
+**Defences carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the sixty
+cards is one of the five colours — the three defences ship one copy per colour where they used to
 ship four basic copies, so the deck size did not move — and the matcher counts them like anything
 else. A hand is **what you played, not what you hit with**.
 
@@ -868,16 +906,16 @@ What that changed, in order of how much it matters:
 
 - **The element axis went from nine cards a colour to twelve**, which is exactly as wide as the form
   axis. The two ladders are now priced identically at every rung, because they are now equally hard.
-- **`plan` became a fourth countable form.** Any two plans are a Form Pair regardless of concept or
+- **`defend` is a fourth countable form.** Any two defences are a Form Pair regardless of concept or
   colour, and twelve of forty-eight cards carry it.
-- **A plan brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
-  not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Prepare
+- **A defence brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
+  not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Ward
   beside two fire Strikes turns a Card Pair into an Elemental Three of a Kind and pays it on the two
   Strikes' damage. That is the whole of what the change buys.
-- **A plan's colour arms a status.** `elementsOf` reads the formed hand, so a fire Prepare shows fire
+- **A defence's colour arms a status.** `elementsOf` reads the formed hand, so a fire Ward shows fire
   and lands a burn on a turn with no fire attack in it. That is the sharper half of the same
   decision.
-- **A hand of nothing but plans is real and lands nothing**, which is the accepted cost — see the
+- **A hand of nothing but shields is real and lands nothing**, which is the accepted cost — see the
   decision below the table.
 
 The three ladders are **not** the same numbers, and as of 2026-08-25 no two of them are. The
@@ -929,7 +967,7 @@ a concept five cards, so the rung is dealable at about one hand in 22,000 and is
 number at 785. It is still the rarest thing a round-one hand can build, by an order of magnitude.
 
 **The element five-of-a-kind stopped being an estimate on 2026-08-23**, for a different reason: a
-colour gained three plans, so five cards of one colour came down to 6 AP and the rung became
+colour gained three defences, so five cards of one colour came down to 6 AP and the rung became
 measurable at the real budget.
 
 **The five-of-a-kind row is the one that is not all measurement** *(2026-08-19)*, and it is written
@@ -961,11 +999,11 @@ Three things fall out of it and are worth keeping:
 
 **The best hand is chosen on multiplier, not on what it would deal, and that is now a decision**
 *(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
-plans joining hands made them disagree by everything, and the answer is to leave the matcher alone.
+defences joining hands made them disagree by everything, and the answer is to leave the matcher alone.
 
-The case that forced it: a turn of `Strike + two plans` forms a **Form Pair at 110 on zero damage**,
-because any two plans share `FormPlan` and the pair beats the High Card's 100 — so the Strike is
-announced and lands nothing, where the Strike alone would have landed its face damage. Playing plans
+The case that forced it: a turn of `Strike + two shields` forms a **Form Pair at 110 on zero damage**,
+because any two defences share `FormDefend` and the pair beats the High Card's 100 — so the Strike is
+announced and lands nothing, where the Strike alone would have landed its face damage. Playing defences
 beside a single attack can cost you the blow, and **reading the board to avoid that is part of the
 game** rather than a bug to design out.
 
@@ -984,18 +1022,18 @@ consecutive in.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
-whole round on Prepares. **Five Strikes is dealable as of 2026-08-25** — the deck holds five, one
+whole round on shields. **Five Strikes is dealable as of 2026-08-25** — the deck holds five, one
 per colour — which is what turned the concept five-of-a-kind from a worm's rung into the rarest
 measurable hand in the game. Being dealable and being affordable are still two different questions,
 which is why the wide five-of-a-kind rungs are the cheapest cards of a form or a colour rather than
 of a concept.
 
-**A colour's cheapest five now includes a plan** *(2026-08-23)* — fire Jab, Cut, Bash and Prepare at
+**A colour's cheapest five now includes a defence** *(2026-08-23)* — fire Jab, Cut, Bash and Ward at
 1 AP each plus a fire Thrust at 2 is **6 AP**, which is a plain round's whole budget and the first
-time an elemental five-of-a-kind has been affordable without banking. It used to be 7 AP, because a
-colour held one card per form per tier and nothing cheaper. The Prepare pays nothing into the 5.65x;
+time an elemental five-of-a-kind has been affordable out of a plain budget. It used to be 7 AP, because a
+colour held one card per form per tier and nothing cheaper. The Ward pays nothing into the 5.65x;
 what it does is take the place of the second 2 AP attack the hand used to need, so it is a rung the
-plans *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
+defences *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
 
 ### Requirements
 
@@ -1056,8 +1094,8 @@ reverses the reason it was made a method — "so a brand or ring raising it has 
   everything *else* they do, and a method that reads the duelist costs nothing. What changed is
   that this particular lever is off the table: **no ring, brand or hand raises `MaxActions`.**
 
-The consequence for the banking card: a plan cannot buy action slots, so Prepare buys
-points instead (+2). An earlier draft of a 4-AP bank granted +2 AP and +2 slots specifically to reach
+The consequence a banking card would face, if one were ever written again: it could not buy action
+slots, so it would have to buy points. An earlier draft of a 4-AP bank granted +2 AP and +2 slots specifically to reach
 six- and seven-card hand hands; that is exactly the dilution above and it was cut.
 
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
@@ -1193,7 +1231,7 @@ became **Warm** and grew three siblings.
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
 | **stat rings** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
-| **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no plan card in it; a plan card wipes the streak |
+| **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no defend card in it; a defend card wipes the streak |
 | **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their colour gains +0.1x DMG per landed hit of that colour, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
 | **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
@@ -1221,27 +1259,30 @@ so the price is judgement — see the rings skill.
 
 ### Momentum — a streak that belongs to the duel *(2026-08-22, owner's call)*
 
-**Every card gains +0.2x DMG for each turn played without a plan card, and a plan card wipes it.**
+**Every card gains +0.2x DMG for each turn played without a defend card, and a defend card wipes
+it.**
 Uncommon. It scales the *duelist* rather than a colour or a form: the `card-damage` rule carries no
 predicate at all, so the streak is worth the same on every card in the hand.
 
 - **It is written as two positive rules and no negation.** One grows on every turn, one resets on a
-  turn holding a plan card, and **growth is applied before resets** — so a planning turn nets zero
+  turn holding a defend card, and **growth is applied before resets** — so a defending turn nets zero
   rather than depending on which rule the file lists first. The grammar has no `not` and this is the
   shape that means it does not need one.
 - **`turn-taken` is a new moment**, the first that is about a *turn* rather than a card, a blow or a
   fight. Its predicate is matched against the turn as a whole: the rule fires when any card of the
   turn matches it.
 - **An empty turn is still a turn taken**, so a duelist chilled out of their whole turn keeps
-  building. The streak is about not *planning*, not about swinging.
+  building. The streak is about not *defending*, not about swinging.
 - **A duelist who falls mid-turn never reaches it**, since `playTurn` returns early on a death — a
   streak is a fact about turns taken and a corpse takes none.
 - **The streak does not survive the fight**, and that needed a rule: `combat.KeepsGrowth` reports
   false for any ring holding a `reset-growth`, and `Session.AbsorbGrowth` skips it. Otherwise one
-  good duel would bank a permanent bonus that a single plan card had once wiped.
-- **It is a real argument against Plan and Prepare**, which is the interesting part: the deck's plan
-  cards are how a hand is rebuilt, and this ring prices that. Whether 0.2x a turn is enough to make
-  a player skip a Plan is unmeasured, like every other ring.
+  good duel would bank a permanent bonus that a single defend card had once wiped.
+- **It became a sharper ring when shields landed** *(2026-08-31)*. It used to price the cards that
+  rebuilt a hand, which is an abstract cost; it now prices *taking a hit*, and the question it asks
+  the player is legible in a way the old one never was — swing into the next blow, or spend the turn
+  and lose the streak. Whether 0.2x a turn is enough to make a player eat an attack is unmeasured,
+  like every other ring.
 
 ### The Enflamed family — growth inside a fight *(2026-08-22, owner's call)*
 
@@ -1673,7 +1714,7 @@ an unknown target, an element the rules lack, a value on a target that reads non
 init**.
 
 **`amount` reaches every card in the deck with one worm**, because what the figure *is* depends on
-the verb: a defence percentage, points banked, cards drawn, or a damage multiplier. That is the
+the verb: a defence percentage, shields raised, or a damage multiplier. That is the
 card language paying off — one worm, four meanings, no special cases.
 
 **Cost and amount are per-card and the rest of a card is not.** `combat.Card` carries `CostDelta`
@@ -1698,15 +1739,15 @@ scratch before adding one.
   ceiling.
 - **`amount` compounds rather than replaces** — 150% twice is 225% — so a second worm on the same
   card is worth taking.
-- **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a plan
-  card has no form and so no ladder at all. The screen asks `CanApply` before offering a card, so
+- **A ladder has two ends.** A Smash cannot be promoted and a Jab cannot be demoted, and a defend
+  card is not an attack, so `Neighbour` refuses it a ladder at all. The screen asks `CanApply` before offering a card, so
   a worm that would do nothing is never presented as a choice.
 
 ### The card says what the card does
 
 **Effect text reads the card, not the concept** *(2026-08-17)*. It was already a template over the
 value; what changed is which value it reads. So an altered Defend prints the percentage it
-actually cuts and an altered Prepare prints what it actually banks. **A card whose face disagreed
+actually cuts and an altered Ward prints the shields it actually raises. **A card whose face disagreed
 with its behaviour is the worst thing an alteration mechanic can produce**, and it is the reason
 this was not deferred.
 
@@ -2070,7 +2111,7 @@ buys rather than for the best combination.
 
 **Then it spends what the attacks did not want**, on defences first and the hand's own order after.
 That second pass is what keeps a non-attack card in an enemy deck from being dead content: a
-planner that only maximised damage would never raise a shield, and every `Congeal` in the roster
+planner that only maximised damage would never raise a guard, and every `Congeal` in the roster
 would sit in a discard pile forever.
 
 **`Copies` was the difficulty dial and it is a blunter one now.** Under hands, four copies of a

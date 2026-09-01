@@ -141,7 +141,7 @@ type Style struct {
 	HealthTextSize  float64
 
 	// Spec.Effects drawn as a centred row of squares along the bottom edge. A zero
-	// EffectSize means the style shows none, which is every style but EnemyStyle.
+	// EffectSize means the style shows none, which is every style but the two fighter cards.
 	//
 	// **A square box each, and the badge is fitted into it** — the art is 500px and this is
 	// twenty, so it is scaled like the portrait rather than blitted like a glyph. The row is
@@ -418,10 +418,10 @@ var Stack = Style{
 // **The badges are on this card and not the duelist's** *(2026-08-16)*, which breaks the
 // twins rule everywhere except where that rule actually bites — the bar and the fraction are
 // still at identical offsets, and the band under them is the same free strip on both. The
-// reason is that nothing can put a status on the player: the enemy wears no rings and a ring
-// is what makes a status happen. Drawing an empty band on the duelist card would be reserving
-// space for a mechanic that does not exist. `DuelistStyle` gains it in three lines when one
-// does.
+// reason was that nothing could put a status on the player: the enemy wears no rings and a ring
+// is what makes a status happen. **`DuelistStyle` gained the row on 2026-08-31**, in the three
+// lines this comment promised, and what fills it is not a status — it is the shield count, one pip
+// per shield. The band is at the same offsets on both cards, so the two still read as twins.
 //
 // **The strip they sit in is what was left, not what was wanted.** The fraction's ink ends
 // around y=197 at 18pt and the border starts at 218, so the badges get twenty pixels — small
@@ -494,7 +494,13 @@ var EnemyStyle = Style{
 //	116  Vitae            116..137
 //	161  health bar        161..175
 //	180  hit points        "42/60", centred
+//	197  shield pips       197..217  (Spec.Effects, a centred row)
 //	218  inside of the bottom border
+//
+// **The shield row is the enemy's badge row, seat for seat** *(2026-08-31)*. It holds five, which
+// is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth
+// shield could never be spent. The row closes up as shields are eaten, so three pips sit centred
+// rather than clinging to the left, and an unshielded duelist draws nothing at all.
 //
 // **The bar and the fraction are at exactly the enemy card's offsets**, deliberately: the two
 // cards face each other across the screen and a health bar that sat at a different height on
@@ -530,6 +536,10 @@ var DuelistStyle = Style{
 	HealthBarHeight: 14,
 	HealthTextTop:   180,
 	HealthTextSize:  18,
+
+	EffectSize: 20,
+	EffectTop:  197,
+	EffectGap:  6,
 }
 
 // WormStyle is a worm, in the card format *(2026-08-22)*.

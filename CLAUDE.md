@@ -145,7 +145,7 @@ order is how five end up current and one ends up lying. A stale sheet is worse t
 picture of a catalogue that no longer exists.
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
-holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-plans` — so a
+holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-shields` — so a
 hand that demonstrates something can be asked for by name instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
@@ -155,6 +155,27 @@ holds one per hand, a run's counts ride on `combat.Duelist.HandStones`, and `han
 §Stones and `internal/combat/stone.go`, which owns the arithmetic. **The corollary for tuning:**
 `tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
 that has been buying rocks.
+
+**Shields replaced the plan form on 2026-08-31** *(owner's call)*. The player's three defend cards —
+`Ward`, `Brace`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
+attack whole**. See MECHANICS.md §Shields. Four things to know before touching any of it:
+
+- **The asymmetry is the mechanic.** Only the player raises shields and only creatures raise
+  percentage guards, because every creature is a solo attacker (`SoloAttacks`, one blow per card)
+  while the player forms hands and lands one figure a turn. A count facing a hand would delete a
+  whole turn, which is what `maxDefendPct` exists to forbid. `combat.blockedByShield` carries the
+  note; the rules do not enforce it.
+- **`VerbBank` and `VerbDraw` are both gone** *(owner's call)*. The verb vocabulary is
+  attack / defend / shield. Thirty-six creature bank cards were **deleted** from `enemies.json`
+  rather than converted, so those decks are pure attack now and are modestly stronger for it;
+  `GatheredAP`, `BonusAP`, `KindGathered` and the whole AP-flight animation went with them, and
+  **`Duelist.ActionPoints()` is the stat and nothing else**.
+- **A duelist holds at most five shields**, which is `MaxActions` — the most attacks a turn can
+  throw — and is also what the pip row on the duelist card can draw. The cap is in
+  `Duelist.raiseShields` and the row inherits it; do not clamp in the screen.
+- **The deck shape did not move**: 3 concepts × 5 elements × 1 copy, exactly what the plan cards
+  were, so `data/hands.json` needed no edit and `tools/handodds` prints the same figures. **Keep it
+  that way** — deviating makes any change here a balance change as well.
 
 **Parasites alter the deck *during* a fight, and they are the one mechanic allowed near a live
 round** *(owner's call, 2026-08-27)*. `data/parasites.json` is the catalogue,
@@ -182,7 +203,7 @@ about `data/duelist_cards.json`, the hand size and the action budget. Change any
 tuned against a deck that no longer exists, silently, because nothing fails. The tool measures
 **reachability** rather than what the matcher picks: whether a hand of eight can afford some set
 forming the rung, which is the question the player is actually answering. **It counts every card,
-plans included** *(2026-08-23)* — they carry an element and a form now and join hands like anything
+defences included** *(2026-08-23)* — they carry an element and a form and join hands like anything
 else, bringing no damage with them. MECHANICS.md holds the
 table and the rule that turned it into multipliers.
 
@@ -503,7 +524,7 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   around one row of metal and reads as a scratch. This is the main constraint the technique
   imposes and it drives every span in the file.
 - **A card's corner carries a drawn form mark** *(2026-08-23)*: a spear, a sword, an axe and a
-  bulb for stab, slash, crush and plan, from `assets/form/`. `cards.Form.glyph()` maps a form to
+  shield for stab, slash, crush and defend, from `assets/form/`. `cards.Form.glyph()` maps a form to
   its kind and reports `FormNone` as having none, so a ring and both fighter cards leave the slot
   empty. **The mark is tinted by the card's element** — see the card section below, which is where
   the element is said now.

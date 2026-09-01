@@ -208,13 +208,12 @@
 //     event's dwell. It still cannot change an outcome. mathScript is the half with no geometry in
 //     it and is what the tests pin. It also holds mathBandHeight and mathBandGapAboveCards, the
 //     depth the sum was laid out against.
-//   - combat_bank.go — a Prepare's points flying to the fighter card, and the AP line that waits
-//     for them (2026-08-19). The KindGathered row of the theatre table, built on combat_hits.go's
-//     pattern: the engine has already banked them, shownBank is the view that lets the card's
-//     figure move on the beat the number arrives rather than when the round's end state is
-//     adopted, and endOfRound zeroes it as BonusAP takes over. The target is the fighter card's AP
-//     line, not the strip's 3/6 AP — the strip is this round's budget being spent and a Prepare
-//     does not touch it.
+//   - combat_shields.go — the pip row on the duelist card, one shield each, kept in step with
+//     playback rather than with the model (2026-08-31). Built on combat_hits.go's pattern: the
+//     engine has already raised or spent them, shownShields is the view that lets the row move on
+//     the beat the event is drawn rather than when the round's end state is adopted. There is no
+//     flight — a pip appears in a row on the card the player is already looking at, so the arrival
+//     is the drawing.
 //   - combat_hits.go — the damage figure landing, and the health bar that waits for it. The -N
 //     travels out of wherever the blow was last seen and into the card whose bar it empties, and
 //     the bar holds its old figure until the number arrives — so the drop and the arrival are one

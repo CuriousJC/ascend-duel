@@ -293,27 +293,14 @@ func (s *CombatScene) shuffleDeck() {
 	})
 }
 
-// handTarget is how many cards this round's refill draws to: the usual size, plus whatever a
-// Plan banked in the round before.
+// handTarget is how many cards this round's refill draws to.
 //
-// **This is where a Plan actually draws** *(2026-08-15)*. `internal/combat` has no deck, so a
-// Plan records `BonusDraw` on the duelist and the size of the next hand is the whole of what it
-// bought. It has to be the refill target rather than an immediate two cards: the hand refills to
-// a fixed size at the round boundary anyway, so cards handed over mid-round would be two fewer
-// drawn at the boundary and the card would do nothing at all.
-//
-// The engine assigns `BonusDraw` rather than adding to it, so it lasts exactly one round — a
-// hand of ten, and then a hand of eight again.
-//
-// **A scene with no fighter draws the usual eight.** `OpeningHand` and the flight tests build a
-// bare CombatScene to deal a hand without a duel around it, which is exactly the case a Plan
-// cannot have applied in.
-func (s *CombatScene) handTarget() int {
-	if s.fighter == nil {
-		return handSize
-	}
-	return handSize + s.fighter.BonusDraw
-}
+// **It is a constant, and the function survives the thing that made it one** *(2026-08-31)*. A
+// Plan card used to bank a wider hand for the round after, so this read `handSize + BonusDraw`;
+// nothing widens a hand any more. It stays a function rather than becoming `handSize` at every
+// call site because "how many cards does a refill draw to" is a question with one answer and one
+// place to change it, and the ring grammar has a seat for a card-drawn moment already.
+func (s *CombatScene) handTarget() int { return handSize }
 
 // drawHand fills the hand up to handTarget, reshuffling the discard back into the draw pile
 // when it runs dry. A hand can come up short only if every card the player owns is already

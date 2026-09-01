@@ -12,7 +12,7 @@ func testDeck() []combat.Card {
 		{Concept: combat.Strike, Element: combat.Fire},
 		{Concept: combat.Strike, Element: combat.Ice},
 		{Concept: combat.Smash, Element: combat.Earth},
-		{Concept: combat.Prepare, Element: combat.Basic},
+		{Concept: combat.Ward, Element: combat.Basic},
 	}
 }
 
@@ -257,8 +257,8 @@ func TestTheNumericTargetsApply(t *testing.T) {
 	})
 
 	t.Run("amount compounds", func(t *testing.T) {
-		run := New([]combat.Card{{Concept: combat.Prepare}})
-		base := combat.ConceptOf(combat.Prepare).Amount
+		run := New([]combat.Card{{Concept: combat.Ward}})
+		base := combat.ConceptOf(combat.Ward).Amount
 
 		run.Apply(Worm{Target: TargetAmount, Number: 150}, 0)
 		once, _ := run.Card(0)

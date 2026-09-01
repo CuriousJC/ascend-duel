@@ -86,7 +86,10 @@ const (
 	// spends *this* round's budget belongs on it.
 	anchorAPFigure
 
-	// anchorHandRow is the hand band itself — the row a Plan widens.
+	// anchorHandRow is the hand band itself.
+	//
+	// **Nothing targets it**, for the reason anchorAPFigure does not: it is a real place on the
+	// screen and the next thing that changes the *hand* rather than a duelist belongs on it.
 	anchorHandRow
 
 	// anchorCount is the width of the enum and is never a place. Keep it last.
@@ -194,13 +197,17 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorNone, gestureNone,
 		"the card lifting in its own seat is the drawing, and tableFireLift already does it",
 	},
-	combat.KindGathered: {
+	combat.KindRaised: {
 		anchorActorSeat, anchorActorCard, gestureFly,
-		"banked points land on the AP line they raise, which is the fighter card's and not the strip's",
+		"shields land on the card that draws them, the same trip banked points make",
 	},
-	combat.KindDrew: {
-		anchorActorSeat, anchorHandRow, gestureFly,
-		"a Plan widens the next hand, so it flies at the row it widens",
+	combat.KindBlocked: {
+		anchorNone, anchorTargetCard, gesturePop,
+		"nothing travels - a shield is spent where it stood, on the card whose bar did not move",
+	},
+	combat.KindExpired: {
+		anchorNone, anchorNone, gestureNone,
+		"the pip row emptying says it; a figure flying off a card nobody hit would say it twice",
 	},
 	combat.KindNegated: {
 		anchorNone, anchorSumLine, gesturePop,
@@ -302,12 +309,20 @@ type combatTheatre struct {
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
 
-	// banks are the `+2 AP` figures a Prepare sends to the fighter card whose budget it raises,
-	// and bankShown is what they have already delivered — the points a card's AP line is drawing
-	// on top of `Duelist.BonusAP`, which the engine does not write until the round's end state is
-	// adopted. Indexed by side. See combat_bank.go.
-	banks     []bankFlight
-	bankShown [2]int
+	// shieldsShown is each side's standing shield count as *playback* has reached it, and
+	// shieldsSeen says whether any event this round has set it.
+	//
+	// **The same problem `shownLife` solves, and the same shape.** `Duelist.Shields` is not written
+	// until the round's end state is adopted, so a pip row reading the model would fill up a whole
+	// opposing turn after the card that filled it and empty a whole turn after the attack that ate
+	// it. Every change to the count is announced — raised, blocked, expired — so this follows the
+	// events and the card follows this.
+	//
+	// **Absolute rather than a delta**: each of those events carries the count afterwards, so there
+	// is nothing to add up and no way for the readout to drift from the engine. Cleared in
+	// endOfRound, where the model becomes authoritative again.
+	shieldsShown [2]int
+	shieldsSeen  [2]bool
 
 	// banner is the name of the hand the player committed, on its way from the planning seat to
 	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
@@ -339,7 +354,6 @@ func (t *combatTheatre) tick() {
 	t.flights = advance(t.flights)
 	t.slides = advance(t.slides)
 	t.hits = advance(t.hits)
-	t.tickBanks()
 
 	// The two rows on the table never expire: cards arrive and stay until the round is spent, so
 	// they are advanced in place rather than filtered.
@@ -356,36 +370,13 @@ func (t *combatTheatre) tick() {
 	t.banner.tick()
 }
 
-// tickBanks is the one mover with its own loop, because it does something on the frame a figure
-// *arrives* rather than on the frame it finishes.
-//
-// **The credit happens on arrival**, which is the whole point of the gesture: the number reaching
-// the card is what raises the card's figure. It is kept in `bankShown` rather than read back off
-// the live flights because a flight is dropped when its hold expires and the points have to stay
-// on the card until the round's end state is adopted — see shownBank.
-func (t *combatTheatre) tickBanks() {
-	live := t.banks[:0]
-	for i := range t.banks {
-		b := &t.banks[i]
-		was := b.arrived()
-		b.tick()
-		if !was && b.arrived() {
-			t.bankShown[b.side] += b.amount
-		}
-		if !b.done() {
-			live = append(live, *b)
-		}
-	}
-	t.banks = live
-}
-
 // running reports whether anything the playback cursor waits on is still going.
 //
 // **It is the figures, not the cards.** A card flying to its seat runs alongside playback and never
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheatre) running() bool {
-	return running(t.hits) || running(t.banks)
+	return running(t.hits)
 }
 
 // clear takes the whole stage down, view state included.

@@ -199,19 +199,28 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			// deliberate rather than merely true.
 			blow(e)
 
-		case combat.KindGathered:
-			attach(fmt.Sprintf("+%d AP", e.Amount))
+		case combat.KindRaised:
+			// **The count that is standing, not the count this card added.** Two Guards in a turn
+			// is one duelist behind six shields, and a feed saying "+3" twice makes the reader do
+			// the arithmetic the readout has already done.
+			attach(fmt.Sprintf("%s up", shieldCount(e.Life)))
 
-		case combat.KindDrew:
-			// **The cards say "next round" and this line does not**, because a feed line is read
-			// while a round is being replayed and the sentence around it is already in the past.
-			// The card face is the place that has to state the timing.
-			attach(fmt.Sprintf("+%d cards", e.Amount))
+		case combat.KindExpired:
+			// **A line of its own, because the row emptying needs a reason beside it.** Shields
+			// that were never spent are the player's own decision coming back, and a readout that
+			// simply went blank would read as a bug.
+			attach(fmt.Sprintf("%s lapse", shieldCount(e.Amount)))
+
+		case combat.KindBlocked:
+			// **A sentence of its own rather than a clause on the damage line**, because there is
+			// no damage line: the attack landed nothing, so the feed's only record that it happened
+			// at all is this.
+			attach(fmt.Sprintf("blocked - %s left", shieldCount(e.Amount)))
 
 		case combat.KindNegated:
-			// The card that answered the blow is named rather than assumed. Defend is the only one
-			// that can reach here today, and the sentence is written off the event anyway — a
-			// second card that reduced damage would read correctly without touching this.
+			// The card that answered the blow is named rather than assumed. A creature's guard is
+			// the only thing that can reach here today, and the sentence is written off the event
+			// anyway — a second card that reduced damage would read correctly without touching this.
 			attach(fmt.Sprintf("halved by a %v", lower(combat.ConceptOf(e.Action).Label)))
 
 		case combat.KindDamage:
@@ -325,10 +334,11 @@ func cardEffect(card combat.Card) string {
 	switch c.Verb {
 	case combat.VerbDefend:
 		return "Cuts damage by " + strconv.Itoa(amount) + "%"
-	case combat.VerbBank:
-		return "Bank " + strconv.Itoa(amount) + " AP for next round"
-	case combat.VerbDraw:
-		return "Draw " + strconv.Itoa(amount) + " cards next round"
+	case combat.VerbShield:
+		// **The face says the count and nothing else.** What a shield *does* is one rule for every
+		// card that raises one, so it is the tooltip's line rather than three copies of a sentence
+		// competing for a 128px column — see shieldTipLines.
+		return shieldCount(amount)
 	}
 
 	return attackVerb(c.Form) + " for " + multiplierText(amount) + " DMG"
@@ -370,10 +380,8 @@ func actionPhrase(id combat.ConceptID) string {
 	switch c.Verb {
 	case combat.VerbDefend:
 		return "behind a " + name
-	case combat.VerbBank:
-		return "and gathers with a " + name
-	case combat.VerbDraw:
-		return "and looks ahead with a " + name
+	case combat.VerbShield:
+		return "and raises a " + name
 	default:
 		return "with a " + name
 	}
@@ -445,14 +453,19 @@ func tickVerb(id combat.StatusID) string {
 }
 
 // verbFor is the verb a category is spoken with.
+//
+// **"defends" covers a shield, a guard and a bank alike**, which is a small stretch on the last of
+// those and the right one: the word is a *scanning* aid saying which half of the turn a line
+// belongs to, not a description of the card. A third verb would be a third colour on a pane that
+// is read by colour before it is read at all.
 func verbFor(c combat.Category) string {
-	if c == combat.CategoryPlan {
-		return "plans"
+	if c == combat.CategoryDefend {
+		return "defends"
 	}
 	return "attacks"
 }
 
-// The colour the verb is *written* in. **Red for attack, blue for plan** — the category made loud
+// The colour the verb is *written* in. **Red for attack, blue for defend** — the category made loud
 // enough to scan a round by, without reading it.
 //
 // **The verb was a filled chip until 2026-08-08 and is now the word itself**, coloured, bolded
@@ -462,12 +475,12 @@ func verbFor(c combat.Category) string {
 // retired the full-width highlight bar a day earlier — this is the same mistake one scale
 // smaller.
 //
-// **Plan takes the blue defend used to have** *(2026-08-15)*, rather than the no-hue prepare had.
+// **The defend phase keeps the blue** *(2026-08-15)*, rather than the no-hue the prepare phase had.
 // With two categories the second colour is the whole distinction, and a category rendered in the
 // row's own ink would leave "attacks" as the only marked verb — which is a highlight, not a
 // scheme.
 func verbInkFor(c combat.Category) color.RGBA {
-	if c == combat.CategoryPlan {
+	if c == combat.CategoryDefend {
 		return color.RGBA{R: 52, G: 104, B: 196, A: 255}
 	}
 	return color.RGBA{R: 186, G: 52, B: 52, A: 255}
@@ -592,4 +605,15 @@ func handMath(e combat.Event) string {
 // line, where the `x` is already there as an operator.
 func handMultiplierText(pct int) string {
 	return strconv.FormatFloat(float64(pct)/100, 'f', -1, 64)
+}
+
+// shieldCount is "1 shield" or "3 shields", and it is the one place the noun is pluralised.
+//
+// **The card face, the feed and the tooltip all read it**, because a face saying "1 shields" is
+// the kind of thing that survives a review by being in three files at once.
+func shieldCount(n int) string {
+	if n == 1 {
+		return "1 shield"
+	}
+	return strconv.Itoa(n) + " shields"
 }

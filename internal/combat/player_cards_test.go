@@ -28,52 +28,23 @@ func kindCount(events []Event, kind EventKind) int {
 	return n
 }
 
-func TestPrepareBanksForTheRoundAfter(t *testing.T) {
-	// **Not the round it is played in.** Those points were committed when the cards were queued,
-	// so a bank that funded its own turn would be a free action rather than an investment.
-	a := duelist(10, 4, 100)
-	b := duelist(10, 4, 100)
-
-	events, aAfter, _ := resolve(a, b, PlainCards(Prepare), nil, 1)
-
-	if !hasKind(events, KindGathered) {
-		t.Fatal("no KindGathered event — the Prepare banked nothing")
-	}
-	bank := ConceptOf(Prepare).Amount
-	if aAfter.BonusAP != bank {
-		t.Errorf("BonusAP after a Prepare = %d, want %d", aAfter.BonusAP, bank)
-	}
-	if aAfter.ActionPoints() != a.Actions+bank {
-		t.Errorf("next round's budget = %d, want %d", aAfter.ActionPoints(), a.Actions+bank)
-	}
-}
-
-func TestPrepareIsWorthMoreThanItCosts(t *testing.T) {
-	// Two for one is a deliberate profit. What Prepare actually costs is the card slot and the
-	// action slot it takes out of the round it is played in, not the point on its face — so if the
-	// bank ever stops beating the price, the card is pure loss and nobody would ever play it.
-	if net := ConceptOf(Prepare).Amount - ConceptOf(Prepare).Cost; net <= 0 {
-		t.Errorf("Prepare nets %+d AP; a bank that does not profit is a card nobody plays", net)
-	}
-}
-
-// Defend is the whole defensive vocabulary as of 2026-08-15. Under one blow per turn it takes half
+// testGuard is the whole defensive vocabulary as of 2026-08-15. Under one blow per turn it takes half
 // of what arrives and is then spent.
 func TestDefendHalvesTheBlowAndIsSpent(t *testing.T) {
 	a := duelist(10, 4, 500)
 	b := duelist(10, 4, 500)
 
-	// B defends first. B acts second, so its Defend is standing when A's next turn arrives.
+	// B defends first. B acts second, so its testGuard is standing when A's next turn arrives.
 	// A Smash and a Thrust are different concepts and different forms, and both are colourless, so
 	// they agree on no axis and form no hand: the blow is the High Card — the Smash alone — and the
-	// arithmetic is about the Defend rather than about a multiplier.
-	_, a, b = resolve(a, b, nil, PlainCards(Defend), 1)
+	// arithmetic is about the testGuard rather than about a multiplier.
+	_, a, b = resolve(a, b, nil, PlainCards(testGuard), 1)
 	events, _, bAfter := resolve(a, b, PlainCards(Smash, Thrust), nil, 2)
 
 	if !hasKind(events, KindNegated) {
-		t.Fatal("no KindNegated event — the Defend did not apply")
+		t.Fatal("no KindNegated event — the testGuard did not apply")
 	}
-	if want := 500 - Plain(Smash).Damage(10)*(100-ConceptOf(Defend).Amount)/100; bAfter.CurrentLife != want {
+	if want := 500 - Plain(Smash).Damage(10)*(100-ConceptOf(testGuard).Amount)/100; bAfter.CurrentLife != want {
 		t.Errorf("life after a halved Smash = %d, want %d", bAfter.CurrentLife, want)
 	}
 	if bAfter.DefendCount != 0 {
@@ -91,7 +62,7 @@ func TestNoDefenceStopsABlowOutright(t *testing.T) {
 
 	// Four Jabs is a Barrage, which is the biggest thing a cheap hand can assemble, into every
 	// defensive card the game has.
-	_, a, b = resolve(a, b, nil, PlainCards(Defend, Defend), 1)
+	_, a, b = resolve(a, b, nil, PlainCards(testGuard, testGuard), 1)
 	events, _, bAfter := resolve(a, b, PlainCards(Jab, Jab, Jab, Jab), nil, 2)
 
 	if got := firstDamage(t, events, SideA).Amount; got <= 0 {
@@ -102,38 +73,113 @@ func TestNoDefenceStopsABlowOutright(t *testing.T) {
 	}
 }
 
-// **A Plan banks a wider hand, and the engine can only record that it is owed.** There is no deck
-// in this package, so the whole of what the card produces here is BonusDraw plus an event — the
-// screen holds the deck and honours it.
-func TestPlanBanksItsDrawForTheFollowingRound(t *testing.T) {
-	a := duelist(10, 4, 100)
-	b := duelist(10, 4, 100)
+// **The three defend cards raise their own number of shields, and the price is the count.** Ward
+// for one at 1 AP, Brace for two at 2, Guard for three at 3 — the attacks' ladder with a count
+// where the damage multiplier sits.
+func TestEachDefendCardRaisesItsOwnNumberOfShields(t *testing.T) {
+	for _, tc := range []struct {
+		card ConceptID
+		want int
+	}{{Ward, 1}, {Brace, 2}, {Guard, 3}} {
+		c := ConceptOf(tc.card)
+		if c.Amount != tc.want || c.Cost != tc.want {
+			t.Errorf("%s raises %d for %d AP, want %d for %d", c.Label, c.Amount, c.Cost, tc.want, tc.want)
+		}
 
-	events, a1, _ := resolve(a, b, PlainCards(Plan), nil, 1)
+		events, after, _ := resolve(duelist(10, 6, 100), duelist(10, 6, 100), PlainCards(tc.card), nil, 1)
+		if after.Shields != tc.want {
+			t.Errorf("a %s left %d shields standing, want %d", c.Label, after.Shields, tc.want)
+		}
+		if !hasKind(events, KindRaised) {
+			t.Errorf("a %s raised no KindRaised — the screen is never told to draw the pips", c.Label)
+		}
+	}
+}
 
-	if !hasKind(events, KindDrew) {
-		t.Fatal("no KindDrew event — nothing tells the screen to draw")
+// **One shield eats one attack, whole.** This is the mechanic: a creature is a solo attacker, so
+// its turn is several discrete blows and the player decides how many of them to take.
+func TestAShieldEatsExactlyOneAttack(t *testing.T) {
+	a := duelist(10, 6, 200)
+	b := duelist(10, 6, 200)
+	b.SoloAttacks = true
+
+	// **Both in one round, because that is the turn a shield covers.** A raises at the end of its
+	// own turn and B acts next; a shield still standing when A comes round again is one that
+	// expires unspent — see TestUnspentShieldsLapseBeforeTheirOwnerActsAgain.
+	events, a2, _ := resolve(a, b, PlainCards(Brace), PlainCards(Strike, Strike, Strike), 1)
+
+	if got := countKind(events, KindBlocked); got != 2 {
+		t.Errorf("%d attacks blocked, want 2 — one shield is one attack", got)
 	}
-	drew := ConceptOf(Plan).Amount
-	if a1.BonusDraw != drew {
-		t.Errorf("BonusDraw = %d after a Plan, want %d", a1.BonusDraw, drew)
+	if got := damageCount(events); got != 1 {
+		t.Errorf("%d attacks landed, want 1 — the third Strike had no shield left to meet it", got)
 	}
-	if a1.DrewCards != 0 {
-		t.Errorf("DrewCards = %d at the round boundary, want it rolled into BonusDraw", a1.DrewCards)
+	if a2.Shields != 0 {
+		t.Errorf("%d shields left standing, want 0 — both were spent", a2.Shields)
+	}
+}
+
+// **A blocked attack lands nothing at all**, which is what separates a shield from a guard: a
+// guard leaves a figure and this leaves none.
+func TestABlockedAttackDealsNoDamage(t *testing.T) {
+	a := duelist(10, 6, 200)
+	b := duelist(10, 6, 200)
+	b.SoloAttacks = true
+
+	_, a1, _ := resolve(a, b, PlainCards(Ward), PlainCards(Strike), 1)
+
+	if a1.CurrentLife != a.CurrentLife {
+		t.Errorf("a shielded duelist lost %d life to a blocked Strike, want none",
+			a.CurrentLife-a1.CurrentLife)
+	}
+}
+
+// **Shields last the turn after they were played and then lapse**, on the same schedule a raised
+// guard does — up at the end of your turn, standing through the opponent's, gone before you act
+// again. Stockpiling them across quiet rounds is the thing they were built not to do.
+func TestUnspentShieldsLapseBeforeTheirOwnerActsAgain(t *testing.T) {
+	a := duelist(10, 6, 200)
+	b := duelist(10, 6, 200)
+	b.SoloAttacks = true
+
+	// Round 1: A raises three and B swings at nothing, so all three survive the round.
+	_, a1, b1 := resolve(a, b, PlainCards(Guard), nil, 1)
+	if a1.Shields != 3 {
+		t.Fatalf("A ended round 1 with %d shields, want the Guard's three standing", a1.Shields)
 	}
 
-	// **It lasts exactly one round.** BonusDraw is assigned rather than added to, so a round with
-	// no Plan in it puts the hand back to its usual size — which is what makes the card a boost
-	// rather than a hand that grows all game.
-	_, a2, _ := resolve(a1, b, nil, nil, 2)
-	if a2.BonusDraw != 0 {
-		t.Errorf("BonusDraw = %d a round later, want 0 — a Plan widens one hand, not every hand", a2.BonusDraw)
+	// Round 2: they expire at the start of A's own turn, before anything in it resolves.
+	events, a2, _ := resolve(a1, b1, nil, nil, 2)
+	if a2.Shields != 0 {
+		t.Errorf("A carried %d shields into round 3, want them lapsed", a2.Shields)
 	}
+	if !hasKind(events, KindExpired) {
+		t.Error("no KindExpired — the pip row would keep drawing shields the engine had taken away")
+	}
+}
 
-	// And two in a round stack, for the same reason two Prepares do.
-	_, a3, _ := resolve(a, b, PlainCards(Plan, Plan), nil, 1)
-	if a3.BonusDraw != 2*ConceptOf(Plan).Amount {
-		t.Errorf("two Plans banked %d, want %d", a3.BonusDraw, 2*ConceptOf(Plan).Amount)
+// **A duelist cannot hold more shields than an opposing turn can throw attacks.** MaxActions caps
+// a turn at five cards, so a sixth shield could never be spent by anything — it would be a figure
+// on the card that nothing in the game can take away.
+func TestShieldsAreCappedAtWhatATurnCanThrow(t *testing.T) {
+	a := duelist(10, 12, 200)
+	b := duelist(10, 6, 200)
+
+	// Three Guards is nine shields' worth, paid for out of a budget that can afford it.
+	_, after, _ := resolve(a, b, PlainCards(Guard, Guard, Guard), nil, 1)
+	if after.Shields != maxShields {
+		t.Errorf("nine shields' worth left %d standing, want %d", after.Shields, maxShields)
+	}
+}
+
+// **Nothing in the shipped game gives an enemy a shield**, and that asymmetry is the whole reason
+// a count is safe. The player forms hands and lands one figure a turn; a single shield facing that
+// would delete a whole turn, which is the outcome maxDefendPct exists to forbid.
+func TestNoPlayerConceptGivesTheOpponentShields(t *testing.T) {
+	for _, id := range PlayerConcepts() {
+		if c := ConceptOf(id); c.Verb == VerbShield && c.Form != FormDefend {
+			t.Errorf("%s raises shields but is not a defend card", c.Label)
+		}
 	}
 }
 
@@ -151,7 +197,7 @@ func TestEveryRaisedDefenceMeetsTheBlow(t *testing.T) {
 	// The undefended figure comes off a fresh pair, so it is the same blow against nothing.
 	open, _, _ := resolve(a, b, PlainCards(Smash, Strike), nil, 2)
 
-	_, a, b = resolve(a, b, nil, PlainCards(Defend, Defend), 1)
+	_, a, b = resolve(a, b, nil, PlainCards(testGuard, testGuard), 1)
 	events, _, _ := resolve(a, b, PlainCards(Smash, Strike), nil, 2)
 
 	if got := kindCount(events, KindNegated); got != 2 {
@@ -170,7 +216,7 @@ func TestDefencesAreSpentWhetherOrNotTheyWereNeeded(t *testing.T) {
 	b := duelist(10, 4, 100)
 
 	// A raises two defences into a turn with nothing to answer.
-	_, a1, b1 := resolve(a, b, PlainCards(Defend, Defend), nil, 1)
+	_, a1, b1 := resolve(a, b, PlainCards(testGuard, testGuard), nil, 1)
 	if a1.DefendCount != 2 {
 		t.Fatalf("A ended round 1 holding %d defends, want 2 unspent", a1.DefendCount)
 	}
@@ -189,7 +235,7 @@ func TestClearDefensesClearsEveryDefensiveField(t *testing.T) {
 	// left out of it would stand forever — the worst failure mode available here, and a silent
 	// one. Pin the whole set rather than only the fields this session added.
 	var d Duelist
-	for _, k := range []ConceptID{Defend, Defend} {
+	for _, k := range []ConceptID{testGuard, testGuard} {
 		d = d.raiseDefend(Plain(k))
 	}
 
@@ -263,7 +309,7 @@ func TestPlanCardsDealNothingAndAttacksDoNot(t *testing.T) {
 	const dmg = 10
 	for _, a := range PlayerConcepts() {
 		switch Plain(a).Category() {
-		case CategoryPlan:
+		case CategoryDefend:
 			if d := Plain(a).Damage(dmg); d != 0 {
 				t.Errorf("%v is a plan and deals %d damage", a, d)
 			}
@@ -280,7 +326,7 @@ func TestEveryPlanIsInThePlanFormAndViceVersa(t *testing.T) {
 	// not be able to disagree: the card face says the form and the feed says the category, and a
 	// card whose corner and verb told different stories would be the screen contradicting itself.
 	for _, a := range PlayerConcepts() {
-		if (ConceptOf(a).Form == FormPlan) != (Plain(a).Category() == CategoryPlan) {
+		if (ConceptOf(a).Form == FormDefend) != (Plain(a).Category() == CategoryDefend) {
 			t.Errorf("%v is form %v but category %v", a, ConceptOf(a).Form, Plain(a).Category())
 		}
 	}
@@ -357,24 +403,24 @@ func TestAWormsBoundsHold(t *testing.T) {
 		t.Errorf("a card cheapened past zero costs %d, want 0", got)
 	}
 
-	// Nothing stops a blow outright, however many worms are stacked on a Defend.
-	wall := Card{Concept: Defend, AmountPct: 10000}
+	// Nothing stops a blow outright, however many worms are stacked on a testGuard.
+	wall := Card{Concept: testGuard, AmountPct: 10000}
 	if got := wall.Amount(); got >= 100 {
 		t.Errorf("a defence scaled up reduces by %d%%, and nothing may reach 100", got)
 	}
 
 	// An amount cannot be scaled away to nothing: a reward that left a card doing zero would be
 	// a punishment wearing a gift's clothes.
-	crushed := Card{Concept: Prepare, AmountPct: 1}
+	crushed := Card{Concept: Brace, AmountPct: 1}
 	if got := crushed.Amount(); got < 1 {
 		t.Errorf("a scaled-down card banks %d", got)
 	}
 
 	// The zero value is unmodified, which is what keeps every existing Card literal working.
-	plain := Card{Concept: Prepare}
-	if plain.Amount() != ConceptOf(Prepare).Amount {
+	plain := Card{Concept: Brace}
+	if plain.Amount() != ConceptOf(Brace).Amount {
 		t.Errorf("an unmodified card reports %d against the concept's %d",
-			plain.Amount(), ConceptOf(Prepare).Amount)
+			plain.Amount(), ConceptOf(Brace).Amount)
 	}
 }
 
@@ -414,7 +460,7 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 	}
 
 	// A plan has no form and therefore no ladder, and neither has any enemy card.
-	if _, ok := Neighbour(Prepare, 1); ok {
+	if _, ok := Neighbour(Brace, 1); ok {
 		t.Error("a plan card was promoted")
 	}
 }

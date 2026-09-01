@@ -280,7 +280,7 @@ func TestAGlyphOffTheCornerDoesNotSquareTheCorner(t *testing.T) {
 	// A defend card, because the kite shield is the widest glyph and reaches furthest into the
 	// corner. Disabled as well as enabled: the fade pass walks the same rectangle.
 	for _, enabled := range []bool{true, false} {
-		s := Spec{Name: "Defend", Form: FormPlan, Cost: 3, Element: Ice, Enabled: enabled}
+		s := Spec{Name: "Defend", Form: FormDefend, Cost: 3, Element: Ice, Enabled: enabled}
 		img := render(t, s, st)
 
 		// The outermost corner pixel of the bounding box is outside a 12px radius and must stay
@@ -344,7 +344,7 @@ func TestMiniRendersEverythingInsideTheVisibleStrip(t *testing.T) {
 	// visible strip is hidden by the next card in the row, so a layout that drifted right
 	// would silently stop showing what it claims to show.
 	st := Mini
-	s := Spec{Name: "Prepare", Form: FormPlan, Cost: 1, Element: Lightning, Enabled: true}
+	s := Spec{Name: "Prepare", Form: FormDefend, Cost: 1, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
 	// **Inside the rounded surface, not inside its bounding box.** A rectangle inset by the
@@ -507,7 +507,7 @@ func TestDashesDoNotOverprintTheName(t *testing.T) {
 	// pixels, on the longest name in the deck at the widest cost — the case where a
 	// mistake would actually show.
 	st := Hand
-	s := Spec{Name: "Prepare", Form: FormPlan, Cost: 4, Element: Lightning, Enabled: true}
+	s := Spec{Name: "Prepare", Form: FormDefend, Cost: 4, Element: Lightning, Enabled: true}
 	img := render(t, s, st)
 
 	tick := systems.ColorToward(BorderOf(Lightning), Surface, borderRestToward)
@@ -1050,7 +1050,7 @@ func TestBackIsTheSamePictureWhateverTheCard(t *testing.T) {
 	want := render(t, Spec{FaceDown: true}, Hand)
 
 	loud := Spec{
-		Name: "Prepare", Form: FormPlan, Cost: 4, Text: "Bank 2 AP",
+		Name: "Prepare", Form: FormDefend, Cost: 4, Text: "Bank 2 AP",
 		Element: Lightning, Enabled: true, Selected: true, FaceDown: true,
 	}
 	got := render(t, loud, Hand)

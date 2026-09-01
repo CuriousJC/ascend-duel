@@ -110,7 +110,7 @@ func BorderOf(e Element) color.RGBA {
 // **It replaced the category** *(2026-08-15)*. A card used to say which phase it resolved in —
 // prepare, attack, defend — and with the deck rebuilt around three attack forms that fact
 // became both less useful and derivable: everything in Stab, Slash and Crush is an attack and
-// everything in Plan is not. What a card cannot say any other way is *which of the three ways of
+// everything in Defend is not. What a card cannot say any other way is *which of the three ways of
 // hitting* it is, because that is what a pair is counted on.
 //
 // It is its own type rather than the string it used to be so the mapping to art is a
@@ -124,15 +124,15 @@ const (
 	FormStab
 	FormSlash
 	FormCrush
-	FormPlan
+	FormDefend
 )
 
 var formNames = [...]string{
-	FormNone:  "",
-	FormStab:  "stab",
-	FormSlash: "slash",
-	FormCrush: "crush",
-	FormPlan:  "plan",
+	FormNone:   "",
+	FormStab:   "stab",
+	FormSlash:  "slash",
+	FormCrush:  "crush",
+	FormDefend: "defend",
 }
 
 func (f Form) String() string {
@@ -144,19 +144,19 @@ func (f Form) String() string {
 
 // Forms is the four real ones, for the contact sheet.
 func Forms() []Form {
-	return []Form{FormStab, FormSlash, FormCrush, FormPlan}
+	return []Form{FormStab, FormSlash, FormCrush, FormDefend}
 }
 
 // formGlyphs is the picture each form carries in the card's corner: a spear, a sword, an axe and
-// a bulb, which say the form without a legend.
+// a shield, which say the form without a legend.
 //
 // **FormNone is absent on purpose**, so the lookup below reports it as having no glyph — a ring
 // and both fighter cards belong to no form, and the slot has to stay empty for them.
 var formGlyphs = map[Form]systems.GlyphKind{
-	FormStab:  systems.GlyphFormStab,
-	FormSlash: systems.GlyphFormSlash,
-	FormCrush: systems.GlyphFormCrush,
-	FormPlan:  systems.GlyphFormPlan,
+	FormStab:   systems.GlyphFormStab,
+	FormSlash:  systems.GlyphFormSlash,
+	FormCrush:  systems.GlyphFormCrush,
+	FormDefend: systems.GlyphFormDefend,
 }
 
 // Glyph is the art for this form, and whether it has any.
@@ -334,7 +334,7 @@ type Spec struct {
 	// Text is what the card does, in words, wrapped across the band under the left column.
 	//
 	// **Every action card carries one** *(2026-08-14)*. Half the deck could not be understood from
-	// a card that showed only a name, a cost and a damage figure: what a plan card does is not
+	// a card that showed only a name, a cost and a damage figure: what a defend card does is not
 	// guessable from its price, and nine attacks on one ladder are told apart by a multiplier that
 	// has to be printed. The band it goes in was being held for a long-press description; the
 	// text is now printed and long press becomes the gesture that *pulls a card forward* so an

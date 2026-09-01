@@ -258,7 +258,7 @@
     "RingRecord": "momentum-ring",
     "Name": "Momentum Ring",
     "Art": "",
-    "Text": "Every card gains 0.2x DMG each turn you play no plan card. A plan card resets it.",
+    "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
     "Rarity": "uncommon",
     "Rules": [
       {
@@ -271,7 +271,7 @@
       },
       {
         "When": "turn-taken",
-        "If": { "Form": "plan" },
+        "If": { "Form": "defend" },
         "Then": [{ "Do": "reset-growth" }]
       }
     ]

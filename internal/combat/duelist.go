@@ -47,17 +47,18 @@ type Duelist struct {
 	// `DMG * Amount / 100`.
 	DMG int
 
-	// Actions is this duelist's action-point budget before anything banked. It is what a round is
+	// Actions is this duelist's action-point budget. It is what a round is
 	// spent out of, and cards cost 1 to 3 of it.
 	Actions int
 
 	MaxLife     int
 	CurrentLife int
 
-	// Defends is the plan cards this duelist has raised and not yet spent, and DefendCount is
-	// how many of the array is in use.
+	// Defends is the percentage guards this duelist has raised and not yet spent, and DefendCount
+	// is how many of the array is in use.
 	//
-	// **One card reaches it: Defend** *(2026-08-15)*. It is raised at the end of a turn and stands
+	// **No player card reaches it any more** *(2026-08-31)* — the player's deck raises shields
+	// instead, and this is the ninety creature and boss cards that blunt a blow by half. It stands
 	// until the start of its owner's next turn — long enough to cover the opponent's whole turn
 	// once, whichever side raised it. See ClearDefenses. It is still a set rather than a flag
 	// because two Defends in a round is a legal turn and has to mean something.
@@ -74,33 +75,24 @@ type Duelist struct {
 	Defends     [maxPendingDefends]PendingDefend
 	DefendCount int
 
-	// The two halves of Prepare. GatheredAP is what has been banked *this* round; at the
-	// round boundary it becomes BonusAP, which ActionPoints adds to the budget for the
-	// round after. Splitting them is what makes the bonus arrive next round rather than
-	// funding the turn that bought it.
+	// Shields is how many incoming attacks this duelist can still eat outright, and it is what the
+	// player's three defend cards buy — Ward for one, Brace for two, Guard for three.
 	//
-	// BonusAP is overwritten rather than added to at the boundary, so gathering twice in
-	// one round is worth +4 next round while gathering once a round is worth a flat +2.
-	// Stacking within a round is deliberate and is what puts the five-attack hand in
-	// reach without a ring; carrying across rounds would compound without limit.
-	BonusAP    int
-	GatheredAP int
-
-	// The two halves of Plan, and the same shape as Prepare above for the same reason: DrewCards
-	// is what has been earned *this* round and BonusDraw is what the round after may draw.
+	// **A count rather than a percentage, because an enemy turn is several attacks.** Every
+	// creature in the game is a solo attacker, so its turn resolves card by card with a figure
+	// each; a shield takes one of those away entirely, which is what makes "how many hits am I
+	// taking this round" a question the player can answer exactly rather than approximately.
 	//
-	// **The rules cannot draw a card, and this is how they ask for one** *(2026-08-15)*. There is
-	// no deck in this package — the shuffle lives on the combat screen, which is what keeps the
-	// engine free of randomness — so a Plan cannot hand its owner two cards. It records that two
-	// are owed, and whoever holds the deck honours it when the round is over.
+	// **It is raised and expires on the same schedule Defends do** — up at the end of a turn,
+	// standing through the opponent's whole turn, gone at the start of its owner's next. See
+	// ClearDefenses, which drops both, and expireDefenses, which says when. Unspent shields are
+	// not banked: stockpiling them across quiet rounds is the mechanic these cards replaced and were
+	// retired for.
 	//
-	// **It is a bonus on the refill rather than an immediate draw**, and it has to be. The hand
-	// refills to a fixed size at the round boundary, so cards handed over mid-round would simply
-	// be two fewer drawn at the boundary and Plan would do nothing at all. Overwritten rather than
-	// added to, exactly as BonusAP is: two Plans in one round is a hand of twelve next round, and
-	// a Plan every round is a flat +2 rather than a hand that grows forever.
-	BonusDraw int
-	DrewCards int
+	// **Nothing in the game gives one to an enemy**, and the asymmetry is deliberate rather than
+	// unfinished — see VerbShield. A count meeting a hand-forming attacker deletes that duelist's
+	// whole turn, which is the outcome maxDefendPct exists to forbid.
+	Shields int
 
 	// Statuses is what has been done to this duelist, **indexed by status** — see status.go for
 	// the lifecycle, which is one rule for all of them.
@@ -190,7 +182,7 @@ type Duelist struct {
 // Alive reports whether this duelist can still fight.
 func (d Duelist) Alive() bool { return d.CurrentLife > 0 }
 
-// PendingDefend is one raised plan card waiting for the opponent's blow.
+// PendingDefend is one raised guard card waiting for the opponent's blow.
 //
 // **It is just the card.** It carried a charge count until 2026-08-14, when a turn stopped
 // resolving more than one attack — counting incoming blows is meaningless when there is only
@@ -236,15 +228,53 @@ func (d Duelist) raiseDefend(card Card) Duelist {
 	return d
 }
 
-// ClearDefenses drops every pending defence a turn put up.
+// ClearDefenses drops everything a turn put up: the percentage guards and the shields both.
 //
-// Exported because the combat screen resets a duelist between fights and has to be able to
-// clear this without knowing what is in it — a screen that listed the fields by hand is how a
-// raised defence once survived into the next duel.
+// **Both, from one function, on purpose** *(2026-08-31)*. It is the answer to "this duelist is no
+// longer defending", and two mechanics answering it separately is how one of them survives a fight
+// it should not have. Exported because the combat screen resets a duelist between fights and has
+// to be able to clear this without knowing what is in it — a screen that listed the fields by hand
+// is how a raised defence once survived into the next duel.
+//
+// **An unspent shield is dropped rather than kept.** It expires with the turn it was raised
+// against; see Duelist.Shields.
 func ClearDefenses(d Duelist) Duelist {
 	d.Defends = [maxPendingDefends]PendingDefend{}
 	d.DefendCount = 0
+	d.Shields = 0
 	return d
+}
+
+// raiseShields adds to the shield count, and it is the whole of what VerbShield does.
+//
+// **The total is capped at maxShields, not just each card** *(2026-08-31)*. A turn is capped at
+// MaxActions cards, so an opposing turn can contain at most five attacks and a sixth shield could
+// never be spent by anything. Clamping rather than refusing follows Card.Amount: a Guard played
+// into four standing shields raises one and is a poor play, where a Guard that did nothing at all
+// would look like a bug.
+//
+// It is also what keeps the duelist card honest. The shield row draws one pip per shield in the
+// seat the enemy's status badges occupy, and that row holds five — so a count this could not draw
+// would be a readout quietly disagreeing with the rules.
+func (d Duelist) raiseShields(n int) Duelist {
+	d.Shields += n
+	if d.Shields > maxShields {
+		d.Shields = maxShields
+	}
+	return d
+}
+
+// spendShield takes one shield if there is one, and reports whether an incoming attack was eaten.
+//
+// **A shield negates the attack outright — no damage, no partial figure.** That is the whole
+// mechanic and it is only safe because the duelists holding shields are only ever attacked by solo
+// attackers: one shield buys one of several blows rather than a whole turn. See VerbShield.
+func (d Duelist) spendShield() (Duelist, bool) {
+	if d.Shields <= 0 {
+		return d, false
+	}
+	d.Shields--
+	return d, true
 }
 
 // baseMaxActions is how many actions one duelist may take in a round, whatever they cost.
@@ -269,20 +299,22 @@ const MaxEchoLandings = 5
 // without touching a single call site. See MECHANICS.md.
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
-// ActionPoints is how much this duelist has to spend in a round, including anything
-// banked by a Prepare in the round before.
+// ActionPoints is how much this duelist has to spend in a round.
 //
-// **It is the stat plus the bank, and nothing else** *(2026-08-16)*. It used to be
-// `4 + Spd/10 + BonusAP`, a conversion whose only observable effect was to flatten
-// twenty-four distinct Speed values into three budgets. Now the file says what the budget is.
+// **It is the stat and nothing else** *(2026-08-31)*. It used to be `4 + Spd/10`, a conversion
+// whose only observable effect was to flatten twenty-four distinct Speed values into three
+// budgets, and then the stat plus whatever a bank card had put by. Nothing banks anywhere in the
+// game now, so a round's budget is a number on the duelist and a player can plan against it for a
+// whole fight.
+//
+// **It stays a method rather than becoming a field read**, for the reason MaxActions is one: a
+// ring or a brand raising a budget wants somewhere to bite that is not every call site.
 //
 // **No status touches it.** A chill did until 2026-08-16, and it is now a card off the front of
 // the turn instead — see playTurn. What that costs is the one thing the old version had going for
 // it: an AP cut was felt while the player was still choosing, and a card taken off a committed
 // turn is felt after they have. What it buys is a status a player can name.
-func (d Duelist) ActionPoints() int {
-	return d.Actions + d.BonusAP
-}
+func (d Duelist) ActionPoints() int { return d.Actions }
 
 // CanAfford reports whether a queued set fits inside this duelist's budget. The UI
 // enforces this while the player builds a set; ResolveRound trusts what it is given

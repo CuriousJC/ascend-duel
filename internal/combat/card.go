@@ -120,17 +120,17 @@ func (c Card) Cost() int {
 // happened not to have a floor.
 const minCardCost = 0
 
-// Amount is the card's figure, read against its verb: a defence percentage, action points banked,
-// cards drawn, or the damage multiplier.
+// Amount is the card's figure, read against its verb: a defence percentage, shields raised, or the
+// damage multiplier.
 //
 // **It is the seat a worm's scaling sits in**, the same shape Cost is, and it is why the three
 // places that used to read `Spec().Amount` directly now go through the card. A modified card that
 // still reported its concept's figure would behave differently from what its own face says.
 //
-// **A defence is clamped below 100 and everything is floored at 1.** `RegisterConcept` refuses a
-// concept declaring a defence of 100 or more, because nothing may reduce a blow to zero; a worm
-// stacking onto a Defend has to obey the same rule, and it clamps rather than being refused —
-// a reward that silently did nothing would be worse than one that hits its ceiling.
+// **A defence is clamped below 100, a shield count at maxShields, and everything is floored at 1.**
+// `RegisterConcept` refuses a concept declaring either out of range; a worm stacking onto one has to
+// obey the same rule, and it clamps rather than being refused — a reward that silently did nothing
+// would be worse than one that hits its ceiling.
 func (c Card) Amount() int {
 	s := c.Spec()
 
@@ -144,6 +144,9 @@ func (c Card) Amount() int {
 	if s.Verb == VerbDefend && amount > maxDefendPct {
 		amount = maxDefendPct
 	}
+	if s.Verb == VerbShield && amount > maxShields {
+		amount = maxShields
+	}
 	return amount
 }
 
@@ -151,14 +154,22 @@ func (c Card) Amount() int {
 // see reductionFor, which holds the same rule from the other side.
 const maxDefendPct = 99
 
+// maxShields is the most one card may raise, and it is baseMaxActions because that is the most
+// attacks an opposing turn can contain. A sixth shield could never be spent — it is not a bigger
+// reward, it is a number the readout has to draw and nothing can ever take away.
+//
+// **It bounds one card, not a duelist.** Three Guards in a turn is nine shields and is meant to be:
+// what stops that is the action budget, exactly as it stops nine attacks.
+const maxShields = baseMaxActions
+
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves
-// in the attack phase and everything else in the plan phase. A fire Defend and a plain Defend are
-// both plans — the element never moves a card between phases.
+// in the attack phase and everything else in the defend phase. A fire Guard and a plain Guard are
+// both defences — the element never moves a card between phases.
 func (c Card) Category() Category {
 	if c.Spec().Verb == VerbAttack {
 		return CategoryAttack
 	}
-	return CategoryPlan
+	return CategoryDefend
 }
 
 // Form is which group of cards this one belongs to. Enemy cards belong to none.
@@ -209,36 +220,39 @@ func Concepts(cards []Card) []ConceptID {
 // is built on. It is a property of the action, not an independent choice: a fire Lunge
 // and a plain Lunge are both attacks.
 //
-// **There are two of them as of 2026-08-15**, down from prepare/attack/defend. The deck is now
-// three attack forms and one plan form, and the three-way split was describing a deck that
-// no longer exists: Prepare, Plan and Defend all sit in the same phase, and what separates them
-// is what they do in it rather than when they happen.
+// **There are two of them as of 2026-08-15**, down from prepare/attack/defend. The deck is
+// three attack forms and one defend form, and the three-way split was describing a deck that
+// no longer exists: everything that is not an attack sits in the same phase, and what separates
+// those cards is what they do in it rather than when they happen.
+//
+// **The second phase is named for everything in it** *(2026-08-31)*. The player's three cards raise
+// shields and ninety creature cards raise a percentage guard, and there is no longer a third thing
+// in there for the name to be a stretch over.
 type Category int
 
 const (
 	CategoryAttack Category = iota
-	CategoryPlan
+	CategoryDefend
 )
 
 // Categories is every phase in resolution order, and the order a turn is played in.
 //
-// **Attacks first, plans second.** A plan card is either a bank, which pays next round and so
-// does not care when it resolves, or a defence — and a defence has to go up at the *end* of your
-// turn, because the opponent acts afterwards and that is the blow it answers. Resolving plans
-// first would mean every defence expired before anything could be aimed at it.
+// **Attacks first, defences second.** A defence has to go up at the *end* of your turn, because
+// the opponent acts afterwards and that is the blow it answers. Resolving them first would mean
+// every guard and every shield expired before anything could be aimed at it.
 //
 // It is also the order the combat screen lays a turn out in, which is not a coincidence: the row
 // on the table reads left to right in exactly this sequence.
 func Categories() []Category {
-	return []Category{CategoryAttack, CategoryPlan}
+	return []Category{CategoryAttack, CategoryDefend}
 }
 
 func (c Category) String() string {
 	switch c {
 	case CategoryAttack:
 		return "attack"
-	case CategoryPlan:
-		return "plan"
+	case CategoryDefend:
+		return "defend"
 	default:
 		return "?"
 	}
@@ -256,11 +270,11 @@ func ParseCategory(name string) (Category, bool) {
 	return CategoryAttack, false
 }
 
-// Form is which group of cards an action belongs to: three ways of hitting, plus the plans.
+// Form is which group of cards an action belongs to: three ways of hitting, plus the defences.
 //
 // **It is what the card's corner says, and it is not the same axis as Category** *(2026-08-15)*.
 // Category is when a card resolves and there are two of those; a form is what kind of card it
-// is and there are four. Every form but Plan resolves in the attack phase, so the form is the
+// is and there are four. Every form but Defend resolves in the attack phase, so the form is the
 // finer distinction and the one worth putting on a card face.
 //
 // **FormNone is the zero value and is a real answer**, not a failure: the opponent's cards
@@ -274,12 +288,12 @@ const (
 	FormStab
 	FormSlash
 	FormCrush
-	FormPlan
+	FormDefend
 )
 
 // Forms is every real form, in a fixed order, for anything that walks them.
 func Forms() []Form {
-	return []Form{FormStab, FormSlash, FormCrush, FormPlan}
+	return []Form{FormStab, FormSlash, FormCrush, FormDefend}
 }
 
 func (f Form) String() string {
@@ -290,8 +304,8 @@ func (f Form) String() string {
 		return "slash"
 	case FormCrush:
 		return "crush"
-	case FormPlan:
-		return "plan"
+	case FormDefend:
+		return "defend"
 	default:
 		return "none"
 	}

@@ -69,7 +69,7 @@ var shermanshield_png []byte
 
 // FORM MARKS
 //
-// The four form marks an action card carries in its corner — stab, slash, crush, plan.
+// The four form marks an action card carries in its corner — stab, slash, crush, defend.
 // Drawn as pixel art rather than described in code, for the reason the two Sherman glyphs
 // above are: a spear with a socket and a shoulder is a drawing, and the span language in
 // internal/systems/glyphs.go is a poor way to write one.
@@ -91,8 +91,8 @@ var formslash_png []byte
 //go:embed form/crush.png
 var formcrush_png []byte
 
-//go:embed form/plan.png
-var formplan_png []byte
+//go:embed form/defend.png
+var formdefend_png []byte
 
 // CREATURES
 //
@@ -294,7 +294,7 @@ func LoadImageData() map[string][]byte {
 	images["formstab_png"] = formstab_png
 	images["formslash_png"] = formslash_png
 	images["formcrush_png"] = formcrush_png
-	images["formplan_png"] = formplan_png
+	images["formdefend_png"] = formdefend_png
 
 	// The enemy portraits, keyed by filename stem: `enemy/ogrewarlord-portrait.png` is
 	// `ogrewarlord-portrait`, which is what `data/enemies.json` writes in its Portrait

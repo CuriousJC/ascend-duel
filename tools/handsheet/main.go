@@ -331,8 +331,8 @@ func form(f combat.Form) cards.Form {
 		return cards.FormSlash
 	case combat.FormCrush:
 		return cards.FormCrush
-	case combat.FormPlan:
-		return cards.FormPlan
+	case combat.FormDefend:
+		return cards.FormDefend
 	default:
 		return cards.FormNone
 	}

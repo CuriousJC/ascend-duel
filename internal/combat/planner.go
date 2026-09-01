@@ -5,7 +5,7 @@ package combat
 // **One planner, and the deck is what makes an enemy itself** *(2026-08-16)*. PlanFor scores
 // every affordable combination of the hand's attacks through the same blowFor the resolver uses
 // — so it finds that three cheap cards forming a Three of a Kind beat one expensive card — and
-// then spends whatever budget is left on defences and banks, which is what keeps a non-attack
+// then spends whatever budget is left on defences, which is what keeps a non-attack
 // card in an enemy deck from being dead content. It replaced four named behaviours chosen by a
 // string on the enemy record, three of which were unreachable.
 //
@@ -180,9 +180,9 @@ func greedyAttacks(d Duelist, hand []Card, offence []int, budget, slots int) ([]
 // spareCards fills the slots and points the attacks did not want with whatever else the hand holds.
 //
 // **This is what keeps a non-attack card in an enemy deck from being dead content.** A planner that
-// only maximised damage would never raise a shield or bank a point, so every `Congeal` authored
-// into the roster would sit in a discard pile forever. Attacking is still the whole of the plan;
-// this is the change left over.
+// only maximised damage would never raise a guard, so every `Congeal` authored into the roster
+// would sit in a discard pile forever. Attacking is still the whole of the plan; this is the change
+// left over.
 //
 // **Defences go up first, then the hand's own order.** A defence is the one leftover that changes
 // whether the enemy is alive to use the next one, so it earns the tie-break; past that the deck

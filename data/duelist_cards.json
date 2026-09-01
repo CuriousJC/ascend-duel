@@ -138,29 +138,29 @@
   },
 
   {
-    "Label": "Prepare",
-    "Verb": "bank",
-    "Amount": 2,
+    "Label": "Ward",
+    "Verb": "shield",
+    "Amount": 1,
     "Cost": 1,
-    "Form": "plan",
+    "Form": "defend",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
-    "Label": "Plan",
-    "Verb": "draw",
+    "Label": "Brace",
+    "Verb": "shield",
     "Amount": 2,
     "Cost": 2,
-    "Form": "plan",
+    "Form": "defend",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   },
   {
-    "Label": "Defend",
-    "Verb": "defend",
-    "Amount": 50,
+    "Label": "Guard",
+    "Verb": "shield",
+    "Amount": 3,
     "Cost": 3,
-    "Form": "plan",
+    "Form": "defend",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
     "Copies": 1
   }

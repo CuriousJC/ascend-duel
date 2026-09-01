@@ -324,18 +324,16 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // multiplier now, so 1x is the definition rather than one card's entry, and asking a particular
 // card what it deals would make this figure move when that card was retuned.
 //
-// AP is the live budget, `BonusAP` included, so a Prepare banked last round shows up on the
-// card before it is spent. **It is passed in rather than asked of the combatant** *(2026-08-19)*,
-// for the reason `life` is: a Prepare resolving mid-round sends its points to this card as a
-// figure, and the line has to move when that figure lands rather than when the round's end state
-// is adopted a whole opposing turn later. `shownBank` is the addition; the model underneath is
-// untouched. Vitae is passed in because it is run-level state that does not live on a duelist
-// yet — see startingVitae.
+// AP is the round's budget, which is the duelist's own stat and nothing else — nothing adds to it
+// any more. **It is still passed in rather than asked of the combatant**, so the one caller that
+// wants a different figure has somewhere to put it, exactly as `life` and `shields` do. Vitae is
+// passed in because it is run-level state that does not live on a duelist yet — see
+// startingVitae.
 //
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
 // `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
-func duelistSpec(c *entities.Combatant, name string, vitae, life, ap int) cards.Spec {
+func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vitae, life, ap, shields int) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
@@ -346,8 +344,31 @@ func duelistSpec(c *entities.Combatant, name string, vitae, life, ap int) cards.
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
 	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae), ValueInk: vitaeInk}
+
+	// **One pip per shield, in the seat the enemy's status badges sit in.** They are drawn with
+	// the defend form's own mark, so what the player raised and what is standing are the same
+	// picture — a second drawing for the same idea is how a row of pips comes to mean something
+	// slightly different from the card that bought it.
+	//
+	// **`combat` caps a duelist at as many shields as this row holds**, so a count that would
+	// overflow cannot exist rather than being silently trimmed here — see Duelist.raiseShields.
+	if shields > 0 {
+		if img := shieldPip(gs); img != nil {
+			for i := 0; i < shields && i < len(spec.Effects); i++ {
+				spec.Effects[i] = img
+			}
+		}
+	}
 	return spec
 }
+
+// shieldPip is the picture one standing shield is drawn as: the defend form's corner mark, the
+// same file a Ward, a Brace and a Guard carry.
+//
+// **It goes through `artwork` rather than `systems.Glyph`** because a pip is scaled into a
+// twenty-pixel badge box like every other thing in that row, and `internal/cards` has no graphics
+// context to render a glyph with — the whole reason the badges are bytes.
+func shieldPip(gs *state.GlobalState) image.Image { return artwork(gs, "formdefend_png") }
 
 // ringSpec is an equipped ring as a card: its name and its artwork, and nothing else.
 //
@@ -436,8 +457,8 @@ func form(f combat.Form) cards.Form {
 		return cards.FormSlash
 	case combat.FormCrush:
 		return cards.FormCrush
-	case combat.FormPlan:
-		return cards.FormPlan
+	case combat.FormDefend:
+		return cards.FormDefend
 	default:
 		return cards.FormNone
 	}

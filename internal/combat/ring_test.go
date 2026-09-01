@@ -767,7 +767,7 @@ func TestMomentumBuildsAcrossTurnsAndAPlanCardWipesIt(t *testing.T) {
 		},
 		RingRule{
 			When: MomentTurnTaken,
-			If:   RingCondition{Form: FormPlan, HasForm: true},
+			If:   RingCondition{Form: FormDefend, HasForm: true},
 			Then: []RingEffect{{Do: DoResetGrowth}},
 		})
 
@@ -786,7 +786,7 @@ func TestMomentumBuildsAcrossTurnsAndAPlanCardWipesIt(t *testing.T) {
 	}
 
 	// A turn with any plan card in it nets zero, however much else it held.
-	_, d, target = resolve(d, target, []Card{strike, Plain(MustConcept("Prepare"))}, nil, 3)
+	_, d, target = resolve(d, target, []Card{strike, Plain(Ward)}, nil, 3)
 	if got := d.WornRings()[0].Grown; got != 0 {
 		t.Errorf("a turn holding a plan card left Momentum at %d, want 0", got)
 	}
@@ -812,7 +812,7 @@ func TestARingThatResetsItselfDoesNotBankItsGrowth(t *testing.T) {
 		RingRule{When: MomentTurnTaken, Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 20}}},
 		RingRule{
 			When: MomentTurnTaken,
-			If:   RingCondition{Form: FormPlan, HasForm: true},
+			If:   RingCondition{Form: FormDefend, HasForm: true},
 			Then: []RingEffect{{Do: DoResetGrowth}},
 		})
 	heart := ring(t, "heart-keeps",

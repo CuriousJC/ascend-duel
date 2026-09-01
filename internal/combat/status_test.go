@@ -204,9 +204,9 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 
 func TestOnlyAttacksApplyAStatus(t *testing.T) {
 	// **Decided 2026-08-12**: a plan card carries its element for hands and for the ring
-	// discount and applies nothing. Otherwise a 1-AP Prepare would be as good a status delivery
+	// discount and applies nothing. Otherwise a 1-AP Ward would be as good a status delivery
 	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
-	for _, a := range []ConceptID{Prepare, Plan, Defend} {
+	for _, a := range []ConceptID{Brace, Ward, testGuard} {
 		attacker, target := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
@@ -222,11 +222,11 @@ func TestOnlyAttacksApplyAStatus(t *testing.T) {
 func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 	// **The status lands because the hand formed, not because the blow hurt** *(2026-08-14)*.
 	// This reverses the rule that stood while defends *negated*: back then a stopped attack
-	// carried nothing in, because nothing arrived. A Defend takes 50% off — so making the status
+	// carried nothing in, because nothing arrived. A testGuard takes 50% off — so making the status
 	// conditional on the final figure would let a defensive card silently un-apply an element the
 	// attacker had already paid for, and under one blow per turn that would be every defensive
 	// card in the game.
-	for _, defence := range []ConceptID{Defend} {
+	for _, defence := range []ConceptID{testGuard} {
 		a, b := ringed(duelist(10, 5, 500)), duelist(10, 8, 500)
 
 		// B raises the defence in round one, A swings into it in round two.
@@ -292,12 +292,12 @@ func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
 }
 
 func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
-	// **The status lands because the blow did, not because it hurt.** A Defend halves the hit
+	// **The status lands because the blow did, not because it hurt.** A testGuard halves the hit
 	// and the hit still connected, so making the status conditional on the final figure would
 	// let a defensive card silently un-apply an element the attacker had already paid for.
 	a, b := ringed(duelist(10, 5, 500)), duelist(10, 8, 500)
 
-	_, a1, b1 := resolve(a, b, nil, []Card{Plain(Defend)}, 1)
+	_, a1, b1 := resolve(a, b, nil, []Card{Plain(testGuard)}, 1)
 	events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
 
 	if n := len(statusEvents(events, Ice)); n != 1 {
@@ -539,9 +539,9 @@ func TestAMissedAttackDoesNothingElseEither(t *testing.T) {
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Lightning)}, nil, 1)
 
-	// B is shocked and swings a fire Strike; A is holding a Defend for it.
+	// B is shocked and swings a fire Strike; A is holding a testGuard for it.
 	events, _, bAfter := resolveWith(alwaysMisses(), a1, b1,
-		[]Card{Plain(Defend)}, []Card{Of(Strike, Fire)}, 2)
+		[]Card{Plain(testGuard)}, []Card{Of(Strike, Fire)}, 2)
 
 	if n := countKind(events, KindNegated); n != 0 {
 		t.Error("a missed attack still spent the defence that was waiting for it")

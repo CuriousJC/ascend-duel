@@ -31,7 +31,7 @@ type namedSeed struct {
 // Every number here came out of `tools/seeds`.
 //
 // **Every entry has been replaced three times**: on 2026-08-08 when the deck went from 30 cards to
-// 60, on 2026-08-15 when it was rebuilt as three attack forms plus the plans, and again the same
+// 60, on 2026-08-15 when it was rebuilt as three attack forms plus the defences, and again the same
 // day when the drab attacks were cut and the deck fell to 48. Every re-check failed at once each
 // time, which is exactly what the re-check exists for — a seed is a fact about one particular
 // deck, and changing the deck silently re-deals every catalogued hand.
@@ -56,21 +56,22 @@ var seedCatalog = []namedSeed{
 	// and it draws four of the five colours — four copies of a concept are four different elements.
 	{"four-strikes", 904, "four Strikes: a Four of a Kind, the top of the ladder"},
 
-	// 1xThrust 1xSlash 2xCleave 3xSmash 1xPrepare. The same shape one form over and at the top of
+	// 1xThrust 1xSlash 2xCleave 3xSmash 1xWard. The same shape one form over and at the top of
 	// the ladder: three Smashes is 9 AP and cannot be paid for out of an opening budget, so this is
 	// the hand that shows a hand you can see and cannot afford.
 	{"three-smashes", 152, "three or more Smashes: 9 AP, unaffordable, but the cards are there"},
 
-	// 1xJab 1xThrust 2xSlash 2xStrike 2xDefend. Both verbs in one round, which is what the two
-	// categories have to be told apart by: a plan card and an attack, so a blue "plans" and a red
-	// "attacks" appear in the same feed.
-	{"both-verbs", 1, "a plan card and an attack: both verbs in one round"},
+	// 1xJab 1xThrust 2xSlash 3xStrike 1xGuard. Both phases in one round, which is what the two
+	// categories have to be told apart by: a defend card and an attack, so a blue "defends" and a
+	// red "attacks" appear in the same feed.
+	{"both-verbs", 1, "a defend card and an attack: both phases in one round"},
 
-	// 1xJab 1xCut 1xSlash 1xStrike 1xSmash 1xPrepare 1xPlan 1xDefend — eight distinct
+	// 1xJab 1xCut 1xSlash 1xStrike 1xSmash 1xWard 1xBrace 1xGuard — eight distinct
 	// concepts, which is the widest hand in the catalogue and the best look at the deck. It holds
-	// all three plans, which is what the demo wants: the plan phase has never been seen on screen.
-	// Prepare and Plan and Defend together are 6 AP, so the whole plan vocabulary is one round.
-	{"all-plans", 6, "a Prepare, a Plan and a Defend: the whole plan vocabulary in hand"},
+	// all three defences, which is what the demo wants: six shields in one turn, and the pip row on
+	// the duelist card full. Ward and Brace and Guard together are 6 AP, so the whole defend
+	// vocabulary is one round.
+	{"all-shields", 6, "a Ward, a Brace and a Guard: the whole defend vocabulary in hand"},
 }
 
 // seedFor looks a catalogued seed up by name. **It panics on an unknown name**, which is the

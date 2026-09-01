@@ -96,9 +96,9 @@ func attackTipLines(c actionCard, h held) []string {
 	return append(lines, "before the hand multiplies it")
 }
 
-// planTipLines says what a plan card's figure buys, in the terms the round uses. **The face states
-// the rule and this states the consequence** — "Bank 2 AP" is what the card does, "spend them next
-// round" is why anyone would.
+// planTipLines says what a second-phase card's figure buys, in the terms the round uses. **The face
+// states the rule and this states the consequence** — "3 shields" is what the card does, "eats three
+// attacks outright" is why anyone would.
 func planTipLines(c actionCard) []string {
 	amount := c.Amount()
 
@@ -108,15 +108,10 @@ func planTipLines(c actionCard) []string {
 			"takes " + strconv.Itoa(amount) + "% off one blow",
 			"the round it is played",
 		}
-	case combat.VerbBank:
+	case combat.VerbShield:
 		return []string{
-			"+" + strconv.Itoa(amount) + " AP next round",
-			"on top of your usual budget",
-		}
-	case combat.VerbDraw:
-		return []string{
-			"+" + strconv.Itoa(amount) + " cards next round",
-			"a wider hand to build from",
+			"eats " + attackWord(amount) + " outright",
+			"until the start of your next turn",
 		}
 	}
 	return nil
@@ -242,4 +237,17 @@ func ordinal(n int) string {
 		return "3rd"
 	}
 	return strconv.Itoa(n) + "th"
+}
+
+// attackWord is "one attack" or "three attacks", written out because a tooltip is a sentence and a
+// numeral in the middle of one reads as a stat.
+func attackWord(n int) string {
+	names := [...]string{"no", "one", "two", "three", "four", "five"}
+	if n < 0 || n >= len(names) {
+		return strconv.Itoa(n) + " attacks"
+	}
+	if n == 1 {
+		return "one attack"
+	}
+	return names[n] + " attacks"
 }

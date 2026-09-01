@@ -109,7 +109,7 @@ inside the same blow.
 | Predicate | Matches on | Example |
 |---|---|---|
 | `Element` | the card's colour | `{ "Element": "ice" }` |
-| `Form` | stab / slash / crush / plan | `{ "Form": "slash" }` |
+| `Form` | stab / slash / crush / defend | `{ "Form": "slash" }` |
 | `Concept` | one named card | `{ "Concept": "Strike" }` |
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
 | `Lead` | **the blow's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
@@ -262,10 +262,10 @@ not — it carries a number that lives on the run:
   with the queue and the face must agree with the AP bar.
 - **A ring that can reset itself keeps nothing between fights** *(2026-08-22)*. `combat.KeepsGrowth`
   is the question and `Session.AbsorbGrowth` is what asks it: Momentum's streak is a fact about the
-  turns of one duel, and banking it would make a good fight a permanent bonus that one plan card had
+  turns of one duel, and banking it would make a good fight a permanent bonus that one defend card had
   once wiped. Heart, the stat rings and the Enflamed family hold no reset and are banked.
 - **A turn-wide predicate is matched with *any*, which is how a negation is avoided.** Momentum is
-  "grow every turn" plus "reset on a turn holding a plan card" — two positive rules where one rule
+  "grow every turn" plus "reset on a turn holding a defend card" — two positive rules where one rule
   would have needed a `not`. Reach for that shape before proposing negation into the grammar.
 - **A step never reads the accumulator it is stepping.** Both verbs take the effect's raw `Amount`,
   so growth is linear; `Amount + Grown` there would compound and no growing ring is meant to.

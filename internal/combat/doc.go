@@ -68,8 +68,10 @@
 //     is a person and must not learn, because the balance tool plays both sides headlessly.
 //   - Nothing reduces a blow to zero. A turn lands one figure however many cards made it, so total
 //     negation would be a whole opposing turn deleted by one card.
-//   - The rules cannot draw a card — there is no deck in this package. Plan records a bonus draw
-//     and emits an event; the screen honours it on the next refill.
+//   - The rules cannot draw a card — there is no deck in this package, and nothing in the game
+//     asks for one any more.
+//   - A shield eats one whole incoming attack, and that is only safe because the duelists holding
+//     shields are only ever attacked by solo attackers — see VerbShield.
 //   - Never change these rules to make a screen look right. If a screen contradicts the engine,
 //     say so and let the owner decide which one is wrong. That is a game-design call and it
 //     ripples into the tests and the balance.

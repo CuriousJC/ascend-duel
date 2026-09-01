@@ -40,24 +40,25 @@ const (
 	// VerbDefend reduces the one blow it answers, by Amount percent.
 	VerbDefend
 
-	// VerbBank stores action points for the following round.
-	VerbBank
-
-	// VerbDraw widens the following round's hand.
-	VerbDraw
+	// VerbShield hands its duelist Amount shields, and one shield eats one incoming attack
+	// outright — see Duelist.Shields and blockedByShield.
+	//
+	// **It is a count, not a percentage, and that is what separates it from VerbDefend.** The two
+	// answer different offences: an enemy is a solo attacker, so its turn is several discrete
+	// blows a player can decide how many of to take, while the player forms hands and lands one
+	// figure, which a count could only ever delete whole. See MECHANICS.md §Shields.
+	VerbShield
 )
 
 // Verbs is every verb in a fixed order, for anything that walks them.
-func Verbs() []Verb { return []Verb{VerbAttack, VerbDefend, VerbBank, VerbDraw} }
+func Verbs() []Verb { return []Verb{VerbAttack, VerbDefend, VerbShield} }
 
 func (v Verb) String() string {
 	switch v {
 	case VerbDefend:
 		return "defend"
-	case VerbBank:
-		return "bank"
-	case VerbDraw:
-		return "draw"
+	case VerbShield:
+		return "shield"
 	default:
 		return "attack"
 	}
@@ -158,6 +159,11 @@ func RegisterConcept(scope string, c data.CardData) (ConceptID, error) {
 	}
 	if c.Amount <= 0 {
 		return NoConcept, fmt.Errorf("%s has Amount %d, so it does nothing", key, c.Amount)
+	}
+	if verb == VerbShield && c.Amount > maxShields {
+		// More shields than an opponent can throw attacks is a figure that can never be spent, and
+		// a readout counting past the row it is drawn in. See maxShields.
+		return NoConcept, fmt.Errorf("%s raises %d shields, and nothing may raise more than %d", key, c.Amount, maxShields)
 	}
 	if verb == VerbDefend && c.Amount >= 100 {
 		// Nothing reduces a blow to zero — see defendReductionPct's successor in combat.go. A
@@ -303,12 +309,11 @@ var (
 	Smash     = mustPlayer("Smash")
 	Pulverize = mustPlayer("Pulverize")
 
-	// Plan. The concept named Plan is one card of the form named plan, which is a collision of
-	// words rather than of meanings: the form is what the card's corner says and this is the
-	// card that draws.
-	Prepare = mustPlayer("Prepare")
-	Plan    = mustPlayer("Plan")
-	Defend  = mustPlayer("Defend")
+	// Defend. One card per shield, priced at one AP each — the ladder the three attack forms
+	// use, with the count in place of the damage multiplier.
+	Ward  = mustPlayer("Ward")
+	Brace = mustPlayer("Brace")
+	Guard = mustPlayer("Guard")
 )
 
 func mustPlayer(label string) ConceptID {

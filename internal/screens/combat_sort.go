@@ -224,7 +224,7 @@ func categoryRank(c combat.Category) int {
 	switch c {
 	case combat.CategoryAttack:
 		return 0
-	case combat.CategoryPlan:
+	case combat.CategoryDefend:
 		return 1
 	default:
 		return 2

@@ -268,7 +268,7 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 	// Prepare belongs under "fire", and the failure this guards against is a plan quietly routed
 	// somewhere on the strength of its category.
 	for _, c := range session.StartingDeck() {
-		if c.Category() != combat.CategoryPlan {
+		if c.Category() != combat.CategoryDefend {
 			continue
 		}
 		if got, want := deckRowFor(c), deckRowFor(combat.Of(combat.Strike, c.Element)); got != want {

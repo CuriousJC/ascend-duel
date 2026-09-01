@@ -294,7 +294,7 @@ func (s *Session) WornRings() []combat.WornRing {
 // run's accumulator backwards.
 //
 // **A ring that resets itself keeps nothing** — see combat.KeepsGrowth. Momentum's streak is a fact
-// about the turns of one duel, and banking it would make it a permanent bonus that one plan card
+// about the turns of one duel, and banking it would make it a permanent bonus that one defend card
 // had once wiped.
 //
 // **It is called on a win and not on a defeat**, which needs no rule of its own: a lost fight ends

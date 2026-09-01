@@ -6,8 +6,8 @@
 Everything here is decided unless marked `[?]`. Read this before proposing a design change,
 and before implementing anything that touches a rule.
 
-**Running code:** cards and categories, phase resolution, hands, the 12-concept / 60-card
-deck, and the elements and their statuses inside `internal/combat`. Those sections say so.
+**Running code:** cards and categories, phase resolution, hands, the 11-concept / 55-card
+starting deck, and the elements and their statuses inside `internal/combat`. Those sections say so.
 Everything else here is design that nothing implements yet.
 
 **Hands are data** as of 2026-08-14 — `data/hands.json`, read by `internal/combat`, which is
@@ -124,21 +124,30 @@ what used to make Shrink dead on every 1 AP card and Grow dead on every 3 AP one
 
 | Form | Concept | AP | Effect |
 |---|---|---|---|
-| **stab** | Poke / Jab / Thrust / Lunge / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 2` / `DMG × 4` |
+| **stab** | Poke / Jab / Thrust / Lunge / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 4` |
 | **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
 | **crush** | Tap / Bash / Strike / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
 | **defend** | Ward | 1 | Raises **1 shield** |
 | | Brace | 2 | Raises **2 shields** |
-| | Guard | 3 | Raises **3 shields** |
 
-**Nine attack concepts × five colours = 45 cards; three defences × five colours = 15.** A **60-card
-deck** — the six zero-copy rungs are in the file and not in the pile. **No card in the player's deck
+**The 3 AP attacks pay triple, not double** *(owner's call, 2026-09-01)*. At `DMG × 2` they were a
+point dearer than the 2 AP card for exactly the same damage per point, so nothing was ever a reason
+to play one; at triple they buy a figure the budget cannot reach by spending the same points on
+cheaper cards.
+
+**Guard is out of the deck** *(owner's call, 2026-09-01)*. It is still in the file at zero copies,
+like the six zero-copy attack rungs, so the 3 AP defend rung exists and is not dealt — which is why
+the defend ladder is two rungs where the attack ladders are three.
+
+**Nine attack concepts × five colours = 45 cards; two defences × five colours = 10.** A **55-card
+starting deck** — the zero-copy rungs are in the file and not in the pile. **No card in the player's deck
 is drab** *(2026-08-25)*: every card ships in one of the five elements, the defences included.
 
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
 already took deliberately when Whetworm could drive a card to free: a turn is capped at
 `MaxActions` cards however cheap they are. **A 4 AP card is the first single card that beats a
-whole cheap turn**, at 2× a Lunge for 1.33× the price — the reason it is a worm's prize rather
+whole cheap turn**, at 1.33× a Lunge for 1.33× the price — which is the rung the 3 AP raise to
+triple flattened, and it is now priced level rather than above — the reason it is a worm's prize rather
 than something a run can stock.
 
 **The defences sit on the dealt 1/2/3 ladder as the attacks do**, and there is no defence at
@@ -185,8 +194,8 @@ now, the border having stopped saying it the same day.
 
 **A shield eats one incoming attack, whole** *(owner's call, 2026-08-31)*. No damage and no partial
 figure: the attack lands nothing at all, and the feed says so in a line of its own because there is
-no damage line for it to hang off. Ward, Brace and Guard raise one, two and three shields for one,
-two and three AP.
+no damage line for it to hang off. Ward and Brace raise one and two shields for one and two AP; Guard
+is a third rung the file still holds at zero copies.
 
 **The point is that the player decides how many hits they take.** A creature turn is a known number
 of attacks, so shields turn "how much is this going to hurt" from an estimate into arithmetic —
@@ -238,10 +247,52 @@ attack, not just a description of the starting deck. **A defence ships in the sa
 it carries a colour for the ring discount and for the hand axis even though nothing it does is
 elemental.
 
-45 + 15 = **60 cards** *(2026-08-25, up from 48 when arcane landed)*. A hand of eight against that
-is 13% of the deck, against 17% at 48 and 27% when the deck was 30. **What answers draw variance is
+45 + 10 = **55 cards** *(2026-09-01, down from 60 when Guard left the deck)*. A hand of eight
+against that is 15% of the deck, against 13% at 60, 17% at 48 and 27% when the deck was 30. **What answers draw variance is
 the Discard button, and only that** *(2026-08-31)*: a card drew two extra into the next hand until
 shields replaced it, so the hand is a constant eight again.
+
+### The deck is a starting position, not the game's deck
+
+**Every count on this page describes the deck a run opens with, and a run spends itself changing
+it** *(owner's call, 2026-09-01)*. This is the single easiest thing to forget when reasoning about
+hands, costs or reachability: the 55-card grid above is where the player *begins*, and by floor
+three it may be a different deck in size, in colour and in what it costs to play. A figure derived
+from the starting composition — a rung's odds, the cheapest way to build a hand, how many cards
+share an element — is a fact about round one of fight one and about nothing else.
+
+**Three mechanisms change it, at three different lifetimes.** Keeping them apart is what stops "my
+deck is half ice" from being confused with "my deck contains more ice cards".
+
+- **A worm edits the run's deck itself, permanently.** A won fight offers two; each names a card and
+  an aspect — `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`. After a
+  `remove` the card is gone from every pile and the deck is genuinely smaller; after Grow or Shrink
+  it is a different concept from then on. Nothing takes a worm back.
+- **A ring can rewrite the deck as a fight's deck is built** — the `deck-built` moment. Atrophy
+  steps every 3 AP attack one rung down its own form's ladder, so a Lunge is dealt as a Thrust for
+  the whole fight. It lasts as long as the ring is worn and no longer.
+- **A ring can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
+  the fight's deck alone. Frozen Lightning and Hexfrost both `set-element` to ice, which is why a
+  run wearing the pair reads as zero lightning and zero arcane; take them off and the colours come
+  back. `card-cost` rings are the same shape applied to the price rather than the colour.
+
+**The deck panel shows the *effective* deck** — what the run will actually be dealt, with every one
+of the three applied — which is the number to trust when reasoning about a live run, and is not the
+composition any tool prints.
+
+**Every axis a hand is scored on can be moved, so a build can manufacture any of the three.**
+Elements are the loudest case: two common rings fold two colours into a third, and a deck that is
+half one element makes an Elemental Five of a Kind an ordinary turn rather than the 0.03% hand the
+round-one simulation reports. **Concepts and forms move too** — promote and demote walk a card along
+its form's ladder, so Shrink and Atrophy both turn dear cards into copies of the cheap card below
+them, which is a Card Pair the starting deck could not deal. Only the *form* survives a rung change,
+since a ladder is one form's. **All of it is the intended shape of a build, not a leak**: the ladder
+is priced against the starting deck on purpose, and out-earning that price is what rings and worms
+are for.
+
+**So read `tools/handodds` and `tools/handsheet` as describing fight one.** Both deal from the
+shipping deck with no rings worn, which is the only composition that can be stated without naming a
+particular run. Neither says anything about a deck that has been played with.
 
 **Five copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
 No attack concept ships more than five times, so **a Card Four of a Kind necessarily shows four of
@@ -897,9 +948,9 @@ what that shape is worth.
 
 ### The multipliers come from how often a hand can actually be built *(2026-08-19)*
 
-**Defences carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the sixty
-cards is one of the five colours — the three defences ship one copy per colour where they used to
-ship four basic copies, so the deck size did not move — and the matcher counts them like anything
+**Defences carry an element and join hands** *(owner's call, 2026-08-23)*. Every one of the fifty-five
+cards is one of the five colours — the defences ship one copy per colour where they used to
+ship four basic copies — and the matcher counts them like anything
 else. A hand is **what you played, not what you hit with**.
 
 What that changed, in order of how much it matters:
@@ -919,8 +970,8 @@ What that changed, in order of how much it matters:
   decision below the table.
 
 The three ladders are **not** the same numbers, and as of 2026-08-25 no two of them are. The
-starting deck is 60 cards — **5 per concept, 15 per form, 12 per element** — dealt into a hand of
-eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is priced against rather
+starting deck is 55 cards — **5 per concept, 15 per attack form and 10 for defend, 11 per element**
+— dealt into a hand of eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is priced against rather
 than poker's.
 
 Reachability, from a two-million-hand simulation of round one — *can this turn afford some set
@@ -967,8 +1018,10 @@ a concept five cards, so the rung is dealable at about one hand in 22,000 and is
 number at 785. It is still the rarest thing a round-one hand can build, by an order of magnitude.
 
 **The element five-of-a-kind stopped being an estimate on 2026-08-23**, for a different reason: a
-colour gained three defences, so five cards of one colour came down to 6 AP and the rung became
-measurable at the real budget.
+colour gained defences, so five cards of one colour came down to 6 AP and the rung became
+measurable at the real budget. **It is still exactly 6 AP with Guard gone** — Jab, Cut, Bash, Ward
+and Thrust in one colour — so the cheapest build of the rung is a whole ordinary turn and not a
+point more.
 
 **The five-of-a-kind row is the one that is not all measurement** *(2026-08-19)*, and it is written
 out because a number that came from somewhere else must not read as one that came from the tool:
@@ -1763,7 +1816,7 @@ flip rings took and it is accepted for the same reason.
 
 ### REMOVE is the strongest option, and that is accepted
 
-Thinning a 60-card deck against a fixed hand of eight raises consistency every time — **more so
+Thinning a 55-card deck against a fixed hand of eight raises consistency every time — **more so
 since arcane**, which added twelve cards without adding a card to the hand. It is
 deliberate rather than unnoticed: the offer is two worms out of a growing catalogue, so removal
 being the best of what is on the table is only sometimes the question. **`duplicate` is the one

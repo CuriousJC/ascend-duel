@@ -109,7 +109,7 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 	// `TestTheTutorialsBlowKillsTheTutorialsEnemy` writes the taught turn out by hand — it has to,
 	// since the shuffle needs a scene and that package must stay window-free — and this is what
 	// holds its literal against what the seed actually deals.
-	want := map[string]bool{"Jab": true, "Cut": true, "Thrust": true, "Strike": true}
+	want := map[string]bool{"Cut": true, "Bash": true, "Thrust": true, "Strike": true}
 	for _, c := range hand {
 		if c.Element != best {
 			continue

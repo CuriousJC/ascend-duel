@@ -254,7 +254,7 @@ func TestStrikeDealsDMGAsDamage(t *testing.T) {
 	}
 }
 
-func TestTheTopTierHitsTwiceAsHardAsTheMiddleOne(t *testing.T) {
+func TestTheTopTierHitsThreeTimesAsHardAsTheMiddleOne(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := duelist(1, 5, 500)
 
@@ -264,8 +264,12 @@ func TestTheTopTierHitsTwiceAsHardAsTheMiddleOne(t *testing.T) {
 	strike := firstDamage(t, strikeLog, SideA)
 	smash := firstDamage(t, smashLog, SideA)
 
-	if smash.Amount != strike.Amount*2 {
-		t.Errorf("Smash = %d, Strike = %d; want the 3 AP card to be double", smash.Amount, strike.Amount)
+	// **3x, not the 2x it was until 2026-09-01** *(owner's call)*. The 3 AP cards were a point
+	// dearer than the 2 AP ones for double the figure, which is the same damage per point and
+	// therefore no reason to play one; at triple they buy something the budget cannot get by
+	// spending the same points on cheaper cards.
+	if smash.Amount != strike.Amount*3 {
+		t.Errorf("Smash = %d, Strike = %d; want the 3 AP card to be triple", smash.Amount, strike.Amount)
 	}
 }
 

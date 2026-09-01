@@ -41,23 +41,22 @@ type CardData struct {
 	// have a `Bite` at forty different multipliers without colliding. See combat.ScopedKey.
 	Label string `json:"Label"`
 
-	// Verb is what the card does: attack, defend, bank or draw. A closed vocabulary, exactly like
-	// the reward kinds in hands.json — adding a fifth is a Go change, and is meant to be.
+	// Verb is what the card does: attack, defend or shield. A closed vocabulary, exactly like
+	// the reward kinds in hands.json — adding a fourth is a Go change, and is meant to be.
 	Verb string `json:"Verb"`
 
-	// Amount is read against the verb, which is what lets one field carry four meanings without a
+	// Amount is read against the verb, which is what lets one field carry three meanings without a
 	// generic one nobody could state:
 	//
 	//   - attack: percent of the wielder's DMG, so 100 is 1x and 50 is the cheap rung.
 	//   - defend: percent taken off the one blow it answers.
-	//   - bank:   action points banked for the following round.
-	//   - draw:   cards added to the following round's hand.
+	//   - shield: how many shields it raises, each eating one incoming attack whole.
 	Amount int `json:"Amount"`
 
 	// Cost is action points out of the round's budget.
 	Cost int `json:"Cost"`
 
-	// Form is which group of cards this concept belongs to — stab, slash, crush or plan. Empty
+	// Form is which group of cards this concept belongs to — stab, slash, crush or defend. Empty
 	// means none, which is what every enemy card is: a form is the player's deck axis, the thing
 	// a pair is counted on and the mark in the card's corner, and an enemy card claiming to be a
 	// crush would be saying something untrue about a deck the player cannot build hands against.

@@ -69,9 +69,9 @@ var wants = []want{
 	},
 	{
 		"all-shields",
-		"a Ward, a Brace and a Guard: the whole defend vocabulary in hand",
+		"a Ward and a Brace: the whole defend vocabulary in hand",
 		func(c map[combat.ConceptID]int) bool {
-			return c[combat.Ward] >= 1 && c[combat.Brace] >= 1 && c[combat.Guard] >= 1
+			return c[combat.Ward] >= 1 && c[combat.Brace] >= 1
 		},
 	},
 }

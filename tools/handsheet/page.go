@@ -94,8 +94,11 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
 </p>
 {{if .TooManyAP}}
 <p class="note">
-  <strong>{{.TooManyAP}} rungs a plain round cannot pay for</strong>, on action points or on the
-  card cap. Banking is what makes those real — a Prepare carries AP into the next round.
+  <strong>{{.TooManyAP}} of these examples cost more than a round has</strong>, on action points or
+  on the card cap. That is the <em>example</em>, not the rung: each one varies everything the rung
+  does not count, so it is picked to illustrate rather than to be cheap. Every rung on this ladder
+  has some build a 6 AP round can pay for — an Elemental Five of a Kind is Jab, Cut, Bash, Ward and
+  Thrust in one colour, 6 AP exactly.
 </p>
 {{end}}
 

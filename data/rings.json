@@ -728,7 +728,7 @@
     "RingRecord": "hexfrost-ring",
     "Name": "Hexfrost Ring",
     "Art": "",
-    "Text": "Every arcane card is dealt as a ice card.",
+    "Text": "Every arcane card is dealt as an ice card.",
     "Rarity": "common",
     "Rules": [
       {

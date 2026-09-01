@@ -82,10 +82,10 @@ func playTurn(
 	// and letting them come back would make a chill pure tempo; keeping them spent makes it
 	// tempo and economy both.
 	//
-	// **The chill is read off the status and nowhere else** *(2026-08-17)*. A duelist used to
-	// carry a separate counter as well, banked by a hand that took actions off the opponent's
-	// next turn; hands buy damage alone now, so the status is the only thing that can take a
-	// card and there is one place to look for how many.
+	// **The chill is read off the status and nowhere else** *(2026-08-17)*. A hand buys damage and
+	// only damage, so nothing else in the game can take a card off a turn — which means there is
+	// exactly one place to look for how many, and a second counter would be a second answer to a
+	// question with one.
 	//
 	// **It bites on every turn it outlives**, rather than being spent when it bites — the status
 	// counting down is what ends it. The asymmetry phases impose is carried by the status too:

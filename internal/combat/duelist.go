@@ -76,7 +76,8 @@ type Duelist struct {
 	DefendCount int
 
 	// Shields is how many incoming attacks this duelist can still eat outright, and it is what the
-	// player's three defend cards buy — Ward for one, Brace for two, Guard for three.
+	// player's defend cards buy — Ward for one and Brace for two. Guard is a third rung the file
+	// still declares at zero copies, so the rules can resolve a 3-shield card that nothing deals.
 	//
 	// **A count rather than a percentage, because an enemy turn is several attacks.** Every
 	// creature in the game is a solo attacker, so its turn resolves card by card with a figure
@@ -85,9 +86,11 @@ type Duelist struct {
 	//
 	// **It is raised and expires on the same schedule Defends do** — up at the end of a turn,
 	// standing through the opponent's whole turn, gone at the start of its owner's next. See
-	// ClearDefenses, which drops both, and expireDefenses, which says when. Unspent shields are
-	// not banked: stockpiling them across quiet rounds is the mechanic these cards replaced and were
-	// retired for.
+	// ClearDefenses, which drops both, and expireDefenses, which says when.
+	//
+	// **An unspent shield is lost rather than kept**, which is what makes a defence a read of the
+	// turn in front of you: raising more than the round throws away is a wasted point, so the
+	// question the card asks is how hard *this* turn hits and never how long you can stockpile.
 	//
 	// **Nothing in the game gives one to an enemy**, and the asymmetry is deliberate rather than
 	// unfinished — see VerbShield. A count meeting a hand-forming attacker deletes that duelist's

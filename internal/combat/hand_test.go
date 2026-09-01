@@ -166,17 +166,22 @@ func TestTheSameHandPaysMoreOnBiggerCards(t *testing.T) {
 
 	jabPair, lungePair := damageDealtBy(jabs, SideA), damageDealtBy(lunges, SideA)
 
-	// The cards themselves are 4x apart — Jab deals half DMG and Lunge double — so the pairs have
-	// to stay 4x apart. A term added outside the multiplier would close that gap.
+	// **The multiple is read off the cards, not written down here** *(2026-09-01)*. It was a
+	// literal 4 while Jab dealt half DMG and Lunge double; the day the 3 AP cards went to triple
+	// it failed, having pinned a tuning decision inside a test about proportionality. What this
+	// is here to catch is a term added *outside* the multiplier, which shows up as the pairs
+	// being a different multiple apart than the cards are — whatever that multiple currently is.
 	//
 	// **Within the rounding, and that slack is not slop.** The blow is integer arithmetic, so a
-	// multiplier that does not divide the small figure exactly loses up to a point on the Jab pair
-	// — and comparing `jabPair * 4` multiplies that loss by four. A gap wider than the truncation
-	// is a term outside the multiplier, which is what this is here to catch.
-	want := jabPair * 4
-	if lungePair < want || lungePair > want+4 {
-		t.Errorf("a Lunge Pair dealt %d against a Jab Pair's %d; the cards are 4x apart, so want %d (+ up to 4 of rounding)",
-			lungePair, jabPair, want)
+	// multiplier that does not divide the small figure exactly loses up to a point on the Jab
+	// pair — and scaling that up multiplies the loss with it. A gap wider than the truncation is
+	// the term this test exists to find.
+	const dmg = 10
+	mult := Plain(Lunge).Damage(dmg) / Plain(Jab).Damage(dmg)
+	want := jabPair * mult
+	if lungePair < want || lungePair > want+mult {
+		t.Errorf("a Lunge Pair dealt %d against a Jab Pair's %d; the cards are %dx apart, so want %d (+ up to %d of rounding)",
+			lungePair, jabPair, mult, want, mult)
 	}
 }
 
@@ -284,8 +289,9 @@ func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 //
 // **A fifth Strike is its own rung** *(2026-08-19)*. It used to change nothing — a group matches at
 // least its size, so five of one card was still the four — and the ladder now goes one further on
-// every axis. Five copies of a concept cannot be dealt from the 48-card deck, which ships four of
-// each; the `duplicate` worm is what makes this reachable, and the rung is priced for that.
+// every axis. Five copies of a concept could not be dealt from the 48-card deck of the time, which
+// shipped four of each; arcane made a concept five cards on 2026-08-25, so the rung is dealable and
+// the `duplicate` worm is no longer the only way to it.
 func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 	a, b := duelist(10, 4, 10000), duelist(10, 4, 10000)
 

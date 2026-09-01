@@ -29,7 +29,7 @@
   {
     "Label": "Lunge",
     "Verb": "attack",
-    "Amount": 200,
+    "Amount": 300,
     "Cost": 3,
     "Form": "stab",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
@@ -75,7 +75,7 @@
   {
     "Label": "Cleave",
     "Verb": "attack",
-    "Amount": 200,
+    "Amount": 300,
     "Cost": 3,
     "Form": "slash",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
@@ -121,7 +121,7 @@
   {
     "Label": "Smash",
     "Verb": "attack",
-    "Amount": 200,
+    "Amount": 300,
     "Cost": 3,
     "Form": "crush",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
@@ -162,6 +162,6 @@
     "Cost": 3,
     "Form": "defend",
     "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
-    "Copies": 1
+    "Copies": 0
   }
 ]

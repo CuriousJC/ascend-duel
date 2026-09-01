@@ -752,10 +752,10 @@ func TestAFourOfAKindGrowsOnceForEachCard(t *testing.T) {
 	}
 }
 
-func TestMomentumBuildsAcrossTurnsAndAPlanCardWipesIt(t *testing.T) {
+func TestMomentumBuildsAcrossTurnsAndADefenceWipesIt(t *testing.T) {
 	// Momentum through the real round, because what it measures is a *turn* — the one unit no
 	// applier-level test can see. Written as two rules with no negation anywhere: one grows on every
-	// turn, one resets on a turn holding a plan card, and the reset is applied second.
+	// turn, one resets on a turn holding a defence, and the reset is applied second.
 	momentum := ring(t, "momentum",
 		RingRule{
 			When: MomentCardDamage,

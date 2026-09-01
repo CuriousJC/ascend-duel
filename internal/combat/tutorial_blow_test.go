@@ -32,7 +32,7 @@ func TestTheTutorialsBlowKillsTheTutorialsEnemy(t *testing.T) {
 	const duelist = "Fighter1"
 
 	// The taught turn, as `data/tutorial.json`'s seed deals it: four fire cards, 6 AP exactly.
-	taught := []string{"Jab", "Cut", "Thrust", "Strike"}
+	taught := []string{"Cut", "Bash", "Thrust", "Strike"}
 	const taughtElement = Fire
 
 	// **The opponent is read off the script rather than written here** *(2026-08-25)*, since

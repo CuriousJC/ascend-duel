@@ -36,8 +36,10 @@
 //   - A glyph cannot be resized, so a smaller one is a different drawing. The rim is derived one
 //     pixel thick however big the shape is, so a third-size copy is a third-size copy of its
 //     outline with nothing inside.
-//   - GlyphKind is append-only. The cache keys on the ordinal, so inserting a kind mid-enum
-//     silently re-points every existing entry.
+//   - GlyphKind is append-only in practice: the cache keys on the ordinal, so inserting a kind
+//     mid-enum silently re-points every existing entry. Removing a kind nothing draws is safe and
+//     is the way to retire one, because no ordinal outlives the process — nothing serializes a
+//     GlyphKind, and the contact sheet is regenerated from the enum rather than stored against it.
 //   - SizeOf is the authority on how big one is, never an assumed 64.
 //   - Glyphs carry a five-value palette and are the deliberate exception to the scale-one-colour
 //     rule, because a bevel cannot be made from one colour scaled down. They are drawn untinted; a

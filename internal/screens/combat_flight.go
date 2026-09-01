@@ -581,7 +581,7 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 // attackSeats is every seat in one side's row holding an attack card.
 //
 // It counts along the same walk as noteResolved and seatPlayedCards — a seat is a position in
-// that side's own row, not in the round — so a turn that opens with a Prepare still numbers its
+// that side's own row, not in the round — so a turn that opens with a Ward still numbers its
 // Strike as seat 1.
 func attackSeats(order []combat.Slot, side combat.Side) []int {
 	var (

@@ -482,16 +482,10 @@ that is the argument to answer.
   the combination to be unmistakable. **The consequence: the underline is no longer what marks
   the live row.** That row is now distinguished by `nowInk` plus faux-bold on `prefix`/`suffix`,
   and the verb keeps its category colour there rather than going pink with the rest.
-- **Prepare has no hue and inherits the row's ink.** As a chip it needed a pale ground *and* a
-  near-black foreground, because white-on-white is invisible. With no ground there is nothing for
-  a pale colour to be legible against, so it takes `p.ink` — already the colour that reads on that
-  pane, whichever way round it is painted. Being the category with no colour is also its
-  right rank: it is the one that does nothing to the opponent. `verbInkFor` returns **zero alpha**
-  to mean this, the same "use the default" convention `Button.BaseColor` uses.
 - **The underline sits flush with the bottom of the measured line box**, never a constant above
   it. It used to hang under a chip of fixed height; with no chip the only thing to position it
   against is the text, and `text.Measure` reports the full line including descent — which is what
-  clears the `p` in "prepares". A rule placed a few pixels above the baseline struck through it.
+  clears a descender. A rule placed a few pixels above the baseline struck through one.
 - **The prose lives in `internal/screens`, not `internal/combat`.** The rules package names cards;
   it does not describe them. **It is generated from the verb rather than tabulated** *(2026-08-16)*
   — `actionPhrase` and `cardEffect` in `prose.go`, switching on `Verb` and dropping the

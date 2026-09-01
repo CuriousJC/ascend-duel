@@ -1,0 +1,578 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — stone sheet</title>
+<style>
+  :root {
+    --ground: #e2d0b0;
+    --ink: #2c2822;
+    --dim: #6b6355;
+    --rule: #c4b294;
+    --panel: #ede0c8;
+    --pink: #c8508c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--dim); font-weight: 600;
+    margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  h3.group {
+    font-size: 15px; font-weight: 600; text-transform: capitalize;
+    margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h3.group span {
+    text-transform: none; font-weight: 400; font-size: 12px; color: var(--dim);
+    margin-left: 10px;
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+  .facts code { color: var(--ink); }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
+  .plates { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 22px; }
+  .plate {
+    display: flex; gap: 18px; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 16px; width: 480px;
+  }
+   
+  img { display: block; image-rendering: pixelated; }
+   
+  .empty {
+    width: 162px; height: 224px;
+    border: 2px dashed var(--rule); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--dim); font-size: 12px; text-align: center; padding: 12px;
+    flex: none;
+  }
+  .about { min-width: 0; }
+  .name { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .record { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
+  .text { margin: 10px 0 0; font-size: 13px; white-space: pre-line; }
+  .rule {
+    margin: 10px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; color: var(--dim);
+  }
+  .worth { margin: 10px 0 0; font-size: 13px; }
+  .worth b { font-variant-numeric: tabular-nums; }
+  .art { margin: 6px 0 0; font-size: 11.5px; color: var(--pink); }
+</style>
+
+<h1>Stone sheet</h1>
+<p class="facts">
+  19 stones over 19 rungs.
+  A sealed bag costs <code>5</code> vitae and draws <code>4</code>, keep
+  one — 21.1% of the catalogue gets a seat.
+  Stone card <code>162&times;224</code>,
+  corner radius <code>12</code>,
+  border <code>3</code>,
+  art box inset <code>26</code> from
+  <code>y=44</code> at most <code>96</code> tall,
+  text band from <code>y=148</code>.
+  Shown at 1:1 on the cream the stones are actually offered on.
+</p>
+<p class="note">
+  Regenerate with <code>go run ./tools/stonesheet</code> and refresh. Every card here is drawn by
+  <code>internal/cards</code>, the same code the game blits, and every word beside it is read out
+  of <code>data/stones.json</code> through <code>internal/session</code>'s own validation — so a
+  stone this page refuses to draw is a stone the game refuses to start with.
+</p>
+<p class="note">
+  <strong>The +N is computed, not authored.</strong> A stone adds a tenth of its rung's catalogue
+  multiplier — <code>combat.StoneValue</code> — so the figure on the face follows
+  <code>hands.json</code> without anything being edited here. That is the split worth
+  sanity-checking: the record carries the sentence, the rules carry the arithmetic.
+</p>
+<p class="note">
+  <strong>Read the sentence against the key.</strong> The line under each name is the
+  <code>Text</code> field, which is what the card prints verbatim; the monospace line under it is
+  the rung it is actually keyed to. Nothing in the codebase checks one against the other, and a
+  stone naming the wrong rung would be invisible everywhere but here.
+</p>
+<p class="note">
+  <strong>Every stone draws the same boulder.</strong> It is a generated glyph rather than a file
+  — <code>systems.GlyphStone</code> — so there is nothing to review about the picture and no
+  provenance question to answer. What is being reviewed is the wording and the numbers.
+</p>
+
+<h2>The ladder, by axis</h2>
+<p class="note">
+  <strong>Grouped by what a rung counts on</strong>, and walked in the catalogue's own order
+  inside each. This is deliberately not the hand sheet's layout: that one interleaves all three
+  axes by ascending multiplier, because a player forming a hand chooses among all of them at once.
+  A stone is bought against one rung, so the question here is whether an axis' ladder is priced
+  sensibly against itself.
+</p>
+
+
+<h3 class="group">
+  concept
+  <span>7 rungs, 7 with a stone</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      
+        <img src="stone-pebble.png" width="162" height="224"
+             alt="Pebble">
+      
+      <div class="about">
+        
+          <p class="name">Pebble</p>
+          <div class="record">pebble</div>
+          <p class="text">raise
+HIGH CARD</p>
+          <p class="rule">raises high-card</p>
+          <p class="worth">
+            <b>100</b> &rarr; <b>110</b> with one stone
+            (<b>+10</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">1 cards, counted on concept</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-agate.png" width="162" height="224"
+             alt="Agate">
+      
+      <div class="about">
+        
+          <p class="name">Agate</p>
+          <div class="record">agate</div>
+          <p class="text">raise
+CARD PAIR</p>
+          <p class="rule">raises concept-pair</p>
+          <p class="worth">
+            <b>115</b> &rarr; <b>126</b> with one stone
+            (<b>+11</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">2 cards, counted on concept</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-banded-agate.png" width="162" height="224"
+             alt="Banded Agate">
+      
+      <div class="about">
+        
+          <p class="name">Banded Agate</p>
+          <div class="record">banded-agate</div>
+          <p class="text">raise
+CARD 2 PAIR</p>
+          <p class="rule">raises concept-two-pair</p>
+          <p class="worth">
+            <b>210</b> &rarr; <b>231</b> with one stone
+            (<b>+21</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">4 cards, counted on concept</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-jasper.png" width="162" height="224"
+             alt="Jasper">
+      
+      <div class="about">
+        
+          <p class="name">Jasper</p>
+          <div class="record">jasper</div>
+          <p class="text">raise
+CARD TRIPS</p>
+          <p class="rule">raises concept-three-of-a-kind</p>
+          <p class="worth">
+            <b>250</b> &rarr; <b>275</b> with one stone
+            (<b>+25</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">3 cards, counted on concept</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-bloodstone.png" width="162" height="224"
+             alt="Bloodstone">
+      
+      <div class="about">
+        
+          <p class="name">Bloodstone</p>
+          <div class="record">bloodstone</div>
+          <p class="text">raise
+CARD HOUSE</p>
+          <p class="rule">raises concept-full-house</p>
+          <p class="worth">
+            <b>415</b> &rarr; <b>456</b> with one stone
+            (<b>+41</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">5 cards, counted on concept</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-onyx.png" width="162" height="224"
+             alt="Onyx">
+      
+      <div class="about">
+        
+          <p class="name">Onyx</p>
+          <div class="record">onyx</div>
+          <p class="text">raise
+CARD QUADS</p>
+          <p class="rule">raises concept-four-of-a-kind</p>
+          <p class="worth">
+            <b>500</b> &rarr; <b>550</b> with one stone
+            (<b>+50</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">4 cards, counted on concept</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-obsidian.png" width="162" height="224"
+             alt="Obsidian">
+      
+      <div class="about">
+        
+          <p class="name">Obsidian</p>
+          <div class="record">obsidian</div>
+          <p class="text">raise
+CARD FIVE</p>
+          <p class="rule">raises concept-five-of-a-kind</p>
+          <p class="worth">
+            <b>785</b> &rarr; <b>863</b> with one stone
+            (<b>+78</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">5 cards, counted on concept</p>
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="group">
+  form
+  <span>6 rungs, 6 with a stone</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      
+        <img src="stone-flint.png" width="162" height="224"
+             alt="Flint">
+      
+      <div class="about">
+        
+          <p class="name">Flint</p>
+          <div class="record">flint</div>
+          <p class="text">raise
+FORM PAIR</p>
+          <p class="rule">raises form-pair</p>
+          <p class="worth">
+            <b>110</b> &rarr; <b>121</b> with one stone
+            (<b>+11</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">2 cards, counted on form</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-chert.png" width="162" height="224"
+             alt="Chert">
+      
+      <div class="about">
+        
+          <p class="name">Chert</p>
+          <div class="record">chert</div>
+          <p class="text">raise
+FORM 2 PAIR</p>
+          <p class="rule">raises form-two-pair</p>
+          <p class="worth">
+            <b>145</b> &rarr; <b>159</b> with one stone
+            (<b>+14</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">4 cards, counted on form</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-slate.png" width="162" height="224"
+             alt="Slate">
+      
+      <div class="about">
+        
+          <p class="name">Slate</p>
+          <div class="record">slate</div>
+          <p class="text">raise
+FORM TRIPS</p>
+          <p class="rule">raises form-three-of-a-kind</p>
+          <p class="worth">
+            <b>150</b> &rarr; <b>165</b> with one stone
+            (<b>+15</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">3 cards, counted on form</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-basalt.png" width="162" height="224"
+             alt="Basalt">
+      
+      <div class="about">
+        
+          <p class="name">Basalt</p>
+          <div class="record">basalt</div>
+          <p class="text">raise
+FORM HOUSE</p>
+          <p class="rule">raises form-full-house</p>
+          <p class="worth">
+            <b>290</b> &rarr; <b>319</b> with one stone
+            (<b>+29</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">5 cards, counted on form</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-granite.png" width="162" height="224"
+             alt="Granite">
+      
+      <div class="about">
+        
+          <p class="name">Granite</p>
+          <div class="record">granite</div>
+          <p class="text">raise
+FORM QUADS</p>
+          <p class="rule">raises form-four-of-a-kind</p>
+          <p class="worth">
+            <b>295</b> &rarr; <b>324</b> with one stone
+            (<b>+29</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">4 cards, counted on form</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-gabbro.png" width="162" height="224"
+             alt="Gabbro">
+      
+      <div class="about">
+        
+          <p class="name">Gabbro</p>
+          <div class="record">gabbro</div>
+          <p class="text">raise
+FORM FIVE</p>
+          <p class="rule">raises form-five-of-a-kind</p>
+          <p class="worth">
+            <b>575</b> &rarr; <b>632</b> with one stone
+            (<b>+57</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">5 cards, counted on form</p>
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="group">
+  element
+  <span>6 rungs, 6 with a stone</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      
+        <img src="stone-opal.png" width="162" height="224"
+             alt="Opal">
+      
+      <div class="about">
+        
+          <p class="name">Opal</p>
+          <div class="record">opal</div>
+          <p class="text">raise
+ELEM PAIR</p>
+          <p class="rule">raises element-pair</p>
+          <p class="worth">
+            <b>110</b> &rarr; <b>121</b> with one stone
+            (<b>+11</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">2 cards, counted on element</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-moonstone.png" width="162" height="224"
+             alt="Moonstone">
+      
+      <div class="about">
+        
+          <p class="name">Moonstone</p>
+          <div class="record">moonstone</div>
+          <p class="text">raise
+ELEM 2 PAIR</p>
+          <p class="rule">raises element-two-pair</p>
+          <p class="worth">
+            <b>155</b> &rarr; <b>170</b> with one stone
+            (<b>+15</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">4 cards, counted on element</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-amber.png" width="162" height="224"
+             alt="Amber">
+      
+      <div class="about">
+        
+          <p class="name">Amber</p>
+          <div class="record">amber</div>
+          <p class="text">raise
+ELEM TRIPS</p>
+          <p class="rule">raises element-three-of-a-kind</p>
+          <p class="worth">
+            <b>160</b> &rarr; <b>176</b> with one stone
+            (<b>+16</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">3 cards, counted on element</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-garnet.png" width="162" height="224"
+             alt="Garnet">
+      
+      <div class="about">
+        
+          <p class="name">Garnet</p>
+          <div class="record">garnet</div>
+          <p class="text">raise
+ELEM HOUSE</p>
+          <p class="rule">raises element-full-house</p>
+          <p class="worth">
+            <b>335</b> &rarr; <b>368</b> with one stone
+            (<b>+33</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">5 cards, counted on element</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-topaz.png" width="162" height="224"
+             alt="Topaz">
+      
+      <div class="about">
+        
+          <p class="name">Topaz</p>
+          <div class="record">topaz</div>
+          <p class="text">raise
+ELEM QUADS</p>
+          <p class="rule">raises element-four-of-a-kind</p>
+          <p class="worth">
+            <b>340</b> &rarr; <b>374</b> with one stone
+            (<b>+34</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">4 cards, counted on element</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      
+        <img src="stone-zircon.png" width="162" height="224"
+             alt="Zircon">
+      
+      <div class="about">
+        
+          <p class="name">Zircon</p>
+          <div class="record">zircon</div>
+          <p class="text">raise
+ELEM FIVE</p>
+          <p class="rule">raises element-five-of-a-kind</p>
+          <p class="worth">
+            <b>680</b> &rarr; <b>748</b> with one stone
+            (<b>+68</b> each)
+          </p>
+          <p class="art">no art of its own — drawing the generated boulder</p>
+        
+        <p class="rule">5 cards, counted on element</p>
+      </div>
+    </div>
+  
+</div>
+
+
+<h2>Card states</h2>
+<p class="note">
+  The two states a stone card is drawn in. The bag's dialog dims the three rocks that were not
+  kept rather than lighting the one that was, so there is no third.
+</p>
+<div class="plates">
+  
+    <figure style="margin:0">
+      <img src="state-rest.png" width="162" height="224" alt="Pebble — in the bag">
+      <figcaption style="color:var(--dim);font-size:11.5px;margin-top:7px;max-width:180px">
+        Pebble — in the bag
+      </figcaption>
+    </figure>
+  
+    <figure style="margin:0">
+      <img src="state-disabled.png" width="162" height="224" alt="Pebble — the rock not kept">
+      <figcaption style="color:var(--dim);font-size:11.5px;margin-top:7px;max-width:180px">
+        Pebble — the rock not kept
+      </figcaption>
+    </figure>
+  
+</div>

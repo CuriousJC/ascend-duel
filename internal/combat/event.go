@@ -22,24 +22,44 @@ type EventKind int
 const (
 	KindRoundStart EventKind = iota
 	KindAction
-	KindGathered
-
-	// KindDrew is a Plan banking cards for the following round's hand. Amount is how many.
-	//
-	// **It is the engine asking rather than doing.** This package has no deck, so the event is
-	// the whole of what a Plan produces here — the screen honours it when it refills. It is a
-	// separate kind from KindGathered because the two bank different currencies and the feed has
-	// to be able to say which.
-	KindDrew
 
 	// KindNegated is the blow meeting a raised defence: Action is the card that answered it and
 	// Amount is what is left of the blow afterwards.
 	//
 	// **One kind, one card.** It was three kinds for three cards that differed only in percentage;
 	// `Action` already names which card it was, which is the whole distinction the feed was drawing.
-	// Only Defend reaches it today, and the kind keeps its general name because what it describes is
-	// a blow being reduced rather than one particular card doing it.
+	// Only creature guards reach it today, and the kind keeps its general name because what it
+	// describes is a blow being reduced rather than one particular card doing it.
 	KindNegated
+
+	// KindRaised is a defend card putting shields up. Action is the card, Amount is how many it
+	// raised, and Life carries the duelist's shield count afterwards, so a second Guard in the same
+	// turn reads as five rather than as three twice.
+	//
+	KindRaised
+
+	// KindBlocked is a shield eating one incoming attack outright. Action is the attack that was
+	// stopped, Target is the duelist that spent the shield, and Amount is how many shields are
+	// left afterwards.
+	//
+	// **It is not a KindNegated.** A guard leaves a figure and this leaves none, so a feed reading
+	// `Amount` off the two would be reading a remaining blow in one case and a remaining shield in
+	// the other. It is not a KindMissed either: a miss is the attacker's own failure and costs the
+	// defender nothing, where this is something the defender paid for.
+	KindBlocked
+
+	// KindExpired is a duelist's standing shields lapsing unspent, at the start of their own next
+	// turn. Amount is how many were lost.
+	//
+	// **It exists because a shield row has to empty when the shields do.** Every other change to
+	// that count is announced — raised, and eaten one attack at a time — so an expiry that said
+	// nothing would leave the readout showing a defence the engine had already taken away, for a
+	// whole turn. This is the same argument that makes a chilled slot emit a beat.
+	//
+	// **Only shields raise it, and only when some were standing.** A percentage guard lapsing is
+	// not drawn anywhere, so announcing it would be a beat with no picture; and a turn beginning
+	// with nothing up is the ordinary case, which must not cost the feed a line.
+	KindExpired
 
 	KindDamage
 	KindDefeated
@@ -102,8 +122,8 @@ const maxHandTerms = baseMaxActions * MaxEchoLandings
 type Event struct {
 	Kind   EventKind
 	Side   Side      // who acted
-	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindHand for the card the blow led with
-	Amount int       // damage dealt, action points banked, status applied, or on KindHand what the hand adds up to
+	Action ConceptID // set on KindAction, on KindNegated for the defense that stopped it, on KindRaised for the card that raised the shields, on KindBlocked for the attack a shield ate, on KindChilled for the action lost, on KindMissed for the attack that never landed, and on KindHand for the card the blow led with
+	Amount int       // damage dealt, shields raised or left standing, status applied, or on KindHand what the hand adds up to
 	Target Side      // who took the damage
 	Life   int       // target's life after the event
 	Round  int
@@ -269,8 +289,8 @@ type Slot struct {
 // draws it; neither works the order out for itself, so the pane and the engine cannot
 // drift apart.
 //
-// **A whole turn each, in category order.** Everything side A queued resolves — prepares,
-// then attacks, then defenses — and only then does side B begin. Within a category the
+// **A whole turn each, in category order.** Everything side A queued resolves — attacks first,
+// then everything else — and only then does side B begin. Within a category the
 // queued order is kept, which is where drag-to-reorder still bites and where sequence
 // hands will match.
 //

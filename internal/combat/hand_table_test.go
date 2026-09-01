@@ -203,7 +203,7 @@ func TestAMalformedHandIsRefused(t *testing.T) {
 			Key: "k", ID: 1, Name: "x", Match: "suit", Groups: []int{2}, Multiplier: 150}},
 		// **Four forms reach a blow as of 2026-08-23**, since plans join hands, so a five-group form
 		// hand is the rung nobody could climb — and it would fail silently rather than loudly
-		// without the check. It was four groups while `FormPlan` was filtered out of the matcher.
+		// without the check. It was four groups while `FormDefend` was filtered out of the matcher.
 		{"more groups than the axis has values", data.HandData{
 			Key: "k", ID: 1, Name: "x", Match: "form", Groups: []int{1, 1, 1, 1, 1}, Multiplier: 150}},
 	} {

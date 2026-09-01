@@ -61,7 +61,7 @@ const (
 	// held — an empty turn is still a turn taken.
 	//
 	// **A rule's `If` is matched against the turn as a whole**: it fires when *any* card of the turn
-	// matches, which is what lets "a turn with a plan card in it" be said without the predicates
+	// matches, which is what lets "a turn with a defend card in it" be said without the predicates
 	// needing a negation. See TurnTaken.
 	//
 	// **Appended, because the enum is append-only.**
@@ -1018,7 +1018,7 @@ func Growth(w WornRing) int {
 // **A rule fires when any card of the turn matches it**, and a rule with no `If` fires on every
 // turn — including an empty one, which is still a turn taken. That is what lets Momentum be written
 // without a "not" in the predicates: one rule grows on every turn, a second resets on a turn holding
-// a plan card, and the reset is applied second so a planning turn nets zero.
+// a defend card, and the reset is applied second so a defending turn nets zero.
 //
 // **Growth first, then resets**, always. The other order would let a turn both bank and lose the
 // same step depending on which rule the file happened to list first.
@@ -1051,7 +1051,7 @@ func (d Duelist) TurnTaken(cards []Card) Duelist {
 }
 
 // anyMatches reports whether any card of a turn satisfies a condition. **Any rather than every**,
-// which is the reading a turn-wide predicate needs: "a turn with a plan card in it".
+// which is the reading a turn-wide predicate needs: "a turn with a defend card in it".
 func anyMatches(c RingCondition, cards []Card) bool {
 	for _, card := range cards {
 		if c.Matches(card) {
@@ -1065,7 +1065,7 @@ func anyMatches(c RingCondition, cards []Card) bool {
 //
 // **A ring that can reset itself does not keep anything** *(2026-08-22)*: Momentum's streak is a
 // fact about the turns of one duel, and banking it between fights would make it a permanent bonus
-// that a single plan card once wiped. Heart, the growing stat rings and the Enflamed family hold no
+// that a single defend card once wiped. Heart, the growing stat rings and the Enflamed family hold no
 // reset and are kept.
 func KeepsGrowth(id RingID) bool {
 	for _, rule := range RingOf(id).Rules {

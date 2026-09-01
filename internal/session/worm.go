@@ -320,7 +320,7 @@ func (s *Session) Apply(w Worm, i int) bool {
 
 // CanApply reports whether this worm would do anything to this card. **The screen asks before it
 // offers**, because a worm that lands and changes nothing is a reward taken away: a Smash cannot
-// be promoted and a plan card has no ladder at all.
+// be promoted and a defend card has no ladder at all.
 func (s *Session) CanApply(w Worm, i int) bool {
 	card, ok := s.Card(i)
 	if !ok {

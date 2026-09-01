@@ -373,10 +373,8 @@ func effectText(c data.CardData) string {
 	switch verb {
 	case combat.VerbDefend:
 		return "Cuts damage by " + strconv.Itoa(c.Amount) + "%"
-	case combat.VerbBank:
-		return "Bank " + strconv.Itoa(c.Amount) + " AP for next round"
-	case combat.VerbDraw:
-		return "Draw " + strconv.Itoa(c.Amount) + " cards next round"
+	case combat.VerbShield:
+		return shieldText(c.Amount)
 	default:
 		return attackVerb(c.Form) + " for " + multiplier(c.Amount) + " DMG"
 	}
@@ -496,4 +494,15 @@ func styleFacts(st cards.Style) map[string]int {
 		"nameSize":  int(st.NameSize),
 		"healthTop": st.HealthBarTop,
 	}
+}
+
+// shieldText is what a shield card's face says, and it is shared with internal/screens through
+// nothing at all — a roster card and a played card are drawn by two packages that may not import
+// each other, so the wording is written twice on purpose and kept identical by
+// TestARosterCardSaysWhatAPlayedCardSays.
+func shieldText(n int) string {
+	if n == 1 {
+		return "1 shield"
+	}
+	return strconv.Itoa(n) + " shields"
 }

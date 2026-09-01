@@ -77,7 +77,7 @@ func TestTheSplitIsTakenFromResolutionOrder(t *testing.T) {
 	// first and its plans second; a row that counted its own would be a second answer to a
 	// question already settled, and would drift the first time a card changed category.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Defend, combat.Strike, combat.Prepare, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Guard, combat.Strike, combat.Ward, combat.Jab),
 	}
 	s.seatEnemyCards()
 
@@ -145,11 +145,11 @@ func TestTheOpponentsRowIsInResolutionOrder(t *testing.T) {
 	// turn into attacks then plans, so a queue planned plan-first comes out of the planner in one
 	// order and resolves in another.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Prepare, combat.Strike, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Ward, combat.Strike, combat.Jab),
 	}
 
 	got := s.enemyQueueOrder()
-	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Prepare)
+	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Ward)
 
 	if len(got) != len(want) {
 		t.Fatalf("the row holds %d cards, want %d", len(got), len(want))
@@ -183,12 +183,12 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	// have — so this is what replaces that safety.
 	s := &CombatScene{
 		hand: []paletteCard{
-			{actionCard: actionCard{Concept: combat.Prepare, Element: combat.Ice}, selected: true},
+			{actionCard: actionCard{Concept: combat.Ward, Element: combat.Ice}, selected: true},
 			{actionCard: actionCard{Concept: combat.Strike, Element: combat.Fire}, selected: true},
 			{actionCard: actionCard{Concept: combat.Jab, Element: combat.Earth}, selected: true},
 		},
 		fighterActions: []combat.Card{
-			combat.Of(combat.Prepare, combat.Ice),
+			combat.Of(combat.Ward, combat.Ice),
 			combat.Of(combat.Strike, combat.Fire),
 			combat.Of(combat.Jab, combat.Earth),
 		},
@@ -202,7 +202,7 @@ func TestSeatingWalksTheSameOrderAsPlayback(t *testing.T) {
 	want := []combat.Card{
 		combat.Of(combat.Strike, combat.Fire),
 		combat.Of(combat.Jab, combat.Earth),
-		combat.Of(combat.Prepare, combat.Ice),
+		combat.Of(combat.Ward, combat.Ice),
 	}
 	if len(s.theatre.resolved) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.theatre.resolved), len(want))
@@ -379,11 +379,11 @@ func TestTheOpponentsRowIsSeatedFromItsQueue(t *testing.T) {
 	// does not happen. It is the same walk, and this pins that seating uses it rather than
 	// taking the queue as planned.
 	s := &CombatScene{
-		enemyActions: combat.PlainCards(combat.Prepare, combat.Strike, combat.Jab),
+		enemyActions: combat.PlainCards(combat.Ward, combat.Strike, combat.Jab),
 	}
 	s.seatEnemyCards()
 
-	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Prepare)
+	want := combat.PlainCards(combat.Strike, combat.Jab, combat.Ward)
 	if len(s.theatre.enemyDealt) != len(want) {
 		t.Fatalf("%d cards were seated, want %d", len(s.theatre.enemyDealt), len(want))
 	}
@@ -564,8 +564,8 @@ func TestAQueueOfPlansNamesAHandThatLandsNothing(t *testing.T) {
 	// a Form Pair; what they are not doing is dealing damage with it, and the two facts have to be
 	// visible together or the multiplier looks like it went missing.
 	s := selecting(
-		combat.Of(combat.Prepare, combat.Fire),
-		combat.Of(combat.Plan, combat.Ice),
+		combat.Of(combat.Ward, combat.Fire),
+		combat.Of(combat.Brace, combat.Ice),
 	)
 
 	blow, turn, ok := s.previewBlow()
@@ -594,7 +594,7 @@ func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
 	// slots 1 and 2. The preview goes through `ResolutionOrder` for exactly that reason, and a
 	// preview built off the hand as the player left it would miss this hand entirely.
 	s := selecting(
-		combat.Of(combat.Prepare, combat.Basic),
+		combat.Of(combat.Ward, combat.Basic),
 		combat.Of(combat.Strike, combat.Fire),
 		combat.Of(combat.Strike, combat.Ice),
 	)

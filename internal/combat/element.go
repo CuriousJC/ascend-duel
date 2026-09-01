@@ -12,8 +12,8 @@ package combat
 //
 // **Only attacks apply statuses** *(decided 2026-08-12)*. An ice Guard is an ice card for hand
 // and discount purposes and applies nothing. The alternative was every card applying its status,
-// which would make the 1-AP Jab and the 1-AP Prepare equally good status delivery and turn the
-// prepare phase into the status engine. The cost of the rule chosen: element is mechanically
+// which would make the 1-AP Jab and the 1-AP Ward equally good status delivery and turn the
+// defend phase into the status engine. The cost of the rule chosen: element is mechanically
 // inert on the eight concepts that are not attacks, and it buys them nothing until rings land.
 
 // Element is what a card is made of. `Basic` is the absence of an element rather than a fifth

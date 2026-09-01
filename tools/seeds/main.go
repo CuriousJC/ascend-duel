@@ -54,24 +54,24 @@ var wants = []want{
 	},
 	{
 		"both-verbs",
-		"a plan card and an attack: both verbs in one round",
+		"a defend card and an attack: both phases in one round",
 		func(c map[combat.ConceptID]int) bool {
-			plans, attacks := 0, 0
+			defends, attacks := 0, 0
 			for a, n := range c {
-				if combat.Plain(a).Category() == combat.CategoryPlan {
-					plans += n
+				if combat.Plain(a).Category() == combat.CategoryDefend {
+					defends += n
 				} else {
 					attacks += n
 				}
 			}
-			return plans >= 1 && attacks >= 1
+			return defends >= 1 && attacks >= 1
 		},
 	},
 	{
-		"all-plans",
-		"a Prepare, a Plan and a Defend: the whole plan vocabulary in hand",
+		"all-shields",
+		"a Ward, a Brace and a Guard: the whole defend vocabulary in hand",
 		func(c map[combat.ConceptID]int) bool {
-			return c[combat.Prepare] >= 1 && c[combat.Plan] >= 1 && c[combat.Defend] >= 1
+			return c[combat.Ward] >= 1 && c[combat.Brace] >= 1 && c[combat.Guard] >= 1
 		},
 	},
 }

@@ -14,7 +14,7 @@ package screens
 //
 // **It is a free function over the run rather than a method on a scene**, which is what lets a
 // second screen draw it. What it deliberately does *not* do is move: the combat screen's own band
-// is still its own — it draws a live fighter, mid-fight life, banked AP and an opponent's card at
+// is still its own — it draws a live fighter, mid-fight life, standing shields and an opponent's card at
 // the far end, none of which exist here. This is the between-fights view of the same thing.
 //
 // **Rings are laid out by the same functions the combat screen uses** — `ringSlotAt`, `wornRings` —
@@ -63,8 +63,8 @@ func buildBandBottom(gs *state.GlobalState) int {
 // **Life is the run's `LifeLeft`, not a full bar.** The fight is over and the card still says what
 // it cost — a win on nine life reads as one, and it is also the figure the payout was a tenth of.
 //
-// The AP figure is the duelist's own budget with no bank on it, because a bank is a thing that
-// exists inside a round.
+// The AP figure is the duelist's own budget, which is now simply the stat — nothing adds to it any
+// more. No shields either: nothing is standing between fights.
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag) {
 	drawBuildCard(gs, screen, vitae)
 	drawBuildRings(gs, screen, drag)
@@ -86,7 +86,9 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		if name == "" {
 			name = duelistName
 		}
-		spec := duelistSpec(fighter, name, vitae, gs.Run.LifeLeft(), fighter.ActionPoints())
+		// No shields: this is the build band between fights, where nothing has been raised and
+		// nothing is standing.
+		spec := duelistSpec(gs, fighter, name, vitae, gs.Run.LifeLeft(), fighter.ActionPoints(), 0)
 		if img := cardImage(gs, spec, cards.DuelistStyle); img != nil {
 			r := buildCardRect(gs)
 			op := &ebiten.DrawImageOptions{}

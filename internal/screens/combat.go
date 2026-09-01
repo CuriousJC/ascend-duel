@@ -61,8 +61,9 @@ var victoryHoldTicks = beat(4, 1)
 var eventDwells = map[combat.EventKind]float64{
 	combat.KindRoundStart: 1,
 	combat.KindAction:     1,
-	combat.KindGathered:   1,
-	combat.KindDrew:       1,
+	combat.KindRaised:     1,
+	combat.KindBlocked:    1,
+	combat.KindExpired:    1,
 	combat.KindNegated:    1,
 	combat.KindDamage:     1,
 	combat.KindDefeated:   1,
@@ -299,7 +300,7 @@ type CombatScene struct {
 	rounds [][]combat.Event
 
 	// theatre is everything this screen has moving on it: the cards in the air, the two rows on
-	// the table, the damage figures, the banked points, the hand's name and the sum it flies into.
+	// the table, the damage figures, the shield pips, the hand's name and the sum it flies into.
 	//
 	// **Eleven flat fields until 2026-08-21**, with the rules that govern all of them repeated as
 	// comments across six files. See theatre.go for those rules and why they are a type now. The
@@ -463,7 +464,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
 	// statements, each added after something was found still on screen at the start of the next
-	// fight — a figure in the air belongs to the fight that raised it, a Prepare's points are a
+	// fight — a figure in the air belongs to the fight that raised it, a shield is a
 	// fact about one round of one fight, and the played cards drew over the new table and blanked
 	// the hand slots they claimed. All of those are the same bug: a settled duel freezes rather
 	// than spending its hand, so anything tidied up only by the end-of-round spend is still there.
@@ -491,8 +492,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
 
-	// A fresh duel: full life, no standing defenses, and no action points banked by a
-	// Prepare from a duel that has been walked away from.
+	// A fresh duel: full life and no standing defenses carried out of a duel that has been walked
+	// away from.
 	s.fighter.CurrentLife = s.fighter.MaxLife
 	s.enemy.CurrentLife = s.enemy.MaxLife
 	s.fighter.Duelist = resetCombatState(s.fighter.Duelist)
@@ -512,7 +513,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// refuses to plan for a dead duelist, and a screen re-entered after a defeat still has a
 	// corpse on it until the line above brings it back — so planning first would deal the new
 	// fight an opponent with no cards. The budget the planner reads has to be the fresh one too,
-	// or round one is planned against a Prepare banked in a duel that is over.
+	// or round one is planned against a shield raised in a duel that is over.
 	//
 	// **It spends cards from the opponent's hand**, which is why Init deals that hand first.
 	// A plan is a commitment on either side.
@@ -529,7 +530,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 // resetCombatState clears everything a duel accumulates, leaving the stats a combatant was
 // hydrated with. Init re-enters a screen that may have been left mid-duel, so a standing
-// defence or a banked Prepare would otherwise be inherited by the next one.
+// guard or a standing shield would otherwise be inherited by the next one.
 //
 // It sets the fields by name rather than rebuilding the struct: Con/DMG/Spd/MaxLife come
 // from the data record and must survive, and a zero literal here would quietly wipe them
@@ -538,18 +539,14 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 // **The defences are cleared by `combat.ClearDefenses` rather than field by field.** This
 // function listed them by hand until 2026-08-14 and had fallen behind the rules package, so a
 // raised defence survived into the next fight — which is exactly the failure a screen
-// enumerating another package's state invites. The two fields below are the same hazard and are
-// listed here because they are the screen's to reset, not the engine's.
+// enumerating another package's state invites. It clears the shields too, so this reads as one
+// call rather than as a call plus whatever the screen remembered to add.
 // **The statuses go too, and the rings stay** *(2026-08-16)*. A burn is something one duel did
 // to you; a ring is something you are wearing, and clearing it here would strip the player between
 // fights. Both are fields on `combat.Duelist` and the difference between them is what this
 // function exists to know.
 func resetCombatState(d combat.Duelist) combat.Duelist {
 	d = combat.ClearDefenses(d)
-	d.BonusAP = 0
-	d.GatheredAP = 0
-	d.BonusDraw = 0
-	d.DrewCards = 0
 	d.Statuses = [combat.MaxStatuses]combat.Status{}
 	return d
 }
@@ -904,10 +901,14 @@ func eventLabel(e combat.Event) string {
 	case combat.KindHealed:
 		return fmt.Sprintf("healed      %v restores %d from %v, leaving %d",
 			e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
-	case combat.KindGathered:
-		return fmt.Sprintf("prepared    %v banks %d AP for next round", e.Side, e.Amount)
 	case combat.KindNegated:
 		return fmt.Sprintf("negated     %v's %v cuts it to %d", e.Side, e.Action, e.Amount)
+	case combat.KindRaised:
+		return fmt.Sprintf("raised      %v puts up %d from %v, standing at %d", e.Side, e.Amount, combat.ConceptOf(e.Action).Label, e.Life)
+	case combat.KindBlocked:
+		return fmt.Sprintf("blocked     %v's shield eats %v, %d left", e.Target, combat.ConceptOf(e.Action).Label, e.Amount)
+	case combat.KindExpired:
+		return fmt.Sprintf("expired     %v loses %d unspent shields", e.Target, e.Amount)
 	case combat.KindDamage:
 		return fmt.Sprintf("damage      %v hits %v for %d, leaving %d", e.Side, e.Target, e.Amount, e.Life)
 	case combat.KindHand:
@@ -1020,7 +1021,8 @@ func (s *CombatScene) endOfRound() {
 	// **The adoption above is where banked points become `BonusAP`**, so what the cards have been
 	// drawing on top of it since the figures landed is now in the model and has to stop being
 	// added. Before the early return below: a settled duel adopts its end state like any other.
-	s.theatre.bankShown = [2]int{}
+	s.theatre.shieldsShown = [2]int{}
+	s.theatre.shieldsSeen = [2]bool{}
 
 	if s.duelSettled() {
 		return
@@ -1107,11 +1109,10 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 		return
 	}
 
-	// A Prepare has banked: send its points to the fighter card whose budget they raise. The
-	// engine has already counted them into `GatheredAP`, so this is a ghost of something that has
-	// happened — see combat_bank.go, and noteHit below, which keeps the same division.
-	if e.Kind == combat.KindGathered {
-		s.noteBank(e)
+	// The shield row on the duelist card, moved on the beat rather than at adoption — the same
+	// division noteHit makes between the model and the drawing. See noteShields.
+	if e.Kind == combat.KindRaised || e.Kind == combat.KindBlocked || e.Kind == combat.KindExpired {
+		s.noteShields(e)
 		return
 	}
 
@@ -1265,7 +1266,6 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// **The banked figures, over the card they are flying out of and the fighter card they raise.**
 	// Beside the damage figures because they are the same gesture in the other direction, and after
 	// the table for the reason those are: a figure leaving a card has to be on top of it.
-	s.drawBanks(gs, screen)
 
 	// The hands panel, under the other two: they are mutually exclusive, and this is drawn
 	// first so that opening either of the others covers this one's button along with everything

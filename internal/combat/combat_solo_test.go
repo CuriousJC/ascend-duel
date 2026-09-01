@@ -85,19 +85,19 @@ func TestADefendAnswersEverySwingOfASoloTurn(t *testing.T) {
 	a := duelist(10, 5, 500)
 
 	open, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike), 1)
-	shielded, after, _ := resolve(a, b, PlainCards(Defend), PlainCards(Strike, Strike), 1)
+	shielded, after, _ := resolve(a, b, PlainCards(testGuard), PlainCards(Strike, Strike), 1)
 
-	cut := 100 - ConceptOf(Defend).Amount
+	cut := 100 - ConceptOf(testGuard).Amount
 	for i, e := range damages(shielded) {
 		want := damages(open)[i].Amount * cut / 100
 		if e.Amount != want {
-			t.Errorf("blow %d through a Defend dealt %d, want %d", i, e.Amount, want)
+			t.Errorf("blow %d through a testGuard dealt %d, want %d", i, e.Amount, want)
 		}
 	}
 
 	// And it is gone once the turn it covered is over, exactly as one blow would have spent it.
 	if after.DefendCount != 0 {
-		t.Errorf("the Defend survived the turn it answered, holding %d", after.DefendCount)
+		t.Errorf("the testGuard survived the turn it answered, holding %d", after.DefendCount)
 	}
 }
 
@@ -151,7 +151,7 @@ func TestEverySoloAttackAnnouncesItself(t *testing.T) {
 	a := soloist(10, 9, 500)
 	b := duelist(10, 5, 500)
 
-	cards := PlainCards(Strike, Jab, Prepare)
+	cards := PlainCards(Strike, Jab, Brace)
 	events, _, _ := resolve(a, b, cards, nil, 1)
 
 	actions := 0

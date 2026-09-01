@@ -69,20 +69,21 @@ that unmarshals it, and — for anything returning a map — a sorted `…Order`
 **Every card in the game is written in one language** *(2026-08-16)* — the player's and all 96
 enemies'. Eight fields:
 
-`Label` · `Verb` (attack / defend / bank / draw) · `Amount`, read against the verb · `Cost` ·
+`Label` · `Verb` (attack / defend / shield) · `Amount`, read against the verb · `Cost` ·
 `Target` (opponent / self) · `Form` · `Elements` · `Copies`
 
 - **`Elements` and `Copies` are two axes and neither substitutes for the other.** The player's
-  attacks ship one per colour; its plans ship four copies of one colour; an enemy — all `basic`
+  attacks ship one per colour; its defences ship one per colour too; an enemy — all `basic`
   — has only `Copies`, so that field carries its whole deck size.
-- **Deck size is a consequence of a file you can read**: 9 attacks × 4 colours plus 3 plans × 4
-  copies = **48**.
-- **There is no `Category` column.** Attack-or-plan falls out of the verb. Carrying both would
-  let a file say a card is an attack that banks points.
+- **Deck size is a consequence of a file you can read**: 9 attacks × 5 colours plus 3 defences × 5
+  colours = **60**.
+- **There is no `Category` column.** Which phase a card is in falls out of the verb. Carrying both would
+  let a file say a card is an attack that raises shields.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
   card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
-- **No player card is drab except the plans** *(2026-08-15)*. Attacks are always coloured; the
-  plans are basic because nothing they do is elemental.
+- **No player card is drab** *(2026-08-25)*. Every card in the deck ships in one of the five
+  elements, the three defences included — a colour is worth a hand axis and a ring discount even
+  where nothing the card does is elemental.
 - **Enemy cards are all `basic` and `FormNone`**, and that is deliberate rather than sloppy.
   The colour is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
   into an element, so a colour typed into `enemies.json` would pre-empt a mechanic that does not
@@ -97,7 +98,8 @@ switch statements over a closed `ActionKind` enum with a `CostTier` in the JSON 
 ~400 a per-enemy deck list produces, so the card became a record and both went.
 
 What is checked now: a verb the vocabulary has, a cost that can be paid, an amount that does
-something, and a defence under 100% (**nothing may stop a blow outright**). **A card does not say
+something, a defence under 100% (**nothing may stop a blow outright**), and a shield count no higher
+than the attacks one turn can throw. **A card does not say
 who it lands on** — the verb decides, an attack on the opponent and everything else on its own
 duelist, and there is no field to disagree with.
 

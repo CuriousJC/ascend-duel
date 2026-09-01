@@ -16,7 +16,7 @@ package screens
 //
 // **Playback is a consumer of this, not the owner of it.** The combat screen's per-event pacing is
 // `eventDwells` in combat.go: a multiplier per event kind on top of this number, so "everything is
-// too slow" and "prepares are too slow" stay two different edits.
+// too slow" and "the defend phase is too slow" stay two different edits.
 //
 // **The game-speed setting landed on 2026-08-27 and it scales exactly this.** `speedScale` is the
 // player's multiplier and `speedTicks()` is the number everything reads; `beatTicks` stayed a

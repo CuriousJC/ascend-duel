@@ -636,7 +636,7 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	before, ok := gs.Run.Card(deckIndex)
 	if !ok || !gs.Run.CanApply(worm, deckIndex) {
 		// **A worm that would change nothing is refused rather than shown** — a Smash cannot be
-		// promoted and a plan card has no ladder — so the click does nothing and the card stays
+		// promoted and a defend card has no ladder — so the click does nothing and the card stays
 		// pickable. Saying no here is why CanApply exists.
 		return
 	}

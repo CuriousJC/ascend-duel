@@ -55,12 +55,12 @@
         "Element": "basic"
       },
       {
-        "Card": "Defend",
-        "Element": "basic"
+        "Card": "Guard",
+        "Element": "fire"
       },
       {
-        "Card": "Prepare",
-        "Element": "basic"
+        "Card": "Ward",
+        "Element": "fire"
       }
     ],
     "Enemy": "Bayaz",
@@ -92,8 +92,8 @@
         "Element": "ice"
       },
       {
-        "Card": "Prepare",
-        "Element": "basic"
+        "Card": "Ward",
+        "Element": "fire"
       }
     ],
     "Enemy": "GiantRat"
@@ -131,7 +131,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u2014 which is also a turn with no plan card in it, so Momentum should be climbing 0.2x a round.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u2014 and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Rings": [
       "atrophy-ring",
       "momentum-ring"
@@ -150,8 +150,8 @@
         "Element": "earth"
       },
       {
-        "Card": "Plan",
-        "Element": "basic"
+        "Card": "Brace",
+        "Element": "fire"
       }
     ],
     "Enemy": "OgreWarlord"

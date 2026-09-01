@@ -15,14 +15,15 @@ import "sort"
 // wears poker's names because it is poker's question — high card, pair, two pair, three of a kind,
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
 //
-// **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Plans carry an
-// element now, so they are counted like anything else: two Prepares are a Card Pair, and a turn of
+// **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Defend cards
+// carry an element, so they are counted like anything else: two Wards are a Card Pair, and a turn of
 // four fire cards is an Elemental Four of a Kind whether any of them swung. They bring no damage
-// into the sum, since a plan's `Damage` is zero — so a hand of nothing but plans multiplies nothing
-// and lands nothing, and a plan beside two attacks raises the rung the two attacks are paid at.
+// into the sum, since a defend card's `Damage` is zero — so a hand of nothing but shields multiplies
+// nothing and lands nothing, and a Ward beside two attacks raises the rung the two attacks are paid
+// at.
 // That last case is the whole of what the change buys, and the whole of what it costs.
 //
-// **The colours a hand shows include its plans**, so a fire Prepare arms a burn on a turn with no
+// **The colours a hand shows include its defences**, so a fire Ward arms a burn on a turn with no
 // fire attack in it. That follows from the same decision and is the sharper half of it.
 //
 // **What "agree" means is the hand's own business** *(2026-08-19)*. Every rung exists three times
@@ -54,7 +55,7 @@ import "sort"
 //
 // **Matching is on cards used, never on what they achieved.** A hand is known before the blow is
 // worked out, which is what lets its multiplier apply to the cards that formed it. Matching on
-// damage dealt would mean a plan could be silently invalidated by the opponent's defenses after
+// damage dealt would mean a hand could be silently invalidated by the opponent's defenses after
 // the player had committed to it.
 //
 // Hands are eventually **discovered rather than given**, persisting on the profile as part of
@@ -93,10 +94,10 @@ const (
 	// a concept only by being its four elemental copies.
 	AxisConcept Axis = iota
 
-	// AxisForm counts cards of the same form — stab, slash, crush or plan. `FormNone` never
+	// AxisForm counts cards of the same form — stab, slash, crush or defend. `FormNone` never
 	// counts, so an enemy's formless deck cannot build one.
 	//
-	// **Plan is a fourth form as of 2026-08-23**, since plans join hands now. Twelve of the
+	// **Defend is a fourth form as of 2026-08-23**, since those cards join hands too. Twelve of the
 	// player's forty-eight cards share it, which makes it the commonest value on this axis.
 	AxisForm
 
@@ -140,7 +141,7 @@ func ParseAxis(name string) (Axis, bool) {
 // one matches nothing on that axis. Every enemy card is both, which is what stops a formless,
 // colourless deck from reading as a table full of elemental hands.
 //
-// **The player has no basic card left** *(2026-08-23)*. The plans used to be the exception and
+// **The player has no basic card left** *(2026-08-23)*. The defences used to be the exception and
 // were excluded before this was asked anyway; they now ship in the five colours like every attack,
 // so `FormPlan` and every element are live values here and the absences belong to the enemies.
 func matchValue(c Card, a Axis) (int, bool) {
@@ -381,7 +382,7 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 // entry used to name the categories it counted, and it could never change what was counted — it
 // only invited an entry to claim otherwise.
 //
-// **It counts every card in the turn** *(2026-08-23)*. Plans are in, so a pair of Prepares is a Card
+// **It counts every card in the turn** *(2026-08-23)*. Defences are in, so a pair of Wards is a Card
 // Pair and a turn of one colour is an elemental hand whether it swung or not; they bring no damage
 // with them, since `Card.Damage` is zero for every verb that is not an attack. What is left out is
 // decided by `matchValue` — a card with no value on the hand's own axis — and by nothing else.
@@ -485,7 +486,7 @@ func biggestAttack(turn []Slot) []int {
 //
 // **It is about damage, not about membership** *(2026-08-23)*. Every card a duelist can queue is
 // counted toward a hand — see `matchCountOf` — and this is the narrower question `biggestAttack`
-// asks: which of them can be the High Card. A plan cannot, because it deals nothing.
+// asks: which of them can be the High Card. A defend card cannot, because it deals nothing.
 func (c Card) formsBlow() bool {
 	return c.Spec().Verb == VerbAttack
 }

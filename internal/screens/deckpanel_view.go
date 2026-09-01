@@ -345,7 +345,7 @@ func drawElementTally(gs *state.GlobalState, screen *ebiten.Image, left, top int
 // tallyForms is the order the two form blocks run in: the deck panel's own, so a form is in the same
 // place in the tally as it is along a grid row.
 func tallyForms() []combat.Form {
-	return []combat.Form{combat.FormStab, combat.FormSlash, combat.FormCrush, combat.FormPlan}
+	return []combat.Form{combat.FormStab, combat.FormSlash, combat.FormCrush, combat.FormDefend}
 }
 
 // drawFormMark puts a form's own drawing at the head of a row, **untinted**. The card's corner tints

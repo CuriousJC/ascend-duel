@@ -337,7 +337,7 @@ func formRank(f combat.Form) int {
 		return 1
 	case combat.FormCrush:
 		return 2
-	case combat.FormPlan:
+	case combat.FormDefend:
 		return 3
 	default:
 		return 4

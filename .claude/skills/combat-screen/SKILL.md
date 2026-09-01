@@ -48,8 +48,8 @@ top of, and they are not repeated below:
 
 **Phases.** A round is **a whole turn each**: everything side A
 queued resolves before side B does anything, and within a turn the categories go in order —
-**prepare, attack, defenses**. Defenses come last within a turn because the opponent moves
-next, so a defense raised at the end of your turn is up when their blow arrives.
+**attack, then everything else**. Defences come last within a turn because the opponent moves
+next, so a shield or a guard raised at the end of your turn is up when their blow arrives.
 
 **The attack phase is one blow** *(2026-08-14)*. Every attack card queued is announced with a
 `KindAction`, then one `KindHand` names the hand they formed, then a single `KindDamage`
@@ -107,10 +107,9 @@ for a faster action to lead. `Spd` still buys action points and still never buys
 - **The category is deliberately not concealed** on enemy rows. It is what decides where a row
   sits, so withholding it would make the pane unreadable rather than merely uncertain. It took
   over that job from the initiative number — see `concealedLabel`.
-- **The card shows its category as a glyph** — a sword for attack, a kite shield for
-  defend, an open book for prepare — in the top-left corner above the cost. Three states are
-  not a quantity, which is why it is not a numbered badge; a 22-pixel silhouette is read
-  before any text is.
+- **The card shows its form as a corner mark** — a spear, a sword, an axe, a shield — in the
+  top-left corner above the cost, tinted by the card's element. A form is not a quantity, which is
+  why it is not a numbered badge; a 32-pixel drawing is read before any text is.
 - **Cost is a stack of dash marks**, under the category glyph, one per point. Not a numeral
   and not a badge. Costs run 1..4 and a fifth tier is a layout change, not a bigger number.
 
@@ -165,7 +164,7 @@ in `MECHANICS.md`; these are what matter to the screen.
   than by two pieces of code agreeing. `previewAttack` calls it on `ResolutionOrder(queue, nil)`
   and **every attack previews, the High Card included** *(2026-08-19, owner's call)*. A single
   attack card is a hand — the catalogue's `high-card` at the identity multiplier — so the name is
-  on screen from the first attack picked; a queue of nothing but plans names nothing, `BlowFor`
+  on screen from the first attack picked; a queue of nothing but shields names nothing, `BlowFor`
   returning a blow with no cards. **This reverses the old rule**, which was that only a hand of two
   or more previewed, on the argument that HAND! over one Strike empties the word. What makes it
   safe is that the label names the *hand* rather than shouting HAND!, and the log still writes a
@@ -174,7 +173,7 @@ in `MECHANICS.md`; these are what matter to the screen.
   second line under it** — `1.15x DMG` — and that pair is what flies down to the hand row at DUEL!,
   so the preview and the announcement are one object. See `handBanner`.
   **`Blow.Cards` indexes the turn, not the hand**, which is why the preview goes through
-  `ResolutionOrder` — a Prepare queued first resolves last, so a preview read off the hand as the
+  `ResolutionOrder` — a Ward queued first resolves last, so a preview read off the hand as the
   player left it would miss the hand behind it.
 - **A chilled slot is a row that never resolves.** `currentSlot` counts `KindChilled`
   alongside `KindAction` for exactly this reason — one beat per slot, taken or lost — and
@@ -332,8 +331,8 @@ number the game had decided rather than one they had built.
   whole grammar of the box — something that flies came off a card, something that pops is
   punctuation the game supplied.
 
-**Within a turn the order is: prepares one at a time, every attack card announced, the hand, the
-damage, then the defends.** The screen does nothing to arrange this; it replays the log in order,
+**Within a turn the order is: every attack card announced, the hand, the damage, then the defend
+cards one at a time.** The screen does nothing to arrange this; it replays the log in order,
 and the engine decides.
 
 Three consequences for playback. **The hand line lands after its cards are announced but before
@@ -435,632 +434,32 @@ between them.
   that would break the day the hold is shortened, and it would break as a bar showing a life nobody
   has, which is hard to attribute.
 
-### A Prepare's points, and the AP line that waits for them
-
-*`combat_bank.go`, 2026-08-19, owner's call.* `+2 AP` flies out of the card that banked it and into
-the fighter card whose budget it raises, and **that card's AP line goes up as the figure lands**.
-It is the `KindGathered` row of the choreography table and the damage figure's argument applied to the
-one card in the game whose entire effect is a number changing somewhere else: until this, a Prepare
-resolved with a lift in its own seat, a sentence in a log nobody had open, and a budget that
-silently read two higher at the start of the next round.
-
-- **The target is the fighter card, not the strip's AP figure**, and the theatre row moved with it.
-  `3/6 AP` under the bar is *this* round's budget being spent and a Prepare does not touch it; the
-  line a Prepare changes is the card's, which is the live budget with `BonusAP` in it. A figure
-  landing on the strip would arrive at a total that does not move. `anchorAPFigure` stays in the
-  enum with nothing pointing at it, for whatever next raises or spends the current round's budget.
-- **`shownBank` is a view, exactly like `shownLife`.** The engine counts the points into
-  `GatheredAP` the moment the event resolves and turns them into `BonusAP` when the round's end
-  state is adopted — unchanged. What the screen adds is the same figure arriving early, so the line
-  moves when the number reaches it rather than a whole opposing turn later. `endOfRound` zeroes it
-  on the frame the adoption happens, or the two points would be counted twice.
-- **`duelistSpec` takes the AP to draw as an argument**, for the reason it takes the life: the
-  card's cache keys on the whole `Spec`, and the figure has to be able to differ from what the
-  combatant would answer.
-- **It stops the playback cursor**, like a landing damage figure and for the same reason. Pacing
-  only; the round was decided before a frame of it was drawn.
-- **It grows into place where the damage figure shrinks.** Points being *added* to a fighter arrive
-  at full size on the card they join; a total flying into a card goes away into what it empties.
-  That is `gestureFly`'s own description, and the hit is the documented exception to it.
-- **The credit outlives its figure.** A flight is dropped when its hold expires and the points stay
-  on the card until the adoption; `combat_bank_test.go` pins that, the credit landing on arrival
-  rather than on launch, and `combatTheatre.clear` from `Init` taking both down.
-- **An enemy banks the same way and its card has no AP line to raise**, so the figure flies to the
-  enemy card and lands on nothing. That is the anchors-are-named-by-role rule biting rather than an
-  oversight: the alternative is this file growing an opinion about which side is a person.
-
-### The theatre: what travels, out of what, into what
-
-*`combat_theatre.go`, 2026-08-18.* One table, one entry per `EventKind`, naming a source anchor, a
-target anchor, a gesture and the reason. **It is the map, not the machinery** — the drawings stay
-with the code that already owns each region, because a generic renderer over nine genuinely
-different gestures would be more machinery than the nine gestures.
-
-- **The rule it holds is one sentence: everything travels from the thing that caused it to the
-  thing it happened to.** A figure appearing in the middle of the screen is a figure that was never
-  anywhere else, so the player has to be *told* what it was instead of having watched it happen —
-  the card-flight argument applied to every event. Written down as a table the rule is checkable;
-  written into nine call sites it is a habit.
-- **The checkable part is completeness.** `TestEveryEventKindIsChoreographed` fails when a new kind
-  arrives without an entry. **That matters more since the Resolution feed went behind a button**
-  *(2026-08-18)*: with no running commentary on screen, an event nobody drew is an event the
-  player is only ever told about by opening the log. **A kind with no picture says so with
-  `anchorNone` and a reason** — an absent entry and a deliberate silence otherwise read
-  identically.
-- **Anchors are named by role, never by side.** `anchorActorSeat` is the acting side's row whichever
-  side that is, for the reason `SoloAttacks` is a flag on a duelist rather than a rule about
-  `SideB`: the engine has no idea which duelist is a person and this screen must not grow a second
-  opinion about it.
-- **`Event.Ring` exists because of one row.** `KindStatus` flies out of the ring that caused it, and
-  nothing on screen could say which ring that was — reading it off the card's element would be a
-  second rule about something the ring grammar already decides, and wrong the first time a form
-  or concept ring applied a status, both of which `RegisterRing` accepts today. `statusesFrom`
-  always knew and used to throw the answer away; the first ring worn is the one credited.
-- **It is deliberately not JSON** *(owner asked)*. Every anchor is a geometry function that takes
-  arguments — `ringSlotAt`, `enemySeatAt`, `enemyCardRect` — and a file can only name one by string,
-  so the Go table a file would need underneath it is this table. `data/*.json` is `//go:embed`ed
-  too, so a beat in a file costs the same rebuild as a beat in a constant. **If the timings turn out
-  to be what gets edited over and over, lift the timings out and leave the anchors** — timings are
-  data, anchors are code.
-- **Most rows are not drawn yet, and that is the point of writing them down.** What travels today
-  is `KindDamage` and `KindHand`; the kinds marked `anchorNone` are done by being silent, and
-  `KindAction`'s drawing is the card lifting in its own seat, which `tableFireLift` already does.
-  Everything else — a banked point landing on the AP figure, a status flying off its ring, a chill
-  acting from the badge row, a missed turn struck out — describes what the gesture should be when
-  someone builds it. The log writes a sentence for each of those; none of them moves — and with
-  the feed gone, a sentence in a panel is the only place they are said at all.
-
-### What survives any model
-
-- **`combat.ResolutionOrder` is the single authority on order.** `ResolveRound` plays what
-  it returns and the table draws what it returns. Neither derives the order
-  independently, which is what makes it structurally impossible for the pane to lie to the
-  player about their own round. `TestResolutionOrderIsWhatResolveRoundPlays` pins it.
-  **A chill is the one thing that can remove a slot** rather than reorder it, and the
-  every-slot-accounted-for test above is what keeps that honest.
-  **This is what made the phase change cheap** — one pure function body plus its tests, and
-  both consumers followed untouched. It paid for itself exactly as predicted.
-- **Ordering is a rule.** It belongs in `internal/combat`, never in a screen. A new effect
-  that rearranges resolution changes `ResolutionOrder` and both consumers follow.
-
-### Defense expiry is a rule about turns, not about order
-
-**A defense expires at the start of its owner's next turn, not at the round boundary.** Side B
-acts last, so a defense cleared at the boundary would protect B from nothing it ever faces.
-Expiring at the owner's next turn means every defense covers exactly one opposing turn
-whichever side raised it.
-
-This lives in `ResolveRound`, **not** in `ResolutionOrder` — a side that queues nothing still
-has a turn and still loses its guard in it, so it cannot be derived from the slot list. It is
-the one place the engine's symmetry needed defending against an order that is not symmetric.
-
-The old rule — a Guard lasting until its owner's next *action*, so an idle duelist kept it
-forever — is gone, along with `TestGuardHoldsWhileItsOwnerDoesNothing`.
-
-## Combat screen layout is scaffolding
-
-The screen reads top to bottom rather than left to right: **who you
-are and what the round is doing** above, **the cards you are doing it with** along the
-bottom. Colours identify the role and are placeholders, not a chosen palette.
-
-| Element | Slot | Colour | Role |
-|---|---|---|---|
-| Duelist card | 1% x, 2% y | — | who you are: name, DMG, AP, Vitae, health |
-| Ring row | between the two cards, 10px below their top | pink borders on grey | what you are wearing |
-| Enemy card | right edge at 99% x, 2% y | — | the opponent |
-| The table | full width, under the top row | element | both queues as cards, player left, enemy right |
-| The math band | table width, above the hand | — | empty at rest; the previewed hand's name, then the blow's arithmetic |
-| Fight log | a dialog, 4–96% | pink | every round of the fight, behind the Log button |
-| Hand | centred in what the sort column leaves, 66% y | element | the cards, portrait, in one row |
-| Sort column | band's right edge, centred on the cards | slate | `$` / `T` / `E`, the hand's arrangement |
-| AP bar | hand width, directly under the row | blue | the budget |
-| Bottom strip | 95% y | — | AP figure, Discard, DUEL!, Log, deck pile — evenly spread |
-
-**The top of the screen is one row of three things**: the duelist card in the
-left corner, the enemy card in the right, the rings filling everything between.
-
-- **The ring row takes both its edges from the two cards** rather than from percentages —
-  `ringPaneRect` reads `duelistCardRect` and `enemyCardRect`. That replaced a hardcoded 79%, a
-  percentage standing in for the position of a card it could not see, which went stale the day
-  after it was written when the enemy moved to the corner.
-  `TestTheTopRowIsThreeThingsThatDoNotOverlap` is what keeps it honest.
-- **The rings sit on a plain grey backing and drop 10px below the two cards.** The two go
-  together: with the row spanning most of the screen and a card at either end, nothing said
-  where the middle began — but a backing whose top edge lands on both cards' top edges makes
-  the three read as one wide object with two cards embedded in it, which is the *same* failure
-  the framed pink version was retired for. The drop breaks that line.
-- **A fill, never a frame.** One step darker than the screen's cream `screenGround`, no border,
-  no title, no hue — a colour that meant something would compete with the five saturated pink
-  borders standing on it. `ringPaneBackRect` is derived from the row and pads it by 8 against
-  a 16px gap, so **the backing can never touch either fighter card**;
-  `TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards` pins that and the fact that it
-  is deep enough to hold the `3/5` fraction, which belongs to the row it counts.
-
-**Cards are portrait and live along the bottom.** Landscape cards in a vertical column
-capped how many could be shown, and the hand is going to grow. `cardWidth`/`cardHeight` are
-**flat constants — 162x224 — and must stay flat**: they
-used to be derived from the glyph
-row, so adding a badge silently widened every card and the layout could not be reasoned
-about without doing the arithmetic. Contents fit the card, never the reverse.
-
-**`handBand()` is the single authority on the hand's horizontal extent.** The card slots
-are cut out of it, the AP bar spans it and the caption box matches it, so the three cannot
-drift apart when the hand size changes. A card in flight still owns its slot, which is what
-stops the row sliding half a card sideways when one is lifted.
-
-**The strip at 95% is one row of five things, spaced rather than placed**: the
-AP figure at the hand's left edge, Discard, DUEL!, then the Log button and the deck pile in the
-corner. The two
-buttons used to sit at 20% and 33%, side by side because they were the same choice made two
-ways. **They are separate choices now and the spacing says so** — `buttonStripSlots` divides
-what is left between the figure's column and the **Log button** into three equal gaps and puts a
-button
-in each of the two spaces, so the strip stays evenly spread if any of the three fixed things
-moves. `TestTheButtonStripSharesItsSpaceEvenly` checks the gaps against each other rather than
-against numbers, because the property wanted is the relationship, not a coordinate. Discard
-still carries one condition DUEL! does not: a round's discards can run out.
-
-**The right-hand end of that span is the Log button, not the pile** *(2026-08-18)*. It arrived
-between the two, and a strip still measured to the pile would spread its buttons across a span
-with a control standing in it. **The two corner controls are a pair**: both are things you open to
-look at, as against Discard and DUEL!, which commit a round — which is also why the Log button
-takes the sort column's slate rather than a committing colour.
-
-**The bottom of the screen is one line**, and two of the three things on it are
-now hung off the bottom edge rather than off the hand's geometry:
-
-- **The deck pile's anchor moved** from "down from the AP bar" to "up from the bottom edge",
-  `deckStackBottomInset = 10`. The bar was the constraint while the strip below it was 86
-  pixels and a 54-pixel pile only just fitted; the hand came down and left slack, so measuring
-  from above left the pile floating in the middle of it. Both of its corners are margins from
-  the screen's own edges now, which is what it wanted to say all along.
-- **The mute button uses the same inset**, so the two share a bottom edge exactly. It is chrome
-  in `internal/game`, which imports this package and cannot be imported back, so the number is
-  shared by *being the same number* — checked from both ends, by
-  `TestTheBottomOfTheScreenIsOneLine` here and `TestTheMuteButtonSitsInTheBottomLeftCornerOnScreen` there.
-- **The discard badge is four pixels lower**, because it hangs off a button strip placed as a
-  percentage. Four pixels reads as one line; making it exact would mean taking the strip off
-  percentages for no other reason, and the test allows the slack rather than pretending.
-
-**The hand sits at 66% because that is what lines the AP figure up with the buttons**
-. Dropping the pile freed the band it used to float in, and the row came down
-into it until the action-point figure's top landed on the Discard button's top. It is a
-coincidence of five constants — `handTopPct`, `cardHeight`, `apBarBelow`, `apBarHeight`,
-`apFigureBelowBar` against the strip — and nothing in the code enforces it, so
-`TestTheAPFigureLinesUpWithTheButtonStrip` does. **What the drop buys is height at the top**:
-the bar, the figure, the cards and the band above them all measure off this row, so moving it
-moves the whole lower half together and opens the space between the fighter cards and the hand.
-
-**`apFigureReserve` is a fixed column width, not the figure's measured width.** Measuring
-would move both buttons the moment the text went from `9/12 AP` to `10/12 AP`. The reserve
-holds the normal figure and the `+N over` tail runs past it, into a gap hundreds of pixels
-wide. The buttons read `handSize` through `handBand`, never the live hand, for the same
-form of reason: `handBand` is centred, so a shorter row starts further right.
-
-**The discards left this round are a badge on that button** — a filled disc **centred on its
-bottom-right corner**, count inside, drawn by `drawDiscardsLeft` after `systems.DrawButton`
-because the button blits an opaque cached face. A number you watch tick belongs on the control
-that ticks it, not at the other end of the screen. Three things about it:
-
-- **Centred on the corner, not inset inside it**, so it hangs off both edges and reads as
-  attached to the button rather than printed on it. Nothing sits under that corner — the hand
-  row ends well above the button strip — so the overhang costs nothing.
-- **The scene draws it, not the widget.** `models.Button` is shared by every screen and holds
-  one centred string; a corner-badge field would put a rule about this screen into all of them.
-- **Two fill/ink pairs, not one dimmed.** The face underneath does not dim, it changes colour
-  entirely — `disabledButtonColor` is flat grey and ignores `BaseColor` — so a badge tuned for
-  the yellow face has nothing to say about the grey one.
-
-**There is no Deck button any more**. The draw pile itself is the control: a
-stack of card backs at the right-hand end of the strip, clicked to open the overlay and
-clicked to close it, wearing a **bright yellow ring while the overlay is up**. That ring is
-load-bearing, not decoration — see the overlay's "make its exit the brightest thing on screen"
-rule below, which the old button satisfied for free by being lit on a dead screen. It lives in
-`combat_flight.go` along with the cards that fly out of it.
-
-**Its y is measured up from the bottom edge**, and never as a percentage. It was
-measured *down from the AP bar* until then, and both anchors were chosen the same way — name
-the thing that actually constrains it. The bar was that thing while the strip below it was 86
-pixels and 95% of the screen height put the pile three pixels *through* the bar; the hand has
-since come down and left slack there, so the bottom edge is. `cards.Stack` is small because of
-the original squeeze and stayed small. `TestDeckStackClearsTheAPBarAndTheScreen` still holds
-the ring against both the bar and the screen, so neither anchor can quietly stop working.
-
-**Its x is measured in from the right edge, and the margin is where its count is written**
-. `deckStackRightMargin` went 10 → 96 so the fraction sits beside the pile rather
-than floating in the corner. **The count is `left / owned`** — `len(s.deck)` over `deckSize()` —
-and the denominator deliberately never moves: the numerator alone says how far through the deck
-the round is, and the discard is the subtraction (owned, less what is left to draw, less the
-hand). It replaced `deck 45 · discard 7` on the line under the hand, which is gone.
-
-**A won fight leaves by itself, and there is no control at all while it does** *(2026-08-19,
-owner's call)*. `holdVictory` counts `victoryHoldTicks` from the last drawn event and then hands
-over to the post-battle screen; `victoryPending` is the predicate, and **the DUEL! slot is not
-drawn while it is true** — a `Next` standing lit under a screen that is about to change on its own
-is the offer of a choice the player has not got.
-
-- **The hold is the design and only the press was dropped.** The screen freezes a settled duel on
-  purpose (see the freeze below), so leaving on the frame the last figure lands would throw that
-  picture away. `victoryHoldTicks` is the one number to move if the pause reads wrong.
-- **The count stops while a dialog is up.** The fight log can be opened on a won fight, and a
-  screen changing out from under an open panel is reading material snatched away.
-- **A defeat is untouched.** Retry keeps its button, because playing the same fight again is a
-  decision and it is the player's.
-
-**DUEL! becomes Retry when a duel is lost**, changing its own label rather than a fourth button
-appearing. Same slot, same meaning — commit and move the game
-forward — and a control that only ever showed up at the end of a fight would be one nobody
-had learned. `duelSettled()` gates it on playback having *finished* as well as someone being
-dead, because life reaches zero partway through the log and offering the exit before the
-killing blow is drawn would cut the round short at its best moment.
-
-The caption changes with it, naming the next enemy. Before this, winning left every button
-dark with no way to play on short of restarting the process.
-
-**Selection having two verbs is deliberate.** There is no discard mode and no second
-gesture. One selected set, two things you can do with it, which is why the two buttons are
-adjacent and why the action points come back when a card is discarded — the selection was
-proposed, not spent.
-
-**Selected is the only thing that ever leaves the hand**, by either verb. `spendSelected` is
-the single movement — the selected cards go to the discard pile, the draw tops the hand back
-up to `handSize` — and both Discard and the end of a round call it. Two functions doing this
-would be two functions that have to agree.
-
-### The table: two hands facing each other
-
-*`combat_table.go`.* Pressing DUEL! lays both queues out across the middle of the
-screen at full size — **the player's played cards left-aligned, the opponent's queued cards
-right-aligned** — and clears them when the round ends. It is the first thing on this screen
-that shows a round as a confrontation rather than as a list.
-
-It replaced a pile of played cards in the bottom-left corner, where a card rose
-out of its slot, held below the Resolution pane to be read, and stacked in the corner. That
-pile was legible and it was history *only*: it grew with nothing opposite it, so the one thing
-a duel is about — my cards against yours — was something the player had to assemble from a pane
-of sentences.
-
-- **Both rows come from `combat.ResolutionOrder`**, so both say what *will* happen rather than
-  what was planned — a queue planned attack-first resolves prepare-first, and a row in
-  selection order would be a confident picture of a round that never happens.
-- **The whole queue is dealt at round start, not a card at a time.** The opponent's hand is
-  known in full at that moment, so a player's row assembling itself over the next few seconds
-  would be one hand against half of another. **Playback drives which cards are lit, not which
-  cards exist** — `firingSeats` and `enemyFiringSeats`, written by `noteResolved`.
-- **A prepare or a defend lights its own seat; the attack hand goes up all at once**
-  *(2026-08-15)*. A turn lands one blow and the blow is the set, so the first attack announcement
-  raises every attack card of that turn and `noteHand` then drops whichever earned nothing. They
-  used to climb one per beat, which read as one attack per card — the model this replaced. Only
-  one *side* is ever lit: the event that lights one clears the other. **A solo attacker climbs one
-  per beat and should** *(2026-08-17)*, because one attack per card is exactly what its turn is.
-- **`noteResolved` and `seatPlayedCards` count along the same walk.** The third card to resolve
-  is not the third card in the hand, and two independent tallies would light the wrong one the
-  first time somebody queued a defense before an attack.
-  `TestSeatingWalksTheSameOrderAsPlayback` is what replaced the safety the old per-event pile
-  had for free.
-- **A resolving card lifts in place** (`tableFireLift`) rather than flying to the middle to be
-  read. The middle is where the opponent's hand is now, so the old hold beat would send a card
-  across the cards it is being played against. The lift borrows selection's gesture from the
-  hand row.
-- **The two rows never touch.** Five full-size cards a side do not fit a screen, so each row
-  overlaps *within itself* and the pitch is derived exactly as `handPitch` is — the action cap
-  is a rule a ring is expected to raise, so a pitch that only worked for five would hide a
-  rendering bug behind a balance change. `TestTheTwoHandsNeverReachEachOther`.
-- **The opponent's row is up during planning, and that is what the row is for**.
-  It appeared only at DUEL! for one day, because `enemyActions` held *last* round's plan until
-  then. **The fix was to move when the opponent commits**: `planEnemyRound` runs at the start of
-  the planning phase — from `Init` for round one and from the end of playback after that — so
-  the player picks their round against a hand they can see.
-  **Nothing about the plan changed, only when it is shown.** `PlanFor` never sees the player's
-  queue and the opponent's state does not move between one round ending and DUEL! being pressed,
-  so the same cards are chosen either way. `startRound` must never re-plan; if it did, the cards
-  the player chose against would not be the cards they faced.
-  **Ordering that bit once**: in `Init` the plan has to come *after* the life reset — the
-  function refuses to plan for a dead duelist, and a screen re-entered after a defeat still has
-  a corpse on it until then, so planning first dealt the next fight an opponent with no cards.
-- **The duel is open-information now, on the owner's call.** `concealEnemy` is still the screen's
-  concealment predicate, and the table deliberately ignores it — with the opponent's cards face up
-  there is nothing left for it to hide. **The lever is still built**: `cards.Spec.FaceDown` draws a
-  back and the draw pile is a stack of them, so hiding this row again is a field rather than a
-  second drawing path.
-- **The opponent's cards fly in from the enemy fighter card** in the top-right corner — the
-  opponent itself, and the mirror of the player's cards coming out of their hand. There is no
-  enemy draw pile on screen; inventing one would be a second thing to explain, where a card
-  coming out of the thing that *is* the opponent needs no caption. Same `riseTicks` and same
-  `flightStaggerPer` as the player's row, and `TestBothRowsUseTheSameArrivalClock` is what stops
-  a later change to one being made twice.
-- **Every opponent card is elementless**, because every enemy's deck in `data/enemies.json` is
-  authored `basic`. That was a fact nobody could see when an enemy card was never drawn; it is
-  visible now, and the neutral grey border is the truth rather than a placeholder. It stays true
-  until affixes exist: an enemy's colour does nothing without one, so a coloured enemy card would
-  be a border claiming a rule.
-- **A played card has not left the hand.** It leaves at the end of the round with everything
-  else played, which is what keeps the Resolution pane able to narrate from `fighterActions`
-  while the round is still running. `resolvedInHand` hides a *drawing*, exactly like
-  `inboundTo`.
-
-**Four things move, and they share a clock and nothing else** — `travel`. A card to or from
-the draw pile, one of the player's to its seat, one of the
-opponent's to theirs. The obvious unification — one struct holding a start and an end point —
-was **rejected**: no mover stores its endpoints. Every one recomputes both every frame from
-`slotAt`, `playedSeatAt`, `enemySeatAt` or `deckStackRect`, which is what makes a flight survive
-the row re-laying out underneath it and survive a resize. What they genuinely share is a delay,
-an age, a duration and an eased progress, so that is all `travel` is. The *gestures* stay
-separate, because they are genuinely different drawings: the discard accelerates away lifting,
-turning and shrinking; the deal scales up out of the pile and flips face up; the two table rows
-travel flat.
-
-**The animation does not own the card, and this is the rule to protect.** `spendSelected`
-completes the whole logical move before it raises a single flight, so a card in the air has
-already gone: the hand, the piles and the queue are correct the instant it returns. The
-tempting alternative — holding a card in its slot until the flight lands — would make
-"is this card in the hand" a question `planning()`, the AP budget and `handBand()` all have
-to answer. What the row does instead is skip *drawing* a slot a card is still flying into
-(`inboundTo`), which is a view concern and stays in `combat_flight.go`.
-
-**The hand persists across rounds**. It used to empty completely every
-round and deal a fresh eight, justified by "a hand kept back would let a plan be prepared once
-and repeated". That conflated the queue with the hand: the *queue* still empties every round,
-so no plan repeats by default, but taking away cards the player had deliberately held punished
-holding them and made playing a card the only way to keep it.
-
-The consequence to hold on to: **Discard is now the only way an unwanted card leaves your
-hand.** `discardsPerRound` stopped being a convenience and became the rate at which a hand can
-be steered.
-
-**A settled duel does not spend the hand at all — it freezes** *(2026-08-16)*. `endOfRound`
-adopts the end state and then returns if `duelSettled()`, so the last round is never cleared
-away: the played cards stay on the table, the hand keeps the gaps they left, and `Init` clears
-all of it when the next fight starts.
-
-**What forced it is that the row is a measurement, not just a picture.** `handBand` is a function
-of how many cards are in the hand and the AP bar spans that band — so spending the hand after the
-killing blow collapsed the cards into a narrow centred huddle and dragged the bar in with them.
-**The picture the player is looking at when the blow lands is the picture they should still be
-looking at while the screen holds it.**
-
-The intermediate version — refill nothing but still spend — does not work and is worth not
-re-trying: a hand that loses cards reflows whether or not it is topped back up. What has to stop
-is the whole end-of-round movement, which is why this is a branch in `endOfRound` rather than a
-rule inside `drawHand`.
-
-**What the freeze cost, and it is the shape of thing to look for again.** `s.theatre.resolved` used to be
-emptied in exactly two places — `seatPlayedCards` at the start of a round and `spendSelected` at
-the end of one — and that covered every case *only because every round ended in a spend*. With the
-last one frozen, the winning hand was still seated when the next fight started: it drew over the
-new table, and `resolvedInHand` blanked the hand slots it claimed, so the fresh hand came up full
-of holes. **`Init` clears the table now** — `resolved` and `enemyDealt` both — which is where a
-per-fight reset belonged anyway. Anything else that is only ever cleaned up by the spend is now
-sitting on the same assumption.
-
-**Both fighters are cards, in opposite corners.** The argument for it: everything the duel is
-made of is a card, including both the
-people playing it.
-
-- **`cards.DuelistStyle` and `cards.EnemyStyle` are twins and must stay so.** Same footprint,
-  and **the health bar and the fraction under it are at identical offsets on both** — the two
-  cards face each other across the screen, and a bar at a different height on each would turn
-  comparing them into an act of measurement. `TestTheTwoFighterCardsShareTheirHealthGeometry`
-  pins it. Above the bar they differ, because that is where they say different things: a
-  portrait on one, three stat rows on the other.
-- **The duelist card holds name, DMG, AP, Vitae, bar, fraction.** DMG is `Strike.Damage(DMG)`
-  asked of the rules rather than the field copied out. **That is an identity today** — the stat
-  was renamed off `Str` on 2026-08-16 precisely because the middle rung of the ladder returns it
-  unchanged — and the call is still worth making, because it makes the figure follow the *ladder*
-  rather than the field. AP is the live budget including a banked Prepare. Vitae is still a fixed
-  placeholder with no rule behind it.
-- **`Spec.Stats` is a fixed array, not a slice, and that is load-bearing** — the screen's card
-  cache keys on the whole `Spec`, so it has to stay comparable. `cards.MaxStatLines` is what
-  the layout fits rather than headroom over it: a fourth figure lands on the health bar and
-  `TestStatRowsClearTheHealthBar` fails rather than drawing it.
-- **The enemy card carries the statuses standing on it**, as a row of badges along the bottom
-  edge from `assets/effect/` — flame, snowflake, bolt, and a placeholder for earth. **It is the
-  only thing on screen that says a status is on**: a chill takes a card off a turn not yet
-  queued and a weight blunts a blow not yet swung, so without a badge either is learned only by
-  being surprised by it. Twenty pixels, in the strip the life fraction leaves above the border,
-  and `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both ends of it. **The row is
-  centred and closes up**, like the ring row.
-  - **The badge appears on the beat the status lands**, not when playback finishes.
-    `applyEvent` writes it from `KindStatus` — a drawing, overwritten a few frames later when
-    the two duelists adopt `s.enemyAfter`. Same argument as the burn: a card that disagrees with
-    the sentence beside it.
-  - **The duelist card has no badge row**, and that is not an oversight of the twins rule — the
-    bar and the fraction are still at identical offsets, which is where that rule bites. Nothing
-    can put a status on the player: an enemy wears no rings, and a ring is what makes a status
-    happen. `DuelistStyle` gains the three fields when one can.
-- **The enemy names itself above its portrait**. The name sat between the
-  portrait and the bar until then; every other card in the game carries its name across the
-  top, and a card with its own reading order reads as a different kind of object.
-- **All of it is one cached image from `internal/cards`**, health bar included, so
-  `tools/cardsheet` draws a wounded fighter without reimplementing a bar. `Life`/`MaxLife` are
-  on the `Spec`, so a point of damage is a new cache entry — affordable because life changes
-  on damage events, not per frame. The duelist's figures work the same way.
-- **Red is what is left, not what is lost.** A bar where the red grows as the enemy weakens
-  says the opposite of what it means.
-- **Neither card carries an element**, so both borders are the neutral mid grey. If the two
-  corners ever need telling apart by colour that is one entry in `cards.Element`, not a
-  change to either style.
-- **There is no loose sprite anywhere any more.** `drawCombatant`, `DrawHealthBar` and
-  `Combatant.Sprite` are gone, and `entities` imports no Ebitengine at all.
-- **Discards left lives on the Discard button, not on the duelist card** — see
-  `drawDiscardsLeft`. The card holds what is read between rounds, not what is watched during one.
-
-**The deck overlay is a dialog, and one of two in the game** — the fight log below is the other.
-
-**It is no longer this screen's** *(2026-08-22)*. It lives in `internal/screens/deckpanel.go` as a
-widget over a `deckContents` — cards you can still draw, cards that are spoken for, and who is
-holding them — because the reward screen and the shop both want it. This screen builds one with
-`fightContents`, which is the single place saying how a fight's three piles map onto the panel's
-two; the other two screens open it with a `deckToggle`, a 44px `D` in the bottom-right corner
-built to the Log button's shape and rules. **What did not move is the pile as a control**: clicking
-the stack of card backs is honest here because a draw pile exists, and between fights there is
-none.
-
-Everything below still describes the panel. It fills nearly the screen,
-everything behind it goes dead, and `Draw` renders the Deck button *again* on top of the
-overlay so the single live control is the only one that looks live. Pressing it closes it.
-There is no Escape key to fall back on and no right click, so a modal has to make its exit
-the brightest thing on screen or it is a trap.
-
-**There are no words at the top of it at all** *(owner's call, 2026-08-24)*. It had a title, a
-counts line reporting the three piles, and a legend explaining the dimming; all three are gone and
-the grid starts where they were — `modalBareBodyTop`, which clears the close button and nothing
-else, because the X is the only thing left up there. The panel is a picture of a deck and the cards
-say what they are, so a title naming what the player has just clicked to open, a total they can see
-laid out in front of them, and a sentence captioning the dimming were three captions on something
-that needed none. `modalHead` is a title or nothing now, and the hands panel is the only caller that
-still passes one.
-
-**Two toggles along its bottom edge, and three tallies under the grid** *(owner's call,
-2026-08-24)*. Both live in `internal/screens/deckpanel_view.go` on a `deckView`, which the panel's
-owner holds — `deckToggle` for the two screens between fights, `CombatScene.deckView` for this one.
-**Neither can change anything**: this is a reading preference over a picture of a deck, the same
-standing as the hand's sort column, so it was safe to build without asking what it does to the
-engine.
-
-- **`ALTERATIONS` / `AS OWNED` picks which face every card is drawn in**, and **alterations are the
-  default**. A run wearing a flip ring never draws a lightning card, so a panel opening on the list
-  the run owns would be showing a deck that does not exist for the length of that run. Both faces
-  are computed from the *owned* card, looked up by `combat.Card.ID` — the card in your hand carries
-  only the colour it became, deliberately, so the way back to the original is identity rather than
-  memory. See `deckContents.faceOf`.
-- **`AS OWNED` contradicts the screen around it, and that is accepted** *(owner's call)*. With a
-  flip ring worn, a card in your hand is drawn on this panel as lightning and two inches below on
-  the hand row as ice. It is inherent — the deck you own and the deck you play with are two
-  different decks, which is the whole reason the toggle exists. A legend said so for an afternoon
-  and went with the rest of the words; the latched button is what names the view now.
-- **`FULL` / `PLAYED` picks which half the tallies count and which half is lit.** It **inverts the
-  dimming and moves nothing**, which is the panel's governing idea applied to a second toggle: a
-  card does not move when it is played, it only dims. It is not drawn between fights, where there
-  is one pile and both states would be the same picture — `deckContents.inFight`.
-- **Each button names the state it is in, not the state pressing would reach.** A latched button
-  already says "this is on", so a label naming the other side would have the two contradicting each
-  other.
-- **The alterations button is live and latching even when it does nothing** *(owner's call)*. Most
-  runs wear no altering ring; a button that vanished then would be a control nobody learned
-  existed, and would leave a player unable to confirm that a ring they have just bought is doing
-  anything.
-- **Three tallies at once rather than a fourth toggle**: by form, by form and AP, and by element.
-  The question this panel is opened to answer is a comparison, and a player made to cycle between
-  the three has to hold two answers in their head while looking at the third. The middle one is the
-  block the other two cannot say — a form's row across the AP columns reads as a curve, and four
-  cheap stabs is a different deck from one dear one.
-- **The tallies count the laid-out grid, not the piles**, so both toggles reach them for free and
-  there is no second answer to "which cards is this panel about" to keep in step. `tallyOf` walks
-  `pileGridLayout.slots` and counts `lit`.
-- **The form marks are drawn untinted**, in `PaletteWhite`. A card's corner tints the same art by
-  the card's element; a tally row is about the form, and a coloured mark there would be claiming
-  one.
-- **A zero is written and faded, never left blank.** A blank cell reads as a column that does not
-  exist, and "I own no 4 AP crush" is exactly what a player opens this panel to find out.
-
-- **It draws the cards, not a table of counts.** A count cannot say which of six Strikes
-  are fire, and with elements on the cards that is most of what the panel is for.
-- **One grid holding both piles, discarded cards dimmed.** Sorting by kind and element
-  rather than by pile means **a card does not move when it is discarded, it only dims** —
-  the deck draining in place reads better than cards jumping between two lists.
-- **Sorted, never in pile order.** Drawing the shuffled draw pile in order would hand the
-  player their next five cards. The old counts-only version dodged this by construction; the
-  sort is what replaces that protection.
-- It draws a `+N more not shown` line rather than silently dropping overflow. It cannot fire
-  at twenty cards, but deckbuilding will grow the deck and a panel that quietly hid cards
-  would be a picture that lies about what you own.
-
-### The fight log, and the second dialog
-
-*`combat_log.go`, 2026-08-18.* A 44px square marked `L` beside the draw pile, sharing its bottom
-edge, opening a panel with every round of this fight written out in sentences.
-
-**It replaced the Resolution feed rather than joining it**, in two steps the same day: the log
-first, then the feed removed once it was clear the log held what the feed had been holding. That
-feed showed one round, cleared at the start of the next and had no scroll gesture to reach an
-earlier one — so a fight's account was something the player had to have been watching. That was
-survivable while it was the only thing narrating a round. It stopped being that: the table shows
-both hands, cards fly to their seats, the sum is acted out and the damage figure travels into the
-bar it empties. Once the pictures say what happened, a running list of sentences under them is a
-second telling costing a band of the screen, and what the sentences are *good* for is the thing
-the feed could not do — being read back.
-
-- **The walk was not rewritten.** `logRows(events)` is the feed's own walk: the prose, the merging
-  of an action with its outcome, the one line per slot. It knows nothing about capacity, overflow
-  or which row is live — those are properties of the box, and they stay with the caller. **That is
-  why a round reads here exactly as it read while it was happening.**
-- **The round in progress is included only as far as playback has reached**, the same slice the
-  feed drew and the same protection: the dialog can be opened mid-round, the resolved round is
-  sitting in `s.log` in full, and a log built from all of it would hand the player the rest of the
-  round they are watching.
-- **`CombatScene.rounds` holds events, not finished lines.** Storing sentences would freeze a
-  fight's account against the wording of the day it was played, and would be a second copy of
-  something the events already say. A round moves into it in `startRound`, as `log` is about to
-  stop being the current round. Appending at the end of playback instead would double it:
-  `log` still holds the finished round through the planning phase, and `fightLogRows` reads both.
-- **Headings belong to the caller.** `logRows` still ignores `KindRoundStart`/`KindRoundEnd`,
-  because only the caller knows whether a round has anything before it. A heading is a row with no
-  swatch and no verb, which `drawPane` centres.
-- **The two dialogs are mutually exclusive rather than stacked.** Each one's button is dead while
-  the other is up, so there is no way to open the second without closing the first — and each
-  survives its *own* overlay, because it is the only thing that closes one. `modalUp()` is the
-  single predicate every other control gates on; a button left live under a dialog is a round
-  edited through a panel the player is only reading.
-- **It takes the deck overlay's footprint and the Resolution pane's colours.** Two dialogs at two
-  sizes would read as two kinds of thing, and the off-white ground is what makes the coloured verbs
-  legible — the reason Resolution went light in the first place.
-- **What it does not do yet:** the log keeps only the newest rows a full panel can hold and reports
-  the rest as `... N earlier`, and it is a *fight* log rather than a run log — `Init` clears it.
-  Both are in `TODO.md`. Neither is fixable inside the panel: the first wants a scroll gesture the
-  input vocabulary has not got, the second wants the rounds moved onto `session.Session`.
-
-### The round narrates itself in pictures; the log holds the sentences
-
-*Split, then narrowed, then emptied.* The screen carried two live panes at once — one for what you
-had **queued** and one for what had **happened**. The first was dropped from `Draw` on 2026-08-07
-and deleted on 2026-08-21; the second was removed on 2026-08-18, when the fight log arrived to hold
-what it had been holding. What draws these rows now is the log, and nothing else does.
-
-**What is given up, and it is not nothing:** the enemy's queued shape during planning, and a
-running account of the round as it plays. The first matters less than it did, since the table has
-drawn the opponent's cards face up since 2026-08-12; the second is the trade the owner took — the
-table, the flights, the hand dialog and the travelling damage figure narrate a round in pictures,
-and the sentences are for reading back.
-
-**The prompt went with it.** `(press DUEL!)` was a line in the feed, and nothing carries it now;
-the button says DUEL! on its face, which is what has to be enough. **Nothing on screen says why a
-dark DUEL! button is dark** either — the AP bar going red says something is wrong, not what to do
-about it. That was already true and is now the only thing saying it.
-
-**A hand never has to be marked across non-adjacent slots**, which was the open problem for as
-long as a walking highlight down one row per slot was the only account of a round: the table keeps
-the cards that earned it raised, and the log says it in words. Same for a slot a chill deleted.
-
-**Short labels and sentences are not interchangeable**, which is why the log is a full-screen panel
-rather than a column: `Strike` fits a quarter of the width and "Duelist lands a Card Three of a
-Kind" does not.
-
-Four rules survive into the log, and they are the ones to protect:
-
-- **One line per slot, not one per event.** A busy round is 25–30 events. Merging an action with
-  its outcome is presentation of events the engine already decided; it computes nothing.
-- **Hands and chills get lines of their own**, because they are not something a card did.
-  Folding a hand into the line of the card that happened to start it would bury the one thing
-  worth reading.
-- **Built only from events playback has reached**, so nothing ever spoils the rest of a round in
-  progress. It was `s.log[:cursor+1]` in the feed and it is the same slice in `fightLogRows`.
-- **Overflow is reported, never silent** — `... N earlier`, the same rule as the deck overlay's
-  `+N more not shown`. A panel that quietly hides part of what it claims to show is a picture that
-  lies.
-
-**The caption stopped narrating long before the feed went** and there is no caption box at all
-now. It used to show one event at a time, which meant the whole account of a round existed only as
-a quarter-second flash.
-
-`panePlacement` carries its own `rowHeight` because the two panes hold different things:
-`paneRowHeight` (30) for card names, `paneTextRowHeight` (22) for sentences.
+### The shield row on the duelist card
+
+*`combat_shields.go` and `card_art.go`, 2026-08-31.* The player's three defend cards raise shields, and
+**one pip per shield is drawn in the seat the enemy card's status badges occupy** — same offsets,
+same box, so the two fighter cards stay twins. The pip is `assets/form/defend.png`, the mark the
+cards themselves carry, so what was raised and what is standing are the same picture.
+
+- **`shownShields` is a view, exactly like `shownLife`.** `Duelist.Shields` is not
+  written until the round's end state is adopted, so a row reading the model would fill a whole
+  opposing turn after the card that filled it and empty a whole turn after the attack that ate it.
+- **All three changes to the count are announced**: `KindRaised` when a card goes down,
+  `KindBlocked` each time one eats an attack, `KindExpired` when the unspent ones lapse. The last of
+  those exists *for this row* — without it the pips would keep drawing a defence the engine had
+  already taken away.
+- **It falls back to the model when no event this round has spoken**, which is what makes the
+  planning phase right: a shield raised at the end of the last round is standing while the player
+  builds this one, and nothing has fired yet.
+- **The engine caps a duelist at five shields**, which is exactly what the row can draw. That is not
+  a coincidence and not a clamp in the screen — see `Duelist.raiseShields`, which takes the cap for
+  its own reason and this row inherits it.
 
 ### The log writes sentences, and the verb is marked in the text
 
 *A line is `<who> <verb> <phrase>` — **"Duelist attacks with a
 heavy strike"** — and the verb is **coloured, bold and underlined**: **red for attack, blue for
-defend, the row's own ink for prepare**. A round can then be scanned for what *kind* of thing
+defend, the row's own ink for everything else**. A round can then be scanned for what *kind* of thing
 happened before any of it is read.
 
 **The hand line is the exception and has no verb.** It is an announcement — amber swatch,

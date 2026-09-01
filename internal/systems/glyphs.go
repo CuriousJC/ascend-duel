@@ -104,7 +104,7 @@ const (
 	// score's level is a bar on the settings screen and zero on it is the only silence there is.
 	GlyphGear
 
-	// The four form marks a card carries in its corner: a spear, a sword, an axe, a bulb.
+	// The four form marks a card carries in its corner: a spear, a sword, an axe, a shield.
 	//
 	// **Drawn rather than generated, and authored at 32.** The span language above describes a
 	// silhouette well and a spear's socket badly; and at 32 pixels the derived rim these would
@@ -113,7 +113,7 @@ const (
 	GlyphFormStab
 	GlyphFormSlash
 	GlyphFormCrush
-	GlyphFormPlan
+	GlyphFormDefend
 
 	// GlyphStone is a boulder, and it is the picture on a stone card and on the bag of rocks the
 	// shop sells them in.
@@ -137,7 +137,7 @@ func GlyphKinds() []GlyphKind {
 		GlyphDamage, GlyphActionPoints,
 		GlyphAttack, GlyphDefend, GlyphPrepare,
 		GlyphSound, GlyphMuted, GlyphGear,
-		GlyphFormStab, GlyphFormSlash, GlyphFormCrush, GlyphFormPlan,
+		GlyphFormStab, GlyphFormSlash, GlyphFormCrush, GlyphFormDefend,
 		GlyphStone,
 	}
 }
@@ -666,10 +666,10 @@ var glyphArt = map[GlyphKind]glyphArtwork{
 	GlyphAttack: {key: "shermansword_png", size: categoryArtSize},
 	GlyphDefend: {key: "shermanshield_png", size: categoryArtSize},
 
-	GlyphFormStab:  {key: "formstab_png", size: formArtSize, canvas: formArtSize},
-	GlyphFormSlash: {key: "formslash_png", size: formArtSize, canvas: formArtSize},
-	GlyphFormCrush: {key: "formcrush_png", size: formArtSize, canvas: formArtSize},
-	GlyphFormPlan:  {key: "formplan_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormStab:   {key: "formstab_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormSlash:  {key: "formslash_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormCrush:  {key: "formcrush_png", size: formArtSize, canvas: formArtSize},
+	GlyphFormDefend: {key: "formdefend_png", size: formArtSize, canvas: formArtSize},
 }
 
 // glyphCache holds rendered images, keyed by what was asked for. Building one walks a

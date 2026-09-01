@@ -40,7 +40,7 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, 
 	if a.Alive() && b.Alive() {
 		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, hands, rng)
 	} else {
-		b = expireDefenses(b)
+		events, b = expireDefenses(events, SideB, b, round)
 	}
 
 	// **A always burns before B**, which is the same order the turns were played in and needs no
@@ -71,11 +71,11 @@ func playTurn(
 	hands []Hand,
 	rng *rand.Rand,
 ) ([]Event, Duelist, Duelist) {
-	actor = expireDefenses(actor)
+	events, actor = expireDefenses(events, side, actor, round)
 
 	// A chill comes off the front, which needs no tie-break and so is the only pick that is
 	// deterministic without inventing a rule. **The front of a turn is its attacks** — the phase
-	// order puts them before the plans — so what a chill costs first is the blow, which is what
+	// order puts them before the defences — so what a chill costs first is the blow, which is what
 	// makes it worth planning around rather than merely suffering.
 	//
 	// **The action points are not refunded.** They were committed when the cards were queued,
@@ -118,10 +118,10 @@ func playTurn(
 	// Strikes are not five hits; they are one Four of a Kind.
 	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, round, hands, rng)
 
-	// **The plan phase comes second, and that is what a defence needs** *(2026-08-15)*. A Defend
-	// answers the *opponent's* blow, and the opponent acts after this turn ends — so a defence
-	// raised at the end of a turn is the only one that is standing when anything is aimed at it.
-	// Prepare and Plan both bank for the round after and do not care where they sit.
+	// **The defend phase comes second, and that is what a defence needs** *(2026-08-15)*. A guard
+	// and a shield both answer the *opponent's* blow, and the opponent acts after this turn ends —
+	// so a defence raised at the end of a turn is the only one that is standing when anything is
+	// aimed at it.
 	//
 	// **It is skipped if either side fell**, since a corpse raising a shield is a line in the log
 	// nobody wants and a duel that is over does not need one.
@@ -129,14 +129,14 @@ func playTurn(
 		return events, actor, target
 	}
 	for _, slot := range turn {
-		if slot.Card.Category() != CategoryPlan {
+		if slot.Card.Category() != CategoryDefend {
 			continue
 		}
-		events, actor, target = resolvePlan(events, side, actor, target, slot.Card, round)
+		events, actor, target = resolveDefend(events, side, actor, target, slot.Card, round)
 	}
 
 	// **The turn is closed after everything in it has resolved**, which is what makes "a turn with
-	// no plan card in it" a question this can answer. A duelist who fell mid-turn returns above and
+	// no defend card in it" a question this can answer. A duelist who fell mid-turn returns above and
 	// never reaches this: a streak is a fact about turns taken, and a corpse takes none.
 	actor = actor.TurnTaken(cardsOf(turn))
 
@@ -152,10 +152,10 @@ func cardsOf(turn []Slot) []Card {
 	return out
 }
 
-// resolvePlan runs one plan card. **The plans are the only cards that still resolve one at a
-// time**, because each does something to its own duelist rather than contributing to a shared
+// resolveDefend runs one card of the second phase. **They are the only cards that still resolve one
+// at a time**, because each does something to its own duelist rather than contributing to a shared
 // blow.
-func resolvePlan(
+func resolveDefend(
 	events []Event,
 	side Side,
 	actor, target Duelist,
@@ -170,28 +170,21 @@ func resolvePlan(
 		Round:   round,
 	})
 
-	// **The switch is on the verb, not on the card** *(2026-08-16)*. It used to name Prepare, Plan
-	// and Defend one at a time, which meant an enemy's `Congeal` could not shield anything however
-	// obviously it was a defence. Three verbs, any number of cards.
+	// **The switch is on the verb, not on the card** *(2026-08-16)*. It used to name the player's
+	// three cards one at a time, which meant an enemy's `Congeal` could not guard anything however
+	// obviously it was a defence. Two verbs, any number of cards.
 	spec := card.Spec()
 	switch spec.Verb {
-	case VerbBank:
-		actor.GatheredAP += card.Amount()
+	case VerbShield:
+		// Raised, not spent. Each one eats a whole incoming attack when the opponent swings — see
+		// blockedByShield, and Duelist.Shields for when they expire.
+		actor = actor.raiseShields(card.Amount())
 		events = append(events, Event{
-			Kind:   KindGathered,
+			Kind:   KindRaised,
 			Side:   side,
+			Action: card.Concept,
 			Amount: card.Amount(),
-			Round:  round,
-		})
-
-	case VerbDraw:
-		// **Recorded, not drawn.** There is no deck in this package; what is banked here is honoured
-		// by whoever holds one when the round is over. See Duelist.BonusDraw.
-		actor.DrewCards += card.Amount()
-		events = append(events, Event{
-			Kind:   KindDrew,
-			Side:   side,
-			Amount: card.Amount(),
+			Life:   actor.Shields,
 			Round:  round,
 		})
 
@@ -204,18 +197,32 @@ func resolvePlan(
 	return events, actor, target
 }
 
-// expireDefenses drops everything the previous turn put up. Called at the start of a
-// side's own turn, never at the round boundary — side B acts last, so a defense cleared
-// at the boundary would have protected B from nothing at all.
+// expireDefenses drops everything the previous turn put up — guards and shields alike. Called at
+// the start of a side's own turn, never at the round boundary — side B acts last, so a defense
+// cleared at the boundary would have protected B from nothing at all.
+//
+// **This is the whole of "a shield lasts the turn after it was played".** Raised at the end of
+// your turn, standing through the opponent's, gone before you act again.
 //
 // The clearing itself is ClearDefenses, which the combat screen also calls between fights; the
 // timing rule is what lives here.
-func expireDefenses(d Duelist) Duelist { return ClearDefenses(d) }
+func expireDefenses(events []Event, side Side, d Duelist, round int) ([]Event, Duelist) {
+	// **The announcement is for the shields alone**, because they are the only half of this the
+	// screen draws. A guard lapsing unspent has no readout to correct, and a beat with no picture
+	// is the thing the choreography table exists to refuse.
+	if d.Shields > 0 {
+		events = append(events, Event{
+			Kind:   KindExpired,
+			Side:   side,
+			Target: side,
+			Amount: d.Shields,
+			Round:  round,
+		})
+	}
+	return events, ClearDefenses(d)
+}
 
-// endRound rolls what was banked this round into next round's budget, ticks a burn, and counts
-// every status down one. Assignment rather than addition for the bank: two Prepares in one round
-// are worth +4 next round, and preparing every round is worth a flat +2 rather than compounding
-// forever.
+// endRound ticks a burn and counts every status down one.
 //
 // **The burn ticks before the countdown**, so a fire hit lands damage at the end of the round it
 // was struck in as well as the round after. MECHANICS.md says a DoT "lands at end of round" and
@@ -265,15 +272,7 @@ func endRound(events []Event, side Side, d Duelist, round int) ([]Event, Duelist
 		}
 	}
 
-	d = tickStatuses(d)
-
-	d.BonusAP = d.GatheredAP
-	d.GatheredAP = 0
-
-	// Same shape and the same reason: assignment, so a Plan widens exactly one hand.
-	d.BonusDraw = d.DrewCards
-	d.DrewCards = 0
-	return events, d
+	return events, tickStatuses(d)
 }
 
 // resolveAttackPhase is the whole of one side's offence: every attack card it queued, the hand
@@ -369,6 +368,16 @@ func resolveAttackPhase(
 		return events, actor, target
 	}
 
+	// **A shield eats the blow whole, before any of the arithmetic below runs.** One blow is one
+	// attack, so one shield is the whole turn — see blockedByShield, which says why that is safe
+	// today and what would stop it being so.
+	if blocked := false; target.Shields > 0 {
+		events, target, blocked = blockedByShield(events, side, target, turn[blow.Cards[0]].Card, round)
+		if blocked {
+			return events, actor, target
+		}
+	}
+
 	// **Base damage is the cards in the hand, and the multiplier is DMG on top.** DMG is what one
 	// Strike deals at this duelist's strength, which is the figure the duelist card shows — so
 	// `20 + 10 x 1.5 = 35` for a pair of Strikes at Str 10, exactly as the design states it.
@@ -450,6 +459,36 @@ func resolveAttackPhase(
 	}
 
 	return events, actor, target
+}
+
+// blockedByShield spends one of the target's shields against one incoming attack, and reports
+// whether the attack was eaten. A blocked attack lands nothing at all: no damage, no life change,
+// and no KindDamage for the feed to draw.
+//
+// **It is checked before weight, vulnerability and the guards** — everything downstream shapes a
+// figure, and a blocked attack never produces one. Ordering it after them would spend a shield on
+// arithmetic nobody sees.
+//
+// **A hand-forming attacker costs exactly one shield, and that deletes its whole turn.** Nothing
+// in the game reaches it — every creature is a solo attacker and no creature holds shields, so the
+// only shielded duelist is the player and the only thing swinging at them resolves card by card.
+// It is written down rather than guarded against because the day an enemy forms hands is the day
+// this becomes the dominant strategy maxDefendPct exists to forbid, and a silent branch would not
+// say so.
+func blockedByShield(events []Event, side Side, target Duelist, card Card, round int) ([]Event, Duelist, bool) {
+	target, spent := target.spendShield()
+	if !spent {
+		return events, target, false
+	}
+	events = append(events, Event{
+		Kind:   KindBlocked,
+		Side:   other(side),
+		Action: card.Concept,
+		Target: other(side),
+		Amount: target.Shields,
+		Round:  round,
+	})
+	return events, target, true
 }
 
 // applyDefends runs every card the target has raised over one incoming blow and reports what is
@@ -548,6 +587,17 @@ func resolveSoloAttacks(
 				Round:   round,
 			})
 			continue
+		}
+
+		// **One shield, one attack** — spent before anything is computed, so a blocked card lands
+		// nothing and says so in its own kind. This is the seat the whole mechanic was built for:
+		// a creature turn is several discrete blows, and shields are how many of them the player
+		// decided to take.
+		if blocked := false; target.Shields > 0 {
+			events, target, blocked = blockedByShield(events, side, target, slot.Card, round)
+			if blocked {
+				continue
+			}
 		}
 
 		dmg := blunt(actor.CardDamage(slot.Card), actor.weight())

@@ -27,10 +27,10 @@ import (
 // the sheet, because a bare "S" in a corner is obvious to whoever wired it and opaque a month
 // later — and doubly so for Slash, which carries a D.
 var formNotes = map[cards.Form]string{
-	cards.FormStab:  `a spear, tinted by the card's element`,
-	cards.FormSlash: `a sword, tinted by the card's element`,
-	cards.FormCrush: `an axe, tinted by the card's element`,
-	cards.FormPlan:  `a bulb, tinted by the card's element`,
+	cards.FormStab:   `a spear, tinted by the card's element`,
+	cards.FormSlash:  `a sword, tinted by the card's element`,
+	cards.FormCrush:  `an axe, tinted by the card's element`,
+	cards.FormDefend: `a shield, tinted by the card's element`,
 }
 
 // concept is one of the eighteen, with the cost, form and effect text the rules give it.
@@ -44,7 +44,7 @@ type concept struct {
 }
 
 // The eighteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
-// of five tiers, then the plans.
+// of five tiers, then the defences.
 //
 // **Three forms by five tiers, and the tiers cost and hit the same in each** *(2026-08-24)*.
 // 0 AP is a quarter, 1 AP is half, 2 AP is one, 3 AP is two, 4 AP is four, in Stab and Slash and
@@ -78,9 +78,9 @@ var concepts = []concept{
 	{"Smash", cards.FormCrush, 3, "Crushes for 2x DMG"},
 	{"Pulverize", cards.FormCrush, 4, "Crushes for 4x DMG"},
 
-	{"Prepare", cards.FormPlan, 1, "Bank 2 AP for next round"},
-	{"Plan", cards.FormPlan, 2, "Draw 2 cards next round"},
-	{"Defend", cards.FormPlan, 3, "Halve damage this turn"},
+	{"Ward", cards.FormDefend, 1, "1 shield"},
+	{"Brace", cards.FormDefend, 2, "2 shields"},
+	{"Guard", cards.FormDefend, 3, "3 shields"},
 }
 
 // realCards is **all eighteen concepts at hand size**, one element after another so the row

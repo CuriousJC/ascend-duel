@@ -355,7 +355,7 @@ func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 func TestTheLadderCountsAttacksAlone(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Prepare, Prepare, Prepare), nil, 1)
+	events, _, _ := resolve(a, b, PlainCards(Brace, Brace, Brace), nil, 1)
 
 	if got := handsFormed(events, SideA); len(got) != 0 {
 		t.Fatalf("three plans formed %v, want nothing", got)
@@ -540,7 +540,9 @@ func TestChilledCardsCannotFormAHand(t *testing.T) {
 func TestIceLandedByBBitesInTheFollowingRound(t *testing.T) {
 	a, b := duelist(10, 4, 20000), wearing(duelist(10, 4, 20000), Ice)
 
-	r1, a1, b1 := resolve(a, b, PlainCards(Prepare), []Card{Of(Strike, Ice)}, 1)
+	// **A queues nothing**, deliberately: a shield would eat B's Strike whole and the ice would
+	// never land, which is a test about shields rather than about when a chill bites.
+	r1, a1, b1 := resolve(a, b, nil, []Card{Of(Strike, Ice)}, 1)
 
 	if lost := chilledActions(r1, SideA); len(lost) != 0 {
 		t.Fatalf("A already acted, so nothing can be taken from it this round, got %v", lost)
@@ -626,7 +628,7 @@ func TestARoundWithNoRandomnessIsDeterministic(t *testing.T) {
 func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 	a, b := wearing(duelist(10, 4, 20000), Ice), duelist(10, 4, 20000)
 	aPlan := []Card{Of(Strike, Ice), Of(Strike, Ice), Of(Strike, Ice)}
-	bPlan := PlainCards(Prepare, Jab, Strike, Defend)
+	bPlan := PlainCards(Brace, Jab, Strike, testGuard)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
 	order := ResolutionOrder(aPlan, bPlan)

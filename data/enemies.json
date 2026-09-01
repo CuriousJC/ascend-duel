@@ -173,13 +173,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Recharge",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -220,13 +213,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Roost",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -267,13 +253,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Skitter",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -314,13 +293,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Cower",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -453,13 +425,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Hover",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -638,13 +603,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Recharge",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -776,13 +734,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Reboot",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -915,13 +866,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Circle",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -962,13 +906,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Spin",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -1009,13 +946,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Roost",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -1147,13 +1077,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Circle",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -1333,13 +1256,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Skulk",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -1379,13 +1295,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Adapt",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -1425,13 +1334,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Harden",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -1563,13 +1465,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Reboot",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -1610,13 +1505,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Blink",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -1842,13 +1730,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Circle",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -1934,13 +1815,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Steep",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2072,13 +1946,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Adapt",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2166,13 +2033,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Blink",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2212,13 +2072,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Reboot",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2489,13 +2342,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Spin",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -2720,13 +2566,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Adapt",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2858,13 +2697,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Reboot",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2905,13 +2737,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Coil",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -2997,13 +2822,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Phase",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -3181,13 +2999,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Reload",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -3365,13 +3176,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Reload",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -3550,13 +3354,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Reform",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -3596,13 +3393,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Spin",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -3827,13 +3617,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 1
-      },
-      {
-        "Label": "Reload",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 2
       }
     ]
   },
@@ -3920,13 +3703,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Phase",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -4012,13 +3788,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Regrow",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -4152,13 +3921,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Wing Guard",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -4291,13 +4053,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Reform",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },
@@ -4337,13 +4092,6 @@
         "Amount": 200,
         "Cost": 3,
         "Copies": 2
-      },
-      {
-        "Label": "Drift",
-        "Verb": "bank",
-        "Amount": 2,
-        "Cost": 1,
-        "Copies": 3
       }
     ]
   },

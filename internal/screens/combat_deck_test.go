@@ -94,7 +94,7 @@ func TestFormRankIsIndependentOfTheEnumsOwnOrder(t *testing.T) {
 	// formRank is written out rather than read off the enum, because the enum's order is what
 	// an expanded hand ID is derived from and that is a rule. This asserts the display order is
 	// what was asked for, and will fail if someone "simplifies" it back to the enum.
-	want := []combat.Form{combat.FormStab, combat.FormSlash, combat.FormCrush, combat.FormPlan}
+	want := []combat.Form{combat.FormStab, combat.FormSlash, combat.FormCrush, combat.FormDefend}
 	for i, f := range want {
 		if got := formRank(f); got != i {
 			t.Errorf("%s ranks %d, want %d", f, got, i)
@@ -103,8 +103,8 @@ func TestFormRankIsIndependentOfTheEnumsOwnOrder(t *testing.T) {
 
 	// The opponent's formless cards sort last rather than colliding with a real form — they
 	// are never in the player's deck, so what matters is only that they do not land inside it.
-	if got := formRank(combat.FormNone); got <= formRank(combat.FormPlan) {
+	if got := formRank(combat.FormNone); got <= formRank(combat.FormDefend) {
 		t.Errorf("FormNone ranks %d, at or before the plans at %d",
-			got, formRank(combat.FormPlan))
+			got, formRank(combat.FormDefend))
 	}
 }

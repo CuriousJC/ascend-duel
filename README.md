@@ -52,7 +52,7 @@ nothing.
 
 | | |
 |---|---|
-| 18 duelist cards | four forms — stab, slash, crush and plan — across five elements |
+| 18 duelist cards | four forms — stab, slash, crush and defend — across five elements |
 | 19 hands | three axes: concept, form and element, wearing poker's names |
 | 58 rings | bought and sold in the shop, priced by rarity |
 | 11 worms | each rewrites one card in your deck after a win |

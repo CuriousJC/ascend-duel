@@ -182,7 +182,7 @@ func enemySeatAt(gs *state.GlobalState, n, total, split int) image.Point {
 // a row with no plans in it, which `groupGapFor` reads as "no break".
 func splitOf(cards []combat.Card) int {
 	for i, c := range cards {
-		if c.Category() == combat.CategoryPlan {
+		if c.Category() == combat.CategoryDefend {
 			return i
 		}
 	}
@@ -192,7 +192,7 @@ func splitOf(cards []combat.Card) int {
 // playedSplit and enemySplit are splitOf over the two rows' own card lists.
 func (s *CombatScene) playedSplit() int {
 	for i, r := range s.theatre.resolved {
-		if r.card.Category() == combat.CategoryPlan {
+		if r.card.Category() == combat.CategoryDefend {
 			return i
 		}
 	}
@@ -201,7 +201,7 @@ func (s *CombatScene) playedSplit() int {
 
 func (s *CombatScene) enemySplit() int {
 	for i, d := range s.theatre.enemyDealt {
-		if d.card.Category() == combat.CategoryPlan {
+		if d.card.Category() == combat.CategoryDefend {
 			return i
 		}
 	}

@@ -321,7 +321,7 @@ func (s Spec) atState(base color.RGBA) color.RGBA {
 func identity(c color.RGBA) color.RGBA { return c }
 
 // drawForm marks the card's form in the corner above the cost stack: a spear, a sword, an axe
-// or a bulb, for stab, slash, crush and plan.
+// or a shield, for stab, slash, crush and defend.
 //
 // **It replaced the phase glyph** *(2026-08-15)*. The sword, shield and open book named which
 // phase a card resolved in, and with the deck rebuilt on three attack forms that fact became

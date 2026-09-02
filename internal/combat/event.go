@@ -238,6 +238,19 @@ type Event struct {
 	// A fixed array for the reason HandCards is one: Event has to stay comparable.
 	HandAmounts [maxHandTerms]int
 
+	// HandCardBase is what each landing was worth **before any worn ring touched it** — the card's
+	// own damage at the wielder's DMG, with an echo's fraction already taken off.
+	//
+	// **It is here so the sum can be written the way it is worked out** *(owner's call,
+	// 2026-09-02)*: `10 + 10 + (10 x 2) x 2.5 = 100` rather than `10 + 10 + 20 x 2.5 = 100`. The
+	// ring's figure is beside the term it priced everywhere else — on the card in the hand dialog,
+	// on the term line in the ledger — and the sum was the one place it was silently folded in.
+	//
+	// **A screen may not divide HandAmounts by HandRingScale to get it back.** Every ring rounds
+	// and CardDamage floors at 1, so the quotient is wrong exactly where the arithmetic is
+	// interesting. That is the reason this is a field rather than a reading of two others.
+	HandCardBase [maxHandTerms]int
+
 	// EchoTerms is how many of those terms are echoes rather than cards — the tail of the list.
 	// Zero on almost every blow. It is here so a screen can say *why* one card paid three terms
 	// without re-deriving the ring that did it.

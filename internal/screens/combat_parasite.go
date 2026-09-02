@@ -45,29 +45,24 @@ import (
 // The button that opens the bucket.
 //
 // **`P` on a 44px square**, the shape every dialog opener on this screen takes, and a letter that
-// does not collide with the `L` beside the pile or the `$`/`T`/`E` of the sort column.
+// does not collide with the `$`/`T`/`E` of the sort column or the `L` the frame's ledger button
+// carries in the other corner.
 const (
 	parasiteToggleLabel = "P"
 	parasiteToggleText  = 30
-
-	// The gap between this button and the Log button under it. The same 10 two toggles standing
-	// together take everywhere else.
-	parasiteButtonUp = modalToggleGap
 )
 
-// parasiteButtonPlace is where it stands: **directly above the Log button, sharing its column.**
+// parasiteButtonPlace is where it stands: **the slot beside the draw pile**, which the fight log's
+// button held until the ledger became chrome and left it empty *(2026-09-02)*.
 //
-// **Stacked rather than added to the bottom strip**, which is deliberate and is the cheap half of
-// a decision the owner has said he wants to move later. `buttonStripSlots` measures the strip's
-// span from the AP figure to the Log button and divides what is left in three; putting a fifth
-// control on that line would re-space Discard and DUEL! as a side effect of adding a bucket. The
-// air above the Log button is empty — the hand row ends well clear of it — so a square there costs
-// nothing and moves nothing.
+// **Not added to the bottom strip**, which is deliberate: `buttonStripSlots` measures the strip's
+// span from the AP figure to this slot and divides what is left in three, so putting another
+// control on that line would re-space Discard and DUEL! as a side effect of adding a bucket.
 func parasiteButtonPlace(gs *state.GlobalState) image.Point {
-	log := logButtonRect(gs)
+	slot := pileSlotRect(gs)
 	return image.Pt(
-		log.Min.X+logButtonSize/2,
-		log.Min.Y-parasiteButtonUp-logButtonSize/2,
+		slot.Min.X+pileSlotSize/2,
+		slot.Min.Y+pileSlotSize/2,
 	)
 }
 
@@ -103,7 +98,7 @@ type parasiteToggle struct {
 // `Init` runs again on every fight, and arriving in a duel with the bucket open would be a dialog
 // nobody asked for.
 func (s *CombatScene) initParasites() {
-	s.parasites.modalToggle.init(parasiteToggleLabel, logButtonSize, logButtonSize,
+	s.parasites.modalToggle.init(parasiteToggleLabel, pileSlotSize, pileSlotSize,
 		parasiteToggleText, parasiteButtonPlace)
 	s.parasites.disarm()
 }
@@ -126,7 +121,7 @@ func (t *parasiteToggle) dismiss() {
 // round is playing back. `blocked` is the same field another dialog sets, and it neither runs nor
 // draws the button, which is what stops a control being lit for something the player cannot do.
 func (s *CombatScene) updateParasites(gs *state.GlobalState) bool {
-	s.parasites.block(s.showDeck || s.showLog || s.hands.open || !s.canSpendParasites(gs))
+	s.parasites.block(s.showDeck || s.hands.open || !s.canSpendParasites(gs))
 	if !s.parasites.open {
 		s.parasites.disarm()
 		s.parasites.shown = nil

@@ -314,7 +314,7 @@ type handsToggle struct {
 // init wires the button wherever the screen wants it. A screen with a hand on it has somewhere
 // better than the corner; see handsButtonPlace on the combat scene.
 func (t *handsToggle) init(place func(gs *state.GlobalState) image.Point) {
-	t.modalToggle.init(handsToggleLabel, handsButtonWidth, logButtonSize, handsButtonText,
+	t.modalToggle.init(handsToggleLabel, handsButtonWidth, pileSlotSize, handsButtonText,
 		place)
 }
 

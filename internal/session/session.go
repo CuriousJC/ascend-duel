@@ -104,6 +104,11 @@ type Session struct {
 	// `stones`, which is saved.
 	granted []Stone
 
+	// ledger is the run's account of itself: every fight, round by round, in already-worded
+	// lines. **Run-level because that is the whole feature** — it used to be this fight's events
+	// on the combat screen, thrown away by the next Init. See ledger.go.
+	ledger Ledger
+
 	// tutorial is the teaching run, or nil for a run nobody is being taught. See tutorial.go for
 	// why a step cursor belongs to the run rather than to the screen that happens to be up.
 	tutorial *tutorial.Run

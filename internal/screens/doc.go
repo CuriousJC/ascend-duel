@@ -274,22 +274,21 @@
 //   - combat_parasite.go — the bucket: the board piece a parasite is spent from, behind the P
 //     button above the fight log. Two stages — pick a parasite, pick the cards out of the hand —
 //     and live only while planning(), because a round is resolved before it is drawn.
-//   - combat_log.go — the fight log, and the button beside the draw pile that opens it
-//     (2026-08-18). Every round of the fight in sentences, on the deck overlay's own footprint. It
-//     replaced a live feed rather than joining it: that feed held one round, cleared at the start
-//     of the next and could not be scrolled back, so a fight's account was something the player
-//     had to have been watching — and with the table, the flights, the mathbox and the travelling
-//     damage figure all narrating, a running list of sentences under them was a second telling
-//     costing a band of the screen. It is the second dialog in the game and obeys the first one's
-//     rules — a scrim, state.ModalOpen, every other control dead, and the button that opened it
-//     drawn again on top, because there is no Escape key and no right click. Three things it
-//     settles: the walk was not rewritten, logRows is the feed's own, which is why a round reads
-//     here exactly as it read while it happened; the round in progress is included only as far as
-//     playback has reached, since the dialog can be opened mid-round and the resolved log holds
-//     the rest of it; and the two dialogs are mutually exclusive rather than stacked, each one's
-//     button being dead while the other is up, which is what modalUp is for. CombatScene.rounds
-//     holds the finished rounds as events rather than as finished lines — storing sentences would
-//     freeze a fight's account against the wording of the day it was played. What the log still
-//     cannot do — keep more than a panel holds, or survive the fight — is in TODO.md.
+//   - combat_pileslot.go — the square beside the draw pile, and modalUp. The fight log's button
+//     used to stand there; what is left is the geometry, which four other controls are placed
+//     against.
+//   - ledger.go — the run's account of itself, and the panel that reads it back (2026-09-02).
+//     Every fight, folded to a line each, with the fight in progress opened out; a dragged
+//     scrollbar, because the input vocabulary has no wheel; and the arithmetic under every blow,
+//     term by term, with the ring that priced each one named beside it. It replaced the fight log,
+//     which held one fight, could not be scrolled, and dropped its oldest rows. **It is chrome
+//     rather than a scene** — internal/game holds it — for two reasons: it is wanted on every
+//     screen, and a screen could not be one, since leaving the combat screen and coming back
+//     re-runs Init and deals a fresh duel. See session/ledger.go for why the run keeps worded
+//     lines rather than the events they came from, and prose_terms.go for the working.
+//   - combat_ledger.go — the three call sites that put a duel into that account: a fight opening,
+//     a round finishing, a duel settling.
+//   - prose_terms.go — a blow's working: one line per landing, what the card was worth, and which
+//     ring bought or priced it. Every figure comes off the event, exactly as the hand dialog's do.
 //   - seeds.go — the named opening-hand catalogue.
 package screens

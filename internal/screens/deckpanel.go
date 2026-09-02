@@ -138,7 +138,7 @@ type deckToggle struct {
 
 // init wires the button into the corner it stands in.
 func (t *deckToggle) init() {
-	t.modalToggle.init(deckToggleLabel, logButtonSize, logButtonSize, logButtonTextSize,
+	t.modalToggle.init(deckToggleLabel, pileSlotSize, pileSlotSize, pileSlotTextSize,
 		cornerSlot(0))
 }
 

@@ -166,7 +166,7 @@ func TestTheButtonStripSharesItsSpaceEvenly(t *testing.T) {
 	const discardWidth, duelWidth = stripButtonWidth, stripButtonWidth
 	discardX, duelX := buttonStripSlots(gs, discardWidth, duelWidth)
 
-	figure, corner := apFigureRight(gs), logButtonRect(gs).Min.X
+	figure, corner := apFigureRight(gs), pileSlotRect(gs).Min.X
 	before := discardX - discardWidth/2 - figure
 	between := duelX - duelWidth/2 - (discardX + discardWidth/2)
 	after := corner - (duelX + duelWidth/2)

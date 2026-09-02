@@ -175,6 +175,16 @@ const maxDefendPct = 99
 // what stops that is the action budget, exactly as it stops nine attacks.
 const maxShields = baseMaxActions
 
+// MaxShields is the same number for a caller outside this package.
+//
+// **The screen needs it because it draws a shield before the engine raises one** *(2026-09-02)*: a
+// defend card's pips fly to the duelist card on the beat that card is scored into the hand, which
+// is the attack phase — several beats before the defend phase raises them. The flight predicts,
+// and a prediction has to know the ceiling the raise will be held to or it can draw a sixth pip on
+// a row that holds five. See screens.shieldFlight, and Duelist.raiseShields, which is the cap
+// itself.
+const MaxShields = maxShields
+
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves
 // in the attack phase and everything else in the defend phase. A fire Guard and a plain Guard are
 // both defences — the element never moves a card between phases.

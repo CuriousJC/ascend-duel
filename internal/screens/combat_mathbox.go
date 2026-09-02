@@ -203,11 +203,22 @@ var (
 // the word: `PAIR!` and `1.5` are one fact said twice, and a figure that leaves a pink word in
 // yellow reads as a second thing appearing rather than as that word's own number setting off.
 //
-// It is the screen's existing pink — `paneEdge`'s value — rather than a fifth hue, and that is
-// worth knowing rather than hiding: pink already means "ring" on this screen (the ring row's
-// borders) and "pane chrome" in the panels. Nothing puts a ring card and the hand's name side by
-// side, but that is the question to answer if a third pink is ever proposed.
-var handNameInk = color.RGBA{R: 235, G: 105, B: 170, A: 255}
+// **It stopped being a hue at all on 2026-09-02** *(owner's call)*, and this is the rule the
+// screen's palette now runs on: **hue belongs to the elements**, and a hand is not one.
+//
+// It was the screen's pink, which is also `boostInk` — a *ring's* figure — so a hand's multiplier
+// and a ring's multiplier arrived in one colour in the same sum, in the one place the player is
+// trying to tell them apart. Deep purple fixed that and immediately collided with arcane, which
+// was the moment the real problem was visible: the wheel is full. Fire, ice, lightning, earth and
+// arcane take five hues, ring takes pink, the two verbs take red and blue, the two sides take
+// green and grey. There is no unclaimed hue, and every candidate is a near-collision waiting to be
+// re-litigated.
+//
+// **So a hand is marked by weight and by the amber swatch on its row, not by colour.** Nothing
+// else in a pane is heavy, the shout is eighty points, and two of the three axes a hand counts on
+// — concept and form — have nothing to do with elements in the first place. It takes the ground's
+// own ink: the colour text on this screen is written in when nothing is claiming it.
+var handNameInk = groundInk
 
 // mathItem is one thing written on the line: a card's figure, an operator, the multiplier, or
 // the answer.
@@ -242,6 +253,15 @@ type mathItem struct {
 	// cardSeat is the played card this item's figure flies out of, plus one, on the same
 	// convention. Filled by `startHandMath`, which is the half of the box that knows the table.
 	cardSeat int
+
+	// shields is how many pips this term's card raises, and 0 for a card that raises none. **It is
+	// on the item rather than worked out when the flight is raised** because this is where the
+	// script already knows which card paid which term — see startHandMath.
+	shields int
+
+	// shieldsFlown says the pips have already set off, so an item held on screen for its whole
+	// beat cannot launch them once a frame.
+	shieldsFlown bool
 
 	// shakeRings are worn seats that shake as this item runs without their figure being the one
 	// flying: the echo ring behind an extra landing, which buys a *term* rather than a multiplier
@@ -482,6 +502,13 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 			seat := e.HandCards[term]
 			box.items[i].from = s.handCardCentre(gs, e.Side, seat)
 			box.items[i].tint = s.handCardInk(e.Side, seat)
+
+			// **A defend card's pips leave with its figure** *(owner's call, 2026-09-02)*. A
+			// defence in a hand pays a 0 into the sum, so without this the card appears to do
+			// nothing at the one moment it is the thing being read — and what it did turns up
+			// several beats later, in the defend phase, on a card the player has stopped watching.
+			// See combat_shields.go.
+			box.items[i].shields = s.shieldsRaisedBy(e.Side, seat)
 			term++
 			continue
 		}
@@ -861,6 +888,35 @@ func (b *handMathBox) tick() {
 		return
 	}
 	b.hold.tick()
+}
+
+// takeShields hands back the pips owed by the item now running, once.
+//
+// **Asked on the beat the item starts rather than when it ends**, so the pips and the figure leave
+// the card together: they are two things one card did, and staggering them would make the shield
+// look like a consequence of the sum rather than of the card.
+func (b *handMathBox) takeShields() (int, bool) {
+	if !b.active || b.at >= len(b.items) {
+		return 0, false
+	}
+	it := &b.items[b.at]
+	if it.shields <= 0 || it.shieldsFlown {
+		return 0, false
+	}
+	it.shieldsFlown = true
+	return it.shields, true
+}
+
+// runningSeat is the played seat the item now running belongs to, and false for an item that
+// belongs to no card — an operator, the multiplier, the total.
+func (b *handMathBox) runningSeat() (int, bool) {
+	if !b.active || b.at >= len(b.items) {
+		return 0, false
+	}
+	if seat := b.items[b.at].cardSeat; seat > 0 {
+		return seat - 1, true
+	}
+	return 0, false
 }
 
 // clear takes the box down. Called when the script finishes and whenever a round or a fight

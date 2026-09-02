@@ -51,6 +51,13 @@ type Game struct {
 	// Built lazily in Update, because it needs nothing from a scene and nothing from a
 	// window, and NewGame runs before assets and fonts are loaded.
 	settingsButton *models.Button
+
+	// ledgerButton opens the run's account, and ledger is the panel it opens. **Both are chrome
+	// for the same reason the cog is** — true for the whole run, wanted on every screen, owned by
+	// no scene — and the panel could not have been a screen at all: navigating away from the
+	// combat screen and back re-runs its Init, which deals a fresh duel. See chrome.go.
+	ledgerButton *models.Button
+	ledger       screens.LedgerPanel
 }
 
 func NewGame() *Game {
@@ -114,6 +121,19 @@ func (g *Game) Update() error {
 
 	scene := g.scene()
 
+	// **The ledger owns the frame while it is up, and the scene is not updated at all.** It is a
+	// panel over every screen rather than one screen's dialog, so there is no scene to set
+	// state.ModalOpen and no scene that could be trusted to go inert for it. What that costs is
+	// pacing — a duel's playback stops while the account is open — which is the same thing every
+	// dialog on the combat screen already does and, like all of them, cannot change an outcome:
+	// ResolveRound decided the round before any of it was drawn.
+	if g.ledger.IsOpen() {
+		g.GlobalState.ModalOpen = false
+		g.GlobalState.InputGated = false
+		g.ledger.Update(g.GlobalState)
+		return nil
+	}
+
 	// One-shot init on entering a screen. Doing it here rather than inside each
 	// scene's Update means no scene has to remember the NewScreen dance.
 	if g.GlobalState.NewScreen {
@@ -161,6 +181,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// The frame, over the screen it frames. See chrome.go for why the mute button lives here
 	// rather than on four scenes, and why it stands down over a dialog.
 	g.drawChrome(g.GlobalState, screen)
+
+	// **Over the chrome as well as the screen**, because it covers both: the cog stands down under
+	// it the way it does under any dialog, and the panel's own X is the way out.
+	g.ledger.Draw(g.GlobalState, screen)
 
 	// Debug Info will front-run everything and is drawn last on the screen
 	if g.GlobalState.DebugPlacement {

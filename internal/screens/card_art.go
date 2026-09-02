@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/png"
 	"log"
 	"strconv"
@@ -333,7 +334,8 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
 // `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
-func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vitae, life, ap, shields int) cards.Spec {
+func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vitae, life, ap, shields int,
+	inks ...color.RGBA) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
@@ -352,9 +354,18 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vita
 	//
 	// **`combat` caps a duelist at as many shields as this row holds**, so a count that would
 	// overflow cannot exist rather than being silently trimmed here — see Duelist.raiseShields.
+	// **Each pip keeps the colour of the card that raised it** *(owner's call, 2026-09-02)*, which
+	// is the colour it was drawn in while it flew. Cosmetic: nothing about a shield depends on the
+	// element behind it, and a pip that changed colour on landing would say the opposite. A pip with
+	// no ink — a shield standing from a round nobody watched, or one drawn outside a duel — is the
+	// mark as drawn.
 	if shields > 0 {
-		if img := shieldPip(gs); img != nil {
-			for i := 0; i < shields && i < len(spec.Effects); i++ {
+		for i := 0; i < shields && i < len(spec.Effects); i++ {
+			var ink color.RGBA
+			if i < len(inks) {
+				ink = inks[i]
+			}
+			if img := shieldPip(gs, ink); img != nil {
 				spec.Effects[i] = img
 			}
 		}
@@ -368,7 +379,51 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vita
 // **It goes through `artwork` rather than `systems.Glyph`** because a pip is scaled into a
 // twenty-pixel badge box like every other thing in that row, and `internal/cards` has no graphics
 // context to render a glyph with — the whole reason the badges are bytes.
-func shieldPip(gs *state.GlobalState) image.Image { return artwork(gs, "formdefend_png") }
+func shieldPip(gs *state.GlobalState, ink color.RGBA) image.Image {
+	img := artwork(gs, "formdefend_png")
+	if img == nil || ink.A == 0 {
+		return img
+	}
+	return tintedPip(img, ink)
+}
+
+// tintedPips is one tinted copy of the mark per colour asked for.
+//
+// **Cached, and that is load-bearing rather than an optimisation.** `cardImage` keys its cache on
+// the whole Spec, and a Spec holds these as interface values — so a fresh image every frame would
+// be a fresh key every frame, and the card would be re-rendered sixty times a second.
+var tintedPips = map[color.RGBA]image.Image{}
+
+// tintedPip multiplies the mark by a colour, keeping its outline and its shading.
+//
+// **Multiplied rather than filled**, the argument `cards.tintInk` makes for the form marks on a
+// card face: a flat silhouette in the element's colour throws away the interior detail that is the
+// whole reason these are drawn art rather than generated glyphs.
+func tintedPip(src image.Image, ink color.RGBA) image.Image {
+	if img, ok := tintedPips[ink]; ok {
+		return img
+	}
+
+	b := src.Bounds()
+	out := image.NewRGBA(b)
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			r, g, bl, a := src.At(x, y).RGBA()
+			// **`RGBA()` hands back 16-bit values and `ink` is 8-bit**, so the division by 0xffff
+			// is the whole conversion: `65535 * 255 / 65535` is already 255. Shifting the result
+			// down another eight bits — which this did for one build — makes every pixel black.
+			out.SetRGBA(x, y, color.RGBA{
+				R: uint8(r * uint32(ink.R) / 0xffff),
+				G: uint8(g * uint32(ink.G) / 0xffff),
+				B: uint8(bl * uint32(ink.B) / 0xffff),
+				A: uint8(a >> 8),
+			})
+		}
+	}
+
+	tintedPips[ink] = out
+	return out
+}
 
 // ringSpec is an equipped ring as a card: its name and its artwork, and nothing else.
 //

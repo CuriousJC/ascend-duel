@@ -32,7 +32,7 @@ import (
 func shopkeeperLines() []proseLine {
 	return []proseLine{
 		{runs: []proseRun{{text: "A hooded creature appears from the shadow and you see the glint of gold in his hands."}}},
-		{runs: []proseRun{{text: `"Vitae for jewelry, duelist?"`, ink: handNameInk}, {text: " it rasps."}}},
+		{runs: []proseRun{{text: `"Vitae for jewelry, duelist?"`, ink: boostInk}, {text: " it rasps."}}},
 	}
 }
 

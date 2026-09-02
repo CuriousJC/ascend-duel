@@ -106,7 +106,8 @@ func (s *CombatScene) drawDuelistCard(gs *state.GlobalState, screen *ebiten.Imag
 		duelistSpec(gs, s.fighter, s.sideName(combat.SideA), gs.Run.Vitae(),
 			s.shownLife(combat.SideA, s.fighter.CurrentLife),
 			s.fighter.ActionPoints(),
-			s.shownShields(combat.SideA, s.fighter.Shields)),
+			s.shownShields(combat.SideA, s.fighter.Shields),
+			s.shownShieldInks(combat.SideA)...),
 		cards.DuelistStyle)
 	if img == nil {
 		return

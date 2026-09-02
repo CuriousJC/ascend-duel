@@ -3,7 +3,8 @@ package screens
 // **What every modal in this game has in common**, pulled out of the deck panel on 2026-08-24 so
 // that the third one did not start life as a copy of the first.
 //
-// There are three now — the deck, the fight log and the hands ladder — and the parts they share
+// There are four now — the deck, the hands ladder, the bucket and the run's ledger — and the parts
+// they share
 // are not incidental: the footprint, the scrim, the raised panel, the heading block, the closing
 // hint, and the rule that the button which opened a dialog is the button that closes it. **The
 // player learns one shape.** Two dialogs at two sizes would read as two kinds of thing, and there
@@ -185,8 +186,8 @@ func (c *modalCloser) draw(gs *state.GlobalState, screen *ebiten.Image) {
 // The buttons that open a modal: a square carrying one character.
 //
 // **One character on a square**, exactly as the sort column is, because the button is too small
-// for a word. The letters may not collide with each other or with the combat screen's `L`, `$`,
-// `T` and `E`.
+// for a word. The letters may not collide with each other, with the combat screen's `$`, `T` and
+// `E`, or with the `L` the frame's ledger button carries.
 const (
 	// **D is a letter and HANDS is a word** *(owner's call, 2026-08-24)*. The corner buttons are
 	// squares because they stand beside the mute button and the sort column, where there is no
@@ -267,10 +268,10 @@ func (t *modalToggle) init(label string, w, h int, textSize float64,
 // cornerSlot is the bottom-right corner, n places in from it. Slot 0 is the corner itself.
 func cornerSlot(n int) func(*state.GlobalState) image.Point {
 	return func(gs *state.GlobalState) image.Point {
-		step := logButtonSize + modalToggleGap
+		step := pileSlotSize + modalToggleGap
 		return image.Pt(
-			gs.PctX(100)-modalToggleInset-logButtonSize/2-n*step,
-			gs.PctY(100)-modalToggleInset-logButtonSize/2,
+			gs.PctX(100)-modalToggleInset-pileSlotSize/2-n*step,
+			gs.PctY(100)-modalToggleInset-pileSlotSize/2,
 		)
 	}
 }
@@ -279,9 +280,9 @@ func cornerSlot(n int) func(*state.GlobalState) image.Point {
 // deck button, sharing its bottom line. **Measured from the corner rather than from a slot index**,
 // because the two buttons are different widths and a slot walk would assume they are not.
 func handsCornerPlace(gs *state.GlobalState) image.Point {
-	right := gs.PctX(100) - modalToggleInset - logButtonSize - modalToggleGap
+	right := gs.PctX(100) - modalToggleInset - pileSlotSize - modalToggleGap
 	return image.Pt(right-handsButtonWidth/2,
-		gs.PctY(100)-modalToggleInset-logButtonSize/2)
+		gs.PctY(100)-modalToggleInset-pileSlotSize/2)
 }
 
 // update runs the button and, while the panel is up, whatever that panel puts under the cursor.

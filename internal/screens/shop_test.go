@@ -250,9 +250,9 @@ func TestThePouchButtonClearsTheOtherTwoCornerToggles(t *testing.T) {
 	deck := cornerSlot(0)(gs)
 
 	// Each is stored as its centre, so the edges are half a width either side.
-	pouchLeft, pouchRight := pouch.X-logButtonSize/2, pouch.X+logButtonSize/2
+	pouchLeft, pouchRight := pouch.X-pileSlotSize/2, pouch.X+pileSlotSize/2
 	handsLeft, handsRight := hands.X-handsButtonWidth/2, hands.X+handsButtonWidth/2
-	deckLeft := deck.X - logButtonSize/2
+	deckLeft := deck.X - pileSlotSize/2
 
 	if pouchRight >= handsLeft {
 		t.Errorf("the pouch button ends at %d and the hands button starts at %d", pouchRight, handsLeft)

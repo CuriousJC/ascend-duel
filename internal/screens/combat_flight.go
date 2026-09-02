@@ -561,6 +561,20 @@ func (s *CombatScene) noteResolved(e combat.Event) {
 		}
 	}
 
+	// **A defence that already flew its pips does not rise again** *(owner's call, 2026-09-02)*.
+	// The engine resolves defences at the end of the turn, several beats after the hand they were
+	// scored into — so once the pips leave the card with its figure, the card climbing a second
+	// time on its own announcement reads as the card firing twice. The lift is what says "this
+	// card is acting now", and it already said it.
+	//
+	// **It is the flight that decides, not the card's kind.** A turn of nothing but defences
+	// forms no hand, so nothing has flown when its announcement arrives — the seat is recorded by
+	// the raise that follows this beat — and that card does lift, which is the only thing on
+	// screen saying which defence is going up.
+	if s.shieldsRaisedBy(side, seat) > 0 && s.row(side).flew(seat) {
+		return
+	}
+
 	mine, theirs := &s.theatre.firingSeats, &s.theatre.enemyFiringSeats
 	if side == combat.SideB {
 		mine, theirs = &s.theatre.enemyFiringSeats, &s.theatre.firingSeats

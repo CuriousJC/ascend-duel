@@ -92,10 +92,10 @@ type pouchToggle struct {
 // pouchCornerPlace is where the S button stands: one square in from the hands button, sharing the
 // bottom line with it and the deck button.
 func pouchCornerPlace(gs *state.GlobalState) image.Point {
-	right := gs.PctX(100) - modalToggleInset - logButtonSize - modalToggleGap -
+	right := gs.PctX(100) - modalToggleInset - pileSlotSize - modalToggleGap -
 		handsButtonWidth - modalToggleGap
-	return image.Pt(right-logButtonSize/2,
-		gs.PctY(100)-modalToggleInset-logButtonSize/2)
+	return image.Pt(right-pileSlotSize/2,
+		gs.PctY(100)-modalToggleInset-pileSlotSize/2)
 }
 
 // pouchRow is the run's carried stones, resolved, in the order they were acquired.
@@ -119,7 +119,7 @@ func pouchRow(gs *state.GlobalState) []session.Stone {
 
 // init wires the button and the two tabs.
 func (t *pouchToggle) init() {
-	t.modalToggle.init(pouchToggleLabel, logButtonSize, logButtonSize, pouchToggleText,
+	t.modalToggle.init(pouchToggleLabel, pileSlotSize, pileSlotSize, pouchToggleText,
 		pouchCornerPlace)
 	t.armed, t.doing = -1, pouchNone
 

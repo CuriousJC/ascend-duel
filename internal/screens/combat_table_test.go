@@ -680,3 +680,48 @@ func TestADeadDuelistKeepsTheRoundThatKilledItOnTheTable(t *testing.T) {
 // first one sorted**, so a change to the roster's order does not silently change which deck these
 // tests are exercising — and a low-floor enemy, so the hand it draws is small and cheap.
 const testEnemyRecord = "ClearSlime1"
+
+// **A defence that already flew its pips does not rise again.** The engine resolves defences at
+// the end of the turn, several beats after the hand they were scored into — so with the pips
+// leaving on the beat the card is scored, a second lift on the card's own announcement reads as
+// the card firing twice. A defence that flew nothing still lifts: that is the only thing on screen
+// saying which one is going up.
+func TestADefenceThatAlreadyFlewDoesNotRiseAgain(t *testing.T) {
+	ward, ok := combat.ConceptByKey("ward")
+	if !ok {
+		t.Skip("no ward concept in this build")
+	}
+
+	newScene := func() *CombatScene {
+		s := &CombatScene{
+			fighterActions: []combat.Card{combat.Plain(combat.Strike), combat.Plain(ward)},
+			log: []combat.Event{
+				{Kind: combat.KindAction, Side: combat.SideA, Action: combat.Strike},
+				{Kind: combat.KindAction, Side: combat.SideA, Action: ward},
+			},
+		}
+		s.seatPlayedCards()
+		s.cursor = 0
+		s.noteResolved(s.log[0])
+		return s
+	}
+
+	// The ward was scored into the hand and its pips left with its figure: the attack set stays up
+	// and the ward does not climb on its own beat.
+	s := newScene()
+	s.row(combat.SideA).noteFlight(1)
+	s.cursor = 1
+	s.noteResolved(s.log[1])
+	if !sameSeats(s.theatre.firingSeats, []int{0}) {
+		t.Errorf("a ward whose pips already flew raised %v, want the attack seat alone",
+			s.theatre.firingSeats)
+	}
+
+	// Nothing flew for this one — a turn of nothing but defences forms no hand — so it lifts.
+	s = newScene()
+	s.cursor = 1
+	s.noteResolved(s.log[1])
+	if !sameSeats(s.theatre.firingSeats, []int{1}) {
+		t.Errorf("a defence that flew nothing raised %v, want its own seat", s.theatre.firingSeats)
+	}
+}

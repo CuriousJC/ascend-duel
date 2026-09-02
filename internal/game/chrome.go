@@ -2,7 +2,7 @@ package game
 
 // The game's chrome: what is drawn around every screen rather than by one.
 //
-// **There is exactly one thing in it and that is the point of the file.** A frame is easy to
+// **There are two things in it, and the bar for a third is the same as it was for these.** A frame is easy to
 // grow by accident, and the bar for joining it is high: something that is true for the whole
 // session, on every screen, and owned by no scene. The settings qualify — the score is started
 // once in main and loops across the title, the tower, the duel and the credits, and the game's
@@ -14,6 +14,12 @@ package game
 // number and would have had to be kept from disagreeing, so zero on the bar is the only silence
 // there is. What the corner lost is the one-click silence; what it gained is a place to put the
 // game speed, which had no control at all.
+//
+// **The ledger joined it on 2026-09-02** *(owner's call)*: the run's account of itself is true for
+// the whole run, wanted on every screen, and owned by no scene — the same three tests the settings
+// pass. It is also the one thing here that *could* not have been a screen: leaving the combat
+// screen and coming back re-runs Init, which deals a fresh duel, so a ledger that navigated would
+// destroy the fight it was opened to read. See internal/screens/ledger.go.
 //
 // See CLAUDE.md on the input vocabulary: this is a click on a button, and there is no hotkey
 // for it, because the game has no keyboard.
@@ -44,6 +50,17 @@ import (
 const (
 	settingsButtonSize  = 44
 	settingsButtonInset = 10
+
+	// The ledger's button stands beside the cog, in the same corner and on the same line: both are
+	// the program rather than the fight, so they read as a pair rather than as one control and a
+	// stray. The gap is the inset, which is what the combat screen's own toggles use between two
+	// squares standing together.
+	ledgerButtonGap = 10
+
+	// **One character on a square**, the size the game's other square buttons carry a letter at.
+	// `L` is what the fight log's button was, and the ledger is what became of it.
+	ledgerButtonLabel = "L"
+	ledgerButtonText  = 30
 )
 
 // settingsButtonColor is the face at full strength: a flat slate, deliberately unlike any control
@@ -64,6 +81,17 @@ func (g *Game) openSettings() {
 	gs.ReturnScreen = gs.ActiveScreen
 	gs.ActiveScreen = state.Settings
 	gs.NewScreen = true
+}
+
+// toggleLedger opens or closes the run's account. **It changes no phase and no screen** — see
+// screens.LedgerPanel, and openSettings above, which makes the same promise for the same reason.
+func (g *Game) toggleLedger() { g.ledger.Toggle() }
+
+// ledgerButtonRect is where the ledger's button sits: to the right of the cog, bottom edges level.
+func ledgerButtonRect(gs *state.GlobalState) image.Rectangle {
+	cog := settingsButtonRect(gs)
+	left := cog.Max.X + ledgerButtonGap
+	return image.Rect(left, cog.Min.Y, left+settingsButtonSize, cog.Max.Y)
 }
 
 // settingsButtonRect is where the button sits: the bottom-left corner of the screen, inset.
@@ -92,6 +120,16 @@ func chromeShowing(gs *state.GlobalState) bool {
 	return !gs.ModalOpen && gs.ActiveScreen != state.Settings
 }
 
+// ledgerShowing reports whether the ledger's own button is drawn.
+//
+// **It stands down wherever the cog does, and also while the ledger itself is up** — the panel
+// carries a red X, and an opener that survived its own overlay would be a second way out of a
+// dialog whose whole design is that the exit is the brightest thing on screen. That is the rule
+// the combat screen's toggles were changed to on 2026-08-24.
+func (g *Game) ledgerShowing(gs *state.GlobalState) bool {
+	return chromeShowing(gs) && !g.ledger.IsOpen()
+}
+
 // updateChrome builds the settings button on first use and runs it.
 func (g *Game) updateChrome(gs *state.GlobalState) {
 	if g.settingsButton == nil {
@@ -112,6 +150,40 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 		return
 	}
 	systems.UpdateButton(gs, g.settingsButton)
+	g.updateLedgerButton(gs)
+}
+
+// updateLedgerButton builds the ledger's button on first use and runs it.
+func (g *Game) updateLedgerButton(gs *state.GlobalState) {
+	if g.ledgerButton == nil {
+		g.ledgerButton = models.NewButton(
+			settingsButtonSize, settingsButtonSize, ledgerButtonLabel, g.toggleLedger)
+		g.ledgerButton.BaseColor = settingsButtonColor
+		g.ledgerButton.TextSize = ledgerButtonText
+	}
+
+	r := ledgerButtonRect(gs)
+	g.ledgerButton.ScreenX = r.Min.X + r.Dx()/2
+	g.ledgerButton.ScreenY = r.Min.Y + r.Dy()/2
+
+	// **Dead with no run to account for.** The title screen and the credits have none, and a
+	// panel that opened onto "no run" would be a control that works and says nothing.
+	setChromeEnabled(g.ledgerButton, gs.Run != nil)
+	systems.UpdateButton(gs, g.ledgerButton)
+}
+
+// setChromeEnabled is the frame's own enable, matching screens.setEnabled: a disabled button
+// ignores its colour and reads as unavailable first. **It only ever leaves a disabled button**,
+// never a hovered one, so a control re-enabled under a cursor that has since moved does not come
+// back lit.
+func setChromeEnabled(b *models.Button, on bool) {
+	if !on {
+		b.State = models.ButtonStateDisabled
+		return
+	}
+	if b.State == models.ButtonStateDisabled {
+		b.State = models.ButtonStateNormal
+	}
 }
 
 // drawChrome draws the settings button and the cog on its face.
@@ -142,4 +214,11 @@ func (g *Game) drawChrome(gs *state.GlobalState, screen *ebiten.Image) {
 	// Untinted, like every glyph. Scaling a five-value palette collapses the bevel into a
 	// flat silhouette, which is the whole thing the palette exists to avoid.
 	screen.DrawImage(systems.Glyph(kind, systems.PaletteWhite), op)
+
+	// The ledger's button, beside it. **A letter rather than a glyph**, because there is no drawn
+	// mark for "the account of this run" and a generated one at 32 pixels would be a silhouette
+	// nobody could name. See CLAUDE.md on what a glyph can carry at that size.
+	if g.ledgerButton != nil && g.ledgerShowing(gs) {
+		systems.DrawButton(gs, screen, g.ledgerButton)
+	}
 }

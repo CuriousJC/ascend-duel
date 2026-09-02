@@ -59,17 +59,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         next, and must salt its own source rather than share one.
       - **Blocked on nothing**, but the current records become **seeds for the generator or
         test fixtures**, not the roster.
-- [ ] **The fight log keeps a fight, not a run, and cannot be scrolled.** *(the log landed and the
-      Resolution feed was removed, 2026-08-18 — `combat_log.go`)* Both limits are real and neither
-      is fixable inside the panel.
-      - **`Init` clears `s.rounds`**, so the account of a fight is gone the moment the next one
-        starts and the post-battle screen has nothing to show. A run log means moving the rounds
-        onto `session.Session`, where run-level state belongs — and then deciding what a log of
-        forty fights is *for*, because it is a different thing from a fight's.
-      - **A long fight loses its oldest rounds.** The panel keeps the newest rows that fit and
-        reports the rest as `... N earlier`, which is honest and is the wrong shape for a thing
-        built to be read back. The input vocabulary has no wheel and no keyboard; **a drag on the
-        panel is the gesture that exists and is unclaimed**.
 
 ### Cards and piles — presentation
 

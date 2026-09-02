@@ -1,6 +1,6 @@
 ---
 name: combat-screen
-description: The combat screen's layout, its card/action box widget, hidden information, and the resolution-order rule the screen must obey. Load before touching any of internal/screens/combat.go, combat_deck.go, combat_hud.go, combat_actionbox.go, internal/combat, the hand, the cards, the deck overlay, the fight log, the character block, or anything about how a round is drawn or played back.
+description: The combat screen's layout, its card/action box widget, hidden information, and the resolution-order rule the screen must obey. Load before touching any of internal/screens/combat.go, combat_deck.go, combat_hud.go, combat_actionbox.go, internal/combat, the hand, the cards, the deck overlay, the ledger, the character block, or anything about how a round is drawn or played back.
 ---
 
 # The combat screen
@@ -453,7 +453,42 @@ cards themselves carry, so what was raised and what is standing are the same pic
   builds this one, and nothing has fired yet.
 - **The engine caps a duelist at five shields**, which is exactly what the row can draw. That is not
   a coincidence and not a clamp in the screen — see `Duelist.raiseShields`, which takes the cap for
-  its own reason and this row inherits it.
+  its own reason and this row inherits it. **`combat.MaxShields` exports it** for the one caller that
+  has to predict against it, below.
+- **The pips fly, and they fly on the beat the card that raises them is *scored*** *(owner's call,
+  2026-09-02)*. A defence joins a hand like any other card and pays a `0` into the sum; that 0 was
+  the whole of what the card appeared to do, with the shield turning up several beats later in the
+  defend phase, on a card the player had stopped watching. **What a card creates shows while the
+  card is being scored.** They land in the pip row along the bottom of the fighter card rather than
+  its middle — a pip joins a row, where a damage figure hits a card.
+- **Two flights, and they differ in where the count comes from.** A defence scored into a hand flies
+  before the engine has raised anything, so it *predicts*: capped at `combat.MaxShields`, adding its
+  own count on arrival, and corrected by the `KindRaised` that follows, which sets the count
+  absolutely. **A turn of nothing but defences forms no hand at all** — no sum, no dialog, no beat
+  to leave on — so there the announcement flies them itself and carries `KindRaised.Life`, which the
+  row takes outright when they land. The row records the seat, so one card's pips can never fly
+  twice — **and forgets it at the end of the round**, because a seat is a position in one round's
+  table: kept across the boundary it silently gagged the next round's defence in the same seat,
+  which then flew nothing and so landed with no colour.
+- **The row is one list, and the count is its length** *(2026-09-02)* — `shield_row.go`. It was
+  four parallel structures for a day: a count, a colour per pip, a "has anything spoken" flag and
+  the set of seats. **Every shield bug in that day was two of them disagreeing** — a count ahead of
+  the colours drew a white pip, a colour list trimmed by something that had taken no shield away
+  lost a pip's element, a set of seats outliving its round stopped a flight happening at all. A pip
+  *is* its colour now, so the commonest failure is unrepresentable rather than repaired in two
+  places. **The rule the type carries**: a raise may only raise, and only a block or an expiry may
+  lower — a raise is announced a phase after the pips it describes have landed and names what is
+  standing after *its own* card, so the first of two raises is smaller than what is already drawn.
+- **A defence that already flew its pips does not lift on its own announcement** *(owner's call,
+  2026-09-02)*. The engine resolves defences at the end of the turn, several beats after the hand
+  they were scored into, so the card climbed the table again just as the opponent started swinging
+  — which reads as the card firing a second time. The lift says "this card is acting now" and the
+  flight already said it. **The flight decides, not the card's kind**: a turn of nothing but
+  defences forms no hand, nothing has flown when its announcement arrives, and that card does lift
+  — it is the only thing on screen saying which defence is going up. `noteResolved`.
+- **A flight whose seat the row no longer holds still flies, from the row's first card.** It used to
+  draw nothing while `landShields` paid the pips in anyway, which is a pip appearing without having
+  crossed the screen — the one failure this whole gesture exists to prevent.
 
 ### The log writes sentences, and the verb is marked in the text
 
@@ -646,10 +681,11 @@ unless `DebugGameplay` is on. `CombatScene.concealEnemy` is the single predicate
 `!gs.DebugGameplay && s.planning()` — and anything else that becomes secret should join it
 rather than growing a second rule.
 
-**The fight log needs no concealment rule at all**, and that falls out of its design rather than
-being a second decision: it is built from `s.log[:cursor+1]` for the round in progress, so it can
-only ever contain events playback has already reached, and an action that has resolved is not a
-secret. There is no way for it to leak the rest of the round because it has not been given it.
+**The ledger needs no concealment rule at all**, and that falls out of its design rather than
+being a second decision: a round is written into the run's account when it *ends*, so the panel
+can only ever hold rounds that have finished playing. The round being watched is not in it yet, so
+there is nothing for it to leak. *(The fight log it replaced got the same property a different
+way, by being built from `s.log[:cursor+1]`.)*
 
 - **Concealment lifts once playback starts**, for the same reason.
 - **Concealed rows keep their real count**, so the opponent's AP spend stays readable even

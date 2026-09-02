@@ -22,7 +22,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 
 	"image/color"
@@ -79,7 +81,136 @@ var (
 // It knows nothing about capacity, overflow or which row is live. Those are properties of the
 // panel the rows are poured into, not of the round, and they stay with the caller.
 func (s *CombatScene) logRows(events []combat.Event) []paneRow {
-	var rows []paneRow
+	return paneRowsFor(s.ledgerLines(events))
+}
+
+// paneRowsFor draws already-worded lines as pane rows: the voice becomes a swatch, and each run's
+// ink name becomes a colour.
+//
+// **The colours are decided here and never stored**, which is what lets a saved run be re-coloured
+// by a change to this file rather than carrying a palette in its history. See session.LedgerLine.
+func paneRowsFor(lines []session.LedgerLine) []paneRow {
+	rows := make([]paneRow, 0, len(lines))
+	for _, l := range lines {
+		runs := make([]paneRun, 0, len(l.Runs))
+		for _, r := range l.Runs {
+			runs = append(runs, paneRun{text: r.Text, ink: inkNamed(r.Ink), mark: r.Mark})
+		}
+		rows = append(rows, paneRow{
+			runs:   runs,
+			swatch: swatchForVoice(l.Voice),
+			indent: indentForVoice(l.Voice),
+		})
+	}
+	return rows
+}
+
+// inkNamed is the colour behind an ink's name. **Zero alpha is "the panel's own ink"**, which is
+// what an unnamed run and an unrecognised name both get — a ledger written by another build must
+// draw as words rather than refuse to draw.
+//
+// **Every colour here is the one the combat screen uses for the same thing**, which is the point:
+// the account should look like what it is an account of. The elements come through cards.BorderOf,
+// which is the live table, so recolouring an element recolours its figures in the ledger too.
+func inkNamed(name string) color.RGBA {
+	switch name {
+	case "":
+		return color.RGBA{}
+	case session.InkAttack:
+		return verbInkFor(combat.CategoryAttack)
+	case session.InkDefend:
+		return verbInkFor(combat.CategoryDefend)
+	case session.InkHand:
+		// **No colour**: the panel's own ink, and the run's Mark is what says it is the hand. See
+		// session.InkHand, and handNameInk, which is the same decision on the combat screen.
+		return color.RGBA{}
+	case session.InkRing:
+		return boostInk
+	case session.InkTotal:
+		return verbInkFor(combat.CategoryAttack)
+	}
+	if e, ok := combat.ParseElement(name); ok {
+		return cards.BorderOf(artFor(e))
+	}
+	return color.RGBA{}
+}
+
+// elementInk is an element's ink name, which is simply what the element is called. A card's figure
+// in a sum wears its own card's colour, exactly as the hand dialog's does.
+func elementInk(e combat.Element) string { return e.String() }
+
+// swatchForVoice is the square a line is drawn beside. **A zero-alpha swatch is a line with no
+// swatch**, which drawPane centres — so headings read as blocks rather than as more of the list.
+func swatchForVoice(voice string) color.RGBA {
+	switch voice {
+	case session.VoiceYou:
+		return playerSwatch
+	case session.VoiceFoe:
+		return enemySwatch
+	case session.VoiceHand:
+		return handSwatch
+	default:
+		return color.RGBA{}
+	}
+}
+
+// indentForVoice is how far a line is set in. Only the arithmetic's own terms are, which is also
+// what keeps them left-aligned rather than centred — see paneRow.indent.
+func indentForVoice(voice string) int {
+	if voice == session.VoiceTerm {
+		return termIndent
+	}
+	return 0
+}
+
+// voiceFor is whose line it is.
+func voiceFor(side combat.Side) string {
+	if side == combat.SideB {
+		return session.VoiceFoe
+	}
+	return session.VoiceYou
+}
+
+// cardWeight is what an attack card multiplies its owner's DMG by, in brackets: ` (1.5x)`.
+//
+// **It is on the line rather than on a line of its own** *(owner's call, 2026-09-02)*, because it
+// is a fact about the card that was just named and not a thing that happened. It exists for the
+// opponent's turn: a Giant Rat's gnaw and its maul are two sentences that read identically and land
+// wildly different figures, and the only account of why was the number at the end.
+//
+// **Attacks only, and never the identity.** A defence multiplies nothing, and `(1x)` on every
+// ordinary swing is a bracket that says nothing on most lines in the game.
+func cardWeight(c combat.Card) string {
+	if c.Category() != combat.CategoryAttack || c.Amount() == 100 {
+		return ""
+	}
+	return " (" + multiplierText(c.Amount()) + ")"
+}
+
+// categoryInk is the ink a category's verb is written in, as the ledger names it.
+func categoryInk(c combat.Category) string {
+	if c == combat.CategoryDefend {
+		return session.InkDefend
+	}
+	return session.InkAttack
+}
+
+// ledgerLines is the walk itself: one line per thing that happened, worded once, kept for the
+// length of the run. See session/ledger.go for why the run stores these rather than the events
+// they were written from.
+func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
+	var rows []session.LedgerLine
+
+	// **Which card is which, for the arithmetic underneath a blow.** A hand event names its terms
+	// as indices into its own side's resolved actions, and those actions are events that have not
+	// arrived yet when it does — so the turn is indexed up front. See combat.Event.HandCards.
+	played := map[combat.Side][]combat.Card{}
+	for _, e := range events {
+		if e.Kind == combat.KindAction {
+			played[e.Side] = append(played[e.Side],
+				combat.Card{Concept: e.Action, Element: e.Element})
+		}
+	}
 
 	// cur is the line the next outcome attaches to, or -1 when the last thing appended was
 	// an announcement rather than an action. curSide is whose line it is.
@@ -101,26 +232,27 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 		if outcomes > 0 {
 			sep = ", "
 		}
-		rows[cur].suffix += sep + what
+		rows[cur].Runs = append(rows[cur].Runs, session.LedgerRun{Text: sep + what})
 		outcomes++
 	}
 
 	// act opens a line in the form "<who> <verb> <what>", with the verb carrying its
 	// category's colour. See cardPhrase.
 	act := func(side combat.Side, c combat.Card) {
-		rows = append(rows, paneRow{
-			prefix:  s.sideName(side) + " ",
-			verb:    verbFor(c.Category()),
-			suffix:  " " + cardPhrase(c),
-			verbInk: verbInkFor(c.Category()),
-			swatch:  swatchFor(side),
+		rows = append(rows, session.LedgerLine{
+			Voice: voiceFor(side),
+			Runs: []session.LedgerRun{
+				{Text: s.sideName(side) + " "},
+				{Text: verbFor(c.Category()), Ink: categoryInk(c.Category()), Mark: true},
+				{Text: " " + cardPhrase(c) + cardWeight(c)},
+			},
 		})
 		cur, curSide = len(rows)-1, side
 		outcomes = 0
 	}
 
-	announce := func(label string, swatch color.RGBA) {
-		rows = append(rows, paneRow{prefix: label, swatch: swatch})
+	announce := func(label string, voice string) {
+		rows = append(rows, session.Line(voice, label))
 		cur = -1
 	}
 
@@ -130,13 +262,21 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 	// damage, a shocked miss and any status it lands all belong to it, because the cards that
 	// would otherwise have carried them no longer write lines of their own.
 	blow := func(e combat.Event) {
-		rows = append(rows, paneRow{
-			prefix: fmt.Sprintf("HAND!  %s lands a %s", s.sideName(e.Side), handName(e)),
-			suffix: "  " + handMath(e),
-			swatch: handSwatch,
+		rows = append(rows, session.LedgerLine{
+			Voice: session.VoiceHand,
+			// **The hand's name is the whole line** *(owner's call, 2026-09-02)*. It read
+			// "HAND!  Duelist lands Three of a Kind (Card)", and every word before the name was
+			// already said by something on the row: the amber swatch says a hand formed, and in a
+			// player's ledger the duelist is who forms them. What is left is the rung and what it
+			// came to.
+			//
+			// **And it is not marked.** Bold is the whole panel and an underline under a name that
+			// is already alone on its line reads as a mistake rather than as emphasis — see the
+			// multiplier in the sum, which lost its underline for the same reason.
+			Runs: []session.LedgerRun{{Text: handTitle(e), Ink: session.InkHand}},
 		})
 		cur, curSide = len(rows)-1, e.Side
-		outcomes = 1 // the sum is already on the line, so the first outcome reads as a list
+		outcomes = 0
 	}
 
 	for _, e := range events {
@@ -164,7 +304,7 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 
 		case combat.KindChilled:
 			announce(fmt.Sprintf("%s is chilled - %v is lost", s.sideName(e.Side), combat.ConceptOf(e.Action).Label),
-				swatchFor(e.Side))
+				voiceFor(e.Side))
 
 		case combat.KindMissed:
 			// It attaches to the attacker's own line rather than announcing, because the card
@@ -184,7 +324,7 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			// **The status names itself** *(2026-08-17)*: with statuses decoupled from the colours,
 			// a second damage-over-time status would otherwise narrate identically to the first.
 			announce(fmt.Sprintf("%s %s %d",
-				s.sideName(e.Target), tickVerb(e.Status), e.Amount), swatchFor(e.Target))
+				s.sideName(e.Target), tickVerb(e.Status), e.Amount), voiceFor(e.Target))
 
 		case combat.KindHand:
 			// **This is the attack phase's line, and every hand takes it — the High Card
@@ -198,6 +338,7 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			// The High Card is an equal citizen throughout now, on the owner's call, so this is
 			// deliberate rather than merely true.
 			blow(e)
+			rows = append(rows, s.handTermLines(e, played[e.Side])...)
 
 		case combat.KindRaised:
 			// **The count that is standing, not the count this card added.** Two Guards in a turn
@@ -243,7 +384,7 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			}
 
 		case combat.KindDefeated:
-			announce(fmt.Sprintf("%s falls", s.sideName(e.Target)), swatchFor(e.Target))
+			announce(fmt.Sprintf("%s falls", s.sideName(e.Target)), voiceFor(e.Target))
 		}
 	}
 
@@ -578,27 +719,56 @@ func handName(e combat.Event) string {
 	return hand.Name
 }
 
-// handMath is the blow written out as the sum it is: `20 x 1.5 = 30`.
+// handMath is the blow written out as the sum the player watched: `5 + 5 + 10 x 1.5 = 30`.
 //
-// **Every figure in it comes off the event.** Base, Multiplier and the total are all worked out
-// by the resolver, so the line cannot claim a sum the round did not use — which is the whole
-// reason those fields are on the event rather than being recomputed here.
+// **Term by term, matching the hand dialog line for line** *(owner's call, 2026-09-02)*. It used
+// to fold the cards into one figure — `(20 x 1.5 = 30)` — on the grounds that the dialog was where
+// a blow got spelled out. The ledger is read *after* the dialog is gone, so the one place the sum
+// survives has to be the sum rather than a summary of it.
 //
-// **The cards' damage is one term, not one term each.** The hand dialog is what spells the hand
-// out card by card; the feed is three rows of a sentence, and four identical numbers would be
-// half a line saying what the dialog just showed at four times the size.
+// **Every figure in it comes off the event.** Base, Multiplier, the per-card amounts and the total
+// are all worked out by the resolver, so the line cannot claim a sum the round did not use — which
+// is the whole reason those fields are on the event rather than being recomputed here.
 //
 // **The multiplier is always written, the identity included** *(2026-08-19, owner's call)*. A High
 // Card used to print `(20)` rather than `(20 x 1 = 20)`, on the argument that a sum times one says
-// nothing. **Hands are going to be upgradable**, which makes that 1 a number that will change — and
-// a term that appears only once it stops being 1 would make an upgrade read as a new rule rather
-// than as a bigger figure. The dialog does the same, so the line and the sum say one thing.
-//
-// It is the blow before the attacker's weight and before anything the defender raised, so the
-// damage that follows on the same line is often smaller. That gap is what a defence is worth,
-// and it is only legible because both figures are shown.
+// nothing. Hands are going to be upgradable, which makes that 1 a number that will change — and a
+// term appearing only once it stops being 1 would make an upgrade look like a new rule rather than
+// a bigger figure.
 func handMath(e combat.Event) string {
-	return fmt.Sprintf("(%d x %s = %d)", e.Base, handMultiplierText(e.Multiplier), e.Amount)
+	terms := make([]string, 0, e.HandCardCount)
+	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
+		terms = append(terms, strconv.Itoa(e.HandAmounts[i]))
+	}
+	// A blow whose event carries no terms still has its two figures. Nothing produces one today;
+	// saying the sum it did is better than a line that reads `x 1.5 = 30` with nothing in front.
+	if len(terms) == 0 {
+		terms = append(terms, strconv.Itoa(e.Base))
+	}
+	return fmt.Sprintf("%s x %s = %d",
+		strings.Join(terms, " + "), handMultiplierText(e.Multiplier), e.Amount)
+}
+
+// handTitle is the hand as the ledger names it: `Three of a Kind (Form)`.
+//
+// **The axis goes to the back and into brackets** *(owner's call, 2026-09-02)*. `hands.json` writes
+// it in front — "Form Three of a Kind" — which puts the least interesting word first on the loudest
+// line of the round and reads as a hand called "Form Three" to anybody skimming. What the rung is
+// comes first; which axis counted it is the qualifier.
+//
+// **The bracket is the word the catalogue used**, stripped off the front rather than looked up, so
+// a hand renamed is renamed once — in the data. A name with no axis word in front of it is left
+// exactly as it is, which is what keeps "High Card" from becoming "High Card (Card)".
+func handTitle(e combat.Event) string { return axisToBack(handName(e)) }
+
+// axisToBack does the moving, split out so it can be tested without an event.
+func axisToBack(name string) string {
+	for _, axis := range []string{"Card ", "Form ", "Elemental "} {
+		if rest, ok := strings.CutPrefix(name, axis); ok {
+			return rest + " (" + strings.TrimSpace(axis) + ")"
+		}
+	}
+	return name
 }
 
 // handMultiplierText writes a *hand's* percentage multiplier the way the design does: 350 as

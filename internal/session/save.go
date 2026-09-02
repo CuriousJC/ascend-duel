@@ -49,7 +49,8 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 			FromLife:   s.spoils.FromLife,
 			FromRoom:   s.spoils.FromRoom,
 		},
-		Deck: make([]profile.CardSnapshot, 0, len(s.deck)),
+		Deck:   make([]profile.CardSnapshot, 0, len(s.deck)),
+		Ledger: s.ledgerSnapshot(),
 	}
 
 	// **Only rings actually worn.** `grown` can hold an accumulator for a ring since sold, and
@@ -78,6 +79,76 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 			AmountPct: c.AmountPct,
 			Riders:    riders,
 		})
+	}
+	return out
+}
+
+// ledgerSnapshot writes the run's account out as plain records.
+//
+// **Prose is copied rather than resolved.** Every other conversion here turns a name back into a
+// thing this build has — a concept, an element, a ring — and refuses a snapshot naming something
+// it has not got. A ledger line names nothing: it is words that were true when they were written,
+// and the day a status is renamed is not a day a saved run should stop loading.
+func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
+	if len(s.ledger.Fights) == 0 {
+		return nil
+	}
+	out := make([]profile.LedgerFightSnapshot, 0, len(s.ledger.Fights))
+	for _, f := range s.ledger.Fights {
+		rec := profile.LedgerFightSnapshot{
+			Number:  f.Number,
+			Floor:   f.Floor,
+			Enemy:   f.Enemy,
+			Outcome: f.Outcome,
+			Dealt:   f.dealt,
+			Rounds:  make([]profile.LedgerRoundSnapshot, 0, len(f.Rounds)),
+		}
+		for _, r := range f.Rounds {
+			lines := make([]profile.LedgerLineSnapshot, 0, len(r.Lines))
+			for _, l := range r.Lines {
+				runs := make([]profile.LedgerRunSnapshot, 0, len(l.Runs))
+				for _, run := range l.Runs {
+					runs = append(runs, profile.LedgerRunSnapshot{
+						Text: run.Text, Ink: run.Ink, Mark: run.Mark,
+					})
+				}
+				lines = append(lines, profile.LedgerLineSnapshot{Voice: l.Voice, Runs: runs})
+			}
+			rec.Rounds = append(rec.Rounds, profile.LedgerRoundSnapshot{Number: r.Number, Lines: lines})
+		}
+		out = append(out, rec)
+	}
+	return out
+}
+
+// resumeLedger reads the account back.
+//
+// **It cannot fail, and that is deliberate.** A line is prose; there is nothing in it to resolve
+// against this build, so the worst a strange one can do is draw in the plain voice. Refusing a run
+// because a sentence in its history used a word this build no longer writes would trade the whole
+// run for the transcript of a fight already over.
+func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
+	var out Ledger
+	for _, f := range snap {
+		rec := LedgerFight{
+			Number:  f.Number,
+			Floor:   f.Floor,
+			Enemy:   f.Enemy,
+			Outcome: f.Outcome,
+			dealt:   f.Dealt,
+		}
+		for _, r := range f.Rounds {
+			lines := make([]LedgerLine, 0, len(r.Lines))
+			for _, l := range r.Lines {
+				runs := make([]LedgerRun, 0, len(l.Runs))
+				for _, run := range l.Runs {
+					runs = append(runs, LedgerRun{Text: run.Text, Ink: run.Ink, Mark: run.Mark})
+				}
+				lines = append(lines, LedgerLine{Voice: l.Voice, Runs: runs})
+			}
+			rec.Rounds = append(rec.Rounds, LedgerRound{Number: r.Number, Lines: lines})
+		}
+		out.Fights = append(out.Fights, rec)
 	}
 	return out
 }
@@ -164,6 +235,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		},
 	}
 	s.climb = newClimb(enemies, bosses, runSeed)
+	s.ledger = resumeLedger(snap.Ledger)
 
 	for _, key := range snap.Worn {
 		if !s.Wear(key) {

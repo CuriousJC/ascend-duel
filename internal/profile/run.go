@@ -93,6 +93,60 @@ type RunSnapshot struct {
 
 	// Deck is every card the run owns, in order.
 	Deck []CardSnapshot `json:"deck"`
+
+	// Ledger is the run's account of itself: every fight, round by round, in already-worded lines.
+	//
+	// **It is the one part of a snapshot that is prose rather than state** *(owner's call,
+	// 2026-09-02)*. Everything else here is resumed *into* the run; this is only ever read back and
+	// shown. That is what makes it safe to carry, and it is also why it may never fail a resume —
+	// see session.Resume, where an unrecognised ink draws plain instead of costing the player a run
+	// over a sentence.
+	//
+	// **Sentences rather than events**, because a run of combat.Events is megabytes of mostly-zero
+	// arrays. See session/ledger.go for the arithmetic behind that.
+	Ledger []LedgerFightSnapshot `json:"ledger,omitempty"`
+}
+
+// LedgerFightSnapshot is one duel of the run's account.
+type LedgerFightSnapshot struct {
+	Number int    `json:"number"`
+	Floor  int    `json:"floor"`
+	Enemy  string `json:"enemy"`
+
+	// Outcome is "won", "lost", or empty for a fight still being fought when the run was saved —
+	// which cannot happen today, since a run is only ever saved between stations, and is written
+	// down rather than assumed away.
+	Outcome string `json:"outcome,omitempty"`
+
+	// Dealt is what the player's blows came to across the fight. **Stored rather than recomputed**,
+	// because the lines are prose and adding them back up would mean parsing sentences.
+	Dealt int `json:"dealt,omitempty"`
+
+	Rounds []LedgerRoundSnapshot `json:"rounds,omitempty"`
+}
+
+// LedgerRoundSnapshot is one round of one fight.
+type LedgerRoundSnapshot struct {
+	Number int                  `json:"number"`
+	Lines  []LedgerLineSnapshot `json:"lines,omitempty"`
+}
+
+// LedgerLineSnapshot is one line of the account.
+//
+// **Runs rather than one string**, because the panel colours a line in pieces: the verb by its
+// category, a figure by its card's element, a ring's multiplier in the ring pink. Voice and Ink are
+// short closed vocabularies written as words, on the rule every other name in this file is under —
+// a colour in a save file would be a palette decision frozen into a run.
+type LedgerLineSnapshot struct {
+	Voice string              `json:"voice,omitempty"`
+	Runs  []LedgerRunSnapshot `json:"runs,omitempty"`
+}
+
+// LedgerRunSnapshot is one run of text inside a line.
+type LedgerRunSnapshot struct {
+	Text string `json:"text"`
+	Ink  string `json:"ink,omitempty"`
+	Mark bool   `json:"mark,omitempty"`
 }
 
 // SpoilsSnapshot is one win's unclaimed payout, split the way the reward screen reads it out.

@@ -605,7 +605,7 @@ func apFigureRight(gs *state.GlobalState) int {
 // It reads the pile's *bounds*, not its front card: the backs are drawn up and to the left, so
 // the front card's edge is not the pile's edge.
 func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, int) {
-	left, right := apFigureRight(gs), logButtonRect(gs).Min.X
+	left, right := apFigureRight(gs), pileSlotRect(gs).Min.X
 	gap := (right - left - discardWidth - duelWidth) / 3
 
 	discardLeft := left + gap
@@ -719,6 +719,6 @@ func handsButtonPlace(gs *state.GlobalState) image.Point {
 	col := sortColumnRect(gs)
 	return image.Pt(
 		col.Min.X+handsButtonWidth/2,
-		col.Max.Y+handsButtonDown+logButtonSize/2,
+		col.Max.Y+handsButtonDown+pileSlotSize/2,
 	)
 }

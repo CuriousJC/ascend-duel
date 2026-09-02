@@ -457,8 +457,15 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 	return out, lead, true
 }
 
-// biggestAttack is the High Card: the single attack that hits hardest, or nothing if the turn
-// queued no attacks at all.
+// biggestAttack is the High Card: the single attack that hits hardest, or — for a turn that queued
+// no damage at all — the first card in it.
+//
+// **A turn of nothing but defences is a hand too** *(owner's call, 2026-09-02)*. Every card carries
+// a form and an element and every card is counted toward a hand, so the one turn that could not
+// name one was the turn whose cards all deal zero — which made a shield build a build the ladder
+// could not see. The blow it forms sums to nothing and lands nothing, and the hand is still named
+// and still multiplied by whatever a ring makes of it. See resolveAttackPhase, which is what
+// declines to spend the target's shield on a blow of zero.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
 // blow is. The player's three forms ladder identically — a Lunge, a Cleave and a Smash all deal
@@ -477,7 +484,10 @@ func biggestAttack(turn []Slot) []int {
 		}
 	}
 	if best < 0 {
-		return nil
+		if len(turn) == 0 {
+			return nil
+		}
+		return []int{0}
 	}
 	return []int{best}
 }

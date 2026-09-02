@@ -357,17 +357,24 @@ func TestAHandIgnoresWhatSitsBetweenItsCards(t *testing.T) {
 	}
 }
 
-// The ladder is scoped to attacks, so three Prepares are three of a card and form nothing.
-func TestTheLadderCountsAttacksAlone(t *testing.T) {
+// **A turn of nothing but defences is a hand, and it lands nothing** *(owner's call, 2026-09-02)*.
+// Every card carries a form and an element and every card is counted, so three Braces are three of
+// a kind — the ladder can see a shield build. What the hand does not do is attack: no damage, and
+// nothing of the target's is spent.
+func TestATurnOfDefencesFormsAHandAndLandsNothing(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	events, _, _ := resolve(a, b, PlainCards(Brace, Brace, Brace), nil, 1)
+	events, _, after := resolve(a, b, PlainCards(Brace, Brace, Brace), nil, 1)
 
-	if got := handsFormed(events, SideA); len(got) != 0 {
-		t.Fatalf("three plans formed %v, want nothing", got)
+	if got := handsFormed(events, SideA); len(got) != 1 {
+		t.Fatalf("three Braces formed %v, want one hand", got)
 	}
 	if n := kindCount(events, KindDamage); n != 0 {
-		t.Fatalf("a turn of plans dealt damage %d times, want 0", n)
+		t.Fatalf("a turn of defences dealt damage %d times, want 0", n)
+	}
+	if after.CurrentLife != b.CurrentLife {
+		t.Errorf("the target is on %d life, want the %d it started with",
+			after.CurrentLife, b.CurrentLife)
 	}
 }
 
@@ -657,5 +664,36 @@ func TestEverySlotIsEitherTakenOrChilled(t *testing.T) {
 
 	if lost := chilledActions(events, SideB); len(lost) == 0 {
 		t.Fatal("this fixture is meant to chill side B")
+	}
+}
+
+// **A blow of nothing may not spend anything of the target's** *(owner's call, 2026-09-02)*. A
+// shield eats one attack whole and defences are cleared by the turn they answer, so a turn of
+// shields that counted as an attack would strip an opponent's guard for free — which is the whole
+// reason the zero blow is counted and not thrown.
+func TestAZeroBlowSpendsNothingOfTheTargets(t *testing.T) {
+	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
+	b.Shields = 2
+	b = b.raiseDefend(Plain(Guard))
+
+	events, _, after := resolve(a, b, PlainCards(Brace, Brace, Brace), nil, 1)
+
+	// The target's own turn expires what they were holding, so what proves the blow never touched
+	// it is the expiry announcing both shields still standing.
+	held := 0
+	for _, e := range events {
+		if e.Kind == KindExpired && e.Target == SideB {
+			held = e.Amount
+		}
+		if e.Kind == KindBlocked {
+			t.Errorf("a zero blow was blocked: it never happened")
+		}
+	}
+	if held != 2 {
+		t.Errorf("%d of the target's shields survived the turn, want both", held)
+	}
+	if after.CurrentLife != b.CurrentLife {
+		t.Errorf("the target is on %d life, want the %d they started with",
+			after.CurrentLife, b.CurrentLife)
 	}
 }

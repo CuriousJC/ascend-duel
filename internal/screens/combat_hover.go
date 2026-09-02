@@ -44,10 +44,6 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		hoverDeckPanel(gs, at, s.deckView, s.fightContents(), &s.tip)
 		return
 	}
-	if s.showLog {
-		return
-	}
-
 	if s.hoverHand(gs, at) || s.hoverRings(gs, at) {
 		return
 	}

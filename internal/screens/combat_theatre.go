@@ -199,7 +199,7 @@ var choreography = map[combat.EventKind]flightSpec{
 	},
 	combat.KindRaised: {
 		anchorActorSeat, anchorActorCard, gestureFly,
-		"shields land on the card that draws them, the same trip banked points make",
+		"pips fly from the card to the fighter card - but on the beat the card is scored, not this one",
 	},
 	combat.KindBlocked: {
 		anchorNone, anchorTargetCard, gesturePop,
@@ -313,20 +313,16 @@ type combatTheatre struct {
 	// while one of these is up; what waits is the drawing.
 	hits []hitFlight
 
-	// shieldsShown is each side's standing shield count as *playback* has reached it, and
-	// shieldsSeen says whether any event this round has set it.
-	//
-	// **The same problem `shownLife` solves, and the same shape.** `Duelist.Shields` is not written
-	// until the round's end state is adopted, so a pip row reading the model would fill up a whole
-	// opposing turn after the card that filled it and empty a whole turn after the attack that ate
-	// it. Every change to the count is announced — raised, blocked, expired — so this follows the
-	// events and the card follows this.
-	//
-	// **Absolute rather than a delta**: each of those events carries the count afterwards, so there
-	// is nothing to add up and no way for the readout to drift from the engine. Cleared in
-	// endOfRound, where the model becomes authoritative again.
-	shieldsShown [2]int
-	shieldsSeen  [2]bool
+	// shields are the defend cards' pips currently travelling to a fighter card. **They set off on
+	// the beat their card is scored into the hand**, which is several beats before the defend phase
+	// raises them — see combat_shields.go, where the trade that buys is written down.
+	shields []shieldFlight
+
+	// shieldRows is each side's standing shields as playback has reached them: one list of pips
+	// per side, each pip carrying the element of the card that raised it, plus the two pieces of
+	// bookkeeping that belong to the same question. **One structure rather than four** — see
+	// shield_row.go, where the bugs that bought that are written down.
+	shieldRows [2]shieldRow
 
 	// banner is the name of the hand the player committed, on its way from the planning seat to
 	// the hand row or resting there. **It is raised at DUEL! and lives until the round is over**,
@@ -358,6 +354,7 @@ func (t *combatTheatre) tick() {
 	t.flights = advance(t.flights)
 	t.slides = advance(t.slides)
 	t.hits = advance(t.hits)
+	t.shields = advance(t.shields)
 
 	// The two rows on the table never expire: cards arrive and stay until the round is spent, so
 	// they are advanced in place rather than filtered.
@@ -380,7 +377,7 @@ func (t *combatTheatre) tick() {
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheatre) running() bool {
-	return running(t.hits)
+	return running(t.hits) || running(t.shields)
 }
 
 // clear takes the whole stage down, view state included.

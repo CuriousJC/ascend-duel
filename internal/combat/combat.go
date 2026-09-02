@@ -346,9 +346,13 @@ func resolveAttackPhase(
 			Round:   round,
 		})
 	}
-	if attacks == 0 {
-		return events, actor, target
-	}
+	// **A turn with no attack in it still forms a hand** *(owner's call, 2026-09-02)*, and the
+	// `attacks` count above is only about announcements: every attack card gets its own beat, and a
+	// defence gets one later in its own phase. What used to stop here was the whole scoring of the
+	// turn, so a hand of nothing but shields was the one hand the ladder could not see — which
+	// makes a shield build unreachable the moment a ring or an authored card wants one. The blow it
+	// forms sums to zero and is declined below, before anything of the target's is spent.
+	_ = attacks
 
 	// **The ladder is read through the actor's own stones**, so a run that has bought a Card Pair
 	// stone plays a different ladder from the one its opponent does. A duelist holding none reads
@@ -370,6 +374,16 @@ func resolveAttackPhase(
 	// multiplier is the whole reward and there is nothing to pay before the roll.
 	swung, grown := handEvent(side, blow, turn, held, actor, round)
 	events = append(events, swung)
+
+	// **A blow of nothing is counted and not thrown** *(owner's call, 2026-09-02)*. The hand above
+	// is named, multiplied and written into the account like any other; what stops here is the
+	// *attack*, so a turn of shields cannot spend the target's shield, clear the defences they
+	// raised, roll for a miss, land a status or grow a ring. The gate is the sum the hand carries,
+	// which is the same figure the screen has just drawn — a card given damage, or a shield card
+	// authored with some, walks straight past it and is an attack like any other.
+	if swung.Amount <= 0 {
+		return events, actor, target
+	}
 
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
 	// spent, no status applied. The attack did not occur.
@@ -733,6 +747,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 				at := e.HandCardCount
 				e.HandCards[at] = i
 				e.HandAmounts[at] = d
+				e.HandCardBase[at] = shape.Amount(t, card.Damage(actor.DMG))
 				e.HandRingScale[at] = CardScaleBySeat(actor.WornRings(), card)
 				e.HandCardCount++
 				if t > 0 {

@@ -262,14 +262,9 @@ type CombatScene struct {
 	// combat_hover.go, and hidden by the tick it is not aimed.
 	tip models.Tooltip
 
-	// showLog toggles the fight log. The second dialog in the game, and it obeys the first
-	// one's rules — see combat_log.go.
-	showLog bool
-
-	// closer is the red X on whichever of this screen's two older dialogs is up — the deck overlay
-	// or the fight log. **One between them**, because only one can be open at a time and two
-	// buttons in the same corner is one too many. The hands panel carries its own, inside its
-	// toggle.
+	// closer is the red X on the deck overlay. It is a shared piece rather than the panel's own
+	// because the fight log used to share it; the hands panel and the bucket carry their own,
+	// inside their toggles.
 	closer modalCloser
 
 	// hands is the third dialog: every rung of the hand ladder, written as a sum. It carries
@@ -281,24 +276,18 @@ type CombatScene struct {
 	// combat_parasite.go, and MECHANICS.md for what a parasite is.
 	parasites parasiteToggle
 
-	// logButton opens and closes it. Held on the scene rather than built in Draw because it
-	// is a widget with hover and press state, like every other button here.
-	logButton *models.Button
+	// ledgerDealt is what the player's blows in the round being played back came to, and
+	// ledgerWritten says whether that round has been handed to the run's account yet.
+	//
+	// **A round is written down once, when it is over.** It is recorded either as the next round
+	// replaces it or as the duel settles — whichever comes first — and this flag is what stops the
+	// last round of a fight being written twice or not at all. See combat_ledger.go.
+	ledgerWritten bool
 
-	// rounds is every round of this fight that has finished, oldest first, kept as the event
-	// logs the resolver produced.
-	//
-	// **The round in progress is not in here** — it is still `log`, and the log dialog reads
-	// the two together. A round moves across in startRound, as the previous one is replaced,
-	// which is the one moment `log` is about to stop being the current round. Appending at
-	// the *end* of playback instead would double the round the feed is still showing during
-	// the planning phase.
-	//
-	// **It holds events rather than finished lines.** The prose is generated from the events
-	// by logRows, so storing sentences would freeze this fight's account against the wording
-	// of the day it was played — and would be a second copy of something the events already
-	// say. Events are what the engine produced; everything else is a reading of them.
-	rounds [][]combat.Event
+	// ledgerClosed says the duel's outcome has been written down. **A settled duel sits on screen
+	// for as long as the player leaves it there**, so without this the account would be told the
+	// fight ended once a frame.
+	ledgerClosed bool
 
 	// theatre is everything this screen has moving on it: the cards in the air, the two rows on
 	// the table, the damage figures, the shield pips, the hand's name and the sum it flies into.
@@ -440,17 +429,6 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		b.ScreenX, b.ScreenY = at.X, at.Y
 	}
 
-	// The Log button, beside the draw pile. Built once and placed every visit, like the strip
-	// below — its position is a function of the pile, which is a function of the screen.
-	if s.logButton == nil {
-		s.buildLogButton()
-	}
-	{
-		r := logButtonRect(gs)
-		s.logButton.ScreenX = r.Min.X + r.Dx()/2
-		s.logButton.ScreenY = r.Min.Y + r.Dy()/2
-	}
-
 	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
 	s.discardButton.ScreenX = discardX
 	s.discardButton.ScreenY = gs.PctY(buttonStripPct)
@@ -458,7 +436,6 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.duelButton.ScreenY = gs.PctY(buttonStripPct)
 
 	s.showDeck = false
-	s.showLog = false
 	s.hands.init(handsButtonPlace)
 	s.initParasites()
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
@@ -501,10 +478,13 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.enemy.Duelist = resetCombatState(s.enemy.Duelist)
 
 	s.log = nil
-	s.rounds = nil
 	s.cursor = 0
 	s.ticks = 0
 	s.round = 0
+
+	// **A record for the duel about to be fought.** After the reset above, because it names the
+	// opponent this visit is putting up. See combat_ledger.go.
+	s.openLedgerFight(gs)
 
 	// **The opponent plans for round one here, and this is a commitment now** *(2026-08-12)*.
 	// It used to be display only — startRound re-planned every round regardless — and it is the
@@ -663,6 +643,12 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	s.theatre.tick()
+
+	// **Pips are paid in as they arrive, wherever the round is.** A flight raised inside the hand
+	// dialog can outlive it — the box stops holding the cursor the moment its script ends — so the
+	// arrival is checked on the frame clock rather than only inside playback. Paying twice is
+	// impossible: a landed flight says so. See combat_shields.go.
+	s.landShields()
 	// **Every opener is inert while any dialog is up, and the X on the panel is the exit**
 	// *(owner's call, 2026-08-24)*. It used to be the other way round — each control survived its
 	// own overlay because it was the only thing that closed one — and that stopped working when a
@@ -670,7 +656,6 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	if !s.modalUp() {
 		s.updateDeckStack(gs)
 	}
-	s.updateLogButton(gs)
 
 	// The deck panel's own two toggles, live only while it is up. They are a view over a picture
 	// of the deck and can change nothing about the round underneath — see deckView.
@@ -679,16 +664,16 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	}
 
 	// The X, run while either of the two older dialogs is up. The hands panel closes itself.
-	if s.showDeck || s.showLog {
+	if s.showDeck {
 		if s.closer.update(gs) {
-			s.showDeck, s.showLog = false, false
+			s.showDeck = false
 		}
 	}
 
 	// **The hands button is dead under the other two dialogs**, for the reason each of them is
 	// dead under the other: a dialog whose exit is not the brightest thing on screen is a trap,
 	// and two live exits is two.
-	s.hands.block(s.showDeck || s.showLog || s.parasites.open)
+	s.hands.block(s.showDeck || s.parasites.open)
 	s.hands.update(gs)
 
 	// **The bucket is the fourth dialog and obeys the same rule**: dead under any of the other
@@ -767,6 +752,23 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	systems.UpdateButton(gs, s.discardButton)
 
 	s.advancePlayback(gs)
+
+	// **A round goes into the account the moment it has finished being watched**, not when the
+	// next one replaces it. It used to be the latter, and the round the player had just played was
+	// therefore the one round missing from the ledger for the whole of the planning phase — which
+	// is exactly when "what just happened" gets asked *(fixed 2026-09-02)*. Playback reaching the
+	// end of the log is the same test `duelSettled` uses for its half of the question.
+	if s.cursor >= len(s.log) {
+		s.recordRound()
+	}
+
+	// **The account is closed the moment the duel settles**, which is after the killing blow has
+	// finished being drawn rather than when life reached zero — the same test the exits use, so
+	// the last round is written exactly once and with everything in it. See combat_ledger.go.
+	if s.duelSettled() && !s.ledgerClosed {
+		s.ledgerClosed = true
+		s.closeLedgerFight()
+	}
 
 	// **Last, after everything that could have moved a card.** The pass reads the same slot
 	// functions the drawing does, so asking before a flight or a re-sort had settled would point at
@@ -891,14 +893,10 @@ func (s *CombatScene) startRound() {
 
 	s.fighterAfter = fighterAfter
 	s.enemyAfter = enemyAfter
-	// **The round being replaced moves into the fight log.** This is the one moment `log` is
-	// about to stop being the current round, so it is where the handover belongs — and the
-	// feed goes on drawing the round that just ended right up to it, off `log`, so a round in
-	// both places for a frame would be a round said twice. See combat_log.go.
-	if len(s.log) > 0 {
-		s.rounds = append(s.rounds, s.log)
-	}
+	// **The round being replaced is already in the account**, written when its playback finished
+	// rather than here — see Update. This is only the handover of the flag that says so.
 	s.log = log
+	s.ledgerWritten = false
 	s.cursor = 0
 	s.ticks = 0
 
@@ -995,6 +993,16 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// drawn; what waits is the drawing of it.
 	if s.theatre.mathBox.running() {
 		s.theatre.mathBox.tick()
+
+		// **A defend card's pips set off with its figure.** The box is the only thing that knows
+		// which card is being scored right now, and this is the frame it starts on. See
+		// combat_shields.go for why the shields lead the engine's own raise by a phase.
+		if n, ok := s.theatre.mathBox.takeShields(); ok {
+			seat, _ := s.theatre.mathBox.runningSeat()
+			s.noteShieldFlight(s.theatre.mathBox.side, seat, n,
+				s.shownShields(s.theatre.mathBox.side, s.modelShields(s.theatre.mathBox.side)))
+		}
+		s.landShields()
 		// **The banner goes when its own figure sets off** *(2026-08-19, owner's call)*. The
 		// multiplier flies out of the second line under the hand's name and into the sum, so from
 		// that frame the number is in the line and the banner is a copy of something that has
@@ -1076,8 +1084,12 @@ func (s *CombatScene) endOfRound() {
 	// **The adoption above is where banked points become `BonusAP`**, so what the cards have been
 	// drawing on top of it since the figures landed is now in the model and has to stop being
 	// added. Before the early return below: a settled duel adopts its end state like any other.
-	s.theatre.shieldsShown = [2]int{}
-	s.theatre.shieldsSeen = [2]bool{}
+	// **The shield rows hand authority back to the model and forget this round's seats.** The pips
+	// themselves stay: the shields survive the round, and their colours are the only account of what
+	// raised them. See shield_row.go.
+	for i := range s.theatre.shieldRows {
+		s.theatre.shieldRows[i].endRound()
+	}
 
 	if s.duelSettled() {
 		return
@@ -1167,6 +1179,13 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// The shield row on the duelist card, moved on the beat rather than at adoption — the same
 	// division noteHit makes between the model and the drawing. See noteShields.
 	if e.Kind == combat.KindRaised || e.Kind == combat.KindBlocked || e.Kind == combat.KindExpired {
+		// **A raise whose pips have not flown flies them now, and the row waits for them.** A turn
+		// of nothing but defences forms no hand, so there is no sum to leave with — see
+		// noteShieldRaise. When it does fly, the count arrives with the pips rather than here, or
+		// the row would fill before the thing filling it had crossed the screen.
+		if s.noteShieldRaise(e) {
+			return
+		}
 		s.noteShields(e)
 		return
 	}
@@ -1266,7 +1285,6 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawSortButtons(gs, screen)
 	s.drawDiscardsLeft(gs, screen)
 	s.drawDeckStack(gs, screen)
-	s.drawLogButton(gs, screen)
 
 	// **Order below is contested, and the ranking is written down because it will be
 	// re-broken otherwise** *(2026-08-11, narrowed 2026-08-18)*. Two things want to be on top
@@ -1317,6 +1335,8 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// They are drawn after the dialog because a figure leaving the sum has to be on top of it —
 	// underneath, the first frames of the flight would be hidden by the number it left.
 	s.drawHits(gs, screen)
+	// The pips, over the cards they are crossing and under the dialogs. See combat_shields.go.
+	s.drawShields(gs, screen)
 
 	// **The banked figures, over the card they are flying out of and the fighter card they raise.**
 	// Beside the damage figures because they are the same gesture in the other direction, and after
@@ -1337,10 +1357,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	if s.showDeck {
 		drawDeckPanel(gs, screen, &s.deckView, s.fightContents())
 	}
-	if s.showLog {
-		s.drawLogOverlay(gs, screen)
-	}
-	if s.showDeck || s.showLog {
+	if s.showDeck {
 		s.closer.draw(gs, screen)
 	}
 

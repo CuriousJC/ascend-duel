@@ -675,15 +675,28 @@ is no build step.**
   gets back the level they chose rather than a moment of the wrong one. Music that begins on its
   own is the first thing a new player reaches for a control to stop.
 
-### The frame: one control that belongs to no screen
+### The frame: the two controls that belong to no screen
 
 [internal/game/chrome.go](internal/game/chrome.go) draws the **settings button** — a 44px
-square in the bottom-left corner of every screen, carrying a generated cog.
+square in the bottom-left corner of every screen, carrying a generated cog — and, beside it, the
+**ledger button**: the run's account of itself, on every screen. See MECHANICS.md §The ledger,
+`internal/screens/ledger.go` for the panel and `internal/session/ledger.go` for what it holds.
+
+**The ledger is chrome for the usual three reasons and one it does not share**: it is true for the
+whole run, wanted on every screen and owned by no scene — and unlike the settings it *could not*
+have been a screen, because leaving the combat screen and coming back re-runs `Init`, which deals a
+fresh duel. A ledger that navigated would destroy the fight it was opened to read about. While its
+panel is up, `internal/game` does not update the active scene at all; that freezes pacing and, like
+every other dialog, cannot change an outcome.
 
 **It was the mute button until 2026-08-27** and is now the door to the settings screen. What the
 corner lost is one-click silence; what it gained is somewhere to put the game speed, which had no
 control at all.
 
+- **A third widget arrived with it: `models.Scrollbar`** *(2026-09-02)*, built the way
+  `models.Button` and `models.Slider` are — a plain struct in `models`, behaviour in `systems`. It
+  **counts rows, not pixels**, so a panel cannot land half a line off, and it is a drag because the
+  input vocabulary has no wheel and adding one would be a fourth verb rather than a widget.
 - **It is deliberately outside "scenes own their own widgets" rather than an exception to
   it.** The score is started once in `main` and loops for the whole session across every
   screen, and the game's one clock is the same number on every screen, so the control that
@@ -835,6 +848,16 @@ the whole pricing decision — a ring is rebalanced by moving it, never by writi
 review question is "does any of these forty-odd commons belong a tier up", which an alphabetical list
 cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
 because a scarce tier rounds to `0%` and would read as unreachable.
+
+**Hue belongs to the elements, and the wheel is full** *(owner's call, 2026-09-02)*. Fire, ice,
+lightning, earth and arcane take five hues; pink is a ring and a pane's chrome; red and blue are the
+attack and defend verbs; green and grey are the two duelists. **There is no unclaimed hue left**, so
+a new thing wanting to stand out is marked by *weight, case, a swatch or an underline* rather than by
+a colour. The hand is the case that established it: it was the screen's pink, which is also the
+colour a ring's multiplier takes — the two things that multiply a blow, in one colour, in the same
+sum — and moving it to deep purple immediately collided with arcane. It now takes the ground's own
+ink and is marked instead. See `screens.handNameInk` and `session.InkHand`, and note the second
+argument: two of the three axes a hand counts on are not elemental at all.
 
 ### Colour: name one colour and scale it — and the light comes off that colour too
 

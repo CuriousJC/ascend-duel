@@ -350,7 +350,7 @@ func (s *CombatScene) demoReport(gs *state.GlobalState, label string) {
 	// events is the only version there can be. It is the same logRows walk the log draws.
 	rows := s.logRows(s.log)
 	for _, row := range rows {
-		line := row.prefix + row.verb + row.suffix
+		line := row.text()
 		if line == "" {
 			continue
 		}

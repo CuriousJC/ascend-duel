@@ -967,7 +967,16 @@ What that changed, in order of how much it matters:
   and lands a burn on a turn with no fire attack in it. That is the sharper half of the same
   decision.
 - **A hand of nothing but shields is real and lands nothing**, which is the accepted cost — see the
-  decision below the table.
+  decision below the table. **It is scored as of 2026-09-02** *(owner's call)*: the attack phase used
+  to return before naming a hand whenever the turn queued no attack card, so the one hand the ladder
+  could not see was the shield build — which is a build a ring or an authored card should be able to
+  reward. The hand is named and multiplied like any other and the blow sums to zero.
+- **A blow of zero is counted and not thrown** *(owner's call, 2026-09-02)*. The gate is the sum the
+  hand carries: below it the turn spends nothing of the target's — no shield eaten, no raised guard
+  cleared, no miss rolled, no status landed and no ring grown — because a shield build stripping an
+  opponent's defences for free is an attack in everything but the arithmetic. **It reads the sum
+  rather than the cards**, so a shield card authored with damage, or a ring that gives a defence
+  some, is an attack like any other with nothing else to change.
 
 The three ladders are **not** the same numbers, and as of 2026-08-25 no two of them are. The
 starting deck is 55 cards — **5 per concept, 15 per attack form and 10 for defend, 11 per element**
@@ -2396,6 +2405,50 @@ settled before the save format lands, because a choice log replays through this.
   stays vulnerable to draw-count drift; this cannot be.
 
 The same trick should apply to the player's deck once `Session` exists.
+
+---
+
+## The ledger — the run's account of itself *(owner's call, 2026-09-02)*
+
+**Every fight of the run, kept and readable, with the working under every blow.** It replaced the
+fight log, which held one fight, was thrown away by the next `Init`, and had no way to reach its
+own earlier rows.
+
+What it is for is two questions at two scales, and the design answers both on one panel:
+
+- **"What just happened?"** — a blow written as the sum it was: each landing, what the card was
+  worth, which ring multiplied it and which ring bought the extra landing, and what the hand's
+  multiplier did to the total. The hand dialog already acts this out while the blow lands and then
+  it is gone; the ledger is where it keeps.
+- **"How did my run go, and where did it go wrong?"** — every fight as one line: floor, opponent,
+  won or lost, in how many rounds, for how much damage. Clicking one opens it.
+
+The rules that hold it up:
+
+- **The fight in progress is expanded; every finished fight is folded to its heading.** A
+  thirty-fight climb is thousands of lines and a panel opening onto all of them is a scrollbar
+  with nothing to aim at.
+- **A round is written down when it ends, never while it plays.** So the panel cannot show a round
+  the player is still watching, which is the concealment rule it never needed to be given.
+- **It stores sentences, not events.** A `combat.Event` is about 2.5 KB — three 25x5 arrays,
+  almost all zero on anything that is not a hand — so a run of them would be megabytes to say what
+  a few hundred kilobytes of prose says. The events are still the source and the words are the
+  same ones the log always wrote.
+- **It says nothing the events do not.** Every figure comes off the `KindHand` event, which is why
+  those fields are on the event at all; the panel is a second *drawing* of one event and never a
+  second arithmetic.
+- **It is saved with the run**, so "how did my whole climb go" survives a resume. It is the one
+  part of a snapshot that is prose rather than state, and therefore the one part that may never
+  fail a resume: an unrecognised voice draws plain rather than costing the player the run.
+- **It is reachable everywhere**, from a button beside the cog rather than from the combat screen.
+  It is chrome, not a screen — see CLAUDE.md, and note that a screen could not have done it:
+  navigating away from a duel and back re-deals it.
+- **It is coloured like the screen it accounts for**: a figure in its card's element, a ring's
+  multiplier in the ring pink, a verb in its category's colour. The hand itself is *marked* rather
+  than coloured — bold and underlined — because hue belongs to the elements and there is none left
+  that is not a near-collision. See CLAUDE.md.
+- **Scrolling is a dragged scrollbar** *(owner's call)*. The input vocabulary is clicks, drags and
+  hover; the wheel stays out of the game.
 
 ---
 

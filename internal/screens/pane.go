@@ -42,6 +42,14 @@ const (
 	// The Resolution rows are sentences rather than card names, and there are more of them —
 	// a busy round merges to a dozen lines where the flow pane draws at most ten.
 	paneTextRowHeight = 22
+
+	// paneTextSize is what a pane writes at unless it says otherwise. See panePlacement.textSize.
+	paneTextSize = 16
+
+	// paneBandInset keeps a row's ground clear of the pane's own border, and paneBandRise lifts it
+	// so the band sits around the line rather than starting at its cap height.
+	paneBandInset = 3
+	paneBandRise  = 4
 )
 
 // panePlacement is one pane's horizontal slot, label and identifying colour. The
@@ -70,6 +78,21 @@ type panePlacement struct {
 	// sentences about what those cards did.
 	rowHeight int
 
+	// textSize is the point size the rows are written at. **Zero means paneTextSize**, so a pane
+	// that has no opinion gets the size every pane had before this existed.
+	//
+	// It travels with rowHeight rather than being derived from it: the two have to move together —
+	// a bigger face at the old pitch overlaps its neighbours — and which pitch a size wants is a
+	// judgement about air between lines, not arithmetic.
+	textSize float64
+
+	// bold draws every run bold, not just the marked one. **The ledger takes it and nothing else
+	// does** *(2026-09-02, owner asked to see it)*: the panel is read at a distance rather than
+	// glanced at during a round, and kubasta at 16 on an off-white ground is light. It is a
+	// property of the pane rather than of a row so that a row still says what a *verb* is — the
+	// mark keeps its underline, which is what tells the two apart once everything is heavy.
+	bold bool
+
 	// firstRow is the gap from the top edge to the first row. A titled pane has to clear its
 	// title; the feed has no title and cannot afford to pretend it does — 45 pixels of
 	// reserved heading out of an 82-pixel box is most of the box.
@@ -79,28 +102,71 @@ type panePlacement struct {
 // paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
 var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 
-// paneRow is one line in a pane: a label, optionally preceded by a colour swatch
-// saying whose action it is. A zero-alpha swatch means the row has none, in which case
-// the label is centred instead of sitting in a column beside the squares.
-type paneRow struct {
-	// A row is drawn as three runs, so the verb in the middle can be coloured, bolded and
-	// underlined while the words either side of it are not. Rows that are not a sentence —
-	// a card name in Action Flow, a placeholder — put everything in prefix and leave the
-	// other two empty, which is why prefix rather than verb is the one that always has to
-	// be set.
-	prefix, verb, suffix string
+// paneRun is one run of text inside a row, with the colour it is written in.
+//
+// **A row is runs rather than three fixed slots** *(2026-09-02)*. It was prefix / verb / suffix,
+// which was exactly enough for a sentence with one coloured verb in it and not enough for the
+// ledger's arithmetic — a figure in its card's colour, a ring's multiplier in the ring pink, the
+// hand's own multiplier in the hand's. Storing runs is what lets the panel look like the screen it
+// is an account of.
+type paneRun struct {
+	text string
 
-	// verbInk is the colour the verb itself is written in. **Zero alpha means "the row's own
-	// ink"**, the same convention Button.BaseColor uses, and it is what the neutral category
-	// takes — see verbInkFor. Storing a colour rather than a category keeps drawPane from
-	// having to know anything about combat.
-	verbInk color.RGBA
+	// ink is the colour this run is written in. **Zero alpha means "the row's own ink"**, the same
+	// convention Button.BaseColor uses.
+	ink color.RGBA
+
+	// mark draws it bold and underlined: the verb, and nothing else.
+	mark bool
+}
+
+// paneRow is one line in a pane: some runs of text, optionally preceded by a colour swatch saying
+// whose action it is. A zero-alpha swatch means the row has none, in which case a single unmarked
+// run is centred instead of sitting in a column beside the squares.
+type paneRow struct {
+	runs []paneRun
 
 	swatch color.RGBA
 
 	// highlighted marks the row as the one happening right now, drawn lit against the
 	// dim pane behind it.
 	highlighted bool
+
+	// band is a colour painted across the whole row before anything is drawn on it, and a
+	// zero-alpha band is no band at all.
+	//
+	// **It is what groups rows into blocks.** The ledger folds a run into one line per fight and
+	// opens one at a time; without a ground behind them, an opened fight's forty rows and the next
+	// fight's heading are one undifferentiated list. A band says "all of this is the same thing".
+	band color.RGBA
+
+	// indent sets a row in from the pane's left edge, in pixels, and **is what stops a row with
+	// no swatch being centred**. The arithmetic under a blow is a column of figures: centring it
+	// would put every line at a different left edge, which is the one layout a column cannot
+	// survive. See prose_terms.go.
+	indent int
+}
+
+// plainRow is a whole row in the pane's own ink: a heading, a placeholder, a sentence nobody has
+// coloured. Most rows outside a duel are one of these.
+func plainRow(text string) paneRow {
+	return paneRow{runs: []paneRun{{text: text}}}
+}
+
+// text is the row as one string, for a caller reading it rather than drawing it — a test, or the
+// scripted demo's report.
+func (r paneRow) text() string {
+	var out string
+	for _, run := range r.runs {
+		out += run.text
+	}
+	return out
+}
+
+// centred reports whether the row is written down the middle of the pane rather than in the
+// column: a lone unmarked run, no swatch and no indent. Headings are the case this exists for.
+func (r paneRow) centred() bool {
+	return r.swatch.A == 0 && r.indent == 0 && len(r.runs) == 1 && !r.runs[0].mark
 }
 
 // panePlacementRect is the column a full-height pane occupies, from its percentages and the
@@ -116,7 +182,7 @@ func panePlacementRect(gs *state.GlobalState, p panePlacement) image.Rectangle {
 // drawPaneFrame draws a pane's fill, border and title in the rectangle given, and reports it
 // back as floats. Split out because the card panes fill themselves rather than drawing text
 // rows.
-func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle) (x, y, w, h float32) {
+func drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle) (x, y, w, h float32) {
 	// Not drawBox: a pane names its own ground and its own ink, where drawBox derives a dim
 	// fill from one colour. drawBox still serves the caption and the character strip, which
 	// have no text on a light ground to worry about.
@@ -142,10 +208,18 @@ func (s *CombatScene) drawPaneFrame(gs *state.GlobalState, screen *ebiten.Image,
 }
 
 // drawPane draws a read-only pane: the frame, then a row per action.
-func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle, rows []paneRow) {
-	x, y, w, _ := s.drawPaneFrame(gs, screen, p, r)
+//
+// **Free functions rather than methods on the combat scene** *(2026-09-02)*. They never touched a
+// field of it, and the ledger — which is chrome, not a scene — draws the same panel: a widget only
+// one type could call would have meant a second pane renderer for the same picture.
+func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r image.Rectangle, rows []paneRow) {
+	x, y, w, _ := drawPaneFrame(gs, screen, p, r)
 
-	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}
+	size := p.textSize
+	if size == 0 {
+		size = paneTextSize
+	}
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
 
 	// **The highlight is centred on the text, not offset from the row's top by a constant.**
 	// It used to be drawn at rowY-4 with height rowHeight-2, numbers picked by eye against a
@@ -157,109 +231,111 @@ func (s *CombatScene) drawPane(gs *state.GlobalState, screen *ebiten.Image, p pa
 
 	for i, row := range rows {
 		rowY := y + float32(p.firstRow) + float32(i*p.rowHeight)
-		rowOp := &text.DrawOptions{}
+
+		// The row's own ground, edge to edge inside the pane's border, before anything is written
+		// on it. Drawn a whole pitch tall so consecutive banded rows read as one block rather than
+		// as stripes.
+		if row.band.A != 0 {
+			vector.DrawFilledRect(screen, x+paneBandInset, rowY-paneBandRise,
+				w-2*paneBandInset, float32(p.rowHeight), row.band, false)
+		}
 
 		// **The row playback is on is set in the text itself — coloured, bold and underlined —
 		// rather than sat on a lit bar** *(changed 2026-08-07)*. A full-width bar was a fourth
-		// saturated block in a pane that already carries a swatch, a verb chip and a sentence,
-		// and on a light ground it had to be pale enough to read through, which left it
-		// shouting and saying little. Marking the words is the same signal spent on the thing
-		// the reader is actually looking at.
+		// saturated block in a pane that already carries a swatch, a verb and a sentence, and on a
+		// light ground it had to be pale enough to read through, which left it shouting and saying
+		// little. Marking the words is the same signal spent on the thing being read.
 		//
-		// Bold is faux — the same run drawn again a pixel right. `text/v2` has no synthetic
-		// weight and kubasta ships one, so this is the only way to get one without a second
-		// font file. At a pixel font's sizes it is exactly what a bold face would do anyway.
+		// Bold is faux — the same run drawn again a pixel right. `text/v2` has no synthetic weight
+		// and kubasta ships one, so this is the only way to get one without a second font file. At
+		// a pixel font's sizes it is exactly what a bold face would do anyway.
 		ink := p.ink
 		if row.highlighted {
 			ink = p.nowInk
 		}
 
-		// A row with no verb is a single centred or left-aligned run and keeps the old path.
-		// One with a verb has to be laid out left to right so the chip can be measured into
-		// place, which rules out centring it — a sentence in a list wants a common left edge
-		// anyway.
-		if row.swatch.A == 0 && row.verb == "" {
+		// A lone unmarked run with nothing beside it is a heading, and headings are centred.
+		if row.centred() {
+			// **A centred run keeps its own ink.** It did not for one build, and the row that
+			// needs it most is the one that has a band behind it: a heading on a dark ground
+			// written in the panel's near-black ink is a heading nobody can read.
+			tint := ink
+			if !row.highlighted && row.runs[0].ink.A != 0 {
+				tint = row.runs[0].ink
+			}
+
+			rowOp := &text.DrawOptions{}
 			rowOp.GeoM.Translate(float64(x+w/2), float64(rowY))
 			rowOp.PrimaryAlign = text.AlignCenter
-			rowOp.ColorScale.ScaleWithColor(ink)
-			text.Draw(screen, row.prefix, face, rowOp)
+			rowOp.ColorScale.ScaleWithColor(tint)
+			text.Draw(screen, row.runs[0].text, face, rowOp)
 			continue
 		}
 
-		textX := x + paneRowInset
+		textX := x + paneRowInset + float32(row.indent)
 		if row.swatch.A != 0 {
-			// A swatch turns the row into a column: square on the left, the line beside it,
-			// so the squares line up down the pane and the alternation is readable as a
-			// pattern rather than as text.
+			// A swatch turns the row into a column: square on the left, the line beside it, so the
+			// squares line up down the pane and the alternation is readable as a pattern rather
+			// than as text.
 			//
-			// **Idle swatches fade toward the pane's own ground**, so the lit one is the
-			// strongest thing in the pane whether that ground is dark or light. Scaling
-			// toward black — which is what dimming used to mean here — made idle rows *more*
-			// contrasty than the lit one the moment Resolution went off-white. See
-			// systems.ColorToward.
+			// **Idle swatches fade toward the pane's own ground**, so the lit one is the strongest
+			// thing in the pane whether that ground is dark or light. Scaling toward black — which
+			// is what dimming used to mean here — made idle rows *more* contrasty than the lit one
+			// the moment the pane went off-white. See systems.ColorToward.
 			swatch := row.swatch
 			if !row.highlighted {
 				swatch = systems.ColorToward(swatch, p.fill, 45)
 			}
-			// Centred on the line for the same reason the bar is, so the squares sit level
+			// Centred on the line for the same reason everything else is, so the squares sit level
 			// with the text they belong to whatever pitch the pane draws at.
 			swatchTop := rowY + float32(lineHeight)/2 - swatchSize/2
 			vector.DrawFilledRect(screen, x+paneRowInset, swatchTop, swatchSize, swatchSize, swatch, false)
 			textX = x + paneRowInset + swatchSize + swatchGap
 		}
 
-		// Three runs, measured one after the next. The verb is written in its category's own
-		// colour — red for attack, blue for defend — so a round can
-		// be scanned for what *kind* of thing happened before any of it is read.
+		// The runs, measured one after the next. **A run with no ink of its own takes the row's**,
+		// so a plain sentence is written in one colour and a sum is written in five.
 		cursorX := float64(textX)
-		draw := func(str string, tint color.RGBA, bold bool) {
-			if str == "" {
-				return
+		for _, run := range row.runs {
+			if run.text == "" {
+				continue
 			}
+			tint := run.ink
+			if tint.A == 0 || row.highlighted {
+				tint = ink
+			}
+			bold := run.mark || row.highlighted || p.bold
+
 			at := func(dx float64) {
 				op := &text.DrawOptions{}
 				op.GeoM.Translate(cursorX+dx, float64(rowY))
 				op.ColorScale.ScaleWithColor(tint)
-				text.Draw(screen, str, face, op)
+				text.Draw(screen, run.text, face, op)
 			}
 			at(0)
 			if bold {
 				at(1) // faux bold
 			}
 
-			// Advance by the *unbolded* width, so the second pass thickens the strokes without
-			// walking the runs after it out of place.
-			wRun, _ := text.Measure(str, face, 0)
-			cursorX += wRun
-		}
+			wRun, _ := text.Measure(run.text, face, 0)
 
-		draw(row.prefix, ink, row.highlighted)
-		if row.verb != "" {
-			// **The verb is always bold and always underlined, on every row.** That is what makes
-			// it read as the verb rather than as a word that happens to be coloured — one mark
-			// would be ambiguous against a pane that also uses colour for the side and for the
-			// live row, and three together are unmistakable at a glance.
-			verbInk := row.verbInk
-			if verbInk.A == 0 {
-				verbInk = ink
+			// **The mark is always bold *and* underlined.** That is what makes a verb read as the
+			// verb rather than as a word that happens to be coloured — one mark would be ambiguous
+			// against a pane that also uses colour for the side and for the live row.
+			//
+			// **Flush with the bottom of the measured line box**, not a constant above it:
+			// text.Measure reports the full line including descent, which is what keeps the rule
+			// clear of a descender rather than striking through one.
+			if run.mark {
+				vector.DrawFilledRect(screen,
+					float32(cursorX), rowY+float32(lineHeight)-underlineHeight,
+					float32(wRun), underlineHeight, tint, false)
 			}
 
-			verbLeft := float32(cursorX)
-			wVerb, _ := text.Measure(row.verb, face, 0)
-			draw(row.verb, verbInk, true)
-
-			// **Flush with the bottom of the measured line box**, not a constant above it. The
-			// underline used to sit under a chip whose height was fixed at 18 against a 22px
-			// pitch; with no chip the only thing it can be positioned against is the text, and
-			// text.Measure already reports the full line including descent. That is what keeps
-			// it clear of a descender — a rule three pixels up from the baseline strikes
-			// straight through one — and what lets either pane's pitch change again.
-			vector.DrawFilledRect(screen,
-				verbLeft, rowY+float32(lineHeight)-underlineHeight,
-				float32(wVerb), underlineHeight,
-				verbInk, false)
+			// Advance by the *unbolded* width, so the second pass thickens the strokes without
+			// walking the runs after it out of place.
+			cursorX += wRun
 		}
-		draw(row.suffix, ink, row.highlighted)
 	}
 }
 

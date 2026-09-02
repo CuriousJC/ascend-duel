@@ -29,10 +29,12 @@ package screens
 import (
 	"fmt"
 	"image"
+	"math/rand"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -91,6 +93,10 @@ type parasiteToggle struct {
 	// **Identities, not hand positions.** The hand is re-laid-out by a sort and re-dealt by a
 	// refill; an identity survives both, and it is what `session.ApplyParasite` takes.
 	picked []int
+
+	// shown is a rock shower's receipt: the stones it just handed over, held on screen until the
+	// player dismisses them. Empty for every other parasite, which close on the take.
+	shown []session.Stone
 }
 
 // initParasites wires the button. **The button survives a re-entry and the state does not** —
@@ -108,6 +114,12 @@ func (t *parasiteToggle) disarm() {
 	t.picked = nil
 }
 
+// dismiss clears a rock shower's receipt and closes the dialog behind it.
+func (t *parasiteToggle) dismiss() {
+	t.shown = nil
+	t.open = false
+}
+
 // updateParasites runs the button and, while the bucket is open, whatever is under the cursor.
 //
 // **It is taken out of the frame entirely when it cannot be used** — no parasites to spend, or the
@@ -117,6 +129,7 @@ func (s *CombatScene) updateParasites(gs *state.GlobalState) bool {
 	s.parasites.block(s.showDeck || s.showLog || s.hands.open || !s.canSpendParasites(gs))
 	if !s.parasites.open {
 		s.parasites.disarm()
+		s.parasites.shown = nil
 	}
 	return s.parasites.modalToggle.update(gs, func(at image.Point, tip *models.Tooltip) {
 		s.parasiteHover(gs, at, tip)
@@ -129,7 +142,13 @@ func (s *CombatScene) updateParasites(gs *state.GlobalState) bool {
 // presentation rule: the first is what keeps an alteration out of a round that has already been
 // resolved, and the second is what stops an empty dialog being something to open.
 func (s *CombatScene) canSpendParasites(gs *state.GlobalState) bool {
-	return gs.Run != nil && gs.Run.HoldCount() > 0 && s.planning()
+	if gs.Run == nil || !s.planning() {
+		return false
+	}
+	// **A receipt keeps the dialog alive after the bucket has emptied.** Spending the last rock
+	// shower leaves nothing to spend, and without this the panel showing what it just handed over
+	// would be taken off screen in the same frame it went up.
+	return gs.Run.HoldCount() > 0 || len(s.parasites.shown) > 0
 }
 
 // drawParasites puts the button and, if it is open, the panel on screen.
@@ -258,6 +277,14 @@ func (s *CombatScene) parasiteHover(gs *state.GlobalState, at image.Point, tip *
 		return
 	}
 
+	// **A receipt takes the whole panel and the only gesture is dismissing it.** Nothing is being
+	// chosen — the stones are already on their rungs — so any click anywhere puts it away rather
+	// than the player having to find a control.
+	if len(s.parasites.shown) > 0 {
+		s.parasites.dismiss()
+		return
+	}
+
 	p, armed := s.armedParasite(gs)
 	if !armed {
 		for i, r := range s.bucketRects(gs) {
@@ -328,7 +355,7 @@ func (s *CombatScene) aimParasite(gs *state.GlobalState, p session.Parasite, id 
 // bucket by an application that then refused would be a consumable the player paid for and did not
 // get; `ApplyParasite` is all-or-nothing, so asking it first is what makes the pair safe.
 func (s *CombatScene) takeParasite(gs *state.GlobalState, p session.Parasite) {
-	if !gs.Run.ApplyParasite(p, s.parasites.picked) {
+	if !gs.Run.ApplyParasiteRolling(p, s.parasites.picked, s.showerRNG(gs)) {
 		s.parasites.disarm()
 		return
 	}
@@ -340,10 +367,56 @@ func (s *CombatScene) takeParasite(gs *state.GlobalState, p session.Parasite) {
 	// card would still be sitting in the row.
 	s.resyncHandFromRun(gs)
 
+	// **A copy joins the hand it was copied from** *(owner's call, 2026-09-02)*. The worm version
+	// of this only has to put a card in the deck, because it is spent between fights; a parasite is
+	// spent in the middle of one, and the fight's piles were dealt before it existed — so a copy
+	// that went only into the run would not be playable until the next fight and would read as a
+	// dud. `resyncHandFromRun` cannot do it, because it walks the hand and the copy is not in it.
+	//
+	// **It arrives unselected, whatever the card it came from was doing.** A copy that queued
+	// itself would spend action points the player had not committed.
+	for _, copied := range gs.Run.Duplicated() {
+		s.hand = append(s.hand, paletteCard{actionCard: copied})
+	}
+	s.syncQueue()
+
 	s.parasites.disarm()
+
+	// **A rock shower stays on screen instead of closing the dialog** *(owner's call, 2026-09-02)*:
+	// "show them all and put them all in". They are already in the run's pouch by the time this
+	// runs — the panel is a receipt, not an offer, and the only click it takes is the one that
+	// dismisses it. What can be done with them is the shop's S button; see shop_pouch.go.
+	if shown := gs.Run.Granted(); len(shown) > 0 {
+		s.parasites.shown = shown
+		saveRun(gs)
+		return
+	}
+
 	s.parasites.open = false
 	saveRun(gs)
 }
+
+// showerRNG is the source a rock shower draws its stones from, and nil for every other parasite.
+//
+// **Its own salted stream, plus the number of stones the run has already placed** — see
+// `seeds.StoneShower`. The fight index alone is not enough here, because a run may carry three
+// showers and spend all three in one fight; the placed count is a number the snapshot already
+// carries, so a resumed run rolls what it would have rolled.
+func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
+	if gs.Run == nil {
+		return nil
+	}
+	placed := 0
+	for _, n := range gs.Run.StoneCounts() {
+		placed += n
+	}
+	seed := seeds.ForFight(gs.RunSeed, seeds.StoneShower, gs.Run.Fight()) + int64(placed)*stoneShowerStride
+	return rand.New(rand.NewSource(seed))
+}
+
+// stoneShowerStride separates one shower from the next inside a fight. A large odd number, on the
+// argument `seeds.fightStride` is under: consecutive draws should not be consecutive seeds.
+const stoneShowerStride int64 = 0x3B9A_CA07
 
 // resyncHandFromRun brings the hand back in line with the run's deck after a parasite has altered
 // it: an altered card is redrawn as it now is, and a card the run no longer owns leaves the row.
@@ -376,6 +449,11 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 func (s *CombatScene) drawParasitePanel(gs *state.GlobalState, screen *ebiten.Image) {
 	r := drawModalFrame(gs, screen, modalHead{})
 
+	if len(s.parasites.shown) > 0 {
+		s.drawStoneReceipt(gs, screen, r)
+		return
+	}
+
 	p, armed := s.armedParasite(gs)
 	s.drawParasitePrompt(gs, screen, r, p, armed)
 
@@ -395,6 +473,41 @@ func (s *CombatScene) drawParasitePanel(gs *state.GlobalState, screen *ebiten.Im
 		return
 	}
 	s.drawParasiteTargets(gs, screen, p)
+}
+
+// drawStoneReceipt is what a rock shower leaves on screen: the stones it handed over.
+//
+// **They are drawn where the bucket's cards stand**, not where the hand does, because they are the
+// thing that was just spent rather than the thing being aimed at — and they are drawn *enabled*,
+// since every one of them was kept. There is nothing to choose here.
+func (s *CombatScene) drawStoneReceipt(gs *state.GlobalState, screen *ebiten.Image,
+	r image.Rectangle) {
+
+	shown := s.parasites.shown
+
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: parasitePromptSize}
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(r.Min.X+r.Dx()/2), float64(r.Min.Y+parasitePromptDrop))
+	op.PrimaryAlign = text.AlignCenter
+	op.ColorScale.ScaleWithColor(groundInk)
+	text.Draw(screen, fmt.Sprintf("%d %s into your pouch - spend them at the shop",
+		len(shown), stoneWord(len(shown))), face, op)
+
+	rects := parasiteCardRects(r, len(shown), r.Min.Y+r.Dy()*parasiteBucketRowPct/100)
+	for i, rect := range rects {
+		if i >= len(shown) {
+			break
+		}
+		drawStoneCard(gs, screen, rect.Min, shown[i], true)
+	}
+}
+
+// stoneWord is "stone" or "stones", so a shower of one does not read "1 stones".
+func stoneWord(n int) string {
+	if n == 1 {
+		return "stone"
+	}
+	return "stones"
 }
 
 // drawParasiteTargets is the hand, drawn as the thing being aimed at.

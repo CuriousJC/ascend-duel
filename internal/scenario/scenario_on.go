@@ -48,6 +48,10 @@ type record struct {
 	// exactly as Rings are: a parasite key is internal/session's to resolve.
 	Parasites []string `json:"Parasites"`
 
+	// Stones is what the run opens carrying in its pouch, by record key. The caller resolves them,
+	// on the terms Parasites is under.
+	Stones []string `json:"Stones"`
+
 	// Enemy is a record key from enemies.json. **Empty means the climb's own**, so a scenario that
 	// is only about the hand does not have to pick a fight.
 	Enemy string `json:"Enemy"`
@@ -254,6 +258,9 @@ func Rings() []string { return current.Rings }
 // Parasites is what the run opens holding in its bucket, by record key. The caller resolves them,
 // for the reason it resolves the rings.
 func Parasites() []string { return current.Parasites }
+
+// Stones is what the run opens carrying in its pouch, by record key.
+func Stones() []string { return current.Stones }
 
 // Hand is the opening hand to deal, resolved into real cards.
 func Hand() []combat.Card {

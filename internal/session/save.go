@@ -42,6 +42,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Grown:      map[string]int{},
 		Stones:     s.StoneCounts(),
 		Held:       s.Held(),
+		Pouch:      s.Carried(),
 		NextCardID: s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
@@ -175,6 +176,16 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	for _, key := range snap.Held {
 		if !s.Hold(key) {
 			return nil, 0, fmt.Errorf("parasite %q is not one this build has", key)
+		}
+	}
+
+	// **A carried stone the catalogue no longer holds is refused rather than dropped**, on the
+	// terms a parasite is. It is checked before the placed counts below because the two are
+	// different failures: this is a rock in the pouch that has stopped existing, and that is a rung
+	// that has.
+	for _, key := range snap.Pouch {
+		if !s.Carry(key) {
+			return nil, 0, fmt.Errorf("stone %q is not one this build has", key)
 		}
 	}
 

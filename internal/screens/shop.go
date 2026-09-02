@@ -180,6 +180,11 @@ type ShopScene struct {
 	// shop_goods.go.
 	good goods
 
+	// pouch is the S button beside them: the stones the run is carrying, and the two things
+	// that can be done to one. **A panel rather than a row**, because the screen has no vertical
+	// room left for a fourth row of cards - see shop_pouch.go.
+	pouch pouchToggle
+
 	// tip explains a ring: what it does, what it costs, and where it would sit in the firing order.
 	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
 	// and nothing at all about slashes.
@@ -202,6 +207,8 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 		s.sellButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
 		s.sellButton.TextSize = sellTabTextSize
 	}
+
+	s.pouch.init()
 
 	s.armed, s.selling = "", ""
 	s.leaving = false
@@ -332,12 +339,15 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 
 	// While the deck panel is up the two rows are dead. See deckToggle.update, which counts the
 	// frame the panel closes on as a covered one.
-	s.deck.block(s.hands.open)
-	s.hands.block(s.deck.open)
+	s.deck.block(s.hands.open || s.pouch.open)
+	s.hands.block(s.deck.open || s.pouch.open)
 	if s.deck.update(gs, ownedContents(gs)) {
 		return nil
 	}
 	if s.hands.update(gs) {
+		return nil
+	}
+	if s.updatePouch(gs) {
 		return nil
 	}
 
@@ -635,6 +645,7 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// on top of it.
 	s.deck.draw(gs, screen, ownedContents(gs))
 	s.hands.draw(gs, screen, ownedHands(gs))
+	s.drawPouch(gs, screen)
 
 	// The sealed good's dialog, over both panels: it is the one dialog on this screen that a
 	// purchase has already been made for, so nothing may be drawn on top of it but the tutorial.

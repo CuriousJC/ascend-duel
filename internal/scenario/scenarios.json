@@ -131,7 +131,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u2014 and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Rings": [
       "atrophy-ring",
       "momentum-ring"
@@ -172,19 +172,92 @@
   },
   {
     "ScenarioRecord": "bucket-of-parasites",
-    "Note": "The board piece: a bucket holding one of each shape a parasite can take, opened with the P button above the fight log. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic turns one into a Strike, and Hoard needs no target at all and so is taken on the click.",
+    "Note": "The board piece: a bucket holding one of each shape a parasite can take, opened with the P button above the fight log. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Strike, Graft makes the first card you click into the second, and Hoard needs no target at all and so is taken on the click.",
     "Rings": [],
     "Hand": [],
     "Parasites": [
       "leech",
       "gnaw",
       "mimic",
+      "effigy",
+      "graft",
       "hoard"
     ],
     "Screen": "combat",
     "Seed": "0000HX",
     "Fight": 0,
     "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "held-back-riders",
+    "Note": "The four riders that pay for a card you do NOT play, plus the two that pay for one you do. Attach Patience or Spite or Brood to a card, then leave that card in the hand and press DUEL! - the blow gets bigger, or the fight log says 'kept back for 3 vitae', on every turn you go on holding it. Hunger is the opposite question: it only pays if its card is one of the cards the hand was formed from, which a turn can play a card without doing. Carapace puts a Jab in the shield business. It is here because none of this is on a card face yet - the tooltip prose is the only readout, so the way to check the arithmetic is to hold the card and watch the sum.",
+    "Rings": [],
+    "Hand": [],
+    "Parasites": [
+      "patience",
+      "spite",
+      "brood",
+      "hunger",
+      "carapace",
+      "goad"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "element-and-form-borers",
+    "Note": "The eight recolouring and reforming parasites, two cards each. The five bores paint a pair of cards an element; the three grubs change what a pair COUNTS AS on the form axis without changing the cards - so point Maulgrub at two Wards and you have two cards that still shield and now make a crush pair. That is a legal weird thing on the owner's call, not a hole in the checking. Watch the corner mark and the cost ticks for the recolour; watch the hands panel for the reform.",
+    "Rings": [],
+    "Hand": [],
+    "Parasites": [
+      "emberbore",
+      "arcbore",
+      "maulgrub",
+      "thorngrub"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "rock-shower",
+    "Note": "Three rock showers in the bucket. Each one needs no target, so it is taken on the click, and the panel stays up showing the three stones it just handed over - they go into the run's POUCH, not onto the ladder. Win the fight and the shop's S button is where they are spent: Use puts one on its rung, Sell pays 5. For the shop half on its own without the fight, see stones-in-the-pouch.",
+    "Rings": [],
+    "Hand": [],
+    "Parasites": [
+      "rockshower",
+      "rockshower",
+      "rockshower"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "stones-in-the-pouch",
+    "Note": "Opens on the shop carrying five stones, which is the other half of the rock shower. The S button in the corner beside D and C is the pouch; click a stone to arm it and two tabs hang under it - green Use puts it on its rung for the rest of the run, crimson Sell pays 5 vitae. The hands panel next door is where to check a Use actually moved the rung. It is here because a carried stone is otherwise a parasite bought, a fight won and a shower spent away.",
+    "Rings": [],
+    "Hand": [],
+    "Parasites": [],
+    "Stones": [
+      "agate",
+      "jasper",
+      "onyx",
+      "flint",
+      "garnet"
+    ],
+    "Screen": "shop",
+    "Seed": "0000HX",
+    "Fight": 1,
+    "Vitae": 40,
     "Life": 0
   }
 ]

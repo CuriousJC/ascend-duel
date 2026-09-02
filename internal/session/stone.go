@@ -132,12 +132,24 @@ func resolveStone(r data.StoneData) (Stone, error) {
 	return Stone{Record: r.StoneRecord, Name: r.Name, Text: r.Text, Hand: r.Hand}, nil
 }
 
+// StoneSalePrice is what one carried stone fetches when it is sold.
+//
+// **Five, which is what a whole bag of rocks costs** — the bag is 5 vitae for four stones of which
+// one is kept, so a stone sold back at 5 pays for the next bag outright. That is deliberately
+// generous rather than tuned: selling exists so a rung you will never build is worth something,
+// and a price that made selling pointless would leave the pouch full of rocks nobody wants. It is
+// one number in one place, and it is the obvious thing to move first if the pouch turns out to be
+// a vitae fountain.
+const StoneSalePrice = 5
+
 // UseStone puts a stone on its rung, for the rest of the run, and reports whether the catalogue
 // held it.
 //
-// **Using it is the whole of owning it** *(owner's call, 2026-08-27)*. A stone is not carried
-// around waiting to be spent: the bag of rocks offers four, the one that is chosen is applied on
-// the spot, and the other three are gone. So there is no inventory here — only the counts.
+// **Using is no longer the same as owning** *(owner's call, 2026-09-02, reversing 2026-08-27)*. A
+// stone used to be applied the moment it was chosen and there was no inventory at all. A run now
+// **carries** stones — see Carry and the pouch — and this is what spending one does. The bag of
+// rocks still applies its chosen stone on the spot, because that is a pick out of four rather than
+// something handed over; what changed is that a stone can now also arrive as a thing to keep.
 func (s *Session) UseStone(key string) bool {
 	stone, ok := stones[key]
 	if !ok {
@@ -219,3 +231,69 @@ func sortedHands(m map[string]int) []string {
 	sort.Strings(out)
 	return out
 }
+
+// The pouch: stones the run is carrying, unspent.
+//
+// **A list of record keys rather than counts**, which is the opposite of `stones` and is right for
+// the opposite reason. `stones` is what the ladder reads and two Agates there are genuinely one
+// number; the pouch is a row of things to click, and two Agates in it are two cards to draw and two
+// separate decisions to make. It is the parasite bucket's shape exactly, and for the same argument.
+
+// Carry puts a stone in the pouch, and reports whether the catalogue held it.
+//
+// **A stone the catalogue does not have is refused** rather than carried as a key nothing can
+// resolve — the posture `Hold` takes for a parasite, and for the same reason: a pouch slot that
+// cannot be resolved is a slot the player cannot spend.
+func (s *Session) Carry(key string) bool {
+	if _, ok := stones[key]; !ok {
+		return false
+	}
+	s.pouch = append(s.pouch, key)
+	return true
+}
+
+// Carried is every stone the run is carrying, by record key, in the order they were acquired.
+func (s *Session) Carried() []string {
+	out := make([]string, len(s.pouch))
+	copy(out, s.pouch)
+	return out
+}
+
+// CarryCount is how many stones are in the pouch.
+func (s *Session) CarryCount() int { return len(s.pouch) }
+
+// SpendCarried takes one out of the pouch and puts it on its rung. It reports whether it was there.
+//
+// **Out of the pouch first, then onto the rung**, and by position rather than by key because the
+// pouch may hold two of the same stone and spending one must not be ambiguous about which — the
+// argument `parasiteToggle.armed` is under.
+func (s *Session) SpendCarried(i int) bool {
+	if i < 0 || i >= len(s.pouch) {
+		return false
+	}
+	key := s.pouch[i]
+	s.pouch = append(s.pouch[:i], s.pouch[i+1:]...)
+	return s.UseStone(key)
+}
+
+// SellCarried takes one out of the pouch and pays for it. It reports whether it was there.
+//
+// **The rung is never touched.** A sold stone was never on the ladder, which is the whole point of
+// carrying one: a rung you will never build is a thing to turn into vitae rather than a raise you
+// are stuck with.
+func (s *Session) SellCarried(i int) bool {
+	if i < 0 || i >= len(s.pouch) {
+		return false
+	}
+	s.pouch = append(s.pouch[:i], s.pouch[i+1:]...)
+	s.AddVitae(StoneSalePrice)
+	return true
+}
+
+// StartingStones is what a run opens carrying in its pouch, by record key.
+//
+// **Empty as shipped, and it is a debug seat**, the counterpart of StartingParasites and for the
+// same reason: a stone reaches the pouch only from a rock-shower parasite, which is bought two
+// screens away and spent in the fight after that. `internal/scenario` is what fills it; nothing
+// else may.
+var StartingStones []string

@@ -73,6 +73,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindMissed:     1,
 	combat.KindBurned:     1,
 	combat.KindHealed:     1,
+	combat.KindVitae:      1,
 	combat.KindRoundEnd:   1,
 }
 
@@ -792,6 +793,42 @@ func setEnabled(b *models.Button, enabled bool) {
 	}
 }
 
+// heldCards is the cards still in the hand that are not being played this round.
+//
+// **Taken at the press, before the queued cards leave the row.** `spendSelected` filters them out
+// a moment later; until then the hand holds both, and the selection flag is the only thing that
+// tells them apart. See combat.ResolveRoundHolding for what reads this.
+func (s *CombatScene) heldCards() []combat.Card {
+	out := make([]combat.Card, 0, len(s.hand))
+	for _, c := range s.hand {
+		if c.selected {
+			continue
+		}
+		out = append(out, c.actionCard)
+	}
+	return out
+}
+
+// payHeldVitae hands the run whatever the unplayed hand earned this round.
+//
+// **The rules announce it and this pays it**, because `internal/combat` has no purse — see
+// combat.KindVitae. It walks the log the engine has already finished rather than watching the
+// playback, so how fast the round is drawn cannot change what the player is paid.
+//
+// **Only the player's side is paid.** A creature has no run behind it, and a KindVitae from the
+// opponent would be a purse nobody owns; nothing emits one today, and this is what keeps that
+// true if something ever does.
+func (s *CombatScene) payHeldVitae(events []combat.Event) {
+	if s.run == nil {
+		return
+	}
+	for _, e := range events {
+		if e.Kind == combat.KindVitae && e.Side == combat.SideA {
+			s.run.AddVitae(e.Amount)
+		}
+	}
+}
+
 // startRound resolves a single round and hands playback an event log. It does not
 // run the duel to a conclusion — control returns to the player to re-plan.
 func (s *CombatScene) startRound() {
@@ -834,9 +871,20 @@ func (s *CombatScene) startRound() {
 	// never happened. Nothing about the plan changes by waiting — PlanFor never sees the
 	// player's queue, and the opponent's own state has not moved since the last round ended —
 	// so this is purely a change to *when* the player is told.
-	log, fighterAfter, enemyAfter := combat.ResolveRound(
+	// **The unplayed hand goes in with the round** *(2026-09-02)*. Four riders read it — a card
+	// held back can pay damage, scaling or vitae — so the resolver has to be told what was *not*
+	// played as well as what was. See combat.ResolveRoundHolding.
+	//
+	// **It is read before `spendSelected` runs**, which is the whole reason it is taken here: the
+	// hand still holds every card at this moment, selected and not, and the queued ones are gone
+	// from it by the time the flights are raised.
+	//
+	// The opponent holds nothing — a creature plans a turn rather than keeping a hand — so nothing
+	// is passed for it.
+	log, fighterAfter, enemyAfter := combat.ResolveRoundHolding(
 		s.fighter.Duelist, s.enemy.Duelist,
 		s.fighterActions, s.enemyActions,
+		s.heldCards(), nil,
 		s.round,
 		s.combatRNG,
 	)
@@ -853,6 +901,13 @@ func (s *CombatScene) startRound() {
 	s.log = log
 	s.cursor = 0
 	s.ticks = 0
+
+	// **The purse is filled from the resolved log, here, rather than during playback.** The rules
+	// have no purse and announce a KindVitae instead; reading it at adoption keeps the payment a
+	// function of the round the engine decided and not of how far the animation has got, which is
+	// the presentation-may-never-change-an-outcome rule pointing the other way for once. See
+	// combat.KindVitae.
+	s.payHeldVitae(log)
 
 	// Both hands go to the table now, not as the round plays out. The opponent's is known in
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of

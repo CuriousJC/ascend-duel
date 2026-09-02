@@ -75,6 +75,12 @@ type RunSnapshot struct {
 	// two things to spend.
 	Held []string `json:"held,omitempty"`
 
+	// Pouch is the stones the run is carrying but has not spent, by record key, **in acquisition
+	// order**, which is the order the player sees them in. **Separate from Stones**, which is what
+	// has already gone on the ladder: a carried stone is a thing still to decide about and a placed
+	// one is a decision already made, and folding the two would lose the difference.
+	Pouch []string `json:"pouch,omitempty"`
+
 	// Spoils is what the last win still owes, unclaimed. A run saved at the reward station has a
 	// payout part-narrated, and dropping it would pay the player less for quitting.
 	Spoils SpoilsSnapshot `json:"spoils"`

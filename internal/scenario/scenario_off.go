@@ -26,6 +26,9 @@ func Hand() []combat.Card { return nil }
 // Parasites is what the run should open holding in its bucket. Nil here.
 func Parasites() []string { return nil }
 
+// Stones is what the run should open carrying in its pouch. Nil here.
+func Stones() []string { return nil }
+
 // Enemy is the record key to fight instead of the climb's own. Empty here.
 func Enemy() string { return "" }
 

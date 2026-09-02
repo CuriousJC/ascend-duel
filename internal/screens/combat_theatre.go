@@ -245,6 +245,10 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorActorSeat, anchorActorCard, gestureFly,
 		"a rider is a property of the card, so the life flies out of that card's seat into the bar it fills",
 	},
+	combat.KindVitae: {
+		anchorNone, anchorNone, gestureNone,
+		"vitae is not on this screen - the purse lives between fights, so the figure has nowhere to land and the feed is where the player is told",
+	},
 	combat.KindRoundEnd: {
 		anchorNone, anchorNone, gestureNone,
 		"bookkeeping - the round boundary is a moment, not an event with a victim",

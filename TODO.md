@@ -14,19 +14,23 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
-- [?] **Six parasites from the owner's list still need a design decision before they can be
-      written as data** *(owner asked for this to be tracked, 2026-08-27)*. The grammar and the
-      board piece are built — see `MECHANICS.md`'s Parasites section — and the rest of the list
-      is either already expressible or a known extension. These six are not, because what they
-      mean is not settled: **lucky card**; **one card into two** (is that `duplicate`, or a split
-      into two different cards?); **pump up cards by 1** (cost, damage, or a rung up the ladder?);
-      **random generation of upgrade cards / whetstones** (does it make *stones*, or a new
-      consumable?); **chance to increase a ring** (which ring, and increase what?); **wild card**
-      (matches any axis, or any one axis you name?). Two of them are also random, which needs its
-      own stream and its own argument in `MECHANICS.md` per the `randomness` skill.
-      Separately and already known: **changing a card's form** is blocked — form is concept-wide,
-      so a form parasite would change every copy of that card in the deck. Making `combat.Card`
-      carry its own form is a field, the hand matcher, the card face and the form mark.
+- [ ] **A card's face does not say what riders it carries** *(owner asked for this to be tracked,
+      2026-09-02)*. Sixteen parasites now attach seven kinds of rider, and a ridden card looks
+      exactly like an unridden one — the only place a rider is visible is the tooltip prose. That
+      was tolerable at one rider on one parasite and is not at seven: a hand's worth of held-back
+      cards paying vitae, doubling DMG or raising shields is a turn the player cannot read.
+      `combat.MaxCardRiders` is 3 **because the face has room for three badges**, so the room was
+      reserved and never used. What it needs: a badge per rider kind (the `assets/effect` route, or
+      generated glyphs), a row on the card face that does not collide with the cost column or the
+      text band, and something in the hand row that marks a card as worth *not* playing — the four
+      in-hand riders are the first mechanic in the game that rewards leaving a card alone, and
+      nothing on screen says so.
+
+- [?] **Three parasites from the owner's list still need a design decision before they can be
+      written as data** *(owner asked for this to be tracked, 2026-08-27; trimmed 2026-09-02 as
+      the rest landed)*. **Lucky card**; **chance to increase a ring** (which ring, and increase
+      what?); **wild card** (matches any axis, or any one axis you name?). Two of them are random,
+      which needs its own stream and its own argument in `MECHANICS.md` per the `randomness` skill.
 
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)

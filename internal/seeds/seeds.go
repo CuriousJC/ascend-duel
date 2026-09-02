@@ -79,6 +79,19 @@ const (
 	// other's — and authoring a parasite would silently reroll every bag every run has ever
 	// opened.
 	BucketStock
+
+	// StoneShower is which stones a rock-shower parasite hands over. Per fight.
+	//
+	// **The first roll a consumable makes while it is being spent**, rather than one that decides
+	// what a shelf is offering. Every other stream here is drawn once at a station: a shop's four
+	// are a function of the fight, and opening the same bucket twice is not a thing the shelf
+	// allows. A parasite is different — a run may carry three rock showers and spend all three in
+	// one fight — so the fight index alone would hand out the same three stones every time.
+	//
+	// **The count of stones the run has already placed is mixed in by the caller**, which is a
+	// number the snapshot already carries, so a resumed run rolls what it would have rolled. See
+	// `Session.ApplyParasite`, which is the one place it is drawn.
+	StoneShower
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -113,6 +126,7 @@ var streams = [...]stream{
 	BagStock:    {name: "bag-stock", salt: 0x5EED_B0C5, perFight: true},
 	CanStock:    {name: "can-stock", salt: 0x5EED_CA07, perFight: true},
 	BucketStock: {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
+	StoneShower: {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

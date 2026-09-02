@@ -87,6 +87,23 @@ type Session struct {
 	// spend, and the board piece draws a card for each. See parasite.go.
 	held []string
 
+	// duplicated is what the last duplicate parasite minted, so the screen can seat the copy in
+	// the hand it was spent from. **Deliberately not snapshotted**: it is a handover between two
+	// calls a frame apart, not a fact about the run, and a resumed run has no hand to seat it in.
+	// See Session.Duplicated.
+	duplicated []combat.Card
+
+	// pouch is the stones the run is carrying but has not spent, by record key, in the order they
+	// were acquired. **A list rather than counts**, unlike `stones` — see stone.go, where the
+	// distinction is written down.
+	pouch []string
+
+	// granted is the stones the last rock-shower parasite handed over, so the dialog can show what
+	// the player just got. **Not snapshotted**, for the reason duplicated is not: it is a handover
+	// between two calls a frame apart, and the stones themselves are already on their rungs in
+	// `stones`, which is saved.
+	granted []Stone
+
 	// tutorial is the teaching run, or nil for a run nobody is being taught. See tutorial.go for
 	// why a step cursor belongs to the run rather than to the screen that happens to be up.
 	tutorial *tutorial.Run
@@ -117,6 +134,11 @@ func New(deck []combat.Card) *Session {
 	// as shipped.
 	for _, key := range StartingParasites {
 		s.Hold(key)
+	}
+	// **And the pouch the same way**, with a key the catalogue has not got dropped rather than
+	// carried — `Carry` is what refuses it. See StartingStones, which is empty as shipped.
+	for _, key := range StartingStones {
+		s.Carry(key)
 	}
 	return s
 }

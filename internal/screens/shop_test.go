@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"image"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -233,4 +234,67 @@ func shopState(t *testing.T) *state.GlobalState {
 		t.Fatal("the fixture could not put a single ring on")
 	}
 	return gs
+}
+
+// TestThePouchButtonClearsTheOtherTwoCornerToggles is the only thing about the pouch panel a test
+// without a window can check: three square-ish buttons sharing one bottom line, and the third one
+// added years after the layout was written.
+//
+// **A button drawn over another button is a click that goes to whichever was updated last**, which
+// is invisible until somebody presses the wrong one.
+func TestThePouchButtonClearsTheOtherTwoCornerToggles(t *testing.T) {
+	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+
+	pouch := pouchCornerPlace(gs)
+	hands := handsCornerPlace(gs)
+	deck := cornerSlot(0)(gs)
+
+	// Each is stored as its centre, so the edges are half a width either side.
+	pouchLeft, pouchRight := pouch.X-logButtonSize/2, pouch.X+logButtonSize/2
+	handsLeft, handsRight := hands.X-handsButtonWidth/2, hands.X+handsButtonWidth/2
+	deckLeft := deck.X - logButtonSize/2
+
+	if pouchRight >= handsLeft {
+		t.Errorf("the pouch button ends at %d and the hands button starts at %d", pouchRight, handsLeft)
+	}
+	if handsRight >= deckLeft {
+		t.Errorf("the hands button ends at %d and the deck button starts at %d", handsRight, deckLeft)
+	}
+	if pouchLeft < 0 {
+		t.Errorf("the pouch button starts at %d, off the left of the screen", pouchLeft)
+	}
+	if pouch.Y != hands.Y || pouch.Y != deck.Y {
+		t.Errorf("the three corner buttons sit at y %d, %d and %d", pouch.Y, hands.Y, deck.Y)
+	}
+}
+
+// TestTheTabsUnderAnArmedStoneStayInsideThePanel holds the two confirm tabs against the frame they
+// hang in. A tab drawn outside the modal panel is a control on a scrim.
+func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
+	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+
+	run := session.New(combat.PlainCards(combat.Strike))
+	for _, key := range []string{"agate", "jasper", "onyx"} {
+		if !run.Carry(key) {
+			t.Fatalf("the catalogue has no stone %q", key)
+		}
+	}
+	gs.Run = run
+
+	s := &ShopScene{}
+	s.pouch.init()
+
+	panel := modalPanelRect(gs)
+	for i := range run.Carried() {
+		s.pouch.armed = i
+		use, sell := s.pouch.tabRects(gs)
+		for _, tab := range []image.Rectangle{use, sell} {
+			if !tab.In(panel) {
+				t.Errorf("seat %d hangs a tab at %v, outside the panel %v", i, tab, panel)
+			}
+		}
+		if use.Max.X >= sell.Min.X {
+			t.Errorf("seat %d overlaps its own two tabs: %v and %v", i, use, sell)
+		}
+	}
 }

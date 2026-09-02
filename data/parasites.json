@@ -1,12 +1,84 @@
 [
   {
-    "ParasiteRecord": "leech",
-    "Name": "Leech",
+    "ParasiteRecord": "arcbore",
+    "Name": "Arcbore",
+    "Target": "element",
+    "Value": "lightning",
+    "Count": 2,
+    "Text": "two cards\nturn\nLIGHTNING"
+  },
+  {
+    "ParasiteRecord": "brood",
+    "Name": "Brood",
     "Target": "rider",
-    "Rider": "heal-on-play",
+    "Rider": "vitae-in-hand",
+    "Value": "3",
+    "Count": 1,
+    "Text": "held back:\n3 vitae"
+  },
+  {
+    "ParasiteRecord": "carapace",
+    "Name": "Carapace",
+    "Target": "rider",
+    "Rider": "shield-on-play",
+    "Value": "1",
+    "Count": 1,
+    "Text": "played:\nraise 1\nshield"
+  },
+  {
+    "ParasiteRecord": "edgegrub",
+    "Name": "Edgegrub",
+    "Target": "form",
+    "Value": "slash",
+    "Count": 2,
+    "Text": "two cards\ncount as\nSLASH"
+  },
+  {
+    "ParasiteRecord": "effigy",
+    "Name": "Effigy",
+    "Target": "swap",
+    "Value": "Strike",
+    "Count": 1,
+    "Text": "make one card\na STRIKE"
+  },
+  {
+    "ParasiteRecord": "emberbore",
+    "Name": "Emberbore",
+    "Target": "element",
+    "Value": "fire",
+    "Count": 2,
+    "Text": "two cards\nturn FIRE"
+  },
+  {
+    "ParasiteRecord": "gnaw",
+    "Name": "Gnaw",
+    "Target": "remove",
+    "Count": 2,
+    "Text": "eat two\ncards"
+  },
+  {
+    "ParasiteRecord": "goad",
+    "Name": "Goad",
+    "Target": "rider",
+    "Rider": "damage-on-play",
     "Value": "10",
     "Count": 1,
-    "Text": "one card\nheals 10"
+    "Text": "played:\n+10 DMG\nthis turn"
+  },
+  {
+    "ParasiteRecord": "graft",
+    "Name": "Graft",
+    "Target": "clone",
+    "Count": 2,
+    "Text": "first card\nbecomes\nthe second"
+  },
+  {
+    "ParasiteRecord": "hexbore",
+    "Name": "Hexbore",
+    "Target": "element",
+    "Value": "arcane",
+    "Count": 2,
+    "Text": "two cards\nturn\nARCANE"
   },
   {
     "ParasiteRecord": "hoard",
@@ -17,18 +89,86 @@
     "Text": "gain 20\nvitae"
   },
   {
-    "ParasiteRecord": "gnaw",
-    "Name": "Gnaw",
-    "Target": "remove",
+    "ParasiteRecord": "hunger",
+    "Name": "Hunger",
+    "Target": "rider",
+    "Rider": "scale-in-combo",
+    "Value": "200",
+    "Count": 1,
+    "Text": "in the hand:\n2x DMG"
+  },
+  {
+    "ParasiteRecord": "leech",
+    "Name": "Leech",
+    "Target": "rider",
+    "Rider": "heal-on-play",
+    "Value": "10",
+    "Count": 1,
+    "Text": "one card\nheals 10"
+  },
+  {
+    "ParasiteRecord": "loambore",
+    "Name": "Loambore",
+    "Target": "element",
+    "Value": "earth",
     "Count": 2,
-    "Text": "eat two\ncards"
+    "Text": "two cards\nturn EARTH"
+  },
+  {
+    "ParasiteRecord": "maulgrub",
+    "Name": "Maulgrub",
+    "Target": "form",
+    "Value": "crush",
+    "Count": 2,
+    "Text": "two cards\ncount as\nCRUSH"
   },
   {
     "ParasiteRecord": "mimic",
     "Name": "Mimic",
-    "Target": "swap",
-    "Value": "Strike",
+    "Target": "duplicate",
     "Count": 1,
-    "Text": "make one card\na STRIKE"
+    "Text": "copy one\ncard"
+  },
+  {
+    "ParasiteRecord": "patience",
+    "Name": "Patience",
+    "Target": "rider",
+    "Rider": "scale-in-hand",
+    "Value": "200",
+    "Count": 1,
+    "Text": "held back:\n2x DMG"
+  },
+  {
+    "ParasiteRecord": "rimebore",
+    "Name": "Rimebore",
+    "Target": "element",
+    "Value": "ice",
+    "Count": 2,
+    "Text": "two cards\nturn ICE"
+  },
+  {
+    "ParasiteRecord": "rockshower",
+    "Name": "Rockshower",
+    "Target": "stones",
+    "Value": "3",
+    "Count": 0,
+    "Text": "three random\nstones,\nall kept"
+  },
+  {
+    "ParasiteRecord": "spite",
+    "Name": "Spite",
+    "Target": "rider",
+    "Rider": "damage-in-hand",
+    "Value": "10",
+    "Count": 1,
+    "Text": "held back:\n+10 DMG"
+  },
+  {
+    "ParasiteRecord": "thorngrub",
+    "Name": "Thorngrub",
+    "Target": "form",
+    "Value": "stab",
+    "Count": 2,
+    "Text": "two cards\ncount as\nSTAB"
   }
 ]

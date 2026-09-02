@@ -205,6 +205,12 @@ func (s *CombatScene) logRows(events []combat.Event) []paneRow {
 			// the arithmetic the readout has already done.
 			attach(fmt.Sprintf("%s up", shieldCount(e.Life)))
 
+		case combat.KindVitae:
+			// **The one line in the feed about something outside the duel.** A card held back pays
+			// into the purse, and the purse is not on this screen — so the sentence is the only
+			// place the player is told it happened at all. See combat.KindVitae.
+			attach(fmt.Sprintf("kept back for %d vitae", e.Amount))
+
 		case combat.KindExpired:
 			// **A line of its own, because the row emptying needs a reason beside it.** Shields
 			// that were never spent are the player's own decision coming back, and a readout that

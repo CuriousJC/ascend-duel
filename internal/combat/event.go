@@ -107,6 +107,15 @@ const (
 	// amount to know which it was looking at is a feed one missing minus sign away from lying.
 	KindHealed
 
+	// KindVitae is a rider paying vitae for a card that stayed in the hand. Action is the card
+	// that carried it, Amount is the figure, Side is whose hand it was.
+	//
+	// **The rules have no purse, so this is an announcement and not a payment.** `internal/combat`
+	// is at the bottom of the graph and knows nothing about a run; the combat screen reads this
+	// off the resolved log and hands it to `session`. It is the first event that means something
+	// outside the duel, which is why it is worth saying twice: nothing in this package pays it.
+	KindVitae
+
 	KindRoundEnd
 )
 

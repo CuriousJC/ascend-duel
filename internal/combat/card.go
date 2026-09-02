@@ -43,6 +43,19 @@ type Card struct {
 	CostDelta int
 	AmountPct int
 
+	// FormOverride is what this one card counts as on the form axis, when a parasite has told it
+	// to be something else. **FormNone means unmodified**, so a plain card is still the zero value
+	// and every `Card{Concept: x}` literal keeps working — the same trade AmountPct made.
+	//
+	// **It is a per-card modifier and not a concept swap**, because that is the difference the
+	// owner asked for: a Ward turned into a crush is still a Ward, still defends, and now counts
+	// as a crush when the hand is matched. That produces a card that shields and matches on an
+	// attack axis, which is a legal weird thing rather than a bug *(owner's call, 2026-09-02)*.
+	//
+	// **Only `Card.Form` reads it**, which is the one chokepoint the whole game already asks —
+	// the matcher, the form rings, the sort and the card face all go through it.
+	FormOverride Form
+
 	// ID is which card in the run this is, and it is the card's identity rather than its
 	// description.
 	//
@@ -173,7 +186,12 @@ func (c Card) Category() Category {
 }
 
 // Form is which group of cards this one belongs to. Enemy cards belong to none.
-func (c Card) Form() Form { return c.Spec().Form }
+func (c Card) Form() Form {
+	if c.FormOverride != FormNone {
+		return c.FormOverride
+	}
+	return c.Spec().Form
+}
 
 // Label is what this card is called on screen and in the Resolution feed.
 func (c Card) Label() string { return c.Spec().Label }

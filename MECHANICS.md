@@ -1687,6 +1687,40 @@ of the figure `hands.json` writes down**, for the rest of the run.
   shop section above. What it is worth in practice depends on which rung a run keeps hitting, which
   `tools/handodds` measures for the shipped deck and not for a run that has been worming it.
 
+### The pouch — carrying stones *(owner's call, 2026-09-02)*
+
+**Using a stone stopped being the same as owning one.** Until 2026-09-02 a stone was applied the
+instant it was chosen and there was no inventory at all: the bag of rocks offered four, one went on
+its rung, the other three were gone. The rock-shower parasite is what changed it — it hands over
+*consumables*, and a consumable you cannot carry is a consumable you cannot decide about.
+
+| | |
+|---|---|
+| Held | in the run's **pouch**, uncapped, across fights and across a save |
+| Spent | at the shop, from the `S` panel: **Use** puts it on its rung, **Sell** pays `StoneSalePrice` |
+| Arrives from | a rock-shower parasite. **The bag of rocks still applies its pick on the spot** |
+
+- **The pouch is a list of keys and `stones` is a map of counts**, which is the opposite shape for
+  the opposite reason. The counts are what the ladder reads and two Agates there are genuinely one
+  number; the pouch is a row of cards to click, and two Agates in it are two separate decisions.
+- **The bag of rocks is unchanged.** It is a pick out of four, taken on the spot; the pouch is for
+  stones that arrive already yours. Making the bag fill the pouch too would turn a choice among four
+  into four things to decide about later, which is not what it is for.
+- **Selling pays 5, which is what a whole bag costs.** Deliberately generous rather than tuned:
+  selling exists so a rung you will never build is worth something, and a price that made selling
+  pointless would leave the pouch full of rocks nobody wants. One number, `StoneSalePrice`, and the
+  obvious thing to move first if the pouch turns out to be a vitae fountain.
+- **It is the shop and not the combat screen**, because selling is a trade and the shop is the only
+  screen that trades. Splitting *use* onto another screen would make one row of cards into two board
+  pieces answering the same question.
+- **A panel, not a row.** The shelf ends at y=684 and Leave is centred at 845; a card row wants 224
+  of the 160 between them. So the pouch is the shop's third corner toggle beside `D` and `C`.
+- **Spending asks twice**, on the worn row's own argument: a stone armed by a click puts two tabs
+  under it, because a rung raised cannot be lowered and a sale cannot be undone.
+- **The pouch is snapshotted separately from the placed counts.** A carried stone is a decision
+  still to make and a placed one is a decision already made, and folding the two would lose that.
+
+
 ## Worms — altering the deck between fights
 
 **A worm is a change to a card you already own.** It recolours it, removes it, or copies it. It
@@ -1892,6 +1926,38 @@ validated.
 | `remove` | — | 1–2 | takes cards out of the run |
 | `swap` | a concept key | 1–2 | turns a card into a different card the game already defines |
 | `vitae` | a figure | **0** | fills the purse and touches no card |
+| `duplicate` | — | 1–2 | copies a card — **and the copy joins the dealt hand** |
+| `element` | an element name | 1–2 | recolours cards |
+| `form` | a form name | 1–2 | changes what cards **count as** on the form axis |
+| `stones` | how many | **0** | puts that many random stones in the run's **pouch** |
+| `clone` | — | **2** | the first card picked becomes the second |
+
+**Four targets landed on 2026-09-02** *(owner's call)*, and three of them are worth saying twice:
+
+- **`duplicate` is the mid-fight `spawn`, and the copy has to reach the hand.** A worm copying a
+  card only has to put it in the deck, because it is spent between fights. A parasite is spent in
+  the middle of one, and the fight's piles were dealt before the copy existed — so a copy that went
+  only into the run would not be playable until the *next* fight and would read as a dud. The copy
+  is a new card with a new identity, arrives unselected, and `Session.Duplicated` is the handover.
+- **`form` is an override on the card, not a swap of the concept.** A Ward told to be a crush is
+  still a Ward: it still shields, and it now counts as a crush when the hand is matched. **A defend
+  card is a legal target and that is the point** *(owner's call)* — it produces a card that shields
+  and matches on an attack axis, which nothing in the catalogue does. `combat.Card.FormOverride` is
+  the field and `Card.Form` is the one chokepoint that reads it.
+- **`stones` is the first thing in the game that rolls while it is being *spent*.** Every other
+  draw decides what a shelf is offering and is a function of the fight; a run may carry three rock
+  showers and spend all three in one fight, so the fight index alone would hand out the same three
+  stones each time. `seeds.StoneShower` is the stream and **the number of stones the run has already
+  placed is mixed in** — a figure the snapshot already carries, so a resumed run rolls what it would
+  have rolled. **The source is the caller's**, because the run does not know its own seed;
+  `ApplyParasiteRolling` is refused outright without one rather than falling back to a default draw.
+- **They go into a pouch, not onto the ladder** *(owner's call, 2026-09-02)*. See §The pouch below,
+  which is where that reversal is written down. The dialog stays up afterwards as a *receipt* rather
+  than an offer, and any click dismisses it.
+- **`clone` is the one target whose two seats are not interchangeable.** Every other parasite
+  treats its targets as a set; this one is directional — first pick changes, second pick is the
+  template — so the picker's click order is a rule rather than a detail. It copies the concept and
+  keeps the first card's identity, riders and modifiers, exactly as `swap` does.
 
 **The vocabulary is closed**, the posture every other one in the game takes. A bad record — an
 unknown target, a rider the rules lack, a concept this build has not registered, a `vitae` asking
@@ -1913,6 +1979,34 @@ hand and the discard, and fires only when that card is played.
 | Rider | Fires | Does |
 |---|---|---|
 | `heal-on-play` | as the card is played, **after a chill has taken what it takes** | restores life, capped at full |
+| `shield-on-play` | as the card is played | raises shields, through the same cap a Guard is under |
+| `damage-on-play` | the blow the card is played into | **adds to the duelist's DMG** for that calculation |
+| `damage-in-hand` | every turn the card is **kept back** | adds to the duelist's DMG for that turn's blow |
+| `scale-in-hand` | every turn the card is **kept back** | scales the duelist's DMG, as a percentage |
+| `vitae-in-hand` | every turn the card is **kept back** | pays vitae — **announced, never applied** |
+| `scale-in-combo` | when the card is one of the cards the hand was **formed from** | scales the duelist's DMG |
+
+**Six riders landed on 2026-09-02** *(owner's call)*, and they add two ideas the game did not have:
+
+- **A damage rider is a bonus to the *duelist*, not to the card** — the owner's words: "add 10 to
+  the duelist's base damage for that calculation and then use it for all of the calcs". `Card.Damage`
+  is linear in DMG, so raising the duelist's figure for the length of one sum raises every term of
+  the hand by the same proportion, and the printed bracket goes on summing to the printed total.
+  Adding to one card's amount would have made the bonus a fact about that card instead of about the
+  turn. **Flat first, then the percentages**, so a +10 and a doubling compose as `(DMG+10)×2`; two
+  percentages compound. `combat.blowDMG` is the whole rule, and the DMG is **put back before the
+  duelist is returned** — a bonus left standing would silently be a permanent upgrade.
+- **The four in-hand riders are the first mechanic that rewards *not* playing a card.** They pay on
+  every turn the card is still being held, so a card dealt on the first turn and kept for three has
+  paid three times, and nothing is ever spent. That is what made `ResolveRoundHolding` necessary:
+  the resolver had never been told what a side did *not* play, because until now it could not
+  matter. `ResolveRound` is kept and delegates with nothing held.
+- **`scale-in-combo` asks a question the player can lose.** `Blow.Cards` is the scoring set, and a
+  turn can play a card that pays nothing into it. The card has to *make the hand*, not merely be in
+  the turn.
+- **Vitae is announced and not paid.** `internal/combat` has no purse and is at the bottom of the
+  graph, so it emits `KindVitae` and the combat screen reads it off the **resolved log** — not off
+  the playback, so how fast a round is drawn cannot change what the player is paid.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
   parasite does happens to the run; a rider is the one thing read while a round resolves, and that
@@ -1938,8 +2032,10 @@ The band holds seven lines at that pitch and no card writes more than three, so 
 fit. **It is not written in the ring pink**: that colour means "a ring did this" everywhere else,
 and a parasite is not a ring.
 
-*(Open: whether a badge row would be better than a line of text. The line is the cheap honest
-answer and the owner has not ruled on the alternative.)*
+**This is now the weakest part of the feature.** Seven rider kinds are attachable and a ridden card
+still looks like an unridden one on its face; the tooltip prose is the only place a rider is
+visible. `MaxCardRiders` is 3 *because the face has room for three badges*, and the room has never
+been used. See TODO.md — the owner asked for it to be tracked on 2026-09-02.
 
 ### Targets come out of the hand *(taken while building it, and the one most worth revisiting)*
 

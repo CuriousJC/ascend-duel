@@ -135,6 +135,7 @@ func main() {
 		// **A chosen bucket, on the same terms.** The board piece is otherwise a shop and a fight
 		// away from any launch; see internal/scenario.
 		session.StartingParasites = scenario.Parasites()
+		session.StartingStones = scenario.Stones()
 	}
 
 	// **The profile is opened before the run, because it can decide what the run is.** A run in

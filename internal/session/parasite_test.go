@@ -1,6 +1,7 @@
 package session
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -148,8 +149,8 @@ func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
 		t.Fatal("the rider was refused")
 	}
 
-	mimic, _ := ParasiteByKey("mimic")
-	if !run.ApplyParasite(mimic, []int{id}) {
+	effigy, _ := ParasiteByKey("effigy")
+	if !run.ApplyParasite(effigy, []int{id}) {
 		t.Fatal("the swap was refused")
 	}
 
@@ -157,9 +158,9 @@ func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
 	if !ok {
 		t.Fatal("the swapped card lost its identity")
 	}
-	if card.Concept != mimic.Concept {
+	if card.Concept != effigy.Concept {
 		t.Errorf("the card is %s, wanted %s",
-			combat.ConceptOf(card.Concept).Label, combat.ConceptOf(mimic.Concept).Label)
+			combat.ConceptOf(card.Concept).Label, combat.ConceptOf(effigy.Concept).Label)
 	}
 	if card.HealOnPlay() != leech.Number {
 		t.Errorf("the swap lost the rider: heals %d", card.HealOnPlay())
@@ -222,11 +223,11 @@ func TestARiderIsRefusedOnACardWithNoRoom(t *testing.T) {
 }
 
 func TestASwapOntoTheCardItAlreadyIsDoesNothing(t *testing.T) {
-	mimic, _ := ParasiteByKey("mimic")
-	run := runWith(combat.Plain(mimic.Concept))
+	effigy, _ := ParasiteByKey("effigy")
+	run := runWith(combat.Plain(effigy.Concept))
 	id := ids(run)[0]
 
-	if run.CanApplyParasite(mimic, []int{id}) {
+	if run.CanApplyParasite(effigy, []int{id}) {
 		t.Error("a swap onto the card it already is was offered as a legal target")
 	}
 }
@@ -263,5 +264,146 @@ func TestTheBucketAndItsRidersSurviveASnapshot(t *testing.T) {
 	}
 	if card.HealOnPlay() != leech.Number {
 		t.Errorf("the resumed card heals %d, wanted %d", card.HealOnPlay(), leech.Number)
+	}
+}
+
+func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) {
+	// **They go into the pouch, not onto the ladder** *(owner's call, 2026-09-02)*. A shower hands
+	// over consumables to be spent or sold later; the run decides which rungs it raises.
+	run := runWith(combat.Plain(combat.Strike))
+	p, ok := ParasiteByKey("rockshower")
+	if !ok {
+		t.Fatal("the catalogue has no rock shower")
+	}
+
+	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(1))) {
+		t.Fatal("a rock shower was refused")
+	}
+
+	if got := run.CarryCount(); got != p.Number {
+		t.Errorf("a shower of %d put %d stones in the pouch", p.Number, got)
+	}
+	placed := 0
+	for _, n := range run.StoneCounts() {
+		placed += n
+	}
+	if placed != 0 {
+		t.Errorf("a shower placed %d stones on the ladder, and should have placed none", placed)
+	}
+	if got := len(run.Granted()); got != p.Number {
+		t.Errorf("the receipt shows %d stones, wanted %d", got, p.Number)
+	}
+}
+
+func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
+	run := runWith(combat.Plain(combat.Strike))
+	p, _ := ParasiteByKey("rockshower")
+	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(3)))
+
+	first, _ := StoneByKey(run.Carried()[0])
+	before := run.StonesOn(first.Hand)
+
+	if !run.SpendCarried(0) {
+		t.Fatal("a carried stone would not be spent")
+	}
+	if got := run.StonesOn(first.Hand); got != before+1 {
+		t.Errorf("%s went on rung %s and left it at %d, wanted %d",
+			first.Record, first.Hand, got, before+1)
+	}
+	if run.CarryCount() != p.Number-1 {
+		t.Errorf("the pouch holds %d after spending one of %d", run.CarryCount(), p.Number)
+	}
+}
+
+func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
+	run := runWith(combat.Plain(combat.Strike))
+	p, _ := ParasiteByKey("rockshower")
+	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(5)))
+
+	sold, _ := StoneByKey(run.Carried()[0])
+	purse := run.Vitae()
+
+	if !run.SellCarried(0) {
+		t.Fatal("a carried stone would not be sold")
+	}
+	if got := run.Vitae(); got != purse+StoneSalePrice {
+		t.Errorf("selling a stone paid %d, wanted %d", got-purse, StoneSalePrice)
+	}
+	if got := run.StonesOn(sold.Hand); got != 0 {
+		t.Errorf("a sold stone left %d on rung %s", got, sold.Hand)
+	}
+}
+
+func TestThePouchSurvivesASnapshot(t *testing.T) {
+	// **A run resumed one consumable lighter is a run the player would have to work out had
+	// changed** — the rule the bucket and the worn rings are both under.
+	run := runWith(combat.Plain(combat.Strike))
+	p, _ := ParasiteByKey("rockshower")
+	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(9)))
+	want := run.Carried()
+
+	back, _, err := Resume(nil, nil, run.Snapshot(0))
+	if err != nil {
+		t.Fatalf("a run carrying stones would not resume: %v", err)
+	}
+	got := back.Carried()
+	if len(got) != len(want) {
+		t.Fatalf("the pouch came back holding %d of %d stones", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("pouch seat %d came back as %s, wanted %s", i, got[i], want[i])
+		}
+	}
+}
+
+func TestARockShowerDrawsWithoutRepeats(t *testing.T) {
+	// A seat spent showing the same rock twice says nothing, which is the bag's own argument.
+	run := runWith(combat.Plain(combat.Strike))
+	p, _ := ParasiteByKey("rockshower")
+
+	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(7))) {
+		t.Fatal("a rock shower was refused")
+	}
+
+	seen := map[string]bool{}
+	for _, st := range run.Granted() {
+		if seen[st.Record] {
+			t.Errorf("%s was handed over twice in one shower", st.Record)
+		}
+		seen[st.Record] = true
+	}
+}
+
+func TestARockShowerWithNoSourceIsRefusedRatherThanRolledTheSameWayTwice(t *testing.T) {
+	// **Refused outright rather than falling back to a default draw.** A consumable quietly
+	// handing out the same three rocks every time is a mechanic nobody designed, and it would be
+	// invisible — see ApplyParasiteRolling.
+	run := runWith(combat.Plain(combat.Strike))
+	p, _ := ParasiteByKey("rockshower")
+
+	if run.ApplyParasite(p, nil) {
+		t.Error("a rock shower rolled with no source")
+	}
+}
+
+func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *testing.T) {
+	// The stream is the caller's, so what this pins is that the run does not smuggle in a source
+	// of its own: the same seed twice is the same three stones.
+	first := runWith(combat.Plain(combat.Strike))
+	second := runWith(combat.Plain(combat.Strike))
+	p, _ := ParasiteByKey("rockshower")
+
+	first.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
+	second.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
+
+	a, b := first.Granted(), second.Granted()
+	if len(a) != len(b) {
+		t.Fatalf("one seed drew %d stones and the other %d", len(a), len(b))
+	}
+	for i := range a {
+		if a[i].Record != b[i].Record {
+			t.Errorf("seat %d drew %s once and %s the other time", i, a[i].Record, b[i].Record)
+		}
 	}
 }

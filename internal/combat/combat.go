@@ -13,12 +13,30 @@ import "math/rand"
 // with no business being random should pass: a preview, or a test pinning the parts of the
 // engine that are still exact.
 func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
-	return resolveRound(a, b, aCards, bCards, round, handTable, rng)
+	return resolveRound(a, b, aCards, bCards, nil, nil, round, handTable, rng)
+}
+
+// ResolveRoundHolding is ResolveRound told what each side did **not** play.
+//
+// **It exists because four riders read the unplayed hand** — see rider.go, where the in-hand
+// riders are. A card kept back is not a card the resolver would otherwise ever see: the turn is
+// what was queued, and everything else was invisible to this package until a parasite made
+// holding a card worth something.
+//
+// **ResolveRound is kept and delegates**, rather than every caller and test growing two nil
+// arguments. A side that holds nothing plays exactly the round it always did, which is what makes
+// that safe.
+//
+// `aHeld` and `bHeld` are the cards still in each side's hand at the moment the round was
+// committed — not the draw pile, and not the cards being played. An opponent has no hand to hold,
+// so `bHeld` is nil for every fight the game plays today.
+func ResolveRoundHolding(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
+	return resolveRound(a, b, aCards, bCards, aHeld, bHeld, round, handTable, rng)
 }
 
 // resolveRound is ResolveRound with the catalogue injected. It exists so a test can drive a
 // synthetic hand through the whole engine rather than only through the matcher.
-func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
+func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, hands []Hand, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
@@ -32,13 +50,13 @@ func resolveRound(a, b Duelist, aCards, bCards []Card, round int, hands []Hand, 
 	// a chill is spent at it, and a hand's position is an index *within* it — so the turn
 	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
 	// exactly the slots it produced for that side.
-	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), round, hands, rng)
+	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), aHeld, round, hands, rng)
 
 	// B still loses its standing defenses even in a round it never gets to act in, which is
 	// why this is not inside playTurn's early return: expiry is a property of the turn
 	// arriving, not of anything happening in it.
 	if a.Alive() && b.Alive() {
-		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), round, hands, rng)
+		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), bHeld, round, hands, rng)
 	} else {
 		events, b = expireDefenses(events, SideB, b, round)
 	}
@@ -67,6 +85,7 @@ func playTurn(
 	side Side,
 	actor, target Duelist,
 	turn []Slot,
+	held []Card,
 	round int,
 	hands []Hand,
 	rng *rand.Rand,
@@ -111,12 +130,12 @@ func playTurn(
 	// ate was never played. Putting it in front of the attack phase is what makes a heal arrive in
 	// time to matter to the turn it was spent in, rather than after the round it was meant to
 	// survive. See rider.go.
-	events, actor = playRiders(events, side, actor, turn, round)
+	events, actor = playRiders(events, side, actor, turn, held, round)
 
 	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
 	// announced, then the hand they form is announced, then a single figure of damage lands. Five
 	// Strikes are not five hits; they are one Four of a Kind.
-	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, round, hands, rng)
+	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, rng)
 
 	// **The defend phase comes second, and that is what a defence needs** *(2026-08-15)*. A guard
 	// and a shield both answer the *opponent's* blow, and the opponent acts after this turn ends —
@@ -294,6 +313,7 @@ func resolveAttackPhase(
 	side Side,
 	actor, target Duelist,
 	turn []Slot,
+	held []Card,
 	round int,
 	hands []Hand,
 	rng *rand.Rand,
@@ -348,7 +368,7 @@ func resolveAttackPhase(
 	// points or take actions off the opponent's next turn, which is why there was a phase here
 	// paying those out before the blow landed. Statuses come from elements and rings now, so the
 	// multiplier is the whole reward and there is nothing to pay before the roll.
-	swung, grown := handEvent(side, blow, turn, actor, round)
+	swung, grown := handEvent(side, blow, turn, held, actor, round)
 	events = append(events, swung)
 
 	// A shocked attacker may miss outright, and misses before anything else happens — no defence
@@ -658,7 +678,7 @@ func resolveSoloAttacks(
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
-func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) (Event, Duelist) {
+func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, round int) (Event, Duelist) {
 	e := Event{
 		Kind:       KindHand,
 		Side:       side,
@@ -666,6 +686,17 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) (Eve
 		Multiplier: blow.Multiplier,
 		Round:      round,
 	}
+
+	// **The riders that speak to damage are folded into DMG here, for the length of this sum
+	// alone** *(owner's call, 2026-09-02)*. `CardDamage` reads `actor.DMG`, so raising it is what
+	// makes a +10 arrive in every term of the bracket rather than in one of them — see blowDMG,
+	// which is the whole rule.
+	//
+	// **It is put back before the actor is returned.** The caller adopts this duelist for the
+	// growth the loop below records; a DMG left raised would make the bonus permanent, which is
+	// the one way this could quietly become a different mechanic.
+	baseDMG := actor.DMG
+	actor.DMG = blowDMG(baseDMG, turn, held, blow)
 
 	// **The blow is added up here and nowhere else.** The attack phase takes its damage figure off
 	// this event rather than recomputing it, so the sentence the feed prints and the damage that
@@ -740,6 +771,7 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) (Eve
 	// **The grown duelist goes back with the event and is adopted by the caller, not here.** A blow
 	// that misses is not paid for — see resolveAttackPhase, where the miss check sits between the
 	// two — so the growth has to be something the caller can decline.
+	actor.DMG = baseDMG
 	return e, actor
 }
 
@@ -750,8 +782,25 @@ func handEvent(side Side, blow Blow, turn []Slot, actor Duelist, round int) (Eve
 // that fired and changed nothing, and emitting a zero would put a line in the feed saying life was
 // restored when none was — so the cap is applied first and a no-op is silent. The rider is still
 // spent, because it is a property of the card rather than a charge.
-func playRiders(events []Event, side Side, actor Duelist, turn []Slot, round int) ([]Event, Duelist) {
+func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Card, round int) ([]Event, Duelist) {
 	for _, slot := range turn {
+		// **Shields first, and from the same seat a defend card raises them.** A rider is not a
+		// defend card — it is on a Jab, and the Jab is about to swing — so this cannot wait for
+		// the defend phase without a shielding attack being the only card in the game whose two
+		// halves happen in different phases. It goes through raiseShields, so the five-shield cap
+		// and the pip row hold exactly as they do for a Guard.
+		if up := slot.Card.ShieldOnPlay(); up > 0 {
+			actor = actor.raiseShields(up)
+			events = append(events, Event{
+				Kind:   KindRaised,
+				Side:   side,
+				Action: slot.Card.Concept,
+				Amount: up,
+				Life:   actor.Shields,
+				Round:  round,
+			})
+		}
+
 		heal := slot.Card.HealOnPlay()
 		if heal <= 0 {
 			continue
@@ -771,6 +820,28 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, round int
 			Element: slot.Card.Element,
 			Amount:  actor.CurrentLife - before,
 			Life:    actor.CurrentLife,
+			Round:   round,
+		})
+	}
+
+	// **The held hand pays after the played cards, and it pays once per card.** A card kept back
+	// is not spent, so this fires again on every turn it is still being held — which is the whole
+	// bargain the in-hand riders offer: a card worth more in the hand than in the turn.
+	//
+	// **One event per card rather than one for the turn**, because the feed names the card that
+	// paid and a single summed line would name none of them.
+	for _, c := range held {
+		paid := c.VitaeInHand()
+		if paid <= 0 {
+			continue
+		}
+		events = append(events, Event{
+			Kind:    KindVitae,
+			Side:    side,
+			Target:  side,
+			Action:  c.Concept,
+			Element: c.Element,
+			Amount:  paid,
 			Round:   round,
 		})
 	}

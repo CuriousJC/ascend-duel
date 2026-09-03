@@ -24,7 +24,7 @@ import (
 // run is quiescent between stations — no piles dealt, no queued actions, no hidden hand — so a
 // snapshot is the ten-odd fields `session.Snapshot` reads and not the combat screen's whole working
 // state. The cost is stated rather than discovered: quitting mid-duel loses that duel and resumes at
-// the start of the room, which is exactly what `Retry` already does after a defeat.
+// the start of the room it was lost in.
 func saveRun(gs *state.GlobalState) {
 	if gs == nil || gs.Run == nil {
 		return
@@ -52,9 +52,9 @@ func awardFirstSteps(gs *state.GlobalState) {
 
 // award records an achievement and saves the profile if anything changed.
 //
-// **Nothing is shown to the player.** There is no toast and no achievements screen yet — see
-// TODO.md — so today the file is the whole of the record. The boolean `Award` reports is what a
-// toast will hang off when one exists.
+// **Nothing is shown at the moment it is earned.** The achievements screen exists as of 2026-09-03
+// and is reachable from the title menu, so the record is visible — but an award lands mid-run in
+// silence. The boolean `Award` reports is what a toast will hang off when one exists; see TODO.md.
 func award(gs *state.GlobalState, key string) {
 	if gs == nil || gs.Profile == nil || !gs.Profile.Award(key) {
 		return

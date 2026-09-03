@@ -113,11 +113,23 @@ func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
 // on screen or it is a trap. Chrome updated and drawn after the scene would sit live on top of
 // that by construction.
 //
-// **And it stands down on the settings screen itself**, which is the one screen where the corner
-// would be a door into the room the player is already standing in. That screen carries its own
-// Back button, so nothing is lost.
+// **And it stands down on the screens a player is looking *at* rather than playing.** Settings is
+// the room the cog would be a door into; Achievements and Credits joined it on 2026-09-03. Each
+// carries its own Back, so nothing is lost — and a ledger button in the corner of the credits would
+// be one part of the game sitting on top of another.
+//
+// **The end-of-run splash is on that list for a different reason**: the run is gone by the time it
+// draws, so the ledger button would be dead anyway and the cog would be a door out of the one page
+// that has something to say. It has a Back to Title of its own.
 func chromeShowing(gs *state.GlobalState) bool {
-	return !gs.ModalOpen && gs.ActiveScreen != state.Settings
+	if gs.ModalOpen {
+		return false
+	}
+	switch gs.ActiveScreen {
+	case state.Settings, state.Achievements, state.Credits, state.RunOver:
+		return false
+	}
+	return true
 }
 
 // ledgerShowing reports whether the ledger's own button is drawn.

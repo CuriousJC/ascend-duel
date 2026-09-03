@@ -71,6 +71,15 @@ func NewGame() *Game {
 			state.Shop:       &screens.ShopScene{},
 			state.Credits:    &screens.CreditsScene{},
 			state.Settings:   &screens.SettingsScene{},
+
+			// **The two menu screens** *(2026-09-03)*. Neither is a station of a run, so neither
+			// appears in screens/flow.go — they are reached from the title menu and put the player
+			// back where they came from, exactly as Settings does.
+			state.Achievements: &screens.AchievementsScene{},
+
+			// **The end-of-run splash.** Not a station either: the run is already gone by the time
+			// it draws, which is why it reads a summary off the state rather than the run.
+			state.RunOver: &screens.RunOverScene{},
 		},
 	}
 }

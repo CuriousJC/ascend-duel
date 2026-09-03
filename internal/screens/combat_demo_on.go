@@ -422,3 +422,13 @@ func demoCapture(screen *ebiten.Image, name string) {
 	}
 	fmt.Printf("demo: wrote %s\n", path)
 }
+
+// DemoPlaysItself is what tells BootRun to walk straight into the run rather than stopping at
+// the title screen.
+//
+// **The title screen became the boot screen on 2026-09-03 and this is what it cost.** The demo
+// drives the combat scene once that scene is active, and it presses buttons rather than
+// navigating — so a menu in front of the duel is a menu it sits on forever, writing nothing. It
+// is a predicate in the two demo files rather than a check in main for the reason every other
+// half of this pair is: an untagged build carries neither the answer nor the question.
+func DemoPlaysItself() bool { return true }

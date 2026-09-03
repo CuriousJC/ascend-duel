@@ -29,7 +29,7 @@ const runFile = "run.json"
 // half-resolved round would mean serialising both piles, the queued actions, the opponent's hidden
 // hand and the playback position — and the combat screen is the part of the game still being built,
 // so its shape moves week to week. Quitting mid-duel therefore loses that duel and puts the player
-// back at the start of the room, which is what `Retry` already does after a defeat.
+// back at the start of the room, which is the one place a resumed run can honestly begin.
 type RunSnapshot struct {
 	// Version is the snapshot format, on the same terms as the profile's.
 	Version int `json:"version"`
@@ -208,10 +208,9 @@ func SaveRun(s Store, r *RunSnapshot) error {
 
 // DeleteRun throws the run away, and is content for there not to be one.
 //
-// **Nothing calls it yet, and that is a statement about the game rather than an oversight.** A
-// defeat currently offers `Retry` and puts the same opponent back up — no run ever *ends*, so there
-// is no moment at which a save should be dropped. When a death exists this is what it calls; until
-// then a resumed loss lands at the start of the room it was lost in, which is what Retry does.
+// **Three callers, all of them a run that is over** *(2026-09-03)*: a death, the settings screen's
+// Abandon Run, and New Run replacing what was there. All three go through `screens.AbandonRun` or
+// its defeat twin, so there is one path from "this climb is finished" to "the file is gone".
 func DeleteRun(s Store) error { return s.remove(runFile) }
 
 // RiderSnapshot is one rule attached to one card.

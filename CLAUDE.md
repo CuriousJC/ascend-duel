@@ -442,6 +442,89 @@ that feels like it wants one needs a different design.
 - **Wanting a text field is a design smell.** Find the click or drag version instead.
   A settings value is a row of buttons or a slider, never a number you type.
 
+### The game boots to the title screen, and the title screen owns the run
+
+**Changed back on 2026-09-03** *(owner's call)*, after months of booting straight into `Combat`
+because that screen was the work. The menu now *decides something* — **New Run** or **Continue** —
+which is a question nothing else in the game asks, and a run that started before the player was
+asked is a run they cannot decline.
+
+- **`internal/screens/run.go` is the run's whole lifecycle**: `BootRun` (resume off disk or build
+  fresh), `NewRun`, `ContinueRun`, `AbandonRun`. All four used to be one function in `main`. **They
+  moved because a screen cannot import `main`** — once starting a run is a button, building one is
+  something a screen does. `main` now rolls a seed and calls `BootRun`.
+- **`state.SeedPinned` says the seed was chosen rather than rolled**, so `NewRun` does not silently
+  break `fixedRunSeed` or a scenario's `Seed` from a menu button. **The tutorial still outranks
+  it** — a taught run is dealt the script's own code.
+- **`Continue` is gated on `gs.Resumed`**, which now has two readers rather than one.
+- **`demoplay` needed a door.** The scripted demo drives the combat scene rather than navigating to
+  it, so a menu in front of the duel is a menu it sits on forever. `screens.DemoPlaysItself` is the
+  predicate, in the usual two-file `_on`/`_off` shape, read by `BootRun`.
+
+**Abandon Run is on the settings screen** — the one screen reachable from everywhere. That does file
+a run decision under the program's screen, which is the distinction `settings.go`'s own doc comment
+draws; the objection was raised and overruled, and the cost is paid in the layout rather than
+pretended away. It is the only thing on that screen that touches `gs.Run`, and it does so by calling
+`AbandonRun`.
+
+**A death is the same event, so it is the same function.** `EndRunInDefeat` is `AbandonRun` under a
+second name, because the only difference between dying and giving up is which screen the player was
+standing on — and two paths from "this climb is finished" to "the file is gone" is one path that can
+be got wrong. **Retry was removed on 2026-09-03** *(owner's call)*: a defeat used to re-enter the
+combat screen with the same opponent, and a roguelike where a death can be taken back is not one.
+`CombatScene.restart` is now `died`, and the button in the DUEL! slot reads `defeatButtonLabel`.
+
+**A run ends on a splash, not on the title screen** *(owner's call, 2026-09-03)*. `screens.endRun`
+is the one door: it takes `gs.Run.Summarise(gs.RunSeed, ended)` **before** deleting anything, puts it
+on `gs.Summary`, then nils the run and goes to `state.RunOver`. The ordering is the whole thing — the
+numbers come off the ledger the run was carrying, and a clear-then-summarise leaves a blank page that
+nothing fails on. `session.RunSummary` is plain ints and strings so the screen never learns what a
+`Session` is; **it is the one piece of state that deliberately outlives what it describes**, and
+`RunOverScene.leave` drops it.
+
+**The run code is on that splash and in the settings screen's bottom-right corner.** It went to the
+log at launch and nowhere a player could see, which made a six-character code that exists to be
+transcribed unreachable. `drawRunCode` draws nothing with no run standing.
+
+### Four screens that are not stations of a run
+
+**Settings, Achievements, Credits and RunOver.** None appears in `screens/flow.go` — which is what
+"not a station" means mechanically — and the chrome stands down on all four. The first three are
+reached by an `actions.Open*` call and record `gs.ReturnScreen` so Back works from anywhere; **RunOver
+is the exception and goes to the title outright**, because the screen it came from was drawing a run
+that has ended and there is nowhere to put the player back to.
+
+- **Adding one is two edits, not three**: an ordinal in `state.ActiveScreen` (append-only, and its
+  `String` case) and an entry in the registry in `internal/game`. There is no phase, because there is
+  no station.
+- **`actions` has one function per screen rather than one taking a destination.** A shared
+  `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run* screen
+  gets opened without its phase being set. The explicit list is what says which screens may work this
+  way.
+- **The achievements catalogue is a table in `internal/screens/achievements.go`, not a file in
+  `data/`.** One record whose fields are a name and a sentence does not earn a loader; the half that
+  *is* a contract — the key written to disk — is already in `internal/profile`. **When it grows
+  enough to scroll it moves to `data/achievements.json`** and takes the loader with it.
+- **The title menu is six rows and `TitleScene.menu()` is the one list.** Init, Update and Draw all
+  read it, because three hand-written orders are three places a new entry gets forgotten — which is
+  how a button ends up drawn and not clickable.
+
+### The third dialog shape: a question, not a view
+
+`internal/screens/confirm.go`. The first two shapes are the near-full-screen `modalToggle` panel and
+the tutorial's bubble; this is a small centred box with two answers, and it is deliberate rather
+than a drift.
+
+- **A confirm is a question, not a page.** A modal takes the screen because what it holds *is* a
+  page — fifty-five cards, a ladder, a run's account. A dialog that covers the screen to ask six
+  words reads as something having gone wrong, and it hides the thing being asked about.
+- **It stays in the family**: same scrim, same bevelled panel, same pink stroke, and the destructive
+  answer takes `modalCloseColor` — the only red in the game. It does **not** borrow the X: an X means
+  "put this away", and a question with one has three answers where it should have two.
+- **The callbacks are rebound every frame**, because one dialog serves two callers and a callback
+  wired once at build time answers the previous caller's question.
+- **Cancel is the safe answer and it is on the left.**
+
 ### The settings screen, and the second widget in the game
 
 [internal/screens/settings.go](internal/screens/settings.go) is the program's own screen: a music
@@ -1261,6 +1344,9 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   the three edits below; the room choice is still walked past.
 - **Adding a screen is therefore three edits**: a phase in `session/flow.go`, an entry in
   `screens/flow.go`, and an entry in the registry in `internal/game`. No existing scene changes.
+- **`screens.enterRun` is the same table read at the door** *(2026-09-03)*. Continue puts the player
+  on whichever scene draws the station the run was saved at, falling back to the combat screen for a
+  phase with no scene — the same courtesy `advance` extends during play.
 
 ### The three rules a change most often breaks
 

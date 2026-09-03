@@ -2320,13 +2320,91 @@ never a field.
 
 **`first-steps` is the first achievement: defeat an enemy.** It fires on every win and the profile
 keeps one, so it means the first enemy the player ever beats rather than the first of a run — a
-player who loses room one fifty times gets it on the fifty-first. Nothing shows it yet; see TODO.md.
+player who loses room one fifty times gets it on the fifty-first. **The achievements screen shows
+it** as of 2026-09-03; nothing announces one at the moment it is earned — see TODO.md.
 
 **A run is saved at every phase transition and never inside a duel** *(owner's call, 2026-08-25)*.
 Between stations the run is quiescent — no piles dealt, no queued actions, no hidden hand — so the
 snapshot is a dozen fields rather than the whole combat screen's working state. The cost is stated
-rather than discovered: quitting mid-duel loses that duel and resumes at the top of the room, which
-is what `Retry` already does after a defeat.
+rather than discovered: quitting mid-duel loses that duel and resumes at the top of the room.
+
+### The title screen, and giving up *(owner's call, 2026-09-03)*
+
+**The game boots to a menu again, and the menu is where a run is decided.** It booted straight into
+a duel for as long as the combat screen was the thing under construction, and a run existed before
+anybody had been asked anything — which was fine until there was a question worth asking. There is
+now: **New Run** or **Continue**.
+
+- **Continue is dead when there is nothing to continue**, rather than absent. A menu whose entries
+  come and go between launches is one that has to be re-read every time.
+- **New Run asks first, and only when it would destroy something.** A player on a clean install gets
+  a run; a player forty rooms up gets a question.
+- **A pinned seed is not rerolled by New Run.** A pin is a debugging session where the same tower in
+  the same order is the whole point, and a menu button must not undo what the source set. The
+  tutorial still outranks both — a taught run is dealt the script's code, because the lesson
+  promises the player the hand they are holding.
+
+**Abandon Run is how a climb ends early**, on the settings screen, below a rule, in the destructive
+red, behind a confirm. The game had no way to give up: quitting meant closing the window and the next
+launch resumed exactly where it left off. It is filed under the program's screen rather than given a
+corner of its own because that is the one screen reachable from everywhere, which is what a "give
+up" control has to be — and the placement is why it is set so far apart from the two bars.
+
+**A death ends the run, and there is no retry** *(owner's call, 2026-09-03)*. A defeat used to put
+the same opponent straight back up, which is not what a roguelike is. The duelist falling ends the
+climb exactly as giving up does — same function, same deleted file, same trip back to the title —
+and the button in the DUEL! slot says **End Run** rather than offering a choice that no longer
+exists. The press is the player deciding they have looked long enough, not a decision about whether
+to die; the screen holds its last picture until they make it.
+
+**The run's ledger is readable on that screen before the button is pressed**, since it is chrome and
+the run still exists until the press. That is the account of the climb that just ended, which is the
+one moment it is most worth having.
+
+### The end-of-run splash *(owner's call, 2026-09-03)*
+
+**A finished run gets a page saying what it came to**, before the player is put back on the title —
+whether it ended in a death or was given up from the settings screen. Both are the same event and
+both land here; the only difference is the sentence at the top.
+
+What it shows: **floor reached, enemies defeated, damage dealt** — the three the run is judged on —
+then rooms entered, rounds fought and unspent vitae, quieter. And **the run code, in a box, at three
+times the size of anything else on the page.**
+
+**The seed is the reason the page earns its place.** Everything else is a number about a run that is
+over; the code is the one thing still useful afterwards — it deals the whole tower again, and it is
+how a run can be handed to somebody or named in a bug report. Before this it went to the log at
+launch and nowhere a player could ever see.
+
+**The code is also in the bottom-right corner of the settings screen**, quiet and captioned, drawn
+only while a run is in progress. The splash is a page you see once and only after the fact; the cog
+is on every screen, so that corner is where the answer is always two clicks away. Nothing is drawn
+there with no run standing, because the code would name a tower the next New Run is about to reroll.
+
+**There is no "run it again" button, and there should not be.** The seed being on screen is what
+makes a run repeatable; a button that dealt it again would be a retry with a longer name.
+
+**The summary is taken before the run is destroyed** and held on the global state, so the splash
+draws numbers rather than holding a finished run open — a `Session` still alive behind that page
+would be a run that is over and still resumable.
+
+### Two menu screens *(owner's call, 2026-09-03)*
+
+**Achievements** and **Credits** hang off the title menu. Neither is a station of a run: they read
+the profile and a list of names, they never touch `session.Phase`, and each records where the player
+came from so Back works from anywhere — the same shape the settings screen has.
+
+- **Achievements lists what has not been earned as well as what has**, greyed. A page showing only
+  what you already have says nothing on the day you most want to read it. There is one achievement
+  today, `first-steps`; the page is built to grow.
+- **Credits names both copyright holders, the two dependencies, the portrait source and the
+  licence.** It is partly a page to read and partly a page to be *correct*: the project is
+  source-available and meant to be sold, so the attribution has to exist somewhere the player can
+  see it.
+
+Both are deliberately simple. When either outgrows the screen it takes a `models.Scrollbar`, which
+already exists, and the achievements catalogue moves from a table in its own file to
+`data/achievements.json`.
 
 **Resuming is not replaying, and the distinction is load-bearing.** A run is *not* replayable from
 its seed alone — a deck edit is a choice, so replay would need a seed plus a choice log — but

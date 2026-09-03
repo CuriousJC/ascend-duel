@@ -1,5 +1,26 @@
 package screens
 
+// The front screen: the logo, and the six things a player can do from a cold start.
+//
+// **It is the door to a run rather than a door to a screen** *(owner's call, 2026-09-03)*. It
+// carried a "Combat" button until then, which navigated — it put the game on the combat screen and
+// the run had already been built by `main` before anybody saw the menu. Now the menu is the place
+// the run is decided: **New Run** builds one, **Continue** walks back into the one on disk, and
+// `main` only rolls a seed and calls `BootRun`. See run.go.
+//
+// **Continue is dead when there is nothing to continue**, rather than absent. A menu whose entries
+// move about between launches is a menu that has to be re-read every time; a greyed row says both
+// "this exists" and "not for you yet", which is the same rule the settings screen's music bar is
+// under.
+//
+// **New Run asks first, and only when it would destroy something.** A fresh player pressing it has
+// nothing to lose and gets no dialog; a player forty rooms up gets the question. See confirm.go.
+//
+// **Achievements and Credits hang off here rather than off the run**, because neither is a station
+// of a climb: they read the profile and a list of names respectively, and both are things a player
+// looks at between runs. They are `actions` calls for the reason Settings is — each records where
+// the player came from, so Back works from anywhere.
+
 import (
 	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/models"
@@ -12,11 +33,27 @@ import (
 	"image/color"
 )
 
-// TitleScene is the front screen: the logo and the three menu buttons.
+// The menu's shape. **Six rows now rather than three**, so both the buttons and the step are
+// smaller than the 84-tall rows spaced 150 apart that three fitted comfortably. At the old figures
+// the sixth row ended 200 pixels below the bottom of the screen.
+const (
+	titleButtonWidth  = 275
+	titleButtonHeight = 68
+	titleRowGap       = 88
+)
+
+// TitleScene is the front screen: the logo and the menu.
 type TitleScene struct {
-	combatButton   *models.Button
-	settingsButton *models.Button
-	exitButton     *models.Button
+	newRunButton       *models.Button
+	continueButton     *models.Button
+	achievementsButton *models.Button
+	creditsButton      *models.Button
+	settingsButton     *models.Button
+	exitButton         *models.Button
+
+	// confirm is the "are you sure" in front of New Run, and it is only ever raised when a run is
+	// actually in progress.
+	confirm confirmDialog
 }
 
 // Init builds the buttons on first entry and positions them every time.
@@ -26,31 +63,88 @@ type TitleScene struct {
 // stale any frame Ebiten chooses to skip Draw. The internal resolution is fixed, so
 // these coordinates only need computing once per visit.
 func (s *TitleScene) Init(gs *state.GlobalState) {
-	if s.combatButton == nil {
-		s.combatButton = models.NewButton(275, 100, "Combat", func() { actions.GoToCombat(gs) })
-		s.settingsButton = models.NewButton(275, 100, "Settings", func() { actions.OpenSettings(gs) })
-		s.exitButton = models.NewButton(275, 100, "Exit", func() { actions.QuitGame(gs) })
+	if s.newRunButton == nil {
+		s.newRunButton = models.NewButton(titleButtonWidth, titleButtonHeight, "New Run",
+			func() { s.startNewRun(gs) })
+		s.continueButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Continue",
+			func() { ContinueRun(gs) })
+
+		// **The two menu screens go through actions, like Settings does.** They are not stations of
+		// a run — nothing in flow.go names them — so they record where the player was and Back puts
+		// them there, which is the one thing every screen reachable from anywhere has to do.
+		s.achievementsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Achievements",
+			func() { actions.OpenAchievements(gs) })
+		s.achievementsButton.TextSize = 20
+
+		s.creditsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Credits",
+			func() { actions.OpenCredits(gs) })
+
+		s.settingsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Settings",
+			func() { actions.OpenSettings(gs) })
+		s.exitButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Exit",
+			func() { actions.QuitGame(gs) })
 	}
 
-	// The percentage anchors the menu; the 150px steps space it. Giving each button its
-	// own percentage would let the spacing drift apart the next time the menu moves.
+	// **The dialog does not survive a visit.** A scene's Init runs again every time it is entered,
+	// and arriving at the title with a question already up would be a dialog nobody asked.
+	s.confirm.close()
+
+	// The percentage anchors the menu; the fixed steps space it. Giving each button its own
+	// percentage would let the spacing drift apart the next time the menu moves.
 	menuTop := gs.PctY(33)
 
-	s.combatButton.ScreenX = gs.PctX(50)
-	s.combatButton.ScreenY = menuTop
-
-	s.settingsButton.ScreenX = gs.PctX(50)
-	s.settingsButton.ScreenY = menuTop + 150
-
-	s.exitButton.ScreenX = gs.PctX(50)
-	s.exitButton.ScreenY = menuTop + 300
+	for i, b := range s.menu() {
+		b.ScreenX = gs.PctX(50)
+		b.ScreenY = menuTop + i*titleRowGap
+	}
 }
 
 func (s *TitleScene) Update(gs *state.GlobalState) error {
-	systems.UpdateButton(gs, s.combatButton)
-	systems.UpdateButton(gs, s.settingsButton)
-	systems.UpdateButton(gs, s.exitButton)
+	// **The question owns the screen while it is up.** The menu underneath is still where it was,
+	// and a click reaching New Run through the dialog asking about New Run would start two runs.
+	if s.confirm.isOpen() {
+		s.confirm.update(gs)
+		return nil
+	}
+
+	// **Dead with nothing to go back to.** A run only exists here if BootRun resumed one off disk
+	// or the player started one and came back to the title; either way the test is the same.
+	setEnabled(s.continueButton, gs.Run != nil && gs.Resumed)
+
+	for _, b := range s.menu() {
+		systems.UpdateButton(gs, b)
+	}
 	return nil
+}
+
+// menu is the rows, top to bottom. **One list read by Init, Update and Draw**, because three
+// hand-written orders are three places a new entry can be forgotten — which is exactly how a
+// button ends up drawn and not clickable.
+func (s *TitleScene) menu() []*models.Button {
+	return []*models.Button{
+		s.newRunButton, s.continueButton,
+		s.achievementsButton, s.creditsButton,
+		s.settingsButton, s.exitButton,
+	}
+}
+
+// startNewRun begins a new climb, asking first if that would throw one away.
+//
+// **The question is asked about the *saved* run rather than about whatever `gs.Run` happens to
+// hold.** A fresh launch has a run standing already — BootRun builds one so the first press of New
+// Run is instant — and asking "abandon your run?" about a tower nobody has entered would be a
+// dialog that means nothing.
+func (s *TitleScene) startNewRun(gs *state.GlobalState) {
+	if gs.Run == nil || !gs.Resumed {
+		NewRun(gs)
+		return
+	}
+	s.confirm.ask(
+		"Start a new run?",
+		"The climb in progress will be lost. This cannot be undone.",
+		"New Run",
+		func() { NewRun(gs) },
+	)
 }
 
 func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
@@ -81,17 +175,13 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	//BUTTONS
 	//
 	// Positions are set in Init; Draw only draws.
-	systems.DrawButton(gs, screen, s.combatButton)
-	systems.DrawButton(gs, screen, s.settingsButton)
-	systems.DrawButton(gs, screen, s.exitButton)
+	for _, b := range s.menu() {
+		systems.DrawButton(gs, screen, b)
+	}
 
 	// The build, bottom right. Small and dim on purpose — it is a thing to be *found* when
 	// someone is asked "which version are you on", not a thing to be read every time the
 	// title screen is looked at.
-	//
-	// The window title carries it too, and that is the one that matters most today: this
-	// screen is skipped on boot while combat is the screen under construction, so a
-	// screenshot of the game will show the title bar and never this.
 	versionOp := &text.DrawOptions{}
 	versionOp.GeoM.Translate(float64(gs.PctX(100)-versionInset), float64(gs.PctY(100)-versionInset))
 	versionOp.PrimaryAlign = text.AlignEnd
@@ -99,6 +189,9 @@ func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	versionOp.ColorScale.ScaleWithColor(versionColor)
 	text.Draw(screen, gs.Version,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 14}, versionOp)
+
+	// Over the menu it is asking about.
+	s.confirm.draw(gs, screen)
 }
 
 // Where the build string sits on the title screen, and how loud it is.

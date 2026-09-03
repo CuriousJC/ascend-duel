@@ -69,9 +69,14 @@ func TestAnUnfoughtFightIsNotKept(t *testing.T) {
 	}
 }
 
-// A retry is its own record: a defeat fought again is a different duel with a different shuffle,
-// and folding the two would make the account claim a fight was won that was lost first.
-func TestARetryIsItsOwnRecord(t *testing.T) {
+// Two fights in the same room are two records. **The account keys on nothing but the order it was
+// told things**, so a room number appearing twice does not fold — folding it would make the account
+// claim a fight was won that was lost first.
+//
+// Retry was what produced that case and Retry is gone (a death ends the run as of 2026-09-03), so
+// this is now a property of the ledger rather than a scenario the game can reach. It is kept
+// because the property is what stops a future re-entry from silently rewriting history.
+func TestTwoFightsInTheSameRoomAreTwoRecords(t *testing.T) {
 	s := New(testDeck())
 
 	s.BeginFight(2, "Cave Troll")
@@ -90,7 +95,7 @@ func TestARetryIsItsOwnRecord(t *testing.T) {
 		t.Errorf("the two records are %q and %q", fights[0].Outcome, fights[1].Outcome)
 	}
 	if fights[1].Number != 2 {
-		t.Errorf("the retry is fight %d, want 2", fights[1].Number)
+		t.Errorf("the second record is fight %d, want 2", fights[1].Number)
 	}
 }
 

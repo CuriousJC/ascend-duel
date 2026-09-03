@@ -32,6 +32,14 @@ import (
 // last round of a won duel, cards on the table and an empty enemy bar. See holdVictory.
 var victoryHoldTicks = beat(4, 1)
 
+// defeatButtonLabel is what the DUEL! slot says once the duelist has fallen.
+//
+// **"End Run" rather than "Retry"** *(owner's call, 2026-09-03)*. The run is already over by the
+// time the button is drawn — the press does not decide anything, it says the player has looked
+// long enough — so the label names where it goes rather than offering a choice that no longer
+// exists. A roguelike where a death can be taken back is not one.
+const defeatButtonLabel = "End Run"
+
 // eventDwells is each kind's share of the playback speed: a multiplier on `beatTicks`,
 // where 1 is the ordinary beat every event gets.
 //
@@ -310,14 +318,18 @@ type CombatScene struct {
 	// every other. This is a per-visit copy, read in Init, so the draw paths and the seed
 	// arithmetic can go on reading a plain int.
 	//
-	// restart is what a defeat raises: a retry re-enters this screen rather than changing to
-	// another one. A flag rather than a direct call because it is raised from a button's OnClick,
-	// which takes no arguments and so cannot reach the global state Init needs.
+	// died is what a defeat raises: **the run is over**. A flag rather than a direct call because
+	// it is raised from a button's OnClick, which takes no arguments and so cannot reach the
+	// global state that ending a run needs.
+	//
+	// **It replaced `restart` on 2026-09-03** *(owner's call)*. A defeat used to put the same
+	// opponent straight back up, which is not what a roguelike is: a death kills the run and the
+	// player starts over. See EndRunInDefeat.
 	fightIndex int
-	restart    bool
+	died       bool
 
 	// won is the other exit: the fight was won, so the run advances and the post-battle screen
-	// takes over. Same shape as restart and for the same reason — raised by a button, consumed by
+	// takes over. Same shape as died and for the same reason — raised by a button, consumed by
 	// Update with the global state in hand.
 	won bool
 
@@ -449,7 +461,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// A mover added tomorrow is covered without anybody remembering. See combatTheatre.clear.
 	s.theatre.clear()
 
-	s.restart = false
+	s.died = false
 	s.victoryHeld = 0
 	s.discardsLeft = discardsPerRound
 
@@ -541,14 +553,15 @@ func (s *CombatScene) duelSettled() bool {
 	return s.cursor >= len(s.log) && (!s.fighter.Alive() || !s.enemy.Alive())
 }
 
-// nextFight arms the restart. It cannot re-init the screen itself — a button's OnClick takes
-// no arguments and Init needs the global state — so it raises a flag that Update acts on
+// nextFight arms whichever exit the duel earned. It cannot act itself — a button's OnClick takes
+// no arguments and both exits need the global state — so it raises a flag that Update acts on
 // with the pointer already in hand.
 //
-// **Winning leaves the screen; losing stays on it.** A win goes to the post-battle scene, which
-// offers one alteration to the deck and sends the player back here for the next room — so the
-// advance along the roster is the run's (`WonFight`), not this screen's. A defeat has nothing to
-// award, so it re-enters directly and puts the same opponent back up.
+// **Both outcomes leave the screen, and they leave by different doors** *(owner's call,
+// 2026-09-03)*. A win goes to the post-battle scene, which offers one alteration to the deck and
+// sends the player back here for the next room — so the advance along the roster is the run's
+// (`WonFight`), not this screen's. **A defeat ends the run**: there is no retry, because a death
+// killing the climb is what makes a roguelike one. See EndRunInDefeat.
 // victoryPending reports a won fight winding down: settled, the enemy dead, and the screen holding
 // its last picture until the post-battle scene takes over on its own. It is what the button strip
 // and `Draw` read, so "the fight is over and there is nothing to press" is asked in one place.
@@ -571,8 +584,9 @@ func (s *CombatScene) victoryPending() bool {
 // opened on a won fight, and a screen that changed out from under an open panel would be reading
 // material snatched away.
 //
-// A defeat is untouched: `Retry` is a decision to play the same fight again, and a screen that
-// restarted a lost duel by itself would take that decision away.
+// A defeat is untouched, and for the reason that survived Retry being taken out: the run ending is
+// the biggest thing that happens in it, and a screen that swept the player off the picture of their
+// own death would take away the moment they are meant to sit with. **They press the button.**
 func (s *CombatScene) holdVictory() {
 	if s.modalUp() {
 		return
@@ -588,22 +602,22 @@ func (s *CombatScene) nextFight() {
 		return
 	}
 	if s.enemy.Alive() {
-		s.restart = true
+		s.died = true
 		return
 	}
 	s.won = true
 }
 
 func (s *CombatScene) Update(gs *state.GlobalState) error {
-	// A restart re-enters this screen rather than changing to another one, so it calls Init
-	// directly instead of setting gs.NewScreen — that flag belongs to screen changes, and
-	// Init is documented as safe to re-enter.
 	// The scripted-demo driver, empty in every build but `-tags demoplay`.
 	s.demoUpdate(gs)
 
-	if s.restart {
-		s.restart = false
-		s.Init(gs)
+	// **A death ends the run and puts the player back on the title screen.** It goes through the
+	// same function the settings screen's Abandon Run does, because it is the same event — a climb
+	// that is over — and one path there is one place to get it wrong. See run.go.
+	if s.died {
+		s.died = false
+		EndRunInDefeat(gs)
 		return nil
 	}
 
@@ -703,7 +717,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// Once the duel is decided the DUEL! button becomes the way onward, in place. Reusing
 	// the same button rather than adding a fourth is the point: it is the same slot for
 	// "commit and move the game forward", and a control that appears only at the end of a
-	// fight would be a control nobody has learned.
+	// fight would be a control nobody has learned. See defeatButtonLabel.
 	if s.duelSettled() {
 		// **A won fight has no control at all** *(2026-08-19, owner's call)*. It holds its last
 		// picture and then leaves, so there is nothing to press and nothing to label: a `Next`
@@ -717,9 +731,10 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 			return nil
 		}
 
-		// A defeat keeps its button: Retry is a decision to play the same fight again, and it is
-		// the player's.
-		s.duelButton.Text, s.duelButton.OnClick = "Retry", s.nextFight
+		// **A defeat keeps its button, and it says what it does.** The run is over the moment the
+		// duelist falls; the press is the player deciding they have looked long enough, not a
+		// decision about whether to die. See nextFight.
+		s.duelButton.Text, s.duelButton.OnClick = defeatButtonLabel, s.nextFight
 		setEnabled(s.duelButton, !s.modalUp())
 		setEnabled(s.discardButton, false)
 
@@ -1245,8 +1260,8 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 //
 // What that costs, stated rather than discovered later: nothing on screen says *why* a dark
 // DUEL! button is dark. The AP bar turning red says that something is wrong, not what to do
-// about it, and there is no prompt naming the next enemy — DUEL! relabelling itself Next or
-// Retry is what carries that.
+// about it, and there is no prompt naming the next enemy — DUEL! relabelling itself is what
+// carries that.
 //
 // Both were the owner's call, made knowing the cost. If either is wanted back it is a line
 // somewhere else, not a box.
@@ -1277,7 +1292,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawEnemyCard(gs, screen)
 	// **Nothing is drawn in the DUEL! slot on a won fight.** The screen is holding its last
 	// picture and leaving by itself, so the slot stands empty for the second or so that takes —
-	// see victoryPending. A defeat still shows Retry there.
+	// see victoryPending. A defeat still shows its End Run button there.
 	if !s.victoryPending() {
 		systems.DrawButton(gs, screen, s.duelButton)
 	}

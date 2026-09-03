@@ -130,8 +130,9 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         than given, and `profile.Profile.HandsDiscovered` is the field waiting for it. Gating the
         table is a balance change and belongs in a commit where its effect can be seen, not in the
         one that added the file.
-- [ ] **An achievement the player can see.** `first-steps` is awarded on a won duel and lands in
-      `profile.json` silently: there is no toast and no achievements screen. `Profile.Award` already
+- [ ] **An achievement the player is *told* about.** The achievements screen landed on 2026-09-03
+      and is reachable from the title menu, so the record is visible — but an award still happens
+      silently mid-run and nothing says so at the moment it is earned. `Profile.Award` already
       reports whether an award was new, which is what a toast would hang off.
       - A toast is a new widget and the frame in `internal/game/chrome.go` is the only thing that
         outlives a scene, so it is the natural home and the bar for joining it is high — see
@@ -139,9 +140,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         screen.
       - Steam's overlay draws its own popup when that lands, so this may turn out to be a thing
         only the non-Steam build needs.
-- [ ] **A run that ends.** Delete-on-death is decided and has nowhere to fire from: a defeat
-      currently offers `Retry` and puts the same opponent back up, so no run ever ends.
-      `profile.DeleteRun` is written and uncalled, waiting for whatever ends one.
 - [ ] **Several profiles, and the second text screen.** Explicitly a later problem, split out
       so that "one profile for now" does not quietly become "one profile forever". Multiple
       profiles need naming, naming needs typing, and typing makes the one-text-field rule in

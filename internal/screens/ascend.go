@@ -12,10 +12,3 @@ type AscendScene struct{}
 func (s *AscendScene) Init(gs *state.GlobalState)                       {}
 func (s *AscendScene) Update(gs *state.GlobalState) error               { return nil }
 func (s *AscendScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {}
-
-// CreditsScene is not built yet.
-type CreditsScene struct{}
-
-func (s *CreditsScene) Init(gs *state.GlobalState)                       {}
-func (s *CreditsScene) Update(gs *state.GlobalState) error               { return nil }
-func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {}

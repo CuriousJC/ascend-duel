@@ -138,6 +138,14 @@ type GlobalState struct {
 	// Nil until main builds it. Scenes must not create one: two would be two runs.
 	Run *session.Session
 
+	// Summary is what the last run came to, kept alive across the moment the run itself is thrown
+	// away. **The one piece of state that deliberately outlives the thing it describes**: the
+	// run-over screen is drawn after Run has gone to nil, because a summary that held the Session
+	// open would be a finished run that is still resumable.
+	//
+	// Nil except between a run ending and the player leaving that screen. See screens.endRun.
+	Summary *session.RunSummary
+
 	// Store is the directory the player's two files live in, and Profile is what has been read
 	// out of the first of them. **Genuinely global for the reason Run is**: the profile outlives
 	// every screen, is written from three different scenes, and no scene owns it.
@@ -148,10 +156,23 @@ type GlobalState struct {
 	Store   profile.Store
 	Profile *profile.Profile
 
-	// Resumed is whether this session picked a run up off the disk rather than starting one.
-	// **Read once, by the tutorial's trigger**: a lesson that opens by describing the hand the
-	// player is holding cannot begin halfway up a tower.
+	// Resumed is whether the run currently on Run came off the disk rather than being started
+	// fresh. **Two readers**: the tutorial's trigger, because a lesson that opens by describing the
+	// hand the player is holding cannot begin halfway up a tower; and the title screen's Continue,
+	// which is exactly the question "is there a climb to go back to".
 	Resumed bool
+
+	// SeedPinned is whether RunSeed was chosen deliberately rather than rolled off the clock —
+	// `main.fixedRunSeed`, or a scenario's own code.
+	//
+	// **It exists so that New Run does not silently break a pin.** A pinned seed is a debugging
+	// session where the same tower in the same order is the whole point, and a menu button that
+	// rerolled it would undo from the title screen what was set in the source. See screens.NewRun.
+	//
+	// **The tutorial outranks it**, as it always has: a taught run is dealt the script's own code,
+	// because the lesson promises the player the hand they are holding and that is a fact about one
+	// deal. So this says "do not reroll off the clock", not "this seed is final".
+	SeedPinned bool
 
 	// ProfileWritable is whether what was read may be written back. False for a corrupt file and
 	// for one written by a newer build — see profile.LoadProfile, which holds the whole migration
@@ -196,10 +217,13 @@ type GlobalState struct {
 // NewGlobalState used at the start of the game to start us off
 func NewGlobalState() *GlobalState {
 	return &GlobalState{
-		// Boots straight into Combat rather than Title: that screen is where the work
-		// is, and clicking through the title every run gets old. Put this back to Title
-		// once the combat screen stops being the thing under construction.
-		ActiveScreen: Combat,
+		// **Boots to the title screen again as of 2026-09-03** *(owner's call)*. It booted
+		// straight into Combat for as long as that screen was the thing under construction and
+		// clicking through a menu every launch was pure cost. What changed is that the menu now
+		// *decides something*: whether this is a new climb or the one on disk, which is a question
+		// nothing else in the game asks. A run that started before the player was asked is a run
+		// they cannot decline. See screens/title.go and screens/run.go.
+		ActiveScreen: Title,
 		NewScreen:    true,
 		Assets:       make(map[string]*ebiten.Image),          // Initialize the assets map
 		Fonts:        make(map[string]*text.GoTextFaceSource), // Initialize the fonts map
@@ -243,6 +267,20 @@ const (
 	// came from** — see ReturnScreen. Appended rather than filed next to Title because
 	// ActiveScreen is append-only like every other ordinal in the game.
 	Settings
+
+	// RunOver is the splash a finished run ends on: what it came to, and the code that would deal
+	// it again. **It is the one screen that draws something no longer in the game** — the run is
+	// already gone by the time it is up, which is why what it draws is a session.RunSummary held on
+	// the state rather than the run itself. Appended, because ActiveScreen is append-only.
+	RunOver
+
+	// Achievements is what the player has earned across every run they have ever played.
+	//
+	// **It is the program's screen rather than a run's**, like Settings and Credits: it never
+	// touches session.Phase, and it reads the profile rather than the run — so it says the same
+	// thing whether it is opened between climbs or halfway up one. Appended, because ActiveScreen
+	// is append-only.
+	Achievements
 )
 
 func (active ActiveScreen) String() string {
@@ -261,6 +299,10 @@ func (active ActiveScreen) String() string {
 		return "Settings"
 	case Credits:
 		return "Credits"
+	case Achievements:
+		return "Achievements"
+	case RunOver:
+		return "RunOver"
 	default:
 		return "Unknown"
 	}

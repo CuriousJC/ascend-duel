@@ -15,3 +15,6 @@ import (
 func (s *CombatScene) demoUpdate(*state.GlobalState) {}
 
 func (s *CombatScene) demoDraw(*state.GlobalState, *ebiten.Image) {}
+
+// DemoPlaysItself is false in every build that ships. See the demoplay counterpart.
+func DemoPlaysItself() bool { return false }

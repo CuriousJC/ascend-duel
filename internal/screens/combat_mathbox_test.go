@@ -210,8 +210,8 @@ func mathTestState(t *testing.T) *state.GlobalState {
 		t.Fatalf("kubasta would not parse: %v", err)
 	}
 	return &state.GlobalState{
-		ScreenWidth:  1280,
-		ScreenHeight: 960,
+		ScreenWidth:  state.ScreenWidth,
+		ScreenHeight: state.ScreenHeight,
 		Fonts:        map[string]*text.GoTextFaceSource{"kubasta": src},
 	}
 }

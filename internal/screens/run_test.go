@@ -396,7 +396,7 @@ func TestEveryEndingHasWordsForIt(t *testing.T) {
 // invisible in practice**, and nothing about drawing one fails.
 func TestEveryMenuRowIsOnScreen(t *testing.T) {
 	gs := saveState(t)
-	gs.ScreenWidth, gs.ScreenHeight = 1280, 960
+	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
 	scene := &TitleScene{}
 	scene.Init(gs)
@@ -415,7 +415,7 @@ func TestEveryMenuRowIsOnScreen(t *testing.T) {
 // the button height, or two rows share pixels and the upper one eats the lower one's clicks.
 func TestTheMenuRowsDoNotOverlap(t *testing.T) {
 	gs := saveState(t)
-	gs.ScreenWidth, gs.ScreenHeight = 1280, 960
+	gs.ScreenWidth, gs.ScreenHeight = state.ScreenWidth, state.ScreenHeight
 
 	scene := &TitleScene{}
 	scene.Init(gs)

@@ -66,10 +66,10 @@ type tutorialHost interface {
 
 // The bubble's footprint and the furniture inside it.
 const (
-	// Bob is drawn at RingStyle's 162x224 — a card with a name and a picture and nothing else,
+	// Bob is drawn at RingStyle's 203x280 — a card with a name and a picture and nothing else,
 	// which is exactly what he is. EnemyStyle would give him a health bar.
-	tutorialCardW = 162
-	tutorialCardH = 224
+	tutorialCardW = 203
+	tutorialCardH = 280
 
 	tutorialPad      = 20
 	tutorialTextW    = 400

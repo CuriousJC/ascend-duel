@@ -13,6 +13,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
 // panelRun is a run wearing the named rings, with a deck small enough to reason about by hand.
@@ -283,7 +284,7 @@ func TestTheTallyBandFitsBetweenTheGridAndTheButtons(t *testing.T) {
 	//
 	// The internal resolution, which Layout fixes. Written out rather than imported because game
 	// imports screens and not the reverse.
-	const screenH = 960
+	const screenH = state.ScreenHeight
 	pctY := func(p int) int { return screenH * p / 100 }
 
 	top := pctY(modalPanelTopPct)
@@ -307,7 +308,7 @@ func TestTheTallyBandFitsBetweenTheGridAndTheButtons(t *testing.T) {
 func TestTheTwoToggleButtonsDoNotOverlap(t *testing.T) {
 	// They are placed as a pair from the panel's centre, so this is the arithmetic that says the
 	// pair fits the panel and that neither sits on the other.
-	const screenW = 1280
+	const screenW = state.ScreenWidth
 	pctX := func(p int) int { return screenW * p / 100 }
 
 	span := 2*deckViewButtonWidth + deckViewButtonGap

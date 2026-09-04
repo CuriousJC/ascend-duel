@@ -55,12 +55,21 @@ const (
 
 	// settingsRowGap is the space between one bar and the next, measured from centre to centre.
 	settingsRowGap = 100
+
+	// settingsToggleHeight is the fullscreen button. **Shorter than a bar's row**, because a
+	// latched button has no label band above it — the word is on the face.
+	settingsToggleHeight = 52
 )
 
 // settingsTitleSize and settingsTitle are the heading.
 const (
 	settingsTitleSize = 40
 	settingsTitle     = "Settings"
+
+	// **It names the state it puts you in, not the state you are in**, which is the rule a latched
+	// control follows: the latch says whether it is on, so a label that also said so would be the
+	// same fact twice and would read as wrong in one of the two states.
+	settingsFullscreenLabel = "Full screen"
 )
 
 // The abandon band: the rule that separates it from the settings, and the button under it.
@@ -105,6 +114,12 @@ type SettingsScene struct {
 
 	// abandon gives up the run, and confirm is the question in front of it. **Never one without
 	// the other**: this is the only irreversible control in the game reachable from every screen.
+	// full is the fullscreen toggle: **a latched button rather than a bar**, because unlike the
+	// two settings above it this is genuinely a pair of states rather than a level. `Latched` is
+	// already how the game draws a mode that is on — sunken and darker — so this needed no new
+	// widget.
+	full *models.Button
+
 	abandon *models.Button
 	confirm confirmDialog
 }
@@ -128,6 +143,10 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 		s.speed.OnChange = func(v float64) { SetSpeed(speedFor(v)) }
 		s.speed.OnCommit = func(v float64) { s.commit(gs) }
 
+		s.full = models.NewButton(settingsSliderWidth, settingsToggleHeight,
+			settingsFullscreenLabel, func() { s.toggleFullscreen(gs) })
+		s.full.TextSize = 20
+
 		s.back = models.NewButton(200, 60, "Back", func() { s.leave(gs) })
 
 		s.abandon = models.NewButton(240, 56, settingsAbandonLabel, func() { s.askAbandon(gs) })
@@ -147,6 +166,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	// silent and the game may have been played for an hour since — and Init runs on every entry.
 	s.music.Value = music.Level()
 	s.speed.Value = speedValue(Speed())
+	s.full.Latched = Fullscreen()
 
 	// **The bar is only live if there is anything to hear.** Opening the audio device is allowed
 	// to fail, and a volume control that silently did nothing would be worse than one that says
@@ -158,6 +178,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 
 	s.music.ScreenX, s.music.ScreenY = centre, top
 	s.speed.ScreenX, s.speed.ScreenY = centre, top+settingsRowGap
+	s.full.ScreenX, s.full.ScreenY = centre, top+2*settingsRowGap
 
 	// The abandon band, below the rule; Back stays last, at the bottom of the screen, because the
 	// way out of a screen is the last thing on it.
@@ -168,7 +189,17 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 // abandonRuleY is where the rule between the settings and the abandon band is drawn. One function
 // so the rule and the button under it cannot drift apart.
 func (s *SettingsScene) abandonRuleY(gs *state.GlobalState) int {
-	return gs.PctY(38) + settingsRowGap + settingsAbandonGap
+	return gs.PctY(38) + 2*settingsRowGap + settingsAbandonGap
+}
+
+// toggleFullscreen flips the display and records it.
+//
+// **It reads the window back rather than trusting the flip**, so a request the platform refuses
+// leaves the button saying what is actually true instead of what was asked for.
+func (s *SettingsScene) toggleFullscreen(gs *state.GlobalState) {
+	SetFullscreen(!Fullscreen())
+	s.full.Latched = Fullscreen()
+	s.commit(gs)
 }
 
 func (s *SettingsScene) Update(gs *state.GlobalState) error {
@@ -181,7 +212,13 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 
 	systems.UpdateSlider(gs, s.music)
 	systems.UpdateSlider(gs, s.speed)
+	systems.UpdateButton(gs, s.full)
 	systems.UpdateButton(gs, s.back)
+
+	// **Re-read every tick, not only on entry.** Nothing else in the game changes it today, but a
+	// window manager can drop a game out of fullscreen on its own and a latch that then disagreed
+	// with the display would be the control lying about the thing it controls.
+	s.full.Latched = Fullscreen()
 
 	// **Dead with no run to give up.** Settings is reachable from the title screen, where there may
 	// be no climb at all — and a control that works and does nothing is worse than one that says it
@@ -209,6 +246,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawSlider(gs, screen, s.music)
 	systems.DrawSlider(gs, screen, s.speed)
+	systems.DrawButton(gs, screen, s.full)
 
 	// The rule, then the thing that is not a setting, then the note saying what it does. **The note
 	// is there whether or not the button is live**, because the sentence is what tells a player
@@ -316,6 +354,7 @@ func (s *SettingsScene) commit(gs *state.GlobalState) {
 	}
 	gs.Profile.Settings.MusicVolume = music.Level()
 	gs.Profile.Settings.Speed = Speed()
+	gs.Profile.Settings.Fullscreen = Fullscreen()
 	saveProfile(gs)
 }
 
@@ -354,4 +393,23 @@ func ApplySettings(s profile.Settings) {
 	// already normalised one off disk — so an older profile with no settings block at all lands
 	// on the tuned speed rather than on a stopped clock.
 	SetSpeed(s.Speed)
+
+	// **Fullscreen is applied here rather than in main** for the reason the other two are: one
+	// function puts a whole settings block into force, so a setting that is loaded and never
+	// applied cannot exist. Ebitengine takes this before the window opens as happily as after.
+	SetFullscreen(s.Fullscreen)
 }
+
+// SetFullscreen puts the game on the whole display, or back in its window.
+//
+// **A thin wrapper so the settings screen does not reach for Ebitengine itself**, which is the
+// same shape SetSpeed and music.SetLevel have — the screen asks for a state and something else
+// owns how it is reached. It also gives Fullscreen() one answer to read back.
+func SetFullscreen(on bool) { ebiten.SetFullscreen(on) }
+
+// Fullscreen is whether the game is on the whole display right now.
+//
+// **Asked of the window rather than of the profile**, exactly as the two bars ask the audio device
+// and the clock. A screen that read the file would show a state the game is not in on a machine
+// where the file could not be written.
+func Fullscreen() bool { return ebiten.IsFullscreen() }

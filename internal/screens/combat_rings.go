@@ -19,10 +19,11 @@ import (
 	"image"
 	"log"
 
+	"math"
+
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
-	"math"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -124,10 +125,19 @@ var ringPaneBackColor = color.RGBA{R: 207, G: 189, B: 156, A: 255}
 func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
 	duelist, enemy := s.duelistCardRect(gs), s.enemyCardRect(gs)
 
-	left := duelist.Max.X + ringPaneGap
+	// **The caption column comes first** *(2026-09-04)*: the floor and the room used to hang under
+	// the duelist card, which cost the screen 54 pixels of height it no longer had once the card
+	// grew — see towerPlaceRect. The row starts after that strip rather than at the card's edge, so
+	// the two cannot overlap however many rings are worn.
+	left := duelist.Max.X + ringPaneGap + towerColumnWidth + ringPaneGap
 	top := duelist.Min.Y + ringPaneTopDrop
 	right := enemy.Min.X - ringPaneGap
-	bottom := top + cards.RingStyle.Height + ringRuleGap
+
+	// **The row is exactly a card deep now** *(2026-09-04)*. It used to reserve ringRuleGap under
+	// itself for a rule with the worn count beneath it; both moved into the caption column, so the
+	// pane ends where the cards do. That is 44 pixels the top band gives back, which is what let
+	// the card grow to five quarters — see cardScaleNum in internal/cards/style.go.
+	bottom := top + cards.RingStyle.Height
 
 	return image.Rect(left, top, right, bottom)
 }
@@ -139,10 +149,9 @@ func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
 // panel's floor and the number is loose underneath it, which is backwards — the count belongs
 // to the row it counts.
 func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
-	r := s.ringPaneRect(gs).Inset(-ringPaneBackPad)
-	r.Max.Y = s.ringPaneRect(gs).Max.Y +
-		ringRuleWidth + ringCountTopGap + ringCountSize + ringPaneBackPad
-	return r
+	// **Simply the row padded, since 2026-09-04.** It used to be extended to cover the rule and
+	// the count, which were under the row; those are in the caption column now.
+	return s.ringPaneRect(gs).Inset(-ringPaneBackPad)
 }
 
 // ringSlotMaxGap is the most bare table ever left between two ring cards.
@@ -154,9 +163,16 @@ func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
 // fixed pitch and the row widens outwards from the middle as one is added, up to the point where
 // five of them fill the pane and the pitch has to close up again.
 //
-// 22 is the gap five rings leave in the combat screen's pane, so the fullest row on the screen the
-// pitch was originally derived from is drawn exactly where it always was.
-const ringSlotMaxGap = 22
+// **26 since 2026-09-04**, from 22 — the same seven sixths the card grew by, so the row keeps its
+// rhythm rather than closing up around bigger cards.
+//
+// **It stopped being the gap five rings leave in the pane on the same day.** That was true while
+// the screen was 1280 wide: five rings filled the combat pane exactly, and the cap was read off
+// them. At 1920 the pane is 1443 pixels and a full row is 1039, so there is slack even at five and
+// the row is centred in it. Filling the pane again would mean a gap of 118 — most of a card of bare
+// table between rings, which is precisely the "two unrelated things rather than one build" failure
+// the cap was written to prevent. So the cap is now a chosen pitch rather than a derived one.
+const ringSlotMaxGap = 26
 
 // ringSlotPitch is how far apart two ring cards start, **for the number actually worn**.
 //
@@ -572,26 +588,46 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 		drawRingCard(gs, screen, at, ring, counters[ring.RingRecord], true, !s.ringShake[i].done())
 	}
 
-	// The rule: the row's whole width, whatever is standing on it. **It is drawn even with no
-	// rings equipped**, which is deliberate — an empty band with a line under it says the row
-	// exists and is empty, where nothing at all says the screen forgot to draw something.
-	vector.DrawFilledRect(screen,
-		float32(r.Min.X), float32(r.Max.Y), float32(r.Dx()), ringRuleWidth,
-		ringRuleColor, false)
-
-	// **`worn / cap`, exactly like the pile's `left / owned`.** The numerator is what moves and
-	// the denominator deliberately never does, so the figure is read as "three of your five
-	// fingers are spoken for" rather than as two unrelated numbers.
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(r.Max.X-ringCountRightPad),
-		float64(r.Max.Y+ringRuleWidth+ringCountTopGap))
-	op.PrimaryAlign = text.AlignEnd
-	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d", len(worn), maxRings),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
+	// **The rule and the count moved into the caption column on 2026-09-04.** They used to sit
+	// under the row, which put 44 pixels of ink below the deepest thing in the top band and cost
+	// the combat screen height it stopped having when the card grew. They say something *about* the
+	// row rather than being part of it, so the column beside the duelist card — which already holds
+	// the floor and the room — is where they belong. See ringCountRect.
+	s.drawRingCount(gs, screen, len(worn))
 
 	// Last, so the ring riding the cursor is over the rule and the fraction as well as the row.
 	drawDraggedRing(gs, screen, &s.ringDrag, counters)
+}
+
+// ringCountRect is where the worn count stands: **under the floor and the room, in the caption
+// column**, so the whole of the top band's left gutter is one short list of facts about the run.
+func (s *CombatScene) ringCountRect(gs *state.GlobalState) image.Rectangle {
+	tower := s.towerPlaceRect(gs)
+	top := tower.Max.Y + ringCountTopGap
+	return image.Rect(tower.Min.X, top, tower.Max.X, top+ringRuleWidth+ringCountTopGap+ringCountSize)
+}
+
+// drawRingCount writes the rule and `worn / cap` in the caption column.
+//
+// **`worn / cap`, exactly like the pile's `left / owned`.** The numerator is what moves and the
+// denominator deliberately never does, so the figure is read as "three of your five fingers are
+// spoken for" rather than as two unrelated numbers.
+//
+// **The rule is drawn even with no rings equipped**, which is deliberate — a line with an empty
+// figure under it says the row exists and is empty, where nothing at all says the screen forgot to
+// draw something.
+func (s *CombatScene) drawRingCount(gs *state.GlobalState, screen *ebiten.Image, worn int) {
+	r := s.ringCountRect(gs)
+
+	vector.DrawFilledRect(screen,
+		float32(r.Min.X), float32(r.Min.Y), float32(r.Dx()), ringRuleWidth,
+		ringRuleColor, false)
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y+ringRuleWidth+ringCountTopGap))
+	op.ColorScale.ScaleWithColor(groundInk)
+	text.Draw(screen, fmt.Sprintf("%d/%d rings", worn, maxRings),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
 }
 
 // updateRingRow runs the drag over the worn row. Called every tick from Update.

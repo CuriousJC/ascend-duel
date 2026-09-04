@@ -35,9 +35,17 @@ const (
 	// screen back some room. It has to stay equal to cards.Hand's footprint — that package
 	// draws the picture and this one places it — and TestCardFootprintMatchesTheRenderer is
 	// what says so.
-	cardWidth  = 162
-	cardHeight = 224
-	cardGap    = 12
+	// **Up a quarter on 2026-09-04**, from 162x224, following cards.Hand — see
+	// cardScaleNum in internal/cards/style.go for why the face grew when the screen went to
+	// 1920x1080. The gap went 12 to 15 with it, so a row of cards keeps the same rhythm rather than
+	// becoming a denser one; the pair is what handPitch measures a hand of eight against.
+	//
+	// **Still two plain numbers rather than a read of cards.Hand.Width**, for the reason above:
+	// deriving them would make TestCardFootprintMatchesTheRenderer tautological, and that test is
+	// the only thing standing between the picture and the placement drifting apart.
+	cardWidth  = 203
+	cardHeight = 280
+	cardGap    = 15
 
 	// The row sits low, with the budget bar and then the button strip beneath it. handTopPct
 	// is the top of an *unselected* card; a selected one rises above it by selectedNudge.
@@ -57,6 +65,10 @@ const (
 	// The bar's own y is measured from this row and the band above the hand from it as well, so
 	// as well, so moving the row moves the whole lower half of the screen together — which is
 	// the point: what the drop buys is height between the top row and the cards.
+	// **It no longer places the hand** *(2026-09-04)*. See handTop, which measures up from the
+	// bottom edge instead. This is kept because it is what the row rested at for the whole time
+	// the screen was 1280x960, and because it is still the right sanity check on the derived
+	// figure: if handTop stops landing near two thirds down, something below it has grown.
 	handTopPct = 66
 
 	// selectedNudge is how far a selected card lifts out of the row. Selection is the only
@@ -83,6 +95,12 @@ const (
 
 	// The strip under the bar: the AP figure, the two buttons and the deck pile, all on one
 	// line. buttonStripPct is that line's centre and every one of them is placed against it.
+	// **Kept as the resting value the strip had, and no longer what places it** *(2026-09-04)*.
+	// See buttonStripY: the strip's centre is now derived from the action-point figure, because
+	// the alignment the owner asked for on 2026-08-12 was a coincidence of five constants that
+	// held at 960 tall and does not survive a change of resolution — at 1080 the nearest integer
+	// percentage lands two pixels off, and there is no percentage in between. This is here so the
+	// number the strip used to sit at is still written down.
 	buttonStripPct = 95
 
 	// Both buttons on that strip are the same size, and it is named here rather than written
@@ -144,6 +162,53 @@ const (
 	// into a one-pixel reorder and selecting a card would be a coin toss.
 	dragThreshold = 4
 )
+
+// apFigureTop is the top of the action-point figure: the hand row, the bar under it, and the gap
+// under that. **One function rather than the sum written twice**, since the strip is now placed
+// against it.
+func apFigureTop(gs *state.GlobalState) int {
+	return handTop(gs) + cardHeight + apBarBelow + apBarHeight + apFigureBelowBar
+}
+
+// handTop is where the hand row sits, measured **up from the bottom edge of the screen**
+// *(2026-09-04)*.
+//
+// **The bottom of this screen is a fixed stack and the hand is what floats.** Four things hang off
+// the bottom edge in a known order — the deck pile at its own inset, the discard badge on the same
+// line as it, the button strip the badge hangs off, and the action-point figure and bar above that
+// — and every one of them is a fixed number of pixels rather than a proportion. The hand used to be
+// pinned at a percentage from the top and everything below it derived downwards, which meant the
+// two ends met at the badge and only agreed at one screen height and one card size.
+//
+// **That is what the change of resolution exposed.** At 960 tall, 66% happened to put the badge on
+// the pile's line. At 1080 no integer percentage does — 64% lands nine pixels low, 65% two pixels
+// high, and there is nothing in between — so the alignment could not be recovered by re-tuning the
+// number, only by turning the chain around. Measuring up means the bottom line is exact by
+// construction at any resolution and any card height, and the slack lands where there is room for
+// it: above the hand, between the table and the top row.
+//
+// **Nothing else in this file reads a percentage for its vertical position any more.** The row, the
+// bar, the sort column and the table all measure off this.
+func handTop(gs *state.GlobalState) int {
+	strip := buttonStripY(gs)
+	figure := strip - stripButtonHeight/2
+	return figure - apFigureBelowBar - apBarHeight - apBarBelow - cardHeight
+}
+
+// buttonStripY is the centre line the Discard and DUEL! buttons sit on.
+//
+// **Derived from the deck pile rather than from a percentage of its own** *(2026-09-04)*.
+//
+// The badge hangs off the Discard button's bottom-right corner and has to land on the same line as
+// the pile and the settings button — that is what "the bottom of the screen is one line" means. So
+// the pile's inset is the anchor and the strip is placed a badge and half a button above it, which
+// makes that line exact rather than a percentage that happened to land on it. `handTop` then
+// measures up from here, and the two owner-asked-for alignments — this line, and the action-point
+// figure sitting on the Discard button's top — both hold by construction.
+func buttonStripY(gs *state.GlobalState) int {
+	pile := gs.ScreenHeight - deckStackBottomInset
+	return pile - discardBadgeRadius - stripButtonHeight/2
+}
 
 // The card's look — its geometry, colours, rounded corners and cost dashes — lives in
 // internal/cards, which draws a card into a plain Go image with no graphics context.
@@ -375,7 +440,7 @@ func handBand(gs *state.GlobalState, n int) image.Rectangle {
 	}
 	w := (n-1)*handPitch(gs, n) + cardWidth
 	left := handRowCentre(gs).X - w/2
-	top := gs.PctY(handTopPct)
+	top := handTop(gs)
 	return image.Rect(left, top, left+w, top+cardHeight)
 }
 
@@ -386,7 +451,7 @@ func handBand(gs *state.GlobalState, n int) image.Rectangle {
 // spent while it was on screen.
 func handRowCentre(gs *state.GlobalState) image.Point {
 	return image.Pt(gs.PctX(handBandLeftPct)+cardBandWidth(gs)/2,
-		gs.PctY(handTopPct)+cardHeight/2)
+		handTop(gs)+cardHeight/2)
 }
 
 // handRowLeft is the x of the first slot.
@@ -417,7 +482,7 @@ func (s *CombatScene) dropIndex(gs *state.GlobalState) int {
 // the last card is obviously still a drop into the hand. It reaches up by selectedNudge
 // because a selected card does.
 func handZone(gs *state.GlobalState) image.Rectangle {
-	top := gs.PctY(handTopPct)
+	top := handTop(gs)
 	return image.Rect(0, top-selectedNudge, gs.PctX(100), top+cardHeight)
 }
 
@@ -449,7 +514,7 @@ func (s *CombatScene) cardSlot(gs *state.GlobalState, i int) image.Rectangle {
 func slotAt(gs *state.GlobalState, i, n int) image.Point {
 	return image.Pt(
 		handBand(gs, n).Min.X+i*handPitch(gs, n),
-		gs.PctY(handTopPct),
+		handTop(gs),
 	)
 }
 
@@ -458,7 +523,7 @@ func slotAt(gs *state.GlobalState, i, n int) image.Point {
 func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 	band := handBand(gs, s.laidOutCount())
 	left, right := float32(band.Min.X), float32(band.Max.X)
-	top := float32(gs.PctY(handTopPct))
+	top := float32(handTop(gs))
 	below := top + cardHeight
 
 	s.drawAPBar(screen, left, below+apBarBelow, right-left)

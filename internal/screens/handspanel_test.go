@@ -7,6 +7,7 @@ import (
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
@@ -23,7 +24,7 @@ func shippingHands() handsContents {
 // The panel's own footprint at the internal resolution, which Layout fixes. Written here rather
 // than imported because game imports screens and not the reverse.
 func handsTestBody() (left, top, right, bottom int) {
-	const screenW, screenH = 1280, 960
+	const screenW, screenH = state.ScreenWidth, state.ScreenHeight
 	pctX := func(p int) int { return screenW * p / 100 }
 	pctY := func(p int) int { return screenH * p / 100 }
 	r := handsBodyRect(image.Rect(

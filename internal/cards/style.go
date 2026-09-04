@@ -237,7 +237,7 @@ func (st Style) NameLinesAbove(floor, lineHeight int) int {
 // under a badge. What it costs is measure — 128 pixels, and the wording has to be short words.
 // `TestEveryCardTextFitsItsBand` holds the line count against the band and
 // `TestNoEffectTextWordIsWiderThanItsColumn` holds each word against the measure.
-var Hand = Style{
+var handAuthored = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
@@ -371,6 +371,73 @@ func (st Style) Scaled(num, den int) Style {
 // text lands at 9pt in a 64-pixel measure. The panel is a list of what you own rather than a
 // place cards are played from, so the name and the mark carry it; look at `tools/cardsheet`
 // before assuming the sentence can be read.
+// The face is drawn at five quarters of the size it is authored at.
+//
+// **The screen went to 1920x1080 on 2026-09-04 and the card did not follow on its own**
+// *(owner's call)*. Every offset in this file is absolute, so a wider screen leaves the card
+// exactly the size it was and simply puts more space around it — and because Layout's buffer
+// used to be stretched by 1.125 to reach a 1080p window and now is not, an unchanged card would
+// have come out *smaller* on the same monitor than it was before the change. Five quarters puts
+// it about a tenth larger than it used to read, which is the direction the extra room was for.
+//
+// **Five quarters is what the combat screen's vertical stack allows once the floor-and-room
+// caption is out of it.** The width was never the binding constraint — a hand of eight fits flat
+// well past this. The height is: that screen stacks three card heights — the top row, the table row
+// and the hand — plus the furniture above, between and below them. The caption used to hang under
+// the duelist card and cost 54 pixels of that budget, which capped the card at 266 and put this at
+// seven sixths for about an hour on the day of the change. Moving it beside the card instead —
+// there is room at 1920 and there was none at 1280 — leaves `3h + 200 <= 1080`, so the cap is 293
+// and 280 clears it by 13. Three halves still overruns, by 82.
+//
+// **The other thing that had to give was the direction the screen is measured in.** The hand was
+// pinned at a percentage from the top with everything below derived downwards, so the top-down
+// chain and the fixed line along the bottom edge only agreed at one screen height and one card
+// size. `handTop` now measures up from the bottom edge and the slack lands above the hand, which
+// is what makes the card size a free choice rather than a hunt for a percentage that lands.
+
+// **`Style.Scaled` was already here and is what makes this one number rather than thirty.** It
+// existed for `Mini`, which is `Hand` halved; the same rounding applies, so nothing in this file
+// had to be re-derived by hand.
+const cardScaleNum, cardScaleDen = 5, 4
+
+// atCardScale is the authored style as it is actually drawn.
+//
+// **It puts `FormSize` back afterwards** *(owner's call, 2026-09-04)*. The four form marks are
+// drawn PNGs authored at 32x32 — see systems.glyphArt — and `RenderGlyphAt` resamples drawn art
+// to whatever size the box asks for, so scaling the field would silently upscale a 32-pixel mark
+// carrying a one-pixel rim to 40. Until they are re-exported at the size the bigger card wants,
+// the mark renders at its own size and `placeInk` centres it in the corner: proportionally
+// smaller on the face, and sharp rather than soft. The box around it still moves with the card,
+// which is what makes the gap visible instead of hidden.
+func atCardScale(st Style) Style {
+	out := st.Scaled(cardScaleNum, cardScaleDen)
+	out.FormSize = st.FormSize
+	return out
+}
+
+// The eight faces the game draws, each at the scale above.
+var (
+	Hand         = atCardScale(handAuthored)
+	Stack        = stackOf(Hand)
+	EnemyStyle   = atCardScale(enemyAuthored)
+	DuelistStyle = atCardScale(duelistAuthored)
+	WormStyle    = atCardScale(wormAuthored)
+	RingStyle    = atCardScale(ringAuthored)
+	Token        = centringItsMark(atCardScale(tokenAuthored))
+)
+
+// centringItsMark puts the glyph inset back on the centre line of a card that has no text column
+// to line a mark up against.
+//
+// **Token is the only style whose `GlyphInset` is an arithmetic rather than a measurement** — it is
+// authored as `(Width - FormSize) / 2` — so holding `FormSize` back while the card grows leaves the
+// mark off centre by the difference. Hand's inset is a left margin and means what it says at any
+// size; this one has to be recomputed. TestATokenCentresItsColumn is what fails otherwise.
+func centringItsMark(st Style) Style {
+	st.GlyphInset = (st.Width - st.FormSize) / 2
+	return st
+}
+
 var Mini = Hand.Scaled(1, 2)
 
 // Stack is the draw pile's card: a back, and nothing else, at the size the screen has room
@@ -389,14 +456,22 @@ var Mini = Hand.Scaled(1, 2)
 // The proportions are Hand's — 40x54 against 162x224 — so the stack reads as the same object
 // as the cards in the row, seen smaller. It came down with the rest on 2026-08-11; the strip
 // it has to fit did not change, so this one had room to spare either way.
-var Stack = Style{
-	Width: 40, Height: 54,
-
-	CornerRadius: 4,
-	BorderWidth:  0,
-
-	ShowName: false,
-	ShowForm: false,
+// **Derived from Hand rather than authored** *(2026-09-04)*, the way Mini is. It was 40x54, which
+// is 0.741 wide per tall against the hand card's 0.723 — inside the two-hundredth
+// TestStackStyleKeepsTheCardsProportions allows, but only just, and scaling both rounded them
+// apart far enough to fail it. A fifth of the hand card cannot drift, because it is the same
+// rectangle divided; what stays authored is the chrome, which is not a proportion.
+//
+// **A fifth rather than a quarter, because the strip it stands in did not grow.** The pile hangs
+// off the bottom edge in the band under the action-point bar — that is what forced it to be
+// smaller than Mini in the first place — and a quarter of the bigger card reaches up into the bar.
+// A fifth lands at 41x56, within a pixel or two of the 40x54 it was authored at, which is the
+// size that band has always had room for.
+func stackOf(st Style) Style {
+	out := st.Scaled(1, 5)
+	out.ShowName, out.ShowForm = false, false
+	out.CornerRadius, out.BorderWidth = 4, 0
+	return out
 }
 
 // EnemyStyle is the opponent, in the card format *(2026-08-11)*.
@@ -448,7 +523,7 @@ var Stack = Style{
 // damage badge — for the same reason RingStyle does: none of them are things an enemy card
 // is. `Element` is Basic, so the border is the neutral mid grey rather than claiming the
 // opponent is made of fire.
-var EnemyStyle = Style{
+var enemyAuthored = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
@@ -513,7 +588,7 @@ var EnemyStyle = Style{
 // mid grey — the same as the enemy's, since neither card is made of an element. If the two
 // corners ever need telling apart by colour, that is one entry in the Element enum and not a
 // change here.
-var DuelistStyle = Style{
+var duelistAuthored = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
@@ -557,7 +632,7 @@ var DuelistStyle = Style{
 // **The art is a placeholder for every worm today.** `Spec.Art` is filled from the shared default
 // image, so the box is the seat the art goes into rather than a box that will have to be invented
 // when there is some.
-var WormStyle = Style{
+var wormAuthored = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
@@ -597,7 +672,7 @@ var WormStyle = Style{
 //
 // **Not wired into the game.** Nothing builds one of these yet — it exists so the design
 // can be looked at on the contact sheet before rings become real.
-var RingStyle = Style{
+var ringAuthored = Style{
 	Width: 162, Height: 224,
 
 	CornerRadius: 12,
@@ -660,7 +735,7 @@ var RingStyle = Style{
 // The hands panel is the caller: nineteen rungs, each shown as the cards that build it, is a
 // hundred-odd cards on one screen, and at Mini's 81x112 that is a panel of cards with no room
 // left for the ladder.
-var Token = Style{
+var tokenAuthored = Style{
 	Width: 40, Height: 56,
 
 	CornerRadius: 6,

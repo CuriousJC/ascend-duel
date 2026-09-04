@@ -14,7 +14,7 @@ import (
 // reason. See CLAUDE.md.
 
 func TestTheSettingsButtonSitsInTheBottomLeftCornerOnScreen(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: ScreenWidth, ScreenHeight: ScreenHeight}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	r := settingsButtonRect(gs)
 
 	if r.Dx() != settingsButtonSize || r.Dy() != settingsButtonSize {
@@ -46,7 +46,7 @@ func TestTheSettingsButtonStandsDownOnTheSettingsScreen(t *testing.T) {
 	// The corner would otherwise be a door into the room the player is already standing in. That
 	// screen carries its own Back button, so nothing is lost.
 	gs := &state.GlobalState{
-		ScreenWidth: ScreenWidth, ScreenHeight: ScreenHeight,
+		ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight,
 		ActiveScreen: state.Settings,
 	}
 	if chromeShowing(gs) {
@@ -58,7 +58,7 @@ func TestTheSettingsButtonStandsDownOverADialog(t *testing.T) {
 	// The deck overlay's rule is that the one control closing it is the only lit thing on
 	// screen, because there is no Escape key and no right click to fall back on. Chrome drawn
 	// after the scene would break that by construction, so both halves check the flag.
-	gs := &state.GlobalState{ScreenWidth: ScreenWidth, ScreenHeight: ScreenHeight, ModalOpen: true}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight, ModalOpen: true}
 	g := &Game{GlobalState: gs}
 
 	g.updateChrome(gs)

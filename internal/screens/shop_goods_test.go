@@ -99,7 +99,7 @@ func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 // The row is five full-size cards now and it still has to fit, with the two goods' price figures
 // clearing the Leave button exactly as the rings' do.
 func TestTheGoodsStandInTheShelfRowAndFit(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	s := &ShopScene{shelf: make([]shelfItem, shelfSize)}
 
 	bag, can := s.goodSlot(gs, goodBag), s.goodSlot(gs, goodCan)

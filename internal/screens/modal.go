@@ -41,10 +41,14 @@ import (
 // way the previous change already argued for, so the panel covers more of the hand rather than
 // less. See deckpanel.go, where the rest of the fifth row was paid for.
 const (
-	modalPanelLeftPct   = 4
-	modalPanelRightPct  = 96
-	modalPanelTopPct    = 4
-	modalPanelBottomPct = 95
+	modalPanelLeftPct  = 4
+	modalPanelRightPct = 96
+	// **3 and 96 since 2026-09-04**, from 4 and 95. The panel's contents are cards and the card
+	// grew by a quarter while the screen grew by an eighth, so the deck view's five rows of Mini
+	// plus its tally band no longer fitted between the margins — see
+	// TestTheTallyBandFitsBetweenTheGridAndTheButtons, which is the arithmetic that says they do.
+	modalPanelTopPct    = 3
+	modalPanelBottomPct = 96
 
 	// Offsets down from the panel's top edge, and the air kept clear at the bottom.
 	modalTitleTop   = 40

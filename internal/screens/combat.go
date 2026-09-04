@@ -443,9 +443,9 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
 	s.discardButton.ScreenX = discardX
-	s.discardButton.ScreenY = gs.PctY(buttonStripPct)
+	s.discardButton.ScreenY = buttonStripY(gs)
 	s.duelButton.ScreenX = duelX
-	s.duelButton.ScreenY = gs.PctY(buttonStripPct)
+	s.duelButton.ScreenY = buttonStripY(gs)
 
 	s.showDeck = false
 	s.hands.init(handsButtonPlace)
@@ -1446,8 +1446,8 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	// 2026-08-18 — but the hand dialog and the planned hand's name are both laid out
 	// against it, so it is worth a rectangle in the dump.
 	trace.Rect("mathBand", image.Rect(
-		tableInset, gs.PctY(handTopPct)-mathBandGapAboveCards-mathBandHeight,
-		gs.ScreenWidth-tableInset, gs.PctY(handTopPct)-mathBandGapAboveCards))
+		tableInset, handTop(gs)-mathBandGapAboveCards-mathBandHeight,
+		gs.ScreenWidth-tableInset, handTop(gs)-mathBandGapAboveCards))
 	trace.Rect("duelistCard", s.duelistCardRect(gs))
 	trace.Rect("enemyCard", s.enemyCardRect(gs))
 	trace.Rect("ringPane", s.ringPaneRect(gs))

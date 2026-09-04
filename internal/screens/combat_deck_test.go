@@ -1,8 +1,9 @@
 package screens
 
 import (
-	"github.com/curiousjc/ascend-duel/internal/session"
 	"testing"
+
+	"github.com/curiousjc/ascend-duel/internal/session"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )

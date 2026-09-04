@@ -41,10 +41,58 @@ var version = "dev"
 // silently rolling a fresh run, because a pin nobody notices is off is worse than no pin.
 const fixedRunSeed = ""
 
+// The allowance left for the window's own furniture and the desktop's: a title bar and a border
+// at the top, a taskbar at the bottom. **Deliberately generous** — a window a few pixels smaller
+// than it could be is a window with a margin around it, and one a few pixels larger is one whose
+// bottom row of controls is behind the taskbar, which is the bug this whole function exists for.
+const (
+	windowChromeX = 32
+	windowChromeY = 96
+)
+
+// windowSize is how big the window opens: **the largest whole eighth of the internal resolution
+// that fits on the monitor** *(2026-09-04)*.
+//
+// **Eighths rather than a best fit**, because the window and the internal resolution are the two
+// ends of a scale factor and a ragged one resamples pixel art by a fraction that changes with the
+// monitor. A whole eighth keeps the ratio simple and the same on every machine that lands on it,
+// and 8/8 — the 1:1 case the art is authored for — is reached on any display with room for it
+// rather than having to be asked for.
+//
+// **It is a launch size and not a constraint.** The player can resize, maximise, or take the
+// fullscreen toggle on the settings screen; Layout does not care what any of them do.
+//
+// **A monitor that will not answer falls back to three quarters**, which is the figure this was
+// before it was computed and is small enough to fit anything the game will run on.
+func windowSize() (int, int) {
+	w, h := 0, 0
+	if m := ebiten.Monitor(); m != nil {
+		w, h = m.Size()
+	}
+	if w <= 0 || h <= 0 {
+		return state.ScreenWidth * 3 / 4, state.ScreenHeight * 3 / 4
+	}
+
+	for eighths := 8; eighths > 2; eighths-- {
+		ww := state.ScreenWidth * eighths / 8
+		wh := state.ScreenHeight * eighths / 8
+		if ww <= w-windowChromeX && wh <= h-windowChromeY {
+			return ww, wh
+		}
+	}
+	// Smaller than a quarter is not a window anybody can play in; let it be too big and be
+	// resized rather than open at something unreadable.
+	return state.ScreenWidth * 2 / 8, state.ScreenHeight * 2 / 8
+}
+
 func main() {
-	// The window opens at the internal resolution; Layout keeps that resolution fixed
-	// whatever the window is resized to afterwards.
-	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
+	// **The window is not the internal resolution, and that is the point** *(2026-09-04)*. Layout
+	// reports state.ScreenWidth x ScreenHeight whatever the window is, so the two are free to
+	// differ and Ebitengine scales between them. They were the same number until the internal
+	// resolution went to 1920x1080, at which point opening the window at it put a 1080-pixel-tall
+	// window on a 1080-pixel-tall desktop: the title bar and the taskbar take their cut off the
+	// top and the bottom, so the button strip and the deck pile were simply not on screen.
+	ebiten.SetWindowSize(windowSize())
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Ascending Duel " + version)
 	ebiten.SetWindowClosingHandled(true)

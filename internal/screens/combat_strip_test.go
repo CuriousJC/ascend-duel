@@ -20,14 +20,14 @@ import (
 func testState() *state.GlobalState {
 	// The fixed internal resolution game.Layout returns. Anything laid out against a
 	// percentage is a function of these two numbers and nothing else.
-	return &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	return &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 }
 
 func TestDeckStackClearsTheAPBarAndTheScreen(t *testing.T) {
 	gs := testState()
 
 	// What the stack has to live below: the hand row, then the AP figure, then the bar.
-	barBottom := gs.PctY(handTopPct) + cardHeight + apBarBelow + apBarHeight
+	barBottom := handTop(gs) + cardHeight + apBarBelow + apBarHeight
 
 	// **The pile is the outermost thing drawn** *(2026-08-24)*. It used to wear a yellow ring
 	// while the overlay was open, because the pile was then the only live control on a covered
@@ -70,7 +70,7 @@ func TestTheBottomOfTheScreenIsOneLine(t *testing.T) {
 
 	// The badge is a disc centred on the Discard button's bottom-right corner, so its lowest
 	// point is a radius below that corner.
-	badgeBottom := gs.PctY(buttonStripPct) + stripButtonHeight/2 + discardBadgeRadius
+	badgeBottom := buttonStripY(gs) + stripButtonHeight/2 + discardBadgeRadius
 	if d := badgeBottom - deckStackRect(gs).Max.Y; d < 0 || d > 6 {
 		t.Errorf("the discard badge ends at y=%d and the deck pile at y=%d — %dpx apart, which no longer reads as one line",
 			badgeBottom, deckStackRect(gs).Max.Y, d)
@@ -80,12 +80,17 @@ func TestTheBottomOfTheScreenIsOneLine(t *testing.T) {
 func TestTheAPFigureLinesUpWithTheButtonStrip(t *testing.T) {
 	gs := testState()
 
-	// **The thing the owner asked for on 2026-08-12**, and a coincidence of five constants
-	// rather than anything the code enforces: the action-point figure's top on the same line
-	// as the Discard button's top. handTopPct is the only one of the five that was chosen to
-	// make it true, so this is what says so.
-	figureTop := gs.PctY(handTopPct) + cardHeight + apBarBelow + apBarHeight + apFigureBelowBar
-	buttonTop := gs.PctY(buttonStripPct) - stripButtonHeight/2
+	// **The thing the owner asked for on 2026-08-12**: the action-point figure's top on the same
+	// line as the Discard button's top.
+	//
+	// **It was a coincidence of five constants until 2026-09-04 and is now enforced.** handTopPct
+	// had been chosen to make it true at 960 tall; at 1080 no integer percentage lands on it, so
+	// buttonStripY derives the strip from the figure instead. That makes this check structural
+	// rather than a measurement — which is worth saying, because a tautology cannot fail. What it
+	// still holds is that the two are placed from one number: it fails the day something goes back
+	// to positioning the strip on its own.
+	figureTop := apFigureTop(gs)
+	buttonTop := buttonStripY(gs) - stripButtonHeight/2
 
 	if figureTop != buttonTop {
 		t.Errorf("the AP figure's top is y=%d and the button strip's top is y=%d", figureTop, buttonTop)
@@ -145,7 +150,7 @@ func TestThePlayedRowFitsOnScreen(t *testing.T) {
 	// And its bottom must clear the band above the hand, where the sum is written — see
 	// tableRowTop.
 	bottom := first.Y + cardHeight
-	bandTop := gs.PctY(handTopPct) - mathBandGapAboveCards - mathBandHeight
+	bandTop := handTop(gs) - mathBandGapAboveCards - mathBandHeight
 	if bottom > bandTop {
 		t.Errorf("the played row reaches y=%d, through the band above the hand at y=%d", bottom, bandTop)
 	}

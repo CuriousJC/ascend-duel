@@ -96,7 +96,7 @@ func sortColumnRect(gs *state.GlobalState) image.Rectangle {
 	height := n*sortButtonSize + (n-1)*sortButtonGap
 
 	left := gs.PctX(handBandRightPct) - sortButtonSize
-	top := gs.PctY(handTopPct) + cardHeight/2 - height/2
+	top := handTop(gs) + cardHeight/2 - height/2
 	return image.Rect(left, top, left+sortButtonSize, top+height)
 }
 

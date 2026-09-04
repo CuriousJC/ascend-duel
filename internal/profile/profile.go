@@ -76,6 +76,20 @@ type Settings struct {
 	// reaches for a control to stop, and that rule predates there being anywhere to stop it from.
 	MusicVolume float64 `json:"musicVolume"`
 
+	// Fullscreen is whether the game takes the whole display rather than a window.
+	//
+	// **Its zero value is the right default, unlike the two below it.** A game that seizes the
+	// screen on a first launch is one the player has to find a way out of before they have found
+	// anything else, and the window it opens in instead is deliberately smaller than the internal
+	// resolution — see main. So false means windowed and a fresh profile is windowed.
+	//
+	// **It is the one setting that changes how the game is drawn rather than what it does.** At
+	// 1920x1080 internal, a window is scaled by whatever fraction of the display it occupies and
+	// fullscreen on a 1080p panel is the only 1:1 case there is — which is the case the pixel art
+	// is authored for. It still may not change an outcome: Layout reports the same two numbers
+	// either way.
+	Fullscreen bool `json:"fullscreen"`
+
 	// Speed is the game-speed multiplier: 1 is the speed every duration in the game was tuned at,
 	// above 1 is faster, below is slower. See internal/screens/clock.go, which is the one clock it
 	// scales.

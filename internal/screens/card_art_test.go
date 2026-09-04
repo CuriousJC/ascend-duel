@@ -1,9 +1,11 @@
 package screens
 
 import (
-	"github.com/curiousjc/ascend-duel/internal/session"
 	"strings"
 	"testing"
+
+	"github.com/curiousjc/ascend-duel/internal/session"
+	"github.com/curiousjc/ascend-duel/internal/state"
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
@@ -207,7 +209,7 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 	// The internal resolution, which Layout fixes. Written here rather than imported
 	// because game imports screens and not the reverse; if it ever changes, this test is
 	// the thing that should be updated to match.
-	const screenW, screenH = 1280, 960
+	const screenW, screenH = state.ScreenWidth, state.ScreenHeight
 	pctX := func(p int) int { return screenW * p / 100 }
 	pctY := func(p int) int { return screenH * p / 100 }
 
@@ -485,7 +487,7 @@ func deckRowCounts() []int {
 // under the grid saying so, which is at least honest; a pitch that clamps wrongly instead draws a
 // card off the right-hand edge of the panel, where nothing reports it and nothing is visible.
 func TestTheDeckPanelHidesNothing(t *testing.T) {
-	const screenW = 1280
+	const screenW = state.ScreenWidth
 	pctX := func(p int) int { return screenW * p / 100 }
 	width := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct)
 	room := width - deckRowLabelWidth - deckRowMargin

@@ -13,12 +13,12 @@ import (
 
 // The build band's ring row, which needs no window — nothing here creates an ebiten.Image.
 
-// bandState is a run wearing one ring, with a record for it, on a 1280x960 screen.
+// bandState is a run wearing one ring, with a record for it, at the game’s internal resolution.
 func bandState(t *testing.T) *state.GlobalState {
 	t.Helper()
 
 	gs := &state.GlobalState{
-		ScreenWidth: 1280, ScreenHeight: 960,
+		ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight,
 		Run:   session.New(session.StartingDeck()),
 		Rings: map[string]data.RingData{},
 	}
@@ -123,17 +123,31 @@ func TestTwoRingsSitBesideEachOtherRatherThanApart(t *testing.T) {
 	}
 }
 
-// **A full row on the combat screen is drawn exactly where it always was.** The cap is the gap
-// five rings leave in that pane, so the change cannot have moved the layout it was derived from.
+// **A full row sits inside the pane and centred on it.**
+//
+// **It used to say the row filled the pane exactly** *(until 2026-09-04)*, because at 1280 wide it
+// did — the cap was read off the gap five rings left in this pane. At 1920 the pane is wider than
+// five capped rings need, so the row centres in it with slack at both ends, and asserting a flush
+// left edge would be asserting that the cap must be re-derived from whatever pane it is handed.
+// That is the behaviour ringSlotMaxGap exists to prevent; see the note on it.
+//
+// What is still worth holding is that the row is centred and that five of them fit, which is the
+// pair the cap and the centring are between them responsible for.
 func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 	pane := s.ringPaneRect(gs)
 
-	if got, want := ringSlotAt(pane, 0, maxRings).X, pane.Min.X; got != want {
-		t.Errorf("the first of five rings sits at x=%d, not at the pane's left edge x=%d", got, want)
+	first := ringSlotAt(pane, 0, maxRings).X
+	last := ringSlotRect(pane, maxRings-1, maxRings).Max.X
+
+	if first < pane.Min.X {
+		t.Errorf("the first of five rings sits at x=%d, left of the pane's edge x=%d", first, pane.Min.X)
 	}
-	if got := ringSlotRect(pane, maxRings-1, maxRings).Max.X; got > pane.Max.X {
-		t.Errorf("the last of five rings ends at x=%d, past the pane's x=%d", got, pane.Max.X)
+	if last > pane.Max.X {
+		t.Errorf("the last of five rings ends at x=%d, past the pane's x=%d", last, pane.Max.X)
+	}
+	if before, after := first-pane.Min.X, pane.Max.X-last; before != after {
+		t.Errorf("the row is not centred: %dpx before it and %dpx after", before, after)
 	}
 }

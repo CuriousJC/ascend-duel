@@ -108,7 +108,7 @@ func TestTheTwoRowsDoNotOverlapAndStayOnScreen(t *testing.T) {
 	// Both rows are full-size cards at a fixed pitch, and neither can exceed five. This is what
 	// says the fixed pitch actually fits the screen — the hand's compressing pitch exists because
 	// eight cards do not.
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	for n := 1; n <= combat.MaxWornRings; n++ {
 		left := rowSlot(gs, 0, n, 0)
@@ -141,7 +141,7 @@ func TestTheTwoRowsDoNotOverlapAndStayOnScreen(t *testing.T) {
 // two-row layout could not have, and the one the title and hint were silently losing to before
 // this screen had a band at all.
 func TestTheSellFiguresClearTheNarration(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	var shop ShopScene
 	for n := 1; n <= combat.MaxWornRings; n++ {
@@ -217,12 +217,12 @@ func TestTheSellTabClearsTheNarration(t *testing.T) {
 	}
 }
 
-// shopState is a run wearing a ring, on a 1280x960 screen.
+// shopState is a run wearing a ring, at the game’s internal resolution.
 func shopState(t *testing.T) *state.GlobalState {
 	t.Helper()
 
 	gs := &state.GlobalState{
-		ScreenWidth: 1280, ScreenHeight: 960,
+		ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight,
 		Run: session.New(session.StartingDeck()),
 	}
 	for _, key := range session.Rings() {
@@ -243,7 +243,7 @@ func shopState(t *testing.T) *state.GlobalState {
 // **A button drawn over another button is a click that goes to whichever was updated last**, which
 // is invisible until somebody presses the wrong one.
 func TestThePouchButtonClearsTheOtherTwoCornerToggles(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	pouch := pouchCornerPlace(gs)
 	hands := handsCornerPlace(gs)
@@ -271,7 +271,7 @@ func TestThePouchButtonClearsTheOtherTwoCornerToggles(t *testing.T) {
 // TestTheTabsUnderAnArmedStoneStayInsideThePanel holds the two confirm tabs against the frame they
 // hang in. A tab drawn outside the modal panel is a control on a scrim.
 func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	run := session.New(combat.PlainCards(combat.Strike))
 	for _, key := range []string{"agate", "jasper", "onyx"} {

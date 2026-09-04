@@ -88,11 +88,11 @@ func TestTheRingRowSitsBelowTheCardsBesideIt(t *testing.T) {
 		t.Errorf("the ring row sits %dpx below the duelist card, want %d", got, ringPaneTopDrop)
 	}
 
-	// The rule under the rings hangs below the cards themselves, so the row's rectangle is
-	// taller than a ring card by exactly that gap.
-	if want := cards.RingStyle.Height + ringRuleGap; rings.Dy() != want {
-		t.Errorf("the ring row is %dpx tall, want %d — a %dpx card plus the %dpx rule gap",
-			rings.Dy(), want, cards.RingStyle.Height, ringRuleGap)
+	// **The row is exactly a card deep** *(2026-09-04)*. It used to be a card plus ringRuleGap,
+	// reserving room under itself for the rule and the worn count; both moved into the caption
+	// column beside the duelist card, which is the height that let the card grow to five quarters.
+	if want := cards.RingStyle.Height; rings.Dy() != want {
+		t.Errorf("the ring row is %dpx tall, want %d — exactly a ring card", rings.Dy(), want)
 	}
 }
 
@@ -106,19 +106,27 @@ func TestTheTowerLinesFitBetweenTheCardAndTheTable(t *testing.T) {
 
 	card, place := s.duelistCardRect(gs), s.towerPlaceRect(gs)
 
-	if place.Min.Y <= card.Max.Y {
-		t.Errorf("the tower lines start at y=%d, inside the duelist card ending at y=%d",
-			place.Min.Y, card.Max.Y)
+	// **The caption sits beside the card, not under it** *(2026-09-04)*. Under it cost the screen
+	// 54 pixels of height at the top of the vertical stack, which is what capped the card below
+	// five quarters; there was no room beside it at 1280 and there is at 1920. See towerPlaceRect.
+	if place.Min.X < card.Max.X {
+		t.Errorf("the tower lines start at x=%d, inside the duelist card ending at x=%d",
+			place.Min.X, card.Max.X)
 	}
-	if place.Min.X != card.Min.X {
-		t.Errorf("the tower lines start at x=%d and the card at x=%d — they share a left edge",
-			place.Min.X, card.Min.X)
+	if place.Min.Y != card.Min.Y+ringPaneTopDrop {
+		t.Errorf("the tower lines start at y=%d, off the ring row's line at y=%d",
+			place.Min.Y, card.Min.Y+ringPaneTopDrop)
 	}
 
-	// The player's row of played cards starts at tableInset, well left of the card's right
-	// edge, so the lines have to finish above it.
-	if top := tableRowTop(gs); place.Max.Y > top {
-		t.Errorf("the tower lines reach y=%d, into the table row at y=%d", place.Max.Y, top)
+	// And clear of the ring row, which starts after the column the caption stands in.
+	if pane := s.ringPaneRect(gs); place.Max.X > pane.Min.X {
+		t.Errorf("the tower lines reach x=%d, into the ring row at x=%d", place.Max.X, pane.Min.X)
+	}
+
+	// The whole top band has to finish above the table row.
+	if top := tableRowTop(gs); s.ringPaneRect(gs).Max.Y > top {
+		t.Errorf("the top band reaches y=%d, into the table row at y=%d",
+			s.ringPaneRect(gs).Max.Y, top)
 	}
 }
 
@@ -169,11 +177,11 @@ func TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards(t *testing.T) {
 			back.Max.X, enemy.Min.X)
 	}
 
-	// The `3/5` fraction belongs to the row it counts, so the surface has to be deep enough to
-	// hold it — a number hanging off the bottom edge would read as loose underneath the panel.
-	countBottom := rings.Max.Y + ringRuleWidth + ringCountTopGap + ringCountSize
-	if back.Max.Y < countBottom {
-		t.Errorf("the backing ends at y=%d, above the cap fraction ending at y=%d",
-			back.Max.Y, countBottom)
+	// **The fraction is no longer under the row** *(2026-09-04)*, so the backing is simply the row
+	// padded rather than extended to cover it. What still has to be true is that it holds the cards
+	// on every side; see ringCountRect for where the count went and why.
+	if back.Max.Y < rings.Max.Y {
+		t.Errorf("the backing ends at y=%d, above the row it stands behind at y=%d",
+			back.Max.Y, rings.Max.Y)
 	}
 }

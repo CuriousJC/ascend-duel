@@ -19,7 +19,7 @@ func wornState(t *testing.T, keys ...string) *state.GlobalState {
 	t.Helper()
 
 	gs := &state.GlobalState{
-		ScreenWidth: 1280, ScreenHeight: 960,
+		ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight,
 		Run:   session.New(session.StartingDeck()),
 		Rings: map[string]data.RingData{},
 	}

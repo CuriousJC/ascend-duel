@@ -708,7 +708,7 @@ func mathOperatorInk() color.RGBA { return systems.ColorToward(groundInk, screen
 // The table's insets are the right width because the box is drawn on the bare ground rather than
 // inside a pane — it is an overlay at the same width as the two rows of cards it is about.
 func (s *CombatScene) handMathRect(gs *state.GlobalState) image.Rectangle {
-	bottom := gs.PctY(handTopPct) - mathBandGapAboveCards
+	bottom := handTop(gs) - mathBandGapAboveCards
 	return image.Rect(tableInset, bottom-mathBandHeight, gs.ScreenWidth-tableInset, bottom)
 }
 

@@ -20,7 +20,7 @@ import (
 // thing it names and no one scene knows them all. It is the same tripwire an `EventKind` has with
 // its choreography entry, and it exists for the same reason: the enum is the easy half to add to.
 func TestEveryAnchorHasARectangle(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	// **The run is taught the shipped script**, because `matching-cards` counts on the script's
 	// axis and an untaught run has none — so without this the anchor would report no rectangle for
@@ -81,7 +81,7 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 // holds is that every anchor the script uses is one some scene answers for. The stronger version
 // would need the script to declare its screen, which is a field nothing needs yet.
 func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Load())
 
@@ -120,7 +120,7 @@ func TestANilButtonIsNoRectangle(t *testing.T) {
 // The bubble has to fit on the screen at every seat it can take, or a lesson ends up half off the
 // edge. The panel is a fixed size, so this is arithmetic rather than a rendering check.
 func TestTheBubbleFitsTheScreen(t *testing.T) {
-	const w, h = 1280, 960
+	const w, h = state.ScreenWidth, state.ScreenHeight
 	if tutorialPanelW+tutorialMargin*2 > w {
 		t.Errorf("the bubble is %dpx wide and the screen is %d", tutorialPanelW, w)
 	}
@@ -141,7 +141,7 @@ func TestBothButtonsFitTheBubble(t *testing.T) {
 // The bubble moves out of the way of what it is pointing at. That is the whole reason it is not a
 // modal, so it is worth a test rather than a comment.
 func TestTheBubbleAvoidsWhatItPointsAt(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	var t0 tutorialOverlay
 
 	// A target in the bottom-centre, which is where the bubble would rather be.
@@ -282,7 +282,7 @@ func TestTheWaitingLineFitsItsSlot(t *testing.T) {
 // corner of the panel. The rectangle stays perfectly correct, which is why the scene has to be the
 // one to say it is covered.
 func TestACoveredSceneIsNotPointedAt(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	s := stubCombat()
 
@@ -308,7 +308,7 @@ func TestACoveredSceneIsNotPointedAt(t *testing.T) {
 // screen around a rectangle the player cannot see leaves them one legal click with no way to find
 // it — and the dialog's own X, which is what actually gets them out, would be outside the shield.
 func TestACoveredSceneDropsTheGate(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
 		{Key: "press", Text: "press it", Anchor: tutorial.AnchorDuelButton,
@@ -346,7 +346,7 @@ func stubCombat() *CombatScene {
 // shields the game with it. The bug was visible on screen — Bob describing the tower while the
 // player queued two cards behind him — so it is worth checking at the layer where it was visible.
 func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
 		{Key: "rooms", Text: "eight floors", Anchor: tutorial.AnchorTowerPlace,
@@ -375,7 +375,7 @@ func TestAReadStepShieldsTheWholeScreen(t *testing.T) {
 // And an outcome step must leave the screen alone, or the tutorial deadlocks against its own
 // condition: winning a fight needs clicks on controls the step never names.
 func TestAnOutcomeStepLeavesTheScreenLive(t *testing.T) {
-	gs := &state.GlobalState{ScreenWidth: 1280, ScreenHeight: 960}
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Script{Steps: []tutorial.Step{
 		{Key: "win", Text: "again and again", Lock: tutorial.LockNone,

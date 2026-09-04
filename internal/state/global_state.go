@@ -10,6 +10,29 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
+// ScreenWidth and ScreenHeight are the fixed internal resolution. Layout always reports
+// these regardless of window size, so Ebitengine scales and letterboxes to fit and every
+// absolute coordinate in the game is safe against resizing.
+//
+// **1920x1080 since 2026-09-04** *(owner's call)*, from the 1280x960 the game had been since
+// it existed. Two things drove it. The shape was 4:3, which is not a PC game shape any more and
+// left every screen narrow — the shop could not fit three panes of full-size cards side by side,
+// and `handPitch` compressed a hand of eight until the cards overlapped by 34 pixels. And the
+// *scale* was wrong: Layout's buffer is stretched to the window, so on a 1080p monitor 960 tall
+// meant a factor of 1.125 — a non-integer resample of art the glyph rules go to some length to
+// keep at 1:1 — plus pillarboxing to 1440 of 1920. At 1080p the factor is exactly 1, and exactly
+// 2 on a 4K panel.
+//
+// **They live here rather than in internal/game, which is where they were until the change**
+// *(2026-09-04)*. That package sits above internal/screens in the import graph, so no screen and
+// no screen's test could name them — which is why fourteen test files had 1280 and 960 typed into
+// them and would have gone on passing while testing a screen size the game no longer runs at.
+// internal/state is below everything that measures a screen, so this is now one edit.
+const (
+	ScreenWidth  = 1920
+	ScreenHeight = 1080
+)
+
 // GlobalState is what is genuinely shared: input, timing, layout, loaded resources,
 // and which screen is active. It is threaded by pointer into every scene.
 //
@@ -104,6 +127,11 @@ type GlobalState struct {
 	InputGated bool
 
 	//Layout
+	//
+	// **These are the live figures Layout published**, which is always the two constants
+	// above. They are fields as well as constants because a test builds a GlobalState
+	// without ever calling Layout, and because everything that measures the screen reads
+	// them off the state it was handed rather than off a package it may not import.
 	ScreenWidth  int
 	ScreenHeight int
 

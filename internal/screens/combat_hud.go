@@ -139,10 +139,16 @@ const (
 	// the difficulty disagree about how deep a floor is.
 	fightsPerFloor = pyramid.FightsPerFloor
 
-	towerLineGap   = 10 // gap from the card's bottom edge to the first line
-	towerLineSize  = 18
-	towerLinePitch = 22 // the same pitch a card sets its own text at
-	towerLines     = 2  // the floor, then the room
+	// **towerColumnWidth is the strip the caption stands in** *(2026-09-04)*, between the duelist
+	// card and the ring row. It replaced towerLineGap, which was the drop from the card's bottom
+	// edge to the first line — see towerPlaceRect for why the caption came out from under the card.
+	//
+	// 150 is "Outer Room" at 18pt with room to spare; the ring row starts after it, so nothing here
+	// depends on how many rings are worn.
+	towerColumnWidth = 150
+	towerLineSize    = 18
+	towerLinePitch   = 22 // the same pitch a card sets its own text at
+	towerLines       = 2  // the floor, then the room
 )
 
 // towerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
@@ -167,12 +173,13 @@ func towerRoom(fight int) string { return towerRoomNames[fight%fightsPerFloor] }
 // card's left edge, and what the rectangle is for is holding the block against what is drawn
 // under it. See TestTheTowerLinesFitBetweenTheCardAndTheTable.
 func (s *CombatScene) towerPlaceRect(gs *state.GlobalState) image.Rectangle {
-	r := s.duelistCardRect(gs)
-	top := r.Max.Y + towerLineGap
-	return image.Rect(r.Min.X, top, r.Max.X, top+towerLines*towerLinePitch)
+	card := s.duelistCardRect(gs)
+	left := card.Max.X + ringPaneGap
+	top := card.Min.Y + ringPaneTopDrop
+	return image.Rect(left, top, left+towerColumnWidth, top+towerLines*towerLinePitch)
 }
 
-// drawTowerPlace writes the floor and the room under the duelist card.
+// drawTowerPlace writes the floor and the room beside the duelist card.
 //
 // Straight onto the ground rather than onto a surface of its own, so it takes `groundInk` — it
 // belongs to the card above it and a panel would make it a third object in a row that already

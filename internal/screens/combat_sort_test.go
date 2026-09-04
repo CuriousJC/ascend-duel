@@ -431,7 +431,7 @@ func TestTheSortColumnIsCentredOnTheCards(t *testing.T) {
 	gs := testState()
 	col := sortColumnRect(gs)
 
-	cardsMid := gs.PctY(handTopPct) + cardHeight/2
+	cardsMid := handTop(gs) + cardHeight/2
 	if mid := (col.Min.Y + col.Max.Y) / 2; abs(mid-cardsMid) > 1 {
 		t.Errorf("the column is centred at y=%d, want the cards' centre at %d", mid, cardsMid)
 	}

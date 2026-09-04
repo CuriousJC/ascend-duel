@@ -61,12 +61,16 @@ const (
 
 	// The narration clears the band, whose ring row can now carry a sell price under it. The
 	// reward screen's own prose starts at 296 against a band with nothing under the rings.
-	shopProseTop = 310
+	// **360 since 2026-09-04**, from 310. The band above it is a card tall and the card grew by a
+	// sixth, so the sell figure under a worn ring — and the confirm tab that replaces it — now
+	// reach further down than the narration used to start. TestTheSellFiguresClearTheNarration and
+	// TestTheSellTabClearsTheNarration are what hold the gap.
+	shopProseTop = 360
 
 	// shopHintTop is the line between the narration and the shelf. **It is not a title** — the
 	// creature's two sentences are the title, exactly as the payout's are on the reward screen —
 	// and it is written only when it has something the duelist card does not already say.
-	shopHintTop = 392
+	shopHintTop = 444
 
 	// The figure under a card: what it costs on the shelf, what it pays back in the row.
 	shopFigureGap  = 10

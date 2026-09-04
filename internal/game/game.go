@@ -23,14 +23,6 @@ import (
 // look like a crash.
 var ErrClosing = errors.New("closing")
 
-// ScreenWidth and ScreenHeight are the fixed internal resolution. Layout always
-// reports these regardless of window size, so Ebiten scales and letterboxes to fit
-// and every absolute coordinate in the game is safe against resizing.
-const (
-	ScreenWidth  = 1280
-	ScreenHeight = 960
-)
-
 type Game struct {
 	GlobalState *state.GlobalState
 
@@ -208,10 +200,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 // scales the result to the window and letterboxes the remainder.
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
-	g.GlobalState.ScreenWidth = ScreenWidth
-	g.GlobalState.ScreenHeight = ScreenHeight
+	g.GlobalState.ScreenWidth = state.ScreenWidth
+	g.GlobalState.ScreenHeight = state.ScreenHeight
 
-	return ScreenWidth, ScreenHeight
+	return state.ScreenWidth, state.ScreenHeight
 }
 
 // DrawDebugInfo is the final drawing and will place information on the screen at the specified row if requested

@@ -96,37 +96,42 @@ func TestTheRingRowSitsBelowTheCardsBesideIt(t *testing.T) {
 	}
 }
 
-// The two tower lines sit in the band between the duelist card and the table's left-hand row,
-// and that band is only about seventy pixels deep. Both of its edges move on their own — the
-// card's off topRowTopPct, the table's off handTopPct and the feed's height — so the fit is
-// exactly the kind of thing that goes stale silently.
+// The two tower lines sit under the duelist card, in its column, and the band they have to fit in
+// is bounded by the played row below them. Both edges move on their own — the card's off
+// topRowTopPct, the table's off handTop — so the fit is exactly the kind of thing that goes stale
+// silently.
 func TestTheTowerLinesFitBetweenTheCardAndTheTable(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
 	card, place := s.duelistCardRect(gs), s.towerPlaceRect(gs)
 
-	// **The caption sits beside the card, not under it** *(2026-09-04)*. Under it cost the screen
-	// 54 pixels of height at the top of the vertical stack, which is what capped the card below
-	// five quarters; there was no room beside it at 1280 and there is at 1920. See towerPlaceRect.
-	if place.Min.X < card.Max.X {
-		t.Errorf("the tower lines start at x=%d, inside the duelist card ending at x=%d",
-			place.Min.X, card.Max.X)
+	// **The caption is back under the card** *(2026-09-04, owner's call)*. It stood in a column
+	// beside it for a day, which bought the top band height and cost the ring row — and therefore
+	// the hand, which is laid out to it — 166 pixels of width. See towerPlaceRect.
+	if place.Min.X != card.Min.X || place.Max.X != card.Max.X {
+		t.Errorf("the tower lines run x=%d..%d, want the duelist card's column %d..%d",
+			place.Min.X, place.Max.X, card.Min.X, card.Max.X)
 	}
-	if place.Min.Y != card.Min.Y+ringPaneTopDrop {
-		t.Errorf("the tower lines start at y=%d, off the ring row's line at y=%d",
-			place.Min.Y, card.Min.Y+ringPaneTopDrop)
+	if place.Min.Y != card.Max.Y+towerLineGap {
+		t.Errorf("the tower lines start at y=%d, want %dpx under the card at y=%d",
+			place.Min.Y, towerLineGap, card.Max.Y)
 	}
 
-	// And clear of the ring row, which starts after the column the caption stands in.
+	// And clear of the ring row, which now starts at the card's own right edge.
 	if pane := s.ringPaneRect(gs); place.Max.X > pane.Min.X {
 		t.Errorf("the tower lines reach x=%d, into the ring row at x=%d", place.Max.X, pane.Min.X)
 	}
 
-	// The whole top band has to finish above the table row.
-	if top := tableRowTop(gs); s.ringPaneRect(gs).Max.Y > top {
-		t.Errorf("the top band reaches y=%d, into the table row at y=%d",
-			s.ringPaneRect(gs).Max.Y, top)
+	// The whole top band has to finish above the table row — the caption included, since it is
+	// under the card now rather than beside it.
+	top := tableRowTop(gs)
+	if s.ringCountRect(gs).Max.Y > top {
+		t.Errorf("the ring count reaches y=%d, into the table row at y=%d",
+			s.ringCountRect(gs).Max.Y, top)
+	}
+	if place.Max.Y > top {
+		t.Errorf("the tower lines reach y=%d, into the table row at y=%d", place.Max.Y, top)
 	}
 }
 

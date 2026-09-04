@@ -318,6 +318,17 @@ func (t *handsToggle) init(place func(gs *state.GlobalState) image.Point) {
 		place)
 }
 
+// initInColumn wires it as a rung of the combat screen's control column: the column's width, the
+// column's button height, and the same label size every other rung uses.
+//
+// **A second constructor rather than a width argument on the first**, because the two are
+// different placements rather than one placement in two sizes — the corner form is what a screen
+// with no hand on it gets, and it stands beside the deck button there.
+func (t *handsToggle) initInColumn(place func(gs *state.GlobalState) image.Point) {
+	t.modalToggle.init(handsToggleLabel, ControlButtonWidth, ControlButtonHeight,
+		ControlButtonText, place)
+}
+
 func (t *handsToggle) update(gs *state.GlobalState) bool {
 	return t.modalToggle.update(gs, nil)
 }

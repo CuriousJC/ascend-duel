@@ -61,18 +61,18 @@ const (
 	tableFireLift = 22
 )
 
-// tableRowTop is the y both rows sit at: as low as the band allows while still clearing the
-// Resolution feed.
+// tableRowTop is the y both rows sit at: as low as it can go without reaching the hand.
 //
-// **Measured off the feed's collapsed top, not the expanded one.** A row that jumped whenever
-// the box was held would be a layout reacting to an input it has nothing to do with. An
-// expanded feed reaches up past this and is drawn *under* the cards — see the draw-order
-// ranking in combat.go, where that is the one thing deliberately given up.
+// **The band the sum is written in is no longer subtracted** *(2026-09-04, owner's call)*. It
+// used to be reserved here, so the arithmetic had a row of the screen to itself and pushed the
+// played cards 82 pixels up — into the ring pane's backing, which is what the rows were actually
+// overlapping. The sum is an overlay now: it is drawn last, over the bottom of these cards, and
+// the space it used to claim went back to the table. See handMathRect.
 //
-// This is where `firingAt` used to put a single card, and the number is unchanged; what moved
-// is that a whole row lives here now instead of one card passing through.
+// This is where `firingAt` used to put a single card; what moved is that a whole row lives here
+// now instead of one card passing through.
 func tableRowTop(gs *state.GlobalState) int {
-	return handTop(gs) - mathBandGapAboveCards - mathBandHeight - firingGap - cardHeight
+	return handTop(gs) - mathBandGapAboveCards - firingGap - cardHeight
 }
 
 // tableCentre is the middle of the whole table — both halves — on the row's own centre line.

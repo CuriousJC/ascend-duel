@@ -32,61 +32,30 @@ import (
 // event.
 
 const (
-	// Where the stack sits: the far end of the button strip, away from Discard and DUEL!
-	// because it changes nothing about the round.
-	//
-	// **Measured in from the right edge, not as a percentage** *(2026-08-11)*, which makes it
-	// the horizontal counterpart of the top being measured down from the AP bar. It was 88%,
-	// which put 132 pixels of empty screen to its right for no reason anybody chose — a
-	// percentage says where a thing sits relative to the whole, and what this actually wants
-	// to say is "against the edge, with a margin".
-	//
-	// The margin is to the card's own edge, and TestDeckStackClearsTheAPBarAndTheScreen holds
-	// it against the screen.
-	//
-	// **It was 10 until 2026-08-11**, when the pile took over stating its own count. The
-	// margin is now the strip that count is written in, and it is *derived* from the three
-	// things in that strip rather than being a number that happens to fit: the text's margin
-	// from the screen edge, the width reserved for the text, and the gap between the pile and
-	// it. Nudging the pile is therefore a change to whichever of the three is actually wrong.
-	deckStackRightMargin = deckCountRightMargin + deckCountReserve + deckStackToCountGap
+	// deckCountSize is the count written beside the pile. **`60/60` is 41.2 pixels of kubasta at
+	// 22**, which is what the strip it used to be right-aligned into was sized for; it is
+	// right-aligned on the pile's own edge now — see deckCaptionRect.
+	deckCountSize = 22
 
-	// Where the count sits in that strip: right-aligned this far in from the screen's edge,
-	// with its baseline on the pile's bottom edge.
-	//
-	// **The reserve is measured, not guessed** — `60/60` is 41.2 pixels of kubasta at 22 — and
-	// it is a fixed width for the same reason apFigureReserve is: the pile's placement must
-	// not shift as the numerator loses a digit.
-	deckCountRightMargin = 14
-	deckCountReserve     = 42
-	deckCountSize        = 22
+	deckStackDepth = 3 // backs drawn behind the front one, to read as a pile
+	deckStackStep  = 3 // pixels each one is offset up and left
 
-	// How far the pile stands off its own count. Halved from the 41 pixels the first version
-	// left, which read as two things near each other rather than one labelled thing.
-	deckStackToCountGap = 20
-	deckStackDepth      = 3 // backs drawn behind the front one, to read as a pile
-	deckStackStep       = 3 // pixels each one is offset up and left
-
-	// deckStackBottomInset hangs the pile off the **bottom of the screen** *(2026-08-12)*,
-	// where it used to be measured down from the action-point bar.
+	// **The pile stands in the duelist card's column, at the size of every other card**
+	// *(2026-09-04, owner's call)*. It was a half-size back in the bottom-right corner, which made
+	// it the one card on the screen drawn small — and it stood in the corner the enemy card, the
+	// sort column and DUEL! now line up on. Left-aligned under the duelist card and the floor
+	// caption, it is the bottom of a column that reads as one thing: who you are, where you are,
+	// what is left to draw.
 	//
-	// **The anchor moved because what constrains it moved.** The bar was the constraint while
-	// the strip below it was 86 pixels and a 54-pixel pile only just fitted; the bar has since
-	// come down with the hand and there is slack under it, so measuring from above left the
-	// pile floating in the middle of that slack with a band of empty screen beneath it. What
-	// the pile actually wants to say now is "against the bottom edge, with a margin" — the
-	// vertical counterpart of deckStackRightMargin, and the same correction that constant made.
-	//
-	// **Ten, because that is where the mute button's bottom edge is** — see
-	// internal/game/chrome.go, which is chrome and cannot be read from here, so the number is
-	// shared by being the same number rather than by being derived. The discard badge's bottom
-	// lands four pixels lower at 954, since it hangs off a button strip placed as a percentage;
-	// four pixels reads as one line and chasing it exactly would mean taking the strip off
-	// percentages for no other reason.
-	//
-	// TestDeckStackClearsTheAPBarAndTheScreen fails rather than letting the pile run off the
-	// bottom.
+	// **The corner is the pile's again** *(2026-09-04)*. The frame's cog and ledger stood there
+	// and have moved to the control column on the right — see screens.ControlColumnLeft — so what
+	// the pile is measured against is the screen's own bottom edge, with its count under it.
 	deckStackBottomInset = 10
+
+	// deckCaptionGap is the air between the pile and the two things hung off it: the bucket button
+	// on the line above, the count on the line below. **Neither is beside it**, because what is to
+	// its right at that height is the action-point bar, which spans the whole hand.
+	deckCaptionGap = 6
 
 	// outboundDriftUp is how far a discarded card rises as it leaves, and outboundSpin how
 	// far it turns. A card tossed flat off the side of the table reads as a bug; a little
@@ -269,22 +238,41 @@ func (s *CombatScene) inboundTo(i int) bool {
 // deckStackRect is the front card of the pile: the one that is drawn on top and the one a
 // click is tested against.
 //
-// **Sized against the strip below the action-point bar, which is what forced cards.Stack to
-// be smaller than Mini.** When the pile arrived that strip was 86 pixels, so a 132-pixel
-// half-size card did not fit here however much one would read better. See the Stack style for
-// why a *back* survives that where a face would not.
+// **It is cards.Stack at three quarters, in the duelist's column** *(2026-09-04, owner's call)*.
+// The style was a fifth — a back drawn small, because the strip it used to stand in was 86 pixels
+// deep — and then briefly the full card, which in a column of its own read as the biggest thing on
+// the screen. Three quarters is a card that is plainly a card and plainly not in play.
 //
-// **Hung off the bottom edge since 2026-08-12**, where it used to be measured down from the
-// bar. Both corners are now margins from the screen's own edges, which is what the pile
-// actually wants to say; see deckStackBottomInset for why the anchor moved and why the
-// constraint it has to satisfy is checked by a test rather than by arithmetic here.
+// Left-aligned with the duelist card above it, with the count on the line underneath.
 func deckStackRect(gs *state.GlobalState) image.Rectangle {
 	w, h := cards.Stack.Width, cards.Stack.Height
 
-	top := gs.ScreenHeight - deckStackBottomInset - h
-	left := gs.PctX(100) - deckStackRightMargin - w
+	bottom := gs.ScreenHeight - deckStackBottomInset - deckCountSize - deckCaptionGap
+	left := gs.PctX(duelistCardLeftPct)
 
-	return image.Rect(left, top, left+w, top+h)
+	return image.Rect(left, bottom-h, left+w, bottom)
+}
+
+// deckCountRect is the line under the pile, where the count is written left-aligned with it
+// *(2026-09-04, owner's call)*.
+func deckCountRect(gs *state.GlobalState) image.Rectangle {
+	pile := deckStackRect(gs)
+	top := pile.Max.Y + deckCaptionGap
+	return image.Rect(pile.Min.X, top, pile.Max.X, top+deckCountSize)
+}
+
+// deckCaptionRect is the line above the pile: the bucket button at its left end and the count at
+// its right, both hung off the pile's own edges.
+//
+// **Above rather than beside**, which is the whole of what the move into the column cost. The pile
+// used to have the width of the corner to spread into; it now fills its column, and what is to its
+// right at that height is the action-point bar.
+func deckCaptionRect(gs *state.GlobalState) image.Rectangle {
+	// The pile's *bounds*, not its front card: the backs are drawn up and to the left, so the
+	// front card's top edge is not the pile's.
+	pile := deckStackBounds(gs)
+	bottom := pile.Min.Y - deckCaptionGap
+	return image.Rect(pile.Min.X, bottom-pileSlotSize, pile.Max.X, bottom)
 }
 
 // deckStackBounds is the whole pile including the backs behind the front one, which is what
@@ -334,12 +322,13 @@ func (s *CombatScene) drawDeckStack(gs *state.GlobalState, screen *ebiten.Image)
 		s.drawCardBack(gs, screen, image.Pt(front.Min.X-off, front.Min.Y-off), cards.Stack)
 	}
 
-	// Sitting on the pile's bottom edge rather than centred on its face: the count and the
-	// cards then share a line, and the pile reads as the thing the number is about.
+	// **Under the pile, left-aligned with it** *(2026-09-04, owner's call)*. It shares an edge with
+	// the cards either way, which is what makes the pile read as the thing the number is about; what
+	// the line underneath buys is that the count does not have to find room beside a card in a
+	// column exactly one card wide.
+	count := deckCountRect(gs)
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(gs.PctX(100)-deckCountRightMargin), float64(front.Max.Y))
-	op.PrimaryAlign = text.AlignEnd
-	op.SecondaryAlign = text.AlignEnd
+	op.GeoM.Translate(float64(count.Min.X), float64(count.Min.Y))
 	op.ColorScale.ScaleWithColor(groundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d", len(s.deck), s.deckSize()),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: deckCountSize}, op)

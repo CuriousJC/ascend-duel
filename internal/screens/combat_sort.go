@@ -47,67 +47,55 @@ const (
 	sortByElement
 )
 
-// The column of sort buttons: square, stacked, and sitting to the right of the cards.
+// The three sort buttons are the top three slots of the control column — see controlcolumn.go,
+// which owns the geometry the frame's ledger button shares.
 //
-// **44 is the mute button's footprint** — the other square, iconic control in the game — and
-// the two are the same size for the same reason: a single character has no width to speak of,
-// so the button is sized to be hit rather than to hold a label.
-//
-// The column is pinned to the right edge of the band rather than hung off the row's own right
-// edge. The row is centred, so both of its edges move when the hand grows or shrinks, and a
-// control that slid sideways as cards were drawn would be worse than one standing still.
-const (
-	sortButtonSize = 44
-	sortButtonGap  = 8
+// **The clear air between the last card of the widest hand and the column is all that is left
+// here**, because it is the hand's business rather than the column's: it is what cardBandWidth
+// takes off the cards.
+const sortColumnGap = 12
 
-	// **Half again the default button label** *(2026-08-16)*. The strip's buttons carry a word
-	// and are sized around it; these carry one character on a square, so the size that fits
-	// `Discard` leaves a symbol swimming in the middle of the face. The character *is* the
-	// control here, so it takes the room.
-	sortButtonTextSize = 30
-	// How much room the column takes out of the band the cards are laid out in: the buttons
-	// themselves plus the gap between them and the nearest card.
-	sortColumnGap     = 12
-	sortColumnReserve = sortButtonSize + sortColumnGap
-)
-
-// sortButtonSpecs is the column, top to bottom, with the symbol each button carries.
+// sortButtonSpecs is the block, top to bottom, with the label each tab carries.
 //
-// **One character each, because the button is 44 pixels square.** `$` is cost, `T` is type, `E`
-// is element. **They carry no tooltip yet**, though the widget landed on 2026-08-21 — see the
+// **The labels are bare nouns** *(2026-09-04, owner's call)*. They were `$`, `T` and `E`, then
+// `Sort: Cost` and its two siblings — and the prefix went as soon as the three were one block,
+// because a block of three tabs is self-evidently one control and the word was then written three
+// times to say what the group is. `Form` is the axis the middle one actually sorts on; it was
+// called Type when the label was one letter.
+//
+// **They carry no tooltip**, and with the labels spelled out they no longer want one — see the
 // tooltip entry in TODO.md, which names the figures written straight onto the table as the gap.
 var sortButtonSpecs = []struct {
 	mode  handSort
 	label string
 }{
-	{sortByCost, "$"},
-	{sortByType, "T"},
-	{sortByElement, "E"},
+	{sortByCost, "Cost"},
+	{sortByType, "Form"},
+	{sortByElement, "Element"},
 }
 
-// sortColumnRect is where the three buttons stand: against the band's right edge, centred on
-// the cards rather than on the screen.
+// sortColumnRect is what the three of them occupy together: **one block, with no air in it**
+// *(2026-09-04, owner's call)*.
 //
-// It takes the card row's own top and height, so the column stays centred on the cards if the
-// row moves — which it has done three times, and each time everything measured off it followed
-// and everything measured off a percentage did not.
+// They were three separate buttons with a gap between each, which is what they still are to the
+// code — three models.Button, one latched. What changed is that they are drawn touching, so the
+// group reads as one control with three tabs rather than as three controls that happen to agree
+// about which of them is lit. The latch was already doing the work of a tab strip; the spacing was
+// the only thing saying otherwise.
+//
+// It is derived from the tabs rather than written down, so anything measured against the block
+// follows if the row moves.
 func sortColumnRect(gs *state.GlobalState) image.Rectangle {
-	n := len(sortButtonSpecs)
-	height := n*sortButtonSize + (n-1)*sortButtonGap
-
-	left := gs.PctX(handBandRightPct) - sortButtonSize
-	top := handTop(gs) + cardHeight/2 - height/2
-	return image.Rect(left, top, left+sortButtonSize, top+height)
+	first := sortTabRect(gs, 0)
+	last := sortTabRect(gs, len(sortButtonSpecs)-1)
+	return image.Rect(first.Min.X, first.Min.Y, first.Max.X, last.Max.Y)
 }
 
 // sortButtonCentre is the centre of the i'th button in the column, which is what
 // models.Button stores.
 func sortButtonCentre(gs *state.GlobalState, i int) image.Point {
-	col := sortColumnRect(gs)
-	return image.Pt(
-		col.Min.X+sortButtonSize/2,
-		col.Min.Y+i*(sortButtonSize+sortButtonGap)+sortButtonSize/2,
-	)
+	r := sortTabRect(gs, i)
+	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }
 
 // setSort switches the arrangement, rearranges the hand and sends every card that moved
@@ -287,10 +275,10 @@ func (s *CombatScene) buildSortButtons() {
 	s.sortButtons = make([]*models.Button, 0, len(sortButtonSpecs))
 	for _, spec := range sortButtonSpecs {
 		mode := spec.mode // captured per button, not per loop
-		b := models.NewButton(sortButtonSize, sortButtonSize, spec.label,
+		b := models.NewButton(ControlColumnWidth(), ControlButtonHeight, spec.label,
 			func() { s.setSort(mode) })
 		b.BaseColor = sortButtonColor
-		b.TextSize = sortButtonTextSize
+		b.TextSize = ControlButtonText
 		s.sortButtons = append(s.sortButtons, b)
 	}
 }

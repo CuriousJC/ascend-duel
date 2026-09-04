@@ -3,6 +3,7 @@ package game
 import (
 	"testing"
 
+	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
@@ -13,7 +14,7 @@ import (
 // no test touches one; CI runs the whole test step under `xvfb-run -a` for exactly that
 // reason. See CLAUDE.md.
 
-func TestTheSettingsButtonSitsInTheBottomLeftCornerOnScreen(t *testing.T) {
+func TestTheSettingsButtonSitsInTheBottomRightCorner(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	r := settingsButtonRect(gs)
 
@@ -21,24 +22,24 @@ func TestTheSettingsButtonSitsInTheBottomLeftCornerOnScreen(t *testing.T) {
 		t.Errorf("the settings button is %dx%d, want %d square", r.Dx(), r.Dy(), settingsButtonSize)
 	}
 
-	// Inset from both edges rather than flush: nothing else reaches this corner, and the
-	// margin is what stops it reading as something that fell off the screen.
-	if r.Min.X != settingsButtonInset {
-		t.Errorf("the settings button starts at x=%d, want the %dpx inset", r.Min.X, settingsButtonInset)
+	// **The bottom-right corner, on the control column's right-hand line** *(2026-09-04, owner's
+	// call)*. It sat in the bottom-left corner until then; that corner is the draw pile's now.
+	if want := screens.ControlColumnLeft(gs) + screens.ControlColumnWidth(); r.Max.X != want {
+		t.Errorf("the settings button ends at x=%d, want the control column's edge at %d",
+			r.Max.X, want)
 	}
 	if got := gs.ScreenHeight - r.Max.Y; got != settingsButtonInset {
 		t.Errorf("the settings button is %dpx off the bottom edge, want the %dpx inset",
 			got, settingsButtonInset)
 	}
 
-	// **What it actually has to clear is the busiest screen's bottom-left**, and on combat that
-	// is the action-point figure, which ends around y=861. internal/screens cannot be reached
-	// from here — game imports it, never the reverse — so the number is written down rather
-	// than derived, and it is a floor with 45 pixels of slack rather than an exact fit.
-	const combatAPFigureBottom = 861
-	if r.Min.Y <= combatAPFigureBottom {
-		t.Errorf("the settings button starts at y=%d, into the combat screen's action-point figure ending at y=%d",
-			r.Min.Y, combatAPFigureBottom)
+	// The ledger is the last rung of that column, and the cog stands clear below it.
+	l := ledgerButtonRect(gs)
+	if want := screens.ControlColumnSlot(gs, screens.SlotLedger); l != want {
+		t.Errorf("the ledger button is at %v, want the column's last slot %v", l, want)
+	}
+	if l.Max.Y >= r.Min.Y {
+		t.Errorf("the ledger button ends at y=%d, into the cog starting at y=%d", l.Max.Y, r.Min.Y)
 	}
 }
 

@@ -90,6 +90,13 @@ var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
 // edge**, so this is the one place its geometry is written and both read it — see
 // ringPaneRect.
 func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
+	return duelistCardRect(gs)
+}
+
+// duelistCardRect is the same rectangle without a scene, because the hand row's width is now
+// measured against the ring row between the two corner cards and nothing about that geometry is
+// a fact about a duel. See ringRowSpan.
+func duelistCardRect(gs *state.GlobalState) image.Rectangle {
 	left, top := gs.PctX(duelistCardLeftPct), gs.PctY(topRowTopPct)
 	return image.Rect(left, top,
 		left+cards.DuelistStyle.Width, top+cards.DuelistStyle.Height)
@@ -139,16 +146,16 @@ const (
 	// the difficulty disagree about how deep a floor is.
 	fightsPerFloor = pyramid.FightsPerFloor
 
-	// **towerColumnWidth is the strip the caption stands in** *(2026-09-04)*, between the duelist
-	// card and the ring row. It replaced towerLineGap, which was the drop from the card's bottom
-	// edge to the first line — see towerPlaceRect for why the caption came out from under the card.
-	//
-	// 150 is "Outer Room" at 18pt with room to spare; the ring row starts after it, so nothing here
-	// depends on how many rings are worn.
-	towerColumnWidth = 150
-	towerLineSize    = 18
-	towerLinePitch   = 22 // the same pitch a card sets its own text at
-	towerLines       = 2  // the floor, then the room
+	// **towerLineGap is the drop from the duelist card's bottom edge to the first line**
+	// *(2026-09-04, owner's call)*. The caption stood in a column beside the card for a day, which
+	// bought the top band height and cost the ring row 166 pixels of its width — and the hand row
+	// is laid out to that width now, so the column was being paid for twice. It is back under the
+	// card, where the whole left column is one thing: who you are, where you are, what is left to
+	// draw.
+	towerLineGap   = 10
+	towerLineSize  = 18
+	towerLinePitch = 22 // the same pitch a card sets its own text at
+	towerLines     = 2  // the floor, then the room
 )
 
 // towerRoomNames is what each of a floor's three fights is called, in order. Indexed by the
@@ -174,9 +181,8 @@ func towerRoom(fight int) string { return towerRoomNames[fight%fightsPerFloor] }
 // under it. See TestTheTowerLinesFitBetweenTheCardAndTheTable.
 func (s *CombatScene) towerPlaceRect(gs *state.GlobalState) image.Rectangle {
 	card := s.duelistCardRect(gs)
-	left := card.Max.X + ringPaneGap
-	top := card.Min.Y + ringPaneTopDrop
-	return image.Rect(left, top, left+towerColumnWidth, top+towerLines*towerLinePitch)
+	top := card.Max.Y + towerLineGap
+	return image.Rect(card.Min.X, top, card.Max.X, top+towerLines*towerLinePitch)
 }
 
 // drawTowerPlace writes the floor and the room beside the duelist card.
@@ -278,6 +284,11 @@ const enemyCardRightPct = 99
 // hardcoded 79%, which was a percentage picked to clear a card whose position it could not
 // see and would have gone stale the moment either moved.
 func (s *CombatScene) enemyCardRect(gs *state.GlobalState) image.Rectangle {
+	return enemyCardRect(gs)
+}
+
+// enemyCardRect is the scene-free form, for the same reason duelistCardRect has one.
+func enemyCardRect(gs *state.GlobalState) image.Rectangle {
 	right, top := gs.PctX(enemyCardRightPct), gs.PctY(topRowTopPct)
 	return image.Rect(right-cards.EnemyStyle.Width, top,
 		right, top+cards.EnemyStyle.Height)

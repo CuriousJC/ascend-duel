@@ -129,16 +129,16 @@ func TestTheTableSitsBetweenTheRingRowAndTheFeed(t *testing.T) {
 	// Below the top row, whose lowest ink is the row of ring cards itself. **The rule and the
 	// count used to hang under it and moved into the caption column on 2026-09-04**, which is the
 	// 44 pixels that let the card grow to five quarters — see ringPaneRect.
-	ringBottom := s.ringPaneRect(gs).Max.Y
+	ringBottom := s.ringPaneBackRect(gs).Max.Y
 	if top < ringBottom {
 		t.Errorf("the table starts at y=%d, into the ring row's count ending at y=%d", top, ringBottom)
 	}
 
-	// And clear of the band above the hand, where the sum is written — the one region a played
-	// card may never cover.
-	bandTop := handTop(gs) - mathBandGapAboveCards - mathBandHeight
-	if bottom := top + cardHeight; bottom > bandTop {
-		t.Errorf("the table ends at y=%d, into the band above the hand at y=%d", bottom, bandTop)
+	// And clear of the hand. **The band the sum is written in is no longer reserved**
+	// *(2026-09-04, owner's call)*: the arithmetic overlays the bottom of the played row instead of
+	// pushing it up, which is what let the row drop clear of the ring pane's backing above it.
+	if bottom, handTop := top+cardHeight, handTop(gs)-mathBandGapAboveCards; bottom > handTop {
+		t.Errorf("the table ends at y=%d, into the hand at y=%d", bottom, handTop)
 	}
 }
 

@@ -28,6 +28,7 @@ import (
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/screens"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -35,7 +36,7 @@ import (
 	"image/color"
 )
 
-// The settings button: a small square in the bottom-left corner, carrying a cog.
+// The settings button: a small square in the bottom-right corner of the screen, carrying a cog.
 //
 // **Square and iconic because it is not a move.** DUEL! and Discard are 138x50 with a word on
 // them because they are choices inside a duel and have to be found and read; this changes
@@ -43,24 +44,32 @@ import (
 // weight. A glyph is smaller, says one thing, and is what the repo already generates for
 // interface art — see internal/systems/glyphs.go.
 //
-// **Inset from both edges rather than flush.** Nothing else on any screen is near this corner:
-// on the combat screen — the busiest — the resolved-card pile stops at y=809, the action-point
-// figure at y=861, and the nearest control on the button strip starts around x=396. The inset
-// is what stops it reading as something that fell off the screen.
+// **Inset from both edges rather than flush**, which is what stops it reading as something that
+// fell off the screen.
+//
+// **It moved corners on 2026-09-04** *(owner's call)*: bottom-left, where it had stood since the
+// frame existed, is the draw pile's now. The right-hand corner is under the combat screen's
+// control column and below the last button in it, so the cog sits off the end of that stack rather
+// than in it — which is what a control that is the program rather than the fight should look like.
+//
+// **Its right edge is the column's, not the screen's.** A corner inset of its own would put it a
+// few pixels off the line every other control on that side stands on, which reads as a mistake
+// rather than as a margin. See screens.ControlColumnLeft.
 const (
 	settingsButtonSize  = 44
 	settingsButtonInset = 10
 
-	// The ledger's button stands beside the cog, in the same corner and on the same line: both are
-	// the program rather than the fight, so they read as a pair rather than as one control and a
-	// stray. The gap is the inset, which is what the combat screen's own toggles use between two
-	// squares standing together.
-	ledgerButtonGap = 10
-
-	// **One character on a square**, the size the game's other square buttons carry a letter at.
-	// `L` is what the fight log's button was, and the ledger is what became of it.
-	ledgerButtonLabel = "L"
-	ledgerButtonText  = 30
+	// **`LEDGER`, spelled out and in caps** *(2026-09-04, owner's call)*. It was `L` — what the
+	// fight log's button carried, and what a 44-pixel square can hold. It stands in the combat
+	// screen's control column now and pairs with HANDS directly above it, which has been in caps
+	// since it was written; the two open a page over the game and are the only two controls on
+	// that side that do.
+	//
+	// **Caps at 18 are checked rather than assumed** — see CLAUDE.md, where VITAE rendered as
+	// VITRE at 12. Both words are legible at this size on the contact sheet.
+	//
+	// The size and the width are the column's own, so the pair is set in one type.
+	ledgerButtonLabel = "LEDGER"
 )
 
 // settingsButtonColor is the face at full strength: a flat slate, deliberately unlike any control
@@ -87,22 +96,30 @@ func (g *Game) openSettings() {
 // screens.LedgerPanel, and openSettings above, which makes the same promise for the same reason.
 func (g *Game) toggleLedger() { g.ledger.Toggle() }
 
-// ledgerButtonRect is where the ledger's button sits: to the right of the cog, bottom edges level.
+// ledgerButtonRect is where the ledger's button sits: **the last rung of the combat screen's
+// control column**, under the hands button *(2026-09-04, owner's call)*.
+//
+// **The frame borrows a scene's column, which is the one thing here worth arguing with.** The
+// ledger belongs to no screen — that is what makes it chrome — and it is now placed by geometry
+// the combat screen owns. What makes it the right trade is that the alternative was a corner of
+// its own: a button that stands somewhere else on every screen but combat is a button the player
+// has to find twice, and the run's account is wanted most where the run is being fought. The
+// column is a fixed set of percentages, so it is a real place on every screen rather than a
+// rectangle that only means something during a duel.
 func ledgerButtonRect(gs *state.GlobalState) image.Rectangle {
-	cog := settingsButtonRect(gs)
-	left := cog.Max.X + ledgerButtonGap
-	return image.Rect(left, cog.Min.Y, left+settingsButtonSize, cog.Max.Y)
+	return screens.ControlColumnSlot(gs, screens.SlotLedger)
 }
 
-// settingsButtonRect is where the button sits: the bottom-left corner of the screen, inset.
+// settingsButtonRect is where the button sits: the bottom-right corner, its right edge on the
+// control column's line and its bottom inset from the screen's edge.
 //
-// Bottom-left is measured from the live screen dimensions rather than from the ScreenWidth and
-// ScreenHeight constants, so a change to the internal resolution moves it rather than leaving
-// it stranded in the middle.
+// Both figures are read off the live screen dimensions rather than the ScreenWidth and
+// ScreenHeight constants, so a change to the internal resolution moves the button rather than
+// leaving it stranded in the middle.
 func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
-	left := settingsButtonInset
+	right := screens.ControlColumnLeft(gs) + screens.ControlColumnWidth()
 	top := gs.ScreenHeight - settingsButtonInset - settingsButtonSize
-	return image.Rect(left, top, left+settingsButtonSize, top+settingsButtonSize)
+	return image.Rect(right-settingsButtonSize, top, right, top+settingsButtonSize)
 }
 
 // chromeShowing reports whether the frame is drawn at all this frame.
@@ -169,9 +186,10 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 func (g *Game) updateLedgerButton(gs *state.GlobalState) {
 	if g.ledgerButton == nil {
 		g.ledgerButton = models.NewButton(
-			settingsButtonSize, settingsButtonSize, ledgerButtonLabel, g.toggleLedger)
+			screens.ControlButtonWidth, screens.ControlButtonHeight,
+			ledgerButtonLabel, g.toggleLedger)
 		g.ledgerButton.BaseColor = settingsButtonColor
-		g.ledgerButton.TextSize = ledgerButtonText
+		g.ledgerButton.TextSize = screens.ControlButtonText
 	}
 
 	r := ledgerButtonRect(gs)

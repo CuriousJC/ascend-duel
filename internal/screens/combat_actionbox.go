@@ -111,6 +111,17 @@ const (
 	stripButtonWidth  = 138
 	stripButtonHeight = 50
 
+	// The air between Discard and DUEL!. **They are deliberately not adjacent** — they were, when
+	// they were the same choice made two ways, and they are separate choices now.
+	//
+	// **150 rather than 60** *(2026-09-04, owner's call)*, two and a half times what the pair first
+	// stood at. The pair is centred under the hand, so this pushes both buttons outward from the
+	// middle rather than moving one: what it buys is that Discard and DUEL! are read as two
+	// decisions taken from opposite ends of the row, and what it spends is the clear air on either
+	// side of the pair. TestTheButtonsAreCentredUnderTheHand holds the left end of it against the
+	// action-point figure's column.
+	stripButtonGap = 150
+
 	// **The figure came back on 2026-08-11**, having been dropped that same day along with the
 	// pile counts it shared a line with. What was wrong with it was where it was — a line of
 	// small text wedged between the cards and the bar — not that it was written down. It is
@@ -136,15 +147,9 @@ const (
 	apBarGap     = 4
 	apBarMinCell = 3
 
-	// The row never grows past this, whatever the hand holds. Beyond the count that fits at
-	// full pitch the cards overlap and the band stays put — see handPitch.
-	//
-	// **The left edge came in to 2% on 2026-08-16**, when the sort column took a strip off the
-	// right-hand end. The cards were going to overlap by another forty pixels otherwise, and the
-	// screen's left margin was the cheapest place to find some of it back — nothing is drawn
-	// there and the row is the widest thing on the screen.
-	handBandLeftPct  = 2
-	handBandRightPct = 96
+	// **The row runs between the two fighter cards** *(2026-09-04, owner's call)*. It used to run
+	// between two percentages of the screen — 2% to 96%, less the sort column — which made it the
+	// widest thing drawn and left it disagreeing with everything above it. See handBandLeft.
 
 	// The card's *interior* — the glyph column, the name and category positions, the
 	// corner radius, the cost dashes — no longer lives here. It moved to
@@ -193,6 +198,15 @@ func handTop(gs *state.GlobalState) int {
 	strip := buttonStripY(gs)
 	figure := strip - stripButtonHeight/2
 	return figure - apFigureBelowBar - apBarHeight - apBarBelow - cardHeight
+}
+
+// apBarBottom is the bottom edge of the action-point bar, which is the line the control column's
+// panel buttons are stacked up from — see ControlColumnSlot.
+//
+// **Named rather than added up at the two call sites**, because the drawing works it out from the
+// bar's own top and anything placed against it would otherwise be repeating that sum.
+func apBarBottom(gs *state.GlobalState) int {
+	return handTop(gs) + cardHeight + apBarBelow + apBarHeight
 }
 
 // buttonStripY is the centre line the Discard and DUEL! buttons sit on.
@@ -411,15 +425,31 @@ func handPitch(gs *state.GlobalState, n int) int {
 	return (band - cardWidth) / (n - 1)
 }
 
-// cardBandWidth is how much of the band the cards themselves get: everything between the two
-// percentages, less the strip the sort column stands in.
+// cardBandWidth is how much room the cards themselves get: everything up to the control column,
+// less the air between the last card and it.
 //
-// **One function rather than the subtraction written twice**, because the pitch and the row's
-// centre both need it and the two disagreeing would put the row half a card off centre or run
-// its last card under the buttons. See combat_sort.go for why the column is a fixed reserve
-// rather than something hung off the row's own right edge.
+// **The band is derived rather than written down as percentages** *(2026-09-04, owner's call)*.
+// It used to run 2% to 96%, which agreed with nothing above it; it now runs between the two
+// fighter cards, so the left edge of the hand is the left edge of the ring row and its right edge
+// is the enemy card's. The cards pay for the narrowing in overlap, which is what handPitch is for.
+//
+// **One function rather than the arithmetic written twice**, because the pitch and the row's
+// centre both need it and the two disagreeing would put the row half a card off centre.
 func cardBandWidth(gs *state.GlobalState) int {
-	return gs.PctX(handBandRightPct) - gs.PctX(handBandLeftPct) - sortColumnReserve
+	return ControlColumnLeft(gs) - sortColumnGap - handBandLeft(gs)
+}
+
+// handBandLeft is where the bottom of the screen starts: the same line the ring row starts on,
+// which is the duelist card's right edge.
+//
+// **The two ends are decided by different things** *(2026-09-04, owner's call)*, which is why this
+// is one figure rather than a span. The left is the ring row's, so the rings and the hand start
+// together; the right is the control column — the enemy card's *left* edge, where the sort buttons
+// stand — see ControlColumnLeft. Nothing is laid out to the enemy card's *right* edge any more:
+// DUEL! was, for an afternoon, and it is centred under the hand now.
+func handBandLeft(gs *state.GlobalState) int {
+	l, _ := ringRowSpan(gs)
+	return l
 }
 
 // handBand is the rectangle a row of n cards occupies, centred on the screen rather than
@@ -450,8 +480,7 @@ func handBand(gs *state.GlobalState, n int) image.Rectangle {
 // does — takes it from here rather than from the band, or it would drift sideways as cards were
 // spent while it was on screen.
 func handRowCentre(gs *state.GlobalState) image.Point {
-	return image.Pt(gs.PctX(handBandLeftPct)+cardBandWidth(gs)/2,
-		handTop(gs)+cardHeight/2)
+	return image.Pt(handBandLeft(gs)+cardBandWidth(gs)/2, handTop(gs)+cardHeight/2)
 }
 
 // handRowLeft is the x of the first slot.
@@ -658,24 +687,27 @@ func apFigureRight(gs *state.GlobalState) int {
 	return handBand(gs, handSize).Min.X + apFigureReserve
 }
 
-// buttonStripSlots is where the two buttons sit: three equal gaps between the AP figure's
-// column and the deck pile, with a button in the two spaces between them. Returns centres,
-// which is what models.Button stores.
+// buttonStripSlots is where the two buttons sit: **the pair centred under the dealt hand**.
+// Returns centres, which is what models.Button stores.
 //
-// **Written as one function of the strip rather than two placements**, because the property
-// wanted is a relationship — evenly shared space — and two hand-picked percentages cannot
-// hold it when the pile or the figure moves. `TestTheButtonStripSharesItsSpaceEvenly` checks
-// the gaps against each other rather than against numbers.
+// **They float in the middle rather than being spread or pinned** *(2026-09-04, owner's call)*.
+// Both earlier arrangements anchored the strip to something at its ends — three equal gaps between
+// the action-point figure and the deck pile, and then DUEL! flush with the band's right-hand line —
+// and both were describing the strip by what is beside it. What the two buttons are actually about
+// is the hand above them: Discard throws some of it away and DUEL! commits it, so the pair belongs
+// under the cards it acts on.
 //
-// It reads the pile's *bounds*, not its front card: the backs are drawn up and to the left, so
-// the front card's edge is not the pile's edge.
+// **Centred on handRowCentre, never on handBand** — the band narrows as the hand is spent, so a
+// pair centred on it would drift sideways while the round is being planned. Same trap the hand's
+// own name and the arithmetic band avoid.
+//
+// **stripButtonGap keeps them apart**, because they are separate choices rather than one choice
+// made two ways — see Init.
 func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, int) {
-	left, right := apFigureRight(gs), pileSlotRect(gs).Min.X
-	gap := (right - left - discardWidth - duelWidth) / 3
+	pair := discardWidth + stripButtonGap + duelWidth
+	left := handRowCentre(gs).X - pair/2
 
-	discardLeft := left + gap
-	duelLeft := discardLeft + discardWidth + gap
-	return discardLeft + discardWidth/2, duelLeft + duelWidth/2
+	return left + discardWidth/2, left + discardWidth + stripButtonGap + duelWidth/2
 }
 
 // drawAPBar draws the action-point budget as a bar. The figure beside it answers "exactly";
@@ -763,27 +795,19 @@ func abs(n int) int {
 	return n
 }
 
-// handsButtonDown is the air between the bottom of the sort column and the top of the hands
-// button — the same 8 the three sort buttons keep between each other, so the button reads as a
-// fourth rung of the column rather than as something parked under it.
-const handsButtonDown = sortButtonGap
-
-// handsButtonPlace is where the hands button stands on the combat screen: **left edge aligned
-// with the sort column, sitting under it** *(owner's call, 2026-08-24)*.
+// handsButtonPlace is where the hands button stands on the combat screen: **the second panel slot
+// of the control column**, directly above the ledger's *(owner's call, 2026-08-24; stacked up from
+// the action-point bar since 2026-09-04)*.
 //
-// **Measured off sortColumnRect rather than off a percentage**, so the button follows the column
-// if the card row moves — which it has done three times, and each time everything measured off
-// the row followed and everything measured off a percentage did not. The column is centred on
-// the cards and pinned to the band's right edge, so this button stands still while the hand is
-// spent, which was the whole reason the old placement was measured from a full hand rather than
-// the row as dealt.
+// **Measured off the column rather than off a percentage**, so the button follows it if the card
+// row moves — which it has done four times, and each time everything measured off the row followed
+// and everything measured off a percentage did not. The column is pinned to the enemy card, so
+// this button stands still while the hand is spent — which was the whole reason the placement
+// before it was measured from a full hand rather than from the row as dealt.
 //
-// **The button is wider than the column**, because the word is wider than one character, so it
-// overhangs to the right by the difference.
+// It is the same width as every other button in the column now. It used to be wider than the
+// column and overhang to the right, because a word is wider than one character; the column is a
+// card wide and every label in it is a word.
 func handsButtonPlace(gs *state.GlobalState) image.Point {
-	col := sortColumnRect(gs)
-	return image.Pt(
-		col.Min.X+handsButtonWidth/2,
-		col.Max.Y+handsButtonDown+pileSlotSize/2,
-	)
+	return ControlColumnSlotCentre(gs, SlotHands)
 }

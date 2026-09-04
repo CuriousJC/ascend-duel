@@ -20,10 +20,12 @@ import (
 // blow's arithmetic across it, and `drawPlannedHand`, which writes the name of the hand the
 // selection has already formed in the same place. See combat_mathbox.go.
 //
-// The two constants stay because the band does: `tableRowTop` keeps the played cards clear of
-// it, and `handMathRect` is measured from it. Their **values are the feed's** — the sum was
-// laid out and looked at against a box of exactly this height, so keeping the number is what
-// stops removing the feed from quietly re-laying out the arithmetic.
+// **It is an overlay and reserves nothing** *(2026-09-04, owner's call)*. `tableRowTop` used to
+// subtract this height, so a band nothing is drawn in at rest cost the played cards a row of the
+// screen; the cards now come down over it and the sum is drawn on top of them, last. The
+// constants stay because the sum's own layout does: `handMathRect` is measured from them, and
+// their **values are the feed's** — the arithmetic was laid out and looked at against a box of
+// exactly this height, so changing the number is re-laying out the sum.
 const (
 	// mathBandHeight is how deep it is: what the feed's collapsed three rows came to.
 	mathBandHeight = 82

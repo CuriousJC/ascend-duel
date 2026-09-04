@@ -440,37 +440,29 @@ func centringItsMark(st Style) Style {
 
 var Mini = Hand.Scaled(1, 2)
 
-// Stack is the draw pile's card: a back, and nothing else, at the size the screen has room
-// for rather than at any proportion of Hand.
+// Stack is the draw pile's card: a back, and nothing else, at **three quarters of Hand**
+// *(2026-09-04, owner's call)*.
 //
-// **It is smaller than Mini and that is forced by the layout, not chosen.** The strip below
-// the action-point bar is about 86 pixels tall, and a 132-pixel Mini card does not fit in it
-// — see the deck stack in internal/screens/combat_flight.go for the arithmetic.
+// **The size is a proportion of the card now, not of the strip it used to stand in.** It was a
+// fifth — 41x56 — because the pile hung off the bottom edge in the band under the action-point
+// bar, and that band was about 86 pixels deep; anything larger reached up into the bar. The pile
+// moved into the duelist card's column on 2026-09-04 and the constraint left with it. A full-size
+// card was tried first and read as the biggest thing on the screen, which is the opposite of what
+// a pile nobody is playing from should say.
 //
-// What makes that survivable is the thing that makes a back different from a face: **there
-// is no detail to lose.** A face at this size would be illegible, which is exactly why Mini
-// already drops the damage badge and why nothing smaller than Mini exists for one. A back is
-// a dark rounded rectangle with a triangle on it, and the triangle is sized as a proportion
-// of the card, so it is the same drawing here as at hand size.
+// **Derived from Hand rather than authored** *(2026-09-04)*, the way Mini is, so the pile reads as
+// the same object as the cards in the row seen smaller and cannot drift out of proportion with
+// them — see TestStackStyleKeepsTheCardsProportions. What stays authored is the chrome, which is
+// not a proportion: no name, no form mark, no border, because a back has none of them.
 //
-// The proportions are Hand's — 40x54 against 162x224 — so the stack reads as the same object
-// as the cards in the row, seen smaller. It came down with the rest on 2026-08-11; the strip
-// it has to fit did not change, so this one had room to spare either way.
-// **Derived from Hand rather than authored** *(2026-09-04)*, the way Mini is. It was 40x54, which
-// is 0.741 wide per tall against the hand card's 0.723 — inside the two-hundredth
-// TestStackStyleKeepsTheCardsProportions allows, but only just, and scaling both rounded them
-// apart far enough to fail it. A fifth of the hand card cannot drift, because it is the same
-// rectangle divided; what stays authored is the chrome, which is not a proportion.
-//
-// **A fifth rather than a quarter, because the strip it stands in did not grow.** The pile hangs
-// off the bottom edge in the band under the action-point bar — that is what forced it to be
-// smaller than Mini in the first place — and a quarter of the bigger card reaches up into the bar.
-// A fifth lands at 41x56, within a pixel or two of the 40x54 it was authored at, which is the
-// size that band has always had room for.
+// What makes any of these sizes survivable is the thing that makes a back different from a face:
+// **there is no detail to lose.** A back is a dark rounded rectangle with a triangle on it, and
+// the triangle is sized as a proportion of the card, so it is the same drawing here as at hand
+// size.
 func stackOf(st Style) Style {
-	out := st.Scaled(1, 5)
+	out := st.Scaled(3, 4)
 	out.ShowName, out.ShowForm = false, false
-	out.CornerRadius, out.BorderWidth = 4, 0
+	out.BorderWidth = 0
 	return out
 }
 

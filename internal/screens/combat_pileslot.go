@@ -24,30 +24,25 @@ import (
 const (
 	pileSlotSize = 44
 
-	// The gap between the slot and the pile's own left edge. Wider than the sort column's 8,
-	// because these two controls are not a set: the pile and whatever stands beside it are
-	// separate things that happen to stand together, and a gap tight enough to read as a stack
-	// would say they were one widget.
-	pileSlotToDeckGap = 18
-
 	// **One character on a square**, which is what a control this size can carry — the same
 	// reason the sort column is single letters. It is the size the toggles draw their labels at.
 	pileSlotTextSize = 30
 )
 
-// pileSlotRect is the slot: immediately left of the pile, bottom edges level.
+// pileSlotRect is the slot: the left end of the pile's caption line, with the deck count on the
+// right end of the same line.
 //
-// **Both edges come off the pile**, never off a percentage. The pile is itself hung off the
-// screen's bottom-right corner, so a control placed any other way would drift the first time that
-// inset changed — the same staleness ringPaneRect was rewritten to avoid.
+// **Both edges come off the pile**, never off a percentage — a control placed any other way would
+// drift the first time the pile moved, which is the staleness ringPaneRect was rewritten to avoid
+// and which this file has now survived twice.
 //
-// It reads the pile's *bounds* rather than its front card, exactly as buttonStripSlots does: the
-// backs are drawn up and to the left, so the front card's edge is not the pile's edge.
+// **It moved above the pile with it on 2026-09-04** *(owner's call)*. It stood to the pile's left
+// while the pile was in the bottom-right corner; in the duelist card's column there is nothing to
+// the left, and what is to the right at that height is the action-point bar.
 func pileSlotRect(gs *state.GlobalState) image.Rectangle {
-	stack := deckStackBounds(gs)
-	right := stack.Min.X - pileSlotToDeckGap
-	bottom := stack.Max.Y
-	return image.Rect(right-pileSlotSize, bottom-pileSlotSize, right, bottom)
+	caption := deckCaptionRect(gs)
+	return image.Rect(caption.Min.X, caption.Min.Y,
+		caption.Min.X+pileSlotSize, caption.Max.Y)
 }
 
 // modalUp reports whether any of this screen's dialogs is covering it.

@@ -63,15 +63,10 @@ const (
 	// legible as a thing *behind* the rings rather than a border *around* everything.
 	ringPaneTopDrop = 10
 
-	// How far the rule sits below the cards, and how thick it is.
-	ringRuleGap   = 12
-	ringRuleWidth = 2
-
-	// The cap fraction under the bottom-right corner, sized and spaced like the deck pile's
-	// count, which is the same idea: a number saying how much of a fixed thing is in use.
-	ringCountSize     = 22
-	ringCountTopGap   = 6
-	ringCountRightPad = 2
+	// The cap fraction under the pane's bottom-right corner, sized and spaced like the deck
+	// pile's count, which is the same idea: a number saying how much of a fixed thing is in use.
+	ringCountSize   = 22
+	ringCountTopGap = 6
 
 	// ringPaneBackPad is how far the backing extends past the row on every side. The pitch
 	// puts the first card flush left and the last flush right, so with no padding the two end
@@ -82,15 +77,6 @@ const (
 	// it — 8 against 16 leaves half the gap still showing on each side.
 	ringPaneBackPad = 8
 )
-
-// ringRuleColor is the line under the rings.
-//
-// **Neutral rather than the ring's pink** *(2026-08-11)*. The pane was a full pink box —
-// filled, bordered and titled — for its first hour and the box was the loudest thing in the
-// band, competing with the five saturated pink borders standing inside it. What is left is a
-// rule: it says where the row ends and nothing else, so it takes a grey that is read as
-// structure rather than as a colour meaning something.
-var ringRuleColor = color.RGBA{R: 120, G: 122, B: 132, A: 255}
 
 // ringPaneBackColor is the surface the rings stand on: one step off `screenGround`, and
 // nothing else.
@@ -123,23 +109,32 @@ var ringPaneBackColor = color.RGBA{R: 207, G: 189, B: 156, A: 255}
 // out of and what the rule and the fraction hang off; the backing is derived from it — see
 // ringPaneBackRect — so growing the padding cannot silently move a ring.
 func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
-	duelist, enemy := s.duelistCardRect(gs), s.enemyCardRect(gs)
+	left, right := ringRowSpan(gs)
+	top := duelistCardRect(gs).Min.Y + ringPaneTopDrop
 
-	// **The caption column comes first** *(2026-09-04)*: the floor and the room used to hang under
-	// the duelist card, which cost the screen 54 pixels of height it no longer had once the card
-	// grew — see towerPlaceRect. The row starts after that strip rather than at the card's edge, so
-	// the two cannot overlap however many rings are worn.
-	left := duelist.Max.X + ringPaneGap + towerColumnWidth + ringPaneGap
-	top := duelist.Min.Y + ringPaneTopDrop
-	right := enemy.Min.X - ringPaneGap
-
-	// **The row is exactly a card deep now** *(2026-09-04)*. It used to reserve ringRuleGap under
-	// itself for a rule with the worn count beneath it; both moved into the caption column, so the
-	// pane ends where the cards do. That is 44 pixels the top band gives back, which is what let
+	// **The row is exactly a card deep** *(2026-09-04)*. It used to reserve a gap under itself for
+	// a rule with the worn count beneath it; the rule is gone and the count hangs off the backing's
+	// corner, so the pane ends where the cards do. That is 44 pixels the top band gives back, which is what let
 	// the card grow to five quarters — see cardScaleNum in internal/cards/style.go.
 	bottom := top + cards.RingStyle.Height
 
 	return image.Rect(left, top, right, bottom)
+}
+
+// ringRowSpan is the horizontal extent of the ring row: where it starts after the duelist card
+// and its caption column, and where it stops short of the enemy card.
+//
+// **It is a function of its own because the hand row is measured against it** *(2026-09-04,
+// owner's call)*. The band the cards are dealt into used to run between two percentages of the
+// screen and was therefore wider than anything above it; aligning it to this span is what makes
+// the screen read as one column, at the cost of the hand overlapping itself a little more. See
+// cardBandWidth.
+//
+// **It starts at the duelist card's right edge again** *(2026-09-04, owner's call)*. The floor
+// and the room stood in a 166-pixel column here for a day; they are back under the card, and the
+// row — and therefore the hand — got the width back. See towerPlaceRect.
+func ringRowSpan(gs *state.GlobalState) (left, right int) {
+	return duelistCardRect(gs).Max.X + ringPaneGap, enemyCardRect(gs).Min.X - ringPaneGap
 }
 
 // ringPaneBackRect is the surface drawn behind the row: the row padded on every side, and
@@ -588,26 +583,30 @@ func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) 
 		drawRingCard(gs, screen, at, ring, counters[ring.RingRecord], true, !s.ringShake[i].done())
 	}
 
-	// **The rule and the count moved into the caption column on 2026-09-04.** They used to sit
-	// under the row, which put 44 pixels of ink below the deepest thing in the top band and cost
-	// the combat screen height it stopped having when the card grew. They say something *about* the
-	// row rather than being part of it, so the column beside the duelist card — which already holds
-	// the floor and the room — is where they belong. See ringCountRect.
+	// **The count hangs off the pane's bottom-right corner** *(2026-09-04, owner's call)*, and the
+	// rule that used to run under the row is gone with the trip through the caption column: the
+	// backing has an edge of its own now, so a second line saying where the row ends was drawing
+	// the same fact twice. See ringCountRect.
 	s.drawRingCount(gs, screen, len(worn))
 
 	// Last, so the ring riding the cursor is over the rule and the fraction as well as the row.
 	drawDraggedRing(gs, screen, &s.ringDrag, counters)
 }
 
-// ringCountRect is where the worn count stands: **under the floor and the room, in the caption
-// column**, so the whole of the top band's left gutter is one short list of facts about the run.
+// ringCountRect is where the worn count stands: **hung off the bottom-right corner of the pane
+// the rings stand on** *(2026-09-04, owner's call)*. It spent a day in the caption column beside
+// the duelist card, which is where the floor and the room were; both have moved back under that
+// card, and a count of the rings belongs against the rings.
+//
+// The rectangle spans the whole backing and the figure is drawn right-aligned in it, so the number
+// sits on the corner however wide the pane gets.
 func (s *CombatScene) ringCountRect(gs *state.GlobalState) image.Rectangle {
-	tower := s.towerPlaceRect(gs)
-	top := tower.Max.Y + ringCountTopGap
-	return image.Rect(tower.Min.X, top, tower.Max.X, top+ringRuleWidth+ringCountTopGap+ringCountSize)
+	back := s.ringPaneBackRect(gs)
+	top := back.Max.Y + ringCountTopGap
+	return image.Rect(back.Min.X, top, back.Max.X, top+ringCountSize)
 }
 
-// drawRingCount writes the rule and `worn / cap` in the caption column.
+// drawRingCount writes `worn / cap` on the pane's bottom-right corner.
 //
 // **`worn / cap`, exactly like the pile's `left / owned`.** The numerator is what moves and the
 // denominator deliberately never does, so the figure is read as "three of your five fingers are
@@ -619,12 +618,9 @@ func (s *CombatScene) ringCountRect(gs *state.GlobalState) image.Rectangle {
 func (s *CombatScene) drawRingCount(gs *state.GlobalState, screen *ebiten.Image, worn int) {
 	r := s.ringCountRect(gs)
 
-	vector.DrawFilledRect(screen,
-		float32(r.Min.X), float32(r.Min.Y), float32(r.Dx()), ringRuleWidth,
-		ringRuleColor, false)
-
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y+ringRuleWidth+ringCountTopGap))
+	op.GeoM.Translate(float64(r.Max.X), float64(r.Min.Y))
+	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d rings", worn, maxRings),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)

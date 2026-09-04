@@ -401,39 +401,98 @@ func TestTheSortColumnStandsClearOfTheCards(t *testing.T) {
 	gs := testState()
 	col := sortColumnRect(gs)
 
-	// Against the band's right edge, and inside the screen with it.
-	if col.Max.X > gs.PctX(handBandRightPct) {
-		t.Errorf("the sort column reaches x=%d, past the band's right edge at %d",
-			col.Max.X, gs.PctX(handBandRightPct))
+	// Just past the band's right edge, and inside the screen with it.
+	if col.Max.X > gs.ScreenWidth {
+		t.Errorf("the sort column reaches x=%d, past the screen's edge at %d",
+			col.Max.X, gs.ScreenWidth)
 	}
 
 	// **Checked at more than one hand size**, because the row is centred on the space the
 	// column leaves: a bigger hand is a wider row, and the failure this guards is the last
 	// card sliding under the buttons.
+	//
+	// **The block abuts the cards rather than standing off them** *(2026-09-04, owner's call)* —
+	// it is tied to the row it arranges — so what is checked is that no card reaches *into* it.
 	for _, n := range []int{1, 3, handSize, handSize + 2, 14} {
 		band := handBand(gs, n)
-		if band.Max.X+sortColumnGap > col.Min.X {
-			t.Errorf("a hand of %d reaches x=%d, leaving less than %dpx before the column at %d",
-				n, band.Max.X, sortColumnGap, col.Min.X)
+		if band.Max.X > col.Min.X {
+			t.Errorf("a hand of %d reaches x=%d, into the sort block at %d",
+				n, band.Max.X, col.Min.X)
 		}
-		if band.Min.X < gs.PctX(handBandLeftPct) {
-			t.Errorf("a hand of %d starts at x=%d, left of the band's edge at %d",
-				n, band.Min.X, gs.PctX(handBandLeftPct))
+		if left, _ := ringRowSpan(gs); band.Min.X < left {
+			t.Errorf("a hand of %d starts at x=%d, left of the ring row it aligns to at %d",
+				n, band.Min.X, left)
 		}
 	}
 }
 
-func TestTheSortColumnIsCentredOnTheCards(t *testing.T) {
-	// It is centred on the cards rather than on the screen or the band, which is what the
-	// owner asked for and also what keeps it reading as belonging to the row. Measured off
-	// the row's own top and height, so it follows if handTopPct moves again — it has three
-	// times.
+// The sort tabs are one block: top edge on the hand's top edge, left edge on the cards' right
+// edge, and no air between the three *(2026-09-04, owner's call)*.
+func TestTheSortTabsAreOneBlockTiedToTheCards(t *testing.T) {
 	gs := testState()
-	col := sortColumnRect(gs)
+	block := sortColumnRect(gs)
 
-	cardsMid := handTop(gs) + cardHeight/2
-	if mid := (col.Min.Y + col.Max.Y) / 2; abs(mid-cardsMid) > 1 {
-		t.Errorf("the column is centred at y=%d, want the cards' centre at %d", mid, cardsMid)
+	if block.Min.Y != handTop(gs) {
+		t.Errorf("the block starts at y=%d, want the top of the dealt hand at %d",
+			block.Min.Y, handTop(gs))
+	}
+	if want := handBandLeft(gs) + cardBandWidth(gs); block.Min.X != want {
+		t.Errorf("the block starts at x=%d, want the cards' right edge at %d", block.Min.X, want)
+	}
+
+	// Touching, which is what makes three buttons read as one control with three tabs.
+	for i := 1; i < len(sortButtonSpecs); i++ {
+		prev, this := sortTabRect(gs, i-1), sortTabRect(gs, i)
+		if this.Min.Y != prev.Max.Y {
+			t.Errorf("tab %d starts at y=%d and tab %d ends at y=%d — there is air in the block",
+				i, this.Min.Y, i-1, prev.Max.Y)
+		}
+		if this.Min.X != prev.Min.X || this.Max.X != prev.Max.X {
+			t.Errorf("tab %d runs x=%d..%d and tab %d x=%d..%d — the block is not straight",
+				i, this.Min.X, this.Max.X, i-1, prev.Min.X, prev.Max.X)
+		}
+	}
+}
+
+// The two panel buttons stack upward from the bottom of the action-point bar, on the enemy card's
+// line, and they are narrower than the column *(2026-09-04, owner's call)*.
+func TestThePanelButtonsStackUpFromTheAPBar(t *testing.T) {
+	gs := testState()
+	s := &CombatScene{}
+
+	// LEDGER's bottom is the bar's bottom, which is the whole of what ties the pair to the hand's
+	// own furniture rather than leaving them floating.
+	if got := ControlColumnSlot(gs, SlotLedger).Max.Y; got != apBarBottom(gs) {
+		t.Errorf("the ledger's bottom is y=%d, want the action-point bar's at %d",
+			got, apBarBottom(gs))
+	}
+
+	for i := 1; i < ControlColumnSlots; i++ {
+		below, this := ControlColumnSlot(gs, i-1), ControlColumnSlot(gs, i)
+		if gap := below.Min.Y - this.Max.Y; gap != ControlButtonGap {
+			t.Errorf("slot %d sits %dpx above slot %d, want %d", i, gap, i-1, ControlButtonGap)
+		}
+		if this.Min.X != below.Min.X || this.Max.X != below.Max.X {
+			t.Errorf("slot %d runs x=%d..%d and slot %d x=%d..%d — the pair is not aligned",
+				i, this.Min.X, this.Max.X, i-1, below.Min.X, below.Max.X)
+		}
+	}
+
+	// On the enemy card's line, and **narrower than the column**: a control taking a card's width
+	// to carry one word reads as a pane rather than as a button.
+	slot := ControlColumnSlot(gs, SlotHands)
+	if card := s.enemyCardRect(gs); slot.Min.X != card.Min.X {
+		t.Errorf("the panel buttons start at x=%d, want the enemy card's left edge at %d",
+			slot.Min.X, card.Min.X)
+	}
+	if slot.Dx() >= ControlColumnWidth() {
+		t.Errorf("the panel buttons are %dpx wide, which is the whole %dpx column",
+			slot.Dx(), ControlColumnWidth())
+	}
+
+	// And clear of the block above them, whose last tab must not reach into the pair.
+	if last, top := sortColumnRect(gs).Max.Y, ControlColumnSlot(gs, ControlColumnSlots-1).Min.Y; last > top {
+		t.Errorf("the sort block ends at y=%d, into the panel buttons at y=%d", last, top)
 	}
 }
 

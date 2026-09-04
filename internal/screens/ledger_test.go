@@ -10,28 +10,30 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// The slot beside the draw pile shares its bottom edge, so the corner reads as controls on one
-// line rather than as something that happens to be near a pile.
+// The slot stands on the pile's caption line, at its left end, with the deck count at the right
+// end of the same line. **It was beside the pile until 2026-09-04**, when the pile moved into the
+// duelist card's column: there is nothing to the left of it there, and what is to the right at that
+// height is the action-point bar.
 //
-// It is checked rather than eyeballed because both of its edges are derived from the pile, which
-// is itself derived from the screen's corner — three constants deep, and nothing in the code says
-// out loud that the result has to be level.
-func TestThePileSlotStandsBesideThePileOnTheSameLine(t *testing.T) {
+// It is checked rather than eyeballed because every edge of it is derived from the pile, which is
+// itself derived from the frame's corner — three constants deep, and nothing in the code says out
+// loud that the result has to line up.
+func TestThePileSlotStandsOnThePilesCaptionLine(t *testing.T) {
 	gs := testState()
 
-	slot, pile := pileSlotRect(gs), deckStackBounds(gs)
+	slot, pile, caption := pileSlotRect(gs), deckStackBounds(gs), deckCaptionRect(gs)
 
-	if slot.Max.Y != pile.Max.Y {
-		t.Errorf("the slot's bottom is y=%d and the pile's is y=%d", slot.Max.Y, pile.Max.Y)
+	if slot.Min.X != caption.Min.X || slot.Max.Y != caption.Max.Y {
+		t.Errorf("the slot %v does not stand on the left end of the caption line %v", slot, caption)
 	}
 	if slot.Overlaps(pile) {
 		t.Errorf("the slot %v overlaps the deck pile %v", slot, pile)
 	}
-	if gap := pile.Min.X - slot.Max.X; gap != pileSlotToDeckGap {
-		t.Errorf("the gap between the slot and the pile is %dpx, not the %dpx it is set to",
-			gap, pileSlotToDeckGap)
+	if gap := pile.Min.Y - caption.Max.Y; gap != deckCaptionGap {
+		t.Errorf("the gap between the caption line and the pile is %dpx, not the %dpx it is set to",
+			gap, deckCaptionGap)
 	}
-	if slot.Min.X < 0 || slot.Max.Y > gs.ScreenHeight {
+	if slot.Min.X < 0 || slot.Min.Y < 0 || slot.Max.Y > gs.ScreenHeight {
 		t.Errorf("the slot %v is off the screen", slot)
 	}
 }

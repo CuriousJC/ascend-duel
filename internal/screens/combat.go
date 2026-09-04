@@ -448,7 +448,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	s.duelButton.ScreenY = buttonStripY(gs)
 
 	s.showDeck = false
-	s.hands.init(handsButtonPlace)
+	s.hands.initInColumn(handsButtonPlace)
 	s.initParasites()
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
 

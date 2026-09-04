@@ -23,57 +23,70 @@ func testState() *state.GlobalState {
 	return &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 }
 
-func TestDeckStackClearsTheAPBarAndTheScreen(t *testing.T) {
+// The pile stands at the bottom of the duelist card's column *(2026-09-04, owner's call)*, which
+// is a different set of neighbours from the corner it used to sit in: the hand and its bar are
+// beside it rather than above it, and the frame's own corner controls are below it.
+func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 	gs := testState()
+	s := &CombatScene{}
 
-	// What the stack has to live below: the hand row, then the AP figure, then the bar.
-	barBottom := handTop(gs) + cardHeight + apBarBelow + apBarHeight
-
-	// **The pile is the outermost thing drawn** *(2026-08-24)*. It used to wear a yellow ring
-	// while the overlay was open, because the pile was then the only live control on a covered
-	// screen; the panel carries a red X now, so the highlight said "press me" about a control
-	// that no longer does anything.
+	// **The pile is the outermost thing drawn** *(2026-08-24)*, so the bounds are what has to fit
+	// rather than the front card: the backs are drawn up and to the left of it.
 	ring := deckStackBounds(gs)
+	card := s.duelistCardRect(gs)
 
-	if ring.Min.Y < barBottom {
-		t.Errorf("the deck stack's highlight starts at y=%d, which is inside the AP bar ending at y=%d",
-			ring.Min.Y, barBottom)
+	if deckStackRect(gs).Min.X != card.Min.X {
+		t.Errorf("the pile starts at x=%d and the duelist card at x=%d",
+			deckStackRect(gs).Min.X, card.Min.X)
 	}
-	if ring.Max.Y > gs.ScreenHeight {
-		t.Errorf("the deck stack's highlight reaches y=%d, past the bottom of the %d-pixel screen",
-			ring.Max.Y, gs.ScreenHeight)
+
+	// Clear of the hand, which is what is to its right — the bar included, since that spans the
+	// whole band and reaches further down than the cards do.
+	if left := handBandLeft(gs); ring.Max.X > left {
+		t.Errorf("the pile reaches x=%d, into the hand band starting at x=%d", ring.Max.X, left)
 	}
-	if ring.Max.X > gs.ScreenWidth {
-		t.Errorf("the deck stack's highlight reaches x=%d, past the right of the %d-pixel screen",
-			ring.Max.X, gs.ScreenWidth)
+
+	// The count sits under it, left edges level, and the whole column has to stay on the screen.
+	count := deckCountRect(gs)
+	if count.Min.X != deckStackRect(gs).Min.X {
+		t.Errorf("the count starts at x=%d and the pile at x=%d", count.Min.X, deckStackRect(gs).Min.X)
+	}
+	if count.Max.Y > gs.ScreenHeight-deckStackBottomInset {
+		t.Errorf("the count ends at y=%d, past the %dpx bottom inset", count.Max.Y, deckStackBottomInset)
+	}
+	if ring.Min.X < 0 || ring.Min.Y < 0 {
+		t.Errorf("the pile %v runs off the screen", ring)
+	}
+
+	// The bucket button is on the line above it, and that line must clear the played row.
+	if top := deckCaptionRect(gs).Min.Y; top < tableRowTop(gs)+cardHeight {
+		t.Errorf("the pile's caption line starts at y=%d, inside the played row ending at y=%d",
+			top, tableRowTop(gs)+cardHeight)
 	}
 }
 
 func TestTheBottomOfTheScreenIsOneLine(t *testing.T) {
 	gs := testState()
 
-	// **Three things hang off the bottom of the screen and they read as one line.** The deck
-	// pile and the mute button share an inset exactly; the discard badge lands four pixels
-	// lower because it hangs off a button strip placed as a percentage, and chasing that would
-	// mean taking the strip off percentages for no other reason.
+	// **Three things hang off the bottom of the screen and they read as one line**: the deck
+	// pile's count on the left, the discard badge in the middle, and the cog at the foot of the
+	// control column on the right.
 	//
-	// The mute button is chrome and lives in internal/game, which imports this package and so
-	// cannot be imported back. Its inset is therefore written down rather than read, and
-	// TestTheMuteButtonSitsInTheBottomLeftCornerOnScreen holds the other end of it.
-	const muteButtonInset = 10
+	// The cog is chrome and lives in internal/game, which imports this package and so cannot be
+	// imported back. Its inset is therefore written down rather than read, and
+	// TestTheSettingsButtonSitsAtTheFootOfTheControlColumn holds the other end of it.
+	const cogInset = 10
 
-	pile := gs.ScreenHeight - deckStackRect(gs).Max.Y
-	if pile != muteButtonInset {
-		t.Errorf("the deck pile sits %dpx off the bottom edge and the mute button %dpx",
-			pile, muteButtonInset)
+	if got := gs.ScreenHeight - deckCountRect(gs).Max.Y; got != cogInset {
+		t.Errorf("the deck count sits %dpx off the bottom edge and the cog %dpx", got, cogInset)
 	}
 
 	// The badge is a disc centred on the Discard button's bottom-right corner, so its lowest
 	// point is a radius below that corner.
 	badgeBottom := buttonStripY(gs) + stripButtonHeight/2 + discardBadgeRadius
-	if d := badgeBottom - deckStackRect(gs).Max.Y; d < 0 || d > 6 {
-		t.Errorf("the discard badge ends at y=%d and the deck pile at y=%d — %dpx apart, which no longer reads as one line",
-			badgeBottom, deckStackRect(gs).Max.Y, d)
+	if d := gs.ScreenHeight - badgeBottom - cogInset; d < -6 || d > 6 {
+		t.Errorf("the discard badge ends %dpx off the bottom edge and the cog %dpx — which no longer reads as one line",
+			gs.ScreenHeight-badgeBottom, cogInset)
 	}
 }
 
@@ -147,46 +160,79 @@ func TestThePlayedRowFitsOnScreen(t *testing.T) {
 		t.Errorf("a firing card reaches y=%d, off the top of the screen", top)
 	}
 
-	// And its bottom must clear the band above the hand, where the sum is written — see
-	// tableRowTop.
+	// And its bottom must clear the hand itself. **It no longer has to clear the band the sum is
+	// written in** *(2026-09-04, owner's call)*: the arithmetic is an overlay drawn over the row
+	// rather than a strip reserved above it, so the only thing under the played cards that they
+	// may not reach is the hand — see tableRowTop.
 	bottom := first.Y + cardHeight
-	bandTop := handTop(gs) - mathBandGapAboveCards - mathBandHeight
-	if bottom > bandTop {
-		t.Errorf("the played row reaches y=%d, through the band above the hand at y=%d", bottom, bandTop)
+	if top := handTop(gs) - mathBandGapAboveCards; bottom > top {
+		t.Errorf("the played row reaches y=%d, into the hand at y=%d", bottom, top)
 	}
 }
 
-// The bottom strip is five things on one line — the AP figure, Discard, DUEL!, the Log button
-// and the deck pile — and what is wanted of the two buttons is a *relationship*: the space
-// between the figure and the things in the corner shared equally, rather than two percentages
-// that happened to look right once. That is what this checks, in the only terms it can be
-// stated in: the three gaps.
-//
-// **The right-hand end is the Log button, not the pile** *(2026-08-18)*. It arrived between the
-// two, so a strip still measured to the pile would spread its buttons across a span with a
-// control standing in it.
-func TestTheButtonStripSharesItsSpaceEvenly(t *testing.T) {
+// The two buttons are one pair centred under the dealt hand *(2026-09-04, owner's call)*, rather
+// than spread across the strip or pinned to its right-hand end — both of which described the
+// buttons by what was beside them instead of by the cards they act on.
+func TestTheButtonsAreCentredUnderTheHand(t *testing.T) {
 	gs := testState()
 
 	const discardWidth, duelWidth = stripButtonWidth, stripButtonWidth
 	discardX, duelX := buttonStripSlots(gs, discardWidth, duelWidth)
 
-	figure, corner := apFigureRight(gs), pileSlotRect(gs).Min.X
-	before := discardX - discardWidth/2 - figure
-	between := duelX - duelWidth/2 - (discardX + discardWidth/2)
-	after := corner - (duelX + duelWidth/2)
-
-	if before <= 0 || between <= 0 || after <= 0 {
-		t.Fatalf("the buttons do not fit between the AP figure at x=%d and the Log button at x=%d: gaps %d, %d, %d",
-			figure, corner, before, between, after)
+	// Centred as a pair, so the air outside Discard's left edge and outside DUEL!'s right edge is
+	// the same. Integer halving costs a pixel.
+	left, right := discardX-discardWidth/2, duelX+duelWidth/2
+	if d := (left + right) - 2*handRowCentre(gs).X; d > 1 || d < -1 {
+		t.Errorf("the pair spans x=%d..%d, which is not centred on the hand at x=%d",
+			left, right, handRowCentre(gs).X)
 	}
 
-	// Integer division puts the remainder in the last gap, so the tolerance is the two pixels
-	// three-way rounding can lose. Anything larger is a placement, not a division.
-	if d := before - between; d > 2 || d < -2 {
-		t.Errorf("gap before Discard is %d and the gap between the buttons is %d", before, between)
+	// **On the row's fixed centre, not the band's**, which narrows as the hand is spent — a pair
+	// centred on that would slide sideways mid-round.
+	if got, want := right-left, discardWidth+stripButtonGap+duelWidth; got != want {
+		t.Errorf("the pair is %dpx wide, want %d", got, want)
 	}
-	if d := before - after; d > 2 || d < -2 {
-		t.Errorf("gap before Discard is %d and the gap after DUEL! is %d", before, after)
+	if gap := duelX - duelWidth/2 - (discardX + discardWidth/2); gap != stripButtonGap {
+		t.Errorf("the buttons are %dpx apart, want %d", gap, stripButtonGap)
+	}
+
+	// Clear of the action-point figure's column, which shares the line with them.
+	if figure := apFigureRight(gs); left <= figure {
+		t.Errorf("Discard starts at x=%d, inside the action-point figure's column ending at %d",
+			left, figure)
+	}
+}
+
+// The bottom of the screen runs from the ring row's left edge to the control column
+// *(2026-09-04, owner's call)*: the rings and the hand start together, and the cards stop a gap
+// short of the sort buttons, which stand on the enemy card's left edge.
+//
+// It is checked at both ends rather than on the width alone: a band of the right size in the
+// wrong place would be the same mistake, and the cards are centred on it.
+func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
+	gs := testState()
+	s := &CombatScene{}
+	left := handBandLeft(gs)
+
+	if want := s.duelistCardRect(gs).Max.X + ringPaneGap; left != want {
+		t.Errorf("the band starts at x=%d, want the ring row's own left edge at %d", left, want)
+	}
+
+	// The cards stop a gap short of the control column, and are centred on what is left.
+	if got, want := cardBandWidth(gs), ControlColumnLeft(gs)-sortColumnGap-left; got != want {
+		t.Errorf("the cards are laid out into %dpx, want %dpx", got, want)
+	}
+	if got, want := handRowCentre(gs).X, left+cardBandWidth(gs)/2; got != want {
+		t.Errorf("the hand is centred at x=%d, want %d", got, want)
+	}
+
+	// The sort block abuts the cards, and the panel buttons under it stand on the enemy card's
+	// left edge — the two groups are anchored to different things, which is the point of the
+	// column being two groups. See controlcolumn.go.
+	if got, want := sortColumnRect(gs).Min.X, left+cardBandWidth(gs); got != want {
+		t.Errorf("the sort block starts at x=%d, want the cards' right edge at %d", got, want)
+	}
+	if got, want := ControlColumnSlot(gs, SlotHands).Min.X, s.enemyCardRect(gs).Min.X; got != want {
+		t.Errorf("the panel buttons start at x=%d, want the enemy card's left edge at %d", got, want)
 	}
 }

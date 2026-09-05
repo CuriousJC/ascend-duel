@@ -163,42 +163,80 @@ func TextWidth(f *Faces, size float64, s string) (int, error) {
 // fits the band it is drawn in. The wording lives in internal/screens and the geometry lives
 // here, so neither package can answer that alone — see TestEveryCardTextFitsItsBand.
 //
-// It breaks on spaces only. A single word longer than the line is left whole and overruns,
-// rather than being hyphenated at an arbitrary point: the strings on the cards are written
-// here in the repo, so an overrun is an authoring mistake to fix and not a case to handle.
+// **It breaks at every space** *(owner's call, 2026-09-05)*, one word to a line — except that a
+// figure stays on its unit's line, `-1 AP` drawn as `AP -1`; see unitLines. Which is what a
+// ring's name already does. Width no longer decides where a line ends, so a *set* of cards breaks
+// in the same place for free: the elemental worms differ only in the colour they name, and FIRE
+// used to fit the line where LIGHTNING all but filled it, which made four layouts of one card.
+// That is what the authored newline was for, and it is why there is no longer one — a newline in
+// the source now reads as an ordinary space.
 //
-// **A newline in the source is an authored break** *(2026-08-23)*, honoured before the width is
-// consulted and never joined back up. It exists because width-wrapping alone cannot make a *set*
-// of cards break in the same place: the four elemental worms differ only in the element they
-// name, and FIRE fits the line where LIGHTNING all but fills it, so the four would read as four
-// different layouts of one card. Which is a thing the author knows and the measurer cannot.
-//
-// **It is a break, not a paragraph.** An authored line still wraps if it is too wide for the
-// band, so a break can only ever add lines — it cannot be used to overrun one.
+// A single word longer than the line is still left whole and overruns, rather than being
+// hyphenated at an arbitrary point: the strings on the cards are written here in the repo, so an
+// overrun is an authoring mistake to fix and not a case to handle.
 func WrapText(f *Faces, size float64, s string, width int) ([]string, error) {
 	face, err := f.at(size)
 	if err != nil {
 		return nil, err
 	}
 
-	var lines []string
-	for _, authored := range strings.Split(s, "\n") {
-		line := ""
-		for _, word := range strings.Fields(authored) {
-			try := word
-			if line != "" {
-				try = line + " " + word
-			}
-			if line != "" && font.MeasureString(face, try).Ceil() > width {
-				lines = append(lines, line)
-				line = word
+	// **One word to a line**, which is what a ring's name already does — see Style.NameWordPerLine.
+	// The face is still resolved above, because a word wider than the column is the one thing this
+	// cannot fix and TestNoEffectTextWordIsWiderThanItsColumn is what reports it.
+	_, _ = face, width
+
+	return unitLines(strings.Fields(strings.ReplaceAll(s, "\n", " "))), nil
+}
+
+// units are the words a figure belongs to. **A closed list, and closing it is the point**: the
+// alternative is guessing from shape, and "CARD" beside "+1" would read as a unit as easily as
+// "AP" does.
+var units = map[string]bool{"AP": true, "DMG": true, "HP": true, "VITAE": true}
+
+// unitLines is the word-per-line split with one exception: **a figure stays on its unit's line,
+// and the unit leads** *(owner's call, 2026-09-05)*. "-1 AP" is drawn "AP -1" on one line, and
+// "DMG +50%" stays as it is — a number alone on a line says nothing until the eye reaches the line
+// under it, and the pair is one fact rather than two words.
+//
+// **The figure may sit on either side of its unit in the authored text**, because both read
+// naturally in a sentence — "EASIER -1 AP" and "GAINS DMG +50%" — and neither ordering is the one
+// drawn.
+func unitLines(words []string) []string {
+	var out []string
+	for i := 0; i < len(words); i++ {
+		word := words[i]
+
+		if i+1 < len(words) {
+			if units[word] && isFigure(words[i+1]) {
+				out = append(out, word+" "+words[i+1])
+				i++
 				continue
 			}
-			line = try
+			if isFigure(word) && units[words[i+1]] {
+				out = append(out, words[i+1]+" "+word)
+				i++
+				continue
+			}
 		}
-		if line != "" {
-			lines = append(lines, line)
+		out = append(out, word)
+	}
+	return out
+}
+
+// isFigure reports whether a word is a number a unit could belong to: a digit somewhere, and
+// nothing but a sign, digits, a point and a trailing % or x around it. **"+50%" and "-1" are
+// figures and "EASIER" is not**, which is the whole question this answers.
+func isFigure(word string) bool {
+	digits := false
+	for _, r := range word {
+		switch {
+		case r >= '0' && r <= '9':
+			digits = true
+		case r == '+' || r == '-' || r == '.' || r == '%' || r == 'x':
+			// part of a figure
+		default:
+			return false
 		}
 	}
-	return lines, nil
+	return digits
 }

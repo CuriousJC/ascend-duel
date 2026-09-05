@@ -24,6 +24,14 @@ import "github.com/curiousjc/ascend-duel/internal/pyramid"
 // and that is intended.
 const lifeShareDivisor = 10
 
+// LifeSharePer and PropagationPer are the two rates the reward screen names in words. They are
+// exported so the sentence reads the rule rather than repeating it: a screen printing "for each 10"
+// beside a figure computed from a different number would be a lie nothing fails on.
+const (
+	LifeSharePer   = lifeShareDivisor
+	PropagationPer = propagationPer
+)
+
 // roomVitae is what the room itself pays: **3 for a floor's outer room, 4 for its inner room, 5 for
 // the stairway that is its boss** *(owner's call, 2026-08-22)*. Flat for the whole climb — a floor-8
 // boss pays the same 5 as floor 1's, because the scaling that makes a later fight worth more is the

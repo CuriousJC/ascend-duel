@@ -459,7 +459,7 @@ func TestTheElementalWormsAllBreakInTheSamePlace(t *testing.T) {
 				w.Record, len(lines), want, w.Text)
 		}
 		if len(lines) < 2 {
-			t.Errorf("%s draws on one line — the authored break in worms.json has been lost: %q",
+			t.Errorf("%s draws on one line, so nothing about the set is being checked: %q",
 				w.Record, w.Text)
 		}
 	}

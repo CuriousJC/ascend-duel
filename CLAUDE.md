@@ -433,8 +433,14 @@ included. The entire input vocabulary is:
 - **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
   rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
   §Hover and long press, where the record of hover being *rejected* was reversed.
+- **A key may be a shortcut for a button that is on the screen, and nothing else** *(owner's call,
+  2026-09-05)*. Escape presses the settings cog — `internal/game/chrome.go` — and it is live
+  exactly when that button is, gated on the same `chromeShowing` predicate and the same
+  `gs.InputGated` shield. **A key that does something no visible control does is forbidden**, and
+  so is anything that makes the keyboard *required*: a shortcut is a faster way to reach a control
+  a player could always have clicked. A player who never touches the keyboard misses nothing.
 - **One typed-text field in the whole game** — entering a seed to replay a run. Nothing
-  else anywhere accepts keyboard input.
+  else anywhere accepts typed input.
 
 **No right click, ever.** There is no context menu and no secondary action. Anything
 that feels like it wants one needs a different design.

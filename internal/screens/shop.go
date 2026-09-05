@@ -79,9 +79,9 @@ const (
 	// The confirm tab that hangs under an armed ring, in the seat the sell figure was written in.
 	// **Narrower than the card it hangs off**, so it reads as attached to that ring rather than as
 	// a row of its own.
-	sellTabWidth    = 130
+	sellTabWidth    = 200
 	sellTabHeight   = 30
-	sellTabTextSize = 18
+	sellTabTextSize = 26
 
 	// shopRowLabelGap is how far the row's own label sits above its cards.
 	shopRowLabelGap  = 34
@@ -198,7 +198,7 @@ type ShopScene struct {
 // Init deals the shelf. **Re-entered on every visit**, because each fight earns its own.
 func (s *ShopScene) Init(gs *state.GlobalState) {
 	if s.leaveButton == nil {
-		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "Leave",
+		s.leaveButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LEAVE",
 			func() { s.leaving = true })
 		s.leaveButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
 	}
@@ -491,7 +491,7 @@ func (s *ShopScene) updateSellTab(gs *state.GlobalState) {
 
 	// The label carries the figure, so the tab is the whole question — the sell figure it replaces
 	// said the same number and asked nothing.
-	s.sellButton.Text = fmt.Sprintf("Sell for %d?", session.SellValue(s.armed))
+	s.sellButton.Text = fmt.Sprintf("SELL FOR %d?", session.SellValue(s.armed))
 	tab := s.sellTabRect(gs)
 	s.sellButton.ScreenX = (tab.Min.X + tab.Max.X) / 2
 	s.sellButton.ScreenY = (tab.Min.Y + tab.Max.Y) / 2
@@ -991,7 +991,7 @@ func goodTip(kind goodKind) (string, []string) {
 		return bagName, []string{
 			fmt.Sprintf("%d stones, and you keep one", session.BagSize()),
 			"a stone raises one hand's multiplier",
-			"by a tenth of it, for the rest of the run",
+			"by a tenth of it",
 			fmt.Sprintf("%d vitae", session.BagPrice()),
 		}
 	}

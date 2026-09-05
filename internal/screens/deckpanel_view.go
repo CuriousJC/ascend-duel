@@ -31,9 +31,9 @@ import (
 // they stand in the middle of an otherwise empty band at the foot of a full-screen panel, so there
 // is nothing to be short for, and neither state is guessable from an initial.
 const (
-	deckViewButtonWidth  = 168
+	deckViewButtonWidth  = 300
 	deckViewButtonHeight = 40
-	deckViewButtonText   = 18
+	deckViewButtonText   = 36
 	deckViewButtonGap    = 16
 
 	// deckViewButtonBottom is how far the button line's centre sits up from the panel's bottom

@@ -108,8 +108,8 @@ const (
 	// discard badge hangs off a corner, buttonStripSlots divides the space around the pair,
 	// and the AP figure's line is checked against their top edge. Those were reading a
 	// literal 138 copied into a test, which is the shape of thing that drifts.
-	stripButtonWidth  = 138
-	stripButtonHeight = 50
+	stripButtonWidth  = 250
+	stripButtonHeight = 68
 
 	// The air between Discard and DUEL!. **They are deliberately not adjacent** — they were, when
 	// they were the same choice made two ways, and they are separate choices now.

@@ -35,21 +35,21 @@ import (
 // The box, and what stands in it. Sized to the longest line either caller writes rather than to a
 // percentage: a question box that grew with the screen would be a page again.
 const (
-	confirmWidth  = 620
-	confirmHeight = 240
+	confirmWidth  = 800
+	confirmHeight = 330
 
-	confirmTitleSize = 28
-	confirmBodySize  = 18
+	confirmTitleSize = 36
+	confirmBodySize  = 20
 
 	// Offsets down from the box's top edge.
-	confirmTitleTop = 58
-	confirmBodyTop  = 104
+	confirmTitleTop = 74
+	confirmBodyTop  = 132
 
 	// The answer row: two buttons, centred as a pair, sitting off the bottom edge.
-	confirmButtonWidth  = 200
-	confirmButtonHeight = 54
+	confirmButtonWidth  = 330
+	confirmButtonHeight = 74
 	confirmButtonGap    = 24
-	confirmButtonBottom = 40
+	confirmButtonBottom = 56
 )
 
 // confirmCancelColor is the safe answer: the same flat slate the chrome and the settings sliders
@@ -94,7 +94,7 @@ func (d *confirmDialog) update(gs *state.GlobalState) {
 		return
 	}
 	if d.no == nil {
-		d.no = models.NewButton(confirmButtonWidth, confirmButtonHeight, "Cancel", nil)
+		d.no = models.NewButton(confirmButtonWidth, confirmButtonHeight, "CANCEL", nil)
 		d.no.BaseColor = confirmCancelColor
 		d.yes = models.NewButton(confirmButtonWidth, confirmButtonHeight, "", nil)
 		d.yes.BaseColor = modalCloseColor

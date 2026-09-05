@@ -43,8 +43,7 @@ func (s *PostBattleScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor)
 	return r, true
 }
 
-// tutorialCovered is whether the deck panel or the hands ladder is over the screen. See the
+// tutorialCovered is whether anything is over the screen. **Nothing can be**: this screen carries
+// no panel of its own and the chrome stands down on it, so the choice is the only thing up. See the
 // combat screen's, and tutorial.go for what it is for.
-func (s *PostBattleScene) tutorialCovered(*state.GlobalState) bool {
-	return s.deck.open || s.hands.open
-}
+func (s *PostBattleScene) tutorialCovered(*state.GlobalState) bool { return false }

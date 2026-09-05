@@ -345,7 +345,7 @@ func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vita
 	}
 	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
-	spec.Stats[2] = cards.StatLine{Label: "Vitae", Value: strconv.Itoa(vitae), ValueInk: vitaeInk}
+	spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: strconv.Itoa(vitae), ValueInk: vitaeInk}
 
 	// **One pip per shield, in the seat the enemy's status badges sit in.** They are drawn with
 	// the defend form's own mark, so what the player raised and what is standing are the same

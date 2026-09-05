@@ -38,7 +38,7 @@ var victoryHoldTicks = beat(4, 1)
 // time the button is drawn — the press does not decide anything, it says the player has looked
 // long enough — so the label names where it goes rather than offering a choice that no longer
 // exists. A roguelike where a death can be taken back is not one.
-const defeatButtonLabel = "End Run"
+const defeatButtonLabel = "END RUN"
 
 // eventDwells is each kind's share of the playback speed: a multiplier on `beatTicks`,
 // where 1 is the ordinary beat every event gets.
@@ -414,7 +414,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 		s.duelButton.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255} // crimson
 	}
 	if s.discardButton == nil {
-		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "Discard", s.discardSelected)
+		s.discardButton = models.NewButton(stripButtonWidth, stripButtonHeight, "DISCARD", s.discardSelected)
 		s.discardButton.BaseColor = color.RGBA{R: 225, G: 200, B: 60, A: 255} // yellow
 	}
 	// **The bottom strip is one row of four things, spaced rather than placed** *(2026-08-11)*:

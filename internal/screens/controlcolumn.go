@@ -46,14 +46,14 @@ const (
 	// ControlButtonText is the label size. **18 rather than the default 20**, because `Element` on
 	// a tab and `LEDGER` on a narrow button both have to fit without being abbreviated back, which
 	// is what spelling them out was for.
-	ControlButtonText = 18
+	ControlButtonText = 36
 
 	// ControlButtonWidth is how wide HANDS and LEDGER are: **the wider word and a little more,
 	// not the column** *(2026-09-04, owner's call)*. `LEDGER` measures about 62 pixels of kubasta
 	// at 18, so this is the label with half again around it. A control taking a card's width to
 	// carry one word reads as a pane rather than a button, which is what these two open rather
 	// than what they are.
-	ControlButtonWidth = 110
+	ControlButtonWidth = 200
 
 	// sortTabWidth is the block's width, and it is the enemy card's so the block, the cards it
 	// arranges and the corner above it are one measure.

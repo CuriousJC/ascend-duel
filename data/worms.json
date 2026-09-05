@@ -1,75 +1,96 @@
 [
   {
     "WormRecord": "devour",
-    "Name": "Devour",
+    "Name": "DEVOUR",
     "Target": "remove",
-    "Text": "eat one card"
+    "Text": "DESTROY CARD"
   },
   {
     "WormRecord": "spawn",
-    "Name": "Spawn",
+    "Name": "SPAWN",
     "Target": "duplicate",
-    "Text": "copy one card"
+    "Text": "COPY CARD"
   },
   {
     "WormRecord": "ember-worm",
-    "Name": "Ember Worm",
+    "Name": "EMBER WORM",
     "Target": "element",
     "Value": "fire",
-    "Text": "make one card\nFIRE"
+    "Text": "CARD BECOMES FIRE"
   },
   {
     "WormRecord": "rime-worm",
-    "Name": "Rime Worm",
+    "Name": "RIME WORM",
     "Target": "element",
     "Value": "ice",
-    "Text": "make one card\nICE"
+    "Text": "CARD BECOMES ICE"
   },
   {
     "WormRecord": "arc-worm",
-    "Name": "Arc Worm",
+    "Name": "ARC WORM",
     "Target": "element",
     "Value": "lightning",
-    "Text": "make one card\nLIGHTNING"
+    "Text": "CARD BECOMES LIGHTNING"
   },
   {
     "WormRecord": "loam-worm",
-    "Name": "Loam Worm",
+    "Name": "LOAM WORM",
     "Target": "element",
     "Value": "earth",
-    "Text": "make one card\nEARTH"
+    "Text": "CARD BECOMES EARTH"
   },
   {
     "WormRecord": "hex-worm",
-    "Name": "Hex Worm",
+    "Name": "HEX WORM",
     "Target": "element",
     "Value": "arcane",
-    "Text": "make one card\nARCANE"
+    "Text": "CARD BECOMES ARCANE"
   },
   {
     "WormRecord": "whetworm",
-    "Name": "Whetworm",
+    "Name": "WHETWORM",
     "Target": "cost",
     "Value": "-1",
-    "Text": "one card costs 1 less AP"
+    "Text": "CARD BECOMES EASIER -1 AP"
   },
   {
     "WormRecord": "swell",
-    "Name": "Swell",
+    "Name": "SWELL",
     "Target": "amount",
     "Value": "150",
-    "Text": "one card does half again"
+    "Text": "CARD GAINS DMG +50%"
   },
   {
     "WormRecord": "grow",
-    "Name": "Grow",
+    "Name": "GROW",
     "Target": "promote",
-    "Text": "one card up a tier"
+    "Text": "CARD GAINS STRENGTH +1 AP"
   },
   {
     "WormRecord": "shrink",
-    "Name": "Shrink",
+    "Name": "SHRINK",
     "Target": "demote",
-    "Text": "one card down a tier"
+    "Text": "CARD LOSES STRENGTH -1 AP"
+  },
+  {
+    "WormRecord": "tusk-worm",
+    "Name": "TUSK WORM",
+    "Target": "form",
+    "Value": "crush",
+    "Text": "CARD BECOMES CRUSH"
+  },
+  {
+    "WormRecord": "edge-worm",
+    "Name": "EDGE WORM",
+    "Target": "form",
+    "Value": "slash",
+    "Text": "CARD BECOMES SLASH"
+  },
+  {
+    "WormRecord": "point-worm",
+    "Name": "POINT WORM",
+    "Target": "form",
+    "Value": "stab",
+    "Text": "CARD BECOMES STAB"
   }
 ]

@@ -56,7 +56,7 @@ const (
 
 // The page's shape.
 const (
-	creditsTitle     = "Credits"
+	creditsTitle     = "CREDITS"
 	creditsTitleSize = 40
 
 	creditsHeadingSize = 22
@@ -78,23 +78,23 @@ var credits = []creditsLine{
 	{"a roguelike duel up a tower", creditsQuiet},
 	{"", creditsGap},
 
-	{"Made by", creditsHeading},
+	{"MADE BY", creditsHeading},
 	{"Justin Crosby  ·  CuriousJC", creditsBody},
 	{"KingSherman1820", creditsBody},
 	{"", creditsGap},
 
-	{"Built with", creditsHeading},
+	{"BUILT WITH", creditsHeading},
 	{"Ebitengine  ·  Apache-2.0", creditsBody},
 	{"Oto  ·  Apache-2.0", creditsBody},
 	{"", creditsGap},
 
-	{"Art and sound", creditsHeading},
+	{"ART AND SOUND", creditsHeading},
 	{"Creature and boss portraits by PVGames", creditsBody},
 	{"Interface art and glyphs generated in-engine", creditsQuiet},
 	{"Score synthesised from MIDI in-engine", creditsQuiet},
 	{"", creditsGap},
 
-	{"Licence", creditsHeading},
+	{"LICENCE", creditsHeading},
 	{"PolyForm Noncommercial 1.0.0", creditsBody},
 	{"Source-available. Streaming and video of gameplay are permitted,", creditsQuiet},
 	{"monetised or not. See LICENSE for the full terms.", creditsQuiet},
@@ -116,7 +116,7 @@ type CreditsScene struct {
 // why positioning is not done in Draw.
 func (s *CreditsScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
-		s.back = models.NewButton(200, 60, "Back", func() { s.leave(gs) })
+		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(91)
 }

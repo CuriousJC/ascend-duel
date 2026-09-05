@@ -638,21 +638,22 @@ var wormAuthored = Style{
 	NameSize:     20,
 	NameCentered: true,
 
-	// Between the name and the text band, and squarer than the ring's: what is left after a line
-	// of name above and three lines of text below is a 96-pixel box.
+	// Between the name and the text band. **The band took 36 pixels back on 2026-09-05**, when
+	// effect text went to one word a line and the longest worm needed five of them; what is left
+	// after a line of name above and five lines of text below is a 60-pixel box.
 	ArtTop:   44,
 	ArtInset: 26,
-	ArtMaxH:  96,
+	ArtMaxH:  60,
 
 	// The full width, unlike Hand — there is no cost column to leave room for. Centred in the band
 	// under the art for the same reason Hand centres in its own: a one-line worm and a two-line one
 	// should look like the same card.
 	TextColumnLeft: 12,
 	TextInset:      8,
-	TextBandTop:    148,
+	TextBandTop:    112,
 	TextBandBottom: 212,
 	TextSize:       17,
-	TextLineHeight: 21,
+	TextLineHeight: 20,
 }
 
 // RingStyle is a ring, in the card format.

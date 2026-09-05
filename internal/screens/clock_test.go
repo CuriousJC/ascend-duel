@@ -87,7 +87,7 @@ func TestTheBetweenFightScreensMoveOnTheSameSpeedAsTheDuel(t *testing.T) {
 		ticks int
 	}{
 		{"settleFlightTicks", settleFlightTicks},
-		{"morphHoldTicks", morphHoldTicks},
+		{"settledHoldTicks", settledHoldTicks},
 		{"victoryHoldTicks", victoryHoldTicks},
 		{"flightTicks", flightTicks},
 		{"hitFlyTicks", hitFlyTicks},

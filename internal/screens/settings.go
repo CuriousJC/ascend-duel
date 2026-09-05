@@ -32,6 +32,7 @@ package screens
 import (
 	"fmt"
 
+	"github.com/curiousjc/ascend-duel/internal/actions"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/music"
 	"github.com/curiousjc/ascend-duel/internal/profile"
@@ -64,12 +65,12 @@ const (
 // settingsTitleSize and settingsTitle are the heading.
 const (
 	settingsTitleSize = 40
-	settingsTitle     = "Settings"
+	settingsTitle     = "SETTINGS"
 
 	// **It names the state it puts you in, not the state you are in**, which is the rule a latched
 	// control follows: the latch says whether it is on, so a label that also said so would be the
 	// same fact twice and would read as wrong in one of the two states.
-	settingsFullscreenLabel = "Full screen"
+	settingsFullscreenLabel = "FULL SCREEN"
 )
 
 // The abandon band: the rule that separates it from the settings, and the button under it.
@@ -82,29 +83,23 @@ const (
 	// rather than as a decoration of its own.
 	settingsAbandonRuleWidth = settingsSliderWidth
 
-	settingsAbandonLabel = "Abandon Run"
-	settingsAbandonNote  = "gives up this climb and shows what it came to"
+	settingsAbandonLabel = "ABANDON RUN"
+
+	// settingsExitLabel leaves the program, under the button that leaves the run. settingsExitGap
+	// clears the note belonging to the button above it.
+	settingsExitLabel = "EXIT"
+	settingsExitGap   = 92
 )
 
-// The run code in the bottom-right corner *(owner's call, 2026-09-03)*.
+// The run code rides on the abandon button *(owner's call, 2026-09-05)*.
 //
-// **It is here because this is the screen a player can always reach.** The code is on the end-of-run
-// splash too, but that is a page you see once and only after the run is over — and the whole point
-// of a six-character code is being able to write down the run you are *in*, to report a bug against
-// it or to hand it to somebody. The cog is on every screen, so this corner is the one place the
-// answer is always two clicks away.
-//
-// **Quiet, in the corner, and captioned.** It is a thing to be *found* when somebody is asked "what
-// seed are you on", not a thing to be read every time the volume is changed — the same argument the
-// build string on the title screen is under, which is why it sits in the same corner at a similar
-// weight. The caption is there because six characters alone in a corner say nothing about what they
-// are.
-const (
-	settingsSeedCaption = "run code"
-	settingsSeedSize    = 26
-	settingsSeedCapSize = 13
-	settingsSeedInset   = 16
-)
+// **It is here because this is the screen a player can always reach**, and because it names the run
+// the button is about to throw away — the two facts belong on one face. It was a quiet caption in
+// the bottom-right corner until the button took it. The whole point of a six-character code is
+// being able to write down the run you are *in*, to report a bug against it or to hand it to
+// somebody, and the cog is on every screen, so this is the one place the answer is always two
+// clicks away.
+const settingsSeedCaption = "SEED"
 
 // SettingsScene is the settings screen.
 type SettingsScene struct {
@@ -122,6 +117,9 @@ type SettingsScene struct {
 
 	abandon *models.Button
 	confirm confirmDialog
+
+	// exit closes the game. Live whether or not a run is standing, unlike abandon.
+	exit *models.Button
 }
 
 // Init builds the controls on first entry and positions them every time.
@@ -133,29 +131,32 @@ type SettingsScene struct {
 // could not be written.
 func (s *SettingsScene) Init(gs *state.GlobalState) {
 	if s.music == nil {
-		s.music = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "Music", 0)
+		s.music = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "MUSIC", 0)
 		s.music.Ink = groundInk
 		s.music.OnChange = func(v float64) { music.SetLevel(v) }
 		s.music.OnCommit = func(v float64) { s.commit(gs) }
 
-		s.speed = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "Game speed", 0)
+		s.speed = models.NewSlider(settingsSliderWidth, settingsSliderHeight, "GAME SPEED", 0)
 		s.speed.Ink = groundInk
 		s.speed.OnChange = func(v float64) { SetSpeed(speedFor(v)) }
 		s.speed.OnCommit = func(v float64) { s.commit(gs) }
 
 		s.full = models.NewButton(settingsSliderWidth, settingsToggleHeight,
 			settingsFullscreenLabel, func() { s.toggleFullscreen(gs) })
-		s.full.TextSize = 20
+		s.full.TextSize = 40
 
-		s.back = models.NewButton(200, 60, "Back", func() { s.leave(gs) })
+		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
 
-		s.abandon = models.NewButton(240, 56, settingsAbandonLabel, func() { s.askAbandon(gs) })
+		s.abandon = models.NewButton(760, 76, settingsAbandonLabel, func() { s.askAbandon(gs) })
 
 		// **The modal X's red, which is the only red in the game.** It is already the colour of
 		// the one control that gets you out of somewhere, and this is the largest version of that
 		// there is. Nothing else on this screen is anything but slate.
 		s.abandon.BaseColor = modalCloseColor
-		s.abandon.TextSize = 20
+		s.abandon.TextSize = 40
+
+		s.exit = models.NewButton(760, 76, settingsExitLabel, func() { actions.QuitGame(gs) })
+		s.exit.TextSize = 40
 	}
 
 	// **The question does not survive a visit**, for the reason the title screen's does not: Init
@@ -183,6 +184,7 @@ func (s *SettingsScene) Init(gs *state.GlobalState) {
 	// The abandon band, below the rule; Back stays last, at the bottom of the screen, because the
 	// way out of a screen is the last thing on it.
 	s.abandon.ScreenX, s.abandon.ScreenY = centre, s.abandonRuleY(gs)+56
+	s.exit.ScreenX, s.exit.ScreenY = centre, s.abandon.ScreenY+settingsExitGap
 	s.back.ScreenX, s.back.ScreenY = centre, gs.PctY(88)
 }
 
@@ -224,7 +226,9 @@ func (s *SettingsScene) Update(gs *state.GlobalState) error {
 	// be no climb at all — and a control that works and does nothing is worse than one that says it
 	// has nothing to do.
 	setEnabled(s.abandon, gs.Run != nil)
+	s.abandon.Text = abandonLabel(gs)
 	systems.UpdateButton(gs, s.abandon)
+	systems.UpdateButton(gs, s.exit)
 
 	// The readouts follow the bars rather than being written once, so the number under the
 	// cursor is the number the game is at.
@@ -248,9 +252,8 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.DrawSlider(gs, screen, s.speed)
 	systems.DrawButton(gs, screen, s.full)
 
-	// The rule, then the thing that is not a setting, then the note saying what it does. **The note
-	// is there whether or not the button is live**, because the sentence is what tells a player
-	// what "abandon" costs before they press it, not after.
+	// The rule, then the two things that are not settings: the way out of the run and the way out
+	// of the program.
 	ruleY := s.abandonRuleY(gs)
 	ruleLeft := gs.PctX(50) - settingsAbandonRuleWidth/2
 	vector.StrokeLine(screen,
@@ -260,12 +263,7 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	systems.DrawButton(gs, screen, s.abandon)
 
-	note := &text.DrawOptions{}
-	note.GeoM.Translate(float64(gs.PctX(50)), float64(s.abandon.ScreenY+s.abandon.Height/2+16))
-	note.PrimaryAlign = text.AlignCenter
-	note.ColorScale.ScaleWithColor(systems.ColorToward(groundInk, screenGround, 40))
-	text.Draw(screen, settingsAbandonNote,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, note)
+	systems.DrawButton(gs, screen, s.exit)
 
 	systems.DrawButton(gs, screen, s.back)
 
@@ -280,39 +278,18 @@ func (s *SettingsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, note)
 	}
 
-	s.drawRunCode(gs, screen)
-
 	// Over the screen it is asking about.
 	s.confirm.draw(gs, screen)
 }
 
-// drawRunCode puts the run code in the bottom-right corner, under a caption.
-//
-// **Nothing is drawn with no run.** The settings screen is reachable from the title, where there may
-// be no climb — and a code in the corner there would name the run the *next* New Run is about to
-// throw away and reroll, which is a number that is true for nobody. See settingsSeedCaption.
-func (s *SettingsScene) drawRunCode(gs *state.GlobalState, screen *ebiten.Image) {
+// abandonLabel is what the button says: the deed, and the run it would end. **With no run standing
+// there is no code to name**, and the button is dead anyway — the settings are reachable from the
+// title screen, where the next New Run has not been rolled yet.
+func abandonLabel(gs *state.GlobalState) string {
 	if gs.Run == nil {
-		return
+		return settingsAbandonLabel
 	}
-	right := float64(gs.PctX(100) - settingsSeedInset)
-	bottom := gs.PctY(100) - settingsSeedInset
-
-	code := &text.DrawOptions{}
-	code.GeoM.Translate(right, float64(bottom))
-	code.PrimaryAlign = text.AlignEnd
-	code.SecondaryAlign = text.AlignEnd
-	code.ColorScale.ScaleWithColor(systems.ColorToward(groundInk, screenGround, 15))
-	text.Draw(screen, seeds.Code(gs.RunSeed),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: settingsSeedSize}, code)
-
-	caption := &text.DrawOptions{}
-	caption.GeoM.Translate(right, float64(bottom)-settingsSeedSize-6)
-	caption.PrimaryAlign = text.AlignEnd
-	caption.SecondaryAlign = text.AlignEnd
-	caption.ColorScale.ScaleWithColor(systems.ColorToward(groundInk, screenGround, 48))
-	text.Draw(screen, settingsSeedCaption,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: settingsSeedCapSize}, caption)
+	return fmt.Sprintf("%s, %s: %s", settingsAbandonLabel, settingsSeedCaption, seeds.Code(gs.RunSeed))
 }
 
 // askAbandon puts the question up. **There is no path from the button to AbandonRun that does not
@@ -323,7 +300,7 @@ func (s *SettingsScene) askAbandon(gs *state.GlobalState) {
 		return
 	}
 	s.confirm.ask(
-		"Abandon this run?",
+		"ABANDON THIS RUN?",
 		"The climb will be lost. You will see what it came to first.",
 		settingsAbandonLabel,
 		func() { AbandonRun(gs) },

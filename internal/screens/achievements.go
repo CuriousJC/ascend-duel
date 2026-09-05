@@ -48,14 +48,14 @@ type achievement struct {
 var achievements = []achievement{
 	{
 		key:  profile.AchievementFirstSteps,
-		name: "First Steps",
+		name: "FIRST STEPS",
 		line: "Defeat your first enemy.",
 	},
 }
 
 // The page's shape. A heading, a column of rows under it, and the way back.
 const (
-	achievementsTitle     = "Achievements"
+	achievementsTitle     = "ACHIEVEMENTS"
 	achievementsTitleSize = 40
 
 	// achievementRowHeight is the band one entry takes, and achievementRowGap the air between two.
@@ -93,7 +93,7 @@ type AchievementsScene struct {
 // why positioning is not done in Draw.
 func (s *AchievementsScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
-		s.back = models.NewButton(200, 60, "Back", func() { s.leave(gs) })
+		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(88)
 }

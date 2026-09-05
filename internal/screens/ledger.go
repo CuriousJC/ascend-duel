@@ -40,7 +40,7 @@ import (
 // these are the log's rows and an off-white ground is what makes three saturated verb inks
 // readable. See pane.go.
 var ledgerPane = panePlacement{
-	title:     "The Ledger",
+	title:     "THE LEDGER",
 	color:     paneEdge,
 	fill:      color.RGBA{R: 234, G: 230, B: 224, A: 255},
 	ink:       color.RGBA{R: 34, G: 32, B: 38, A: 255},

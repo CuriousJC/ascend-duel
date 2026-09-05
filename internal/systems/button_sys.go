@@ -245,7 +245,7 @@ func buttonSunken(button *models.Button) bool {
 
 // defaultButtonTextSize is what a button that names no size draws its label at, which is
 // what every button in the game drew at when the size was written into paintButton.
-const defaultButtonTextSize = 20
+const defaultButtonTextSize = 40
 
 // textSizeOf resolves a button's label size, zero meaning the default — the same "use the
 // default" convention BaseColor's zero alpha uses.

@@ -37,8 +37,8 @@ import (
 // smaller than the 84-tall rows spaced 150 apart that three fitted comfortably. At the old figures
 // the sixth row ended 200 pixels below the bottom of the screen.
 const (
-	titleButtonWidth  = 275
-	titleButtonHeight = 68
+	titleButtonWidth  = 460
+	titleButtonHeight = 84
 	titleRowGap       = 88
 )
 
@@ -64,24 +64,24 @@ type TitleScene struct {
 // these coordinates only need computing once per visit.
 func (s *TitleScene) Init(gs *state.GlobalState) {
 	if s.newRunButton == nil {
-		s.newRunButton = models.NewButton(titleButtonWidth, titleButtonHeight, "New Run",
+		s.newRunButton = models.NewButton(titleButtonWidth, titleButtonHeight, "NEW RUN",
 			func() { s.startNewRun(gs) })
-		s.continueButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Continue",
+		s.continueButton = models.NewButton(titleButtonWidth, titleButtonHeight, "CONTINUE",
 			func() { ContinueRun(gs) })
 
 		// **The two menu screens go through actions, like Settings does.** They are not stations of
 		// a run — nothing in flow.go names them — so they record where the player was and Back puts
 		// them there, which is the one thing every screen reachable from anywhere has to do.
-		s.achievementsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Achievements",
+		s.achievementsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "ACHIEVEMENTS",
 			func() { actions.OpenAchievements(gs) })
-		s.achievementsButton.TextSize = 20
+		s.achievementsButton.TextSize = 40
 
-		s.creditsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Credits",
+		s.creditsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "CREDITS",
 			func() { actions.OpenCredits(gs) })
 
-		s.settingsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Settings",
+		s.settingsButton = models.NewButton(titleButtonWidth, titleButtonHeight, "SETTINGS",
 			func() { actions.OpenSettings(gs) })
-		s.exitButton = models.NewButton(titleButtonWidth, titleButtonHeight, "Exit",
+		s.exitButton = models.NewButton(titleButtonWidth, titleButtonHeight, "EXIT",
 			func() { actions.QuitGame(gs) })
 	}
 
@@ -140,9 +140,9 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 		return
 	}
 	s.confirm.ask(
-		"Start a new run?",
+		"START A NEW RUN?",
 		"The climb in progress will be lost. This cannot be undone.",
-		"New Run",
+		"NEW RUN",
 		func() { NewRun(gs) },
 	)
 }

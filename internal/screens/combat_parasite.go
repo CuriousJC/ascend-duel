@@ -49,7 +49,7 @@ import (
 // carries in the other corner.
 const (
 	parasiteToggleLabel = "P"
-	parasiteToggleText  = 30
+	parasiteToggleText  = 60
 )
 
 // parasiteButtonPlace is where it stands: **the slot beside the draw pile**, which the fight log's

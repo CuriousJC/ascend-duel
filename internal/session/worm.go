@@ -68,12 +68,24 @@ const (
 	// consistency play** — a hand of cheap cards plays more of itself, and the hand ladder counts
 	// copies rather than damage.
 	TargetDemote
+
+	// TargetForm changes what one card counts as on the form axis — the element worms' trick on
+	// the other matching axis.
+	//
+	// **It writes `Card.FormOverride`, which a parasite already owns**, so this is the vocabulary
+	// arriving at a mechanic rather than a new one: form is concept-wide and a worm swapping the
+	// concept's form would change every copy in the deck, which is the argument the target list
+	// was closed against. The override is per-card and only `Card.Form` reads it.
+	//
+	// **A Ward told to be a crush still defends**, and now matches on an attack axis — the legal
+	// weird thing the owner ruled in when parasites got the field.
+	TargetForm
 )
 
 // WormTargets is every target in a fixed order, for anything that walks them.
 func WormTargets() []WormTarget {
 	return []WormTarget{TargetElement, TargetRemove, TargetDuplicate,
-		TargetCost, TargetAmount, TargetPromote, TargetDemote}
+		TargetCost, TargetAmount, TargetPromote, TargetDemote, TargetForm}
 }
 
 func (t WormTarget) String() string {
@@ -90,6 +102,8 @@ func (t WormTarget) String() string {
 		return "promote"
 	case TargetDemote:
 		return "demote"
+	case TargetForm:
+		return "form"
 	default:
 		return "element"
 	}
@@ -118,6 +132,9 @@ type Worm struct {
 
 	// Element is the new colour, and is only meaningful for TargetElement.
 	Element combat.Element
+
+	// Form is the axis a card is told to count on, and is only meaningful for TargetForm.
+	Form combat.Form
 
 	// Number is the value read against a numeric target: a signed delta for `cost`, a percentage
 	// for `amount`. Meaningless for the rest, which are refused if they carry one.
@@ -229,6 +246,21 @@ func resolveWorm(r data.WormData) (Worm, error) {
 		return w, nil
 	}
 
+	if target == TargetForm {
+		f, ok := combat.ParseForm(r.Value)
+		if !ok {
+			return Worm{}, fmt.Errorf("%s names form %q, which the rules do not have",
+				r.WormRecord, r.Value)
+		}
+		if f == combat.FormNone {
+			// A card counting on no axis is a card that can never join a form hand, which is a
+			// worm that takes something away rather than giving it.
+			return Worm{}, fmt.Errorf("%s takes a card's form away", r.WormRecord)
+		}
+		w.Form = f
+		return w, nil
+	}
+
 	if target == TargetElement {
 		e, ok := combat.ParseElement(r.Value)
 		if !ok {
@@ -300,6 +332,11 @@ func (s *Session) Apply(w Worm, i int) bool {
 		s.deck[i] = card
 		return true
 
+	case TargetForm:
+		card.FormOverride = w.Form
+		s.deck[i] = card
+		return true
+
 	case TargetPromote, TargetDemote:
 		step := 1
 		if w.Target == TargetDemote {
@@ -336,6 +373,8 @@ func (s *Session) CanApply(w Worm, i int) bool {
 		return ok
 	case TargetElement:
 		return card.Element != w.Element
+	case TargetForm:
+		return card.Form() != w.Form
 	default:
 		return true
 	}

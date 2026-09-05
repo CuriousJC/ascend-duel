@@ -1,6 +1,6 @@
 ---
 name: rings
-description: The ring grammar - how a ring is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a ring may never do. Load before designing or discussing a new ring, adding an entry to rings.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn ring.
+description: The ring grammar - how a ring is written as data, the closed vocabularies it draws on, where each moment fires in the code, and what a ring may never do. Load before designing or discussing a new ring, adding an entry to rings.json or statuses.json, adding a moment or an effect verb, or wiring anything that reads a worn ring. Also the ring analyser: given a proposed ring, whether it duplicates one that exists, which siblings it implies across the element/form/concept/tier axes, what it costs to build against the current grammar, and a best guess at its rarity.
 ---
 
 # Rings
@@ -113,6 +113,8 @@ inside the same blow.
 | `Concept` | one named card | `{ "Concept": "Strike" }` |
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
 | `Lead` | **the blow's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
+| `Hand` | **the rung the blow formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung rings. `blow-formed` only, and refused alongside any card predicate |
+| `MinForms` | **how many distinct forms the blow's scoring cards cover** | `{ "Hand": "element-pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
 | *(absent)* | always | Banker, Hungry, the stat rings |
 
 **`Tier` reads the declared cost, never the wearer's.** A discount ring makes a Lunge cost 2 to the
@@ -126,6 +128,17 @@ next one of those arrives — last card, lone card, the card that formed the han
 a predicate rather than inside a verb. **A verb that names its own scope is the anti-pattern this
 replaced**: `echo-attack` meant "the lead card" until the form repeat rings needed the same
 arithmetic at a different scope, and one predicate covered both.
+
+**`Hand` is the second predicate that is not about a card** *(2026-09-05)*, and it is asked of the
+blow rather than of a card — `RingCondition.Matches` does not read it, because "is this card part of
+the hand" is a different question with a different answer. `HandBonus` is the one caller. **A rule
+carrying both a `Hand` and a card predicate is refused at registration**: an element is a fact about
+one card and a rung is a fact about the whole blow, so the pair asks something nobody wrote down.
+
+**The nineteen rung rings are what it was added for.** Their bonus lands *inside* `Base`, after every
+card term and before the multiplier — so a rung's bonus is worth more on the rung that pays more,
+which is the whole reason a flat number can follow the ladder's shape. See `combat.HandBonus` and
+`TestTheHandBonusIsAddedBeforeTheMultiplier`.
 
 **`Concept` names a card by its label**, resolved at load the way a deck list is. A concept *ID*
 is registration-ordered and must never be serialized — the label is what is stable.
@@ -150,12 +163,18 @@ not ignored.
 | `scale-hp` | `fight-start` | `Amount` percent | scales max life; **the one scaling verb meant to go below 100** — 75 takes a quarter off. Applied *after* every `add-hp`, and never below 1 life |
 | `grow-on-win` | `fight-won` | `Amount` | adds to **this ring's own accumulator**, once per win |
 | `grow-on-turn` | `turn-taken` | `Amount` | the same accumulator, once per matching turn — Momentum |
+| `grow-per-card` | `turn-taken` | `Amount` | the same accumulator, **once for every matching card of the turn** — Ebb & Flow. Refused with no `If`, since there would be nothing to count |
+| `add-damage-per-vitae` | `fight-start` | `Amount` | flat damage on every blow **per vitae the run holds** — Rampant. The verb declares a *rate*; the product is re-read at **every blow** against `Duelist.Vitae`, which moves inside a fight |
+| `scale-hand-damage` | `blow-formed` | `Amount` | scales **the blow**, after the hand's own multiplier, when it formed the named rung — the Pairing / Oak / Pentacle family. A **second multiplier**: `Event.Multiplier` stays the ladder's figure, because that is what the banner and hand row show |
+| `scale-damage-per-vitae` | `card-damage` | `Amount` | scales a matching card by **Amount percentage points per vitae held** — Fire of Life. 1 is +1% a vitae |
 | `reset-growth` | `turn-taken` | *nothing* | puts the accumulator back to zero. **Growth is applied first and resets second**, so a turn cannot both bank and lose the same step |
 | `grow-on-hit` | `attack-lands` | `Amount` | the same accumulator, **once per matching landing, inside the blow's own sum** — so the card queued first is counted bare and pays for the one behind it to be counted bigger. Echoes and repeats each count |
 | `scale-propagation` | `fight-won` | `Amount` percent | scales vitae propagation, *after* its cap |
 | `adjust-picks` | `prizes-dealt` | `Amount` delta | more post-battle choices |
 | `adjust-prize-vitae` | `prizes-dealt` | `Amount` flat | the vitae card pays more |
 | `repeat-card` | `blow-formed` | `Amount` landings | every **matching** card lands Amount times, each at **full** damage — the form repeat rings |
+| `add-hand-damage` | `blow-formed` | `Amount` flat | adds flat damage to the blow **when the named rung formed** — added last, inside `Base`, so the multiplier multiplies it |
+| `add-damage-per-held` | `blow-formed` | `Amount` flat | adds `Amount` to the blow **for every card still in hand** matching the rule's card predicate. Refused alongside `Lead` or `Hand` — a held card is in neither pile those name |
 | `echo-attack` | `blow-formed` | `Amount` landings | the blow's lead card lands Amount times, at even fractions counting down — 3 is full, 2/3, 1/3. Extra landings from two rings **add** rather than compound; capped at `combat.MaxEchoLandings` |
 
 **Adding a verb is a Go change** — one entry here plus the one place applying it — and that cost
@@ -362,6 +381,142 @@ The questions to put to an idea, in order:
 
 **Do not grow the vocabulary ahead of the rings.** A moment or a verb with no ring behind it is
 `CostTier` again — see the `data` skill. Ship the rows that have an entry.
+
+## Analysing a proposed ring
+
+**The six questions above are the design conversation; this is the report.** Run it when a ring is
+proposed — by the owner, or by you before authoring one — and answer all four parts even when one
+of them is "nothing to say". A ring that turns out to be Keen with a different name is the finding
+this exists to catch, and it is only ever caught by looking.
+
+**Derive the axes, never remember them.** `python .claude/skills/rings/coverage.py` reads
+`data/rings.json` and `data/duelist_cards.json` and prints every occupied `(When, Do, If)` cell
+with the rings standing in it, then the empty siblings of every filled family. `--gaps` prints
+the second half alone. The elements, the forms, the concepts and the tiers are all read off the
+card file, so a sixth element or a new concept joins the grid with nothing edited here. **A
+hard-coded axis list is the failure mode**: it goes stale silently, and the whole point of the
+report is to be current.
+
+### 1. Similarity — is this ring already in the file?
+
+Take the proposal's `(When, Do)` pair and read the grid at it. Three verdicts:
+
+- **Identical** — same moment, same verb, same predicate. Say which ring, and stop; the
+  interesting question becomes whether the existing one is priced right.
+- **A sibling** — same cell, different value on an axis. That is the healthy case and it is what
+  section 2 is about.
+- **Overlapping** — a different cell that reaches the same outcome. This is the one the grid does
+  not catch on its own, so it has to be read for: Banker, Soul Taker and Hungry all landed on the
+  post-battle screen from three different moments, and two of them nearly did one job. Arcane Ring
+  and Unravelled Ring share `card-damage / scale-damage / Element=arcane` and are *not* a
+  duplicate — one is flat and one grows — which is the distinction to draw rather than to flag.
+
+### 2. Expansion — which siblings does it imply?
+
+**Ask the question; do not assume the answer.** A filled family with an empty cell is a question
+about that cell, and roughly half the time the emptiness is the grammar being right:
+
+- **`repeat-card` has no defend ring, and must not.** A defend card deals no damage, so repeating
+  one repeats nothing. The same goes for `scale-damage` on defend.
+- **Concept rings do not want filling out.** Striker covers four cards where Keen covers twelve;
+  eighteen concept rings would be eighteen near-dead records, and the grid will report seventeen
+  "missing" every single run. Read that line and move past it.
+- **`demote-card` on tiers other than 3** is a real question with a real answer — Atrophy steps a
+  card down its own ladder, and a tier with nothing below it is a no-op.
+- **The element families are the ones that genuinely want to be complete.** Five hues, five cards
+  of each concept, and a player building around a colour who finds their colour has no cost ring
+  has found a hole rather than a choice. `adjust-cost`, `scale-damage`, `grow-on-hit` and
+  `apply-status` are all complete across five today; the flip grid is complete at 5x4.
+
+**Say what a proposed ring implies for its family**, and say whether the family should be filled
+now or is a note. Do not author four siblings because one was asked for — offer them.
+
+### 3. Feasibility — what does it cost to build?
+
+Four verdicts, in ascending cost. Name the one and the specific term:
+
+| Verdict | Means | Cost |
+|---|---|---|
+| **expressible today** | an existing moment, an existing `If`, existing verbs | a record in `rings.json` and a `Text` line |
+| **needs one new term** | a new status, a new predicate value, a new effect verb | one row in a table here plus the one place applying it; a status is a file entry, a *kind* of status is Go |
+| **needs new plumbing** | a new moment, a Go seat, a fact the rules cannot currently observe | a `When` with a seat somewhere real, and the seat has to already be a place the code passes through |
+| **refused** | it collides with *What a ring may never do* | say which rule, and offer the nearest thing that is legal |
+
+**Check the refusals before anything else** — they are where an easy-sounding ring most often
+dies. Raising `MaxActions`, reducing a blow to zero, chaining flips, changing what a concept is,
+a sixth worn ring, and a growing ring with two numeric effects are all already decided.
+
+**A verb used at the wrong moment is refused at load**, so "this verb exists" is not the same as
+"this verb is available here". Read the moment column of the `Then` table, not just the verb
+column.
+
+### 4. Balance and rarity — a best guess, labelled as one
+
+**Nothing in the repo measures what a ring does to a duel**, so every figure here is judgement and
+should be said as judgement. Give a tier anyway — `common` / `uncommon` / `rare` — with the
+reasoning, because a proposal with no suggested tier is a proposal the owner has to price from
+scratch.
+
+The comparisons that actually carry weight:
+
+- **Breadth of the predicate.** A form ring covers twelve cards, an element ring five, a concept
+  ring four. Same verb at three prices.
+- **Whether it compounds.** Rings fire left to right and multiply, so two of a kind is a build.
+  A verb that multiplies is worth more than one that adds, at the same number.
+- **Whether it grows.** An accumulator is uncapped by decision, so a growing ring is priced on
+  where it ends up at the top of the tower, not on fight one.
+- **Whether it takes something away.** A drawback is what `rare` is for — Onslaught's `scale-hp`
+  below 100 is the shape.
+- **Whether it is dead in some runs.** A ring keyed on one element does nothing for a run that
+  drew none of it, which is the argument for a tier *down*, not up.
+
+**Say when a price is a guess and stop there.** Do not invent a damage figure to justify a tier.
+
+**And say what the tier does to the shelf, because the weights make it counter-intuitive.** Tickets
+are 10 / 4 / 1, so a tier's share is taken over the whole catalogue — which means **anything added to
+common devalues every rare in the game**. On 2026-09-05 the catalogue went from 58 rings to 139 and
+rare grew from 4 rings to 26; its share of a shelf draw went 2.9% to 3.2%, because 57 commons had
+arrived underneath it. `go run ./tools/ringsheet` prints the three shares — read them after any
+batch, not just after a rarity change.
+
+### Authoring, once the analysis is agreed
+
+The record goes in `data/rings.json` and nowhere else if the verdict was *expressible today*.
+Then: **regenerate the ring sheet alone** — `go run ./tools/ringsheet`, not `tools/sheets`, which
+rewrites 4.9 MB including 126 portraits nothing touched. `Text` is what the player reads and it is
+printed verbatim, so a rule authored without its sentence is a ring that lies. `go test ./...`
+covers the name fitting the card, the art resolving and the record parsing; a bad word panics at
+load rather than being ignored.
+
+### Naming: two words on the face, and `Face` when that is not enough
+
+A ring card writes its name **one word to a line, two lines**, with the trailing "Ring" trimmed —
+`data.RingData.FaceName`. `TestEveryRingNameFitsItsCard` fails on a third line rather than letting
+it land on the artwork, so a three-word name is refused at test time.
+
+**`Face` overrides the derivation** *(2026-09-05)*, for the one case the trim cannot reach: a name
+whose punctuation makes it a word too long, like "Ebb & Flow". It is an override rather than a
+second place every name is written down — a record without one still derives, and the full `Name`
+is what the tooltip and the shop say. **Reach for a better name first**; `Face` is the escape
+hatch, not the pattern.
+
+## The rings that read the purse *(2026-09-05)*
+
+**`internal/combat` holds the purse for the length of a round** — `Duelist.Vitae`, seeded from the
+run at the top of each round and stepped as the round pays. It is **re-read at every blow**, because
+vitae moves inside a fight: a card carrying `RiderVitaeInHand` pays one every turn it is held, and
+riders fire *before* the attack phase, so what a turn pays is already in the purse that turn's blow
+reads. **A figure resolved once at fight-start is the bug to avoid** — it was the first version of
+Rampant and it priced a turn-three blow at turn-one rates.
+
+- **Rampant** — `add-damage-per-vitae` at `fight-start`, flat damage per vitae, joining `Base` after
+  the cards and before the multiplier. Rare.
+- **Fire of Life** — `scale-damage-per-vitae` at `card-damage`, percentage points per vitae on a
+  matching card. `Amount: 1` is +1% a vitae, which is a tenth of a multiplier per ten held.
+
+**Both verbs declare a rate and neither caches a product.** The run is paid the *difference* between
+the purse the duel opened with and the one it closes with; **never sum `KindVitae` events to move a
+purse**, which was the old way and now double-pays.
 
 ## The two vitae rings, and why they are not the same ring
 

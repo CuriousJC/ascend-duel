@@ -144,7 +144,7 @@
     "Name": "Storm Ring",
     "Art": "",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
-    "Rarity": "common",
+    "Rarity": "rare",
     "Rules": [
       {
         "When": "attack-lands",
@@ -153,6 +153,201 @@
           { "Do": "apply-status", "Status": "shocked" },
           { "Do": "apply-status", "Status": "chilled" }
         ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "scald-ring",
+    "Name": "Scald Ring",
+    "Art": "",
+    "Text": "Fire attacks BURN and CHILL the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "fire" },
+        "Then": [
+          { "Do": "apply-status", "Status": "burning" },
+          { "Do": "apply-status", "Status": "chilled" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "wildfire-ring",
+    "Name": "Wildfire Ring",
+    "Art": "",
+    "Text": "Fire attacks BURN and SHOCK the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "fire" },
+        "Then": [
+          { "Do": "apply-status", "Status": "burning" },
+          { "Do": "apply-status", "Status": "shocked" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hoarfrost-ring",
+    "Name": "Hoarfrost Ring",
+    "Art": "",
+    "Text": "Ice attacks CHILL and WEIGH the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "ice" },
+        "Then": [
+          { "Do": "apply-status", "Status": "chilled" },
+          { "Do": "apply-status", "Status": "weighted" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "brittle-ring",
+    "Name": "Brittle Ring",
+    "Art": "",
+    "Text": "Ice attacks CHILL and WEAKEN the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "ice" },
+        "Then": [
+          { "Do": "apply-status", "Status": "chilled" },
+          { "Do": "apply-status", "Status": "weakened" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "palsy-ring",
+    "Name": "Palsy Ring",
+    "Art": "",
+    "Text": "Lightning attacks SHOCK and WEAKEN the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "lightning" },
+        "Then": [
+          { "Do": "apply-status", "Status": "shocked" },
+          { "Do": "apply-status", "Status": "weakened" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "caldera-ring",
+    "Name": "Caldera Ring",
+    "Art": "",
+    "Text": "Earth attacks WEIGH and BURN the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "earth" },
+        "Then": [
+          { "Do": "apply-status", "Status": "weighted" },
+          { "Do": "apply-status", "Status": "burning" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "tremor-ring",
+    "Name": "Tremor Ring",
+    "Art": "",
+    "Text": "Earth attacks WEIGH and SHOCK the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "earth" },
+        "Then": [
+          { "Do": "apply-status", "Status": "weighted" },
+          { "Do": "apply-status", "Status": "shocked" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "blightfire-ring",
+    "Name": "Blightfire Ring",
+    "Art": "",
+    "Text": "Arcane attacks WEAKEN and BURN the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "arcane" },
+        "Then": [
+          { "Do": "apply-status", "Status": "weakened" },
+          { "Do": "apply-status", "Status": "burning" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "millstone-ring",
+    "Name": "Millstone Ring",
+    "Art": "",
+    "Text": "Arcane attacks WEAKEN and WEIGH the target.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Element": "arcane" },
+        "Then": [
+          { "Do": "apply-status", "Status": "weakened" },
+          { "Do": "apply-status", "Status": "weighted" }
+        ]
+      }
+    ]
+  },
+  {
+    "RingRecord": "sundering-ring",
+    "Name": "Sundering Ring",
+    "Art": "",
+    "Text": "Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "apply-status", "Status": "weakened" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "bruising-ring",
+    "Name": "Bruising Ring",
+    "Art": "",
+    "Text": "Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "apply-status", "Status": "weighted" }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "pinning-ring",
+    "Name": "Pinning Ring",
+    "Art": "",
+    "Text": "Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "attack-lands",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "apply-status", "Status": "shocked" }]
       }
     ]
   },
@@ -213,6 +408,202 @@
     ]
   },
   {
+    "RingRecord": "prodder-ring",
+    "Name": "Prodder Ring",
+    "Art": "",
+    "Text": "Every Poke deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Poke" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "boxer-ring",
+    "Name": "Boxer Ring",
+    "Art": "",
+    "Text": "Every Jab deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Jab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "lancer-ring",
+    "Name": "Lancer Ring",
+    "Art": "",
+    "Text": "Every Thrust deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Thrust" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "fencer-ring",
+    "Name": "Fencer Ring",
+    "Art": "",
+    "Text": "Every Lunge deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Lunge" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "impaler-ring",
+    "Name": "Impaler Ring",
+    "Art": "",
+    "Text": "Every Impale deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Impale" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "skirmisher-ring",
+    "Name": "Skirmisher Ring",
+    "Art": "",
+    "Text": "Every Nick deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Nick" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "cutter-ring",
+    "Name": "Cutter Ring",
+    "Art": "",
+    "Text": "Every Cut deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Cut" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "slasher-ring",
+    "Name": "Slasher Ring",
+    "Art": "",
+    "Text": "Every Slash deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Slash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "cleaver-ring",
+    "Name": "Cleaver Ring",
+    "Art": "",
+    "Text": "Every Cleave deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Cleave" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "headsman-ring",
+    "Name": "Headsman Ring",
+    "Art": "",
+    "Text": "Every Sever deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Sever" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "knocker-ring",
+    "Name": "Knocker Ring",
+    "Art": "",
+    "Text": "Every Tap deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Tap" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "basher-ring",
+    "Name": "Basher Ring",
+    "Art": "",
+    "Text": "Every Bash deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Bash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "smasher-ring",
+    "Name": "Smasher Ring",
+    "Art": "",
+    "Text": "Every Smash deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Smash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "grinder-ring",
+    "Name": "Grinder Ring",
+    "Art": "",
+    "Text": "Every Pulverize deals double DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Pulverize" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "flurry-ring",
     "Name": "Flurry Ring",
     "Art": "",
@@ -255,11 +646,212 @@
     ]
   },
   {
+    "RingRecord": "backdraft-ring",
+    "Name": "Backdraft Ring",
+    "Art": "",
+    "Text": "Every fire card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "shatter-ring",
+    "Name": "Shatter Ring",
+    "Art": "",
+    "Text": "Every ice card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "forked-ring",
+    "Name": "Forked Ring",
+    "Art": "",
+    "Text": "Every lightning card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "landslide-ring",
+    "Name": "Landslide Ring",
+    "Art": "",
+    "Text": "Every earth card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "recursion-ring",
+    "Name": "Recursion Ring",
+    "Art": "",
+    "Text": "Every arcane card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "smoulder-ring",
+    "Name": "Smoulder Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "frostbank-ring",
+    "Name": "Frostbank Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "potential-ring",
+    "Name": "Potential Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "bedrock-ring",
+    "Name": "Bedrock Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "wellspring-ring",
+    "Name": "Wellspring Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "poised-ring",
+    "Name": "Poised Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "sheathed-ring",
+    "Name": "Sheathed Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "coiled-ring",
+    "Name": "Coiled Ring",
+    "Art": "",
+    "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "ebb-and-flow-ring",
+    "Name": "Ebb & Flow Ring",
+    "Face": "Ebb Flow",
+    "Art": "",
+    "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "turn-taken",
+        "If": { "Form": "defend" },
+        "Then": [{ "Do": "grow-per-card", "Amount": 20 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "momentum-ring",
     "Name": "Momentum Ring",
     "Art": "",
     "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
@@ -372,6 +964,63 @@
     ]
   },
   {
+    "RingRecord": "sharpening-ring",
+    "Name": "Sharpening Ring",
+    "Art": "",
+    "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "pounding-ring",
+    "Name": "Pounding Ring",
+    "Art": "",
+    "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "quickening-ring",
+    "Name": "Quickening Ring",
+    "Art": "",
+    "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "echo-ring",
     "Name": "Echo Ring",
     "Art": "",
@@ -400,6 +1049,328 @@
     ]
   },
   {
+    "RingRecord": "erode-ring",
+    "Name": "Erode Ring",
+    "Art": "",
+    "Text": "Every 2 AP card is dealt as its 1 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Tier": 2 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "whittle-ring",
+    "Name": "Whittle Ring",
+    "Art": "",
+    "Text": "Every 1 AP attack is dealt as its 0 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Tier": 1 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "swarm-ring",
+    "Name": "Swarm Ring",
+    "Art": "",
+    "Text": "Every 1 AP card deals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Tier": 1 },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "crown-ring",
+    "Name": "Crown Ring",
+    "Art": "",
+    "Text": "Every 3 AP card deals 2.5x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Tier": 3 },
+        "Then": [{ "Do": "scale-damage", "Amount": 250 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "high-card-hand-ring",
+    "Name": "Lone Ring",
+    "Art": "",
+    "Text": "A High Card deals 2 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "high-card" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "concept-pair-hand-ring",
+    "Name": "Twinned Ring",
+    "Art": "",
+    "Text": "A Card Pair deals 2 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "concept-two-pair-hand-ring",
+    "Name": "Doubled Ring",
+    "Art": "",
+    "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-two-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 4 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "concept-three-of-a-kind-hand-ring",
+    "Name": "Trined Ring",
+    "Art": "",
+    "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-three-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "concept-full-house-hand-ring",
+    "Name": "Laden Ring",
+    "Art": "",
+    "Text": "A Card Full House deals 8 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-full-house" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 8 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "concept-four-of-a-kind-hand-ring",
+    "Name": "Quartered Ring",
+    "Art": "",
+    "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-four-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "concept-five-of-a-kind-hand-ring",
+    "Name": "Perfect Ring",
+    "Art": "",
+    "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-five-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 16 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "form-pair-hand-ring",
+    "Name": "Matched Ring",
+    "Art": "",
+    "Text": "A Form Pair deals 2 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "form-two-pair-hand-ring",
+    "Name": "Paired Ring",
+    "Art": "",
+    "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-two-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "form-three-of-a-kind-hand-ring",
+    "Name": "Forged Ring",
+    "Art": "",
+    "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-three-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "form-full-house-hand-ring",
+    "Name": "Armoury Ring",
+    "Art": "",
+    "Text": "A Form Full House deals 6 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-full-house" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "form-four-of-a-kind-hand-ring",
+    "Name": "Arsenal Ring",
+    "Art": "",
+    "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-four-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "form-five-of-a-kind-hand-ring",
+    "Name": "Panoply Ring",
+    "Art": "",
+    "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-five-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 12 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "element-pair-hand-ring",
+    "Name": "Kindred Ring",
+    "Art": "",
+    "Text": "A Elemental Pair deals 2 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "element-two-pair-hand-ring",
+    "Name": "Twinflame Ring",
+    "Art": "",
+    "Text": "A Elemental Two Pair deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-two-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "element-three-of-a-kind-hand-ring",
+    "Name": "Attuned Ring",
+    "Art": "",
+    "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-three-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "element-full-house-hand-ring",
+    "Name": "Convergent Ring",
+    "Art": "",
+    "Text": "A Elemental Full House deals 7 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-full-house" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "element-four-of-a-kind-hand-ring",
+    "Name": "Confluent Ring",
+    "Art": "",
+    "Text": "A Elemental Four of a Kind deals 7 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-four-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "element-five-of-a-kind-hand-ring",
+    "Name": "Elemental Ring",
+    "Art": "",
+    "Text": "A Elemental Five of a Kind deals 14 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-five-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 14 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "onslaught-ring",
     "Name": "Onslaught Ring",
     "Art": "",
@@ -421,7 +1392,7 @@
     "Name": "Warm Ring",
     "Art": "",
     "Text": "Fire cards cost 1 AP less.",
-    "Rarity": "common",
+    "Rarity": "rare",
     "Rules": [
       {
         "When": "card-cost",
@@ -435,7 +1406,7 @@
     "Name": "Cold Ring",
     "Art": "",
     "Text": "Ice cards cost 1 AP less.",
-    "Rarity": "common",
+    "Rarity": "rare",
     "Rules": [
       {
         "When": "card-cost",
@@ -449,7 +1420,7 @@
     "Name": "Static Ring",
     "Art": "",
     "Text": "Lightning cards cost 1 AP less.",
-    "Rarity": "common",
+    "Rarity": "rare",
     "Rules": [
       {
         "When": "card-cost",
@@ -463,7 +1434,7 @@
     "Name": "Dirty Ring",
     "Art": "",
     "Text": "Earth cards cost 1 AP less.",
-    "Rarity": "common",
+    "Rarity": "rare",
     "Rules": [
       {
         "When": "card-cost",
@@ -477,7 +1448,7 @@
     "Name": "Eerie Ring",
     "Art": "",
     "Text": "Arcane cards cost 1 AP less.",
-    "Rarity": "common",
+    "Rarity": "rare",
     "Rules": [
       {
         "When": "card-cost",
@@ -487,11 +1458,71 @@
     ]
   },
   {
+    "RingRecord": "whetted-ring",
+    "Name": "Whetted Ring",
+    "Art": "",
+    "Text": "Slash cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "hefted-ring",
+    "Name": "Hefted Ring",
+    "Art": "",
+    "Text": "Crush cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "tapered-ring",
+    "Name": "Tapered Ring",
+    "Art": "",
+    "Text": "Stab cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "braced-ring",
+    "Name": "Braced Ring",
+    "Art": "",
+    "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "defend" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      },
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "add-hp", "Amount": 15 }]
+      }
+    ]
+  },
+  {
     "RingRecord": "frozen-lightning-ring",
     "Name": "Frozen Lightning Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an ice card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -505,7 +1536,7 @@
     "Name": "Permafrost Ring",
     "Art": "",
     "Text": "Every earth card is dealt as an ice card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -519,7 +1550,7 @@
     "Name": "Frostbite Ring",
     "Art": "",
     "Text": "Every fire card is dealt as an ice card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -533,7 +1564,7 @@
     "Name": "Meltdown Ring",
     "Art": "",
     "Text": "Every ice card is dealt as a fire card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -547,7 +1578,7 @@
     "Name": "Firestorm Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as a fire card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -561,7 +1592,7 @@
     "Name": "Magma Ring",
     "Art": "",
     "Text": "Every earth card is dealt as a fire card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -575,7 +1606,7 @@
     "Name": "Thundersnow Ring",
     "Art": "",
     "Text": "Every ice card is dealt as a lightning card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -589,7 +1620,7 @@
     "Name": "Heat Lightning Ring",
     "Art": "",
     "Text": "Every fire card is dealt as a lightning card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -603,7 +1634,7 @@
     "Name": "Dust Storm Ring",
     "Art": "",
     "Text": "Every earth card is dealt as a lightning card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -617,7 +1648,7 @@
     "Name": "Glacier Ring",
     "Art": "",
     "Text": "Every ice card is dealt as an earth card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -631,7 +1662,7 @@
     "Name": "Obsidian Ring",
     "Art": "",
     "Text": "Every fire card is dealt as an earth card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -645,7 +1676,7 @@
     "Name": "Fulgurite Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an earth card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -659,7 +1690,7 @@
     "Name": "Witchfire Ring",
     "Art": "",
     "Text": "Every fire card is dealt as an arcane card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -673,7 +1704,7 @@
     "Name": "Runefrost Ring",
     "Art": "",
     "Text": "Every ice card is dealt as an arcane card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -687,7 +1718,7 @@
     "Name": "Spellbolt Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an arcane card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -701,7 +1732,7 @@
     "Name": "Leyline Ring",
     "Art": "",
     "Text": "Every earth card is dealt as an arcane card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -715,7 +1746,7 @@
     "Name": "Hexfire Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as a fire card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -729,7 +1760,7 @@
     "Name": "Hexfrost Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as an ice card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -743,7 +1774,7 @@
     "Name": "Hexbolt Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as a lightning card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -757,7 +1788,7 @@
     "Name": "Hexstone Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as a earth card.",
-    "Rarity": "common",
+    "Rarity": "uncommon",
     "Rules": [
       {
         "When": "card-drawn",
@@ -797,7 +1828,7 @@
     "Name": "Heart Ring",
     "Art": "",
     "Text": "+5 HP, and 5 more for every fight won.",
-    "Rarity": "uncommon",
+    "Rarity": "common",
     "Rules": [
       {
         "When": "fight-start",
@@ -806,6 +1837,221 @@
       {
         "When": "fight-won",
         "Then": [{ "Do": "grow-on-win", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "rampant-ring",
+    "Name": "Rampant Ring",
+    "Art": "",
+    "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "fight-start",
+        "Then": [{ "Do": "add-damage-per-vitae", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "weight-of-the-earth-ring",
+    "Name": "Weight of the Earth Ring",
+    "Face": "Earthweight",
+    "Art": "",
+    "Text": "Every earth crush card\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "earth", "Form": "crush" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "struck-by-lightning-ring",
+    "Name": "Struck by Lightning Ring",
+    "Face": "Lightningstruck",
+    "Art": "",
+    "Text": "Every lightning stab card\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "lightning", "Form": "stab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "sharp-as-ice-ring",
+    "Name": "Sharp as Ice Ring",
+    "Face": "Icesharp",
+    "Art": "",
+    "Text": "Every ice slash card\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "ice", "Form": "slash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "fire-of-life-ring",
+    "Name": "Fire of Life Ring",
+    "Face": "Firelife",
+    "Art": "",
+    "Text": "Fire cards gain 0.1x DMG\nfor every 10 vitae you hold.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "scale-damage-per-vitae", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "dual-wield-ring",
+    "Name": "Dual Wield Ring",
+    "Face": "Dualwield",
+    "Art": "",
+    "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-pair", "MinForms": 2 },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-pair", "MinForms": 2 },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "pairing-ring",
+    "Name": "Pairing Ring",
+    "Art": "",
+    "Text": "Every pair deals 2x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-pair" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-pair" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-pair" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "triplicate-form-ring",
+    "Name": "Triplicate Form Ring",
+    "Face": "Triplicate",
+    "Art": "",
+    "Text": "Every Three of a Kind\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-three-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-three-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-three-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "house-of-pain-ring",
+    "Name": "House of Pain Ring",
+    "Face": "Painhouse",
+    "Art": "",
+    "Text": "Every Full House\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-full-house" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-full-house" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-full-house" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "oak-ring",
+    "Name": "Oak Ring",
+    "Art": "",
+    "Text": "Every Four of a Kind\ndeals 4x DMG.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-four-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-four-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-four-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RingRecord": "pentacle-ring",
+    "Name": "Pentacle Ring",
+    "Art": "",
+    "Text": "Every Five of a Kind\ndeals 5x DMG.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-five-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-five-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-five-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
       }
     ]
   },

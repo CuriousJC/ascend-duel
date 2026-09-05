@@ -825,3 +825,515 @@ func TestARingThatResetsItselfDoesNotBankItsGrowth(t *testing.T) {
 		t.Error("a ring with no reset is not banked between fights")
 	}
 }
+
+// --- the hand bonus ----------------------------------------------------------------------------
+
+// handEventOf is the KindHand event one side produced, for the tests that read the blow's own sum.
+func handEventOf(t *testing.T, events []Event, side Side) Event {
+	t.Helper()
+
+	for _, e := range events {
+		if e.Kind == KindHand && e.Side == side {
+			return e
+		}
+	}
+	t.Fatalf("no hand event for %v", side)
+	return Event{}
+}
+
+func TestAHandRuleIsRefusedAnywhereButBlowFormed(t *testing.T) {
+	// **Only blow-formed knows what formed**, exactly as only blow-formed knows which card leads.
+	// A `Hand` predicate anywhere else would match nothing and read as a ring that does nothing.
+	pair, ok := HandIDForKey("concept-pair")
+	if !ok {
+		t.Fatal("the ladder has no concept-pair, so this test cannot say what it means")
+	}
+
+	refused(t, "hand at card-damage", RingRule{
+		When: MomentCardDamage,
+		If:   RingCondition{Hand: pair, HasHand: true},
+		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+	})
+	refused(t, "add-hand-damage at card-damage", RingRule{
+		When: MomentCardDamage,
+		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 5}},
+	})
+}
+
+func TestAHandRuleMayNotAlsoNameACard(t *testing.T) {
+	// **A hand is a fact about the whole blow and an element is a fact about one card**, so a rule
+	// carrying both is asking a question with no answer — which of the hand's cards would have to
+	// be fire? It is refused rather than resolved to one reading nobody wrote down.
+	pair, _ := HandIDForKey("concept-pair")
+
+	refused(t, "hand and element", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: pair, HasHand: true, Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 5}},
+	})
+}
+
+func TestAHandRingPaysOnlyItsOwnRung(t *testing.T) {
+	// **The predicate is the whole ring**, so the test that matters is the negative one: a ring
+	// naming Form Three of a Kind must be worth nothing on the turns that build something else.
+	// **Three of one concept, which is the rung three identical cards actually build.** Card
+	// Three of a Kind pays 250 where the form rung pays 150, and the matcher takes the best — so a
+	// test naming the form rung here would be describing a hand the game never forms.
+	trips, ok := HandIDForKey("concept-three-of-a-kind")
+	if !ok {
+		t.Fatal("the ladder has no concept-three-of-a-kind")
+	}
+	forged := ring(t, "forged", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: trips, HasHand: true},
+		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 3}},
+	})
+
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: forged})
+	slash := slashCard(t)
+	crush := crushCard(t)
+
+	// Three of one form is the rung the ring names.
+	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
+	trip := handEventOf(t, events, SideA)
+	if trip.HandBonus != 3 {
+		t.Errorf("a form three of a kind paid %d, want 3", trip.HandBonus)
+	}
+
+	// Two of one form and one of another cannot be that rung.
+	events, _, _ = resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash, crush}, nil, 1)
+	other := handEventOf(t, events, SideA)
+	if other.Hand == trips {
+		t.Fatal("two slashes and a crush formed a form three of a kind, so this test proves nothing")
+	}
+	if other.HandBonus != 0 {
+		t.Errorf("a hand that is not the named rung paid %d, want 0", other.HandBonus)
+	}
+}
+
+func TestTheHandBonusIsAddedBeforeTheMultiplier(t *testing.T) {
+	// **This is the whole design decision** *(owner's call, 2026-09-05)*: the bonus is a term of
+	// the base sum rather than something added to the answer, so a rung's bonus is worth more on
+	// the rung that pays more. A bonus applied after the multiplier would be the same ring at
+	// every rung, and nothing on screen would say which it was.
+	trips, _ := HandIDForKey("concept-three-of-a-kind")
+	forged := ring(t, "forged-order", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: trips, HasHand: true},
+		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 3}},
+	})
+
+	slash := slashCard(t)
+	cards := []Card{slash, slash, slash}
+
+	bare, _, _ := resolve(duelist(10, 5, 100), duelist(10, 5, 100000), cards, nil, 1)
+	worn, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRing{Ring: forged}),
+		duelist(10, 5, 100000), cards, nil, 1)
+
+	before := handEventOf(t, bare, SideA)
+	after := handEventOf(t, worn, SideA)
+
+	if after.Base != before.Base+3 {
+		t.Errorf("the bonus put %d into the base sum, want 3", after.Base-before.Base)
+	}
+	if want := scaleDamage(before.Base+3, after.Multiplier); after.Amount != want {
+		t.Errorf("the blow came to %d, want %d — the bonus is not being multiplied with the cards",
+			after.Amount, want)
+	}
+	if after.Amount == before.Amount+3 {
+		t.Error("the bonus landed after the multiplier, and it is meant to land before it")
+	}
+}
+
+func TestTwoHandRingsOnOneRungAdd(t *testing.T) {
+	// **Flat terms in a sum, so there is nothing to compound** — unlike the multipliers, where worn
+	// order decides the result. This is what makes the rung rings the one family whose order on the
+	// hand does not matter.
+	pair, _ := HandIDForKey("concept-pair")
+	rule := RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: pair, HasHand: true},
+		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 4}},
+	}
+	one := ring(t, "pairbonus-one", rule)
+	two := ring(t, "pairbonus-two", rule)
+
+	slash := slashCard(t)
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: one}).Wearing(WornRing{Ring: two})
+
+	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
+	e := handEventOf(t, events, SideA)
+	if e.HandBonus != 8 {
+		t.Errorf("two rings on one rung paid %d, want 8", e.HandBonus)
+	}
+	if !e.HandBonusSeats[0] || !e.HandBonusSeats[1] {
+		t.Error("both rings paid, so both seats have to be attributable")
+	}
+}
+
+// --- the held bonus ----------------------------------------------------------------------------
+
+func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
+	// **A held card is in neither pile the blow predicates name.** `Lead` is the first card played
+	// and `Hand` is the rung the played cards formed, so either beside this verb is a rule whose
+	// two halves are about different things.
+	pair, _ := HandIDForKey("concept-pair")
+
+	refused(t, "held and lead", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Lead: true},
+		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+	})
+	refused(t, "held and hand", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: pair, HasHand: true},
+		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+	})
+	refused(t, "held at card-damage", RingRule{
+		When: MomentCardDamage,
+		If:   RingCondition{Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+	})
+}
+
+func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
+	// **Once per match, not once per turn.** The whole point of the ring is that a second held
+	// fire card is worth as much as the first — a flat per-card term, which is what makes holding
+	// a colour a decision rather than a threshold.
+	smoulder := ring(t, "smoulder", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+	})
+
+	fire := Of(Strike, Fire)
+	ice := Of(Strike, Ice)
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: smoulder})
+
+	for _, tc := range []struct {
+		name string
+		held []Card
+		want int
+	}{
+		{"nothing held", nil, 0},
+		{"one fire held", []Card{fire}, 5},
+		{"two fire held", []Card{fire, fire}, 10},
+		{"the wrong colour held", []Card{ice, ice}, 0},
+		{"one of each", []Card{fire, ice}, 5},
+	} {
+		got, seats := HeldBonus(wearer.WornRings(), tc.held)
+		if got != tc.want {
+			t.Errorf("%s paid %d, want %d", tc.name, got, tc.want)
+		}
+		if paid := seats[0]; paid != (tc.want > 0) {
+			t.Errorf("%s attributed the bonus to seat 0 = %v, want %v", tc.name, paid, tc.want > 0)
+		}
+	}
+}
+
+func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
+	// **Through the real round**, because the seat is the thing being tested: the held hand is a
+	// parameter of ResolveRound that only the blow's own sum ever reads, and a verb wired to the
+	// wrong pile would still pass every unit test of HeldBonus.
+	smoulder := ring(t, "smoulder-round", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+	})
+
+	played := []Card{Of(Slash, Earth), Of(Slash, Earth)}
+	held := []Card{Of(Strike, Fire), Of(Strike, Fire)}
+
+	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
+		played, nil, held, nil, 1, nil)
+	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRing{Ring: smoulder}),
+		duelist(10, 5, 100000), played, nil, held, nil, 1, nil)
+
+	before := handEventOf(t, bare, SideA)
+	after := handEventOf(t, worn, SideA)
+
+	if after.HeldBonus != 10 {
+		t.Errorf("two held fire cards paid %d into the blow, want 10", after.HeldBonus)
+	}
+	if after.Base != before.Base+10 {
+		t.Errorf("the held bonus put %d into the base sum, want 10", after.Base-before.Base)
+	}
+	if want := scaleDamage(before.Base+10, after.Multiplier); after.Amount != want {
+		t.Errorf("the blow came to %d, want %d — the held bonus is not being multiplied with the cards",
+			after.Amount, want)
+	}
+}
+
+func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
+	// **It is a fact about the hand, not an event.** A card kept back is not spent, so the ring
+	// pays for it again next turn — which is what separates this from anything that fires once.
+	bedrock := ring(t, "bedrock", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Element: Earth, HasElement: true},
+		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+	})
+
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: bedrock})
+	played := []Card{Of(Slash, Fire), Of(Slash, Fire)}
+	held := []Card{Of(Strike, Earth)}
+
+	for round := 1; round <= 3; round++ {
+		events, _, _ := ResolveRoundHolding(wearer, duelist(10, 5, 100000),
+			played, nil, held, nil, round, nil)
+		e := handEventOf(t, events, SideA)
+		if e.HeldBonus != 5 {
+			t.Errorf("round %d paid %d for the same held card, want 5", round, e.HeldBonus)
+		}
+	}
+}
+
+// defendCardForTest is any shield card the registry holds, for the turn-taken rules that count them.
+func defendCardForTest(t *testing.T) Card {
+	t.Helper()
+
+	for id := ConceptID(0); int(id) < ConceptCount(); id++ {
+		if ConceptOf(id).Form == FormDefend {
+			return Of(id, Basic)
+		}
+	}
+	t.Fatal("no defend concept is registered")
+	return Card{}
+}
+
+// TestGrowPerCardCountsRatherThanFires. The whole difference between the two turn-taken growth
+// verbs: grow-on-turn takes one step for a turn holding any match, this one takes a step per match.
+// A ring worth the same for one shield as for three would be grow-on-turn under a longer name.
+func TestGrowPerCardCountsRatherThanFires(t *testing.T) {
+	id := ring(t, "ebbtest.perCard", RingRule{
+		When: MomentTurnTaken,
+		If:   RingCondition{Form: FormDefend, HasForm: true},
+		Then: []RingEffect{{Do: DoGrowPerCard, Amount: 20}},
+	})
+
+	shield := defendCardForTest(t)
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+
+	after := wearer.TurnTaken([]Card{shield, shield, shield, slashCard(t)})
+	if after.Rings[0].Grown != 60 {
+		t.Errorf("three shields grew the ring by %d, want 60", after.Rings[0].Grown)
+	}
+}
+
+// TestGrowPerCardIgnoresATurnWithNoMatch. A turn of pure attacks is not a step of zero, it is no
+// step at all — the same reading anyMatches gives grow-on-turn.
+func TestGrowPerCardIgnoresATurnWithNoMatch(t *testing.T) {
+	id := ring(t, "ebbtest.noMatch", RingRule{
+		When: MomentTurnTaken,
+		If:   RingCondition{Form: FormDefend, HasForm: true},
+		Then: []RingEffect{{Do: DoGrowPerCard, Amount: 20}},
+	})
+
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	if after := wearer.TurnTaken([]Card{slashCard(t)}); after.Rings[0].Grown != 0 {
+		t.Errorf("a turn with no shield in it grew the ring by %d, want 0", after.Rings[0].Grown)
+	}
+}
+
+// TestGrowPerCardIsRefusedWithNothingToCount. A per-card step with no predicate would count every
+// card of the turn, which is a thing the file cannot say it meant — and is grow-on-turn's job.
+func TestGrowPerCardIsRefusedWithNothingToCount(t *testing.T) {
+	refused(t, "perCardBare", RingRule{
+		When: MomentTurnTaken,
+		Then: []RingEffect{{Do: DoGrowPerCard, Amount: 20}},
+	})
+}
+
+// TestTheVitaeBonusReachesTheBlowAndIsMultiplied. Rampant's figure is a fact about the run, not
+// about a card, so it joins Base after every card term and is scaled with the rest of them.
+func TestTheVitaeBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
+	id := ring(t, "rampanttest.pays", RingRule{
+		When: MomentFightStart,
+		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+	})
+
+	slash := slashCard(t)
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer.Vitae = 30 // the purse session.Equip seeded the duel with
+
+	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
+	e := handEventOf(t, events, SideA)
+
+	if e.VitaeBonus != 30 {
+		t.Errorf("the purse paid %d, want 30", e.VitaeBonus)
+	}
+	if !e.VitaeBonusSeats[0] {
+		t.Error("the ring that pays has to be attributable, or the figure cannot fly from it")
+	}
+	if want := scaleDamage(e.Base, e.Multiplier); e.Amount != want {
+		t.Errorf("the blow landed %d where its own base and multiplier say %d", e.Amount, want)
+	}
+}
+
+// TestDamagePerVitaeIsAskedOfTheRingsAndNotTheDuelist. The seam that keeps the purse out of the
+// rules: combat reports the *rate*, and whoever knows what the run is carrying does the sum.
+func TestDamagePerVitaeIsAskedOfTheRingsAndNotTheDuelist(t *testing.T) {
+	one := ring(t, "rampanttest.rateOne", RingRule{
+		When: MomentFightStart,
+		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+	})
+	two := ring(t, "rampanttest.rateTwo", RingRule{
+		When: MomentFightStart,
+		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 2}},
+	})
+
+	worn := []WornRing{{Ring: one}, {Ring: two}}
+	if got := DamagePerVitae(worn); got != 3 {
+		t.Errorf("two rings rated %d a vitae between them, want 3", got)
+	}
+	if got := DamagePerVitae(nil); got != 0 {
+		t.Errorf("a bare duelist is rated %d a vitae, want 0", got)
+	}
+}
+
+// TestThePurseIsReReadEveryBlow. The correction that made Rampant right: vitae moves *during* a
+// fight — a card kept in hand pays one every turn it is held — so a ring reading the purse has to
+// be re-asked at each blow. A figure resolved once at fight-start pays a late turn at opening
+// prices, which is the bug this holds against.
+func TestThePurseIsReReadEveryBlow(t *testing.T) {
+	id := ring(t, "rampanttest.reread", RingRule{
+		When: MomentFightStart,
+		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+	})
+
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer.Vitae = 10
+	played := []Card{slashCard(t), slashCard(t)}
+	held := []Card{carrying(Jab, RiderVitaeInHand, 3)}
+
+	// **Riders fire before the blow**, by the design note in resolveTurn — so the 3 this turn's
+	// held card pays is already in the purse the blow reads. The opening balance of 10 therefore
+	// buys 13 on round one, and the bonus climbs by 3 a round after that.
+	for round, want := 1, 13; round <= 3; round, want = round+1, want+3 {
+		events, after, _ := ResolveRoundHolding(wearer, duelist(10, 5, 100000),
+			played, nil, held, nil, round, nil)
+
+		e := handEventOf(t, events, SideA)
+		if e.VitaeBonus != want {
+			t.Errorf("round %d paid %d on a purse of %d, want %d", round, e.VitaeBonus, wearer.Vitae, want)
+		}
+		wearer = after
+	}
+}
+
+// TestAHandScalerIsASecondMultiplierAndNotABiggerHand. The rule the owner set: `Multiplier` is the
+// ladder's own figure and a ring may not move it — the banner, the hand row and the sum all show
+// the rung the player actually built. What the ring does is scale the result afterwards.
+func TestAHandScalerIsASecondMultiplierAndNotABiggerHand(t *testing.T) {
+	pair, _ := HandIDForKey("concept-pair")
+	id := ring(t, "pairing", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: pair, HasHand: true},
+		Then: []RingEffect{{Do: DoScaleHandDamage, Amount: 200}},
+	})
+
+	slash := slashCard(t)
+	bare := duelist(10, 5, 100)
+	wearer := bare.Wearing(WornRing{Ring: id})
+
+	plain, _, _ := resolve(bare, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
+	scaled, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
+
+	was, now := handEventOf(t, plain, SideA), handEventOf(t, scaled, SideA)
+	if now.HandScale != 200 {
+		t.Errorf("the ring scaled the hand by %d, want 200", now.HandScale)
+	}
+	if now.Multiplier != was.Multiplier {
+		t.Errorf("the ring moved the hand's own multiplier from %d to %d, and it may not",
+			was.Multiplier, now.Multiplier)
+	}
+	if now.Base != was.Base {
+		t.Errorf("the ring moved Base from %d to %d, and it may only scale the result", was.Base, now.Base)
+	}
+	if now.Amount != was.Amount*2 {
+		t.Errorf("the blow landed %d against %d unworn, want double", now.Amount, was.Amount)
+	}
+	if !now.HandScaleSeats[0] {
+		t.Error("the ring that scaled has to be attributable, or the figure cannot fly from it")
+	}
+}
+
+// TestAHandScalerPaysOnlyItsOwnRung. Same guard the flat rung rings carry: the matcher reports one
+// rung, so a ring naming a different one is silent.
+func TestAHandScalerPaysOnlyItsOwnRung(t *testing.T) {
+	trips, _ := HandIDForKey("concept-three-of-a-kind")
+	id := ring(t, "tripsonly", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: trips, HasHand: true},
+		Then: []RingEffect{{Do: DoScaleHandDamage, Amount: 300}},
+	})
+
+	slash := slashCard(t)
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+
+	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
+	if e := handEventOf(t, events, SideA); e.HandScale != 100 {
+		t.Errorf("a pair paid a Three of a Kind ring %d, want the identity", e.HandScale)
+	}
+}
+
+// TestMinFormsCountsTheScoringSet. Dual Wield's predicate: a pair built from two different weapons
+// pays, and a pair of the same weapon does not.
+func TestMinFormsCountsTheScoringSet(t *testing.T) {
+	pair, _ := HandIDForKey("element-pair")
+	id := ring(t, "dualwield", RingRule{
+		When: MomentBlowFormed,
+		If:   RingCondition{Hand: pair, HasHand: true, MinForms: 2},
+		Then: []RingEffect{{Do: DoScaleHandDamage, Amount: 300}},
+	})
+
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+
+	// Two fire cards of different forms: an elemental pair covering two weapons.
+	mixed, _, _ := resolve(wearer, duelist(10, 5, 100000),
+		[]Card{Of(Slash, Fire), Of(Strike, Fire)}, nil, 1)
+	if e := handEventOf(t, mixed, SideA); e.HandScale != 300 {
+		t.Errorf("a pair of two different forms paid %d, want 300", e.HandScale)
+	}
+
+	// Two fire slashes are one form, whatever else they are.
+	same, _, _ := resolve(wearer, duelist(10, 5, 100000),
+		[]Card{Of(Slash, Fire), Of(Slash, Fire)}, nil, 1)
+	if e := handEventOf(t, same, SideA); e.HandScale != 100 {
+		t.Errorf("a pair of one form paid %d, want the identity", e.HandScale)
+	}
+}
+
+// TestMinFormsIsRefusedAnywhereButBlowFormed. Same seam Hand and Lead sit on: only one moment knows
+// what formed.
+func TestMinFormsIsRefusedAnywhereButBlowFormed(t *testing.T) {
+	refused(t, "minFormsAtCardDamage", RingRule{
+		When: MomentCardDamage,
+		If:   RingCondition{MinForms: 2},
+		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+	})
+}
+
+// TestTheVitaeScalerGrowsWithThePurse. Fire of Life: a percentage point a vitae, read against the
+// live purse rather than a figure fixed at the door.
+func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
+	id := ring(t, "fireoflife", RingRule{
+		When: MomentCardDamage,
+		If:   RingCondition{Element: Fire, HasElement: true},
+		Then: []RingEffect{{Do: DoScaleDamagePerVitae, Amount: 1}},
+	})
+
+	card := Of(Slash, Fire)
+	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+
+	bare := wearer.CardDamage(card)
+	wearer.Vitae = 50
+	if got, want := wearer.CardDamage(card), bare*150/100; got != want {
+		t.Errorf("a fire card on a purse of 50 dealt %d, want %d (%d at nothing held)", got, want, bare)
+	}
+
+	// And it says nothing about a card it does not name.
+	ice := Of(Slash, Ice)
+	if got := wearer.CardDamage(ice); got != duelist(10, 5, 100).CardDamage(ice) {
+		t.Errorf("an ice card was moved to %d by a fire ring", got)
+	}
+}

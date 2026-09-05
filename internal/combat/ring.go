@@ -263,13 +263,77 @@ const (
 	//
 	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
 	DoScaleHP
+
+	// DoAddHandDamage adds Amount flat to the blow's base sum when the hand named by the rule's
+	// `Hand` predicate is what formed.
+	//
+	// **It is added last and multiplied with everything else** *(owner's call, 2026-09-05)*. Every
+	// other term of the sum is a card; this one is the hand itself, so it joins after the cards are
+	// counted and before the multiplier is applied — which is what makes a rung's bonus worth more
+	// on the rung that pays more, without the ring saying so twice.
+	//
+	// **A blow forms exactly one hand**, so at most one rule per ring can fire, and two rings
+	// naming the same rung add rather than compound.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoAddHandDamage
+
+	// DoAddDamagePerHeld adds Amount to the blow for **every card still in the hand** that matches
+	// the rule's predicate — the cards kept back, not the cards played.
+	//
+	// **It is the one verb that pays for what a turn did not do** *(owner's call, 2026-09-05)*.
+	// Every other element and form ring pays for spending a card; this pays for holding one, so a
+	// run wearing both is being pulled in two directions on purpose.
+	//
+	// **The held hand is already something the rules see** — `blowDMG` reads it for the parasite
+	// riders — so this needed no new moment. It lands in the blow's base sum beside the hand's own
+	// term, and is multiplied with the cards for the same reason that one is.
+	//
+	// **Appended, because the enum is append-only**: the registry indexes by ordinal.
+	DoAddDamagePerHeld
+
+	// DoGrowPerCard adds Amount to **this ring's own accumulator once for every card of the turn
+	// the rule matched** — where DoGrowOnTurn takes one step for a turn holding any match at all.
+	//
+	// **Per card rather than per turn** *(owner's call, 2026-09-05)*, which is what lets a ring be
+	// worth more for defending twice than for defending once. It is the only turn-taken verb that
+	// counts rather than fires.
+	DoGrowPerCard
+
+	// DoAddDamagePerVitae adds Amount flat damage to every blow **for each vitae the run is
+	// carrying** — Rampant, which pays a duelist for not spending.
+	//
+	// **The rate is fixed at fight-start and the purse is not.** The verb sits at fight-start
+	// because that is when the rings are put on, but the figure it produces is re-asked at every
+	// blow against Duelist.Vitae, which moves during a fight. A ring resolved once at the door
+	// would pay a turn-three blow at turn-one prices.
+	DoAddDamagePerVitae
+
+	// DoScaleHandDamage scales **the blow** by Amount percent when it formed the rung the rule
+	// names — the rung rings that multiply, where add-hand-damage is the pair that adds a flat term.
+	//
+	// **It is a second multiplier, never a bigger hand** *(owner's call, 2026-09-05)*. `Multiplier`
+	// is the ladder's own figure and stays it, because the banner, the hand row and the sum all
+	// show the rung the player built; a ring that grew that number would make the ladder look
+	// wrong. The scaling is applied to the result instead, and drawn as its own term.
+	DoScaleHandDamage
+
+	// DoScaleDamagePerVitae scales a matching card's damage by **Amount percentage points for each
+	// vitae the run holds** — so 1 is +1% a vitae, which is the tenth of a multiplier per ten vitae
+	// Fire of Life is written as.
+	//
+	// **It reads Duelist.Vitae at the card**, like every other per-vitae rule, because the purse
+	// moves inside a fight.
+	DoScaleDamagePerVitae
 )
 
 // RingVerbs is every verb in a fixed order.
 func RingVerbs() []RingVerb {
 	return []RingVerb{DoAdjustCost, DoScaleDamage, DoApplyStatus, DoSetElement, DoAddDMG,
 		DoAddHP, DoGrowOnWin, DoScalePropagation, DoAdjustPicks, DoAdjustPrizeVitae, DoScaleHP,
-		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth}
+		DoEchoAttack, DoRepeatCard, DoDemoteCard, DoGrowOnHit, DoGrowOnTurn, DoResetGrowth,
+		DoAddHandDamage, DoAddDamagePerHeld, DoGrowPerCard, DoAddDamagePerVitae,
+		DoScaleHandDamage, DoScaleDamagePerVitae}
 }
 
 func (v RingVerb) String() string {
@@ -290,6 +354,14 @@ func (v RingVerb) String() string {
 		return "grow-on-hit"
 	case DoGrowOnTurn:
 		return "grow-on-turn"
+	case DoGrowPerCard:
+		return "grow-per-card"
+	case DoAddDamagePerVitae:
+		return "add-damage-per-vitae"
+	case DoScaleHandDamage:
+		return "scale-hand-damage"
+	case DoScaleDamagePerVitae:
+		return "scale-damage-per-vitae"
 	case DoResetGrowth:
 		return "reset-growth"
 	case DoScalePropagation:
@@ -306,6 +378,10 @@ func (v RingVerb) String() string {
 		return "repeat-card"
 	case DoDemoteCard:
 		return "demote-card"
+	case DoAddHandDamage:
+		return "add-hand-damage"
+	case DoAddDamagePerHeld:
+		return "add-damage-per-held"
 	default:
 		return "adjust-cost"
 	}
@@ -328,19 +404,19 @@ func verbMoment(v RingVerb) Moment {
 	switch v {
 	case DoAdjustCost:
 		return MomentCardCost
-	case DoScaleDamage:
+	case DoScaleDamage, DoScaleDamagePerVitae:
 		return MomentCardDamage
 	case DoApplyStatus, DoGrowOnHit:
 		return MomentAttackLands
-	case DoGrowOnTurn, DoResetGrowth:
+	case DoGrowOnTurn, DoResetGrowth, DoGrowPerCard:
 		return MomentTurnTaken
 	case DoSetElement:
 		return MomentCardDrawn
 	case DoDemoteCard:
 		return MomentDeckBuilt
-	case DoAddDMG, DoAddHP, DoScaleHP:
+	case DoAddDMG, DoAddHP, DoScaleHP, DoAddDamagePerVitae:
 		return MomentFightStart
-	case DoEchoAttack, DoRepeatCard:
+	case DoEchoAttack, DoRepeatCard, DoAddHandDamage, DoAddDamagePerHeld, DoScaleHandDamage:
 		return MomentBlowFormed
 	case DoGrowOnWin, DoScalePropagation:
 		return MomentFightWon
@@ -383,11 +459,35 @@ type RingCondition struct {
 	// **Only `blow-formed` knows which card leads**, so a rule setting this at any other moment is
 	// refused at registration — see checkRule.
 	Lead bool
+
+	// Hand narrows a rule to blows that formed one named rung of the ladder, and it is the second
+	// predicate that is not a fact about a card *(2026-09-05)*.
+	//
+	// **It is asked of the blow, never of a card**, so `Matches` does not read it: a rung is a
+	// property of the whole set, and a per-card test would have to answer "is this card part of
+	// the hand", which is a different question with a different answer. `HandBonus` is the one
+	// caller and it asks directly.
+	//
+	// **Only `blow-formed` knows what formed**, so a rule setting this at any other moment is
+	// refused at registration, exactly as Lead is.
+	Hand    HandID
+	HasHand bool
+
+	// MinForms narrows a rule to blows whose **scoring cards cover at least this many distinct
+	// forms** — Dual Wield, which pays for a pair built out of two different weapons.
+	//
+	// **The third predicate that is not a fact about a card** *(2026-09-05)*, and like Hand it is
+	// asked of the blow: `Matches` does not read it, because "how many forms are in this set" has
+	// no per-card answer. It is legal alongside `Hand` for the same reason — both narrow the same
+	// set — and refused anywhere but `blow-formed`, which is the only moment that knows what
+	// formed.
+	MinForms int
 }
 
 // Any reports whether this condition constrains anything at all.
 func (c RingCondition) Any() bool {
-	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead
+	return c.HasElement || c.HasForm || c.HasConcept || c.HasTier || c.Lead || c.HasHand ||
+		c.MinForms > 0
 }
 
 // Matches reports whether a card satisfies every predicate that is set. **Every one, not any** — two
@@ -484,11 +584,38 @@ func RegisterRing(key, name string, rules []RingRule) (RingID, error) {
 			return NoRing, fmt.Errorf("%s narrows a %s rule to the lead card, and only blow-formed knows which card leads",
 				key, rule.When)
 		}
+		if rule.If.HasHand && rule.When != MomentBlowFormed {
+			return NoRing, fmt.Errorf("%s narrows a %s rule to a hand, and only blow-formed knows what formed",
+				key, rule.When)
+		}
+		if rule.If.HasHand && (rule.If.HasElement || rule.If.HasForm || rule.If.HasConcept ||
+			rule.If.HasTier || rule.If.Lead) {
+			return NoRing, fmt.Errorf("%s narrows a rule by both a hand and a card, and a hand is a fact about the whole blow",
+				key)
+		}
 		if rule.If.HasConcept && (rule.If.Concept < 0 || int(rule.If.Concept) >= ConceptCount()) {
 			return NoRing, fmt.Errorf("%s names a concept the registry does not hold", key)
 		}
 
 		for _, e := range rule.Then {
+			// **A held card has no place in the blow**, so neither predicate about one applies:
+			// `Lead` names the blow's first *played* card and `Hand` names the rung the played
+			// cards formed. Either alongside this verb is a rule whose two halves are about
+			// different piles.
+			// Same seam as Hand: a form count is a fact about the set that formed, and only one
+			// moment knows what formed.
+			if rule.If.MinForms > 0 && rule.When != MomentBlowFormed {
+				return NoRing, fmt.Errorf("%s counts the forms of a blow at %s, and only %s knows what formed",
+					key, rule.When, MomentBlowFormed)
+			}
+			if e.Do == DoAddDamagePerHeld && (rule.If.Lead || rule.If.HasHand || rule.If.MinForms > 0) {
+				return NoRing, fmt.Errorf("%s pays per held card and also narrows by the blow, and a held card is in neither", key)
+			}
+			// A per-card step with nothing to count by is grow-on-turn wearing a longer name,
+			// and the two would then differ only by how many cards the turn happened to hold.
+			if e.Do == DoGrowPerCard && !rule.If.Any() {
+				return NoRing, fmt.Errorf("%s grows per card and names no card to count", key)
+			}
 			if want := verbMoment(e.Do); want != rule.When {
 				return NoRing, fmt.Errorf("%s does %s at %s, and %s belongs to %s",
 					key, e.Do, rule.When, e.Do, want)
@@ -730,6 +857,13 @@ func (d Duelist) CardDamage(c Card) int {
 		return 0
 	}
 	for _, e := range d.ringEffects(MomentCardDamage, c) {
+		// **The per-vitae scaler is the one that is not a plain percentage.** Its Amount is
+		// percentage points *per vitae*, read against the duelist's live purse, so it composes
+		// into the same left-to-right product as everything else rather than needing its own pass.
+		if e.Do == DoScaleDamagePerVitae {
+			dmg = dmg * (100 + e.Amount*d.Vitae) / 100
+			continue
+		}
 		dmg = dmg * e.Amount / 100
 	}
 	if dmg < 1 {
@@ -905,6 +1039,191 @@ func LandingSeats(worn []WornRing, card Card, lead bool) [MaxWornRings]bool {
 	return out
 }
 
+// HandBonus is the flat damage a worn set adds to a blow for the rung it formed, and which seats
+// are the reason.
+//
+// **It is asked of the hand and not of a card**, which is what separates it from every other
+// blow-formed verb: `repeat-card` and `echo-attack` both answer "what does this ring do to this
+// card", where this answers "what does this ring do because the turn built a Full House". That is
+// why `RingCondition.Hand` is read here rather than inside `Matches`.
+//
+// **Two rings naming one rung add.** They are flat terms in a sum, so there is nothing to compound
+// — unlike the multipliers, where worn order decides the result.
+//
+// The seats come back for the same reason `LandingSeats` reports them: the bonus is a term in the
+// bracket that no card produced, so without this the ring paying for it would sit still while its
+// own figure landed.
+// DamagePerVitae is the flat damage every blow gains for each vitae the run holds, summed over the
+// worn rings that say so.
+//
+// **It is the rate, not the payment.** The multiplication is done at each blow against the
+// duelist's live purse, because vitae moves inside a fight: a card kept in hand pays one. Asking
+// once at fight-start was the first version of this and it was wrong.
+func DamagePerVitae(worn []WornRing) int {
+	total := 0
+	for _, w := range worn {
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentFightStart {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do == DoAddDamagePerVitae {
+					total += e.Amount
+				}
+			}
+		}
+	}
+	return total
+}
+
+// seatsDoing is which worn seats carry a verb at all — the attribution a flat fight-start term
+// cannot recover from its own figure, since by the time a blow lands it is one number.
+func seatsDoing(worn []WornRing, do RingVerb) [MaxWornRings]bool {
+	var seats [MaxWornRings]bool
+	for seat, w := range worn {
+		if seat >= MaxWornRings {
+			break
+		}
+		for _, rule := range RingOf(w.Ring).Rules {
+			for _, e := range rule.Then {
+				if e.Do == do {
+					seats[seat] = true
+				}
+			}
+		}
+	}
+	return seats
+}
+
+// HandScale is what the worn rings multiply a blow by **after its hand multiplier has been
+// applied**, in percent, and which seats paid for it. 100 is the identity.
+//
+// **It is deliberately not folded into the hand's own multiplier.** That figure belongs to the
+// ladder and is what the banner and the hand row say; see DoScaleHandDamage.
+//
+// **Rings compound, left to right by seat**, like every other multiplier in the game: two 200 rings
+// on one rung are 4x rather than 3x, and which seat a ring sits in therefore matters exactly as
+// much as it does for the card scalers.
+//
+// **`cards` is the scoring set, not the turn** — it is what `MinForms` counts, so a card the turn
+// played that paid nothing into the hand is not a second form.
+func HandScale(worn []WornRing, hand HandID, cards []Card) (int, [MaxWornRings]bool) {
+	var seats [MaxWornRings]bool
+	pct := 100
+
+	if hand == HandNone {
+		return pct, seats
+	}
+	for seat, w := range worn {
+		if seat >= MaxWornRings {
+			break
+		}
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentBlowFormed {
+				continue
+			}
+			if rule.If.HasHand && rule.If.Hand != hand {
+				continue
+			}
+			if rule.If.MinForms > 0 && distinctForms(cards) < rule.If.MinForms {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do != DoScaleHandDamage {
+					continue
+				}
+				pct = pct * e.Amount / 100
+				seats[seat] = true
+			}
+		}
+	}
+	return pct, seats
+}
+
+// distinctForms is how many different forms a set of cards covers. **Defend counts like any other**
+// — a shield in the scoring set is a second weapon by this reckoning, and the rungs that can hold
+// one are the elemental and card hands rather than the form ones.
+func distinctForms(cards []Card) int {
+	// A fixed array rather than a map: this runs inside every blow, and a map here would be an
+	// allocation a round does not need. FormDefend is the last of the enum.
+	var seen [FormDefend + 1]bool
+	n := 0
+	for _, c := range cards {
+		f := c.Form()
+		if f == FormNone || int(f) >= len(seen) || seen[f] {
+			continue
+		}
+		seen[f] = true
+		n++
+	}
+	return n
+}
+
+func HandBonus(worn []WornRing, hand HandID) (int, [MaxWornRings]bool) {
+	var seats [MaxWornRings]bool
+	total := 0
+
+	if hand == HandNone {
+		return 0, seats
+	}
+	for seat, w := range worn {
+		if seat >= MaxWornRings {
+			break
+		}
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentBlowFormed || !rule.If.HasHand || rule.If.Hand != hand {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do != DoAddHandDamage {
+					continue
+				}
+				total += e.Amount
+				seats[seat] = true
+			}
+		}
+	}
+	return total, seats
+}
+
+// HeldBonus is the flat damage a worn set adds to a blow for the cards the turn **kept back**, and
+// which seats are the reason.
+//
+// **The predicate is matched against each held card**, so `{ Element: "fire" }` means "for every
+// fire card still in hand" and the amount is paid once per match. That is the same reading a
+// `card-damage` rule takes, applied to the other pile.
+//
+// **A card kept back is not spent**, so this pays again on every turn it is still being held — the
+// same property the parasite riders have, and for the same reason: it is a fact about the hand at
+// the moment the blow is added up rather than an event.
+func HeldBonus(worn []WornRing, held []Card) (int, [MaxWornRings]bool) {
+	var seats [MaxWornRings]bool
+	total := 0
+
+	for seat, w := range worn {
+		if seat >= MaxWornRings {
+			break
+		}
+		for _, rule := range RingOf(w.Ring).Rules {
+			if rule.When != MomentBlowFormed {
+				continue
+			}
+			for _, e := range rule.Then {
+				if e.Do != DoAddDamagePerHeld {
+					continue
+				}
+				for _, c := range held {
+					if rule.If.Matches(c) {
+						total += e.Amount
+						seats[seat] = true
+					}
+				}
+			}
+		}
+	}
+	return total, seats
+}
+
 // LandingsOf is how many times a card lands, and how, given what its wearer has on.
 //
 // **Two verbs land here and they stack in a fixed order** *(2026-08-22)*: `repeat-card` adds
@@ -1036,6 +1355,8 @@ func (d Duelist) TurnTaken(cards []Card) Duelist {
 				switch e.Do {
 				case DoGrowOnTurn:
 					step += e.Amount
+				case DoGrowPerCard:
+					step += e.Amount * countMatches(rule.If, cards)
 				case DoResetGrowth:
 					reset = true
 				}
@@ -1048,6 +1369,18 @@ func (d Duelist) TurnTaken(cards []Card) Duelist {
 		}
 	}
 	return d
+}
+
+// countMatches is how many cards of a turn satisfy a condition — the counting counterpart of
+// anyMatches, and the whole difference between grow-per-card and grow-on-turn.
+func countMatches(c RingCondition, cards []Card) int {
+	n := 0
+	for _, card := range cards {
+		if c.Matches(card) {
+			n++
+		}
+	}
+	return n
 }
 
 // anyMatches reports whether any card of a turn satisfies a condition. **Any rather than every**,
@@ -1256,7 +1589,7 @@ func Grows(id RingID) bool {
 	for _, rule := range RingOf(id).Rules {
 		for _, e := range rule.Then {
 			switch e.Do {
-			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit:
+			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard:
 				return true
 			}
 		}
@@ -1296,7 +1629,7 @@ func GrowthEffect(w WornRing) (RingEffect, bool) {
 	for _, rule := range RingOf(w.Ring).Rules {
 		for _, e := range rule.Then {
 			switch e.Do {
-			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoResetGrowth,
+			case DoGrowOnWin, DoGrowOnTurn, DoGrowOnHit, DoGrowPerCard, DoResetGrowth,
 				DoApplyStatus, DoSetElement:
 				continue
 			}

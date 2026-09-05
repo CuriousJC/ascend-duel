@@ -692,6 +692,18 @@ func resolveSoloAttacks(
 // line has to say. The individual attack cards are still announced — a slot that resolved has to
 // produce a beat — but the screen draws no sentence for them: five cards making one blow read as
 // five blows, which is the thing one-blow-per-turn was meant to stop saying.
+// scoringCards is the cards that formed the hand, in turn order. **The scoring set, not the turn**
+// — Blow.Cards already excludes an attack that paid nothing into the rung.
+func scoringCards(blow Blow, turn []Slot) []Card {
+	out := make([]Card, 0, len(blow.Cards))
+	for _, i := range blow.Cards {
+		if i >= 0 && i < len(turn) {
+			out = append(out, turn[i].Card)
+		}
+	}
+	return out
+}
+
 func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, round int) (Event, Duelist) {
 	e := Event{
 		Kind:       KindHand,
@@ -775,10 +787,46 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 
 	lead := turn[blow.Cards[0]].Card
 
+	// **The hand's own term is added last, and it is inside Base** *(owner's call, 2026-09-05)*.
+	// Every term above is a card; this one is the rung the turn built, so it lands after the cards
+	// are counted and before the multiplier — which is what makes it read as damage the *hand*
+	// contributed rather than as damage a ring moved on a card.
+	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRings(), blow.Hand.ID)
+	e.Base += e.HandBonus
+
+	// **And the cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
+	// is a term the hand contributed rather than a number a ring moved on a card.
+	e.HeldBonus, e.HeldBonusSeats = HeldBonus(actor.WornRings(), held)
+	e.Base += e.HeldBonus
+
+	// **And the purse pays last of the three.** It is not a card, not the rung and not the cards
+	// kept back — it is a fact about the run standing behind the duelist, so it joins the sum after
+	// everything the turn itself did and is multiplied with the rest.
+	//
+	// **Read at the blow, never cached** *(owner's call, 2026-09-05)*. The purse moves during a
+	// fight, so a figure resolved at fight-start would be a turn-three blow paid at turn-one prices.
+	e.VitaeBonus, e.VitaeBonusSeats = DamagePerVitae(actor.WornRings())*actor.Vitae,
+		seatsDoing(actor.WornRings(), DoAddDamagePerVitae)
+	e.Base += e.VitaeBonus
+
+	// **A rung ring is a second multiplier, never a bigger hand** *(owner's call, 2026-09-05)*.
+	// `Multiplier` is the ladder's own figure and stays it — the banner, the hand row and the sum
+	// all show the rung the player actually built. What a ring adds is another term in the
+	// arithmetic, applied after it. Folding the two into one number was the first version of this
+	// and it made a ring look like the hand having changed.
+	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRings(), blow.Hand.ID, scoringCards(blow, turn))
+
 	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
 	// hand is worth a proportion of what its own cards deal, so a Pair of Lunges is worth more
 	// than a Pair of Jabs by exactly the margin the cards themselves are worth.
 	e.Amount = scaleDamage(e.Base, blow.Multiplier)
+
+	// **And the ring's own multiplier last**, as a second scaling rather than a bigger first one.
+	// Two steps rather than one product, so the figure the player is shown at each stage is the
+	// figure the rules used.
+	if e.HandScale != 0 && e.HandScale != 100 {
+		e.Amount = scaleDamage(e.Amount, e.HandScale)
+	}
 
 	e.Action = lead.Concept
 	e.Element = lead.Element
@@ -859,6 +907,11 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 			Amount:  paid,
 			Round:   round,
 		})
+
+		// **The duelist's own copy of the purse moves with the announcement**, so a later turn of
+		// this fight reads what this one paid. The run's figure is still the screen's to add — see
+		// Duelist.Vitae, which says why there are two.
+		actor.Vitae += paid
 	}
 	return events, actor
 }

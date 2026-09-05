@@ -54,6 +54,16 @@ type Duelist struct {
 	MaxLife     int
 	CurrentLife int
 
+	// Vitae is the purse the run behind this duelist is carrying, **live for the length of the
+	// fight**: seeded by session.Equip and stepped by every KindVitae the round announces.
+	//
+	// **The rules hold a copy, not the purse itself** *(owner's call, 2026-09-05)*. A rider paying
+	// vitae for a card kept in hand is still announced rather than applied — the run's own figure
+	// is the screen's to move — but a ring that reads the purse has to see what an earlier turn of
+	// the same fight paid, so a duel cannot be handed one number at fight-start and left with it.
+	// The copy is rebuilt on the next Equip, so it can only ever drift inside one fight.
+	Vitae int
+
 	// Defends is the percentage guards this duelist has raised and not yet spent, and DefendCount
 	// is how many of the array is in use.
 	//

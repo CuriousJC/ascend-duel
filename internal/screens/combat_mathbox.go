@@ -570,6 +570,55 @@ func mathScript(e combat.Event) []mathItem {
 		}
 	}
 
+	// **The hand's own term, last of the additions and in the ground's own ink** *(owner's call,
+	// 2026-09-05)*. Every figure above it is a card's, wearing that card's element; this one is
+	// paid by the rung the turn built, so it takes the ink the table is written in — the same
+	// colour a card's figure falls back to — and reads as one more thing adding into the sum
+	// rather than as a number a ring moved on something.
+	//
+	// **It is deliberately not in the ring pink.** `boostInk` means "a ring multiplied this", and
+	// this is not a multiplication of anything on the line: it is its own term. It still flies out
+	// of the ring that paid it, because every figure in this box comes from the thing that produced
+	// it — see ringNote, which draws the same conclusion the other way.
+	if e.HandBonus != 0 {
+		items = append(items, mathOperator("+"), mathItem{
+			text:     strconv.Itoa(e.HandBonus),
+			size:     mathTermSize,
+			tint:     groundInk,
+			fly:      true,
+			ringSeat: handBonusSeat(e),
+			t:        newTravel(0, mathTermTicks),
+		})
+	}
+
+	// **And the cards kept back pay after the ones spent**, on the same terms as the rung's own
+	// term above: its own figure, the ground's ink, flying out of the ring that paid it. Two terms
+	// rather than one merged figure, because they answer different questions — what the hand
+	// formed, and what it is still holding.
+	if e.HeldBonus != 0 {
+		items = append(items, mathOperator("+"), mathItem{
+			text:     strconv.Itoa(e.HeldBonus),
+			size:     mathTermSize,
+			tint:     groundInk,
+			fly:      true,
+			ringSeat: firstSeat(e.HeldBonusSeats),
+			t:        newTravel(0, mathTermTicks),
+		})
+	}
+
+	// **And the purse, third and last of the flat terms.** Same ink and same flight as the other
+	// two: it is a figure a ring put into the sum, not a number the cards carried.
+	if e.VitaeBonus != 0 {
+		items = append(items, mathOperator("+"), mathItem{
+			text:     strconv.Itoa(e.VitaeBonus),
+			size:     mathTermSize,
+			tint:     groundInk,
+			fly:      true,
+			ringSeat: firstSeat(e.VitaeBonusSeats),
+			t:        newTravel(0, mathTermTicks),
+		})
+	}
+
 	// **The multiplier is always shown, the identity included** *(2026-08-19, owner's call)*. It
 	// was dropped at `x 1` on the argument that `20 x 1 = 20` is a sum with nothing in it — true
 	// of the arithmetic and wrong about the game: **hands are going to be upgradable**, so the
@@ -590,12 +639,48 @@ func mathScript(e combat.Event) []mathItem {
 		t:         newTravel(0, mathTermTicks),
 	})
 
+	// **A rung ring is its own multiplier in the sum, after the hand's** *(owner's call,
+	// 2026-09-05)*. It is deliberately not folded into the figure beside it: the hand's number is
+	// the rung the player built and is what the banner and the ladder say, so a ring that quietly
+	// grew it would make the ladder look wrong. In the pane's pink and flying out of the ring that
+	// paid, like every other figure a ring put in this box.
+	if e.HandScale != 0 && e.HandScale != 100 {
+		items = append(items, mathOperator("x"), mathItem{
+			text:     handMultiplierText(e.HandScale),
+			size:     mathTermSize,
+			tint:     paneEdge,
+			fly:      true,
+			ringSeat: firstSeat(e.HandScaleSeats),
+			t:        newTravel(0, mathTermTicks),
+		})
+	}
+
 	return append(items, mathOperator("="), mathItem{
 		text: strconv.Itoa(e.Amount),
 		size: mathTotalSize,
 		tint: verbInkFor(combat.CategoryAttack),
 		t:    newTravel(0, mathTotalTicks),
 	})
+}
+
+// handBonusSeat is which worn seat the hand bonus flies out of: the first ring that paid into it,
+// counting from the left, or 0 for none.
+//
+// **The leftmost of several, rather than all of them.** Two rings naming one rung add into a single
+// term — there is nothing to split — so one figure leaves one card, and worn order is the only
+// ordering the player can see. The alternative is a term with two origins, which would have to be
+// drawn as two figures that then merge, and that is a second animation for a case the shelf makes
+// rare.
+func handBonusSeat(e combat.Event) int { return firstSeat(e.HandBonusSeats) }
+
+// firstSeat is the leftmost worn seat in a set of contributors, as a 1-based ringSeat, or 0.
+func firstSeat(paid [combat.MaxWornRings]bool) int {
+	for seat, did := range paid {
+		if did {
+			return seat + 1
+		}
+	}
+	return 0
 }
 
 // ringNote is the little multiplier one ring put on one term, or nil when that ring did not fire.

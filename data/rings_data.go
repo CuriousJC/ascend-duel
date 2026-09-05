@@ -46,6 +46,10 @@ type RingData struct {
 	// card face carries FaceName instead**, which is this without the trailing "Ring".
 	Name string `json:"Name"`
 
+	// Face overrides FaceName's derivation for a name the trim cannot shorten enough. Empty on
+	// almost every record, and it should stay that way — see FaceName.
+	Face string `json:"Face,omitempty"`
+
 	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the
 	// default ring face** — see ArtKey; an unknown name draws a ring with no artwork and logs
 	// once, the same choice the enemy portraits make, and for the same reason: a card with a
@@ -117,6 +121,17 @@ type RingIfData struct {
 	// **A concept ring is a much narrower object than a form ring** and pricing them alike is a
 	// mistake waiting to happen: Striker covers 4 cards where Keen covers 12.
 	Concept string `json:"Concept,omitempty"`
+
+	// Hand names one rung of the ladder by its `hands.json` key — `concept-full-house`. It narrows
+	// the rule to blows that formed exactly that rung.
+	//
+	// **A key rather than the id, for the reason a concept is a label**: `HandID` is a number in a
+	// file that outlives the build that wrote it. Meaningful at `blow-formed` and refused anywhere
+	// else, and refused alongside any card predicate — a hand is a fact about the whole blow.
+	Hand string `json:"Hand,omitempty"`
+
+	// MinForms is how many distinct forms the blow's scoring cards must cover.
+	MinForms int `json:"MinForms,omitempty"`
 }
 
 // RingEffectData is one entry in a rule's `Then`. Which fields mean anything depends on `Do`, the same
@@ -178,7 +193,15 @@ func (r RingData) ArtKey() string {
 //
 // A record named only "Ring" keeps it, since a card with no name on it is worse than a
 // redundant one.
+//
+// **`Face` overrides the trim outright**, for the one case the derivation cannot reach: a name
+// whose punctuation makes it a word too long for the card. It is an override rather than a
+// replacement — a record without one still derives, so this is not a second place every name is
+// written down.
 func (r RingData) FaceName() string {
+	if r.Face != "" {
+		return r.Face
+	}
 	short := strings.TrimSpace(strings.TrimSuffix(r.Name, "Ring"))
 	if short == "" {
 		return r.Name

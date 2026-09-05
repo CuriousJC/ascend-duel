@@ -39,7 +39,7 @@ import (
 const (
 	// The button: S, on the square every other corner toggle takes.
 	pouchToggleLabel = "S"
-	pouchToggleText  = 30
+	pouchToggleText  = 60
 
 	// Where the stone cards stand inside the panel, as a percentage of its height. **Above
 	// centre**, because the two tabs hang below the cards and need the room under them.
@@ -51,7 +51,7 @@ const (
 
 	// The two tabs that hang under an armed stone, side by side. **Narrower than the worn row's
 	// single sell tab, because there are two of them** — together they come to about its width.
-	pouchTabWidth  = 92
+	pouchTabWidth  = 170
 	pouchTabHeight = 30
 	pouchTabGap    = 8
 
@@ -126,14 +126,14 @@ func (t *pouchToggle) init() {
 	if t.use != nil {
 		return
 	}
-	t.use = models.NewButton(pouchTabWidth, pouchTabHeight, "Use",
+	t.use = models.NewButton(pouchTabWidth, pouchTabHeight, "USE",
 		func() { t.doing = pouchUse })
 	// **Green, because spending a stone is what the panel is for.** The tab beside it wears the
 	// crimson every control on this screen that cannot be taken back wears.
 	t.use.BaseColor = color.RGBA{R: 46, G: 150, B: 70, A: 255}
 	t.use.TextSize = sellTabTextSize
 
-	t.sell = models.NewButton(pouchTabWidth, pouchTabHeight, "Sell",
+	t.sell = models.NewButton(pouchTabWidth, pouchTabHeight, "SELL",
 		func() { t.doing = pouchSell })
 	t.sell.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
 	t.sell.TextSize = sellTabTextSize

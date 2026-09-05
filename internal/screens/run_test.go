@@ -376,17 +376,12 @@ func TestTheSplashLeavesByItselfWithNothingToSay(t *testing.T) {
 }
 
 // TestEveryEndingHasWordsForIt keeps the two constants and the page's phrase table in step. An
-// ending with no entry still draws its numbers, but it loses the sentence — which is a silent
+// ending with no entry still draws its numbers, but it loses its heading — which is a silent
 // downgrade rather than a failure, so this is what notices.
 func TestEveryEndingHasWordsForIt(t *testing.T) {
 	for _, ending := range []string{session.EndedInDefeat, session.EndedByChoice} {
-		w, ok := runOverWords[ending]
-		if !ok {
+		if runOverWords[ending] == "" {
 			t.Errorf("no words for the ending %q", ending)
-			continue
-		}
-		if w.title == "" || w.how == "" {
-			t.Errorf("the ending %q is missing a title or a line", ending)
 		}
 	}
 }

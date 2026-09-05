@@ -95,8 +95,8 @@ const (
 	proseLineGap = 42
 
 	offerButtonsPct   = 88
-	offerButtonWidth  = 220
-	offerButtonHeight = 56
+	offerButtonWidth  = 400
+	offerButtonHeight = 76
 )
 
 // stage is how far through the choice the player has got.
@@ -112,11 +112,6 @@ const (
 
 	// pickCard: a worm is chosen, and the hand it applies to is dealt.
 	pickCard
-
-	// morph: a card is chosen and the screen shows **what it would become**, before and after,
-	// with nothing committed. Nothing on this screen may surprise the player: a worm reads as a
-	// gift and the whole reason to show the result first is that some of them are trades.
-	morph
 
 	// settled: the alteration is taken and the new card is shown alone, so the thing that was won
 	// is looked at before it disappears into a deck of forty-eight.
@@ -139,10 +134,10 @@ var (
 	// thing was *won* and has come to you.
 	settleFlightTicks = beat(1, 1)
 
-	// morphHoldTicks is how long the finished card is held before the screen leaves. **Long enough
-	// to read, short enough not to need a button** — the click that took the worm is the last
-	// input the player has to make.
-	morphHoldTicks = beat(4, 1)
+	// settledHoldTicks is how long the finished card is held before the screen leaves. **Long
+	// enough to read, short enough not to need a button** — the click that picked the card is the
+	// last input the player has to make.
+	settledHoldTicks = beat(4, 1)
 )
 
 // PostBattleScene offers one alteration to the run deck.
@@ -173,46 +168,31 @@ type PostBattleScene struct {
 	// player is thinking about their build.
 	ringDrag cardDrag
 
-	// deck is the D button in the corner and the panel behind it. **A worm is a deck edit, and
-	// until 2026-08-22 this screen was the one place a deck could be changed without being able
-	// to look at it** — see deckpanel.go, and TODO.md, which carried the extraction.
-	deck deckToggle
-
-	// hands is the C button beside it. A worm changes what hands the deck can build, which is the
-	// thing this screen is asking the player to decide about. See handspanel.go.
-	hands handsToggle
-
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
 	// removed. It takes neither worm and pays nothing extra — the win has already paid — so it is
 	// an exit rather than a third choice, which is exactly why it is not a card.
-	backButton *models.Button
-	takeButton *models.Button
 	skipButton *models.Button
 
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
 
-	// aimed is which offered card the worm is pointed at while the morph is shown, and before/after
-	// are what it looks like on each side of the change. **Computed once, when the card is picked**
-	// rather than every frame: `preview` runs the worm against a throwaway copy of the run, and
-	// doing that in Draw would be a screen that alters the deck sixty times a second.
-	aimed  int
-	before combat.Card
-	after  combat.Card
+	// aimed is which offered card the worm was pointed at, and after is what it became.
+	// **Computed once, when the card is picked** rather than every frame: the worm is run against a
+	// throwaway copy of the run, and doing that in Draw would be a screen that alters the deck
+	// sixty times a second.
+	aimed int
+	after combat.Card
 
-	// removes is a preview that has no "after" card, because the card is gone. Drawn as an empty
+	// removes says the alteration has no "after" card, because the card is gone. Drawn as an empty
 	// seat rather than as a second card.
 	removes bool
 
 	// held counts the settled stage down, and it does not start until the flight has landed.
 	held int
 
-	// skipping is the Skip button's request, consumed by Update for the reason taking is.
+	// skipping is the Skip button's request, consumed by Update — a button's OnClick reaches no
+	// global state, and leaving the screen needs it.
 	skipping bool
-
-	// taking is the Take button's request, consumed by Update — a button's OnClick reaches no
-	// global state, and the flight it starts needs the layout.
-	taking bool
 
 	// arrival is the won card's journey to the middle, and arrivedFrom is the seat it set off
 	// from — a prize's place in the row, or the morph's after-slot.
@@ -243,15 +223,8 @@ type PostBattleScene struct {
 
 // Init deals both offers. **Re-entered on every visit**, because each fight earns its own.
 func (s *PostBattleScene) Init(gs *state.GlobalState) {
-	if s.backButton == nil {
-		s.backButton = models.NewButton(offerButtonWidth, offerButtonHeight, "Back", s.back)
-		s.backButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
-
-		s.takeButton = models.NewButton(offerButtonWidth, offerButtonHeight, "Take it",
-			func() { s.taking = true })
-		s.takeButton.BaseColor = color.RGBA{R: 90, G: 170, B: 100, A: 255}
-
-		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "Let them escape",
+	if s.skipButton == nil {
+		s.skipButton = models.NewButton(offerButtonWidth, offerButtonHeight, "LET THEM ESCAPE",
 			func() { s.skipping = true })
 		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
 	}
@@ -259,7 +232,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.chosen, s.aimed = -1, -1
 	s.stage = narrate
 	s.removes, s.held = false, 0
-	s.arrival, s.arrivedFrom, s.taking = travel{}, image.Rectangle{}, false
+	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
 	s.entry = make([]travel, len(s.prizes))
@@ -274,8 +247,6 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	trace.Logf("postbattle", "after fight %d: prizes %v, %d cards of %d, %d to take",
 		gs.Run.Fight(), prizeNames(s.prizes), len(s.offer), gs.Run.Size(), s.picksLeft)
 
-	s.deck.init()
-	s.hands.init(handsCornerPlace)
 }
 
 func prizeNames(ps []prize) []string {
@@ -361,21 +332,7 @@ func sortInts(v []int) {
 
 func (s *PostBattleScene) place(gs *state.GlobalState) {
 	y := gs.PctY(offerButtonsPct)
-	s.backButton.ScreenX, s.backButton.ScreenY = gs.PctX(50), y
 	s.skipButton.ScreenX, s.skipButton.ScreenY = gs.PctX(50), y
-	// The morph's two buttons are a pair, so Back moves in beside Take rather than staying where
-	// it sits under the card row. Set at draw time in morphButtons.
-}
-
-// morphButtons puts Back and Take side by side, centred, for the stage where they are the only
-// two controls. Skip is not offered there: the choice at that point is take it or step back, and a
-// third exit reading "take nothing" beside a card you are looking at is a way to lose a reward by
-// misreading a button.
-func (s *PostBattleScene) morphButtons(gs *state.GlobalState) {
-	step := offerButtonWidth + 24
-	y := gs.PctY(offerButtonsPct)
-	s.backButton.ScreenX, s.backButton.ScreenY = gs.PctX(50)-step/2, y
-	s.takeButton.ScreenX, s.takeButton.ScreenY = gs.PctX(50)+step/2, y
 }
 
 func (s *PostBattleScene) Update(gs *state.GlobalState) error {
@@ -394,20 +351,6 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		if s.prose.finished() {
 			s.beginOffer(gs)
 		}
-		return nil
-	}
-
-	// **The deck panel is available from the moment the offer is made**, and while it is up the
-	// screen behind it is frozen — including the settled stage's own countdown, which is the rule
-	// the fight log follows on the combat screen: a screen changing out from under an open panel
-	// is reading material snatched away. It is deliberately not offered during the narration,
-	// which is the whole screen while it runs.
-	s.deck.block(s.hands.open)
-	s.hands.block(s.deck.open)
-	if s.deck.update(gs, ownedContents(gs)) {
-		return nil
-	}
-	if s.hands.update(gs) {
 		return nil
 	}
 
@@ -446,12 +389,6 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	if s.taking {
-		s.taking = false
-		s.take(gs)
-		return nil
-	}
-
 	// The worms' arrival. **They are clickable while they fly** — a card is where its layout
 	// function says it is, and the flight is a ghost over that seat, the same rule the combat
 	// screen's hand follows.
@@ -467,11 +404,6 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		systems.UpdateButton(gs, s.skipButton)
 	case pickCard:
 		s.place(gs)
-		systems.UpdateButton(gs, s.backButton)
-	case morph:
-		s.morphButtons(gs)
-		systems.UpdateButton(gs, s.takeButton)
-		systems.UpdateButton(gs, s.backButton)
 	}
 
 	s.hover(gs)
@@ -501,16 +433,6 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	}
 
 	switch s.stage {
-	case pickWorm:
-		for i, p := range s.prizes {
-			seat := s.wormSlot(gs, i)
-			if p.taken || !at.In(seat) {
-				continue
-			}
-			title, lines := wormTip(p.worm)
-			s.tip.Point(seat, title, lines)
-			return
-		}
 	case pickCard:
 		for i, deckIndex := range s.offer {
 			seat := s.offerSlot(gs, i)
@@ -521,19 +443,6 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 			title, lines := cardTip(card, heldByRun(gs, card))
 			s.tip.Point(seat, title, lines)
 			return
-		}
-	case morph:
-		// **Both halves of the preview**, because the question a morph asks is what changed — and
-		// the answer is two cards' worth of arithmetic side by side.
-		beforeAt, afterAt := morphSlots(gs)
-		if at.In(beforeAt) {
-			title, lines := cardTip(s.before, heldByRun(gs, s.before))
-			s.tip.Point(beforeAt, title, lines)
-			return
-		}
-		if !s.removes && at.In(afterAt) {
-			title, lines := cardTip(s.after, heldByRun(gs, s.after))
-			s.tip.Point(afterAt, title, lines)
 		}
 	}
 }
@@ -599,7 +508,7 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 	s.chosen, s.aimed = -1, -1
 	s.stage = pickWorm
 	s.removes, s.held = false, 0
-	s.arrival, s.arrivedFrom, s.taking = travel{}, image.Rectangle{}, false
+	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.offer = dealOffer(gs)
 	s.place(gs)
@@ -615,7 +524,7 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 // the card lands, so a slower flight is a longer look rather than a card arriving late to a
 // countdown already running.
 func (s *PostBattleScene) settle(gs *state.GlobalState, from image.Rectangle) {
-	s.stage, s.held = settled, morphHoldTicks
+	s.stage, s.held = settled, settledHoldTicks
 	s.arrival = newTravel(0, settleFlightTicks)
 	s.arrivedFrom = from
 }
@@ -633,8 +542,7 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	}
 	deckIndex := s.offer[slot]
 
-	before, ok := gs.Run.Card(deckIndex)
-	if !ok || !gs.Run.CanApply(worm, deckIndex) {
+	if _, ok := gs.Run.Card(deckIndex); !ok || !gs.Run.CanApply(worm, deckIndex) {
 		// **A worm that would change nothing is refused rather than shown** — a Smash cannot be
 		// promoted and a defend card has no ladder — so the click does nothing and the card stays
 		// pickable. Saying no here is why CanApply exists.
@@ -646,18 +554,26 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 		return
 	}
 
-	s.aimed, s.before, s.stage = slot, before, morph
+	s.aimed = slot
 	s.removes = worm.Target == session.TargetRemove
 
-	if worm.Target == session.TargetDuplicate {
+	switch {
+	case worm.Target == session.TargetDuplicate:
 		// The copy is appended, so the card that arrived is the last one — and it is the *new*
 		// card that is the reward, even though it is identical to the one that was picked.
 		s.after, _ = trial.Card(trial.Size() - 1)
-		return
-	}
-	if !s.removes {
+	case !s.removes:
 		s.after, _ = trial.Card(deckIndex)
 	}
+
+	// **The click is the commitment** *(owner's call, 2026-09-05)*. It was a preview with Take and
+	// Back under it; picking the card is now the whole decision, and what follows is the result
+	// being shown rather than a question about it. The deck is still not touched until the settled
+	// stage is over — see applyNow — so the card on screen is drawn from the trial run above.
+	s.pendingWhat = fmt.Sprintf("%s on card %d", worm.Record, deckIndex)
+	s.applyNow = func(run *session.Session) { run.Apply(worm, deckIndex) }
+	s.tip.Forget()
+	s.settle(gs, s.offerSlot(gs, slot))
 }
 
 // wormSlot is where one offered worm is drawn, and the rectangle it is clicked in.
@@ -691,36 +607,6 @@ func (s *PostBattleScene) offerSlot(gs *state.GlobalState, i int) image.Rectangl
 	left := gs.PctX(50) - width/2
 	top := gs.PctY(offerRowPct)
 	return image.Rect(left+i*pitch, top, left+i*pitch+cardWidth, top+cardHeight)
-}
-
-// take commits the previewed alteration. **It does not leave the screen** — the result is held on
-// the settled stage first, because the card that was won disappearing straight into a deck of
-// forty-eight is a reward the player never sees.
-func (s *PostBattleScene) take(gs *state.GlobalState) {
-	worm, ok := s.chosenWorm()
-	if !ok || s.aimed < 0 || s.aimed >= len(s.offer) {
-		return
-	}
-	deckIndex := s.offer[s.aimed]
-
-	s.pendingWhat = fmt.Sprintf("%s on card %d", worm.Record, deckIndex)
-	s.applyNow = func(run *session.Session) { run.Apply(worm, deckIndex) }
-
-	// It sets off from the after-slot it has been sitting in, so the card the player has been
-	// looking at is the card that travels.
-	_, afterAt := morphSlots(gs)
-	s.settle(gs, afterAt)
-}
-
-// back steps one stage out: the morph returns to the cards, and the cards return to the worms.
-// **Nothing is committed until the take**, so a player who picked up the wrong worm or aimed it at
-// the wrong card is never stuck with either.
-func (s *PostBattleScene) back() {
-	if s.stage == morph {
-		s.aimed, s.stage = -1, pickCard
-		return
-	}
-	s.chosen, s.stage = -1, pickWorm
 }
 
 func (s *PostBattleScene) chosenPrize() (prize, bool) {
@@ -759,12 +645,6 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		return
 	}
 
-	// **Deferred before the tooltip, so it is drawn after it.** The panel covers the screen and
-	// carries a tooltip of its own; anything of this screen's drawn on top of it would be a
-	// control the player could believe was live.
-	defer s.deck.draw(gs, screen, ownedContents(gs))
-	defer s.hands.draw(gs, screen, ownedHands(gs))
-
 	line := func(y int, face *text.GoTextFace, msg string) {
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(float64(gs.PctX(50)), float64(y))
@@ -773,7 +653,11 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		text.Draw(screen, msg, face, op)
 	}
 
-	if s.stage != pickWorm {
+	// **Neither stage that offers a choice is titled** *(owner's call, 2026-09-05)*. The worms
+	// arrive under the sentence saying they are fleeing, and the card row under the worm that is
+	// going to eat one — in both cases the thing on screen says what the screen is for, and a
+	// heading over it was a caption on a picture nobody had trouble reading.
+	if s.stage != pickWorm && s.stage != pickCard {
 		line(offerTitleTop, heading, s.title())
 		line(offerHintTop, small, s.hint(gs))
 	}
@@ -781,12 +665,6 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	defer systems.DrawTooltip(gs, screen, &s.tip)
 
 	switch s.stage {
-	case morph:
-		s.drawMorph(gs, screen, small)
-		systems.DrawButton(gs, screen, s.backButton)
-		systems.DrawButton(gs, screen, s.takeButton)
-		return
-
 	case settled:
 		s.drawSettled(gs, screen)
 		return
@@ -811,56 +689,12 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			usable := gs.Run.CanApply(worm, deckIndex)
 			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card), usable, false)
 		}
-		systems.DrawButton(gs, screen, s.backButton)
 	}
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line
 	// this is the counterpart of: the scrim dims what is already drawn, so nothing may follow it.
 	s.tut.draw(gs, screen, s)
 }
-
-// morphSlots is where the before and after cards sit: side by side, centred, with room between
-// them for the arrow. **The same footprint as a hand card**, so the thing being changed is the
-// size it was when it was picked.
-func morphSlots(gs *state.GlobalState) (before, after image.Rectangle) {
-	const gap = 120
-	top := gs.PctY(36)
-	left := gs.PctX(50) - cardWidth - gap/2
-	right := gs.PctX(50) + gap/2
-
-	return image.Rect(left, top, left+cardWidth, top+cardHeight),
-		image.Rect(right, top, right+cardWidth, top+cardHeight)
-}
-
-// drawMorph is the preview: what the card is, what it becomes, and nothing committed.
-//
-// **A removal has no after card**, so the right-hand seat is left as an outline. Drawing the same
-// card twice would say the worm did nothing, and drawing nothing at all would leave the row
-// looking half-finished rather than deliberately empty.
-func (s *PostBattleScene) drawMorph(gs *state.GlobalState, screen *ebiten.Image,
-	face *text.GoTextFace) {
-
-	beforeAt, afterAt := morphSlots(gs)
-
-	drawCard(gs, screen, beforeAt.Min, cards.Hand, s.before, heldByRun(gs, s.before), true, false)
-
-	arrow := &text.DrawOptions{}
-	arrow.GeoM.Translate(float64(gs.PctX(50)), float64(beforeAt.Min.Y+cardHeight/2))
-	arrow.PrimaryAlign = text.AlignCenter
-	arrow.SecondaryAlign = text.AlignCenter
-	arrow.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, gone, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 40}, arrow)
-
-	if s.removes {
-		drawEmptySeat(screen, afterAt)
-		return
-	}
-	drawCard(gs, screen, afterAt.Min, cards.Hand, s.after, heldByRun(gs, s.after), true, true)
-}
-
-// gone is the mark between the two cards. A hyphen and a chevron rather than an em dash: the
-// kubasta font has no U+2014 and draws a missing-glyph box for it.
-const gone = "->"
 
 // settledSeat is where the won card comes to rest.
 func settledSeat(gs *state.GlobalState) image.Rectangle {
@@ -893,17 +727,15 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 
 func (s *PostBattleScene) title() string {
 	switch s.stage {
-	case morph:
-		return "The worm turns"
 	case settled:
 		if s.removes {
-			return "Eaten"
+			return "EATEN"
 		}
-		return "Changed"
+		return "CHANGED"
 	case narrate:
 		return ""
 	default:
-		return "Two creatures flee"
+		return "WORMS FLEE"
 	}
 }
 
@@ -935,20 +767,11 @@ func (s *PostBattleScene) drawWorms(gs *state.GlobalState, screen *ebiten.Image)
 
 func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 	switch s.stage {
-	case morph:
-		w, _ := s.chosenWorm()
-		if s.removes {
-			return w.Name + " eats this card"
-		}
-		return w.Name + " makes it this"
 	case settled:
 		if s.removes {
 			return "one fewer card to draw"
 		}
 		return "into the deck it goes"
-	case pickCard:
-		w, _ := s.chosenWorm()
-		return fmt.Sprintf("%s - pick the card it takes", w.Name)
 	default:
 		if s.picksLeft > 1 {
 			return fmt.Sprintf("take %d - %d cards in your deck, %d vitae in hand",

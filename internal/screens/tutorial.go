@@ -240,16 +240,16 @@ func (t *tutorialOverlay) focus(gs *state.GlobalState, host tutorialHost) (image
 // the tutorial should be findable without being the loudest thing in the bubble.
 func (t *tutorialOverlay) build() {
 	if t.next == nil {
-		t.next = models.NewButton(tutorialButtonW, tutorialButtonH, "Next",
+		t.next = models.NewButton(tutorialButtonW, tutorialButtonH, "NEXT",
 			func() { t.nextPressed = true })
 		t.next.BaseColor = color.RGBA{R: 220, G: 20, B: 60, A: 255}
-		t.next.TextSize = 18
+		t.next.TextSize = 36
 	}
 	if t.skip == nil {
-		t.skip = models.NewButton(tutorialButtonW, tutorialButtonH, "Skip",
+		t.skip = models.NewButton(tutorialButtonW, tutorialButtonH, "SKIP",
 			func() { t.skipPressed = true })
 		t.skip.BaseColor = sortButtonColor
-		t.skip.TextSize = 18
+		t.skip.TextSize = 36
 	}
 }
 
@@ -492,7 +492,7 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 	//
 	// **Left of Skip, not where Next would be.** Skip slides right into the empty slot when there
 	// is no Next — see placeButtons — so a hint pinned to the panel's edge was drawn underneath it,
-	// which is how it first shipped: "take them all" and "Skip" in the same pixels.
+	// which is how it first shipped: "take them all" and "SKIP" in the same pixels.
 	//
 	// It is measured off the button rather than off the panel, so the two cannot drift apart.
 	hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 17}

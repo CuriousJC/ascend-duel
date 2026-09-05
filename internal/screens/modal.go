@@ -145,7 +145,7 @@ const (
 	modalCloseSize  = 34
 	modalCloseInset = 12
 	modalCloseLabel = "X"
-	modalCloseText  = 24
+	modalCloseText  = 34
 )
 
 // modalCloseColor is the face at full strength. It rests at 65% of this, like every button; see
@@ -207,8 +207,8 @@ const (
 	// button against the left edge of the sort column and the column is pinned 44 in from the
 	// band's right edge — so at 100 the word overhung the screen. The word had margin to give:
 	// five characters at 18pt do not fill 88 either.
-	handsButtonWidth = 88
-	handsButtonText  = 18
+	handsButtonWidth = 170
+	handsButtonText  = 36
 
 	// The corner they stand in on a screen with no hand, matching the mute button's inset on the
 	// other side so the two bottom corners share a line. See internal/game/chrome.go.

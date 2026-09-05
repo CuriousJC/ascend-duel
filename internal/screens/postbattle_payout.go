@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"image"
 
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -41,11 +42,9 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	if spoils.Propagated > 0 {
 		lines = append(lines, proseLine{
 			runs: []proseRun{
-				{text: "The "},
-				{text: "vitae", ink: vitaeInk},
-				{text: " inside you resonates with what you carry and proliferates by "},
-				{text: fmt.Sprintf("%d", spoils.Propagated), ink: vitaeInk},
-				{text: "."},
+				{text: "Vitae", ink: vitaeInk},
+				{text: fmt.Sprintf(" proliferates for each %d -- ", session.PropagationPer)},
+				{text: fmt.Sprintf("+%d", spoils.Propagated), ink: vitaeInk},
 			},
 			pays: func(gs *state.GlobalState) int { return gs.Run.ClaimPropagation() },
 		})
@@ -53,20 +52,18 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 
 	lines = append(lines, proseLine{
 		runs: []proseRun{
-			{text: "Your wounded body hums with life and "},
-			{text: "vitae", ink: vitaeInk},
-			{text: " proliferates by "},
-			{text: fmt.Sprintf("%d", spoils.FromLife), ink: vitaeInk},
-			{text: "."},
+			{text: fmt.Sprintf("Health proliferates for each %d -- ", session.LifeSharePer)},
+			{text: fmt.Sprintf("+%d", spoils.FromLife), ink: vitaeInk},
 		},
 		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimFromLife() },
 	})
 
 	lines = append(lines, proseLine{
 		runs: []proseRun{
-			{text: "The fallen enemy's "},
-			{text: fmt.Sprintf("%d vitae", spoils.FromRoom), ink: vitaeInk},
-			{text: " flows to you too."},
+			{text: "Enemy "},
+			{text: "vitae", ink: vitaeInk},
+			{text: " -- "},
+			{text: fmt.Sprintf("+%d", spoils.FromRoom), ink: vitaeInk},
 		},
 		pays: func(gs *state.GlobalState) int { return gs.Run.ClaimFromRoom() },
 	})
@@ -74,11 +71,11 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 	lines = append(lines, proseLine{runs: []proseRun{
 		{text: "You have "},
 		{text: fmt.Sprintf("%d vitae", total), ink: vitaeInk},
-		{text: " now."},
+		{text: "."},
 	}})
 
 	lines = append(lines, proseLine{runs: []proseRun{
-		{text: "Two creatures flee your fallen enemy, you can only catch one."},
+		{text: "Worms flee your enemy, you can only catch one."},
 	}})
 
 	return lines

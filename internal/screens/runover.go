@@ -37,7 +37,6 @@ import (
 // The page's shape.
 const (
 	runOverTitleSize = 44
-	runOverHowSize   = 20
 
 	// The totals block: a two-column list, labels right-aligned into the middle and figures left of
 	// it. **Aligned on the gutter rather than centred as lines**, because a column of figures is
@@ -52,21 +51,15 @@ const (
 	runOverSeedBoxH    = 96
 	runOverSeedSize    = 46
 	runOverSeedCapSize = 15
-	runOverSeedCaption = "run code"
+	runOverSeedCaption = "SEED"
 )
 
-// The two words at the top, by how the run ended. **The heading says what happened and the line
-// under it says it in a sentence**, because "Defeated" alone on a screen the player did not ask for
-// reads as an error message.
-var runOverWords = map[string]struct{ title, how string }{
-	session.EndedInDefeat: {
-		"Your climb ends here",
-		"the duelist has fallen",
-	},
-	session.EndedByChoice: {
-		"Run abandoned",
-		"you walked away from the tower",
-	},
+// The heading at the top, by how the run ended. **One line and no sentence under it** *(owner's
+// call, 2026-09-05)*: the subtitle said the heading over again, and the numbers below are what the
+// page is for.
+var runOverWords = map[string]string{
+	session.EndedInDefeat: "DUELIST FALLS",
+	session.EndedByChoice: "RUN ABANDONED",
 }
 
 // runOverSeedFill is the seed box's face. **A cool slate against the cream ground**, which is the
@@ -87,8 +80,8 @@ type RunOverScene struct {
 // why positioning is not done in Draw.
 func (s *RunOverScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
-		s.back = models.NewButton(260, 62, "Back to Title", func() { s.leave(gs) })
-		s.back.TextSize = 22
+		s.back = models.NewButton(420, 84, "BACK TO TITLE", func() { s.leave(gs) })
+		s.back.TextSize = 44
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(91)
 }
@@ -112,31 +105,20 @@ func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	sum := *gs.Summary
 	centre := float64(gs.PctX(50))
 
-	words, ok := runOverWords[sum.Ended]
-	if !ok {
-		// An ending this build does not have a phrase for still gets a page. **The summary is the
-		// point and the wording is decoration**, so an unknown value loses the sentence rather than
-		// the numbers.
-		words.title = "Run over"
+	// An ending this build does not have a phrase for still gets a page. **The summary is the point
+	// and the wording is decoration.**
+	title := runOverWords[sum.Ended]
+	if title == "" {
+		title = "RUN OVER"
 	}
 
-	title := &text.DrawOptions{}
-	title.GeoM.Translate(centre, float64(gs.PctY(13)))
-	title.PrimaryAlign = text.AlignCenter
-	title.SecondaryAlign = text.AlignCenter
-	title.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, words.title,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverTitleSize}, title)
-
-	if words.how != "" {
-		how := &text.DrawOptions{}
-		how.GeoM.Translate(centre, float64(gs.PctY(19)))
-		how.PrimaryAlign = text.AlignCenter
-		how.SecondaryAlign = text.AlignCenter
-		how.ColorScale.ScaleWithColor(systems.ColorToward(groundInk, screenGround, 38))
-		text.Draw(screen, words.how,
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverHowSize}, how)
-	}
+	head := &text.DrawOptions{}
+	head.GeoM.Translate(centre, float64(gs.PctY(13)))
+	head.PrimaryAlign = text.AlignCenter
+	head.SecondaryAlign = text.AlignCenter
+	head.ColorScale.ScaleWithColor(groundInk)
+	text.Draw(screen, title,
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: runOverTitleSize}, head)
 
 	s.drawTotals(gs, screen, sum)
 	s.drawSeed(gs, screen, sum.Seed)
@@ -152,12 +134,12 @@ func (s *RunOverScene) drawTotals(gs *state.GlobalState, screen *ebiten.Image, s
 		figure string
 		quiet  bool
 	}{
-		{"Floor reached", strconv.Itoa(sum.Floor), false},
-		{"Enemies defeated", strconv.Itoa(sum.Defeated), false},
-		{"Damage dealt", strconv.Itoa(sum.Dealt), false},
-		{"Rooms entered", strconv.Itoa(sum.Rooms), true},
-		{"Rounds fought", strconv.Itoa(sum.Rounds), true},
-		{"Vitae unspent", strconv.Itoa(sum.Vitae), true},
+		{"FLOOR REACHED", strconv.Itoa(sum.Floor), false},
+		{"ENEMIES DEFEATED", strconv.Itoa(sum.Defeated), false},
+		{"DAMAGE DEALT", strconv.Itoa(sum.Dealt), false},
+		{"ROOMS ENTERED", strconv.Itoa(sum.Rooms), true},
+		{"ROUNDS FOUGHT", strconv.Itoa(sum.Rounds), true},
+		{"VITAE UNSPENT", strconv.Itoa(sum.Vitae), true},
 	}
 
 	gutter := gs.PctX(50)

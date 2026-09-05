@@ -1078,33 +1078,30 @@ func TestBackRendersWithNoFont(t *testing.T) {
 	}
 }
 
-func TestAnAuthoredBreakSurvivesWrapping(t *testing.T) {
-	// **A newline is a break the author asked for** *(2026-08-23)*, and the measurer may not undo
-	// it: a line that fits is exactly the case width-wrapping would join back up, and it is the
-	// case the feature exists for.
+func TestEffectTextBreaksAtEveryWord(t *testing.T) {
+	// **One word to a line** *(owner's call, 2026-09-05)*. The width is deliberately far wider than
+	// the text: a measurer that fitted the words onto one line is exactly what this replaced, and a
+	// generous column is the case that would hide it.
 	f := faces(t)
-	lines, err := WrapText(f, WormStyle.TextSize, "make one card\nFIRE", 400)
+	lines, err := WrapText(f, WormStyle.TextSize, "CARD BECOMES FIRE", 400)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(lines) != 2 || lines[0] != "make one card" || lines[1] != "FIRE" {
-		t.Errorf("an authored break was not honoured: got %q", lines)
+	if len(lines) != 3 || lines[0] != "CARD" || lines[1] != "BECOMES" || lines[2] != "FIRE" {
+		t.Errorf("the text did not break at every word: got %q", lines)
 	}
 }
 
-func TestAnAuthoredLineStillWraps(t *testing.T) {
-	// **A break can only add lines.** Honouring one must not become a way to overrun the band, so
-	// an authored line too wide for the column is wrapped like any other.
+func TestANewlineIsJustASpace(t *testing.T) {
+	// A newline used to be an authored break and is now nothing special — every space breaks, so
+	// there is nothing left for one to ask for. It must not produce an empty line.
 	f := faces(t)
-	lines, err := WrapText(f, Hand.TextSize, "one\nthe second line is far too wide for this", 60)
+	lines, err := WrapText(f, WormStyle.TextSize, "CARD BECOMES\nFIRE", 400)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(lines) < 3 {
-		t.Errorf("an authored line was not wrapped: got %q", lines)
-	}
-	if lines[0] != "one" {
-		t.Errorf("the authored break moved: got %q", lines)
+	if len(lines) != 3 {
+		t.Errorf("a newline did not read as a space: got %q", lines)
 	}
 }
 
@@ -1325,5 +1322,39 @@ func TestATokenCentresItsColumn(t *testing.T) {
 	}
 	if want := (st.Width - st.DashWidth) / 2; st.DashLeft != want {
 		t.Errorf("the ticks sit at x=%d against a centred %d", st.DashLeft, want)
+	}
+}
+
+// TestAFigureStaysOnItsUnitsLine is the one exception to breaking at every word: a number and the
+// unit it belongs to are one fact, and a number alone on a line says nothing until the eye reaches
+// the line under it. **The unit leads whichever way the text was authored** — see unitLines.
+func TestAFigureStaysOnItsUnitsLine(t *testing.T) {
+	f := faces(t)
+
+	cases := []struct {
+		text string
+		want []string
+	}{
+		{"CARD BECOMES EASIER -1 AP", []string{"CARD", "BECOMES", "EASIER", "AP -1"}},
+		{"CARD GAINS DMG +50%", []string{"CARD", "GAINS", "DMG +50%"}},
+		{"CARD GAINS STRENGTH +1 AP", []string{"CARD", "GAINS", "STRENGTH", "AP +1"}},
+		{"CARD BECOMES STAB", []string{"CARD", "BECOMES", "STAB"}},
+	}
+
+	for _, c := range cases {
+		lines, err := WrapText(f, WormStyle.TextSize, c.text, 400)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(lines) != len(c.want) {
+			t.Errorf("%q wrapped to %q, want %q", c.text, lines, c.want)
+			continue
+		}
+		for i := range lines {
+			if lines[i] != c.want[i] {
+				t.Errorf("%q wrapped to %q, want %q", c.text, lines, c.want)
+				break
+			}
+		}
 	}
 }

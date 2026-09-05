@@ -21,8 +21,11 @@ package game
 // screen and coming back re-runs Init, which deals a fresh duel, so a ledger that navigated would
 // destroy the fight it was opened to read. See internal/screens/ledger.go.
 //
-// See CLAUDE.md on the input vocabulary: this is a click on a button, and there is no hotkey
-// for it, because the game has no keyboard.
+// See CLAUDE.md on the input vocabulary: this is a click on a button. **Escape is the one hotkey
+// in the game** *(owner's call, 2026-09-05)*, and it does exactly what the cog does and nothing
+// else: it is a second way to press one button, not a second way to do something. It is live only
+// while the cog itself is — same predicate, same input gate — so a key cannot reach a screen where
+// the button has stood down.
 
 import (
 	"image"
@@ -32,6 +35,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"image/color"
 )
@@ -143,7 +147,7 @@ func chromeShowing(gs *state.GlobalState) bool {
 		return false
 	}
 	switch gs.ActiveScreen {
-	case state.Settings, state.Achievements, state.Credits, state.RunOver:
+	case state.Settings, state.Achievements, state.Credits, state.RunOver, state.PostBattle, state.Title:
 		return false
 	}
 	return true
@@ -179,6 +183,15 @@ func (g *Game) updateChrome(gs *state.GlobalState) {
 		return
 	}
 	systems.UpdateButton(gs, g.settingsButton)
+
+	// **Escape presses the cog.** Gated on the tutorial's shield as well as on the button being
+	// drawn — the lesson makes one rectangle clickable, and a key that walked past that would be a
+	// way out of a step the player is being held on.
+	if !gs.InputGated && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		g.openSettings()
+		return
+	}
+
 	g.updateLedgerButton(gs)
 }
 

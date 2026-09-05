@@ -491,8 +491,11 @@ func (s *Session) CardCost(c combat.Card) int { return combat.CostWith(s.WornRin
 // **It reports the figure rather than adding it** *(2026-08-22)*, because the post-battle screen
 // narrates the interest as its own sentence and the purse has to climb when that sentence lands.
 // See spoils.go: deciding a payout and paying it are separate here.
+// propagationPer is how much held vitae one point of interest is earned for.
+const propagationPer = 5
+
 func (s *Session) propagation() int {
-	base := s.vitae / 5
+	base := s.vitae / propagationPer
 	if base > maxPropagation {
 		base = maxPropagation
 	}

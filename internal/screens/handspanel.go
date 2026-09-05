@@ -210,7 +210,7 @@ func handsColumns(rows []handsRow, columns int) [][]handsRow {
 // explaining the ordering — both true, both describing pictures that were already on the screen
 // saying it better. A panel built to show a rule in cards and then captioned in prose is a panel
 // that does not trust its own drawings, and the two lines cost it forty pixels of ladder.
-const handsPanelTitle = "Duelist Hands"
+const handsPanelTitle = "DUELIST HANDS"
 
 // handsBodyRect is the room the rungs are laid out in: the panel, less the title above it, and
 // inset at the sides by the margin the deck panel's rows keep.

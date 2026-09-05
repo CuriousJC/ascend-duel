@@ -640,7 +640,7 @@ func lower(s string) string { return strings.ToLower(s) }
 // keyed `Fighter1` in duelists.json — a key is not a label, and renaming it would mean
 // renaming it in the balance tool and the tests for no gain — but the record now carries a
 // Name and that is what is normally shown.
-const duelistName = "Duelist"
+const duelistName = "DUELIST"
 
 // playerRecord is the key the playable duelist is filed under in duelists.json. **Two screens
 // hydrate the player now** — the combat screen for the fight and the reward screen for the card it

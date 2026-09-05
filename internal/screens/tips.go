@@ -20,7 +20,6 @@ package screens
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -212,17 +211,8 @@ func statusTexts() map[string]string {
 	return out
 }
 
-// wormTip explains an offered alteration: what it does, and that it is permanent.
-//
-// **"For the rest of the run" is the part the face does not say.** A worm reads as a reward and some
-// of them are trades; the card states the change and this states how long you live with it.
-//
-// **The card's authored line breaks are the tooltip's line breaks** *(2026-08-23)*. `Text` may carry
-// a newline saying where the *card* should break — see `cards.WrapText` — and a tooltip is a list of
-// lines already, so splitting on it is what stops the escape reaching a player as a stray glyph.
-func wormTip(w session.Worm) (string, []string) {
-	return w.Name, append(strings.Split(w.Text, "\n"), "for the rest of the run")
-}
+// **A worm has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
+// one word to a line, and a hover repeating that sentence beside it was the same words twice.
 
 // ordinal is 1st, 2nd, 3rd — for the five positions a ring can be worn in, and nothing else. Written
 // out rather than generalised, because the row is capped at five and a general one would be a rule

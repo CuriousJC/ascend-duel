@@ -63,9 +63,9 @@ func goodKinds() []goodKind { return []goodKind{goodBag, goodCan, goodBucket} }
 // what is inside: a bag that named its four rocks on the face would be a shelf item you could read
 // before paying for, which is the one thing these are not.
 const (
-	bagName    = "Bag of Rocks"
-	canName    = "Can of Worms"
-	bucketName = "Bucket of Parasites"
+	bagName    = "BAG OF ROCKS"
+	canName    = "CAN OF WORMS"
+	bucketName = "BUCKET OF PARASITES"
 )
 
 // Where the goods row sits, and how the dialog lays its cards out.
@@ -323,9 +323,6 @@ func (g *goods) hover(gs *state.GlobalState) {
 		case g.kind == goodBucket:
 			p := g.parasites[i]
 			g.tip.Point(g.slot(gs, i), p.Name, parasiteTipLines(p))
-		default:
-			title, lines := wormTip(g.worms[i])
-			g.tip.Point(g.slot(gs, i), title, lines)
 		}
 		return
 	}
@@ -401,12 +398,14 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	panel := drawModalFrame(gs, screen, modalHead{title: g.title()})
 
-	hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(panel.Min.X+panel.Dx()/2), float64(panel.Min.Y+goodsHintTop))
-	op.PrimaryAlign = text.AlignCenter
-	op.ColorScale.ScaleWithColor(color.RGBA{R: 226, G: 228, B: 236, A: 255})
-	text.Draw(screen, g.hint(), hint, op)
+	if line := g.hint(); line != "" {
+		hint := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 20}
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(float64(panel.Min.X+panel.Dx()/2), float64(panel.Min.Y+goodsHintTop))
+		op.PrimaryAlign = text.AlignCenter
+		op.ColorScale.ScaleWithColor(color.RGBA{R: 226, G: 228, B: 236, A: 255})
+		text.Draw(screen, line, hint, op)
+	}
 
 	for i := 0; i < g.count(); i++ {
 		at := g.slot(gs, i).Min
@@ -431,6 +430,10 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 // title names what is open, and hint says what to do with it. **Two short lines rather than a
 // paragraph**: the cards say what they are, and this says how many of them the player gets.
+//
+// **The can is the exception and says one thing** *(owner's call, 2026-09-05)*: the worms on the
+// table are the whole of what the dialog is, so it is an instruction rather than a label with a
+// caption. hint returns nothing there and draw prints nothing rather than an empty line.
 func (g *goods) title() string {
 	switch g.kind {
 	case goodBag:
@@ -438,20 +441,20 @@ func (g *goods) title() string {
 	case goodBucket:
 		return bucketName
 	default:
-		return canName
+		return "CHOOSE YOUR WORM"
 	}
 }
 
 func (g *goods) hint() string {
 	switch {
+	case g.kind == goodCan:
+		return ""
 	case g.stage == goodsAim:
 		return "and the card it changes"
 	case g.kind == goodBag:
 		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.stones))
-	case g.kind == goodBucket:
-		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.parasites))
 	default:
-		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.worms))
+		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.parasites))
 	}
 }
 
@@ -463,7 +466,7 @@ func (g *goods) hint() string {
 func stoneTipLines(gs *state.GlobalState, st session.Stone) []string {
 	worth := session.StoneWorth(st.Hand)
 
-	out := []string{fmt.Sprintf("raises this hand by %d, for the rest of the run", worth)}
+	out := []string{fmt.Sprintf("raises this hand by %d", worth)}
 	if gs.Run == nil {
 		return out
 	}

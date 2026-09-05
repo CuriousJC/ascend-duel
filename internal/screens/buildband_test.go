@@ -151,3 +151,42 @@ func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 		t.Errorf("the row is not centred: %dpx before it and %dpx after", before, after)
 	}
 }
+
+// TestTheBandEndsBelowBothOfItsHalves. Everything on the two between-fight screens is placed under
+// the band, so this figure being short by ten pixels is a worn ring drawn through a line of type.
+// The ring row is dropped below the duelist card's top and is the same height, so the row is what
+// ends last — reading the card alone is the mistake this pins.
+func TestTheBandEndsBelowBothOfItsHalves(t *testing.T) {
+	gs := testState()
+
+	bottom := buildBandBottom(gs)
+	if card := buildCardRect(gs).Max.Y; bottom < card {
+		t.Errorf("the band ends at %d and the duelist card at %d", bottom, card)
+	}
+	if rings := buildRingRect(gs).Max.Y; bottom < rings {
+		t.Errorf("the band ends at %d and the ring row at %d", bottom, rings)
+	}
+}
+
+// TestNothingUnderTheBandIsDrawnInsideIt. Both between-fight screens write type below the build
+// band, and both of them did it in absolute pixels until 2026-09-05 — figures that were right when
+// the screen was 1280x960 and the cards were a quarter smaller. The reward screen's narration ended
+// up struck through by a worn ring, and nothing failed.
+func TestNothingUnderTheBandIsDrawnInsideIt(t *testing.T) {
+	gs := testState()
+	bottom := buildBandBottom(gs)
+
+	for _, c := range []struct {
+		what string
+		top  int
+	}{
+		{"the reward screen's title", offerTitleTop(gs)},
+		{"the reward screen's narration", proseTop(gs)},
+		{"the reward screen's hint", offerHintTop(gs)},
+		{"the shop's narration", shopProseTop},
+	} {
+		if c.top <= bottom {
+			t.Errorf("%s starts at %d, inside a band that ends at %d", c.what, c.top, bottom)
+		}
+	}
+}

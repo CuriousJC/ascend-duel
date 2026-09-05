@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"image"
 	"math/rand"
+	"sort"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -84,14 +85,17 @@ const (
 	wormChosenRowPct = 34
 	offerRowPct      = 62
 
-	// The title and the hint belong to the stages that have no prose up. **Nothing is titled while
-	// the payout is on screen** — the sentences are the title.
-	offerTitleTop = 262
-	offerHintTop  = 300
+	// The title, the hint and the narration all hang off the bottom of the build band, each by its
+	// own drop. **They were absolute pixels until 2026-09-05** — 262, 300 and 296, written when the
+	// band ended around y=253 — and the band has moved twice since: the screen went to 1920x1080
+	// and the cards grew a quarter with it. The band now ends at 311, so all three were being drawn
+	// *inside* it, which is the worn ring struck through the first line of the payout. These are
+	// the same three gaps that arithmetic produced, measured from the band rather than from the top
+	// of the screen, so the next time either moves the text follows.
+	offerTitleDrop = 9
+	offerProseDrop = 43
+	offerHintDrop  = 47
 
-	// proseTop clears the build band, which ends around y=253 — the duelist card and the ring row
-	// are both 224 tall and start at 2%.
-	proseTop     = 296
 	proseLineGap = 42
 
 	offerButtonsPct   = 88
@@ -212,6 +216,23 @@ type PostBattleScene struct {
 	// what one of the offered deck cards is worth.
 	tip models.Tooltip
 
+	// How the offer row is arranged, and the block of tabs that chooses it — the same widget the
+	// combat screen's hand carries *(owner's call, 2026-09-05)*. **Eight overlapping cards are
+	// eight overlapping cards wherever they are dealt**, so the row a worm is pointed at is read
+	// the same way a hand is.
+	//
+	// **sortMode is the working copy of `gs.HandSort`**, exactly as CombatScene's is: the button
+	// callback moves this, and Update writes it back. So a player who arranges by element in a
+	// duel meets an offer already arranged by element.
+	sortMode handSort
+	sortTabs *sortTabs
+
+	// slides is the offer row rearranging itself, on the shared mover — see cardslide.go. **The
+	// same widget behaves the same way on both screens** *(owner's call, 2026-09-05)*: a card that
+	// changes where it is on screen travels there, and a sort that re-laid this row out instantly
+	// while sliding the hand would be two controls wearing one set of labels.
+	slides []cardSlide
+
 	// picksLeft is how many prizes this visit still owes the player, from `session.Picks` — the
 	// `prizes-dealt` moment, which the Hungry ring is what moves off 1.
 	//
@@ -241,6 +262,13 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 	s.offer = dealOffer(gs)
 	s.picksLeft = gs.Run.Picks()
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
+
+	s.sortMode = handSortOf(gs)
+	if s.sortTabs == nil {
+		s.sortTabs = newSortTabs(s.sortTabRect, s.setSort)
+	}
+	s.slides = nil
+	s.sortOffer(gs)
 
 	s.place(gs)
 
@@ -404,6 +432,16 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		systems.UpdateButton(gs, s.skipButton)
 	case pickCard:
 		s.place(gs)
+
+		// **Placed every tick rather than at Init**, unlike every other widget on this screen: the
+		// block hangs off the offer row's right edge, and a second pick re-deals that row against a
+		// deck a worm may have shortened. A block placed once would then stand beside a row that
+		// had moved out from under it.
+		s.sortTabs.place(gs)
+		s.sortTabs.update(gs, true)
+		setHandSort(gs, s.sortMode)
+		s.sortOffer(gs)
+		s.slides = advance(s.slides)
 	}
 
 	s.hover(gs)
@@ -599,14 +637,122 @@ func (s *PostBattleScene) wormSlot(gs *state.GlobalState, i int) image.Rectangle
 	return image.Rect(left+i*pitch, top, left+i*pitch+cardWidth, top+cardHeight)
 }
 
-// offerSlot is where one offered card is drawn, and the rectangle it is clicked in.
-func (s *PostBattleScene) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
-	n := len(s.offer)
-	pitch := handPitch(gs, n)
-	width := (n-1)*pitch + cardWidth
+// offerRow is the whole row of offered cards: what the seats are cut out of, and what the sort
+// block is hung off. **One function rather than the arithmetic twice**, the reason cardBandWidth
+// is one on the combat screen — a row and the tabs beside it disagreeing about where the row ends
+// is a block standing in the middle of the cards.
+func (s *PostBattleScene) offerRow(gs *state.GlobalState) image.Rectangle {
+	return offerRowOf(gs, len(s.offer))
+}
+
+// offerRowOf is that row **for a stated number of cards**, which is what a slide needs: a row of
+// eight is not centred where a row of seven is, so a card leaving one and landing in the other has
+// to be able to ask about both. Same reason a cardSlide carries a count at each end.
+func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
+	width := (n-1)*handPitch(gs, n) + cardWidth
 	left := gs.PctX(50) - width/2
 	top := gs.PctY(offerRowPct)
-	return image.Rect(left+i*pitch, top, left+i*pitch+cardWidth, top+cardHeight)
+	return image.Rect(left, top, left+width, top+cardHeight)
+}
+
+// offerSlot is where one offered card is drawn, and the rectangle it is clicked in.
+func (s *PostBattleScene) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
+	at := s.offerSeat(gs, i, len(s.offer))
+	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
+}
+
+// offerSeat is that seat as a point, for a stated row size — the counterpart of the combat
+// screen's slotAt, and what the shared mover is handed.
+func (s *PostBattleScene) offerSeat(gs *state.GlobalState, i, count int) image.Point {
+	row := offerRowOf(gs, count)
+	return image.Pt(row.Min.X+i*handPitch(gs, count), row.Min.Y)
+}
+
+// sortTabRect is the i'th tab of the sort block: one block, no air in it, its top edge on the
+// offer row's top edge.
+//
+// **It hangs off the cards, not off a column of its own**, which is the rule the combat screen's
+// block follows — see sortTabRect there. This screen has no control column, and the row is centred
+// rather than banded, so the anchor is the row's own right edge and sortColumnGap is the same air
+// the hand leaves.
+func (s *PostBattleScene) sortTabRect(gs *state.GlobalState, i int) image.Rectangle {
+	row := s.offerRow(gs)
+	left := row.Max.X + sortColumnGap
+	top := row.Min.Y + i*ControlButtonHeight
+	return image.Rect(left, top, left+ControlColumnWidth(), top+ControlButtonHeight)
+}
+
+// setSort is the press on a tab. **It records the mode and nothing else** — the row is rearranged
+// by sortOffer on the same tick, which is where the global state a sort needs is available; a
+// button's OnClick reaches none on any screen in this package.
+func (s *PostBattleScene) setSort(mode handSort) { s.sortMode = mode }
+
+// sortOffer arranges the offer row and sends every card that moved sliding to its new place.
+//
+// **The row is a list of deck indices rather than of cards**, so it sorts a permutation and
+// rebuilds — which is also what makes the slides possible at all, for the reason sortHand does it:
+// two identical cards cannot be told apart after the fact by looking at them, and a card sliding
+// has to know where it set off from.
+//
+// **Stable, over the deck order dealOffer left it in**, so two identical cards keep their
+// positions in the deck as the tie-break and pressing the same tab twice cannot shuffle them.
+//
+// **The cards have already moved by the time the slides exist**, exactly as on the combat screen:
+// s.offer is in its new order the instant this returns, and every slide is a ghost of a card that
+// is already where it is going.
+//
+// **It runs every tick while the row is up**, not only on a press, which is what makes it right
+// after a re-deal for a second pick — the same reason the combat screen re-sorts on every refill.
+// A stable sort over an already-sorted list is a walk of eight items that raises nothing.
+func (s *PostBattleScene) sortOffer(gs *state.GlobalState) {
+	if gs.Run == nil {
+		return
+	}
+
+	card := func(deckIndex int) (combat.Card, bool) { return gs.Run.Card(deckIndex) }
+
+	order := make([]int, len(s.offer))
+	for i := range order {
+		order[i] = i
+	}
+	sort.SliceStable(order, func(i, j int) bool {
+		a, aok := card(s.offer[order[i]])
+		b, bok := card(s.offer[order[j]])
+		if !aok || !bok {
+			// A deck index the run cannot resolve should not exist here — the offer is dealt off
+			// the deck between fights — but ordering by index rather than panicking keeps a row
+			// the player can still read if one ever does.
+			return s.offer[order[i]] < s.offer[order[j]]
+		}
+		return handLess(s.sortMode, a, b)
+	})
+
+	sorted := make([]int, len(s.offer))
+	for to, from := range order {
+		sorted[to] = s.offer[from]
+	}
+	s.offer = sorted
+
+	// Nothing in this row stands proud of it: there is no selection on this screen, so the lift
+	// every slide carries is zero.
+	s.slides = slidesFor(s.slides, order, func(i int) actionCard {
+		c, _ := card(s.offer[i])
+		return c
+	}, func(int) int { return 0 })
+}
+
+// drawSlides draws the offered cards moving within their row, on the shared mover.
+//
+// **A sliding card is drawn usable**, whatever the worm could do to it. The dimming says "this one
+// cannot be picked", which is a fact about a card sitting in a seat waiting to be clicked; a card
+// in flight is not being offered yet, and re-deriving it mid-slide would make the row flicker as
+// cards crossed each other.
+func (s *PostBattleScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
+	drawCardSlides(gs, screen, s.slides,
+		func(gs *state.GlobalState, i, count int) image.Point { return s.offerSeat(gs, i, count) },
+		func(sl cardSlide) cards.Spec {
+			return cardSpec(sl.card, heldByRun(gs, sl.card), true, false)
+		})
 }
 
 func (s *PostBattleScene) chosenPrize() (prize, bool) {
@@ -658,8 +804,8 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// going to eat one — in both cases the thing on screen says what the screen is for, and a
 	// heading over it was a caption on a picture nobody had trouble reading.
 	if s.stage != pickWorm && s.stage != pickCard {
-		line(offerTitleTop, heading, s.title())
-		line(offerHintTop, small, s.hint(gs))
+		line(offerTitleTop(gs), heading, s.title())
+		line(offerHintTop(gs), small, s.hint(gs))
 	}
 
 	defer systems.DrawTooltip(gs, screen, &s.tip)
@@ -686,9 +832,17 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 			// says what was offered and the reason one of them is unavailable is visible instead
 			// of a click that silently does nothing.
 			worm, _ := s.chosenWorm()
+			// A seat a card is still sliding into is left empty until it lands — the same rule
+			// the hand follows, and for the same reason: the list is already in its new order,
+			// so what is suppressed is a second drawing of a card that is on screen elsewhere.
+			if slideInto(s.slides, i) {
+				continue
+			}
 			usable := gs.Run.CanApply(worm, deckIndex)
 			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card), usable, false)
 		}
+		s.drawSlides(gs, screen)
+		s.sortTabs.draw(gs, screen)
 	}
 
 	// **Bob over everything, and the spotlight with him.** See combat.go's Draw, whose last line

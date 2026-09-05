@@ -22,12 +22,19 @@
 // says it is worth about what a Form Full House is not — and it is exactly the comparison the
 // file's axis-by-axis layout hides.
 //
-// **The multiplier is a claim, not a measurement.** What a rung actually costs to reach is
-// `go run ./tools/handodds`, which deals two million hands and prints how often each one can be
-// built. This tool deliberately does not sample: two tools reporting the same probability by
-// different methods is two numbers that can disagree. What it prints instead is what a rung costs
-// *once you hold the cards* — the cheapest action points it can be played for, and whether that
-// fits a round — and it says on the page which question is which.
+// # It prints two different numbers, and the page says which is which
+//
+// **What a rung costs** is what the example above it costs *once you hold the cards* — the cheapest
+// action points it can be played for, and whether that fits a round. **How often you hold them** is
+// the reachability beside it: two million hands dealt off this deck, counting how many could have
+// afforded some set forming the rung. The multipliers are priced against the second one.
+//
+// **Both come from tools/hands, and so does tools/handodds's table** *(owner's call, 2026-09-05)*.
+// This tool used to refuse to sample at all, on the argument that two tools reporting the same
+// probability by different methods would be two numbers that can disagree. That argument was right
+// and the odds belong on the sheet anyway — so the disagreement is made impossible instead of
+// avoided: one method, one pinned sample, printed in two places. `go run ./tools/handodds` is still
+// the tuning view, with the axes kept apart and the `-ap` flag.
 //
 // # Output
 //
@@ -45,16 +52,17 @@ import (
 	"fmt"
 	"image/png"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/assets"
-	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
+	"github.com/curiousjc/ascend-duel/tools/hands"
 )
 
 // ground is the combat screen's table — screens.screenGround — because a hand is laid out on it.
@@ -80,29 +88,38 @@ func run(dir string) error {
 		return err
 	}
 
-	deck := startingDeck()
-	budget := budgetOf()
+	deck := hands.StartingDeck()
+	budget := hands.Budget()
+
+	// **The sample is taken before a card is drawn**, and it is the slow part of this command —
+	// two million hands, a few seconds. It is not optional and not cached: a cached table is a
+	// table that can go stale against the deck beside it, which is the same failure a stale sheet
+	// is. See tools/hands for why both commands deal the identical sample.
+	odds := hands.Measure(deck, budget, hands.HandSize, hands.Trials)
 
 	page := page{
 		Ground:    ground,
 		Style:     styleFacts(cards.Mini),
 		Budget:    budget,
-		MaxCards:  maxCards,
+		MaxCards:  hands.MaxCards,
 		DeckSize:  len(deck),
-		Attacks:   countAttacks(deck),
+		Attacks:   hands.Attacks(deck),
 		PerValue:  map[string]int{},
+		HandSize:  odds.HandSize,
+		Trials:    odds.Trials,
+		Nothing:   pct(odds.Nothing),
 		TooManyAP: 0,
 	}
 	for _, a := range []combat.Axis{combat.AxisConcept, combat.AxisForm, combat.AxisElement} {
-		page.PerValue[a.String()] = perValue(deck, a)
+		page.PerValue[a.String()] = hands.PerValue(deck, a)
 	}
 
 	// **Sorted by multiplier, then by cards, then by key.** The last two are only there so two
 	// rungs paying the same amount land in the same order every run — the sort has to be total or
 	// the page reshuffles itself between runs of an unchanged file.
-	hands := combat.Hands()
-	sort.SliceStable(hands, func(i, j int) bool {
-		a, b := hands[i], hands[j]
+	ladder := combat.Hands()
+	sort.SliceStable(ladder, func(i, j int) bool {
+		a, b := ladder[i], ladder[j]
 		if a.Multiplier != b.Multiplier {
 			return a.Multiplier < b.Multiplier
 		}
@@ -113,7 +130,7 @@ func run(dir string) error {
 	})
 
 	drawn := map[string]cell{}
-	for _, h := range hands {
+	for _, h := range ladder {
 		r := row{
 			Key:        h.Key,
 			Name:       h.Name,
@@ -124,9 +141,17 @@ func run(dir string) error {
 			Pays:       fmt.Sprintf("%d.%02dx", h.Multiplier/100, h.Multiplier%100),
 		}
 
+		if o, ok := odds.Find(h.Key); ok {
+			r.Sampled = true
+			r.Reachable = pct(o.Reachable)
+			r.OneIn = oneIn(o)
+			r.Best = pct(o.Best)
+			r.Bar = bar(o.Reachable)
+		}
+
 		example, cost := decks.Example(deck, h)
 		r.Cost = cost
-		r.Affordable = cost <= budget && h.Cards() <= maxCards
+		r.Affordable = cost <= budget && h.Cards() <= hands.MaxCards
 		r.Shares = sharedValues(example, h.Match)
 		for _, c := range example {
 			cell, err := cardOnce(dir, faces, drawn, c)
@@ -153,85 +178,58 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d hands, %d a round cannot play\n",
-		out, len(drawn), len(page.Rows), page.TooManyAP)
+	fmt.Printf("wrote %s and %d PNGs — %d hands, %d a round cannot play, %d hands sampled\n",
+		out, len(drawn), len(page.Rows), page.TooManyAP, odds.Trials)
 	for _, r := range page.Rows {
-		fmt.Printf("  %6s  %-28s %-8s %-6s %s\n", r.Pays, r.Name, r.Match, r.Groups, verdict(r, budget))
+		fmt.Printf("  %6s  %-28s %-8s %-6s %-24s %8s reachable\n",
+			r.Pays, r.Name, r.Match, r.Groups, verdict(r, budget), r.Reachable)
 	}
 	return nil
+}
+
+// pct writes a percentage the way both the page and the terminal want it: three decimals, because
+// the rarest rung on the ladder is six hands in a hundred thousand and two decimals round it to
+// nothing.
+func pct(v float64) string { return fmt.Sprintf("%.3f%%", v) }
+
+// oneIn is the reachability as odds — "1 in 260" — which is the form a rare rung is actually read
+// in. A rung nothing reached is said in words rather than as one in nothing.
+func oneIn(o hands.Odds) string {
+	if o.OneIn() <= 0 {
+		return "never"
+	}
+	return fmt.Sprintf("1 in %.0f", o.OneIn())
+}
+
+// bar is the reachability as a width, for the page's meter.
+//
+// **Square-rooted, not linear** *(2026-09-05)*. The ladder runs from 100% to 0.006%, so a linear
+// bar draws every rung above a Full House as full and every rung below it as an invisible sliver —
+// which is the whole interesting half of the ladder rendered as nothing. The root keeps the rare
+// end visible while leaving the order intact; it is a picture of the ranking, and the figure beside
+// it is the fact.
+func bar(reachable float64) int {
+	if reachable <= 0 {
+		return 0
+	}
+	w := int(100 * math.Sqrt(reachable/100))
+	if w < 1 {
+		w = 1
+	}
+	return w
 }
 
 // verdict is the one-line answer for the terminal: what this rung's example costs, and whether a
 // round can pay it.
 func verdict(r row, budget int) string {
 	switch {
-	case !r.Affordable && r.Cards > maxCards:
-		return fmt.Sprintf("%d cards — over the %d-card cap", r.Cards, maxCards)
+	case !r.Affordable && r.Cards > hands.MaxCards:
+		return fmt.Sprintf("%d cards — over the %d-card cap", r.Cards, hands.MaxCards)
 	case !r.Affordable:
 		return fmt.Sprintf("%d AP — over the %d a round has", r.Cost, budget)
 	default:
 		return fmt.Sprintf("%d AP", r.Cost)
 	}
-}
-
-// maxCards is the count bound on a turn, read off the rules rather than repeated. It asks a bare
-// duelist because a ring or a brand is meant to be able to raise it.
-var maxCards = combat.Duelist{}.MaxActions()
-
-// budgetOf is the fighter's action points. **Named, never the first entry of the map** — the
-// roster is keyed and Go randomises map order, so taking whichever came out first would make the
-// page depend on nothing. tools/handodds names the same record.
-func budgetOf() int { return data.LoadDuelists()["Fighter1"].Actions }
-
-// startingDeck is what a run opens with, built the way the combat screen builds it. It is not
-// imported from there: internal/screens links Ebitengine and this tool has no window, which is
-// the same wall tools/handodds runs into.
-func startingDeck() []combat.Card {
-	var out []combat.Card
-	for _, rec := range data.LoadDuelistCards() {
-		id, ok := combat.ConceptByKey(rec.Label)
-		if !ok {
-			panic("duelist_cards.json: the rules did not register a card called " + rec.Label)
-		}
-		for _, name := range rec.Elements {
-			e, ok := combat.ParseElement(name)
-			if !ok {
-				panic("duelist_cards.json: " + rec.Label + " names unknown element " + name)
-			}
-			for i := 0; i < rec.Copies; i++ {
-				out = append(out, combat.Of(id, e))
-			}
-		}
-	}
-	return out
-}
-
-func countAttacks(deck []combat.Card) int {
-	n := 0
-	for _, c := range deck {
-		if c.Category() == combat.CategoryAttack {
-			n++
-		}
-	}
-	return n
-}
-
-// perValue is how many attack cards share the commonest value on an axis, which is the whole
-// reason the three ladders are priced apart. Same figure tools/handodds prints in its header.
-func perValue(deck []combat.Card, a combat.Axis) int {
-	counts := map[int]int{}
-	for _, c := range deck {
-		if v, ok := decks.MatchValue(c, a); ok {
-			counts[v]++
-		}
-	}
-	most := 0
-	for _, n := range counts {
-		if n > most {
-			most = n
-		}
-	}
-	return most
 }
 
 // sharedValues names what the example's groups actually agree on, in the axis's own words —
@@ -392,6 +390,17 @@ type row struct {
 	Cost   int
 	Shares []string
 	Cells  []cell
+
+	// What the sample said about this rung. **Sampled is false for the High Card**, which is not
+	// in the sample at all: it is the fallback every turn with an attack in it lands on, so a
+	// reachability for it would be a number about nothing.
+	Sampled   bool
+	Reachable string
+	OneIn     string
+	Best      string
+
+	// Bar is the meter's width in percent, square-rooted — see bar().
+	Bar int
 }
 
 type page struct {
@@ -402,6 +411,12 @@ type page struct {
 	DeckSize int
 	Attacks  int
 	PerValue map[string]int
+
+	// The sample behind every reachability on the page: how big a hand was dealt, how many were
+	// dealt, and how many of them built nothing at all.
+	HandSize int
+	Trials   int
+	Nothing  string
 
 	TooManyAP int
 

@@ -83,7 +83,7 @@ func payoutLines(gs *state.GlobalState) []proseLine {
 
 // proseLineAt is the middle of one narrated line — where a payment sets off from.
 func proseLineAt(gs *state.GlobalState, i int) image.Point {
-	return image.Pt(gs.PctX(50), proseTop+i*proseLineGap)
+	return image.Pt(gs.PctX(50), proseTop(gs)+i*proseLineGap)
 }
 
 // drawProse puts the narration up: every line typed so far, and whatever figure is in the air.
@@ -95,7 +95,7 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 		if !on {
 			break
 		}
-		drawProseLine(screen, face, line.plain(), runs, gs.PctX(50), proseTop+i*proseLineGap)
+		drawProseLine(screen, face, line.plain(), runs, gs.PctX(50), proseTop(gs)+i*proseLineGap)
 	}
 
 	s.prose.drawVitaeFlight(gs, screen, face)
@@ -140,3 +140,9 @@ func (s *PostBattleScene) wormArrivingAt(gs *state.GlobalState, i int) image.Poi
 	}
 	return flyingTo(from, seat, s.entry[i])
 }
+
+// Where the three lines of type under the build band sit. **Measured from the band, never from the
+// top of the screen** — see the drops in postbattle.go for what reading absolute pixels cost.
+func offerTitleTop(gs *state.GlobalState) int { return buildBandBottom(gs) + offerTitleDrop }
+func offerHintTop(gs *state.GlobalState) int  { return buildBandBottom(gs) + offerHintDrop }
+func proseTop(gs *state.GlobalState) int      { return buildBandBottom(gs) + offerProseDrop }

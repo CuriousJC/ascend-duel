@@ -139,84 +139,26 @@ func (s *CombatScene) addFlight(f cardFlight) {
 	s.theatre.flights = append(s.theatre.flights, f)
 }
 
-// handSlide is a card moving from one slot in the hand to another: what a sort looks like,
-// and what a card left standing does when the cards around it are spent.
-//
-// **It is the fourth mover and it stores no coordinates either**, for the reason travel's own
-// comment gives — both ends are `slotAt` calls made fresh every frame. What it does store that
-// the others do not is a row size at *each* end, because the two can differ: at the end of a
-// round a surviving card slides out of the row it was in and into the smaller or refilled one
-// that replaced it, and a single count could only describe one of those.
-//
-// **It never travels between the hand and anywhere else.** A card going to the pile, to the
-// table or back is one of the three journeys above; this is the one that begins and ends in
-// the row.
-type handSlide struct {
-	travel
+// The hand's slides are cardSlide, and the mover is cardslide.go — shared with the worm screen's
+// offer row since 2026-09-05. What stays here is what a *hand* slide is: the seat it uses, and the
+// fact that a queued card is drawn standing proud of the row.
 
-	card actionCard
-
-	// selected lifts both ends by selectedNudge, so a queued card slides along the raised
-	// line it is already on rather than dropping into the row and jumping back out of it.
-	selected bool
-
-	fromIndex, fromCount int
-	toIndex, toCount     int
-}
-
-// addSlide queues one, and drops any slide already heading for the same slot.
-//
-// **Pressing a second sort button before the first has landed is the case this exists for.**
-// Two slides converging on one slot would draw the card twice and leave `slidingTo` suppressing
-// the row's own copy until the later of them finished. The new arrangement is the true one, so
-// the older claim on that slot loses.
-func (s *CombatScene) addSlide(sl handSlide) {
-	kept := s.theatre.slides[:0]
-	for _, old := range s.theatre.slides {
-		if old.toIndex != sl.toIndex {
-			kept = append(kept, old)
-		}
-	}
-	s.theatre.slides = append(kept, sl)
+// addSlide queues one against the hand's row.
+func (s *CombatScene) addSlide(sl cardSlide) {
+	s.theatre.slides = addCardSlide(s.theatre.slides, sl)
 }
 
 // slidingTo reports whether a card is currently sliding into hand slot i, so the row can leave
-// that slot empty until it lands. Exactly like inboundTo, and hiding a drawing rather than a
-// card for exactly the same reason: the hand is already in its new order.
-func (s *CombatScene) slidingTo(i int) bool {
-	for _, sl := range s.theatre.slides {
-		if sl.toIndex == i {
-			return true
-		}
-	}
-	return false
-}
+// that slot empty until it lands.
+func (s *CombatScene) slidingTo(i int) bool { return slideInto(s.theatre.slides, i) }
 
-// drawSlides draws the cards moving within the row.
-//
-// **Flat, at full size, with no flip, spin or scale** — and that is the whole gesture. The other
-// three journeys cross the screen and dramatise it; this one is a card shuffling a few inches
-// sideways into place, and anything more would make re-sorting a hand look like an event.
+// drawSlides draws the cards moving within the hand.
 func (s *CombatScene) drawSlides(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, sl := range s.theatre.slides {
-		if sl.waiting() {
-			continue
-		}
-		t := easeOut(sl.progress())
-
-		from, to := slotAt(gs, sl.fromIndex, sl.fromCount), slotAt(gs, sl.toIndex, sl.toCount)
-		if sl.selected {
-			from.Y -= selectedNudge
-			to.Y -= selectedNudge
-		}
-
-		var geo ebiten.GeoM
-		geo.Translate(
-			float64(from.X)+(float64(to.X)-float64(from.X))*t,
-			float64(from.Y)+(float64(to.Y)-float64(from.Y))*t,
-		)
-		drawFlyingCard(gs, screen, cardSpec(sl.card, heldBy(s.fighter.Duelist, sl.card), true, sl.selected), cards.Hand, geo)
-	}
+	drawCardSlides(gs, screen, s.theatre.slides,
+		func(gs *state.GlobalState, i, count int) image.Point { return slotAt(gs, i, count) },
+		func(sl cardSlide) cards.Spec {
+			return cardSpec(sl.card, heldBy(s.fighter.Duelist, sl.card), true, sl.lift > 0)
+		})
 }
 
 // inboundTo reports whether a card is currently flying into hand slot i, so the row can

@@ -83,7 +83,10 @@
 //   - title.go, ascend.go — the front screen, and two stubs.
 //   - postbattle.go — pick a worm, then pick the card it eats. The first of the between-fight
 //     scenes; a shop and a room choice come after it, and each is an ordinary scene rather than a
-//     mode of the combat screen. It is also the prizes-dealt ring moment.
+//     mode of the combat screen. It is also the prizes-dealt ring moment. The row of cards a worm
+//     is pointed at carries the same three sort tabs the hand does (2026-09-05), hung off the row's
+//     own right edge; see handsort.go. Nothing slides there — the row is dealt, read and clicked
+//     once, so there is no arrangement of it to preserve.
 //   - postbattle_prose.go, postbattle_payout.go — the typewriter and the payout it types. The
 //     typewriter is general: a block of lines, a character clock, a pause between sentences, and
 //     an optional `pays` per line. The shop reuses it with no claims on any line.
@@ -169,21 +172,24 @@
 //     carddrag.go. Reordering a queued hand re-prices it; see combat_sort.go below.
 //   - carddrag.go — the press-and-drag lifecycle every reorderable row of cards shares: the hand,
 //     and the worn ring row on all three screens that draw it. dragRow is what a row supplies.
-//   - combat_sort.go — how the hand is arranged, and the three square buttons that choose it:
-//     $ cost, T type, E element, stacked in a column against the band's right edge and centred on
-//     the cards. Cost is the default and every mode ends with it — each is the deck overlay's own
-//     key chain with one key promoted to the front, so a row of cards means the same thing in the
-//     hand as in the panel. Three things about it: the sort re-applies on every refill, so a drawn
-//     card lands where it belongs rather than on the right-hand end and a drag survives only until
-//     the next deal; sortMode is the one field Init does not reset, because it is a reading
-//     preference rather than a fact about a duel; and it *can* change an outcome as of 2026-08-26,
-//     since a growing ring steps between the cards of one blow and the queue's order therefore
-//     prices them. The buttons stay live anyway — owner's call. sortHand returns the permutation it applied —
-//     it sorts a slice of indices and rebuilds rather than sorting in place — because a card
-//     sliding to its new seat has to know where it set off from and two identical cards cannot be
-//     told apart after the fact. elementRank and categoryRank are written out rather than read off
-//     the enums, for the reason formRank is: combat.Basic leads its enum as the zero value and
-//     trails on screen, where the colours are what the statuses are counted on.
+//   - handsort.go — the half of sorting that belongs to no screen (2026-09-05): the three modes,
+//     the comparison each makes, and sortTabs, the block of three tabs as a widget. A scene hands
+//     it where its rungs go and what to do when one is pressed. Cost is the default and every mode
+//     ends with it — each is the deck overlay's own key chain with one key promoted to the front,
+//     so a row of cards means the same thing wherever the row is. The mode is state.HandSort, one
+//     preference over every screen that deals a hand, so a player arranges by element once rather
+//     than on each screen that shows them cards; each scene keeps a working copy because a button's
+//     OnClick reaches no global state here. elementRank and categoryRank are written out rather than
+//     read off the enums, for the reason formRank is: combat.Basic leads its enum as the zero value
+//     and trails on screen, where the colours are what the statuses are counted on.
+//   - combat_sort.go — what the combat screen does with that: the queue is resynced and every card
+//     that moved is sent sliding. The sort re-applies on every refill, so a drawn card lands where
+//     it belongs rather than on the right-hand end and a drag survives only until the next deal;
+//     and it *can* change an outcome as of 2026-08-26, since a growing ring steps between the cards
+//     of one blow and the queue's order therefore prices them. The buttons stay live anyway —
+//     owner's call. sortHand returns the permutation it applied — it sorts a slice of indices and
+//     rebuilds rather than sorting in place — because a card sliding to its new seat has to know
+//     where it set off from and two identical cards cannot be told apart after the fact.
 //   - combat_mathbox.go — the hand dialog: the blow's arithmetic acted out across the band above
 //     the hand on the beat a hand fires — each card's own figure flying down into a line, then the
 //     multiplier, then the answer, all of it at double the type it was drawn at before 2026-08-19,

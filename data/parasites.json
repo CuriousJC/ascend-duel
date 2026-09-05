@@ -1,11 +1,88 @@
 [
   {
+    "ParasiteRecord": "graft",
+    "Name": "Graft",
+    "Target": "clone",
+    "Count": 2,
+    "Text": "first card\nbecomes\nthe second"
+  },
+  {
+    "ParasiteRecord": "mimic",
+    "Name": "Mimic",
+    "Target": "duplicate",
+    "Count": 1,
+    "Text": "copy one\ncard"
+  },
+  {
     "ParasiteRecord": "arcbore",
     "Name": "Arcbore",
     "Target": "element",
     "Value": "lightning",
     "Count": 2,
-    "Text": "two cards\nturn\nLIGHTNING"
+    "Text": "2 CARDS BECOME LIGHTNING"
+  },
+  {
+    "ParasiteRecord": "emberbore",
+    "Name": "Emberbore",
+    "Target": "element",
+    "Value": "fire",
+    "Count": 2,
+    "Text": "two cards\nturn FIRE"
+  },
+  {
+    "ParasiteRecord": "hexbore",
+    "Name": "Hexbore",
+    "Target": "element",
+    "Value": "arcane",
+    "Count": 2,
+    "Text": "two cards\nturn\nARCANE"
+  },
+  {
+    "ParasiteRecord": "loambore",
+    "Name": "Loambore",
+    "Target": "element",
+    "Value": "earth",
+    "Count": 2,
+    "Text": "two cards\nturn EARTH"
+  },
+  {
+    "ParasiteRecord": "rimebore",
+    "Name": "Rimebore",
+    "Target": "element",
+    "Value": "ice",
+    "Count": 2,
+    "Text": "two cards\nturn ICE"
+  },
+  {
+    "ParasiteRecord": "edgegrub",
+    "Name": "Edgegrub",
+    "Target": "form",
+    "Value": "slash",
+    "Count": 2,
+    "Text": "two cards\ncount as\nSLASH"
+  },
+  {
+    "ParasiteRecord": "maulgrub",
+    "Name": "Maulgrub",
+    "Target": "form",
+    "Value": "crush",
+    "Count": 2,
+    "Text": "two cards\ncount as\nCRUSH"
+  },
+  {
+    "ParasiteRecord": "thorngrub",
+    "Name": "Thorngrub",
+    "Target": "form",
+    "Value": "stab",
+    "Count": 2,
+    "Text": "two cards\ncount as\nSTAB"
+  },
+  {
+    "ParasiteRecord": "gnaw",
+    "Name": "Gnaw",
+    "Target": "remove",
+    "Count": 2,
+    "Text": "eat two\ncards"
   },
   {
     "ParasiteRecord": "brood",
@@ -26,37 +103,6 @@
     "Text": "played:\nraise 1\nshield"
   },
   {
-    "ParasiteRecord": "edgegrub",
-    "Name": "Edgegrub",
-    "Target": "form",
-    "Value": "slash",
-    "Count": 2,
-    "Text": "two cards\ncount as\nSLASH"
-  },
-  {
-    "ParasiteRecord": "effigy",
-    "Name": "Effigy",
-    "Target": "swap",
-    "Value": "Strike",
-    "Count": 1,
-    "Text": "make one card\na STRIKE"
-  },
-  {
-    "ParasiteRecord": "emberbore",
-    "Name": "Emberbore",
-    "Target": "element",
-    "Value": "fire",
-    "Count": 2,
-    "Text": "two cards\nturn FIRE"
-  },
-  {
-    "ParasiteRecord": "gnaw",
-    "Name": "Gnaw",
-    "Target": "remove",
-    "Count": 2,
-    "Text": "eat two\ncards"
-  },
-  {
     "ParasiteRecord": "goad",
     "Name": "Goad",
     "Target": "rider",
@@ -64,29 +110,6 @@
     "Value": "10",
     "Count": 1,
     "Text": "played:\n+10 DMG\nthis turn"
-  },
-  {
-    "ParasiteRecord": "graft",
-    "Name": "Graft",
-    "Target": "clone",
-    "Count": 2,
-    "Text": "first card\nbecomes\nthe second"
-  },
-  {
-    "ParasiteRecord": "hexbore",
-    "Name": "Hexbore",
-    "Target": "element",
-    "Value": "arcane",
-    "Count": 2,
-    "Text": "two cards\nturn\nARCANE"
-  },
-  {
-    "ParasiteRecord": "hoard",
-    "Name": "Hoard",
-    "Target": "vitae",
-    "Value": "20",
-    "Count": 0,
-    "Text": "gain 20\nvitae"
   },
   {
     "ParasiteRecord": "hunger",
@@ -107,29 +130,6 @@
     "Text": "one card\nheals 10"
   },
   {
-    "ParasiteRecord": "loambore",
-    "Name": "Loambore",
-    "Target": "element",
-    "Value": "earth",
-    "Count": 2,
-    "Text": "two cards\nturn EARTH"
-  },
-  {
-    "ParasiteRecord": "maulgrub",
-    "Name": "Maulgrub",
-    "Target": "form",
-    "Value": "crush",
-    "Count": 2,
-    "Text": "two cards\ncount as\nCRUSH"
-  },
-  {
-    "ParasiteRecord": "mimic",
-    "Name": "Mimic",
-    "Target": "duplicate",
-    "Count": 1,
-    "Text": "copy one\ncard"
-  },
-  {
     "ParasiteRecord": "patience",
     "Name": "Patience",
     "Target": "rider",
@@ -137,22 +137,6 @@
     "Value": "200",
     "Count": 1,
     "Text": "held back:\n2x DMG"
-  },
-  {
-    "ParasiteRecord": "rimebore",
-    "Name": "Rimebore",
-    "Target": "element",
-    "Value": "ice",
-    "Count": 2,
-    "Text": "two cards\nturn ICE"
-  },
-  {
-    "ParasiteRecord": "rockshower",
-    "Name": "Rockshower",
-    "Target": "stones",
-    "Value": "3",
-    "Count": 0,
-    "Text": "three random\nstones,\nall kept"
   },
   {
     "ParasiteRecord": "spite",
@@ -164,11 +148,27 @@
     "Text": "held back:\n+10 DMG"
   },
   {
-    "ParasiteRecord": "thorngrub",
-    "Name": "Thorngrub",
-    "Target": "form",
-    "Value": "stab",
-    "Count": 2,
-    "Text": "two cards\ncount as\nSTAB"
+    "ParasiteRecord": "rockshower",
+    "Name": "Rockshower",
+    "Target": "stones",
+    "Value": "3",
+    "Count": 0,
+    "Text": "three random\nstones,\nall kept"
+  },
+  {
+    "ParasiteRecord": "effigy",
+    "Name": "Effigy",
+    "Target": "swap",
+    "Value": "Strike",
+    "Count": 1,
+    "Text": "make one card\na STRIKE"
+  },
+  {
+    "ParasiteRecord": "hoard",
+    "Name": "Hoard",
+    "Target": "vitae",
+    "Value": "20",
+    "Count": 0,
+    "Text": "gain 20\nvitae"
   }
 ]

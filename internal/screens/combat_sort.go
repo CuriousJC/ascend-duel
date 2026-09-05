@@ -2,18 +2,18 @@ package screens
 
 import (
 	"image"
-	"image/color"
 	"sort"
 
-	"github.com/curiousjc/ascend-duel/internal/combat"
-	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/state"
-	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// How the hand is arranged, and the three buttons that choose it.
+// How the *hand* is arranged: what the combat screen does when a sort tab is pressed.
+//
+// **The modes, the comparisons and the tab block itself are in handsort.go** *(2026-09-05)*, which
+// belongs to no screen — the worm screen sorts its offer with the same three tabs. What is left
+// here is the half only a duel has: a queue to resync and a row of cards to send sliding.
 //
 // **The order of the queue is a rule as of 2026-08-26** *(owner's call)*. It was not one for the
 // first three months of this screen, and this file was written under the old rule: cross-category
@@ -33,69 +33,18 @@ import (
 // instead of on the right-hand end. A drag still moves a card and still survives until the next
 // refill, at which point the sort reclaims the row.
 //
-// **The mode survives Init**, unlike everything else on this screen. It is a reading preference
-// rather than a fact about a duel, and having it snap back to cost at the start of every fight
-// would make it something the player re-presses rather than something they set.
+// **The mode survives Init**, unlike everything else on this screen — and it now survives leaving
+// the screen entirely, being `gs.HandSort` rather than a field here. It is a reading preference
+// rather than a fact about a duel.
 
-// handSort is which arrangement the hand is in. Cost is the zero value because it is the
-// default, so a scene that never touches this field is already sorted the way a fresh one is.
-type handSort int
-
-const (
-	sortByCost handSort = iota
-	sortByType
-	sortByElement
-)
-
-// The three sort buttons are the top three slots of the control column — see controlcolumn.go,
+// The three sort tabs are the top three rungs of the control column — see controlcolumn.go,
 // which owns the geometry the frame's ledger button shares.
-//
-// **The clear air between the last card of the widest hand and the column is all that is left
-// here**, because it is the hand's business rather than the column's: it is what cardBandWidth
-// takes off the cards.
-const sortColumnGap = 12
 
-// sortButtonSpecs is the block, top to bottom, with the label each tab carries.
-//
-// **The labels are bare nouns** *(2026-09-04, owner's call)*. They were `$`, `T` and `E`, then
-// `Sort: Cost` and its two siblings — and the prefix went as soon as the three were one block,
-// because a block of three tabs is self-evidently one control and the word was then written three
-// times to say what the group is. `Form` is the axis the middle one actually sorts on; it was
-// called Type when the label was one letter.
-//
-// **They carry no tooltip**, and with the labels spelled out they no longer want one — see the
-// tooltip entry in TODO.md, which names the figures written straight onto the table as the gap.
-var sortButtonSpecs = []struct {
-	mode  handSort
-	label string
-}{
-	{sortByCost, "Cost"},
-	{sortByType, "Form"},
-	{sortByElement, "Element"},
-}
-
-// sortColumnRect is what the three of them occupy together: **one block, with no air in it**
-// *(2026-09-04, owner's call)*.
-//
-// They were three separate buttons with a gap between each, which is what they still are to the
-// code — three models.Button, one latched. What changed is that they are drawn touching, so the
-// group reads as one control with three tabs rather than as three controls that happen to agree
-// about which of them is lit. The latch was already doing the work of a tab strip; the spacing was
-// the only thing saying otherwise.
-//
-// It is derived from the tabs rather than written down, so anything measured against the block
-// follows if the row moves.
+// sortColumnRect is what the block occupies, for anything measuring against it.
 func sortColumnRect(gs *state.GlobalState) image.Rectangle {
 	first := sortTabRect(gs, 0)
 	last := sortTabRect(gs, len(sortButtonSpecs)-1)
 	return image.Rect(first.Min.X, first.Min.Y, first.Max.X, last.Max.Y)
-}
-
-// sortButtonCentre is the centre of the i'th button in the column, which is what
-// models.Button stores.
-func sortButtonCentre(gs *state.GlobalState, i int) image.Point {
-	r := sortTabRect(gs, i)
-	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }
 
 // setSort switches the arrangement, rearranges the hand and sends every card that moved
@@ -111,19 +60,9 @@ func sortButtonCentre(gs *state.GlobalState, i int) image.Point {
 func (s *CombatScene) setSort(mode handSort) {
 	s.sortMode = mode
 
-	n := len(s.hand)
-	for to, from := range s.sortHand() {
-		if from == to {
-			continue
-		}
-		s.addSlide(handSlide{
-			travel:    newTravel(0, slideTicks),
-			card:      s.hand[to].actionCard,
-			selected:  s.hand[to].selected,
-			fromIndex: from, fromCount: n,
-			toIndex: to, toCount: n,
-		})
-	}
+	s.theatre.slides = slidesFor(s.theatre.slides, s.sortHand(),
+		func(i int) actionCard { return s.hand[i].actionCard },
+		func(i int) int { return selectedLift(s.hand[i].selected) })
 
 	trace.Logf("input", "hand sorted by %v -> %s", mode, handLabel(s.hand))
 }
@@ -145,6 +84,14 @@ func (s *CombatScene) setSort(mode handSort) {
 // identical cards cannot be told apart afterwards by looking at them. Sorting a slice of
 // indices and rebuilding the hand from it is what makes that answer available at all; sorting
 // the cards in place throws it away.
+//
+// **It reads `s.sortMode`, which is this screen's working copy of `gs.HandSort`.** The
+// preference is global — see that field — but neither of this function's callers is handed a
+// `*GlobalState`: a refill is reached from a button callback, and `OpeningCards` builds a bare
+// scene with no state at all to answer what a seed deals. Threading one in would put the whole
+// deck path in the business of knowing about a screen, and a button reaching global state is
+// exactly what this package's callbacks do not do. `Init` loads the copy and
+// `updateSortButtons` writes it back each tick, so the two cannot disagree for a frame.
 func (s *CombatScene) sortHand() []int {
 	mode := s.sortMode
 
@@ -166,86 +113,6 @@ func (s *CombatScene) sortHand() []int {
 	return order
 }
 
-// handLess is the comparison each mode makes. Every one of them falls through to the same
-// secondary chain, so the modes differ only in what they put first.
-func handLess(mode handSort, a, b actionCard) bool {
-	switch mode {
-	case sortByType:
-		if ra, rb := categoryRank(a.Category()), categoryRank(b.Category()); ra != rb {
-			return ra < rb
-		}
-	case sortByElement:
-		if ra, rb := elementRank(a.Element), elementRank(b.Element); ra != rb {
-			return ra < rb
-		}
-	}
-	return costChainLess(a, b)
-}
-
-// costChainLess is the default order, and the tail every other mode ends with: cheapest first,
-// then the deck overlay's own keys.
-//
-// **It is the overlay's chain with cost promoted to the front**, deliberately rather than
-// coincidentally. The panel arranges the whole deck form-first because what a player looks
-// for there is how much of a form they still hold; a hand is looked at to find what can be
-// afforded, so cost leads. Everything under that is the same order in both places, so scanning
-// a row of cards means the same thing wherever the row is.
-func costChainLess(a, b actionCard) bool {
-	if ca, cb := a.Cost(), b.Cost(); ca != cb {
-		return ca < cb
-	}
-	if ra, rb := formRank(a.Form()), formRank(b.Form()); ra != rb {
-		return ra < rb
-	}
-	if a.Concept != b.Concept {
-		return a.Concept < b.Concept
-	}
-	return elementRank(a.Element) < elementRank(b.Element)
-}
-
-// categoryRank is the order the type sort runs in: everything that attacks, then the plans.
-//
-// A function rather than the enum's own order, for the reason formRank is one — the enum is
-// grouped for the rules, and reading it here would tie how the hand is arranged to a rules
-// decision that has no reason to keep agreeing with it.
-func categoryRank(c combat.Category) int {
-	switch c {
-	case combat.CategoryAttack:
-		return 0
-	case combat.CategoryDefend:
-		return 1
-	default:
-		return 2
-	}
-}
-
-// elementRank is the order the element sort runs in: fire, ice, lightning, earth, arcane, then the
-// colourless cards.
-//
-// **Basic is last and the enum has it first**, which is the whole reason this is written out.
-// `combat.Basic` is the zero value because a card that names no element is a plain card — a
-// rules decision — but on screen the colourless cards are the plans, and the player is reading
-// the five colours to see what a mix is worth. So the run of colours leads and the drab tail
-// follows, which also puts the plans at the same end of the row as the type sort does.
-func elementRank(e combat.Element) int {
-	switch e {
-	case combat.Fire:
-		return 0
-	case combat.Ice:
-		return 1
-	case combat.Lightning:
-		return 2
-	case combat.Earth:
-		return 3
-	case combat.Arcane:
-		return 4
-	case combat.Basic:
-		return 5
-	default:
-		return 6
-	}
-}
-
 // updateSortButtons runs the column and latches whichever mode is active.
 //
 // **All three go dead outside planning**, and that is a rule rather than tidiness: a card that
@@ -253,54 +120,23 @@ func elementRank(e combat.Element) int {
 // rearranging the hand mid-round would light the wrong card on the table. The deck overlay
 // takes them out for the reason it takes out everything else: it is a dialog.
 func (s *CombatScene) updateSortButtons(gs *state.GlobalState) {
-	live := s.planning() && !s.modalUp()
-	for i, b := range s.sortButtons {
-		b.Latched = sortButtonSpecs[i].mode == s.sortMode
-		setEnabled(b, live)
-		systems.UpdateButton(gs, b)
-	}
+	s.sortTabs.update(gs, s.planning() && !s.modalUp())
+
+	// **The write back is here rather than in the callback**, because a button's OnClick reaches
+	// no global state on any screen in this package — see PostBattleScene.skipping for the same
+	// shape. The scene's copy is what a press moves; this is where it becomes the preference every
+	// other screen reads.
+	setHandSort(gs, s.sortMode)
 }
 
 // drawSortButtons draws the column.
 func (s *CombatScene) drawSortButtons(gs *state.GlobalState, screen *ebiten.Image) {
-	for _, b := range s.sortButtons {
-		systems.DrawButton(gs, screen, b)
-	}
+	s.sortTabs.draw(gs, screen)
 }
 
-// buildSortButtons builds the column, wiring each button to the mode it selects. A method on
-// the scene rather than a free function because the callback has to reach the scene's own
-// state, which is the same reason every other widget on this screen is built here.
+// buildSortButtons builds the column. A method on the scene rather than a free function because
+// the callback has to reach the scene's own state, which is the same reason every other widget on
+// this screen is built here.
 func (s *CombatScene) buildSortButtons() {
-	s.sortButtons = make([]*models.Button, 0, len(sortButtonSpecs))
-	for _, spec := range sortButtonSpecs {
-		mode := spec.mode // captured per button, not per loop
-		b := models.NewButton(ControlColumnWidth(), ControlButtonHeight, spec.label,
-			func() { s.setSort(mode) })
-		b.BaseColor = sortButtonColor
-		b.TextSize = ControlButtonText
-		s.sortButtons = append(s.sortButtons, b)
-	}
-}
-
-// sortButtonColor is a muted slate, quieter than either button on the strip below.
-//
-// **Deliberately not crimson or the Discard yellow**: those two commit a round and these three only
-// rearrange one — which is no longer the same as saying they change nothing, since 2026-08-26. They
-// are still the quieter control of the two kinds. The base is light enough to leave the latched
-// state somewhere to go — the active mode is drawn *darker* than the two beside it, so the
-// bright end of the ramp stays with hover and press.
-var sortButtonColor = color.RGBA{R: 110, G: 125, B: 155, A: 255}
-
-func (m handSort) String() string {
-	switch m {
-	case sortByCost:
-		return "cost"
-	case sortByType:
-		return "type"
-	case sortByElement:
-		return "element"
-	default:
-		return "?"
-	}
+	s.sortTabs = newSortTabs(sortTabRect, s.setSort)
 }

@@ -53,8 +53,19 @@ func buildRingRect(gs *state.GlobalState) image.Rectangle {
 }
 
 // buildBandBottom is where the band ends, so a screen below it knows what it has left.
+//
+// **It is the lower of the two, and that is not pedantry** *(2026-09-05)*. The ring row is dropped
+// ringPaneTopDrop below the duelist card's top and is the same height, so the row ends that many
+// pixels *under* the card — and everything that placed itself below the band was reading the card
+// alone and landing inside the rings. That was invisible while both were 224 tall on a 960-high
+// screen and the numbers under it were written by eye; the cards grew a quarter on 2026-09-04 and
+// the reward screen's narration ended up struck through by a worn ring.
 func buildBandBottom(gs *state.GlobalState) int {
-	return buildCardRect(gs).Max.Y
+	card := buildCardRect(gs).Max.Y
+	if rings := buildRingRect(gs).Max.Y; rings > card {
+		return rings
+	}
+	return card
 }
 
 // drawBuildBand puts the whole thing up: the duelist as they came out of the fight, and the rings

@@ -17,7 +17,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
 | `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
-| `hands.json` | `LoadHands` | the poker hands on each of three matching axes, and what each multiplies a blow by |
+| `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
@@ -272,21 +272,35 @@ first lesson wherever Go's hashing felt like it.
 
 ### Hands
 
-`hands.json` is **one list of nineteen**: six poker rungs, Pair through Five of a Kind, on each of
-three axes, plus the one High Card they fall back to. Each carries a key, an ID, a name, a `match`,
-`groups` and a percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to
-the narrowest axis.
+`hands.json` is **one list of twenty-five**: six poker rungs, Pair through Five of a Kind, on each
+of three axes; four rungs counting *difference*; two on the cost axis; plus the one High Card they
+fall back to. Each carries a key, an ID, a name, a `match`, `groups`, an optional `vary` and a
+percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to the narrowest
+axis.
 
 **`match` is the axis, and it is required** *(2026-08-19)* — `concept` (copies of the same card),
-`form` (stab/slash/crush) or `element`. A missing or unknown one is refused at init rather than
-defaulted: an entry landing on the wrong axis by omission would be a balance change nobody made.
-`groups` counts distinct values **on that axis**, so `[3,2]` on `element` is three cards of one
-colour and two of another.
+`form` (stab/slash/crush/defend), `element`, or `cost` (the same action points, added 2026-09-05).
+A missing or unknown one is refused at init rather than defaulted: an entry landing on the wrong
+axis by omission would be a balance change nobody made. `groups` counts distinct values **on that
+axis**, so `[3,2]` on `element` is three cards of one colour and two of another, and `[1,1,1]` is
+three cards of three different colours.
+
+**`vary` is an axis every card must *differ* on** *(2026-09-05)*, and it is optional. Groups say
+which cards agree; this is the only way to say which must disagree, and Weaponmaster — `cost`
+`[3]` with `"vary": "form"`, three cards of one cost in three different forms — is the hand that
+needed it. It is refused if it names the axis the hand already counts on, or if a group asks for
+more distinct values than that axis has.
 
 **Keys carry the axis and the names are long**: `concept-two-pair` / `form-two-pair` /
-`element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. IDs are banded
-— 1 high card, 10s concept, 20s form, 30s element — so a new axis or rung lands without moving one.
-The five-of-a-kind rungs did exactly that on 2026-08-19, landing as 15, 25 and 35.
+`element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. The difference
+rungs are named rather than described — `element-prism`, `element-spectrum`,
+`element-elementalist`, `form-arsenal`, `cost-rising-attack`, `cost-weaponmaster`. IDs are banded
+— 1 high card, 10s concept, 20s form, 30s element, 40s cost — so a new axis or rung lands without
+moving one. It has paid off twice: the five-of-a-kind rungs landed as 15, 25 and 35 in 2026-08-19,
+and the six new rungs as 26, 36–38 and 40–41 on 2026-09-05.
+
+**Every rung needs a stone**, so a new hand is also a new record in `stones.json` — `loadStones`
+panics on a rung with none.
 
 **The three ladders are priced apart and are meant to be.** They come from measured reachability
 against the real starting deck rather than from poker's ordering: a form pair is a 100% hand at 110
@@ -317,7 +331,9 @@ file is the opposite of what the narrowing was for.
 A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
 engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
 wanting more cards than a turn holds, and one wanting more groups than its axis has values, since
-only three forms and five elements ever reach a blow.
+only four forms and five elements ever reach a blow. The cost axis is left unchecked: a card
+declares its own cost, so the width of that axis is a fact about the shipped deck rather than an
+enum.
 
 ## Adding a file, or a field
 

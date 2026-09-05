@@ -103,6 +103,15 @@ const (
 
 	// AxisElement counts cards of the same colour. `Basic` never counts, for the same reason.
 	AxisElement
+
+	// AxisCost counts cards that cost the same action points *(2026-09-05)*. It is the fourth
+	// axis and it is genuinely orthogonal to the other three in the player's deck: every cost
+	// tier holds three or four forms and every form spans all three costs, so a hand counting
+	// cost is not a hand counting form under another name.
+	//
+	// **Every card carries a cost, so there is no absence here** — unlike `FormNone` and `Basic`,
+	// a cost of zero is a real value rather than "this card does not play on this axis".
+	AxisCost
 )
 
 // axisNames are the strings hands.json writes. Index by Axis.
@@ -110,11 +119,12 @@ var axisNames = [...]string{
 	AxisConcept: "concept",
 	AxisForm:    "form",
 	AxisElement: "element",
+	AxisCost:    "cost",
 }
 
 // AllAxes is every axis, in tie-break order. It exists so a test and a reference screen can walk
 // them without knowing how many there are.
-var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement}
+var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement, AxisCost}
 
 func (a Axis) String() string {
 	if int(a) < 0 || int(a) >= len(axisNames) {
@@ -152,6 +162,9 @@ func matchValue(c Card, a Axis) (int, bool) {
 	case AxisElement:
 		e := c.Element
 		return int(e), e != Basic
+	case AxisCost:
+		// No absence: a card that costs nothing costs nothing, which is a value like any other.
+		return c.Cost(), true
 	default:
 		return int(c.Concept), true
 	}
@@ -171,6 +184,12 @@ func (a Axis) spread() int {
 		return len(Forms())
 	case AxisElement:
 		return ElementCount - 1
+	case AxisCost:
+		// **Left unchecked, like concepts.** A card declares its own cost — see the note in
+		// CLAUDE.md about nothing stopping a data file writing 5 — so the width of this axis is a
+		// fact about the shipped deck rather than about an enum, and a bound written here would
+		// be a second place to keep in step with duelist_cards.json.
+		return 0
 	default:
 		return 0
 	}
@@ -189,6 +208,20 @@ type Hand struct {
 	// `[3,2]` is a full house; the groups naming distinct values is why five cards sharing one
 	// value can never be one.
 	Groups []int
+
+	// Vary is an axis every card in the hand must *differ* on, and Varies says whether one was
+	// named *(2026-09-05)*.
+	//
+	// **It is the second constraint the grammar needed and the smallest one that would do.**
+	// Groups already say "these cards agree"; nothing said "and these cards disagree", so
+	// Weaponmaster — three cards of one cost, each a different form — could not be written at
+	// all. `[1,1,1]` expresses all-different on the hand's *own* axis; Vary is what expresses it
+	// on a second one.
+	//
+	// A card carrying no value on the Vary axis cannot join a hand that names one, for the same
+	// reason `FormNone` cannot join a form hand: it has nothing to differ with.
+	Vary   Axis
+	Varies bool
 
 	// Multiplier is this hand's damage multiplier, in percent, and is the whole of what forming
 	// it buys.
@@ -431,14 +464,22 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 	lead := -1
 	for _, g := range h.Groups {
 		best, bestCount := -1, 0
+		var bestTake []int
 		for j := range tallies {
 			if tallies[j].spent || len(tallies[j].members) < g {
+				continue
+			}
+			// A hand naming a Vary axis wants g members that differ on it, which is not simply
+			// the first g of the tally — so the members are chosen here rather than sliced below,
+			// and a tally that cannot supply them does not qualify at all.
+			take, ok := distinctOn(turn, tallies[j].members, h, g)
+			if !ok {
 				continue
 			}
 			// Strictly greater, so a tie goes to the earlier tally — which is the concept whose
 			// first card was played first, since tallies are built by walking the turn.
 			if len(tallies[j].members) > bestCount {
-				best, bestCount = j, len(tallies[j].members)
+				best, bestCount, bestTake = j, len(tallies[j].members), take
 			}
 		}
 		if best < 0 {
@@ -446,15 +487,51 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 		}
 		tallies[best].spent = true
 		if lead < 0 {
-			lead = tallies[best].members[0]
+			lead = bestTake[0]
 		}
-		out = append(out, tallies[best].members[:g]...)
+		out = append(out, bestTake...)
 	}
 
 	// The cards are collected group by group, so a full house arrives as its three and then its
 	// two. Sorting puts them back into the order they resolve, which is what a bracket wants.
 	sort.Ints(out)
 	return out, lead, true
+}
+
+// distinctOn picks g of a tally's members, honouring the hand's Vary clause.
+//
+// **Without a Vary axis this is the first g members**, which is what the matcher always did — the
+// cards are already in the order they were played, so a prefix is the earliest ones.
+//
+// **With one, it is one card per distinct value on that axis**, taken in play order, and it
+// reports failure when the tally cannot supply g different values. A card carrying no value on the
+// Vary axis is skipped rather than counted under a zero the others would join, which is the same
+// rule matchValue applies to the hand's own axis.
+//
+// Greedy is exact here: the requirement is that the chosen cards be pairwise different on one
+// axis, so taking the first card of each distinct value finds a set whenever one exists.
+func distinctOn(turn []Slot, members []int, h Hand, g int) ([]int, bool) {
+	if !h.Varies {
+		if len(members) < g {
+			return nil, false
+		}
+		return members[:g], true
+	}
+
+	seen := map[int]bool{}
+	out := make([]int, 0, g)
+	for _, i := range members {
+		v, counts := matchValue(turn[i].Card, h.Vary)
+		if !counts || seen[v] {
+			continue
+		}
+		seen[v] = true
+		out = append(out, i)
+		if len(out) == g {
+			return out, true
+		}
+	}
+	return nil, false
 }
 
 // biggestAttack is the High Card: the single attack that hits hardest, or — for a turn that queued

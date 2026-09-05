@@ -1,6 +1,7 @@
 package combat
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
@@ -59,10 +60,22 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 		"element-full-house":      "Elemental Full House",
 		"element-four-of-a-kind":  "Elemental Four of a Kind",
 		"element-five-of-a-kind":  "Elemental Five of a Kind",
+
+		// **The spread rungs, and the cost axis** *(owner's call, 2026-09-05)*. Everything above
+		// counts copies; these count *difference*, which is the other thing a set of cards can
+		// have in common. Prism, Spectrum and Elementalist are the elemental ladder of it, Arsenal
+		// is the form one, and the two cost rungs are the axis that arrived with them.
+		"element-prism":        "Prism",
+		"element-spectrum":     "Spectrum",
+		"element-elementalist": "Elementalist",
+		"form-arsenal":         "Arsenal",
+
+		"cost-rising-attack": "Rising Attack",
+		"cost-weaponmaster":  "Weaponmaster",
 	}
 
 	if got := len(Hands()); got != len(want) {
-		t.Errorf("the catalogue holds %d hands, want %d - six rungs on each of three axes, plus the High Card", got, len(want))
+		t.Errorf("the catalogue holds %d hands, want %d - six rungs on each of three of-a-kind axes, four spread rungs, two cost rungs, plus the High Card", got, len(want))
 	}
 	for key, name := range want {
 		h, ok := handByKey(key)
@@ -117,33 +130,73 @@ func TestAHandCarriesItsWholeName(t *testing.T) {
 	}
 }
 
-// The rungs have to climb, or a bigger hand would pay less than the one inside it and the
-// best-hand rule would pick the wrong one. It climbs once per axis *(2026-08-19)*, since every
-// rung exists three times over. Across axes
-// the numbers deliberately do not line up — a form pair is far commoner than a card pair and pays
-// less — so this walks each ladder on its own.
+// The rungs have to climb, or a hand would pay less than one it *contains* and the best-hand rule
+// would pick the wrong one.
+//
+// **It climbs by containment, not by poker's order** *(owner's call, 2026-09-05)*. This used to
+// walk pair, two pair, three of a kind, full house, four of a kind, five of a kind and require each
+// to beat the last — which is poker's ladder, and poker has thirteen ranks. This deck has four
+// forms and five elements, so on those axes **spreading is harder than stacking**: a Form Two Pair
+// wants two distinct forms and four cards and is measurably rarer than a Form Three of a Kind. The
+// old order forced the ladder to pay the commoner hand more, which is the inversion tools/handodds
+// was showing and this test was enforcing.
+//
+// What survives is the part that was always sound: a rung whose groups **dominate** another's on
+// the same axis contains it, so it must pay more. `[3]` contains `[2]`; `[3,2]` contains both `[3]`
+// and `[2,2]`; `[5]` contains `[4]`. `[2,2]` and `[3]` contain neither, so the file is free to
+// price them in whatever order the measurements say.
 func TestTheLadderClimbs(t *testing.T) {
-	for _, axis := range []string{"concept", "form", "element"} {
-		last := 0
-		for _, rung := range []string{"pair", "two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
-			"five-of-a-kind"} {
-			key := axis + "-" + rung
-			h, ok := handByKey(key)
-			if !ok {
-				t.Fatalf("the catalogue has no %q", key)
+	hands := Hands()
+	for _, big := range hands {
+		for _, small := range hands {
+			if big.Key == small.Key || big.Match != small.Match {
+				continue
 			}
-			if h.Multiplier <= last {
-				t.Errorf("%s pays x%d, which is not more than the rung below it (x%d)", key, h.Multiplier, last)
+			if !dominates(big.Groups, small.Groups) {
+				continue
 			}
-			last = h.Multiplier
+			if big.Multiplier <= small.Multiplier {
+				t.Errorf("%s pays x%d and contains %s at x%d, so nobody would ever build it",
+					big.Key, big.Multiplier, small.Key, small.Multiplier)
+			}
 		}
 	}
 }
 
-// Every rung exists on every axis, and no axis is missing one. A rung built on two axes and not
-// the third would be a hole a player could fall into without ever being told it was there.
-func TestEveryRungExistsOnEveryAxis(t *testing.T) {
-	for _, axis := range AllAxes {
+// dominates reports whether every group of `small` can be matched to a distinct group of `big` that
+// is at least as large — which is what it means for a hand to contain another on the same axis.
+//
+// Greedy on both sorted descending is exact: the largest demand is best served by the largest
+// supply, so if that pairing fails no other succeeds.
+func dominates(big, small []int) bool {
+	if len(small) > len(big) {
+		return false
+	}
+	b := append([]int(nil), big...)
+	sm := append([]int(nil), small...)
+	sort.Sort(sort.Reverse(sort.IntSlice(b)))
+	sort.Sort(sort.Reverse(sort.IntSlice(sm)))
+	for i, want := range sm {
+		if b[i] < want {
+			return false
+		}
+	}
+	return true
+}
+
+// Every of-a-kind rung exists on every of-a-kind axis, and no axis is missing one. A rung built on
+// two axes and not the third would be a hole a player could fall into without ever being told it
+// was there.
+//
+// **The cost axis is deliberately outside this** *(owner's call, 2026-09-05)*. Concept, form and
+// element carry the whole six-rung ladder because the same shape means something on each of them.
+// Cost carries two bespoke rungs instead — Rising Attack, three cards of three different costs, and
+// Weaponmaster, three cards of one cost in three different forms — because the of-a-kind rungs on
+// that axis would be redundant: a cost Three of a Kind is a rung with no idea in it, sitting under
+// Weaponmaster and above nothing. So this walks the three axes that carry the ladder, and the check
+// underneath it is what holds the cost axis to the catalogue.
+func TestEveryRungExistsOnEveryOfAKindAxis(t *testing.T) {
+	for _, axis := range []Axis{AxisConcept, AxisForm, AxisElement} {
 		for _, rung := range []string{"pair", "two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
 			"five-of-a-kind"} {
 			key := axis.String() + "-" + rung
@@ -159,25 +212,46 @@ func TestEveryRungExistsOnEveryAxis(t *testing.T) {
 	}
 }
 
-// The narrower axis pays more at every rung, which is what makes aiming at a card hand worth the
-// extra difficulty. A concept fixes a form, so a card hand is always also a form hand — if the
-// form rung paid the same or better, nobody would ever have reason to build the narrower one.
-func TestANarrowerAxisPaysMore(t *testing.T) {
+// **A hand's key names the axis it counts on**, which is what makes the of-a-kind walk above a
+// check rather than a coincidence, and what keeps a hand added to the cost axis from being filed
+// under a name that says element.
+func TestEveryHandsKeyNamesItsAxis(t *testing.T) {
+	for _, h := range Hands() {
+		if h.Key == highCardKey {
+			// The fallback belongs to no axis: it is what a turn forms when it built nothing.
+			continue
+		}
+		if !strings.HasPrefix(h.Key, h.Match.String()+"-") {
+			t.Errorf("hand %q counts on %s, so its key should begin %q", h.Key, h.Match, h.Match.String()+"-")
+		}
+	}
+}
+
+// A card hand pays more than the form hand inside it, which is what makes aiming at the narrower
+// one worth the extra difficulty. **A concept fixes a form**, so any set of cards sharing a concept
+// also shares a form — if the form rung paid the same or better, nobody would ever have reason to
+// build the card one.
+//
+// **Element is not in this and never was entitled to be** *(owner's call, 2026-09-05)*. A concept
+// does *not* fix an element — a fire Jab and an ice Jab are one concept and two colours — so there
+// is no containment between the two axes and no reason the card rung must outpay the elemental one.
+// The measurements say it often should not: an Elemental Two Pair is rarer than a Form Two Pair and
+// is priced above it. This used to require concept > element at every rung, which was an assumption
+// wearing a proof's clothes.
+func TestACardHandPaysMoreThanTheFormHandInsideIt(t *testing.T) {
 	for _, rung := range []string{"pair", "two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
 		"five-of-a-kind"} {
 		card, ok := handByKey("concept-" + rung)
 		if !ok {
 			t.Fatalf("the catalogue has no concept-%s", rung)
 		}
-		for _, wider := range []string{"form", "element"} {
-			h, ok := handByKey(wider + "-" + rung)
-			if !ok {
-				t.Fatalf("the catalogue has no %s-%s", wider, rung)
-			}
-			if h.Multiplier > card.Multiplier {
-				t.Errorf("%s-%s pays x%d, beating the narrower concept-%s at x%d",
-					wider, rung, h.Multiplier, rung, card.Multiplier)
-			}
+		form, ok := handByKey("form-" + rung)
+		if !ok {
+			t.Fatalf("the catalogue has no form-%s", rung)
+		}
+		if form.Multiplier >= card.Multiplier {
+			t.Errorf("form-%s pays x%d, matching or beating the concept-%s it is contained by at x%d",
+				rung, form.Multiplier, rung, card.Multiplier)
 		}
 	}
 }

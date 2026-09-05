@@ -143,10 +143,14 @@ func run(dir string) error {
 
 		if o, ok := odds.Find(h.Key); ok {
 			r.Sampled = true
+			r.Dealt = pct(o.Dealt)
 			r.Reachable = pct(o.Reachable)
+			r.Score = pct(o.Score())
 			r.OneIn = oneIn(o)
 			r.Best = pct(o.Best)
-			r.Bar = bar(o.Reachable)
+			// **The meter is the score, not either column alone.** It is the figure the ladder is
+			// priced on, so a rung whose bar is short should be a rung that pays a lot.
+			r.Bar = bar(o.Score())
 		}
 
 		example, cost := decks.Example(deck, h)
@@ -181,8 +185,8 @@ func run(dir string) error {
 	fmt.Printf("wrote %s and %d PNGs — %d hands, %d a round cannot play, %d hands sampled\n",
 		out, len(drawn), len(page.Rows), page.TooManyAP, odds.Trials)
 	for _, r := range page.Rows {
-		fmt.Printf("  %6s  %-28s %-8s %-6s %-24s %8s reachable\n",
-			r.Pays, r.Name, r.Match, r.Groups, verdict(r, budget), r.Reachable)
+		fmt.Printf("  %6s  %-28s %-8s %-10s %-30s %8s dealt %9s playable %8s score\n",
+			r.Pays, r.Name, r.Match, r.Groups, verdict(r, budget), r.Dealt, r.Reachable, r.Score)
 	}
 	return nil
 }
@@ -192,7 +196,7 @@ func run(dir string) error {
 // nothing.
 func pct(v float64) string { return fmt.Sprintf("%.3f%%", v) }
 
-// oneIn is the reachability as odds — "1 in 260" — which is the form a rare rung is actually read
+// oneIn is the deal as odds — "1 in 260" — which is the form a rare rung is actually read
 // in. A rung nothing reached is said in words rather than as one in nothing.
 func oneIn(o hands.Odds) string {
 	if o.OneIn() <= 0 {
@@ -395,6 +399,8 @@ type row struct {
 	// in the sample at all: it is the fallback every turn with an attack in it lands on, so a
 	// reachability for it would be a number about nothing.
 	Sampled   bool
+	Dealt     string
+	Score     string
 	Reachable string
 	OneIn     string
 	Best      string

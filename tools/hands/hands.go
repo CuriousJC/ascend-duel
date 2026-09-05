@@ -34,6 +34,7 @@
 package hands
 
 import (
+	"math"
 	"math/rand"
 	"sort"
 
@@ -140,7 +141,19 @@ func PerValue(deck []combat.Card, a combat.Axis) int {
 type Odds struct {
 	Hand combat.Hand
 
-	// Reachable is the percentage of hands that could build this rung inside the budget.
+	// Dealt is the percentage of hands **holding the cards for this rung**, whatever they cost.
+	// It is the question about the deal alone *(owner's call, 2026-09-05)*: how often the shuffle
+	// puts the rung in front of you. It is what the ladder is priced against, because a
+	// multiplier is paid for a shape being rare rather than for it being expensive.
+	Dealt float64
+
+	// Reachable is the percentage of hands that could build this rung inside the budget — dealt
+	// **and** affordable.
+	//
+	// **It is kept beside Dealt rather than replaced by it**, because the two come apart hard on
+	// the cost axis: a Rising Attack is 1+2+3 AP, the whole of a 6 AP round, so it is dealt far
+	// more often than it can be played. A single column would price it as though those were the
+	// same number.
 	Reachable float64
 
 	// Best is the percentage of hands where this rung is the dearest-paying one reachable —
@@ -148,13 +161,16 @@ type Odds struct {
 	Best float64
 }
 
-// OneIn is the reachability as odds: 1 in N hands. Zero when nothing reached it, which the caller
-// has to render as "never" rather than as one in nothing.
+// OneIn is the deal as odds: 1 in N hands hold the rung. Zero when nothing held it, which the
+// caller has to render as "never" rather than as one in nothing.
+//
+// **It reads Dealt rather than Reachable** *(2026-09-05)*, so the headline figure beside a rung is
+// about the shuffle and not about the budget.
 func (o Odds) OneIn() float64 {
-	if o.Reachable <= 0 {
+	if o.Dealt <= 0 {
 		return 0
 	}
-	return 100 / o.Reachable
+	return 100 / o.Dealt
 }
 
 // Table is a whole sample: what was dealt, and what came of it.
@@ -184,6 +200,7 @@ func (t Table) Find(key string) (Odds, bool) {
 // Measure deals the sample and counts what each hand could have built.
 func Measure(deck []combat.Card, budget, handSize, trials int) Table {
 	rungs := Built()
+	held := make([]int, len(rungs))
 	reach := make([]int, len(rungs))
 	top := make([]int, len(rungs))
 	nothing := 0
@@ -199,7 +216,14 @@ func Measure(deck []combat.Card, budget, handSize, trials int) Table {
 		best, any := -1, false
 		for i, h := range rungs {
 			cost := MinCost(hand, h)
-			if cost < 0 || cost > budget {
+			if cost < 0 {
+				continue
+			}
+			// Dealt asks only whether the cards are here. The budget is the next question and it
+			// is counted separately, because a rung the deal hands you and the round cannot pay
+			// for is a different fact from one you were never dealt.
+			held[i]++
+			if cost > budget {
 				continue
 			}
 			reach[i]++
@@ -229,7 +253,12 @@ func Measure(deck []combat.Card, budget, handSize, trials int) Table {
 		Nothing:  pct(nothing),
 	}
 	for i, h := range rungs {
-		out.Rungs = append(out.Rungs, Odds{Hand: h, Reachable: pct(reach[i]), Best: pct(top[i])})
+		out.Rungs = append(out.Rungs, Odds{
+			Hand:      h,
+			Dealt:     pct(held[i]),
+			Reachable: pct(reach[i]),
+			Best:      pct(top[i]),
+		})
 	}
 	return out
 }
@@ -245,14 +274,16 @@ func MinCost(hand []combat.Card, h combat.Hand) int {
 		return -1
 	}
 
-	// costs by value on this hand's axis, each list sorted so a prefix sum is the cheapest N.
-	byValue := map[int][]int{}
+	// cards by value on this hand's axis. A Vary clause means a group is not just the cheapest N
+	// of a value — the N must differ on a second axis — so the cards are kept rather than their
+	// costs alone, and the cheapest qualifying set is worked out per group size below.
+	byValue := map[int][]combat.Card{}
 	for _, c := range hand {
 		v, ok := decks.MatchValue(c, h.Match)
 		if !ok {
 			continue
 		}
-		byValue[v] = append(byValue[v], c.Cost())
+		byValue[v] = append(byValue[v], c)
 	}
 
 	// A sorted walk, never a map walk — the values decide an output figure. See the randomness
@@ -263,15 +294,12 @@ func MinCost(hand []combat.Card, h combat.Hand) int {
 	}
 	sort.Ints(values)
 
-	prefix := make([][]int, len(values))
+	// cheapest[i][n] is what the cheapest n cards of values[i] cost, or -1 when n of them cannot
+	// be had at all. Indexed by group size rather than accumulated as a prefix sum, because a
+	// Vary clause makes "the cheapest three" a different set from "the three cheapest".
+	cheapest := make([][]int, len(values))
 	for i, v := range values {
-		costs := byValue[v]
-		sort.Ints(costs)
-		p := make([]int, len(costs)+1)
-		for j, c := range costs {
-			p[j+1] = p[j] + c
-		}
-		prefix[i] = p
+		cheapest[i] = cheapestSets(byValue[v], h)
 	}
 
 	best := -1
@@ -285,15 +313,116 @@ func MinCost(hand []combat.Card, h combat.Hand) int {
 		}
 		want := h.Groups[group]
 		for i := range values {
-			if used[i] || len(prefix[i]) <= want {
+			if used[i] || want >= len(cheapest[i]) || cheapest[i][want] < 0 {
 				continue
 			}
 			used[i] = true
-			fill(group+1, used, spent+prefix[i][want])
+			fill(group+1, used, spent+cheapest[i][want])
 			used[i] = false
 		}
 	}
 	fill(0, make([]bool, len(values)), 0)
 
 	return best
+}
+
+// cheapestSets is what the cheapest n of these cards cost, for every n up to MaxCards, or -1 where
+// n of them cannot be taken.
+//
+// **Without a Vary clause it is a prefix sum of the sorted costs** — the cheapest n cards, which is
+// what this always was. **With one, each card taken has to carry a value the set does not already
+// hold**, so the answer is the cheapest one card per distinct value on the Vary axis: sort the
+// per-value cheapest and take a prefix of *those*. A card carrying no value on the Vary axis
+// cannot join at all, for the reason it cannot join a hand counting on that axis.
+func cheapestSets(cs []combat.Card, h combat.Hand) []int {
+	costs := make([]int, 0, len(cs))
+	if h.Varies {
+		// The cheapest card at each distinct value on the Vary axis. A sorted walk, never a map
+		// walk, because the result is a figure the ladder is tuned against.
+		byVary := map[int]int{}
+		var seen []int
+		for _, c := range cs {
+			v, ok := decks.MatchValue(c, h.Vary)
+			if !ok {
+				continue
+			}
+			if prev, had := byVary[v]; !had {
+				byVary[v] = c.Cost()
+				seen = append(seen, v)
+			} else if c.Cost() < prev {
+				byVary[v] = c.Cost()
+			}
+		}
+		sort.Ints(seen)
+		for _, v := range seen {
+			costs = append(costs, byVary[v])
+		}
+	} else {
+		for _, c := range cs {
+			costs = append(costs, c.Cost())
+		}
+	}
+	sort.Ints(costs)
+
+	out := make([]int, MaxCards+1)
+	sum := 0
+	for n := range out {
+		switch {
+		case n == 0:
+			out[n] = 0
+		case n <= len(costs):
+			sum += costs[n-1]
+			out[n] = sum
+		default:
+			out[n] = -1
+		}
+	}
+	return out
+}
+
+// The pricing curve: one score per rung, and the multiplier that follows from it.
+//
+// **A rung is priced on how hard it is to land, and that has two independent halves** *(owner's
+// call, 2026-09-05)*. Dealt says how often the shuffle puts the shape in front of you; playable
+// says how often you could also pay for it. Pricing on Dealt alone makes a five-card Form Full
+// House — dealt in 93% of hands, payable in 8% — cheaper than a two-card pair, and nobody would
+// build it. Pricing on Reachable alone treats a rung you are handed constantly and can rarely
+// afford as though you had never been dealt it, which throws away the fact that it is a hand you
+// can plan toward: hold cards, buy a cheaper copy, wear a discount.
+//
+// So the score is the **geometric mean of the two**. It collapses to Reachable wherever the budget
+// never bites — which is most of the concept axis, where the two columns are equal — and lifts a
+// rung the deal offers often but the round cannot pay for, by exactly half the distance in the log.
+// A geometric mean is the right average of two probabilities on one scale; an arithmetic one would
+// be dominated by whichever number happened to be large.
+const (
+	// PriceFloor is what a rung scoring 100% pays: a hand every deal can build is worth the
+	// identity plus a token, and 110 is where the commonest rungs already sat.
+	PriceFloor = 110
+
+	// PriceDecade is what one factor of ten in rarity buys. **It is a fixed constant rather than a
+	// curve fitted to the rarest rung in the sample**, so adding a rarer hand does not silently
+	// reprice every hand below it — the whole failure this file exists to catch. 168 is the number
+	// that puts the rarest rung of the shipped ladder at the 785 it was already tuned to.
+	PriceDecade = 168
+)
+
+// Score is the rung's combined rarity, in percent: the geometric mean of Dealt and Reachable.
+func (o Odds) Score() float64 { return math.Sqrt(o.Dealt * o.Reachable) }
+
+// Price is the multiplier the curve suggests for this rung.
+//
+// **It is a suggestion and not an authority.** data/hands.json is where the ladder is tuned and a
+// deliberate departure from the curve is a tuning decision, not a bug — what this is for is
+// showing which rungs have drifted, and giving a new rung a defensible number to start from
+// instead of one picked by eye.
+func (o Odds) Price() int {
+	r := o.Score()
+	if r <= 0 {
+		return 0
+	}
+	if r > 100 {
+		r = 100
+	}
+	return int(math.Round(PriceFloor + PriceDecade*math.Log10(100/r)))
 }

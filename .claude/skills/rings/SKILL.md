@@ -135,7 +135,7 @@ the hand" is a different question with a different answer. `HandBonus` is the on
 carrying both a `Hand` and a card predicate is refused at registration**: an element is a fact about
 one card and a rung is a fact about the whole blow, so the pair asks something nobody wrote down.
 
-**The nineteen rung rings are what it was added for.** Their bonus lands *inside* `Base`, after every
+**The rung rings are what it was added for** — one per entry in `hands.json`. Their bonus lands *inside* `Base`, after every
 card term and before the multiplier — so a rung's bonus is worth more on the rung that pays more,
 which is the whole reason a flat number can follow the ladder's shape. See `combat.HandBonus` and
 `TestTheHandBonusIsAddedBeforeTheMultiplier`.

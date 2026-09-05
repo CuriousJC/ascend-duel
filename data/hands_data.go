@@ -34,7 +34,7 @@ type handFile struct {
 // HandData is one rung of the of-a-kind ladder as written in the file.
 //
 // **A hand names what it counts copies *of*** *(2026-08-19)*. `match` is one of three axes —
-// `concept`, `form`, `element` — so the same rung exists three times over and each can be priced
+// `concept`, `form`, `element`, `cost` — so the same rung exists once per axis and each can be priced
 // on its own rarity. There is still no category filter: the matcher counts every card in the turn
 // and the axis decides what a card is worth, so a hand saying which categories it counts would be
 // repeating a rule it cannot change.
@@ -59,6 +59,12 @@ type HandData struct {
 	// Groups is how many cards of each distinct value **on the hand's own axis** the hand wants.
 	// `[3,2]` is a full house and can never be satisfied by five cards sharing one value.
 	Groups []int `json:"groups"`
+
+	// Vary is an optional axis every card in the hand must *differ* on *(2026-09-05)*. Groups say
+	// which cards agree; this is the only way to say which must disagree, and it is what lets
+	// Weaponmaster — three cards of one cost, each a different form — be written down at all.
+	// Empty means the hand names no such constraint, which is every rung written before it.
+	Vary string `json:"vary,omitempty"`
 
 	// Multiplier is the hand's damage multiplier, in **percent** — 150 is 1.5x. An integer because
 	// `internal/combat` is integer arithmetic throughout, and a float here would be the one number

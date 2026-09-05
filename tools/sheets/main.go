@@ -90,9 +90,10 @@ var sheets = []sheet{
 		Tool:  "./tools/handsheet",
 		Title: "Hand sheet",
 		Blurb: "Every rung of the hand ladder drawn as an actual hand of real cards, ordered by " +
-			"multiplier across all three axes at once — which is the comparison hands.json's " +
-			"axis-by-axis layout hides — with how often each rung can actually be built beside " +
-			"what it pays, which is what the ladder is priced against.",
+			"multiplier across every axis at once — which is the comparison hands.json's " +
+			"axis-by-axis layout hides — with how often each rung is dealt, how often a round " +
+			"can pay for it, and the score those two combine into, which is what the ladder is " +
+			"priced against.",
 	},
 	{
 		Dir:   "stonesheet",

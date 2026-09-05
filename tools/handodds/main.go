@@ -43,6 +43,11 @@ func main() {
 	// a colour and join hands. What `-ap` answers now is how much a discount widens the *set* of
 	// hands that reach a rung, which is a different and still useful question.
 	budget := flag.Int("ap", hands.Budget(), "action points a turn may spend")
+	// **-price is the tuning view's other half.** The table says how rare each rung is; this says
+	// what the curve in tools/hands would charge for that rarity, and what the file charges today.
+	// A rung whose two figures disagree has either been tuned deliberately or been left behind by
+	// a change to the deck, and the point is that the second case is visible rather than silent.
+	price := flag.Bool("price", false, "show the multiplier the rarity curve suggests, against the one in hands.json")
 	flag.Parse()
 
 	deck := hands.StartingDeck()
@@ -50,20 +55,38 @@ func main() {
 
 	fmt.Printf("%d attack cards of %d, hand of %d, %d AP, %d cards to a turn, %d hands dealt\n\n",
 		hands.Attacks(deck), len(deck), table.HandSize, table.Budget, hands.MaxCards, table.Trials)
-	fmt.Printf("cards sharing a value: %d per concept, %d per form, %d per element\n\n",
+	fmt.Printf("cards sharing a value: %d per concept, %d per form, %d per element, %d per cost\n\n",
 		hands.PerValue(deck, combat.AxisConcept),
 		hands.PerValue(deck, combat.AxisForm),
-		hands.PerValue(deck, combat.AxisElement))
+		hands.PerValue(deck, combat.AxisElement),
+		hands.PerValue(deck, combat.AxisCost))
 
-	fmt.Printf("%-28s %6s %10s %10s %12s\n", "hand", "pays", "reachable", "1 in", "best in hand")
+	// **Dealt first, then playable.** The ladder is priced on the deal — how often the shuffle puts
+	// a shape in front of you — and the budget is the second, separate question. Printing them side
+	// by side is what stops a rung being tuned as though they were one number; see the note on
+	// hands.Odds, and the Rising Attack row, where the two are twenty points apart.
+	if *price {
+		fmt.Printf("%-28s %6s %8s %9s %8s %8s\n", "hand", "pays", "dealt", "playable", "score", "suggest")
+	} else {
+		fmt.Printf("%-28s %6s %8s %9s %8s %12s\n", "hand", "pays", "dealt", "playable", "1 in", "best in hand")
+	}
 	lastAxis := combat.Axis(-1)
 	for _, o := range table.Rungs {
 		if o.Hand.Match != lastAxis {
 			fmt.Println()
 			lastAxis = o.Hand.Match
 		}
-		fmt.Printf("%-28s %6d %8.3f%% %10.0f %11.2f%%\n",
-			o.Hand.Name, o.Hand.Multiplier, o.Reachable, o.OneIn(), o.Best)
+		if *price {
+			flag := ""
+			if o.Price() != o.Hand.Multiplier {
+				flag = "  <-"
+			}
+			fmt.Printf("%-28s %6d %7.3f%% %8.3f%% %7.3f%% %8d%s\n",
+				o.Hand.Name, o.Hand.Multiplier, o.Dealt, o.Reachable, o.Score(), o.Price(), flag)
+			continue
+		}
+		fmt.Printf("%-28s %6d %7.3f%% %8.3f%% %8.0f %11.2f%%\n",
+			o.Hand.Name, o.Hand.Multiplier, o.Dealt, o.Reachable, o.OneIn(), o.Best)
 	}
 	fmt.Printf("\nno built hand of any kind: %.3f%% - the turns the High Card names\n", table.Nothing)
 }

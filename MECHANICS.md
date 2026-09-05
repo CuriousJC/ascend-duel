@@ -280,10 +280,12 @@ deck is half ice" from being confused with "my deck contains more ice cards".
 of the three applied — which is the number to trust when reasoning about a live run, and is not the
 composition any tool prints.
 
-**Every axis a hand is scored on can be moved, so a build can manufacture any of the three.**
+**Every axis a hand is scored on can be moved, so a build can manufacture any of them.**
 Elements are the loudest case: two common rings fold two colours into a third, and a deck that is
-half one element makes an Elemental Five of a Kind an ordinary turn rather than the 0.03% hand the
-round-one simulation reports. **Concepts and forms move too** — promote and demote walk a card along
+half one element makes an Elemental Five of a Kind an ordinary turn rather than the hand
+the round-one simulation reports at a 0.29% score. **Cost moves too, and it is the axis a discount
+moves hardest**: a ring or a worm taking a point off a card changes which cost tier it sits in, so
+the same run that makes a Rising Attack affordable can also destroy the Weaponmaster it was holding. **Concepts and forms move too** — promote and demote walk a card along
 its form's ladder, so Shrink and Atrophy both turn dear cards into copies of the cheap card below
 them, which is a Card Pair the starting deck could not deal. Only the *form* survives a rung change,
 since a ladder is one form's. **All of it is the intended shape of a build, not a leak**: the ladder
@@ -781,25 +783,34 @@ testability nor its freedom from Ebitengine.
 **A malformed catalogue panics at package init**, exactly as a deck whose declared cost tiers
 disagree with the rules does. A hand silently dropped is a balance change nobody made.
 
-### The pattern: three axes, and they wear poker's names
+### The pattern: four axes, and the of-a-kind rungs wear poker's names
 
 A hand counts **cards that agree** in the set that formed one attack — which is exactly what a
 poker hand counts, so it wears poker's names honestly: High Card, Pair, Two Pair, Three of a Kind,
 Full House, Four of a Kind.
 
 **What they have to agree *on* is the hand's own axis** *(2026-08-19, owner's call)*, and there are
-three:
+four:
 
 | Axis | Cards agree on | Two that form a pair | Two that do not |
 |---|---|---|---|
 | `concept` | the same card | ice Bash + fire Bash | Bash + Strike |
-| `form` | stab, slash or crush | Bash + Smash (both crush) | Bash + Thrust |
-| `element` | fire, ice, lightning or earth | ice Bash + ice Thrust | ice Bash + fire Bash |
+| `form` | stab, slash, crush or defend | Bash + Smash (both crush) | Bash + Thrust |
+| `element` | fire, ice, lightning, earth or arcane | ice Bash + ice Thrust | ice Bash + fire Bash |
+| `cost` | the same action points | Bash + Cut (both 1 AP) | Bash + Thrust |
 
-**Every rung exists once per axis**, as its own catalogue entry rather than as one entry with three
-readings — so a Card Three of a Kind and an Elemental Three of a Kind can be priced apart, which
-they have to be: one wants three copies of a nine-copy concept and the other three of nine cards
-sharing a colour.
+**`cost` is the fourth axis and it arrived last** *(owner's call, 2026-09-05)*. It is genuinely
+orthogonal to the other three in the player's deck — every cost tier holds three or four forms, and
+every form spans all three costs — so a hand counting cost is not a hand counting form under
+another name. **Every card carries a cost, so this axis has no absence**, unlike `FormNone` and
+`Basic`.
+
+**The of-a-kind ladder exists once per axis on the first three**, as its own catalogue entry rather
+than as one entry with three readings — so a Card Three of a Kind and an Elemental Three of a Kind
+can be priced apart, which they have to be: one wants three copies of a five-copy concept and the
+other three of eleven cards sharing a colour. **The cost axis deliberately carries no of-a-kind
+rungs**: a cost Three of a Kind would be a rung with no idea in it, sitting under Weaponmaster and
+above nothing. It carries two bespoke rungs instead — see *Counting difference* below.
 
 **The axes are not parallel, and the nesting is the thing to hold onto.** A concept fixes a form,
 so **every card hand is also a form hand**; element is independent of both, which is why an ice
@@ -813,7 +824,7 @@ The player's defences carry a colour like everything else, and it is inert for t
 
 **Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Bashes satisfy the
 Card Pair and the Form Pair at once; the narrower one is what the player aimed at, so `concept`
-beats `form` beats `element` whenever the multipliers are level. `combat.Axis` is written in that
+beats `form` beats `element` beats `cost` whenever the multipliers are level. `combat.Axis` is written in that
 order for exactly this reason and is never serialized, so the order is free to mean something.
 
 **Exactly one hand applies.** It wins on its multiplier — four Strikes are a Four of a Kind rather
@@ -918,10 +929,18 @@ is all that survives of the second axis.
 
 ### The catalogue's shape
 
-`data/hands.json` holds one list of **nineteen** entries: six rungs on each of three axes, plus the
-one High Card they all fall back to. **A hand carries a key, an ID, a name, a `match`, `groups` and
-a `multiplier` in percent** — nothing else. `groups` naming *distinct values on the hand's own axis*
-is why `[3,2]` is a full house and can never be satisfied by five cards sharing one value.
+`data/hands.json` holds one list of **twenty-five** entries: six of-a-kind rungs on each of three
+axes, four spread rungs, two cost rungs, plus the one High Card they all fall back to. **A hand
+carries a key, an ID, a name, a `match`, `groups`, an optional `vary` and a `multiplier` in
+percent** — nothing else. `groups` naming *distinct values on the hand's own axis* is why `[3,2]` is
+a full house and can never be satisfied by five cards sharing one value.
+
+**`vary` is the second constraint, and it is the smallest one that would do** *(owner's call,
+2026-09-05)*. Groups say which cards must agree; nothing said which must *disagree*, so Weaponmaster
+— three cards of one cost, each a different form — could not be written at all. `vary` names an axis
+every card in the hand must differ on. It is refused at load if it names the axis the hand already
+counts on, which no hand could ever form, or if a group asks for more distinct values than that axis
+has.
 
 **`match` is required and never defaulted.** An entry that landed on the wrong axis by omission
 would be a balance change nobody made, so a missing or unknown one is refused at init like any other
@@ -930,9 +949,35 @@ and one wanting more groups than its axis has values — four forms and four ele
 a five-group form hand is a rung nobody could climb and would otherwise fail silently. It was
 *three* forms until 2026-08-23, when the fourth joined them.
 
-**A hand names one axis, not one per group.** A mixed hand — three ice cards *and* a pair of
-Bashes — is deliberately not expressible; reopening it is a schema change and should be argued for
-here first.
+**A hand names one axis to count on, not one per group.** A mixed hand — three ice cards *and* a
+pair of Bashes — is deliberately not expressible; reopening it is a schema change and should be
+argued for here first. `vary` is not that door: it constrains the *same* cards on a second axis
+rather than letting different groups count on different ones.
+
+### Counting difference, not copies *(owner's call, 2026-09-05)*
+
+Six rungs count what a set of cards has in common by being **all different** rather than all the
+same. They are the other thing a set can have in common, and the grammar already half-expressed
+them: `[1,1,1]` is three groups of one card, which is three distinct values on the hand's own axis.
+
+| Rung | Axis | Shape | What it asks for |
+|---|---|---|---|
+| Prism | `element` | `[1,1,1]` | three cards, three colours |
+| Spectrum | `element` | `[1,1,1,1]` | four cards, four colours |
+| Elementalist | `element` | `[1,1,1,1,1]` | five cards, all five colours |
+| Arsenal | `form` | `[1,1,1,1]` | one card of every form, defend included |
+| Rising Attack | `cost` | `[1,1,1]` | three cards, three different costs |
+| Weaponmaster | `cost` | `[3]` + `vary: form` | three cards of one cost, three forms |
+
+**Prism, Spectrum and Elementalist are a ladder and Arsenal is not.** The element axis has five
+values, so difference has three rungs on it; the form axis has four, and a three-form rung under
+Arsenal would be nearly free. **Weaponmaster is the only rung using `vary`**, and it is the hand
+that forced the field.
+
+**A cost rung with no `vary` clause is a parent of Weaponmaster** — every Weaponmaster is three
+cards of one cost — and of a Card Three of a Kind, since three copies of one concept share a cost.
+That is the shape of the argument any further rung on this axis has to answer: it would have to
+price below both hands it contains.
 
 **Keys carry their axis and the names are long, for now** *(2026-08-19, owner's call)*.
 `concept-two-pair`, `form-two-pair`, `element-two-pair`; on screen, **Card Two Pair**, **Form Two
@@ -978,86 +1023,110 @@ What that changed, in order of how much it matters:
   rather than the cards**, so a shield card authored with damage, or a ring that gives a defence
   some, is an attack like any other with nothing else to change.
 
-The three ladders are **not** the same numbers, and as of 2026-08-25 no two of them are. The
-starting deck is 55 cards — **5 per concept, 15 per attack form and 10 for defend, 11 per element**
-— dealt into a hand of eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is priced against rather
-than poker's.
+The ladders are **not** the same numbers, and no two of them are. The starting deck is 55 cards —
+**5 per concept, 15 per attack form and 10 for defend, 11 per element, 20 at the commonest cost** —
+dealt into a hand of eight against a 6 AP, 5-card turn, and that arithmetic is what the ladder is
+priced against rather than poker's.
 
-Reachability, from a two-million-hand simulation of round one — *can this turn afford some set
-forming this rung* — with the multiplier each was given:
+#### Two questions, not one *(owner's call, 2026-09-05)*
 
-| Rung | concept | | form | | element | |
-|---|---|---|---|---|---|---|
-| | reach | pays | reach | pays | reach | pays |
-| Pair | 92.4% | 115 | 100% | 110 | 100% | 110 |
-| Two Pair | 19.9% | 210 | 52.2% | 145 | 43.3% | 155 |
-| Three of a Kind | 11.3% | 250 | 76.1% | 150 | 60.1% | 160 |
-| Full House | 0.95% | 415 | 5.9% | 290 | 3.1% | 335 |
-| Four of a Kind | 0.27% | 500 | 7.7% | 295 | 3.7% | 340 |
-| Five of a Kind | 0.004% | 785 | 0.093% | 575 | 0.019% | 680 |
+The tool used to report a single figure called *reachable*: can this hand afford some set forming
+this rung. That is two questions wearing one number, and separating them is what exposed the
+inversions the ladder had been carrying.
 
-The rule that produced them is unchanged: **`100 + K x ln(1/P)`, floored at 110, rounded to five,
-then forced to climb within each ladder.** **K is 67.7 where it was 61.2**, because the constant is
-*defined* by anchoring the rarest measurable hand — a concept Four of a Kind — at the 500 it already
-carried. Re-deriving the constant rather than keeping it is what holds the concept ladder
-recognisably where it was through a change that moved everything under it.
+- **Dealt** — does the hand hold the cards for the rung at all, whatever they cost.
+- **Playable** — dealt *and* affordable inside the round's action points.
 
-**The form and element ladders came apart, and that is the headline** *(2026-08-25)*. They were
-priced identically at every rung on 2026-08-23 because they were then equally hard — twelve cards
-share a form and twelve share a colour. Arcane broke the symmetry in both directions at once: a
-form now gathers fifteen cards where it gathered twelve, and a colour still gathers twelve out of a
-deck a quarter bigger. So **elemental hands got harder and form hands got easier**, and the element
-ladder now pays more than the form ladder at every rung above the pair. An Elemental Four of a Kind
-went from 6.9% to 3.7% reachable and from 285 to 340.
+They come apart hard on the five-card rungs. A **Form Full House is dealt in 93.3% of hands and
+payable in 8.5%**: the shuffle hands it to you constantly and the round cannot pay for it. On most
+of the concept axis they are the same number.
+
+**Neither one alone can price the ladder.** Pricing on the deal puts that Form Full House below a
+two-card pair, so nobody would ever build it. Pricing on playability treats a rung you are dealt
+every hand and can rarely afford as though you had never seen it — when in fact it is the one kind
+of hand you can *plan toward*, by holding cards, buying a cheaper copy or wearing a discount.
+
+**So the score is the geometric mean of the two**, `√(dealt × playable)`. It collapses to
+playability wherever the budget never bites, and lifts a rung the deal offers often but the round
+cannot pay for by exactly half the distance in the log. An arithmetic mean would be dominated by
+whichever number happened to be large.
+
+**The curve is then one line: `110 + 168 × log10(100/score)`.** 110 is what a rung scoring 100%
+pays — the identity plus a token, where the commonest rungs already sat. 168 is what one factor of
+ten in rarity buys, and it is **a fixed constant rather than a curve fitted to the rarest rung in
+the sample**, so adding a rarer hand cannot silently reprice every hand below it. It is the number
+that puts the rarest rung of the shipped ladder at the 785 it was already tuned to.
+
+`go run ./tools/handodds -price` prints what the curve would charge beside what the file charges,
+and marks every row where they differ. **The file currently matches the curve at every rung**, so
+any mark is a real signal rather than accumulated drift.
+
+From a two-million-hand simulation of round one:
+
+| Rung | Axis | Dealt | Playable | Score | Pays |
+|---|---|---|---|---|---|
+| Elemental Pair | element | 100% | 100% | 100% | 110 |
+| Form Pair | form | 100% | 100% | 100% | 110 |
+| Prism | element | 99.7% | 99.3% | 99.5% | 110 |
+| Card Pair | concept | 94.7% | 94.7% | 94.7% | 114 |
+| Rising Attack | cost | 89.8% | 89.8% | 89.8% | 118 |
+| Form Three of a Kind | form | 95.7% | 80.0% | 87.5% | 120 |
+| Form Two Pair | form | 97.5% | 61.7% | 77.6% | 129 |
+| Spectrum | element | 89.1% | 61.0% | 73.7% | 132 |
+| Weaponmaster | cost | 77.0% | 68.1% | 72.5% | 134 |
+| Elemental Three of a Kind | element | 79.7% | 65.3% | 72.2% | 134 |
+| Elemental Two Pair | element | 96.9% | 52.8% | 71.5% | 134 |
+| Arsenal | form | 65.1% | 42.0% | 52.3% | 157 |
+| Card Two Pair | concept | 57.3% | 26.6% | 39.0% | 179 |
+| Form Full House | form | 93.3% | 8.5% | 28.2% | 202 |
+| Form Four of a Kind | form | 41.4% | 10.1% | 20.4% | 226 |
+| Elemental Full House | element | 76.5% | 4.7% | 18.9% | 232 |
+| Card Three of a Kind | concept | 19.8% | 14.5% | 16.9% | 240 |
+| Elementalist | element | 38.4% | 4.8% | 13.5% | 256 |
+| Elemental Four of a Kind | element | 21.0% | 5.0% | 10.2% | 276 |
+| Card Full House | concept | 12.0% | 1.4% | 4.2% | 342 |
+| Form Five of a Kind | form | 8.6% | 0.14% | 1.10% | 439 |
+| Card Four of a Kind | concept | 1.1% | 0.39% | 0.64% | 479 |
+| Elemental Five of a Kind | element | 2.7% | 0.03% | 0.29% | 537 |
+| Card Five of a Kind | concept | 0.016% | 0.006% | 0.009% | 787 |
+
+**Every row is measurement now.** The concept Pair's hand-set 115, the estimated five-of-a-kind
+rungs and the "forced to climb within each ladder" pass are all gone: the curve is monotone in the
+score by construction, so nothing needs forcing.
+
+**Poker's shape order does not survive this deck, and the ladder no longer pretends it does**
+*(owner's call, 2026-09-05)*. Poker's ordering comes from thirteen ranks; here the form axis has
+four values and the element axis five, so **spreading is harder than stacking**: a Form Two Pair
+wants two distinct forms and four cards and is rarer than a Form Three of a Kind, which wants one
+value and three. The ladder used to force two pair below three of a kind on every axis, which meant
+paying the commoner hand more — four inversions, on both wide axes, at both the two-pair and the
+full-house rung.
+
+**What replaced the shape order is containment.** A rung whose groups *dominate* another's on the
+same axis contains it and must pay more: `[3]` contains `[2]`, `[3,2]` contains both `[3]` and
+`[2,2]`, `[5]` contains `[4]`. `[2,2]` and `[3]` contain neither, so the file is free to price them
+in whatever order the measurements say. `TestTheLadderClimbs` checks exactly that and nothing more.
 
 **Nothing measures whether the re-pricing lands.** The curve says what a rung is worth relative to
 the others; it has never said whether the whole ladder is worth the right amount, and there is
 still no simulation of a duel to ask.
 
-**One number in the table is judgement rather than measurement, and it is the same one as before:**
-
-- **The concept Pair keeps 115 rather than the 110 the floor gives it.** At 92.4% the curve floors
-  out, and letting it sit at 110 would make the narrowest axis pay exactly what the two wide ones do
-  at the bottom rung — the nesting problem the ladder exists to avoid.
-
-**Card Five of a Kind stopped being an estimate** *(2026-08-25)*, which leaves every other row in
-the table straight off the tool. It was 745 by judgement for as long as the deck shipped four copies
-of a concept and nothing could deal a fifth — the rung existed for the `duplicate` worm. Arcane made
-a concept five cards, so the rung is dealable at about one hand in 22,000 and is priced off its own
-number at 785. It is still the rarest thing a round-one hand can build, by an order of magnitude.
-
-**The element five-of-a-kind stopped being an estimate on 2026-08-23**, for a different reason: a
-colour gained defences, so five cards of one colour came down to 6 AP and the rung became
-measurable at the real budget. **It is still exactly 6 AP with Guard gone** — Jab, Cut, Bash, Ward
-and Thrust in one colour — so the cheapest build of the rung is a whole ordinary turn and not a
-point more.
-
-**The five-of-a-kind row is the one that is not all measurement** *(2026-08-19)*, and it is written
-out because a number that came from somewhere else must not read as one that came from the tool:
-
-- **Both wide five-of-a-kind rungs are now straight off the curve**, at 0.049% and 0.047% — one turn
-  in about two thousand, and still the rarest thing a round-one hand can build on either axis.
-- **Card Five of a Kind is the one row with no probability behind it**, and the thing to re-derive
-  first if the `duplicate` worm ever makes five copies common.
-
 Three things fall out of it and are worth keeping:
 
-- **A near-certain hand pays near the identity.** The form and elemental pairs are 98–99% hands, so
+- **A near-certain hand pays near the identity.** The form and elemental pairs are 100% hands, so
   they are a floor rather than a reward — what they buy is the *sum of both cards*, which is
-  already most of the change.
-- **The narrower axis pays more at every rung**, which is what stops the nesting from making the
-  concept ladder dead content: a card hand is always also a form hand, so if the form rung paid the
-  same, nobody would ever have a reason to build the narrower one.
-  `TestANarrowerAxisPaysMore` holds it.
-- **The ladders cross, and that is intended.** A form Three of a Kind (145) pays less than a card
-  Two Pair (200) though it uses fewer cards, because it is eight times as easy to build.
-- **The form and element ladders are the same numbers as of 2026-08-23**, because the two axes are
-  now the same width — twelve cards share the commonest value on each. They are kept as separate
-  entries rather than merged: the *tie-break* still prefers form, so an elemental hand is only ever
-  named when no form hand of the same rung is live, and what an elemental hand carries into
-  `elementsOf` is different. **If the two are meant to feel different, the thing to change is the
-  deck rather than the file** — pricing them apart when they are equally hard would be a number
-  with nothing behind it.
+  already most of the change. **Prism joins them at 110**, which makes it a rung nobody can aim at:
+  it is scored at 99.5% and the curve has nowhere to put it.
+- **A card hand pays more than the form hand inside it.** A concept fixes a form, so any set sharing
+  a concept also shares a form — if the form rung paid the same, nobody would ever have a reason to
+  build the narrower one. `TestACardHandPaysMoreThanTheFormHandInsideIt` holds it.
+- **That does not extend to element** *(owner's call, 2026-09-05)*. A concept does *not* fix an
+  element — a fire Jab and an ice Jab are one concept and two colours — so there is no containment
+  between those axes and no reason the card rung must outpay the elemental one. The measurements say
+  an Elemental Two Pair is rarer than a Form Two Pair, and it is priced above it.
+- **The ladders cross, and that is intended.** A Form Full House pays 202 against a Card Two Pair's
+  179 though it counts on the wider axis, because at a 28.2% score it is genuinely the harder hand.
+  Rung shape and axis width are both inputs to rarity; neither is the answer on its own.
 
 **The best hand is chosen on multiplier, not on what it would deal, and that is now a decision**
 *(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
@@ -1074,13 +1143,17 @@ be the base in `hands.json` plus the card's enum value, so inserting a card mid-
 ID above it — an open question against profile discovery. One entry now covers every concept in the
 game, so there is **one ID per catalogue key** and it is written down rather than derived.
 Reordering the cards cannot renumber a hand a player has already found. **They are banded by axis**
-— 1 for the High Card, 10–15 concept, 20–25 form, 30–35 element — renumbered on 2026-08-19 while no
-profile exists to record them. The banding paid for itself the same day: the five-of-a-kind rungs
-landed as 15, 25 and 35 without moving a single existing ID. Once a profile does exist, they
-freeze.
+— 1 for the High Card, 10–15 concept, 20–26 form, 30–38 element, 40–41 cost — renumbered on
+2026-08-19 while no profile exists to record them. The banding has paid for itself twice: the
+five-of-a-kind rungs landed as 15, 25 and 35 on the day it was introduced, and the six rungs added
+on 2026-09-05 landed as 26, 36–38 and 40–41, both times without moving a single existing ID. Once a
+profile does exist, they freeze.
 
 **Straights are dropped rather than invented** — the concepts have no natural order to be
-consecutive in.
+consecutive in. **Cost is the one attribute that does have an order**, and Rising Attack is what
+came of it: three cards of three different costs, which in a deck running 1..3 is the whole run.
+It is written as `[1,1,1]` on the cost axis rather than as a sequence, so it stays a hand about
+difference and the grammar gains no notion of consecutiveness.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
@@ -1740,7 +1813,7 @@ means a verb that raises, keeps or spends a shield, and that has not been design
 **A worm alters a card; a stone alters a rung.** One stone raises one hand's multiplier by **a tenth
 of the figure `hands.json` writes down**, for the rest of the run.
 
-- **There is a stone for every rung**, all nineteen, and `data/stones.json` is refused at load if one
+- **There is a stone for every rung**, all twenty-five, and `data/stones.json` is refused at load if one
   is missing — a rung with no stone is a rung that can never be raised, and nothing would fail.
 - **Ten percent of the base, per stone, additive, floored.** Card Pair is 115, so a stone is worth
   11 and two stones are worth 22 — never 11.5 rounded up, and never a tenth of the number the

@@ -59,7 +59,7 @@
 
 <h1>Hand sheet</h1>
 <p class="facts">
-  19 hands, cheapest-paying first. Deck of <code>55</code>,
+  25 hands, cheapest-paying first. Deck of <code>55</code>,
   <code>45</code> of them attacks;
   <code>5</code> cards per concept,
   <code>15</code> per form,
@@ -76,18 +76,28 @@
   shipping deck cannot form at all.
 </p>
 <p class="note">
-  <strong>Ordered by multiplier, across all three axes at once.</strong> That is the comparison
-  the numbers are making — an Elemental Three of a Kind at 195 is claiming to be worth about what
-  a Form Full House is not — and it is the comparison <code>hands.json</code>'s axis-by-axis
-  layout hides.
+  <strong>Ordered by multiplier, across every axis at once.</strong> That is the comparison the
+  numbers are making — an Elemental Three of a Kind is claiming to be worth about what a
+  Weaponmaster is — and it is the comparison <code>hands.json</code>'s axis-by-axis layout hides.
 </p>
 <p class="note">
-  <strong>The AP figure is not the difficulty, and the reachability is.</strong> The AP is what the
-  example costs <em>once you hold the cards</em>. <strong>Reachable</strong> is how often you hold
-  them: of <code>2000000</code> opening hands of <code>8</code> dealt off this deck,
-  the share that could afford some set forming the rung — which is the figure the multipliers are
-  priced against. <strong>Best in hand</strong> is the share where it was the dearest-paying rung
-  available, which is what a player taking the most they could would actually have landed.
+  <strong>The AP figure is not the difficulty, and the three percentages are.</strong> The AP is
+  what the example costs <em>once you hold the cards</em>. Of <code>2000000</code> opening hands
+  of <code>8</code> dealt off this deck, <strong>dealt</strong> is the share holding the
+  cards for the rung at all, and <strong>playable</strong> is the share that could also pay for
+  them inside the round's action points. They come apart hard on the five-card rungs: a Form Full
+  House is dealt in most hands and payable in very few.
+</p>
+<p class="note">
+  <strong>The score is the geometric mean of the two, and it is what the multipliers are priced
+  against.</strong> Pricing on the deal alone would put a five-card Full House below a two-card
+  pair, since the shuffle hands it to you constantly and the round cannot pay for it; pricing on
+  playability alone would treat a rung you are dealt every hand and can rarely afford as though you
+  had never seen it, when in fact it is a hand you can plan toward. The curve behind it is
+  <code>tools/hands</code>, and <code>go run ./tools/handodds -price</code> prints what it would
+  charge for each rung beside what the file charges today. <strong>Best in hand</strong> is the
+  share where the rung was the dearest-paying one available — what a player taking the most they
+  could would actually have landed.
 </p>
 <p class="note">
   Round one only: a later hand draws from a depleted pile and keeps what it did not spend, which
@@ -98,7 +108,7 @@
 </p>
 
 <p class="note">
-  <strong>6 of these examples cost more than a round has</strong>, on action points or
+  <strong>12 of these examples cost more than a round has</strong>, on action points or
   on the card cap. That is the <em>example</em>, not the rung: each one varies everything the rung
   does not count, so it is picked to illustrate rather than to be cheap. Every rung on this ladder
   has some build a 6 AP round can pay for — an Elemental Five of a Kind is Jab, Cut, Bash, Ward and
@@ -149,9 +159,9 @@
       <div class="odds">
         
           <div class="reach">100.000%</div>
-          <div class="one">1 in 1 hands</div>
+          <div class="one">100.000% dealt &middot; 100.000% playable</div>
           <div class="meter"><div style="width: 100%"></div></div>
-          <div class="best">best in hand 0.000%</div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 0.000%</div>
         
       </div>
       <div class="hand">
@@ -182,9 +192,9 @@
       <div class="odds">
         
           <div class="reach">100.000%</div>
-          <div class="one">1 in 1 hands</div>
+          <div class="one">100.000% dealt &middot; 100.000% playable</div>
           <div class="meter"><div style="width: 100%"></div></div>
-          <div class="best">best in hand 0.076%</div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 0.000%</div>
         
       </div>
       <div class="hand">
@@ -205,7 +215,42 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">1.15x</div>
+        <div class="mult">1.10x</div>
+        <div class="name">Prism</div>
+        <div class="axis">element [1,1,1] &middot; 3 cards &middot; element-prism</div>
+        <div class="cost">
+          6 AP
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">99.499%</div>
+          <div class="one">99.735% dealt &middot; 99.264% playable</div>
+          <div class="meter"><div style="width: 99%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 0.000%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+            
+              <img src="card-smash-lightning.png" width="102" height="140" alt="Smash — lightning, 3 AP">
+            
+          </div>
+          <div class="shares">
+            1× fire &middot; 1× ice &middot; 1× lightning
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">1.14x</div>
         <div class="name">Card Pair</div>
         <div class="axis">concept [2] &middot; 2 cards &middot; concept-pair</div>
         <div class="cost">
@@ -215,9 +260,9 @@
       <div class="odds">
         
           <div class="reach">94.719%</div>
-          <div class="one">1 in 1 hands</div>
+          <div class="one">94.719% dealt &middot; 94.719% playable</div>
           <div class="meter"><div style="width: 97%"></div></div>
-          <div class="best">best in hand 6.329%</div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 0.368%</div>
         
       </div>
       <div class="hand">
@@ -238,19 +283,19 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">1.45x</div>
-        <div class="name">Form Two Pair</div>
-        <div class="axis">form [2,2] &middot; 4 cards &middot; form-two-pair</div>
+        <div class="mult">1.18x</div>
+        <div class="name">Rising Attack</div>
+        <div class="axis">cost [1,1,1] &middot; 3 cards &middot; cost-rising-attack</div>
         <div class="cost">
           6 AP
         </div>
       </div>
       <div class="odds">
         
-          <div class="reach">61.663%</div>
-          <div class="one">1 in 2 hands</div>
-          <div class="meter"><div style="width: 78%"></div></div>
-          <div class="best">best in hand 0.678%</div>
+          <div class="reach">89.847%</div>
+          <div class="one">89.847% dealt &middot; 89.847% playable</div>
+          <div class="meter"><div style="width: 94%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 1.836%</div>
         
       </div>
       <div class="hand">
@@ -259,15 +304,13 @@
             
               <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
             
-              <img src="card-thrust-ice.png" width="102" height="140" alt="Thrust — ice, 2 AP">
-            
-              <img src="card-cut-fire.png" width="102" height="140" alt="Cut — fire, 1 AP">
-            
               <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+            
+              <img src="card-smash-lightning.png" width="102" height="140" alt="Smash — lightning, 3 AP">
             
           </div>
           <div class="shares">
-            2× stab &middot; 2× slash
+            1× Jab &middot; 1× Slash &middot; 1× Smash
           </div>
         
       </div>
@@ -275,7 +318,7 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">1.50x</div>
+        <div class="mult">1.20x</div>
         <div class="name">Form Three of a Kind</div>
         <div class="axis">form [3] &middot; 3 cards &middot; form-three-of-a-kind</div>
         <div class="cost">
@@ -284,10 +327,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">79.989%</div>
-          <div class="one">1 in 1 hands</div>
-          <div class="meter"><div style="width: 89%"></div></div>
-          <div class="best">best in hand 10.585%</div>
+          <div class="reach">87.506%</div>
+          <div class="one">95.730% dealt &middot; 79.989% playable</div>
+          <div class="meter"><div style="width: 93%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 1.668%</div>
         
       </div>
       <div class="hand">
@@ -310,19 +353,19 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">1.55x</div>
-        <div class="name">Elemental Two Pair</div>
-        <div class="axis">element [2,2] &middot; 4 cards &middot; element-two-pair</div>
-        <div class="cost">
-          6 AP
+        <div class="mult">1.29x</div>
+        <div class="name">Form Two Pair</div>
+        <div class="axis">form [2,2] &middot; 4 cards &middot; form-two-pair</div>
+        <div class="cost over">
+          7 AP — more than a round can play
         </div>
       </div>
       <div class="odds">
         
-          <div class="reach">52.780%</div>
-          <div class="one">1 in 2 hands</div>
-          <div class="meter"><div style="width: 72%"></div></div>
-          <div class="best">best in hand 6.060%</div>
+          <div class="reach">77.557%</div>
+          <div class="one">97.548% dealt &middot; 61.663% playable</div>
+          <div class="meter"><div style="width: 88%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 0.184%</div>
         
       </div>
       <div class="hand">
@@ -331,15 +374,15 @@
             
               <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
             
-              <img src="card-slash-fire.png" width="102" height="140" alt="Slash — fire, 2 AP">
+              <img src="card-thrust-ice.png" width="102" height="140" alt="Thrust — ice, 2 AP">
             
-              <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
+              <img src="card-cleave-lightning.png" width="102" height="140" alt="Cleave — lightning, 3 AP">
             
-              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+              <img src="card-cut-earth.png" width="102" height="140" alt="Cut — earth, 1 AP">
             
           </div>
           <div class="shares">
-            2× fire &middot; 2× ice
+            2× stab &middot; 2× slash
           </div>
         
       </div>
@@ -347,7 +390,79 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">1.60x</div>
+        <div class="mult">1.32x</div>
+        <div class="name">Spectrum</div>
+        <div class="axis">element [1,1,1,1] &middot; 4 cards &middot; element-spectrum</div>
+        <div class="cost over">
+          7 AP — more than a round can play
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">73.744%</div>
+          <div class="one">89.122% dealt &middot; 61.020% playable</div>
+          <div class="meter"><div style="width: 85%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 2.974%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+            
+              <img src="card-smash-lightning.png" width="102" height="140" alt="Smash — lightning, 3 AP">
+            
+              <img src="card-ward-earth.png" width="102" height="140" alt="Ward — earth, 1 AP">
+            
+          </div>
+          <div class="shares">
+            1× fire &middot; 1× ice &middot; 1× lightning &middot; 1× earth
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">1.34x</div>
+        <div class="name">Weaponmaster</div>
+        <div class="axis">cost [3] &middot; 3 cards &middot; cost-weaponmaster</div>
+        <div class="cost">
+          3 AP
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">72.452%</div>
+          <div class="one">77.030% dealt &middot; 68.147% playable</div>
+          <div class="meter"><div style="width: 85%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 6.288%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-cut-ice.png" width="102" height="140" alt="Cut — ice, 1 AP">
+            
+              <img src="card-bash-lightning.png" width="102" height="140" alt="Bash — lightning, 1 AP">
+            
+          </div>
+          <div class="shares">
+            1× Jab &middot; 1× Cut &middot; 1× Bash
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">1.34x</div>
         <div class="name">Elemental Three of a Kind</div>
         <div class="axis">element [3] &middot; 3 cards &middot; element-three-of-a-kind</div>
         <div class="cost">
@@ -356,10 +471,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">65.346%</div>
-          <div class="one">1 in 2 hands</div>
-          <div class="meter"><div style="width: 80%"></div></div>
-          <div class="best">best in hand 36.392%</div>
+          <div class="reach">72.157%</div>
+          <div class="one">79.677% dealt &middot; 65.346% playable</div>
+          <div class="meter"><div style="width: 84%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 11.441%</div>
         
       </div>
       <div class="hand">
@@ -382,19 +497,93 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">2.10x</div>
+        <div class="mult">1.34x</div>
+        <div class="name">Elemental Two Pair</div>
+        <div class="axis">element [2,2] &middot; 4 cards &middot; element-two-pair</div>
+        <div class="cost over">
+          7 AP — more than a round can play
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">71.501%</div>
+          <div class="one">96.861% dealt &middot; 52.780% playable</div>
+          <div class="meter"><div style="width: 84%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 8.399%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-slash-fire.png" width="102" height="140" alt="Slash — fire, 2 AP">
+            
+              <img src="card-smash-ice.png" width="102" height="140" alt="Smash — ice, 3 AP">
+            
+              <img src="card-ward-ice.png" width="102" height="140" alt="Ward — ice, 1 AP">
+            
+          </div>
+          <div class="shares">
+            2× fire &middot; 2× ice
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">1.57x</div>
+        <div class="name">Arsenal</div>
+        <div class="axis">form [1,1,1,1] &middot; 4 cards &middot; form-arsenal</div>
+        <div class="cost over">
+          7 AP — more than a round can play
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">52.289%</div>
+          <div class="one">65.074% dealt &middot; 42.016% playable</div>
+          <div class="meter"><div style="width: 72%"></div></div>
+          <div class="best">1 in 2 hands hold it &middot; best in hand 25.714%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+            
+              <img src="card-smash-lightning.png" width="102" height="140" alt="Smash — lightning, 3 AP">
+            
+              <img src="card-ward-earth.png" width="102" height="140" alt="Ward — earth, 1 AP">
+            
+          </div>
+          <div class="shares">
+            1× stab &middot; 1× slash &middot; 1× crush &middot; 1× defend
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">1.79x</div>
         <div class="name">Card Two Pair</div>
         <div class="axis">concept [2,2] &middot; 4 cards &middot; concept-two-pair</div>
         <div class="cost">
-          4 AP
+          6 AP
         </div>
       </div>
       <div class="odds">
         
-          <div class="reach">26.557%</div>
-          <div class="one">1 in 4 hands</div>
-          <div class="meter"><div style="width: 51%"></div></div>
-          <div class="best">best in hand 11.384%</div>
+          <div class="reach">39.021%</div>
+          <div class="one">57.335% dealt &middot; 26.557% playable</div>
+          <div class="meter"><div style="width: 62%"></div></div>
+          <div class="best">1 in 2 hands hold it &middot; best in hand 10.574%</div>
         
       </div>
       <div class="hand">
@@ -405,13 +594,13 @@
             
               <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
             
-              <img src="card-cut-fire.png" width="102" height="140" alt="Cut — fire, 1 AP">
+              <img src="card-slash-lightning.png" width="102" height="140" alt="Slash — lightning, 2 AP">
             
-              <img src="card-cut-ice.png" width="102" height="140" alt="Cut — ice, 1 AP">
+              <img src="card-slash-earth.png" width="102" height="140" alt="Slash — earth, 2 AP">
             
           </div>
           <div class="shares">
-            2× Jab &middot; 2× Cut
+            2× Jab &middot; 2× Slash
           </div>
         
       </div>
@@ -419,42 +608,7 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">2.50x</div>
-        <div class="name">Card Three of a Kind</div>
-        <div class="axis">concept [3] &middot; 3 cards &middot; concept-three-of-a-kind</div>
-        <div class="cost">
-          3 AP
-        </div>
-      </div>
-      <div class="odds">
-        
-          <div class="reach">14.486%</div>
-          <div class="one">1 in 7 hands</div>
-          <div class="meter"><div style="width: 38%"></div></div>
-          <div class="best">best in hand 7.150%</div>
-        
-      </div>
-      <div class="hand">
-        
-          <div class="cards">
-            
-              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
-            
-              <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
-            
-              <img src="card-jab-lightning.png" width="102" height="140" alt="Jab — lightning, 1 AP">
-            
-          </div>
-          <div class="shares">
-            3× Jab
-          </div>
-        
-      </div>
-    </div>
-  
-    <div class="rung">
-      <div class="pays">
-        <div class="mult">2.90x</div>
+        <div class="mult">2.02x</div>
         <div class="name">Form Full House</div>
         <div class="axis">form [3,2] &middot; 5 cards &middot; form-full-house</div>
         <div class="cost over">
@@ -463,10 +617,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">8.548%</div>
-          <div class="one">1 in 12 hands</div>
-          <div class="meter"><div style="width: 29%"></div></div>
-          <div class="best">best in hand 3.590%</div>
+          <div class="reach">28.237%</div>
+          <div class="one">93.278% dealt &middot; 8.548% playable</div>
+          <div class="meter"><div style="width: 53%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 1.988%</div>
         
       </div>
       <div class="hand">
@@ -479,9 +633,9 @@
             
               <img src="card-lunge-lightning.png" width="102" height="140" alt="Lunge — lightning, 3 AP">
             
-              <img src="card-cut-fire.png" width="102" height="140" alt="Cut — fire, 1 AP">
+              <img src="card-cut-earth.png" width="102" height="140" alt="Cut — earth, 1 AP">
             
-              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+              <img src="card-slash-arcane.png" width="102" height="140" alt="Slash — arcane, 2 AP">
             
           </div>
           <div class="shares">
@@ -493,7 +647,7 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">2.95x</div>
+        <div class="mult">2.26x</div>
         <div class="name">Form Four of a Kind</div>
         <div class="axis">form [4] &middot; 4 cards &middot; form-four-of-a-kind</div>
         <div class="cost over">
@@ -502,10 +656,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">10.080%</div>
-          <div class="one">1 in 10 hands</div>
-          <div class="meter"><div style="width: 31%"></div></div>
-          <div class="best">best in hand 8.046%</div>
+          <div class="reach">20.430%</div>
+          <div class="one">41.408% dealt &middot; 10.080% playable</div>
+          <div class="meter"><div style="width: 45%"></div></div>
+          <div class="best">1 in 2 hands hold it &middot; best in hand 3.954%</div>
         
       </div>
       <div class="hand">
@@ -530,19 +684,19 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">3.35x</div>
+        <div class="mult">2.32x</div>
         <div class="name">Elemental Full House</div>
         <div class="axis">element [3,2] &middot; 5 cards &middot; element-full-house</div>
         <div class="cost over">
-          9 AP — more than a round can play
+          8 AP — more than a round can play
         </div>
       </div>
       <div class="odds">
         
-          <div class="reach">4.664%</div>
-          <div class="one">1 in 21 hands</div>
-          <div class="meter"><div style="width: 21%"></div></div>
-          <div class="best">best in hand 3.065%</div>
+          <div class="reach">18.893%</div>
+          <div class="one">76.538% dealt &middot; 4.664% playable</div>
+          <div class="meter"><div style="width: 43%"></div></div>
+          <div class="best">1 in 1 hands hold it &middot; best in hand 2.647%</div>
         
       </div>
       <div class="hand">
@@ -555,9 +709,9 @@
             
               <img src="card-smash-fire.png" width="102" height="140" alt="Smash — fire, 3 AP">
             
-              <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
+              <img src="card-ward-ice.png" width="102" height="140" alt="Ward — ice, 1 AP">
             
-              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+              <img src="card-cut-ice.png" width="102" height="140" alt="Cut — ice, 1 AP">
             
           </div>
           <div class="shares">
@@ -569,7 +723,81 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">3.40x</div>
+        <div class="mult">2.40x</div>
+        <div class="name">Card Three of a Kind</div>
+        <div class="axis">concept [3] &middot; 3 cards &middot; concept-three-of-a-kind</div>
+        <div class="cost">
+          3 AP
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">16.919%</div>
+          <div class="one">19.761% dealt &middot; 14.486% playable</div>
+          <div class="meter"><div style="width: 41%"></div></div>
+          <div class="best">1 in 5 hands hold it &middot; best in hand 11.220%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
+            
+              <img src="card-jab-lightning.png" width="102" height="140" alt="Jab — lightning, 1 AP">
+            
+          </div>
+          <div class="shares">
+            3× Jab
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">2.56x</div>
+        <div class="name">Elementalist</div>
+        <div class="axis">element [1,1,1,1,1] &middot; 5 cards &middot; element-elementalist</div>
+        <div class="cost over">
+          8 AP — more than a round can play
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">13.537%</div>
+          <div class="one">38.410% dealt &middot; 4.771% playable</div>
+          <div class="meter"><div style="width: 36%"></div></div>
+          <div class="best">1 in 3 hands hold it &middot; best in hand 4.102%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-slash-ice.png" width="102" height="140" alt="Slash — ice, 2 AP">
+            
+              <img src="card-smash-lightning.png" width="102" height="140" alt="Smash — lightning, 3 AP">
+            
+              <img src="card-ward-earth.png" width="102" height="140" alt="Ward — earth, 1 AP">
+            
+              <img src="card-cut-arcane.png" width="102" height="140" alt="Cut — arcane, 1 AP">
+            
+          </div>
+          <div class="shares">
+            1× fire &middot; 1× ice &middot; 1× lightning &middot; 1× earth &middot; 1× arcane
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">2.76x</div>
         <div class="name">Elemental Four of a Kind</div>
         <div class="axis">element [4] &middot; 4 cards &middot; element-four-of-a-kind</div>
         <div class="cost over">
@@ -578,10 +806,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">4.980%</div>
-          <div class="one">1 in 20 hands</div>
-          <div class="meter"><div style="width: 22%"></div></div>
-          <div class="best">best in hand 4.835%</div>
+          <div class="reach">10.221%</div>
+          <div class="one">20.975% dealt &middot; 4.980% playable</div>
+          <div class="meter"><div style="width: 31%"></div></div>
+          <div class="best">1 in 5 hands hold it &middot; best in hand 4.835%</div>
         
       </div>
       <div class="hand">
@@ -606,19 +834,19 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">4.15x</div>
+        <div class="mult">3.42x</div>
         <div class="name">Card Full House</div>
         <div class="axis">concept [3,2] &middot; 5 cards &middot; concept-full-house</div>
-        <div class="cost">
-          5 AP
+        <div class="cost over">
+          7 AP — more than a round can play
         </div>
       </div>
       <div class="odds">
         
-          <div class="reach">1.446%</div>
-          <div class="one">1 in 69 hands</div>
-          <div class="meter"><div style="width: 12%"></div></div>
-          <div class="best">best in hand 1.392%</div>
+          <div class="reach">4.168%</div>
+          <div class="one">12.019% dealt &middot; 1.446% playable</div>
+          <div class="meter"><div style="width: 20%"></div></div>
+          <div class="best">1 in 8 hands hold it &middot; best in hand 1.392%</div>
         
       </div>
       <div class="hand">
@@ -631,13 +859,13 @@
             
               <img src="card-jab-lightning.png" width="102" height="140" alt="Jab — lightning, 1 AP">
             
-              <img src="card-cut-fire.png" width="102" height="140" alt="Cut — fire, 1 AP">
+              <img src="card-slash-earth.png" width="102" height="140" alt="Slash — earth, 2 AP">
             
-              <img src="card-cut-ice.png" width="102" height="140" alt="Cut — ice, 1 AP">
+              <img src="card-slash-arcane.png" width="102" height="140" alt="Slash — arcane, 2 AP">
             
           </div>
           <div class="shares">
-            3× Jab &middot; 2× Cut
+            3× Jab &middot; 2× Slash
           </div>
         
       </div>
@@ -645,44 +873,7 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">5.00x</div>
-        <div class="name">Card Four of a Kind</div>
-        <div class="axis">concept [4] &middot; 4 cards &middot; concept-four-of-a-kind</div>
-        <div class="cost">
-          4 AP
-        </div>
-      </div>
-      <div class="odds">
-        
-          <div class="reach">0.385%</div>
-          <div class="one">1 in 260 hands</div>
-          <div class="meter"><div style="width: 6%"></div></div>
-          <div class="best">best in hand 0.244%</div>
-        
-      </div>
-      <div class="hand">
-        
-          <div class="cards">
-            
-              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
-            
-              <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
-            
-              <img src="card-jab-lightning.png" width="102" height="140" alt="Jab — lightning, 1 AP">
-            
-              <img src="card-jab-earth.png" width="102" height="140" alt="Jab — earth, 1 AP">
-            
-          </div>
-          <div class="shares">
-            4× Jab
-          </div>
-        
-      </div>
-    </div>
-  
-    <div class="rung">
-      <div class="pays">
-        <div class="mult">5.75x</div>
+        <div class="mult">4.39x</div>
         <div class="name">Form Five of a Kind</div>
         <div class="axis">form [5] &middot; 5 cards &middot; form-five-of-a-kind</div>
         <div class="cost over">
@@ -691,10 +882,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">0.141%</div>
-          <div class="one">1 in 710 hands</div>
-          <div class="meter"><div style="width: 3%"></div></div>
-          <div class="best">best in hand 0.135%</div>
+          <div class="reach">1.103%</div>
+          <div class="one">8.642% dealt &middot; 0.141% playable</div>
+          <div class="meter"><div style="width: 10%"></div></div>
+          <div class="best">1 in 12 hands hold it &middot; best in hand 0.000%</div>
         
       </div>
       <div class="hand">
@@ -721,7 +912,44 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">6.80x</div>
+        <div class="mult">4.79x</div>
+        <div class="name">Card Four of a Kind</div>
+        <div class="axis">concept [4] &middot; 4 cards &middot; concept-four-of-a-kind</div>
+        <div class="cost">
+          4 AP
+        </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">0.637%</div>
+          <div class="one">1.055% dealt &middot; 0.385% playable</div>
+          <div class="meter"><div style="width: 7%"></div></div>
+          <div class="best">1 in 95 hands hold it &middot; best in hand 0.379%</div>
+        
+      </div>
+      <div class="hand">
+        
+          <div class="cards">
+            
+              <img src="card-jab-fire.png" width="102" height="140" alt="Jab — fire, 1 AP">
+            
+              <img src="card-jab-ice.png" width="102" height="140" alt="Jab — ice, 1 AP">
+            
+              <img src="card-jab-lightning.png" width="102" height="140" alt="Jab — lightning, 1 AP">
+            
+              <img src="card-jab-earth.png" width="102" height="140" alt="Jab — earth, 1 AP">
+            
+          </div>
+          <div class="shares">
+            4× Jab
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="rung">
+      <div class="pays">
+        <div class="mult">5.37x</div>
         <div class="name">Elemental Five of a Kind</div>
         <div class="axis">element [5] &middot; 5 cards &middot; element-five-of-a-kind</div>
         <div class="cost over">
@@ -730,10 +958,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">0.031%</div>
-          <div class="one">1 in 3263 hands</div>
-          <div class="meter"><div style="width: 1%"></div></div>
-          <div class="best">best in hand 0.031%</div>
+          <div class="reach">0.287%</div>
+          <div class="one">2.695% dealt &middot; 0.031% playable</div>
+          <div class="meter"><div style="width: 5%"></div></div>
+          <div class="best">1 in 37 hands hold it &middot; best in hand 0.031%</div>
         
       </div>
       <div class="hand">
@@ -760,7 +988,7 @@
   
     <div class="rung">
       <div class="pays">
-        <div class="mult">7.85x</div>
+        <div class="mult">7.87x</div>
         <div class="name">Card Five of a Kind</div>
         <div class="axis">concept [5] &middot; 5 cards &middot; concept-five-of-a-kind</div>
         <div class="cost">
@@ -769,10 +997,10 @@
       </div>
       <div class="odds">
         
-          <div class="reach">0.006%</div>
-          <div class="one">1 in 18018 hands</div>
+          <div class="reach">0.009%</div>
+          <div class="one">0.016% dealt &middot; 0.006% playable</div>
           <div class="meter"><div style="width: 1%"></div></div>
-          <div class="best">best in hand 0.006%</div>
+          <div class="best">1 in 6289 hands hold it &middot; best in hand 0.006%</div>
         
       </div>
       <div class="hand">

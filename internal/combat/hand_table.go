@@ -36,6 +36,10 @@ func loadCatalogue() []Hand {
 		if err != nil {
 			panic(fmt.Sprintf("combat: hands.json hand %q: %v", rec.Key, err))
 		}
+		vary, varies, err := validateVary(rec, axis)
+		if err != nil {
+			panic(fmt.Sprintf("combat: hands.json hand %q: %v", rec.Key, err))
+		}
 		if seenKey[rec.Key] {
 			panic(fmt.Sprintf("combat: hands.json declares hand key %q twice", rec.Key))
 		}
@@ -47,6 +51,8 @@ func loadCatalogue() []Hand {
 			Name:       rec.Name,
 			Match:      axis,
 			Groups:     append([]int(nil), rec.Groups...),
+			Vary:       vary,
+			Varies:     varies,
 			Multiplier: rec.Multiplier,
 		}
 		if prev, dup := seenID[h.ID]; dup {
@@ -120,6 +126,34 @@ func validateHand(r data.HandData) (Axis, error) {
 	}
 
 	return axis, nil
+}
+
+// validateVary resolves the optional `vary` clause and refuses the two ways it can be nonsense.
+//
+// **Varying on the axis the hand already counts is a contradiction**, not a curiosity: every card
+// in a group carries the same value there by construction, so such a hand could never form and
+// would be invisible rather than refused. **And a group cannot ask for more distinct values than
+// the axis has** — three forms varying across four cards is the same unclimbable typo the groups
+// check above catches, one axis over.
+func validateVary(r data.HandData, match Axis) (Axis, bool, error) {
+	if r.Vary == "" {
+		return AxisConcept, false, nil
+	}
+	vary, ok := ParseAxis(r.Vary)
+	if !ok {
+		return AxisConcept, false, fmt.Errorf("varies on %q, which is not one of %s", r.Vary, axisList())
+	}
+	if vary == match {
+		return AxisConcept, false, fmt.Errorf("varies on %s, which is the axis it already counts on, so no hand could ever form it", vary)
+	}
+	if spread := vary.spread(); spread > 0 {
+		for _, g := range r.Groups {
+			if g > spread {
+				return AxisConcept, false, fmt.Errorf("wants a group of %d cards varying on %s, but only %d %ss can reach a blow", g, vary, spread, vary)
+			}
+		}
+	}
+	return vary, true, nil
 }
 
 // axisList is the axes written out for an error message.

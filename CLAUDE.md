@@ -202,12 +202,19 @@ touching any of it:
   outstanding.
 
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
-prints.** The ladder is priced off how reachable each rung is — a form pair is a 100% hand and pays
-110, a concept Four of a Kind is a 0.27% hand and pays 500 — and every one of those figures is a fact
+prints.** The ladder is priced off how hard each rung is to land — a form pair scores 100% and pays
+110, a concept Four of a Kind scores 0.64% and pays 479 — and every one of those figures is a fact
 about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the ladder is
-tuned against a deck that no longer exists, silently, because nothing fails. The tool measures
-**reachability** rather than what the matcher picks: whether a hand of eight can afford some set
-forming the rung, which is the question the player is actually answering. **It counts every card,
+tuned against a deck that no longer exists, silently, because nothing fails.
+
+**It reports two columns and a score, and the difference matters** *(owner's call, 2026-09-05)*.
+**Dealt** is whether a hand of eight holds the cards for the rung at all; **playable** is whether it
+could also pay for them inside the round. They come apart hard on the five-card rungs — a Form Full
+House is dealt in 93% of hands and payable in 8% — and the **score** is the geometric mean of the
+two, which is what the multipliers are priced against. `go run ./tools/handodds -price` prints what
+the curve would charge beside what the file charges and marks every row where they differ; the file
+matches at every rung today, so a mark is a real signal. See MECHANICS.md for why neither column
+alone can price a ladder. **It counts every card,
 defences included** *(2026-08-23)* — they carry an element and a form and join hands like anything
 else, bringing no damage with them. MECHANICS.md holds the
 table and the rule that turned it into multipliers.
@@ -887,7 +894,7 @@ actually fire.
 fights away; the sheet draws all eleven grouped by what each one changes about a card, with the
 authored `Text` against the rule that fires, exactly as the ring sheet does. The hand sheet draws
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
-that best *illustrates* the rung — ordered by ascending multiplier across all three axes at once,
+that best *illustrates* the rung — ordered by ascending multiplier across every axis at once,
 which is the comparison `hands.json`'s axis-by-axis layout hides. **The example varies everything
 the rung does not count** *(owner's call, 2026-08-24)*: a form pair is a 1 AP stab beside a 3 AP
 one, because cheapest-set picked two identical cards and made a form pair, a card pair and an
@@ -958,7 +965,7 @@ a colour. The hand is the case that established it: it was the screen's pink, wh
 colour a ring's multiplier takes — the two things that multiply a blow, in one colour, in the same
 sum — and moving it to deep purple immediately collided with arcane. It now takes the ground's own
 ink and is marked instead. See `screens.handNameInk` and `session.InkHand`, and note the second
-argument: two of the three axes a hand counts on are not elemental at all.
+argument: three of the four axes a hand counts on are not elemental at all.
 
 ### Colour: name one colour and scale it — and the light comes off that colour too
 

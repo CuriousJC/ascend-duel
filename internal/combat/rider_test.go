@@ -283,8 +283,15 @@ func TestARiderThatScalesInComboNeedsTheCardToMakeTheHand(t *testing.T) {
 	inHand, _, _ := resolve(a, b, []Card{carrying(Strike, RiderScaleInCombo, 200), Plain(Strike)}, nil, 1)
 	bare, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
 
-	if got, want := blowOf(inHand, SideA), blowOf(bare, SideA)*2; got != want {
-		t.Errorf("a 2x rider in the combo dealt %d, wanted %d", got, want)
+	// **Within a point, because the multiplier truncates** *(2026-09-05)*. scaleDamage is integer
+	// arithmetic rounding toward zero, so doubling the DMG and *then* scaling is not always the
+	// same as scaling and then doubling — `40 * 114 / 100` is 45 where `(20 * 114 / 100) * 2` is
+	// 44. What this pins is that the ridden card doubled the blow; the odd point is the ladder's
+	// rounding and pinning it exactly would make the test fail on any multiplier that is not a
+	// factor of the sum, which is a tuning constraint nobody agreed to.
+	got, want := blowOf(inHand, SideA), blowOf(bare, SideA)*2
+	if got < want || got > want+1 {
+		t.Errorf("a 2x rider in the combo dealt %d, wanted %d (or one more, for the truncation)", got, want)
 	}
 }
 

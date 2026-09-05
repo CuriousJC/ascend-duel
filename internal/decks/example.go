@@ -34,6 +34,9 @@ func MatchValue(c combat.Card, a combat.Axis) (int, bool) {
 		return int(f), f != combat.FormNone
 	case combat.AxisElement:
 		return int(c.Element), c.Element != combat.Basic
+	case combat.AxisCost:
+		// No absence: every card costs something, zero included. Mirrors the matcher.
+		return c.Cost(), true
 	default:
 		return int(c.Concept), true
 	}
@@ -103,34 +106,25 @@ func Example(deck []combat.Card, h combat.Hand) ([]combat.Card, int) {
 		})
 	}
 
-	// The illustrative pick for each value, at each group size the rung asks for. Computed once
-	// per value rather than inside the walk below, which would redo it for every arrangement of
-	// the groups.
-	type choice struct {
-		cards []combat.Card
-		cost  int
-		shown int
-	}
-	picks := make([]map[int]choice, len(values))
-	for i, v := range values {
-		picks[i] = map[int]choice{}
-		for _, want := range h.Groups {
-			if _, done := picks[i][want]; done {
-				continue
-			}
-			cs, cost := pickIllustrative(byValue[v], h.Match, want)
-			picks[i][want] = choice{cards: cs, cost: cost, shown: variety(cs, h.Match)}
-		}
-	}
-
 	var best []combat.Card
 	bestCost, bestShown := -1, -1
 
-	var fill func(group int, used []bool, picked []combat.Card, spent, shown int)
-	fill = func(group int, used []bool, picked []combat.Card, spent, shown int) {
+	// **The pick is made inside the walk rather than precomputed per value** *(2026-09-05)*. It
+	// used to be worked out once for each (value, group size) pair, which is cheaper and was right
+	// while every rung had a group of two or more: the most illustrative pair of fire cards is the
+	// same pair whatever else is on the row. It is wrong for a rung of all ones — Prism, Spectrum,
+	// Elementalist, Arsenal — where a group is a single card and the only thing that can make the
+	// row varied is *which* card each group contributes. Precomputed, every group offered its
+	// cheapest card and the row came out as five Jabs.
+	//
+	// The deck is small and a rung is at most five groups, so the extra work is a few hundred
+	// greedy picks. It buys a row that says what the rung leaves free, which is the whole job.
+	var fill func(group int, used []bool, picked []combat.Card, spent int)
+	fill = func(group int, used []bool, picked []combat.Card, spent int) {
 		if group == len(h.Groups) {
 			// **Variety first, cost second.** Two sets that demonstrate the rule equally well are
 			// separated by what they cost, which is the old rule surviving as the tie-break.
+			shown := variety(picked, h.Match)
 			if shown > bestShown || (shown == bestShown && spent < bestCost) {
 				bestCost, bestShown = spent, shown
 				best = append([]combat.Card(nil), picked...)
@@ -139,16 +133,22 @@ func Example(deck []combat.Card, h combat.Hand) ([]combat.Card, int) {
 		}
 		want := h.Groups[group]
 		for i := range values {
-			p, ok := picks[i][want]
-			if used[i] || !ok {
+			if used[i] {
+				continue
+			}
+			cs, cost := pickIllustrative(byValue[values[i]], h, want, picked)
+			if len(cs) < want {
+				// A Vary clause ran the axis out, so this value cannot supply the group. Not a
+				// candidate: a group short of the cards the rung asks for is not an illustration
+				// of it.
 				continue
 			}
 			used[i] = true
-			fill(group+1, used, append(picked, p.cards...), spent+p.cost, shown+p.shown)
+			fill(group+1, used, append(picked, cs...), spent+cost)
 			used[i] = false
 		}
 	}
-	fill(0, make([]bool, len(values)), nil, 0, 0)
+	fill(0, make([]bool, len(values)), nil, 0)
 
 	if bestCost < 0 {
 		return nil, 0
@@ -171,9 +171,14 @@ func Example(deck []combat.Card, h combat.Hand) ([]combat.Card, int) {
 //
 // The candidates arrive cheapest-first and ties are broken by the order they sit in, so two decks
 // holding the same cards illustrate a rung the same way.
-func pickIllustrative(cs []combat.Card, a combat.Axis, want int) ([]combat.Card, int) {
+func pickIllustrative(cs []combat.Card, h combat.Hand, want int, row []combat.Card) ([]combat.Card, int) {
+	a := h.Match
 	var picked []combat.Card
 	taken := make([]bool, len(cs))
+	// **A Vary clause is a requirement, not a preference.** The variety score below is a tie-break
+	// among sets that all satisfy the rung; a hand naming a Vary axis is not satisfied at all by a
+	// set that repeats a value on it, so those candidates are refused rather than ranked down.
+	usedVary := map[int]bool{}
 
 	for len(picked) < want {
 		bestAt, bestGain := -1, -1
@@ -181,14 +186,31 @@ func pickIllustrative(cs []combat.Card, a combat.Axis, want int) ([]combat.Card,
 			if taken[i] {
 				continue
 			}
+			if h.Varies {
+				v, counts := MatchValue(c, h.Vary)
+				if !counts || usedVary[v] {
+					continue
+				}
+			}
 			// The gain is how much more of the rung's freedom the row would show with this card
 			// on it. A first card gains nothing by definition, so the cheapest is taken.
-			gain := variety(append(picked, c), a) - variety(picked, a)
+			// **Measured against the whole row, not against this group alone.** A group of one
+			// card can differ from nothing by itself; what it can do is differ from what the
+			// other groups already put down.
+			so := append(append([]combat.Card(nil), row...), picked...)
+			gain := variety(append(so, c), a) - variety(so, a)
 			if gain > bestGain {
 				bestAt, bestGain = i, gain
 			}
 		}
 		if bestAt < 0 {
+			if h.Varies {
+				// The Vary axis has run out of values, so no further card can join this row. The
+				// catalogue refuses such a rung at load — see validateVary — so reaching here
+				// means the *deck* cannot illustrate it, and coming back short is the honest
+				// answer rather than a repeat that breaks the rung's own rule.
+				break
+			}
 			// Every distinct card is on the row already and the rung wants more, so the pass
 			// starts over and cards are repeated. See the note above.
 			for i := range taken {
@@ -197,6 +219,11 @@ func pickIllustrative(cs []combat.Card, a combat.Axis, want int) ([]combat.Card,
 			continue
 		}
 		taken[bestAt] = true
+		if h.Varies {
+			if v, counts := MatchValue(cs[bestAt], h.Vary); counts {
+				usedVary[v] = true
+			}
+		}
 		picked = append(picked, cs[bestAt])
 	}
 

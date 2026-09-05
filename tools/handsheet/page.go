@@ -95,18 +95,28 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
   shipping deck cannot form at all.
 </p>
 <p class="note">
-  <strong>Ordered by multiplier, across all three axes at once.</strong> That is the comparison
-  the numbers are making — an Elemental Three of a Kind at 195 is claiming to be worth about what
-  a Form Full House is not — and it is the comparison <code>hands.json</code>'s axis-by-axis
-  layout hides.
+  <strong>Ordered by multiplier, across every axis at once.</strong> That is the comparison the
+  numbers are making — an Elemental Three of a Kind is claiming to be worth about what a
+  Weaponmaster is — and it is the comparison <code>hands.json</code>'s axis-by-axis layout hides.
 </p>
 <p class="note">
-  <strong>The AP figure is not the difficulty, and the reachability is.</strong> The AP is what the
-  example costs <em>once you hold the cards</em>. <strong>Reachable</strong> is how often you hold
-  them: of <code>{{.Trials}}</code> opening hands of <code>{{.HandSize}}</code> dealt off this deck,
-  the share that could afford some set forming the rung — which is the figure the multipliers are
-  priced against. <strong>Best in hand</strong> is the share where it was the dearest-paying rung
-  available, which is what a player taking the most they could would actually have landed.
+  <strong>The AP figure is not the difficulty, and the three percentages are.</strong> The AP is
+  what the example costs <em>once you hold the cards</em>. Of <code>{{.Trials}}</code> opening hands
+  of <code>{{.HandSize}}</code> dealt off this deck, <strong>dealt</strong> is the share holding the
+  cards for the rung at all, and <strong>playable</strong> is the share that could also pay for
+  them inside the round's action points. They come apart hard on the five-card rungs: a Form Full
+  House is dealt in most hands and payable in very few.
+</p>
+<p class="note">
+  <strong>The score is the geometric mean of the two, and it is what the multipliers are priced
+  against.</strong> Pricing on the deal alone would put a five-card Full House below a two-card
+  pair, since the shuffle hands it to you constantly and the round cannot pay for it; pricing on
+  playability alone would treat a rung you are dealt every hand and can rarely afford as though you
+  had never seen it, when in fact it is a hand you can plan toward. The curve behind it is
+  <code>tools/hands</code>, and <code>go run ./tools/handodds -price</code> prints what it would
+  charge for each rung beside what the file charges today. <strong>Best in hand</strong> is the
+  share where the rung was the dearest-paying one available — what a player taking the most they
+  could would actually have landed.
 </p>
 <p class="note">
   Round one only: a later hand draws from a depleted pile and keeps what it did not spend, which
@@ -139,10 +149,10 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
       </div>
       <div class="odds">
         {{if .Sampled}}
-          <div class="reach">{{.Reachable}}</div>
-          <div class="one">{{.OneIn}} hands</div>
+          <div class="reach">{{.Score}}</div>
+          <div class="one">{{.Dealt}} dealt &middot; {{.Reachable}} playable</div>
           <div class="meter"><div style="width: {{.Bar}}%"></div></div>
-          <div class="best">best in hand {{.Best}}</div>
+          <div class="best">{{.OneIn}} hands hold it &middot; best in hand {{.Best}}</div>
         {{else}}
           <div class="unsampled">not sampled — the fallback every attacking turn lands on</div>
         {{end}}

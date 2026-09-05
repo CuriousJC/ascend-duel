@@ -115,5 +115,41 @@
     "Name": "Zircon",
     "Hand": "element-five-of-a-kind",
     "Text": "RAISE ELEMENT FIVE OF A KIND"
+  },
+  {
+    "StoneRecord": "quartzite",
+    "Name": "Quartzite",
+    "Hand": "form-arsenal",
+    "Text": "RAISE ARSENAL"
+  },
+  {
+    "StoneRecord": "spinel",
+    "Name": "Spinel",
+    "Hand": "element-prism",
+    "Text": "RAISE PRISM"
+  },
+  {
+    "StoneRecord": "labradorite",
+    "Name": "Labradorite",
+    "Hand": "element-spectrum",
+    "Text": "RAISE SPECTRUM"
+  },
+  {
+    "StoneRecord": "tourmaline",
+    "Name": "Tourmaline",
+    "Hand": "element-elementalist",
+    "Text": "RAISE ELEMENTALIST"
+  },
+  {
+    "StoneRecord": "sandstone",
+    "Name": "Sandstone",
+    "Hand": "cost-rising-attack",
+    "Text": "RAISE RISING ATTACK"
+  },
+  {
+    "StoneRecord": "whetstone",
+    "Name": "Whetstone",
+    "Hand": "cost-weaponmaster",
+    "Text": "RAISE WEAPONMASTER"
   }
 ]

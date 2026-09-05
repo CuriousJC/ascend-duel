@@ -126,6 +126,24 @@ type GlobalState struct {
 	InputFocus image.Rectangle
 	InputGated bool
 
+	// HandSort is how a dealt hand is arranged, and which of the three sort tabs is latched.
+	// See screens.handSort, whose ordinals this holds — cost is the zero value, so a state
+	// nobody has touched is already sorted the way a fresh screen is.
+	//
+	// **It lives here because it is one preference over every screen that deals a hand**
+	// *(owner's call, 2026-09-05)*, rather than one per screen. It was a field on CombatScene,
+	// which was right while the combat screen was the only place a hand was laid out; the worm
+	// screen deals one too, and a player who arranged their hand by element and then met a row
+	// sorted by cost would be setting the same preference twice.
+	//
+	// **It is a reading preference, not a fact about a run**, so it is not saved to the profile
+	// and no scene's Init resets it. It is a plain int for the reason Version and RunSeed are:
+	// state stays free of imports, and screens holds the enum.
+	//
+	// Sorting a *queued* hand re-prices it — see combat_sort.go — which is a rule about the
+	// combat screen rather than about this field.
+	HandSort int
+
 	//Layout
 	//
 	// **These are the live figures Layout published**, which is always the two constants

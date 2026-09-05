@@ -9,8 +9,14 @@ import "html/template"
 // card sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// The layout is a row per rung — what it pays on the left, the cards on the right — because the
-// review question is a comparison down the column, not a look at any one hand.
+// The layout is a row per rung — what it pays on the left, how often it can be built in the middle,
+// the cards on the right — because the review question is a comparison down the column, not a look
+// at any one hand.
+//
+// **The reachability carries a meter as well as a figure** *(2026-09-05)*. The figure is the fact
+// and the meter is the ranking: eighteen numbers running from 100% to 0.006% are not comparable by
+// eye down a column, and the whole point of putting them on this page is to read them against the
+// multiplier beside them. It is square-rooted, for the reason bar() in main.go gives.
 var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
 <title>Ascending Duel — hand sheet</title>
@@ -52,6 +58,16 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
   .pays .axis { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
   .pays .cost { font-size: 12.5px; margin-top: 8px; }
   .pays .cost.over { color: var(--pink); font-weight: 600; }
+  .odds { width: 190px; flex: none; }
+  .odds .reach { font-size: 19px; font-weight: 600; line-height: 1.1; }
+  .odds .one { color: var(--dim); font-size: 12px; }
+  .odds .meter {
+    height: 6px; margin: 8px 0 6px; border-radius: 3px;
+    background: rgba(0, 0, 0, .09);
+  }
+  .odds .meter div { height: 100%; border-radius: 3px; background: var(--pink); }
+  .odds .best { color: var(--dim); font-size: 11.5px; }
+  .odds .unsampled { color: var(--dim); font-size: 12px; }
   .hand { min-width: 0; }
   .cards { display: flex; gap: 6px; flex-wrap: wrap; }
   /* Natural size, never scaled. See the comment above. */
@@ -85,12 +101,19 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
   layout hides.
 </p>
 <p class="note">
-  <strong>The AP figure is not the difficulty.</strong> It is what the example above costs
-  <em>once you hold the cards</em>. How often you hold them is
-  <code>go run ./tools/handodds</code>, which deals two million hands and prints the
-  reachability the multipliers are actually priced against. Two tools reporting the same
-  probability by different methods would be two numbers that can disagree, so this one does not
-  sample.
+  <strong>The AP figure is not the difficulty, and the reachability is.</strong> The AP is what the
+  example costs <em>once you hold the cards</em>. <strong>Reachable</strong> is how often you hold
+  them: of <code>{{.Trials}}</code> opening hands of <code>{{.HandSize}}</code> dealt off this deck,
+  the share that could afford some set forming the rung — which is the figure the multipliers are
+  priced against. <strong>Best in hand</strong> is the share where it was the dearest-paying rung
+  available, which is what a player taking the most they could would actually have landed.
+</p>
+<p class="note">
+  Round one only: a later hand draws from a depleted pile and keeps what it did not spend, which
+  the sample does not model. <code>{{.Nothing}}</code> of hands build no rung at all — the turns the
+  High Card names. The same table, with the axes kept apart and an <code>-ap</code> flag for a turn
+  holding cost discounts, is <code>go run ./tools/handodds</code>: one pinned sample in
+  <code>tools/hands</code>, printed by both, so the two cannot disagree.
 </p>
 {{if .TooManyAP}}
 <p class="note">
@@ -113,6 +136,16 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
         <div class="cost{{if not .Affordable}} over{{end}}">
           {{.Cost}} AP{{if not .Affordable}} — more than a round can play{{end}}
         </div>
+      </div>
+      <div class="odds">
+        {{if .Sampled}}
+          <div class="reach">{{.Reachable}}</div>
+          <div class="one">{{.OneIn}} hands</div>
+          <div class="meter"><div style="width: {{.Bar}}%"></div></div>
+          <div class="best">best in hand {{.Best}}</div>
+        {{else}}
+          <div class="unsampled">not sampled — the fallback every attacking turn lands on</div>
+        {{end}}
       </div>
       <div class="hand">
         {{if .Cells}}

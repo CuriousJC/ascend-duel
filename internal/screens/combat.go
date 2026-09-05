@@ -358,11 +358,14 @@ type CombatScene struct {
 	duelButton    *models.Button
 	discardButton *models.Button
 
-	// How the hand is arranged, and the column of buttons that chooses it. See
-	// combat_sort.go — including why this is the one field on the scene that Init does not
-	// reset: it is a reading preference rather than a fact about a duel.
-	sortMode    handSort
-	sortButtons []*models.Button
+	// How the hand is arranged, and the block of tabs that chooses it. See combat_sort.go.
+	//
+	// **sortMode is this screen's working copy of `gs.HandSort`** *(2026-09-05)*, not the
+	// preference itself: Init loads it and updateSortButtons writes it back, so the arrangement
+	// a player chose here is the one the worm screen's offer arrives in. It was the one field
+	// Init did not reset, which is now true of the global one instead.
+	sortMode handSort
+	sortTabs *sortTabs
 
 	// tut is Bob, when a run is being taught. **A field on the scene rather than global state**,
 	// because the widget is this screen's — the two buttons and where the bubble last sat. What
@@ -431,15 +434,14 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// **There is no third button.** Deck was one until 2026-08-10 and is now the pile itself.
 	// See combat_flight.go.
 	// The sort column, beside the cards rather than on the strip below them: it arranges the
-	// hand and commits nothing, so it belongs against the thing it arranges. **s.sortMode is
-	// deliberately not reset here** — see combat_sort.go.
-	if s.sortButtons == nil {
+	// hand and commits nothing, so it belongs against the thing it arranges. **The mode is
+	// loaded rather than reset** — it is `gs.HandSort`, a reading preference shared with every
+	// other screen that deals a hand, and this is where this screen picks it up.
+	s.sortMode = handSortOf(gs)
+	if s.sortTabs == nil {
 		s.buildSortButtons()
 	}
-	for i, b := range s.sortButtons {
-		at := sortButtonCentre(gs, i)
-		b.ScreenX, b.ScreenY = at.X, at.Y
-	}
+	s.sortTabs.place(gs)
 
 	discardX, duelX := buttonStripSlots(gs, s.discardButton.Width, s.duelButton.Width)
 	s.discardButton.ScreenX = discardX

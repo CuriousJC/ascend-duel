@@ -39,6 +39,16 @@
   .pays .axis { color: var(--dim); font-size: 11.5px; font-family: ui-monospace, monospace; }
   .pays .cost { font-size: 12.5px; margin-top: 8px; }
   .pays .cost.over { color: var(--pink); font-weight: 600; }
+  .odds { width: 190px; flex: none; }
+  .odds .reach { font-size: 19px; font-weight: 600; line-height: 1.1; }
+  .odds .one { color: var(--dim); font-size: 12px; }
+  .odds .meter {
+    height: 6px; margin: 8px 0 6px; border-radius: 3px;
+    background: rgba(0, 0, 0, .09);
+  }
+  .odds .meter div { height: 100%; border-radius: 3px; background: var(--pink); }
+  .odds .best { color: var(--dim); font-size: 11.5px; }
+  .odds .unsampled { color: var(--dim); font-size: 12px; }
   .hand { min-width: 0; }
   .cards { display: flex; gap: 6px; flex-wrap: wrap; }
    
@@ -72,12 +82,19 @@
   layout hides.
 </p>
 <p class="note">
-  <strong>The AP figure is not the difficulty.</strong> It is what the example above costs
-  <em>once you hold the cards</em>. How often you hold them is
-  <code>go run ./tools/handodds</code>, which deals two million hands and prints the
-  reachability the multipliers are actually priced against. Two tools reporting the same
-  probability by different methods would be two numbers that can disagree, so this one does not
-  sample.
+  <strong>The AP figure is not the difficulty, and the reachability is.</strong> The AP is what the
+  example costs <em>once you hold the cards</em>. <strong>Reachable</strong> is how often you hold
+  them: of <code>2000000</code> opening hands of <code>8</code> dealt off this deck,
+  the share that could afford some set forming the rung — which is the figure the multipliers are
+  priced against. <strong>Best in hand</strong> is the share where it was the dearest-paying rung
+  available, which is what a player taking the most they could would actually have landed.
+</p>
+<p class="note">
+  Round one only: a later hand draws from a depleted pile and keeps what it did not spend, which
+  the sample does not model. <code>0.000%</code> of hands build no rung at all — the turns the
+  High Card names. The same table, with the axes kept apart and an <code>-ap</code> flag for a turn
+  holding cost discounts, is <code>go run ./tools/handodds</code>: one pinned sample in
+  <code>tools/hands</code>, printed by both, so the two cannot disagree.
 </p>
 
 <p class="note">
@@ -101,6 +118,11 @@
           1 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="unsampled">not sampled — the fallback every attacking turn lands on</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -123,6 +145,14 @@
         <div class="cost">
           3 AP
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">100.000%</div>
+          <div class="one">1 in 1 hands</div>
+          <div class="meter"><div style="width: 100%"></div></div>
+          <div class="best">best in hand 0.000%</div>
+        
       </div>
       <div class="hand">
         
@@ -149,6 +179,14 @@
           3 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">100.000%</div>
+          <div class="one">1 in 1 hands</div>
+          <div class="meter"><div style="width: 100%"></div></div>
+          <div class="best">best in hand 0.076%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -174,6 +212,14 @@
           2 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">94.719%</div>
+          <div class="one">1 in 1 hands</div>
+          <div class="meter"><div style="width: 97%"></div></div>
+          <div class="best">best in hand 6.329%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -198,6 +244,14 @@
         <div class="cost">
           6 AP
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">61.663%</div>
+          <div class="one">1 in 2 hands</div>
+          <div class="meter"><div style="width: 78%"></div></div>
+          <div class="best">best in hand 0.678%</div>
+        
       </div>
       <div class="hand">
         
@@ -228,6 +282,14 @@
           6 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">79.989%</div>
+          <div class="one">1 in 1 hands</div>
+          <div class="meter"><div style="width: 89%"></div></div>
+          <div class="best">best in hand 10.585%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -254,6 +316,14 @@
         <div class="cost">
           6 AP
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">52.780%</div>
+          <div class="one">1 in 2 hands</div>
+          <div class="meter"><div style="width: 72%"></div></div>
+          <div class="best">best in hand 6.060%</div>
+        
       </div>
       <div class="hand">
         
@@ -284,6 +354,14 @@
           6 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">65.346%</div>
+          <div class="one">1 in 2 hands</div>
+          <div class="meter"><div style="width: 80%"></div></div>
+          <div class="best">best in hand 36.392%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -310,6 +388,14 @@
         <div class="cost">
           4 AP
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">26.557%</div>
+          <div class="one">1 in 4 hands</div>
+          <div class="meter"><div style="width: 51%"></div></div>
+          <div class="best">best in hand 11.384%</div>
+        
       </div>
       <div class="hand">
         
@@ -340,6 +426,14 @@
           3 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">14.486%</div>
+          <div class="one">1 in 7 hands</div>
+          <div class="meter"><div style="width: 38%"></div></div>
+          <div class="best">best in hand 7.150%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -366,6 +460,14 @@
         <div class="cost over">
           9 AP — more than a round can play
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">8.548%</div>
+          <div class="one">1 in 12 hands</div>
+          <div class="meter"><div style="width: 29%"></div></div>
+          <div class="best">best in hand 3.590%</div>
+        
       </div>
       <div class="hand">
         
@@ -398,6 +500,14 @@
           7 AP — more than a round can play
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">10.080%</div>
+          <div class="one">1 in 10 hands</div>
+          <div class="meter"><div style="width: 31%"></div></div>
+          <div class="best">best in hand 8.046%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -426,6 +536,14 @@
         <div class="cost over">
           9 AP — more than a round can play
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">4.664%</div>
+          <div class="one">1 in 21 hands</div>
+          <div class="meter"><div style="width: 21%"></div></div>
+          <div class="best">best in hand 3.065%</div>
+        
       </div>
       <div class="hand">
         
@@ -458,6 +576,14 @@
           7 AP — more than a round can play
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">4.980%</div>
+          <div class="one">1 in 20 hands</div>
+          <div class="meter"><div style="width: 22%"></div></div>
+          <div class="best">best in hand 4.835%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -486,6 +612,14 @@
         <div class="cost">
           5 AP
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">1.446%</div>
+          <div class="one">1 in 69 hands</div>
+          <div class="meter"><div style="width: 12%"></div></div>
+          <div class="best">best in hand 1.392%</div>
+        
       </div>
       <div class="hand">
         
@@ -518,6 +652,14 @@
           4 AP
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">0.385%</div>
+          <div class="one">1 in 260 hands</div>
+          <div class="meter"><div style="width: 6%"></div></div>
+          <div class="best">best in hand 0.244%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -546,6 +688,14 @@
         <div class="cost over">
           8 AP — more than a round can play
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">0.141%</div>
+          <div class="one">1 in 710 hands</div>
+          <div class="meter"><div style="width: 3%"></div></div>
+          <div class="best">best in hand 0.135%</div>
+        
       </div>
       <div class="hand">
         
@@ -578,6 +728,14 @@
           8 AP — more than a round can play
         </div>
       </div>
+      <div class="odds">
+        
+          <div class="reach">0.031%</div>
+          <div class="one">1 in 3263 hands</div>
+          <div class="meter"><div style="width: 1%"></div></div>
+          <div class="best">best in hand 0.031%</div>
+        
+      </div>
       <div class="hand">
         
           <div class="cards">
@@ -608,6 +766,14 @@
         <div class="cost">
           5 AP
         </div>
+      </div>
+      <div class="odds">
+        
+          <div class="reach">0.006%</div>
+          <div class="one">1 in 18018 hands</div>
+          <div class="meter"><div style="width: 1%"></div></div>
+          <div class="best">best in hand 0.006%</div>
+        
       </div>
       <div class="hand">
         

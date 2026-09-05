@@ -811,3 +811,15 @@ func abs(n int) int {
 func handsButtonPlace(gs *state.GlobalState) image.Point {
 	return ControlColumnSlotCentre(gs, SlotHands)
 }
+
+// selectedLift is selectedNudge or nothing, as a cardSlide's lift.
+//
+// **The shared mover knows about a raised card, not about selection.** A hand is the only row in
+// the game with a card standing proud of it, so the concept stays here and what crosses to
+// cardslide.go is a number of pixels.
+func selectedLift(selected bool) int {
+	if selected {
+		return selectedNudge
+	}
+	return 0
+}

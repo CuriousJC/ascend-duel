@@ -205,10 +205,10 @@ func (s *CombatScene) spendSelected() {
 		if was == to && leaving == len(s.hand) {
 			continue
 		}
-		s.addSlide(handSlide{
+		s.addSlide(cardSlide{
 			travel:    newTravel(0, slideTicks),
 			card:      s.hand[to].actionCard,
-			selected:  s.hand[to].selected,
+			lift:      selectedLift(s.hand[to].selected),
 			fromIndex: was, fromCount: leaving,
 			toIndex: to, toCount: len(s.hand),
 		})

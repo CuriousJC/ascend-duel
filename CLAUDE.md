@@ -121,7 +121,7 @@ go run ./tools/sheets       # regenerate every review sheet and the index that l
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
 go run ./tools/ringsheet    # every ring to PNGs + a page grouped by rarity: art, price, text, rules
 go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it changes about a card
-go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by ascending multiplier
+go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/enemysheet   # all 96 creatures by floor band: card, stat line, whole deck
 go run ./tools/bosssheet    # the 30 stairway protectors, the same way, by floor
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
@@ -892,10 +892,22 @@ which is the comparison `hands.json`'s axis-by-axis layout hides. **The example 
 the rung does not count** *(owner's call, 2026-08-24)*: a form pair is a 1 AP stab beside a 3 AP
 one, because cheapest-set picked two identical cards and made a form pair, a card pair and an
 elemental pair the same picture. `decks.Example` is the one answer, shared with the hands panel;
-cost is the tie-break among equally illustrative sets. **It does not sample**: the AP figure beside
-a rung is what that example costs once you hold the cards, and how often you hold them is
-`tools/handodds`. Two tools reporting the same probability by different methods would be two
-numbers that can disagree.
+cost is the tie-break among equally illustrative sets.
+
+**It carries the reachability now, and `tools/hands` is why that is safe** *(owner's call,
+2026-09-05)*. The sheet used to refuse to sample, on the argument that two tools reporting the same
+probability by different methods would be two numbers that can disagree — which was right, and is
+exactly why putting the odds on the sheet meant making the disagreement *impossible* rather than
+avoiding it. The deck, the round's bounds, `MinCost` and the sample all moved into `tools/hands`,
+where the seed and the trial count are pinned, so `handsheet` and `handodds` print the identical
+table to the last decimal. It is the second shared library under `tools/` and it earns the
+exception for `roster`'s reason: these are the same question read two ways. **The cost is about
+thirty seconds on every `tools/handsheet` run**, which a full `tools/sheets` pays too.
+
+**Two figures, and the page says which is which.** The AP beside a rung is what that example costs
+*once you hold the cards*; **reachable** is how often you hold them, and it is what the multipliers
+are priced against. `handodds` stays the tuning view — the axes kept apart, and the `-ap` flag for
+a turn holding cost discounts.
 
 **`tools/stonesheet` and `tools/parasitesheet` do it for the two consumable catalogues**
 *(2026-09-01)*. Both arrive four at a time inside a sealed good, so the whole of either is several

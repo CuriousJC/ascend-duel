@@ -274,7 +274,7 @@ type combatTheatre struct {
 	// closing up after cards were spent. Separate from flights rather than a fourth flag on
 	// one, because a slide is the only mover whose journey begins and ends in the row, and it
 	// is the only one that needs a row size at each end.
-	slides []handSlide
+	slides []cardSlide
 
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the

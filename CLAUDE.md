@@ -52,7 +52,7 @@ skill that does not exist.
 | [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / rings / worms, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
-| [`rings`](.claude/skills/rings/SKILL.md) | designing or **discussing** a new ring, adding to `rings.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn ring |
+| [`rings`](.claude/skills/rings/SKILL.md) | designing, **discussing** or **analysing** a proposed ring, adding to `rings.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn ring |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
 went wrong once and should not have to be rediscovered.
@@ -1372,6 +1372,14 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   re-points everything already stored.
 - **Re-run `tools/handodds` and `tools/seeds` after touching the deck.** Both measure facts about
   one particular deck, and nothing fails when they go stale.
+- **`internal/combat` holds the purse while a round resolves, and `KindVitae` is not the payment**
+  *(owner's call, 2026-09-05)*. `Duelist.Vitae` is seeded from the run at the top of each round,
+  stepped as the round pays, and the run is handed the **difference** — see `screens.payHeldVitae`.
+  Summing `KindVitae` events to move a purse is the old way and now double-pays. The rules got a
+  purse because a ring wanted to read one; the doc comments saying they have none are corrected.
+- **Re-run `tools/ringsheet` after touching `rings.json`, and delete the PNG of a ring you removed.**
+  The sheet writes a file per ring and never cleans up, so a deleted record leaves an orphan picture
+  in `docs/sheets/ringsheet/` that no page links and nothing fails on.
 
 ### Drawing idioms
 

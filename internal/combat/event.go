@@ -110,10 +110,13 @@ const (
 	// KindVitae is a rider paying vitae for a card that stayed in the hand. Action is the card
 	// that carried it, Amount is the figure, Side is whose hand it was.
 	//
-	// **The rules have no purse, so this is an announcement and not a payment.** `internal/combat`
-	// is at the bottom of the graph and knows nothing about a run; the combat screen reads this
-	// off the resolved log and hands it to `session`. It is the first event that means something
-	// outside the duel, which is why it is worth saying twice: nothing in this package pays it.
+	// **It is an announcement to the feed, not the payment** *(and the payment moved on
+	// 2026-09-05)*. The rules do step `Duelist.Vitae` when this fires — they have to, because a
+	// ring reading the purse must see what an earlier turn of the round paid — but that is a copy
+	// for the length of one fight. What the run is actually paid is the difference between the
+	// purse the duel was handed and the one it hands back; see screens.payHeldVitae. **Do not sum
+	// these events to move a purse**: that was the old way and it made two counters over one
+	// figure.
 	KindVitae
 
 	KindRoundEnd
@@ -292,6 +295,40 @@ type Event struct {
 	// alternative is a screen re-deriving which ring grew, which is the resolver-in-the-screen this
 	// whole block of fields exists to prevent.
 	HandGrown [maxHandTerms][MaxWornRings]int
+
+	// HandBonus is flat damage a worn ring added to this blow **because of the rung it formed**,
+	// and HandBonusSeats is which seats paid it.
+	//
+	// **It is a term of Base and it is the last one** *(owner's call, 2026-09-05)*: every other
+	// entry in the bracket is a card, so this is added after the cards are counted and before the
+	// multiplier is applied. The screen draws it as its own term at the end of the sum, in the
+	// ground's own ink rather than a ring's pink, because it is the hand paying rather than a
+	// number a ring moved.
+	//
+	// Zero when nothing worn names this rung, which is the usual case.
+	HandBonus      int
+	HandBonusSeats [MaxWornRings]bool
+
+	// HeldBonus is flat damage a worn ring added to this blow **for the cards the turn kept back**,
+	// and HeldBonusSeats is which seats paid it.
+	//
+	// **A second term of Base, beside HandBonus and on the same terms**: after the cards, before
+	// the multiplier, drawn in the ground's own ink. The two are separate fields rather than one
+	// because they are different sentences — one is what the hand formed, the other is what the
+	// hand still holds — and a screen that merged them could not say which.
+	HeldBonus      int
+	HeldBonusSeats [MaxWornRings]bool
+
+	// VitaeBonus is the duelist's Bounty as it joined this blow's Base, and VitaeBonusSeats is
+	// which worn rings put it there.
+	VitaeBonus      int
+	VitaeBonusSeats [MaxWornRings]bool
+
+	// HandScale is the percentage the worn rings moved this blow's Multiplier by — 100 when
+	// nothing did — and HandScaleSeats is which rings paid. **Multiplier already has it applied**;
+	// this is kept so a screen can say the hand was improved rather than only show a bigger figure.
+	HandScale      int
+	HandScaleSeats [MaxWornRings]bool
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits

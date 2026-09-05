@@ -185,6 +185,17 @@ func ringCondition(key string, in *data.RingIfData) (combat.RingCondition, error
 		}
 		cond.Tier, cond.HasTier = in.Tier, true
 	}
+	if in.Hand != "" {
+		id, ok := combat.HandIDForKey(in.Hand)
+		if !ok {
+			return cond, fmt.Errorf("%s matches hand %q, which is not a rung of the ladder", key, in.Hand)
+		}
+		cond.Hand, cond.HasHand = id, true
+	}
+
+	if in.MinForms > 0 {
+		cond.MinForms = in.MinForms
+	}
 	cond.Lead = in.Lead
 	return cond, nil
 }
@@ -329,6 +340,12 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	}
 
 	d.DMG += combat.AddedDMG(worn)
+
+	// **The duel is seeded with the purse rather than with a product.** It was a resolved figure
+	// for an hour, which was wrong: vitae moves *inside* a fight — a card kept in hand pays one —
+	// so a ring reading the purse has to be re-asked each blow. What crosses the seam is the
+	// opening balance; see combat.Duelist.Vitae.
+	d.Vitae = s.vitae
 
 	if hp := combat.AddedHP(worn); hp > 0 {
 		d.MaxLife += hp

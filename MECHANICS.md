@@ -1278,6 +1278,11 @@ off each status record's `Badge`. And `StatusID` is append-only, carrying the ha
 flip predate the grammar**; the rest came out of it. **All of them are reachable in a run since
 2026-08-21**, bought and sold in the shop — see The shop, below.
 
+**This table is the original set and stopped being the catalogue on 2026-09-05**, when nine more
+families landed and the count reached 139. It is kept because each row is the *argument* for a
+shape; for what is actually in the game, read `docs/sheets/ringsheet/index.html`. **The rarities in
+it are also stale** — see "The catalogue tripled, and the tiers moved", below.
+
 **Bulwark** (+25 HP) is the one name still invented rather than taken from this table — Heart is the
 skill's own name for the growing one. The discount ring was **Thrifty** until 2026-08-22, when it
 became **Warm** and grew three siblings.
@@ -1666,6 +1671,70 @@ the other three are gone.
   two sentences of narration and the Leave button at 88%, and a card is 224. There is room for one
   row of cards, not two.
 
+### The catalogue tripled, and the tiers moved *(owner's call, 2026-09-05)*
+
+**139 rings.** The table above is the *original* set and is kept as the argument for each shape; it
+is no longer the catalogue. **`docs/sheets/ringsheet/index.html` is the catalogue** — art, price,
+authored text and resolved rules for every ring, grouped by rarity — and it is the only place that
+can be current, because a table of 139 rows in a file loaded every session is a cost paid forever.
+
+**Nine families landed in one sitting**, and every one of them is a cell the coverage grid in
+`.claude/skills/rings/coverage.py` reported empty:
+
+| Family | Count | Tier | What it is |
+|---|---|---|---|
+| **concept rings** | 14 + Striker | common | one per attack card — Prodder, Boxer, Lancer, Fencer, Impaler; Skirmisher, Cutter, Slasher, Cleaver, Headsman; Knocker, Basher, Smasher, Grinder. `scale-damage 200`, exactly Striker's shape |
+| **form cost rings** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's colour family |
+| **form status / growth** | 3 + 3 | uncommon | Sundering / Bruising / Pinning, and Sharpening / Pounding / Quickening |
+| **tier rings** | 4 | rare / uncommon | Erode and Whittle demote; Swarm and Crown pay a tier |
+| **rung rings, flat** | 19 | common | one per rung, `add-hand-damage`, bonus = the rung's multiplier over 50 |
+| **rung rings, multiplying** | 5 | uncommon / rare | Pairing, Triplicate Form, House of Pain; **Oak and Pentacle are rare** — 4x on a Four of a Kind and 5x on a Five of a Kind are 20x and 39x blows, and a ring that turns the two rarest hands in the game into those is not a common shelf offer |
+| **double-status** | 9 | rare | one per unordered status pair, each triggered by an element holding one of the two |
+| **element repeats** | 5 | uncommon | Backdraft, Shatter, Forked, Landslide, Recursion — the colour half of Flurry/Rend/Aftershock |
+| **held-card rings** | 8 | common | +5 DMG per matching card **kept back**, 5 colours and 3 forms |
+
+**Four tier moves, and the reasoning is worth more than the list:**
+
+- **Every card-cost reducer is rare.** A discount is worth a fraction of a turn every turn, forever;
+  nothing else at common compounds like that.
+- **Every flip ring is uncommon.** They were common as enablers, which undersold them: a flip is what
+  makes a mono-colour build reachable at all, and the colour payoffs it feeds are uncommon already.
+- **Erode and Whittle are rare, with the cost family.** Demoting a whole tier is a discount written
+  the other way round, and the narrow version being dearer than the wide one was the inconsistency.
+- **Heart, Momentum and the eight held-card rings are common.** Each is flat, self-capping and
+  unable to compound. Momentum additionally has a dead case a player cannot always steer away from —
+  being attacked and having to defend — where a colour ring's dead case is a build you chose.
+
+**The weights invert what "adding a common" means, and this is the thing to know before adding
+another.** At 10 / 4 / 1 tickets, **anything added to common devalues every rare in the game**, because
+it grows the denominator every tier's share is taken over. Rare held 4 rings at the start of the day
+and about 2.9% of a shelf draw; it holds 26 and **3.2%**. Twenty-two rings arrived in the tier and its
+scarcity did not move, because 33 commons became 57 underneath it.
+
+### A rung ring is a second multiplier, never a bigger hand *(owner's call, 2026-09-05)*
+
+`scale-hand-damage` scales the **blow**, after the ladder's own multiplier has been applied.
+`Event.Multiplier` stays the rung's figure and a ring may not touch it.
+
+**The first version folded the two together** — a Card Pair under Pairing displayed as 2.3x — and
+that is the reading to avoid: it says the *hand* changed, when what changed is that the player is
+wearing a ring. The banner, the hand row and the sum all show the rung actually built, and the
+ring's figure is drawn as its own term in the pane's pink, flying out of the ring that paid.
+
+The flat pair, `add-hand-damage`, does the opposite and joins `Base` **before** the multiplier, so a
+rung ring can be written either as a term the hand contributed or as a multiplier laid over it.
+
+### The defensive half of the game has one ring, and no verb can reach it
+
+**Nothing in the vocabulary names a shield.** `CardDamage` returns zero immediately for a card that
+deals none, so a `card-damage` rule on a defend concept is a record that can never fire — which is
+why Ward, Brace and Guard got no concept ring when the other fourteen were written, and why
+**Braced** reaches shields sideways, through cost, rather than head on.
+
+It is recorded as a **gap rather than a decision**: 138 of 139 rings are about attacking, in a game
+whose one defensive mechanic — a shield eating a whole blow — is among its strongest. Filling it
+means a verb that raises, keeps or spends a shield, and that has not been designed.
+
 ## Stones — altering the hand ladder *(owner's call, 2026-08-27)*
 
 **A worm alters a card; a stone alters a rung.** One stone raises one hand's multiplier by **a tenth
@@ -2013,9 +2082,14 @@ hand and the discard, and fires only when that card is played.
 - **`scale-in-combo` asks a question the player can lose.** `Blow.Cards` is the scoring set, and a
   turn can play a card that pays nothing into it. The card has to *make the hand*, not merely be in
   the turn.
-- **Vitae is announced and not paid.** `internal/combat` has no purse and is at the bottom of the
-  graph, so it emits `KindVitae` and the combat screen reads it off the **resolved log** — not off
-  the playback, so how fast a round is drawn cannot change what the player is paid.
+- **The rules hold the purse for the length of a round, and the run holds it the rest of the time**
+  *(owner's call, 2026-09-05)*. `combat.Duelist.Vitae` is seeded from the run at the top of each
+  round and stepped as the round pays; the combat screen then hands the run the **difference**. It
+  reads that off the **resolved duelist**, not off the playback, so how fast a round is drawn cannot
+  change what the player is paid. `KindVitae` is still emitted, but it is the feed's line rather
+  than the payment — summing those events to move a purse is the old way and would now double-pay.
+  The rules got a purse because a ring wanted to read one: see Rampant, which pays damage per vitae
+  held and would otherwise price a turn-three blow at turn-one rates.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
   parasite does happens to the run; a rider is the one thing read while a round resolves, and that

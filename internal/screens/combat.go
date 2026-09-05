@@ -826,23 +826,28 @@ func (s *CombatScene) heldCards() []combat.Card {
 	return out
 }
 
-// payHeldVitae hands the run whatever the unplayed hand earned this round.
+// payHeldVitae hands the run whatever the round earned it — the difference between the purse the
+// rules were given and the one they hand back.
 //
-// **The rules announce it and this pays it**, because `internal/combat` has no purse — see
-// combat.KindVitae. It walks the log the engine has already finished rather than watching the
-// playback, so how fast the round is drawn cannot change what the player is paid.
+// **It is a delta rather than a sum over the log** *(owner's call, 2026-09-05)*. It used to walk
+// the events adding every `KindVitae` up itself, which meant two places counted the same money:
+// the resolver, which has to, because a ring reading the purse must see what this round paid, and
+// this, which did it again. Two counters over one figure is a pair that can disagree, and the way
+// it would have failed is silent — a future rule that moves vitae without announcing a KindVitae
+// would pay a ring and not the player. **Whatever the rules did to the purse is what the run is
+// told**, and there is nothing left to keep in step.
 //
-// **Only the player's side is paid.** A creature has no run behind it, and a KindVitae from the
-// opponent would be a purse nobody owns; nothing emits one today, and this is what keeps that
-// true if something ever does.
-func (s *CombatScene) payHeldVitae(events []combat.Event) {
+// **Only the player's side reaches this.** A creature has no run behind it, and it is handed the
+// player's resolved duelist rather than the log, so an opponent's purse cannot be paid by mistake.
+//
+// It refuses a negative for the same reason `Session.AddVitae` does: spending is the shop's
+// business, and a fight that took money off a run is a rule nobody has written.
+func (s *CombatScene) payHeldVitae(after combat.Duelist) {
 	if s.run == nil {
 		return
 	}
-	for _, e := range events {
-		if e.Kind == combat.KindVitae && e.Side == combat.SideA {
-			s.run.AddVitae(e.Amount)
-		}
+	if earned := after.Vitae - s.fighter.Duelist.Vitae; earned > 0 {
+		s.run.AddVitae(earned)
 	}
 }
 
@@ -898,6 +903,15 @@ func (s *CombatScene) startRound() {
 	//
 	// The opponent holds nothing — a creature plans a turn rather than keeping a hand — so nothing
 	// is passed for it.
+	// **The purse is handed to the rules before the round and taken back after it** *(owner's call,
+	// 2026-09-05)*. The run owns it *between* rounds — a parasite, a sale or a shop can move it
+	// while the player is planning — and the rules own it *inside* one, because a ring that reads
+	// the purse has to see what an earlier turn of the same round paid. Re-seeding here is what
+	// stops the duelist's copy going stale; `payHeldVitae` below is what brings the change back.
+	if s.run != nil {
+		s.fighter.Duelist.Vitae = s.run.Vitae()
+	}
+
 	log, fighterAfter, enemyAfter := combat.ResolveRoundHolding(
 		s.fighter.Duelist, s.enemy.Duelist,
 		s.fighterActions, s.enemyActions,
@@ -915,12 +929,11 @@ func (s *CombatScene) startRound() {
 	s.cursor = 0
 	s.ticks = 0
 
-	// **The purse is filled from the resolved log, here, rather than during playback.** The rules
-	// have no purse and announce a KindVitae instead; reading it at adoption keeps the payment a
-	// function of the round the engine decided and not of how far the animation has got, which is
-	// the presentation-may-never-change-an-outcome rule pointing the other way for once. See
-	// combat.KindVitae.
-	s.payHeldVitae(log)
+	// **The purse is filled from the resolved round, here, rather than during playback.** Reading
+	// it at adoption keeps the payment a function of what the engine decided and not of how far
+	// the animation has got, which is the presentation-may-never-change-an-outcome rule pointing
+	// the other way for once.
+	s.payHeldVitae(fighterAfter)
 
 	// Both hands go to the table now, not as the round plays out. The opponent's is known in
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of

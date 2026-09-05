@@ -71,10 +71,12 @@ const (
 
 	// RiderVitaeInHand pays vitae while this card sits unplayed in the hand. Amount is the figure.
 	//
-	// **The rules have no purse**, so this is announced rather than applied — see KindVitae, which
-	// the combat screen reads off the resolved log and hands to the run. That is the same
-	// direction of travel every other run-level consequence takes: `internal/combat` decides, and
-	// the layer that owns the thing being changed does the changing.
+	// **The rules hold a copy of the purse, not the purse** *(owner's call, 2026-09-05)*. This
+	// steps `Duelist.Vitae` so a ring that reads vitae sees it — Rampant — and announces a
+	// KindVitae for the feed. The *run* is paid the difference between the purse the duel opened
+	// with and the one it closes with, which is the same direction of travel every other run-level
+	// consequence takes: `internal/combat` decides, and the layer that owns the thing being
+	// changed does the changing.
 	RiderVitaeInHand
 
 	// RiderScaleInCombo scales the duelist's DMG for the blow when this card is one of the cards

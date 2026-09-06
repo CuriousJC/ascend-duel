@@ -59,7 +59,7 @@ func TestTheOfferIsAFunctionOfTheFight(t *testing.T) {
 		t.Errorf("the same fight offered %v then %v", first, again)
 	}
 
-	gs.Run.WonFight(0)
+	gs.Run.WonFight(0, 0)
 	if next := dealOffer(gs); sameInts(first, next) {
 		t.Errorf("fight 2 offered the same cards as fight 1: %v", next)
 	}
@@ -139,7 +139,7 @@ func TestTheWormOfferIsAFunctionOfTheFight(t *testing.T) {
 		t.Errorf("the same fight offered %v then %v", prizeNames(toPrizes(first)), prizeNames(toPrizes(again)))
 	}
 
-	gs.Run.WonFight(0)
+	gs.Run.WonFight(0, 0)
 	next := dealWorms(gs)
 	if first[0].Record == next[0].Record && first[1].Record == next[1].Record {
 		t.Errorf("fight 2 offered the same pair as fight 1: %v", prizeNames(toPrizes(next)))

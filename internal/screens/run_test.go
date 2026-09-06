@@ -18,7 +18,7 @@ func TestAbandoningARunLeavesNothingToResume(t *testing.T) {
 	gs.Resumed = true
 
 	// Put something on disk the way the game does, by moving the run to a new station.
-	gs.Run.WonFight(40)
+	gs.Run.WonFight(40, 40)
 	advanceRun(gs)
 	if _, ok, _ := profile.LoadRun(gs.Store); !ok {
 		t.Fatal("the run should be on disk before it is abandoned")
@@ -92,7 +92,7 @@ func TestAPinnedSeedSurvivesANewRun(t *testing.T) {
 // up on.
 func TestANewRunClearsTheOldSaveBeforeItStarts(t *testing.T) {
 	gs := saveState(t)
-	gs.Run.WonFight(40)
+	gs.Run.WonFight(40, 40)
 	advanceRun(gs)
 	if _, ok, _ := profile.LoadRun(gs.Store); !ok {
 		t.Fatal("the run should be on disk before New Run is pressed")
@@ -270,7 +270,7 @@ func TestAbandonAsksBeforeItDestroys(t *testing.T) {
 // be quietly softened later: there is no retry, so a loss has to leave nothing to come back to.
 func TestADeathEndsTheRun(t *testing.T) {
 	gs := saveState(t)
-	gs.Run.WonFight(40)
+	gs.Run.WonFight(40, 40)
 	advanceRun(gs)
 	if _, ok, _ := profile.LoadRun(gs.Store); !ok {
 		t.Fatal("the run should be on disk before the duelist falls")

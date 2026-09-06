@@ -28,7 +28,7 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 
 	s := Start(enemies, bosses, seed)
 	s.AddVitae(9)
-	s.WonFight(41)
+	s.WonFight(41, 41)
 	s.SetPhase(PhaseShop)
 	if !s.Wear(Rings()[0]) {
 		t.Fatal("the catalogue should have a ring to wear")
@@ -93,7 +93,7 @@ func TestUnclaimedSpoilsSurvive(t *testing.T) {
 	seed, _ := seeds.Parse(theSeed)
 
 	s := Start(enemies, bosses, seed)
-	s.WonFight(50)
+	s.WonFight(50, 50)
 	s.ClaimFromLife()
 	want := s.Spoils()
 

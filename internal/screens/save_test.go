@@ -37,7 +37,7 @@ func TestAdvancingTheRunWritesIt(t *testing.T) {
 		t.Fatal("nothing should be on disk before the run moves")
 	}
 
-	gs.Run.WonFight(40)
+	gs.Run.WonFight(40, 40)
 	advanceRun(gs)
 
 	snap, ok, err := profile.LoadRun(gs.Store)

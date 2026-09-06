@@ -141,8 +141,8 @@ func TestAGrowingRingGainsOnEveryWin(t *testing.T) {
 		t.Errorf("fight one equipped to %d, want 105", got)
 	}
 
-	run.WonFight(0)
-	run.WonFight(0)
+	run.WonFight(0, 0)
+	run.WonFight(0, 0)
 
 	if got := run.Grown("heart-ring"); got != 10 {
 		t.Errorf("two wins grew the ring by %d, want 10", got)
@@ -159,7 +159,7 @@ func TestPropagationCountsFivesAndStopsAtFive(t *testing.T) {
 	} {
 		run := bare(t)
 		run.vitae = tc.held
-		run.WonFight(0)
+		run.WonFight(0, 0)
 		run.ClaimPropagation()
 
 		if got := run.Vitae() - tc.held; got != tc.want {
@@ -174,7 +174,7 @@ func TestBankerScalesWhatTheCapProduced(t *testing.T) {
 	// nothing past 25, which is a ring that stops working when a run can finally afford it.
 	run := wearing(t, "banker-ring")
 	run.vitae = 25
-	run.WonFight(0)
+	run.WonFight(0, 0)
 	run.ClaimPropagation()
 
 	if got := run.Vitae() - 25; got != 10 {

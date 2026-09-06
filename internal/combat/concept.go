@@ -272,12 +272,13 @@ func registerPlayerConcepts() map[string]ConceptID {
 	return out
 }
 
-// The player's eighteen, named so the rules' own tests, the balance tool and the screen can say
+// The player's nineteen, named so the rules' own tests, the balance tool and the screen can say
 // `combat.Strike` rather than looking a string up.
 //
-// **Six of them ship at zero copies** *(2026-08-24)* — the 0 AP and 4 AP rung of each attack form.
+// **Eight of them ship at zero copies** — the 0 AP and 4 AP rung of each attack form *(2026-08-24)*,
+// and Flinch and Guard at the two ends of the defences *(2026-09-06)*.
 // They are not in the starting deck and cannot be bought; the only way to hold one is a Shrink or a
-// Grow worm walking a card off the end of the middle three. They are registered concepts all the
+// Grow worm walking a card off the end of the rungs the deck does ship. They are registered concepts all the
 // same, because `Neighbour` derives the ladder from this registry and a rung that does not exist is
 // a rung a worm cannot step onto.
 //
@@ -309,11 +310,15 @@ var (
 	Smash     = mustPlayer("Smash")
 	Pulverize = mustPlayer("Pulverize")
 
-	// Defend. One card per shield, priced at one AP each — the ladder the three attack forms
-	// use, with the count in place of the damage multiplier.
-	Ward  = mustPlayer("Ward")
-	Brace = mustPlayer("Brace")
-	Guard = mustPlayer("Guard")
+	// Defend. A ladder like the three attack forms, with the shield count in place of the damage
+	// multiplier. **Flinch is the free rung and raises a shield anyway**, because a shield is a
+	// whole blow eaten and there is no fraction of one to fall to — so where Poke is a Jab for
+	// half the damage, Flinch is a Ward for none of the cost. That is the floor of the count
+	// rather than an oversight; it ships at zero copies for it.
+	Flinch = mustPlayer("Flinch")
+	Ward   = mustPlayer("Ward")
+	Brace  = mustPlayer("Brace")
+	Guard  = mustPlayer("Guard")
 )
 
 func mustPlayer(label string) ConceptID {
@@ -346,21 +351,27 @@ func (c Concept) Tier() int { return c.Cost }
 //
 // **A form with no name has no ladder.** Every enemy card is `FormNone`, and they share this
 // registry with the player's, so matching on the zero form would step a Goblin's Bite onto a
-// Slime's. The player's nine attacks are the only cards with a form, which is exactly the set
-// that has a ladder to walk.
+// Slime's. The player's cards are the only ones with a form, which is exactly the set that has a
+// ladder to walk.
+//
+// **The verb is matched rather than required to be an attack** *(2026-09-06)*. The defences are a
+// ladder too — Flinch, Ward, Brace, Guard at 0/1/2/3 AP for 1/1/2/3 shields — so a Grow or a Shrink
+// reaches them the same way it reaches a Jab. Matching `from.Verb` rather than pinning `VerbAttack`
+// is what keeps the two ladders separate while there is only one registry: a defend card and an
+// attack card can never share a form, but reading the verb says so rather than relying on it.
 //
 // It scans the registry rather than reading a table, so the ladder is a *consequence* of what
 // `data/duelist_cards.json` declares rather than a second list to keep in step with it.
 func Neighbour(id ConceptID, step int) (ConceptID, bool) {
 	from := ConceptOf(id)
-	if from.Form == FormNone || from.Verb != VerbAttack {
+	if from.Form == FormNone {
 		return NoConcept, false
 	}
 
 	want := from.Tier() + step
 	for other := range registry {
 		c := registry[other]
-		if c.Form == from.Form && c.Verb == VerbAttack && c.Tier() == want {
+		if c.Form == from.Form && c.Verb == from.Verb && c.Tier() == want {
 			return ConceptID(other), true
 		}
 	}

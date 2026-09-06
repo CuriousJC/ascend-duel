@@ -20,6 +20,7 @@ package screens
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -138,7 +139,11 @@ func costTipLines(c actionCard, h held) []string {
 // file is written for a player. The risk is drift, and it is a real one: the file is the only place
 // that says what a ring does in words, so a rule changed without its Text is a ring that lies.
 func ringTip(record data.RingData, wornAt, wornOf int) (string, []string) {
-	lines := []string{record.Text}
+	// **The authored text, split on its own line breaks.** A newline in `rings.json` is an authored
+	// break for the *card face*, and a tooltip draws its own lines one at a time — handing the whole
+	// string to one line draws every line of it at the same y, which reads as garbled text rather
+	// than as a missing break. Same treatment `parasiteTipLines` gives a parasite.
+	lines := strings.Split(record.Text, "\n")
 
 	if wornAt >= 0 && wornOf > 1 {
 		// **Worn order is a rule** — rings fire left to right and compound — so where one sits is

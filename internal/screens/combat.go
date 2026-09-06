@@ -294,9 +294,12 @@ type CombatScene struct {
 	// existed and there was no reason to give the screen a fourth pair of fields by hand.
 	hands handsToggle
 
-	// parasites is the bucket dialog: the board piece a consumable is spent from. See
-	// combat_parasite.go, and MECHANICS.md for what a parasite is.
-	parasites parasiteToggle
+	// stones is a rock shower's stones on their way to the pouch. **There is no bucket dialog any
+	// more** *(owner's call, 2026-09-06)* — a parasite is clicked in the consumables pane on the
+	// top row and aimed with the hand's own selection, so what used to be a `parasiteToggle` is a
+	// pane, a predicate and this one animation. See combat_parasite.go, consumables.go and
+	// stoneflight.go, and MECHANICS.md for what a parasite is.
+	stones []stoneFlight
 
 	// ledgerDealt is what the player's blows in the round being played back came to, and
 	// ledgerWritten says whether that round has been handed to the run's account yet.
@@ -465,7 +468,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 
 	s.showDeck = false
 	s.hands.initInColumn(handsButtonPlace)
-	s.initParasites()
+	s.stones = nil
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
 
 	// **The whole stage comes down, and that is one line on purpose** *(2026-08-21)*. It was eight
@@ -721,16 +724,15 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		}
 	}
 
-	// **The hands button is dead under the other two dialogs**, for the reason each of them is
-	// dead under the other: a dialog whose exit is not the brightest thing on screen is a trap,
-	// and two live exits is two.
-	s.hands.block(s.showDeck || s.parasites.open)
+	// **The hands button is dead under the deck overlay**, for the reason each dialog is dead
+	// under the other: a dialog whose exit is not the brightest thing on screen is a trap, and two
+	// live exits is two. **The bucket used to be the fourth dialog** and is now a pane on the top
+	// row — see combat_parasite.go.
+	s.hands.block(s.showDeck)
 	s.hands.update(gs)
 
-	// **The bucket is the fourth dialog and obeys the same rule**: dead under any of the other
-	// three, and taken out of the frame entirely when there is nothing to spend or the round is
-	// playing back. See combat_parasite.go.
-	s.updateParasites(gs)
+	s.updateConsumables(gs)
+	s.updateStoneFlights()
 
 	// Tell the frame a dialog is up, so the game's own chrome stands down rather than sitting
 	// live on top of it. Written unconditionally from what the screen already knows, never
@@ -1395,6 +1397,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
 	// combat_rings.go.
 	s.drawRingPane(gs, screen)
+	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.parasiteSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)
 	// **Nothing is drawn in the DUEL! slot on a won fight.** The screen is holding its last
@@ -1471,7 +1474,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// The bucket, beside the hands panel and under the other two, for the same reason: its own
 	// draw puts its button back on top of its own panel.
-	s.drawParasites(gs, screen)
+	s.drawStoneFlights(gs, screen)
 
 	// The overlay covers everything, card in flight included, and the X goes on top of it. The
 	// two are mutually exclusive rather than stacked — neither opener is live while the other's

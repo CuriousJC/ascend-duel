@@ -407,3 +407,34 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 		}
 	}
 }
+
+// The cap is a rule, not a label on a pane. **`MaxHeld` is what the top row draws as `held/2`** —
+// see internal/screens/consumables.go — and a bucket that took a third would make that fraction a
+// lie on the one screen the player reads their build off.
+func TestTheBucketRefusesMoreThanItHolds(t *testing.T) {
+	run := runWith(combat.Plain(combat.Strike))
+
+	for i := 0; i < MaxHeld; i++ {
+		if !run.Hold("leech") {
+			t.Fatalf("the bucket refused parasite %d of %d", i+1, MaxHeld)
+		}
+	}
+	if !run.HoldFull() {
+		t.Errorf("a bucket holding %d of %d does not report itself full", run.HoldCount(), MaxHeld)
+	}
+	if run.Hold("gnaw") {
+		t.Errorf("a full bucket took a %dth parasite", MaxHeld+1)
+	}
+	if run.HoldCount() != MaxHeld {
+		t.Errorf("the bucket holds %d, past the cap of %d", run.HoldCount(), MaxHeld)
+	}
+
+	// **Dropping one makes room again**, which is what makes the cap a bound on carrying rather
+	// than on ever acquiring.
+	if !run.Drop(0) || run.HoldFull() {
+		t.Errorf("a bucket with one spent still reports itself full at %d", run.HoldCount())
+	}
+	if !run.Hold("gnaw") || run.HoldCount() != MaxHeld {
+		t.Errorf("the freed seat did not take a parasite: %d held", run.HoldCount())
+	}
+}

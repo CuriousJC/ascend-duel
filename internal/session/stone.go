@@ -266,7 +266,7 @@ func (s *Session) CarryCount() int { return len(s.pouch) }
 //
 // **Out of the pouch first, then onto the rung**, and by position rather than by key because the
 // pouch may hold two of the same stone and spending one must not be ambiguous about which — the
-// argument `parasiteToggle.armed` is under.
+// argument a parasite's seat index in the consumables pane is under.
 func (s *Session) SpendCarried(i int) bool {
 	if i < 0 || i >= len(s.pouch) {
 		return false

@@ -404,14 +404,46 @@ func (s *Session) Held() []string {
 	return out
 }
 
+// MaxHeld is how many parasites the run can carry at once.
+//
+// **Two, and it is a rule rather than a number the layout chose** — the same standing `MaxWornRings`
+// has, and for the same reason: the top row draws the bucket as `held/2` beside the rings' `worn/5`,
+// and a row saying two while the run carried a third is exactly the drift a displayed cap invites.
+//
+// **The bucket was uncapped until 2026-09-06** *(owner's call)*. What that cost was not storage —
+// the dialog's row already tightened its pitch to hold any number — it was that a consumable with
+// no ceiling is one a rich run hoards rather than spends. A cap of two makes the third purchase a
+// decision about the two you are holding.
+const MaxHeld = 2
+
 // HoldCount is how many parasites the run is carrying.
 func (s *Session) HoldCount() int { return len(s.held) }
+
+// HoldFull is whether the bucket has no room. **Asked before a parasite is paid for**, which is the
+// shop's business: see the bucket seat, which goes unavailable rather than taking five vitae for a
+// parasite that would be refused.
+func (s *Session) HoldFull() bool { return len(s.held) >= MaxHeld }
 
 // Hold puts a parasite in the bucket, and reports whether it went in.
 //
 // **A parasite the catalogue does not have is refused**, rather than held as a key nothing can
 // resolve — a bucket carrying a name that means nothing is a slot the player cannot spend.
+//
+// **A full bucket refuses too.** It is the last line of defence rather than the control the player
+// meets: a seat that could be bought and then silently dropped would be the purchase-for-nothing
+// this returns false to prevent, and the shop is where it is actually stopped.
 func (s *Session) Hold(key string) bool {
+	if s.HoldFull() {
+		return false
+	}
+	return s.hold(key)
+}
+
+// hold is Hold without the cap: it checks the key and nothing else.
+//
+// **The one caller is StartingParasites**, which plants a bucket rather than acquiring one — see
+// NewSession, where the argument is written down. Nothing a player can do reaches this.
+func (s *Session) hold(key string) bool {
 	if _, ok := parasites[key]; !ok {
 		return false
 	}

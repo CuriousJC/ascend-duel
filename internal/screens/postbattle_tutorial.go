@@ -40,6 +40,16 @@ func (s *PostBattleScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor)
 	for i := 1; i < len(s.prizes); i++ {
 		r = r.Union(s.wormSlot(gs, i))
 	}
+
+	// **The offer row is inside the anchor since the gesture reversed** *(2026-09-06)*. The lit
+	// square is also the one legal click, so an anchor covering only the worms would have been a
+	// lock-up the moment taking one required a card to be selected first: every worm dim, every
+	// card unclickable, and a step waiting for a phase that could never arrive. This is the failure
+	// CLAUDE.md warns about — the machinery can refuse an ungated step, and cannot tell whether an
+	// anchor shows the player how to satisfy its own condition.
+	for i := range s.offer {
+		r = r.Union(s.offerSlot(gs, i))
+	}
 	return r, true
 }
 

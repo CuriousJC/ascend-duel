@@ -76,15 +76,21 @@ func (p prize) name() string { return p.worm.Name }
 // Where the two rows sit and where the controls sit under them. Percentages anchor the groups;
 // offsets inside a group stay in pixels, per CLAUDE.md.
 const (
-	// **The worms sit under the payout, on the same screen** *(owner's call, 2026-08-22)*. The
-	// narration does not clear when the offer arrives: what a win paid and what it is offering are
-	// one picture, so the row goes below the last sentence rather than replacing it.
-	wormRowPct = 58
-
-	// Once a worm is *chosen*, the prose has done its job and the two rows move up into the space
-	// it leaves — the chosen worm where the eye lands, the cards it may eat below it.
+	// **The prose has done its job once the offer is up, and the two rows take the screen** — the
+	// worms where the eye lands, the cards they may eat below them.
+	//
+	// **The worms used to sit at 58% under the payout** *(owner's call, 2026-08-22)*, on the
+	// argument that what a win paid and what it is offering are one picture. That could not
+	// survive both rows being on screen at once: a worm row at 58% is 280 tall against a button
+	// strip at 88%, so there is nowhere for the cards to go. **The narration therefore clears when
+	// the offer arrives rather than one stage later**, which is the cost of the reversed gesture
+	// and was taken deliberately.
 	wormChosenRowPct = 34
-	offerRowPct      = 62
+
+	// **64 rather than 62 since 2026-09-06**, to buy the headroom a selected card lifts into. See
+	// offerSelectedNudge: the row is a card tall and rises by 26 when one is picked, and at 62 the
+	// lifted card's top edge landed inside the worm row above it.
+	offerRowPct = 64
 
 	// The title, the hint and the narration all hang off the bottom of the build band, each by its
 	// own drop. **They were absolute pixels until 2026-09-05** — 262, 300 and 296, written when the
@@ -102,6 +108,23 @@ const (
 	offerButtonsPct   = 88
 	offerButtonWidth  = 400
 	offerButtonHeight = 76
+
+	// wormRowGap is the air on each side of the skip button, which stands **in** the worm row
+	// rather than under it *(owner's call, 2026-09-06)*. It was centred at offerButtonsPct — 88%,
+	// the seat the shop's Leave button takes — and with both rows of cards on screen the offer row
+	// reached y=949 against a button centred at 950, so the cards were drawn straight over it.
+	//
+	// **Between the two worms rather than beside them**, which is what makes it read as one row:
+	// taking neither is the third answer to the question the two cards are asking, so it stands
+	// where a third card would.
+	wormRowGap = 40
+
+	// offerSelectedNudge is how far a picked card lifts out of the offer row.
+	//
+	// **The hand's own figure** — see selectedNudge in combat_actionbox.go — because this is the
+	// same gesture on the same kind of row, and a selection that rose by a different amount on the
+	// two screens would be two gestures wearing one name.
+	offerSelectedNudge = selectedNudge
 )
 
 // stage is how far through the choice the player has got.
@@ -112,11 +135,14 @@ const (
 	// because the payout is the first thing that happened and the worms are what it leads to.
 	narrate stage = iota
 
-	// pickWorm: the two worms are up and nothing else is.
-	pickWorm
-
-	// pickCard: a worm is chosen, and the hand it applies to is dealt.
-	pickCard
+	// choosing: both rows are up — the worms, and the cards they may eat.
+	//
+	// **It was two stages until 2026-09-06** *(owner's call)*, worm first and then the card. The
+	// order reversed with the parasite's: **select the card, then click the worm**, so a consumable
+	// is pointed at a card the same way everywhere in the game. One gesture in one order meant one
+	// stage — the two rows are on screen together, because the player is choosing between them
+	// rather than passing through them.
+	choosing
 
 	// settled: the alteration is taken and the new card is shown alone, so the thing that was won
 	// is looked at before it disappears into a deck of forty-eight.
@@ -180,6 +206,15 @@ type PostBattleScene struct {
 
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
+
+	// selected is which offered card is picked out, or -1. **A worm takes exactly one target**, so
+	// this is one index rather than a set — see consumableTarget, which is what asks whether it is
+	// enough for the worm being clicked.
+	//
+	// **It is the offer row's counterpart of the hand's `selected` flag**, and it is deliberately a
+	// different shape: the hand's selection is also the round's queue and may hold five, where this
+	// selects the one card a worm is about to eat.
+	selected int
 
 	// aimed is which offered card the worm was pointed at, and after is what it became.
 	// **Computed once, when the card is picked** rather than every frame: the worm is run against a
@@ -251,7 +286,7 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 		s.skipButton.BaseColor = color.RGBA{R: 120, G: 132, B: 150, A: 255}
 	}
 
-	s.chosen, s.aimed = -1, -1
+	s.chosen, s.aimed, s.selected = -1, -1, -1
 	s.stage = narrate
 	s.removes, s.held = false, 0
 	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
@@ -359,9 +394,12 @@ func sortInts(v []int) {
 	}
 }
 
+// place puts the skip button in its seat in the worm row. **Read off wormRowSeats**, so the button
+// and the cards beside it cannot disagree about where the row is.
 func (s *PostBattleScene) place(gs *state.GlobalState) {
-	y := gs.PctY(offerButtonsPct)
-	s.skipButton.ScreenX, s.skipButton.ScreenY = gs.PctX(50), y
+	_, button := wormRowSeats(gs, len(s.prizes))
+	s.skipButton.ScreenX = button.Min.X + button.Dx()/2
+	s.skipButton.ScreenY = button.Min.Y + button.Dy()/2
 }
 
 func (s *PostBattleScene) Update(gs *state.GlobalState) error {
@@ -436,11 +474,9 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	s.click(gs)
 
 	switch s.stage {
-	case pickWorm:
+	case choosing:
 		s.place(gs)
 		systems.UpdateButton(gs, s.skipButton)
-	case pickCard:
-		s.place(gs)
 
 		// **Placed every tick rather than at Init**, unlike every other widget on this screen: the
 		// block hangs off the offer row's right edge, and a second pick re-deals that row against a
@@ -480,7 +516,11 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 	}
 
 	switch s.stage {
-	case pickCard:
+	case choosing:
+		// **The prizes are deliberately not tooltipped**, as they were not before the two stages
+		// merged: a worm's whole rule is printed on its face, where a deck card's is not. What a
+		// dim prize means — "not for the card you have selected" — is the one thing that is new
+		// here and is left to the row rather than to a tooltip.
 		for i, deckIndex := range s.offer {
 			seat := s.offerSlot(gs, i)
 			card, ok := gs.Run.Card(deckIndex)
@@ -503,36 +543,87 @@ func (s *PostBattleScene) click(gs *state.GlobalState) {
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
-	if s.stage != pickWorm && s.stage != pickCard {
+	if s.stage != choosing {
 		return
 	}
 
-	if s.stage == pickWorm {
-		for i := range s.prizes {
-			if at.In(s.wormSlot(gs, i)) {
-				s.takePrize(gs, i)
-				return
-			}
-		}
-		return
-	}
-
+	// **The card row is asked first**, because it is the row a click is most often meant for and
+	// the two do not overlap. Selecting is free and reversible; clicking a worm spends the pick.
 	for i := range s.offer {
 		if at.In(s.offerSlot(gs, i)) {
-			s.aimAt(gs, i)
+			s.selectOffered(i)
+			return
+		}
+	}
+
+	for i := range s.prizes {
+		if at.In(s.wormSlot(gs, i)) {
+			s.takePrize(gs, i)
 			return
 		}
 	}
 }
 
-// takePrize is the click on the prize row: the worm is chosen and the cards it may eat come up.
+// selectOffered picks a card out of the offer row, or puts it back.
+//
+// **Clicking the selected card deselects it**, which is the hand row's own gesture — a card clicked
+// into the queue is clicked out of it — so the one thing a player already knows how to undo works
+// here too.
+//
+// **One card at a time.** A worm eats exactly one, so a second click moves the selection rather than
+// adding to it; there is no set for it to be wrong about.
+func (s *PostBattleScene) selectOffered(i int) {
+	if s.selected == i {
+		s.selected = -1
+		return
+	}
+	s.selected = i
+	s.tip.Forget()
+}
+
+// selectedDeckIndex is the offer's current pick as an index into the run deck, and whether there is
+// one.
+func (s *PostBattleScene) selectedDeckIndex() (int, bool) {
+	if s.selected < 0 || s.selected >= len(s.offer) {
+		return 0, false
+	}
+	return s.offer[s.selected], true
+}
+
+// wormSpendable is whether clicking this prize now would take it: a card is selected, and this worm
+// can actually change that card.
+//
+// **It is the same question the click asks and the same one the card's lit state reads**, which is
+// what stops a prize looking available and doing nothing. See consumableTarget.
+func (s *PostBattleScene) wormSpendable(gs *state.GlobalState, p prize) bool {
+	if p.taken {
+		return false
+	}
+	target := consumableTarget{
+		needs: 1,
+		legal: func(ids []int) bool { return gs.Run.CanApply(p.worm, ids[0]) },
+	}
+	if idx, ok := s.selectedDeckIndex(); ok {
+		return target.satisfiedBy([]int{idx})
+	}
+	return target.satisfiedBy(nil)
+}
+
+// takePrize is the click on the prize row: this worm is spent on the card that is selected.
+//
+// **It refuses rather than falling back**, on the predicate the card's lit state already read — a
+// prize drawn dim cannot be taken, and a prize drawn lit always works.
 func (s *PostBattleScene) takePrize(gs *state.GlobalState, i int) {
-	if i < 0 || i >= len(s.prizes) || s.prizes[i].taken {
+	if i < 0 || i >= len(s.prizes) || !s.wormSpendable(gs, s.prizes[i]) {
+		return
+	}
+	slot, ok := s.selected, true
+	if _, ok = s.selectedDeckIndex(); !ok {
 		return
 	}
 	s.chosen = i
 	s.tip.Forget()
-	s.stage = pickCard
+	s.aimAt(gs, slot)
 }
 
 // rearm is what a second pick is: the taken prize is struck off, the row stays where it is, and the
@@ -552,8 +643,8 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 		s.prizes[s.chosen].taken = true
 	}
 
-	s.chosen, s.aimed = -1, -1
-	s.stage = pickWorm
+	s.chosen, s.aimed, s.selected = -1, -1, -1
+	s.stage = choosing
 	s.removes, s.held = false, 0
 	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
@@ -631,19 +722,49 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 // In the second stage the chosen worm stays on screen, alone and centred, so what is about to
 // happen is still stated while the card is picked.
 func (s *PostBattleScene) wormSlot(gs *state.GlobalState, i int) image.Rectangle {
-	top := gs.PctY(wormRowPct)
-
-	if s.stage == pickCard {
-		top = gs.PctY(wormChosenRowPct)
-		left := gs.PctX(50) - cardWidth/2
-		return image.Rect(left, top, left+cardWidth, top+cardHeight)
+	// **The row sits where the chosen worm used to** *(2026-09-06)*. Both rows are up at once now,
+	// so the worms take the seat the prose vacates and the cards they may eat go below them —
+	// which is the layout the second stage already had, with every prize in it rather than one.
+	seats, _ := wormRowSeats(gs, len(s.prizes))
+	if i < 0 || i >= len(seats) {
+		return image.Rectangle{}
 	}
+	return seats[i]
+}
 
-	n := len(s.prizes)
-	pitch := cardWidth + 40
-	width := (n-1)*pitch + cardWidth
-	left := gs.PctX(50) - width/2
-	return image.Rect(left+i*pitch, top, left+i*pitch+cardWidth, top+cardHeight)
+// wormRowSeats lays the whole worm row out: a seat per prize, and the skip button standing between
+// them.
+//
+// **One function for the cards and the button**, which is the rule every row in this game follows —
+// a control placed by its own arithmetic beside cards placed by theirs is how the two come to
+// overlap, which is exactly what happened when the button was left at 88%.
+//
+// **The button takes the middle slot.** With the usual two prizes that is literally between them;
+// with an odd number it sits left of centre, which is arbitrary and harmless — nothing deals an odd
+// number today, and a row that refused to lay one out would be worse than one that leans.
+func wormRowSeats(gs *state.GlobalState, n int) (prizes []image.Rectangle, button image.Rectangle) {
+	top := gs.PctY(wormChosenRowPct)
+
+	// The row is n cards and one button, with a gap between every pair.
+	width := n*cardWidth + offerButtonWidth + (n)*wormRowGap
+	x := gs.PctX(50) - width/2
+
+	mid := n / 2
+	prizes = make([]image.Rectangle, 0, n)
+	for i := 0; i < n; i++ {
+		if i == mid {
+			button = image.Rect(x, top+(cardHeight-offerButtonHeight)/2,
+				x+offerButtonWidth, top+(cardHeight+offerButtonHeight)/2)
+			x += offerButtonWidth + wormRowGap
+		}
+		prizes = append(prizes, image.Rect(x, top, x+cardWidth, top+cardHeight))
+		x += cardWidth + wormRowGap
+	}
+	if mid >= n {
+		button = image.Rect(x, top+(cardHeight-offerButtonHeight)/2,
+			x+offerButtonWidth, top+(cardHeight+offerButtonHeight)/2)
+	}
+	return prizes, button
 }
 
 // offerRow is the whole row of offered cards: what the seats are cut out of, and what the sort
@@ -665,8 +786,20 @@ func offerRowOf(gs *state.GlobalState, n int) image.Rectangle {
 }
 
 // offerSlot is where one offered card is drawn, and the rectangle it is clicked in.
+//
+// **A selected card lifts out of the row**, the hand's own gesture — see cardSlot, which does the
+// same thing for the same reason. It was the card's `Selected` border alone until 2026-09-06, and
+// that was not enough to see: with the worms lit by the selection, the screen said a card had been
+// picked and did not say which one.
+//
+// **The lift is in this function rather than in the drawing**, so the protruding part of a card is
+// clickable rather than merely visible — the drawn-here-clicked-there bug every row in this game is
+// shaped to avoid.
 func (s *PostBattleScene) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
 	at := s.offerSeat(gs, i, len(s.offer))
+	if i == s.selected {
+		at.Y -= offerSelectedNudge
+	}
 	return image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight)
 }
 
@@ -792,7 +925,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.ringDrag)
 
 	// **The narration stays up while the offer is made**, and only clears once a worm is chosen.
-	if s.stage == narrate || s.stage == pickWorm {
+	if s.stage == narrate {
 		s.drawProse(gs, screen, prose)
 	}
 
@@ -812,7 +945,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// arrive under the sentence saying they are fleeing, and the card row under the worm that is
 	// going to eat one — in both cases the thing on screen says what the screen is for, and a
 	// heading over it was a caption on a picture nobody had trouble reading.
-	if s.stage != pickWorm && s.stage != pickCard {
+	if s.stage != choosing {
 		line(offerTitleTop(gs), heading, s.title())
 		line(offerHintTop(gs), small, s.hint(gs))
 	}
@@ -827,28 +960,28 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	s.drawWorms(gs, screen)
 
-	if s.stage == pickWorm {
+	if s.stage == choosing {
 		systems.DrawButton(gs, screen, s.skipButton)
 	}
 
-	if s.stage == pickCard {
+	if s.stage == choosing {
 		for i, deckIndex := range s.offer {
 			card, ok := gs.Run.Card(deckIndex)
 			if !ok {
 				continue
 			}
-			// **A card the worm cannot change is dimmed rather than hidden**, so the row still
-			// says what was offered and the reason one of them is unavailable is visible instead
-			// of a click that silently does nothing.
-			worm, _ := s.chosenWorm()
 			// A seat a card is still sliding into is left empty until it lands — the same rule
 			// the hand follows, and for the same reason: the list is already in its new order,
 			// so what is suppressed is a second drawing of a card that is on screen elsewhere.
 			if slideInto(s.slides, i) {
 				continue
 			}
-			usable := gs.Run.CanApply(worm, deckIndex)
-			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card), usable, false)
+			// **Every card is selectable and the worms are what go dim** *(2026-09-06)*. The row
+			// used to dim a card the chosen worm could not change, which was the same rule read in
+			// the other direction — with the card picked first there is no worm yet to ask, so the
+			// legality lands on the prize row instead. See wormSpendable.
+			drawCard(gs, screen, s.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card),
+				true, i == s.selected)
 		}
 		s.drawSlides(gs, screen)
 		s.sortTabs.draw(gs, screen)
@@ -916,15 +1049,14 @@ func drawPrizeCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 // It borrows `cards.Hand` rather than taking a style of its own: a worm has no cost and no form,
 // which that style draws as nothing at all, so what is left is exactly the name and the text. A
 // dedicated style is what this wants once a worm has art.
+// **A prize is lit exactly when clicking it would take it** *(2026-09-06)*, which is what makes
+// select-then-click readable: with no card selected the whole row is dim, and selecting one lights
+// the worms that could eat it. It is the same rule the parasite pane is under — see
+// consumableTarget — and the same rule the offer row itself already followed in the other
+// direction.
 func (s *PostBattleScene) drawWorms(gs *state.GlobalState, screen *ebiten.Image) {
-	if s.stage == pickCard {
-		if p, ok := s.chosenPrize(); ok {
-			drawPrizeCard(gs, screen, s.wormSlot(gs, s.chosen).Min, p, true)
-		}
-		return
-	}
 	for i, p := range s.prizes {
-		drawPrizeCard(gs, screen, s.wormArrivingAt(gs, i), p, !p.taken)
+		drawPrizeCard(gs, screen, s.wormArrivingAt(gs, i), p, s.wormSpendable(gs, p))
 	}
 }
 

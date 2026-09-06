@@ -83,6 +83,13 @@ func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
 // information**: rings fire left to right and compound, so which of two doublings applies first is
 // a fact about the row rather than about either ring.
 func (s *CombatScene) hoverRings(gs *state.GlobalState, at image.Point) bool {
+	// **The consumables pane shares this door**, exactly as it does on the build band: it is the
+	// other half of the same row, and a caller that had to remember two calls is a caller that will
+	// eventually make one.
+	if hoverConsumables(gs, s.consumablePaneRect(gs), at, &s.tip) {
+		return true
+	}
+
 	worn := wornRings(gs)
 	if len(worn) == 0 {
 		return false

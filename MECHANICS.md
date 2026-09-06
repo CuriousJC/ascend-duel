@@ -2085,7 +2085,8 @@ and is walked past.
 
 **A parasite is a consumable you carry into a duel and spend between its turns.** It is bought
 from the shop in a **bucket of parasites**, held in the run, and spent from a board piece on the
-combat screen — the `P` button above the fight log.
+combat screen — clicked in the **consumables pane** on the top row, aimed with the hand's own
+selection. See the section below.
 
 **They overlap with worms on purpose** *(owner's call)*. Several parasites do what a worm already
 does. What makes them a different thing is *when* you spend one: a worm is won after a fight and
@@ -2096,10 +2097,81 @@ separate grammars.
 | | |
 |---|---|
 | Bought | the shop's sixth seat, a **bucket of parasites** — 5 vitae, holds 4, keep 1 |
-| Held | in the run's bucket, uncapped, across fights and across a save |
-| Spent | on the combat screen, **between turns only** — never while a round is playing back |
+| Held | in the run's bucket, **two at a time**, across fights and across a save |
+| Spent | on the combat screen, **between turns only** — select the cards, then click the parasite |
 | Targets | cards **in the hand**, by identity, one or two of them |
 | Lasts | the rest of the run |
+
+### The bucket holds two, and the top row says so *(owner's call, 2026-09-06)*
+
+**A run carries at most two parasites**, and the count is drawn where the worn rings' is: the top
+row of every screen that shows a build is now **two panes** — `worn/5` rings on the left, `held/2`
+parasites on the right.
+
+- **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
+  or it is a lie the first time a third parasite arrives. `session.MaxHeld` is that rule, and it
+  reads the same way `combat.MaxWornRings` does — one number, read by the screen rather than
+  restated in it.
+- **What it buys is that the third purchase is a decision.** An uncapped consumable is one a rich
+  run hoards rather than spends; with two seats, a bucket bought while both are full is a parasite
+  you have to spend one to make room for.
+- **The shop's bucket seat goes dim when the bucket is full**, rather than taking five vitae for a
+  parasite that would be refused. It is the same courtesy an unaffordable good already gets, and it
+  is the control the player actually meets — `Hold` refusing is the belt behind it.
+- **Only the bucket needs it.** A stone is spent in the dialog that opened the bag and a worm in the
+  dialog that opened the can, so neither hands the run something it has no room for.
+- **The pane is where a parasite is visible at all.** Before this the only readout was behind the
+  `P` button, two clicks into a dialog that exists mid-duel — so what a run was carrying was
+  invisible on the two screens where it decides what to carry.
+- **The whole row packs at one pitch, and it overlaps** *(owner's call)*. The combat row spans 1443
+  pixels between the two fighter cards; five ring seats and two consumable seats do not fit at full
+  size there and no gutter arithmetic makes them. So the pitch is *solved* for the span rather than
+  chosen — 201 against a 203-pixel card, a two-pixel overlap — and **both panes take the same one**,
+  which is what makes the line read as one row divided rather than two rows at two spacings. A row
+  closes up rather than shrinking a card, because a smaller ring is a different drawing.
+  **The shop and the reward screen pay nothing**: there is no opponent card, the span is 1662, and
+  the pitch hits its cap at 229 before it hits the span, so nothing overlaps there.
+- **A fixture may still plant more than two.** `session.StartingParasites` goes past the cap on
+  purpose, exactly as a scenario's hand may be longer than the game's own — four fixtures walk six
+  parasites through the dialog. The pane draws the first two seats and the count reports the honest
+  number, so an over-full bucket looks like what it is.
+
+### Select the cards, then click the consumable *(owner's call, 2026-09-06)*
+
+**The gesture reversed.** Spending a parasite used to be arm-then-aim behind the `P` button: open a
+dialog, click the parasite, then click the cards it eats, in a second drawing of the hand one row
+lower. It is now **select the cards in the hand, then click the parasite in the consumables pane**.
+The worm offer follows the same order, so there is one way to point a consumable at a card anywhere
+in the game.
+
+- **The `P` button and its dialog are gone.** What went with them: a modal, a two-stage prompt, a
+  second copy of the hand row, and the fourth entry in the combat screen's dialog-blocking rules.
+- **A consumable is clickable exactly when the selection is what it needs**, and dim otherwise —
+  the same state an unaffordable card on the shop shelf takes. That predicate is the whole of what
+  makes the reversed order readable: the player is never asked whether they have picked the right
+  cards, because the consumable that wants them is the one that is lit.
+- **Exactly, never at least.** A parasite that ate two cards out of a selection of five would be
+  choosing for the player which two, and nothing on screen could say which it picked.
+- **The order of a selection is the order of the row.** A parasite naming a first and a second
+  target — Clone — reads them left to right, and the player reorders by dragging, exactly as they
+  reorder the round. There is no separate click order to learn.
+- **What it costs, said out loud.** On the combat screen a selected card is also a card queued for
+  the round, so one gesture now carries two meanings. The objection was raised and overruled; the
+  lit-when-legal rule is what makes it workable, and the cost is that a player who has selected a
+  turn's worth of cards may find a parasite lit that they did not mean to think about.
+- **A rock shower's stones fly to the duelist card** rather than putting a receipt up to be
+  dismissed. They are in the pouch before the first frame is drawn — the flight is a picture of
+  where they went, not a confirmation, and it cannot change an outcome.
+- **The worm offer reversed with it, and lost a stage doing so.** The reward screen was two stages —
+  pick a worm, then pick the card it eats — and is now one: both rows on screen, select the card,
+  click the worm. The legality moved with the order, so the *cards* are all selectable and the
+  *worms* go dim, where it used to be the other way round.
+- **The narration clears a stage earlier than it did**, and that is the cost. The worms used to sit
+  under the payout at 58% so that what a win paid and what it is offering read as one picture;
+  two rows of full-size cards do not fit under it, so the prose now ends when the offer arrives.
+- **The tutorial's anchor had to grow to cover both rows.** The lit square is also the one legal
+  click, so a step lighting only the worms would have been a lock-up the moment taking one required
+  a selection first.
 
 ### Why between turns, and never inside one
 

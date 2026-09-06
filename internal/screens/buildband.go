@@ -46,10 +46,26 @@ func buildCardRect(gs *state.GlobalState) image.Rectangle {
 // buildRingRect is the row's extent, taken off the duelist card beside it for the reason the
 // combat screen's is: whichever card moves, the row follows.
 func buildRingRect(gs *state.GlobalState) image.Rectangle {
+	rings, _ := buildTopRowPanes(gs)
+	return rings
+}
+
+// buildConsumableRect is the row's other half: the parasites the run is carrying, in the pane the
+// combat screen draws in the same place. See consumables.go.
+func buildConsumableRect(gs *state.GlobalState) image.Rectangle {
+	_, consumables := buildTopRowPanes(gs)
+	return consumables
+}
+
+// buildTopRowPanes is the split, over the span between the duelist card and the far margin.
+//
+// **It is the same function the combat screen calls** *(2026-09-06)*, over a wider span, which is
+// what stops the two screens disagreeing about where the consumables pane begins. The band has no
+// opponent card to stop at, so the rings keep more room here than they do in a fight.
+func buildTopRowPanes(gs *state.GlobalState) (rings, consumables image.Rectangle) {
 	card := buildCardRect(gs)
-	top := card.Min.Y + ringPaneTopDrop
-	return image.Rect(card.Max.X+ringPaneGap, top,
-		gs.PctX(buildBandRightPct), top+cards.RingStyle.Height)
+	return topRowPanes(card.Max.X+ringPaneGap, gs.PctX(buildBandRightPct),
+		card.Min.Y+ringPaneTopDrop)
 }
 
 // buildBandBottom is where the band ends, so a screen below it knows what it has left.
@@ -79,6 +95,9 @@ func buildBandBottom(gs *state.GlobalState) int {
 func drawBuildBand(gs *state.GlobalState, screen *ebiten.Image, vitae int, drag *cardDrag) {
 	drawBuildCard(gs, screen, vitae)
 	drawBuildRings(gs, screen, drag)
+	// **nil: a parasite is carried on these screens, not spent.** The pane draws the same two seats
+	// and the same cards, dim, and the tooltip still explains them. See canSpend.
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
 }
 
 // drawBuildCard is the duelist half of the band on its own.
@@ -164,6 +183,13 @@ func buildRingRow(gs *state.GlobalState, click func(i int)) ringRow {
 func hoverBuildRings(gs *state.GlobalState, at image.Point, tip *models.Tooltip) bool {
 	if gs.Run == nil {
 		return false
+	}
+
+	// **The consumables pane is asked first and through the same door** *(2026-09-06)*. It is the
+	// other half of the row this function already owns, and a second call at every site is the
+	// forgetting hoverBuildRings exists to prevent.
+	if hoverConsumables(gs, buildConsumableRect(gs), at, tip) {
+		return true
 	}
 
 	row := buildRingRect(gs)

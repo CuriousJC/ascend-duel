@@ -78,7 +78,7 @@ type pouchToggle struct {
 	//
 	// **A seat rather than a record key**, which is the one place this differs from the worn row's
 	// armed field: the pouch may hold two of the same stone and spending one must not be ambiguous
-	// about which. It is the argument parasiteToggle.armed is under.
+	// about which. It is the argument the parasite pane's seat index is under.
 	armed int
 
 	// doing is the tabs' request, consumed on the next frame.

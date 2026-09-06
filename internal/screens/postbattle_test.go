@@ -177,3 +177,42 @@ func sameInts(a, b []int) bool {
 	}
 	return true
 }
+
+// The reward screen puts both rows on one screen, and the two ways that goes wrong are a control
+// under the cards and a selection nobody can see. Arithmetic, so it is checkable without a window.
+func TestTheSkipButtonStandsBetweenTheWorms(t *testing.T) {
+	gs := testState()
+	prizes, button := wormRowSeats(gs, 2)
+
+	if len(prizes) != 2 {
+		t.Fatalf("laid out %d prize seats, want 2", len(prizes))
+	}
+	if button.Min.X < prizes[0].Max.X || button.Max.X > prizes[1].Min.X {
+		t.Errorf("the button runs %d..%d, not between worms ending at %d and starting at %d",
+			button.Min.X, button.Max.X, prizes[0].Max.X, prizes[1].Min.X)
+	}
+
+	// **Centred on the row it stands in**, or it reads as a control that happens to be near the
+	// cards rather than as the third answer beside them.
+	rowMid, buttonMid := (prizes[0].Min.Y+prizes[0].Max.Y)/2, (button.Min.Y+button.Max.Y)/2
+	if rowMid != buttonMid {
+		t.Errorf("the button is centred at y=%d against a card row centred at y=%d", buttonMid, rowMid)
+	}
+}
+
+// **A lifted card must not reach the worms above it.** The lift is what says which card is
+// selected, and the row it lifts into is the one the worms stand in — see offerRowPct, which moved
+// to buy this clearance.
+func TestASelectedOfferCardClearsTheWormRow(t *testing.T) {
+	gs := testState()
+	prizes, _ := wormRowSeats(gs, 2)
+	row := offerRowOf(gs, handSize)
+
+	if top := row.Min.Y - offerSelectedNudge; top <= prizes[0].Max.Y {
+		t.Errorf("a lifted offer card reaches y=%d, inside a worm row ending at y=%d",
+			top, prizes[0].Max.Y)
+	}
+	if row.Max.Y > gs.ScreenHeight {
+		t.Errorf("the offer row reaches y=%d, past the %d-pixel screen", row.Max.Y, gs.ScreenHeight)
+	}
+}

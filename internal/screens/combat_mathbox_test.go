@@ -56,7 +56,7 @@ func scriptText(items []mathItem) string {
 // **The sum is spelled out card by card.** This is the whole reason the dialog exists: the feed
 // prints the hand's cards as one term, and what a player could not see was which card paid what.
 func TestTheHandScriptSpellsOutEveryCard(t *testing.T) {
-	got := scriptText(mathScript(handEvent("concept-pair", []int{20, 20}, 150, 60)))
+	got := scriptText(mathScript(handEvent("pair", []int{20, 20}, 150, 60)))
 	if want := "20 + 20 x 1.5 = 60"; got != want {
 		t.Errorf("a Pair of Lunges reads %q, want %q", got, want)
 	}
@@ -75,7 +75,7 @@ func TestAFourCardHandReadsAsFourTerms(t *testing.T) {
 // three times — so a hand event carrying echo terms has to read as extra figures, not as one
 // bigger one.
 func TestAnEchoedCardReadsAsExtraTerms(t *testing.T) {
-	e := handEvent("concept-pair", []int{30, 30, 20, 10}, 150, 135)
+	e := handEvent("pair", []int{30, 30, 20, 10}, 150, 135)
 	e.EchoTerms = 2
 
 	if got, want := scriptText(mathScript(e)), "30 + 30 + 20 + 10 x 1.5 = 135"; got != want {
@@ -105,8 +105,8 @@ func TestTheHighCardShowsItsMultiplier(t *testing.T) {
 // **An event naming no hand at all is still silent.** Nothing emits one, a turn with an attack in
 // it always producing a blow, and a bare `!` at 124 points is what the check is worth.
 func TestEveryNamedHandIsShouted(t *testing.T) {
-	if got := shoutFor(handEvent("concept-pair", []int{20, 20}, 150, 60)); got != "CARD PAIR!" {
-		t.Errorf("a Pair shouts %q, want %q", got, "CARD PAIR!")
+	if got := shoutFor(handEvent("pair", []int{20, 20}, 150, 60)); got != "PAIR!" {
+		t.Errorf("a Pair shouts %q, want %q", got, "PAIR!")
 	}
 	if got := shoutFor(handEvent("high-card", []int{20}, 100, 20)); got != "HIGH CARD!" {
 		t.Errorf("a High Card shouts %q, want %q", got, "HIGH CARD!")
@@ -143,7 +143,7 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 		e     combat.Event
 		flies int
 	}{
-		{"a Pair", handEvent("concept-pair", []int{20, 20}, 150, 60), 3},
+		{"a Pair", handEvent("pair", []int{20, 20}, 150, 60), 3},
 		{"a High Card", handEvent("high-card", []int{20}, 100, 20), 2},
 		{"trips", handEvent("concept-three-of-a-kind", []int{10, 10, 10}, 200, 60), 4},
 	} {
@@ -177,7 +177,7 @@ func TestTheFlyingItemsAreTheCardsThenTheMultiplier(t *testing.T) {
 // **The script ends with the answer, and the answer is the event's.** Nothing in the box may
 // recompute a total: the figure shown and the figure landed have to be one number.
 func TestTheScriptEndsWithTheEventsOwnTotal(t *testing.T) {
-	e := handEvent("concept-pair", []int{7, 7}, 150, 21)
+	e := handEvent("pair", []int{7, 7}, 150, 21)
 	items := mathScript(e)
 
 	last := items[len(items)-1]
@@ -337,7 +337,7 @@ func TestTheHandNameCarriesTheMultiplierTheSumWillShow(t *testing.T) {
 // multiplier has been sitting under the hand's name since DUEL! and is simply travelling. A
 // multiplier that grew on the way would read as a second copy of a figure already on screen.
 func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
-	items := mathScript(handEvent("concept-pair", []int{20, 20}, 150, 60))
+	items := mathScript(handEvent("pair", []int{20, 20}, 150, 60))
 
 	mult := items[len(items)-3]
 	if mult.text != "1.5" {
@@ -357,7 +357,7 @@ func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
 // second is counted bigger — so it is a fact about the term. And a card face carries no ring at all
 // now, so the sum is the only place any of it can be seen.
 func TestTheScriptAnnotatesEveryRingThatFired(t *testing.T) {
-	e := handEvent("concept-pair", []int{40, 44}, 150, 126)
+	e := handEvent("pair", []int{40, 44}, 150, 126)
 	e.HandRingScale[0] = [combat.MaxWornRings]int{200, 100}
 	e.HandRingScale[1] = [combat.MaxWornRings]int{200, 110}
 
@@ -370,7 +370,7 @@ func TestTheScriptAnnotatesEveryRingThatFired(t *testing.T) {
 // **A ring that did not fire says nothing**, which is the only thing the zero means. A flat ring on
 // a card its predicate does not match has no beat and no figure.
 func TestARingThatDidNotFireIsNotInTheScript(t *testing.T) {
-	e := handEvent("concept-pair", []int{20, 20}, 150, 60)
+	e := handEvent("pair", []int{20, 20}, 150, 60)
 	e.HandRingScale[0] = [combat.MaxWornRings]int{}
 	e.HandRingScale[1] = [combat.MaxWornRings]int{}
 
@@ -384,7 +384,7 @@ func TestARingThatDidNotFireIsNotInTheScript(t *testing.T) {
 // that beat; a bounce with no figure beside it would be a card jumping for no stated reason, and the
 // climb off 1x is the thing the player is meant to watch.
 func TestARingFiringAtTheIdentityStillSaysSo(t *testing.T) {
-	e := handEvent("concept-pair", []int{20, 20}, 150, 60)
+	e := handEvent("pair", []int{20, 20}, 150, 60)
 	e.HandRingScale[0] = [combat.MaxWornRings]int{100}
 	e.HandRingScale[1] = [combat.MaxWornRings]int{100}
 
@@ -402,7 +402,7 @@ func TestARingFiringAtTheIdentityStillSaysSo(t *testing.T) {
 // with `HandCards` in order, so a ring's figure has to be tellable from a card's or every figure
 // after the first ring sets off from the wrong card. `ringSeat` is that mark.
 func TestEveryRingFigureFliesFromItsOwnRing(t *testing.T) {
-	e := handEvent("concept-pair", []int{20, 22}, 150, 63)
+	e := handEvent("pair", []int{20, 22}, 150, 63)
 	e.HandRingScale[0] = [combat.MaxWornRings]int{200, 110}
 	e.HandRingScale[1] = [combat.MaxWornRings]int{200, 120}
 
@@ -431,7 +431,7 @@ func TestEveryRingFigureFliesFromItsOwnRing(t *testing.T) {
 // A ring's figure has to name the seat it sets off from, and the seats have to be the ones that
 // fired — a figure flying out of an empty finger is worse than one that simply appeared.
 func TestARingFigureNamesTheSeatItFliesFrom(t *testing.T) {
-	e := handEvent("concept-pair", []int{20, 20}, 150, 60)
+	e := handEvent("pair", []int{20, 20}, 150, 60)
 	e.HandRingScale[0] = [combat.MaxWornRings]int{0, 0, 250}
 
 	var seats []int
@@ -450,7 +450,7 @@ func TestARingFigureNamesTheSeatItFliesFrom(t *testing.T) {
 // figure landing before its rings' figures is a property of the order they are written in — the
 // order the engine applied them.
 func TestTheRingFiguresFollowTheirOwnTerm(t *testing.T) {
-	e := handEvent("concept-pair", []int{20, 22}, 150, 63)
+	e := handEvent("pair", []int{20, 22}, 150, 63)
 	e.HandRingScale[0] = [combat.MaxWornRings]int{200}
 	e.HandRingScale[1] = [combat.MaxWornRings]int{210}
 
@@ -467,7 +467,7 @@ func TestTheRingFiguresFollowTheirOwnTerm(t *testing.T) {
 // This checks the script side of that — which item names what. The beat it happens on is the box's
 // own item cursor, which no test without a window can reach.
 func TestEachItemNamesWhatShakesWithIt(t *testing.T) {
-	e := handEvent("concept-pair", []int{20, 14}, 150, 51)
+	e := handEvent("pair", []int{20, 14}, 150, 51)
 	e.HandCards[0], e.HandCards[1] = 3, 3
 	e.HandRingScale[1] = [combat.MaxWornRings]int{0, 180}
 	e.HandLanding[1] = [combat.MaxWornRings]bool{true}

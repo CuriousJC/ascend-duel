@@ -96,8 +96,9 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
 </p>
 <p class="note">
   <strong>Ordered by multiplier, across every axis at once.</strong> That is the comparison the
-  numbers are making — an Elemental Three of a Kind is claiming to be worth about what a
-  Weaponmaster is — and it is the comparison <code>hands.json</code>'s axis-by-axis layout hides.
+  numbers are making — an Elemental Three of a Kind is claiming to be worth about what a Form Two
+  Pair is — and it is the comparison <code>hands.json</code>'s axis-by-axis layout hides. A rung
+  reading <code>any</code> is one entry read on whichever of the three the turn satisfies.
 </p>
 <p class="note">
   <strong>The AP figure is not the difficulty, and the three percentages are.</strong> The AP is

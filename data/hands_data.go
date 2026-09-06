@@ -33,11 +33,15 @@ type handFile struct {
 
 // HandData is one rung of the of-a-kind ladder as written in the file.
 //
-// **A hand names what it counts copies *of*** *(2026-08-19)*. `match` is one of three axes —
-// `concept`, `form`, `element`, `cost` — so the same rung exists once per axis and each can be priced
-// on its own rarity. There is still no category filter: the matcher counts every card in the turn
-// and the axis decides what a card is worth, so a hand saying which categories it counts would be
-// repeating a rule it cannot change.
+// **A hand names what it counts copies *of*** *(2026-08-19)*. `match` is one of three axes -
+// `concept`, `form`, `element` - so a rung can exist once per axis and each can be priced on its
+// own rarity. There is still no category filter: the matcher counts every card in the turn and the
+// axis decides what a card is worth, so a hand saying which categories it counts would be repeating
+// a rule it cannot change.
+//
+// **`"any"` is the fourth thing `match` can say** *(owner's call, 2026-09-05)*, and it means the
+// rung is read on whichever of the three the turn satisfies. The Pair is the only entry using it:
+// three rungs, three stones and three rings all said the same thing about the same two cards.
 type HandData struct {
 	// Key is a stable slug — `pair`, `four-of-a-kind`. It is how a caller asks for a rung without
 	// knowing its number, and it is deliberately independent of Name so a hand can be renamed
@@ -51,20 +55,15 @@ type HandData struct {
 	// Name is what the hand is called on screen.
 	Name string `json:"name"`
 
-	// Match is the axis the hand counts on: `concept`, `form` or `element`. It is required — a
-	// missing one is refused rather than defaulted, because an entry that landed on the wrong axis
-	// by omission would be a balance change nobody made.
+	// Match is the axis the hand counts on: `concept`, `form`, `element`, or `any` for a rung read
+	// on whichever of the three the turn satisfies. It is required - a missing one is refused
+	// rather than defaulted, because an entry that landed on the wrong axis by omission would be a
+	// balance change nobody made.
 	Match string `json:"match"`
 
 	// Groups is how many cards of each distinct value **on the hand's own axis** the hand wants.
 	// `[3,2]` is a full house and can never be satisfied by five cards sharing one value.
 	Groups []int `json:"groups"`
-
-	// Vary is an optional axis every card in the hand must *differ* on *(2026-09-05)*. Groups say
-	// which cards agree; this is the only way to say which must disagree, and it is what lets
-	// Weaponmaster — three cards of one cost, each a different form — be written down at all.
-	// Empty means the hand names no such constraint, which is every rung written before it.
-	Vary string `json:"vary,omitempty"`
 
 	// Multiplier is the hand's damage multiplier, in **percent** — 150 is 1.5x. An integer because
 	// `internal/combat` is integer arithmetic throughout, and a float here would be the one number

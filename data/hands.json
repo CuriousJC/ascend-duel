@@ -10,13 +10,14 @@
     },
 
     {
-      "key": "concept-pair",
+      "key": "pair",
       "id": 10,
-      "name": "Card Pair",
-      "match": "concept",
+      "name": "Pair",
+      "match": "any",
       "groups": [2],
-      "multiplier": 114
+      "multiplier": 100
     },
+
     {
       "key": "concept-two-pair",
       "id": 11,
@@ -59,14 +60,6 @@
     },
 
     {
-      "key": "form-pair",
-      "id": 20,
-      "name": "Form Pair",
-      "match": "form",
-      "groups": [2],
-      "multiplier": 110
-    },
-    {
       "key": "form-two-pair",
       "id": 21,
       "name": "Form Two Pair",
@@ -107,23 +100,6 @@
       "multiplier": 439
     },
 
-    {
-      "key": "form-arsenal",
-      "id": 26,
-      "name": "Arsenal",
-      "match": "form",
-      "groups": [1, 1, 1, 1],
-      "multiplier": 157
-    },
-
-    {
-      "key": "element-pair",
-      "id": 30,
-      "name": "Elemental Pair",
-      "match": "element",
-      "groups": [2],
-      "multiplier": 110
-    },
     {
       "key": "element-two-pair",
       "id": 31,
@@ -166,46 +142,12 @@
     },
 
     {
-      "key": "element-prism",
-      "id": 36,
-      "name": "Prism",
-      "match": "element",
-      "groups": [1, 1, 1],
-      "multiplier": 110
-    },
-    {
-      "key": "element-spectrum",
-      "id": 37,
-      "name": "Spectrum",
-      "match": "element",
-      "groups": [1, 1, 1, 1],
-      "multiplier": 132
-    },
-    {
       "key": "element-elementalist",
       "id": 38,
       "name": "Elementalist",
       "match": "element",
       "groups": [1, 1, 1, 1, 1],
       "multiplier": 256
-    },
-
-    {
-      "key": "cost-rising-attack",
-      "id": 40,
-      "name": "Rising Attack",
-      "match": "cost",
-      "groups": [1, 1, 1],
-      "multiplier": 118
-    },
-    {
-      "key": "cost-weaponmaster",
-      "id": 41,
-      "name": "Weaponmaster",
-      "match": "cost",
-      "groups": [3],
-      "vary": "form",
-      "multiplier": 134
     }
   ]
 }

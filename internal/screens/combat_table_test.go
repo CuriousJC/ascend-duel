@@ -605,7 +605,7 @@ func TestAPlanQueuedFirstDoesNotHideTheHandBehindIt(t *testing.T) {
 	if !ok {
 		t.Fatal("a pair behind a Prepare previewed no hand")
 	}
-	if blow.Hand.Key != "concept-pair" {
+	if blow.Hand.Key != "pair" {
 		t.Errorf("a pair behind a Prepare previewed %q, want the pair", blow.Hand.Key)
 	}
 	if !sameSeats(blow.Cards, []int{0, 1}) {

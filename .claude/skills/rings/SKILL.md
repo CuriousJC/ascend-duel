@@ -114,7 +114,7 @@ inside the same blow.
 | `Tier` | **the rung of its form's ladder** a card sits on — its *declared* cost, 1/2/3 | `{ "Tier": 3 }` — Atrophy |
 | `Lead` | **the blow's first attack card**, not a fact about the card | `{ "Lead": true }` — Echo. `blow-formed` only; refused elsewhere |
 | `Hand` | **the rung the blow formed**, by its `hands.json` key | `{ "Hand": "concept-full-house" }` — the rung rings. `blow-formed` only, and refused alongside any card predicate |
-| `MinForms` | **how many distinct forms the blow's scoring cards cover** | `{ "Hand": "element-pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
+| `MinForms` | **how many distinct forms the blow's scoring cards cover** | `{ "Hand": "pair", "MinForms": 2 }` — Dual Wield. `blow-formed` only. Legal beside `Hand`, since both narrow the same set |
 | *(absent)* | always | Banker, Hungry, the stat rings |
 
 **`Tier` reads the declared cost, never the wearer's.** A discount ring makes a Lunge cost 2 to the

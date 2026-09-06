@@ -151,9 +151,9 @@ type Odds struct {
 	// **and** affordable.
 	//
 	// **It is kept beside Dealt rather than replaced by it**, because the two come apart hard on
-	// the cost axis: a Rising Attack is 1+2+3 AP, the whole of a 6 AP round, so it is dealt far
-	// more often than it can be played. A single column would price it as though those were the
-	// same number.
+	// the five-card rungs: a Form Full House is dealt in 93% of hands and payable in 8%, since its
+	// five cards are far more than a 6 AP round can buy. A single column would price it as though
+	// those were the same number.
 	Reachable float64
 
 	// Best is the percentage of hands where this rung is the dearest-paying one reachable —
@@ -269,14 +269,41 @@ func Measure(deck []combat.Card, budget, handSize, trials int) Table {
 // for a form pair; what decides whether one can be *played* is whether the two cheapest of them fit
 // in the round's action points alongside nothing else. Spending the dearest copies would answer a
 // question nobody asks.
+// **A merged rung is asked on each of its axes and answers with the cheapest** *(2026-09-05)*.
+// The Pair is one entry read on concept, form or element, so a walk that read `h.Match` alone
+// would report the concept reading's cost and the concept reading's reachability - which is a
+// figure about a rung that no longer exists.
 func MinCost(hand []combat.Card, h combat.Hand) int {
+	best := -1
+	for _, axis := range Axes(h) {
+		got := minCostOn(hand, h.On(axis))
+		if got < 0 {
+			continue
+		}
+		if best < 0 || got < best {
+			best = got
+		}
+	}
+	return best
+}
+
+// Axes is every axis a rung may be read on, falling back to the one it names. **A helper here
+// rather than a method there**, because `combat.Hand.axes` is the matcher's own and unexported;
+// this is the one place outside the rules that has to walk the same list.
+func Axes(h combat.Hand) []combat.Axis {
+	if len(h.Axes) == 0 {
+		return []combat.Axis{h.Match}
+	}
+	return h.Axes
+}
+
+// minCostOn is MinCost against one reading of the rung.
+func minCostOn(hand []combat.Card, h combat.Hand) int {
 	if h.Cards() > MaxCards {
 		return -1
 	}
 
-	// cards by value on this hand's axis. A Vary clause means a group is not just the cheapest N
-	// of a value — the N must differ on a second axis — so the cards are kept rather than their
-	// costs alone, and the cheapest qualifying set is worked out per group size below.
+	// cards by value on this hand's axis.
 	byValue := map[int][]combat.Card{}
 	for _, c := range hand {
 		v, ok := decks.MatchValue(c, h.Match)
@@ -295,11 +322,11 @@ func MinCost(hand []combat.Card, h combat.Hand) int {
 	sort.Ints(values)
 
 	// cheapest[i][n] is what the cheapest n cards of values[i] cost, or -1 when n of them cannot
-	// be had at all. Indexed by group size rather than accumulated as a prefix sum, because a
-	// Vary clause makes "the cheapest three" a different set from "the three cheapest".
+	// be had at all. Indexed by group size rather than read off a running prefix sum, so a caller
+	// asking for one group size cannot be handed another's answer.
 	cheapest := make([][]int, len(values))
 	for i, v := range values {
-		cheapest[i] = cheapestSets(byValue[v], h)
+		cheapest[i] = cheapestSets(byValue[v])
 	}
 
 	best := -1
@@ -327,40 +354,13 @@ func MinCost(hand []combat.Card, h combat.Hand) int {
 }
 
 // cheapestSets is what the cheapest n of these cards cost, for every n up to MaxCards, or -1 where
-// n of them cannot be taken.
-//
-// **Without a Vary clause it is a prefix sum of the sorted costs** — the cheapest n cards, which is
-// what this always was. **With one, each card taken has to carry a value the set does not already
-// hold**, so the answer is the cheapest one card per distinct value on the Vary axis: sort the
-// per-value cheapest and take a prefix of *those*. A card carrying no value on the Vary axis
-// cannot join at all, for the reason it cannot join a hand counting on that axis.
-func cheapestSets(cs []combat.Card, h combat.Hand) []int {
+// n of them cannot be taken. It is a prefix sum of the sorted costs: every card in the slice
+// already shares the hand's axis, so any n of them satisfy a group of n and the cheapest n are the
+// cheapest way to fill it.
+func cheapestSets(cs []combat.Card) []int {
 	costs := make([]int, 0, len(cs))
-	if h.Varies {
-		// The cheapest card at each distinct value on the Vary axis. A sorted walk, never a map
-		// walk, because the result is a figure the ladder is tuned against.
-		byVary := map[int]int{}
-		var seen []int
-		for _, c := range cs {
-			v, ok := decks.MatchValue(c, h.Vary)
-			if !ok {
-				continue
-			}
-			if prev, had := byVary[v]; !had {
-				byVary[v] = c.Cost()
-				seen = append(seen, v)
-			} else if c.Cost() < prev {
-				byVary[v] = c.Cost()
-			}
-		}
-		sort.Ints(seen)
-		for _, v := range seen {
-			costs = append(costs, byVary[v])
-		}
-	} else {
-		for _, c := range cs {
-			costs = append(costs, c.Cost())
-		}
+	for _, c := range cs {
+		costs = append(costs, c.Cost())
 	}
 	sort.Ints(costs)
 

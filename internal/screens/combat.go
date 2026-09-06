@@ -853,6 +853,37 @@ func (s *CombatScene) payHeldVitae(after combat.Duelist) {
 	}
 }
 
+// recordHandsPlayed adds this round's hands to the run's tally - see session/play.go, which owns
+// what a play count is for and why it is not a stone.
+//
+// **It reads the resolved log rather than watching the playback** *(2026-09-05)*, on the same terms
+// payHeldVitae reads the resolved duelist: the round is decided before a frame of it is drawn, so a
+// counter incremented as the animation reached each blow would be a number the player could change
+// by leaving the screen. Presentation may never change an outcome, and a tally is an outcome.
+//
+// **The player's side only.** A creature has no run behind it, and the ladder the panel draws is
+// the player's.
+//
+// **Every KindHand counts, the High Card included.** A turn with an attack in it always forms a
+// hand, so the fallback is a rung the player built as much as any other - and a ladder whose
+// commonest rung was the one place the count stayed at zero would read as broken rather than as
+// deliberate.
+func (s *CombatScene) recordHandsPlayed(log []combat.Event) {
+	if s.run == nil {
+		return
+	}
+	for _, e := range log {
+		if e.Kind != combat.KindHand || e.Side != combat.SideA {
+			continue
+		}
+		h, ok := combat.HandByID(e.Hand)
+		if !ok {
+			continue
+		}
+		s.run.RecordHandPlayed(h.Key)
+	}
+}
+
 // startRound resolves a single round and hands playback an event log. It does not
 // run the duel to a conclusion — control returns to the player to re-plan.
 func (s *CombatScene) startRound() {
@@ -936,6 +967,7 @@ func (s *CombatScene) startRound() {
 	// the animation has got, which is the presentation-may-never-change-an-outcome rule pointing
 	// the other way for once.
 	s.payHeldVitae(fighterAfter)
+	s.recordHandsPlayed(log)
 
 	// Both hands go to the table now, not as the round plays out. The opponent's is known in
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of

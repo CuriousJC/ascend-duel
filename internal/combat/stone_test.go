@@ -48,7 +48,7 @@ func TestNoStonesReadsTheCatalogueUntouched(t *testing.T) {
 }
 
 func TestAStoneRaisesOnlyItsOwnRung(t *testing.T) {
-	d, ok := Duelist{}.WithHandStone("concept-pair")
+	d, ok := Duelist{}.WithHandStone("pair")
 	if !ok {
 		t.Fatal("concept-pair is not a rung the catalogue holds")
 	}
@@ -59,7 +59,7 @@ func TestAStoneRaisesOnlyItsOwnRung(t *testing.T) {
 			t.Fatalf("%s is not in the catalogue", h.Key)
 		}
 		want := base.Multiplier
-		if h.Key == "concept-pair" {
+		if h.Key == "pair" {
 			want += StoneValue(base.Multiplier, 1)
 		}
 		if h.Multiplier != want {
@@ -114,7 +114,7 @@ func TestARaisedRungPaysMoreInARealRound(t *testing.T) {
 
 // twoOfAKind is the card pair, which is the rung the test above builds.
 func twoOfAKind() Hand {
-	h, _ := HandByID(mustHandID("concept-pair"))
+	h, _ := HandByID(mustHandID("pair"))
 	return h
 }
 

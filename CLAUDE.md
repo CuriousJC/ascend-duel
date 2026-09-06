@@ -158,6 +158,23 @@ holds one per hand, a run's counts ride on `combat.Duelist.HandStones`, and `han
 `tools/handodds` and `tools/handsheet` describe the game as shipped and say nothing about a run
 that has been buying rocks.
 
+**A run keeps two counters against every rung, and only one of them is a stone** *(owner's call,
+2026-09-05)*. A stone is the rung's **level**: bought, saved by hand key, and read through
+`Duelist.HandTable` into what the hand pays. The **plays** are how often the run has actually formed
+the rung: earned, saved beside the stones in `run.json`, and read by nothing in `internal/combat` at
+all. `internal/session/play.go` owns the tally and `CombatScene.recordHandsPlayed` is the one place
+it grows — **off the resolved event log, never off the playback**, exactly as `payHeldVitae` takes
+the round's purse. The hands panel is where both are read. See MECHANICS.md §Play counts.
+
+**The three pair rungs merged on 2026-09-05** *(owner's call)*. Card Pair, Form Pair and Elemental
+Pair became **one entry, `pair`**, written `"match": "any"` in `data/hands.json` and read on
+whichever of concept / form / element the turn satisfies — `combat.Hand.Axes` is the list and
+`Hand.On(axis)` is one reading. **It pays 1x**, the identity, so the loader now allows a multi-card
+rung *at* 100 and refuses one below it: what a pair buys is that two cards are summed where a High
+Card lands one. **Prism, Spectrum, Arsenal, Rising Attack and Weaponmaster were cut in the same
+change**, leaving eighteen rungs. **`combat.Axis` is three values** — concept, form, element — and
+a hand can only say what its cards must *agree* on.
+
 **Shields replaced the plan form on 2026-08-31** *(owner's call)*. The player's three defend cards —
 `Ward`, `Brace`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
 attack whole**. See MECHANICS.md §Shields. Four things to know before touching any of it:
@@ -202,8 +219,8 @@ touching any of it:
   outstanding.
 
 **Re-run `tools/handodds` after touching the deck, and read the hand multipliers against what it
-prints.** The ladder is priced off how hard each rung is to land — a form pair scores 100% and pays
-110, a concept Four of a Kind scores 0.64% and pays 479 — and every one of those figures is a fact
+prints.** The ladder is priced off how hard each rung is to land — the Pair scores 100% and pays
+100, a Card Four of a Kind scores 0.64% and pays 479 — and every one of those figures is a fact
 about `data/duelist_cards.json`, the hand size and the action budget. Change any of them and the ladder is
 tuned against a deck that no longer exists, silently, because nothing fails.
 
@@ -212,8 +229,10 @@ tuned against a deck that no longer exists, silently, because nothing fails.
 could also pay for them inside the round. They come apart hard on the five-card rungs — a Form Full
 House is dealt in 93% of hands and payable in 8% — and the **score** is the geometric mean of the
 two, which is what the multipliers are priced against. `go run ./tools/handodds -price` prints what
-the curve would charge beside what the file charges and marks every row where they differ; the file
-matches at every rung today, so a mark is a real signal. See MECHANICS.md for why neither column
+the curve would charge beside what the file charges and marks every row where they differ. **The
+Pair is the one marked row and it is deliberate** — the curve would charge 110 for a certain hand
+and the file charges the identity, because the Pair is the ladder's floor rather than a reward — so
+a second mark is a real signal. See MECHANICS.md for why neither column
 alone can price a ladder. **It counts every card,
 defences included** *(2026-08-23)* — they carry an element and a form and join hands like anything
 else, bringing no damage with them. MECHANICS.md holds the
@@ -896,9 +915,9 @@ authored `Text` against the rule that fires, exactly as the ring sheet does. The
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
 that best *illustrates* the rung — ordered by ascending multiplier across every axis at once,
 which is the comparison `hands.json`'s axis-by-axis layout hides. **The example varies everything
-the rung does not count** *(owner's call, 2026-08-24)*: a form pair is a 1 AP stab beside a 3 AP
-one, because cheapest-set picked two identical cards and made a form pair, a card pair and an
-elemental pair the same picture. `decks.Example` is the one answer, shared with the hands panel;
+the rung does not count** *(owner's call, 2026-08-24)*: a Pair is drawn as a 1 AP stab beside a 3 AP
+one, because cheapest-set picked two identical cards and made every reading of a pair the same
+picture. `decks.Example` is the one answer, shared with the hands panel;
 cost is the tie-break among equally illustrative sets.
 
 **It carries the reachability now, and `tools/hands` is why that is safe** *(owner's call,
@@ -921,7 +940,8 @@ a turn holding cost discounts.
 shop visits and a lot of luck away in a launched game. The stone sheet is **walked by rung rather
 than by stone** — the catalogue is one stone per rung, so walking the ladder orders the page for
 free *and* makes a rung nobody authored a stone for show as a gap rather than as an absence nobody
-notices. It is grouped by axis, which is deliberately not the hand sheet's layout: that one
+notices. It is grouped by axis, with a merged rung under `any axis` and an axis with no rungs left
+dropped rather than drawn empty, which is deliberately not the hand sheet's layout: that one
 interleaves all three by multiplier because a player forming a hand chooses among all of them at
 once, where a stone is bought against one rung. **It is also the only place the ladder and the +N
 are visible together**, and the +N is computed from `hands.json` rather than authored, so a retuned

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/assets"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -162,5 +163,69 @@ func TestTheColumnsAreFilledDownwards(t *testing.T) {
 	}
 	if last := columns[0][len(columns[0])-1]; columns[1][0].name == last.name {
 		t.Errorf("the second column repeats %q", last.name)
+	}
+}
+
+// **A rung's cards have to fit inside the rung.** The panel's geometry was three constants written
+// out by hand against a token that has since grown to 70px tall, so every row's cards overhung its
+// own hairline and landed on the name of the rung below it — nineteen collisions, none of which any
+// test could see. The measurements are derived off `cards.Token` now, and this is what fails if one
+// is written down again.
+func TestARungsCardsFitBetweenItsNameAndItsRule(t *testing.T) {
+	if bottom := handsCardsTop + cards.Token.Height; bottom > handsRuleDrop {
+		t.Errorf("the cards run to %dpx and the rule closing the rung is at %d", bottom, handsRuleDrop)
+	}
+	if handsRuleDrop >= handsRowHeight {
+		t.Errorf("the rule is at %dpx against a row pitch of %d, so it lands in the next rung",
+			handsRuleDrop, handsRowHeight)
+	}
+	// The next rung's name is drawn at its own top, so the pitch has to clear the rule by at least
+	// the air the block leaves under it.
+	if gap := handsRowHeight - handsRuleDrop; gap < handsRowGap {
+		t.Errorf("%dpx between one rung's rule and the next rung's name, want at least %d",
+			gap, handsRowGap)
+	}
+}
+
+// **The tally says only what is true.** A rung nobody has built and nobody has raised carries no
+// annotation at all: eighteen rungs each reading "PLAYED 0" is noise around the two or three the
+// player is actually working on.
+func TestTheTallyIsDrawnOnlyWhereThereIsSomethingToSay(t *testing.T) {
+	for _, tc := range []struct {
+		plays, level int
+		want         string
+	}{
+		{0, 0, ""},
+		{3, 0, "PLAYED 3"},
+		{0, 2, "LVL 2"},
+		{3, 2, "PLAYED 3  LVL 2"},
+	} {
+		if got := handsTallyText(handsRow{plays: tc.plays, level: tc.level}); got != tc.want {
+			t.Errorf("%d plays and %d levels reads %q, want %q", tc.plays, tc.level, got, tc.want)
+		}
+	}
+}
+
+// **The tally fits its column beside the name it annotates.** It is drawn after the name on the
+// same line, so the pair is what has to fit rather than either alone.
+func TestEveryRungsNameAndTallyFitTheColumn(t *testing.T) {
+	fonts := assets.LoadFonts()
+	src := fonts["kubasta"]
+	if src == nil {
+		t.Fatal("no kubasta font to measure with")
+	}
+
+	left, _, right, _ := handsTestBody()
+	width := handsColumnWidth(image.Rect(left, 0, right, 0), handsColumnCount)
+
+	// A deliberately loud tally: three figures of plays and two of level is more than a run will
+	// reach, and it is the width the layout has to survive.
+	tally := handsTallyText(handsRow{plays: 999, level: 99})
+	for _, row := range handsRows(shippingHands()) {
+		name, _ := text.Measure(row.name, &text.GoTextFace{Source: src, Size: handsNameSize}, 0)
+		adv, _ := text.Measure(tally, &text.GoTextFace{Source: src, Size: handsTallySize}, 0)
+		if span := int(name) + handsTallyGap + int(adv); span > width {
+			t.Errorf("%s and its tally come to %dpx against a %dpx column", row.name, span, width)
+		}
 	}
 }

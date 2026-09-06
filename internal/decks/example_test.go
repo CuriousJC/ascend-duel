@@ -98,9 +98,10 @@ func TestACardIsRepeatedOnlyWhenTheDeckRunsOut(t *testing.T) {
 }
 
 // **A rung has to look like itself, and until 2026-08-24 three of them did not.** The cheapest
-// pair on every axis is two identical cards, so a Form Pair, a Card Pair and an Elemental Pair
-// were the same two cards — and drawn as pictures on the hands panel that is the panel claiming
-// a form pair wants two copies of one card.
+// pair on every axis is two identical cards, so the three per-axis pairs of the time were the same
+// two cards - and drawn as pictures on the hands panel that is the panel claiming a form pair wants
+// two copies of one card. The three merged into one on 2026-09-05 and the argument survives it: the
+// Pair still has to be drawn as something that shows what it leaves free.
 //
 // What this pins is that each rung's example differs in something the rung leaves free.
 func TestAnExampleShowsWhatTheRungLeavesFree(t *testing.T) {

@@ -283,11 +283,11 @@ composition any tool prints.
 **Every axis a hand is scored on can be moved, so a build can manufacture any of them.**
 Elements are the loudest case: two common rings fold two colours into a third, and a deck that is
 half one element makes an Elemental Five of a Kind an ordinary turn rather than the hand
-the round-one simulation reports at a 0.29% score. **Cost moves too, and it is the axis a discount
-moves hardest**: a ring or a worm taking a point off a card changes which cost tier it sits in, so
-the same run that makes a Rising Attack affordable can also destroy the Weaponmaster it was holding. **Concepts and forms move too** — promote and demote walk a card along
+the round-one simulation reports at a 0.29% score. **Cost moves too**: a ring or a worm taking a point off a card changes which cost tier it sits in,
+and no rung counts cost today, so what that moves is what a turn can *afford* rather than what it
+forms. **Concepts and forms move too** — promote and demote walk a card along
 its form's ladder, so Shrink and Atrophy both turn dear cards into copies of the cheap card below
-them, which is a Card Pair the starting deck could not deal. Only the *form* survives a rung change,
+them, which is a Card Two Pair the starting deck could not deal. Only the *form* survives a rung change,
 since a ladder is one form's. **All of it is the intended shape of a build, not a leak**: the ladder
 is priced against the starting deck on purpose, and out-earning that price is what rings and worms
 are for.
@@ -805,12 +805,12 @@ every form spans all three costs — so a hand counting cost is not a hand count
 another name. **Every card carries a cost, so this axis has no absence**, unlike `FormNone` and
 `Basic`.
 
-**The of-a-kind ladder exists once per axis on the first three**, as its own catalogue entry rather
-than as one entry with three readings — so a Card Three of a Kind and an Elemental Three of a Kind
-can be priced apart, which they have to be: one wants three copies of a five-copy concept and the
-other three of eleven cards sharing a colour. **The cost axis deliberately carries no of-a-kind
-rungs**: a cost Three of a Kind would be a rung with no idea in it, sitting under Weaponmaster and
-above nothing. It carries two bespoke rungs instead — see *Counting difference* below.
+**The of-a-kind ladder exists once per axis on the first three above the Pair**, as its own
+catalogue entry rather than as one entry with three readings — so a Card Three of a Kind and an
+Elemental Three of a Kind can be priced apart, which they have to be: one wants three copies of a
+five-copy concept and the other three of eleven cards sharing a colour. **The Pair is the one rung
+that is a single entry read three ways** — see *The pairs are one rung* below, which is also where
+the argument for keeping the rest apart is written down.
 
 **The axes are not parallel, and the nesting is the thing to hold onto.** A concept fixes a form,
 so **every card hand is also a form hand**; element is independent of both, which is why an ice
@@ -822,8 +822,9 @@ rather than values, so an enemy's formless colourless deck cannot build a form o
 at all — its whole ladder is the concept axis, which is what its `Copies` field was always buying.
 The player's defences carry a colour like everything else, and it is inert for the same reason.
 
-**Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Bashes satisfy the
-Card Pair and the Form Pair at once; the narrower one is what the player aimed at, so `concept`
+**Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Bashes and two Cleaves
+satisfy the Card Two Pair and the Form Two Pair at once; the narrower one is what the player aimed
+at, so `concept`
 beats `form` beats `element` beats `cost` whenever the multipliers are level. `combat.Axis` is written in that
 order for exactly this reason and is never serialized, so the order is free to mean something.
 
@@ -929,18 +930,33 @@ is all that survives of the second axis.
 
 ### The catalogue's shape
 
-`data/hands.json` holds one list of **twenty-five** entries: six of-a-kind rungs on each of three
-axes, four spread rungs, two cost rungs, plus the one High Card they all fall back to. **A hand
-carries a key, an ID, a name, a `match`, `groups`, an optional `vary` and a `multiplier` in
-percent** — nothing else. `groups` naming *distinct values on the hand's own axis* is why `[3,2]` is
+`data/hands.json` holds one list of **eighteen** entries: five of-a-kind rungs on each of three
+axes, the merged Pair, the Elementalist, plus the one High Card they all fall back to. **A hand
+carries a key, an ID, a name, a `match`, `groups` and a `multiplier` in percent** — nothing
+else. `groups` naming *distinct values on the hand's own axis* is why `[3,2]` is
 a full house and can never be satisfied by five cards sharing one value.
 
-**`vary` is the second constraint, and it is the smallest one that would do** *(owner's call,
-2026-09-05)*. Groups say which cards must agree; nothing said which must *disagree*, so Weaponmaster
-— three cards of one cost, each a different form — could not be written at all. `vary` names an axis
-every card in the hand must differ on. It is refused at load if it names the axis the hand already
-counts on, which no hand could ever form, or if a group asks for more distinct values than that axis
-has.
+### The pairs are one rung *(owner's call, 2026-09-05)*
+
+**Card Pair, Form Pair and Elemental Pair are now one entry called Pair**, keyed `pair`, written
+`"match": "any"`, and read on **concept, form or element — whichever the turn satisfies**. They were
+three rungs, three stones and three rings describing the same two cards, and a player forming a pair
+does not care which axis let them.
+
+**It pays 1x.** That is the identity, and it is deliberately what the High Card pays: what a pair
+buys is not a multiplier at all, it is that **two cards are summed where a High Card lands one**. So
+the loader now allows a multi-card rung *at* 100 and refuses one below it — a rung under the
+identity would pay a player less for building more.
+
+**A pair is now certain rather than likely.** A hand of eight over four forms cannot avoid one, so
+`tools/handodds` scores it at 100% and the High Card is essentially unreachable in round one. That
+is the right shape for a floor: the ladder starts where every turn already is.
+
+`combat.Hand.Axes` is where the list lives and `combat.Hand.On` is how one reading is taken.
+
+**`Match` is the narrowest axis a merged rung names, and a *formed* hand reports the axis that
+satisfied it** — so the blow can always say how it was made even though the rung could have been
+made three ways.
 
 **`match` is required and never defaulted.** An entry that landed on the wrong axis by omission
 would be a balance change nobody made, so a missing or unknown one is refused at init like any other
@@ -951,37 +967,33 @@ a five-group form hand is a rung nobody could climb and would otherwise fail sil
 
 **A hand names one axis to count on, not one per group.** A mixed hand — three ice cards *and* a
 pair of Bashes — is deliberately not expressible; reopening it is a schema change and should be
-argued for here first. `vary` is not that door: it constrains the *same* cards on a second axis
-rather than letting different groups count on different ones.
+argued for here first. **`"match": "any"` is not that door**: a merged rung is the *same* groups
+read on one axis at a time, and whichever reading it satisfies it satisfies whole.
 
-### Counting difference, not copies *(owner's call, 2026-09-05)*
+### Counting difference, not copies
 
-Six rungs count what a set of cards has in common by being **all different** rather than all the
-same. They are the other thing a set can have in common, and the grammar already half-expressed
-them: `[1,1,1]` is three groups of one card, which is three distinct values on the hand's own axis.
+**One rung counts what a set of cards has in common by being all different** rather than all the
+same, and the grammar already half-expressed it: `[1,1,1,1,1]` is five groups of one card, which is
+five distinct values on the hand's own axis.
 
 | Rung | Axis | Shape | What it asks for |
 |---|---|---|---|
-| Prism | `element` | `[1,1,1]` | three cards, three colours |
-| Spectrum | `element` | `[1,1,1,1]` | four cards, four colours |
 | Elementalist | `element` | `[1,1,1,1,1]` | five cards, all five colours |
-| Arsenal | `form` | `[1,1,1,1]` | one card of every form, defend included |
-| Rising Attack | `cost` | `[1,1,1]` | three cards, three different costs |
-| Weaponmaster | `cost` | `[3]` + `vary: form` | three cards of one cost, three forms |
 
-**Prism, Spectrum and Elementalist are a ladder and Arsenal is not.** The element axis has five
-values, so difference has three rungs on it; the form axis has four, and a three-form rung under
-Arsenal would be nearly free. **Weaponmaster is the only rung using `vary`**, and it is the hand
-that forced the field.
+**It is the top of the element axis and there is no ladder under it** *(owner's call, 2026-09-05)*.
+A rung asking for three or four colours out of five scores at or beside the identity, and a rung the
+curve has nowhere to put is a rung nobody can aim at.
 
-**A cost rung with no `vary` clause is a parent of Weaponmaster** — every Weaponmaster is three
-cards of one cost — and of a Card Three of a Kind, since three copies of one concept share a cost.
-That is the shape of the argument any further rung on this axis has to answer: it would have to
-price below both hands it contains.
+**The grammar is three axes and nothing else** *(owner's call, 2026-09-05)*: `concept`, `form`,
+`element`, plus `any` for a rung read on whichever of them the turn satisfies. A hand says what its
+cards must *agree* on and there is no way to say what they must differ on, beyond `[1,1,1]` on the
+hand's own axis. Anything wanting more than that is a schema change and belongs in the paragraph
+above.
 
 **Keys carry their axis and the names are long, for now** *(2026-08-19, owner's call)*.
 `concept-two-pair`, `form-two-pair`, `element-two-pair`; on screen, **Card Two Pair**, **Form Two
-Pair**, **Elemental Two Pair**. The file's word is `concept` and the player's is *Card*, which is
+Pair**, **Elemental Two Pair**. **The Pair is the exception** — it counts on all three, so its key
+names none of them. The file's word is `concept` and the player's is *Card*, which is
 the one deliberate mismatch — a player has never heard of a concept. The longest name is
 `ELEMENTAL THREE OF A KIND!`; it measured 1220 pixels of a 1280-wide screen while the name was
 shouted at 124 points, and about 790 since the name settled at one size of 80.
@@ -1002,11 +1014,11 @@ What that changed, in order of how much it matters:
 
 - **The element axis went from nine cards a colour to twelve**, which is exactly as wide as the form
   axis. The two ladders are now priced identically at every rung, because they are now equally hard.
-- **`defend` is a fourth countable form.** Any two defences are a Form Pair regardless of concept or
+- **`defend` is a fourth countable form.** Any two defences are a Pair regardless of concept or
   colour, and twelve of forty-eight cards carry it.
 - **A defence brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
   not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Ward
-  beside two fire Strikes turns a Card Pair into an Elemental Three of a Kind and pays it on the two
+  beside two fire Strikes turns a Pair into an Elemental Three of a Kind and pays it on the two
   Strikes' damage. That is the whole of what the change buys.
 - **A defence's colour arms a status.** `elementsOf` reads the formed hand, so a fire Ward shows fire
   and lands a burn on a turn with no fire attack in it. That is the sharper half of the same
@@ -1058,25 +1070,20 @@ the sample**, so adding a rarer hand cannot silently reprice every hand below it
 that puts the rarest rung of the shipped ladder at the 785 it was already tuned to.
 
 `go run ./tools/handodds -price` prints what the curve would charge beside what the file charges,
-and marks every row where they differ. **The file currently matches the curve at every rung**, so
-any mark is a real signal rather than accumulated drift.
+and marks every row where they differ. **The Pair is the one marked row and it is deliberate**
+*(owner's call, 2026-09-05)*: the curve would charge 110 for a 100% hand and the file charges 100,
+because the Pair is the ladder's floor rather than a reward. Every other rung matches, so any second
+mark is a real signal rather than accumulated drift.
 
 From a two-million-hand simulation of round one:
 
 | Rung | Axis | Dealt | Playable | Score | Pays |
 |---|---|---|---|---|---|
-| Elemental Pair | element | 100% | 100% | 100% | 110 |
-| Form Pair | form | 100% | 100% | 100% | 110 |
-| Prism | element | 99.7% | 99.3% | 99.5% | 110 |
-| Card Pair | concept | 94.7% | 94.7% | 94.7% | 114 |
-| Rising Attack | cost | 89.8% | 89.8% | 89.8% | 118 |
+| Pair | any | 100% | 100% | 100% | 100 |
 | Form Three of a Kind | form | 95.7% | 80.0% | 87.5% | 120 |
 | Form Two Pair | form | 97.5% | 61.7% | 77.6% | 129 |
-| Spectrum | element | 89.1% | 61.0% | 73.7% | 132 |
-| Weaponmaster | cost | 77.0% | 68.1% | 72.5% | 134 |
 | Elemental Three of a Kind | element | 79.7% | 65.3% | 72.2% | 134 |
 | Elemental Two Pair | element | 96.9% | 52.8% | 71.5% | 134 |
-| Arsenal | form | 65.1% | 42.0% | 52.3% | 157 |
 | Card Two Pair | concept | 57.3% | 26.6% | 39.0% | 179 |
 | Form Full House | form | 93.3% | 8.5% | 28.2% | 202 |
 | Form Four of a Kind | form | 41.4% | 10.1% | 20.4% | 226 |
@@ -1113,10 +1120,10 @@ still no simulation of a duel to ask.
 
 Three things fall out of it and are worth keeping:
 
-- **A near-certain hand pays near the identity.** The form and elemental pairs are 100% hands, so
-  they are a floor rather than a reward — what they buy is the *sum of both cards*, which is
-  already most of the change. **Prism joins them at 110**, which makes it a rung nobody can aim at:
-  it is scored at 99.5% and the curve has nowhere to put it.
+- **A certain hand pays the identity.** The Pair is a 100% hand, so it is a floor rather than a
+  reward — what it buys is the *sum of both cards*, which is already the whole of the change. It is
+  the one rung priced under the curve on purpose; a rung the curve has nowhere to put is a rung
+  nobody can aim at, and the honest thing is to charge nothing for it.
 - **A card hand pays more than the form hand inside it.** A concept fixes a form, so any set sharing
   a concept also shares a form — if the form rung paid the same, nobody would ever have a reason to
   build the narrower one. `TestACardHandPaysMoreThanTheFormHandInsideIt` holds it.
@@ -1132,28 +1139,27 @@ Three things fall out of it and are worth keeping:
 *(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
 defences joining hands made them disagree by everything, and the answer is to leave the matcher alone.
 
-The case that forced it: a turn of `Strike + two shields` forms a **Form Pair at 110 on zero damage**,
-because any two defences share `FormDefend` and the pair beats the High Card's 100 — so the Strike is
-announced and lands nothing, where the Strike alone would have landed its face damage. Playing defences
-beside a single attack can cost you the blow, and **reading the board to avoid that is part of the
-game** rather than a bug to design out.
+The case that forced it: a turn of `Strike + two shields` forms a **Pair on zero damage**, because
+any two defences share `FormDefend` and a formed hand beats the High Card fallback — so the Strike is
+announced and lands nothing, where the Strike alone would have landed its face damage. **The Pair
+dropping to 1x narrowed this rather than closing it** *(2026-09-05)*: the two are level on
+multiplier now, and what still costs the player the blow is that the pair's own cards are the two
+shields, which deal nothing. Playing defences beside a single attack can cost you the blow, and
+**reading the board to avoid that is part of the game** rather than a bug to design out.
 
 **Hand IDs are written in the file, and the hazard is gone** *(2026-08-16)*. An entry's ID used to
 be the base in `hands.json` plus the card's enum value, so inserting a card mid-enum shifted every
 ID above it — an open question against profile discovery. One entry now covers every concept in the
 game, so there is **one ID per catalogue key** and it is written down rather than derived.
 Reordering the cards cannot renumber a hand a player has already found. **They are banded by axis**
-— 1 for the High Card, 10–15 concept, 20–26 form, 30–38 element, 40–41 cost — renumbered on
-2026-08-19 while no profile exists to record them. The banding has paid for itself twice: the
-five-of-a-kind rungs landed as 15, 25 and 35 on the day it was introduced, and the six rungs added
-on 2026-09-05 landed as 26, 36–38 and 40–41, both times without moving a single existing ID. Once a
-profile does exist, they freeze.
+— 1 for the High Card, 10 for the merged Pair, 11–15 concept, 21–25 form, 31–38 element — renumbered
+on 2026-08-19 while no profile exists to record them. The banding has paid for itself every time it
+has been tested: the five-of-a-kind rungs landed as 15, 25 and 35 without moving anything, and when
+the three per-axis pairs merged on 2026-09-05 the survivor kept 10 and left every gap where it was.
+Once a profile does exist, they freeze.
 
 **Straights are dropped rather than invented** — the concepts have no natural order to be
-consecutive in. **Cost is the one attribute that does have an order**, and Rising Attack is what
-came of it: three cards of three different costs, which in a deck running 1..3 is the whole run.
-It is written as `[1,1,1]` on the cost axis rather than as a sequence, so it stays a hand about
-difference and the grammar gains no notion of consecutiveness.
+consecutive in, and the grammar has no notion of consecutiveness for one to be written in.
 
 What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
 a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
@@ -1789,7 +1795,7 @@ scarcity did not move, because 33 commons became 57 underneath it.
 `scale-hand-damage` scales the **blow**, after the ladder's own multiplier has been applied.
 `Event.Multiplier` stays the rung's figure and a ring may not touch it.
 
-**The first version folded the two together** — a Card Pair under Pairing displayed as 2.3x — and
+**The first version folded the two together** — a Pair under Pairing displayed as 2.3x — and
 that is the reading to avoid: it says the *hand* changed, when what changed is that the player is
 wearing a ring. The banner, the hand row and the sum all show the rung actually built, and the
 ring's figure is drawn as its own term in the pane's pink, flying out of the ring that paid.
@@ -1813,12 +1819,18 @@ means a verb that raises, keeps or spends a shield, and that has not been design
 **A worm alters a card; a stone alters a rung.** One stone raises one hand's multiplier by **a tenth
 of the figure `hands.json` writes down**, for the rest of the run.
 
-- **There is a stone for every rung**, all twenty-five, and `data/stones.json` is refused at load if one
+- **There is a stone for every rung**, all eighteen, and `data/stones.json` is refused at load if one
   is missing — a rung with no stone is a rung that can never be raised, and nothing would fail.
-- **Ten percent of the base, per stone, additive, floored.** Card Pair is 115, so a stone is worth
-  11 and two stones are worth 22 — never 11.5 rounded up, and never a tenth of the number the
+- **A stone is a *level*, and a run keeps two counters against every rung** *(owner's call,
+  2026-09-05)*. The level is how many stones stand on the hand, and it moves what the hand pays; the
+  *plays* are how many times the run has actually formed it, and they move nothing at all. They are
+  deliberately not derived from one another — buying a rock and landing a Full House are different
+  achievements, and one figure could not say which had happened. See *Play counts* below.
+- **Ten percent of the base, per stone, additive, floored.** Card Two Pair is 179, so a stone is
+  worth 17 and two stones are worth 34 — never 17.9 rounded up, and never a tenth of the number the
   previous stone produced. The tenth stone is worth exactly what the first was. Integer arithmetic
-  throughout, like the rest of the damage path.
+  throughout, like the rest of the damage path. **The Pair's 100 makes its stone worth 10**, which
+  is the cheapest step on the ladder and the only one starting from the identity.
 - **Using it is the whole of owning it.** There is no inventory: the click that picks a rock out of
   the bag is the click that puts it on the ladder. A run holds counts per rung, not stones.
 - **It belongs to the run, not to the profile.** Stones are gone when the run is — the same lifetime
@@ -1832,7 +1844,7 @@ of the figure `hands.json` writes down**, for the rest of the run.
   — the same colour a ring-moved figure takes on a card. The shared reading is *something you bought
   moved this number*; a second hue for the second source would be two colours to learn one fact.
 - **A stone has no rarity and the bag is a flat draw.** Every rung is worth a tenth of itself, so a
-  Card Five stone is not a better rock than a Card Pair stone — it is a rock for a rung you may
+  Card Five stone is not a better rock than a Pair stone — it is a rock for a rung you may
   never build. Weighting them would be pricing the *hand*, which the ladder already does.
 - **Nothing measures whether a tenth is the right number**, on the same terms as every price in the
   shop section above. What it is worth in practice depends on which rung a run keeps hitting, which
@@ -1870,6 +1882,34 @@ its rung, the other three were gone. The rock-shower parasite is what changed it
   under it, because a rung raised cannot be lowered and a sale cannot be undone.
 - **The pouch is snapshotted separately from the placed counts.** A carried stone is a decision
   still to make and a placed one is a decision already made, and folding the two would lose that.
+
+### Play counts — the run's other number against a rung *(owner's call, 2026-09-05)*
+
+**A run keeps two counters against every hand, and they say different things.** The *level* is how
+many stones stand on the rung, it is bought, and it moves what the rung pays. The *plays* are how
+many times the run has formed the rung, they are earned, and they move nothing at all.
+
+- **Two counters rather than one derived from the other.** Buying a rock and landing a Full House
+  are different achievements, and a single figure could not say which had happened. A rule that
+  wanted playing a hand to *improve* it would be a mechanic, and it would go through stones.
+- **The rules never see it.** `combat.Duelist` carries stone counts because the resolver has to read
+  them through `HandTable`; it carries no play counts, because a hand pays what it pays however
+  often it has been formed. The tally lives on the run — `internal/session/play.go`.
+- **Counted off the resolved round, never off the playback.** The combat screen reads the event log
+  the instant `ResolveRound` hands it over, exactly as it takes the round's vitae — so a player who
+  leaves the screen mid-animation cannot change the count. Presentation may never change an
+  outcome, and a tally is an outcome.
+- **Every `KindHand` counts, the High Card included.** A turn with an attack in it always forms a
+  hand, so the fallback is a rung the player built as much as any other, and a ladder whose
+  commonest rung was the one stuck at zero would read as broken rather than as deliberate.
+- **The player's side only.** A creature has no run behind it.
+- **Saved, and dropped rather than refused on a rung this build has not got.** That is the opposite
+  of what a stone gets: a stone is something the player paid for, and losing one changes what the
+  run pays. A tally is a statistic, and refusing to open a save over one would be the machinery
+  mattering more than the game.
+- **The hands panel is where both are read.** A rung the run has neither played nor raised carries
+  no annotation at all — eighteen rungs each reading `PLAYED 0` is noise around the two or three the
+  player is actually working on.
 
 
 ## Worms — altering the deck between fights

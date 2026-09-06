@@ -134,7 +134,7 @@ func run(dir string) error {
 		r := row{
 			Key:        h.Key,
 			Name:       h.Name,
-			Match:      h.Match.String(),
+			Match:      matchLabel(h),
 			Groups:     groupText(h.Groups),
 			Cards:      h.Cards(),
 			Multiplier: h.Multiplier,
@@ -427,4 +427,18 @@ type page struct {
 	TooManyAP int
 
 	Rows []row
+}
+
+// matchLabel is the axis column for one rung.
+//
+// **A merged rung says `any` rather than the narrowest of its axes** *(2026-09-05)*. The Pair is
+// one entry read on concept, form or element, and printing `concept` there would say the concept
+// ladder holds a rung the other two do not — which is the opposite of what the merge means. The
+// example beside it is still built on one axis, because an example is a hand and a hand agrees on
+// something in particular.
+func matchLabel(h combat.Hand) string {
+	if len(h.Axes) > 1 {
+		return "any"
+	}
+	return h.Match.String()
 }

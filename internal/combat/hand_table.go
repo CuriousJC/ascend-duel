@@ -32,11 +32,7 @@ func loadCatalogue() []Hand {
 	seenID := map[HandID]string{}
 
 	for _, rec := range handRecs {
-		axis, err := validateHand(rec)
-		if err != nil {
-			panic(fmt.Sprintf("combat: hands.json hand %q: %v", rec.Key, err))
-		}
-		vary, varies, err := validateVary(rec, axis)
+		axes, err := validateHand(rec)
 		if err != nil {
 			panic(fmt.Sprintf("combat: hands.json hand %q: %v", rec.Key, err))
 		}
@@ -49,10 +45,9 @@ func loadCatalogue() []Hand {
 			ID:         HandID(rec.ID),
 			Key:        rec.Key,
 			Name:       rec.Name,
-			Match:      axis,
+			Match:      axes[0],
+			Axes:       axes,
 			Groups:     append([]int(nil), rec.Groups...),
-			Vary:       vary,
-			Varies:     varies,
 			Multiplier: rec.Multiplier,
 		}
 		if prev, dup := seenID[h.ID]; dup {
@@ -73,16 +68,38 @@ func loadCatalogue() []Hand {
 	return hands
 }
 
-func validateHand(r data.HandData) (Axis, error) {
+// anyAxisName is what hands.json writes for a rung read on more than one axis, and mergedAxes is
+// what it resolves to *(2026-09-05)*.
+//
+// **Cost is not in it, on purpose.** See Hand.Axes: two cards of one cost is very nearly any two
+// cards, so a merged rung counting it would fire on turns the player did not build.
+const anyAxisName = "any"
+
+var mergedAxes = []Axis{AxisConcept, AxisForm, AxisElement}
+
+// parseMatch resolves a hand's `match` field into the axes it may be read on.
+func parseMatch(name string) ([]Axis, bool) {
+	if name == anyAxisName {
+		return append([]Axis(nil), mergedAxes...), true
+	}
+	a, ok := ParseAxis(name)
+	if !ok {
+		return nil, false
+	}
+	return []Axis{a}, true
+}
+
+func validateHand(r data.HandData) ([]Axis, error) {
+	one := []Axis{AxisConcept}
 	switch {
 	case r.Key == "":
-		return AxisConcept, fmt.Errorf("has no key")
+		return one, fmt.Errorf("has no key")
 	case r.Name == "":
-		return AxisConcept, fmt.Errorf("has no name")
+		return one, fmt.Errorf("has no name")
 	case r.ID <= 0:
-		return AxisConcept, fmt.Errorf("has no ID, or a zero one, which means 'no hand'")
+		return one, fmt.Errorf("has no ID, or a zero one, which means 'no hand'")
 	case len(r.Groups) == 0:
-		return AxisConcept, fmt.Errorf("names no groups, so it counts nothing")
+		return one, fmt.Errorf("names no groups, so it counts nothing")
 	// **100 is the identity and 0 deletes the blow** *(2026-08-18)*. The multiplier multiplies the
 	// hand's own cards now rather than a separate swing added on top of them, so a hand at 0 is not
 	// "pays no bonus" — it is an attack phase that deals nothing. Every hand needs a real number,
@@ -91,69 +108,48 @@ func validateHand(r data.HandData) (Axis, error) {
 	// Anything below 100 is a *penalty* and is deliberately still legal: refusing it would take a
 	// tuning lever away from the file, which is the one place the ladder is meant to be tuned.
 	case r.Multiplier <= 0:
-		return AxisConcept, fmt.Errorf("has a multiplier of %d; the multiplier scales the hand's own cards, so that is an attack phase dealing nothing", r.Multiplier)
+		return one, fmt.Errorf("has a multiplier of %d; the multiplier scales the hand's own cards, so that is an attack phase dealing nothing", r.Multiplier)
 	}
 
 	total := 0
 	for _, g := range r.Groups {
 		if g < 1 {
-			return AxisConcept, fmt.Errorf("names a group of %d cards", g)
+			return one, fmt.Errorf("names a group of %d cards", g)
 		}
 		total += g
 	}
-	// **A built hand has to beat the cards that formed it.** The High Card sits at the identity, so
-	// a multi-card hand at or below 100 is one a player would be punished for making — a typo
-	// rather than an ambition, and refused rather than loaded.
-	if total > 1 && r.Multiplier <= multiplierScale {
-		return AxisConcept, fmt.Errorf("wants %d cards for multiplier %d, which is no better than playing them as a High Card", total, r.Multiplier)
+	// **A built hand may sit *at* the identity but never below it** *(owner's call, 2026-09-05)*.
+	// The Pair does, at 100: it adds no multiplier of its own and is still worth building, because
+	// the multiplier scales the hand's *own cards* - two cards summed at 1x beat the one card a
+	// High Card lands. What is refused is a rung below 100, which would pay a player less for
+	// building more, and that is a typo rather than an ambition.
+	if total > 1 && r.Multiplier < multiplierScale {
+		return one, fmt.Errorf("wants %d cards for multiplier %d, which pays less than playing them as a High Card", total, r.Multiplier)
 	}
 	// **A hand cannot ask for more cards than a turn can hold.** MaxActions is five and frozen,
 	// so a six-card hand is one nobody could ever form and is a typo rather than an ambition.
 	if total > baseMaxActions {
-		return AxisConcept, fmt.Errorf("wants %d cards but a turn holds %d", total, baseMaxActions)
+		return one, fmt.Errorf("wants %d cards but a turn holds %d", total, baseMaxActions)
 	}
 
 	// **Nor for more distinct values than its axis has** *(2026-08-19)*. Three forms reach a blow
 	// and five elements do, so a hand wanting four groups on the form axis is unclimbable — the
 	// same class of typo as one wanting six cards, and invisible without the check because the
 	// matcher would simply never find it.
-	axis, ok := ParseAxis(r.Match)
+	axes, ok := parseMatch(r.Match)
 	if !ok {
-		return AxisConcept, fmt.Errorf("matches on %q, which is not one of %s", r.Match, axisList())
+		return one, fmt.Errorf("matches on %q, which is not %q or one of %s", r.Match, anyAxisName, axisList())
 	}
-	if spread := axis.spread(); spread > 0 && len(r.Groups) > spread {
-		return AxisConcept, fmt.Errorf("wants %d groups but only %d %ss can reach a blow", len(r.Groups), spread, axis)
-	}
-
-	return axis, nil
-}
-
-// validateVary resolves the optional `vary` clause and refuses the two ways it can be nonsense.
-//
-// **Varying on the axis the hand already counts is a contradiction**, not a curiosity: every card
-// in a group carries the same value there by construction, so such a hand could never form and
-// would be invisible rather than refused. **And a group cannot ask for more distinct values than
-// the axis has** — three forms varying across four cards is the same unclimbable typo the groups
-// check above catches, one axis over.
-func validateVary(r data.HandData, match Axis) (Axis, bool, error) {
-	if r.Vary == "" {
-		return AxisConcept, false, nil
-	}
-	vary, ok := ParseAxis(r.Vary)
-	if !ok {
-		return AxisConcept, false, fmt.Errorf("varies on %q, which is not one of %s", r.Vary, axisList())
-	}
-	if vary == match {
-		return AxisConcept, false, fmt.Errorf("varies on %s, which is the axis it already counts on, so no hand could ever form it", vary)
-	}
-	if spread := vary.spread(); spread > 0 {
-		for _, g := range r.Groups {
-			if g > spread {
-				return AxisConcept, false, fmt.Errorf("wants a group of %d cards varying on %s, but only %d %ss can reach a blow", g, vary, spread, vary)
-			}
+	// **Every axis of a merged rung has to be able to hold it.** A rung readable on three axes
+	// where one of them is too narrow carries a reading nothing can ever satisfy, which is
+	// invisible rather than refused.
+	for _, axis := range axes {
+		if spread := axis.spread(); spread > 0 && len(r.Groups) > spread {
+			return one, fmt.Errorf("wants %d groups but only %d %ss can reach a blow", len(r.Groups), spread, axis)
 		}
 	}
-	return vary, true, nil
+
+	return axes, nil
 }
 
 // axisList is the axes written out for an error message.

@@ -20,24 +20,14 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 )
 
-// MatchValue is what one card counts as on an axis, and whether it counts at all. It mirrors the
-// matcher's own rule: a card with no form or no colour carries no value on that axis, so it can
-// never be counted on it.
+// MatchValue is what one card counts as on an axis, and whether it counts at all: a card with no
+// form or no colour carries no value on that axis, so it can never be counted on it.
 //
-// **A mirror rather than a call**, because the matcher's version is unexported and internal to how
-// a turn is tallied. Three lines of its vocabulary is a smaller risk than exporting the rule; what
-// would be a genuine fork is a second `matchCountOf`, and that is not here.
-func MatchValue(c combat.Card, a combat.Axis) (int, bool) {
-	switch a {
-	case combat.AxisForm:
-		f := c.Form()
-		return int(f), f != combat.FormNone
-	case combat.AxisElement:
-		return int(c.Element), c.Element != combat.Basic
-	default:
-		return int(c.Concept), true
-	}
-}
+// **It was a three-line mirror of the matcher's own rule until 2026-09-06**, on the argument that
+// copying something that small was a smaller risk than exporting it. `internal/achieve` then needed
+// the same reading, and two mirrors is a fork however it is described — so `combat.MatchValue` is
+// exported now and this delegates. The name stays because callers here read it as a decks concern.
+func MatchValue(c combat.Card, a combat.Axis) (int, bool) { return combat.MatchValue(c, a) }
 
 // Example is the set of cards that best *illustrates* a rung: cards that share what the rung
 // counts on and differ in everything else, as cheaply as that can be done. It comes back with the

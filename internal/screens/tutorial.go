@@ -23,6 +23,7 @@ package screens
 // stays live.
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"image/color"
 	"strings"
@@ -131,6 +132,13 @@ type tutorialOverlay struct {
 	nextPressed bool
 	skipPressed bool
 
+	// finished latches the one frame the lesson ends on. **A latch rather than the `!run.Active()`
+	// test alone**, because that test stays true for the rest of the session: without it the
+	// tutorial-finished moment would be raised on every frame of every screen after the lesson, and
+	// while awarding is idempotent, walking the catalogue sixty times a second to be told nothing
+	// changed is not.
+	finished bool
+
 	// panel is where the bubble was last placed, kept so that draw and update agree about where
 	// the buttons are without placing them twice from two call sites.
 	panel image.Rectangle
@@ -187,7 +195,7 @@ func (t *tutorialOverlay) update(gs *state.GlobalState, host tutorialHost) {
 
 	if t.skipPressed {
 		run.Skip()
-		markTutorialSeen(gs)
+		t.finish(gs)
 		gs.InputGated = false
 		return
 	}
@@ -199,8 +207,19 @@ func (t *tutorialOverlay) update(gs *state.GlobalState, host tutorialHost) {
 	// leave the screen shielded around a rectangle nothing is drawing any more.
 	if !run.Active() {
 		gs.InputGated = false
-		markTutorialSeen(gs)
+		t.finish(gs)
 	}
+}
+
+// finish records the lesson as over, once. **Skipping counts as finishing** — see markTutorialSeen,
+// which makes the same call for the same reason.
+func (t *tutorialOverlay) finish(gs *state.GlobalState) {
+	if t.finished {
+		return
+	}
+	t.finished = true
+	markTutorialSeen(gs)
+	earnMoment(gs, achieve.TutorialFinished())
 }
 
 // focus is the rectangle input is being held to, and whether it is being held at all.

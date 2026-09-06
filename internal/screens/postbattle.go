@@ -30,6 +30,7 @@ package screens
 
 import (
 	"fmt"
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"math/rand"
 	"sort"
@@ -401,6 +402,14 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 				s.applyNow(gs.Run)
 				trace.Logf("postbattle", "%s, deck now %d", s.pendingWhat, gs.Run.Size())
 				s.applyNow = nil
+
+				// **The alteration is a moment, raised where the deck actually changes.** A worm
+				// that removed a card leaves nothing behind, so there is nothing to name and the
+				// moment is not raised — see achieve.MomentCardAltered, which carries the resulting
+				// card's label rather than the worm's, because several worms can arrive at one card.
+				if !s.removes {
+					earnMoment(gs, achieve.CardAltered(s.after.Label()))
+				}
 			}
 			if s.rearm(gs) {
 				return nil

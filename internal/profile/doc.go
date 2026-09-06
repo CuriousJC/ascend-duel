@@ -14,8 +14,8 @@
 //
 // **Two files, not one, and that is a decision rather than tidiness** *(owner's call, 2026-08-25)*:
 //
-//   - `profile.json` is the player. Achievements, unlocks, whether the tutorial has been watched.
-//     It accumulates and is never thrown away.
+//   - `profile.json` is the player. Achievements, unlocks, lifetime counters, whether the tutorial
+//     has been watched. It accumulates and is never thrown away.
 //   - `run.json` is the run in progress. It is written at every phase transition and deleted when
 //     the run ends.
 //

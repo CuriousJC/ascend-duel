@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"math"
 	"math/rand"
@@ -198,6 +199,19 @@ type CombatScene struct {
 	deck    []actionCard
 	hand    []paletteCard
 	discard []actionCard
+
+	// playedTurn is the last turn the player actually resolved, kept for one tick so the
+	// achievements can be asked about it.
+	//
+	// **It is a copy taken at resolution, not a reading of the queue later.** `spendSelected` empties
+	// the queue as the cards fly to the table, so by the time Update comes round again there is
+	// nothing left to look at — and reading it off the *playback* would make a record the player
+	// could change by leaving the screen, which is the rule payHeldVitae and recordHandsPlayed are
+	// both written under.
+	//
+	// **Stashed rather than acted on in place** because startRound is a button callback and has no
+	// GlobalState to award against. See drainTurn.
+	playedTurn []combat.Card
 
 	// run is the run these piles were dealt out of, or nil for the callers that deal a hand
 	// without one — `OpeningHand`, `tools/seeds` and the flight tests.
@@ -617,8 +631,16 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// **A death ends the run and puts the player back on the title screen.** It goes through the
 	// same function the settings screen's Abandon Run does, because it is the same event — a climb
 	// that is over — and one path there is one place to get it wrong. See run.go.
+	// **Before either exit below**, because a turn that killed the enemy is still a turn: the
+	// killing blow is exactly the one most likely to be a Spectrum, and a drain that ran only on a
+	// fight that carried on would lose every achievement earned on the last swing of a duel.
+	s.drainTurn(gs)
+
 	if s.died {
 		s.died = false
+		// **A lost duel still played its cards.** What a defeat costs is the climb, not the record
+		// of what was swung on the way up — so the tallies are settled here as well as on a win.
+		settleCounters(gs)
 		EndRunInDefeat(gs)
 		return nil
 	}
@@ -633,10 +655,18 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
 		gs.Run.WonFight(s.fighter.CurrentLife)
 
-		// **The first duel ever won, recorded on the profile.** It fires on every win and the
-		// profile keeps one — see save.go, and profile.AchievementFirstSteps for why the key is
-		// fixed from here on.
-		awardFirstSteps(gs)
+		// **The duel-won moment, and the floor the run now stands on.** Both fire on every win and
+		// the profile keeps one award apiece — see achieve.go, and data/achievements.json, where
+		// "defeat your first enemy" is a record rather than a line of Go.
+		//
+		// **The floor is read after WonFight**, so a win that climbed the stairs reports the floor
+		// arrived at rather than the one left behind.
+		earnMoment(gs, achieve.DuelWon())
+		earnMoment(gs, achieve.FloorReached(gs.Run.Floor()))
+
+		// **The end of the duel, which is where the lifetime tallies are settled.** See achieve.go
+		// for why they are held in memory until here.
+		settleCounters(gs)
 
 		advanceRun(gs)
 		return nil
@@ -884,6 +914,26 @@ func (s *CombatScene) recordHandsPlayed(log []combat.Event) {
 	}
 }
 
+// drainTurn asks the achievements about the turn just resolved, and adds it to the lifetime
+// tallies.
+//
+// **One tick late, deliberately.** startRound runs inside a button callback and has no GlobalState;
+// rather than thread one through the screen's whole input path for this, the turn is stashed and
+// read here on the next pass. Nothing the player can do in that frame changes what was played.
+//
+// **The tallies are bumped in memory and the counters are not asked here** — that is
+// settleCounters, at the end of the duel. See achieve.go.
+func (s *CombatScene) drainTurn(gs *state.GlobalState) {
+	if len(s.playedTurn) == 0 {
+		return
+	}
+	turn := s.playedTurn
+	s.playedTurn = s.playedTurn[:0]
+
+	earnTurn(gs, turn)
+	bumpCounters(gs, turn)
+}
+
 // startRound resolves a single round and hands playback an event log. It does not
 // run the duel to a conclusion — control returns to the player to re-plan.
 func (s *CombatScene) startRound() {
@@ -968,6 +1018,11 @@ func (s *CombatScene) startRound() {
 	// the other way for once.
 	s.payHeldVitae(fighterAfter)
 	s.recordHandsPlayed(log)
+
+	// **The turn as it was played, kept for the achievements.** Taken here, beside the other two
+	// readings of the resolved round, and for the same reason: this is the last moment the queue
+	// exists. See playedTurn and drainTurn.
+	s.playedTurn = append(s.playedTurn[:0], s.fighterActions...)
 
 	// Both hands go to the table now, not as the round plays out. The opponent's is known in
 	// full at this moment and is drawn from enemyActions directly; the player's is dealt out of

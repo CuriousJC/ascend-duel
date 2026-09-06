@@ -25,6 +25,7 @@ package screens
 
 import (
 	"fmt"
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"image/color"
 	"math/rand"
@@ -350,6 +351,15 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 		worm := g.worms[g.chosen]
 		if gs.Run.Apply(worm, g.offer[i]) {
 			trace.Logf("shop", "can of worms: %s applied to deck position %d", worm.Record, g.offer[i])
+
+			// **The same moment the post-battle screen raises**, because it is the same event: a
+			// card in the run's deck is now a different card. Read back out of the deck rather than
+			// predicted, and skipped for a removal, which leaves no card to name.
+			if worm.Target != session.TargetRemove {
+				if card, ok := gs.Run.Card(g.offer[i]); ok {
+					earnMoment(gs, achieve.CardAltered(card.Label()))
+				}
+			}
 		}
 		g.reset()
 

@@ -1,47 +1,45 @@
 package screens
 
 import (
+	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 
 	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// TestEveryAchievementInTheCatalogueHasBothHalves is the one thing that can go wrong in a table
-// nobody validates: a row with a key and no words, or words and no key. A blank row draws a blank
-// card, which reads as a bug in the page rather than as a mistake in the list.
+// TestEveryAchievementInTheCatalogueHasBothHalves is the one thing that can go wrong in a
+// catalogue nobody looks at: a row with a key and no words. A blank row draws a blank card, which
+// reads as a bug in the page rather than as a mistake in the list.
+//
+// **The shape checks moved to internal/achieve on 2026-09-06**, where the file is parsed and a bad
+// record fails the launch. What is left here is the half that is this screen's: that every record
+// carries the two strings this page draws.
 func TestEveryAchievementInTheCatalogueHasBothHalves(t *testing.T) {
-	if len(achievements) == 0 {
+	all := achieve.Loaded().All()
+	if len(all) == 0 {
 		t.Fatal("the catalogue is empty, so the page has nothing to say")
 	}
-	seen := map[string]bool{}
-	for i, a := range achievements {
-		if a.key == "" {
-			t.Errorf("achievement %d (%q) has no key, so nothing can ever award it", i, a.name)
+	for _, a := range all {
+		if a.Name == "" || a.How == "" {
+			t.Errorf("achievement %q is missing a Name or a How", a.Key)
 		}
-		if a.name == "" || a.line == "" {
-			t.Errorf("achievement %d (%q) is missing a name or a line", i, a.key)
-		}
-		if seen[a.key] {
-			t.Errorf("achievement %d repeats the key %q", i, a.key)
-		}
-		seen[a.key] = true
 	}
 }
 
-// TestTheAchievementCatalogueNamesKeysTheProfileAwards is the seam between the two halves. The key
-// is the contract on disk and the catalogue is presentation, so nothing links them but this: a
-// catalogue naming a key nothing ever awards is a row that can never light up, and no test in
-// `internal/profile` can see it.
-func TestTheAchievementCatalogueNamesKeysTheProfileAwards(t *testing.T) {
-	awarded := map[string]bool{
-		profile.AchievementFirstSteps: true,
-	}
-	for _, a := range achievements {
-		if !awarded[a.key] {
-			t.Errorf("the page lists %q, which nothing in the game awards", a.key)
-		}
+// TestTheOldFirstStepsKeyIsStillInTheCatalogue is the one seam a data move can quietly break. The
+// key is the contract on disk — every profile already written holds `first-steps` — and the
+// catalogue that awards it is now a JSON file, so nothing but this says the two still agree.
+//
+// **profile.AchievementFirstSteps is the Go side of that contract**, and it is kept for exactly
+// this: a constant naming the one key that shipped before the catalogue existed.
+func TestTheOldFirstStepsKeyIsStillInTheCatalogue(t *testing.T) {
+	if _, ok := achieve.Loaded().Find(profile.AchievementFirstSteps); !ok {
+		t.Fatalf("every profile on disk holds %q; the catalogue no longer has it",
+			profile.AchievementFirstSteps)
 	}
 }
 
@@ -49,14 +47,15 @@ func TestTheAchievementCatalogueNamesKeysTheProfileAwards(t *testing.T) {
 // the page gets opened.
 func TestTheTallyCountsWhatTheProfileHolds(t *testing.T) {
 	gs := saveState(t)
+	total := strconv.Itoa(len(achieve.Loaded().All()))
 
-	if got := achievementTally(gs); got != "0 of 1" {
-		t.Errorf("a fresh profile should read %q, got %q", "0 of 1", got)
+	if got, want := achievementTally(gs), "0 of "+total; got != want {
+		t.Errorf("a fresh profile should read %q, got %q", want, got)
 	}
 
 	gs.Profile.Award(profile.AchievementFirstSteps)
-	if got := achievementTally(gs); got != "1 of 1" {
-		t.Errorf("after the award it should read %q, got %q", "1 of 1", got)
+	if got, want := achievementTally(gs), "1 of "+total; got != want {
+		t.Errorf("after the award it should read %q, got %q", want, got)
 	}
 }
 
@@ -66,13 +65,14 @@ func TestAMissingProfileIsNothingEarned(t *testing.T) {
 	gs := saveState(t)
 	gs.Profile = nil
 
-	for _, a := range achievements {
-		if earned(gs, a) {
-			t.Errorf("%q cannot be earned with no profile to hold it", a.key)
+	for _, a := range achieve.Loaded().All() {
+		if earned(gs, a.Key) {
+			t.Errorf("%q cannot be earned with no profile to hold it", a.Key)
 		}
 	}
-	if got := achievementTally(gs); got != "0 of 1" {
-		t.Errorf("with no profile the tally should read %q, got %q", "0 of 1", got)
+	want := "0 of " + strconv.Itoa(len(achieve.Loaded().All()))
+	if got := achievementTally(gs); got != want {
+		t.Errorf("with no profile the tally should read %q, got %q", want, got)
 	}
 }
 

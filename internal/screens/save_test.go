@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -63,8 +64,8 @@ func TestAdvancingTheRunWritesIt(t *testing.T) {
 func TestTheFirstWinIsRecordedOnce(t *testing.T) {
 	gs := saveState(t)
 
-	awardFirstSteps(gs)
-	awardFirstSteps(gs)
+	earnMoment(gs, achieve.DuelWon())
+	earnMoment(gs, achieve.DuelWon())
 
 	back, _, err := profile.LoadProfile(gs.Store)
 	if err != nil {
@@ -98,7 +99,7 @@ func TestAnUnwritableProfileIsNotWrittenTo(t *testing.T) {
 	gs := saveState(t)
 	gs.ProfileWritable = false
 
-	awardFirstSteps(gs)
+	earnMoment(gs, achieve.DuelWon())
 	markTutorialSeen(gs)
 
 	if _, ok, _ := profile.LoadRun(gs.Store); ok {
@@ -117,7 +118,7 @@ func TestAnUnwritableProfileIsNotWrittenTo(t *testing.T) {
 // reached in a test or a fixture with no run behind it.
 func TestSavingWithNoRunIsHarmless(t *testing.T) {
 	saveRun(nil)
-	awardFirstSteps(nil)
+	earnMoment(nil, achieve.DuelWon())
 	markTutorialSeen(nil)
 	saveRun(&state.GlobalState{})
 }

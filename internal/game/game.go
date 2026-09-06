@@ -50,6 +50,14 @@ type Game struct {
 	// combat screen and back re-runs its Init, which deals a fresh duel. See chrome.go.
 	ledgerButton *models.Button
 	ledger       screens.LedgerPanel
+
+	// toast is the achievement notice, and it is chrome for the ledger's reasons *(2026-09-06)*:
+	// an achievement can land during a duel, on the post-battle screen or on the transition between
+	// them, and no scene owns any of that. Like the ledger it takes the frame while it is up.
+	//
+	// **It holds no queue** — state.EarnedThisSession is the queue, written wherever an award
+	// happens in internal/screens. This is the thing that draws it.
+	toast screens.AchievementToast
 }
 
 func NewGame() *Game {
@@ -128,6 +136,19 @@ func (g *Game) Update() error {
 	// pacing — a duel's playback stops while the account is open — which is the same thing every
 	// dialog on the combat screen already does and, like all of them, cannot change an outcome:
 	// ResolveRound decided the round before any of it was drawn.
+	// **The toast owns the frame before anything else does, the ledger included.** An achievement
+	// that landed is a thing the player has not seen yet, and the queue it sits in is drained one
+	// box at a time by a click — so a panel opened underneath it would take the click that was
+	// meant to dismiss it. Pacing stops while it is up, which is what every dialog in the game
+	// does and, like all of them, cannot change an outcome: the round was resolved before a frame
+	// of it was drawn.
+	if g.toast.IsOpen(g.GlobalState) {
+		g.GlobalState.ModalOpen = false
+		g.GlobalState.InputGated = false
+		g.toast.Update(g.GlobalState)
+		return nil
+	}
+
 	if g.ledger.IsOpen() {
 		g.GlobalState.ModalOpen = false
 		g.GlobalState.InputGated = false
@@ -186,6 +207,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// **Over the chrome as well as the screen**, because it covers both: the cog stands down under
 	// it the way it does under any dialog, and the panel's own X is the way out.
 	g.ledger.Draw(g.GlobalState, screen)
+
+	// **Over the ledger as well**, matching the update order above: the toast is the one thing in
+	// the frame that is waiting to be read, so nothing may be drawn on top of it.
+	g.toast.Draw(g.GlobalState, screen)
 
 	// Debug Info will front-run everything and is drawn last on the screen
 	if g.GlobalState.DebugPlacement {

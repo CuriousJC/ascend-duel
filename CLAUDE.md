@@ -533,10 +533,11 @@ that has ended and there is nowhere to put the player back to.
   `openScreen(gs, dest)` would be shorter and would also be the seam through which a *run* screen
   gets opened without its phase being set. The explicit list is what says which screens may work this
   way.
-- **The achievements catalogue is a table in `internal/screens/achievements.go`, not a file in
-  `data/`.** One record whose fields are a name and a sentence does not earn a loader; the half that
-  *is* a contract — the key written to disk — is already in `internal/profile`. **When it grows
-  enough to scroll it moves to `data/achievements.json`** and takes the loader with it.
+- **The achievements catalogue moved to `data/achievements.json` on 2026-09-06**, which is exactly
+  what the old note here said would happen once there were enough to scroll. Eleven records is past
+  that line, and the "a name and a sentence does not earn a loader" argument stopped holding the
+  moment a record had to say *what earns it*. `internal/achieve` is the loader and the validator;
+  the screen draws what it hands over and decides nothing. See MECHANICS.md §Achievements.
 - **The title menu is six rows and `TitleScene.menu()` is the one list.** Init, Update and Draw all
   read it, because three hand-written orders are three places a new entry gets forgotten — which is
   how a button ends up drawn and not clickable.
@@ -796,6 +797,14 @@ is no build step.**
 square in the bottom-left corner of every screen, carrying a generated cog — and, beside it, the
 **ledger button**: the run's account of itself, on every screen. See MECHANICS.md §The ledger,
 `internal/screens/ledger.go` for the panel and `internal/session/ledger.go` for what it holds.
+
+**A third thing joined the frame on 2026-09-06: the achievement toast.** It is not a control — it is
+the game telling the player they did something, and waiting to be clicked out of. It qualifies on the
+same three tests and could not be a scene's for the ledger's reason plus one of its own: an
+achievement can land during a duel, on the post-battle screen, or on the transition between them.
+Like the ledger it takes the frame while it is up and the active scene is not updated at all. **Its
+queue is `state.EarnedThisSession`**, written wherever an award happens in `internal/screens` and
+drained one box at a time — a five-element turn earns three achievements together.
 
 **The ledger is chrome for the usual three reasons and one it does not share**: it is true for the
 whole run, wanted on every screen and owned by no scene — and unlike the settings it *could not*
@@ -1322,6 +1331,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `pyramid` | data |
 | `combat` | data |
 | `tutorial` | data |
+| `achieve` | data, combat |
 | `decks` | data, combat |
 | `entities` | data, combat, pyramid |
 | `session` | data, combat, pyramid, profile, seeds, tutorial |
@@ -1422,6 +1432,16 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   stepped as the round pays, and the run is handed the **difference** — see `screens.payHeldVitae`.
   Summing `KindVitae` events to move a purse is the old way and now double-pays. The rules got a
   purse because a ring wanted to read one; the doc comments saying they have none are corrected.
+- **An achievement nobody can earn is invisible**, and that is what `internal/achieve` exists to
+  refuse. Every word `data/achievements.json` may write — a trigger kind, a clause mode, an axis, a
+  moment name, a counter name — is a closed vocabulary checked at package init, so a misspelling
+  fails the launch rather than producing a row that sits locked forever. **A new moment is a constant
+  in `internal/achieve/catalogue.go` plus the one call site that raises it**, never something a file
+  can assert into existence. See MECHANICS.md §Achievements.
+- **`profile.Counters` is bumped in memory and written when a duel ends** *(owner's call,
+  2026-09-06)*. A card played is not a disk write; `screens.settleCounters` is the one place the
+  tallies land, on a win and on a defeat alike. A crash mid-duel loses that duel's counts, which was
+  taken deliberately rather than discovered.
 - **Re-run `tools/ringsheet` after touching `rings.json`, and delete the PNG of a ring you removed.**
   The sheet writes a file per ring and never cleans up, so a deleted record leaves an orphan picture
   in `docs/sheets/ringsheet/` that no page links and nothing fails on.

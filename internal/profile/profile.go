@@ -48,6 +48,21 @@ type Profile struct {
 	// own commit where its effect can be seen.
 	HandsDiscovered []string `json:"handsDiscovered"`
 
+	// Counters is every lifetime tally the player has run up, by counter name.
+	//
+	// **It is the one collection here that is not a set of keys**, and it is a map because the
+	// question it answers is "how many", which a sorted list cannot hold. `encoding/json` writes a
+	// map's keys in sorted order, so the file stays diffable exactly as the lists do.
+	//
+	// **A name, never an ordinal**, on the rule the whole package is under: `form:slash` and
+	// `concept:Strike` rather than a Form and a ConceptID, both of which are append-only enums whose
+	// numbers will eventually mean something else. See internal/achieve, which makes the names.
+	//
+	// **A counter nothing reads any more is kept rather than pruned.** It costs a few bytes and the
+	// alternative is a build deleting a tally that a later build wanted back — the same posture
+	// `unknown` takes for a field this build has never heard of.
+	Counters map[string]int `json:"counters,omitempty"`
+
 	// Settings is what the player has chosen about the program rather than about a run: how loud
 	// the score is and how fast the game moves. **They are on the profile rather than in a file
 	// of their own** *(owner's call, 2026-08-27)* — the profile is already the per-user file the
@@ -156,6 +171,29 @@ func (p *Profile) Award(key string) bool { return insert(&p.Achievements, key) }
 // Unlocked reports whether something has been unlocked, and Unlock records it.
 func (p *Profile) Unlocked(key string) bool { return contains(p.Unlocks, key) }
 func (p *Profile) Unlock(key string) bool   { return insert(&p.Unlocks, key) }
+
+// Count is how far a lifetime tally has got. A counter nothing has ever bumped reads as zero, which
+// is what an achievement asking for 300 of something should see on a fresh profile.
+func (p *Profile) Count(key string) int { return p.Counters[key] }
+
+// Bump adds to a tally and reports the new figure.
+//
+// **Bumping does not write the file.** Counters move every turn of every duel, and the profile is
+// written at a handful of named moments — see internal/screens/save.go, and the rule that a run is
+// snapshotted between phases and never inside one. A tally is held in memory for the length of a
+// duel and settled when it ends, so what a crash mid-duel costs is that duel's counts and nothing
+// else. That price was taken deliberately *(owner's call, 2026-09-06)*; the alternative is a disk
+// write per card played.
+func (p *Profile) Bump(key string, n int) int {
+	if key == "" || n == 0 {
+		return p.Counters[key]
+	}
+	if p.Counters == nil {
+		p.Counters = map[string]int{}
+	}
+	p.Counters[key] += n
+	return p.Counters[key]
+}
 
 // Discovered reports whether a hand has been found, and Discover records it.
 func (p *Profile) Discovered(key string) bool { return contains(p.HandsDiscovered, key) }

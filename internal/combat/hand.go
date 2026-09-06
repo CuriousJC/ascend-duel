@@ -150,7 +150,16 @@ func ParseAxis(name string) (Axis, bool) {
 // **The player has no basic card left** *(2026-08-23)*. The defences used to be the exception and
 // were excluded before this was asked anyway; they now ship in the five colours like every attack,
 // so `FormDefend` and every element are live values here and the absences belong to the enemies.
-func matchValue(c Card, a Axis) (int, bool) {
+// **It was unexported until 2026-09-06.** `internal/decks` mirrored it in three lines rather than
+// have it exported, on the argument that copying a rule that small was the smaller risk;
+// `internal/achieve` then wanted the same reading for the turn achievements, and two mirrors of one
+// rule is a fork whichever way it is described. So it is exported here as `MatchValue`, and both
+// callers ask the matcher rather than remembering what the matcher does.
+func matchValue(c Card, a Axis) (int, bool) { return MatchValue(c, a) }
+
+// MatchValue is what one card counts as on an axis, and whether it counts at all — the matcher's
+// own reading, for the packages above that have to agree with it. See matchValue above.
+func MatchValue(c Card, a Axis) (int, bool) {
 	switch a {
 	case AxisForm:
 		f := c.Form()

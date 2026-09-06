@@ -2518,8 +2518,8 @@ never a field.
 
 **`first-steps` is the first achievement: defeat an enemy.** It fires on every win and the profile
 keeps one, so it means the first enemy the player ever beats rather than the first of a run — a
-player who loses room one fifty times gets it on the fifty-first. **The achievements screen shows
-it** as of 2026-09-03; nothing announces one at the moment it is earned — see TODO.md.
+player who loses room one fifty times gets it on the fifty-first. It is now one record of eleven —
+see the next section.
 
 **A run is saved at every phase transition and never inside a duel** *(owner's call, 2026-08-25)*.
 Between stations the run is quiescent — no piles dealt, no queued actions, no hidden hand — so the
@@ -2653,6 +2653,87 @@ raw number rather than as a fraction of it is one the setting cannot reach, whic
 
 **A sounds bar is expected and is deliberately not there yet.** There is no sound system, and a
 slider setting a number nothing reads would be a control that lies about what it does.
+
+## Achievements *(owner's call, 2026-09-06)*
+
+**An achievement is a record of something the player did, and it changes nothing.** That is the line
+`internal/profile` has drawn since it was written: an *unlock* is an input to the rules and something
+in the rules reads it; an achievement is a note. **A ring behind an achievement therefore reads the
+unlock, never the award** — the record *grants* an unlock key, which is two keys rather than one, and
+that is what lets an achievement be reworded or retired without orphaning the thing it opened.
+Nothing is gated on one yet; the bridge is a field on the record so the day one is, it is a line of
+JSON.
+
+**Eleven of them, in `data/achievements.json`.** The catalogue was a Go table on the achievements
+screen until this change, on the argument that one record whose fields were a name and a sentence
+did not earn a loader. That argument stopped holding the moment a record had to say *what earns it*.
+
+### Three kinds of trigger, because there are three kinds of achievement
+
+The list looks heterogeneous and is not. It is three families, and only one of them is situational:
+
+- **A turn shape** — what the player put on the table together. Spectrum (four elements at once),
+  Elementalist (five), Weaponmaster (three attack forms), Arsenal (three attack forms and a
+  defence), Prism (one form or one card, in all five colours). **This family is pure grammar**, and
+  four of the five were rungs of the hand ladder until 2026-09-05 — cut because the ladder could not
+  *price* them, not because they could not be matched. This is where they went, and it is the right
+  home: a shape worth naming that is not worth paying for.
+- **A lifetime count** — three hundred slashing cards, two hundred Strikes. A tally on the profile,
+  not a predicate over anything the process is holding.
+- **A named moment** — a duel won, the tutorial finished, the fifth floor reached, a card altered
+  into a Flinch. The only family that costs a line of Go each, and deliberately the short one.
+
+**The turn family reads the turn, not the hand.** A hand counts the cards that scored it and leaves
+the rest out; these are about what was played together, which is why Arsenal can ask for a defence
+beside three attack forms — something no rung on the ladder can say, because a hand can only state
+what its cards must *agree* on.
+
+**Thresholds are at-least, everywhere** *(owner's call)*. A five-element turn earns Spectrum as well
+as Elementalist, and arriving on floor six earns the fifth-floor row. The alternative makes a player
+who jumped a step permanently miss it, which reads as a bug in the page.
+
+### What a record says, and what it says twice
+
+**Two pieces of prose, in opposite tenses.** `How` is what you must do and is legible while the row
+is still locked — which is the entire reason the achievements page lists what has not been earned.
+`Said` is what the game says once it has happened. One line would have to be both.
+
+**Every `Said` line is shown at once.** Picking one of several would be a roll, and a roll owes its
+own salted stream and its own argument; several lines together cost neither.
+
+### The toast, and when the tallies are settled
+
+**An achievement announces itself and is clicked out of.** Nothing announced one until now — the
+record was visible on a screen the player had to think to open. It is the confirm dialog's shape
+with one answer instead of two: a small centred box, on confirm.go's argument that a notice the size
+of a page reads as something having gone wrong. **It is drawn by the frame rather than by a scene**,
+because an achievement can land during a duel, on the post-battle screen, or on the transition
+between them. Like every dialog it freezes pacing and cannot change an outcome.
+
+**The queue is drained one box at a time.** A five-element turn earns three achievements together,
+and a single box would have to pick one name to put at the top.
+
+**Counters are held in memory and settled when a duel ends** *(owner's call)*. The alternative was a
+disk write per card played, against a file the rest of the game writes at a handful of named
+moments. What that costs is stated rather than discovered: a crash mid-duel loses that duel's
+tallies and nothing else. **A lost duel settles them too** — what a defeat costs is the climb, not
+the record of what was swung on the way up.
+
+**Counters are per concept and per form, and never per concept and element** *(owner's call)*. Five
+colours of twelve concepts is sixty tallies to say what twelve say. Both axes are counted because
+the two questions are genuinely different: "how many slashing cards" is the form and "how many
+Strikes" is the concept.
+
+### The failure this shape exists to prevent
+
+**An achievement nobody can earn looks exactly like one nobody has earned yet.** No amount of
+playing tells the two apart, and nothing fails. So every word a record may write is a closed
+vocabulary refused at load: a trigger kind, a clause mode, an axis, a moment name, and a counter
+name — the last checked against the forms and the player's own concepts, because a misspelled tally
+is a row that sits locked forever while the game plays happily on. `internal/achieve` is where all
+of that is refused, and `TestEveryShippedAchievementIsReachable` builds an actual turn for every
+pattern in the file.
+
 
 ## Randomness
 

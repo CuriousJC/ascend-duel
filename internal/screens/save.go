@@ -41,26 +41,10 @@ func saveRun(gs *state.GlobalState) {
 	}
 }
 
-// awardFirstSteps records the achievement for winning a duel.
-//
-// **It fires on every win and the profile keeps one**, which is what makes "defeat the first enemy"
-// mean the first one the player ever beats rather than the first of a particular run: a player who
-// loses room one fifty times gets it on the fifty-first.
-func awardFirstSteps(gs *state.GlobalState) {
-	award(gs, profile.AchievementFirstSteps)
-}
-
-// award records an achievement and saves the profile if anything changed.
-//
-// **Nothing is shown at the moment it is earned.** The achievements screen exists as of 2026-09-03
-// and is reachable from the title menu, so the record is visible — but an award lands mid-run in
-// silence. The boolean `Award` reports is what a toast will hang off when one exists; see TODO.md.
-func award(gs *state.GlobalState, key string) {
-	if gs == nil || gs.Profile == nil || !gs.Profile.Award(key) {
-		return
-	}
-	saveProfile(gs)
-}
+// Awarding an achievement used to live here as one function per key. **It moved to achieve.go on
+// 2026-09-06**, when the catalogue became data and the triggers became a grammar: an award is now a
+// key handed back by internal/achieve rather than a call site that knew which achievement it was
+// standing in. What stayed is saveProfile below, which is still the only thing here that writes.
 
 // markTutorialSeen records that the teaching run is over.
 //

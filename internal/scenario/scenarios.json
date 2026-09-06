@@ -259,5 +259,36 @@
     "Fight": 1,
     "Vitae": 40,
     "Life": 0
+  },
+  {
+    "ScenarioRecord": "achievement-toast",
+    "Note": "Four cheap attacks across three forms and four elements, plus a defence: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Poke, Nick and Tap are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point ASCEND_DUEL_PROFILE at an empty directory to see them land again.",
+    "Rings": [],
+    "Hand": [
+      {
+        "Card": "Poke",
+        "Element": "fire"
+      },
+      {
+        "Card": "Nick",
+        "Element": "ice"
+      },
+      {
+        "Card": "Tap",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Poke",
+        "Element": "earth"
+      },
+      {
+        "Card": "Ward",
+        "Element": "arcane"
+      }
+    ],
+    "Screen": "combat",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
   }
 ]

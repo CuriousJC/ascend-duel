@@ -202,6 +202,20 @@ type GlobalState struct {
 	Store   profile.Store
 	Profile *profile.Profile
 
+	// EarnedThisSession is the queue of achievements landed but not yet shown, by key, oldest
+	// first. **A queue rather than a flag**, because a single turn can earn three at once — a
+	// five-element Prism is also an Elementalist and a Spectrum — and a toast that showed one and
+	// dropped the rest would be the game quietly forgetting what the player just did.
+	//
+	// **It is here for the reason ModalOpen is**: it is written by `internal/screens`, wherever an
+	// award happens, and drained by the frame in `internal/game`, which is what draws the toast.
+	// Neither can reach the other, and the toast belongs to no scene — an achievement can land on
+	// the combat screen, on the post-battle screen or on the way between them.
+	//
+	// **It holds keys, not records.** The catalogue is a package away from either reader and a key
+	// is what the profile stores, so nothing here has to learn what an achievement is.
+	EarnedThisSession []string
+
 	// Resumed is whether the run currently on Run came off the disk rather than being started
 	// fresh. **Two readers**: the tutorial's trigger, because a lesson that opens by describing the
 	// hand the player is holding cannot begin halfway up a tower; and the title screen's Continue,

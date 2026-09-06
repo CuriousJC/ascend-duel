@@ -1,0 +1,153 @@
+[
+  {
+    "AchievementRecord": "first-steps",
+    "Name": "FIRST STEPS",
+    "How": "Defeat your first enemy.",
+    "Said": [
+      "One down. The tower does not notice, but you do.",
+      "Everything above this is the same thing again, harder."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "duel-won" }
+  },
+  {
+    "AchievementRecord": "taught",
+    "Name": "TAUGHT",
+    "How": "Sit through the whole lesson.",
+    "Said": [
+      "Bob has said his piece and gone back to wherever he waits.",
+      "Nothing he told you was untrue. Nothing he told you was all of it."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "tutorial-finished" }
+  },
+  {
+    "AchievementRecord": "flinch",
+    "Name": "FLINCH",
+    "How": "Wear a defence all the way down to a Flinch.",
+    "Said": [
+      "A guard worn down to a twitch, and it still costs nothing.",
+      "Free is a kind of strong, if you are counting cards rather than shields."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "card-altered", "Value": "Flinch" }
+  },
+  {
+    "AchievementRecord": "spectrum",
+    "Name": "SPECTRUM",
+    "How": "Attack with four elements in one turn.",
+    "Said": [
+      "Four colours in one breath.",
+      "The hand ladder does not pay for this. Do it anyway."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        { "Clauses": [ { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 4 } ] }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "elementalist",
+    "Name": "ELEMENTALIST",
+    "How": "Attack with all five elements in one turn.",
+    "Said": [
+      "Fire, ice, lightning, earth and arcane, all in the same swing.",
+      "Every ring you own fired at once, and every one you do not sat out."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        { "Clauses": [ { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 5 } ] }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "weaponmaster",
+    "Name": "WEAPONMASTER",
+    "How": "Attack with a stab, a slash and a crush in one turn.",
+    "Said": [
+      "Three ways of hitting, none of them wasted.",
+      "A rung the ladder used to have, and could never price."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        { "Clauses": [ { "Of": "attack", "Axis": "form", "Mode": "distinct", "N": 3 } ] }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "arsenal",
+    "Name": "ARSENAL",
+    "How": "All three attack forms and a defence, in one turn.",
+    "Said": [
+      "Everything the deck can be, on the table at once.",
+      "Four forms. There is no fifth."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        {
+          "Clauses": [
+            { "Of": "attack", "Axis": "form", "Mode": "distinct", "N": 3 },
+            { "Of": "defend", "Mode": "count", "N": 1 }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "prism",
+    "Name": "PRISM",
+    "How": "Five attacks of one form or one card, in all five elements.",
+    "Said": [
+      "One shape, every colour.",
+      "The narrowest hand in the game and the widest, at the same time."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        {
+          "Clauses": [
+            { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 5 },
+            { "Of": "attack", "Axis": "form", "Mode": "same" }
+          ]
+        },
+        {
+          "Clauses": [
+            { "Of": "attack", "Axis": "element", "Mode": "distinct", "N": 5 },
+            { "Of": "attack", "Axis": "concept", "Mode": "same" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "fifth-floor",
+    "Name": "FIFTH FLOOR",
+    "How": "Climb as far as the fifth floor.",
+    "Said": [
+      "Four floors below you, and the stairs keep going.",
+      "Whatever you came in wearing, you are not wearing it now."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "floor-reached", "N": 5 }
+  },
+  {
+    "AchievementRecord": "slash-300",
+    "Name": "THREE HUNDRED CUTS",
+    "How": "Play 300 slashing cards.",
+    "Said": [
+      "Three hundred of them, and the edge has not dulled.",
+      "You have a favourite. That is fine. It is also readable."
+    ],
+    "Trigger": { "Kind": "count", "Counter": "form:slash", "N": 300 }
+  },
+  {
+    "AchievementRecord": "strike-200",
+    "Name": "STRUCK TWO HUNDRED",
+    "How": "Play the Strike card 200 times.",
+    "Said": [
+      "Two hundred Strikes. The middle rung of the crushes, over and over.",
+      "Nothing fancy has ever needed to be."
+    ],
+    "Trigger": { "Kind": "count", "Counter": "concept:Strike", "N": 200 }
+  }
+]

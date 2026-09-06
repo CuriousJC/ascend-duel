@@ -20,6 +20,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
 | `stones.json` | `LoadStones` | one rung-raiser per hand: which rung it raises, and what its card says |
+| `achievements.json` | `LoadAchievements` | what the player has done: a name, how it is earned, what is said when it lands, and a trigger |
 | `tutorial.json` | `LoadTutorial` | the tutorial script: what Bob says, what he points at, what moves him on |
 
 ## Who may read what, and why it is not "whether it is data"
@@ -239,6 +240,34 @@ different amounts, and not before.
 so `+11` written into the file goes stale the first time `hands.json` is tuned — silently, since
 nothing reads a card's text. The record carries the sentence and `screens.stoneSpec` carries the
 arithmetic.
+
+### Achievements
+
+`achievements.json` is **a name, two pieces of prose and a trigger**, and the trigger is the whole
+design. **Parsed and validated in `internal/achieve`, not here and not in `internal/combat`** — an
+achievement is the *player's*, and the rules have never heard of a player. Same who-consumes-it test
+every file here answers.
+
+- **Three trigger kinds, closed**: `turn` (a pattern over the cards played in one turn), `count` (a
+  lifetime tally reaching a figure), `moment` (a named thing having happened). Three rather than one
+  because a turn is gone when it resolves, a count accumulates across every run ever played, and a
+  moment is something the code already reaches — one mechanism covering all three would be a
+  predicate that has to remember a hundred turns to answer "300 times".
+- **A turn trigger is patterns, and a pattern is clauses.** Any pattern matching earns it; every
+  clause in a pattern must hold. A clause is `{Of, Axis, Mode, N}` — `Of` filters by category,
+  `Mode` is `distinct` (at least N values), `same` or `count`. **The filter is on the clause rather
+  than on the pattern**, which is what lets Arsenal ask for three attack forms *and* a defence
+  beside them: two different selections of one turn.
+- **A record's `AchievementRecord` is the disk contract** and may never change once shipped. Its
+  `Name`, `How` and `Said` can be reworded any afternoon.
+- **`How` and `Said` are two strings on purpose.** `How` is what you must do, legible while the row
+  is locked; `Said` is what the game says once it happened. Every `Said` line is shown at once —
+  picking one would be a roll, and a roll owes its own stream.
+- **`Unlocks` is the bridge to the rules, and the achievement itself never gates anything.** Two key
+  spaces, kept apart by `internal/profile`. Nothing ships with one yet.
+- **A misspelled word fails the launch**, including a counter naming no form and no player concept.
+  That check matters more here than anywhere else in `data/`: an achievement that can never land is
+  indistinguishable from one nobody has earned, and nothing else in the game would ever notice.
 
 ### The tutorial script
 

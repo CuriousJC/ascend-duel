@@ -2,7 +2,7 @@ package screens
 
 // **The achievements screen: what has been earned, and what has not.**
 //
-// It is the second screen reachable from the title menu rather than from the run loop, and it is
+// It is one of the screens reachable from the title menu rather than from the run loop, and it is
 // the program's rather than a climb's — like the settings screen, it never touches `session.Phase`
 // and puts the player back where they came from.
 //
@@ -11,47 +11,32 @@ package screens
 // on the day a player most wants to read it. Nothing here is a spoiler yet; the day one is, that
 // entry gets a hidden flag rather than the page getting a policy.
 //
-// **The catalogue is a table in this file rather than a file in `data/`** *(2026-09-03)*, and that
-// is a decision about size rather than about where catalogues live. There is one achievement. A
-// JSON file plus a loader plus its validation, for one record whose only two fields are a name and
-// a sentence, would be ceremony that makes the thing harder to read rather than easier — and the
-// half that genuinely *is* a contract, the key written to disk, already lives in `internal/profile`
-// where it belongs. **When there are enough of these to scroll, it moves to `data/achievements.json`
-// and gets the loader**; see the `data` skill for what that costs.
+// **The catalogue moved to `data/achievements.json` on 2026-09-06**, which is exactly the move the
+// old note in this file said it would make once there were enough of these to scroll. Eleven records
+// carrying trigger grammars is well past that line, and the argument that a name and a sentence do
+// not earn a loader stopped holding the moment a record had to say *what earns it*. `internal/achieve`
+// is the loader; this file draws what it hands over and decides nothing.
 //
-// **The key is the disk contract and the name is not.** `profile.AchievementFirstSteps` may never
-// change; "First Steps" can be reworded any afternoon.
+// **The key is the disk contract and the name is not.** A record's `AchievementRecord` may never
+// change once shipped; its `Name` can be reworded any afternoon.
+//
+// **It scrolls now**, on `models.Scrollbar` — the third widget in the game, a drag rather than a
+// wheel because the input vocabulary has no wheel. The rows are a fixed height, so the bar counts
+// rows and the page cannot land half a line off.
 
 import (
+	"image"
 	"image/color"
 	"strconv"
 
+	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"github.com/curiousjc/ascend-duel/internal/models"
-	"github.com/curiousjc/ascend-duel/internal/profile"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
-
-// achievement is one row: the key on disk, and the two strings shown to a player.
-type achievement struct {
-	key  string
-	name string
-	line string
-}
-
-// achievements is the catalogue, in the order the page lists them. **Order is authored** rather
-// than sorted by key or by whether it is earned — a page that reshuffled as you played would be a
-// page you have to re-read each visit.
-var achievements = []achievement{
-	{
-		key:  profile.AchievementFirstSteps,
-		name: "FIRST STEPS",
-		line: "Defeat your first enemy.",
-	},
-}
 
 // The page's shape. A heading, a column of rows under it, and the way back.
 const (
@@ -70,8 +55,17 @@ const (
 	// achievementRowInset is how far in from the row's left edge the words start.
 	achievementRowInset = 20
 
-	// achievementTallySize is the "1 of 1" under the heading.
+	// achievementTallySize is the "1 of 11" under the heading.
 	achievementTallySize = 18
+
+	// The rows are cut off at the top of the Back button. **A count of rows rather than a pixel
+	// height**, because that is what the scrollbar is told and a page that could show two and a
+	// half rows would be a page whose bottom row is a lie.
+	achievementsVisible = 6
+
+	// The scrollbar's track, to the right of the rows with a gap between.
+	achievementScrollWidth = 14
+	achievementScrollGap   = 18
 )
 
 // The two grounds a row is drawn on: earned, and not.
@@ -86,20 +80,40 @@ var (
 
 // AchievementsScene is the achievements screen.
 type AchievementsScene struct {
-	back *models.Button
+	back   *models.Button
+	scroll *models.Scrollbar
 }
 
-// Init builds the one button on first entry and positions it every time. See TitleScene.Init for
+// Init builds the widgets on first entry and positions them every time. See TitleScene.Init for
 // why positioning is not done in Draw.
 func (s *AchievementsScene) Init(gs *state.GlobalState) {
 	if s.back == nil {
 		s.back = models.NewButton(320, 80, "BACK", func() { s.leave(gs) })
 	}
 	s.back.ScreenX, s.back.ScreenY = gs.PctX(50), gs.PctY(88)
+
+	if s.scroll == nil {
+		s.scroll = models.NewScrollbar(achievementScrollWidth, achievementsColumnHeight())
+		// The page is drawn on the cream ground, so the track is dimmed toward that rather than
+		// toward black — the same reason models.Slider.Ink exists. See systems.ColorToward.
+		s.scroll.Ground = screenGround
+	}
+
+	// **Back to the top on every entry.** A page re-opened where it was left is a page whose first
+	// row is missing for no reason the player can see.
+	s.scroll.Offset = 0
 }
 
 func (s *AchievementsScene) Update(gs *state.GlobalState) error {
 	systems.UpdateButton(gs, s.back)
+
+	track := achievementsScrollRect(gs)
+	s.scroll.Width, s.scroll.Height = track.Dx(), track.Dy()
+	s.scroll.ScreenX = track.Min.X + track.Dx()/2
+	s.scroll.ScreenY = track.Min.Y + track.Dy()/2
+	s.scroll.Total = len(achieve.Loaded().All())
+	s.scroll.Visible = achievementsVisible
+	systems.UpdateScrollbar(gs, s.scroll)
 	return nil
 }
 
@@ -125,20 +139,24 @@ func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementTallySize}, tally)
 
 	left := gs.PctX(50) - achievementRowWidth/2
-	top := gs.PctY(28)
+	top := achievementsTop(gs)
 
-	for i, a := range achievements {
+	all := achieve.Loaded().All()
+	offset := s.scroll.Offset
+	for i := 0; i < achievementsVisible && offset+i < len(all); i++ {
+		a := all[offset+i]
 		y := top + i*(achievementRowHeight+achievementRowGap)
-		s.drawRow(gs, screen, a, left, y, earned(gs, a))
+		s.drawRow(gs, screen, a, left, y, earned(gs, a.Key))
 	}
 
+	systems.DrawScrollbar(gs, screen, s.scroll)
 	systems.DrawButton(gs, screen, s.back)
 }
 
 // drawRow puts one entry on the page. **A locked row is the same row with its ink pulled toward the
 // ground** rather than a different layout — the shape of the page must not change as it fills up.
 func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
-	a achievement, x, y int, got bool) {
+	a achieve.Achievement, x, y int, got bool) {
 
 	fill := achievementLockedFill
 	if got {
@@ -162,15 +180,34 @@ func (s *AchievementsScene) drawRow(gs *state.GlobalState, screen *ebiten.Image,
 	name.GeoM.Translate(float64(x+achievementRowInset), float64(y+22))
 	name.SecondaryAlign = text.AlignCenter
 	name.ColorScale.ScaleWithColor(nameInk)
-	text.Draw(screen, a.name,
+	text.Draw(screen, a.Name,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementNameSize}, name)
 
 	line := &text.DrawOptions{}
 	line.GeoM.Translate(float64(x+achievementRowInset), float64(y+54))
 	line.SecondaryAlign = text.AlignCenter
 	line.ColorScale.ScaleWithColor(lineInk)
-	text.Draw(screen, a.line,
+	text.Draw(screen, a.How,
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}, line)
+
+	// **Progress, but only where there is any.** A tally has a fraction and a moment does not, so a
+	// row that is either done or not says nothing here rather than saying "0 / 1" — see
+	// achieve.Achievement.Progress, which is the one place that decision is made.
+	//
+	// **It is drawn on a locked row and not on an earned one.** A finished tally would read
+	// "300 / 300" next to a tick, which is the same fact twice.
+	if !got && gs.Profile != nil {
+		if p := a.Progress(gs.Profile.Counters); p != "" {
+			prog := &text.DrawOptions{}
+			prog.GeoM.Translate(
+				float64(x+achievementRowWidth-achievementRowInset), float64(y+54))
+			prog.PrimaryAlign = text.AlignEnd
+			prog.SecondaryAlign = text.AlignCenter
+			prog.ColorScale.ScaleWithColor(lineInk)
+			text.Draw(screen, p,
+				&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: achievementLineSize}, prog)
+		}
+	}
 
 	// **A tick on an earned row, and nothing on a locked one.** A word would need a second column
 	// and a padlock would need art nobody has drawn; the mark is two strokes, which is the least
@@ -192,21 +229,38 @@ func (s *AchievementsScene) drawTick(screen *ebiten.Image, cx, cy int) {
 	vector.StrokeLine(screen, x-3, y+9, x+12, y-10, w, groundInk, true)
 }
 
+// achievementsTop is where the first row sits, and achievementsColumnHeight how deep the whole
+// column is. **One is derived from the other**, so the scrollbar's track and the rows it scrolls
+// cannot drift apart.
+func achievementsTop(gs *state.GlobalState) int { return gs.PctY(28) }
+
+func achievementsColumnHeight() int {
+	return achievementsVisible*(achievementRowHeight+achievementRowGap) - achievementRowGap
+}
+
+// achievementsScrollRect is the bar's track: beside the rows, the full depth of the column.
+func achievementsScrollRect(gs *state.GlobalState) image.Rectangle {
+	left := gs.PctX(50) + achievementRowWidth/2 + achievementScrollGap
+	top := achievementsTop(gs)
+	return image.Rect(left, top, left+achievementScrollWidth, top+achievementsColumnHeight())
+}
+
 // earned reports whether the profile holds an entry. **A missing profile reads as nothing earned**
 // rather than as an error: a machine that could not read its profile still gets to look at the page.
-func earned(gs *state.GlobalState, a achievement) bool {
-	return gs.Profile != nil && gs.Profile.Has(a.key)
+func earned(gs *state.GlobalState, key string) bool {
+	return gs.Profile != nil && gs.Profile.Has(key)
 }
 
 // achievementTally is the "N of M" line under the heading.
 func achievementTally(gs *state.GlobalState) string {
+	all := achieve.Loaded().All()
 	got := 0
-	for _, a := range achievements {
-		if earned(gs, a) {
+	for _, a := range all {
+		if earned(gs, a.Key) {
 			got++
 		}
 	}
-	return strconv.Itoa(got) + " of " + strconv.Itoa(len(achievements))
+	return strconv.Itoa(got) + " of " + strconv.Itoa(len(all))
 }
 
 // leave goes back to whichever screen opened this one, on the same terms the settings screen's Back

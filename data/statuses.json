@@ -6,7 +6,7 @@
     "Effect": "damage-over-time",
     "Amount": 50,
     "Rounds": 2,
-    "Text": "takes 50% of the attacker's DMG at the end of each round"
+    "Text": ".5x DMG END OF ROUND"
   },
   {
     "StatusRecord": "chilled",
@@ -15,7 +15,7 @@
     "Effect": "lose-actions",
     "Amount": 1,
     "Rounds": 2,
-    "Text": "loses one card off the front of each turn"
+    "Text": "-1 ATTACK"
   },
   {
     "StatusRecord": "shocked",
@@ -24,7 +24,7 @@
     "Effect": "miss-chance",
     "Amount": 25,
     "Rounds": 2,
-    "Text": "has a 25% chance to miss with every attack"
+    "Text": "1/4 CHANCE TO MISS ATTACKS"
   },
   {
     "StatusRecord": "weighted",
@@ -33,7 +33,7 @@
     "Effect": "damage-reduction",
     "Amount": 25,
     "Rounds": 2,
-    "Text": "deals 25% less DMG"
+    "Text": "-1/4 DMG FROM ATTACKS"
   },
   {
     "StatusRecord": "weakened",
@@ -42,6 +42,6 @@
     "Effect": "damage-amplification",
     "Amount": 100,
     "Rounds": 2,
-    "Text": "takes double DMG from everything, burns included"
+    "Text": "2X DMG FROM ATTACKS"
   }
 ]

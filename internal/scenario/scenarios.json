@@ -24,16 +24,19 @@
   },
   {
     "ScenarioRecord": "shop-shelf",
-    "Note": "The shop with money to spend and two fingers already full. Straight to the shelf without playing three duels to reach it.",
+    "Note": "The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.",
     "Rings": [
       "heart-ring",
       "keen-ring"
     ],
     "Hand": [],
+    "Parasites": [
+      "graft"
+    ],
     "Screen": "shop",
     "Fight": 3,
     "Vitae": 40,
-    "Life": 63
+    "Life": 30
   },
   {
     "ScenarioRecord": "stairway-boss",

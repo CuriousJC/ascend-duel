@@ -60,8 +60,12 @@ import (
 // few pixels off the line every other control on that side stands on, which reads as a mistake
 // rather than as a margin. See screens.ControlColumnLeft.
 const (
-	settingsButtonSize  = 44
-	settingsButtonInset = 10
+	// **Both figures are the screens package's now** *(2026-09-06)*, because the shop's own square
+	// controls stand on the same line and walk leftward from this button — see
+	// screens.ChromeCornerSlot. Two owners measuring one corner is what put the cog underneath the
+	// shop's HANDS button.
+	settingsButtonSize  = screens.ChromeButtonSize
+	settingsButtonInset = screens.ChromeButtonInset
 
 	// **`LEDGER`, spelled out and in caps** *(2026-09-04, owner's call)*. It was `L` — what the
 	// fight log's button carried, and what a 44-pixel square can hold. It stands in the combat
@@ -121,9 +125,7 @@ func ledgerButtonRect(gs *state.GlobalState) image.Rectangle {
 // ScreenHeight constants, so a change to the internal resolution moves the button rather than
 // leaving it stranded in the middle.
 func settingsButtonRect(gs *state.GlobalState) image.Rectangle {
-	right := screens.ControlColumnLeft(gs) + screens.ControlColumnWidth()
-	top := gs.ScreenHeight - settingsButtonInset - settingsButtonSize
-	return image.Rect(right-settingsButtonSize, top, right, top+settingsButtonSize)
+	return screens.ChromeCornerSlot(gs, screens.ChromeSlotSettings)
 }
 
 // chromeShowing reports whether the frame is drawn at all this frame.

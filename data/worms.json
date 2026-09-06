@@ -92,5 +92,12 @@
     "Target": "form",
     "Value": "stab",
     "Text": "CARD BECOMES STAB"
+  },
+  {
+    "WormRecord": "shell-worm",
+    "Name": "SHELL WORM",
+    "Target": "form",
+    "Value": "defend",
+    "Text": "CARD BECOMES DEFEND"
   }
 ]

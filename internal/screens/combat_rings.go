@@ -157,9 +157,43 @@ func ringRowSpan(gs *state.GlobalState) (left, right int) {
 // panel's floor and the number is loose underneath it, which is backwards — the count belongs
 // to the row it counts.
 func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
-	// **Simply the row padded, since 2026-09-04.** It used to be extended to cover the rule and
-	// the count, which were under the row; those are in the caption column now.
-	return s.ringPaneRect(gs).Inset(-ringPaneBackPad)
+	return ringPaneBackOf(s.ringPaneRect(gs))
+}
+
+// ringPaneBackOf is the backing for any ring row, whichever screen laid it out.
+//
+// **Simply the row padded, since 2026-09-04.** It used to be extended to cover the rule and the
+// count, which were under the row; those are in the caption column now.
+//
+// **A free function since 2026-09-06**, so the build band draws the same pane the fight does — it
+// drew bare cards on the shop and the reward screen, which is two screens showing the run's rings
+// as something other than what the fight shows.
+func ringPaneBackOf(row image.Rectangle) image.Rectangle {
+	return row.Inset(-ringPaneBackPad)
+}
+
+// drawRingPaneBack paints that surface. Flat, one step off the ground, no border and no title — see
+// drawRingPane, which is where the argument for all three is written down.
+func drawRingPaneBack(screen *ebiten.Image, row image.Rectangle) {
+	back := ringPaneBackOf(row)
+	vector.DrawFilledRect(screen,
+		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
+		ringPaneBackColor, false)
+}
+
+// drawPaneCount writes a pane's fraction on its bottom-right corner: `3/5 rings`, `1/2 held`.
+//
+// **One function for every pane that has one**, so the two on the top row and the two on the band
+// cannot come to different conclusions about where a corner is or what size the figure is.
+func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle, msg string) {
+	back := ringPaneBackOf(row)
+	top := back.Max.Y + ringCountTopGap
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(back.Max.X), float64(top))
+	op.PrimaryAlign = text.AlignEnd
+	op.ColorScale.ScaleWithColor(groundInk)
+	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
 }
 
 // ringSlotMaxGap is the most bare table ever left between two ring cards.

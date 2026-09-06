@@ -99,6 +99,12 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 // or removed has nothing to fly, so the seat it would have landed in is drawn empty rather than
 // left blank. A blank gap reads as a layout fault; an outlined one reads as a hole where a card
 // was.
+//
+// **It is for a row standing on the bare table** *(2026-09-06)*. A seat inside a pane needs
+// nothing: the pane's own surface already reads as a hole, and an outline drawn in a row that
+// overlaps lands on the card next to it. The shop's shelf draws nothing for a spent seat for that
+// reason; the consumables pane still outlines, because a seat there is one something can go into
+// rather than one that has been spent.
 func drawEmptySeat(screen *ebiten.Image, at image.Rectangle) {
 	vector.StrokeRect(screen, float32(at.Min.X), float32(at.Min.Y),
 		float32(at.Dx()), float32(at.Dy()), 3, groundInk, false)

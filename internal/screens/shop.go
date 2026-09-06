@@ -52,13 +52,6 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// **There is one row of rings for sale, and the worn row is the build band's** *(owner's call,
-	// 2026-08-22)*. The shop drew its own row of worn rings until the band arrived; with the band
-	// up they were the same five rings twice, and the screen had no room for both once the hooded
-	// creature started speaking. So the shelf is the only row the shop lays out, and it sits under
-	// the narration where the eye lands after reading it.
-	shelfRowPct = 48
-
 	// The narration clears the band, whose ring row can now carry a sell price under it. The
 	// reward screen's own prose starts at 296 against a band with nothing under the rings.
 	// **360 since 2026-09-04**, from 310. The band above it is a card tall and the card grew by a
@@ -82,10 +75,6 @@ const (
 	sellTabWidth    = 200
 	sellTabHeight   = 30
 	sellTabTextSize = 26
-
-	// shopRowLabelGap is how far the row's own label sits above its cards.
-	shopRowLabelGap  = 34
-	shopRowLabelSize = 18
 )
 
 // shopMoveTicks is how long a ring takes to reach its new place — a bought one crossing to the
@@ -172,6 +161,35 @@ type ShopScene struct {
 	// answers and the shelf does not. See handspanel.go.
 	hands handsToggle
 
+	// offered is which packs this visit put up: two of the three, dealt in Init and fixed for the
+	// visit unless the reroll button under them is pressed. **A slice rather than three flags**,
+	// because the pane's two seats are positions and which kind stands in each is the decision.
+	offered []goodKind
+
+	// stockRNG and packRNG are the visit's two streams, kept so a reroll advances a cursor rather
+	// than starting a second sequence. See Init.
+	stockRNG *rand.Rand
+	packRNG  *rand.Rand
+
+	// ringReroll and packReroll are the two buttons under those panes. **Two buttons rather than
+	// one moved between two places**, unlike the worn row's sell tab, because both are up at once.
+	ringReroll, packReroll *models.Button
+
+	// rerolling is the pane a button asked to redraw, consumed on the next frame for the reason
+	// `selling` is: a button's OnClick reaches no global state and a reroll needs the purse.
+	rerolling shopPane
+	rerollNow bool
+
+	// rerolls is how many times each pane has been rerolled this visit, by pane. It is what the
+	// price is doubled against — see rerollPrice — and it is per visit rather than per run, so a
+	// fresh shop opens at the base price whatever the last one cost.
+	rerolls map[shopPane]int
+
+	// drunk is which potions have been bought this visit, by record key. **Per visit, like a
+	// sealed good's flag**: the catalogue is the same three every shop, and a run that could buy
+	// three Salves in a row would be buying a life bar rather than a potion.
+	drunk map[string]bool
+
 	// bagBought, canBought and bucketBought are whether this visit's three sealed goods have been
 	// taken.
 	//
@@ -212,6 +230,7 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 		s.sellButton.TextSize = sellTabTextSize
 	}
 
+	s.initRerollButtons()
 	s.pouch.init()
 
 	s.armed, s.selling = "", ""
@@ -220,10 +239,25 @@ func (s *ShopScene) Init(gs *state.GlobalState) {
 	s.tip = models.Tooltip{DwellTicks: tipDwell}
 	s.bagBought, s.canBought, s.bucketBought = false, false, false
 	s.good.reset()
-	s.shelf = dealShelf(gs)
+
+	// **Both stocks are dealt from an rng the visit keeps**, rather than from one built per call.
+	// That is what makes a reroll *advance* the stream instead of drawing a second sequence
+	// beside it — the property TODO.md asked for, and the one that keeps a replayed run exact.
+	s.stockRNG = shopRNG(gs, seeds.ShopStock)
+	s.packRNG = shopRNG(gs, seeds.PackOffer)
+	s.rerolls = map[shopPane]int{}
+	s.drunk = map[string]bool{}
+	s.offered = dealPacks(s.packRNG)
+	s.shelf = dealShelf(gs, s.stockRNG)
 	s.prose.setLines(shopkeeperLines())
-	s.deck.init()
-	s.hands.init(handsCornerPlace)
+	// **The same places the combat screen uses** *(owner's call, 2026-09-06)*. HANDS is a rung of
+	// the control column and the two square panels stand on the bottom line beside the frame's cog,
+	// so the corner reads the same on every screen that has one — see controlcolumn.go, which is
+	// the one place either is measured from.
+	s.deck.initAsPile()
+	s.hands.initInColumn(func(gs *state.GlobalState) image.Point {
+		return ControlColumnSlotCentre(gs, SlotHands)
+	})
 
 	trace.Logf("shop", "after fight %d: %v for sale, %d vitae in hand, wearing %d",
 		gs.Run.Fight(), shelfKeys(s.shelf), gs.Run.Vitae(), len(gs.Run.Worn()))
@@ -244,14 +278,18 @@ func shelfKeys(items []shelfItem) []string {
 // rare one's, so a rare ring is something a run mostly does not see rather than something it sees
 // and cannot afford — see data.Rarity for why the price ladder is much flatter than that.
 //
+// **The stream is handed in rather than built here** *(2026-09-06)*, so the reroll button can deal
+// a second shelf off the same cursor. A function that rebuilt the rng from the seed would hand back
+// the same three rings however many times it was pressed.
+//
 // **Its own stream** (`seeds.ShopStock`), and per fight — so a defeat and a retry walk into the
 // same shop, exactly as they meet the same opponent. Sharing the worm offer's stream would have
 // made authoring a worm change which rings every run was ever sold; see internal/seeds.
 //
 // **What is already worn is off the shelf**, rather than shown and refused. A ring on your hand
 // offered back to you is a seat spent saying nothing, and `Buy` would turn the click down anyway.
-func dealShelf(gs *state.GlobalState) []shelfItem {
-	if gs.Run == nil {
+func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
+	if gs.Run == nil || rng == nil {
 		return nil
 	}
 
@@ -266,8 +304,6 @@ func dealShelf(gs *state.GlobalState) []shelfItem {
 			pool = append(pool, key)
 		}
 	}
-
-	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.ShopStock, gs.Run.Fight())))
 
 	out := make([]shelfItem, 0, shelfSize)
 	for len(out) < shelfSize && len(pool) > 0 {
@@ -366,6 +402,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	// nothing the rows own, so `click` leaves it armed and the release lands here — the same
 	// press-then-release split the action box relies on.
 	s.updateSellTab(gs)
+	s.updateRerollButtons(gs)
 
 	s.click(gs)
 	s.updateRingRow(gs)
@@ -400,12 +437,30 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	for _, kind := range goodKinds() {
+	for _, kind := range s.offered {
 		seat := s.goodSlot(gs, kind)
 		if s.goodTaken(kind) || !at.In(seat) {
 			continue
 		}
 		title, lines := goodTip(kind)
+		s.tip.Point(seat, title, lines)
+		return
+	}
+
+	for i, potion := range shopPotions() {
+		seat := potionSeat(gs, i)
+		if s.drunk[potion.Record] || !at.In(seat) {
+			continue
+		}
+		title, lines := potionTip(potion)
+		s.tip.Point(seat, title, lines)
+		return
+	}
+
+	// **The brand explains itself even though it cannot be bought**, which is the whole reason it
+	// has a tooltip: a dim card with no explanation is one the player keeps clicking.
+	if seat := brandSeat(gs); at.In(seat) {
+		title, lines := brandTip()
 		s.tip.Point(seat, title, lines)
 		return
 	}
@@ -429,6 +484,12 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	// **The pile is tested before the rows**, because it is the opener for a panel that covers
+	// them: a press that lands on both is the one that opens the deck.
+	if s.clickedPile(gs, at) {
+		return
+	}
+
 	for i := range s.shelf {
 		if !s.shelf[i].bought && at.In(s.shelfSlot(gs, i)) {
 			s.armed = ""
@@ -437,10 +498,21 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 	}
 
-	for _, kind := range goodKinds() {
+	for _, kind := range s.offered {
 		if at.In(s.goodSlot(gs, kind)) {
 			s.armed = ""
 			s.openGood(gs, kind)
+			return
+		}
+	}
+
+	// **The potions are the shelf's rule, not the worn row's**: one click buys and drinks, because
+	// the price is on the card and a purse cannot go into debt. The brand is not in this list at
+	// all — it is a placeholder and a click on it does nothing. See shop_potions.go.
+	for i, potion := range shopPotions() {
+		if at.In(potionSeat(gs, i)) {
+			s.armed = ""
+			s.drinkPotion(gs, potion.Record)
 			return
 		}
 	}
@@ -588,7 +660,7 @@ func (s *ShopScene) start(from map[string]image.Rectangle) {
 // for both**, the same rule every other row in the game follows: a card hit-tested against a
 // rectangle it is not drawn in is exactly the bug this shape prevents.
 func (s *ShopScene) shelfSlot(gs *state.GlobalState, i int) image.Rectangle {
-	return rowSlot(gs, i, s.rowWidth(), gs.PctY(shelfRowPct))
+	return shopSeatRect(gs, shopPaneRings, i)
 }
 
 // wornSlot is where one worn ring is drawn — **a finger in the build band**, not a row of the
@@ -600,15 +672,6 @@ func (s *ShopScene) shelfSlot(gs *state.GlobalState, i int) image.Rectangle {
 // row the player has been reading all run rather than on a second copy of it.
 func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
 	return ringSlotRect(buildRingRect(gs), i, n)
-}
-
-// rowSlot is a centred row of cards at a fixed pitch. **Full-size cards at a fixed gap**, not the
-// hand's compressing pitch: neither row here can exceed five, so nothing has to be squeezed.
-func rowSlot(gs *state.GlobalState, i, n, top int) image.Rectangle {
-	pitch := cardWidth + 40
-	width := (n-1)*pitch + cardWidth
-	left := gs.PctX(50) - width/2 + i*pitch
-	return image.Rect(left, top, left+cardWidth, top+cardHeight)
 }
 
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
@@ -628,7 +691,18 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
 	// because a ring here carries a price and moves when the row re-centres. See buildband.go.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
+	// **The pane, without its fraction** *(2026-09-06)*. Every ring in this row carries a sell
+	// figure under it and the count hangs off the same corner on the same line, so with five worn
+	// the `5/5 rings` and the last `sell +3` are two numbers in one place. The pane is what was
+	// missing here; the fraction is already said by a row you can count.
+	drawRingPaneBack(screen, buildRingRect(gs))
 	s.drawWorn(gs, screen, small)
+
+	// **The parasites the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
+	// The shop draws the band's two halves itself, because a ring here carries a price — and the
+	// consumables pane went missing in the split, so a run walked into a shop and its bucket
+	// vanished. nil: a parasite is carried on this screen, not spent. See buildband.go.
+	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
 
 	s.drawProse(gs, screen, prose)
 
@@ -639,8 +713,15 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	line(shopHintTop, small, s.hint(gs), groundInk)
-	s.drawShelf(gs, screen, small, line)
-	s.drawGoods(gs, screen, small, line)
+
+	// **The four panes, left to right.** Each paints its own surface first and its cards on top;
+	// see shop_panes.go, which owns where they stand.
+	s.drawGoods(gs, screen)
+	s.drawShelf(gs, screen)
+	s.drawPotions(gs, screen)
+	s.drawBrand(gs, screen)
+	s.drawRerollButtons(gs, screen)
+	s.drawShopPile(gs, screen)
 
 	systems.DrawButton(gs, screen, s.leaveButton)
 	systems.DrawTooltip(gs, screen, &s.tip)
@@ -665,18 +746,17 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 // **A ring that cannot be bought is dimmed rather than hidden**, so the row still says what was
 // offered and the reason one of them is unavailable is visible instead of a click that silently
 // does nothing. The price is dimmed with it: the figure and the card say the same thing at once.
-func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image,
-	face *text.GoTextFace, line func(int, *text.GoTextFace, string, color.RGBA)) {
-
-	// **The row is never empty now**, because the two sealed goods are always in it — so the old
-	// "nothing left to sell you" line went with the day the shelf stopped being rings alone. A run
-	// wearing every ring in the catalogue still has a bag and a can to spend on.
-	line(gs.PctY(shelfRowPct)-shopRowLabelGap, face, "for sale", groundInk)
+func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
+	drawShopPaneBack(gs, screen, shopPaneRings)
 
 	for i, item := range s.shelf {
 		at := s.shelfSlot(gs, i)
 		if item.bought {
-			drawEmptySeat(screen, at)
+			// **A spent seat draws nothing; the pane is the hole** *(owner's call, 2026-09-06)*.
+			// It used to be outlined, which is what a row standing on the bare table needs — and
+			// on a pane it is a dark rectangle overlapping the card beside it, because the row
+			// overlaps. See drawEmptySeat, and the consumables pane, which keeps its outline
+			// because a seat there is one something can still go into.
 			continue
 		}
 
@@ -829,30 +909,18 @@ var _ = func(r data.RingData) (string, data.Rarity) { return r.Name, r.Rarity }
 // goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centred**,
 // so the row reads as a pair rather than as two things that happen to be near each other.
 func (s *ShopScene) goodSlot(gs *state.GlobalState, kind goodKind) image.Rectangle {
-	i := len(s.shelf)
-	switch kind {
-	case goodCan:
-		i++
-	case goodBucket:
-		i += 2
+	for i, offered := range s.offered {
+		if offered == kind {
+			return shopSeatRect(gs, shopPanePacks, i)
+		}
 	}
-	return rowSlot(gs, i, s.rowWidth(), gs.PctY(shelfRowPct))
+	return image.Rectangle{}
 }
 
-// rowWidth is how many seats the shelf has: the rings, plus the two sealed goods.
-//
-// **One row rather than two, and the screen decided it** *(2026-08-27)*. A second row of cards
-// under the rings would have read better — a ring is worn and a good is opened, which are not the
-// same kind of thing — but the shop is 960 tall with a build band at the top, two sentences of
-// narration under it and the Leave button at 88%, and a card is 224. There is room for one row of
-// cards between the narration and the button and there is no room for two. So the goods stand at
-// the right-hand end of the shelf, told apart by their faces and by the label under them rather
-// than by where they are.
-// **Six seats since the bucket** *(2026-08-27)*. `rowSlot` is a fixed pitch of `cardWidth + 40`,
-// so six is 1172 pixels of 1280 — it fits, with about 54 clear at each end, and a seventh would
-// not. The next good has to narrow the pitch or find a second row, which is the constraint the
-// paragraph above already describes.
-func (s *ShopScene) rowWidth() int { return len(s.shelf) + len(goodKinds()) }
+// **The row's geometry moved to shop_panes.go on 2026-09-06** *(owner's call)*. It was one flat
+// row of six seats at a fixed pitch, told apart by the labels written under them; it is four panes
+// at one solved pitch now, and there is no label anywhere on the shelf. `rowWidth` went with it —
+// nothing counts the shelf's seats any more, because each pane knows its own.
 
 // goodTaken is whether this visit's copy has already been opened.
 func (s *ShopScene) goodTaken(kind goodKind) bool {
@@ -943,13 +1011,12 @@ func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
 // drawGoods draws the two sealed goods with their price under them, on the same terms as the
 // shelf: an unaffordable one is dimmed rather than hidden, and one already opened leaves an empty
 // seat rather than closing the row up.
-func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image,
-	face *text.GoTextFace, line func(int, *text.GoTextFace, string, color.RGBA)) {
+func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image) {
+	drawShopPaneBack(gs, screen, shopPanePacks)
 
-	for _, kind := range goodKinds() {
+	for _, kind := range s.offered {
 		at := s.goodSlot(gs, kind)
 		if s.goodTaken(kind) {
-			drawEmptySeat(screen, at)
 			continue
 		}
 

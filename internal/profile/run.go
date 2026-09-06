@@ -66,6 +66,16 @@ type RunSnapshot struct {
 	Hurt     int `json:"hurt,omitempty"`
 	BossWins int `json:"bossWins,omitempty"`
 
+	// DMGBonus and LifeBonus are what the run has drunk: the damage and the max life its potions
+	// have added to the duelist's own record.
+	//
+	// **Totals rather than a list of bottles**, for the reason BossWins is a count rather than a
+	// product: a potion is gone the moment it is drunk, so there is nothing to name in a save file
+	// and no receipt a later build could mean something else by. Omitted when zero, like the two
+	// above, so a run that has bought none reads the way it did before either field existed.
+	DMGBonus  int `json:"dmgBonus,omitempty"`
+	LifeBonus int `json:"lifeBonus,omitempty"`
+
 	// Worn is the rings, by record key, **in worn order** — which is a rule and not a presentation
 	// detail, since rings fire left to right and compound. A list rather than a set for that
 	// reason.

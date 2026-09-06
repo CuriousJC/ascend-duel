@@ -73,6 +73,13 @@ type Session struct {
 	// rebuilt every fight and moved by whatever is worn. See life.go.
 	hurt int
 
+	// dmgBonus and lifeBonus are what the run has drunk: the damage and the max life the potions
+	// have added to the duelist's own record. **Two totals rather than a list of bottles** — a
+	// potion is gone the moment it is drunk, so what a run carries is the sum. See potion.go, and
+	// Equip, which is where they reach the fighter.
+	dmgBonus  int
+	lifeBonus int
+
 	// bossWins is how many stairway protectors the run has beaten. It is the run's max-life
 	// multiplier, kept as a count rather than as a product. See life.go.
 	bossWins int

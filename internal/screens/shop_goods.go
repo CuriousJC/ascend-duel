@@ -12,10 +12,17 @@ package screens
 // Choosing it is using it: there is no inventory, so the click that picks a rock is the click that
 // puts it on the ladder.
 //
-// **The can is a worm, on the same terms as the reward screen's** — pick one of four, then pick
-// the card it eats. It is worth five vitae over a free offer of two because four is twice the
+// **The can is a worm, on the same terms as the reward screen's** — and that includes the gesture:
+// the four worms and a hand's worth of cards are up together, and you select the card first and
+// click the worm second *(owner's call, 2026-09-06)*. It was two stages until then, and what was
+// wrong with them is that the worms left the screen at the moment the player had to judge one
+// against a card. See targeting.go for the rule, and the reward screen, which merged its own two
+// stages the same day. It is worth five vitae over a free offer of two because four is twice the
 // choice and because it arrives at the shop rather than at the end of a fight, which is a
 // different moment to want one at.
+//
+// **The can's title is an instruction and its hint is the gesture**, because a dialog whose two
+// rows are both live has to say which one is clicked first.
 //
 // **This dialog has no X, and that is deliberate.** Every other modal in the game is a look at
 // something and closes without consequence; this one stands between a purchase and what it bought,
@@ -71,9 +78,16 @@ const (
 
 // Where the goods row sits, and how the dialog lays its cards out.
 const (
-	// The dialog's four cards, and the deck row the can's second stage offers.
+	// The dialog's four cards, centred in the panel — the bag's and the bucket's, which have one
+	// row and nothing under it.
 	goodsChoiceRowPct = 42
-	goodsOfferRowPct  = 70
+
+	// The can has two rows and they both have to fit inside the panel, so its worms sit high and
+	// the cards they may eat sit under them. **Not 42 and 70** *(2026-09-06)*: the offer row ended
+	// exactly on the panel's bottom edge, which was survivable while it was the only row on screen
+	// and is not now that a selected card is lifted into the row above it.
+	canWormRowPct    = 22
+	goodsOfferRowPct = 55
 
 	// The line under the title, saying what to do with what is up.
 	goodsHintTop = 120
@@ -86,12 +100,13 @@ const (
 	// goodsClosed: nothing is open, and the shop is the shop.
 	goodsClosed goodsStage = iota
 
-	// goodsPick: the four are up, and one click ends it — or, for the can, moves it on.
+	// goodsPick: what was drawn is up, and a click takes one. **There is no second stage**
+	// *(owner's call, 2026-09-06)*: the can used to move on to a row of cards once a worm was
+	// chosen, so the worms disappeared at the moment the player had to judge one against a card.
+	// Both rows are up together now and the gesture is the row's own — select the card, then click
+	// the worm. See targeting.go, which is the rule the parasite pane and the reward screen's own
+	// worm row already follow.
 	goodsPick
-
-	// goodsAim: a worm is chosen and the cards it may eat are dealt. **Only the can reaches
-	// here**; a stone has nothing to aim at, since the rung it raises is written on its face.
-	goodsAim
 )
 
 // goods is the dialog: which good was opened, what was drawn from it, and how far through the
@@ -109,13 +124,15 @@ type goods struct {
 	worms     []session.Worm
 	parasites []session.Parasite
 
-	// chosen is which of the four was taken, for the can's second stage. -1 before one is.
-	chosen int
-
-	// offer is the deck positions the chosen worm may be applied to, by index into the run's deck.
-	// **Re-dealt rather than held across a purchase**, because a worm removes a card and every
-	// index after it moves — the same rule the reward screen's offer is under.
+	// offer is the cards a worm may be aimed at, by index into the run's deck. **Only the can
+	// fills it**, and it is dealt when the can is opened rather than when a worm is picked — the
+	// two rows are up at once, so the cards cannot be a function of a choice not yet made.
 	offer []int
+
+	// selected is which offered card is picked out, or -1. **One card**, because a worm eats
+	// exactly one — the reward screen's own field, and the same reason it is an index rather than
+	// a set. See consumableTarget.
+	selected int
 
 	// tip explains whichever card the cursor is resting on.
 	tip models.Tooltip
@@ -128,7 +145,7 @@ type goods struct {
 // visit is not possible — see the shelf's `bought` flag — so a stream per fight is a stream per
 // bag.
 func (g *goods) open(gs *state.GlobalState, kind goodKind) {
-	g.kind, g.stage, g.chosen = kind, goodsPick, -1
+	g.kind, g.stage, g.selected = kind, goodsPick, -1
 	g.stones, g.worms, g.parasites, g.offer = nil, nil, nil, nil
 	g.tip = models.Tooltip{DwellTicks: tipDwell}
 
@@ -137,6 +154,7 @@ func (g *goods) open(gs *state.GlobalState, kind goodKind) {
 		g.stones = dealStones(gs)
 	case goodCan:
 		g.worms = dealCanWorms(gs)
+		g.offer = dealCanOffer(gs)
 	case goodBucket:
 		g.parasites = dealBucketParasites(gs)
 	}
@@ -147,16 +165,15 @@ func (g *goods) openNow() bool { return g.stage != goodsClosed }
 
 // close puts it away.
 func (g *goods) reset() {
-	g.kind, g.stage, g.chosen = goodNone, goodsClosed, -1
+	g.kind, g.stage, g.selected = goodNone, goodsClosed, -1
 	g.stones, g.worms, g.parasites, g.offer = nil, nil, nil, nil
 	g.tip.Forget()
 }
 
-// count is how many cards the current stage is showing.
+// count is how many cards are in the row that is taken from: the stones, the parasites, or the
+// worms. **Not the offer**, which is a second row with its own slot function.
 func (g *goods) count() int {
 	switch {
-	case g.stage == goodsAim:
-		return len(g.offer)
 	case g.kind == goodBag:
 		return len(g.stones)
 	case g.kind == goodBucket:
@@ -235,22 +252,22 @@ func parasiteTipLines(p session.Parasite) []string {
 	return append(lines, "spent between the turns of a fight")
 }
 
-// dealCanOffer is which cards the chosen worm may be applied to: a shuffle of every position in
-// the run's deck, cut to a hand's worth.
+// dealCanOffer is the hand the can deals beside its worms: a shuffle of every position in the run's
+// deck, cut to a hand's worth.
 //
-// **Only the cards the worm would actually change.** `CanApply` is asked before the offer is cut,
-// which is the reward screen's rule — a Promote worm pointed at a row of Smashes is a reward that
-// does nothing, and dimming four cards the player cannot click is worse than not offering them.
-func dealCanOffer(gs *state.GlobalState, w session.Worm) []int {
+// **It is not filtered by a worm any more** *(owner's call, 2026-09-06)*. It could not be: both rows
+// are up at once now, so the cards are dealt before the player has chosen anything, and a filter
+// would have to know which worm. What replaces it is the *worm* going dim — a worm that cannot
+// change the selected card is unclickable, which is the same information at the other end of the
+// gesture, and the reward screen's own rule. See wormSpendable.
+func dealCanOffer(gs *state.GlobalState) []int {
 	if gs.Run == nil || gs.Run.Size() == 0 {
 		return nil
 	}
 
 	idx := make([]int, 0, gs.Run.Size())
 	for i := 0; i < gs.Run.Size(); i++ {
-		if gs.Run.CanApply(w, i) {
-			idx = append(idx, i)
-		}
+		idx = append(idx, i)
 	}
 
 	rng := rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.CanStock, gs.Run.Fight())))
@@ -272,15 +289,66 @@ func (g *goods) slot(gs *state.GlobalState, i int) image.Rectangle {
 	}
 
 	top := gs.PctY(goodsChoiceRowPct)
-	pitch := cardWidth + 40
-	if g.stage == goodsAim {
-		top = gs.PctY(goodsOfferRowPct)
-		pitch = handPitch(gs, n)
+	if g.kind == goodCan {
+		top = gs.PctY(canWormRowPct)
 	}
+	pitch := cardWidth + 40
 
 	width := (n-1)*pitch + cardWidth
 	left := gs.PctX(50) - width/2
 	return image.Rect(left+i*pitch, top, left+i*pitch+cardWidth, top+cardHeight)
+}
+
+// offerSlot is where one of the cards a worm may eat is drawn and clicked. **The hand's own
+// compressing pitch**, because this row is a hand's worth of cards and the fixed pitch above it is
+// for four.
+//
+// **A selected card is lifted**, exactly as it is in the hand and on the reward screen: the row a
+// consumable is aimed at says which card is picked by standing it up, not by a highlight nobody
+// has to learn.
+func (g *goods) offerSlot(gs *state.GlobalState, i int) image.Rectangle {
+	n := len(g.offer)
+	if n == 0 || i < 0 || i >= n {
+		return image.Rectangle{}
+	}
+
+	pitch := handPitch(gs, n)
+	width := (n-1)*pitch + cardWidth
+	left := gs.PctX(50) - width/2 + i*pitch
+	top := gs.PctY(goodsOfferRowPct)
+	if i == g.selected {
+		top -= offerSelectedNudge
+	}
+	return image.Rect(left, top, left+cardWidth, top+cardHeight)
+}
+
+// selectedDeckIndex is the offer's current pick as an index into the run deck, and whether there is
+// one. The reward screen's function of the same name, and the same job.
+func (g *goods) selectedDeckIndex() (int, bool) {
+	if g.selected < 0 || g.selected >= len(g.offer) {
+		return 0, false
+	}
+	return g.offer[g.selected], true
+}
+
+// wormSpendable is whether clicking this worm now would take it: a card is selected, and this worm
+// can actually change that card.
+//
+// **The same question the click asks and the same one the card's lit state reads**, which is what
+// stops a worm looking available and doing nothing. It is the reward screen's predicate over the
+// same target rule — see targeting.go.
+func (g *goods) wormSpendable(gs *state.GlobalState, w session.Worm) bool {
+	if gs.Run == nil {
+		return false
+	}
+	target := consumableTarget{
+		needs: 1,
+		legal: func(ids []int) bool { return gs.Run.CanApply(w, ids[0]) },
+	}
+	if idx, ok := g.selectedDeckIndex(); ok {
+		return target.satisfiedBy([]int{idx})
+	}
+	return target.satisfiedBy(nil)
 }
 
 // update runs the dialog and reports whether it swallowed the frame. **The shop is dead while it
@@ -306,18 +374,31 @@ func (g *goods) hover(gs *state.GlobalState) {
 	}
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	for i := range g.offer {
+		seat := g.offerSlot(gs, i)
+		if !at.In(seat) {
+			continue
+		}
+		card, ok := gs.Run.Card(g.offer[i])
+		if !ok {
+			return
+		}
+		title, lines := cardTip(card, heldByRun(gs, card))
+		g.tip.Point(seat, title, lines)
+		return
+	}
+
 	for i := 0; i < g.count(); i++ {
 		if !at.In(g.slot(gs, i)) {
 			continue
 		}
 		switch {
-		case g.stage == goodsAim:
-			card, ok := gs.Run.Card(g.offer[i])
-			if !ok {
-				return
-			}
-			title, lines := cardTip(card, heldByRun(gs, card))
-			g.tip.Point(g.slot(gs, i), title, lines)
+		case g.kind == goodCan:
+			// **The worms are deliberately not tooltipped**, which is the reward screen's own
+			// choice on the same row: a worm's whole rule is printed on its face, where a deck
+			// card's is not. What a dim worm means — "not for the card you have selected" — is
+			// left to the row rather than to a tooltip.
+			return
 		case g.kind == goodBag:
 			st := g.stones[i]
 			g.tip.Point(g.slot(gs, i), st.Name, stoneTipLines(gs, st))
@@ -335,6 +416,16 @@ func (g *goods) hover(gs *state.GlobalState) {
 func (g *goods) click(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
 
+	// **The offer row first**, because it is the row drawn in front: a selected card is lifted and
+	// a lifted card overlaps nothing above it, but reading the rows in drawing order is the rule
+	// every screen here follows.
+	for i := range g.offer {
+		if at.In(g.offerSlot(gs, i)) {
+			g.selectCard(i)
+			return
+		}
+	}
+
 	for i := 0; i < g.count(); i++ {
 		if !at.In(g.slot(gs, i)) {
 			continue
@@ -347,16 +438,24 @@ func (g *goods) click(gs *state.GlobalState) {
 // take commits whichever card was clicked.
 func (g *goods) take(gs *state.GlobalState, i int) {
 	switch {
-	case g.stage == goodsAim:
-		worm := g.worms[g.chosen]
-		if gs.Run.Apply(worm, g.offer[i]) {
-			trace.Logf("shop", "can of worms: %s applied to deck position %d", worm.Record, g.offer[i])
+	case g.kind == goodCan:
+		// **A worm is refused rather than falling back**, on the predicate its lit state already
+		// read: a dim worm cannot be taken and a lit one always works. With no card selected every
+		// worm is dim, so the dialog waits rather than choosing a card for the player.
+		worm := g.worms[i]
+		idx, ok := g.selectedDeckIndex()
+		if !ok || !g.wormSpendable(gs, worm) {
+			return
+		}
+
+		if gs.Run.Apply(worm, idx) {
+			trace.Logf("shop", "can of worms: %s applied to deck position %d", worm.Record, idx)
 
 			// **The same moment the post-battle screen raises**, because it is the same event: a
 			// card in the run's deck is now a different card. Read back out of the deck rather than
 			// predicted, and skipped for a removal, which leaves no card to name.
 			if worm.Target != session.TargetRemove {
-				if card, ok := gs.Run.Card(g.offer[i]); ok {
+				if card, ok := gs.Run.Card(idx); ok {
 					earnMoment(gs, achieve.CardAltered(card.Label()))
 				}
 			}
@@ -381,22 +480,19 @@ func (g *goods) take(gs *state.GlobalState, i int) {
 				p.Record, gs.Run.HoldCount())
 		}
 		g.reset()
-
-	default:
-		g.chosen = i
-		g.offer = dealCanOffer(gs, g.worms[i])
-		if len(g.offer) == 0 {
-			// **A worm with nothing to eat ends the dialog rather than stranding it.** The offer
-			// is filtered by `CanApply`, so an empty one means every card in the deck is already
-			// what this worm would make it — which is a purchase that bought nothing, and a dialog
-			// with no clickable card would be a lock-up on top of that.
-			trace.Logf("shop", "can of worms: %s has nothing it can change", g.worms[i].Record)
-			g.reset()
-			return
-		}
-		g.stage = goodsAim
-		g.tip.Forget()
 	}
+}
+
+// selectCard picks a card out of the offer row, or puts it back. **Clicking the selected card
+// deselects it**, the hand row's own gesture, so the thing a player already knows how to undo works
+// here too.
+func (g *goods) selectCard(i int) {
+	if g.selected == i {
+		g.selected = -1
+		return
+	}
+	g.selected = i
+	g.tip.Forget()
 }
 
 // draw puts the dialog up. It takes the shared modal frame, so it reads as the same kind of thing
@@ -420,19 +516,28 @@ func (g *goods) draw(gs *state.GlobalState, screen *ebiten.Image) {
 	for i := 0; i < g.count(); i++ {
 		at := g.slot(gs, i).Min
 		switch {
-		case g.stage == goodsAim:
-			card, ok := gs.Run.Card(g.offer[i])
-			if !ok {
-				continue
-			}
-			drawCard(gs, screen, at, cards.Hand, card, heldByRun(gs, card), true, false)
 		case g.kind == goodBag:
 			drawStoneCard(gs, screen, at, g.stones[i], true)
 		case g.kind == goodBucket:
 			drawSpecCard(gs, screen, at, parasiteSpec(gs, g.parasites[i], true, false))
 		default:
-			drawWormCard(gs, screen, at, g.worms[i], true)
+			// **A worm is lit only for the card that is selected.** With nothing selected the
+			// whole row is dim, which is what says the gesture starts underneath — the reward
+			// screen's rule, and the parasite pane's.
+			drawWormCard(gs, screen, at, g.worms[i], g.wormSpendable(gs, g.worms[i]))
 		}
+	}
+
+	// **The cards the worms may eat, under them and up at the same time** *(owner's call,
+	// 2026-09-06)*. They are drawn after the worms so a lifted card is in front of the row above
+	// it, which is the only place the two rows can meet.
+	for i, deckIndex := range g.offer {
+		card, ok := gs.Run.Card(deckIndex)
+		if !ok {
+			continue
+		}
+		drawCard(gs, screen, g.offerSlot(gs, i).Min, cards.Hand, card, heldByRun(gs, card),
+			true, i == g.selected)
 	}
 
 	systems.DrawTooltip(gs, screen, &g.tip)
@@ -458,9 +563,7 @@ func (g *goods) title() string {
 func (g *goods) hint() string {
 	switch {
 	case g.kind == goodCan:
-		return ""
-	case g.stage == goodsAim:
-		return "and the card it changes"
+		return "pick the card, then the worm that eats it"
 	case g.kind == goodBag:
 		return fmt.Sprintf("take one of the %d, the rest are gone", len(g.stones))
 	default:

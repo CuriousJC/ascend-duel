@@ -98,6 +98,60 @@ func ControlColumnSlotCentre(gs *state.GlobalState, i int) image.Point {
 	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }
 
+// The bottom line: the strip of square buttons that ends at the screen's bottom-right corner.
+//
+// **It is the column's other half** *(owner's call, 2026-09-06)*, and it lives here for the reason
+// the column does: two owners measuring the same corner independently is how a button ends up drawn
+// on top of another. The frame's settings cog is slot 0 and everything else walks leftward from it,
+// so a screen adding a square control never has to know where the cog is — only that it is first.
+//
+// **The shop was the failure this fixes.** Its deck, stones and hands buttons were each placed by a
+// rule of their own, measured from the screen's right edge rather than from the frame's; the hands
+// button and the cog ended up in the same pixels, and the ledger stood in a column above a row that
+// knew nothing about it.
+const (
+	// ChromeButtonSize is the square every corner control takes, and ChromeButtonInset is the air
+	// under it. **The frame's figures**, moved here so a scene can read them without importing the
+	// package that draws the frame — the arrow points the other way.
+	ChromeButtonSize  = 44
+	ChromeButtonInset = 10
+
+	// ChromeButtonGap is the air between two of them.
+	ChromeButtonGap = 10
+)
+
+// The bottom line's occupants, counted leftward from the corner. **Written down here rather than
+// each caller knowing its own index**, which is the rule the column above is already under: the cog
+// is placed by internal/game and the other two by the shop, and two owners counting one strip
+// independently is how a button ends up drawn over another.
+const (
+	// ChromeSlotSettings is the frame's cog, in the corner itself.
+	ChromeSlotSettings = iota
+
+	// ChromeSlotStones is the shop's pouch button, next to it. **The deck used to sit between the
+	// two** and is drawn as a pile now — see shop_pile.go — so there is one square here rather
+	// than two.
+	ChromeSlotStones
+)
+
+// ChromeCornerSlot is the n'th square along the bottom line, counting **leftward from the corner**.
+// Slot 0 is the settings cog's seat; a scene's own square controls take 1, 2 and so on.
+//
+// **Its right edge is the control column's**, not the screen's, so the column above and the strip
+// below read as one corner rather than two things near each other.
+func ChromeCornerSlot(gs *state.GlobalState, n int) image.Rectangle {
+	right := ControlColumnLeft(gs) + ControlColumnWidth() -
+		n*(ChromeButtonSize+ChromeButtonGap)
+	top := gs.ScreenHeight - ChromeButtonInset - ChromeButtonSize
+	return image.Rect(right-ChromeButtonSize, top, right, top+ChromeButtonSize)
+}
+
+// ChromeCornerCentre is that slot's centre, which is what models.Button stores.
+func ChromeCornerCentre(gs *state.GlobalState, n int) image.Point {
+	r := ChromeCornerSlot(gs, n)
+	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
+}
+
 // sortTabRect is the i'th tab of the sort block: full column width, no gap above or below it, and
 // the block's top edge on the hand's top edge.
 //

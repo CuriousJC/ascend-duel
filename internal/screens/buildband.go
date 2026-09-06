@@ -22,6 +22,7 @@ package screens
 // here, because there is no enemy card to end it at.
 
 import (
+	"fmt"
 	"image"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -116,9 +117,20 @@ func drawBuildCard(gs *state.GlobalState, screen *ebiten.Image, vitae int) {
 		if name == "" {
 			name = duelistName
 		}
+		// **The life is the ceiling less the wound, not the figure the last fight ended on**
+		// *(2026-09-06)*. It was `LifeLeft`, and the two agree the moment a fight is won — WonFight
+		// sets the wound from exactly that subtraction — so nothing looked wrong until something
+		// changed one of them *between* fights. Two things now do: a Salve takes the wound down and
+		// a stairway win clears it outright, and both left this card drawing the number the player
+		// walked out of the last room with.
+		//
+		// **The ceiling is the fighter's**, so it already carries the potions, the boss bonus and
+		// every ring — see Session.Equip.
+		life := gs.Run.LifeAtFightStart(fighter.MaxLife)
+
 		// No shields: this is the build band between fights, where nothing has been raised and
 		// nothing is standing.
-		spec := duelistSpec(gs, fighter, name, vitae, gs.Run.LifeLeft(), fighter.ActionPoints(), 0)
+		spec := duelistSpec(gs, fighter, name, vitae, life, fighter.ActionPoints(), 0)
 		if img := cardImage(gs, spec, cards.DuelistStyle); img != nil {
 			r := buildCardRect(gs)
 			op := &ebiten.DrawImageOptions{}
@@ -139,6 +151,7 @@ func drawBuildRings(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag)
 	}
 
 	row := buildRingRect(gs)
+	drawBuildRingPane(gs, screen, row)
 	worn := wornRings(gs)
 	counters := runCounters(gs)
 	for i, record := range worn {
@@ -153,6 +166,17 @@ func drawBuildRings(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag)
 	if drag != nil {
 		drawDraggedRing(gs, screen, drag, counters)
 	}
+}
+
+// drawBuildRingPane is the surface the worn rings stand on and the fraction on its corner.
+//
+// **The band drew neither until 2026-09-06** *(owner's call)*, so the rings the run is wearing were
+// a pane in a fight and five loose cards on the shop and the reward screen — the same row drawn as
+// two different things on three screens. It is split out because the shop draws its own ring cards
+// and still wants the pane under them.
+func drawBuildRingPane(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
+	drawRingPaneBack(screen, row)
+	drawPaneCount(gs, screen, row, fmt.Sprintf("%d/%d rings", len(wornRings(gs)), maxRings))
 }
 
 // buildRingRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.

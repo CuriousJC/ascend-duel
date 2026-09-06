@@ -245,9 +245,20 @@ type modalToggle struct {
 	// thing on screen is a trap.
 	blocked bool
 
+	// hidden means the scene draws the opener itself and this toggle has no button on screen.
+	//
+	// **The shop's deck pile is why** *(owner's call, 2026-09-06)*. The panel is a widget and the
+	// thing that opens it need not be: the combat screen opens it by clicking the draw pile, and
+	// the shop now does the same rather than standing a lettered square beside it. The panel, the
+	// scrim and the X are unchanged — what is hidden is one button.
+	hidden bool
+
 	// closer is the X on this toggle's own panel — the only thing that closes it.
 	closer modalCloser
 }
+
+// toggle is the scene's way in when the opener is hidden: whatever it drew was clicked.
+func (t *modalToggle) toggle() { t.open = !t.open }
 
 // block takes the button out of the frame while another dialog is up. Called every tick from the
 // scene, never latched, so a panel that closes cannot leave its neighbour dead.
@@ -259,6 +270,7 @@ func (t *modalToggle) block(b bool) { t.blocked = b }
 func (t *modalToggle) init(label string, w, h int, textSize float64,
 	place func(gs *state.GlobalState) image.Point) {
 
+	t.hidden = false
 	if t.button == nil {
 		t.button = models.NewButton(w, h, label, func() { t.open = !t.open })
 		t.button.BaseColor = sortButtonColor
@@ -269,25 +281,11 @@ func (t *modalToggle) init(label string, w, h int, textSize float64,
 	t.tip = models.Tooltip{DwellTicks: tipDwell}
 }
 
-// cornerSlot is the bottom-right corner, n places in from it. Slot 0 is the corner itself.
-func cornerSlot(n int) func(*state.GlobalState) image.Point {
-	return func(gs *state.GlobalState) image.Point {
-		step := pileSlotSize + modalToggleGap
-		return image.Pt(
-			gs.PctX(100)-modalToggleInset-pileSlotSize/2-n*step,
-			gs.PctY(100)-modalToggleInset-pileSlotSize/2,
-		)
-	}
-}
-
-// handsCornerPlace is where the hands button stands on a screen with no hand: to the left of the
-// deck button, sharing its bottom line. **Measured from the corner rather than from a slot index**,
-// because the two buttons are different widths and a slot walk would assume they are not.
-func handsCornerPlace(gs *state.GlobalState) image.Point {
-	right := gs.PctX(100) - modalToggleInset - pileSlotSize - modalToggleGap
-	return image.Pt(right-handsButtonWidth/2,
-		gs.PctY(100)-modalToggleInset-pileSlotSize/2)
-}
+// **The corner rules that used to live here are gone** *(owner's call, 2026-09-06)*. `cornerSlot`
+// and `handsCornerPlace` each measured the bottom-right corner from the screen's own edge, where
+// the frame measures it from the control column — so the shop's HANDS button and the frame's cog
+// ended up in the same pixels. There is one place now, in controlcolumn.go, and every corner
+// control reads it.
 
 // update runs the button and, while the panel is up, whatever that panel puts under the cursor.
 //
@@ -308,7 +306,9 @@ func (t *modalToggle) update(gs *state.GlobalState,
 
 	place := t.place
 	if place == nil {
-		place = cornerSlot(0)
+		place = func(gs *state.GlobalState) image.Point {
+			return ChromeCornerCentre(gs, ChromeSlotSettings)
+		}
 	}
 	c := place(gs)
 	t.button.ScreenX, t.button.ScreenY = c.X, c.Y
@@ -321,7 +321,7 @@ func (t *modalToggle) update(gs *state.GlobalState,
 		if t.closer.update(gs) {
 			t.open = false
 		}
-	} else {
+	} else if !t.hidden {
 		systems.UpdateButton(gs, t.button)
 	}
 
@@ -342,7 +342,7 @@ func (t *modalToggle) update(gs *state.GlobalState,
 // drawn last, from when pressing it again was how a dialog closed; now that the X is the exit, a
 // button standing over the panel would be a control that looks live and is not.
 func (t *modalToggle) draw(gs *state.GlobalState, screen *ebiten.Image, body func()) {
-	if !t.blocked {
+	if !t.blocked && !t.hidden {
 		systems.DrawButton(gs, screen, t.button)
 	}
 	if !t.open {

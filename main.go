@@ -254,13 +254,19 @@ func main() {
 func startScenarioAt(g *game.Game) {
 	gs := g.GlobalState
 
+	// **The record's own ceiling is what the fixture's Life is measured against.** A run wearing a
+	// ring that raises max life is carrying the same *wound* under a higher ceiling, which is how
+	// the game treats every wound — see Session.LifeAtFightStart.
+	max := 0
+	if d, ok := gs.Duelists["Fighter1"]; ok {
+		max = d.HP
+	}
+
 	life := scenario.Life()
 	if life <= 0 {
-		if d, ok := gs.Duelists["Fighter1"]; ok {
-			life = d.HP
-		}
+		life = max
 	}
-	gs.Run.JumpTo(scenario.Fight(), scenario.Vitae(), life)
+	gs.Run.JumpTo(scenario.Fight(), scenario.Vitae(), life, max)
 
 	switch scenario.Screen() {
 	case "reward":

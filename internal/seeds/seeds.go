@@ -92,6 +92,20 @@ const (
 	// number the snapshot already carries, so a resumed run rolls what it would have rolled. See
 	// `Session.ApplyParasite`, which is the one place it is drawn.
 	StoneShower
+
+	// PackOffer is which two of the three sealed packs a shop visit puts up. Per fight.
+	//
+	// **Its own stream, on the argument every other shop stream is under.** Sharing ShopStock
+	// would make which packs appear a function of the ring shelf, so authoring a ring would
+	// silently change which good every run was ever offered — and the shelf is redrawn by a
+	// reroll, which would then reroll the packs beside it. Sharing any of the three stock streams
+	// would be worse still: those decide what is *inside* a pack, and the choice of which two
+	// stand on the shelf would move whenever a stone or a worm was written.
+	//
+	// **It exists at all because a visit stopped offering all three** *(owner's call,
+	// 2026-09-06)*. While the bag, the can and the bucket were all always there, which packs a
+	// shop had was not a decision and needed no roll.
+	PackOffer
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -127,6 +141,7 @@ var streams = [...]stream{
 	CanStock:    {name: "can-stock", salt: 0x5EED_CA07, perFight: true},
 	BucketStock: {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
 	StoneShower: {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
+	PackOffer:   {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

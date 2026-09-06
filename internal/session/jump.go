@@ -16,7 +16,13 @@ package session
 //
 // **It goes through the same `spoilsFor` the real win does**, rather than making up a payout. A
 // fixture that pays differently from the game is a fixture that shows the wrong screen.
-func (s *Session) JumpTo(fight, vitae, lifeLeft int) {
+//
+// **It sets the wound as well as the figure the fight ended on** *(2026-09-06)*, which is what
+// `WonFight` does and for the reason it does it: the wound is what a screen between fights draws
+// and what a Salve heals, so a fixture that set only `lifeLeft` dropped the player into a shop at
+// full health however hurt it said they were. `maxLife` is the ceiling that figure is measured
+// against — the duelist's own record — and a zero or a lifeLeft above it leaves the run unhurt.
+func (s *Session) JumpTo(fight, vitae, lifeLeft, maxLife int) {
 	if fight < 0 {
 		fight = 0
 	}
@@ -25,6 +31,12 @@ func (s *Session) JumpTo(fight, vitae, lifeLeft int) {
 	}
 	s.fight = fight
 	s.lifeLeft = lifeLeft
+
+	if hurt := maxLife - lifeLeft; hurt > 0 {
+		s.hurt = hurt
+	} else {
+		s.hurt = 0
+	}
 
 	// The spoils are the ones the room *below* this one paid, because the run is standing after a
 	// win — the same off-by-one WonFight has, where the counter moves after the payout is decided.

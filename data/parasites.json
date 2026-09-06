@@ -4,14 +4,14 @@
     "Name": "Graft",
     "Target": "clone",
     "Count": 2,
-    "Text": "first card\nbecomes\nthe second"
+    "Text": "LEFT CARD BECOMES RIGHT CARD"
   },
   {
     "ParasiteRecord": "mimic",
     "Name": "Mimic",
     "Target": "duplicate",
     "Count": 1,
-    "Text": "copy one\ncard"
+    "Text": "COPY CARD"
   },
   {
     "ParasiteRecord": "arcbore",
@@ -27,7 +27,7 @@
     "Target": "element",
     "Value": "fire",
     "Count": 2,
-    "Text": "two cards\nturn FIRE"
+    "Text": "2 CARDS BECOME FIRE"
   },
   {
     "ParasiteRecord": "hexbore",
@@ -35,7 +35,7 @@
     "Target": "element",
     "Value": "arcane",
     "Count": 2,
-    "Text": "two cards\nturn\nARCANE"
+    "Text": "2 CARDS BECOME ARCANE"
   },
   {
     "ParasiteRecord": "loambore",
@@ -43,7 +43,7 @@
     "Target": "element",
     "Value": "earth",
     "Count": 2,
-    "Text": "two cards\nturn EARTH"
+    "Text": "2 CARDS BECOME EARTH"
   },
   {
     "ParasiteRecord": "rimebore",
@@ -51,7 +51,7 @@
     "Target": "element",
     "Value": "ice",
     "Count": 2,
-    "Text": "two cards\nturn ICE"
+    "Text": "2 CARDS BECOME ICE"
   },
   {
     "ParasiteRecord": "edgegrub",
@@ -59,7 +59,7 @@
     "Target": "form",
     "Value": "slash",
     "Count": 2,
-    "Text": "two cards\ncount as\nSLASH"
+    "Text": "2 CARDS BECOME SLASH"
   },
   {
     "ParasiteRecord": "maulgrub",
@@ -67,7 +67,7 @@
     "Target": "form",
     "Value": "crush",
     "Count": 2,
-    "Text": "two cards\ncount as\nCRUSH"
+    "Text": "2 CARDS BECOME CRUSH"
   },
   {
     "ParasiteRecord": "thorngrub",
@@ -75,14 +75,22 @@
     "Target": "form",
     "Value": "stab",
     "Count": 2,
-    "Text": "two cards\ncount as\nSTAB"
+    "Text": "2 CARDS BECOME STAB"
+  },
+  {
+    "ParasiteRecord": "wardgrub",
+    "Name": "Wardgrub",
+    "Target": "form",
+    "Value": "defend",
+    "Count": 2,
+    "Text": "2 CARDS BECOME DEFEND"
   },
   {
     "ParasiteRecord": "gnaw",
     "Name": "Gnaw",
     "Target": "remove",
     "Count": 2,
-    "Text": "eat two\ncards"
+    "Text": "2 CARDS DESTROYED"
   },
   {
     "ParasiteRecord": "brood",
@@ -91,7 +99,7 @@
     "Rider": "vitae-in-hand",
     "Value": "3",
     "Count": 1,
-    "Text": "held back:\n3 vitae"
+    "Text": "3 VITAE CARD IN HAND"
   },
   {
     "ParasiteRecord": "carapace",
@@ -100,7 +108,7 @@
     "Rider": "shield-on-play",
     "Value": "1",
     "Count": 1,
-    "Text": "played:\nraise 1\nshield"
+    "Text": "1 SHIELD ON PLAY"
   },
   {
     "ParasiteRecord": "goad",
@@ -109,7 +117,7 @@
     "Rider": "damage-on-play",
     "Value": "10",
     "Count": 1,
-    "Text": "played:\n+10 DMG\nthis turn"
+    "Text": "+10 DMG ON PLAY"
   },
   {
     "ParasiteRecord": "hunger",
@@ -118,7 +126,7 @@
     "Rider": "scale-in-combo",
     "Value": "200",
     "Count": 1,
-    "Text": "in the hand:\n2x DMG"
+    "Text": "2X DMG ON PLAY"
   },
   {
     "ParasiteRecord": "leech",
@@ -127,7 +135,7 @@
     "Rider": "heal-on-play",
     "Value": "10",
     "Count": 1,
-    "Text": "one card\nheals 10"
+    "Text": "+10 HEAL ON PLAY"
   },
   {
     "ParasiteRecord": "patience",
@@ -136,7 +144,7 @@
     "Rider": "scale-in-hand",
     "Value": "200",
     "Count": 1,
-    "Text": "held back:\n2x DMG"
+    "Text": "2X DMG CARD IN HAND"
   },
   {
     "ParasiteRecord": "spite",
@@ -145,7 +153,7 @@
     "Rider": "damage-in-hand",
     "Value": "10",
     "Count": 1,
-    "Text": "held back:\n+10 DMG"
+    "Text": "+10 DMG CARD IN HAND"
   },
   {
     "ParasiteRecord": "rockshower",
@@ -161,7 +169,95 @@
     "Target": "swap",
     "Value": "Strike",
     "Count": 1,
-    "Text": "make one card\na STRIKE"
+    "Text": "CARD BECOMES STRIKE"
+  },
+  {
+    "ParasiteRecord": "totem",
+    "Name": "Totem",
+    "Target": "swap",
+    "Value": "Thrust",
+    "Count": 1,
+    "Text": "CARD BECOMES THRUST"
+  },
+  {
+    "ParasiteRecord": "husk",
+    "Name": "Husk",
+    "Target": "swap",
+    "Value": "Slash",
+    "Count": 1,
+    "Text": "CARD BECOMES SLASH"
+  },
+  {
+    "ParasiteRecord": "cocoon",
+    "Name": "Cocoon",
+    "Target": "swap",
+    "Value": "Brace",
+    "Count": 1,
+    "Text": "CARD BECOMES BRACE"
+  },
+  {
+    "ParasiteRecord": "barb",
+    "Name": "Barb",
+    "Target": "swap",
+    "Value": "Jab",
+    "Count": 1,
+    "Text": "CARD BECOMES JAB"
+  },
+  {
+    "ParasiteRecord": "scab",
+    "Name": "Scab",
+    "Target": "swap",
+    "Value": "Cut",
+    "Count": 1,
+    "Text": "CARD BECOMES CUT"
+  },
+  {
+    "ParasiteRecord": "knot",
+    "Name": "Knot",
+    "Target": "swap",
+    "Value": "Bash",
+    "Count": 1,
+    "Text": "CARD BECOMES BASH"
+  },
+  {
+    "ParasiteRecord": "shell",
+    "Name": "Shell",
+    "Target": "swap",
+    "Value": "Ward",
+    "Count": 1,
+    "Text": "CARD BECOMES WARD"
+  },
+  {
+    "ParasiteRecord": "spur",
+    "Name": "Spur",
+    "Target": "swap",
+    "Value": "Lunge",
+    "Count": 1,
+    "Text": "CARD BECOMES LUNGE"
+  },
+  {
+    "ParasiteRecord": "fang",
+    "Name": "Fang",
+    "Target": "swap",
+    "Value": "Cleave",
+    "Count": 1,
+    "Text": "CARD BECOMES CLEAVE"
+  },
+  {
+    "ParasiteRecord": "growth",
+    "Name": "Growth",
+    "Target": "swap",
+    "Value": "Smash",
+    "Count": 1,
+    "Text": "CARD BECOMES SMASH"
+  },
+  {
+    "ParasiteRecord": "bulwark",
+    "Name": "Bulwark",
+    "Target": "swap",
+    "Value": "Guard",
+    "Count": 1,
+    "Text": "CARD BECOMES GUARD"
   },
   {
     "ParasiteRecord": "hoard",
@@ -169,6 +265,6 @@
     "Target": "vitae",
     "Value": "20",
     "Count": 0,
-    "Text": "gain 20\nvitae"
+    "Text": "+20 VITAE"
   }
 ]

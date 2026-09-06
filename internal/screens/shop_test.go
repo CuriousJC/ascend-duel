@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/seeds"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
@@ -17,7 +18,7 @@ func TestTheShelfHoldsThreeRingsTheRunIsNotWearing(t *testing.T) {
 	// would refuse the click anyway.
 	gs := testRun()
 
-	shelf := dealShelf(gs)
+	shelf := dealShelf(gs, shopRNG(gs, seeds.ShopStock))
 	if len(shelf) != shelfSize {
 		t.Fatalf("the shelf holds %d, want %d", len(shelf), shelfSize)
 	}
@@ -45,8 +46,8 @@ func TestTheShelfHoldsThreeRingsTheRunIsNotWearing(t *testing.T) {
 func TestTheSameFightWalksIntoTheSameShop(t *testing.T) {
 	// **Per fight, like the opponent and the worm offer**, so a defeat and a retry meet the same
 	// shelf rather than rerolling it. The stream is what makes that true; this is what says so.
-	first := shelfKeys(dealShelf(testRun()))
-	again := shelfKeys(dealShelf(testRun()))
+	first := shelfKeys(dealShelfFor(testRun()))
+	again := shelfKeys(dealShelfFor(testRun()))
 
 	if len(first) != len(again) {
 		t.Fatalf("two deals of one fight offered %d and %d rings", len(first), len(again))
@@ -63,10 +64,10 @@ func TestALaterFightIsADifferentShop(t *testing.T) {
 	// but a shelf identical across a whole run would mean the fight index never reached the seed.
 	gs := testRun()
 
-	first := shelfKeys(dealShelf(gs))
+	first := shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))
 	for i := 0; i < 6; i++ {
 		gs.Run.WonFight(0, 0)
-		if !sameKeys(first, shelfKeys(dealShelf(gs))) {
+		if !sameKeys(first, shelfKeys(dealShelf(gs, shopRNG(gs, seeds.ShopStock)))) {
 			return
 		}
 	}
@@ -90,7 +91,7 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 	// row rather than one with holes in it. That case is unreachable today — seventeen rings against
 	// a cap of five leaves at least twelve unworn — so what is checkable is the cut itself, and the
 	// case that *is* reachable: a scene reached before main built a run.
-	if got := len(dealShelf(testRun())); got != shelfSize {
+	if got := len(dealShelfFor(testRun())); got != shelfSize {
 		t.Errorf("a fresh run was offered %d rings, want %d", got, shelfSize)
 	}
 	if len(session.Rings())-combat.MaxWornRings < shelfSize {
@@ -99,40 +100,63 @@ func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 			len(session.Rings()), combat.MaxWornRings)
 	}
 
-	if got := dealShelf(&state.GlobalState{}); got != nil {
+	if got := dealShelf(&state.GlobalState{}, nil); got != nil {
 		t.Errorf("a game with no run was offered %v", shelfKeys(got))
 	}
 }
 
-func TestTheTwoRowsDoNotOverlapAndStayOnScreen(t *testing.T) {
-	// Both rows are full-size cards at a fixed pitch, and neither can exceed five. This is what
-	// says the fixed pitch actually fits the screen — the hand's compressing pitch exists because
-	// eight cards do not.
+// The shelf is four panes on one line, and the row is solved rather than laid out by eye — so what
+// has to hold is that every pane fits between its neighbours, that the whole row stays on screen,
+// and that what hangs under it clears the button at the bottom. **A row that overlaps inside a pane
+// is expected**, which is why the check is on the panes rather than on the cards: nine full-size
+// cards cannot sit apart on a 1920-wide screen and shopPitch is what admits it.
+func TestTheFourPanesFitOnOneRow(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
-	for n := 1; n <= combat.MaxWornRings; n++ {
-		left := rowSlot(gs, 0, n, 0)
-		right := rowSlot(gs, n-1, n, 0)
+	panes := shopPaneOrder()
+	first := shopPaneBackRect(gs, panes[0])
+	last := shopPaneBackRect(gs, panes[len(panes)-1])
 
-		if left.Min.X < 0 || right.Max.X > gs.ScreenWidth {
-			t.Errorf("a row of %d runs from %d to %d", n, left.Min.X, right.Max.X)
+	if first.Min.X < 0 || last.Max.X > gs.ScreenWidth {
+		t.Errorf("the row runs from %d to %d on a screen %d wide",
+			first.Min.X, last.Max.X, gs.ScreenWidth)
+	}
+
+	for i := 1; i < len(panes); i++ {
+		prev := shopPaneBackRect(gs, panes[i-1])
+		this := shopPaneBackRect(gs, panes[i])
+		if this.Min.X < prev.Max.X {
+			t.Errorf("pane %d starts at %d and pane %d ends at %d",
+				i, this.Min.X, i-1, prev.Max.X)
 		}
-		for i := 1; i < n; i++ {
-			if rowSlot(gs, i, n, 0).Min.X <= rowSlot(gs, i-1, n, 0).Max.X {
-				t.Errorf("a row of %d overlaps at seat %d", n, i)
+		if this.Min.Y != prev.Min.Y {
+			t.Errorf("pane %d sits at %d and pane %d at %d, so the shelf is not one row",
+				i, this.Min.Y, i-1, prev.Min.Y)
+		}
+	}
+
+	// Every seat is inside the pane it belongs to, however tight the pitch gets.
+	for _, p := range panes {
+		back := shopPaneBackRect(gs, p)
+		for i := 0; i < shopPaneSeats(p); i++ {
+			seat := shopSeatRect(gs, p, i)
+			if seat.Min.X < back.Min.X || seat.Max.X > back.Max.X {
+				t.Errorf("seat %d of pane %d runs from %d to %d outside %v",
+					i, p, seat.Min.X, seat.Max.X, back)
 			}
 		}
 	}
 
-	// **The row is five seats now**, not three: the three rings plus the bag of rocks and the can
-	// of worms. See ShopScene.rowWidth for why they share one row rather than taking a second.
-	shelf := rowSlot(gs, 0, shelfSize+2, gs.PctY(shelfRowPct))
-	if shelf.Max.Y+shopFigureGap+shopFigureSize >= gs.PctY(offerButtonsPct)-offerButtonHeight/2 {
-		t.Error("the shelf's prices run into the Leave button")
+	if top := shopPaneRect(gs, shopPaneRings).Min.Y; top-shopFigureSize <= shopHintTop {
+		t.Errorf("the shelf starts at %d and the hint sits at %d", top, shopHintTop)
 	}
-	if shelf.Min.Y-shopRowLabelGap <= shopHintTop {
-		t.Errorf("the shelf's label at %d collides with the hint at %d",
-			shelf.Min.Y-shopRowLabelGap, shopHintTop)
+
+	// The prices hang under the panes and the two reroll buttons hang under those, so it is the
+	// buttons rather than the figures that have to clear the Leave button.
+	bottom := shopRerollRect(gs, shopPaneRings).Max.Y
+	if bottom >= gs.PctY(offerButtonsPct)-offerButtonHeight/2 {
+		t.Errorf("a reroll button ends at %d and Leave starts at %d",
+			bottom, gs.PctY(offerButtonsPct)-offerButtonHeight/2)
 	}
 }
 
@@ -236,35 +260,34 @@ func shopState(t *testing.T) *state.GlobalState {
 	return gs
 }
 
-// TestThePouchButtonClearsTheOtherTwoCornerToggles is the only thing about the pouch panel a test
-// without a window can check: three square-ish buttons sharing one bottom line, and the third one
-// added years after the layout was written.
-//
-// **A button drawn over another button is a click that goes to whichever was updated last**, which
-// is invisible until somebody presses the wrong one.
-func TestThePouchButtonClearsTheOtherTwoCornerToggles(t *testing.T) {
+// **Every corner control comes off one strip now** *(2026-09-06)*, so what has to hold is that the
+// strip and the column above it do not stand on each other and none of it leaves the screen. The
+// bug this exists for shipped: the shop's HANDS button was placed by a rule of its own and landed
+// under the frame's settings cog, where a click goes to whichever was updated last.
+func TestTheCornerControlsDoNotOverlap(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
-	pouch := pouchCornerPlace(gs)
-	hands := handsCornerPlace(gs)
-	deck := cornerSlot(0)(gs)
+	settings := ChromeCornerSlot(gs, ChromeSlotSettings)
+	stones := ChromeCornerSlot(gs, ChromeSlotStones)
 
-	// Each is stored as its centre, so the edges are half a width either side.
-	pouchLeft, pouchRight := pouch.X-pileSlotSize/2, pouch.X+pileSlotSize/2
-	handsLeft, handsRight := hands.X-handsButtonWidth/2, hands.X+handsButtonWidth/2
-	deckLeft := deck.X - pileSlotSize/2
+	if !stones.Intersect(settings).Empty() {
+		t.Errorf("the bottom line overlaps: settings %v, stones %v", settings, stones)
+	}
+	if stones.Min.X < 0 || settings.Max.X > gs.ScreenWidth || settings.Max.Y > gs.ScreenHeight {
+		t.Errorf("the bottom line runs off the screen: %v to %v", stones, settings)
+	}
+	if stones.Min.Y != settings.Min.Y {
+		t.Error("the two squares are not on one line")
+	}
 
-	if pouchRight >= handsLeft {
-		t.Errorf("the pouch button ends at %d and the hands button starts at %d", pouchRight, handsLeft)
-	}
-	if handsRight >= deckLeft {
-		t.Errorf("the hands button ends at %d and the deck button starts at %d", handsRight, deckLeft)
-	}
-	if pouchLeft < 0 {
-		t.Errorf("the pouch button starts at %d, off the left of the screen", pouchLeft)
-	}
-	if pouch.Y != hands.Y || pouch.Y != deck.Y {
-		t.Errorf("the three corner buttons sit at y %d, %d and %d", pouch.Y, hands.Y, deck.Y)
+	// The column stacks upward from the action-point bar and the strip sits under it; the two are
+	// the same corner, so they may not meet.
+	for i := 0; i < ControlColumnSlots; i++ {
+		rung := ControlColumnSlot(gs, i)
+		if !rung.Intersect(settings).Empty() {
+			t.Errorf("column slot %d at %v stands on the settings button at %v",
+				i, rung, settings)
+		}
 	}
 }
 
@@ -296,5 +319,38 @@ func TestTheTabsUnderAnArmedStoneStayInsideThePanel(t *testing.T) {
 		if use.Max.X >= sell.Min.X {
 			t.Errorf("seat %d overlaps its own two tabs: %v and %v", i, use, sell)
 		}
+	}
+}
+
+// dealShelfFor deals a shelf for a run the caller has just built, seeding the visit's stream the
+// way Init does. **The stream is the scene's now** — a reroll advances its cursor — so a test that
+// wants one shelf has to open one, exactly as the screen does.
+func dealShelfFor(gs *state.GlobalState) []shelfItem {
+	return dealShelf(gs, shopRNG(gs, seeds.ShopStock))
+}
+
+// The pile stands to the left of the control column and clear of the shelf above it. **The bug it
+// guards against is the one the lettered square had**: a control placed by a rule of its own,
+// beside controls placed by another.
+func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
+	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
+
+	pile := shopPileBounds(gs)
+	if pile.Max.X >= ControlColumnLeft(gs) {
+		t.Errorf("the pile ends at %d and the column starts at %d",
+			pile.Max.X, ControlColumnLeft(gs))
+	}
+	if pile.Min.X < 0 || shopPileCountRect(gs).Max.Y > gs.ScreenHeight {
+		t.Errorf("the pile and its count run off the screen: %v", pile)
+	}
+
+	for _, p := range shopPaneOrder() {
+		back := shopPaneBackRect(gs, p)
+		if !back.Intersect(pile).Empty() {
+			t.Errorf("the pile at %v stands on pane %d at %v", pile, p, back)
+		}
+	}
+	if !pile.Intersect(shopRerollRect(gs, shopPaneRings)).Empty() {
+		t.Error("the pile stands on the rings' reroll button")
 	}
 }

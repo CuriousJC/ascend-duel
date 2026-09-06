@@ -1,0 +1,26 @@
+[
+  {
+    "PotionRecord": "salve",
+    "Name": "Salve",
+    "Effect": "heal",
+    "Amount": 15,
+    "Price": 4,
+    "Text": "HEAL 15\nLIFE"
+  },
+  {
+    "PotionRecord": "draught",
+    "Name": "Draught",
+    "Effect": "dmg",
+    "Amount": 2,
+    "Price": 6,
+    "Text": "+2 DMG\nFOR THE RUN"
+  },
+  {
+    "PotionRecord": "tonic",
+    "Name": "Tonic",
+    "Effect": "life",
+    "Amount": 10,
+    "Price": 6,
+    "Text": "+10 MAX\nLIFE"
+  }
+]

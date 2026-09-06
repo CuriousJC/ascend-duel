@@ -459,8 +459,24 @@ func TestTheLadderWalksItsOwnForm(t *testing.T) {
 		t.Error("the top of a ladder was promoted")
 	}
 
-	// A plan has no form and therefore no ladder, and neither has any enemy card.
-	if _, ok := Neighbour(Brace, 1); ok {
-		t.Error("a plan card was promoted")
+	// The defences are a ladder too, and Grow and Shrink walk it exactly as they walk an attack
+	// form. Brace sits in the middle of Flinch / Ward / Brace / Guard.
+	if up, ok := Neighbour(Brace, 1); !ok || up != Guard {
+		t.Errorf("promoting a Brace gave %v, want Guard", up)
+	}
+	if down, ok := Neighbour(Ward, -1); !ok || down != Flinch {
+		t.Errorf("demoting a Ward gave %v, want Flinch", down)
+	}
+	if _, ok := Neighbour(Flinch, -1); ok {
+		t.Error("the bottom of the defend ladder was demoted")
+	}
+	if _, ok := Neighbour(Guard, 1); ok {
+		t.Error("the top of the defend ladder was promoted")
+	}
+
+	// The two ladders never meet: a defence promoted stays a defence, and an enemy card has no
+	// form and therefore no ladder at all.
+	if up, _ := Neighbour(Brace, 1); ConceptOf(up).Verb != VerbShield {
+		t.Error("promoting a defence produced an attack")
 	}
 }

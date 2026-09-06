@@ -19,8 +19,8 @@ import (
 // a fifth cost tier, a ring, a border colour nothing uses. It is a drawing-board, not a
 // report.
 //
-// The cost of that is drift: the names and costs below are a snapshot of the eighteen
-// concepts as of 2026-08-24. If they stop matching the deck it makes the sheet a worse
+// The cost of that is drift: the names and costs below are a snapshot of the nineteen
+// concepts as of 2026-09-06. If they stop matching the deck it makes the sheet a worse
 // preview but never a wrong one, because every pixel still comes from cards.Render.
 
 // formNotes says what mark each form actually draws, for the caption. Worth spelling out on
@@ -43,7 +43,7 @@ type concept struct {
 	text string
 }
 
-// The eighteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
+// The nineteen concepts, in duelist_cards.json's order, which is grid order: three attack forms
 // of five tiers, then the defences.
 //
 // **Three forms by five tiers, and the tiers cost and hit the same in each** *(2026-08-24)*.
@@ -51,7 +51,11 @@ type concept struct {
 // Crush alike. So a form is *which* pair you are building rather than a stronger or weaker way to
 // build one, and the only thing separating Lunge from Cleave is what it pairs with.
 //
-// **The outer two rungs ship at zero copies**, so they are on this sheet and not in any deck. This
+// **The defences are a four-rung ladder of their own** *(2026-09-06)*, Flinch through Guard, with
+// the shield count where the attacks have a damage multiplier — so a Grow or a Shrink walks it too.
+//
+// **The outer rungs ship at zero copies** — both ends of each attack form, and Flinch and Guard —
+// so they are on this sheet and not in any deck. This
 // is where they get looked at, and there are two specific things to look for: a 0 AP card draws an
 // empty cost column, and a 4 AP card is the only one that stacks four ticks.
 //
@@ -78,12 +82,13 @@ var concepts = []concept{
 	{"Smash", cards.FormCrush, 3, "Crushes for 2x DMG"},
 	{"Pulverize", cards.FormCrush, 4, "Crushes for 4x DMG"},
 
+	{"Flinch", cards.FormDefend, 0, "1 shield"},
 	{"Ward", cards.FormDefend, 1, "1 shield"},
 	{"Brace", cards.FormDefend, 2, "2 shields"},
 	{"Guard", cards.FormDefend, 3, "3 shields"},
 }
 
-// realCards is **all eighteen concepts at hand size**, one element after another so the row
+// realCards is **all nineteen concepts at hand size**, one element after another so the row
 // also walks the border colours.
 //
 // **It was a spread of six until 2026-08-14**, chosen to break the layout: the longest name,

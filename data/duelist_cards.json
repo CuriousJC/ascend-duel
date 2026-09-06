@@ -138,6 +138,15 @@
   },
 
   {
+    "Label": "Flinch",
+    "Verb": "shield",
+    "Amount": 1,
+    "Cost": 0,
+    "Form": "defend",
+    "Elements": ["fire", "ice", "lightning", "earth", "arcane"],
+    "Copies": 0
+  },
+  {
     "Label": "Ward",
     "Verb": "shield",
     "Amount": 1,

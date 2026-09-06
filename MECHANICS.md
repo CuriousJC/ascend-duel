@@ -127,17 +127,20 @@ what used to make Shrink dead on every 1 AP card and Grow dead on every 3 AP one
 | **stab** | Poke / Jab / Thrust / Lunge / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 4` |
 | **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
 | **crush** | Tap / Bash / Strike / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
-| **defend** | Ward | 1 | Raises **1 shield** |
+| **defend** | Flinch | 0 | Raises **1 shield** |
+| | Ward | 1 | Raises **1 shield** |
 | | Brace | 2 | Raises **2 shields** |
+| | Guard | 3 | Raises **3 shields** |
 
 **The 3 AP attacks pay triple, not double** *(owner's call, 2026-09-01)*. At `DMG × 2` they were a
 point dearer than the 2 AP card for exactly the same damage per point, so nothing was ever a reason
 to play one; at triple they buy a figure the budget cannot reach by spending the same points on
 cheaper cards.
 
-**Guard is out of the deck** *(owner's call, 2026-09-01)*. It is still in the file at zero copies,
-like the six zero-copy attack rungs, so the 3 AP defend rung exists and is not dealt — which is why
-the defend ladder is two rungs where the attack ladders are three.
+**The defend ladder is four rungs and the dealt two are the middle** *(owner's call, 2026-09-06)*.
+`Flinch` at 0 AP and `Guard` at 3 AP ship at zero copies exactly as the outer attack rungs do, so
+the deck opens on Ward and Brace and the two ends are somewhere a worm can walk a card to. Guard
+left the deck on 2026-09-01; Flinch was added to give the defences the same shape.
 
 **Nine attack concepts × five colours = 45 cards; two defences × five colours = 10.** A **55-card
 starting deck** — the zero-copy rungs are in the file and not in the pile. **No card in the player's deck
@@ -150,17 +153,25 @@ whole cheap turn**, at 1.33× a Lunge for 1.33× the price — which is the rung
 triple flattened, and it is now priced level rather than above — the reason it is a worm's prize rather
 than something a run can stock.
 
-**The defences sit on the dealt 1/2/3 ladder as the attacks do**, and there is no defence at
-either end — the two outer rungs are an attack's ladder only. **The price is the count**: one AP
-buys one shield, and that is the whole of the pricing decision. It is the flattest rung in the game
-on purpose — three attack tiers buy 0.5x, 1x and 2x, where three defend tiers buy one, two and
-three — because a shield is *a hit you do not take* rather than a figure, and a curve on it would
-make the top card the only one worth holding.
+**The defences sit on the same ladder the attacks do**, 0 through 3 AP. **The price is the count**:
+one AP buys one shield, and that is the whole of the pricing decision. It is the flattest rung in
+the game on purpose — the attack tiers buy 0.25x, 0.5x, 1x, 2x and 4x, where the defend tiers buy
+one, two and three — because a shield is *a hit you do not take* rather than a figure, and a curve
+on it would make the top card the only one worth holding.
 
-**`combat.Neighbour` refuses to walk this ladder**, so a Grow or a Shrink worm cannot promote a
-Ward or demote a Guard. That is deliberate rather than an omission *(owner's call, 2026-08-31)*:
-the worms step a card along a *damage* ladder, and a worm handing out a free shield is a worm
-changing how many hits a run takes for the rest of the tower.
+**Flinch raises a shield for nothing, and that is the floor rather than a mistake** *(owner's call,
+2026-09-06)*. A shield eats a whole blow, so there is no fraction of one to fall to: where Poke is a
+Jab at a quarter of the damage, Flinch is a Ward at none of the cost. What bounds it is the count —
+a turn plays at most `MaxActions` cards however cheap they are, and a duelist holds at most
+`maxShields` — rather than the budget, which is the same shift `minCardCost` took when Whetworm
+could drive a card to free.
+
+**`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so a Grow promotes a Ward and
+a Shrink demotes a Guard. **This reverses the 2026-08-31 call** that kept the worms to the damage
+ladders on the argument that a free shield changes how many hits a run takes for the rest of the
+tower — which is still true, and is now something a run is allowed to build toward: a deck of ten
+defences shrunk to Flinches is five free shields a turn against the five-shield cap. It is matched on
+the *verb* rather than pinned to attacks, so the two ladders can never step onto each other.
 
 **`Strike` is the 1× reference the ladder is written against**, and that is why the crush form
 holds the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, so the figure the player reads

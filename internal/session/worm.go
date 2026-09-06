@@ -356,8 +356,9 @@ func (s *Session) Apply(w Worm, i int) bool {
 }
 
 // CanApply reports whether this worm would do anything to this card. **The screen asks before it
-// offers**, because a worm that lands and changes nothing is a reward taken away: a Smash cannot
-// be promoted and a defend card has no ladder at all.
+// offers**, because a worm that lands and changes nothing is a reward taken away: a Pulverize cannot
+// be promoted, and neither can a Guard — the defences are a ladder of their own since 2026-09-06,
+// so the ends stop the same way rather than the whole verb being refused.
 func (s *Session) CanApply(w Worm, i int) bool {
 	card, ok := s.Card(i)
 	if !ok {

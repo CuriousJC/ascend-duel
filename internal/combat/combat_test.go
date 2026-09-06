@@ -469,9 +469,10 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 		Tap:       CategoryAttack,
 		Pulverize: CategoryAttack,
 
-		Ward:  CategoryDefend,
-		Brace: CategoryDefend,
-		Guard: CategoryDefend,
+		Flinch: CategoryDefend,
+		Ward:   CategoryDefend,
+		Brace:  CategoryDefend,
+		Guard:  CategoryDefend,
 	}
 
 	got := PlayerConcepts()

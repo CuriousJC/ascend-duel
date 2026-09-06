@@ -11,15 +11,16 @@ import (
 
 // **The check CLAUDE.md said did not exist, and the bug it would have caught.**
 //
-// The lesson tells the player four of their cards burn the same colour, to take all four, and that
-// the blow ends the fight. Every one of those is a promise about one particular deal off the
-// shipping deck against one particular creature — and for a while nothing held them: the script was
+// The lesson tells the player four of their cards burn the same colour, to take all four, that one
+// of them is a shield, and that what is left of the creature swings back. Every one of those is a
+// promise about one particular deal off the shipping deck against one particular creature — and for a while nothing held them: the script was
 // pinned to a seed by a scenario, and when the profile became the real trigger the lesson ran on
 // whatever the clock had rolled, describing a set the hand did not contain.
 //
 // **Pinning the seed in `data/tutorial.json` is only half the fix.** The other half is this. The
-// seed is a fact about `duelist_cards.json`, `startingDeck` and `handSize`; the kill is a fact about
-// those *plus* the hand ladder, the duelist's DMG and the creature's HP. Six files can each move for
+// seed is a fact about `duelist_cards.json`, `startingDeck` and `handSize`; the wound that stops
+// short of a kill is a fact about those *plus* the hand ladder, the duelist's DMG and the
+// creature's HP. Six files can each move for
 // their own good reasons and quietly turn Bob into a liar, and nothing else fails when they do.
 //
 // **If this goes red, the fix is a new seed, not a weaker check.**
@@ -87,7 +88,12 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 		t.Fatalf("tutorial.json names enemy %q, which is in no roster", script.Enemy)
 	}
 
-	cost, sum := 0, 0
+	// **A shield in the taught set is now required rather than reported** *(2026-09-06)*. It was
+	// an error here for as long as the lesson was four attacks and a kill in one; the lesson now
+	// teaches that a defence carries an element and joins a hand like anything else, so the set has
+	// to contain exactly one — and, since the shield brings no damage, the blow no longer kills and
+	// the creature gets the turn the shield is there to answer.
+	cost, sum, shields := 0, 0, 0
 	for _, c := range hand {
 		if c.Element != best {
 			continue
@@ -97,19 +103,19 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 		if concept.Verb == combat.VerbAttack {
 			sum += concept.Amount
 		} else {
-			// A plan in the taught set is not fatal, but it is worth saying out loud: it joins the
-			// hand and brings no damage, so the lesson would be asking the player to play a card
-			// that does nothing while telling them it multiplies the blow.
-			t.Errorf("the taught set holds %s, which is a %v and deals nothing",
-				concept.Label, concept.Verb)
+			shields++
 		}
+	}
+	if shields != 1 {
+		t.Errorf("run %s deals a taught set holding %d cards that are not attacks, and the lesson "+
+			"describes exactly one shield", script.Seed, shields)
 	}
 
 	// **The four cards are named, so this test and combat's cannot drift.**
-	// `TestTheTutorialsBlowKillsTheTutorialsEnemy` writes the taught turn out by hand — it has to,
+	// `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` writes the taught turn out by hand — it has to,
 	// since the shuffle needs a scene and that package must stay window-free — and this is what
 	// holds its literal against what the seed actually deals.
-	want := map[string]bool{"Cut": true, "Bash": true, "Thrust": true, "Strike": true}
+	want := map[string]bool{"Jab": true, "Ward": true, "Thrust": true, "Strike": true}
 	for _, c := range hand {
 		if c.Element != best {
 			continue
@@ -117,7 +123,7 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 		label := combat.ConceptOf(c.Concept).Label
 		if !want[label] {
 			t.Errorf("the taught set holds %s, which internal/combat's copy of this turn does not; "+
-				"update TestTheTutorialsBlowKillsTheTutorialsEnemy to match", label)
+				"update TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt to match", label)
 		}
 		delete(want, label)
 	}
@@ -129,9 +135,9 @@ func TestTheTutorialsSeedDealsTheHandTheLessonDescribes(t *testing.T) {
 		t.Errorf("the taught set costs %d AP and the duelist has %d, so it cannot be played at all",
 			cost, me.Actions)
 	}
-	if blow := sum * me.DMG / 100 * multiplierFor(t, bestN) / 100; blow < foe.HP {
-		t.Errorf("the taught blow is %d against %s's %d HP, and the lesson promises a kill in one",
-			blow, script.Enemy, foe.HP)
+	if blow := sum * me.DMG / 100 * multiplierFor(t, bestN) / 100; blow >= foe.HP {
+		t.Errorf("the taught blow is %d against %s's %d HP, and the lesson needs the creature to "+
+			"survive it and swing back", blow, script.Enemy, foe.HP)
 	}
 }
 

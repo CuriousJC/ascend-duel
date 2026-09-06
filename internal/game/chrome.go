@@ -102,7 +102,18 @@ func (g *Game) openSettings() {
 
 // toggleLedger opens or closes the run's account. **It changes no phase and no screen** — see
 // screens.LedgerPanel, and openSettings above, which makes the same promise for the same reason.
-func (g *Game) toggleLedger() { g.ledger.Toggle() }
+//
+// **The opening is counted, and only the opening** *(2026-09-06)*. The tutorial has a step asking
+// the player to read the account, and while the panel is up the active scene is not updated at all
+// — so the lesson cannot watch the panel itself and instead watches this tally, arriving at the
+// first frame after the panel is closed again. Counting the close as well would advance the step
+// on the click that opened it. See state.LedgerOpens.
+func (g *Game) toggleLedger() {
+	g.ledger.Toggle()
+	if g.ledger.IsOpen() {
+		g.GlobalState.LedgerOpens++
+	}
+}
 
 // ledgerButtonRect is where the ledger's button sits: **the last rung of the combat screen's
 // control column**, under the hands button *(2026-09-04, owner's call)*.

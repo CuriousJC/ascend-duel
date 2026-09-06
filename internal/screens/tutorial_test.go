@@ -28,6 +28,11 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Load())
 
+	// **And it is wearing what the lesson makes it buy**, for the same reason the two rows below
+	// are filled: `shop-worn` reports false for an empty hand, so a bare run would fail this as a
+	// missing case when it is really an empty row.
+	wearTwo(t, gs)
+
 	// Each scene is asked with the fields its rect functions read already filled, since a rect
 	// that reports false only because a row is empty would hide a missing case.
 	combat := stubCombat()
@@ -84,6 +89,7 @@ func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 	gs.Run = session.New(nil)
 	gs.Run.Teach(tutorial.Load())
+	wearTwo(t, gs)
 
 	combat := stubCombat()
 	hosts := []tutorialHost{
@@ -509,4 +515,20 @@ func TestAnUntaughtRunHasNoMatchingSet(t *testing.T) {
 	if got := s.matchingCards(&state.GlobalState{}); got != nil {
 		t.Errorf("a run with no tutorial reported a set: %v", got)
 	}
+}
+
+// wearTwo puts two rings on the run, so that the worn row an anchor points at has something in it.
+// **Any two the catalogue holds**, because the anchor is the row and not a particular ring.
+func wearTwo(t *testing.T, gs *state.GlobalState) {
+	t.Helper()
+	worn := 0
+	for _, key := range session.Rings() {
+		if worn == 2 {
+			return
+		}
+		if gs.Run.Wear(key) {
+			worn++
+		}
+	}
+	t.Fatalf("could not put two rings on the run; the catalogue offered %d", worn)
 }

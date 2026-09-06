@@ -79,6 +79,38 @@ const (
 	// nothing they do satisfies a step that is pointing somewhere else entirely. An outcome the
 	// player reaches by pressing one particular button should have that button lit.
 	AnchorShopLeave
+
+	// AnchorLedgerButton is the LEDGER button in the control column — the run's account, and the
+	// one anchor that names a control the frame owns rather than a scene.
+	//
+	// **The rectangle is still a scene's answer**, because `internal/game` places the button by
+	// asking `screens.ControlColumnSlot` where the column's last rung is. So the anchor crosses no
+	// package line that the button had not already crossed, and the lit square is derived from the
+	// same function that positions the thing it lights.
+	//
+	// **Pairing it with [CondLedgerOpened] costs one frame, deliberately.** The panel takes the
+	// whole frame while it is up and the scene under it is not updated at all, so the step cannot
+	// advance until the player closes the account again — which is the right moment anyway: a step
+	// that gave way while the panel was covering it would have Bob talking to a closed door.
+	AnchorLedgerButton
+
+	// AnchorShopWorn is the row of rings the run is actually wearing, in the build band.
+	//
+	// **The argument against it expired** *(2026-09-06)*. It was deliberately absent because a run
+	// reaches its first shop wearing nothing, so a step pointing at the row would have pointed at
+	// an empty band — vocabulary ahead of a use. The lesson now makes the player buy two before it
+	// says anything about them, so by the time this is pointed at there is something in it. It
+	// still reports false for an empty row, which is what keeps that honest.
+	AnchorShopWorn
+
+	// AnchorShopDMGPotion is the Draught's own seat in the potions pane — **one card, not the
+	// pane**, and that is a lock-up being avoided rather than a preference.
+	//
+	// The step that names it waits for the Draught to be drunk, and the lit square is the only
+	// legal click. An anchor covering all three potions would let the player spend their last
+	// vitae on a Salve and then face a step demanding a potion they can no longer afford, with
+	// nothing on screen able to satisfy it. See the affordability test in `internal/screens`.
+	AnchorShopDMGPotion
 )
 
 // anchorNames is the word each anchor is written as in `data/tutorial.json`.
@@ -102,6 +134,9 @@ var anchorNames = map[Anchor]string{
 	AnchorShopShelf:     "shop-shelf",
 	AnchorMatchingCards: "matching-cards",
 	AnchorShopLeave:     "shop-leave",
+	AnchorLedgerButton:  "ledger-button",
+	AnchorShopWorn:      "shop-worn",
+	AnchorShopDMGPotion: "shop-dmg-potion",
 }
 
 func (a Anchor) String() string {
@@ -177,18 +212,46 @@ const (
 	CondPhaseFight
 	CondPhaseReward
 	CondPhaseShop
+
+	// CondLedgerOpened is the run's account having been opened since this step came up.
+	//
+	// **It is measured against a baseline, exactly as [CondRoundDone] is**, because the ledger is
+	// reachable from every screen at every moment: a player who opened it out of curiosity three
+	// steps earlier must still be asked to open it when the step that teaches it arrives.
+	//
+	// **It is an action condition**, so the step gates to its anchor — the LEDGER button is the
+	// one thing clickable while it stands. That is what makes it safe for the panel to eat the
+	// frame: there is nothing else the player could have been doing.
+	CondLedgerOpened
+
+	// CondRingsWorn is the run wearing at least the step's [Step.Count] rings.
+	//
+	// **The only condition that reads a number off the script**, because "buy two" is a fact about
+	// the lesson rather than about the game — a second tutorial teaching a single ring would want
+	// the same condition with a different figure. Parse refuses it without one.
+	CondRingsWorn
+
+	// CondDMGBought is the Draught drunk: the run carrying a damage bonus it did not have.
+	//
+	// **Measured against a baseline like the ledger's**, so a step asking for it cannot be
+	// satisfied by a bonus bought before the step came up. Nothing in the taught run can do that
+	// today, and relying on that would be relying on the shape of one script.
+	CondDMGBought
 )
 
 var conditionNames = map[Condition]string{
-	CondNext:        "next",
-	CondCardsQueued: "cards-queued",
-	CondHandEmptied: "hand-emptied",
-	CondMatchQueued: "matching-queued",
-	CondDuelPressed: "duel-pressed",
-	CondRoundDone:   "round-done",
-	CondPhaseFight:  "phase-fight",
-	CondPhaseReward: "phase-reward",
-	CondPhaseShop:   "phase-shop",
+	CondNext:         "next",
+	CondCardsQueued:  "cards-queued",
+	CondHandEmptied:  "hand-emptied",
+	CondMatchQueued:  "matching-queued",
+	CondDuelPressed:  "duel-pressed",
+	CondRoundDone:    "round-done",
+	CondPhaseFight:   "phase-fight",
+	CondPhaseReward:  "phase-reward",
+	CondPhaseShop:    "phase-shop",
+	CondLedgerOpened: "ledger-opened",
+	CondRingsWorn:    "rings-worn",
+	CondDMGBought:    "dmg-bought",
 }
 
 func (c Condition) String() string {
@@ -223,7 +286,8 @@ func ParseCondition(s string) (Condition, error) {
 // no business naming.
 func (c Condition) isAction() bool {
 	switch c {
-	case CondCardsQueued, CondHandEmptied, CondMatchQueued, CondDuelPressed:
+	case CondCardsQueued, CondHandEmptied, CondMatchQueued, CondDuelPressed, CondLedgerOpened,
+		CondRingsWorn, CondDMGBought:
 		return true
 	}
 	return false
@@ -265,11 +329,18 @@ func (l Lock) String() string {
 }
 
 // lockFor is the three-way split, and the one place it is decided.
+//
+// **[CondRoundDone] locks everything, which is what separates it from the phase conditions**
+// *(2026-09-06)*. They share a shape — an outcome, not a click — and were treated alike, so a step
+// narrating a round's playback left the whole screen live and the player queued the next turn while
+// Bob was still describing this one. The distinction is whether the player has anything to *do*:
+// winning a fight or leaving a shop takes clicks on controls the step has no business naming, where
+// a round plays itself out and there is nothing to press. So it gets what a Next-button step gets.
 func lockFor(c Condition) Lock {
 	switch {
 	case c.isAction():
 		return LockToAnchor
-	case c == CondNext:
+	case c == CondNext, c == CondRoundDone:
 		return LockAll
 	default:
 		return LockNone
@@ -283,6 +354,14 @@ type Step struct {
 	Anchor Anchor
 	Lock   Lock
 	Until  Condition
+
+	// Count is how many of something the step is waiting for, and **only the counting conditions
+	// read it**. It is the one number the script hands the state machine.
+	//
+	// **Refused where it means nothing and required where it is needed**, per Parse: a step
+	// carrying a count its condition cannot read is a figure nobody will ever act on, which is how
+	// a script comes to say something it is not doing.
+	Count int
 }
 
 // Facts is what a scene says is true this frame, and it is the whole of what a condition may
@@ -321,6 +400,18 @@ type Facts struct {
 
 	// Resolving is whether a round is playing back rather than being planned.
 	Resolving bool
+
+	// LedgerOpens is `state.LedgerOpens`: how many times the run's account has been opened this
+	// session. [CondLedgerOpened] reads it against a baseline, for the reason RoundsPlayed is read
+	// that way — see below.
+	LedgerOpens int
+
+	// RingsWorn is how many rings the run has on, and DMGBonus what its potions have added to the
+	// duelist's damage. [CondRingsWorn] and [CondDMGBought] read them — the second against a
+	// baseline, the first as a total, because a ring can be sold again and a step asking for two
+	// rings wants two rings on the hand rather than two purchases ever made.
+	RingsWorn int
+	DMGBonus  int
 
 	// RoundsPlayed is how many rounds this fight has resolved. [CondRoundDone] reads it rather
 	// than watching `Resolving` fall, because a step that arrived *during* playback would see
@@ -475,8 +566,23 @@ func Parse(in data.TutorialData) (Script, error) {
 			usesMatching = true
 		}
 
+		// **A count belongs to exactly the conditions that read one.** Required where it is read,
+		// because a step waiting for "at least zero rings" is satisfied before it is drawn;
+		// refused everywhere else, because a number nothing acts on is a script saying something
+		// it is not doing.
+		if until == CondRingsWorn && r.Count < 1 {
+			return Script{}, fmt.Errorf(
+				"step %q waits on %v and names no Count, so it is satisfied before it is shown",
+				r.StepRecord, until)
+		}
+		if until != CondRingsWorn && r.Count != 0 {
+			return Script{}, fmt.Errorf("step %q carries Count %d, which %v does not read",
+				r.StepRecord, r.Count, until)
+		}
+
 		out.Steps = append(out.Steps, Step{
 			Key: r.StepRecord, Text: r.Text, Anchor: anchor, Lock: lock, Until: until,
+			Count: r.Count,
 		})
 	}
 
@@ -504,6 +610,14 @@ type Run struct {
 	// baseRounds is RoundsPlayed as it stood when the current step came up, so [CondRoundDone]
 	// measures a round this step actually watched.
 	baseRounds int
+
+	// baseLedger is the same trick for [CondLedgerOpened]: the account can be opened from any
+	// screen at any moment, so the step asks for an opening of its own rather than for the tally
+	// to be non-zero.
+	baseLedger int
+
+	// baseDMG is the same again for [CondDMGBought].
+	baseDMG int
 }
 
 // NewRun starts the script at its first step.
@@ -558,6 +672,8 @@ func (r *Run) Advance(f Facts) {
 	}
 	r.step++
 	r.baseRounds = f.RoundsPlayed
+	r.baseLedger = f.LedgerOpens
+	r.baseDMG = f.DMGBonus
 	if r.step >= r.script.Len() {
 		r.done = true
 	}
@@ -575,13 +691,13 @@ func (r *Run) Update(f Facts, nextPressed bool) {
 	if !ok {
 		return
 	}
-	if r.satisfied(step.Until, f, nextPressed) {
+	if r.satisfied(step, f, nextPressed) {
 		r.Advance(f)
 	}
 }
 
-func (r *Run) satisfied(c Condition, f Facts, nextPressed bool) bool {
-	switch c {
+func (r *Run) satisfied(step Step, f Facts, nextPressed bool) bool {
+	switch step.Until {
 	case CondNext:
 		return nextPressed
 	case CondCardsQueued:
@@ -594,6 +710,16 @@ func (r *Run) satisfied(c Condition, f Facts, nextPressed bool) bool {
 		return f.Resolving
 	case CondRoundDone:
 		return f.RoundsPlayed > r.baseRounds && !f.Resolving
+	case CondLedgerOpened:
+		return f.LedgerOpens > r.baseLedger
+	case CondRingsWorn:
+		// **A step with no count is never satisfied**, rather than satisfied immediately. Parse
+		// refuses one in a real script, but the zero value has to stall like everything else here
+		// — a condition that sails through on Facts nobody published is the failure the whole of
+		// this switch is written to avoid.
+		return step.Count > 0 && f.RingsWorn >= step.Count
+	case CondDMGBought:
+		return f.DMGBonus > r.baseDMG
 	case CondPhaseFight:
 		return f.Phase == "fight"
 	case CondPhaseReward:

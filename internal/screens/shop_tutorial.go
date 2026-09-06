@@ -5,6 +5,7 @@ package screens
 import (
 	"image"
 
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/tutorial"
 )
@@ -15,7 +16,15 @@ func (s *ShopScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 	if gs.Run == nil {
 		return tutorial.Facts{}
 	}
-	return tutorial.Facts{Phase: gs.Run.Phase().String()}
+	return tutorial.Facts{
+		Phase: gs.Run.Phase().String(),
+
+		// **Both read off the run, which is the only thing that knows.** What is worn and what has
+		// been drunk outlive this visit, and a count kept by the scene would be a second opinion
+		// about a purchase — wrong the moment a ring is sold, or the screen re-entered.
+		RingsWorn: len(gs.Run.Worn()),
+		DMGBonus:  gs.Run.DMGBonus(),
+	}
 }
 
 // tutorialRect answers for the shelf.
@@ -23,10 +32,11 @@ func (s *ShopScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 // **The whole row rather than one card**, exactly as the reward screen's worms are: which ring to
 // buy is the player's decision, and a spotlight on one of three would be making it for them.
 //
-// **There is deliberately no anchor for the worn row.** A run reaches its first shop wearing
-// nothing — see session.StartingRings, which ships empty — so the row a step pointed at would be
-// empty on the one visit the tutorial is present for, and an anchor that can only ever resolve to
-// nothing is vocabulary ahead of a use.
+// **The worn row now has one** *(2026-09-06)*. It deliberately did not, because a run reaches its
+// first shop wearing nothing and a step pointing at that row would have pointed at an empty band.
+// The lesson now buys two rings before it says a word about them, so the row has something in it by
+// the time it is pointed at — and it still reports false when empty, which is what keeps the old
+// argument's teeth.
 func (s *ShopScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (image.Rectangle, bool) {
 	// The same card the reward screen answers for, through the same function. See that one.
 	if a == tutorial.AnchorBuildCard {
@@ -37,6 +47,27 @@ func (s *ShopScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (imag
 	if a == tutorial.AnchorShopLeave {
 		return buttonRect(s.leaveButton), true
 	}
+	// The rings the run actually has on. **False for an empty row**, so a step that reached it too
+	// early drops its gate and is visible as a mistake rather than lighting an empty band.
+	if a == tutorial.AnchorShopWorn {
+		worn := gs.Run.Worn()
+		return rowUnion(len(worn), func(i int) image.Rectangle {
+			return s.wornSlot(gs, i, len(worn))
+		})
+	}
+
+	// **The Draught's seat alone, not the potions pane.** See AnchorShopDMGPotion: the lit square
+	// is the only legal click, and a pane-wide anchor would let the last vitae go on a Salve while
+	// the step waited for a Draught that could no longer be bought.
+	if a == tutorial.AnchorShopDMGPotion {
+		for i, p := range shopPotions() {
+			if p.Effect == session.PotionDMG {
+				return potionSeat(gs, i), true
+			}
+		}
+		return image.Rectangle{}, false
+	}
+
 	if a != tutorial.AnchorShopShelf {
 		return image.Rectangle{}, false
 	}

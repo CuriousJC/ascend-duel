@@ -126,6 +126,20 @@ type GlobalState struct {
 	InputFocus image.Rectangle
 	InputGated bool
 
+	// LedgerOpens is how many times the run's account has been opened this session.
+	//
+	// **A counter and not a bool, so a step can watch for an opening of its own.** The tutorial
+	// asks the player to open the ledger, and a flag set the first time it was ever opened would
+	// be a step already satisfied before it was drawn — the same reason `tutorial.Run` measures
+	// rounds against a baseline rather than against zero.
+	//
+	// **It lives here for the reason ModalOpen and InputGated do**: the button belongs to the
+	// frame and the lesson belongs to a scene, so it is a thing the two have to agree on. It is
+	// bumped by `internal/game` when the panel opens and read by whichever scene is publishing
+	// tutorial facts — never cleared each tick, because unlike the two above it is a tally of
+	// something that happened rather than an assertion about this frame.
+	LedgerOpens int
+
 	// HandSort is how a dealt hand is arranged, and which of the three sort tabs is latched.
 	// See screens.handSort, whose ordinals this holds — cost is the zero value, so a state
 	// nobody has touched is already sorted the way a fresh screen is.

@@ -50,9 +50,11 @@ type TutorialData struct {
 	// which is the tool to re-run when any of those move.
 	Seed string `json:"Seed"`
 
-	// Enemy is the record the first room stands, by key. **The lesson promises a kill in one blow**,
-	// which is a fact about the taught hand's damage against one creature's HP —
-	// `TestTheTutorialsBlowKillsTheTutorialsEnemy` in `internal/combat` is what holds it.
+	// Enemy is the record the first room stands, by key. **The lesson promises a blow that wounds
+	// without killing**, so that the creature takes a turn and the taught shield has something to
+	// eat — which is a fact about the taught hand's damage against one creature's HP.
+	// `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` is what
+	// holds it.
 	//
 	// Empty means whoever the climb put there, which is a lesson that has stopped promising
 	// anything about the fight.
@@ -94,6 +96,11 @@ type TutorialStepData struct {
 	// `tutorial.ParseCondition`. `next` is the Next button and is the only one that asks the
 	// player to acknowledge rather than to act.
 	Until string `json:"Until"`
+
+	// Count is how many of something the step waits for, read by the counting conditions alone —
+	// `rings-worn` is the only one today. **Refused where the condition cannot read it**, so a
+	// figure never sits in the file doing nothing; see `tutorial.Parse`.
+	Count int `json:"Count,omitempty"`
 }
 
 // LoadTutorial parses the script, steps in file order.

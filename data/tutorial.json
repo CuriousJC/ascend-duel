@@ -1,5 +1,5 @@
 {
-  "Seed": "0000DH",
+  "Seed": "0000GY",
   "Enemy": "GiantBat",
   "Match": "element",
   "Steps": [
@@ -40,9 +40,15 @@
     },
     {
       "StepRecord": "take-them-all",
-      "Text": "Now look closer. Select all the same color cards. Cards that match make a hand, and a hand multiplies the whole blow - so take the other three.",
+      "Text": "Now look closer. Four cards burn the same colour. Matching cards make a hand, and a hand multiplies the whole blow - so take the other three.",
       "Anchor": "matching-cards",
       "Until": "matching-queued"
+    },
+    {
+      "StepRecord": "the-shield",
+      "Text": "One of those four is a Ward - a shield, not a blow. It deals nothing, but it counts toward the hand all the same, and it will eat one attack coming back at you.",
+      "Anchor": "matching-cards",
+      "Until": "next"
     },
     {
       "StepRecord": "swing",
@@ -54,11 +60,29 @@
       "StepRecord": "watch",
       "Text": "Now your hand calculates.  Each attack multiplies your DMG and your hand has its own multiplier.",
       "Anchor": "math-band",
+      "Until": "round-done"
+    },
+    {
+      "StepRecord": "the-blow-landed",
+      "Text": "Not dead. It swung back three times - your shield swallowed the first one whole, and the other two found you. One shield, one attack. Raise more when you expect worse.",
+      "Anchor": "duelist-card",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "the-ledger",
+      "Text": "Every blow of this climb is written down here, term by term. Open it and see what that round actually cost.",
+      "Anchor": "ledger-button",
+      "Until": "ledger-opened"
+    },
+    {
+      "StepRecord": "finish-it",
+      "Text": "It has little left. Take it down.",
+      "Anchor": "hand",
       "Until": "phase-reward"
     },
     {
       "StepRecord": "the-vitae",
-      "Text": "Dead in one blow. Its vitae is yours, the only coin in this tower.",
+      "Text": "Dead. Its vitae is yours, the only coin in this tower.",
       "Anchor": "build-card",
       "Until": "next"
     },
@@ -76,8 +100,33 @@
     },
     {
       "StepRecord": "the-shelf",
-      "Text": "Now your jewelry.  You won't survive without them.  Spend your vitae wisely.",
+      "Text": "Now your jewelry. Three on offer and coin enough for two of them - you won't survive without them, so spend it.",
       "Anchor": "shop-shelf",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "buy-two-rings",
+      "Text": "Take two. Any two - they are yours for the rest of the climb.",
+      "Anchor": "shop-shelf",
+      "Until": "rings-worn",
+      "Count": 2
+    },
+    {
+      "StepRecord": "rings-stack",
+      "Text": "Both are on your hand now, and both are awake at once. Every card they match, they each take a turn at - so two rings that want the same card multiply together rather than taking turns. They fire left to right along this row.",
+      "Anchor": "shop-worn",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "the-draught",
+      "Text": "One flask left to buy. Drink it.",
+      "Anchor": "shop-dmg-potion",
+      "Until": "dmg-bought"
+    },
+    {
+      "StepRecord": "draught-is-permanent",
+      "Text": "That DMG is yours for good. A ring can be sold and a shield lasts a turn, but a draught changes the duelist - every blow you throw from here is bigger for it.",
+      "Anchor": "build-card",
       "Until": "next"
     },
     {

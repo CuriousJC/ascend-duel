@@ -1261,17 +1261,33 @@ player's.
   lesson and became a bug the moment the profile became a real trigger — the tutorial ran on
   whatever the clock had rolled and described a hand it had not dealt. **A promise and the thing
   that makes it true belong in one file.** The scenario entry keeps only `"Teach": true`.
-- **Run code `0000HX` deals `Jab Cut Thrust Strike`, all fire, for exactly 6 AP and 102 damage
-  against a GiantBat's 80.** The other four cards are two earth, an ice and a lightning, so there is
-  no competing set, and the first card dealt is one of the four — which the opening step needs,
-  since it queues `first-card` and a stray would break both the budget and the hand.
-- **Both halves of the promise are now tested, and they check each other.**
-  `TestTheTutorialsBlowKillsTheTutorialsEnemy` in `internal/combat` proves the rules resolve that
-  turn lethally; `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` in `internal/screens` proves
-  the seed actually deals it — the set's size, that it is the only one that size, that the first
-  card belongs to it, that it is affordable and lethal, and that its four cards are the four the
+- **The taught fight is two rounds, and the shield is why** *(owner's call, 2026-09-06)*. Run code
+  `0000GY` deals `Jab Ward Thrust Strike`, all lightning, for exactly 6 AP — an Elemental Four of a
+  Kind dealing 69 into a GiantBat's 80. **One of the four is a Ward**, which teaches the thing a
+  hand of pure attacks cannot: a defence carries an element and joins a hand like anything else,
+  bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
+  Swoop, Drain, Nip — and **the Ward's one shield eats the Swoop whole while the other two land**,
+  60 life down to 48. A creature that dies in one blow never swings, so a lesson about shields
+  cannot be taught in a round that kills. The player then reads the ledger and finishes it.
+- **The other four cards are an arcane, an earth, a fire and an ice**, so there is no competing set,
+  and the first card dealt is one of the four — which the opening step needs, since it queues
+  `first-card` and a stray would break both the budget and the hand.
+- **Both halves of the promise are tested, and they check each other.**
+  `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` proves the
+  rules resolve that turn to a wound — **it is two-sided**, failing if the blow starts killing, if
+  it leaves more than half the creature standing, or if the taught set stops holding exactly one
+  shield. `TestTheTutorialsSeedDealsTheHandTheLessonDescribes` in `internal/screens` proves the seed
+  actually deals it — the set's size, that it is the only one that size, that the first card belongs
+  to it, that it is affordable, that it does *not* kill, and that its four cards are the four the
   combat test writes out by hand. **If either goes red the answer is a new seed, not a weaker
   check**; `go run ./tools/seeds` is the search.
+- **The ledger step is the one anchor naming a control the frame owns** *(2026-09-06)*. `state.LedgerOpens`
+  is a tally bumped by `internal/game` when the panel opens, published as a fact and read by
+  `ledger-opened` against a baseline — the same trick `round-done` uses, because the account is
+  reachable from every screen and an opening from three steps ago is not this step's. **It advances
+  one frame late on purpose**: the panel takes the whole frame and the scene beneath it is not
+  updated at all, so the step gives way when the player closes the account rather than while it is
+  covering Bob.
 - **`gs.InputGated` / `gs.InputFocus` is the shield**, and it gates on the *cursor* rather than per
   widget — one predicate in `systems.UpdateButton` plus the handful of places in `internal/screens`
   that read the mouse directly. A per-widget rule is a list a new widget is missing from.
@@ -1280,9 +1296,10 @@ player's.
 - **It is deliberately not a `modalToggle`.** Every other dialog takes one footprint and scrims the
   whole screen; a thing whose job is to point at what is underneath cannot be the thing covering it.
   That is a second dialog shape, decided on purpose *(owner's call, 2026-08-25)*.
-- **`TestTheTutorialsBlowKillsTheTutorialsEnemy` in `internal/combat` is the one to keep.** The
-  lesson promises a kill in one blow, and four files tuned for their own reasons can break that
-  promise silently — Jab's `Amount`, the ladder's multiplier, the duelist's `DMG`, the bat's `HP`.
+- **`TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` is the one
+  to keep.** The lesson promises a blow that wounds and does *not* kill, and four files tuned for
+  their own reasons can break that promise silently in either direction — the taught cards'
+  `Amount`, the ladder's multiplier, the duelist's `DMG`, the bat's `HP`.
 
 **The machinery refuses the mistakes it can detect** — an ungated action step, a click with nothing
 named to click, a lock disagreeing with its condition. **What it cannot check is whether an anchor

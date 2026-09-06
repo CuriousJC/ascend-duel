@@ -204,7 +204,11 @@ func check(r *record) error {
 	// exactly as a Deck has — by reference rather than by list. The tutorial is what wanted it:
 	// its lesson has to happen on the real deck and the real shuffle, so the fixture pins the run
 	// that deals the hand rather than replacing the deck that cannot.
-	if len(r.Hand) == 0 && len(r.Deck) == 0 && r.Seed == "" && r.Screen == screenCombat {
+	// **And so does Teach** *(2026-09-06)*. The tutorial's seed moved into `data/tutorial.json`,
+	// where the lesson's promises live, so the entry that starts it no longer pins one here — it
+	// says only "teach it". That is the same guarantee at one further remove: the script names the
+	// run, and the run deals the hand.
+	if len(r.Hand) == 0 && len(r.Deck) == 0 && r.Seed == "" && !r.Teach && r.Screen == screenCombat {
 		return fmt.Errorf("has no hand and no deck, so there is nothing to look at")
 	}
 	for _, c := range r.Deck {

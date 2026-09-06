@@ -29,9 +29,27 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		// **Unqueued, not the hand's length.** A queued card stays in the row with `selected` set —
 		// see `toggle` and `syncQueue` — so `len(s.hand)` is the same number before and after the
 		// player has picked everything, and a step waiting on that waited forever.
-		Unqueued:     len(s.hand) - s.selectedCount(),
-		Resolving:    !s.planning() && !s.duelSettled(),
-		RoundsPlayed: s.round,
+		Unqueued:  len(s.hand) - s.selectedCount(),
+		Resolving: !s.planning() && !s.duelSettled(),
+
+		// **Rounds *finished*, which is not what `s.round` counts** *(2026-09-06)*. That counter is
+		// bumped when DUEL! is pressed — it is the round now being played, so it reads 1 for the
+		// whole of the first playback — and `tutorial.Facts.RoundsPlayed` is documented as how many
+		// rounds have resolved. Publishing it raw made `round-done` unsatisfiable: `duel-pressed`
+		// gives way on the same frame the counter moves, so the following step's baseline was
+		// already the round it was waiting for and the lesson hung on the math band forever.
+		//
+		// **Corrected here rather than in the condition**, because the condition is right and the
+		// number was wrong. A `>=` in `satisfied` would have made every other reading of the field
+		// off by one to compensate for this one.
+		RoundsPlayed: s.roundsFinished(),
+
+		// **Read off the frame, not off this screen.** The ledger button belongs to `internal/game`
+		// and its panel eats the whole frame while it is up, so what this screen can honestly say
+		// is the tally the frame keeps — which is why it is on GlobalState rather than here. The
+		// value arrives on the first frame after the panel closes, since this method is not called
+		// while it is open at all.
+		LedgerOpens: gs.LedgerOpens,
 	}
 	match := s.matchingCards(gs)
 	f.Matching = len(match)
@@ -44,6 +62,17 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		f.Phase = gs.Run.Phase().String()
 	}
 	return f
+}
+
+// roundsFinished is how many rounds of this duel have been played out to the end.
+//
+// **`s.round` is the round in progress, not the count of completed ones**, so a round being
+// replayed right now is subtracted back off. See the field it feeds, and tutorial.CondRoundDone.
+func (s *CombatScene) roundsFinished() int {
+	if !s.planning() && !s.duelSettled() {
+		return s.round - 1
+	}
+	return s.round
 }
 
 // tutorialRect is where each of this screen's anchors is drawn.
@@ -109,6 +138,13 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 		band := handZone(gs)
 		return image.Rect(band.Min.X, band.Max.Y+apBarBelow-4,
 			band.Max.X, band.Max.Y+apBarBelow+apBarHeight+apFigureBelowBar+20), true
+
+	case tutorial.AnchorLedgerButton:
+		// **The column's own answer, not a copy of it.** `internal/game` places the LEDGER button
+		// by asking this same function for the same slot — see chrome.go's ledgerButtonRect — so
+		// the lit square is derived from the thing that positions the button rather than from a
+		// second reading of the layout.
+		return ControlColumnSlot(gs, SlotLedger), true
 
 	case tutorial.AnchorDuelButton:
 		return buttonRect(s.duelButton), true

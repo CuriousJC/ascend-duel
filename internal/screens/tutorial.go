@@ -297,9 +297,16 @@ func (t *tutorialOverlay) placeButtons(step tutorial.Step) {
 // corner is nowhere.
 //
 // The candidates are ordered so the common case is stable: bottom-centre first, because most of
-// what a lesson points at is a card or a corner control, then the four corners. A step whose
-// anchor covers all five gets the last one anyway — with the anchor spotlit through the scrim, a
-// bubble overlapping it is legible where no bubble at all would be a lesson with no words.
+// what a lesson points at is a card or a corner control, then the four corners.
+//
+// **A step whose anchor rules out every seat gets the one that covers least of it** *(owner's call,
+// 2026-09-06)*, rather than the last seat in the list. The reward screen is what wanted it: its
+// worm anchor covers the prizes *and* the row of cards they are aimed at — the whole middle of the
+// screen — so every seat overlaps, and falling through to dead centre put the bubble squarely over
+// the two worms the step was telling the player to choose between. Top-centre misses by 27 pixels.
+// A bubble overlapping a spotlit anchor is legible where no bubble at all would be a lesson with no
+// words, so the fallback still places one; it just stops picking the worst available spot on
+// purpose.
 func (t *tutorialOverlay) place(gs *state.GlobalState, host tutorialHost,
 	step tutorial.Step) image.Rectangle {
 
@@ -335,14 +342,23 @@ func (t *tutorialOverlay) place(gs *state.GlobalState, host tutorialHost,
 	// Kept off the anchor by the same margin it keeps off the screen edge, so a bubble does not
 	// end up touching the thing it is pointing at.
 	avoid := target.Inset(-tutorialMargin)
+
+	// **Scored against the anchor itself, not against the margin around it.** What matters in the
+	// fallback is how much of the thing being pointed at is hidden; the margin is a courtesy that
+	// decides whether a seat is clean, and counting it would let a seat that merely crowds the
+	// anchor lose to one that sits on top of it.
+	best, bestArea := image.Rectangle{}, -1
 	for _, s := range seats {
 		r := image.Rect(s.X, s.Y, s.X+w, s.Y+h)
 		if !r.Overlaps(avoid) {
 			return r
 		}
+		hidden := r.Intersect(target)
+		if area := hidden.Dx() * hidden.Dy(); bestArea < 0 || area < bestArea {
+			best, bestArea = r, area
+		}
 	}
-	last := seats[len(seats)-1]
-	return image.Rect(last.X, last.Y, last.X+w, last.Y+h)
+	return best
 }
 
 // draw puts the spotlight down, then the bubble on top of it.
@@ -532,15 +548,18 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 // player to do something else — looks exactly like a step that is simply stuck.
 // `TestEveryConditionSaysWhatItIsWaitingFor` fails rather than letting one through.
 var waitingWords = map[tutorial.Condition]string{
-	tutorial.CondNext:        "", // has a button; this is never read
-	tutorial.CondCardsQueued: "take a card",
-	tutorial.CondHandEmptied: "take them all",
-	tutorial.CondMatchQueued: "take them all",
-	tutorial.CondDuelPressed: "press it",
-	tutorial.CondRoundDone:   "watching",
-	tutorial.CondPhaseFight:  "back to the tower",
-	tutorial.CondPhaseReward: "win the fight",
-	tutorial.CondPhaseShop:   "take your prize",
+	tutorial.CondNext:         "", // has a button; this is never read
+	tutorial.CondCardsQueued:  "take a card",
+	tutorial.CondHandEmptied:  "take them all",
+	tutorial.CondMatchQueued:  "take them all",
+	tutorial.CondDuelPressed:  "press it",
+	tutorial.CondRoundDone:    "watching",
+	tutorial.CondPhaseFight:   "back to the tower",
+	tutorial.CondPhaseReward:  "win the fight",
+	tutorial.CondPhaseShop:    "take your prize",
+	tutorial.CondLedgerOpened: "open the ledger",
+	tutorial.CondRingsWorn:    "buy them",
+	tutorial.CondDMGBought:    "drink it",
 }
 
 func waitingFor(c tutorial.Condition) string { return waitingWords[c] }

@@ -36,7 +36,7 @@ func TestEveryStepCanBeSatisfied(t *testing.T) {
 		step, _ := run.Current()
 
 		before := step
-		f, next := satisfying(t, step.Until, run.baseRounds)
+		f, next := satisfying(t, step, run.baseRounds, run.baseLedger, run.baseDMG)
 		run.Update(f, next)
 
 		if cur, ok := run.Current(); ok && cur.Key == before.Key {
@@ -46,8 +46,9 @@ func TestEveryStepCanBeSatisfied(t *testing.T) {
 }
 
 // satisfying is the Facts and the button press that make one condition true.
-func satisfying(t *testing.T, c Condition, baseRounds int) (Facts, bool) {
+func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG int) (Facts, bool) {
 	t.Helper()
+	c := step.Until
 	switch c {
 	case CondNext:
 		return Facts{}, true
@@ -61,6 +62,12 @@ func satisfying(t *testing.T, c Condition, baseRounds int) (Facts, bool) {
 		return Facts{Resolving: true}, false
 	case CondRoundDone:
 		return Facts{RoundsPlayed: baseRounds + 1}, false
+	case CondLedgerOpened:
+		return Facts{LedgerOpens: baseLedger + 1}, false
+	case CondRingsWorn:
+		return Facts{RingsWorn: step.Count}, false
+	case CondDMGBought:
+		return Facts{DMGBonus: baseDMG + 1}, false
 	case CondPhaseFight:
 		return Facts{Phase: "fight"}, false
 	case CondPhaseReward:

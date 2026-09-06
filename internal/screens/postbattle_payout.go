@@ -107,7 +107,7 @@ func (s *PostBattleScene) drawProse(gs *state.GlobalState, screen *ebiten.Image,
 // here — the line just read says two creatures are fleeing the enemy, and a card that was already
 // on screen would contradict it.
 func (s *PostBattleScene) beginOffer(gs *state.GlobalState) {
-	s.stage = pickWorm
+	s.stage = choosing
 	for i := range s.entry {
 		s.entry[i] = newTravel(i*wormEntryStagger, wormEntryTicks)
 	}

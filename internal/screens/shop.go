@@ -883,6 +883,25 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 	}
 }
 
+// goodAvailable is whether a seat can be clicked at all: the purse covers it, and there is somewhere
+// to put what comes out.
+//
+// **Only the bucket has the second question** *(2026-09-06)*. A stone is spent in the dialog that
+// opened the bag and a worm is spent in the dialog that opened the can, so neither can hand the run
+// something it has no room for; a parasite goes into a bucket that now holds two — see
+// session.MaxHeld — and a full one would take five vitae for a card that `Hold` refuses. The seat
+// goes dim rather than the purchase failing afterwards, which is the same courtesy an unaffordable
+// good already gets.
+func goodAvailable(gs *state.GlobalState, kind goodKind) bool {
+	if !goodAffordable(gs, kind) {
+		return false
+	}
+	if kind == goodBucket && gs.Run.HoldFull() {
+		return false
+	}
+	return true
+}
+
 // openGood pays for a sealed good and opens it.
 //
 // **The purse moves first and the dialog opens second**, exactly as `Buy` wears the ring after
@@ -890,7 +909,7 @@ func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 // refuses. A dialog opened before the payment would be four cards the player could take for free
 // if the purse turned out to be short.
 func (s *ShopScene) openGood(gs *state.GlobalState, kind goodKind) {
-	if gs.Run == nil || s.goodTaken(kind) || !goodAffordable(gs, kind) {
+	if gs.Run == nil || s.goodTaken(kind) || !goodAvailable(gs, kind) {
 		return
 	}
 
@@ -934,7 +953,7 @@ func (s *ShopScene) drawGoods(gs *state.GlobalState, screen *ebiten.Image,
 			continue
 		}
 
-		lit := goodAffordable(gs, kind)
+		lit := goodAvailable(gs, kind)
 		drawGoodCard(gs, screen, at.Min, goodName(kind), goodLine(kind), goodArt(gs, kind), lit)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", goodPrice(kind)), lit)
 	}

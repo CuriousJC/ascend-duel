@@ -202,11 +202,14 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
 **Parasites alter the deck *during* a fight, and they are the one mechanic allowed near a live
 round** *(owner's call, 2026-08-27)*. `data/parasites.json` is the catalogue,
 `internal/session/parasite.go` validates and applies, `internal/combat/rider.go` holds the one
-vocabulary the rules have to read, and `internal/screens/combat_parasite.go` is the board piece —
-the `P` button above the fight log. See MECHANICS.md §Parasites. Three things to know before
+vocabulary the rules have to read, and `internal/screens/combat_parasite.go` is the run's half —
+there is no board piece any more. **The `P` button and its dialog went on 2026-09-06** *(owner's
+call)*: a parasite is a card in the **consumables pane** on the top row (`consumables.go`), and it
+is aimed by **selecting the cards in the hand first and clicking the parasite second** — the rule
+that joins the two is `targeting.go`. See MECHANICS.md §Parasites. Three things to know before
 touching any of it:
 
-- **Between turns, never inside one.** The dialog is gated on `planning()`, because `ResolveRound`
+- **Between turns, never inside one.** Spending is gated on `planning()`, because `ResolveRound`
   decides a whole round before playback starts and a card altered mid-playback would show a face
   disagreeing with a blow already computed. This is the presentation-may-never-change-an-outcome
   rule meeting the one mechanic that wanted to break it.

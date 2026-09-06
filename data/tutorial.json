@@ -70,7 +70,7 @@
     },
     {
       "StepRecord": "choose-a-worm",
-      "Text": "Choose a worm to change your deck.",
+      "Text": "Pick the card you want changed, then click the worm that changes it.",
       "Anchor": "reward-worms",
       "Until": "phase-shop"
     },

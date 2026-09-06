@@ -33,12 +33,26 @@ func TestTheTopRowIsThreeThingsThatDoNotOverlap(t *testing.T) {
 			rings.Max.X, enemy.Min.X)
 	}
 
-	// And the row is wide enough to be a row. Five ring cards at full size is what the band
-	// was widened for, and a pane narrower than that would start overlapping them — which
-	// ringSlotPitch does deliberately, so nothing else would report it.
-	if want := maxRings * cards.RingStyle.Width; rings.Dx() < want {
-		t.Errorf("the ring row is %dpx wide, less than the %d cards it holds at %dpx each",
-			rings.Dx(), maxRings, cards.RingStyle.Width)
+	// **What is deliberately not checked is that the cards do not overlap** *(owner's call,
+	// 2026-09-06)*. They do, and that is the design: the top row packs five ring seats and two
+	// consumable seats at one shared pitch, and between the two fighter cards that pitch is two
+	// pixels tighter than a card. ringSlotPitch closes a row up rather than shrinking a card,
+	// because a smaller ring is a different drawing — so an assertion that five cards fit at full
+	// width was a fact about a row with nothing beside it, and it went stale the moment the row was
+	// divided.
+	//
+	// The floor kept here is a sanity bound and not a layout rule: a pitch that has collapsed to
+	// nothing means the span arithmetic is wrong rather than that the row is snug.
+	if pitch := ringSlotPitch(rings, maxRings); pitch <= 0 {
+		t.Errorf("%d rings sit at a pitch of %dpx in a %dpx row", maxRings, pitch, rings.Dx())
+	}
+
+	// The consumables pane is the other half of the row, and it must clear the enemy card and the
+	// rings on either side of it. It is fixed width, so this is what catches the row being narrowed
+	// under it rather than the pane being resized.
+	if cons := s.consumablePaneRect(gs); cons.Min.X <= rings.Max.X || cons.Max.X > enemy.Min.X {
+		t.Errorf("the consumables pane runs %d..%d, against a ring row ending at %d and an enemy card at %d",
+			cons.Min.X, cons.Max.X, rings.Max.X, enemy.Min.X)
 	}
 }
 

@@ -152,8 +152,16 @@ func New(deck []combat.Card) *Session {
 	// **The bucket is filled the same way the fingers are**, and a key the catalogue has not got is
 	// dropped rather than held — `Hold` is what refuses it. See StartingParasites, which is empty
 	// as shipped.
+	//
+	// **It goes past the cap on purpose** *(2026-09-06)*. `Hold` refuses a third parasite because
+	// `MaxHeld` is a rule about *acquiring* one, and this is a fixture planting a bucket rather than
+	// a run buying one — the same exception `internal/scenario`'s check() already writes down for a
+	// hand longer than the game's own. Four fixtures exist to walk six parasites through the dialog
+	// and trimming them to two would leave four Notes describing cards that are no longer there.
+	// The pane draws the first two seats and the count reads the honest number, so an over-full
+	// bucket looks like what it is.
 	for _, key := range StartingParasites {
-		s.Hold(key)
+		s.hold(key)
 	}
 	// **And the pouch the same way**, with a key the catalogue has not got dropped rather than
 	// carried — `Carry` is what refuses it. See StartingStones, which is empty as shipped.

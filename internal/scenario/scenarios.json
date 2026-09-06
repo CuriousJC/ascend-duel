@@ -172,7 +172,7 @@
   },
   {
     "ScenarioRecord": "bucket-of-parasites",
-    "Note": "The board piece: a bucket holding one of each shape a parasite can take, opened with the P button above the fight log. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Strike, Graft makes the first card you click into the second, and Hoard needs no target at all and so is taken on the click.",
+    "Note": "The board piece: a bucket holding one of each shape a parasite can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the parasite. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Strike, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.",
     "Rings": [],
     "Hand": [],
     "Parasites": [

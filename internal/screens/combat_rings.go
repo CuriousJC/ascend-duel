@@ -108,17 +108,30 @@ var ringPaneBackColor = color.RGBA{R: 207, G: 189, B: 156, A: 255}
 // **The rectangle is the cards and the rule, not the backing.** It is what the slots are cut
 // out of and what the rule and the fraction hang off; the backing is derived from it — see
 // ringPaneBackRect — so growing the padding cannot silently move a ring.
+//
+// **It is the left half of a two-pane row since 2026-09-06** *(owner's call)*. The consumables pane
+// takes a fixed two seats off the right-hand end and the rings take what is left — see topRowPanes,
+// and consumablePaneWidth for what that costs a full row of five.
 func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
+	rings, _ := s.topRowPanes(gs)
+	return rings
+}
+
+// consumablePaneRect is the right half: the parasites the run is carrying. See consumables.go.
+func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle {
+	_, consumables := s.topRowPanes(gs)
+	return consumables
+}
+
+// topRowPanes is the split, over the span between the two fighter cards.
+//
+// **The row is exactly a card deep** *(2026-09-04)*. It used to reserve a gap under itself for a
+// rule with the worn count beneath it; the rule is gone and the count hangs off the backing's
+// corner, so the pane ends where the cards do. That is 44 pixels the top band gives back, which is
+// what let the card grow to five quarters — see cardScaleNum in internal/cards/style.go.
+func (s *CombatScene) topRowPanes(gs *state.GlobalState) (rings, consumables image.Rectangle) {
 	left, right := ringRowSpan(gs)
-	top := duelistCardRect(gs).Min.Y + ringPaneTopDrop
-
-	// **The row is exactly a card deep** *(2026-09-04)*. It used to reserve a gap under itself for
-	// a rule with the worn count beneath it; the rule is gone and the count hangs off the backing's
-	// corner, so the pane ends where the cards do. That is 44 pixels the top band gives back, which is what let
-	// the card grow to five quarters — see cardScaleNum in internal/cards/style.go.
-	bottom := top + cards.RingStyle.Height
-
-	return image.Rect(left, top, right, bottom)
+	return topRowPanes(left, right, duelistCardRect(gs).Min.Y+ringPaneTopDrop)
 }
 
 // ringRowSpan is the horizontal extent of the ring row: where it starts after the duelist card

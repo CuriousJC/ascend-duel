@@ -397,6 +397,15 @@ card file, so a sixth element or a new concept joins the grid with nothing edite
 hard-coded axis list is the failure mode**: it goes stale silently, and the whole point of the
 report is to be current.
 
+**This skill is one ring at a time. For the catalogue as a whole, load `ring-balance`** —
+`.claude/skills/ring-balance/SKILL.md`, and its `classify.py`, which put every ring on six axes
+(category, payload, scope, breadth, build, rarity) derived from its rules. Reach for it when the
+question is "what is the catalogue short of" rather than "is this ring already in it": whether
+offense is over-weighted at common, whether a proposal's category is thin or crowded, what a batch
+of new commons does to the shelf. **The two grids are complementary** — `coverage.py` walks the
+*grammar's* shape and `classify.py` walks the *game's*, so a cell can be full in one and empty in
+the other.
+
 ### 1. Similarity — is this ring already in the file?
 
 Take the proposal's `(When, Do)` pair and read the grid at it. Three verdicts:

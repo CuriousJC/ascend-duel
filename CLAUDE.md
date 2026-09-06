@@ -53,6 +53,7 @@ skill that does not exist.
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
 | [`rings`](.claude/skills/rings/SKILL.md) | designing, **discussing** or **analysing** a proposed ring, adding to `rings.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn ring |
+| [`ring-balance`](.claude/skills/ring-balance/SKILL.md) | any question about the ring catalogue **as a whole** — is offense over-weighted at common, does every element have a cost ring, what a batch of new rings does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
 went wrong once and should not have to be rediscovered.

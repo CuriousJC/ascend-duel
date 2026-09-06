@@ -65,7 +65,7 @@ func TestALaterFightIsADifferentShop(t *testing.T) {
 
 	first := shelfKeys(dealShelf(gs))
 	for i := 0; i < 6; i++ {
-		gs.Run.WonFight(0)
+		gs.Run.WonFight(0, 0)
 		if !sameKeys(first, shelfKeys(dealShelf(gs))) {
 			return
 		}

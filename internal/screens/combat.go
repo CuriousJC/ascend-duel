@@ -498,9 +498,14 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
 
-	// A fresh duel: full life and no standing defenses carried out of a duel that has been walked
-	// away from.
+	// **A fresh duel, but not a fresh body** *(owner's call, 2026-09-06)*. The wound the run is
+	// carrying comes with it into this room; only a stairway win clears it, and `WonFight` is
+	// where that happens. The opponent is always whole — a creature met in a room has not fought
+	// anybody. See session/life.go.
 	s.fighter.CurrentLife = s.fighter.MaxLife
+	if gs.Run != nil {
+		s.fighter.CurrentLife = gs.Run.LifeAtFightStart(s.fighter.MaxLife)
+	}
 	s.enemy.CurrentLife = s.enemy.MaxLife
 	s.fighter.Duelist = resetCombatState(s.fighter.Duelist)
 	s.enemy.Duelist = resetCombatState(s.enemy.Duelist)
@@ -653,7 +658,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		// **Before WonFight**, because a `grow-on-hit` ring grew the fighter's own copy during the
 		// duel and this is the last tick that copy exists.
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
-		gs.Run.WonFight(s.fighter.CurrentLife)
+		gs.Run.WonFight(s.fighter.CurrentLife, s.fighter.MaxLife)
 
 		// **The duel-won moment, and the floor the run now stands on.** Both fire on every win and
 		// the profile keeps one award apiece — see achieve.go, and data/achievements.json, where

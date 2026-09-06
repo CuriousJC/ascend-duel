@@ -2382,6 +2382,38 @@ shape is not. *(ideas.md's "one enemy per level" is superseded.)*
 - **Generate both doors, always.** Rolling only the chosen one shifts every subsequent draw in
   the run.
 
+### Life between fights, and what a stairway is worth *(owner's call, 2026-09-06)*
+
+**A wound is carried from room to room, and only a boss takes it away.** A duel used to open at
+full life whatever the last one cost, which made damage a fact about one round and never about the
+climb: three rooms could be walked in the same condition, and the only thing a bad fight cost was
+the tenth of life-left the payout pays. A floor is now an attrition budget of three rooms.
+
+- **Beating the floor's stairway protector heals to full**, and it is the only thing that does. No
+  card, no ring and no room between fights returns life outside a duel. That is what makes the
+  third room of a floor the one worth arriving at holding something back.
+- **It also raises the ceiling by a third, compounding.** Each stairway is 33% more body than the
+  run already had, not 33% of the body it started with — so a run standing on floor eight, seven
+  stairways up, is carrying about seven and a half times the life it opened with. The ascent curve
+  grows the opponent by 10% a *room*, which is a little over twice that across the same climb, so
+  the two are pulling in the same direction and the boss bonus is the player's half of it.
+- **The ceiling grows, the wound does not scale with it.** Forty points taken on floor two are
+  forty points on floor six — worth much less against a bigger body, which is deliberate: the
+  reward for climbing is that the early rooms of a floor stop being able to end you.
+- **A defeat ends the run**, so nothing carries a wound past the bottom of the tower. There is no
+  state where a run is alive and unable to start a fight; a wound deeper than the ceiling — only
+  reachable by selling the ring that was holding the ceiling up — starts the fight on one life
+  rather than on a corpse.
+- **The rounding is down at every step.** A ceiling is a whole number of hit points, so 100 becomes
+  133, then 176, then 234 rather than the 235 the arithmetic in the round would give.
+- **The opponent is always whole.** A creature met in a room has not fought anybody; only the
+  player carries anything between fights.
+
+`session.Session` stores **the wound and the count of bosses beaten**, not a life total and a
+ceiling. The ceiling is rebuilt from the record every fight and then moved by whatever is worn, so
+a stored total would mean a different fraction of it the moment a ring changed hands, and a stored
+multiplier is a second copy of a fact the count already carries. See `internal/session/life.go`.
+
 ### The ascent curve
 
 **Every room grows the opponent's HP and DMG by 10%, compounding** *(2026-08-17, owner's call)*.

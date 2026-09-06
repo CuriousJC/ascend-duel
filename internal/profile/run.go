@@ -54,6 +54,18 @@ type RunSnapshot struct {
 	Vitae    int `json:"vitae"`
 	LifeLeft int `json:"lifeLeft"`
 
+	// Hurt is how much life the run is down, carried from room to room, and BossWins is how many
+	// stairway protectors it has beaten — which is the run's max-life multiplier.
+	//
+	// **A wound and a count, rather than a life total and a ceiling.** The ceiling is rebuilt from
+	// the record every fight and moved by whatever is worn, so a stored total would mean a
+	// different fraction of it the moment a ring changed hands; and a stored multiplier is a
+	// second copy of a fact the count already carries. Both are omitted when zero, so a save from
+	// a run that has taken no damage and climbed no stairway reads the way it did before either
+	// field existed.
+	Hurt     int `json:"hurt,omitempty"`
+	BossWins int `json:"bossWins,omitempty"`
+
 	// Worn is the rings, by record key, **in worn order** — which is a rule and not a presentation
 	// detail, since rings fire left to right and compound. A list rather than a set for that
 	// reason.

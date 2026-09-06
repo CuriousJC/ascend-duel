@@ -9,7 +9,7 @@ func TestAWinPaysInterestThenTheRoomAndTheLife(t *testing.T) {
 	run := bare(t)
 	run.vitae = 20
 
-	run.WonFight(63)
+	run.WonFight(63, 63)
 
 	got := run.Spoils()
 	if got.Propagated != 4 {
@@ -34,7 +34,7 @@ func TestTheRoomIsWorthThreeFourFive(t *testing.T) {
 	} {
 		run := bare(t)
 		run.fight = tc.fight
-		run.WonFight(0)
+		run.WonFight(0, 0)
 
 		if got := run.Spoils().FromRoom; got != tc.want {
 			t.Errorf("fight %d paid %d, want %d", tc.fight, got, tc.want)
@@ -47,7 +47,7 @@ func TestTheRoomIsWorthThreeFourFive(t *testing.T) {
 func TestSoulTakerPaysTheRoomFlat(t *testing.T) {
 	run := wearing(t, "soul-taker-ring")
 	run.fight = 2
-	run.WonFight(0)
+	run.WonFight(0, 0)
 
 	if got := run.Spoils().FromRoom; got != 10 {
 		t.Errorf("a stairway paid %d wearing Soul Taker, want 10", got)
@@ -59,7 +59,7 @@ func TestSoulTakerPaysTheRoomFlat(t *testing.T) {
 func TestLifeLeftIsATenthRoundedDown(t *testing.T) {
 	for _, tc := range []struct{ life, want int }{{0, 0}, {9, 0}, {10, 1}, {65, 6}, {100, 10}} {
 		run := bare(t)
-		run.WonFight(tc.life)
+		run.WonFight(tc.life, tc.life)
 
 		if got := run.Spoils().FromLife; got != tc.want {
 			t.Errorf("%d life left paid %d, want %d", tc.life, got, tc.want)
@@ -72,7 +72,7 @@ func TestLifeLeftIsATenthRoundedDown(t *testing.T) {
 func TestClaimingPaysOnce(t *testing.T) {
 	run := bare(t)
 	run.vitae = 20
-	run.WonFight(63)
+	run.WonFight(63, 63)
 	want := run.Vitae() + run.Spoils().Total()
 
 	run.ClaimPropagation()
@@ -94,7 +94,7 @@ func TestClaimingPaysOnce(t *testing.T) {
 func TestAdvancePaysWhatWasNeverClaimed(t *testing.T) {
 	run := bare(t)
 	run.vitae = 20
-	run.WonFight(63)
+	run.WonFight(63, 63)
 	want := run.Vitae() + run.Spoils().Total()
 
 	run.Advance() // fight -> reward
@@ -112,7 +112,7 @@ func TestAdvancePaysWhatWasNeverClaimed(t *testing.T) {
 func TestAdvancingIntoTheRewardKeepsTheSpoils(t *testing.T) {
 	run := bare(t)
 	run.vitae = 20
-	run.WonFight(63)
+	run.WonFight(63, 63)
 	owed := run.Spoils().Total()
 
 	run.Advance() // fight -> reward, the move a win makes

@@ -15,7 +15,7 @@ import (
 func wonRun(life int) *state.GlobalState {
 	gs := &state.GlobalState{RunSeed: 20260822, Run: session.New(session.StartingDeck())}
 	gs.Run.AddVitae(15)
-	gs.Run.WonFight(life)
+	gs.Run.WonFight(life, life)
 	return gs
 }
 
@@ -99,7 +99,7 @@ func TestNoInterestLineWithNoInterest(t *testing.T) {
 	for gs.Run.Vitae() > 0 {
 		gs.Run.SpendVitae(1)
 	}
-	gs.Run.WonFight(50)
+	gs.Run.WonFight(50, 50)
 
 	for _, l := range payoutLines(gs) {
 		if strings.Contains(l.plain(), "resonates") {

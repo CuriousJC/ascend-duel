@@ -334,6 +334,13 @@ func (s *Session) Grown(key string) int { return s.grown[key] }
 // stops paying. HP raises the ceiling and fills it, because a fight starts at full life; a duelist
 // arriving hurt keeps the wound and gains the headroom.
 func (s *Session) Equip(d combat.Duelist) combat.Duelist {
+	// **The boss bonus goes on first, before any ring** *(2026-09-06)*. It is growth of the
+	// duelist's own body rather than something worn, so a flat +25 stays worth 25 on top of it and
+	// a percentage ring scales the grown figure — which is the ordering this function already
+	// documents below rather than a third rule. See life.go.
+	d.MaxLife = s.scaleLifeForBosses(d.MaxLife)
+	d.CurrentLife = s.scaleLifeForBosses(d.CurrentLife)
+
 	worn := s.WornRings()
 	for _, w := range worn {
 		d = d.Wearing(w)

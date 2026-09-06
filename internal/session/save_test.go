@@ -206,31 +206,34 @@ func TestEveryPhaseNameParsesBack(t *testing.T) {
 func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
 	s := New(nil)
 
-	agate, ok := StoneForHand("concept-pair")
+	agate, ok := StoneForHand("pair")
 	if !ok {
-		t.Fatal("no stone raises concept-pair")
+		t.Fatal("no stone raises pair")
 	}
-	flint, _ := StoneForHand("form-pair")
+	chert, ok := StoneForHand("form-two-pair")
+	if !ok {
+		t.Fatal("no stone raises form-two-pair")
+	}
 
 	s.UseStone(agate.Record)
 	s.UseStone(agate.Record)
-	s.UseStone(flint.Record)
+	s.UseStone(chert.Record)
 
-	want, _ := s.HandMultiplier("concept-pair")
+	want, _ := s.HandMultiplier("pair")
 
 	back, _, err := Resume(nil, nil, s.Snapshot(0))
 	if err != nil {
 		t.Fatalf("the run would not resume: %v", err)
 	}
 
-	if n := back.StonesOn("concept-pair"); n != 2 {
-		t.Errorf("the resumed run holds %d stones on concept-pair, want 2", n)
+	if n := back.StonesOn("pair"); n != 2 {
+		t.Errorf("the resumed run holds %d stones on pair, want 2", n)
 	}
-	if n := back.StonesOn("form-pair"); n != 1 {
-		t.Errorf("the resumed run holds %d stones on form-pair, want 1", n)
+	if n := back.StonesOn("form-two-pair"); n != 1 {
+		t.Errorf("the resumed run holds %d stones on form-two-pair, want 1", n)
 	}
-	if got, _ := back.HandMultiplier("concept-pair"); got != want {
-		t.Errorf("the resumed run pays %d for a card pair, want %d", got, want)
+	if got, _ := back.HandMultiplier("pair"); got != want {
+		t.Errorf("the resumed run pays %d for a pair, want %d", got, want)
 	}
 }
 

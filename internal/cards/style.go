@@ -725,7 +725,7 @@ var ringAuthored = Style{
 // is the same reading in the same colours, and nothing here can drift from the card it stands
 // for except by that column moving.
 //
-// The hands panel is the caller: nineteen rungs, each shown as the cards that build it, is a
+// The hands panel is the caller: eighteen rungs, each shown as the cards that build it, is a
 // hundred-odd cards on one screen, and at Mini's 81x112 that is a panel of cards with no room
 // left for the ladder.
 var tokenAuthored = Style{

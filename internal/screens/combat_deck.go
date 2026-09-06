@@ -432,5 +432,5 @@ func (s *CombatScene) fightHands() handsContents {
 	for _, c := range s.hand {
 		deck = append(deck, c.actionCard)
 	}
-	return handsContents{deck: deck, holder: s.fighter.Duelist}
+	return handsContents{deck: deck, holder: s.fighter.Duelist, plays: runPlays(s.run)}
 }

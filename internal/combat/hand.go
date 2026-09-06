@@ -16,7 +16,7 @@ import "sort"
 // full house, four of a kind — and the whole of what forming one does is multiply the blow.
 //
 // **A hand is what you played, not what you hit with** *(owner's call, 2026-08-23)*. Defend cards
-// carry an element, so they are counted like anything else: two Wards are a Card Pair, and a turn of
+// carry an element, so they are counted like anything else: two Wards are a Pair, and a turn of
 // four fire cards is an Elemental Four of a Kind whether any of them swung. They bring no damage
 // into the sum, since a defend card's `Damage` is zero — so a hand of nothing but shields multiplies
 // nothing and lands nothing, and a Ward beside two attacks raises the rung the two attacks are paid
@@ -26,11 +26,17 @@ import "sort"
 // **The colours a hand shows include its defences**, so a fire Ward arms a burn on a turn with no
 // fire attack in it. That follows from the same decision and is the sharper half of it.
 //
-// **What "agree" means is the hand's own business** *(2026-08-19)*. Every rung exists three times
-// over, once per `Axis`: two Bashes are a Card Pair, a Bash and a Cleave are a Form Pair only if
-// they share a form — they do not — and an ice Bash beside an ice Thrust is an Elemental Pair
-// though the two agree on nothing else. The three are separate catalogue entries rather than one
-// entry with three readings, so each is priced on how often it can actually be built.
+// **What "agree" means is the hand's own business** *(2026-08-19)*. Most rungs exist three times
+// over, once per `Axis`: two Bashes are a Card Two Pair only if a second pair joins them, a Bash and
+// a Cleave agree on no form - they have different ones - and an ice Bash beside an ice Thrust is an
+// elemental hand though the two agree on nothing else. Those are separate catalogue entries rather
+// than one entry with three readings, so each is priced on how often it can actually be built.
+//
+// **The Pair is the exception and is one entry read on all three** *(owner's call, 2026-09-05)*.
+// Card Pair, Form Pair and Elemental Pair were three rungs describing the same two cards, and a
+// player forming a pair does not care which axis let them - so `hands.json` writes `"match": "any"`
+// and the matcher tries each in turn. See `Hand.Axes`. **It pays 1x**, which is the identity: what
+// a pair buys is that two cards are summed where a High Card lands one.
 //
 // **The multiplier multiplies the hand's own cards** *(2026-08-18, owner's call)*. A Pair of Lunges
 // is `(20 + 20) x 1.5`, so what a hand is worth is a proportion of what its cards deal. It used to
@@ -103,15 +109,6 @@ const (
 
 	// AxisElement counts cards of the same colour. `Basic` never counts, for the same reason.
 	AxisElement
-
-	// AxisCost counts cards that cost the same action points *(2026-09-05)*. It is the fourth
-	// axis and it is genuinely orthogonal to the other three in the player's deck: every cost
-	// tier holds three or four forms and every form spans all three costs, so a hand counting
-	// cost is not a hand counting form under another name.
-	//
-	// **Every card carries a cost, so there is no absence here** — unlike `FormNone` and `Basic`,
-	// a cost of zero is a real value rather than "this card does not play on this axis".
-	AxisCost
 )
 
 // axisNames are the strings hands.json writes. Index by Axis.
@@ -119,12 +116,11 @@ var axisNames = [...]string{
 	AxisConcept: "concept",
 	AxisForm:    "form",
 	AxisElement: "element",
-	AxisCost:    "cost",
 }
 
 // AllAxes is every axis, in tie-break order. It exists so a test and a reference screen can walk
 // them without knowing how many there are.
-var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement, AxisCost}
+var AllAxes = []Axis{AxisConcept, AxisForm, AxisElement}
 
 func (a Axis) String() string {
 	if int(a) < 0 || int(a) >= len(axisNames) {
@@ -162,9 +158,6 @@ func matchValue(c Card, a Axis) (int, bool) {
 	case AxisElement:
 		e := c.Element
 		return int(e), e != Basic
-	case AxisCost:
-		// No absence: a card that costs nothing costs nothing, which is a value like any other.
-		return c.Cost(), true
 	default:
 		return int(c.Concept), true
 	}
@@ -184,12 +177,6 @@ func (a Axis) spread() int {
 		return len(Forms())
 	case AxisElement:
 		return ElementCount - 1
-	case AxisCost:
-		// **Left unchecked, like concepts.** A card declares its own cost — see the note in
-		// CLAUDE.md about nothing stopping a data file writing 5 — so the width of this axis is a
-		// fact about the shipped deck rather than about an enum, and a bound written here would
-		// be a second place to keep in step with duelist_cards.json.
-		return 0
 	default:
 		return 0
 	}
@@ -201,31 +188,46 @@ type Hand struct {
 	Key  string
 	Name string
 
-	// Match is the axis this hand counts on.
+	// Match is the axis this hand counts on. **For a rung read on more than one axis it is the
+	// narrowest of them** - `Axes[0]` - so the tie-break below and `decks.Example` keep working
+	// unchanged against a merged rung.
 	Match Axis
+
+	// Axes is every axis this rung may be read on, narrowest first *(2026-09-05)*. Almost every
+	// entry names one and `Axes` is `[Match]`; the Pair is the exception and names all three.
+	//
+	// **A merged rung is one entry read three ways, not three entries.** Card Pair, Form Pair and
+	// Elemental Pair were three rungs, three stones and three rings saying the same thing about
+	// the same two cards, and a player forming a pair does not care which axis let them - so
+	// `hands.json` writes `"match": "any"` and the matcher tries each in turn.
+	Axes []Axis
 
 	// Groups is how many cards of each *distinct value on the hand's own axis* the hand wants.
 	// `[3,2]` is a full house; the groups naming distinct values is why five cards sharing one
 	// value can never be one.
 	Groups []int
 
-	// Vary is an axis every card in the hand must *differ* on, and Varies says whether one was
-	// named *(2026-09-05)*.
-	//
-	// **It is the second constraint the grammar needed and the smallest one that would do.**
-	// Groups already say "these cards agree"; nothing said "and these cards disagree", so
-	// Weaponmaster — three cards of one cost, each a different form — could not be written at
-	// all. `[1,1,1]` expresses all-different on the hand's *own* axis; Vary is what expresses it
-	// on a second one.
-	//
-	// A card carrying no value on the Vary axis cannot join a hand that names one, for the same
-	// reason `FormNone` cannot join a form hand: it has nothing to differ with.
-	Vary   Axis
-	Varies bool
-
 	// Multiplier is this hand's damage multiplier, in percent, and is the whole of what forming
 	// it buys.
 	Multiplier int
+}
+
+// On is this rung read on one of its axes. **A copy rather than a mutation**, like everything
+// else in this package that hands a value back: the matcher walks a merged rung's axes and needs
+// each reading to be a `Hand` in its own right, so the blow can report which one satisfied it.
+func (h Hand) On(axis Axis) Hand {
+	h.Match = axis
+	h.Axes = []Axis{axis}
+	return h
+}
+
+// axes is every axis this rung may be read on. **A method rather than the field**, so a `Hand`
+// built in a test without one still matches on the axis it names.
+func (h Hand) axes() []Axis {
+	if len(h.Axes) == 0 {
+		return []Axis{h.Match}
+	}
+	return h.Axes
 }
 
 // Cards is how many cards this hand is formed from.
@@ -375,8 +377,9 @@ func highCard(hands []Hand) Hand {
 // matchHand finds the best-paying hand of **two or more cards** the turn can form.
 //
 // **Best is the biggest multiplier, and a tie goes to the narrowest axis** *(2026-08-19)*. Two
-// Bashes satisfy the card pair and the form pair at once, so the comparison needs a second key or
-// it would be decided by file order; `Axis` is written narrowest-first for exactly this.
+// Bashes satisfy the card two pair and the form two pair at once, so the comparison needs a second
+// key or it would be decided by file order; `Axis` is written narrowest-first for exactly this. It
+// is also what picks between the readings of a merged rung, which all carry one multiplier.
 //
 // **The one-card hand is skipped rather than matched** *(2026-08-15)*. The High Card is in the
 // catalogue and would match against any attack at all, but counting is the wrong way to pick it:
@@ -395,13 +398,19 @@ func matchHand(turn []Slot, hands []Hand) ([]int, Hand, int, bool) {
 		if h.Cards() < 2 {
 			continue
 		}
-		cards, lead, ok := matchCountOf(turn, h)
-		if !ok {
-			continue
-		}
-		if !found || h.Multiplier > best.Multiplier ||
-			(h.Multiplier == best.Multiplier && h.Match < best.Match) {
-			best, bestCards, bestLead, found = h, cards, lead, true
+		// **A merged rung is tried on each of its axes**, and each reading competes on the same
+		// two keys as everything else. The readings all carry one multiplier, so the tie-break is
+		// what picks between them - narrowest first, exactly as it picks between two rungs.
+		for _, axis := range h.axes() {
+			on := h.On(axis)
+			cards, lead, ok := matchCountOf(turn, on)
+			if !ok {
+				continue
+			}
+			if !found || on.Multiplier > best.Multiplier ||
+				(on.Multiplier == best.Multiplier && on.Match < best.Match) {
+				best, bestCards, bestLead, found = on, cards, lead, true
+			}
 		}
 	}
 	return bestCards, best, bestLead, found
@@ -469,17 +478,11 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 			if tallies[j].spent || len(tallies[j].members) < g {
 				continue
 			}
-			// A hand naming a Vary axis wants g members that differ on it, which is not simply
-			// the first g of the tally — so the members are chosen here rather than sliced below,
-			// and a tally that cannot supply them does not qualify at all.
-			take, ok := distinctOn(turn, tallies[j].members, h, g)
-			if !ok {
-				continue
-			}
-			// Strictly greater, so a tie goes to the earlier tally — which is the concept whose
-			// first card was played first, since tallies are built by walking the turn.
+			// **The earliest g of the tally**, since the cards are already in the order they were
+			// played. Strictly greater below, so a tie goes to the earlier tally - which is the
+			// value whose first card was played first.
 			if len(tallies[j].members) > bestCount {
-				best, bestCount, bestTake = j, len(tallies[j].members), take
+				best, bestCount, bestTake = j, len(tallies[j].members), tallies[j].members[:g]
 			}
 		}
 		if best < 0 {
@@ -496,42 +499,6 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 	// two. Sorting puts them back into the order they resolve, which is what a bracket wants.
 	sort.Ints(out)
 	return out, lead, true
-}
-
-// distinctOn picks g of a tally's members, honouring the hand's Vary clause.
-//
-// **Without a Vary axis this is the first g members**, which is what the matcher always did — the
-// cards are already in the order they were played, so a prefix is the earliest ones.
-//
-// **With one, it is one card per distinct value on that axis**, taken in play order, and it
-// reports failure when the tally cannot supply g different values. A card carrying no value on the
-// Vary axis is skipped rather than counted under a zero the others would join, which is the same
-// rule matchValue applies to the hand's own axis.
-//
-// Greedy is exact here: the requirement is that the chosen cards be pairwise different on one
-// axis, so taking the first card of each distinct value finds a set whenever one exists.
-func distinctOn(turn []Slot, members []int, h Hand, g int) ([]int, bool) {
-	if !h.Varies {
-		if len(members) < g {
-			return nil, false
-		}
-		return members[:g], true
-	}
-
-	seen := map[int]bool{}
-	out := make([]int, 0, g)
-	for _, i := range members {
-		v, counts := matchValue(turn[i].Card, h.Vary)
-		if !counts || seen[v] {
-			continue
-		}
-		seen[v] = true
-		out = append(out, i)
-		if len(out) == g {
-			return out, true
-		}
-	}
-	return nil, false
 }
 
 // biggestAttack is the High Card: the single attack that hits hardest, or — for a turn that queued

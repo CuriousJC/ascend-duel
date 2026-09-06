@@ -69,6 +69,15 @@ type RunSnapshot struct {
 	// in the catalogue this build loaded, and a file outlives the build that wrote it.
 	Stones map[string]int `json:"stones"`
 
+	// Plays is how many times the run has *formed* each rung, by **hand key**, on the same terms
+	// Stones is keyed *(owner's call, 2026-09-05)*.
+	//
+	// **It is a tally and not an upgrade.** A stone raises what a rung pays; this counts what the
+	// player has actually built, and nothing in the rules reads it. It is saved because a count
+	// that reset every time the game was closed would be a statistic about this sitting rather
+	// than about the run.
+	Plays map[string]int `json:"plays,omitempty"`
+
 	// Held is the bucket of parasites the run is carrying, by record key, **in acquisition
 	// order** — which is the order the board piece draws them in, and so the only order the
 	// player can see. A list rather than a count per key, because two of the same parasite are

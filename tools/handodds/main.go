@@ -55,16 +55,15 @@ func main() {
 
 	fmt.Printf("%d attack cards of %d, hand of %d, %d AP, %d cards to a turn, %d hands dealt\n\n",
 		hands.Attacks(deck), len(deck), table.HandSize, table.Budget, hands.MaxCards, table.Trials)
-	fmt.Printf("cards sharing a value: %d per concept, %d per form, %d per element, %d per cost\n\n",
+	fmt.Printf("cards sharing a value: %d per concept, %d per form, %d per element\n\n",
 		hands.PerValue(deck, combat.AxisConcept),
 		hands.PerValue(deck, combat.AxisForm),
-		hands.PerValue(deck, combat.AxisElement),
-		hands.PerValue(deck, combat.AxisCost))
+		hands.PerValue(deck, combat.AxisElement))
 
 	// **Dealt first, then playable.** The ladder is priced on the deal — how often the shuffle puts
 	// a shape in front of you — and the budget is the second, separate question. Printing them side
 	// by side is what stops a rung being tuned as though they were one number; see the note on
-	// hands.Odds, and the Rising Attack row, where the two are twenty points apart.
+	// hands.Odds, and the Form Full House row, where the two are eighty-five points apart.
 	if *price {
 		fmt.Printf("%-28s %6s %8s %9s %8s %8s\n", "hand", "pays", "dealt", "playable", "score", "suggest")
 	} else {

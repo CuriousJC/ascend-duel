@@ -41,6 +41,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Worn:       s.Worn(),
 		Grown:      map[string]int{},
 		Stones:     s.StoneCounts(),
+		Plays:      s.PlayCounts(),
 		Held:       s.Held(),
 		Pouch:      s.Carried(),
 		NextCardID: s.nextCardID,
@@ -228,6 +229,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		phase:      phase,
 		grown:      map[string]int{},
 		stones:     map[string]int{},
+		plays:      map[string]int{},
 		spoils: Spoils{
 			Propagated: snap.Spoils.Propagated,
 			FromLife:   snap.Spoils.FromLife,
@@ -270,6 +272,19 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		}
 		if n > 0 {
 			s.stones[hand] = n
+		}
+	}
+
+	// **A play count on a rung this build has not got is dropped rather than refused**, which is
+	// the opposite of what a stone gets one block up, and deliberately so: a stone is something the
+	// player bought and paid for, and losing it changes what the run pays. A tally is a statistic,
+	// and refusing to open a save over one would be the machinery mattering more than the game.
+	for hand, n := range snap.Plays {
+		if _, ok := combat.HandSlot(hand); !ok {
+			continue
+		}
+		if n > 0 {
+			s.plays[hand] = n
 		}
 	}
 

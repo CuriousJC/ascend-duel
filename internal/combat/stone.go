@@ -8,13 +8,13 @@ package combat
 //
 // **The bump lives on the duelist rather than on the catalogue** *(owner's call, 2026-08-27)*.
 // `handTable` is package state built at init, shared by every fight, every tool and every test —
-// a run reaching in to raise Card Pair by 11 would raise it for the enemy planner, for
+// a run reaching in to raise the Pair by 10 would raise it for the enemy planner, for
 // `tools/handsheet` and for the next run in the same process. So a duelist carries a count per
 // rung and the catalogue is read *through* it; a duelist with no stones reads the table itself,
 // unchanged and unallocated.
 //
-// **Ten percent of the base, per stone, floored** *(owner's call, 2026-08-27)*. Card Pair is 115,
-// so a stone is worth 11 and two stones are worth 22 — never 11.5 rounded up, and never 10% of
+// **Ten percent of the base, per stone, floored** *(owner's call, 2026-08-27)*. Card Two Pair is
+// 179, so a stone is worth 17 and two stones are worth 34 - never 17.9 rounded up, and never 10% of
 // the value the stone before it produced. The arithmetic is integer for the reason everything in
 // this package is: a hand that rounded differently from the rest of the damage path would be the
 // one number in the game whose sum could not be checked by hand.
@@ -22,12 +22,18 @@ package combat
 // **A hand at a multiplier below its own rung is still legal**, exactly as `hands.json` allows,
 // so nothing here clamps. What it will not do is grow without a stone: `HandStones` is the whole
 // input.
+//
+// **A stone is the run's *level* on a rung** *(owner's call, 2026-09-05)*, and it is one of two
+// counters a run keeps against one hand. The other is how often the rung has been *played*, which
+// lives on the run rather than here - see `session/play.go`. They are deliberately not derived
+// from one another: this one is bought and moves the multiplier, that one is earned and moves
+// nothing, and a single figure could not say which had happened.
 
 // MaxHandSlots is the ceiling on how many rungs a duelist can carry a stone count for.
 //
 // **It exists because `Duelist` has to stay comparable**, exactly as `MaxStatuses` and
 // `MaxWornRings` do — `TestRoundIsDeterministic` compares two resolved duelists with `==`, and a
-// map on the struct would end that. Thirty-two is well clear of the nineteen rungs the catalogue
+// map on the struct would end that. Thirty-two is well clear of the eighteen rungs the catalogue
 // holds; a catalogue that outgrew it panics at init rather than silently dropping the rungs past
 // the end.
 const MaxHandSlots = 32
@@ -35,9 +41,9 @@ const MaxHandSlots = 32
 // handSlots is each hand's seat in the boost array, by key, fixed at init from the catalogue's own
 // order.
 //
-// **A seat is a position in `handTable`, never a `HandID`.** IDs are sparse — 1, then 10..15, then
-// 20..25 — so indexing by one would want an array eight times the size, and it is the file's
-// numbering rather than the rules', which is the sort of thing that moves.
+// **A seat is a position in `handTable`, never a `HandID`.** IDs are sparse - 1, then 10, then
+// 11..15, 21..25, 31..35 and 38 - so indexing by one would want an array twice the size, and it is
+// the file's numbering rather than the rules', which is the sort of thing that moves.
 //
 // **It is never written down.** A seat is derived from the catalogue this build loaded, so a save
 // file records the hand's *key* and resolves it back through here, on exactly the terms
@@ -127,7 +133,7 @@ func (d Duelist) anyHandStones() bool {
 // whatever stones are on it.
 //
 // **It is the one place a stone becomes a number**, so the resolver, the preview and the hands
-// panel cannot come to three different answers about what a Card Pair pays.
+// panel cannot come to three different answers about what a Pair pays.
 func (d Duelist) HandTable() []Hand { return d.handsFrom(handTable) }
 
 // handsFrom applies this duelist's stones to a given ladder.

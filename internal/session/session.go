@@ -82,6 +82,12 @@ type Session struct {
 	// for the rung and the rung is what the ladder is actually read against. See stone.go.
 	stones map[string]int
 
+	// plays is how many times the run has formed each rung, keyed by hand key. **A tally, not an
+	// upgrade** *(owner's call, 2026-09-05)*: `stones` changes what a rung pays and this changes
+	// nothing at all. It is here rather than on the combat screen because a count belonging to one
+	// fight would be reset by the next `Init`, and it is the run's whole climb that is interesting.
+	plays map[string]int
+
 	// held is the bucket: every parasite the run is carrying, by record key, in the order they
 	// were acquired. **A list rather than a count per key** — two of the same are two things to
 	// spend, and the board piece draws a card for each. See parasite.go.
@@ -121,7 +127,7 @@ type Session struct {
 // the reason live. A run buys its rings.
 func New(deck []combat.Card) *Session {
 	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{},
-		stones: map[string]int{}}
+		stones: map[string]int{}, plays: map[string]int{}}
 	copy(s.deck, deck)
 
 	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a

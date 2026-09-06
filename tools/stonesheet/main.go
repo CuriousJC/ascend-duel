@@ -111,7 +111,7 @@ func run(dir string) error {
 		p := plate{
 			Hand:        h.Name,
 			HandKey:     h.Key,
-			Axis:        h.Match.String(),
+			Axis:        axisLabel(h),
 			Multiplier:  h.Multiplier,
 			CardsWanted: h.Cards(),
 		}
@@ -218,21 +218,46 @@ func firstStone(plates []plate) (plate, bool) {
 // hand is choosing among all of them at once. A stone is bought against one rung, so the question
 // here is "is this axis' ladder priced sensibly against itself", and the rows have to be
 // comparable for that.
+// **A merged rung is its own group** *(2026-09-05)*. The Pair is read on concept, form and element
+// alike, so filing it under the narrowest of the three would say the concept ladder has a rung the
+// other two do not - which is the opposite of what the merge means.
+//
+// **An axis with no rungs left is dropped rather than drawn empty.** Cost carried two bespoke rungs
+// until they were cut; a heading over nothing reads as a sheet that failed to render.
 func groupByAxis(plates []plate) []group {
-	out := make([]group, 0, len(combat.AllAxes))
+	labels := []string{mergedLabel}
 	for _, a := range combat.AllAxes {
-		g := group{Axis: a.String()}
+		labels = append(labels, a.String())
+	}
+
+	out := make([]group, 0, len(labels))
+	for _, label := range labels {
+		g := group{Axis: label}
 		for _, p := range plates {
-			if p.Axis == a.String() {
+			if p.Axis == label {
 				g.Rungs = append(g.Rungs, p)
 				if p.Has {
 					g.Stoned++
 				}
 			}
 		}
+		if len(g.Rungs) == 0 {
+			continue
+		}
 		out = append(out, g)
 	}
 	return out
+}
+
+// mergedLabel is what a rung read on more than one axis is filed under.
+const mergedLabel = "any axis"
+
+// axisLabel is the heading a rung belongs under.
+func axisLabel(h combat.Hand) string {
+	if len(h.Axes) > 1 {
+		return mergedLabel
+	}
+	return h.Match.String()
 }
 
 // write renders one card, saves it, and returns what the page needs to show it.

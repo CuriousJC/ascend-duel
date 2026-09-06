@@ -142,7 +142,7 @@ func TestACardOutsideTheHandAddsNothing(t *testing.T) {
 func TestDamageIsTheHandsCardsTimesTheMultiplier(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	pair, ok := handByKey("concept-pair")
+	pair, ok := handByKey("pair")
 	if !ok {
 		t.Fatal("the catalogue has no pair")
 	}
@@ -196,7 +196,7 @@ func TestEveryHandIsWorthItsCatalogueMultiplier(t *testing.T) {
 		turn []Card
 	}{
 		{"high-card", PlainCards(Strike)},
-		{"concept-pair", PlainCards(Strike, Strike)},
+		{"pair", PlainCards(Strike, Strike)},
 		{"concept-three-of-a-kind", PlainCards(Strike, Strike, Strike)},
 		{"concept-four-of-a-kind", PlainCards(Strike, Strike, Strike, Strike)},
 	} {
@@ -259,7 +259,7 @@ func TestTheHandAmountsAddUpToTheBase(t *testing.T) {
 func TestTheMultiplierIsTheHandsAlone(t *testing.T) {
 	a, b := duelist(10, 4, 5000), duelist(10, 4, 5000)
 
-	pair, _ := handByKey("concept-pair")
+	pair, _ := handByKey("pair")
 
 	for _, tc := range []struct {
 		what string
@@ -299,7 +299,7 @@ func TestTheBestPayingHandIsTheOneThatForms(t *testing.T) {
 		n    int
 		want string
 	}{
-		{2, "concept-pair"},
+		{2, "pair"},
 		{3, "concept-three-of-a-kind"},
 		{4, "concept-four-of-a-kind"},
 		{5, "concept-five-of-a-kind"},

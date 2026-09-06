@@ -52,7 +52,7 @@ func TestNoStoneIsWorthNothing(t *testing.T) {
 func TestUsingAStoneRaisesItsRungAndNothingElse(t *testing.T) {
 	s := New(nil)
 
-	stone, ok := StoneForHand("concept-pair")
+	stone, ok := StoneForHand("pair")
 	if !ok {
 		t.Fatal("no stone raises concept-pair")
 	}
@@ -72,7 +72,7 @@ func TestUsingAStoneRaisesItsRungAndNothingElse(t *testing.T) {
 			t.Fatalf("%s has no multiplier", h.Key)
 		}
 		want := before[h.Key]
-		if h.Key == "concept-pair" {
+		if h.Key == "pair" {
 			want += StoneWorth(h.Key)
 		}
 		if now != want {
@@ -85,17 +85,17 @@ func TestUsingAStoneRaisesItsRungAndNothingElse(t *testing.T) {
 // call the mechanic is priced off.
 func TestTwoStonesOnOneRungAreWorthTwice(t *testing.T) {
 	s := New(nil)
-	stone, _ := StoneForHand("concept-pair")
+	stone, _ := StoneForHand("pair")
 
-	base, _ := s.HandMultiplier("concept-pair")
+	base, _ := s.HandMultiplier("pair")
 	s.UseStone(stone.Record)
 	s.UseStone(stone.Record)
 
-	want := base + 2*StoneWorth("concept-pair")
-	if got, _ := s.HandMultiplier("concept-pair"); got != want {
+	want := base + 2*StoneWorth("pair")
+	if got, _ := s.HandMultiplier("pair"); got != want {
 		t.Errorf("two stones give %d, want %d", got, want)
 	}
-	if n := s.StonesOn("concept-pair"); n != 2 {
+	if n := s.StonesOn("pair"); n != 2 {
 		t.Errorf("the run holds %d stones on that rung, want 2", n)
 	}
 }
@@ -104,17 +104,17 @@ func TestTwoStonesOnOneRungAreWorthTwice(t *testing.T) {
 // duelist that had not heard of it would be a mechanic that worked everywhere but in the fight.
 func TestEquipCarriesTheRunsStonesOntoTheFighter(t *testing.T) {
 	s := New(nil)
-	stone, _ := StoneForHand("form-pair")
+	stone, _ := StoneForHand("pair")
 	s.UseStone(stone.Record)
 
 	d := s.Equip(combat.Duelist{DMG: 10, Actions: 6, MaxLife: 60, CurrentLife: 60})
-	if n := d.HandStoneCount("form-pair"); n != 1 {
+	if n := d.HandStoneCount("pair"); n != 1 {
 		t.Fatalf("the fighter carries %d stones on form-pair, want 1", n)
 	}
 
-	want, _ := s.HandMultiplier("form-pair")
+	want, _ := s.HandMultiplier("pair")
 	for _, h := range d.HandTable() {
-		if h.Key == "form-pair" && h.Multiplier != want {
+		if h.Key == "pair" && h.Multiplier != want {
 			t.Errorf("the fighter plays form-pair at %d, the run says %d", h.Multiplier, want)
 		}
 	}

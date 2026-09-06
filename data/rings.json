@@ -1119,15 +1119,15 @@
     ]
   },
   {
-    "RingRecord": "concept-pair-hand-ring",
+    "RingRecord": "pair-hand-ring",
     "Name": "Twinned Ring",
     "Art": "",
-    "Text": "A Card Pair deals 2 more DMG before the multiplier.",
+    "Text": "A Pair deals 2 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-pair" },
+        "If": { "Hand": "pair" },
         "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
       }
     ]
@@ -1203,20 +1203,6 @@
     ]
   },
   {
-    "RingRecord": "form-pair-hand-ring",
-    "Name": "Matched Ring",
-    "Art": "",
-    "Text": "A Form Pair deals 2 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
-      }
-    ]
-  },
-  {
     "RingRecord": "form-two-pair-hand-ring",
     "Name": "Paired Ring",
     "Art": "",
@@ -1283,20 +1269,6 @@
         "When": "blow-formed",
         "If": { "Hand": "form-five-of-a-kind" },
         "Then": [{ "Do": "add-hand-damage", "Amount": 12 }]
-      }
-    ]
-  },
-  {
-    "RingRecord": "element-pair-hand-ring",
-    "Name": "Kindred Ring",
-    "Art": "",
-    "Text": "A Elemental Pair deals 2 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
       }
     ]
   },
@@ -1923,12 +1895,7 @@
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "element-pair", "MinForms": 2 },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-pair", "MinForms": 2 },
+        "If": { "Hand": "pair", "MinForms": 2 },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
       }
     ]
@@ -1942,17 +1909,7 @@
     "Rules": [
       {
         "When": "blow-formed",
-        "If": { "Hand": "concept-pair" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-pair" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-pair" },
+        "If": { "Hand": "pair" },
         "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
       }
     ]

@@ -5,7 +5,7 @@ package screens
 // The multipliers are the whole of what building a hand buys, and until this panel landed
 // *(2026-08-24)* they were readable in three places, none of which is the game: `data/hands.json`,
 // `go run ./tools/handsheet`, and the fight log after a hand had already fired. A player deciding
-// which cards to queue was being asked to remember nineteen numbers.
+// which cards to queue was being asked to remember eighteen numbers.
 //
 // **A rung is drawn as the cards that build it** *(2026-08-24, owner's call)*. It was two lines of
 // words until then — a grammar line saying what the rung wants in the axis's own words, and an
@@ -36,6 +36,7 @@ package screens
 // The panel's chrome is the shared one; see modal.go.
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"sort"
@@ -43,6 +44,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/decks"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -59,6 +61,24 @@ import (
 type handsContents struct {
 	deck   []combat.Card
 	holder combat.Duelist
+
+	// plays is how many times this run has formed each rung, by hand key - see
+	// session/play.go. **Handed in rather than read off the run**, because this panel is drawn
+	// from two places and one of them is mid-fight, where the scene already holds the run.
+	//
+	// **The level is not here**, because the holder already carries it: a level is a stone, and
+	// `combat.Duelist.HandStoneCount` is the same number the ladder itself is read through. Two
+	// sources for one figure is how a panel comes to disagree with the multiplier beside it.
+	plays map[string]int
+}
+
+// runPlays is a run's tally, or nil for no run. **A helper rather than the map inline**, so the
+// two callers cannot come to two answers about what no run means.
+func runPlays(run *session.Session) map[string]int {
+	if run == nil {
+		return nil
+	}
+	return run.PlayCounts()
 }
 
 // handsRow is one rung: its name and what forming it pays, and the hand this deck illustrates it
@@ -67,6 +87,16 @@ type handsRow struct {
 	name  string
 	mult  string
 	cards []combat.Card
+
+	// plays is how many times this run has formed the rung, and level is how many stones stand on
+	// it *(owner's call, 2026-09-05)*. **Two counters and not one**, because they say different
+	// things: a level is something the player bought and it moves the multiplier beside it, and a
+	// play is something the player did and moves nothing at all.
+	//
+	// **Level 0 is a rung as shipped**, and the row simply does not draw the figure - a ladder
+	// with eighteen "LVL 0" on it says nothing eighteen blanks do not.
+	plays int
+	level int
 
 	// raised is whether a stone has moved this rung, which is what the figure is written in the
 	// ring pink for. **A colour rather than a second number**: the panel says what a hand pays
@@ -104,6 +134,8 @@ func handsRows(c handsContents) []handsRow {
 			name:   h.Name,
 			mult:   multiplierText(h.Multiplier),
 			cards:  handsExample(c, h),
+			plays:  c.plays[h.Key],
+			level:  c.holder.HandStoneCount(h.Key),
 			raised: h.Multiplier != catalogueMultiplier(base, h.Key),
 		})
 	}
@@ -130,8 +162,8 @@ func handsExample(c handsContents, h combat.Hand) []combat.Card {
 const (
 	// **Three columns as of 2026-08-24**, up from two. A rung was three lines of words and is now
 	// a name over a row of cards, which is wider and shorter — so the ladder wants columns rather
-	// than depth. Nineteen rungs over three is seven in the deepest, against a budget that holds
-	// eight: TestTheColumnsHoldTheWholeLadder is what fails when a rung is added past that, and
+	// than depth. Eighteen rungs over three is six in the deepest, against a budget that holds
+	// seven: TestTheColumnsHoldTheWholeLadder is what fails when a rung is added past that, and
 	// the headroom is the point — the panel was rebuilt this way to leave room for hands not yet
 	// written.
 	handsColumnCount = 3
@@ -139,16 +171,12 @@ const (
 	handsColumnGap = 28
 
 	// A name line, a row of tokens under it, and a rule under that.
-	handsRowHeight = 86
-	handsNameLine  = 0
-	handsCardsTop  = 24
+	handsNameLine = 0
+	handsCardsTop = 24
 
-	// handsRuleDrop is where the hairline separating one rung from the next sits, measured from
-	// the row's top. **It is what makes a rung one block rather than three lists** — a name, a row
-	// of cards and a figure in three columns otherwise read down the page instead of across, and
-	// a reader pairs each figure with whichever thing is nearest, which at a column's edge is the
-	// rung below.
-	handsRuleDrop = handsCardsTop + 62
+	// handsRowGap is the air between the bottom of a rung's cards and the hairline that closes it,
+	// and again between that hairline and the next rung's name.
+	handsRowGap = 6
 
 	// handsMultGap is the air between the last card and the multiplier. **Beside the cards, not
 	// out at the column's edge** *(owner's call, 2026-08-24)*: the figure belongs to the hand it
@@ -157,7 +185,27 @@ const (
 
 	handsNameSize = 17
 	handsMultSize = 20
+
+	// handsTallySize is the plays-and-level line. **Smaller than the name it sits beside**: it is
+	// an annotation on the rung rather than part of naming it, and at the name's own size the two
+	// would read as one long title.
+	handsTallySize = 13
 )
+
+// handsRuleDrop is where the hairline separating one rung from the next sits, measured from the
+// row's top. **It is what makes a rung one block rather than three lists** - a name, a row of cards
+// and a figure in three columns otherwise read down the page instead of across, and a reader pairs
+// each figure with whichever thing is nearest, which at a column's edge is the rung below.
+//
+// **It is derived from the token rather than written down** *(2026-09-05)*. It was `handsCardsTop +
+// 62` against a token that is 70 tall, so every rung's cards overhung its own rule and landed on
+// the name of the rung beneath - which is what the panel actually looked like. A measurement that
+// has to be kept in step with `cards.Token` by hand is one that will not be.
+var handsRuleDrop = handsCardsTop + cards.Token.Height + handsRowGap
+
+// handsRowHeight is the pitch from one rung to the next: its whole block, and the air under the
+// rule before the next name. Derived for the reason handsRuleDrop is.
+var handsRowHeight = handsRuleDrop + handsRowGap + handsNameSize
 
 // handsCardPitch is how far apart the tokens in a row sit: the token plus two pixels of air.
 //
@@ -174,10 +222,15 @@ var handsCardPitch = cards.Token.Width + 2
 // is what forming it pays.
 var (
 	handsNameInk = color.RGBA{R: 236, G: 232, B: 226, A: 255}
-	handsMultInk = color.RGBA{R: 240, G: 198, B: 108, A: 255}
+
+	// The tally is written in the ground's quietest ink. **No hue of its own** - the wheel is full,
+	// and the two counters are told apart by their words rather than by a colour a player would
+	// have to learn. See CLAUDE.md on hue belonging to the elements.
+	handsTallyInk = color.RGBA{R: 150, G: 146, B: 141, A: 255}
+	handsMultInk  = color.RGBA{R: 240, G: 198, B: 108, A: 255}
 
 	// The rule is barely there on purpose: it groups a rung, and a line loud enough to be read as
-	// a border would make nineteen boxes out of a ladder.
+	// a border would make eighteen boxes out of a ladder.
 	handsRuleInk = color.RGBA{R: 92, G: 90, B: 88, A: 255}
 )
 
@@ -270,6 +323,17 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 
 	write(left, top+handsNameLine, handsNameSize, handsNameInk, row.name)
 
+	// **The tally sits after the name, on the name's own line** *(owner's call, 2026-09-05)*. It
+	// is a fact about the rung, so it belongs to the rung's label rather than to its cards - and
+	// a line of its own would have cost the ladder a row of depth per rung to say two small
+	// numbers.
+	if tally := handsTallyText(row); tally != "" {
+		adv, _ := text.Measure(row.name,
+			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: handsNameSize}, 0)
+		write(left+int(adv)+handsTallyGap, top+handsNameLine+handsTallyDrop,
+			handsTallySize, handsTallyInk, tally)
+	}
+
 	// **The cards are drawn as themselves**, through the same spec every other screen builds, so
 	// a token cannot say something the card in the hand does not. `enabled` is true and nothing is
 	// selected: this is a catalogue, and a dimmed card here would mean "unaffordable" against a
@@ -295,6 +359,35 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 	vector.StrokeLine(screen, float32(left), float32(top+handsRuleDrop),
 		float32(left+width), float32(top+handsRuleDrop), 1, handsRuleInk, false)
 }
+
+// handsTallyText is the plays-and-level annotation, or empty for a rung this run has neither
+// played nor raised.
+//
+// **Nothing is drawn for a rung at zero and nothing.** Eighteen rungs each saying "PLAYED 0" is
+// eighteen lines of noise around the two or three the player is actually building, and the absence
+// says zero perfectly well.
+//
+// **Level is only shown once there is one**, and it is deliberately the second of the two: a play
+// is something that happens to every rung and a level is something bought for one, so the rarer
+// fact reads better last, where it is not competing with a number that moves every fight.
+func handsTallyText(row handsRow) string {
+	switch {
+	case row.plays > 0 && row.level > 0:
+		return fmt.Sprintf("PLAYED %d  LVL %d", row.plays, row.level)
+	case row.level > 0:
+		return fmt.Sprintf("LVL %d", row.level)
+	case row.plays > 0:
+		return fmt.Sprintf("PLAYED %d", row.plays)
+	}
+	return ""
+}
+
+// handsTallyGap is the air between the rung's name and its tally, and handsTallyDrop is what sits
+// the smaller type on the name's baseline rather than on its top edge.
+const (
+	handsTallyGap  = 10
+	handsTallyDrop = handsNameSize - handsTallySize
+)
 
 // handsMultDrop centres a line of type down the token band. **Against the cards, not against the
 // row**: the name sits above the band, so a figure centred on the whole row would ride high of
@@ -343,6 +436,7 @@ func ownedHands(gs *state.GlobalState) handsContents {
 	c := handsContents{}
 	if gs.Run != nil {
 		c.deck = gs.Run.Deck()
+		c.plays = runPlays(gs.Run)
 		if f := buildFighter(gs); f != nil {
 			c.holder = f.Duelist
 		}

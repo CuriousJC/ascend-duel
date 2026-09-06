@@ -34,9 +34,6 @@ func MatchValue(c combat.Card, a combat.Axis) (int, bool) {
 		return int(f), f != combat.FormNone
 	case combat.AxisElement:
 		return int(c.Element), c.Element != combat.Basic
-	case combat.AxisCost:
-		// No absence: every card costs something, zero included. Mirrors the matcher.
-		return c.Cost(), true
 	default:
 		return int(c.Concept), true
 	}
@@ -112,9 +109,9 @@ func Example(deck []combat.Card, h combat.Hand) ([]combat.Card, int) {
 	// **The pick is made inside the walk rather than precomputed per value** *(2026-09-05)*. It
 	// used to be worked out once for each (value, group size) pair, which is cheaper and was right
 	// while every rung had a group of two or more: the most illustrative pair of fire cards is the
-	// same pair whatever else is on the row. It is wrong for a rung of all ones — Prism, Spectrum,
-	// Elementalist, Arsenal — where a group is a single card and the only thing that can make the
-	// row varied is *which* card each group contributes. Precomputed, every group offered its
+	// same pair whatever else is on the row. It is wrong for a rung of all ones - the Elementalist,
+	// and any rung counting difference written after it - where a group is a single card and the
+	// only thing that can make the row varied is *which* card each group contributes. Precomputed, every group offered its
 	// cheapest card and the row came out as five Jabs.
 	//
 	// The deck is small and a rung is at most five groups, so the extra work is a few hundred
@@ -138,9 +135,7 @@ func Example(deck []combat.Card, h combat.Hand) ([]combat.Card, int) {
 			}
 			cs, cost := pickIllustrative(byValue[values[i]], h, want, picked)
 			if len(cs) < want {
-				// A Vary clause ran the axis out, so this value cannot supply the group. Not a
-				// candidate: a group short of the cards the rung asks for is not an illustration
-				// of it.
+				// A group short of the cards the rung asks for is not an illustration of it.
 				continue
 			}
 			used[i] = true
@@ -175,22 +170,12 @@ func pickIllustrative(cs []combat.Card, h combat.Hand, want int, row []combat.Ca
 	a := h.Match
 	var picked []combat.Card
 	taken := make([]bool, len(cs))
-	// **A Vary clause is a requirement, not a preference.** The variety score below is a tie-break
-	// among sets that all satisfy the rung; a hand naming a Vary axis is not satisfied at all by a
-	// set that repeats a value on it, so those candidates are refused rather than ranked down.
-	usedVary := map[int]bool{}
 
 	for len(picked) < want {
 		bestAt, bestGain := -1, -1
 		for i, c := range cs {
 			if taken[i] {
 				continue
-			}
-			if h.Varies {
-				v, counts := MatchValue(c, h.Vary)
-				if !counts || usedVary[v] {
-					continue
-				}
 			}
 			// The gain is how much more of the rung's freedom the row would show with this card
 			// on it. A first card gains nothing by definition, so the cheapest is taken.
@@ -204,13 +189,6 @@ func pickIllustrative(cs []combat.Card, h combat.Hand, want int, row []combat.Ca
 			}
 		}
 		if bestAt < 0 {
-			if h.Varies {
-				// The Vary axis has run out of values, so no further card can join this row. The
-				// catalogue refuses such a rung at load — see validateVary — so reaching here
-				// means the *deck* cannot illustrate it, and coming back short is the honest
-				// answer rather than a repeat that breaks the rung's own rule.
-				break
-			}
 			// Every distinct card is on the row already and the rung wants more, so the pass
 			// starts over and cards are repeated. See the note above.
 			for i := range taken {
@@ -219,11 +197,6 @@ func pickIllustrative(cs []combat.Card, h combat.Hand, want int, row []combat.Ca
 			continue
 		}
 		taken[bestAt] = true
-		if h.Varies {
-			if v, counts := MatchValue(cs[bestAt], h.Vary); counts {
-				usedVary[v] = true
-			}
-		}
 		picked = append(picked, cs[bestAt])
 	}
 

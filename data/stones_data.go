@@ -45,8 +45,8 @@ type StoneData struct {
 
 	// Text is what the card says it does, in the same clipped register the worms use. A `\n` is an
 	// authored line break, honoured by `cards.WrapText` — every stone carries one, because the
-	// nineteen differ only in the rung they name and left to the measurer they would read as
-	// nineteen layouts of one card.
+	// eighteen differ only in the rung they name and left to the measurer they would read as
+	// eighteen layouts of one card.
 	//
 	// **The figure is not in it.** What a stone is worth depends on the rung's own multiplier, so
 	// writing `+11` here would be a number that goes stale the moment `hands.json` is tuned. The

@@ -354,7 +354,7 @@ func resolveAttackPhase(
 	// forms sums to zero and is declined below, before anything of the target's is spent.
 	_ = attacks
 
-	// **The ladder is read through the actor's own stones**, so a run that has bought a Card Pair
+	// **The ladder is read through the actor's own stones**, so a run that has bought a Pair
 	// stone plays a different ladder from the one its opponent does. A duelist holding none reads
 	// the table handed in, unchanged and uncopied — see stone.go.
 	blow := blowFor(turn, actor.handsFrom(hands))

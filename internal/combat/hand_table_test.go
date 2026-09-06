@@ -40,42 +40,36 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 	want := map[string]string{
 		"high-card": "High Card",
 
-		"concept-pair":            "Card Pair",
+		// **One Pair, read on whichever axis the turn satisfies** *(owner's call, 2026-09-05)*.
+		// Card Pair, Form Pair and Elemental Pair were three rungs describing the same two cards.
+		"pair": "Pair",
+
 		"concept-two-pair":        "Card Two Pair",
 		"concept-three-of-a-kind": "Card Three of a Kind",
 		"concept-full-house":      "Card Full House",
 		"concept-four-of-a-kind":  "Card Four of a Kind",
 		"concept-five-of-a-kind":  "Card Five of a Kind",
 
-		"form-pair":            "Form Pair",
 		"form-two-pair":        "Form Two Pair",
 		"form-three-of-a-kind": "Form Three of a Kind",
 		"form-full-house":      "Form Full House",
 		"form-four-of-a-kind":  "Form Four of a Kind",
 		"form-five-of-a-kind":  "Form Five of a Kind",
 
-		"element-pair":            "Elemental Pair",
 		"element-two-pair":        "Elemental Two Pair",
 		"element-three-of-a-kind": "Elemental Three of a Kind",
 		"element-full-house":      "Elemental Full House",
 		"element-four-of-a-kind":  "Elemental Four of a Kind",
 		"element-five-of-a-kind":  "Elemental Five of a Kind",
 
-		// **The spread rungs, and the cost axis** *(owner's call, 2026-09-05)*. Everything above
-		// counts copies; these count *difference*, which is the other thing a set of cards can
-		// have in common. Prism, Spectrum and Elementalist are the elemental ladder of it, Arsenal
-		// is the form one, and the two cost rungs are the axis that arrived with them.
-		"element-prism":        "Prism",
-		"element-spectrum":     "Spectrum",
+		// **The one spread rung left** *(owner's call, 2026-09-05)*. Everything above counts
+		// copies; this counts *difference*, which is the other thing a set of cards can have in
+		// common. Prism, Spectrum, Arsenal, Rising Attack and Weaponmaster were cut with it.
 		"element-elementalist": "Elementalist",
-		"form-arsenal":         "Arsenal",
-
-		"cost-rising-attack": "Rising Attack",
-		"cost-weaponmaster":  "Weaponmaster",
 	}
 
 	if got := len(Hands()); got != len(want) {
-		t.Errorf("the catalogue holds %d hands, want %d - six rungs on each of three of-a-kind axes, four spread rungs, two cost rungs, plus the High Card", got, len(want))
+		t.Errorf("the catalogue holds %d hands, want %d - five rungs on each of three of-a-kind axes, the merged Pair, the Elementalist, plus the High Card", got, len(want))
 	}
 	for key, name := range want {
 		h, ok := handByKey(key)
@@ -93,7 +87,7 @@ func TestTheLadderIsThePokerHandsOnEveryAxis(t *testing.T) {
 // concept, numbered `base + int(concept)`, with bands a hundred apart — which held twelve concepts
 // and could not hold the four hundred a per-enemy deck list produces.
 func TestEachLadderRungIsOneHand(t *testing.T) {
-	for _, key := range []string{"concept-pair", "form-three-of-a-kind", "element-four-of-a-kind"} {
+	for _, key := range []string{"pair", "form-three-of-a-kind", "element-four-of-a-kind"} {
 		id, ok := HandIDForKey(key)
 		if !ok {
 			t.Errorf("no hand called %s", key)
@@ -152,6 +146,13 @@ func TestTheLadderClimbs(t *testing.T) {
 			if big.Key == small.Key || big.Match != small.Match {
 				continue
 			}
+			// **The High Card is outside containment** *(owner's call, 2026-09-05)*. Every rung
+			// dominates `[1]`, and the fallback is not something the matcher ever picks over a
+			// built hand - so the Pair sitting at the identity beside it is the ladder as tuned
+			// rather than a rung nobody would build: two cards summed at 1x beat one card at 1x.
+			if big.Key == highCardKey || small.Key == highCardKey {
+				continue
+			}
 			if !dominates(big.Groups, small.Groups) {
 				continue
 			}
@@ -188,16 +189,11 @@ func dominates(big, small []int) bool {
 // two axes and not the third would be a hole a player could fall into without ever being told it
 // was there.
 //
-// **The cost axis is deliberately outside this** *(owner's call, 2026-09-05)*. Concept, form and
-// element carry the whole six-rung ladder because the same shape means something on each of them.
-// Cost carries two bespoke rungs instead — Rising Attack, three cards of three different costs, and
-// Weaponmaster, three cards of one cost in three different forms — because the of-a-kind rungs on
-// that axis would be redundant: a cost Three of a Kind is a rung with no idea in it, sitting under
-// Weaponmaster and above nothing. So this walks the three axes that carry the ladder, and the check
-// underneath it is what holds the cost axis to the catalogue.
+// **The Pair is outside the walk and is checked on its own** *(owner's call, 2026-09-05)*: it is
+// one entry read on all three, so there is no per-axis key to look up.
 func TestEveryRungExistsOnEveryOfAKindAxis(t *testing.T) {
 	for _, axis := range []Axis{AxisConcept, AxisForm, AxisElement} {
-		for _, rung := range []string{"pair", "two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
+		for _, rung := range []string{"two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
 			"five-of-a-kind"} {
 			key := axis.String() + "-" + rung
 			h, ok := handByKey(key)
@@ -212,13 +208,38 @@ func TestEveryRungExistsOnEveryOfAKindAxis(t *testing.T) {
 	}
 }
 
+// The merged Pair is readable on all three of-a-kind axes and on none of the others. A reading
+// quietly missing would be a pair the player built and was not paid for.
+func TestThePairIsReadOnEveryOfAKindAxis(t *testing.T) {
+	pair, ok := handByKey("pair")
+	if !ok {
+		t.Fatal("the catalogue has no pair")
+	}
+	want := []Axis{AxisConcept, AxisForm, AxisElement}
+	if len(pair.Axes) != len(want) {
+		t.Fatalf("the Pair is read on %v, want %v", pair.Axes, want)
+	}
+	for i, a := range want {
+		if pair.Axes[i] != a {
+			t.Errorf("the Pair's axis %d is %s, want %s", i, pair.Axes[i], a)
+		}
+	}
+	if pair.Match != AxisConcept {
+		t.Errorf("the Pair's Match is %s, want the narrowest of its axes", pair.Match)
+	}
+}
+
 // **A hand's key names the axis it counts on**, which is what makes the of-a-kind walk above a
-// check rather than a coincidence, and what keeps a hand added to the cost axis from being filed
-// under a name that says element.
+// check rather than a coincidence, and what keeps a hand added to one axis from being filed under a
+// name that says another.
 func TestEveryHandsKeyNamesItsAxis(t *testing.T) {
 	for _, h := range Hands() {
 		if h.Key == highCardKey {
 			// The fallback belongs to no axis: it is what a turn forms when it built nothing.
+			continue
+		}
+		if len(h.Axes) > 1 {
+			// A merged rung belongs to every one of its axes, so no single prefix could name it.
 			continue
 		}
 		if !strings.HasPrefix(h.Key, h.Match.String()+"-") {
@@ -239,7 +260,7 @@ func TestEveryHandsKeyNamesItsAxis(t *testing.T) {
 // is priced above it. This used to require concept > element at every rung, which was an assumption
 // wearing a proof's clothes.
 func TestACardHandPaysMoreThanTheFormHandInsideIt(t *testing.T) {
-	for _, rung := range []string{"pair", "two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
+	for _, rung := range []string{"two-pair", "three-of-a-kind", "full-house", "four-of-a-kind",
 		"five-of-a-kind"} {
 		card, ok := handByKey("concept-" + rung)
 		if !ok {
@@ -295,9 +316,10 @@ func TestAWellFormedHandOnEveryAxisIsAccepted(t *testing.T) {
 		got, err := validateHand(rec)
 		if err != nil {
 			t.Errorf("a full house on the %s axis was refused: %v", axis, err)
+			continue
 		}
-		if got != axis {
-			t.Errorf("a %s hand validated as %s", axis, got)
+		if len(got) != 1 || got[0] != axis {
+			t.Errorf("a %s hand validated as %v", axis, got)
 		}
 	}
 }

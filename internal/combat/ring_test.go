@@ -844,7 +844,7 @@ func handEventOf(t *testing.T, events []Event, side Side) Event {
 func TestAHandRuleIsRefusedAnywhereButBlowFormed(t *testing.T) {
 	// **Only blow-formed knows what formed**, exactly as only blow-formed knows which card leads.
 	// A `Hand` predicate anywhere else would match nothing and read as a ring that does nothing.
-	pair, ok := HandIDForKey("concept-pair")
+	pair, ok := HandIDForKey("pair")
 	if !ok {
 		t.Fatal("the ladder has no concept-pair, so this test cannot say what it means")
 	}
@@ -864,7 +864,7 @@ func TestAHandRuleMayNotAlsoNameACard(t *testing.T) {
 	// **A hand is a fact about the whole blow and an element is a fact about one card**, so a rule
 	// carrying both is asking a question with no answer — which of the hand's cards would have to
 	// be fire? It is refused rather than resolved to one reading nobody wrote down.
-	pair, _ := HandIDForKey("concept-pair")
+	pair, _ := HandIDForKey("pair")
 
 	refused(t, "hand and element", RingRule{
 		When: MomentBlowFormed,
@@ -949,7 +949,7 @@ func TestTwoHandRingsOnOneRungAdd(t *testing.T) {
 	// **Flat terms in a sum, so there is nothing to compound** — unlike the multipliers, where worn
 	// order decides the result. This is what makes the rung rings the one family whose order on the
 	// hand does not matter.
-	pair, _ := HandIDForKey("concept-pair")
+	pair, _ := HandIDForKey("pair")
 	rule := RingRule{
 		When: MomentBlowFormed,
 		If:   RingCondition{Hand: pair, HasHand: true},
@@ -977,7 +977,7 @@ func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
 	// **A held card is in neither pile the blow predicates name.** `Lead` is the first card played
 	// and `Hand` is the rung the played cards formed, so either beside this verb is a rule whose
 	// two halves are about different things.
-	pair, _ := HandIDForKey("concept-pair")
+	pair, _ := HandIDForKey("pair")
 
 	refused(t, "held and lead", RingRule{
 		When: MomentBlowFormed,
@@ -1224,7 +1224,7 @@ func TestThePurseIsReReadEveryBlow(t *testing.T) {
 // ladder's own figure and a ring may not move it — the banner, the hand row and the sum all show
 // the rung the player actually built. What the ring does is scale the result afterwards.
 func TestAHandScalerIsASecondMultiplierAndNotABiggerHand(t *testing.T) {
-	pair, _ := HandIDForKey("concept-pair")
+	pair, _ := HandIDForKey("pair")
 	id := ring(t, "pairing", RingRule{
 		When: MomentBlowFormed,
 		If:   RingCondition{Hand: pair, HasHand: true},
@@ -1279,7 +1279,7 @@ func TestAHandScalerPaysOnlyItsOwnRung(t *testing.T) {
 // TestMinFormsCountsTheScoringSet. Dual Wield's predicate: a pair built from two different weapons
 // pays, and a pair of the same weapon does not.
 func TestMinFormsCountsTheScoringSet(t *testing.T) {
-	pair, _ := HandIDForKey("element-pair")
+	pair, _ := HandIDForKey("pair")
 	id := ring(t, "dualwield", RingRule{
 		When: MomentBlowFormed,
 		If:   RingCondition{Hand: pair, HasHand: true, MinForms: 2},

@@ -272,39 +272,40 @@ first lesson wherever Go's hashing felt like it.
 
 ### Hands
 
-`hands.json` is **one list of twenty-five**: six poker rungs, Pair through Five of a Kind, on each
-of three axes; four rungs counting *difference*; two on the cost axis; plus the one High Card they
-fall back to. Each carries a key, an ID, a name, a `match`, `groups`, an optional `vary` and a
-percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to the narrowest
-axis.
+`hands.json` is **one list of eighteen**: five poker rungs, Two Pair through Five of a Kind, on
+each of three axes; the merged **Pair**; the Elementalist; plus the one High Card they fall back to.
+Each carries a key, an ID, a name, a `match`, `groups` and a percent `multiplier`. Exactly one applies, winning on its multiplier, ties going to the narrowest axis.
 
 **`match` is the axis, and it is required** *(2026-08-19)* — `concept` (copies of the same card),
-`form` (stab/slash/crush/defend), `element`, or `cost` (the same action points, added 2026-09-05).
+`form` (stab/slash/crush/defend), `element`, or **`any`**.
 A missing or unknown one is refused at init rather than defaulted: an entry landing on the wrong
 axis by omission would be a balance change nobody made. `groups` counts distinct values **on that
 axis**, so `[3,2]` on `element` is three cards of one colour and two of another, and `[1,1,1]` is
 three cards of three different colours.
 
-**`vary` is an axis every card must *differ* on** *(2026-09-05)*, and it is optional. Groups say
-which cards agree; this is the only way to say which must disagree, and Weaponmaster — `cost`
-`[3]` with `"vary": "form"`, three cards of one cost in three different forms — is the hand that
-needed it. It is refused if it names the axis the hand already counts on, or if a group asks for
-more distinct values than that axis has.
+**`"match": "any"` is a rung read on concept, form or element** *(owner's call, 2026-09-05)* —
+whichever the turn satisfies — and the **Pair is the only entry using it**. Three per-axis pairs
+described the same two cards, and a player forming a pair does not care which axis let them. The
+rung's `Match` is the narrowest of its axes and a *formed* hand reports the axis that satisfied it.
+**A merged rung may sit at 100** — the Pair does — where a single-axis multi-card rung below the
+identity is still refused.
+
+**Three axes, and a hand can only say what its cards must *agree* on** *(owner's call,
+2026-09-05)*. There is no clause for what they must differ on, beyond `[1,1,1]` on the hand's own
+axis; wanting one is a schema change, so argue it in MECHANICS.md first.
 
 **Keys carry the axis and the names are long**: `concept-two-pair` / `form-two-pair` /
-`element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. The difference
-rungs are named rather than described — `element-prism`, `element-spectrum`,
-`element-elementalist`, `form-arsenal`, `cost-rising-attack`, `cost-weaponmaster`. IDs are banded
-— 1 high card, 10s concept, 20s form, 30s element, 40s cost — so a new axis or rung lands without
-moving one. It has paid off twice: the five-of-a-kind rungs landed as 15, 25 and 35 in 2026-08-19,
-and the six new rungs as 26, 36–38 and 40–41 on 2026-09-05.
+`element-two-pair`, drawn as *Card Two Pair*, *Form Two Pair*, *Elemental Two Pair*. **A merged rung
+names no axis** — the Pair is keyed `pair`. IDs are banded — 1 high card, 10 the Pair, 11–15
+concept, 21–25 form, 31–38 element — so a new axis or rung lands without moving one, and the merge
+kept 10 and left every gap where it was.
 
 **Every rung needs a stone**, so a new hand is also a new record in `stones.json` — `loadStones`
 panics on a rung with none.
 
 **The three ladders are priced apart and are meant to be.** They come from measured reachability
-against the real starting deck rather than from poker's ordering: a form pair is a 100% hand at 110
-and a concept Four of a Kind a 0.4% hand at 500. The model is in MECHANICS.md; do not "fix" the
+against the real starting deck rather than from poker's ordering: the Pair is a 100% hand at 100 and
+a Card Four of a Kind a 0.6% hand at 479. The model is in MECHANICS.md; do not "fix" the
 ladders into agreement.
 
 **Two of the three five-of-a-kind rungs could not be measured, and MECHANICS.md says so entry by
@@ -331,9 +332,9 @@ file is the opposite of what the narrowing was for.
 A malformed catalogue panics at init — including a missing `high-card` entry, since a hand the
 engine cannot name is the one failure this model produces. Two shape checks sit beside it: a hand
 wanting more cards than a turn holds, and one wanting more groups than its axis has values, since
-only four forms and five elements ever reach a blow. The cost axis is left unchecked: a card
-declares its own cost, so the width of that axis is a fact about the shipped deck rather than an
-enum.
+only four forms and five elements ever reach a blow. The concept axis is left unchecked: it is
+hundreds of values wide once the enemy decks are registered, so a bound written there would be tied
+to a registry that grows.
 
 ## Adding a file, or a field
 

@@ -39,7 +39,7 @@ const deckVisibleWidth = 75
 // worst case rather than a representative one.
 var deckNames = []string{
 	"Jab", "Thrust", "Lunge",
-	"Cut", "Slash", "Cleave",
+	"Cut", "Slice", "Cleave",
 	"Bash", "Strike", "Smash",
 	"Ward", "Brace", "Guard",
 }

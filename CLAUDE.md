@@ -200,6 +200,24 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   further edit here**, and read MECHANICS.md §The deck is a starting position before drawing a
   conclusion from either: they describe fight one of a ringless run and nothing else.
 
+**Every fight is five rounds long, and the clock is a rule rather than a countdown** *(owner's
+call, 2026-09-06)*. A duelist still standing at the end of the last round dies, through the same
+door a killing blow uses. `combat.Duelist.RoundLimit` is what the resolver checks and
+`combat.DefaultRoundLimit` is the five; **zero is no clock at all**, which is what every creature
+and every bare `Duelist{}` in a test carries — a default of five in the rules would have put the
+whole existing suite on a timer. The run owns the number (`session.Session.RoundLimit`, carried to
+the fighter by `Equip`, saved with the run) so a ring or a brand that buys a sixth round has one
+field to write. See MECHANICS.md §The round limit. Two things to know before touching it:
+
+- **It is read last, after every other way a round can end.** A win on round five is a win and a
+  death to the final blow is a death to the blow — `combat.FightOver` is the guard, and the first
+  version of this killed the winner.
+- **The bar on the combat screen decides nothing.** It is a picture of `CombatScene.round`; the
+  clock is checked inside the resolved round, per presentation-may-never-change-an-outcome. **What
+  nothing catches is the balance**: a hard cap makes every fight a damage check and nothing here
+  simulates a duel, so a floor whose creatures have outrun what a run can build is unwinnable and
+  no test goes red.
+
 **Parasites alter the deck *during* a fight, and they are the one mechanic allowed near a live
 round** *(owner's call, 2026-08-27)*. `data/parasites.json` is the catalogue,
 `internal/session/parasite.go` validates and applies, `internal/combat/rider.go` holds the one

@@ -434,6 +434,35 @@ between them.
   that would break the day the hold is shortened, and it would break as a bar showing a life nobody
   has, which is hard to attribute.
 
+### The round timer under the tower place
+
+*`combat_hud.go`, 2026-09-06.* Every fight lasts five rounds and the duelist still standing at the
+end of the fifth dies — see MECHANICS.md §The round limit, and `internal/combat/clock.go`, which is
+what actually ends it. The screen draws a **five-cell bar under the two tower lines**, one cell per
+round, filled for the rounds already spent.
+
+- **The clock is a rule and this is a readout.** `s.round` is the count and the bar is a picture of
+  it; the limit is checked inside the resolved round, so pausing, the speed slider and a dialog over
+  the cursor cannot buy a player a sixth round. Same constraint as everything else on this screen.
+- **The limit is read off the fighter, never off the run.** `session.Session.RoundLimit` reaches a
+  duel through `Equip`, and a bar reading the run directly would keep drawing five while the duelist
+  fought to whatever a ring had moved it to. A screen with no fighter draws no bar.
+- **Segments rather than a sliding fill.** A round is a discrete thing the player spends, so what
+  the bar has to say is a count — three dark, two left — not a proportion. It also survives a limit
+  a ring has moved with nothing to rescale: six cells is six rounds.
+- **The last cell takes `modalCloseColor`, and only once the fight reaches it.** There is no hue
+  left to claim, so this is not claiming one: it is the existing meaning of the game's one red —
+  "this ends something" — arriving at the moment it becomes true.
+- **There are 23 pixels between the tower lines and the table row and the bar spends 20.**
+  `TestTheRoundTimerFitsUnderTheTowerLines` is what holds that; the column is the duelist card's,
+  which is why the readout is a bar and not a sentence.
+- **It arrives with a tooltip**, which is deliberately unlike every other figure written straight
+  onto the table — a timer that killed without having said what it was would be the worst kind of
+  hidden rule. The tutorial names it before the first duel for the same reason.
+- **`KindTimeUp` is the event.** It moves the life bar like a burn does (nobody acted, so nothing
+  else would), pops on the card whose bar it empties rather than flying from a seat there is none of,
+  and opens its own line in the feed with the fall following it.
+
 ### The shield row on the duelist card
 
 *`combat_shields.go` and `card_art.go`, 2026-08-31.* The player's three defend cards raise shields, and

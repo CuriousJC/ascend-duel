@@ -162,8 +162,8 @@ func TestAFormRingDoublesEveryMatchingCardInTheTurn(t *testing.T) {
 	bare := duelist(10, 5, 100)
 	worn := bare.Wearing(WornRing{Ring: keen})
 
-	if got, want := worn.CardDamage(Plain(Slash)), bare.CardDamage(Plain(Slash))*2; got != want {
-		t.Errorf("a Slash under the keen ring deals %d, want %d", got, want)
+	if got, want := worn.CardDamage(Plain(Slice)), bare.CardDamage(Plain(Slice))*2; got != want {
+		t.Errorf("a Slice under the keen ring deals %d, want %d", got, want)
 	}
 	if got, want := worn.CardDamage(Plain(Strike)), bare.CardDamage(Plain(Strike)); got != want {
 		t.Errorf("the slash ring reached a crush card: %d, want %d", got, want)
@@ -187,7 +187,7 @@ func TestTwoMatchingRingsCompound(t *testing.T) {
 	bare := duelist(10, 5, 100)
 	both := bare.Wearing(WornRing{Ring: a}).Wearing(WornRing{Ring: b})
 
-	if got, want := both.CardDamage(Plain(Slash)), bare.CardDamage(Plain(Slash))*4; got != want {
+	if got, want := both.CardDamage(Plain(Slice)), bare.CardDamage(Plain(Slice))*4; got != want {
 		t.Errorf("two slash rings deal %d, want %d", got, want)
 	}
 }
@@ -207,7 +207,7 @@ func TestAConceptRingReachesOneCardOnly(t *testing.T) {
 	if got, want := worn.CardDamage(Plain(Strike)), bare.CardDamage(Plain(Strike))*2; got != want {
 		t.Errorf("a Strike under the striker ring deals %d, want %d", got, want)
 	}
-	for _, id := range []ConceptID{Bash, Smash, Slash} {
+	for _, id := range []ConceptID{Bash, Smash, Slice} {
 		if got, want := worn.CardDamage(Plain(id)), bare.CardDamage(Plain(id)); got != want {
 			t.Errorf("%v under a Strike ring deals %d, want %d", ConceptOf(id).Label, got, want)
 		}
@@ -227,10 +227,10 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 	bare := duelist(10, 5, 100)
 	worn := bare.Wearing(WornRing{Ring: both})
 
-	if got, want := worn.CardDamage(Of(Slash, Fire)), bare.CardDamage(Of(Slash, Fire))*2; got != want {
+	if got, want := worn.CardDamage(Of(Slice, Fire)), bare.CardDamage(Of(Slice, Fire))*2; got != want {
 		t.Errorf("a fire slash deals %d, want %d", got, want)
 	}
-	for _, c := range []Card{Of(Slash, Ice), Of(Strike, Fire)} {
+	for _, c := range []Card{Of(Slice, Ice), Of(Strike, Fire)} {
 		if got, want := worn.CardDamage(c), bare.CardDamage(c); got != want {
 			t.Errorf("%v matched a rule wanting both predicates: %d, want %d", c, got, want)
 		}
@@ -262,7 +262,7 @@ func TestAStatusNamesTheRingThatAppliedIt(t *testing.T) {
 	b := duelist(10, 5, 500)
 
 	// One fire slash matches both rings at once, so both statuses land off one card.
-	events, _, _ := resolve(a, b, []Card{Of(Slash, Fire)}, nil, 1)
+	events, _, _ := resolve(a, b, []Card{Of(Slice, Fire)}, nil, 1)
 
 	got := map[StatusID]RingID{}
 	for _, e := range events {
@@ -1041,7 +1041,7 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 
-	played := []Card{Of(Slash, Earth), Of(Slash, Earth)}
+	played := []Card{Of(Slice, Earth), Of(Slice, Earth)}
 	held := []Card{Of(Strike, Fire), Of(Strike, Fire)}
 
 	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
@@ -1074,7 +1074,7 @@ func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
 	})
 
 	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: bedrock})
-	played := []Card{Of(Slash, Fire), Of(Slash, Fire)}
+	played := []Card{Of(Slice, Fire), Of(Slice, Fire)}
 	held := []Card{Of(Strike, Earth)}
 
 	for round := 1; round <= 3; round++ {
@@ -1290,14 +1290,14 @@ func TestMinFormsCountsTheScoringSet(t *testing.T) {
 
 	// Two fire cards of different forms: an elemental pair covering two weapons.
 	mixed, _, _ := resolve(wearer, duelist(10, 5, 100000),
-		[]Card{Of(Slash, Fire), Of(Strike, Fire)}, nil, 1)
+		[]Card{Of(Slice, Fire), Of(Strike, Fire)}, nil, 1)
 	if e := handEventOf(t, mixed, SideA); e.HandScale != 300 {
 		t.Errorf("a pair of two different forms paid %d, want 300", e.HandScale)
 	}
 
 	// Two fire slashes are one form, whatever else they are.
 	same, _, _ := resolve(wearer, duelist(10, 5, 100000),
-		[]Card{Of(Slash, Fire), Of(Slash, Fire)}, nil, 1)
+		[]Card{Of(Slice, Fire), Of(Slice, Fire)}, nil, 1)
 	if e := handEventOf(t, same, SideA); e.HandScale != 100 {
 		t.Errorf("a pair of one form paid %d, want the identity", e.HandScale)
 	}
@@ -1322,7 +1322,7 @@ func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
 		Then: []RingEffect{{Do: DoScaleDamagePerVitae, Amount: 1}},
 	})
 
-	card := Of(Slash, Fire)
+	card := Of(Slice, Fire)
 	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
 
 	bare := wearer.CardDamage(card)
@@ -1332,7 +1332,7 @@ func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
 	}
 
 	// And it says nothing about a card it does not name.
-	ice := Of(Slash, Ice)
+	ice := Of(Slice, Ice)
 	if got := wearer.CardDamage(ice); got != duelist(10, 5, 100).CardDamage(ice) {
 		t.Errorf("an ice card was moved to %d by a fire ring", got)
 	}

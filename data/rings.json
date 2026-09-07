@@ -506,15 +506,15 @@
     ]
   },
   {
-    "RingRecord": "slasher-ring",
-    "Name": "Slasher Ring",
+    "RingRecord": "slicer-ring",
+    "Name": "Slicer Ring",
     "Art": "",
-    "Text": "Every Slash deals double DMG.",
+    "Text": "Every Slice card\ndeals double DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
-        "If": { "Concept": "Slash" },
+        "If": { "Concept": "Slice" },
         "Then": [{ "Do": "scale-damage", "Amount": 200 }]
       }
     ]

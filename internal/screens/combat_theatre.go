@@ -249,6 +249,10 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorNone, gestureNone,
 		"vitae is not on this screen - the purse lives between fights, so the figure has nowhere to land and the feed is where the player is told",
 	},
+	combat.KindTimeUp: {
+		anchorNone, anchorTargetCard, gesturePop,
+		"nothing travels - the clock is not a blow, so the figure pops on the card whose bar it empties",
+	},
 	combat.KindRoundEnd: {
 		anchorNone, anchorNone, gestureNone,
 		"bookkeeping - the round boundary is a moment, not an event with a victim",

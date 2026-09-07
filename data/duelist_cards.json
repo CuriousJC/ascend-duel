@@ -64,7 +64,7 @@
     "Copies": 1
   },
   {
-    "Label": "Slash",
+    "Label": "Slice",
     "Verb": "attack",
     "Amount": 100,
     "Cost": 2,

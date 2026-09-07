@@ -66,6 +66,22 @@ func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, 
 	events, a = endRound(events, SideA, a, round)
 	events, b = endRound(events, SideB, b, round)
 
+	// **The clock is read last, after every other way the round could have ended.** A duelist who
+	// died to the final blow or to a burn tick is not out of time — they are simply dead — and
+	// `callTime` says so by asking whether they are still alive. A fight that finishes on the last
+	// round is a fight nobody ran out of. See clock.go.
+	//
+	// **A fight already decided is not timed out.** A duelist who killed their opponent on the
+	// final round beat the clock; one who died to the final blow died to the blow. Only a duel
+	// still standing on both sides has run out of anything. See FightOver.
+	//
+	// **A always before B**, the same order the turns and the burns took, so a round that times
+	// both sides out reads in one order rather than in whichever the map felt like.
+	if !FightOver(a, b) {
+		events, a = callTime(events, SideA, a, round)
+		events, b = callTime(events, SideB, b, round)
+	}
+
 	events = append(events, Event{Kind: KindRoundEnd, Round: round})
 	return events, a, b
 }

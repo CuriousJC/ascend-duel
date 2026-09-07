@@ -15,6 +15,12 @@
       "Until": "next"
     },
     {
+      "StepRecord": "the-clock",
+      "Text": "And that bar is your rope. Five rounds a fight, no more. Still standing when the last one burns out and the tower takes you - so every duel is a race, not a siege.",
+      "Anchor": "round-timer",
+      "Until": "next"
+    },
+    {
       "StepRecord": "the-opponent",
       "Text": "And that is what is in the way.",
       "Anchor": "enemy-card",

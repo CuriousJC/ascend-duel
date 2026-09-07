@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/entities"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -344,6 +345,13 @@ func stubCombat() *CombatScene {
 	s.duelButton = stubButton()
 	s.hands.button = stubButton()
 	s.hand = make([]paletteCard, 5)
+
+	// **On a clock, because `round-timer` reports no rectangle without one** — the same reason the
+	// hand above is filled. A fighter with no limit draws no bar, which is honest and would read
+	// here as a missing case.
+	s.fighter = &entities.Combatant{
+		Duelist: combat.Duelist{RoundLimit: combat.DefaultRoundLimit},
+	}
 	return s
 }
 

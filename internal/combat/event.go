@@ -119,6 +119,20 @@ const (
 	// figure.
 	KindVitae
 
+	// KindTimeUp is the round limit running out on a duelist who is still standing. Target and
+	// Side are both that duelist, Amount is the life the clock took, and Life is what is left of
+	// them, which is nothing.
+	//
+	// **It is emitted before the KindDefeated that follows it**, so the feed reads "out of time"
+	// and then the fall, in that order — a death with no cause in front of it would read as the
+	// engine having lost count.
+	//
+	// **Its own kind rather than a KindDamage.** A blow has an attacker and a card behind it, and
+	// this has neither: nothing was swung, nobody landed it, and a damage event with an empty
+	// Action would send the feed looking for a card that was never played. It is the same argument
+	// KindHealed makes for not being a negative KindDamage.
+	KindTimeUp
+
 	KindRoundEnd
 )
 

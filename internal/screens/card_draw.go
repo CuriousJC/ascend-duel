@@ -103,8 +103,10 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 // **It is for a row standing on the bare table** *(2026-09-06)*. A seat inside a pane needs
 // nothing: the pane's own surface already reads as a hole, and an outline drawn in a row that
 // overlaps lands on the card next to it. The shop's shelf draws nothing for a spent seat for that
-// reason; the consumables pane still outlines, because a seat there is one something can go into
-// rather than one that has been spent.
+// reason, **and the consumables pane stopped outlining on 2026-09-07** — it was the one caller
+// contradicting the rule above, and on screen its two outlines were the loudest thing in the top
+// row. The reward screen is the remaining caller and is exactly the case this is for: a prize taken
+// off a bare table, where the hole is a card that was there a moment ago.
 func drawEmptySeat(screen *ebiten.Image, at image.Rectangle) {
 	vector.StrokeRect(screen, float32(at.Min.X), float32(at.Min.Y),
 		float32(at.Dx()), float32(at.Dy()), 3, groundInk, false)

@@ -49,7 +49,7 @@ func TestTheMergedPairReportsTheAxisThatFormedIt(t *testing.T) {
 		// A stab and a slash, one fire and one ice, agree on neither concept nor element.
 		{"two forms that match", []Card{Of(Jab, Fire), Of(Thrust, Ice)}, AxisForm},
 		// Two different concepts in two different forms, agreeing only on their colour.
-		{"two colours that match", []Card{Of(Jab, Fire), Of(Slash, Fire)}, AxisElement},
+		{"two colours that match", []Card{Of(Jab, Fire), Of(Slice, Fire)}, AxisElement},
 	} {
 		turn := make([]Slot, len(tc.cards))
 		for i, c := range tc.cards {

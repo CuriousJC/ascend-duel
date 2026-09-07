@@ -130,11 +130,12 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // drawConsumablePane puts the pane up: the backing, whatever is held, an empty seat for whatever is
 // not, and the count on the corner.
 //
-// **Empty seats are drawn here where the ring row does not draw them**, and the difference is what
-// the two rows are saying. Five ring seats mostly stand empty and drawing them would spend the
-// loudest thing in the band on what you have not got — the fraction says it more quietly. Two seats
-// is small enough that the pane would otherwise be a bare rectangle with nothing in it at all, which
-// reads as something failing to draw rather than as room you have.
+// **An empty seat draws nothing at all** *(owner's call, 2026-09-07)*. It was outlined for a day
+// on the argument that two bare seats would read as something failing to draw — and on screen the
+// outline was the loudest thing in the top row, two heavy black rectangles beside the ring pane
+// saying only that the run is carrying nothing. **The pane's own surface is the hole**, which is
+// exactly what drawEmptySeat's own doc comment says about a seat inside a pane; this row was the
+// one place disagreeing with it. The count on the corner is what says how much room is left.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
 	spendable func(session.Parasite) bool) {
 
@@ -151,7 +152,6 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	for i := 0; i < maxHeld; i++ {
 		at := consumableSlotRect(r, i)
 		if i >= len(held) {
-			drawEmptySeat(screen, at)
 			continue
 		}
 		// **A parasite is lit exactly when clicking it would do something** *(2026-09-06)*, which

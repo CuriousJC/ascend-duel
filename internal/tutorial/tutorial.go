@@ -111,6 +111,16 @@ const (
 	// vitae on a Salve and then face a step demanding a potion they can no longer afford, with
 	// nothing on screen able to satisfy it. See the affordability test in `internal/screens`.
 	AnchorShopDMGPotion
+
+	// AnchorRoundTimer is the bar under the tower place: how many of the fight's rounds are gone.
+	//
+	// **It points at the readout, not at the rule.** The clock kills a duelist still standing at
+	// the end of the last round and there is nothing on screen to point at when it does — the death
+	// happens inside a resolved round — so the step that teaches it has to be able to name the bar
+	// while it is still empty. That is why this is an anchor of its own rather than the step
+	// borrowing `tower-place`: the two lines above the bar say where you are, and lighting them to
+	// talk about time would point at the wrong sentence.
+	AnchorRoundTimer
 )
 
 // anchorNames is the word each anchor is written as in `data/tutorial.json`.
@@ -137,6 +147,7 @@ var anchorNames = map[Anchor]string{
 	AnchorLedgerButton:  "ledger-button",
 	AnchorShopWorn:      "shop-worn",
 	AnchorShopDMGPotion: "shop-dmg-potion",
+	AnchorRoundTimer:    "round-timer",
 }
 
 func (a Anchor) String() string {

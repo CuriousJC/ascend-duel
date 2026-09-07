@@ -43,7 +43,7 @@ func TestCostSortRunsCheapestFirst(t *testing.T) {
 	hand := sortHandOf(sortByCost,
 		card(combat.Cleave, combat.Ice), // 3
 		card(combat.Ward, combat.Basic), // 1
-		card(combat.Slash, combat.Fire), // 2
+		card(combat.Slice, combat.Fire), // 2
 		card(combat.Jab, combat.Earth),  // 1
 	)
 
@@ -234,7 +234,7 @@ func TestTheSortReportsWhereEveryCardCameFrom(t *testing.T) {
 	s := &CombatScene{hand: []paletteCard{
 		{actionCard: card(combat.Cleave, combat.Fire)}, // 3
 		{actionCard: card(combat.Jab, combat.Fire)},    // 1
-		{actionCard: card(combat.Slash, combat.Fire)},  // 2
+		{actionCard: card(combat.Slice, combat.Fire)},  // 2
 	}}
 	before := append([]paletteCard(nil), s.hand...)
 

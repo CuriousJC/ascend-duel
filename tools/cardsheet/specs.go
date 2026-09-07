@@ -64,28 +64,28 @@ type concept struct {
 // rules cannot deal. It is the longest strings here that matter — the sheet is where an
 // overlong line is *seen* rather than merely failing a test.
 var concepts = []concept{
-	{"Poke", cards.FormStab, 0, "Stabs for 0.25x DMG"},
-	{"Jab", cards.FormStab, 1, "Stabs for 0.5x DMG"},
-	{"Thrust", cards.FormStab, 2, "Stabs for 1x DMG"},
-	{"Lunge", cards.FormStab, 3, "Stabs for 2x DMG"},
-	{"Impale", cards.FormStab, 4, "Stabs for 4x DMG"},
+	{"Poke", cards.FormStab, 0, "STAB\nDMG 0.25x"},
+	{"Jab", cards.FormStab, 1, "STAB\nDMG 0.5x"},
+	{"Thrust", cards.FormStab, 2, "STAB\nDMG 1x"},
+	{"Lunge", cards.FormStab, 3, "STAB\nDMG 3x"},
+	{"Impale", cards.FormStab, 4, "STAB\nDMG 4x"},
 
-	{"Nick", cards.FormSlash, 0, "Slashes for 0.25x DMG"},
-	{"Cut", cards.FormSlash, 1, "Slashes for 0.5x DMG"},
-	{"Slash", cards.FormSlash, 2, "Slashes for 1x DMG"},
-	{"Cleave", cards.FormSlash, 3, "Slashes for 2x DMG"},
-	{"Sever", cards.FormSlash, 4, "Slashes for 4x DMG"},
+	{"Nick", cards.FormSlash, 0, "SLASH\nDMG 0.25x"},
+	{"Cut", cards.FormSlash, 1, "SLASH\nDMG 0.5x"},
+	{"Slice", cards.FormSlash, 2, "SLASH\nDMG 1x"},
+	{"Cleave", cards.FormSlash, 3, "SLASH\nDMG 3x"},
+	{"Sever", cards.FormSlash, 4, "SLASH\nDMG 4x"},
 
-	{"Tap", cards.FormCrush, 0, "Crushes for 0.25x DMG"},
-	{"Bash", cards.FormCrush, 1, "Crushes for 0.5x DMG"},
-	{"Strike", cards.FormCrush, 2, "Crushes for 1x DMG"},
-	{"Smash", cards.FormCrush, 3, "Crushes for 2x DMG"},
-	{"Pulverize", cards.FormCrush, 4, "Crushes for 4x DMG"},
+	{"Tap", cards.FormCrush, 0, "CRUSH\nDMG 0.25x"},
+	{"Bash", cards.FormCrush, 1, "CRUSH\nDMG 0.5x"},
+	{"Strike", cards.FormCrush, 2, "CRUSH\nDMG 1x"},
+	{"Smash", cards.FormCrush, 3, "CRUSH\nDMG 3x"},
+	{"Pulverize", cards.FormCrush, 4, "CRUSH\nDMG 4x"},
 
-	{"Flinch", cards.FormDefend, 0, "1 shield"},
-	{"Ward", cards.FormDefend, 1, "1 shield"},
-	{"Brace", cards.FormDefend, 2, "2 shields"},
-	{"Guard", cards.FormDefend, 3, "3 shields"},
+	{"Flinch", cards.FormDefend, 0, "SHIELD\n1"},
+	{"Ward", cards.FormDefend, 1, "SHIELD\n1"},
+	{"Brace", cards.FormDefend, 2, "SHIELD\n2"},
+	{"Guard", cards.FormDefend, 3, "SHIELD\n3"},
 }
 
 // realCards is **all nineteen concepts at hand size**, one element after another so the row

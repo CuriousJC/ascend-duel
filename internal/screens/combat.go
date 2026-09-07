@@ -83,6 +83,7 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindBurned:     1,
 	combat.KindHealed:     1,
 	combat.KindVitae:      1,
+	combat.KindTimeUp:     2,
 	combat.KindRoundEnd:   1,
 }
 
@@ -1318,7 +1319,10 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// alongside damage rather than being a consequence of a card. Missing it would leave the two
 	// fighter cards showing a life the engine has already spent — and a duelist who dies to a
 	// fire tick would fall with a health bar that never moved.
-	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned {
+	// **The clock empties a bar the same way**, and for the same reason a burn does: nobody acted,
+	// so nothing else on this screen would ever move that life. A duelist timed out with a full
+	// bar would fall looking untouched until the end-of-round adoption caught up.
+	if e.Kind != combat.KindDamage && e.Kind != combat.KindBurned && e.Kind != combat.KindTimeUp {
 		return
 	}
 
@@ -1392,6 +1396,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// run rather than about either fighter, and that corner is where the run's own figures
 	// already are.
 	s.drawTowerPlace(gs, screen)
+
+	// **And the clock under it**, which is the same kind of fact: how long this fight is allowed
+	// to last, in the column that already says where it is being fought. See drawRoundTimer.
+	s.drawRoundTimer(gs, screen)
 
 	// **The ring pane is a sketch** *(2026-08-11)* — it draws what `data/rings.json` defines
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see

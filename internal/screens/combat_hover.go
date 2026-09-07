@@ -47,7 +47,28 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 	if s.hoverHand(gs, at) || s.hoverRings(gs, at) {
 		return
 	}
+	if s.hoverRoundTimer(gs, at) {
+		return
+	}
 	s.hoverFighters(gs, at)
+}
+
+// hoverRoundTimer explains the clock. **It is asked before the fighter cards** for the reason the
+// order of this whole file is what it is — the bar is drawn over the ground under the duelist card
+// and the two rectangles do not overlap today, so the order costs nothing and stops mattering the
+// day the column is re-laid.
+func (s *CombatScene) hoverRoundTimer(gs *state.GlobalState, at image.Point) bool {
+	limit := s.roundTimerLimit()
+	if limit < 1 {
+		return false
+	}
+	r := s.roundTimerRect(gs)
+	if !at.In(r) {
+		return false
+	}
+	title, lines := roundTimerTip(s.roundTimerSpent(limit), limit)
+	s.tip.Point(r, title, lines)
+	return true
 }
 
 // hoverHand walks the hand from the right, because the row overlaps and the card drawn last is the

@@ -23,10 +23,44 @@ package screens
 //
 // **The example is the deck's own answer**, not an invented one: cards this run actually holds.
 //
-// **A rung is one block, ruled off from the next** *(owner's call, 2026-08-24)*, and the
-// multiplier stands right beside the last card rather than out at the column's edge. Three
-// columns of names, cards and figures otherwise read as three columns of *lists* — the eye pairs
-// a figure with whatever is nearest it, and at the far edge the nearest thing is the rung below.
+// **A merged rung is drawn once per axis it reads** *(owner's call, 2026-09-07)*. The Pair is
+// `"match": "any"` — it fires on whichever of concept, form and element the turn happens to satisfy
+// — and the panel drew it as the concept reading alone, which is a picture of a rung that does not
+// exist. It is now three examples side by side, captioned CARD / FORM / ELEMENTAL in the wording the
+// unmerged rungs on the same page use, with a hairline between them: six tokens at the row's own
+// pitch would read as one hand of six, which is the one thing this row must not say.
+//
+// **A rung is one block, ruled off from the next** *(owner's call, 2026-08-24)*, and the block is
+// what holds a figure to the rung it belongs to: three columns of names, cards and figures
+// otherwise read as three columns of *lists*, with the eye pairing each figure with whatever is
+// nearest it. The rule under each rung is what makes that safe, and it is why the multiplier can
+// stand at the column's own edge.
+//
+// **The multiplier is right-justified and the plays count sits beside the last card** *(owner's
+// call, 2026-09-07)*, which is the two of them the other way round from the day before. The
+// multiplier is the figure the panel exists to put in front of a player, so it gets the column of
+// its own that a justified edge makes — eighteen rungs of it in a line is a ladder that can be read
+// down. The plays count is a fact about the run rather than about the rung, so it takes the seat
+// beside the cards.
+//
+// **Every rung including the merged one**: the Pair put its figure on the title line for as long
+// as its three examples and a `HANDS PLAYED:` label would not both fit the band, and shortening the
+// label to `PLAYED:` bought the room back. One placement is worth more than the argument for the
+// exception was — a rung whose figure is somewhere else is a rung a reader has to look twice at.
+//
+// **Both of a rung's counters are drawn on every rung, and they sit apart** *(owner's call,
+// 2026-09-07)*. The **level is a parenthetical on the title** — `PAIR (LVL 1)` — because it is
+// part of what this rung *is* on this run, the same fact the multiplier is already coloured for.
+// The **plays count is centred down the card band**, beside the last card — `PLAYED: 0` — because
+// it is a fact about the run rather than about the rung. Neither is omitted at zero: a blank says
+// the panel has no opinion, which is how a player comes to think a level is something only some
+// rungs have.
+//
+// **The titles are shouted** *(owner's call, 2026-09-07)*, so nothing on the panel is lower case.
+// It costs no width — kubasta is monospaced, and a capital and a lower-case letter take the same
+// advance — so this is purely what the panel looks like. The one thing left in lower case is the
+// `x` on a multiplier, which is `multiplierText` and is shared with the card faces and the
+// tooltips; changing it here alone would make the panel disagree with them.
 //
 // **Ordered by multiplier, cheapest-paying first, across all three axes at once.** That is the
 // comparison the multipliers are making — an Elemental Three of a Kind at 145 says it is worth
@@ -40,6 +74,7 @@ import (
 	"image"
 	"image/color"
 	"sort"
+	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
@@ -84,17 +119,36 @@ func runPlays(run *session.Session) map[string]int {
 // handsRow is one rung: its name and what forming it pays, and the hand this deck illustrates it
 // with.
 type handsRow struct {
-	name  string
-	mult  string
-	cards []combat.Card
+	name string
+	mult string
+
+	// sets is the hands this deck illustrates the rung with, one per axis the rung may be read on.
+	// **Almost every rung has exactly one** and this is a slice of one; the Pair is the exception
+	// and carries three *(owner's call, 2026-09-07)*.
+	//
+	// **A merged rung drawn as one example was the panel claiming it counted one thing.** The Pair
+	// is `"match": "any"` and fires on whichever of concept, form and element the turn satisfies —
+	// and the panel drew it as the concept reading alone, which is a picture of a rung that does
+	// not exist. Three sets, captioned with the axis each is read on, is the rule in the same
+	// pictures the rest of the ladder is drawn in.
+	sets [][]combat.Card
+
+	// axes is what each set is read on, parallel to sets. **Empty for a rung with one axis**,
+	// because its name already says which — "Elemental Two Pair" needs no caption reading
+	// ELEMENTAL under it.
+	axes []combat.Axis
 
 	// plays is how many times this run has formed the rung, and level is how many stones stand on
 	// it *(owner's call, 2026-09-05)*. **Two counters and not one**, because they say different
 	// things: a level is something the player bought and it moves the multiplier beside it, and a
 	// play is something the player did and moves nothing at all.
 	//
-	// **Level 0 is a rung as shipped**, and the row simply does not draw the figure - a ladder
-	// with eighteen "LVL 0" on it says nothing eighteen blanks do not.
+	// **Level 1 is a rung as shipped** *(owner's call, 2026-09-07)*, so `level` is the stone count
+	// plus one and never zero. It read the stones directly until then and drew nothing at zero, on
+	// the argument that eighteen rungs saying "LVL 0" is noise — which was true of a *blank* rung
+	// and false of a ladder: a level a player can raise is one they have to be able to see the
+	// bottom of, and "LVL 0" for the rung as bought reads as a rung with nothing on it rather than
+	// as the first step. The plays count is drawn at zero for the same reason.
 	plays int
 	level int
 
@@ -130,12 +184,14 @@ func handsRows(c handsContents) []handsRow {
 
 	out := make([]handsRow, 0, len(hands))
 	for _, h := range hands {
+		sets, axes := handsExamples(c, h)
 		out = append(out, handsRow{
 			name:   h.Name,
 			mult:   multiplierText(h.Multiplier),
-			cards:  handsExample(c, h),
+			sets:   sets,
+			axes:   axes,
 			plays:  c.plays[h.Key],
-			level:  c.holder.HandStoneCount(h.Key),
+			level:  c.holder.HandStoneCount(h.Key) + 1,
 			raised: h.Multiplier != catalogueMultiplier(base, h.Key),
 		})
 	}
@@ -153,9 +209,38 @@ func handsRows(c handsContents) []handsRow {
 // five copies of one card cannot be dealt from the shipping deck, and the panel used to say so in
 // words where the cards belong — see decks.Example, which repeats a card rather than coming back
 // empty. Whether a rung is reachable is a fact about today's deck; the rung is the ladder.
-func handsExample(c handsContents, h combat.Hand) []combat.Card {
-	hand, _ := decks.Example(c.deck, h)
-	return hand
+// **A rung read on more than one axis is illustrated once per axis** *(owner's call, 2026-09-07)*,
+// and the axes come back beside the sets so the drawing can caption them. `Hand.On` is what narrows
+// the rung to one reading, and it is the matcher's own function — so each set really is a hand that
+// rung would score, rather than three examples this panel invented.
+func handsExamples(c handsContents, h combat.Hand) ([][]combat.Card, []combat.Axis) {
+	axes := h.Axes
+	if len(axes) < 2 {
+		hand, _ := decks.Example(c.deck, h)
+		return [][]combat.Card{hand}, nil
+	}
+
+	sets := make([][]combat.Card, 0, len(axes))
+	for _, a := range axes {
+		hand, _ := decks.Example(c.deck, h.On(a))
+		sets = append(sets, hand)
+	}
+	return sets, append([]combat.Axis(nil), axes...)
+}
+
+// handsAxisWord is what a caption under a set reads. **The catalogue's own wording, not the
+// matcher's** — a player has "Card Two Pair" and "Elemental Two Pair" on the same page, so the
+// merged rung's captions have to be the words those rungs use rather than `Axis.String`'s
+// `concept` and `element`.
+func handsAxisWord(a combat.Axis) string {
+	switch a {
+	case combat.AxisForm:
+		return "FORM"
+	case combat.AxisElement:
+		return "ELEMENTAL"
+	default:
+		return "CARD"
+	}
 }
 
 // The panel's own geometry: three columns of rungs, a name over a row of cards.
@@ -170,9 +255,8 @@ const (
 
 	handsColumnGap = 28
 
-	// A name line, a row of tokens under it, and a rule under that.
+	// A name line, a row of tokens under it, and a rule under that. See handsCardsTop.
 	handsNameLine = 0
-	handsCardsTop = 24
 
 	// handsRowGap is the air between the bottom of a rung's cards and the hairline that closes it,
 	// and again between that hairline and the next rung's name.
@@ -183,14 +267,47 @@ const (
 	// prices, and distance is what says so.
 	handsMultGap = 12
 
-	handsNameSize = 17
-	handsMultSize = 20
+	// handsNameSize is the rung's own title, and **it is the dial the whole row is built off**:
+	// handsCardsTop is derived from it, so moving this moves the block that holds the cards rather
+	// than letting the title grow into them.
+	handsNameSize = 28
 
-	// handsTallySize is the plays-and-level line. **Smaller than the name it sits beside**: it is
-	// an annotation on the rung rather than part of naming it, and at the name's own size the two
-	// would read as one long title.
-	handsTallySize = 13
+	// handsMultSize is what forming the rung pays, and it is **the one figure written larger than
+	// the rung's own title**. It has been a shade over the title since the panel was built (20
+	// against 17) and it scales with it: the name says which rung and the multiplier says what it
+	// is worth, which is the thing the panel exists to put in front of a player mid-hand.
+	handsMultSize = 32
+
+	// handsTallySize is the HANDS PLAYED line, **written at the title's own size** *(owner's call,
+	// 2026-09-07)*. It was 13 and then 16, on the argument that a tally is an annotation; it is
+	// drawn on every rung now and it is the figure a player opens this panel to check, so it is
+	// read at the size of the thing it belongs to.
+	handsTallySize = handsNameSize
+
+	// handsSetGap is the air between one axis's example and the next, on a rung read on more than
+	// one, and it is sized to hold the word that goes in it. **Wider than the two pixels between
+	// cards of one set**: six tokens at the row's own pitch read as one hand of six, which is the
+	// one thing this row must not say.
+	handsSetGap = 28
+
+	// handsOrSize is the "OR" between two of a merged rung's examples. **A word rather than the
+	// hairline it replaces** *(owner's call, 2026-09-07)*: a rule says the sets are separate and
+	// leaves what separates them to be worked out, where the word says the rung takes whichever of
+	// them the turn happens to make. It is written under the title's size on purpose — it is the
+	// one thing in the band that is not a card, and at the title's size it would be read first.
+	handsOrSize = 20
+
+	// handsAxisSize is the caption naming which axis a set is read on, and handsAxisBand is what
+	// the line costs the rung in depth — the type plus the air under it.
+	handsAxisSize = 20
+	handsAxisBand = handsAxisSize + 3
 )
+
+// handsCardsTop is where a rung's tokens start, measured from its own top. **Derived from the
+// title rather than written down** *(2026-09-07)*, for the reason handsRuleDrop is derived from the
+// token: a constant here has to be kept in step with a type size by hand, and the failure is a
+// title drawn through the cards under it.
+var handsCardsTop = handsNameSize + 4
 
 // handsRuleDrop is where the hairline separating one rung from the next sits, measured from the
 // row's top. **It is what makes a rung one block rather than three lists** - a name, a row of cards
@@ -206,6 +323,39 @@ var handsRuleDrop = handsCardsTop + cards.Token.Height + handsRowGap
 // handsRowHeight is the pitch from one rung to the next: its whole block, and the air under the
 // rule before the next name. Derived for the reason handsRuleDrop is.
 var handsRowHeight = handsRuleDrop + handsRowGap + handsNameSize
+
+// The three measurements above are the plain rung's. A rung carrying axis captions is that much
+// taller, and these are the same three read against a row rather than assumed.
+//
+// **The column stacks by accumulated depth rather than by a fixed pitch** *(2026-09-07)*, which is
+// what a row of two heights costs. A pitch is cheaper and was right while every rung was the same
+// block; multiplying an index by it once one rung is taller draws the ladder through itself.
+func handsCardsTopFor(row handsRow) int { return handsCardsTop + handsCaptionBand(row) }
+func handsRuleDropFor(row handsRow) int { return handsRuleDrop + handsCaptionBand(row) }
+func handsRowDepth(row handsRow) int    { return handsRowHeight + handsCaptionBand(row) }
+
+// handsCaptionBand is the depth a rung's axis captions cost it, or zero for a rung that names its
+// own axis.
+func handsCaptionBand(row handsRow) int {
+	if len(row.axes) < 2 {
+		return 0
+	}
+	return handsAxisBand
+}
+
+// handsColumnDepth is how tall a column of rungs stands: every block, less the air the last one
+// leaves under its own rule.
+func handsColumnDepth(column []handsRow) int {
+	if len(column) == 0 {
+		return 0
+	}
+	tall := 0
+	for _, row := range column {
+		tall += handsRowDepth(row)
+	}
+	last := column[len(column)-1]
+	return tall - (handsRowDepth(last) - handsRuleDropFor(last))
+}
 
 // handsCardPitch is how far apart the tokens in a row sit: the token plus two pixels of air.
 //
@@ -290,6 +440,18 @@ func handsCardsWidth(n int) int {
 	return (n-1)*handsCardPitch + cards.Token.Width
 }
 
+// handsSetsWidth is the whole band of examples: every set, and the air between them.
+func handsSetsWidth(sets [][]combat.Card) int {
+	span := 0
+	for i, set := range sets {
+		if i > 0 {
+			span += handsSetGap
+		}
+		span += handsCardsWidth(len(set))
+	}
+	return span
+}
+
 // drawHandPanel covers the screen with the ladder.
 func drawHandPanel(gs *state.GlobalState, screen *ebiten.Image, c handsContents) {
 	rows := handsRows(c)
@@ -302,8 +464,10 @@ func drawHandPanel(gs *state.GlobalState, screen *ebiten.Image, c handsContents)
 
 	for i, column := range columns {
 		left := body.Min.X + i*(colWidth+handsColumnGap)
-		for j, row := range column {
-			drawHandRow(gs, screen, c, row, left, body.Min.Y+j*handsRowHeight, colWidth)
+		top := body.Min.Y
+		for _, row := range column {
+			drawHandRow(gs, screen, c, row, left, top, colWidth)
+			top += handsRowDepth(row)
 		}
 	}
 }
@@ -313,73 +477,103 @@ func drawHandPanel(gs *state.GlobalState, screen *ebiten.Image, c handsContents)
 func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, row handsRow,
 	left, top, width int) {
 
+	face := func(size float64) *text.GoTextFace {
+		return &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}
+	}
 	write := func(x, y int, size float64, ink color.RGBA, s string) {
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
 		op.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, s,
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: size}, op)
+		text.Draw(screen, s, face(size), op)
+	}
+	widthOf := func(s string, size float64) int {
+		adv, _ := text.Measure(s, face(size), 0)
+		return int(adv)
 	}
 
-	write(left, top+handsNameLine, handsNameSize, handsNameInk, row.name)
+	title := handsTitleText(row)
+	write(left, top+handsNameLine, handsNameSize, handsNameInk, title)
 
-	// **The tally sits after the name, on the name's own line** *(owner's call, 2026-09-05)*. It
-	// is a fact about the rung, so it belongs to the rung's label rather than to its cards - and
-	// a line of its own would have cost the ladder a row of depth per rung to say two small
-	// numbers.
-	if tally := handsTallyText(row); tally != "" {
-		adv, _ := text.Measure(row.name,
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: handsNameSize}, 0)
-		write(left+int(adv)+handsTallyGap, top+handsNameLine+handsTallyDrop,
-			handsTallySize, handsTallyInk, tally)
+	multInk := handsMultInk
+	if row.raised {
+		// **A raised rung is written in `boostInk`, which is the ring pink.** It is reused rather
+		// than given a hue of its own: on a card it means "a ring moved this figure", and here it
+		// means "a stone did" — the shared reading is *something you bought moved this number*,
+		// which is the thing a player needs to see. A second pink-ish hue for the second source
+		// would be two colours a player has to tell apart to learn the same fact.
+		multInk = boostInk
 	}
+
+	cardsTop := top + handsCardsTopFor(row)
 
 	// **The cards are drawn as themselves**, through the same spec every other screen builds, so
 	// a token cannot say something the card in the hand does not. `enabled` is true and nothing is
 	// selected: this is a catalogue, and a dimmed card here would mean "unaffordable" against a
 	// budget no round has yet set.
-	for i, card := range row.cards {
-		at := image.Pt(left+i*handsCardPitch, top+handsCardsTop)
-		drawCard(gs, screen, at, cards.Token, card, heldBy(c.holder, card), true, false)
+	x := left
+	for i, set := range row.sets {
+		if i > 0 {
+			// **"OR" in the air between two sets**, centred both ways in the gap. It replaced a
+			// hairline: a rule says the sets are separate and leaves what separates them to be
+			// worked out, where the word says the rung takes whichever of them the turn makes.
+			write(x-handsSetGap/2-widthOf(handsOrWord, handsOrSize)/2,
+				cardsTop+handsMultDrop(handsOrSize), handsOrSize, handsTallyInk, handsOrWord)
+		}
+		if i < len(row.axes) {
+			write(x, cardsTop-handsAxisBand, handsAxisSize, handsTallyInk,
+				handsAxisWord(row.axes[i]))
+		}
+		for j, card := range set {
+			at := image.Pt(x+j*handsCardPitch, cardsTop)
+			drawCard(gs, screen, at, cards.Token, card, heldBy(c.holder, card), true, false)
+		}
+		x += handsCardsWidth(len(set)) + handsSetGap
 	}
-	// Beside the last card and centred against the band, so the figure reads as belonging to the
-	// hand rather than to the column.
-	// **A raised rung is written in `boostInk`, which is the ring pink.** It is reused rather than
-	// given a hue of its own: on a card it means "a ring moved this figure", and here it means "a
-	// stone did" — the shared reading is *something you bought moved this number*, which is the
-	// thing a player needs to see. A second pink-ish hue for the second source would be two
-	// colours a player has to tell apart to learn the same fact.
-	multInk := handsMultInk
-	if row.raised {
-		multInk = boostInk
-	}
-	write(left+handsCardsWidth(len(row.cards))+handsMultGap,
-		top+handsCardsTop+handsMultDrop(handsMultSize), handsMultSize, multInk, row.mult)
 
-	vector.StrokeLine(screen, float32(left), float32(top+handsRuleDrop),
-		float32(left+width), float32(top+handsRuleDrop), 1, handsRuleInk, false)
+	// **The plays count takes the seat beside the last card and the multiplier is justified to the
+	// column's edge** *(owner's call, 2026-09-07)*. Both are centred down the token band, which is
+	// what stops either reading as a caption on whichever card it happens to sit next to; the
+	// multiplier gets the justified edge because eighteen of them in a line is a ladder that can be
+	// read down, which is the whole of what this panel is for.
+	tally := handsTallyText(row)
+	write(left+handsSetsWidth(row.sets)+handsMultGap, cardsTop+handsMultDrop(handsTallySize),
+		handsTallySize, handsTallyInk, tally)
+	write(left+width-widthOf(row.mult, handsMultSize),
+		cardsTop+handsMultDrop(handsMultSize), handsMultSize, multInk, row.mult)
+
+	rule := float32(top + handsRuleDropFor(row))
+	vector.StrokeLine(screen, float32(left), rule, float32(left+width), rule, 1, handsRuleInk, false)
 }
 
-// handsTallyText is the plays-and-level annotation, or empty for a rung this run has neither
-// played nor raised.
+// handsOrWord is what stands between two of a merged rung's examples.
+const handsOrWord = "OR"
+
+// handsTitleText is the rung's name and the level this run has it at. **The level is a
+// parenthetical on the title** *(owner's call, 2026-09-07)*, because it says what this rung *is*
+// here rather than what has happened to it — the same thing the multiplier beside the cards is
+// already written in the ring pink to say.
 //
-// **Nothing is drawn for a rung at zero and nothing.** Eighteen rungs each saying "PLAYED 0" is
-// eighteen lines of noise around the two or three the player is actually building, and the absence
-// says zero perfectly well.
+// **Shouted, and it is free.** kubasta is monospaced, so the capitals measure exactly what the
+// catalogue's own casing did; nothing about the layout depends on this and the whole of what it
+// buys is a panel with nothing lower case on it.
+func handsTitleText(row handsRow) string {
+	return fmt.Sprintf("%s (LVL %d)", strings.ToUpper(row.name), row.level)
+}
+
+// handsTallyText is how often this run has formed the rung, and **every rung carries one**
+// *(owner's call, 2026-09-07)*.
 //
-// **Level is only shown once there is one**, and it is deliberately the second of the two: a play
-// is something that happens to every rung and a level is something bought for one, so the rarer
-// fact reads better last, where it is not competing with a number that moves every fight.
+// It was drawn only where there was something to say, on the argument that eighteen rungs reading
+// "PLAYED 0" is noise. What that missed is that the figure is defined for every rung all the time,
+// and a blank says something else: that the panel has no opinion. Drawn everywhere, it is also a
+// column the eye can run down.
+//
+// **`PLAYED:` rather than `HANDS PLAYED:`** *(owner's call, 2026-09-07)*. The longer label was
+// what pushed the Pair's multiplier off the card band and onto its title line, and the word it
+// spends 61 pixels on is one the panel's own heading has already said. The colon is what keeps it
+// reading as a count rather than as a label on the card beside it.
 func handsTallyText(row handsRow) string {
-	switch {
-	case row.plays > 0 && row.level > 0:
-		return fmt.Sprintf("PLAYED %d  LVL %d", row.plays, row.level)
-	case row.level > 0:
-		return fmt.Sprintf("LVL %d", row.level)
-	case row.plays > 0:
-		return fmt.Sprintf("PLAYED %d", row.plays)
-	}
-	return ""
+	return fmt.Sprintf("PLAYED: %d", row.plays)
 }
 
 // handsTallyGap is the air between the rung's name and its tally, and handsTallyDrop is what sits

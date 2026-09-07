@@ -8,7 +8,7 @@
 //     ShouldClose becomes ErrClosing, which main treats as a clean exit.
 //   - Draw — per-frame rendering. Returns early while NewScreen is set, so a scene is never drawn
 //     before its Init has run.
-//   - Layout — returns the fixed 1280x960 internal resolution whatever the window is resized to,
+//   - Layout — returns the fixed 1920x1080 internal resolution whatever the window is resized to,
 //     which is what makes every absolute coordinate in the game safe.
 //
 // # The scene registry

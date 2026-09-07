@@ -30,6 +30,7 @@ package screens
 import (
 	"image"
 	"math/rand"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -68,13 +69,29 @@ func heldParasites(gs *state.GlobalState) []session.Parasite {
 // constant rather than a field on the record for the reason the worm's is: when parasites get art
 // it becomes a key per parasite, and that should be a `data/parasites.json` field appearing rather
 // than a fallback being unpicked.
+// chimeraBreak is the authored line break on a chimera's face — see cards.WrapText, which honours
+// one. It is a constant rather than a literal so the escape does not have to survive being read
+// back out of this file.
+const chimeraBreak = "\n"
+
+// **A chimera says what it would fire**, because its authored line cannot: the card's whole subject
+// is a parasite named somewhere else, and "COPIES THE LAST" is a card the player has to remember
+// the answer to. On a run that has spent nothing there is no answer, and it keeps its own line — a
+// card that is about to be drawn dim anyway.
 func parasiteSpec(gs *state.GlobalState, p session.Parasite, enabled, selected bool) cards.Spec {
+	text := p.Text
+	if gs.Run != nil {
+		if echoed := gs.Run.EchoedName(p); echoed != "" {
+			text = "COPIES" + chimeraBreak + strings.ToUpper(echoed)
+		}
+	}
+
 	return cards.Spec{
 		Name:     p.Name,
 		Form:     cards.FormNone,
 		Element:  cards.Basic,
 		Art:      artwork(gs, wormArtKey),
-		Text:     p.Text,
+		Text:     text,
 		Enabled:  enabled,
 		Selected: selected,
 	}
@@ -151,9 +168,17 @@ func (s *CombatScene) selectedCardIDs() []int {
 // **The legality question goes to the run**, which is the only thing that knows whether these
 // particular cards can take it — see `Session.CanApplyParasite`, which is also what the apply itself
 // checks, so a parasite that lit up cannot then be refused.
+// **A chimera is asked through the run as well.** Its own record names no cards; how many it wants
+// comes from whatever it is copying, so the count is read off `Session.Echoes` rather than off the
+// card in the pane. A chimera with nothing to copy resolves to a parasite that cannot be satisfied,
+// which is what draws it dim.
 func (s *CombatScene) parasiteTarget(gs *state.GlobalState, p session.Parasite) consumableTarget {
+	echoed, ok := gs.Run.Echoes(p)
+	if !ok {
+		return consumableTarget{needs: -1, legal: func([]int) bool { return false }}
+	}
 	return consumableTarget{
-		needs: p.Count,
+		needs: echoed.Count,
 		legal: func(ids []int) bool { return gs.Run.CanApplyParasite(p, ids) },
 	}
 }
@@ -174,7 +199,7 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 	if !s.parasiteTarget(gs, p).satisfiedBy(ids) {
 		return
 	}
-	if !gs.Run.ApplyParasiteRolling(p, ids, s.showerRNG(gs)) {
+	if !gs.Run.ApplyParasiteRolling(p, ids, s.parasiteRNG(gs, p)) {
 		return
 	}
 	gs.Run.Drop(i)
@@ -209,16 +234,42 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 	saveRun(gs)
 }
 
-// showerRNG is the source a rock shower draws its stones from, and nil for every other parasite.
+// parasiteRNG is the source the parasite about to be spent draws from, and nil for the ones that
+// draw nothing.
+//
+// **It is picked off the *resolved* parasite**, so a chimera copying a rock shower gets the
+// shower's stream rather than none — which is the whole reason this is a switch rather than the
+// single `showerRNG` it replaced.
+//
+// **Two streams and never one.** Sharing would make what a gamble grants a function of how many
+// rock showers the run had spent, and vice versa; the `randomness` skill's test is what a shared
+// stream would silently reroll, and the answer here is "both of them".
+func (s *CombatScene) parasiteRNG(gs *state.GlobalState, p session.Parasite) *rand.Rand {
+	if gs.Run == nil {
+		return nil
+	}
+	echoed, ok := gs.Run.Echoes(p)
+	if !ok {
+		return nil
+	}
+
+	switch echoed.Target {
+	case session.ParasiteStones:
+		return s.showerRNG(gs)
+	case session.ParasiteLuck:
+		return s.luckRNG(gs)
+	default:
+		return nil
+	}
+}
+
+// showerRNG is the source a rock shower draws its stones from.
 //
 // **Its own salted stream, plus the number of stones the run has already placed** — see
 // `seeds.StoneShower`. The fight index alone is not enough here, because a run may carry three
 // showers and spend all three in one fight; the placed count is a number the snapshot already
 // carries, so a resumed run rolls what it would have rolled.
 func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
-	if gs.Run == nil {
-		return nil
-	}
 	placed := 0
 	for _, n := range gs.Run.StoneCounts() {
 		placed += n
@@ -226,6 +277,22 @@ func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
 	seed := seeds.ForFight(gs.RunSeed, seeds.StoneShower, gs.Run.Fight()) + int64(placed)*stoneShowerStride
 	return rand.New(rand.NewSource(seed))
 }
+
+// luckRNG is the source a luck parasite rolls against.
+//
+// **The shower's shape, with the run's roll count as the cursor** — see `seeds.LuckRoll`. The count
+// steps on a dud as well as on a win, which is what stops two consecutive empty rolls being seeded
+// identically and coming up empty for ever.
+func (s *CombatScene) luckRNG(gs *state.GlobalState) *rand.Rand {
+	seed := seeds.ForFight(gs.RunSeed, seeds.LuckRoll, gs.Run.Fight()) +
+		int64(gs.Run.LuckRolls())*luckRollStride
+	return rand.New(rand.NewSource(seed))
+}
+
+// luckRollStride separates one gamble from the next inside a fight, on the argument
+// `stoneShowerStride` is under. A different number from the shower's, so two consumables spent at
+// the same count do not land on neighbouring seeds.
+const luckRollStride int64 = 0x7F4A_7C15
 
 // stoneShowerStride separates one shower from the next inside a fight. A large odd number, on the
 // argument `seeds.fightStride` is under: consecutive draws should not be consecutive seeds.

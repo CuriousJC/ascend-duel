@@ -106,6 +106,24 @@ const (
 	// 2026-09-06)*. While the bag, the can and the bucket were all always there, which packs a
 	// shop had was not a decision and needed no roll.
 	PackOffer
+
+	// LuckRoll is what a luck parasite rolls when it is spent. Per fight.
+	//
+	// **StoneShower's argument, applied to the second consumable that rolls while it is being
+	// spent.** A run may carry two luck parasites and spend both in one fight, so the fight index
+	// alone would hand out the same result twice — and unlike a shelf, there is no station here to
+	// draw once at.
+	//
+	// **The count of rolls the run has already made is mixed in by the caller**, and it is a
+	// dedicated counter rather than the bonuses themselves: three rolls in five come up empty, so
+	// keying off `dmgBonus + lifeBonus` would make two consecutive duds roll identically for ever.
+	// See `Session.LuckRolls`, which the snapshot carries so a resumed run rolls what it would
+	// have rolled.
+	//
+	// **Its own stream rather than StoneShower's**, on the rule every row here is under: sharing
+	// would make what a luck parasite grants a function of how many rock showers the run had
+	// spent, which is a rule nobody designed.
+	LuckRoll
 )
 
 // stream is what the package knows about each one. A table rather than four switch statements,
@@ -142,6 +160,7 @@ var streams = [...]stream{
 	BucketStock: {name: "bucket-stock", salt: 0x5EED_B0CC, perFight: true},
 	StoneShower: {name: "stone-shower", salt: 0x5EED_5704, perFight: true},
 	PackOffer:   {name: "pack-offer", salt: 0x5EED_9AC5, perFight: true},
+	LuckRoll:    {name: "luck-roll", salt: 0x5EED_1DCC, perFight: true},
 }
 
 // fightStride separates one fight's seed from the next within a run. A large odd number so

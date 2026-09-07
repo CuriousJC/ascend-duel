@@ -206,6 +206,13 @@ func ruleLine(p session.Parasite) string {
 		return "becomes " + combat.Of(p.Concept, combat.Basic).Label()
 	case session.ParasiteVitae:
 		return fmt.Sprintf("+%d vitae, touching no card", p.Number)
+	case session.ParasiteLuck:
+		return fmt.Sprintf("1 in %d: +%d DMG; 1 in %d: +%d max life; else nothing",
+			p.Number, session.LuckDMG, p.Number, session.LuckLife)
+	case session.ParasiteChimera:
+		// **The page cannot say what it copies**, because that is a fact about a run in progress
+		// and this sheet is drawn against no run at all. Saying so is better than saying nothing.
+		return "fires the run's last parasite again — count and effect are that one's"
 	default:
 		return p.Target.String()
 	}
@@ -215,7 +222,7 @@ func ruleLine(p session.Parasite) string {
 // Read off the resolved parasite rather than the JSON, so it is what the rules hold.
 func valueOf(p session.Parasite) string {
 	switch p.Target {
-	case session.ParasiteRider, session.ParasiteVitae:
+	case session.ParasiteRider, session.ParasiteVitae, session.ParasiteLuck:
 		return strconv.Itoa(p.Number)
 	case session.ParasiteSwap:
 		return combat.Of(p.Concept, combat.Basic).Label()
@@ -227,6 +234,10 @@ func valueOf(p session.Parasite) string {
 // cardsWanted is how many cards the picker will ask for, said in words for the one that asks for
 // none — a parasite that touches no card is a decision rather than an omission.
 func cardsWanted(p session.Parasite) string {
+	if p.Target == session.ParasiteChimera {
+		// Its own record names none; what it asks for comes from whatever it is copying.
+		return "as many as the parasite it copies"
+	}
 	if p.Count == 0 {
 		return "none — touches no card"
 	}

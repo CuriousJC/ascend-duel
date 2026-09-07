@@ -20,6 +20,46 @@ func ids(s *Session) []int {
 	return out
 }
 
+// anyWithTarget is a parasite from the shipped catalogue that does this, whichever one it is.
+//
+// **A test's subject is the grammar, not the record.** Every assertion in this file already reads
+// off the resolved parasite — `p.Number`, `p.Count`, `p.Concept` — so the record key was the one
+// place a rename could break a test that was not about that record at all, and it broke seven of
+// them at once when `rockshower` became `rockbeetle`.
+//
+// **Deterministic, because `Parasites()` is sorted.** The first match is the same one every run,
+// which is what stops this being a test that quietly changes what it exercises.
+func anyWithTarget(t *testing.T, target ParasiteTarget) Parasite {
+	t.Helper()
+	for _, p := range Parasites() {
+		if p.Target == target {
+			return p
+		}
+	}
+	t.Fatalf("the catalogue holds no %s parasite, so nothing exercises it", target)
+	return Parasite{}
+}
+
+// otherThan is any concept that is not this one, for a test that needs a card a swap would change.
+func otherThan(c combat.ConceptID) combat.ConceptID {
+	if c != combat.Strike {
+		return combat.Strike
+	}
+	return combat.Jab
+}
+
+// anyWithRider is anyWithTarget for the one target whose behaviour is chosen by a second field.
+func anyWithRider(t *testing.T, kind combat.RiderKind) Parasite {
+	t.Helper()
+	for _, p := range Parasites() {
+		if p.Target == ParasiteRider && p.Rider == kind {
+			return p
+		}
+	}
+	t.Fatalf("the catalogue attaches no %s rider, so nothing exercises it", kind)
+	return Parasite{}
+}
+
 // The catalogue's own promises. A bad record panics at init, so by the time a test runs the file
 // has already been validated — what is left worth checking is that the shipped file actually
 // exercises the grammar rather than four records of one shape.
@@ -75,7 +115,8 @@ func TestTheBucketHoldsWhatIsPutInIt(t *testing.T) {
 	if run.HoldCount() != 0 {
 		t.Fatalf("a fresh run started holding %d parasites", run.HoldCount())
 	}
-	if !run.Hold("leech") || !run.Hold("leech") {
+	one := anyWithRider(t, combat.RiderHealOnPlay).Record
+	if !run.Hold(one) || !run.Hold(one) {
 		t.Fatal("the bucket refused a parasite the catalogue has")
 	}
 	if run.HoldCount() != 2 {
@@ -97,10 +138,7 @@ func TestARiderParasiteAttachesToTheCardItNames(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
 	held := ids(run)
 
-	p, ok := ParasiteByKey("leech")
-	if !ok {
-		t.Fatal("leech is not in the catalogue")
-	}
+	p := anyWithRider(t, combat.RiderHealOnPlay)
 	if !run.ApplyParasite(p, []int{held[0]}) {
 		t.Fatal("a legal rider was refused")
 	}
@@ -121,9 +159,9 @@ func TestARemoveParasiteEatsBothOfItsTargets(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab), combat.Plain(combat.Poke))
 	held := ids(run)
 
-	p, _ := ParasiteByKey("gnaw")
+	p := anyWithTarget(t, ParasiteRemove)
 	if p.Count != 2 {
-		t.Fatalf("gnaw eats %d cards, and this test is about the two-card case", p.Count)
+		t.Fatalf("%s eats %d cards, and this test is about the two-card case", p.Record, p.Count)
 	}
 	if !run.ApplyParasite(p, []int{held[0], held[2]}) {
 		t.Fatal("a legal two-card removal was refused")
@@ -141,15 +179,17 @@ func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
 	// **A card the player has already spent parasites on stays the card they invested in.** If a
 	// swap minted a new identity the riders would go with it, and a player would watch an
 	// investment vanish because they changed what the card was.
-	run := runWith(combat.Plain(combat.Jab))
+	// **The card starts as something the swap is not**, since a swap onto the card it already is
+	// is refused — so the starting concept is derived from the parasite rather than named.
+	effigy := anyWithTarget(t, ParasiteSwap)
+	run := runWith(combat.Plain(otherThan(effigy.Concept)))
 	id := ids(run)[0]
 
-	leech, _ := ParasiteByKey("leech")
+	leech := anyWithRider(t, combat.RiderHealOnPlay)
 	if !run.ApplyParasite(leech, []int{id}) {
 		t.Fatal("the rider was refused")
 	}
 
-	effigy, _ := ParasiteByKey("effigy")
 	if !run.ApplyParasite(effigy, []int{id}) {
 		t.Fatal("the swap was refused")
 	}
@@ -171,7 +211,7 @@ func TestAVitaeParasiteTouchesNoCard(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
 	before, size := run.Vitae(), run.Size()
 
-	p, _ := ParasiteByKey("hoard")
+	p := anyWithTarget(t, ParasiteVitae)
 	if !run.ApplyParasite(p, nil) {
 		t.Fatal("a parasite that needs no target was refused")
 	}
@@ -187,7 +227,7 @@ func TestAParasiteRefusesTheWrongNumberOfTargets(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
 	held := ids(run)
 
-	gnaw, _ := ParasiteByKey("gnaw")
+	gnaw := anyWithTarget(t, ParasiteRemove)
 	if run.ApplyParasite(gnaw, []int{held[0]}) {
 		t.Error("a two-card parasite fired on one card")
 	}
@@ -208,7 +248,7 @@ func TestARiderIsRefusedOnACardWithNoRoom(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
 	id := ids(run)[0]
 
-	leech, _ := ParasiteByKey("leech")
+	leech := anyWithRider(t, combat.RiderHealOnPlay)
 	for i := 0; i < combat.MaxCardRiders; i++ {
 		if !run.ApplyParasite(leech, []int{id}) {
 			t.Fatalf("rider %d was refused", i+1)
@@ -223,7 +263,7 @@ func TestARiderIsRefusedOnACardWithNoRoom(t *testing.T) {
 }
 
 func TestASwapOntoTheCardItAlreadyIsDoesNothing(t *testing.T) {
-	effigy, _ := ParasiteByKey("effigy")
+	effigy := anyWithTarget(t, ParasiteSwap)
 	run := runWith(combat.Plain(effigy.Concept))
 	id := ids(run)[0]
 
@@ -239,15 +279,19 @@ func TestTheBucketAndItsRidersSurviveASnapshot(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
 	id := ids(run)[0]
 
-	leech, _ := ParasiteByKey("leech")
+	leech := anyWithRider(t, combat.RiderHealOnPlay)
 	if !run.ApplyParasite(leech, []int{id}) {
 		t.Fatal("the rider was refused")
 	}
-	run.Hold("gnaw")
-	run.Hold("hoard")
+	// **The two records are found by target rather than named**, so this goes on testing that the
+	// bucket round-trips in acquisition order rather than that two particular parasites exist.
+	first := anyWithTarget(t, ParasiteRemove).Record
+	second := anyWithTarget(t, ParasiteVitae).Record
+	run.Hold(first)
+	run.Hold(second)
 
 	snap := run.Snapshot(0)
-	if len(snap.Held) != 2 || snap.Held[0] != "gnaw" || snap.Held[1] != "hoard" {
+	if len(snap.Held) != 2 || snap.Held[0] != first || snap.Held[1] != second {
 		t.Errorf("the bucket was written as %v, wanted acquisition order", snap.Held)
 	}
 
@@ -271,10 +315,7 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 	// **They go into the pouch, not onto the ladder** *(owner's call, 2026-09-02)*. A shower hands
 	// over consumables to be spent or sold later; the run decides which rungs it raises.
 	run := runWith(combat.Plain(combat.Strike))
-	p, ok := ParasiteByKey("rockshower")
-	if !ok {
-		t.Fatal("the catalogue has no rock shower")
-	}
+	p := anyWithTarget(t, ParasiteStones)
 
 	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(1))) {
 		t.Fatal("a rock shower was refused")
@@ -297,7 +338,7 @@ func TestARockShowerCarriesEveryStoneItDrawsRatherThanPlacingThem(t *testing.T) 
 
 func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
-	p, _ := ParasiteByKey("rockshower")
+	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(3)))
 
 	first, _ := StoneByKey(run.Carried()[0])
@@ -317,7 +358,7 @@ func TestACarriedStoneIsSpentOntoItsOwnRung(t *testing.T) {
 
 func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
-	p, _ := ParasiteByKey("rockshower")
+	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(5)))
 
 	sold, _ := StoneByKey(run.Carried()[0])
@@ -338,7 +379,7 @@ func TestThePouchSurvivesASnapshot(t *testing.T) {
 	// **A run resumed one consumable lighter is a run the player would have to work out had
 	// changed** — the rule the bucket and the worn rings are both under.
 	run := runWith(combat.Plain(combat.Strike))
-	p, _ := ParasiteByKey("rockshower")
+	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(9)))
 	want := run.Carried()
 
@@ -360,7 +401,7 @@ func TestThePouchSurvivesASnapshot(t *testing.T) {
 func TestARockShowerDrawsWithoutRepeats(t *testing.T) {
 	// A seat spent showing the same rock twice says nothing, which is the bag's own argument.
 	run := runWith(combat.Plain(combat.Strike))
-	p, _ := ParasiteByKey("rockshower")
+	p := anyWithTarget(t, ParasiteStones)
 
 	if !run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(7))) {
 		t.Fatal("a rock shower was refused")
@@ -380,7 +421,7 @@ func TestARockShowerWithNoSourceIsRefusedRatherThanRolledTheSameWayTwice(t *test
 	// handing out the same three rocks every time is a mechanic nobody designed, and it would be
 	// invisible — see ApplyParasiteRolling.
 	run := runWith(combat.Plain(combat.Strike))
-	p, _ := ParasiteByKey("rockshower")
+	p := anyWithTarget(t, ParasiteStones)
 
 	if run.ApplyParasite(p, nil) {
 		t.Error("a rock shower rolled with no source")
@@ -392,7 +433,7 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 	// of its own: the same seed twice is the same three stones.
 	first := runWith(combat.Plain(combat.Strike))
 	second := runWith(combat.Plain(combat.Strike))
-	p, _ := ParasiteByKey("rockshower")
+	p := anyWithTarget(t, ParasiteStones)
 
 	first.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
 	second.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(42)))
@@ -414,15 +455,18 @@ func TestTwoShowersFromDifferentSourcesCanDifferAndOneSourceIsRepeatable(t *test
 func TestTheBucketRefusesMoreThanItHolds(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
 
+	filler := anyWithRider(t, combat.RiderHealOnPlay).Record
+	spare := anyWithTarget(t, ParasiteRemove).Record
+
 	for i := 0; i < MaxHeld; i++ {
-		if !run.Hold("leech") {
+		if !run.Hold(filler) {
 			t.Fatalf("the bucket refused parasite %d of %d", i+1, MaxHeld)
 		}
 	}
 	if !run.HoldFull() {
 		t.Errorf("a bucket holding %d of %d does not report itself full", run.HoldCount(), MaxHeld)
 	}
-	if run.Hold("gnaw") {
+	if run.Hold(spare) {
 		t.Errorf("a full bucket took a %dth parasite", MaxHeld+1)
 	}
 	if run.HoldCount() != MaxHeld {
@@ -434,7 +478,7 @@ func TestTheBucketRefusesMoreThanItHolds(t *testing.T) {
 	if !run.Drop(0) || run.HoldFull() {
 		t.Errorf("a bucket with one spent still reports itself full at %d", run.HoldCount())
 	}
-	if !run.Hold("gnaw") || run.HoldCount() != MaxHeld {
+	if !run.Hold(spare) || run.HoldCount() != MaxHeld {
 		t.Errorf("the freed seat did not take a parasite: %d held", run.HoldCount())
 	}
 }

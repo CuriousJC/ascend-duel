@@ -126,6 +126,25 @@ type Session struct {
 	// `stones`, which is saved.
 	granted []Stone
 
+	// lastParasite is the record key of the parasite this run spent most recently, which is what a
+	// chimera copies. **Saved**, unlike `granted` and `duplicated`, because the memory is the
+	// run's rather than the fight's: a chimera carried out of one duel still copies what was spent
+	// in the previous one. See luck.go.
+	//
+	// **A chimera never writes itself here** — `rememberParasite` records the resolved record — so
+	// two of them in a row both fire the thing behind them.
+	lastParasite string
+
+	// luckRolls is how many times this run has spent a luck parasite. **Saved**, and it is the
+	// cursor into `seeds.LuckRoll` rather than a tally worth showing: it steps on a dud as well as
+	// on a win, because two consecutive duds seeded identically would roll the same face for ever.
+	luckRolls int
+
+	// lucked is what the last luck parasite rolled, so the screen can say what was won. **Not
+	// snapshotted**, for the reason granted is not: a handover between an apply and the frame that
+	// draws it.
+	lucked LuckResult
+
 	// ledger is the run's account of itself: every fight, round by round, in already-worded
 	// lines. **Run-level because that is the whole feature** — it used to be this fight's events
 	// on the combat screen, thrown away by the next Init. See ledger.go.

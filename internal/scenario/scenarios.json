@@ -234,9 +234,9 @@
     "Rings": [],
     "Hand": [],
     "Parasites": [
-      "rockshower",
-      "rockshower",
-      "rockshower"
+      "rockbeetle",
+      "rockbeetle",
+      "rockbeetle"
     ],
     "Screen": "combat",
     "Seed": "0000HX",
@@ -290,6 +290,21 @@
       }
     ],
     "Screen": "combat",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "luck-and-chimera",
+    "Note": "A Luck and a Chimera in the bucket, which is the whole of it since the bucket holds two. Luck needs no target: click it and it rolls once - 1 in 5 for +1 DMG, 1 in 5 for +5 max life, 3 in 5 for nothing. Watch the duelist card's DMG and life bar, because a dud looks exactly like a click that did nothing and that is the mechanic rather than a bug. Then read the Chimera's face: it stops saying REPEAT LAST PARASITE and starts saying COPIES LUCK, and clicking it rolls again. Spend the Chimera FIRST to see the other half - with nothing spent yet it has nothing to copy and is drawn dim.",
+    "Rings": [],
+    "Hand": [],
+    "Parasites": [
+      "luck",
+      "chimera"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
     "Fight": 0,
     "Vitae": 0,
     "Life": 0

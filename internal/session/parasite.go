@@ -83,6 +83,48 @@ const (
 	// card that changes and the second is the template**, which is the one target whose two seats
 	// are not interchangeable — see ApplyParasite.
 	ParasiteClone
+
+	// ParasiteLuck gambles. It touches no card and takes none: it rolls once and, on the strength
+	// of that one roll, adds a point of DMG to the duelist for the rest of the run, or five to the
+	// life they can carry, or nothing at all.
+	//
+	// **One roll with three outcomes, not two rolls** *(owner's call, 2026-09-07)*. A d5 where 1
+	// is the damage, 2 is the life and 3-5 is nothing — so the two rewards are mutually exclusive
+	// on any one spending and the card cannot pay twice. Two independent rolls would have made a
+	// double payout possible at 4%, which is a headline outcome rare enough that most runs would
+	// never see it and the ones that did would price the card off it.
+	//
+	// **It is the second thing in the game that rolls, and it is a gamble on purpose.** The
+	// `randomness` skill is explicit that lightning is the exception rather than the precedent, so
+	// the argument is made from scratch: a parasite whose whole subject is luck is the one case
+	// where certainty would delete the mechanic rather than tighten it. See MECHANICS.md.
+	//
+	// **What it grants is permanent and run-level**, so it lands on the same two figures a potion
+	// moves — `dmgBonus` and `lifeBonus` — rather than on the duelist a fight is using. A bonus
+	// written onto the fighter would be gone at the end of the round.
+	ParasiteLuck
+
+	// ParasiteChimera fires whatever the run spent last, again.
+	//
+	// **It carries no effect of its own** and is resolved through `Session.Echoes` before anything
+	// reads it: what it costs, how many cards it names and what it does to them all come from the
+	// parasite it is copying. So a chimera behind an Emberbore asks for two cards and paints them
+	// fire, and a chimera behind a Hoard asks for none.
+	//
+	// **The memory is the run's, not the fight's** *(owner's call, 2026-09-07)*. A chimera carried
+	// out of one duel and into the next still copies what was spent in the first. It refuses only
+	// on a run where nothing has ever been spent — there is no effect to copy, and a consumable
+	// that landed and did nothing is something bought and taken away.
+	//
+	// **The targets are picked again rather than inherited.** The copied parasite's cards are long
+	// gone from the hand by the time a chimera is spent — a different turn, sometimes a different
+	// fight — and re-firing against the same identities would be a no-op wherever the effect was
+	// idempotent, which is most of the catalogue.
+	//
+	// **A chimera never becomes the thing to copy.** `lastParasite` records the *resolved* record,
+	// so a chimera behind a Goad leaves Goad behind it, and two chimeras in a row both fire Goad
+	// rather than the second one copying the first into nothing.
+	ParasiteChimera
 )
 
 // ParasiteTargets is every target in a fixed order, for anything that walks them.
@@ -90,6 +132,7 @@ func ParasiteTargets() []ParasiteTarget {
 	return []ParasiteTarget{
 		ParasiteRider, ParasiteRemove, ParasiteSwap, ParasiteVitae,
 		ParasiteDuplicate, ParasiteElement, ParasiteForm, ParasiteStones, ParasiteClone,
+		ParasiteLuck, ParasiteChimera,
 	}
 }
 
@@ -111,6 +154,10 @@ func (t ParasiteTarget) String() string {
 		return "stones"
 	case ParasiteClone:
 		return "clone"
+	case ParasiteLuck:
+		return "luck"
+	case ParasiteChimera:
+		return "chimera"
 	default:
 		return "rider"
 	}
@@ -243,7 +290,11 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 	// **The count is checked against the target rather than in general.** A parasite aimed at no
 	// card and one aimed at two are both legal, and the mistake worth catching is the mismatch: a
 	// remove that eats nothing, or a vitae that asks the player to pick a card it will not touch.
-	if target == ParasiteVitae || target == ParasiteStones {
+	if target == ParasiteVitae || target == ParasiteStones ||
+		target == ParasiteLuck || target == ParasiteChimera {
+		// **A chimera is in this group because its own record names no cards.** How many it
+		// actually asks for comes from the parasite it copies, and is read through `Echoes` long
+		// after this — so the record itself is a zero-target one and is checked as one.
 		if r.Count != 0 {
 			return Parasite{}, fmt.Errorf("%s touches no card and asks for %d of them",
 				r.ParasiteRecord, r.Count)
@@ -353,6 +404,22 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 			// could not be honoured, and it is refused rather than quietly shortened.
 			return Parasite{}, fmt.Errorf("%s hands over %d stones and the catalogue holds %d",
 				r.ParasiteRecord, n, len(stoneOrder))
+		}
+		p.Number = n
+		return p, nil
+
+	case ParasiteLuck:
+		n, err := strconv.Atoi(r.Value)
+		if err != nil {
+			return Parasite{}, fmt.Errorf("%s gambles and its value %q is not a number",
+				r.ParasiteRecord, r.Value)
+		}
+		if n < LuckOutcomes {
+			// **Below the number of outcomes there is no losing face left.** A d2 would pay every
+			// time, which is a different card — see LuckOutcomes, which is what the roll is read
+			// against.
+			return Parasite{}, fmt.Errorf("%s gambles on 1 in %d, and %d outcomes always pay",
+				r.ParasiteRecord, n, LuckOutcomes)
 		}
 		p.Number = n
 		return p, nil
@@ -491,13 +558,33 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 	if !s.CanApplyParasite(p, ids) {
 		return false
 	}
-	if p.Target == ParasiteStones && rng == nil {
+
+	// **Resolved before anything reads it**, so a chimera is never asked what it does. From here
+	// down `p` is the parasite that actually fires, and the chimera is gone — which is what keeps
+	// every case below written once. See Session.Echoes.
+	p, ok := s.Echoes(p)
+	if !ok {
 		return false
 	}
+	if (p.Target == ParasiteStones || p.Target == ParasiteLuck) && rng == nil {
+		return false
+	}
+	// **Remembered on the way in rather than on the way out.** Every branch below returns from
+	// inside itself, so a single recording after the switch would be a line nothing reaches; and
+	// the only branch that can still fail from here is the rider's, which fails on a card already
+	// carrying its maximum — a case CanApplyParasite has already refused.
+	s.rememberParasite(p)
 
 	switch p.Target {
 	case ParasiteVitae:
 		s.AddVitae(p.Number)
+		return true
+
+	case ParasiteLuck:
+		// **The roll is taken whatever it comes to.** A dud is a real outcome of this card rather
+		// than a reason to refuse it, so this returns true on a roll that granted nothing — the
+		// parasite was spent, which is what the player gambled.
+		s.rollLuck(p.Number, rng)
 		return true
 
 	case ParasiteRemove:
@@ -598,6 +685,14 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 // parasite that lands and changes nothing is something bought and taken away. It also refuses the
 // wrong number of targets, which is what stops a two-card parasite being spent on one.
 func (s *Session) CanApplyParasite(p Parasite, ids []int) bool {
+	// **The chimera is resolved first, so the count and the legality asked about below are the
+	// copied parasite's.** A chimera with nothing to copy is refused here rather than lower down,
+	// which is what makes the consumables pane draw it dim.
+	p, ok := s.Echoes(p)
+	if !ok {
+		return false
+	}
+
 	if len(ids) != p.Count {
 		return false
 	}

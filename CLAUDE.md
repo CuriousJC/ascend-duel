@@ -1418,7 +1418,7 @@ Six facts about it that are load-bearing:
 to `ebiten.RunGame`. It does **not** wire up widgets — scenes build their own, and the one control
 belonging to no scene is built by `game` itself.
 
-`internal/game` then drives `Update` / `Draw` / `Layout` at a fixed 1280x960 internal resolution,
+`internal/game` then drives `Update` / `Draw` / `Layout` at a fixed 1920x1080 internal resolution,
 picking the active scene out of one registry. `internal/screens/scene.go` is the `Scene` contract;
 `Init` may run more than once, because a screen can be re-entered.
 

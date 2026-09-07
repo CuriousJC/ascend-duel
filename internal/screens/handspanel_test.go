@@ -76,9 +76,9 @@ func TestThePanelSaysNothingAStrengthCouldChange(t *testing.T) {
 		t.Fatalf("%d rungs with a holder against %d without", len(with), len(without))
 	}
 	for i := range with {
-		if len(with[i].cards) != len(without[i].cards) {
-			t.Errorf("%s is illustrated with %d cards in a fight and %d out of one",
-				with[i].name, len(with[i].cards), len(without[i].cards))
+		if len(with[i].sets) != len(without[i].sets) {
+			t.Errorf("%s is illustrated with %d sets in a fight and %d out of one",
+				with[i].name, len(with[i].sets), len(without[i].sets))
 		}
 		if with[i].mult != without[i].mult {
 			t.Errorf("%s pays %q in a fight and %q out of one",
@@ -103,18 +103,88 @@ func TestEveryHandRowFitsItsColumn(t *testing.T) {
 	width := handsColumnWidth(body, handsColumnCount)
 
 	for _, row := range handsRows(shippingHands()) {
-		adv, _ := text.Measure(row.name, &text.GoTextFace{Source: src, Size: handsNameSize}, 0)
+		title := handsTitleText(row)
+		adv, _ := text.Measure(title, &text.GoTextFace{Source: src, Size: handsNameSize}, 0)
 		if int(adv) > width {
-			t.Errorf("%s: the name is %dpx against a %dpx column", row.name, int(adv), width)
+			t.Errorf("%s: the title line is %dpx against a %dpx column", row.name, int(adv), width)
 		}
 
-		// The cards start at the column's left edge and the multiplier stands beside the last of
-		// them, so what has to fit is the row and the figure with their gap.
+		// The cards start at the column's left edge, the multiplier stands beside the last of them
+		// and the plays count is right-aligned at the column's right edge, so what has to fit
+		// across the band is all three and the air between them.
 		mult, _ := text.Measure(row.mult, &text.GoTextFace{Source: src, Size: handsMultSize}, 0)
-		span := handsCardsWidth(len(row.cards)) + handsMultGap + int(mult)
+		tally, _ := text.Measure(handsTallyText(row),
+			&text.GoTextFace{Source: src, Size: handsTallySize}, 0)
+		span := handsSetsWidth(row.sets) + handsMultGap + int(mult) + handsMultGap + int(tally)
 		if span > width {
-			t.Errorf("%s: %d cards and %q come to %dpx against a %dpx column",
-				row.name, len(row.cards), row.mult, span, width)
+			t.Errorf("%s: %d sets, %q and %q come to %dpx against a %dpx column",
+				row.name, len(row.sets), row.mult, handsTallyText(row), span, width)
+		}
+	}
+}
+
+// **A rung read on more than one axis is illustrated on every one of them.** The Pair is
+// `"match": "any"` and fires on whichever of concept, form and element the turn satisfies; a single
+// example is a picture of a rung that counts one thing, which is exactly the reading the merge was
+// made to remove.
+func TestAMergedRungIsDrawnOnEveryAxisItReads(t *testing.T) {
+	byName := map[string]combat.Hand{}
+	for _, h := range combat.Hands() {
+		byName[h.Name] = h
+	}
+
+	merged := 0
+	for _, row := range handsRows(shippingHands()) {
+		h := byName[row.name]
+		want := len(h.Axes)
+		if want < 2 {
+			want = 1
+		} else {
+			merged++
+		}
+		if len(row.sets) != want {
+			t.Errorf("%s is read on %d axes and drawn with %d examples",
+				row.name, want, len(row.sets))
+		}
+		for i, set := range row.sets {
+			if len(set) != h.Cards() {
+				t.Errorf("%s: example %d holds %d cards against a rung of %d",
+					row.name, i, len(set), h.Cards())
+			}
+		}
+		if want > 1 && len(row.axes) != want {
+			t.Errorf("%s carries %d captions for %d examples", row.name, len(row.axes), want)
+		}
+		if want == 1 && len(row.axes) != 0 {
+			t.Errorf("%s names its own axis and should carry no caption, got %v",
+				row.name, row.axes)
+		}
+	}
+	if merged == 0 {
+		t.Fatal("no rung in the catalogue is read on more than one axis, so nothing was checked")
+	}
+}
+
+// **A merged rung's examples really are that rung, read one axis at a time.** They come out of
+// `decks.Example` through `Hand.On`, so each set is a hand the matcher would score — this is what
+// fails if the panel ever starts inventing an illustration of its own.
+func TestEachOfAMergedRungsExamplesMatchesOnItsOwnAxis(t *testing.T) {
+	for _, row := range handsRows(shippingHands()) {
+		for i, axis := range row.axes {
+			seen := map[int]bool{}
+			for _, card := range row.sets[i] {
+				v, ok := combat.MatchValue(card, axis)
+				if !ok {
+					t.Errorf("%s: the %s example holds a card carrying no value on that axis",
+						row.name, axis)
+					continue
+				}
+				seen[v] = true
+			}
+			if len(seen) != 1 {
+				t.Errorf("%s: the %s example spreads over %d values, so it is not that pair",
+					row.name, axis, len(seen))
+			}
 		}
 	}
 }
@@ -143,9 +213,17 @@ func TestTheColumnsHoldTheWholeLadder(t *testing.T) {
 	}
 
 	_, top, _, bottom := handsTestBody()
-	if tall := deepest*handsRowHeight - (handsRowHeight - handsRuleDrop); tall > bottom-top {
-		t.Errorf("the deepest column is %dpx against a %dpx budget (y=%d..%d)",
-			tall, bottom-top, top, bottom)
+	// **Measured rather than multiplied out.** A rung carrying axis captions is taller than the
+	// rest, so a pitch times a count is the wrong arithmetic: it would report a column that fits
+	// while the panel drew it through its own bottom edge.
+	for i, column := range columns {
+		if tall := handsColumnDepth(column); tall > bottom-top {
+			t.Errorf("column %d is %d rungs and %dpx against a %dpx budget (y=%d..%d)",
+				i, len(column), tall, bottom-top, top, bottom)
+		}
+	}
+	if deepest == 0 {
+		t.Error("no column holds a rung")
 	}
 }
 
@@ -172,36 +250,76 @@ func TestTheColumnsAreFilledDownwards(t *testing.T) {
 // test could see. The measurements are derived off `cards.Token` now, and this is what fails if one
 // is written down again.
 func TestARungsCardsFitBetweenItsNameAndItsRule(t *testing.T) {
-	if bottom := handsCardsTop + cards.Token.Height; bottom > handsRuleDrop {
-		t.Errorf("the cards run to %dpx and the rule closing the rung is at %d", bottom, handsRuleDrop)
-	}
-	if handsRuleDrop >= handsRowHeight {
-		t.Errorf("the rule is at %dpx against a row pitch of %d, so it lands in the next rung",
-			handsRuleDrop, handsRowHeight)
-	}
-	// The next rung's name is drawn at its own top, so the pitch has to clear the rule by at least
-	// the air the block leaves under it.
-	if gap := handsRowHeight - handsRuleDrop; gap < handsRowGap {
-		t.Errorf("%dpx between one rung's rule and the next rung's name, want at least %d",
-			gap, handsRowGap)
+	for _, row := range handsRows(shippingHands()) {
+		cardsTop, ruleDrop := handsCardsTopFor(row), handsRuleDropFor(row)
+		if cardsTop < handsNameSize {
+			t.Errorf("%s: the cards start at %dpx and the name is %dpx tall",
+				row.name, cardsTop, handsNameSize)
+		}
+		if len(row.axes) > 1 && cardsTop-handsAxisBand < handsNameSize {
+			t.Errorf("%s: the axis captions land on the name", row.name)
+		}
+		if bottom := cardsTop + cards.Token.Height; bottom > ruleDrop {
+			t.Errorf("%s: the cards run to %dpx and the rule closing the rung is at %d",
+				row.name, bottom, ruleDrop)
+		}
+		// The next rung's name is drawn at its own top, so the depth has to clear the rule by at
+		// least the air the block leaves under it.
+		if gap := handsRowDepth(row) - ruleDrop; gap < handsRowGap {
+			t.Errorf("%s: %dpx between its rule and the next rung's name, want at least %d",
+				row.name, gap, handsRowGap)
+		}
 	}
 }
 
 // **The tally says only what is true.** A rung nobody has built and nobody has raised carries no
 // annotation at all: eighteen rungs each reading "PLAYED 0" is noise around the two or three the
 // player is actually working on.
-func TestTheTallyIsDrawnOnlyWhereThereIsSomethingToSay(t *testing.T) {
+func TestTheTallyIsDrawnOnEveryRung(t *testing.T) {
 	for _, tc := range []struct {
-		plays, level int
-		want         string
+		plays int
+		want  string
 	}{
-		{0, 0, ""},
-		{3, 0, "PLAYED 3"},
-		{0, 2, "LVL 2"},
-		{3, 2, "PLAYED 3  LVL 2"},
+		{0, "PLAYED: 0"},
+		{3, "PLAYED: 3"},
+		{147, "PLAYED: 147"},
 	} {
-		if got := handsTallyText(handsRow{plays: tc.plays, level: tc.level}); got != tc.want {
-			t.Errorf("%d plays and %d levels reads %q, want %q", tc.plays, tc.level, got, tc.want)
+		if got := handsTallyText(handsRow{plays: tc.plays}); got != tc.want {
+			t.Errorf("%d plays reads %q, want %q", tc.plays, got, tc.want)
+		}
+	}
+}
+
+// **The level is a parenthetical on the rung's own title**, so the title line says what this rung
+// is on this run rather than leaving the level to be found in an annotation somewhere else. **And
+// the title is shouted**, which is what keeps the panel free of lower case; it costs no width,
+// kubasta being monospaced.
+func TestTheLevelIsPartOfTheTitle(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		level int
+		want  string
+	}{
+		{"Pair", 1, "PAIR (LVL 1)"},
+		{"Card Full House", 3, "CARD FULL HOUSE (LVL 3)"},
+	} {
+		got := handsTitleText(handsRow{name: tc.name, level: tc.level})
+		if got != tc.want {
+			t.Errorf("%s at level %d reads %q, want %q", tc.name, tc.level, got, tc.want)
+		}
+	}
+}
+
+// **A rung as shipped is level one, not level zero.** The stone count is what the rules read and it
+// starts at nothing; the ladder a player looks at starts at one, because a level they can raise has
+// to have a bottom step they can see.
+func TestAnUnraisedRungIsLevelOne(t *testing.T) {
+	for _, row := range handsRows(shippingHands()) {
+		if row.level != 1 {
+			t.Errorf("%s reads LVL %d on a run holding no stones", row.name, row.level)
+		}
+		if row.raised {
+			t.Errorf("%s reads as raised on a run holding no stones", row.name)
 		}
 	}
 }
@@ -220,12 +338,52 @@ func TestEveryRungsNameAndTallyFitTheColumn(t *testing.T) {
 
 	// A deliberately loud tally: three figures of plays and two of level is more than a run will
 	// reach, and it is the width the layout has to survive.
-	tally := handsTallyText(handsRow{plays: 999, level: 99})
+	// A deliberately loud pair of figures: three digits of plays and two of level is more than a
+	// run will reach, and it is the width the layout has to survive.
+	tally, _ := text.Measure(handsTallyText(handsRow{plays: 999}),
+		&text.GoTextFace{Source: src, Size: handsTallySize}, 0)
 	for _, row := range handsRows(shippingHands()) {
-		name, _ := text.Measure(row.name, &text.GoTextFace{Source: src, Size: handsNameSize}, 0)
-		adv, _ := text.Measure(tally, &text.GoTextFace{Source: src, Size: handsTallySize}, 0)
-		if span := int(name) + handsTallyGap + int(adv); span > width {
-			t.Errorf("%s and its tally come to %dpx against a %dpx column", row.name, span, width)
+		title, _ := text.Measure(handsTitleText(handsRow{name: row.name, level: 99}),
+			&text.GoTextFace{Source: src, Size: handsNameSize}, 0)
+		if int(title) > width {
+			t.Errorf("%s at a two-figure level is %dpx against a %dpx column",
+				row.name, int(title), width)
+		}
+		mult, _ := text.Measure(row.mult, &text.GoTextFace{Source: src, Size: handsMultSize}, 0)
+		span := handsSetsWidth(row.sets) + handsMultGap + int(mult) + handsMultGap + int(tally)
+		if span > width {
+			t.Errorf("%s: its examples and a three-figure tally come to %dpx against a %dpx column",
+				row.name, span, width)
+		}
+	}
+}
+
+// **An axis caption has to fit over the set it names, and so does the word between two sets.** The
+// captions carry the whole of the merged rung's claim, and one running into the set beside it would
+// say the wrong pair counts on that axis; the OR has only the gap to stand in.
+func TestEveryAxisCaptionFitsItsExample(t *testing.T) {
+	fonts := assets.LoadFonts()
+	src := fonts["kubasta"]
+	if src == nil {
+		t.Fatal("no kubasta font to measure with")
+	}
+
+	for _, row := range handsRows(shippingHands()) {
+		for i, axis := range row.axes {
+			word := handsAxisWord(axis)
+			adv, _ := text.Measure(word, &text.GoTextFace{Source: src, Size: handsAxisSize}, 0)
+			room := handsCardsWidth(len(row.sets[i])) + handsSetGap
+			if int(adv) > room {
+				t.Errorf("%s: %q is %dpx over a %dpx example", row.name, word, int(adv), room)
+			}
+		}
+		if len(row.sets) < 2 {
+			continue
+		}
+		or, _ := text.Measure(handsOrWord, &text.GoTextFace{Source: src, Size: handsOrSize}, 0)
+		if int(or) > handsSetGap {
+			t.Errorf("%s: %q is %dpx in a %dpx gap between examples",
+				row.name, handsOrWord, int(or), handsSetGap)
 		}
 	}
 }

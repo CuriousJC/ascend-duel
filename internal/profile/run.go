@@ -121,6 +121,16 @@ type RunSnapshot struct {
 	// one is a decision already made, and folding the two would lose the difference.
 	Pouch []string `json:"pouch,omitempty"`
 
+	// LastParasite is the record key of the parasite the run spent most recently, which is what a
+	// chimera copies. **A name, never an ordinal**, the rule every vocabulary in this file is
+	// under. Empty on a run that has spent none, which is what makes a chimera refuse.
+	LastParasite string `json:"lastParasite,omitempty"`
+
+	// LuckRolls is how many times the run has gambled on a luck parasite. It is saved because it
+	// is the cursor into that roll's stream — a resumed run has to roll what it would have rolled
+	// rather than starting the sequence again. See `seeds.LuckRoll`.
+	LuckRolls int `json:"luckRolls,omitempty"`
+
 	// Spoils is what the last win still owes, unclaimed. A run saved at the reward station has a
 	// payout part-narrated, and dropping it would pay the player less for quitting.
 	Spoils SpoilsSnapshot `json:"spoils"`

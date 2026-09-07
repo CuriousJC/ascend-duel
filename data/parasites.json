@@ -156,12 +156,12 @@
     "Text": "+10 DMG CARD IN HAND"
   },
   {
-    "ParasiteRecord": "rockshower",
-    "Name": "Rockshower",
+    "ParasiteRecord": "rockbeetle",
+    "Name": "Rock Beetle",
     "Target": "stones",
-    "Value": "3",
+    "Value": "2",
     "Count": 0,
-    "Text": "three random\nstones,\nall kept"
+    "Text": "+2 STONES IN POUCH"
   },
   {
     "ParasiteRecord": "effigy",
@@ -185,7 +185,7 @@
     "Target": "swap",
     "Value": "Slice",
     "Count": 1,
-    "Text": "CARD BECOMES SLASH"
+    "Text": "CARD BECOMES SLICE"
   },
   {
     "ParasiteRecord": "cocoon",
@@ -266,5 +266,20 @@
     "Value": "20",
     "Count": 0,
     "Text": "+20 VITAE"
+  },
+  {
+    "ParasiteRecord": "luck",
+    "Name": "Luck",
+    "Target": "luck",
+    "Value": "5",
+    "Count": 0,
+    "Text": "1 IN 5:\n+1 DMG\nOR +5 HP"
+  },
+  {
+    "ParasiteRecord": "chimera",
+    "Name": "Chimera",
+    "Target": "chimera",
+    "Count": 0,
+    "Text": "REPEAT LAST\nPARASITE"
   }
 ]

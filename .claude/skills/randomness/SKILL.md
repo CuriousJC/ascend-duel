@@ -100,6 +100,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which rings are for sale, on any change to the worm catalogue |
 | `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the ring shelf |
 | `seeds.CanStock` | fight | `dealCanWorms` and `dealCanOffer` (`internal/screens/shop_goods.go`) | which four worms a can holds, on any change to the free offer |
+| `seeds.LuckRoll` | fight | `luckRNG` (`internal/screens/combat_parasite.go`) | what every gamble in the run grants, on any change to the rock shower |
 | Loot offers | — | **not built** | — |
 | Floor offers | — | **not built** | — |
 
@@ -183,7 +184,11 @@ particular deck, and changing the deck silently deals something else.
 ## Adding a roll — the argument comes before the code
 
 **Rewrite a random-sounding rule rather than let it in.** Lightning is the deliberate
-exception, not the precedent. It was taken because unreliability is what lightning *is*, and
+exception, not the precedent. **The luck parasite is the second one** *(2026-09-07)* and it made its
+own argument in `MECHANICS.md` rather than appealing to lightning's: every other random-sounding
+rule had a deterministic rewrite at least as good, and a consumable whose whole subject is luck does
+not — a gamble that always pays is a purchase. Note what it still had to do: name the alternative it
+declined (two independent rolls), say what the roll costs, and take its own stream. It was taken because unreliability is what lightning *is*, and
 because the alternatives — breaking the hand, cutting the multiplier — were weighed and written
 down in `MECHANICS.md`.
 

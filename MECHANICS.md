@@ -2256,6 +2256,8 @@ validated.
 | `form` | a form name | 1–2 | changes what cards **count as** on the form axis |
 | `stones` | how many | **0** | puts that many random stones in the run's **pouch** |
 | `clone` | — | **2** | the first card picked becomes the second |
+| `luck` | the odds denominator | **0** | gambles once: +1 DMG, +5 max life, or nothing |
+| `chimera` | — | **0** | fires the run's last parasite again |
 
 **Four targets landed on 2026-09-02** *(owner's call)*, and three of them are worth saying twice:
 
@@ -2283,6 +2285,74 @@ validated.
   treats its targets as a set; this one is directional — first pick changes, second pick is the
   template — so the picker's click order is a rule rather than a detail. It copies the concept and
   keeps the first card's identity, riders and modifiers, exactly as `swap` does.
+
+### `luck` is the second roll in the game, and the argument is made from scratch *(owner's call, 2026-09-07)*
+
+**One roll, three outcomes.** A d5: on a 1 the duelist gains **+1 DMG** for the rest of the run, on
+a 2 they gain **+5 max life**, and on a 3, 4 or 5 nothing happens. So it pays 40% of the time, the
+two rewards are mutually exclusive on any one spending, and the card cannot pay twice.
+
+**Two independent rolls were the alternative and were declined.** Two d5s would have paid something
+36% of the time and *both* 4% of the time — and a headline outcome that rare is one most runs never
+see, while the runs that do see it price the card off it for ever. One die with a losing face is a
+gamble a player can hold in their head.
+
+**A roll needs its own argument and this is it.** The `randomness` skill is explicit that lightning
+is the exception rather than the precedent: certainty is usually the better game as well as the
+cheaper code. The exception here is that **the card's whole subject is luck**. Every other
+random-sounding rule in the game had a deterministic rewrite that was at least as good; this one
+does not, because a luck parasite that always paid is a purchase, and a purchase is a thing the
+catalogue already has thirty-four of.
+
+- **What it grants is permanent and run-level**, so it lands on `dmgBonus` and `lifeBonus` — the two
+  figures a potion moves — rather than on the duelist a fight is using. A bonus written onto the
+  fighter would be gone at the end of the round.
+- **`seeds.LuckRoll` is the stream**, per fight, with **the number of rolls the run has already
+  made** mixed in. That is the rock shower's shape and it is needed for the shower's reason: a run
+  may spend two of these in one fight. **The counter is dedicated rather than derived from the
+  bonuses**, because three rolls in five pay nothing — keying off `dmgBonus + lifeBonus` would seed
+  two consecutive duds identically and they would come up empty for ever.
+- **The counter steps on a dud.** It is the stream's cursor, not a tally of winnings.
+- **A dud is a success.** `ApplyParasite` returns true on a roll that granted nothing: the parasite
+  was spent, which is exactly what the player gambled. Refusing would make the card free to try.
+- **`LuckOutcomes` is 3 and a record naming fewer faces is refused at init**, because a die with no
+  losing face is a different card and the mistake is one a number in a JSON file could make quietly.
+- **The two payouts are Go constants rather than record fields.** A record has one `Value` and this
+  needs two figures, and **the odds are the interesting dial** — a second tier of luck is written by
+  moving the denominator, not by paying more per hit. The day somebody wants a greater luck granting
+  three DMG is the day they become fields.
+
+**What nothing catches is the balance.** A 40% payout on a 5-vitae consumable is a guess, and
+nothing in the repo simulates a run — so if luck turns out to be the only parasite worth buying, the
+dial to move is the denominator in `data/parasites.json` and no code changes.
+
+### `chimera` fires the last one again *(owner's call, 2026-09-07)*
+
+**It carries no effect of its own.** What it costs, how many cards it names and what it does to them
+all come from the parasite it is copying, resolved through `Session.Echoes` before anything reads
+it. A chimera behind an Emberbore asks for two cards and paints them fire; a chimera behind a Hoard
+asks for none.
+
+- **The memory is the run's, not the fight's.** A chimera carried out of one duel and into the next
+  still copies what was spent in the first. `Session.lastParasite` is the record key and it is
+  **saved with the run**, so a resume does not forget.
+- **It refuses only on a run that has spent nothing.** There is no effect to copy, and a consumable
+  that landed and did nothing is something bought and taken away. The consumables pane draws it dim,
+  the same courtesy an unaffordable ring gets.
+- **The targets are picked again rather than inherited.** The copied parasite's cards are long gone
+  from the hand by the time a chimera is spent — a different turn, sometimes a different fight — and
+  re-firing against the same identities would be a no-op wherever the effect was idempotent, which
+  is most of the catalogue.
+- **A chimera never becomes the thing to copy.** `rememberParasite` records the *resolved* record, so
+  two chimeras in a row both fire the parasite behind them rather than the second copying the first
+  into nothing.
+- **A remembered record the catalogue no longer holds is forgotten rather than refused**, which is
+  the one place `Resume` is lenient and is deliberate: a *held* parasite is a thing the player owns
+  and would notice going missing, where this is a memory of one already spent. The worst it costs is
+  a chimera with nothing to copy, which is a state the mechanic already has a rule for.
+- **The card's face says what it would fire** — `COPIES / HOARD` — because its authored line cannot.
+  A card whose whole subject is a parasite named somewhere else is one the player would otherwise
+  have to remember the answer to.
 
 **The vocabulary is closed**, the posture every other one in the game takes. A bad record — an
 unknown target, a rider the rules lack, a concept this build has not registered, a `vitae` asking

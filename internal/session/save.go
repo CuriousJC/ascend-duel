@@ -33,23 +33,25 @@ import (
 // for the two to drift apart.
 func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 	out := &profile.RunSnapshot{
-		Seed:       seeds.Code(runSeed),
-		Fight:      s.fight,
-		Phase:      s.phase.String(),
-		Vitae:      s.vitae,
-		LifeLeft:   s.lifeLeft,
-		Hurt:       s.hurt,
-		BossWins:   s.bossWins,
-		DMGBonus:   s.dmgBonus,
-		LifeBonus:  s.lifeBonus,
-		RoundLimit: s.roundLimit,
-		Worn:       s.Worn(),
-		Grown:      map[string]int{},
-		Stones:     s.StoneCounts(),
-		Plays:      s.PlayCounts(),
-		Held:       s.Held(),
-		Pouch:      s.Carried(),
-		NextCardID: s.nextCardID,
+		Seed:         seeds.Code(runSeed),
+		Fight:        s.fight,
+		Phase:        s.phase.String(),
+		Vitae:        s.vitae,
+		LifeLeft:     s.lifeLeft,
+		Hurt:         s.hurt,
+		BossWins:     s.bossWins,
+		DMGBonus:     s.dmgBonus,
+		LifeBonus:    s.lifeBonus,
+		RoundLimit:   s.roundLimit,
+		Worn:         s.Worn(),
+		Grown:        map[string]int{},
+		Stones:       s.StoneCounts(),
+		Plays:        s.PlayCounts(),
+		Held:         s.Held(),
+		LastParasite: s.lastParasite,
+		LuckRolls:    s.luckRolls,
+		Pouch:        s.Carried(),
+		NextCardID:   s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
 			Propagated: s.spoils.Propagated,
 			FromLife:   s.spoils.FromLife,
@@ -235,6 +237,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		bossWins:   snap.BossWins,
 		dmgBonus:   snap.DMGBonus,
 		lifeBonus:  snap.LifeBonus,
+		luckRolls:  snap.LuckRolls,
 		phase:      phase,
 		roundLimit: resumeRoundLimit(snap.RoundLimit),
 		grown:      map[string]int{},
@@ -260,6 +263,18 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	for _, key := range snap.Held {
 		if !s.Hold(key) {
 			return nil, 0, fmt.Errorf("parasite %q is not one this build has", key)
+		}
+	}
+
+	// **A remembered parasite the catalogue no longer holds is forgotten rather than refused**,
+	// which is the one place this file is lenient and is deliberate. A held parasite is a thing the
+	// player owns and would notice going missing; this is a memory of one already spent, and the
+	// worst it costs is a chimera with nothing to copy — which is a state the mechanic already has
+	// a rule for. Refusing would make deleting a record from the catalogue break every save that
+	// had ever used it.
+	if snap.LastParasite != "" {
+		if p, ok := ParasiteByKey(snap.LastParasite); ok && p.Target != ParasiteChimera {
+			s.lastParasite = snap.LastParasite
 		}
 	}
 

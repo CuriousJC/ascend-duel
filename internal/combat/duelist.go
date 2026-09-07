@@ -190,6 +190,23 @@ type Duelist struct {
 	// the catalogue as written — and an enemy has `SoloAttacks` anyway, so it forms no hands to
 	// raise.
 	HandStones [MaxHandSlots]int
+
+	// RoundLimit is how many rounds this duelist may fight before the clock kills them. **Zero is
+	// no clock at all**, which is what every enemy and every bare `Duelist{}` in a test carries.
+	//
+	// **Zero means unlimited rather than the default on purpose.** A default of five here would
+	// have put every existing multi-round test on a timer it was never written against, and the
+	// safe direction for a rule nobody asked for is off. The run is what turns the clock on — see
+	// session.Session.RoundLimit and DefaultRoundLimit, which is the number it turns it on at.
+	//
+	// **It is a property of the duelist rather than an argument to ResolveRound** for the reason
+	// HandStones is one: the run's opinion reaches a fight through Equip, which is the same seat
+	// the rings and the stones arrive in, and a ring or a brand that moves the limit later moves
+	// this field rather than a signature every caller and test would have to grow.
+	//
+	// **The engine has no idea which side is a person**, so both sides are asked about their own
+	// clock rather than the player's being read off SideA. Nothing sets it for a creature.
+	RoundLimit int
 }
 
 // Alive reports whether this duelist can still fight.

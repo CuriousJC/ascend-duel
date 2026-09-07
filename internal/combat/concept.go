@@ -299,7 +299,7 @@ var (
 	// Slash.
 	Nick   = mustPlayer("Nick")
 	Cut    = mustPlayer("Cut")
-	Slash  = mustPlayer("Slash")
+	Slice  = mustPlayer("Slice")
 	Cleave = mustPlayer("Cleave")
 	Sever  = mustPlayer("Sever")
 

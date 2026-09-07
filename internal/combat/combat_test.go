@@ -458,7 +458,7 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 		Impale: CategoryAttack,
 
 		Cut:    CategoryAttack,
-		Slash:  CategoryAttack,
+		Slice:  CategoryAttack,
 		Cleave: CategoryAttack,
 		Nick:   CategoryAttack,
 		Sever:  CategoryAttack,

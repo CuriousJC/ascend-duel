@@ -387,6 +387,12 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 		d.CurrentLife = d.MaxLife
 	}
 
+	// **The clock goes on with the rest of what the run is carrying.** It touches none of the
+	// figures above and none of them touch it — a fight's length is not a stat — so its place in
+	// this function is not an ordering anybody has to remember. What matters is that it is *here*:
+	// a fighter equipped without it carries a zero, and zero is no clock at all. See clock.go.
+	d.RoundLimit = s.roundLimit
+
 	// **The stones go on last, and they touch nothing above.** Rings move DMG, life and what a card
 	// costs; a stone moves a rung of the hand ladder, which is read at the moment a blow is scored
 	// rather than mixed into the figures here. So the order between the two is not a decision

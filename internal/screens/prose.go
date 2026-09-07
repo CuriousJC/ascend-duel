@@ -364,6 +364,13 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			// at all is this.
 			attach(fmt.Sprintf("blocked - %s left", shieldCount(e.Amount)))
 
+		case combat.KindTimeUp:
+			// **A line of its own, and it opens one.** Nobody swung, so there is no attacker's
+			// sentence for this to attach to — and the fall that follows it on the next event would
+			// otherwise be the only record of the biggest thing that has ever happened in the feed.
+			announce(fmt.Sprintf("%s is out of time - the duel takes %d",
+				s.sideName(e.Target), e.Amount), voiceFor(e.Target))
+
 		case combat.KindNegated:
 			// The card that answered the blow is named rather than assumed. A creature's guard is
 			// the only thing that can reach here today, and the sentence is written off the event
@@ -418,19 +425,25 @@ func swatchFor(side combat.Side) color.RGBA {
 // does not describe them. What changed is that the description is now a function of the rule
 // rather than a lookup beside it, which is the only version that can cover a deck written in JSON.
 
-// attackVerb is the word a form hits with. **The player's three forms are told apart by it** —
-// nine attack cards on one ladder, and a card whose text began "Deal" on all nine would leave the
-// corner mark carrying the distinction alone. An enemy card belongs to no form and simply hits.
+// attackVerb is what a form is called on a card face. **The player's three forms are told apart by
+// it** — nine attack cards on one ladder, and a card naming no form would leave the corner mark
+// carrying the distinction alone. An enemy card belongs to no form and simply hits.
+//
+// **It is the form's name rather than a verb, in capitals** *(owner's call, 2026-09-07)*. It read
+// "Slashes for 1x DMG" until then, wrapped by the measurer into three ragged lines — the word, the
+// stray "for", then the figure — which spent the whole text column on a sentence to say two facts.
+// The card now writes the two facts as two lines and nothing else, and the form is written the way
+// the ladder and the hand names write it: as a label, not as something the card is doing.
 func attackVerb(f combat.Form) string {
 	switch f {
 	case combat.FormStab:
-		return "Stabs"
+		return "STAB"
 	case combat.FormSlash:
-		return "Slashes"
+		return "SLASH"
 	case combat.FormCrush:
-		return "Crushes"
+		return "CRUSH"
 	default:
-		return "Hits"
+		return "HITS"
 	}
 }
 
@@ -480,15 +493,15 @@ func cardEffect(card combat.Card) string {
 
 	switch c.Verb {
 	case combat.VerbDefend:
-		return "Cuts damage by " + strconv.Itoa(amount) + "%"
+		return "CUTS\n" + strconv.Itoa(amount) + "% DMG"
 	case combat.VerbShield:
 		// **The face says the count and nothing else.** What a shield *does* is one rule for every
 		// card that raises one, so it is the tooltip's line rather than three copies of a sentence
 		// competing for a 128px column — see shieldTipLines.
-		return shieldCount(amount)
+		return "SHIELD\n" + strconv.Itoa(amount)
 	}
 
-	return attackVerb(c.Form) + " for " + multiplierText(amount) + " DMG"
+	return attackVerb(c.Form) + "\nDMG " + multiplierText(amount)
 }
 
 // riderText is the lines a card's riders add under its own, one line each.

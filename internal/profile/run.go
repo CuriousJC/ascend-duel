@@ -76,6 +76,15 @@ type RunSnapshot struct {
 	DMGBonus  int `json:"dmgBonus,omitempty"`
 	LifeBonus int `json:"lifeBonus,omitempty"`
 
+	// RoundLimit is how many rounds a fight of this run gets before the clock kills the duelist.
+	//
+	// **Zero is not "no clock" here, it is an older save.** A snapshot written before the limit
+	// existed has no field to read, and a run resumed onto an unlimited clock would be a run that
+	// had quietly lost a mechanic — so `session.Resume` reads a number below one as the default
+	// rather than as an answer. This is the trap this file already documents about settings: a
+	// zero value is not a default, and the reading is where that gets fixed.
+	RoundLimit int `json:"roundLimit,omitempty"`
+
 	// Worn is the rings, by record key, **in worn order** — which is a rule and not a presentation
 	// detail, since rings fire left to right and compound. A list rather than a set for that
 	// reason.

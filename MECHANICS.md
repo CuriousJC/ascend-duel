@@ -1256,6 +1256,57 @@ than an ever-widening round.
 
 ---
 
+## The round limit — a duel is bounded too *(owner's call, 2026-09-06)*
+
+**Every fight lasts at most five rounds. A duelist still standing when the fifth ends dies.**
+
+The round above is bounded by cost and by count; this bounds the *duel*. It applies to every fight
+in the tower — the two ordinary rooms and the stairway protector alike, one number for all of
+them — and it is the reason a duel is a race rather than a siege.
+
+**What it is for.** Without it the correct play against anything dangerous is to stall: raise
+shields, hold cards back, and win on attrition against a creature whose deck cannot out-scale a
+defended turn. Attrition is the one strategy that gets *stronger* the worse the matchup is, which
+is backwards. A clock makes damage the thing every build has to solve, and it prices defence
+honestly: a shield buys a round, and rounds are now finite.
+
+**Timing out is a death, not a loss on points.** The duelist's life goes to zero and the run ends
+through the same door a killing blow uses — there is no retry, per the roguelike rule. What the
+clock takes is announced (`KindTimeUp`) before the fall, so the account of the fight says what
+happened rather than showing a duelist dying to nothing.
+
+**The rules own it, not the screen.** `combat.Duelist.RoundLimit` is what the resolver checks, at
+the end of the round and after every other way the round could have finished:
+
+- **A duelist who killed their opponent on the final round has beaten the clock.** The check runs
+  only on a fight still standing on both sides, so a win on round five is a win.
+- **A duelist who died to the final blow died to the blow.** The clock never fires over a body,
+  the same rule the burn tick keeps.
+- **Zero is no clock at all**, which is what every creature carries and what a bare duelist in a
+  test carries. That is deliberately not "the default": a default of five in the rules would put
+  every headless caller on a timer it was never written against, and the safe direction for a rule
+  nobody asked for is off.
+
+**The number belongs to the run.** `session.Session.RoundLimit` is what a fight is actually on,
+seeded from `combat.DefaultRoundLimit` and carried to the fighter by `Equip` — the same seat the
+rings and the stones arrive in. Nothing moves it today, and the reason it is a field rather than a
+constant is that **a ring or a brand buying the player a sixth round is expected**, and when one
+lands it writes to one place and every fight of the run is on the new number. It is saved with the
+run; a save written before the clock existed resumes onto the default rather than onto no clock.
+
+**The player watches it fill.** A five-cell bar under the tower place, one cell per round spent,
+with the last one taking the game's one red as it lights. It is a picture of the round counter and
+decides nothing — the clock is checked inside the resolved round, per the rule that presentation
+may never change an outcome. The tutorial names it before the first duel, because a timer that
+killed without having said so would be the worst kind of hidden rule.
+
+**The cost, stated rather than discovered.** A hard cap turns every fight into a damage check, and
+nothing in this repo simulates a duel — so a floor where creature HP has outrun what a run can
+build is unwinnable and no test goes red. That is the thing to watch as the tower scales, and it is
+an argument for a headless duel simulator rather than against the clock.
+
+---
+
 ## Rings
 
 - **Bought after every fight, with vitae.** *(Built 2026-08-21 — see The shop, below.)*

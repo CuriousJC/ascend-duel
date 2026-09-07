@@ -321,3 +321,112 @@ func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image)
 	op.GeoM.Translate(float64(r.Min.X), float64(r.Min.Y))
 	screen.DrawImage(img, op)
 }
+
+// **The round timer: how much of the fight is left to spend.**
+//
+// Every duel is five rounds long and the duelist still standing at the end of the fifth dies —
+// see MECHANICS.md §The round limit, and `internal/combat/clock.go`, which is what actually ends
+// it. This is the readout, and it decides nothing: the bar is a picture of `s.round` and the
+// clock is checked inside the resolved round, exactly as the presentation-may-never-change-an-
+// outcome rule requires.
+//
+// **It is under the tower place because it is the same kind of fact.** Where you are and how long
+// you have got are both the frame around the fight rather than parts of it, and the left column is
+// already one thing: who you are, where you are, what is left to draw. It goes below the two lines
+// rather than beside them because the column is only 203 pixels wide.
+//
+// **It is segments, not a sliding fill, and that is the whole design.** A round is a discrete
+// thing the player spends, so what they need read off the bar is a count — three cells dark, two
+// left — rather than a proportion they have to convert. It is also what keeps the readout honest
+// at a limit a ring has moved: six cells is six rounds, with nothing to rescale.
+const (
+	// roundTimerGap is the drop from the tower lines to the bar, and roundTimerHeight is how tall
+	// it is. **There are 23 pixels between the tower lines and the table row** and these spend 20
+	// of them; a taller bar collides, which TestTheRoundTimerFitsUnderTheTowerLines is what says.
+	roundTimerGap    = 6
+	roundTimerHeight = 14
+
+	// roundTimerCellGap is the bare pixel between one cell and the next. Enough to count them by,
+	// and small enough that five of them still read as one bar rather than as five objects.
+	roundTimerCellGap = 2
+)
+
+// roundTimerRect is the bar's whole footprint: the duelist card's column again, under the two
+// tower lines.
+func (s *CombatScene) roundTimerRect(gs *state.GlobalState) image.Rectangle {
+	place := s.towerPlaceRect(gs)
+	top := place.Max.Y + roundTimerGap
+	return image.Rect(place.Min.X, top, place.Max.X, top+roundTimerHeight)
+}
+
+// roundTimerLimit is how many rounds this fight gets, or zero for a fight on no clock at all.
+//
+// **It is read off the fighter rather than off the run**, because the fighter is what the rules
+// will actually check — the run's number reaches a duel through `Equip` and a bar reading the run
+// directly would keep drawing five while the duelist fought to some other figure. A run-less
+// screen — a test, the scripted demo — draws nothing.
+// **A screen with no fighter has no clock**, which is a test or the frame before `Init` rather
+// than a state the game plays in — but the tutorial's anchor lookup reaches this from both.
+func (s *CombatScene) roundTimerLimit() int {
+	if s.fighter == nil {
+		return 0
+	}
+	return s.fighter.RoundLimit
+}
+
+// roundTimerSpent is how many rounds of the limit are gone, clamped into the bar.
+//
+// **`s.round` is rounds *resolved*, so it is zero while the first one is still being planned** —
+// which is right: the player has spent nothing yet. It is clamped because a fight can be looked at
+// for a frame after the round that timed it out, and a sixth filled cell on a five-cell bar would
+// be drawn outside the rectangle.
+func (s *CombatScene) roundTimerSpent(limit int) int {
+	switch {
+	case s.round < 0:
+		return 0
+	case s.round > limit:
+		return limit
+	}
+	return s.round
+}
+
+// drawRoundTimer draws one cell per round, filled for the rounds already spent.
+//
+// **The last cell is the game's one red** — `modalCloseColor`, the colour the destructive answer
+// on a confirm dialog takes — and it is lit only once the fight has actually reached it. There is
+// no hue left to claim (see CLAUDE.md), and this is not claiming one: it is the existing meaning
+// of that red, which is "this ends something", arriving at the moment it becomes true.
+func (s *CombatScene) drawRoundTimer(gs *state.GlobalState, screen *ebiten.Image) {
+	limit := s.roundTimerLimit()
+	if limit < 1 {
+		return // a fight on no clock has no bar, rather than a full one or an empty one
+	}
+
+	r := s.roundTimerRect(gs)
+	spent := s.roundTimerSpent(limit)
+
+	// **The cells are laid out by their own edges rather than by a width times an index**, so the
+	// rounding left over from dividing 203 pixels by five lands in the gaps instead of leaving the
+	// last cell short of the column it is supposed to end at.
+	for i := 0; i < limit; i++ {
+		x0 := r.Min.X + i*r.Dx()/limit
+		x1 := r.Min.X + (i+1)*r.Dx()/limit - roundTimerCellGap
+		if x1 <= x0 {
+			continue // a limit high enough that a cell is thinner than its own gap draws nothing
+		}
+
+		// An unspent round is the ground's ink at a quarter strength: present enough to be
+		// counted, quiet enough not to read as a round already gone. `ColorToward` rather than
+		// `ColorAtStrength`, because the table is cream — see CLAUDE.md.
+		fill := systems.ColorToward(groundInk, screenGround, 75)
+		if i < spent {
+			fill = groundInk
+			if i == limit-1 {
+				fill = modalCloseColor
+			}
+		}
+
+		systems.BevelRect(screen, x0, r.Min.Y, x1-x0, r.Dy(),
+			systems.PaneBevelWidth, fill, i >= spent)
+	}
+}

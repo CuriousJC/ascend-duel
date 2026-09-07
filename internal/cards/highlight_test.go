@@ -11,7 +11,7 @@ import (
 
 func markedSpec(mark string) Spec {
 	return Spec{
-		Name:    "Slash",
+		Name:    "Slice",
 		Form:    FormSlash,
 		Cost:    2,
 		Element: Fire,

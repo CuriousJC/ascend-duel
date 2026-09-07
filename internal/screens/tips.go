@@ -246,3 +246,21 @@ func attackWord(n int) string {
 	}
 	return names[n] + " attacks"
 }
+
+// roundTimerTip explains the bar under the tower place: what the cells are, and what happens when
+// the last one lights.
+//
+// **The bar has no legend anywhere else**, which is the objection TODO.md already files against
+// every other figure written straight onto the table — so it arrives with one rather than joining
+// the list. The sentence names the consequence in full: a player who has read this cannot be
+// surprised by the death, and a timer that killed without having said so would be the worst kind
+// of hidden rule.
+func roundTimerTip(spent, limit int) (string, []string) {
+	return "The Clock", []string{
+		fmt.Sprintf("Round %d of %d.", spent+1, limit),
+		"",
+		fmt.Sprintf("Every duel lasts %d rounds.", limit),
+		"Still standing when the last one",
+		"ends, and the tower takes you.",
+	}
+}

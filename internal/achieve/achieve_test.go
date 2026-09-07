@@ -277,17 +277,17 @@ func TestCardAlteredMatchesOnTheResultingCard(t *testing.T) {
 // two questions a player asks are different ones.
 func TestCountersNameBothAxes(t *testing.T) {
 	turn := []combat.Card{
-		card("Slash", combat.Fire),
+		card("Slice", combat.Fire),
 		card("Cut", combat.Ice),
 		card("Ward", combat.Earth),
 	}
 	got := CountersFor(turn)
 
 	if got["form:slash"] != 2 {
-		t.Errorf("a Slash and a Cut are two slashing cards, got %d", got["form:slash"])
+		t.Errorf("a Slice and a Cut are two slashing cards, got %d", got["form:slash"])
 	}
-	if got["concept:Slash"] != 1 {
-		t.Errorf("one of them is the card called Slash, got %d", got["concept:Slash"])
+	if got["concept:Slice"] != 1 {
+		t.Errorf("one of them is the card called Slice, got %d", got["concept:Slice"])
 	}
 	if got["form:defend"] != 1 {
 		t.Errorf("a Ward is a defending card, got %d", got["form:defend"])

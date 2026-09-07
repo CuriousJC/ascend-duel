@@ -89,6 +89,17 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 		return s.duelistCardRect(gs), true
 	case tutorial.AnchorTowerPlace:
 		return s.towerPlaceRect(gs), true
+	case tutorial.AnchorRoundTimer:
+		// **The whole bar rather than the cell about to light.** What the step is teaching is the
+		// count, and a square around one segment would say the opposite — that this round is the
+		// thing to look at — while also moving every time the fight advanced.
+		//
+		// **It reports false for a fight on no clock**, which is the same honesty `shop-worn` keeps
+		// about an empty row: there is no bar drawn, so there is nothing to point at.
+		if s.roundTimerLimit() < 1 {
+			return image.Rectangle{}, false
+		}
+		return s.roundTimerRect(gs), true
 	case tutorial.AnchorHand:
 		return handZone(gs), true
 	case tutorial.AnchorFirstCard:

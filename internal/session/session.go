@@ -134,6 +134,13 @@ type Session struct {
 	// tutorial is the teaching run, or nil for a run nobody is being taught. See tutorial.go for
 	// why a step cursor belongs to the run rather than to the screen that happens to be up.
 	tutorial *tutorial.Run
+
+	// roundLimit is how many rounds a fight of this run gets before the clock kills the duelist.
+	// **The run's number, not the rules'** — `combat.DefaultRoundLimit` is what a run opens at and
+	// this is what it is actually on, so a ring or a brand that buys a sixth round has one field to
+	// move rather than a constant it cannot reach. See clock.go, and Equip, which is where it
+	// reaches a fighter.
+	roundLimit int
 }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
@@ -143,7 +150,7 @@ type Session struct {
 // the reason live. A run buys its rings.
 func New(deck []combat.Card) *Session {
 	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{},
-		stones: map[string]int{}, plays: map[string]int{}}
+		stones: map[string]int{}, plays: map[string]int{}, roundLimit: combat.DefaultRoundLimit}
 	copy(s.deck, deck)
 
 	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a

@@ -426,11 +426,26 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	s.tut.update(gs, s)
 
 	// **The narration is the whole screen while it runs.** Nothing is clickable but the click that
-	// skips it, which is what keeps a payout from being half-read while a worm is already being
+	// reads it, which is what keeps a payout from being half-read while a worm is already being
 	// chosen.
+	//
+	// **Two clicks, not one** *(owner's call, 2026-09-08)*: the first fills the block, the second
+	// hands the screen to the worms. One gesture doing both meant the only way to see the whole
+	// payout at once was also the way past it.
+	//
+	// **The click is not gated** — deliberately, and it is the one place on this screen that
+	// ignores `CursorAllowed`. The tutorial's step here anchors the duelist card, so a gated
+	// narration is one a taught player has no way to hurry, and hurrying it changes nothing: the
+	// claims are the same either way, per the rule at the top of postbattle_prose.go. **Bob's own
+	// bubble is the one exception**, since a press on NEXT landing on the screen underneath it
+	// would answer two questions with one click.
 	if s.stage == narrate {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
-			s.prose.skip(gs)
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !s.tut.coversCursor(gs) {
+			if s.prose.filled() {
+				s.prose.release()
+			} else {
+				s.prose.skip(gs)
+			}
 		}
 		s.prose.tick(gs, func(i int) image.Point { return proseLineAt(gs, i) })
 		if s.prose.finished() {
@@ -1092,14 +1107,15 @@ func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Imag
 		return
 	}
 
-	// **An eaten card leaves an outlined hole**, once it has finished coming apart. That is the
-	// same rule the offer row follows for a prize that has been taken: a blank gap reads as a
-	// layout fault where an outlined one reads as a card that was there a moment ago.
-	if s.removes && s.change.done() {
-		drawEmptySeat(screen, seats[0])
-		return
-	}
-
+	// **An eaten card leaves nothing** *(owner's call, 2026-09-08)*. It left an outlined hole until
+	// then, on the argument that a blank gap reads as a layout fault — which is true of a seat that
+	// was never filled, and not of this one: the player has just watched the card come apart square
+	// by square, so the emptiness is the thing they were shown rather than something to explain. An
+	// outline redrawn over the space the dissolve had just cleared put the card's silhouette back on
+	// the table the frame after eating it.
+	//
+	// The morph is what draws the absence, by having no second face to hand over to. Nothing here
+	// asks whether this was a removal.
 	drawMorph(gs, screen, at, s.change)
 }
 

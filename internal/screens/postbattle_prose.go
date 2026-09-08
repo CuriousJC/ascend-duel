@@ -1,17 +1,23 @@
 package screens
 
-// **The reward screen types what happened, one sentence at a time, and the purse climbs as it
-// reads.**
+// **The reward screen types what happened, every line at once, and the purse climbs as it reads.**
 //
 // The screen used to open with everything already true: three cards on a table and a purse that had
 // silently changed while the fight was ending. What a win actually *is* — interest on what you were
 // carrying, a tenth of the life you kept, and what the room itself pays — was arithmetic nobody
 // ever saw happen.
 //
-// So the payout is narrated *(owner's call, 2026-08-22)*. Each sentence types out at the game's own
-// speed, and the figure it names then flies to the duelist card and lands in the purse. **Nothing
-// is added before its sentence has been read**, which is what makes the three parts distinguishable
-// rather than one number that moved.
+// So the payout is narrated *(owner's call, 2026-08-22)*. The block types out at the game's own
+// speed, and the figure each line names then flies to the duelist card and lands in the purse.
+// **Nothing is added before its sentence has been read**, which is what makes the three parts
+// distinguishable rather than one number that moved.
+//
+// **A click fills the block and a click leaves it** *(owner's call, 2026-09-08)*. The fill used to
+// be the exit as well, so the one gesture available to a player who wanted the payout *now* was the
+// gesture that took it off the screen. **The reward screen advances on nothing but a click**: it
+// holds the total for as long as the player wants it, where the shop releases itself the frame its
+// greeting is complete. Typing every line at once was tried in the same sitting and put back - the
+// lines arrive one at a time, at twice the old speed.
 //
 // **It may not change what a win is worth.** The amounts are frozen by `session.WonFight` before
 // this screen exists — see session/spoils.go — and everything here is a clock. A player who clicks
@@ -32,13 +38,15 @@ import (
 // The narration's two clocks, both **proportions of the game's one speed** — see clock.go, and
 // CLAUDE.md, which is why no screen may declare a raw tick count.
 var (
-	// proseCharTicks is how long one character takes. **Fast on purpose**: this is a sentence
-	// appearing, not a teletype, and a player who has read it should be waiting on the next line
-	// rather than on the rest of this one.
-	proseCharTicks = beat(1, 12)
+	// proseCharTicks is how long one character takes. **Fast on purpose, and doubled again on
+	// 2026-09-08** *(owner's call)*: this is a sentence appearing, not a teletype, and a player who
+	// has read it should be waiting on the next line rather than on the rest of this one.
+	proseCharTicks = beat(1, 24)
 
 	// proseLinePause is the beat held between one finished sentence and the next starting. It is
-	// what makes the payout read as three separate things.
+	// what makes the payout read as three separate things, and it is **deliberately not scaled with
+	// the typing**: the pause is the separation, so shortening it alongside the characters would
+	// give back the run-together reading that typing every line at once produced.
 	proseLinePause = beat(1, 2)
 
 	// vitaeFlightTicks is how long a figure takes to reach the duelist card. The purse changes when
@@ -82,9 +90,12 @@ type typewriter struct {
 	line, shown, wait, ticks int
 
 	// flight is the figure currently crossing to the duelist card, if any.
-	flight  vitaeFlight
-	flying  bool
-	fromMid image.Point
+	flight vitaeFlight
+	flying bool
+
+	// released is whether the block has given the screen back. **Only a caller sets it**
+	// *(owner's call, 2026-09-08)* - see release, and the two screens that answer it differently.
+	released bool
 }
 
 // vitaeFlight is one payment on its way to the purse.
@@ -99,10 +110,23 @@ func (t *typewriter) setLines(lines []proseLine) {
 	*t = typewriter{lines: lines}
 }
 
-// finished reports whether every sentence is up and every payment has landed.
-func (t *typewriter) finished() bool {
+// filled reports whether every sentence is up and every payment has landed.
+//
+// **It is not the same question as finished**, and the split is the whole of the 2026-09-08 change:
+// a block can be complete and still be holding the screen. The reward screen holds it there until a
+// second click, because the figures are what the player came to read; the shop releases the moment
+// it is filled, because a greeting is flavour standing in front of a shelf.
+func (t *typewriter) filled() bool {
 	return t.line >= len(t.lines) && !t.flying
 }
+
+// release hands the screen on. **Nothing in here calls it** - a block does not decide when it is
+// done being looked at, and the beat it used to hold before moving on by itself was what put the
+// worms up over a total still being read.
+func (t *typewriter) release() { t.released = true }
+
+// finished reports whether the narration is done with the screen.
+func (t *typewriter) finished() bool { return t.filled() && t.released }
 
 // tick advances the typing, the pause between lines, and whatever is in the air.
 //
@@ -153,6 +177,10 @@ func (t *typewriter) tick(gs *state.GlobalState, at func(line int) image.Point) 
 //
 // **It pays through the same claims**, rather than adding the total itself, so the fast path and
 // the slow one cannot disagree about what a win was worth.
+//
+// **It does not release the screen** *(owner's call, 2026-09-08)*. A click that both finished the
+// reading and started the worms would have skipped the sentence it was asking to be shown - the
+// player asked to see the payout now, not to be past it. The next click leaves.
 func (t *typewriter) skip(gs *state.GlobalState) {
 	for i := range t.lines {
 		if t.lines[i].pays != nil {

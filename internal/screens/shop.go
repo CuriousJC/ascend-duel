@@ -362,11 +362,19 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	// **The greeting is the whole screen while it types.** A click skips it rather than buying
 	// something, which is the reward screen's rule for its payout and for the same reason: a
 	// sentence half-read while a ring is already being bought is two things at once.
+	//
+	// **It releases itself the moment it is complete**, which is where the two screens part
+	// *(2026-09-08)*. The payout is held for a second click because its figures are the thing the
+	// player came to read; a greeting is flavour in front of a shelf, so making it a gesture would
+	// be charging a click for a sentence nobody is studying.
 	if !s.prose.finished() {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
 			s.prose.skip(gs)
 		}
 		s.prose.tick(gs, func(i int) image.Point { return shopProseLineAt(gs, i) })
+		if s.prose.filled() {
+			s.prose.release()
+		}
 		return nil
 	}
 
@@ -753,10 +761,9 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 		at := s.shelfSlot(gs, i)
 		if item.bought {
 			// **A spent seat draws nothing; the pane is the hole** *(owner's call, 2026-09-06)*.
-			// It used to be outlined, which is what a row standing on the bare table needs — and
-			// on a pane it is a dark rectangle overlapping the card beside it, because the row
-			// overlaps. See drawEmptySeat, and the consumables pane, which keeps its outline
-			// because a seat there is one something can still go into.
+			// It used to be outlined, and on a pane an outline is a dark rectangle overlapping the
+			// card beside it, because the row overlaps. See the consumables pane, which took the
+			// same decision a day later.
 			continue
 		}
 

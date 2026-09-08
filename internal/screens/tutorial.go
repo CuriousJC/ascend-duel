@@ -220,6 +220,20 @@ func (t *tutorialOverlay) update(gs *state.GlobalState, host tutorialHost) {
 	}
 }
 
+// coversCursor is whether Bob's bubble is under the cursor right now.
+//
+// **It exists for the reward screen's narration** *(2026-09-08)*, which reads the raw mouse rather
+// than a widget and does so with the gate ignored, so that a taught player can fill the payout the
+// way an untaught one can. Without this, the click on NEXT would also be a click on the screen
+// underneath it, and one press would answer two questions.
+func (t *tutorialOverlay) coversCursor(gs *state.GlobalState) bool {
+	if !tutorialUp(gs) {
+		return false
+	}
+	x, y := ebiten.CursorPosition()
+	return image.Pt(x, y).In(t.panel)
+}
+
 // finish records the lesson as over, once. **Skipping counts as finishing** — see markTutorialSeen,
 // which makes the same call for the same reason.
 func (t *tutorialOverlay) finish(gs *state.GlobalState) {

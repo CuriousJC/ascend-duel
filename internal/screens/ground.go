@@ -1,6 +1,11 @@
 package screens
 
-import "image/color"
+import (
+	"image/color"
+
+	"github.com/curiousjc/ascend-duel/internal/systems"
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 // The table everything on a between-fight screen is drawn on.
 //
@@ -12,27 +17,121 @@ import "image/color"
 // Anything drawn on a surface of its own — a card, a panel, a button — takes that surface's
 // own colours instead. These two are only for what is painted straight onto the table.
 
-// screenGround is what every screen is painted on, and **it went cream on 2026-08-14**, from
-// the {50,50,50} dark grey the combat screen had been since it existed.
+// screenGround is what every screen is painted on. It went cream on 2026-08-14 from the
+// {50,50,50} dark grey the combat screen had been since it existed, and **it went a light slate
+// blue on 2026-09-07** *(owner's call)*.
 //
-// **Everything drawn straight onto it had assumed a dark ground**, which is the cost of the
-// change and the reason it is a named constant now rather than a literal in Draw. Three
-// figures were white and are now `groundInk`; the action-point bar's empty cells were
-// `ColorAtStrength(apBarColor, 20)`, which scales toward black and therefore came out *louder*
-// than the filled cells on a light ground — exactly the failure `systems.ColorToward` was
-// written for; and the ring row's backing had to stop being one step *lighter* than the ground
-// and become one step darker.
+// **Its lightness is the load-bearing part, not its hue.** Everything written straight onto the
+// table takes `groundInk`, which is near black, and everything dimmed toward the table goes
+// through `systems.ColorToward(x, screenGround, pct)` — both of which are correct only on a
+// *light* ground. That was the whole cost of the 2026-08-14 change and it is documented in
+// CLAUDE.md: `ColorAtStrength` scales toward black and therefore makes things *louder* on a light
+// surface, which is why `ColorToward` exists. So this blue was chosen at the cream's lightness
+// rather than at a hue that read well on its own, and **a darker blue is not a colour change —
+// it is a re-tune of every figure on the table.**
 //
-// **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} and the
-// fight log's panel fill is {234,230,224} — because a card, a panel and the table cannot all be
-// the same off-white or the objects stop having edges. The warmth is where the separation
-// comes from: the ground is the yellowest of the three.
-var screenGround = color.RGBA{R: 226, G: 208, B: 176, A: 255}
+// **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} — because a card, a
+// panel and the table cannot all be the same near-white or the objects stop having edges. The
+// separation used to come from warmth, the ground being the yellowest of the three; it now comes
+// from hue outright, which is a wider gap than the cream ever had.
+//
+// **It is a single colour even though the screen is painted with a gradient.** Everything that
+// dims toward the ground needs one answer to "what colour is the table", and a per-pixel one
+// would make a figure's dimming depend on where on the screen it happened to be drawn. So this is
+// the gradient's midpoint and the two ends are derived from it — see groundTop and groundBottom.
+var screenGround = color.RGBA{R: 168, G: 188, B: 212, A: 255}
+
+// groundTravel is how far the background gradient moves either side of screenGround, in percent.
+//
+// **Subtle on purpose** *(owner's call, 2026-09-07)*. It should read as light falling on a table
+// rather than as a designed gradient, and there is a mechanical reason as well as a taste one:
+// everything dimmed toward the ground reads `screenGround` alone, so the further the two ends are
+// from it the more a dimmed figure at the top of the screen disagrees with the surface actually
+// behind it. Twelve percent of travel keeps that disagreement under the threshold of noticing.
+const groundTravel = 6
+
+// The two ends of the background gradient, derived from screenGround so that changing the one
+// colour moves the whole screen.
+//
+// **Lighter at the top and darker at the bottom**, which is the direction `systems.BevelEdges`
+// already lights every card, button and panel from. A screen lit from below with objects on it
+// lit from above is the kind of disagreement nobody can name and everybody can see.
+var (
+	groundTop    = systems.ColorToward(screenGround, color.RGBA{R: 255, G: 255, B: 255, A: 255}, groundTravel)
+	groundBottom = systems.ColorAtStrength(screenGround, 100-groundTravel)
+)
+
+// groundStrip is the cached gradient: one pixel wide and as tall as the screen, stretched across
+// the width when it is drawn.
+//
+// **One pixel wide because the gradient is vertical**, so every column is identical and painting
+// 1920 of them would be 1920 times the work for the same picture. Ebitengine's default filter is
+// nearest, so the stretch is an exact repeat rather than a resample.
+//
+// **Rebuilt only when the height changes**, which in practice is once: the game runs at a fixed
+// 1920x1080 internal resolution. The check is there rather than an assumption because `Layout`
+// owns that number and this file should not have an opinion about it.
+var (
+	groundStrip *ebiten.Image
+	groundAt    int
+)
+
+// fillGround paints the background of a screen. It replaces `screen.Fill(screenGround)`, which is
+// what every scene did until the gradient landed.
+//
+// **Every scene calls this rather than filling its own colour.** The ground is the game's, not any
+// one screen's — the same argument that moved these colours out of combat.go in the first place —
+// and a scene painting its own would be the one screen that did not follow when the colour moved.
+func fillGround(screen *ebiten.Image) {
+	h := screen.Bounds().Dy()
+	if h <= 0 {
+		return
+	}
+	if groundStrip == nil || groundAt != h {
+		strip := ebiten.NewImage(1, h)
+		for y := 0; y < h; y++ {
+			strip.Set(0, y, groundAtRow(y, h))
+		}
+		groundStrip, groundAt = strip, h
+	}
+
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(float64(screen.Bounds().Dx()), 1)
+	screen.DrawImage(groundStrip, op)
+}
+
+// groundAtRow is the gradient's colour on one row of a screen h tall.
+//
+// **A per-channel interpolation rather than `systems.ColorToward`**, which is the one place in
+// this codebase that rule is deliberately not followed. ColorToward takes a whole-number percent,
+// so over 1080 rows it produces about a hundred steps — ten-pixel bands, which on a gradient this
+// subtle is the only thing anybody would see. Interpolating the channels at full precision is
+// safe here for the reason it is not safe generally: the two ends are the same hue at two
+// lightnesses, so there is no hue for a straight lerp to drift off.
+func groundAtRow(y, h int) color.RGBA {
+	if h <= 1 {
+		return screenGround
+	}
+	mix := func(a, b uint8) uint8 {
+		return uint8(int(a) + (int(b)-int(a))*y/(h-1))
+	}
+	return color.RGBA{
+		R: mix(groundTop.R, groundBottom.R),
+		G: mix(groundTop.G, groundBottom.G),
+		B: mix(groundTop.B, groundBottom.B),
+		A: 255,
+	}
+}
 
 // groundInk is for text written straight onto the ground rather than onto a card, a pane or a
 // button — the action-point figure, the draw pile's count, the ring row's fraction, the
-// post-battle screen's heading. Near black and slightly warm, so it belongs to the cream rather
-// than sitting on it.
+// post-battle screen's heading. Near black and slightly warm.
+//
+// **It stayed warm when the ground went blue** *(2026-09-07)*, which is deliberate rather than an
+// oversight: it is the same near-black the cards' own text uses, so a figure on the table and a
+// figure on a card read as the same ink rather than as two blacks that not quite match. What it
+// must stay is *near-black* — see screenGround, where the lightness of the table is the thing
+// holding this up.
 //
 // Anything drawn on a surface of its own takes that surface's ink instead; this is only for what
 // has nothing behind it.
@@ -41,7 +140,9 @@ var groundInk = color.RGBA{R: 44, G: 40, B: 34, A: 255}
 // vitaeInk is the crimson vitae is written in, **everywhere it is written** *(owner's call,
 // 2026-08-22)*: the purse on the duelist card, and the word itself in the reward screen's prose.
 //
-// **One colour for one thing.** Vitae is the run's only currency and it is now the only red on a
-// cream screen, so a figure in this colour says "money" before it is read. It is deliberately not
+// **One colour for one thing.** Vitae is the run's only currency and it is the only red on the
+// table, so a figure in this colour says "money" before it is read. It is louder against the blue
+// ground than it was against the cream, red and blue being opposite ends of the wheel where red
+// and cream were neighbours — which is a gain for a figure whose whole job is to be spotted. It is deliberately not
 // `lifeColor` — life is a bar and a fraction on a card, and the two reds never share a surface.
 var vitaeInk = color.RGBA{R: 168, G: 26, B: 42, A: 255}

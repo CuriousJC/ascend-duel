@@ -127,13 +127,14 @@ go run ./tools/enemysheet   # all 96 creatures by floor band: card, stat line, w
 go run ./tools/bosssheet    # the 30 stairway protectors, the same way, by floor
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
 go run ./tools/parasitesheet # every parasite: the line it prints against the rule that fires
+go run ./tools/upgradesheet  # every visible card upgrade, on all four form marks, in all three tint modes
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
-**The eight sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
+**The nine sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
 there rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone
-opens to see every card, ring, worm, hand, stone, parasite, creature and boss in the game. That
+opens to see every card, ring, worm, hand, stone, parasite, upgrade, creature and boss in the game. That
 reverses the older rule that a regenerated artefact is not worth committing: the argument it left
 out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
 only ever seen by whoever just changed the thing it shows.
@@ -143,8 +144,8 @@ is rewritten by a full run, and a sheet rebuilt in a commit that changed nothing
 weight. **Three quarters of that is the two roster sheets**, which carry 126 photographic
 portraits between them — so a commit touching only `rings.json` should regenerate the ring sheet
 alone rather than reaching for the one command out of habit. **`go run ./tools/sheets` is the one
-command** — it runs all eight and rewrites the index, because eight commands remembered in the
-right order is how seven end up current and one ends up lying. A stale sheet is worse than none:
+command** — it runs all nine and rewrites the index, because nine commands remembered in the
+right order is how eight end up current and one ends up lying. A stale sheet is worse than none:
 it is a picture of a catalogue that no longer exists.
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
@@ -235,6 +236,18 @@ touching any of it:
 - **A rider is a rule carried by one card**, and `combat.Card.Riders` is a **fixed array** because
   a card must stay comparable — the screen's face cache and `TestRoundIsDeterministic` both depend
   on it. A slice there would end both, exactly as it would on `Duelist.Rings`.
+- **A rider may now reach the *face*, and the wildcard is the first that does** *(owner's call,
+  2026-09-07)*. `combat.RiderWildElement` makes a card count as every element when a hand is
+  matched — the one rider read while the hand is *formed* rather than while the turn resolves, so
+  it lives in `matchCountOf` rather than in `playRiders`. It is drawn by **taking the card's left
+  column over**: `systems.Upgrade` is the presentation vocabulary, `internal/screens.upgradeOf` is
+  where a rider becomes one, and neither `internal/cards` nor `internal/systems` learns what a
+  rider is. **The mark and the ticks move together or the card is lying** — one `Spec.atState`,
+  one test. The ink is the **five element colours** in five bands, read out of `cards.BorderOf` so it
+  cannot say a different fire from the cards, and `cards.TintProject` paints the mark from them
+  flat — which loses the mark's outline, knowingly, because at 32 pixels the saturation carries and
+  the bevel does not. `cards.TintMode` keeps the two rejected combinations so
+  `tools/upgradesheet` can show why they lost. See MECHANICS.md §The wildcard.
 - **Targets are card identities, not deck positions.** A parasite may name two cards and is spent
   while three piles hold copies of the same cards, so `combat.Card.ID` is what makes it possible.
   The note in MECHANICS.md saying mid-fight alteration would need one is now satisfied rather than
@@ -1012,7 +1025,11 @@ because a scarce tier rounds to `0%` and would read as unreachable.
 lightning, earth and arcane take five hues; pink is a ring and a pane's chrome; red and blue are the
 attack and defend verbs; green and grey are the two duelists. **There is no unclaimed hue left**, so
 a new thing wanting to stand out is marked by *weight, case, a swatch or an underline* rather than by
-a colour. The hand is the case that established it: it was the screen's pink, which is also the
+a colour. **The ground itself now takes blue** *(2026-09-07)*, which is a real collision with the
+defend verb and is accepted rather than solved: the table is a surface and a verb is a mark on it,
+so the two are never being compared, but it is why the AP bar's empty cells had to stop travelling
+80% of the way to the ground and settle at 50 — see `combat_actionbox.go`. A *new* thing wanting
+blue has nowhere left to stand. The hand is the case that established it: it was the screen's pink, which is also the
 colour a ring's multiplier takes — the two things that multiply a blow, in one colour, in the same
 sum — and moving it to deep purple immediately collided with arcane. It now takes the ground's own
 ink and is marked instead. See `screens.handNameInk` and `session.InkHand`, and note the second
@@ -1051,9 +1068,25 @@ toward black, so on a light surface it makes things louder rather than quieter �
 section above. `systems.ColorToward` is the light-ground counterpart and the two are not
 interchangeable.
 
-**The combat screen's ground is cream as of 2026-08-14** (`screens.screenGround`), so on that
-screen `ColorAtStrength` is now the exception rather than the default, and reaching for it to
-dim something drawn straight onto the table is a bug waiting to be seen. It still governs
+**Every screen's ground is a light slate blue as of 2026-09-07** (`screens.screenGround`, cream
+from 2026-08-14 until then), so `ColorAtStrength` is the exception rather than the default, and
+reaching for it to dim something drawn straight onto the table is a bug waiting to be seen.
+
+**Its lightness is what is load-bearing, not its hue**, and that is the sentence to read before
+changing it again. `groundInk` is near-black and every dim on the table is
+`ColorToward(x, screenGround, pct)`; both are only correct on a light ground. A darker blue is not
+a colour change, it is a re-tune of every figure on the table — which is exactly what the
+2026-08-14 swap cost going the other way.
+
+**The screen is painted by `screens.fillGround`, not by `screen.Fill`** — a subtle vertical
+gradient, lighter at the top, lit from the same corner `systems.BevelEdges` lights every card and
+button from. **`screenGround` stays a single colour anyway**: everything that dims toward the
+ground needs one answer to "what colour is the table", and a per-pixel one would make a figure's
+dimming depend on where it happened to be drawn. The gradient's two ends are derived from it.
+
+**A colour that is "one step off the ground" must be derived, never written down.**
+`ringPaneBackColor` was a hand-picked tan and would have silently stopped being one step off
+anything the moment the ground moved; it is `ColorAtStrength(screenGround, 91)` now. It still governs
 buttons, because a button paints its own dark face and its label is white — that face is the
 ground its states are scaled against, not the screen. Text written directly on the table takes
 `screens.groundInk`.
@@ -1192,6 +1225,12 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
   `StartingRings`. The tutorial is what wanted both: a first lesson has to be able to promise what
   the player is holding, and "these five all match, play them all" stops being true the moment a
   refill deals a sixth card nobody mentioned.
+- **A deck line and a hand card may carry `"Riders"`** *(2026-09-07)*, by the names
+  `combat.RiderKind` writes, with a figure after a colon where the kind takes one —
+  `"damage-on-play:10"`, or the bare `"wild-element"` for the one that does not. It exists because
+  `Parasites` is the right fixture for looking at the *dialog* and the wrong one for looking at what
+  an altered card does to a hand: getting there means playing a turn to spend the consumable and
+  then reading a hand that is already half spent. The `wildcards` entry is what wanted it.
 - **`"Teach": true` starts the tutorial on the run**, and is the only way to start it today — see
   the tutorial section below.
 - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
@@ -1503,7 +1542,7 @@ fight  →  reward  →  shop  →  choice  →  fight ...
 ## Art
 
 **`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `enemy/`,
-`ring/`, `effect/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
+`ring/`, `effect/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
 
 **A map key is not tied to a file path.** Keys are the lookup names used across the game and

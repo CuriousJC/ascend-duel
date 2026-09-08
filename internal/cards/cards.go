@@ -76,8 +76,8 @@ var borderColors = [...]color.RGBA{
 	Ice:   {R: 80, G: 155, B: 230, A: 255},
 	// **Darkened on 2026-08-19** from {240,205,55}, which is a fine yellow on a dark ground and
 	// nearly invisible on two of the three light ones this game draws on — the off-white card
-	// surface and the combat screen's cream. It first showed up as an unreadable damage figure in
-	// the hand sum, where the number is drawn straight onto the cream; the border had the same
+	// surface and the combat screen's ground. It first showed up as an unreadable damage figure in
+	// the hand sum, where the number is drawn straight onto the ground; the border had the same
 	// problem more quietly. The combat screen's attention yellow took the same correction on the
 	// same day, for the same reason, and to the same value; it has since been cut.
 	Lightning: {R: 214, G: 152, B: 12, A: 255},
@@ -330,6 +330,25 @@ type Spec struct {
 	Form    Form
 	Cost    int // action points, drawn as dash marks
 	Element Element
+
+	// Upgrade is a visible alteration the run has made to this card, and it takes the left column
+	// over: the form mark and the cost ticks are painted from the upgrade's ink instead of from
+	// Element's colour. UpgradeNone — the zero value — is every ordinary card.
+	//
+	// **Element is still what the card is**, and is still what everything else on the face and in
+	// the rules reads. A wildcard is a fire card that also counts as anything, not a card with no
+	// element, and the difference matters the moment a status has to land.
+	//
+	// **This package does not know what a rider is**, on the same terms it does not know what a
+	// ring is: `internal/screens` decides that a card carrying combat.RiderWildElement is drawn
+	// as systems.UpgradeWild, and hands over the answer. See Spec.TextInk, which is the same
+	// separation one field up.
+	Upgrade systems.Upgrade
+
+	// UpgradeTint is how the upgrade's ink and the form mark's drawing are combined. **The zero
+	// value is the mode the game uses**, so a caller that never thinks about it gets the right
+	// picture; `tools/upgradesheet` is the only thing that sets it, and it sets all three.
+	UpgradeTint TintMode
 
 	// Text is what the card does, in words, wrapped across the band under the left column.
 	//

@@ -9,7 +9,7 @@ import "html/template"
 // ring sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// **The ground is the cream the parasites actually sit on**, which for these is the panel over a
+// **The ground is the one the parasites actually sit on**, which for these is the panel over a
 // live fight rather than a shop shelf — the bucket opens between turns, which is the one thing
 // about this catalogue the page has to say in words because no card can show it.
 var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
@@ -19,9 +19,9 @@ var tmpl = template.Must(template.New("parasitesheet").Parse(`<!doctype html>
   :root {
     --ground: {{.Ground}};
     --ink: #2c2822;
-    --dim: #6b6355;
-    --rule: #c4b294;
-    --panel: #ede0c8;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
     --pink: #c8508c;
   }
   * { box-sizing: border-box; }

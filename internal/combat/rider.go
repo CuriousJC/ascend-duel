@@ -86,6 +86,23 @@ const (
 	// card that pays nothing into it — a lone Ward beside a pair, a third element in a two-card
 	// hand. So this asks a question the player can lose: the card has to make the hand.
 	RiderScaleInCombo
+
+	// RiderWildElement makes this card count as **every** element at once when a hand is formed.
+	// It carries no amount.
+	//
+	// **The card keeps its own element and everything else keeps reading it.** A wild fire Strike
+	// is still a fire Strike: it lands a burn, it is drawn from the fire row of the deck panel,
+	// and `Blow.Elements` reports fire for it. What changes is one question — what it counts as on
+	// the element axis — and it answers that with "whatever you need".
+	//
+	// **It is the first rider that is read while the hand is *matched* rather than while the turn
+	// is resolved**, which is why `matchCountOf` had to learn about it: every other rider fires
+	// after the hand is already decided. See wildOn.
+	//
+	// **It is a balance lever and not a cosmetic one.** One of these turns any three-of-an-element
+	// into a four, and the elemental rungs are high on the ladder — so what a run pays for it is
+	// the number to watch, and that number is in `data/parasites.json` rather than here.
+	RiderWildElement
 )
 
 // RiderKinds is every kind in a fixed order, for anything that walks them.
@@ -98,6 +115,7 @@ func RiderKinds() []RiderKind {
 		RiderScaleInHand,
 		RiderVitaeInHand,
 		RiderScaleInCombo,
+		RiderWildElement,
 	}
 }
 
@@ -117,6 +135,8 @@ func (k RiderKind) String() string {
 		return "vitae-in-hand"
 	case RiderScaleInCombo:
 		return "scale-in-combo"
+	case RiderWildElement:
+		return "wild-element"
 	default:
 		return "none"
 	}
@@ -309,4 +329,32 @@ func vitaeHeld(held []Card) int {
 		total += c.VitaeInHand()
 	}
 	return total
+}
+
+// CarriesAmount reports whether this kind's Amount means anything.
+//
+// **Almost every rider is a kind plus a figure**, and the one that is not is RiderWildElement:
+// what it does has no quantity, so a value of zero is correct rather than missing. It exists so
+// `internal/session` can refuse a rider parasite with no figure *except* for the kinds that never
+// had one — the alternative was a magic number in the catalogue, which is a record that lies about
+// itself so a check can pass.
+func (k RiderKind) CarriesAmount() bool {
+	return k != RiderWildElement && k != RiderNone
+}
+
+// Wild reports whether this card counts as every value on the given axis.
+//
+// **Element only, today**, and the axis is taken rather than assumed so that a form or concept
+// wildcard is a new rider kind here and not a silent widening of this one. A wildcard that matched
+// on every axis would make the whole ladder one rung.
+func (c Card) Wild(a Axis) bool {
+	if a != AxisElement {
+		return false
+	}
+	for _, r := range c.Riders {
+		if r.Kind == RiderWildElement {
+			return true
+		}
+	}
+	return false
 }

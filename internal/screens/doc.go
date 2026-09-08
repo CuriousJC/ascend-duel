@@ -47,7 +47,8 @@
 //
 // Shared by every scene, and none of it is the combat screen's:
 //
-//   - ground.go — the table everything is painted on (screenGround) and the ink for what is
+//   - ground.go — the table everything is painted on (screenGround, painted by fillGround as a
+//     subtle vertical gradient) and the ink for what is
 //     written straight onto it (groundInk). Anything drawn on a surface of its own takes that
 //     surface's colours instead.
 //   - travel.go — how anything gets from one place to another: travel, the delay-age-duration

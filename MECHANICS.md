@@ -2432,10 +2432,83 @@ The band holds seven lines at that pitch and no card writes more than three, so 
 fit. **It is not written in the ring pink**: that colour means "a ring did this" everywhere else,
 and a parasite is not a ring.
 
-**This is now the weakest part of the feature.** Seven rider kinds are attachable and a ridden card
-still looks like an unridden one on its face; the tooltip prose is the only place a rider is
-visible. `MaxCardRiders` is 3 *because the face has room for three badges*, and the room has never
-been used. See TODO.md — the owner asked for it to be tracked on 2026-09-02.
+**Seven of the eight rider kinds are still invisible on the face**, and the tooltip prose is the
+only place any of them is stated. `MaxCardRiders` is 3 *because the face has room for three
+badges*, and the badge row has never been built. See TODO.md — the owner asked for it to be tracked
+on 2026-09-02. The wildcard below is the first exception, and it is deliberately not a badge.
+
+### The wildcard, and the first *visible* upgrade *(owner's call, 2026-09-07)*
+
+`RiderWildElement` makes one card count as **every element at once** when a hand is formed. It is
+attached by the **Motley** parasite and it is the eighth rider kind.
+
+**The card keeps its own element and everything else goes on reading it.** A wild fire Strike is
+still a fire Strike: it lands a burn, it sits in the fire row of the deck panel, and `Blow.Elements`
+reports fire for it. One question changes — what it counts as on the element axis — and the answer
+is "whatever the hand needs".
+
+**It is the first rider read while the hand is *matched* rather than while the turn resolves.**
+Every other rider fires after the hand is already decided; this one is inside `matchCountOf`, which
+is what made it a change to the matcher rather than another case in `playRiders`.
+
+Four rules, and each of them is a thing the first version got wrong or could have:
+
+- **Element only.** `Card.Wild` takes an axis and answers for one. A wildcard that widened the
+  concept or form axes as well would make the whole ladder a single rung, so a wildcard on another
+  axis is a *new rider kind* rather than a widening of this one.
+- **It tops a group up; it never seeds one.** A tally is a candidate if its own members plus the
+  unspent wildcards can reach the group's size, and the ranking is on its *own* members — so a
+  wildcard joins whichever element already has the most of itself, which is the reading a player
+  makes looking at the row.
+- **It is spent once.** Two groups of a Full House cannot both have the same wildcard, which is
+  what keeps a rung out of reach of a turn that has not got the cards for it.
+- **A turn of nothing but wildcards is a group.** They agree with each other, so refusing would be
+  the matcher saying that cards which match everything match nothing.
+
+**It carries no amount, and the vocabulary says so.** `RiderKind.CarriesAmount` is what
+`internal/session` asks before demanding a figure off a rider parasite's record, so a `Value` on a
+Motley is refused rather than being a number nothing reads.
+
+**This is a balance lever and it was taken as one.** One wildcard turns any three-of-an-element
+into a four, and the elemental rungs are high on the ladder — so what a run pays for a Motley is
+the number to watch, and that number is the parasite's place in `data/parasites.json` rather than
+anything in the rules.
+
+### A visible upgrade takes the left column, not a badge
+
+The card's **left column** — the tinted form mark and the cost ticks under it — is what states the
+element, and everywhere else on the face that decision is already made. A wildcard's whole subject
+is that the card no longer has one element, so it says so by taking that column over and painting
+it from a picture instead of from a colour.
+
+**That is not a fourth thing on a card with three.** It is the same statement the column always
+made, about a card whose answer has changed — which is why it is not a badge, and why the three
+reserved badge seats are still reserved for the riders that genuinely add something rather than
+change something.
+
+- **`systems.Upgrade` is the vocabulary** and it is *presentation*: something visible has happened
+  to this card, and here is what to paint it with. `internal/screens` is where a rider becomes one,
+  on exactly the terms `Spec.TextInk` is where a ring becomes a colour — neither `internal/cards`
+  nor `internal/systems` learns what a rider is.
+- **The whole column or none of it.** A rainbow mark over fire-red ticks would say two different
+  things in the one place the card says one, so `Spec.atState` is the single switch both go
+  through and `TestAnUpgradeTakesTheWholeLeftColumn` fails on a change that wires one and forgets
+  the other.
+- **The ink is authored, not generated**, which makes it the second thing on a card with a
+  provenance question after the ring art. It lives in its own `assets/upgrade/` group rather than
+  with the form marks, because the next visible upgrade will have nothing to do with the form mark.
+- **The line and the colour both appear.** The face prints `ANY ELEMENT` under the card's own text
+  as well as painting the column. The colour is what carries at a glance across a row of eight; the
+  words are what answer "what does that mean" without a hover.
+- **The ink is the five element colours, and the mark takes them flat** *(owner's call,
+  2026-09-07)*. The bands are `cards.BorderOf` for fire, ice, lightning, earth and arcane —
+  arcane split across both edges so the strip is one symmetric cycle rather than a repeat with a
+  seam — and `cards.TintProject` paints the mark from them without the drawing's own shading.
+  **What that costs is the outline**, which is the thing that made the form marks drawn art; it is
+  paid knowingly, because at 32 pixels the saturation is legible and the bevel is not, and because
+  the colours *are* the message. `cards.TintMode` keeps the two rejected answers so the sheet can
+  show why: the choice turned out to depend on the ink rather than on the mode, so a future ink may
+  pick differently. `go run ./tools/upgradesheet` is that comparison.
 
 ### Targets come out of the hand *(taken while building it, and the one most worth revisiting)*
 
@@ -2498,7 +2571,7 @@ is the only thing that adds to it** and **the shop is what takes it out** *(2026
 
 **Vitae is crimson wherever it is written** *(owner's call, 2026-08-22)* — the purse on the duelist
 card and the word itself in the reward screen's prose. It is the run's only currency and now the
-only red on a cream screen, so a figure in that colour says "money" before it is read.
+only red on a light screen, so a figure in that colour says "money" before it is read.
 
 ### What a win pays *(owner's call, 2026-08-22)*
 

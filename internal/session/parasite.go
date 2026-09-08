@@ -320,6 +320,19 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 			return Parasite{}, fmt.Errorf("%s names rider %q, which the rules do not have",
 				r.ParasiteRecord, r.Rider)
 		}
+		// **One rider kind has no figure, and it says so itself** *(2026-09-07)*. A wildcard makes
+		// a card count as every element, which has no quantity — so a record naming it must write
+		// no value, and a record naming any other rider must write one. Asking the vocabulary
+		// rather than special-casing a name here is what keeps the next amount-less rider from
+		// needing an edit in this file.
+		if !kind.CarriesAmount() {
+			if r.Value != "" {
+				return Parasite{}, fmt.Errorf("%s attaches the %s rider and gives it the value %q, "+
+					"which nothing reads", r.ParasiteRecord, kind, r.Value)
+			}
+			p.Rider = kind
+			return p, nil
+		}
 		n, err := strconv.Atoi(r.Value)
 		if err != nil {
 			return Parasite{}, fmt.Errorf("%s attaches a rider and its value %q is not a number",

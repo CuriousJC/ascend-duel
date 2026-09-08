@@ -56,10 +56,10 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// ground is screens.screenGround, the cream a worm is actually offered on. Judging a card
+// ground is screens.screenGround, the light slate blue a worm is actually offered on. Judging a card
 // against a white browser page would be the same failure as previewing art at a scale the game
 // does not use.
-const ground = "#e2d0b0"
+const ground = "#a8bcd4"
 
 // wormArtKey is the picture every worm draws, and it is the constant of the same name in
 // internal/screens. **Keys are not file paths** — the file is assets/worm/default-worm.png and

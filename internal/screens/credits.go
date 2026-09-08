@@ -127,7 +127,7 @@ func (s *CreditsScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *CreditsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(screenGround)
+	fillGround(screen)
 
 	heading := &text.DrawOptions{}
 	heading.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(9)))
@@ -188,7 +188,7 @@ func creditsSize(k creditsKind) float64 {
 }
 
 // creditsInk is the colour a kind is set in. **ColorToward rather than ColorAtStrength**, because
-// this page is drawn on the cream ground — scaling toward black there makes a line louder, not
+// this page is drawn on the light ground — scaling toward black there makes a line louder, not
 // quieter. See the colour rule in CLAUDE.md.
 func creditsInk(k creditsKind) color.Color {
 	if k == creditsQuiet {

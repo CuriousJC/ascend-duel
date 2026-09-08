@@ -3,11 +3,11 @@
 <title>Ascending Duel — worm sheet</title>
 <style>
   :root {
-    --ground: #e2d0b0;
+    --ground: #a8bcd4;
     --ink: #2c2822;
-    --dim: #6b6355;
-    --rule: #c4b294;
-    --panel: #ede0c8;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
     --pink: #c8508c;
   }
   * { box-sizing: border-box; }
@@ -60,14 +60,14 @@
 
 <h1>Worm sheet</h1>
 <p class="facts">
-  14 worms, 2 offered after a won fight — 14.3% of the catalogue gets a
+  15 worms, 2 offered after a won fight — 13.3% of the catalogue gets a
   seat. Worm card <code>203&times;280</code>,
   corner radius <code>15</code>,
   border <code>4</code>,
   art box inset <code>33</code> from
   <code>y=55</code> at most <code>75</code> tall,
   text band from <code>y=140</code>.
-  Shown at 1:1 on the cream the worms are actually offered on.
+  Shown at 1:1 on the ground the worms are actually offered on.
 </p>
 <p class="note">
   Regenerate with <code>go run ./tools/wormsheet</code> and refresh. Every card here is drawn by
@@ -302,7 +302,7 @@
 
 <h3 class="group">
   form
-  <span>3 worms</span>
+  <span>4 worms</span>
 </h3>
 
 <div class="plates">
@@ -327,6 +327,19 @@
         <p class="name">POINT WORM</p>
         <div class="record">point-worm</div>
         <p class="text">CARD BECOMES STAB</p>
+        <p class="rule">form</p>
+        <p class="border">border: basic — grants no element</p>
+        <p class="art">no art of its own — drawing default-worm.png</p>
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="worm-shell-worm.png" width="203" height="280"
+           alt="SHELL WORM">
+      <div class="about">
+        <p class="name">SHELL WORM</p>
+        <div class="record">shell-worm</div>
+        <p class="text">CARD BECOMES DEFEND</p>
         <p class="rule">form</p>
         <p class="border">border: basic — grants no element</p>
         <p class="art">no art of its own — drawing default-worm.png</p>

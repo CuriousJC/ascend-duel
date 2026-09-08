@@ -24,9 +24,9 @@ var tmpl = template.Must(template.New("handsheet").Parse(`<!doctype html>
   :root {
     --ground: {{.Ground}};
     --ink: #2c2822;
-    --dim: #6b6355;
-    --rule: #c4b294;
-    --panel: #ede0c8;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
     --pink: #c8508c;
   }
   * { box-sizing: border-box; }

@@ -1,5 +1,33 @@
 [
   {
+    "ScenarioRecord": "wildcards",
+    "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the left column, where the form mark and the cost ticks come off the rainbow instead of off the element, and the hand line, which names an elemental rung off a set of cards that share no colour at all. A Motley is in the bucket too, for spending on a card that is not wild yet.",
+    "Rings": [],
+    "Deck": [
+      { "Card": "Jab", "Element": "fire", "Copies": 4, "Riders": ["wild-element"] },
+      { "Card": "Cut", "Element": "ice", "Copies": 4, "Riders": ["wild-element"] },
+      { "Card": "Bash", "Element": "earth", "Copies": 4 },
+      { "Card": "Strike", "Element": "lightning", "Copies": 4 },
+      { "Card": "Ward", "Element": "arcane", "Copies": 4, "Riders": ["wild-element"] },
+      { "Card": "Slice", "Element": "arcane", "Copies": 4 }
+    ],
+    "Hand": [
+      { "Card": "Jab", "Element": "fire", "Riders": ["wild-element"] },
+      { "Card": "Cut", "Element": "ice", "Riders": ["wild-element"] },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Strike", "Element": "lightning" },
+      { "Card": "Ward", "Element": "arcane", "Riders": ["wild-element"] },
+      { "Card": "Slice", "Element": "arcane" }
+    ],
+    "Parasites": [
+      "motley"
+    ],
+    "Screen": "combat",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
     "ScenarioRecord": "tutorial",
     "Note": "Bob, from the top, on the real starting deck. The seed and the opening creature are not here: they are in data/tutorial.json, because the lesson's promises - four cards of one colour, one of them a shield, a blow that wounds without killing so the creature swings back - are facts about that deal against that creature, and a second copy of them here is a second copy to drift. This entry now says only 'teach it whatever the profile thinks', which is the one thing the real trigger cannot do and the only way to see the tutorial twice.",
     "Rings": [],

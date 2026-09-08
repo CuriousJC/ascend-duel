@@ -112,7 +112,14 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// *(owner's call, 2026-08-23)*. They are the other thing in the left column, so leaving them
 	// the border's neutral grey would have made the corner the only coloured mark on an
 	// otherwise monochrome column. Same state treatment as the border, different base colour.
-	drawDashes(img, s, st, s.atState(BorderOf(s.Element)))
+	// **An upgrade takes the whole column or none of it** *(2026-09-07)*. The mark and the ticks
+	// are one statement about the card, and a rainbow mark over fire-red ticks would say two
+	// different things in the one place the card says one.
+	if ink := systems.UpgradeInk(s.Upgrade); ink != nil {
+		drawUpgradedDashes(img, s, st, ink)
+	} else {
+		drawDashes(img, s, st, s.atState(BorderOf(s.Element)))
+	}
 
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
 		return nil, err
@@ -350,8 +357,11 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	// size it was authored at and be centred in whatever box the style named, which is how the
 	// overlay's half-size card ended up carrying a full-size mark. Drawn art can be halved; see
 	// systems.RenderGlyphAt for why a generated silhouette still cannot.
-	glyph := tintInk(systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize),
-		BorderOf(s.Element))
+	drawn := systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize)
+	glyph := tintInk(drawn, BorderOf(s.Element))
+	if ink := systems.UpgradeInk(s.Upgrade); ink != nil {
+		glyph = tintUpgrade(drawn, ink, s.UpgradeTint)
+	}
 	at := placeInk(dst, glyph, box, st.GlyphScale, st)
 	if !s.Enabled && !at.Empty() {
 		// A mark carries its own colours rather than a state ink, so a disabled card fades one

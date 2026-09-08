@@ -62,7 +62,7 @@ var runOverWords = map[string]string{
 	session.EndedByChoice: "RUN ABANDONED",
 }
 
-// runOverSeedFill is the seed box's face. **A cool slate against the cream ground**, which is the
+// runOverSeedFill is the seed box's face. **A cool slate against the light ground**, which is the
 // same "this is the program, not the fight" colour the chrome and the sliders take — the code is a
 // fact about the software rather than about the duel.
 var (
@@ -98,7 +98,7 @@ func (s *RunOverScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *RunOverScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(screenGround)
+	fillGround(screen)
 	if gs.Summary == nil {
 		return
 	}

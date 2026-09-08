@@ -63,10 +63,10 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/decks"
 )
 
-// Ground is the cream an opponent card is actually drawn on — `screens.screenGround`, the fill
+// Ground is the one an opponent card is actually drawn on — `screens.screenGround`, the fill
 // behind both corners of the combat screen. Judging a card against a white browser page would be
 // the same failure as previewing art at a scale the game does not use.
-const Ground = "#e2d0b0"
+const Ground = "#a8bcd4"
 
 // groundRGBA is Ground as pixels, for the strip the cards are composited onto. Said twice in two
 // forms rather than parsed, because a hex parser here would be four lines to avoid one constant.

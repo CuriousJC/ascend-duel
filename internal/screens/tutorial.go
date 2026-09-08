@@ -93,7 +93,7 @@ const (
 	tutorialMargin = 24
 )
 
-// tutorialInk is the bubble's colours. It is a dark panel over a cream table, matching the fight
+// tutorialInk is the bubble's colours. It is a dark panel over a light table, matching the fight
 // log and the deck overlay rather than the cards — Bob is chrome, not something in play.
 var (
 	tutorialPanel = color.RGBA{R: 30, G: 30, B: 38, A: 255}

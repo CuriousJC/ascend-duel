@@ -94,7 +94,7 @@ func (s *AchievementsScene) Init(gs *state.GlobalState) {
 
 	if s.scroll == nil {
 		s.scroll = models.NewScrollbar(achievementScrollWidth, achievementsColumnHeight())
-		// The page is drawn on the cream ground, so the track is dimmed toward that rather than
+		// The page is drawn on the light ground, so the track is dimmed toward that rather than
 		// toward black — the same reason models.Slider.Ink exists. See systems.ColorToward.
 		s.scroll.Ground = screenGround
 	}
@@ -118,7 +118,7 @@ func (s *AchievementsScene) Update(gs *state.GlobalState) error {
 }
 
 func (s *AchievementsScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(screenGround)
+	fillGround(screen)
 
 	heading := &text.DrawOptions{}
 	heading.GeoM.Translate(float64(gs.PctX(50)), float64(gs.PctY(14)))

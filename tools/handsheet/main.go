@@ -66,7 +66,7 @@ import (
 )
 
 // ground is the combat screen's table — screens.screenGround — because a hand is laid out on it.
-const ground = "#e2d0b0"
+const ground = "#a8bcd4"
 
 func main() {
 	dir := flag.String("dir", filepath.Join("docs", "sheets", "handsheet"),

@@ -59,10 +59,10 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
-// ground is screens.screenGround, the cream a stone is actually offered on. Judging a card
+// ground is screens.screenGround, the light slate blue a stone is actually offered on. Judging a card
 // against a white browser page would be the same failure as previewing art at a scale the game
 // does not use.
-const ground = "#e2d0b0"
+const ground = "#a8bcd4"
 
 func main() {
 	dir := flag.String("dir", filepath.Join("docs", "sheets", "stonesheet"),

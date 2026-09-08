@@ -34,7 +34,7 @@ const (
 	tipCorner = 6
 )
 
-// The panel is dark on a cream table, which is the one contrast the game has left: every card, pane
+// The panel is dark on a light table, which is the one contrast the game has left: every card, pane
 // and log is an off-white surface, so an overlay that is another off-white would read as one more
 // card rather than as something on top of everything. Same face a button paints.
 var (

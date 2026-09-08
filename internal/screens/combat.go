@@ -1380,7 +1380,7 @@ func (s *CombatScene) applyStatusBadge(e combat.Event) {
 // somewhere else, not a box.
 
 func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(screenGround)
+	fillGround(screen)
 
 	// **The top of the screen is one row of three things** *(2026-08-12)*: the player's card
 	// in the left corner, the enemy's in the right, and the rings filling everything between

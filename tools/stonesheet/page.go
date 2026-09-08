@@ -9,8 +9,8 @@ import "html/template"
 // ring sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
-// **The ground is the cream the stones actually sit on.** A grey border on white is a different
-// card from a grey border on cream.
+// **The ground is the one the stones actually sit on.** A grey border on white is a different
+// card from a grey border on the game's own blue.
 //
 // **A rung with no stone is still a row**, drawn as an empty seat rather than skipped. That is the
 // one layout decision this template makes that the worm sheet's does not, and it is why the page
@@ -22,9 +22,9 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   :root {
     --ground: {{.Ground}};
     --ink: #2c2822;
-    --dim: #6b6355;
-    --rule: #c4b294;
-    --panel: #ede0c8;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
     --pink: #c8508c;
   }
   * { box-sizing: border-box; }
@@ -92,7 +92,7 @@ var tmpl = template.Must(template.New("stonesheet").Parse(`<!doctype html>
   art box inset <code>{{index .Style "artInset"}}</code> from
   <code>y={{index .Style "artTop"}}</code> at most <code>{{index .Style "artMaxH"}}</code> tall,
   text band from <code>y={{index .Style "textBandTop"}}</code>.
-  Shown at 1:1 on the cream the stones are actually offered on.
+  Shown at 1:1 on the ground the stones are actually offered on.
 </p>
 <p class="note">
   Regenerate with <code>go run ./tools/stonesheet</code> and refresh. Every card here is drawn by

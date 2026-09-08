@@ -15,7 +15,7 @@ import (
 )
 
 // Files are grouped into directories by what they are for — `game/`, `enemy/`, `ring/`,
-// `effect/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
+// `effect/`, `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
 // directory rename is a one-line edit per asset here and nothing anywhere else.
 //
 // **The map keys did not change with the move.** They are the lookup names used across the
@@ -93,6 +93,24 @@ var formcrush_png []byte
 
 //go:embed form/defend.png
 var formdefend_png []byte
+
+// UPGRADE ART
+//
+// The colour a *visible upgrade* paints a card's left column from. A card the run has altered
+// used to look exactly like one it had not — sixteen parasites attach seven kinds of rider and
+// the only place any of them was visible was the tooltip prose — and this is the first of them
+// that says so on the face.
+//
+// **It is a colour source, not a picture.** Nothing blits this file: `internal/systems` decodes
+// it and `internal/cards` samples it to paint the form mark and the cost ticks, exactly where the
+// element's own colour would otherwise go. So it is authored at the form marks' 32x32, the box it
+// has to cover, rather than at the 64 the drawn glyphs use.
+//
+// **Its own group rather than `form/`**, because more visible upgrades are coming and the next
+// one will have nothing to do with the form mark.
+
+//go:embed upgrade/wildcard.png
+var wildcardupgrade_png []byte
 
 // CREATURES
 //
@@ -295,6 +313,10 @@ func LoadImageData() map[string][]byte {
 	images["formslash_png"] = formslash_png
 	images["formcrush_png"] = formcrush_png
 	images["formdefend_png"] = formdefend_png
+
+	// The upgrade inks, for the same reason: internal/cards samples them into a card face and
+	// has no graphics context.
+	images["wildcardupgrade_png"] = wildcardupgrade_png
 
 	// The enemy portraits, keyed by filename stem: `enemy/ogrewarlord-portrait.png` is
 	// `ogrewarlord-portrait`, which is what `data/enemies.json` writes in its Portrait

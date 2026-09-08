@@ -112,7 +112,7 @@ func stretch(lo, hi *int, v int) {
 // sheet lie about the art. A strip is wider than most windows, so it scrolls inside its own box
 // rather than being shrunk to fit.
 //
-// **The ground is the cream the cards actually sit on**, not a page colour chosen to flatter them.
+// **The ground is the one the cards actually sit on**, not a page colour chosen to flatter them.
 var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
 <meta charset="utf-8">
 <title>Ascending Duel — {{.Title}}</title>
@@ -120,9 +120,9 @@ var tmpl = template.Must(template.New("roster").Parse(`<!doctype html>
   :root {
     --ground: {{.Ground}};
     --ink: #2c2822;
-    --dim: #6b6355;
-    --rule: #c4b294;
-    --panel: #ede0c8;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
   }
   * { box-sizing: border-box; }
   body {

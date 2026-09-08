@@ -106,9 +106,17 @@ type GlobalState struct {
 	// session, on screens that have never heard of a modal.
 	ModalOpen bool
 
-	// InputFocus is the one rectangle still accepting clicks, and InputGated is whether the
+	// InputFocus is the rectangles still accepting clicks, and InputGated is whether the
 	// restriction is on at all. Together they are the tutorial's shield: while a step says "press
 	// this", the cursor anywhere else clicks nothing.
+	//
+	// **A list rather than one rectangle** *(2026-09-08)*. It was one, and one is a bounding box:
+	// an anchor naming a *set* of cards could only hand over the box around them, so anything
+	// sitting between two of them was lit and clickable while not being part of the set. That is
+	// exactly what happened to the tutorial's matching cards — the taught four sit at seats 0, 1, 2
+	// and 4 under the default cost sort, and the arcane card at seat 3 was inside the square. The
+	// player could queue it, which spends the budget the fourth taught card needed, and the lesson
+	// then committed a hand it had just promised would be something else.
 	//
 	// **It lives here for the reason ModalOpen does** — it is a thing a scene and the frame around
 	// it have to agree on, and the mute button in the corner is exactly the control that would
@@ -123,7 +131,7 @@ type GlobalState struct {
 	//
 	// **The frame clears it every tick and the tutorial re-asserts it**, the same discipline
 	// ModalOpen keeps: a screen left mid-step must not leave the rest of the session unclickable.
-	InputFocus image.Rectangle
+	InputFocus []image.Rectangle
 	InputGated bool
 
 	// LedgerOpens is how many times the run's account has been opened this session.
@@ -394,7 +402,12 @@ func (gs *GlobalState) InputAllowed(at image.Point) bool {
 	if !gs.InputGated {
 		return true
 	}
-	return at.In(gs.InputFocus)
+	for _, r := range gs.InputFocus {
+		if at.In(r) {
+			return true
+		}
+	}
+	return false
 }
 
 // CursorAllowed is InputAllowed asked about wherever the cursor is right now, which is what

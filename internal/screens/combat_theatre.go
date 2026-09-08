@@ -334,6 +334,24 @@ type combatTheatre struct {
 	// that appear. See combat_mathbox.go.
 	banner handBanner
 
+	// breaks are the shields currently crossing the table to kill an attack, and the cracks
+	// opening on the cards they reach. **One beat between the two turns**, staged from the resolved
+	// round rather than from an event — see combat_shatter.go.
+	breaks []shieldBreak
+
+	// shatteredSeats is which of the opponent's seats have finished breaking, and it is what the
+	// row wears for the rest of the round. **The transition writes it and nothing else does**, so
+	// the moving version and the baked mark hand over exactly once.
+	//
+	// A map rather than a slice, because the row can be re-seated and a stale index into a shorter
+	// row would mark the wrong card rather than nothing.
+	shatteredSeats map[int]bool
+
+	// breaksStaged says this round's breaks have already been raised, so the boundary is only
+	// crossed once. Cleared with the rest of the theatre at the start of a fight, and by the round
+	// that raises it — see startRound.
+	breaksStaged bool
+
 	// mathBox is the hand dialog: the blow's arithmetic acted out across the band above the hand
 	// on the beat the hand fires. See combat_mathbox.go.
 	//
@@ -360,6 +378,13 @@ func (t *combatTheatre) tick() {
 	t.hits = advance(t.hits)
 	t.shields = advance(t.shields)
 
+	// **The breaks tick and settle in one pass, and it has to be one pass.** `advance` ticks a
+	// mover and drops it in the same loop, so a break that finishes on this frame is gone by the
+	// time anything else could look at it — noting them beforehand saw nothing finished and noting
+	// them afterwards saw nothing at all, and the mark never landed. The web appeared, played, and
+	// vanished. See advanceBreaks.
+	t.breaks = t.advanceBreaks()
+
 	// The two rows on the table never expire: cards arrive and stay until the round is spent, so
 	// they are advanced in place rather than filtered.
 	for i := range t.resolved {
@@ -381,7 +406,7 @@ func (t *combatTheatre) tick() {
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheatre) running() bool {
-	return running(t.hits) || running(t.shields)
+	return running(t.hits) || running(t.shields) || running(t.breaks)
 }
 
 // clear takes the whole stage down, view state included.

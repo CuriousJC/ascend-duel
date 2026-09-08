@@ -36,7 +36,7 @@ func TestEveryStepCanBeSatisfied(t *testing.T) {
 		step, _ := run.Current()
 
 		before := step
-		f, next := satisfying(t, step, run.baseRounds, run.baseLedger, run.baseDMG)
+		f, next := satisfying(t, step, run.baseRounds, run.baseLedger, run.baseDMG, run.baseBreaks)
 		run.Update(f, next)
 
 		if cur, ok := run.Current(); ok && cur.Key == before.Key {
@@ -46,7 +46,7 @@ func TestEveryStepCanBeSatisfied(t *testing.T) {
 }
 
 // satisfying is the Facts and the button press that make one condition true.
-func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG int) (Facts, bool) {
+func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG, baseBreaks int) (Facts, bool) {
 	t.Helper()
 	c := step.Until
 	switch c {
@@ -62,6 +62,8 @@ func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG int) (F
 		return Facts{Resolving: true}, false
 	case CondRoundDone:
 		return Facts{RoundsPlayed: baseRounds + 1}, false
+	case CondShieldBroke:
+		return Facts{Resolving: true, ShieldBreaks: baseBreaks + 1}, false
 	case CondLedgerOpened:
 		return Facts{LedgerOpens: baseLedger + 1}, false
 	case CondRingsWorn:
@@ -342,5 +344,38 @@ func TestAnInventedAxisIsRefused(t *testing.T) {
 		{StepRecord: "hello", Text: "hello", Until: "next"},
 	}}); err == nil {
 		t.Error("an invented axis was accepted")
+	}
+}
+
+// **A step waiting for NEXT holds the round, and nothing else does.** The shield step is the first
+// in the lesson that lands inside a playing round, and the pause is the whole of what makes it
+// readable — without it the break appears and the creature is already swinging.
+//
+// **The narrowness is the safety.** A step waiting on an *outcome* must never hold, or it stops the
+// thing it is waiting for: `watch` waits for the shield to bite, and a `watch` that froze the round
+// would deadlock the lesson on its own condition.
+func TestOnlyANextStepHoldsTheRound(t *testing.T) {
+	for _, step := range Load().Steps {
+		run := &Run{script: Script{Steps: []Step{step}}}
+
+		holds := run.HoldsRound()
+		if want := step.Until == CondNext; holds != want {
+			t.Errorf("step %q waits on %v and reports HoldsRound %v", step.Key, step.Until, holds)
+		}
+
+		// The one that would deadlock: a step whose condition can only become true while the round
+		// is playing must not be the thing stopping it.
+		if holds && (step.Until == CondRoundDone || step.Until == CondShieldBroke) {
+			t.Errorf("step %q holds the round and waits for the round to do something", step.Key)
+		}
+	}
+}
+
+// A run that is over holds nothing, or a finished lesson would freeze every round after it.
+func TestASpentScriptHoldsNothing(t *testing.T) {
+	run := &Run{script: Script{Steps: []Step{{Key: "x", Text: "x", Until: CondNext}}}}
+	run.Advance(Facts{})
+	if run.HoldsRound() {
+		t.Error("a script that has run out is still holding the round")
 	}
 }

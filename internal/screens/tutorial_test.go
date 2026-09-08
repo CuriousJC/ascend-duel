@@ -63,10 +63,11 @@ func TestEveryAnchorHasARectangle(t *testing.T) {
 		answered := ""
 		var agreed image.Rectangle
 		for _, h := range hosts {
-			r, ok := h.host.tutorialRect(gs, a)
-			if !ok {
+			rs, ok := h.host.tutorialRects(gs, a)
+			if !ok || len(rs) == 0 {
 				continue
 			}
+			r := unionOf(rs)
 			if answered != "" && r != agreed {
 				t.Errorf("anchor %q is %v on %s and %v on %s; one name, two places",
 					a, agreed, answered, r, h.name)
@@ -105,7 +106,7 @@ func TestTheShippedScriptOnlyNamesRealAnchors(t *testing.T) {
 		}
 		found := false
 		for _, h := range hosts {
-			if _, ok := h.tutorialRect(gs, step.Anchor); ok {
+			if _, ok := h.tutorialRects(gs, step.Anchor); ok {
 				found = true
 			}
 		}
@@ -166,8 +167,8 @@ type fixedHost struct{ rect image.Rectangle }
 
 func (f fixedHost) tutorialFacts(*state.GlobalState) tutorial.Facts { return tutorial.Facts{} }
 func (f fixedHost) tutorialCovered(*state.GlobalState) bool         { return false }
-func (f fixedHost) tutorialRect(*state.GlobalState, tutorial.Anchor) (image.Rectangle, bool) {
-	return f.rect, true
+func (f fixedHost) tutorialRects(*state.GlobalState, tutorial.Anchor) ([]image.Rectangle, bool) {
+	return []image.Rectangle{f.rect}, true
 }
 
 // stubButton is a placed button, so a rect function has something to measure. The size and the
@@ -352,6 +353,13 @@ func stubCombat() *CombatScene {
 	s.fighter = &entities.Combatant{
 		Duelist: combat.Duelist{RoundLimit: combat.DefaultRoundLimit},
 	}
+
+	// **With one of the opponent's cards broken**, for the hand's reason and the clock's: an
+	// unbroken round reports no rectangle for `shattered-cards`, which is honest and would read
+	// here as a missing case. The row has to hold the seat as well as the mark — the anchor is the
+	// card's own rectangle, and a mark on a seat the row does not have is nothing to point at.
+	s.theatre.enemyDealt = make([]dealtCard, 3)
+	s.theatre.shatteredSeats = map[int]bool{1: true}
 	return s
 }
 

@@ -37,15 +37,15 @@ func (s *ShopScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 // The lesson now buys two rings before it says a word about them, so the row has something in it by
 // the time it is pointed at — and it still reports false when empty, which is what keeps the old
 // argument's teeth.
-func (s *ShopScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (image.Rectangle, bool) {
+func (s *ShopScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool) {
 	// The same card the reward screen answers for, through the same function. See that one.
 	if a == tutorial.AnchorBuildCard {
-		return buildCardRect(gs), true
+		return one(buildCardRect(gs)), true
 	}
 	// The way out. **Lit even though nothing is locked**, because the step that waits for the run
 	// to reach the next fight is waiting on this press and nothing else — see AnchorShopLeave.
 	if a == tutorial.AnchorShopLeave {
-		return buttonRect(s.leaveButton), true
+		return one(buttonRect(s.leaveButton)), true
 	}
 	// The rings the run actually has on. **False for an empty row**, so a step that reached it too
 	// early drops its gate and is visible as a mistake rather than lighting an empty band.
@@ -62,14 +62,14 @@ func (s *ShopScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (imag
 	if a == tutorial.AnchorShopDMGPotion {
 		for i, p := range shopPotions() {
 			if p.Effect == session.PotionDMG {
-				return potionSeat(gs, i), true
+				return one(potionSeat(gs, i)), true
 			}
 		}
-		return image.Rectangle{}, false
+		return nil, false
 	}
 
 	if a != tutorial.AnchorShopShelf {
-		return image.Rectangle{}, false
+		return nil, false
 	}
 	// **The rings only, not the two sealed goods beside them** *(2026-08-27)*. The shelf became a
 	// five-seat row that day and the anchor deliberately did not grow with it: the lock leaves only
@@ -79,15 +79,20 @@ func (s *ShopScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (imag
 }
 
 // rowUnion is the rectangle covering n slots of a row, and false for a row with nothing in it.
-func rowUnion(n int, slot func(i int) image.Rectangle) (image.Rectangle, bool) {
+//
+// **One rectangle is right here and would be wrong for the matching cards.** A shelf, a worn row
+// and a pane of potions are *contiguous* rows where every seat is part of what the step names — so
+// the box round them contains nothing the player should not reach. See combat_tutorial.go's
+// matching cards, which is the case where that stops being true.
+func rowUnion(n int, slot func(i int) image.Rectangle) ([]image.Rectangle, bool) {
 	if n <= 0 {
-		return image.Rectangle{}, false
+		return nil, false
 	}
 	r := slot(0)
 	for i := 1; i < n; i++ {
 		r = r.Union(slot(i))
 	}
-	return r, true
+	return one(r), true
 }
 
 // tutorialCovered is whether the deck panel or the hands ladder is over the screen. See the

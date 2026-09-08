@@ -636,13 +636,6 @@ func distance(a, b color.RGBA) int {
 	return abs(int(a.R)-int(b.R)) + abs(int(a.G)-int(b.G)) + abs(int(a.B)-int(b.B))
 }
 
-func abs(n int) int {
-	if n < 0 {
-		return -n
-	}
-	return n
-}
-
 func TestTheFormMarkStaysCornerSized(t *testing.T) {
 	// **The bound is the invariant, not the number.** How big the corner mark is stays a design
 	// choice, but one that grows past half of GlyphSize is a full-size shape in a corner slot,

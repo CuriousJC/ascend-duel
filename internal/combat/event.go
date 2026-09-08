@@ -154,6 +154,21 @@ type Event struct {
 	Life   int       // target's life after the event
 	Round  int
 
+	// Slot is which of the acting side's turn a card event is about, as an index into the turn as
+	// it was played — the same sequence HandCards indexes and the same one this side's KindActions
+	// arrive in.
+	//
+	// **It is set on KindBlocked and nowhere else today** *(2026-09-08)*. A block names its attack
+	// by ConceptID, which is a *kind* of card rather than one of them: a creature queuing two Nips
+	// and having one of them eaten gives a screen reading `Action` no way to say which. That did
+	// not matter while shields ate whichever attack came first, because the blocked card was the
+	// next one to act; it matters now that shields pick the heaviest, since the card a shield ate
+	// may be the third of five and the screen has to shatter that one.
+	//
+	// **The zero value is a real slot**, like Status's and Ring's, so it is read only on the kind
+	// that sets it.
+	Slot int
+
 	// Element is the card's element on KindAction, KindMissed and KindStatus. Basic everywhere
 	// else, which is also the zero value — an event with nothing to say about colour says `basic`,
 	// exactly as a plain card does.

@@ -38,6 +38,29 @@
 //     moves. A flat silhouette in the element colour would throw away the interior detail
 //     that made drawn marks worth having over generated ones.
 //
+// # Three ways to say something on a card, and they are not interchangeable
+//
+// The **face** is what the card *is*: name, cost ticks, form mark, effect text. An **upgrade** is
+// what the run has permanently made it, and it says so by taking the left column over rather than
+// by covering anything — see upgrade.go. A **mark** is the card's *situation*, drawn over the
+// finished face, and it covers things because that is the point — see mark.go.
+//
+// The distinction that keeps costing thought: an upgrade travels with the card everywhere it is
+// drawn, including onto `tools/upgradesheet`, because it is a fact about the card. A mark is a fact
+// about this card in this seat right now — a shattered attack is an ordinary card again next round —
+// so the *state* belongs to whoever is drawing it and only the *drawing* belongs here.
+//
+// **Marks are a bitmask because they compose.** A card can be broken and pointed at at once, and
+// drawMark owns the order they are painted in so one pair of facts draws one way. Spec.Mark is a
+// plain value for the reason Spec.Stats is a fixed array: `internal/screens` keys its face cache on
+// the whole Spec.
+//
+// **A mark has two halves and only one of them is here.** The settled picture is baked into the
+// card image and cached with it; the *arrival* — a break spreading — changes every frame and would
+// blow that cache, so this package exports the geometry (ShatterCracks, MarkSeed, CrackInk) and the
+// screen strokes the same lines on the GPU while they are moving. One geometry, two rasterisers, so
+// the animation cannot end on a picture different from the one it hands to.
+//
 // # Rounded corners are rasterised here, not masked
 //
 // **This is the only rounding approach in the tree** *(2026-08-24)*. The screen used to

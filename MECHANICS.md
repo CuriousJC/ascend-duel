@@ -212,6 +212,35 @@ is a third rung the file still holds at zero copies.
 of attacks, so shields turn "how much is this going to hurt" from an estimate into arithmetic —
 which is what a percentage guard could never do, since half of an unknown figure is still unknown.
 
+#### A shield eats their heaviest blow, not their first
+
+*(owner's call, 2026-09-08.)* A creature's turn is several discrete blows of different sizes, and
+until now a shield ate whichever of them was queued first. So what a shield was worth was decided by
+the creature's own ordering: a Giant Bat opening with a Nip spent the player's shield on two damage
+and then landed a Drain for ten, while the same three cards in the other order made the same shield
+worth five times as much.
+
+**What a shield costs to raise does not vary with the opponent's queue, so what it is worth should
+not either.** A shield now takes the biggest blow of the turn, and a second shield the next biggest,
+down the order. Ties go to the earliest card, so the choice is a function of the turn and nothing
+else.
+
+**It is decided at the top of the creature's turn, before any of it resolves**, which is the part
+with a consequence. The ranking is a snapshot: a status landed by an early card amplifies the ones
+after it, so a shield can be provably not-optimal in hindsight. That is paid knowingly, and what it
+buys is that the whole exchange is *showable* — every broken attack can be struck and cracked before
+the creature swings, rather than one card silently doing nothing at a time. Re-ranking as the turn
+resolved would win a little damage and cost the player any way of watching it happen.
+
+**Ranked on the card's own damage, which is the whole of the arithmetic.** Everything downstream —
+the attacker's weight, the target's vulnerability, every guard the target raised — is one multiplier
+applied identically to every attack in the turn, so none of them can reorder two cards. See
+`combat.shieldedSlots`.
+
+**This is a straight buff to shields, and it scales with how spiky a creature's deck is.** A swarm of
+identical small attacks is unaffected; a deck with one big card in it is now much easier to blunt.
+Nothing simulates a duel, so no test catches what that does to a floor.
+
 **They last exactly the turn after they were played**: raised at the end of your turn, standing
 through the opponent's whole turn, gone before you act again. That is the schedule a raised guard is
 already on, and `expireDefenses` is the one function that says when. **An unspent shield lapses**,
@@ -250,6 +279,35 @@ eight or nine, and none falls below eight cards or three distinct concepts.
 
 **What it buys is a budget the player can plan against for a whole fight.** A round's action points
 were a number that could silently be two higher than the stat on the card; they are the stat.
+
+#### The break on the card
+
+**A blocked attack is drawn as a broken window over the card that will not fire** *(owner's call,
+2026-09-08)*, and the shield that killed it crosses the table to do it — one beat between the
+player's turn and the creature's, every blocked attack at once.
+
+**It exists because a shield used to be spent invisibly.** The creature's card came up, nothing
+happened, and a line in the feed said a shield had eaten it — a rule the player pays for on every
+defend card and never watches work. Now they see which blow it chose, which is also the only way the
+"heaviest, not first" rule above is ever legible.
+
+**The break is two drawings of one thing and it stays after the animation.** The card wears the
+break for the rest of the round, because the table is the account of what the turn was and a card
+that never fired has to still say so once the turn is over.
+
+**It is the first of a general mechanism.** A *mark* is a picture drawn over a finished card face
+about that card's situation, as against an *upgrade*, which is what the card permanently is and
+which takes the left column rather than covering anything. See `internal/cards/mark.go`, which holds
+the split between the settled mark and the animation that puts it there, and
+`internal/screens/combat_shatter.go`.
+
+**Marks are a set, and the second one arrived the same day** *(owner's call, 2026-09-08)*. A card can
+be several things at once, so `cards.Mark` is a bitmask rather than one value and the order they are
+painted in belongs to the renderer rather than to whoever asks. The second is **the tutorial's
+highlight**: a card the lesson is pointing at is washed in the tutorial's red rather than having a
+red frame drawn round it. A frame outside a card is a thing near the card; a tinted card is the card
+answering — and where a step names several cards, a frame each is a row of loose rectangles while a
+tint each is just the cards. Rings and worms are expected to take marks too.
 
 ### Concepts and deck composition
 

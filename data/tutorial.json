@@ -47,12 +47,12 @@
     {
       "StepRecord": "take-them-all",
       "Text": "Now look closer. Four cards burn the same colour. Matching cards make a hand, and a hand multiplies the whole blow - so take the other three.",
-      "Anchor": "matching-cards",
+      "Anchor": "matching-cards-left",
       "Until": "matching-queued"
     },
     {
       "StepRecord": "the-shield",
-      "Text": "One of those four is a Ward - a shield, not a blow. It deals nothing, but it counts toward the hand all the same, and it will eat one attack coming back at you.",
+      "Text": "One of those four is a Ward - a shield, not a blow. It deals nothing, but it counts toward the hand all the same. It buys you one shield, and a shield does not eat whatever swings first - it picks their hardest blow and swallows that one.",
       "Anchor": "matching-cards",
       "Until": "next"
     },
@@ -64,13 +64,25 @@
     },
     {
       "StepRecord": "watch",
-      "Text": "Now your hand calculates.  Each attack multiplies your DMG and your hand has its own multiplier.",
+      "Text": "Now your hand calculates. Each attack multiplies your DMG, and your hand has its own multiplier on top.",
       "Anchor": "math-band",
+      "Until": "shield-broke"
+    },
+    {
+      "StepRecord": "the-shield-bit",
+      "Text": "Stop there. That card is broken - your shield went out and killed it before it could swing. It took the Drain, the biggest thing the bat had. A shield never eats whatever comes first; it always takes their worst.",
+      "Anchor": "shattered-cards",
+      "Until": "next"
+    },
+    {
+      "StepRecord": "the-answer",
+      "Text": "Now the two it has left.",
+      "Anchor": "enemy-card",
       "Until": "round-done"
     },
     {
       "StepRecord": "the-blow-landed",
-      "Text": "Not dead. It swung back three times - your shield swallowed the first one whole, and the other two found you. One shield, one attack. Raise more when you expect worse.",
+      "Text": "So it swung three times and landed two. One shield, one attack, and always their worst one - which is why a shield is worth more against a big hitter than against a swarm. Raise more when you expect worse.",
       "Anchor": "duelist-card",
       "Until": "next"
     },

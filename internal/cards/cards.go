@@ -345,6 +345,20 @@ type Spec struct {
 	// separation one field up.
 	Upgrade systems.Upgrade
 
+	// Mark is something that has happened to this card, drawn over the finished face — the first
+	// is a shatter, an attack a shield ate. **MarkNone, the zero value, is every ordinary card.**
+	//
+	// **It is not an Upgrade and the difference is what it is about.** An upgrade is what the card
+	// permanently *is*, and it says so by taking the left column over; a mark is the card's
+	// situation, and it covers the face because that is the point. A shattered Nip is an ordinary
+	// Nip again next round.
+	//
+	// **A plain value, because Spec has to stay comparable** — internal/screens keys its face
+	// cache on the whole Spec, exactly as Stats is a fixed array for that reason.
+	//
+	// See mark.go, which also holds the transition half of this and why it is not here.
+	Mark Mark
+
 	// UpgradeTint is how the upgrade's ink and the form mark's drawing are combined. **The zero
 	// value is the mode the game uses**, so a caller that never thinks about it gets the right
 	// picture; `tools/upgradesheet` is the only thing that sets it, and it sets all three.

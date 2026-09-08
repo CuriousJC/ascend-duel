@@ -181,6 +181,21 @@ a hand can only say what its cards must *agree* on.
 `Ward`, `Brace`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
 attack whole**. See MECHANICS.md §Shields. Four things to know before touching any of it:
 
+- **A shield eats the creature's *heaviest* blow, not its first** *(owner's call, 2026-09-08)*.
+  `combat.shieldedSlots` is the whole rule, and it decides the mask at the top of the creature's turn
+  rather than as each card arrives — which is what lets the screen show the exchange before anything
+  swings. Ranked on `CardDamage` alone, deliberately: weight, vulnerability and every guard are one
+  multiplier over the whole turn and cannot reorder two cards, so projecting the pipeline per card
+  would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
+  `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
+  crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a card
+  permanently *is* and takes the left column, a mark is the card's situation and covers the face.
+  See MECHANICS.md §Shields.
+- **`cards.Mark` is a bitmask and marks compose** *(2026-09-08)*. A card can be broken *and* pointed
+  at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
+  draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
+  the middle changes what every existing value means, not just the ones after it. Two marks today:
+  `MarkShattered` and `MarkHighlit`.
 - **The asymmetry is the mechanic.** Only the player raises shields and only creatures raise
   percentage guards, because every creature is a solo attacker (`SoloAttacks`, one blow per card)
   while the player forms hands and lands one figure a turn. A count facing a hand would delete a
@@ -1299,8 +1314,48 @@ player's.
   publish reports the zero value and stalls immediately.
 - **Three vocabularies, all closed and none defaulted**: anchors, conditions, and the lock derived
   from the condition. See the `data` skill.
+- **A step waiting for NEXT holds the round where it is** *(owner's call, 2026-09-08)*.
+  `tutorial.Run.HoldsRound` is the predicate and `advancePlayback` is the one reader. It exists for
+  the shield step, which is the first in the lesson to land *inside* a playing round — a round has
+  three acts (the duelist swings, the shields break what they can reach, the creature swings with
+  what is left) and the middle one had no beat of its own, so the break appeared and the creature
+  was already answering. **Only a NEXT step holds**, which is what stops a step waiting on an
+  outcome from stopping the thing it is waiting for; `TestOnlyANextStepHoldsTheRound` is the
+  tripwire. It changes pacing and cannot change an outcome.
+- **A break lives inside its own round.** `seatEnemyCards` drops the marks, because that is the line
+  where a seat number stops meaning what it meant — the opponent's row is re-planned the moment a
+  round ends, so a mark left standing cracks whichever card the planner has just put in that seat.
+  Anything wanting to point at a break has to do it during the round, which is why the step above
+  holds one.
+- **An anchor names what the step is *asking for*, not what it is about** *(owner's call,
+  2026-09-08)*. `matching-cards` and `matching-cards-left` are the same set minus what is already
+  queued, and they exist as two because the two steps using them say different things: "take the
+  other three" asks, and "one of those four is a Ward" describes. Sharing one anchor lit four cards
+  under a sentence about three — and since the anchor is the click gate, the card already taken was
+  the one thing the step invited you to click, which undoes the step before it.
+  `TestTheStepAsksOnlyForTheCardsStillToTake` is the tripwire. **The red comes off each card as it
+  is taken**, so the row says how much is left without a counter.
+- **A card is tinted, a control is framed** *(owner's call, 2026-09-08)*. An anchor naming cards gets
+  the scrim and no rectangle: the cards wear `cards.MarkHighlit`, which is the same red the frame
+  was. A frame outside a card is a thing on the screen *near* the card where a tinted card is the
+  card answering, and round a set of cards a frame is a lot of loose rectangles. `Anchor.NamesCards`
+  is the closed table saying which; `screens.marksFor` reads the same `gs.InputFocus` list the
+  spotlight is handed, so lit and clickable stay one set by construction rather than by agreement.
 - **The lit square and the one legal click are the same rectangle**, computed once. A lit hole the
   player cannot click, or a clickable region that is not lit, would each be worse than no tutorial.
+- **An anchor may name several rectangles, and for a *set* of cards it must** *(2026-09-08)*.
+  `tutorialRects` and `state.InputFocus` are both lists because the two anchors naming a set —
+  `matching-cards` and `shattered-cards` — point at cards that need not be adjacent, and the
+  bounding box round them is the set *plus whatever is between two of them*. That was a live bug:
+  the tutorial matches on **element**, so the taught four are four different concepts, and under the
+  default cost-led sort they land at seats 0, 1, 2 and 4 with an arcane card at seat 3 — lit,
+  clickable, and worth 2 AP out of a 6 AP budget the taught set needs all of. Queue it and the
+  fourth taught card can never be paid for, so the lesson commits a Three of a Kind having just
+  promised a Four. **The old note claimed they were contiguous and it reasoned about the wrong
+  axis** — cards sharing a *concept* land together whichever key leads; cards sharing an *element*
+  do not. `TestTheMatchingCardsGateLightsOnlyTheTaughtCards` walks every seat of the real dealt hand
+  through `InputAllowed` and is the tripwire. The spotlight scrims the gaps between holes, so lit
+  and clickable stay the same area.
 - **The tutorial runs on the real deck, and `matching-cards` is what pays for that**
   *(2026-08-25)*. It was a fixture deck of exactly five Jabs, so the lesson's "take them all" step
   could wait on `hand-emptied` — a condition only a hand with nothing else in it can ever reach,
@@ -1323,9 +1378,13 @@ player's.
   Kind dealing 69 into a GiantBat's 80. **One of the four is a Ward**, which teaches the thing a
   hand of pure attacks cannot: a defence carries an element and joins a hand like anything else,
   bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
-  Swoop, Drain, Nip — and **the Ward's one shield eats the Swoop whole while the other two land**,
-  60 life down to 48. A creature that dies in one blow never swings, so a lesson about shields
+  Swoop, Drain, Nip — and **the Ward's one shield eats the Drain whole while the other two land**,
+  60 life down to 53. A creature that dies in one blow never swings, so a lesson about shields
   cannot be taught in a round that kills. The player then reads the ledger and finishes it.
+  **It ate the Swoop and left the player on 48 until 2026-09-08**, when shields started picking the
+  heaviest blow rather than the first one queued — see §Shields. The lesson is *better* for it: the
+  Drain is the creature's one big card, so the shield visibly saves ten rather than five, and the
+  step that explains it has a broken card on the table to point at.
 - **The other four cards are an arcane, an earth, a fire and an ice**, so there is no competing set,
   and the first card dealt is one of the four — which the opening step needs, since it queues
   `first-card` and a stray would break both the budget and the hand.
@@ -1338,6 +1397,13 @@ player's.
   to it, that it is affordable, that it does *not* kill, and that its four cards are the four the
   combat test writes out by hand. **If either goes red the answer is a new seed, not a weaker
   check**; `go run ./tools/seeds` is the search.
+- **A third test holds the creature's half of it** *(2026-09-08)*.
+  `TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow` in `internal/screens` plans the bat's turn
+  exactly as the screen does, resolves the whole round, and checks that one blow is blocked, that it
+  is the heaviest, that the heaviest is the *only* card that size — a creature whose deck flattened
+  out would make the lesson true and pointless — and that the step naming the card names the right
+  one. The two above are about the player's blow; this is about what comes back at them, which is
+  the half the shield steps describe.
 - **The ledger step is the one anchor naming a control the frame owns** *(2026-09-06)*. `state.LedgerOpens`
   is a tally bumped by `internal/game` when the panel opens, published as a fact and read by
   `ledger-opened` against a baseline — the same trick `round-done` uses, because the account is

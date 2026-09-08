@@ -422,7 +422,8 @@ func resolveAttackPhase(
 	// attack, so one shield is the whole turn — see blockedByShield, which says why that is safe
 	// today and what would stop it being so.
 	if blocked := false; target.Shields > 0 {
-		events, target, blocked = blockedByShield(events, side, target, turn[blow.Cards[0]].Card, round)
+		events, target, blocked = blockedByShield(events, side, target, turn[blow.Cards[0]].Card,
+			blow.Cards[0], round)
 		if blocked {
 			return events, actor, target
 		}
@@ -525,7 +526,7 @@ func resolveAttackPhase(
 // It is written down rather than guarded against because the day an enemy forms hands is the day
 // this becomes the dominant strategy maxDefendPct exists to forbid, and a silent branch would not
 // say so.
-func blockedByShield(events []Event, side Side, target Duelist, card Card, round int) ([]Event, Duelist, bool) {
+func blockedByShield(events []Event, side Side, target Duelist, card Card, slot, round int) ([]Event, Duelist, bool) {
 	target, spent := target.spendShield()
 	if !spent {
 		return events, target, false
@@ -536,6 +537,7 @@ func blockedByShield(events []Event, side Side, target Duelist, card Card, round
 		Action: card.Concept,
 		Target: other(side),
 		Amount: target.Shields,
+		Slot:   slot,
 		Round:  round,
 	})
 	return events, target, true
@@ -608,7 +610,11 @@ func resolveSoloAttacks(
 	missed := false
 	rolled := false
 
-	for _, slot := range turn {
+	// **Which attacks the shields eat is decided before the turn starts**, not as each blow
+	// arrives. See shieldedSlots.
+	eaten := shieldedSlots(actor, target, turn)
+
+	for i, slot := range turn {
 		if slot.Card.Category() != CategoryAttack {
 			continue
 		}
@@ -639,12 +645,12 @@ func resolveSoloAttacks(
 			continue
 		}
 
-		// **One shield, one attack** — spent before anything is computed, so a blocked card lands
-		// nothing and says so in its own kind. This is the seat the whole mechanic was built for:
-		// a creature turn is several discrete blows, and shields are how many of them the player
-		// decided to take.
-		if blocked := false; target.Shields > 0 {
-			events, target, blocked = blockedByShield(events, side, target, slot.Card, round)
+		// **One shield, one attack**, and the attacks it eats were chosen before the turn began —
+		// the heaviest first, by shieldedSlots. Spending is still here rather than up there because
+		// a missed turn spends nothing: the roll above returns before this line, so a creature that
+		// swings at nothing costs the player no shield.
+		if blocked := false; eaten[i] && target.Shields > 0 {
+			events, target, blocked = blockedByShield(events, side, target, slot.Card, i, round)
 			if blocked {
 				continue
 			}
@@ -958,4 +964,57 @@ func other(s Side) Side {
 		return SideB
 	}
 	return SideA
+}
+
+// shieldedSlots picks which of a solo attacker's cards the target's shields eat: **the heaviest
+// blows first** *(owner's call, 2026-09-08)*, whatever order they were queued in. It reports a
+// mask over the turn, indexed the way the turn was played.
+//
+// **It reverses the rule that a shield ate whichever attack came first.** That made a shield worth
+// whatever the creature happened to have led with — a Giant Bat opening with a Nip spent the
+// player's shield on two damage and then landed a Drain for ten. What a shield costs to raise does
+// not vary with the opponent's queue order, so what it is worth should not either.
+//
+// **Ranked on CardDamage alone, and that is the whole of the arithmetic rather than a shortcut.**
+// Everything downstream of a card's own damage — the attacker's weight, the target's vulnerability
+// and every defence the target raised — is one multiplier applied identically to every attack in
+// the turn, so none of them can reorder two cards. Projecting the whole pipeline per card would be
+// a second resolver that agreed with the first, which is the drift `Base` and `Multiplier` are on
+// the event to prevent.
+//
+// **It is a snapshot of the turn's opening state, knowingly.** A status landed by an early card
+// amplifies the ones after it, so a shield can be provably not-optimal in hindsight. That is the
+// price of deciding up front, and deciding up front is what lets the screen show the whole
+// exchange before the creature swings — see screens.shatter. Re-ranking as the turn resolved would
+// buy a little optimality and cost the player any way of seeing it happen.
+//
+// **Ties go to the earliest card**, so the mask is a function of the turn and nothing else. A
+// creature holding three identical blows against one shield loses the first of them.
+func shieldedSlots(actor, target Duelist, turn []Slot) []bool {
+	eaten := make([]bool, len(turn))
+	if target.Shields <= 0 {
+		return eaten
+	}
+
+	// The attack slots, worst-first: descending damage, and by index within a tie. A sort would
+	// say the same thing; this is a selection because the list is at most MaxActions long and the
+	// count taken is at most MaxShields, and it keeps the tie-break impossible to get wrong.
+	taken := 0
+	for taken < target.Shields {
+		best, bestDmg := -1, 0
+		for i, slot := range turn {
+			if eaten[i] || slot.Card.Category() != CategoryAttack {
+				continue
+			}
+			if dmg := actor.CardDamage(slot.Card); best < 0 || dmg > bestDmg {
+				best, bestDmg = i, dmg
+			}
+		}
+		if best < 0 {
+			break
+		}
+		eaten[best] = true
+		taken++
+	}
+	return eaten
 }

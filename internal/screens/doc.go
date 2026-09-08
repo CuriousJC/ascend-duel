@@ -221,6 +221,20 @@
 //     the beat the event is drawn rather than when the round's end state is adopted. There is no
 //     flight — a pip appears in a row on the card the player is already looking at, so the arrival
 //     is the drawing.
+//   - combat_shatter.go — the shields breaking the attacks they ate, between the player's turn and
+//     the creature's. combat.shieldedSlots picks which of a creature's blows the shields eat — the
+//     heaviest first — and picks them at the top of its turn rather than as each card arrives,
+//     which is what makes the whole exchange drawable at the boundary instead of one card silently
+//     doing nothing at a time. One beat: every blocked pip flies out of the duelist card into the
+//     attack card it kills, the break opens, the round holds, then the creature swings with what is
+//     left. The pips leave the shield row as they fly and KindBlocked corrects the count later, the
+//     same predict-then-correct the raises use. Two halves: the *transition* is here and strokes
+//     cards.ShatterCracks on the GPU; the *settled* mark is cards.MarkShattered, baked into the
+//     card image, and the seat wears it for the rest of the round. advanceBreaks is the handoff and
+//     is a copy of advance for one reason — the generic one ticks and drops in the same pass, so a
+//     finished break was gone before anything could settle it, and the web appeared and vanished.
+//     A break lives inside its own round: seatEnemyCards drops the marks, because that is the line
+//     where a seat number stops meaning what it meant.
 //   - combat_hits.go — the damage figure landing, and the health bar that waits for it. The -N
 //     travels out of wherever the blow was last seen and into the card whose bar it empties, and
 //     the bar holds its old figure until the number arrives — so the drop and the arrival are one

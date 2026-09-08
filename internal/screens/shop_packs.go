@@ -29,6 +29,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/seeds"
+	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
@@ -125,27 +126,49 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 	s.offered = out
 }
 
-// rerollRings redraws the whole shelf, leaving bought seats empty.
+// rerollRings redraws the whole shelf, bought seats included.
 //
-// **A bought ring does not come back.** The seat it left is spent for the visit, exactly as it is
-// after a purchase — a reroll that refilled it would let one reroll be worth three rings.
+// **A reroll refills every seat** *(owner's call, 2026-09-08)*, which reverses the rule that a
+// bought seat stays spent for the visit. What that rule was protecting against — one reroll being
+// worth three rings — is already paid for twice over: the escalating price is charged whatever the
+// shelf looks like, and the ring that emptied the seat was bought at full price. What it cost was a
+// player who bought early having less shelf to reroll than one who had not, which is the shop
+// punishing the purchase it just made.
+//
+// **The ring just bought cannot come back**, because dealShelf draws from what the run is not
+// wearing and it is now worn. A ring that was bought and then sold again can, which is correct: the
+// shelf offers what the run does not have.
+//
+// **A ring that was standing and was not taken may be dealt again** *(owner's call, 2026-09-08)*,
+// and it is drawn on exactly its rarity's tickets like anything else in the pool. The fresh deal
+// has no memory of the old shelf, which is the point: excluding what was just offered would give a
+// rejected ring worse odds than its rarity says it has, and the shelf is a weighted sample of what
+// the run does not own rather than a queue through the catalogue.
+//
+// A short pool — fewer unworn rings left than seats — leaves the remaining seats empty rather than
+// keeping what was standing there, so the row never shows a ring the fresh draw did not pick.
 func (s *ShopScene) rerollRings(gs *state.GlobalState) {
 	fresh := dealShelf(gs, s.stockRNG)
 
 	for i := range s.shelf {
-		if s.shelf[i].bought || i >= len(fresh) {
+		if i < len(fresh) {
+			s.shelf[i] = fresh[i]
 			continue
 		}
-		s.shelf[i] = fresh[i]
+		s.shelf[i] = shelfItem{bought: true}
 	}
 }
 
 // paneHasSomethingToReroll is whether a press would change anything. A pane whose every seat is
 // spent has nothing to redraw, and taking vitae for that would be the shop selling nothing.
-func (s *ShopScene) paneHasSomethingToReroll(p shopPane) bool {
+//
+// **The rings pane asks the catalogue rather than the shelf**, because a reroll refills bought
+// seats: a shelf where all three have been taken still has something to redraw, so long as the run
+// is not wearing every ring there is.
+func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) bool {
 	switch p {
 	case shopPaneRings:
-		return s.anyLeft()
+		return s.unwornRingExists(gs)
 	case shopPanePacks:
 		for _, kind := range s.offered {
 			if !s.goodTaken(kind) {
@@ -156,10 +179,28 @@ func (s *ShopScene) paneHasSomethingToReroll(p shopPane) bool {
 	return false
 }
 
+// unwornRingExists is whether the catalogue still holds a ring the run is not wearing — the one
+// thing a ring reroll needs, since the shelf itself is replaced wholesale.
+func (s *ShopScene) unwornRingExists(gs *state.GlobalState) bool {
+	if gs.Run == nil {
+		return false
+	}
+	worn := make(map[string]bool, len(gs.Run.Worn()))
+	for _, key := range gs.Run.Worn() {
+		worn[key] = true
+	}
+	for _, key := range session.Rings() {
+		if !worn[key] {
+			return true
+		}
+	}
+	return false
+}
+
 // canReroll is whether a pane's button is live: it has something to redraw and the purse covers the
 // next price.
 func (s *ShopScene) canReroll(gs *state.GlobalState, p shopPane) bool {
-	if gs.Run == nil || !rerollable(p) || !s.paneHasSomethingToReroll(p) {
+	if gs.Run == nil || !rerollable(p) || !s.paneHasSomethingToReroll(gs, p) {
 		return false
 	}
 	return gs.Run.Vitae() >= s.rerollPrice(p)

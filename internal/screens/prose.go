@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -241,11 +242,10 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 	act := func(side combat.Side, c combat.Card) {
 		rows = append(rows, session.LedgerLine{
 			Voice: voiceFor(side),
-			Runs: []session.LedgerRun{
+			Runs: append([]session.LedgerRun{
 				{Text: s.sideName(side) + " "},
 				{Text: verbFor(c.Category()), Ink: categoryInk(c.Category()), Mark: true},
-				{Text: " " + cardPhrase(c) + cardWeight(c)},
-			},
+			}, elementRuns(" "+cardPhrase(c)+cardWeight(c))...),
 		})
 		cur, curSide = len(rows)-1, side
 		outcomes = 0
@@ -581,6 +581,55 @@ func cardPhrase(c combat.Card) string {
 		return phrase[:i] + article + name + " " + phrase[i+2:]
 	}
 	return phrase + " (" + name + ")"
+}
+
+// elementRuns cuts a clause into runs so the word naming an element is written in that element's
+// colour — "attacks with a fire cut", with `fire` in the fire orange.
+//
+// **The ledger's ink vocabulary already had the elements in it**, because a term in the arithmetic
+// wears its own card's colour; see inkNamed, which resolves an element's name through the same
+// `cards.BorderOf` a card's border comes from. So this is the third reader of one table rather than
+// a colour decided here.
+//
+// **The cut is `cards.SplitRuns`**, the same one the card face uses, so where a word begins and ends
+// is answered once — see internal/cards/render.go on why a second implementation would be two sets
+// of answers to where BURN ends inside BURNING.
+func elementRuns(clause string) []session.LedgerRun {
+	found := cards.ElementRuns(clause)
+	if len(found) == 0 {
+		return []session.LedgerRun{{Text: clause}}
+	}
+
+	var out []session.LedgerRun
+	for _, seg := range cards.SplitRuns(clause, found) {
+		out = append(out, session.LedgerRun{Text: seg.Text, Ink: elementInkNames[strings.ToLower(seg.Text)]})
+	}
+	return out
+}
+
+// elementInkNames is which of the ledger's ink names each coloured word takes.
+//
+// **A run is named rather than coloured**, because a ledger line is written once and read back three
+// fights later — see session.LedgerRun.Ink. A colour stored in a line would be the colour the build
+// that wrote it happened to use, and the account would then disagree with the game it is an account
+// of the first time the palette moved.
+//
+// Built once, off the same `statuses.json` the vocabulary itself is built from, so a status arriving
+// later cannot be coloured on a card and plain in the account.
+var elementInkNames = buildElementInkNames()
+
+func buildElementInkNames() map[string]string {
+	out := map[string]string{}
+	for _, e := range []combat.Element{combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane} {
+		out[e.String()] = e.String()
+	}
+	for _, st := range data.LoadStatuses() {
+		if e, ok := combat.ParseElement(st.Element); ok {
+			out[strings.ToLower(st.Name)] = e.String()
+			out[strings.ToLower(st.Verb)] = e.String()
+		}
+	}
+	return out
 }
 
 // statusPhrase is what a landed status says it did, as an outcome attached to the attacker's line.

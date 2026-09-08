@@ -294,6 +294,26 @@ type StatLine struct {
 	ValueInk color.RGBA
 }
 
+// MaxTextHighlights is how many separately coloured runs one card's text can carry.
+//
+// **Four, because the wordiest ring in the catalogue names three things** — an element and two
+// statuses — and a fixed array needs a number. `TestEveryTextFitsItsHighlights` in
+// internal/screens holds the authored catalogue against it, so an entry wanting a fifth fails a
+// test rather than losing its last colour to an array that silently ran out.
+const MaxTextHighlights = 4
+
+// TextRun is one run of a card's Text set in its own colour.
+//
+// **Both halves are the caller's**, exactly as a StatLine's are: this package matches a string
+// and paints it, and never learns why that string is worth a colour.
+type TextRun struct {
+	// Run is the text to colour. Empty means the entry is unused.
+	Run string
+
+	// Ink is what to colour it. Zero alpha means the entry is unused, whatever Run says.
+	Ink color.RGBA
+}
+
 // MaxStatLines is how many stat rows a card can carry.
 //
 // **It is what the layout fits, not headroom over it.** DuelistStyle's three rows run from
@@ -379,30 +399,32 @@ type Spec struct {
 	// names and costs.
 	Text string
 
-	// TextInk overrides the colour Text is set in. **Zero alpha means the default**, which is the
-	// convention every other optional colour in this codebase follows — so a caller that never
-	// thinks about it gets LabelInk and nothing changes.
+	// Highlights are the runs of Text that are set in their own colour. **A zero-alpha Ink
+	// means the entry is empty**, which is the convention every other optional colour in this
+	// codebase follows — so a caller that never fills one in gets a line entirely in LabelInk.
 	//
-	// **It exists so a card can say that something else changed what it does** *(2026-08-21)*: a
-	// slash doubled by a worn Keen Ring reads "Slashes for 4x DMG" in the ring pink, because the
-	// figure is no longer the one the concept declares. The state colouring still applies on top,
-	// so a disabled boosted card fades with everything else rather than staying loud.
+	// **It exists so the words that name a thing with a colour are drawn in it** *(owner's call,
+	// 2026-09-08)*: a worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple, and a
+	// ring reading "Fire attacks BURN and CHILL the target." sets three words across two colours.
+	// The state colouring still applies on top, so a disabled card fades with everything else.
 	//
-	// **This package still does not know what a ring is.** It is handed a colour and a string; the
-	// decision that the two go together is `internal/screens`, which is where the wording lives.
-	TextInk color.RGBA
-
-	// TextHighlight is the one run of Text that TextInk applies to. **Empty means the whole
-	// string**, so a caller wanting a differently coloured line still gets one.
+	// **A run is matched at word boundaries and every occurrence of it is coloured**, which is
+	// what lets one entry carry a word a sentence says twice — "BURNING enemies" after "apply
+	// BURNING status" — without spending two seats. The boundary is not an optimisation: ICE is
+	// inside SLICE and BURN is inside BURNING, and a substring match would paint half a word.
 	//
-	// It exists because colouring the whole sentence was too loud *(owner's call, 2026-08-21)*: the
-	// changed thing on "Slashes for 4x DMG" is the figure, and painting the verb and the unit with
-	// it says the ring changed the card rather than the number.
+	// **Longest first, so an entry cannot eat a longer one's word.** Ordering is the caller's,
+	// and internal/screens sorts by length before filling this in.
 	//
-	// **The first occurrence wins, and it is drawn as a run rather than per glyph.** A card's figure
-	// is one word — 4x — so the wrapper cannot split it across two lines, which is the case a
-	// per-glyph scheme would be needed for. A highlight not found in Text simply does not appear.
-	TextHighlight string
+	// **A fixed array rather than a slice, and that is load-bearing.** `cards.Spec` is the render
+	// cache's key in internal/screens and is compared by value, so a slice here would not compile
+	// — the same constraint Stats is under, and the one combat.Card.Riders is under one package
+	// over. MaxTextHighlights is what the authored catalogue needs plus room; a text wanting more
+	// fails a test in internal/screens rather than quietly losing its last colour.
+	//
+	// **This package still does not know what an element is.** It is handed strings and colours;
+	// the decision that the two go together is internal/screens, which is where the wording lives.
+	Highlights [MaxTextHighlights]TextRun
 
 	// Art is optional artwork drawn on the face, scaled to fit and centred. Rings use
 	// it; action cards do not, and their art is the generated glyphs instead.

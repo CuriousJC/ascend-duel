@@ -1089,6 +1089,31 @@ review question is "does any of these forty-odd commons belong a tier up", which
 cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
 because a scarce tier rounds to `0%` and would read as unreachable.
 
+**Every word naming an element is written in that element's colour** *(owner's call, 2026-09-08)*.
+`cards.ElementRuns` is the one vocabulary — the five element names plus each status's `Name` and
+`Verb`, read off `statuses.json`, longest first — and `cards.SplitRuns` is the one cut, matching
+whole words only and ignoring case so a ring writing `Fire` and a worm writing `FIRE` share an
+entry. Four things to know before touching it:
+
+- **The vocabulary lives in `internal/cards` because that is the only windowless package all three
+  readers share.** The card faces are set there, the screen text is set by Ebitengine's `text/v2` in
+  `internal/screens`, and the nine review sheets build their own `cards.Spec` on purpose — a table
+  anywhere higher would leave every sheet uncoloured, since a sheet cannot import `screens` without
+  linking a window. It costs a `cards` → `data` arrow, which is downward like every other; the
+  precedent is `Badge`, which `statuses.json` already carried for a reader the engine ignores.
+- **`Spec.Highlights` is a fixed array**, because `cards.Spec` is the render cache's key in
+  `internal/screens` and must stay comparable — the same constraint `Stats` is under and
+  `combat.Card.Riders` is under one package over. `TestEveryTextFitsItsHighlights` holds the whole
+  authored catalogue against `MaxTextHighlights`, so an author who runs out of room fails a test
+  rather than shipping a half-lit sentence.
+- **`models.Tooltip.Lines` is runs rather than strings**, and `screens.tipLines` is the one door
+  every `Point` call goes through — which is what stops a new tooltip shipping as the only panel in
+  the game whose ring text is grey. `internal/systems` draws the runs and never learns why one is
+  coloured, because it cannot see `internal/cards` at all.
+- **The fight log colours through the ledger's *named* inks**, not through a stored colour. A line is
+  written once and read back three fights later, so a colour baked into it would be the colour the
+  build that wrote it happened to use — see `session.LedgerRun.Ink` and `screens.elementInkNames`.
+
 **Hue belongs to the elements, and the wheel is full** *(owner's call, 2026-09-02)*. Fire, ice,
 lightning, earth and arcane take five hues; pink is a ring and a pane's chrome; red and blue are the
 attack and defend verbs; green and grey are the two duelists. **There is no unclaimed hue left**, so

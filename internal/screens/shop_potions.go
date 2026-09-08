@@ -97,13 +97,14 @@ func (s *ShopScene) drawBrand(gs *state.GlobalState, screen *ebiten.Image) {
 // a sealed good's are. The hue wheel is full and a fourth kind of shelf card cannot have one.
 func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    p.Name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: artFor(combat.Basic),
-		Art:     artwork(gs, brandArtKey),
-		Text:    p.Text,
-		Enabled: enabled,
+		Name:       p.Name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    artFor(combat.Basic),
+		Art:        artwork(gs, brandArtKey),
+		Text:       p.Text,
+		Highlights: cards.ElementHighlights(p.Text),
+		Enabled:    enabled,
 	}
 }
 
@@ -112,13 +113,14 @@ func potionSpec(gs *state.GlobalState, p session.Potion, enabled bool) cards.Spe
 // resolve one yet.
 func brandSpec(gs *state.GlobalState) cards.Spec {
 	return cards.Spec{
-		Name:    brandName,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: artFor(combat.Basic),
-		Art:     artwork(gs, brandArtKey),
-		Text:    brandLine,
-		Enabled: false,
+		Name:       brandName,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    artFor(combat.Basic),
+		Art:        artwork(gs, brandArtKey),
+		Text:       brandLine,
+		Highlights: cards.ElementHighlights(brandLine),
+		Enabled:    false,
 	}
 }
 

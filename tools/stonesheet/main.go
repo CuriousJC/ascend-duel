@@ -187,15 +187,23 @@ func run(dir string) error {
 // screens.stoneSpec does: a name, the authored line with the computed figure under it, and no
 // element. **Basic, not a colour** — a stone raises a rung of the ladder and a rung is not one of
 // the five, so its border is the mid grey `cards.BorderOf` gives `basic`.
+// stoneLine is what a stone card says: its authored sentence, and the figure it raises its rung
+// by, computed from `hands.json` rather than authored. Derived in one place so the face and its
+// highlights read the same string — screens.stoneLine is the same line on the other side.
+func stoneLine(st session.Stone) string {
+	return fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand))
+}
+
 func specFor(st session.Stone, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    st.Name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: cards.Basic,
-		Art:     art,
-		Text:    fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand)),
-		Enabled: enabled,
+		Name:       st.Name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    cards.Basic,
+		Art:        art,
+		Text:       stoneLine(st),
+		Highlights: cards.ElementHighlights(stoneLine(st)),
+		Enabled:    enabled,
 	}
 }
 

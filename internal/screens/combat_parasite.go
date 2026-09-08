@@ -87,13 +87,14 @@ func parasiteSpec(gs *state.GlobalState, p session.Parasite, enabled, selected b
 	}
 
 	return cards.Spec{
-		Name:     p.Name,
-		Form:     cards.FormNone,
-		Element:  cards.Basic,
-		Art:      artwork(gs, wormArtKey),
-		Text:     text,
-		Enabled:  enabled,
-		Selected: selected,
+		Name:       p.Name,
+		Form:       cards.FormNone,
+		Element:    cards.Basic,
+		Art:        artwork(gs, wormArtKey),
+		Text:       text,
+		Highlights: cards.ElementHighlights(text),
+		Enabled:    enabled,
+		Selected:   selected,
 	}
 }
 

@@ -91,8 +91,31 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 		y += int(tipTitleSize) + tipLineGap
 	}
 	for _, line := range t.Lines {
-		drawTipLine(screen, line, face, at.X+tipPad, y, tipInk)
+		drawTipRuns(screen, line, face, at.X+tipPad, y)
 		y += int(tipLineSize) + tipLineGap
+	}
+}
+
+// drawTipRuns draws one line as its runs, each in its own ink, left to right.
+//
+// **Measured and placed rather than drawn twice**, exactly as `cards.drawMarkedLine` is on the card
+// face — overdrawing a coloured run on top of the whole line composites two sets of antialiased
+// edges and reads as a smudge. The two rasterisers are unrelated and the rule is the same.
+//
+// **A run with no ink takes the panel's own**, so a caller that never thinks about colour is drawn
+// exactly as it was before runs existed.
+func drawTipRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int) {
+	for _, run := range line {
+		if run.Text == "" {
+			continue
+		}
+		ink := run.Ink
+		if ink.A == 0 {
+			ink = tipInk
+		}
+		drawTipLine(screen, run.Text, face, x, y, ink)
+		w, _ := text.Measure(run.Text, face, 0)
+		x += int(w)
 	}
 }
 
@@ -113,7 +136,15 @@ func tipSize(t *models.Tooltip, face, titleFace *text.GoTextFace) (w, h int) {
 		h += int(tipTitleSize) + tipLineGap
 	}
 	for _, line := range t.Lines {
-		if lw, _ := text.Measure(line, face, 0); lw > widest {
+		// **Measured run by run and summed**, because that is how the line is drawn: measuring the
+		// joined string would let kerning across a join make the panel a pixel narrower than what
+		// goes in it.
+		lw := 0.0
+		for _, run := range line {
+			w, _ := text.Measure(run.Text, face, 0)
+			lw += w
+		}
+		if lw > widest {
 			widest = lw
 		}
 		h += int(tipLineSize) + tipLineGap

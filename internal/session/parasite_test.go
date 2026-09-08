@@ -207,6 +207,72 @@ func TestASwapKeepsTheCardsIdentityAndItsRiders(t *testing.T) {
 	}
 }
 
+func TestAGraftMakesTheLeftCardTheRightCardWhole(t *testing.T) {
+	// **"BECOMES" is not a partial verb** *(owner's call, 2026-09-08)*. It copied the concept alone,
+	// so grafting a fire Cut onto an ice Jab produced a card whose name said it had become the
+	// right-hand card and whose colour said it had not.
+	graft := anyWithTarget(t, ParasiteClone)
+	run := runWith(
+		combat.Card{Concept: combat.Jab, Element: combat.Ice},
+		combat.Card{Concept: combat.Strike, Element: combat.Fire},
+	)
+	left, right := ids(run)[0], ids(run)[1]
+
+	// A rider on the right-hand card, so the test says what "whole" means rather than checking one
+	// extra field: everything the right card is travels, not a list somebody has to keep current.
+	leech := anyWithRider(t, combat.RiderHealOnPlay)
+	if !run.ApplyParasite(leech, []int{right}) {
+		t.Fatal("the rider was refused")
+	}
+
+	if !run.ApplyParasite(graft, []int{left, right}) {
+		t.Fatal("the graft was refused")
+	}
+
+	got, ok := run.CardByID(left)
+	if !ok {
+		t.Fatal("the grafted card lost its identity")
+	}
+	want, _ := run.CardByID(right)
+
+	// **The identity is the one thing that does not travel**, so the run still holds two cards, each
+	// findable by the handle it has always had.
+	if got.ID != left {
+		t.Errorf("the graft moved the card's identity to %d", got.ID)
+	}
+	got.ID, want.ID = 0, 0
+	if got != want {
+		t.Errorf("the left card is %+v, wanted the right card %+v", got, want)
+	}
+}
+
+func TestAGraftOntoAnIdenticalCardDoesNothing(t *testing.T) {
+	// The pair check compares everything the apply copies. Two cards alike in every way but their
+	// identity would leave the deck exactly as it was found, so the pick is refused rather than
+	// spending the parasite on nothing.
+	graft := anyWithTarget(t, ParasiteClone)
+	run := runWith(
+		combat.Card{Concept: combat.Jab, Element: combat.Ice},
+		combat.Card{Concept: combat.Jab, Element: combat.Ice},
+	)
+	if run.CanApplyParasite(graft, ids(run)) {
+		t.Error("a graft between two identical cards was offered")
+	}
+}
+
+func TestAGraftBetweenTwoColoursOfOneCardIsOffered(t *testing.T) {
+	// The pick a player reaching for this most obviously wants, and the one the concept-only check
+	// used to refuse: same name, different colour.
+	graft := anyWithTarget(t, ParasiteClone)
+	run := runWith(
+		combat.Card{Concept: combat.Jab, Element: combat.Ice},
+		combat.Card{Concept: combat.Jab, Element: combat.Fire},
+	)
+	if !run.CanApplyParasite(graft, ids(run)) {
+		t.Error("a graft between two colours of one card was refused")
+	}
+}
+
 func TestAVitaeParasiteTouchesNoCard(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
 	before, size := run.Vitae(), run.Size()

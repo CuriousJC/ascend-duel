@@ -30,14 +30,14 @@ func TestThePanelWaitsForTheDwell(t *testing.T) {
 	tip := &Tooltip{DwellTicks: 3}
 
 	for i := 0; i < 3; i++ {
-		tip.Point(aSeat(0), "Strike", []string{"12 DMG"})
+		tip.Point(aSeat(0), "Strike", oneLine("12 DMG"))
 		if tip.Showing() {
 			t.Fatalf("the panel showed after %d ticks, want 3", i)
 		}
 		tick(tip)
 	}
 
-	tip.Point(aSeat(0), "Strike", []string{"12 DMG"})
+	tip.Point(aSeat(0), "Strike", oneLine("12 DMG"))
 	if !tip.Showing() {
 		t.Error("the panel never appeared")
 	}
@@ -84,14 +84,14 @@ func TestTheSameCardSayingSomethingNewKeepsItsDwell(t *testing.T) {
 	// is still the card being looked at, so the panel must not flicker off and back on.
 	tip := &Tooltip{DwellTicks: 1}
 
-	tip.Point(aSeat(0), "Strike", []string{"12 DMG"})
+	tip.Point(aSeat(0), "Strike", oneLine("12 DMG"))
 	tick(tip)
-	tip.Point(aSeat(0), "Strike", []string{"24 DMG"})
+	tip.Point(aSeat(0), "Strike", oneLine("24 DMG"))
 
 	if !tip.Showing() {
 		t.Error("changing the lines restarted the wait")
 	}
-	if len(tip.Lines) != 1 || tip.Lines[0] != "24 DMG" {
+	if len(tip.Lines) != 1 || len(tip.Lines[0]) != 1 || tip.Lines[0][0].Text != "24 DMG" {
 		t.Errorf("the panel is still saying %v", tip.Lines)
 	}
 }
@@ -100,11 +100,17 @@ func TestForgetHidesItImmediately(t *testing.T) {
 	// For a scene that has just done the thing the panel was describing — a ring bought out from
 	// under the cursor.
 	tip := &Tooltip{}
-	tip.Point(aSeat(0), "Keen Ring", []string{"doubles slashes"})
+	tip.Point(aSeat(0), "Keen Ring", oneLine("doubles slashes"))
 	tick(tip)
 
 	tip.Forget()
 	if tip.Showing() {
 		t.Error("Forget left the panel up")
 	}
+}
+
+// oneLine is a tooltip line in one colour, which is what a caller that never thinks about colour
+// builds.
+func oneLine(text string) []TipLine {
+	return []TipLine{{{Text: text}}}
 }

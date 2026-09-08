@@ -176,13 +176,14 @@ func run(dir string) error {
 // cost, which WormStyle draws as nothing.
 func specFor(w session.Worm, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    w.Name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: artFor(w.Element),
-		Art:     art,
-		Text:    w.Text,
-		Enabled: enabled,
+		Name:       w.Name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    artFor(w.Element),
+		Art:        art,
+		Text:       w.Text,
+		Highlights: cards.ElementHighlights(w.Text),
+		Enabled:    enabled,
 	}
 }
 

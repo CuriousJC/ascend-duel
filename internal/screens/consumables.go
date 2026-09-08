@@ -133,9 +133,9 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 // **An empty seat draws nothing at all** *(owner's call, 2026-09-07)*. It was outlined for a day
 // on the argument that two bare seats would read as something failing to draw — and on screen the
 // outline was the loudest thing in the top row, two heavy black rectangles beside the ring pane
-// saying only that the run is carrying nothing. **The pane's own surface is the hole**, which is
-// exactly what drawEmptySeat's own doc comment says about a seat inside a pane; this row was the
-// one place disagreeing with it. The count on the corner is what says how much room is left.
+// saying only that the run is carrying nothing. **The pane's own surface is the hole.** The count
+// on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
+// the reward screen was the last place doing it, and gave it up on 2026-09-08.
 func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle,
 	spendable func(session.Parasite) bool) {
 

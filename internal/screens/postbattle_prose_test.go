@@ -60,8 +60,8 @@ func TestTypingAndSkippingPayTheSame(t *testing.T) {
 		t.Errorf("watching paid %d and skipping paid %d",
 			watched.Run.Vitae(), skipped.Run.Vitae())
 	}
-	if !s.finished() {
-		t.Error("a skipped narration is not finished")
+	if !s.filled() {
+		t.Error("a skipped narration is not filled")
 	}
 	if got := watched.Run.Spoils().Total(); got != 0 {
 		t.Errorf("a fully typed narration left %d vitae unclaimed", got)
@@ -76,7 +76,7 @@ func TestALineIsTypedLeftToRight(t *testing.T) {
 	w.setLines(payoutLines(gs))
 
 	full := w.lines[0].plain()
-	for i := 0; i < 200 && w.line == 0; i++ {
+	for i := 0; i < 200 && !w.filled(); i++ {
 		runs, on := w.visible(0)
 		if !on {
 			t.Fatal("the first line is not on screen")
@@ -118,4 +118,53 @@ func itoaTest(n int) string {
 		n /= 10
 	}
 	return out
+}
+
+// TestATypedOutNarrationWaitsToBeDismissed. **Nothing advances on its own** — a block that finished
+// typing without ever being clicked still holds the screen, so the worms cannot arrive over a total
+// the player is still reading.
+func TestATypedOutNarrationWaitsToBeDismissed(t *testing.T) {
+	gs := wonRun(63)
+	w := typewriter{}
+	w.setLines(payoutLines(gs))
+
+	for i := 0; i < 20000; i++ {
+		w.tick(gs, func(int) image.Point { return image.Point{} })
+		if w.finished() {
+			t.Fatalf("the narration released itself after %d ticks", i)
+		}
+	}
+	if !w.filled() {
+		t.Fatal("the narration never finished typing")
+	}
+
+	w.release()
+	if !w.finished() {
+		t.Error("a released narration is not finished")
+	}
+	if got := gs.Run.Spoils().Total(); got != 0 {
+		t.Errorf("a fully typed narration left %d vitae unclaimed", got)
+	}
+}
+
+// TestFillingDoesNotLeaveTheNarration. **The click that fills the block may not also be the click
+// that leaves it** *(owner's call, 2026-09-08)*. A player asking to see the whole payout is asking
+// to read it, not to be past it, so the worms wait for a second click.
+func TestFillingDoesNotLeaveTheNarration(t *testing.T) {
+	gs := wonRun(63)
+	w := typewriter{}
+	w.setLines(payoutLines(gs))
+	w.skip(gs)
+
+	for i := 0; i < 600; i++ {
+		w.tick(gs, func(int) image.Point { return image.Point{} })
+		if w.finished() {
+			t.Fatalf("a filled narration released itself after %d ticks", i)
+		}
+	}
+
+	w.release()
+	if !w.finished() {
+		t.Error("a released narration is not finished")
+	}
 }

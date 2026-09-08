@@ -9,7 +9,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // **Putting a card on the screen.** Every scene does it, so it is not the combat screen's.
@@ -105,25 +104,6 @@ func drawFlyingCard(gs *state.GlobalState, screen *ebiten.Image, spec cards.Spec
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterLinear}
 	op.GeoM = geo
 	screen.DrawImage(img, op)
-}
-
-// drawEmptySeat outlines a place a card is not.
-//
-// **The exception to "cards fly, they never appear"** is an absence: a card that has been taken
-// or removed has nothing to fly, so the seat it would have landed in is drawn empty rather than
-// left blank. A blank gap reads as a layout fault; an outlined one reads as a hole where a card
-// was.
-//
-// **It is for a row standing on the bare table** *(2026-09-06)*. A seat inside a pane needs
-// nothing: the pane's own surface already reads as a hole, and an outline drawn in a row that
-// overlaps lands on the card next to it. The shop's shelf draws nothing for a spent seat for that
-// reason, **and the consumables pane stopped outlining on 2026-09-07** — it was the one caller
-// contradicting the rule above, and on screen its two outlines were the loudest thing in the top
-// row. The reward screen is the remaining caller and is exactly the case this is for: a prize taken
-// off a bare table, where the hole is a card that was there a moment ago.
-func drawEmptySeat(screen *ebiten.Image, at image.Rectangle) {
-	vector.StrokeRect(screen, float32(at.Min.X), float32(at.Min.Y),
-		float32(at.Dx()), float32(at.Dy()), 3, groundInk, false)
 }
 
 // drawStoneCard draws a stone as the card it is offered as. Same style as a worm — a picture with

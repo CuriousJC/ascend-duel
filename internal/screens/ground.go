@@ -30,6 +30,15 @@ import (
 // rather than at a hue that read well on its own, and **a darker blue is not a colour change —
 // it is a re-tune of every figure on the table.**
 //
+// **It went bluer twice on the same day** *(owner's call)*, from {168,188,212} through
+// {150,185,228} to this: the red came down and the blue went up, widening the gap between the
+// channels from 44 points to 102, which is what actually reads as blue rather than as grey with
+// an opinion. **The second step also took real lightness with it** — about nine percent against
+// the cream this replaced — so the paragraph above is no longer describing a swap made at
+// constant lightness. It is still a light ground and `ColorToward` is still the right tool on it,
+// but the margin that made that obviously true is smaller than it was, and the next step down is
+// the one that stops being a colour change.
+//
 // **It is deeper than the cards stand on** — `cards.Surface` is {240,239,234} — because a card, a
 // panel and the table cannot all be the same near-white or the objects stop having edges. The
 // separation used to come from warmth, the ground being the yellowest of the three; it now comes
@@ -39,16 +48,35 @@ import (
 // dims toward the ground needs one answer to "what colour is the table", and a per-pixel one
 // would make a figure's dimming depend on where on the screen it happened to be drawn. So this is
 // the gradient's midpoint and the two ends are derived from it — see groundTop and groundBottom.
-var screenGround = color.RGBA{R: 168, G: 188, B: 212, A: 255}
+var screenGround = color.RGBA{R: 126, G: 172, B: 228, A: 255}
 
-// groundTravel is how far the background gradient moves either side of screenGround, in percent.
+// groundLift and groundSink are how far the background gradient moves either side of
+// screenGround, in percent. They are separate numbers because the gradient is deliberately
+// **not** symmetric *(owner's call, 2026-09-07)*: it started at six percent each way and read as
+// almost nothing, and what was wanted from a stronger one was a *darker edge* rather than a
+// brighter middle — a table whose far end falls away, not a screen with a light shining on it.
 //
-// **Subtle on purpose** *(owner's call, 2026-09-07)*. It should read as light falling on a table
-// rather than as a designed gradient, and there is a mechanical reason as well as a taste one:
-// everything dimmed toward the ground reads `screenGround` alone, so the further the two ends are
-// from it the more a dimmed figure at the top of the screen disagrees with the surface actually
-// behind it. Twelve percent of travel keeps that disagreement under the threshold of noticing.
-const groundTravel = 6
+// **It grew three times on the same day**, from six each way, to 5/20, to 12/30, to 12/38, to this — the first two both
+// read as nothing at all on a 1080-tall screen, which is the honest answer to how little a
+// percent of lightness is worth spread over that distance. The lift is still the smaller of the
+// two, so the weight of the sweep is in the dark end.
+//
+// **The lift stays small and the sink is the one that grew.** Climbing toward white is where a
+// gradient stops looking like light and starts looking like fog, and the top of the screen is
+// where the enemy card and the fight log sit — a lighter ground under an off-white card is the
+// one place the two surfaces stop having an edge.
+//
+// **Two costs, and both are now real rather than theoretical.** Everything dimmed toward the
+// ground reads `screenGround` alone, so a figure dimmed at the very bottom of the screen sits on
+// a surface nearly a third darker than the colour it was dimmed toward; and `groundInk` is near
+// black, so the bottom band is where text-on-table contrast is thinnest. Both are bounded by the
+// sink and nothing else. **Past about a third the ink has to move too**, and the dim would have
+// to be computed per row — which would make a figure's colour depend on where it happened to be
+// drawn, the thing groundAtRow's neighbours exist to avoid.
+const (
+	groundLift = 12
+	groundSink = 44
+)
 
 // The two ends of the background gradient, derived from screenGround so that changing the one
 // colour moves the whole screen.
@@ -57,8 +85,8 @@ const groundTravel = 6
 // already lights every card, button and panel from. A screen lit from below with objects on it
 // lit from above is the kind of disagreement nobody can name and everybody can see.
 var (
-	groundTop    = systems.ColorToward(screenGround, color.RGBA{R: 255, G: 255, B: 255, A: 255}, groundTravel)
-	groundBottom = systems.ColorAtStrength(screenGround, 100-groundTravel)
+	groundTop    = systems.ColorToward(screenGround, color.RGBA{R: 255, G: 255, B: 255, A: 255}, groundLift)
+	groundBottom = systems.ColorAtStrength(screenGround, 100-groundSink)
 )
 
 // groundStrip is the cached gradient: one pixel wide and as tall as the screen, stretched across

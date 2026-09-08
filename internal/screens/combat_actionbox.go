@@ -587,8 +587,14 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// by the bar going red, after the fact. A selected card never dims: clicking it off
 		// has to stay open, and it is the way out of an over-allocation.
 		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
-		drawCard(gs, screen, s.cardSlot(gs, i).Min, cards.Hand,
-			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected)
+
+		// **A card the tutorial is pointing at wears the mark rather than a frame** — see
+		// marksFor, which reads the same focus list the spotlight is handed, so what is lit and
+		// what is clickable cannot come apart.
+		seat := s.cardSlot(gs, i)
+		drawMarkedCard(gs, screen, seat.Min, cards.Hand,
+			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected,
+			marksFor(gs, seat))
 	}
 
 	if !s.drag.dragging() || !image.Pt(gs.MouseX, gs.MouseY).In(handZone(gs)) {

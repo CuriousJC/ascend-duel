@@ -26,15 +26,15 @@ func (s *PostBattleScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 // **It is the row rather than one card**, because the lesson is that a worm is the prize and
 // either of them is a legitimate answer. Spotlighting one would be telling the player which to
 // take, which is the opposite of what the screen is asking them.
-func (s *PostBattleScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (image.Rectangle, bool) {
+func (s *PostBattleScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool) {
 	// The duelist card in the build band, which is where the purse is written. **Deferred to
 	// `buildCardRect` rather than measured here**, which is what lets the shop answer for the same
 	// anchor without the two being able to disagree about where the card is.
 	if a == tutorial.AnchorBuildCard {
-		return buildCardRect(gs), true
+		return one(buildCardRect(gs)), true
 	}
 	if a != tutorial.AnchorRewardWorms || len(s.prizes) == 0 {
-		return image.Rectangle{}, false
+		return nil, false
 	}
 	r := s.wormSlot(gs, 0)
 	for i := 1; i < len(s.prizes); i++ {
@@ -50,7 +50,7 @@ func (s *PostBattleScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor)
 	for i := range s.offer {
 		r = r.Union(s.offerSlot(gs, i))
 	}
-	return r, true
+	return one(r), true
 }
 
 // tutorialCovered is whether anything is over the screen. **Nothing can be**: this screen carries

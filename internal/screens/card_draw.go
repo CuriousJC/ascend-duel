@@ -51,6 +51,20 @@ func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st ca
 	blitCard(gs, screen, at, cardSpec(c, h, enabled, selected), st)
 }
 
+// drawMarkedCard is drawCard with something drawn over the finished face — a break, today, and
+// whatever else joins cards.Mark.
+//
+// **A separate entry rather than a sixth parameter on drawCard**, because a mark is the rare case:
+// every row in the game draws unmarked cards and exactly one draws marked ones. The signature that
+// nearly every call site uses should not carry a field nearly every call site passes zero for.
+func drawMarkedCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
+	c actionCard, h held, enabled, selected bool, mark cards.Mark) {
+
+	spec := cardSpec(c, h, enabled, selected)
+	spec.Mark = mark
+	blitCard(gs, screen, at, spec, st)
+}
+
 // drawSpecCard draws a card that is not out of the deck — a prize, a ring, a worm — at hand
 // size. The caller has already said what it looks like.
 func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
@@ -126,4 +140,26 @@ func drawGoodCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	name, line string, art image.Image, enabled bool) {
 
 	blitCard(gs, screen, at, goodSpec(gs, name, line, art, enabled), cards.WormStyle)
+}
+
+// marksFor is what a card in this seat is wearing, given where it is drawn.
+//
+// **It reads `gs.InputFocus`, which is the list the tutorial's spotlight was handed** — so a card
+// the lesson has lit and a card the lesson will let you click are the same card by construction,
+// rather than by two pieces of code agreeing. That is the rule the whole tutorial overlay is built
+// on, applied to the cards themselves now that they are marked rather than framed.
+//
+// **The seat has to match a focus rectangle, not merely overlap one.** The hand row overlaps when
+// it is full, so a card beside a lit one shares pixels with it; asking for containment would light
+// its neighbours. See tutorial.Anchor.NamesCards, which is what puts card seats in the list.
+func marksFor(gs *state.GlobalState, seat image.Rectangle) cards.Mark {
+	if !gs.InputGated {
+		return cards.MarkNone
+	}
+	for _, r := range gs.InputFocus {
+		if r == seat {
+			return cards.MarkHighlit
+		}
+	}
+	return cards.MarkNone
 }

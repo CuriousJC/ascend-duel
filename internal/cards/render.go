@@ -133,6 +133,11 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawCounter(img, s, st, f, border); err != nil {
 		return nil, err
 	}
+
+	// **The mark goes on last, over everything including the border.** It is not part of what the
+	// card is — see mark.go — it is what has happened to it, so it sits on top of a finished face
+	// rather than being woven into one.
+	drawMark(img, s.Mark, s.Name, st.Width, st.Height, st.CornerRadius)
 	return img, nil
 }
 

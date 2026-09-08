@@ -963,6 +963,12 @@ func (s *CombatScene) startRound() {
 	// adopted — so this is the last frame the screen can name what the player built. From here it
 	// is the banner's, and it flies down into the hand row as the cards fly up to the table. See
 	// handBanner.
+	// **The staging flag is this round's and nothing else is.** The marks themselves are dropped by
+	// seatEnemyCards, which is the line that actually invalidates them — see there. A settled duel
+	// never reaches either and freezes with its breaks on screen, which is the picture the player
+	// is looking at when the fight ended.
+	s.theatre.breaksStaged = false
+
 	s.theatre.banner.clear()
 	if blow, ok := s.previewAttack(); ok {
 		s.theatre.banner = handBanner{
@@ -1137,6 +1143,32 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		if s.theatre.mathBox.at >= s.theatre.mathBox.multAt {
 			s.theatre.banner.clear()
 		}
+		return
+	}
+
+	// **The shield breaks are staged on the frame the creature's turn is about to start**, which is
+	// the last frame before anything of theirs resolves. Before the dwell below, so the beat that
+	// follows is the break's own rather than the tail of the player's last event; and before the
+	// `running` check, since the breaks are exactly what that will then wait on.
+	//
+	// **It reads ahead in the resolved log**, which nothing else on this screen does — see
+	// stageShieldBreaks, where that is argued and confined.
+	if !s.theatre.breaksStaged && s.cursor < len(s.log) && s.log[s.cursor].Side == combat.SideB {
+		s.theatre.breaksStaged = true
+		if s.stageShieldBreaks(gs) {
+			return
+		}
+	}
+
+	// **A tutorial step waiting for NEXT holds the round where it is** *(owner's call, 2026-09-08)*.
+	// The shield step lands inside a playing round — the break is the middle act, between the
+	// duelist's blow and the creature's answer — and there is no gap there for Bob to stand in
+	// unless one is made. See tutorial.Run.HoldsRound, which is narrow on purpose: only a step
+	// waiting on a click holds, so a step waiting on an *outcome* can never stop the thing it is
+	// waiting for.
+	//
+	// **Pacing, not a rule.** The round was resolved before a frame of it was drawn.
+	if runOf(gs).Active() && runOf(gs).HoldsRound() {
 		return
 	}
 
@@ -1470,6 +1502,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	s.drawHits(gs, screen)
 	// The pips, over the cards they are crossing and under the dialogs. See combat_shields.go.
 	s.drawShields(gs, screen)
+
+	// **The breaks, over the opponent's row.** A crack drawn under the card it is breaking would be
+	// invisible, and the pip crossing to it has to ride over everything it passes, exactly as the
+	// other pips do. See combat_shatter.go.
+	s.drawShieldBreaks(gs, screen)
 
 	// **The banked figures, over the card they are flying out of and the fighter card they raise.**
 	// Beside the damage figures because they are the same gesture in the other direction, and after

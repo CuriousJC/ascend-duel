@@ -121,6 +121,39 @@ const (
 	// borrowing `tower-place`: the two lines above the bar say where you are, and lighting them to
 	// talk about time would point at the wrong sentence.
 	AnchorRoundTimer
+
+	// AnchorShatteredCards is the opponent's queued attacks that a shield broke this round, as one
+	// rectangle over the seats they sit in.
+	//
+	// **It is the second anchor computed from what happened rather than from a layout**, after
+	// [AnchorMatchingCards], and it is the first that depends on a round having already played. A
+	// shield picks the *heaviest* of a creature's blows — see combat.shieldedSlots — which is a rule
+	// the player pays for on every defend card and would otherwise only ever read about in the feed.
+	//
+	// **The break persists to the end of the round, which is what makes this pointable at all.** The
+	// mark is drawn on the card for the rest of the round rather than only while the animation runs,
+	// so a step can name it after the round has finished playing. A step that had to fire *during*
+	// the break would need playback to stop for it, and nothing about the tutorial may hold the
+	// cursor — the round is resolved before a frame of it is drawn.
+	//
+	// **It reports false when nothing broke**, which keeps a step honest on a round where the
+	// player raised no shield or the creature never swung.
+	AnchorShatteredCards
+
+	// AnchorMatchingCardsLeft is [AnchorMatchingCards] minus the ones already queued: **what the
+	// player still has to do**, rather than what the step is about.
+	//
+	// **The two are different sentences and they were sharing one anchor** *(owner's call,
+	// 2026-09-08)*. "Take the other three" pointed at four cards, the first of which was already
+	// taken — and because the anchor is the click gate as well as the mark, that card was live, so
+	// the one thing the step invited was undoing the step before it. The step that *describes* the
+	// set still wants all four; the step that asks for them wants the ones outstanding.
+	//
+	// **It empties as the player works**, which is the point: the red comes off each card as it is
+	// taken, so the row says how much is left without a counter. When the last one goes it reports
+	// nothing and the gate drops for the frame before the condition advances the step — which is
+	// the correct reading of "there is nothing left to click here".
+	AnchorMatchingCardsLeft
 )
 
 // anchorNames is the word each anchor is written as in `data/tutorial.json`.
@@ -128,27 +161,49 @@ const (
 // **One table read in both directions**, by [ParseAnchor] and by [Anchor.String], so a name
 // cannot parse as one thing and print as another.
 var anchorNames = map[Anchor]string{
-	AnchorNone:          "",
-	AnchorEnemyCard:     "enemy-card",
-	AnchorDuelistCard:   "duelist-card",
-	AnchorHand:          "hand",
-	AnchorFirstCard:     "first-card",
-	AnchorAPBar:         "ap-bar",
-	AnchorDuelButton:    "duel-button",
-	AnchorHandsButton:   "hands-button",
-	AnchorDeckStack:     "deck-stack",
-	AnchorTowerPlace:    "tower-place",
-	AnchorMathBand:      "math-band",
-	AnchorRewardWorms:   "reward-worms",
-	AnchorBuildCard:     "build-card",
-	AnchorShopShelf:     "shop-shelf",
-	AnchorMatchingCards: "matching-cards",
-	AnchorShopLeave:     "shop-leave",
-	AnchorLedgerButton:  "ledger-button",
-	AnchorShopWorn:      "shop-worn",
-	AnchorShopDMGPotion: "shop-dmg-potion",
-	AnchorRoundTimer:    "round-timer",
+	AnchorNone:              "",
+	AnchorEnemyCard:         "enemy-card",
+	AnchorDuelistCard:       "duelist-card",
+	AnchorHand:              "hand",
+	AnchorFirstCard:         "first-card",
+	AnchorAPBar:             "ap-bar",
+	AnchorDuelButton:        "duel-button",
+	AnchorHandsButton:       "hands-button",
+	AnchorDeckStack:         "deck-stack",
+	AnchorTowerPlace:        "tower-place",
+	AnchorMathBand:          "math-band",
+	AnchorRewardWorms:       "reward-worms",
+	AnchorBuildCard:         "build-card",
+	AnchorShopShelf:         "shop-shelf",
+	AnchorMatchingCards:     "matching-cards",
+	AnchorShopLeave:         "shop-leave",
+	AnchorLedgerButton:      "ledger-button",
+	AnchorShopWorn:          "shop-worn",
+	AnchorShopDMGPotion:     "shop-dmg-potion",
+	AnchorRoundTimer:        "round-timer",
+	AnchorShatteredCards:    "shattered-cards",
+	AnchorMatchingCardsLeft: "matching-cards-left",
 }
+
+// cardAnchors is which anchors name *cards* rather than controls.
+//
+// **It exists so the two are marked differently** *(owner's call, 2026-09-08)*. A control is a thing
+// on the screen and gets a red frame drawn round it; a card is an object the player is holding or
+// looking at, and it gets tinted red itself — see cards.MarkHighlit. A frame round a card is a
+// rectangle near a card, and round a *set* of cards it is a box that also contains whatever is
+// between them, which is a bug this vocabulary has already had once.
+//
+// **A closed table rather than a guess.** Nothing about a rectangle says whether a card is in it,
+// and a rule like "card-sized" would be a coincidence waiting to stop holding.
+var cardAnchors = map[Anchor]bool{
+	AnchorFirstCard:         true,
+	AnchorMatchingCards:     true,
+	AnchorShatteredCards:    true,
+	AnchorMatchingCardsLeft: true,
+}
+
+// NamesCards reports whether this anchor points at cards, which are marked rather than framed.
+func (a Anchor) NamesCards() bool { return cardAnchors[a] }
 
 func (a Anchor) String() string {
 	if n, ok := anchorNames[a]; ok {
@@ -208,6 +263,18 @@ const (
 	// duel is settled or not.
 	CondRoundDone
 
+	// CondShieldBroke is a shield having broken one of the opponent's queued attacks this round —
+	// the middle act of a round, between the player's blow and the creature's answer.
+	//
+	// **It is measured against a baseline, like [CondRoundDone] and [CondLedgerOpened]**, because a
+	// round is not the first round: a break from two rounds ago is not this step's.
+	//
+	// **A step that waits on it lands in the middle of a playing round**, which no other condition
+	// does. That is what [Run.HoldsRound] is for — the step after it waits for NEXT, and the round
+	// waits with it, so the player reads which attacks died before the creature swings with the
+	// ones that did not.
+	CondShieldBroke
+
 	// CondMatchQueued is every card of [AnchorMatchingCards] sitting in the action box.
 	//
 	// **It is `hand-emptied` for a hand with other cards in it** *(2026-08-25)*. That condition
@@ -255,6 +322,7 @@ var conditionNames = map[Condition]string{
 	CondCardsQueued:  "cards-queued",
 	CondHandEmptied:  "hand-emptied",
 	CondMatchQueued:  "matching-queued",
+	CondShieldBroke:  "shield-broke",
 	CondDuelPressed:  "duel-pressed",
 	CondRoundDone:    "round-done",
 	CondPhaseFight:   "phase-fight",
@@ -341,6 +409,10 @@ func (l Lock) String() string {
 
 // lockFor is the three-way split, and the one place it is decided.
 //
+// **[CondShieldBroke] locks everything for [CondRoundDone]'s reason**: it is something the player
+// watches happen rather than something they do, and there is nothing on screen to press while a
+// round is playing.
+//
 // **[CondRoundDone] locks everything, which is what separates it from the phase conditions**
 // *(2026-09-06)*. They share a shape — an outcome, not a click — and were treated alike, so a step
 // narrating a round's playback left the whole screen live and the player queued the next turn while
@@ -351,7 +423,7 @@ func lockFor(c Condition) Lock {
 	switch {
 	case c.isAction():
 		return LockToAnchor
-	case c == CondNext, c == CondRoundDone:
+	case c == CondNext, c == CondRoundDone, c == CondShieldBroke:
 		return LockAll
 	default:
 		return LockNone
@@ -411,6 +483,13 @@ type Facts struct {
 
 	// Resolving is whether a round is playing back rather than being planned.
 	Resolving bool
+
+	// ShieldBreaks is how many of the opponent's attacks a shield has broken this duel.
+	//
+	// **A running count, not a flag**, so a step can ask for a break of its own against a baseline
+	// — the same shape RoundsPlayed and LedgerOpens have, and for the same reason: a duel has
+	// several rounds and a shield can bite in more than one of them.
+	ShieldBreaks int
 
 	// LedgerOpens is `state.LedgerOpens`: how many times the run's account has been opened this
 	// session. [CondLedgerOpened] reads it against a baseline, for the reason RoundsPlayed is read
@@ -629,6 +708,10 @@ type Run struct {
 
 	// baseDMG is the same again for [CondDMGBought].
 	baseDMG int
+
+	// baseBreaks is the same again for [CondShieldBroke]: a break from an earlier round of the
+	// same duel is not the one this step is waiting for.
+	baseBreaks int
 }
 
 // NewRun starts the script at its first step.
@@ -685,6 +768,7 @@ func (r *Run) Advance(f Facts) {
 	r.baseRounds = f.RoundsPlayed
 	r.baseLedger = f.LedgerOpens
 	r.baseDMG = f.DMGBonus
+	r.baseBreaks = f.ShieldBreaks
 	if r.step >= r.script.Len() {
 		r.done = true
 	}
@@ -721,6 +805,8 @@ func (r *Run) satisfied(step Step, f Facts, nextPressed bool) bool {
 		return f.Resolving
 	case CondRoundDone:
 		return f.RoundsPlayed > r.baseRounds && !f.Resolving
+	case CondShieldBroke:
+		return f.ShieldBreaks > r.baseBreaks
 	case CondLedgerOpened:
 		return f.LedgerOpens > r.baseLedger
 	case CondRingsWorn:
@@ -748,6 +834,26 @@ func (r *Run) satisfied(step Step, f Facts, nextPressed bool) bool {
 // everything, and the returned anchor is meaningless; `LockToAnchor` means restrict everything
 // except that anchor. A caller collapsing the middle case into the first is the bug this replaced
 // — see [Lock].
+// HoldsRound reports that the step on screen should stop the round where it is.
+//
+// **A step waiting for NEXT is waiting for the player, and mid-round the round has to wait too**
+// *(owner's call, 2026-09-08)*. Every other step of the lesson sits either side of a round: the
+// player is planning, or the round has finished. The shield step is the first that lands *inside*
+// one — the break is the middle act, between the duelist's blow and the creature's answer, and
+// there is no gap there for Bob to stand in unless one is made.
+//
+// **It changes pacing and cannot change an outcome**, the constraint every clock on the combat
+// screen is under: the round was resolved before a frame of it was drawn, and this decides which
+// frame is on screen. It cannot deadlock either — NEXT is always live, because the bubble's own
+// buttons are worked with the shield down.
+//
+// It is deliberately narrow: only a NEXT step holds, so a step waiting on an outcome — which is
+// what every other mid-round step would be — cannot stop the thing it is waiting for.
+func (r *Run) HoldsRound() bool {
+	step, ok := r.Current()
+	return ok && step.Until == CondNext
+}
+
 func (r *Run) Gate() (Anchor, Lock) {
 	step, ok := r.Current()
 	if !ok {

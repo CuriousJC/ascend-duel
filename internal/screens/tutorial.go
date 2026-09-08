@@ -26,6 +26,7 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/achieve"
 	"image"
 	"image/color"
+	"sort"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/internal/cards"
@@ -50,9 +51,17 @@ type tutorialHost interface {
 	// why the traffic goes this way rather than as events.
 	tutorialFacts(gs *state.GlobalState) tutorial.Facts
 
-	// tutorialRect is where this scene draws the thing an anchor names, and whether it knows the
+	// tutorialRects is where this scene draws the thing an anchor names, and whether it knows the
 	// anchor at all.
-	tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (image.Rectangle, bool)
+	//
+	// **A list, because an anchor may name a set** *(2026-09-08)*. Nearly every anchor is one
+	// control in one place and hands back one rectangle; `matching-cards` and `shattered-cards`
+	// name a set of cards that need not be adjacent, and the bounding box round them is not the
+	// set — it is the set plus whatever is sitting between two of them. That distinction is
+	// load-bearing here and nowhere else in the game: this rectangle is the *click gate* as well
+	// as the spotlight, so a box was a licence to click a card the step had not named. See
+	// state.GlobalState.InputFocus, where the bug it caused is written down.
+	tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool)
 
 	// tutorialCovered is whether one of this scene's own dialogs is over the top of everything.
 	//
@@ -227,11 +236,11 @@ func (t *tutorialOverlay) finish(gs *state.GlobalState) {
 // **An anchor the current scene cannot answer for drops the gate rather than closing the whole
 // screen.** That happens for a frame either side of a scene change, and the alternative — a
 // shield around an empty rectangle — is a game the player cannot click at all.
-func (t *tutorialOverlay) focus(gs *state.GlobalState, host tutorialHost) (image.Rectangle, bool) {
+func (t *tutorialOverlay) focus(gs *state.GlobalState, host tutorialHost) ([]image.Rectangle, bool) {
 	run := runOf(gs)
 	anchor, lock := run.Gate()
 	if lock == tutorial.LockNone {
-		return image.Rectangle{}, false
+		return nil, false
 	}
 
 	// **Locked with no hole in it.** An empty focus rectangle contains no point, so
@@ -239,19 +248,34 @@ func (t *tutorialOverlay) focus(gs *state.GlobalState, host tutorialHost) (image
 	// that it be read. Bob's own two buttons are worked with the shield down and stay live; see
 	// update.
 	if lock == tutorial.LockAll {
-		return image.Rectangle{}, true
+		return nil, true
 	}
 	// **A covered anchor drops the gate**, for the reason an unknown one does: shielding the screen
 	// around a rectangle the player cannot see leaves them with one legal click they have no way to
 	// find. The dialog's own X is then the only thing to press, which is what it is for.
 	if host.tutorialCovered(gs) {
-		return image.Rectangle{}, false
+		return nil, false
 	}
-	r, ok := host.tutorialRect(gs, anchor)
-	if !ok || r.Empty() {
-		return image.Rectangle{}, false
+	rs, ok := host.tutorialRects(gs, anchor)
+	if !ok || len(rs) == 0 {
+		return nil, false
 	}
-	return r, true
+	return rs, true
+}
+
+// unionOf is the bounding box of a set of rectangles, for the two things that genuinely want one:
+// where to put the bubble, and where to point the leader line. **Never for the gate** — that is the
+// whole distinction this file now keeps.
+func unionOf(rs []image.Rectangle) image.Rectangle {
+	var out image.Rectangle
+	for _, r := range rs {
+		if out.Empty() {
+			out = r
+			continue
+		}
+		out = out.Union(r)
+	}
+	return out
 }
 
 // build makes the two buttons on first use. The Next button is crimson like DUEL! — it is the
@@ -333,8 +357,9 @@ func (t *tutorialOverlay) place(gs *state.GlobalState, host tutorialHost,
 		{X: middle, Y: (gs.ScreenHeight - h) / 2},
 	}
 
-	target, pointing := host.tutorialRect(gs, step.Anchor)
-	if step.Anchor == tutorial.AnchorNone || !pointing {
+	targets, pointing := host.tutorialRects(gs, step.Anchor)
+	target := unionOf(targets)
+	if step.Anchor == tutorial.AnchorNone || !pointing || target.Empty() {
 		// Nothing to avoid: an opening or closing line belongs in the middle of the screen.
 		return image.Rect(middle, (gs.ScreenHeight-h)/2, middle+w, (gs.ScreenHeight-h)/2+h)
 	}
@@ -376,14 +401,15 @@ func (t *tutorialOverlay) draw(gs *state.GlobalState, screen *ebiten.Image, host
 	// **Nothing is pointed at while one of the scene's dialogs is up.** The bubble stays, so what
 	// Bob is saying is still readable and Skip is still reachable; what goes is the square and the
 	// line, because both would be describing something the player cannot see.
-	target, ok := host.tutorialRect(gs, step.Anchor)
-	if ok && step.Anchor != tutorial.AnchorNone && !host.tutorialCovered(gs) {
-		t.drawSpotlight(screen, gs, target, step.Lock != tutorial.LockNone)
+	targets, ok := host.tutorialRects(gs, step.Anchor)
+	if ok && len(targets) > 0 && step.Anchor != tutorial.AnchorNone && !host.tutorialCovered(gs) {
+		t.drawSpotlight(screen, gs, targets, step.Lock != tutorial.LockNone,
+			!step.Anchor.NamesCards())
 
 		// **Under the bubble and over the scrim.** The line leaves the bubble's edge, so nothing
 		// of it is hidden either way — but drawing it before the panel is what guarantees that
 		// stays true if the bubble ever grows a shadow or a tail of its own.
-		t.drawLeader(screen, target)
+		t.drawLeader(screen, unionOf(targets))
 	}
 	t.drawBubble(gs, screen, step)
 }
@@ -452,6 +478,14 @@ func edgeToward(r image.Rectangle, at image.Point) image.Point {
 
 // drawSpotlight is the pointing.
 //
+// **A card is tinted, not framed** *(owner's call, 2026-09-08)*. An anchor naming cards gets the
+// scrim and no rectangle: the cards themselves are drawn in `cards.MarkHighlit`, which is the same
+// red. A frame outside a card is a thing on the screen *near* the card, where a tinted card is the
+// card answering — and where the anchor names several, a frame each is a lot of loose rectangles
+// while a tint each is just the cards. `tutorial.Anchor.NamesCards` is the closed table that says
+// which, and the card rows read the same focus list this function is given, so what is lit and what
+// is clickable stay the same set.
+//
 // **A step that locks anything gets the scrim; one that locks nothing gets only the ring.** The
 // darkened area is exactly the area that has stopped accepting clicks, so a player never learns
 // that a dimmed thing is still clickable.
@@ -463,27 +497,65 @@ func edgeToward(r image.Rectangle, at image.Point) image.Point {
 // read has an actual Next button to press. Dimming the thing being described would be worse, since
 // the player would be reading about something they cannot see.
 //
-// The scrim is four rectangles around the hole rather than a full-screen fill with a cut-out,
-// because there is no cut-out — Ebitengine would want a mask and a blend mode for that, and four
-// `DrawFilledRect` calls are the same picture with none of the machinery.
+// The scrim is rectangles around the holes rather than a full-screen fill with a cut-out,
+// because there is no cut-out — Ebitengine would want a mask and a blend mode for that, and a
+// handful of `DrawFilledRect` calls are the same picture with none of the machinery.
+//
+// **Several holes, and the gaps between them are scrimmed too** *(2026-09-08)*. An anchor naming a
+// set of cards can have something sitting between two of them — the tutorial's four taught cards sit
+// at seats 0, 1, 2 and 4 — and the whole rule this file keeps is that the lit area and the clickable
+// area are the same area. Lighting the bounding box would have made the odd card out look like part
+// of the lesson, which is how it came to be queued.
+//
+// **The gaps are closed horizontally**, because every multi-hole anchor there is names cards in a
+// row. A set stacked vertically would leave its gaps lit — a shape nothing produces today, and the
+// day it does the answer is to close them the same way on the other axis rather than to reach for a
+// mask.
 func (t *tutorialOverlay) drawSpotlight(screen *ebiten.Image, gs *state.GlobalState,
-	target image.Rectangle, locked bool) {
+	targets []image.Rectangle, locked, framed bool) {
 
-	hole := target.Inset(-8)
+	holes := make([]image.Rectangle, 0, len(targets))
+	for _, r := range targets {
+		holes = append(holes, r.Inset(-8))
+	}
+	if len(holes) == 0 {
+		return
+	}
+	sort.Slice(holes, func(i, j int) bool { return holes[i].Min.X < holes[j].Min.X })
+	span := unionOf(holes)
 
 	if locked {
 		w, h := float32(gs.ScreenWidth), float32(gs.ScreenHeight)
-		top, bot := float32(hole.Min.Y), float32(hole.Max.Y)
-		l, r := float32(hole.Min.X), float32(hole.Max.X)
+		top, bot := float32(span.Min.Y), float32(span.Max.Y)
+		l, r := float32(span.Min.X), float32(span.Max.X)
 
 		vector.DrawFilledRect(screen, 0, 0, w, top, tutorialShade, false)
 		vector.DrawFilledRect(screen, 0, bot, w, h-bot, tutorialShade, false)
 		vector.DrawFilledRect(screen, 0, top, l, bot-top, tutorialShade, false)
 		vector.DrawFilledRect(screen, r, top, w-r, bot-top, tutorialShade, false)
+
+		// The columns between one hole and the next, which is what stops the bounding box being
+		// the lit area. **Measured against the furthest right edge seen so far**, not against the
+		// previous hole, so overlapping cards — the hand row overlaps when it is full — never
+		// produce a negative-width band that scrims a hole it is between.
+		reach := holes[0].Max.X
+		for _, next := range holes[1:] {
+			if next.Min.X > reach {
+				vector.DrawFilledRect(screen, float32(reach), top,
+					float32(next.Min.X-reach), bot-top, tutorialShade, false)
+			}
+			if next.Max.X > reach {
+				reach = next.Max.X
+			}
+		}
 	}
 
-	vector.StrokeRect(screen, float32(hole.Min.X), float32(hole.Min.Y),
-		float32(hole.Dx()), float32(hole.Dy()), 3, tutorialGlow, false)
+	if framed {
+		for _, hole := range holes {
+			vector.StrokeRect(screen, float32(hole.Min.X), float32(hole.Min.Y),
+				float32(hole.Dx()), float32(hole.Dy()), 3, tutorialGlow, false)
+		}
+	}
 }
 
 // drawBubble is Bob's card, what he is saying, and the buttons.
@@ -554,6 +626,7 @@ var waitingWords = map[tutorial.Condition]string{
 	tutorial.CondMatchQueued:  "take them all",
 	tutorial.CondDuelPressed:  "press it",
 	tutorial.CondRoundDone:    "watching",
+	tutorial.CondShieldBroke:  "watching",
 	tutorial.CondPhaseFight:   "back to the tower",
 	tutorial.CondPhaseReward:  "win the fight",
 	tutorial.CondPhaseShop:    "take your prize",
@@ -623,3 +696,8 @@ func buttonRect(b *models.Button) image.Rectangle {
 		b.ScreenX+b.Width/2, b.ScreenY+b.Height/2,
 	)
 }
+
+// one is a single rectangle as the set an anchor hands back. **Nearly every anchor is one control
+// in one place**, so this is what most of the three scenes' answers look like — the list exists for
+// the two anchors that name a set of cards, not because a control ever needs more than one.
+func one(r image.Rectangle) []image.Rectangle { return []image.Rectangle{r} }

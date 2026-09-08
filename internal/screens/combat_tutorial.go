@@ -50,6 +50,12 @@ func (s *CombatScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 		// value arrives on the first frame after the panel closes, since this method is not called
 		// while it is open at all.
 		LedgerOpens: gs.LedgerOpens,
+
+		// **Counted off the marks, which is what is actually on screen.** A break that has settled
+		// is a card the player can see is broken; one still crossing the table is not yet
+		// anything. Reading the resolved log instead would let a step fire on a break that had not
+		// been drawn.
+		ShieldBreaks: len(s.theatre.shatteredSeats),
 	}
 	match := s.matchingCards(gs)
 	f.Matching = len(match)
@@ -75,20 +81,20 @@ func (s *CombatScene) roundsFinished() int {
 	return s.round
 }
 
-// tutorialRect is where each of this screen's anchors is drawn.
+// tutorialRects is where each of this screen's anchors is drawn.
 //
 // **The rectangles are asked of the same functions that draw the things**, never re-derived from
 // the constants they were laid out with. A spotlight around where a control used to be is the one
 // failure this whole feature cannot survive, and it is exactly what a second copy of a layout
 // produces the first time the first copy moves.
-func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (image.Rectangle, bool) {
+func (s *CombatScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool) {
 	switch a {
 	case tutorial.AnchorEnemyCard:
-		return s.enemyCardRect(gs), true
+		return one(s.enemyCardRect(gs)), true
 	case tutorial.AnchorDuelistCard:
-		return s.duelistCardRect(gs), true
+		return one(s.duelistCardRect(gs)), true
 	case tutorial.AnchorTowerPlace:
-		return s.towerPlaceRect(gs), true
+		return one(s.towerPlaceRect(gs)), true
 	case tutorial.AnchorRoundTimer:
 		// **The whole bar rather than the cell about to light.** What the step is teaching is the
 		// count, and a square around one segment would say the opposite — that this round is the
@@ -97,49 +103,98 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 		// **It reports false for a fight on no clock**, which is the same honesty `shop-worn` keeps
 		// about an empty row: there is no bar drawn, so there is nothing to point at.
 		if s.roundTimerLimit() < 1 {
-			return image.Rectangle{}, false
+			return nil, false
 		}
-		return s.roundTimerRect(gs), true
+		return one(s.roundTimerRect(gs)), true
 	case tutorial.AnchorHand:
-		return handZone(gs), true
+		return one(handZone(gs)), true
 	case tutorial.AnchorFirstCard:
 		// **The card, not the band.** `cardSlot` is the same rectangle the click is hit-tested
 		// against, so the lit square and the one legal click cannot describe different pixels.
 		// An empty hand has no first card and reports false, which drops the gate rather than
 		// shielding the screen around a seat with nothing in it.
 		if len(s.hand) == 0 {
-			return image.Rectangle{}, false
+			return nil, false
 		}
-		return s.cardSlot(gs, 0), true
+		return one(s.cardSlot(gs, 0)), true
 	case tutorial.AnchorMatchingCards:
-		// **The seats the matching cards occupy, as one rectangle.** The lit square and the one
-		// legal click are the same rectangle here as everywhere else, which is what makes the
-		// lesson true by construction: the only cards the player can reach are the ones Bob just
-		// said match.
+		// **One rectangle per card, not the box round them** *(2026-09-08)*. This was a union and
+		// the union was a bug: the lit square is also the click gate, so anything sitting between
+		// two matching cards was lit and clickable while not being part of the set.
 		//
-		// **They are contiguous because the hand is sorted**, and every sort mode ends in the
-		// same key chain — cards sharing a concept differ only by element, so they land side by
-		// side whichever key leads. The union is taken over the seats rather than assumed to be a
-		// span, so a sort that ever broke them apart would light a wider square rather than the
-		// wrong one.
+		// **They are not contiguous, and the note that said they were reasoned about the wrong
+		// axis.** It argued that cards sharing a *concept* differ only by element and so land side
+		// by side whichever sort key leads — true, and not what this anchor matches on. The lesson
+		// matches on **element**, which is four different concepts at four different costs, and
+		// under the default cost-led sort the taught set lands at seats 0, 1, 2 and 4 with an
+		// arcane card at seat 3. The player could queue that card; the taught four cost 1+1+2+2,
+		// which is the whole budget, so the fourth could then never be paid for and the round
+		// committed a Three of a Kind having just been promised a Four.
+		//
+		// `cardSlot` is the same rectangle the click is hit-tested against, seat by seat, so the
+		// lit squares and the legal clicks are the same pixels — which is what "true by
+		// construction" was always supposed to mean. See TestTheMatchingCardsGateLightsOnlyTheTaughtCards.
 		match := s.matchingCards(gs)
 		if len(match) == 0 {
-			return image.Rectangle{}, false
+			return nil, false
 		}
-		r := s.cardSlot(gs, match[0])
-		for _, i := range match[1:] {
-			r = r.Union(s.cardSlot(gs, i))
+		lit := make([]image.Rectangle, 0, len(match))
+		for _, i := range match {
+			lit = append(lit, s.cardSlot(gs, i))
 		}
-		return r, true
+		return lit, true
+
+	case tutorial.AnchorMatchingCardsLeft:
+		// **The same set minus what is already queued** — the cards the player still has to take.
+		// A card that has been taken is not something to click, and while it was in this list the
+		// only thing the step invited was clicking it back off. See the anchor.
+		var left []image.Rectangle
+		for _, i := range s.matchingCards(gs) {
+			if s.hand[i].selected {
+				continue
+			}
+			left = append(left, s.cardSlot(gs, i))
+		}
+		if len(left) == 0 {
+			return nil, false
+		}
+		return left, true
+
+	case tutorial.AnchorShatteredCards:
+		// **One rectangle per broken seat.** They need not be adjacent — a shield picks the
+		// heaviest blows and a creature does not queue them in order — so the box round them would
+		// light the cards that *did* land, which is the opposite of what the step is saying.
+		//
+		// **Walked in seat order rather than over the map**, because Go randomises map iteration
+		// and the spotlight sorts what it is given: a stable order costs nothing and keeps the
+		// picture the same frame to frame.
+		//
+		// **It reads the same layout the row draws with**, through breakSeatRect, so a card still
+		// flying to its seat is lit where it actually is.
+		var broken []image.Rectangle
+		for seat := range s.theatre.enemyDealt {
+			if !s.theatre.shatteredSeats[seat] {
+				continue
+			}
+			at, ok := s.breakSeatRect(gs, seat)
+			if !ok {
+				continue
+			}
+			broken = append(broken, at)
+		}
+		if len(broken) == 0 {
+			return nil, false
+		}
+		return broken, true
 
 	case tutorial.AnchorDeckStack:
-		return deckStackBounds(gs), true
+		return one(deckStackBounds(gs)), true
 	case tutorial.AnchorMathBand:
 		// The band the blow is added up in. **The whole band rather than the figures in it**: the
 		// sum is laid out centred and its width is a function of how many terms the round produced,
 		// so a rectangle round the figures would be a different size every round and the square
 		// would appear to twitch.
-		return s.handMathRect(gs), true
+		return one(s.handMathRect(gs)), true
 
 	case tutorial.AnchorAPBar:
 		// The bar is drawn from the hand band's bottom edge — see drawAPBar's caller — and it is
@@ -147,22 +202,22 @@ func (s *CombatScene) tutorialRect(gs *state.GlobalState, a tutorial.Anchor) (im
 		// the bar plus the figure written under it, since "3/6 AP" is the half of the pair a
 		// player can actually read.
 		band := handZone(gs)
-		return image.Rect(band.Min.X, band.Max.Y+apBarBelow-4,
-			band.Max.X, band.Max.Y+apBarBelow+apBarHeight+apFigureBelowBar+20), true
+		return one(image.Rect(band.Min.X, band.Max.Y+apBarBelow-4,
+			band.Max.X, band.Max.Y+apBarBelow+apBarHeight+apFigureBelowBar+20)), true
 
 	case tutorial.AnchorLedgerButton:
 		// **The column's own answer, not a copy of it.** `internal/game` places the LEDGER button
 		// by asking this same function for the same slot — see chrome.go's ledgerButtonRect — so
 		// the lit square is derived from the thing that positions the button rather than from a
 		// second reading of the layout.
-		return ControlColumnSlot(gs, SlotLedger), true
+		return one(ControlColumnSlot(gs, SlotLedger)), true
 
 	case tutorial.AnchorDuelButton:
-		return buttonRect(s.duelButton), true
+		return one(buttonRect(s.duelButton)), true
 	case tutorial.AnchorHandsButton:
-		return buttonRect(s.hands.button), true
+		return one(buttonRect(s.hands.button)), true
 	}
-	return image.Rectangle{}, false
+	return nil, false
 }
 
 // tutorialCovered is whether one of this screen's three dialogs is up: the deck overlay, the fight

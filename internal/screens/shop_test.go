@@ -354,3 +354,40 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 		t.Error("the pile stands on the rings' reroll button")
 	}
 }
+
+// TestARerollRefillsABoughtSeat. **A reroll gives the shelf back whole** *(owner's call,
+// 2026-09-08)*, which is the reversal of the older rule that a spent seat stayed spent for the
+// visit. A player who bought early otherwise had less shelf to reroll than one who had not, while
+// paying the same escalating price for it.
+//
+// It is two-sided: the seat comes back, and it does not come back holding the ring that was just
+// bought — dealShelf draws from what the run is not wearing, and the check is what says so.
+func TestARerollRefillsABoughtSeat(t *testing.T) {
+	gs := testRun()
+	s := &ShopScene{stockRNG: shopRNG(gs, seeds.ShopStock)}
+	s.shelf = dealShelf(gs, s.stockRNG)
+	if len(s.shelf) == 0 {
+		t.Fatal("the shop dealt no shelf at all")
+	}
+
+	taken := s.shelf[0].key
+	if !gs.Run.Buy(taken) {
+		t.Fatalf("the run could not buy %s off its own shelf", taken)
+	}
+	s.shelf[0].bought = true
+
+	if !s.paneHasSomethingToReroll(gs, shopPaneRings) {
+		t.Error("a shelf with a spent seat says it has nothing to reroll")
+	}
+
+	s.rerollRings(gs)
+
+	for i, item := range s.shelf {
+		if item.bought {
+			t.Errorf("seat %d is still spent after a reroll", i)
+		}
+		if item.key == taken {
+			t.Errorf("seat %d offers %s back, and the run is wearing it", i, taken)
+		}
+	}
+}

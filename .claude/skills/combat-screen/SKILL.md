@@ -386,6 +386,44 @@ does.
 - **`demoGiveUpAt` has a flat term as well as a multiple of the speed**, since the safety net has
   to outlast dialogs that no longer shrink in proportion to it.
 
+### Shields break the attacks they ate, and a card can be marked
+
+*`combat_shatter.go` and `internal/cards/mark.go`, 2026-09-08.* A shield eats the creature's
+**heaviest** blow rather than its first — `combat.shieldedSlots`, decided at the top of the
+creature's turn — and the screen plays that as **one beat between the two turns**: every blocked pip
+flies out of the duelist card into the attack card it kills, the break opens across that card's
+face, the round holds, then the creature swings with what is left.
+
+- **The rules decided it before a frame was drawn, which is the only reason it is drawable.** The
+  mask is chosen up front rather than as each card arrives, so the whole exchange is known at the
+  boundary. Re-ranking as the turn resolved would win a little optimality and cost the player any
+  way of watching it happen — see MECHANICS.md §Shields, which records that trade.
+- **A *mark* is the third way to say something on a card, and it is not an upgrade.** The face is
+  what the card is; an upgrade is what the run permanently made it and takes the left column; a mark
+  is the card's situation and covers the face. `cards.Mark` is a **bitmask** — a card can be broken
+  and pointed at at once — and `cards.drawMark` owns the order they compose in. Append-only, and
+  worse to insert into than an ordinal enum: claiming a bit in the middle changes every existing
+  value's meaning.
+- **Two halves, one geometry.** The settled mark is baked into the cached card image; the arrival
+  changes every frame and would blow that cache, so `internal/cards` exports the crack geometry and
+  the screen strokes the same lines on the GPU. Same seed both sides, so the frame the animation
+  ends on and the frame the mark starts are the same picture.
+- **`advanceBreaks` is a copy of `advance` and has to be.** The generic one ticks a mover and drops
+  it in the same pass, so a break has exactly one frame in which it is both finished and still in
+  the list — noting them outside that loop saw nothing, the mark never landed, and the web appeared
+  and vanished.
+- **A break lives inside its own round.** `seatEnemyCards` drops the marks, because the opponent's
+  row is re-planned the instant a round ends and a seat number stops meaning what it meant. Anything
+  wanting to *point* at a break has to do it during the round.
+- **The pips leave the shield row as they fly**, several beats before `KindBlocked` says so — the
+  same predict-then-correct the raises use.
+- **`Event.Slot` is the index into the turn as it resolved**, the convention `HandCards` already
+  uses, and it inherits that convention's known gap: a chilled card is trimmed off the front before
+  the indices are handed out while the table row still draws it. Nothing can chill a creature today.
+- **It holds the playback cursor** — `combatTheatre.running` — which is pacing and is allowed. The
+  hold after the break is the longest single one on this screen, deliberately: the round has three
+  acts and the middle one had no beat of its own.
+
 ### The blow landing, and the bar that waits for it
 
 *`combat_hits.go`, 2026-08-18.* The damage figure travels out of wherever the blow was last seen
@@ -702,6 +740,26 @@ The active one latches darker than the other two.
   strength read as a button the cursor was on. Disabled still wins over the latch. `TextSize`
   zero means the default 20, the same "use the default" convention `BaseColor`'s zero alpha
   uses; the sort buttons set 30, because a square carrying one character is nearly all label.
+
+## The tutorial's footprint on this screen
+
+*`combat_tutorial.go`; the machinery is `internal/tutorial` and `internal/screens/tutorial.go`.*
+Two things landed here on 2026-09-08 that a change to this screen can break silently:
+
+- **A step waiting for NEXT holds the round where it is.** `tutorial.Run.HoldsRound`, read once in
+  `advancePlayback`. It exists for the shield step, which is the first in the lesson to land inside
+  a playing round. **Only a NEXT step holds** — that is what stops a step waiting on an *outcome*
+  from stopping the thing it is waiting for. Pacing, never a rule.
+- **A card the lesson points at is tinted, not framed.** `tutorial.Anchor.NamesCards` is the closed
+  table; `screens.marksFor` reads `gs.InputFocus` — the same list the spotlight is handed — so the
+  lit card and the clickable card are one card by construction. It matches seats by **equality, not
+  containment**, because the hand row overlaps when it is full.
+- **`gs.InputFocus` is a *list* of rectangles**, and that is load-bearing rather than tidiness. It
+  was one, and one is a bounding box: an anchor naming a set of cards could only hand over the box
+  round them, so a card sitting between two of them was lit and clickable while not being named. The
+  taught four sit at seats 0, 1, 2 and 4 under the default cost sort. See CLAUDE.md.
+- **An anchor names what a step is asking for, not what it is about.** `matching-cards` and
+  `matching-cards-left` are two anchors over one set for that reason.
 
 ## Hidden information is gated on `DebugGameplay`
 

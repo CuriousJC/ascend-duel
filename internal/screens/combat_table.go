@@ -261,6 +261,14 @@ type dealtCard struct {
 func (s *CombatScene) seatEnemyCards() {
 	queue := s.enemyQueueOrder()
 
+	// **A break belongs to the row it happened in.** The marks are seat numbers, and this is where
+	// the seats stop meaning what they meant — so a mark left standing would draw a crack over
+	// whichever card the planner has just put in that seat. It is cleared here rather than in
+	// startRound because this is the line that invalidates it: the row is replaced the moment the
+	// round ends, several seconds before the next DUEL! is pressed.
+	s.theatre.breaks = nil
+	s.theatre.shatteredSeats = nil
+
 	s.theatre.enemyDealt = make([]dealtCard, 0, len(queue))
 	for i, c := range queue {
 		s.theatre.enemyDealt = append(s.theatre.enemyDealt, dealtCard{
@@ -320,6 +328,18 @@ func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image
 		// **The opponent's own cost, not the player's** — a discount ring is the player's and a
 		// queued enemy card printing a discounted price would be the screen telling a lie about
 		// whose ring it is.
-		drawCard(gs, screen, at, cards.Hand, d.card, heldBy(s.enemy.Duelist, d.card), true, false)
+		//
+		// **A seat a shield broke wears the break**, and it wears it for the rest of the round: the
+		// row is the account of what the turn was, and a card that never fired has to still say so
+		// once the turn is over. See combat_shatter.go, which owns the mark and the animation that
+		// puts it there.
+		// **The two marks compose.** A broken card the tutorial is pointing at is both, and
+		// cards.drawMark owns the order they are painted in so one pair of facts draws one way.
+		mark := marksFor(gs, image.Rect(at.X, at.Y, at.X+cardWidth, at.Y+cardHeight))
+		if s.shattered(i) {
+			mark |= cards.MarkShattered
+		}
+		drawMarkedCard(gs, screen, at, cards.Hand, d.card, heldBy(s.enemy.Duelist, d.card),
+			true, false, mark)
 	}
 }

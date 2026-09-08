@@ -1,6 +1,23 @@
 package models
 
-import "image"
+import (
+	"image"
+	"image/color"
+)
+
+// TipLine is one line of a tooltip, in the runs it is drawn as. A line with one run is a line in
+// one colour, which is what most of them are.
+type TipLine []TextRun
+
+// TextRun is one stretch of a line drawn in its own colour.
+//
+// **A zero-alpha Ink means the panel's own ink**, which is the convention every optional colour in
+// this codebase follows — so a caller that never thinks about colour builds a line of one run and
+// nothing changes.
+type TextRun struct {
+	Text string
+	Ink  color.RGBA
+}
 
 // Tooltip is the panel that explains whatever the cursor is resting on.
 //
@@ -21,8 +38,13 @@ type Tooltip struct {
 	// has to say. Short strings: the panel does not wrap, so the caller decides where a line breaks.
 	// That is deliberate, because every line in a tooltip here is an authored phrase or one term of
 	// an arithmetic, and both know their own shape better than a wrapper would.
+	//
+	// **A line is runs rather than a string** *(owner's call, 2026-09-08)*, so a word naming an
+	// element can be drawn in that element's colour where the rest of the line is not. This package
+	// knows nothing about why a run has a colour — the caller decides that, exactly as it decides
+	// where a line breaks.
 	Title string
-	Lines []string
+	Lines []TipLine
 
 	// Anchor is the thing being explained. The panel is placed beside it rather than under the
 	// cursor, so the tooltip does not sit on top of the card it is about and does not jitter as the
@@ -47,7 +69,7 @@ type Tooltip struct {
 
 // Point aims the tooltip at something, and is called every tick the cursor is still on it. It
 // restarts the dwell when the thing under the cursor changes.
-func (t *Tooltip) Point(at image.Rectangle, title string, lines []string) {
+func (t *Tooltip) Point(at image.Rectangle, title string, lines []TipLine) {
 	key := title + at.String()
 	if key != t.key {
 		t.key, t.Dwell = key, 0

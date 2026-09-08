@@ -229,6 +229,7 @@ func specFor(form cards.Form, name string, e cards.Element, u systems.Upgrade, m
 		Upgrade:     u,
 		UpgradeTint: mode,
 		Text:        textFor(u),
+		Highlights:  cards.ElementHighlights(textFor(u)),
 		Enabled:     true,
 	}
 }

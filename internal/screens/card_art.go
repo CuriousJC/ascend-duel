@@ -98,14 +98,15 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // queued card out of the player's discounts.
 func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 	return cards.Spec{
-		Name:     c.Label(),
-		Form:     form(c.Form()),
-		Cost:     h.cost,
-		Element:  artFor(c.Element),
-		Text:     cardEffect(c) + riderText(c),
-		Upgrade:  upgradeOf(c),
-		Enabled:  enabled,
-		Selected: selected,
+		Name:       c.Label(),
+		Form:       form(c.Form()),
+		Cost:       h.cost,
+		Element:    artFor(c.Element),
+		Text:       cardEffect(c) + riderText(c),
+		Highlights: cards.ElementHighlights(cardEffect(c) + riderText(c)),
+		Upgrade:    upgradeOf(c),
+		Enabled:    enabled,
+		Selected:   selected,
 	}
 }
 
@@ -561,13 +562,14 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 // since removal is the absence of a colour rather than one of its own.
 func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    w.Name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: artFor(w.Element),
-		Art:     artwork(gs, wormArtKey),
-		Text:    w.Text,
-		Enabled: enabled,
+		Name:       w.Name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    artFor(w.Element),
+		Art:        artwork(gs, wormArtKey),
+		Text:       w.Text,
+		Highlights: cards.ElementHighlights(w.Text),
+		Enabled:    enabled,
 	}
 }
 
@@ -600,14 +602,22 @@ const wormArtKey = "defaultworm_png"
 // gives `basic`, exactly as a Devour worm's is.
 func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    st.Name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: artFor(combat.Basic),
-		Art:     stoneArt(),
-		Text:    fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand)),
-		Enabled: enabled,
+		Name:       st.Name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    artFor(combat.Basic),
+		Art:        stoneArt(),
+		Text:       stoneLine(st),
+		Highlights: cards.ElementHighlights(stoneLine(st)),
+		Enabled:    enabled,
 	}
+}
+
+// stoneLine is what a stone card says: its authored sentence, and the figure it raises its rung
+// by. **The figure is computed rather than authored** — see the data skill on why `stones.json`
+// does not carry it — so it is derived in one place and both the face and its highlights read it.
+func stoneLine(st session.Stone) string {
+	return fmt.Sprintf("%s\n+%d", st.Text, session.StoneWorth(st.Hand))
 }
 
 // goodSpec is one of the shop's two sealed goods as a card: the bag of rocks, or the can of worms.
@@ -622,13 +632,14 @@ func stoneSpec(gs *state.GlobalState, st session.Stone, enabled bool) cards.Spec
 // thing to recognise for no gain — what is in the bag is exactly what the picture shows.
 func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
-		Name:    name,
-		Form:    cards.FormNone,
-		Cost:    0,
-		Element: artFor(combat.Basic),
-		Art:     art,
-		Text:    line,
-		Enabled: enabled,
+		Name:       name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    artFor(combat.Basic),
+		Art:        art,
+		Text:       line,
+		Highlights: cards.ElementHighlights(line),
+		Enabled:    enabled,
 	}
 }
 

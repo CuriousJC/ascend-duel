@@ -180,14 +180,15 @@ func run(dir string) error {
 // parasite grants no element, so its border is the mid grey `cards.BorderOf` gives `basic`.
 func specFor(p session.Parasite, art image.Image, enabled, selected bool) cards.Spec {
 	return cards.Spec{
-		Name:     p.Name,
-		Form:     cards.FormNone,
-		Cost:     0,
-		Element:  cards.Basic,
-		Art:      art,
-		Text:     p.Text,
-		Enabled:  enabled,
-		Selected: selected,
+		Name:       p.Name,
+		Form:       cards.FormNone,
+		Cost:       0,
+		Element:    cards.Basic,
+		Art:        art,
+		Text:       p.Text,
+		Highlights: cards.ElementHighlights(p.Text),
+		Enabled:    enabled,
+		Selected:   selected,
 	}
 }
 

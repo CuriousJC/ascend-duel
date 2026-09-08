@@ -115,7 +115,8 @@ func realDeckRow(e cards.Element) []cards.Spec {
 	for _, c := range concepts {
 		out = append(out, cards.Spec{
 			Name: c.name, Form: c.form, Text: c.text,
-			Cost: c.cost, Element: e, Enabled: true,
+			Highlights: cards.ElementHighlights(c.text),
+			Cost:       c.cost, Element: e, Enabled: true,
 		})
 	}
 	return out
@@ -126,7 +127,8 @@ func specFor(name string, e cards.Element) cards.Spec {
 		if c.name == name {
 			return cards.Spec{
 				Name: c.name, Form: c.form, Text: c.text,
-				Cost: c.cost, Element: e, Enabled: true,
+				Highlights: cards.ElementHighlights(c.text),
+				Cost:       c.cost, Element: e, Enabled: true,
 			}
 		}
 	}

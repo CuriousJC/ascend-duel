@@ -539,48 +539,31 @@ func drawEffectText(dst *image.RGBA, s Spec, st Style, f *Faces, ink func(color.
 		top = st.TextBandTop
 	}
 
-	// **The override is passed through the state's ink function like every other colour**, so a
-	// boosted card that is also disabled fades with the rest of the face rather than staying lit.
-	base, marked := LabelInk, LabelInk
-	if s.TextInk.A != 0 {
-		marked = s.TextInk
-		if s.TextHighlight == "" {
-			base = s.TextInk
-		}
-	}
-
 	for i, line := range lines {
 		y := top + i*st.TextLineHeight
-		if err := drawMarkedLine(dst, f, st.TextSize, line, s.TextHighlight,
-			st.TextColumnLeft, width, y, ink(base), ink(marked)); err != nil {
+		if err := drawMarkedLine(dst, f, st.TextSize, line, s.Highlights[:],
+			st.TextColumnLeft, width, y, ink); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// drawMarkedLine draws one centred line with a single run of it in a second colour.
+// drawMarkedLine draws one centred line with any number of its runs in their own colours.
 //
-// **Three segments measured and placed rather than one string drawn twice.** Overdrawing the marked
-// run on top of the full line would composite two sets of antialiased edges and read as a smudge at
-// 18pt, which is most of what a card's text is.
+// **Segments measured and placed rather than one string drawn twice.** Overdrawing a marked run on
+// top of the full line would composite two sets of antialiased edges and read as a smudge at 18pt,
+// which is most of what a card's text is.
 //
-// The cost is kerning across the two joins: each segment is measured on its own, so a pair that
-// would have been kerned together is not. At this size and with a space on either side of the run
-// — the highlight is always a word — that is invisible, and it is the reason this takes a whole
-// run rather than a glyph range.
-func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line, mark string,
-	left, width, y int, ink, marked color.RGBA) error {
-
-	at := -1
-	if mark != "" {
-		at = strings.Index(line, mark)
-	}
-	if at < 0 {
-		return drawTextCenteredIn(dst, f, size, line, left, width, y, ink)
-	}
-
-	before, after := line[:at], line[at+len(mark):]
+// The cost is kerning across each join: every segment is measured on its own, so a pair that would
+// have been kerned together is not. At this size, and with a highlight always being a whole word
+// with a space or a full stop on either side, that is invisible — and it is the reason this takes
+// runs rather than glyph ranges.
+//
+// **The state's ink function is applied to every segment**, not only the plain one, so a card whose
+// text is half in element colours still fades as a whole when it is disabled.
+func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line string, runs []TextRun,
+	left, width, y int, ink func(color.RGBA) color.RGBA) error {
 
 	total, err := TextWidth(f, size, line)
 	if err != nil {
@@ -588,23 +571,142 @@ func drawMarkedLine(dst *image.RGBA, f *Faces, size float64, line, mark string,
 	}
 	x := left + (width-total)/2
 
-	for _, seg := range []struct {
-		s string
-		c color.RGBA
-	}{{before, ink}, {mark, marked}, {after, ink}} {
-		if seg.s == "" {
+	for _, seg := range SplitRuns(line, runs) {
+		if seg.Text == "" {
 			continue
 		}
-		if err := drawText(dst, f, size, seg.s, x, y, seg.c); err != nil {
+		c := seg.Ink
+		if c.A == 0 {
+			c = LabelInk
+		}
+		if err := drawText(dst, f, size, seg.Text, x, y, ink(c)); err != nil {
 			return err
 		}
-		w, err := TextWidth(f, size, seg.s)
+		w, err := TextWidth(f, size, seg.Text)
 		if err != nil {
 			return err
 		}
 		x += w
 	}
 	return nil
+}
+
+// Segment is one stretch of a line drawn in one colour.
+//
+// **A zero-alpha Ink means the caller's own default**, the convention every optional colour here
+// follows — so the card face reads it as LabelInk and a tooltip reads it as the panel's ink, and
+// neither has to know what the other calls "plain".
+type Segment struct {
+	Text string
+	Ink  color.RGBA
+}
+
+// SplitRuns cuts a line into coloured segments, in order, covering the whole line.
+//
+// **Exported because two rasterisers draw this game's words.** This package sets a card's own text
+// and everything else on screen goes through Ebitengine's text/v2 in internal/screens; they share
+// no drawing code and cannot, so they share the cut instead. A second implementation over there
+// would be a second set of answers to where BURN ends inside BURNING.
+//
+// **Every occurrence of every run is coloured**, so one entry carries a word a sentence repeats —
+// "apply BURNING status … BURNING enemies" — without spending a second seat in a fixed array.
+//
+// **Matching ignores case and the line keeps its own spelling.** Rings write "Fire" and worms write
+// "FIRE", and neither the file nor the caller's vocabulary should have to pick one.
+//
+// **A run only matches at a word boundary**: ICE is inside SLICE and BURN is inside BURNING, and a
+// plain substring match would paint half a word in a colour naming something else.
+//
+// **The first run to claim a position keeps it**, which is why the caller sorts by length —
+// otherwise BURN would take the front of BURNING and leave ING in the default ink.
+func SplitRuns(line string, runs []TextRun) []Segment {
+	folded := strings.ToLower(line)
+
+	// paint[i] is the colour byte i is drawn in, or nil where the default ink applies.
+	paint := make([]*color.RGBA, len(line))
+	for i := range runs {
+		r := runs[i]
+		if r.Run == "" || r.Ink.A == 0 {
+			continue
+		}
+		want := strings.ToLower(r.Run)
+		for at := 0; at+len(want) <= len(folded); at++ {
+			if folded[at:at+len(want)] != want || !wholeWord(folded, at, len(want)) {
+				continue
+			}
+			taken := false
+			for j := at; j < at+len(want); j++ {
+				if paint[j] != nil {
+					taken = true
+					break
+				}
+			}
+			if taken {
+				continue
+			}
+			ink := r.Ink
+			for j := at; j < at+len(want); j++ {
+				paint[j] = &ink
+			}
+		}
+	}
+
+	var out []Segment
+	for i := 0; i < len(line); {
+		c := paint[i]
+		j := i
+		for j < len(line) && paint[j] == c {
+			j++
+		}
+		seg := Segment{Text: line[i:j]}
+		if c != nil {
+			seg.Ink = *c
+		}
+		out = append(out, seg)
+		i = j
+	}
+	if out == nil {
+		out = []Segment{{Text: line}}
+	}
+	return out
+}
+
+// ContainsRun reports whether this text says this word — **the same rule splitRuns paints by**,
+// exported so a caller can decide which runs are worth handing over without writing a second copy
+// of it.
+//
+// **A second copy is the failure this exists to prevent.** internal/screens picks the coloured
+// words out of a piece of prose and this package paints them; a run harvested there by one rule and
+// declined here by another is a colour that silently does nothing, which is the hardest kind of
+// missing to notice.
+//
+// Case is ignored and the match is whole-word, for the reasons splitRuns gives.
+func ContainsRun(text, run string) bool {
+	if run == "" {
+		return false
+	}
+	folded, want := strings.ToLower(text), strings.ToLower(run)
+	for at := 0; at+len(want) <= len(folded); at++ {
+		if folded[at:at+len(want)] == want && wholeWord(folded, at, len(want)) {
+			return true
+		}
+	}
+	return false
+}
+
+// wholeWord reports whether the run at [at, at+n) has something that is not a letter or a digit on
+// both sides of it. A card's text is ASCII, so this is a byte test rather than a rune one.
+func wholeWord(s string, at, n int) bool {
+	wordish := func(b byte) bool {
+		return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9'
+	}
+	if at > 0 && wordish(s[at-1]) {
+		return false
+	}
+	if at+n < len(s) && wordish(s[at+n]) {
+		return false
+	}
+	return true
 }
 
 // The mark is as wide as the card allows, and centred on it.

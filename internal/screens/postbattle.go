@@ -553,7 +553,7 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 				continue
 			}
 			title, lines := cardTip(card, heldByRun(gs, card))
-			s.tip.Point(seat, title, lines)
+			s.tip.Point(seat, title, tipLines(lines))
 			return
 		}
 	}

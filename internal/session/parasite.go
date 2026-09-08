@@ -672,12 +672,25 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 	case ParasiteClone:
 		// **The order of the picks is the whole rule**: the first becomes the second. Everything
 		// else about a parasite treats its targets as a set, and this is the one that cannot —
-		// `CanApplyParasite` refuses two identical picks, so there is always a direction.
+		// `CanApplyParasite` refuses a pick that would change nothing, so there is always a
+		// direction.
 		positions := s.positionsOf(ids)
 		if len(positions) != 2 {
 			return false
 		}
-		s.deck[positions[0]].Concept = s.deck[positions[1]].Concept
+
+		// **Everything but the identity** *(owner's call, 2026-09-08)*. It copied the concept alone
+		// until then, so grafting a fire Cut onto an ice Jab produced an ice Cut — a card whose name
+		// said it had become the right-hand card and whose colour said it had not. "BECOMES" is not
+		// a partial verb, and the same bug was waiting on the form override, the worm deltas and the
+		// riders.
+		//
+		// **`ID` is what does not travel**, because it is the one field that says *which* card this
+		// is rather than what it is — see `combat.Card.ID`. A graft leaves the run holding the same
+		// number of cards it held before, each still findable by the handle it has always had.
+		id := s.deck[positions[0]].ID
+		s.deck[positions[0]] = s.deck[positions[1]]
+		s.deck[positions[0]].ID = id
 		return true
 
 	default:
@@ -748,12 +761,20 @@ func (s *Session) CanApplyParasite(p Parasite, ids []int) bool {
 	}
 
 	// **The clone is checked as a pair rather than card by card**, which is the only target that
-	// can be: whether it does anything is a fact about the two picks together. Two cards of the
-	// same concept would leave the deck exactly as it was found.
+	// can be: whether it does anything is a fact about the two picks together.
+	//
+	// **Compared on everything but the identity**, which is exactly what the apply copies. It asked
+	// only about the concept while only the concept was copied, and that made two same-named cards
+	// of different colours an illegal pick — the pick a player reaching for this most obviously
+	// wants, now that the colour travels with the name.
 	if p.Target == ParasiteClone && len(ids) == 2 {
 		first, ok1 := s.CardByID(ids[0])
 		second, ok2 := s.CardByID(ids[1])
-		if !ok1 || !ok2 || first.Concept == second.Concept {
+		if !ok1 || !ok2 {
+			return false
+		}
+		first.ID, second.ID = 0, 0
+		if first == second {
 			return false
 		}
 	}

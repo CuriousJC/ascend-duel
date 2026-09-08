@@ -218,7 +218,7 @@ func (s *ShopScene) pouchHover(gs *state.GlobalState, at image.Point, tip *model
 		if i >= len(row) || !at.In(seat) {
 			continue
 		}
-		tip.Point(seat, row[i].Name, stoneTipLines(gs, row[i]))
+		tip.Point(seat, row[i].Name, tipLines(stoneTipLines(gs, row[i])))
 
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && gs.CursorAllowed() {
 			// Clicking the armed stone disarms it, which is the worn row's own gesture.

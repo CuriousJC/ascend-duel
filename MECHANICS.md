@@ -505,6 +505,24 @@ code's naming.
 grey rather than the near-white it used to be, because the surface went off-white and a
 near-white border on it is invisible.
 
+**Every word that names an element is written in that element's colour** *(owner's call,
+2026-09-08)*. A worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a ring reading
+"Fire attacks BURN and CHILL the target." sets three words across two colours. It reaches the card
+faces, the tooltips and the fight log, because the words are the same words wherever they are read.
+
+- **A status is written in the colour of the element it belongs to**, so BURNING is fire orange
+  wherever it appears. `statuses.json` carries an `Element` and a `Verb` — BURN against BURNING —
+  and a status shipping without either fails a test rather than going quietly uncoloured while
+  every other one is lit.
+- **No new colours.** The vocabulary is `cards.BorderOf` exactly, which is what the border, the
+  tinted form mark and the deck panel's row labels already read — so a colour cannot drift between
+  a card and the sentence describing it. Lightning and earth read thinnest as text, lightning
+  having already been darkened once to survive the off-white card; if either becomes unreadable the
+  answer is to move `BorderOf`, which moves the whole set together, rather than to open a
+  text-only variant.
+- **Bold was asked for and deferred** — there is no bold weight of the card font in `assets/`, and
+  faking one by overdrawing is the smudge the run-splitting drawing exists to avoid.
+
 One collision is live: **the player's green swatch sits near earth's green**, which earth's
 move off brown on 2026-08-14 made sharper rather than created. "Green is you, grey is them" is
 a screen-wide rule and an element breaks it. What holds it together for now is that the two are
@@ -2210,6 +2228,26 @@ separate grammars.
 | Spent | on the combat screen, **between turns only** — select the cards, then click the parasite |
 | Targets | cards **in the hand**, by identity, one or two of them |
 | Lasts | the rest of the run |
+
+### A graft makes the left card the right card whole *(owner's call, 2026-09-08)*
+
+**"LEFT CARD BECOMES RIGHT CARD" is not a partial verb.** The graft copied the *concept* alone, so
+grafting a fire Cut onto an ice Jab produced an ice Cut — a card whose name said it had become the
+right-hand card and whose colour said it had not. Everything the right card is now travels:
+concept, element, form override, the worm-written cost and damage deltas, and the riders.
+
+- **The identity does not travel.** `combat.Card.ID` says *which* card this is rather than what it
+  is, so the run holds the same cards it held before, each findable by the handle it has always had.
+- **The riders travel with it, and that is a real balance consequence.** A graft is a way to
+  duplicate a wildcard — the most valuable thing a card can carry. It is what the card promises, and
+  the alternative was a carve-out for one rider that nobody could predict from reading the card.
+  The visible upgrade follows for free, because `screens.upgradeOf` derives the mark from the riders
+  rather than being copied separately.
+- **A parasite that changes the *run* rather than a card cannot be grafted**, by construction. Luck
+  takes no targets, so there is nothing on a card for the graft to find.
+- **The offer moved with the rule.** It refused any pair sharing a concept, which made two colours
+  of one card an illegal pick — the pick a player reaching for this most obviously wants. It now
+  compares everything the apply copies.
 
 ### The bucket holds two, and the top row says so *(owner's call, 2026-09-06)*
 

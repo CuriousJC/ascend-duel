@@ -72,6 +72,24 @@ type StatusData struct {
 
 	// Text is one line saying what carrying this does, for the long press that does not exist yet.
 	Text string `json:"Text"`
+
+	// Element is which of the five colours this status belongs to, by the name `combat.ParseElement`
+	// reads. **The engine ignores it, exactly as it ignores Badge** — a status is applied by a ring
+	// naming it, and the rules never ask what colour it is.
+	//
+	// **It exists so the words that name a status are drawn in that element's colour** *(owner's
+	// call, 2026-09-08)*: BURNING is written in the fire orange wherever it is written. It is a
+	// field rather than a guess off Badge, because deriving a colour from an assets key would tie
+	// the palette to a filename — and `TestEveryStatusNamesAnElement` in internal/screens fails on
+	// a record that names none, so a new status cannot ship uncoloured.
+	Element string `json:"Element"`
+
+	// Verb is how prose says this status happening rather than standing: BURN against BURNING.
+	//
+	// **Ignored by the engine too**, and it exists for the same reason Element does — a ring reading
+	// "Fire attacks BURN and CHILL the target." names two statuses and neither by its Name. Without
+	// it, half the catalogue's sentences would colour and half would not.
+	Verb string `json:"Verb"`
 }
 
 // LoadStatuses parses the embedded status list, in file order.

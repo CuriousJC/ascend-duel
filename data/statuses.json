@@ -6,7 +6,9 @@
     "Effect": "damage-over-time",
     "Amount": 50,
     "Rounds": 2,
-    "Text": ".5x DMG END OF ROUND"
+    "Text": ".5x DMG END OF ROUND",
+    "Element": "fire",
+    "Verb": "BURN"
   },
   {
     "StatusRecord": "chilled",
@@ -15,7 +17,9 @@
     "Effect": "lose-actions",
     "Amount": 1,
     "Rounds": 2,
-    "Text": "-1 ATTACK"
+    "Text": "-1 ATTACK",
+    "Element": "ice",
+    "Verb": "CHILL"
   },
   {
     "StatusRecord": "shocked",
@@ -24,7 +28,9 @@
     "Effect": "miss-chance",
     "Amount": 25,
     "Rounds": 2,
-    "Text": "1/4 CHANCE TO MISS ATTACKS"
+    "Text": "1/4 CHANCE TO MISS ATTACKS",
+    "Element": "lightning",
+    "Verb": "SHOCK"
   },
   {
     "StatusRecord": "weighted",
@@ -33,7 +39,9 @@
     "Effect": "damage-reduction",
     "Amount": 25,
     "Rounds": 2,
-    "Text": "-1/4 DMG FROM ATTACKS"
+    "Text": "-1/4 DMG FROM ATTACKS",
+    "Element": "earth",
+    "Verb": "WEIGH"
   },
   {
     "StatusRecord": "weakened",
@@ -42,6 +50,8 @@
     "Effect": "damage-amplification",
     "Amount": 100,
     "Rounds": 2,
-    "Text": "2X DMG FROM ATTACKS"
+    "Text": "2X DMG FROM ATTACKS",
+    "Element": "arcane",
+    "Verb": "WEAKEN"
   }
 ]

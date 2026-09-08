@@ -344,12 +344,13 @@ func opponentSpec(e Entry, art image.Image) cards.Spec {
 // be compared, which is the actual balance question.
 func cardSpec(c data.CardData) cards.Spec {
 	return cards.Spec{
-		Name:    c.Label,
-		Form:    form(c.Form),
-		Cost:    c.Cost,
-		Element: element(c.Elements),
-		Text:    effectText(c),
-		Enabled: true,
+		Name:       c.Label,
+		Form:       form(c.Form),
+		Cost:       c.Cost,
+		Element:    element(c.Elements),
+		Text:       effectText(c),
+		Highlights: cards.ElementHighlights(effectText(c)),
+		Enabled:    true,
 	}
 }
 

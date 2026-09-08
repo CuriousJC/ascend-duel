@@ -1467,6 +1467,11 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// are drawn much later and neither of which is ever held open.
 	s.drawHandRow(gs, screen)
 
+	// The ghosts of cards a parasite ate: the row has already closed over them, so there is no seat
+	// left to draw them from and they are drawn at the one they had. A card that is *changing*
+	// rather than gone is drawn by the row itself, at its own seat — see combat_handmorph.go.
+	s.drawHandMorphs(gs, screen)
+
 	// Over the panes and the button it passes across.
 	s.drawDraggedCard(gs, screen)
 

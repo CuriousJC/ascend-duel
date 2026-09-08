@@ -223,9 +223,26 @@ type PostBattleScene struct {
 	aimed int
 	after combat.Card
 
-	// removes says the alteration has no "after" card, because the card is gone. Drawn as an empty
-	// seat rather than as a second card.
+	// before is the card as it was when the player clicked it, and it is what flies to the middle.
+	//
+	// **The card that moves is the card the player was looking at** *(owner's call, 2026-09-08)*.
+	// It used to be `after` that flew, which meant the alteration had already happened by the time
+	// anything moved: the card left the row as one thing and arrived as another, with the change
+	// itself never on screen. The change is now its own beat once the flight has landed — see
+	// `change`, and cardmorph.go for the machinery.
+	before combat.Card
+
+	// change is the alteration happening: the old face coming apart and the new one coming through
+	// it. Which of the three shapes it takes is decided in aimAt, by what the worm did.
+	change morph
+
+	// removes says the alteration has no "after" card, because the card is gone. What is left when
+	// the dissolve finishes is an empty seat.
 	removes bool
+
+	// copied says the alteration added a card rather than changing one, so two cards are on screen
+	// at the end: the original, untouched, and the copy arriving out of nothing beside it.
+	copied bool
 
 	// held counts the settled stage down, and it does not start until the flight has landed.
 	held int
@@ -288,7 +305,8 @@ func (s *PostBattleScene) Init(gs *state.GlobalState) {
 
 	s.chosen, s.aimed, s.selected = -1, -1, -1
 	s.stage = narrate
-	s.removes, s.held = false, 0
+	s.removes, s.copied, s.held = false, false, 0
+	s.change = morph{}
 	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.prizes = dealPrizes(gs)
@@ -432,6 +450,13 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 	if s.stage == settled {
 		if !s.arrival.done() {
 			s.arrival.tick()
+			return nil
+		}
+		// **The change is its own beat, and it does not start until the card has landed** — the
+		// same rule the hold below follows, and for the same reason: a dissolve running over a
+		// moving card would put the one thing worth watching on a target the eye is still chasing.
+		if !s.change.done() {
+			s.change.tick()
 			return nil
 		}
 		s.held--
@@ -645,7 +670,8 @@ func (s *PostBattleScene) rearm(gs *state.GlobalState) bool {
 
 	s.chosen, s.aimed, s.selected = -1, -1, -1
 	s.stage = choosing
-	s.removes, s.held = false, 0
+	s.removes, s.copied, s.held = false, false, 0
+	s.change = morph{}
 	s.arrival, s.arrivedFrom = travel{}, image.Rectangle{}
 	s.pendingWhat, s.applyNow = "", nil
 	s.offer = dealOffer(gs)
@@ -680,7 +706,8 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	}
 	deckIndex := s.offer[slot]
 
-	if _, ok := gs.Run.Card(deckIndex); !ok || !gs.Run.CanApply(worm, deckIndex) {
+	before, ok := gs.Run.Card(deckIndex)
+	if !ok || !gs.Run.CanApply(worm, deckIndex) {
 		// **A worm that would change nothing is refused rather than shown** — a Smash cannot be
 		// promoted and a defend card has no ladder — so the click does nothing and the card stays
 		// pickable. Saying no here is why CanApply exists.
@@ -693,15 +720,34 @@ func (s *PostBattleScene) aimAt(gs *state.GlobalState, slot int) {
 	}
 
 	s.aimed = slot
+	s.before = before
 	s.removes = worm.Target == session.TargetRemove
+	s.copied = worm.Target == session.TargetDuplicate
 
 	switch {
-	case worm.Target == session.TargetDuplicate:
+	case s.copied:
 		// The copy is appended, so the card that arrived is the last one — and it is the *new*
 		// card that is the reward, even though it is identical to the one that was picked.
 		s.after, _ = trial.Card(trial.Size() - 1)
 	case !s.removes:
 		s.after, _ = trial.Card(deckIndex)
+	}
+
+	// **What the worm did decides which shape the change takes**, and the three cases are the
+	// three things a worm can be: it recoloured the card, it ate it, or it made a second one. See
+	// cardmorph.go — the morph is handed two finished faces and works out the rest.
+	beforeSpec := cardSpec(before, heldByRun(gs, before), true, false)
+	switch {
+	case s.removes:
+		s.change = morphAway(beforeSpec, cards.Hand)
+	case s.copied:
+		// **The original is not changed, so it does not morph.** It stands where it landed and the
+		// copy arrives out of nothing beside it, which is the only honest picture of a duplicate:
+		// there is no old face to come apart.
+		s.change = morphIn(cardSpec(s.after, heldByRun(gs, s.after), true, false), cards.Hand)
+	default:
+		s.change = morphInto(beforeSpec,
+			cardSpec(s.after, heldByRun(gs, s.after), true, false), cards.Hand)
 	}
 
 	// **The click is the commitment** *(owner's call, 2026-09-05)*. It was a preview with Take and
@@ -993,32 +1039,68 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 }
 
 // settledSeat is where the won card comes to rest.
+//
+// **A copy needs two seats and everything else needs one**, so the row is laid out for the number
+// of cards that will be standing in it at the end — which is what stops the original having to
+// slide aside when the copy turns up. See settledSeats.
 func settledSeat(gs *state.GlobalState) image.Rectangle {
-	top := gs.PctY(36)
-	return image.Rect(gs.PctX(50)-cardWidth/2, top, gs.PctX(50)+cardWidth/2, top+cardHeight)
+	return settledSeats(gs, 1)[0]
 }
 
-// drawSettled is the card the player won, **flying to the middle and then held there**.
-//
-// It travels from the seat it was already in — a prize's place in the row, or the morph's
-// after-slot — so the card the player has been looking at is the card that moves. A card that
-// simply appeared in the centre would be a card that was never anywhere else, which is the
-// opposite of what a prize is.
-//
-// **A removal has nothing to fly.** What was won is an absence, so the empty seat is drawn where
-// the card would have landed and nothing crosses the screen.
-func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Image) {
-	seat := settledSeat(gs)
+// settledSeats lays the settled row out for n cards, centred.
+func settledSeats(gs *state.GlobalState, n int) []image.Rectangle {
+	if n < 1 {
+		n = 1
+	}
+	top := gs.PctY(36)
+	width := n*cardWidth + (n-1)*wormRowGap
+	x := gs.PctX(50) - width/2
 
-	if s.removes {
-		drawEmptySeat(screen, seat)
+	out := make([]image.Rectangle, 0, n)
+	for i := 0; i < n; i++ {
+		out = append(out, image.Rect(x, top, x+cardWidth, top+cardHeight))
+		x += cardWidth + wormRowGap
+	}
+	return out
+}
+
+// drawSettled is the card the player picked, **flying to the middle, changing there, and then held
+// while they read what it became**.
+//
+// It travels from the seat it was already in, as the card it was — so the card the player has been
+// looking at is the card that moves, and the alteration happens in front of them rather than in the
+// gap between two frames. A card that arrived already changed would be a card the player has to
+// re-read to find out what happened. See cardmorph.go.
+//
+// **The flight carries the old face and the morph carries the new one**, which is why nothing here
+// asks what the worm did: `change` was handed the two faces in aimAt and is the only thing that
+// knows which of the three shapes this is. A removal ends on an empty seat, a duplicate ends on two
+// cards, everything else ends on one.
+func (s *PostBattleScene) drawSettled(gs *state.GlobalState, screen *ebiten.Image) {
+	seats := settledSeats(gs, 1)
+	if s.copied {
+		seats = settledSeats(gs, 2)
+	}
+
+	at := flyingTo(s.arrivedFrom, seats[0], s.arrival)
+
+	// The card that was picked. While a copy is being made it is the original, untouched, and it is
+	// drawn plainly — the morph in the second seat is the whole of what is happening.
+	if s.copied {
+		drawCard(gs, screen, at, cards.Hand, s.before, heldByRun(gs, s.before), true, false)
+		drawMorph(gs, screen, seats[1].Min, s.change)
 		return
 	}
 
-	at := flyingTo(s.arrivedFrom, seat, s.arrival)
+	// **An eaten card leaves an outlined hole**, once it has finished coming apart. That is the
+	// same rule the offer row follows for a prize that has been taken: a blank gap reads as a
+	// layout fault where an outlined one reads as a card that was there a moment ago.
+	if s.removes && s.change.done() {
+		drawEmptySeat(screen, seats[0])
+		return
+	}
 
-	card := s.after
-	drawCard(gs, screen, at, cards.Hand, card, heldByRun(gs, card), true, false)
+	drawMorph(gs, screen, at, s.change)
 }
 
 func (s *PostBattleScene) title() string {

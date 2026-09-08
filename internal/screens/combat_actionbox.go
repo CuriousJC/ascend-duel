@@ -588,10 +588,23 @@ func (s *CombatScene) drawHandRow(gs *state.GlobalState, screen *ebiten.Image) {
 		// has to stay open, and it is the way out of an over-allocation.
 		enabled := c.selected || (s.planning() && s.selectedCount() < s.fighter.MaxActions())
 
+		seat := s.cardSlot(gs, i)
+
+		// A card a parasite has just changed is drawn by its morph — the old face coming apart and
+		// the new one coming through it, in the seat the card is already standing in. Same rule as
+		// the three suppressions above: the card is in the hand and what is skipped is a drawing.
+		//
+		// **It is last of the four on purpose.** A card that has started resolving is drawn by the
+		// resolved pile, so a morph still running when DUEL! is pressed gives way to the round
+		// rather than painting a second copy of the card on the table.
+		if h, ok := s.handMorphFor(c.actionCard.ID); ok {
+			drawMorph(gs, screen, seat.Min, h.m)
+			continue
+		}
+
 		// **A card the tutorial is pointing at wears the mark rather than a frame** — see
 		// marksFor, which reads the same focus list the spotlight is handed, so what is lit and
 		// what is clickable cannot come apart.
-		seat := s.cardSlot(gs, i)
 		drawMarkedCard(gs, screen, seat.Min, cards.Hand,
 			c.actionCard, heldBy(s.fighter.Duelist, c.actionCard), enabled, c.selected,
 			marksFor(gs, seat))

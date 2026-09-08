@@ -280,6 +280,11 @@ type combatTheatre struct {
 	// is the only one that needs a row size at each end.
 	slides []cardSlide
 
+	// Cards changing into other cards where they stand, because a parasite altered them. Separate
+	// from the two above because it is the only mover that does not move: what travels is the face,
+	// not the card. See combat_handmorph.go.
+	morphs []handMorph
+
 	// The player's side of the table: the cards played this round, in resolution order, flying
 	// out of the hand and into a row on the left facing the opponent's. Dealt in full the
 	// moment the round starts — see seatPlayedCards — and what a hand narrows to the cards it
@@ -375,6 +380,7 @@ var _ theatre = (*combatTheatre)(nil)
 func (t *combatTheatre) tick() {
 	t.flights = advance(t.flights)
 	t.slides = advance(t.slides)
+	t.morphs = advance(t.morphs)
 	t.hits = advance(t.hits)
 	t.shields = advance(t.shields)
 

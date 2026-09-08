@@ -659,6 +659,59 @@ instead of having watched it happen.
 - **The exception is an absence**: a removed card has nothing to fly, so the seat it would have
   landed in is drawn empty.
 
+### Cards change in front of you, too
+
+**A card that becomes a different card dissolves into it** *(owner's call, 2026-09-08)*. Same
+argument as the flight one axis over: a card that changes between two frames has to be *re-read* to
+find out what happened, instead of having been watched happening. `internal/screens/cardmorph.go` is
+the machinery and `internal/cards/dissolve.go` is the pattern the face comes apart in.
+
+- **A morph is two finished faces and a clock**, and it knows nothing about where it is on screen —
+  the caller owns the rectangle, exactly as it does for a `travel`. That is what lets the post-battle
+  screen run one in the middle of the table and the combat screen run several in the hand.
+- **Which of two faces it holds is what it does.** `morphInto` replaces, `morphAway` eats,
+  `morphIn` arrives out of nothing. **There is no style enum**, because an enum beside the faces is a
+  second way of saying the same thing and a way for the two to disagree.
+- **It is not a `cards.Mark`.** A mark is the card's situation and the card is still itself
+  afterwards, so it has a settled picture `internal/cards` can bake. A morph ends as a *different
+  card*, so there is nothing to bake and no second rasteriser — what that package owns is the
+  geometry, on the same terms it owns `ShatterCracks`.
+- **The pattern is derived from the card's name, never rolled**, exactly like the crack pattern and
+  as the explicit exception the randomness skill records. So one card always comes apart the same
+  way, through a resize, an interruption or a re-entry.
+- **It reads as patches because the delays come off a smooth lattice.** Independent per-square
+  delays pass every other test and look like television static;
+  `TestNeighbouringSquaresGoTogether` is the tripwire.
+- **The flare on a turning square is light, not a hue.** The square is drawn a second time
+  additively at its peak, so it brightens in its own colours — the wheel is full and a burning edge
+  in a fifth hue would be claiming one.
+- **The card lands first, is still for a beat, and then changes.** A dissolve running over a moving
+  card puts the one thing worth watching on a target the eye is still chasing. `morphWaitTicks` is
+  the pause and it is the travel's own delay, so one clock is the whole transition.
+- **It may never change an outcome.** The post-battle screen still holds the real deck edit in
+  `applyNow` until the stage is over; the morph is a picture of a decision already taken.
+
+**Two callers, and the second is the hand.** `internal/screens/combat_handmorph.go` is a parasite
+changing cards where they stand, mid-fight.
+
+- **What changed is read off the faces, not off the parasite.** `handFaces` is taken before the
+  apply and again after, and the three shapes fall out of the comparison: a face that differs is a
+  replacement, a card that has appeared is a copy, a card that has gone was eaten. **No parasite has
+  a case anywhere in the drawing**, which is what stops a new one arriving with no picture.
+- **One beat for all of them** *(owner's call, the shield break's rule again)*. Every card a
+  parasite took changes at once; three dissolves in sequence would be three pauses over a hand the
+  player is building.
+- **A morph carries the card's identity, never a seat index**, so a sort or a drag under a running
+  one moves the picture with the card. The captured rectangle is the fallback for a card that is no
+  longer in the hand — the eaten case, which has no seat to look up.
+- **The row draws its own**, as a fourth suppression beside `inboundTo`, `resolvedInHand` and
+  `slidingTo`, and it is checked last: a morph still running when DUEL! is pressed gives way to the
+  round rather than painting a second copy of the card.
+- **Nothing waits for it.** A parasite is spent while planning, so the card under a running morph is
+  already the new card and is selectable while it changes — the same rule that makes a flying card
+  clickable. It is deliberately not in `combatTheatre.running()`, which is the playback cursor's
+  question.
+
 - **No UI toolkit dependency.** Widgets are hand-rolled following the
   `models.Button` + `systems.UpdateButton`/`DrawButton` split. Add new widgets the same
   way: a plain struct in `models`, behaviour in `systems`, owned by the scene that uses

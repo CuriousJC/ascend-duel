@@ -199,6 +199,12 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 	if !s.parasiteTarget(gs, p).satisfiedBy(ids) {
 		return
 	}
+
+	// **The hand as it stands, before any of this lands.** What the parasite changed is the
+	// difference between this and the hand a few lines below, which is what lets the morphs be
+	// raised without this file knowing what any particular parasite does. See raiseHandMorphs.
+	was, seats := s.handFaces(gs)
+
 	if !gs.Run.ApplyParasiteRolling(p, ids, s.parasiteRNG(gs, p)) {
 		return
 	}
@@ -222,6 +228,12 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 		s.hand = append(s.hand, paletteCard{actionCard: copied})
 	}
 	s.syncQueue()
+
+	// **The change is shown where it happened**, on the cards in the row rather than in a panel
+	// about them. Raised after the hand is final — the resync, the copies and the queue are all
+	// done — so every morph is a ghost of something that has already happened, which is the rule
+	// every mover on this screen is under. See combat_handmorph.go.
+	s.raiseHandMorphs(gs, was, seats)
 
 	// **A rock shower's stones fly to the duelist card rather than stopping the screen**
 	// *(owner's call, 2026-09-06)*. They are in the run's pouch by the time this runs — there is
@@ -314,11 +326,17 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 		if !ok {
 			continue
 		}
-		// **The element is the hand's, not the run's.** A flip ring recoloured this card as it was
-		// drawn and that colour is a fact about the card in play; taking the run's colour back
-		// would undo a ring mid-round.
-		owned.Element = c.actionCard.Element
-		kept = append(kept, paletteCard{actionCard: owned, selected: c.selected})
+		// **The card is re-dealt rather than re-coloured** *(2026-09-08)*. It used to take the
+		// element straight off the card in the hand, on the argument that a flip ring had recoloured
+		// it as it was drawn and that colour is a fact about the card in play. That argument is
+		// right about the flip and wrong about everything else, and it made every element parasite
+		// do nothing at all: Hexbore turned the run's card arcane, this line wrote the hand's fire
+		// back over it, and what the player saw was a consumable vanishing.
+		//
+		// **`drawnAs` is the honest answer to both.** It is the same function the deal itself uses,
+		// so the card in the hand is the card the run would deal now — the parasite's new colour
+		// with the worn flips applied on top of it, exactly as the next fight will deal it.
+		kept = append(kept, paletteCard{actionCard: s.drawnAs(owned), selected: c.selected})
 	}
 
 	s.hand = kept

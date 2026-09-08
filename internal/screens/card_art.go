@@ -103,9 +103,31 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 		Cost:     h.cost,
 		Element:  artFor(c.Element),
 		Text:     cardEffect(c) + riderText(c),
+		Upgrade:  upgradeOf(c),
 		Enabled:  enabled,
 		Selected: selected,
 	}
+}
+
+// upgradeOf is the visible alteration a card's riders amount to — the one place a rules value
+// becomes a drawing one.
+//
+// **`internal/cards` may not do this and neither may `internal/systems`.** Neither knows what a
+// rider is, and neither should: this is the same separation Spec.TextInk draws, where a ring
+// becomes a colour up here and the renderer is handed the answer. It is why an upgrade is a
+// closed vocabulary in `systems` rather than a field on `combat.Rider`.
+//
+// **A card may carry three riders and only some of them show.** Today exactly one kind does, so
+// the first match wins and the question of what two visible upgrades on one card look like is not
+// yet a question. When it becomes one the answer is a row of badges, which is what
+// `combat.MaxCardRiders` reserved the room for — see TODO.md.
+func upgradeOf(c combat.Card) systems.Upgrade {
+	for _, r := range c.RiderList() {
+		if r.Kind == combat.RiderWildElement {
+			return systems.UpgradeWild
+		}
+	}
+	return systems.UpgradeNone
 }
 
 // boostInk is what a figure a ring has changed is written in. **The ring pink** — `cards.Ring` is

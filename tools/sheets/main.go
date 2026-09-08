@@ -104,6 +104,15 @@ var sheets = []sheet{
 			"it are visible together, and the only place a rung with no stone shows as a gap.",
 	},
 	{
+		Dir:   "upgradesheet",
+		Title: "Upgrade sheet",
+		Tool:  "./tools/upgradesheet",
+		Blurb: "Every *visible* upgrade a card can carry, on all four form marks and in all three " +
+			"ways the mark and the upgrade's ink can be combined. A ridden card looked exactly " +
+			"like an unridden one until 2026-09-07; this is where a new one is judged against " +
+			"the plain card and against the upgrades already on the shelf.",
+	},
+	{
 		Dir:   "parasitesheet",
 		Tool:  "./tools/parasitesheet",
 		Title: "Parasite sheet",
@@ -200,7 +209,7 @@ var tmpl = template.Must(template.New("index").Parse(`<!doctype html>
 <meta charset="utf-8">
 <title>Ascending Duel — review sheets</title>
 <style>
-  :root { --ground: #e2d0b0; --ink: #2c2822; --dim: #6b6355; --rule: #c4b294; --panel: #ede0c8; }
+  :root { --ground: #a8bcd4; --ink: #2c2822; --dim: #5a6472; --rule: #8fa3bd; --panel: #c6d5e6; }
   * { box-sizing: border-box; }
   body {
     margin: 0; padding: 40px 28px 64px; background: var(--ground); color: var(--ink);

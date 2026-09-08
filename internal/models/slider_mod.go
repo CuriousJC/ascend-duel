@@ -46,7 +46,7 @@ type Slider struct {
 	// which is a near-white for a control on a dark ground.
 	//
 	// **It exists because the game has two grounds.** The combat screen and everything that
-	// followed it are painted on cream, where a near-white label is invisible; the title screen
+	// followed it are painted on a light ground, where a near-white label is invisible; the title screen
 	// is not. A widget that assumed one of them would be unusable on the other, and the repo's
 	// colour rule is already that dimming means different things on the two — see
 	// systems.ColorToward.

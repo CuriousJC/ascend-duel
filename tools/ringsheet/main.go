@@ -61,11 +61,11 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// ground is the cream the rings are actually drawn on — `screens.screenGround`, which is
+// ground is the one the rings are actually drawn on — `screens.screenGround`, which is
 // the fill behind both rows that hold a ring: the combat screen's worn row and the shop's
 // shelf. Judging a card against a white browser page or a dark one would be the same
 // failure as previewing art at a scale the game does not use.
-const ground = "#e2d0b0"
+const ground = "#a8bcd4"
 
 func main() {
 	dir := flag.String("dir", filepath.Join("docs", "sheets", "ringsheet"),

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
@@ -114,10 +115,12 @@ type record struct {
 	Teach bool `json:"Teach"`
 }
 
-// handCard is one card of a plugged hand: a concept by its label, and a colour.
+// handCard is one card of a plugged hand: a concept by its label, a colour, and any riders it
+// has already been given.
 type handCard struct {
-	Card    string `json:"Card"`
-	Element string `json:"Element"`
+	Card    string   `json:"Card"`
+	Element string   `json:"Element"`
+	Riders  []string `json:"Riders"`
 }
 
 // deckLine is one line of a replacement deck: a card, a colour, and how many copies.
@@ -129,6 +132,72 @@ type deckLine struct {
 	Card    string `json:"Card"`
 	Element string `json:"Element"`
 	Copies  int    `json:"Copies"`
+
+	// Riders are the rules these cards arrive already carrying, by the names combat.RiderKind
+	// writes — so a fixture can open on a deck a parasite has *already been spent on* rather than
+	// on one a parasite has to be spent on first.
+	//
+	// **It exists because a card alteration is otherwise several shops and a duel away**
+	// *(2026-09-07)*. `Parasites` puts the consumable in the bucket, which is the right fixture
+	// for looking at the *dialog*; it is the wrong one for looking at what an altered card does to
+	// a hand, because getting there means playing a turn to spend it and then reading a hand that
+	// has already been half spent. This is the same argument `Deck` made against `Hand`, one
+	// level further in.
+	//
+	// **A rider that carries a figure writes it after a colon** — `"damage-on-play:10"` — and one
+	// that does not writes the bare name. The vocabulary and which of them take a figure are
+	// `internal/combat`'s, so a misspelling fails the launch like every other word here.
+	Riders []string `json:"Riders"`
+}
+
+// riders resolves the names on one line into real riders, and reports the first it cannot.
+//
+// **A shared helper rather than two copies**, because a deck line and a hand card want exactly
+// the same thing and the check and the build have to agree about what a name means — a fixture
+// whose validation and whose construction read a string differently is a fixture that passes its
+// own check and tests something else.
+func riders(names []string) ([]combat.Rider, error) {
+	out := make([]combat.Rider, 0, len(names))
+	for _, name := range names {
+		kind, amount := name, ""
+		if i := strings.IndexByte(name, ':'); i >= 0 {
+			kind, amount = name[:i], name[i+1:]
+		}
+		k, ok := combat.ParseRiderKind(kind)
+		if !ok {
+			return nil, fmt.Errorf("%q is not a rider the rules have", kind)
+		}
+		if !k.CarriesAmount() {
+			if amount != "" {
+				return nil, fmt.Errorf("the %s rider carries no figure, and %q gives it one",
+					k, name)
+			}
+			out = append(out, combat.Rider{Kind: k})
+			continue
+		}
+		n, err := strconv.Atoi(amount)
+		if err != nil || n <= 0 {
+			return nil, fmt.Errorf("the %s rider wants a figure and %q is not one", k, name)
+		}
+		out = append(out, combat.Rider{Kind: k, Amount: n})
+	}
+	if len(out) > combat.MaxCardRiders {
+		return nil, fmt.Errorf("%d riders on one card, and a card holds %d",
+			len(out), combat.MaxCardRiders)
+	}
+	return out, nil
+}
+
+// ridden is a card with every rider on it, or the card unchanged if it has none.
+func ridden(c combat.Card, names []string) combat.Card {
+	list, err := riders(names)
+	if err != nil {
+		return c // unreachable: check() has already refused anything riders() would reject
+	}
+	for _, r := range list {
+		c, _ = c.AddRider(r)
+	}
+	return c
 }
 
 var current = resolve()
@@ -221,6 +290,9 @@ func check(r *record) error {
 		if c.Copies < 0 {
 			return fmt.Errorf("deck: %q has %d copies", c.Card, c.Copies)
 		}
+		if _, err := riders(c.Riders); err != nil {
+			return fmt.Errorf("deck: %q: %v", c.Card, err)
+		}
 	}
 	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop {
 		return fmt.Errorf("%q is not a screen (want %q, %q or %q)",
@@ -242,6 +314,9 @@ func check(r *record) error {
 		}
 		if _, ok := combat.ParseElement(c.Element); !ok {
 			return fmt.Errorf("%q is not an element", c.Element)
+		}
+		if _, err := riders(c.Riders); err != nil {
+			return fmt.Errorf("hand: %q: %v", c.Card, err)
 		}
 	}
 	return nil
@@ -272,7 +347,7 @@ func Hand() []combat.Card {
 	for _, c := range current.Hand {
 		id, _ := combat.ConceptByKey(c.Card)
 		e, _ := combat.ParseElement(c.Element)
-		out = append(out, combat.Of(id, e))
+		out = append(out, ridden(combat.Of(id, e), c.Riders))
 	}
 	return out
 }
@@ -300,7 +375,7 @@ func Deck() []combat.Card {
 			n = 1
 		}
 		for i := 0; i < n; i++ {
-			out = append(out, combat.Of(id, e))
+			out = append(out, ridden(combat.Of(id, e), line.Riders))
 		}
 	}
 	return out

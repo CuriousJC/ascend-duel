@@ -741,10 +741,17 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 	}
 
 	// **Toward the ground, not toward black.** ColorAtStrength would scale the blue down to
-	// {14,26,46}, which on a cream screen is the darkest thing in the bar and reads as the
+	// {14,26,46}, which on a light screen is the darkest thing in the bar and reads as the
 	// *filled* part — the empty cells stepping in front of the spent ones. See
 	// systems.ColorToward.
-	empty := systems.ColorToward(apBarColor, screenGround, 80)
+	//
+	// **It stops short of the ground now that the ground is blue** *(2026-09-07)*. Eighty percent
+	// of the way to a cream table left an empty cell clearly not-the-table; eighty percent of the
+	// way to a *blue* one lands almost on it, so the bar stopped having a length at all — an empty
+	// cell and the gap beside it were the same colour. Fifty is what keeps the row readable as a
+	// row. **This is the AP bar's share of a wider collision**: the ground is now the same hue as
+	// the bar, and CLAUDE.md's rule is that the wheel is full. See apBarColor.
+	empty := systems.ColorToward(apBarColor, screenGround, 50)
 	cellWidth := (width - float32(cells-1)*apBarGap) / float32(cells)
 
 	// A cell narrower than a couple of pixels is a smear rather than a count, which a big

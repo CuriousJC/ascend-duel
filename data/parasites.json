@@ -102,6 +102,14 @@
     "Text": "3 VITAE CARD IN HAND"
   },
   {
+    "ParasiteRecord": "motley",
+    "Name": "Motley",
+    "Target": "rider",
+    "Rider": "wild-element",
+    "Count": 1,
+    "Text": "CARD IS\nEVERY ELEMENT"
+  },
+  {
     "ParasiteRecord": "carapace",
     "Name": "Carapace",
     "Target": "rider",

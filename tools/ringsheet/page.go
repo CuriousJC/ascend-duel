@@ -10,8 +10,8 @@ import "html/template"
 // it — even by the fraction a max-width rule can introduce — resamples that rim into a blur
 // and makes the sheet lie about the art.
 //
-// **The ground is the cream the rings actually sit on**, not a page colour chosen to flatter
-// them. A pink border on white is a different card from a pink border on cream.
+// **The ground is the one the rings actually sit on**, not a page colour chosen to flatter
+// them. A pink border on white is a different card from a pink border on the game's own blue.
 //
 // The layout is a card beside a block of text rather than a grid of cards, because what is
 // being reviewed here is not only the picture: it is the picture against the price, the
@@ -23,9 +23,9 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
   :root {
     --ground: {{.Ground}};
     --ink: #2c2822;
-    --dim: #6b6355;
-    --rule: #c4b294;
-    --panel: #ede0c8;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
     --pink: #c8508c;
   }
   * { box-sizing: border-box; }
@@ -93,7 +93,7 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
   art box inset <code>{{index .Style "artInset"}}</code> from
   <code>y={{index .Style "artTop"}}</code>, at most
   <code>{{index .Style "artMaxH"}}</code> tall.
-  Shown at 1:1 on the cream the rings are actually drawn on.
+  Shown at 1:1 on the ground the rings are actually drawn on.
 </p>
 <p class="note">
   Regenerate with <code>go run ./tools/ringsheet</code> and refresh. Every card here is

@@ -914,7 +914,7 @@ func (s *PostBattleScene) chosenWorm() (session.Worm, bool) {
 }
 
 func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(screenGround)
+	fillGround(screen)
 
 	heading := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 34}
 	small := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 18}

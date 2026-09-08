@@ -26,12 +26,11 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/combat"
 
 	"github.com/curiousjc/ascend-duel/internal/state"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 	"github.com/curiousjc/ascend-duel/internal/trace"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-
-	"image/color"
 )
 
 // maxRings is how many rings can be worn at once.
@@ -92,11 +91,17 @@ const (
 // title, no hue. A colour that meant something would put it back in competition with the
 // borders it sits behind.
 //
-// **The step goes down now that the ground is cream** *(2026-08-14)*. It was one step
+// **The step goes down now that the ground is light** *(2026-08-14)*. It was one step
 // *lighter* than {50,50,50} for as long as the screen was dark, and kept that way it would be
 // a near-white slab — the loudest thing in the band, which is the exact failure this pane was
 // cut back to a fill to avoid. Which direction "one step" means is a function of the ground.
-var ringPaneBackColor = color.RGBA{R: 207, G: 189, B: 156, A: 255}
+//
+// **It is derived rather than written down** *(2026-09-07)*. It was a hand-picked tan for as long
+// as the ground was one, and a hand-picked colour that is supposed to be "one step off the
+// background" is a colour that silently stops being that the moment the background moves — which
+// is exactly what the ground going blue would have done to it. Nine percent is what the tan
+// actually was, kept so the pane reads as it always did.
+var ringPaneBackColor = systems.ColorAtStrength(screenGround, 91)
 
 // ringPaneRect is the row's extent: the cards' own band, running between the two corner cards
 // and dropped ringPaneTopDrop below them.

@@ -60,8 +60,8 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
-// ground is screens.screenGround, the cream a parasite is actually offered on.
-const ground = "#e2d0b0"
+// ground is screens.screenGround, the light slate blue a parasite is actually offered on.
+const ground = "#a8bcd4"
 
 // wormArtKey is the picture every parasite draws, and it is the constant of the same name in
 // internal/screens — the parasite borrows the worm's placeholder, because a card with no face at

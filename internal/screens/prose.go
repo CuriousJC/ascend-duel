@@ -36,7 +36,7 @@ import (
 // hue with every enemy action on screen.
 //
 // Darker than a screen yellow because it sits on a light pane now — the same figure that read
-// as amber on plum reads as washed-out cream on off-white.
+// as amber on plum reads as washed-out pale on off-white.
 var handSwatch = color.RGBA{R: 198, G: 142, B: 16, A: 255}
 
 // The two sides' colours: **green is you, grey is them.**
@@ -524,6 +524,12 @@ func riderText(card combat.Card) string {
 		switch r.Kind {
 		case combat.RiderHealOnPlay:
 			out += "\n+" + strconv.Itoa(r.Amount) + " LIFE"
+		case combat.RiderWildElement:
+			// **The line and the rainbow column say the same thing on purpose.** The colour is
+			// what carries at a glance across a row of eight cards; the words are what answers
+			// "what does that mean" without a hover. Neither is redundant with the other, and a
+			// card that only did the colour would be one nobody could learn from.
+			out += "\nANY ELEMENT"
 		}
 	}
 	return out

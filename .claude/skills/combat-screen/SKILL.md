@@ -324,7 +324,7 @@ number the game had decided rather than one they had built.
   **Lightning's own colour was darkened to make this work** — `{240,205,55}` to `{214,152,12}`, in
   `cards`, so every lightning border moved with it. A bright yellow is legible on a dark ground and
   nearly invisible on the two light ones this game draws on — the off-white card surface and the
-  cream screen — and a figure written straight onto the cream is where that finally showed. It is
+  light screen — and a figure written straight onto the cream is where that finally showed. It is
   now the same value as `attentionYellow`: a collision rather than a shared constant, and the
   attention colour is the one that moves if they ever have to be told apart.
 - **A flown figure travels and grows; an operator is stamped in place.** That difference is the

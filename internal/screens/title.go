@@ -148,7 +148,7 @@ func (s *TitleScene) startNewRun(gs *state.GlobalState) {
 }
 
 func (s *TitleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
-	screen.Fill(color.RGBA{R: 109, G: 141, B: 138, A: 255})
+	fillGround(screen)
 
 	//TITLE
 	//

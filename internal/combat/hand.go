@@ -459,7 +459,15 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 	}
 
 	var tallies []tally
+	// wilds are the turn indices of cards that count as *every* value on this axis. They are held
+	// out of the tallies rather than joined to one, because which value they help is not decided
+	// until the groups are being filled - see below.
+	var wilds []int
 	for i, s := range turn {
+		if s.Card.Wild(h.Match) {
+			wilds = append(wilds, i)
+			continue
+		}
 		v, counts := matchValue(s.Card, h.Match)
 		if !counts {
 			continue
@@ -478,26 +486,44 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 		tallies[at].members = append(tallies[at].members, i)
 	}
 
+	// **A turn of nothing but wildcards forms a group among themselves.** They all match each
+	// other, so refusing would be the matcher saying five cards that agree on everything agree on
+	// nothing. Everywhere else a wildcard *joins* a value rather than being one, which is what the
+	// next loop does.
+	if len(tallies) == 0 && len(wilds) > 0 {
+		tallies = append(tallies, tally{members: wilds})
+		wilds = nil
+	}
+
 	var out []int
 	lead := -1
 	for _, g := range h.Groups {
 		best, bestCount := -1, 0
 		var bestTake []int
 		for j := range tallies {
-			if tallies[j].spent || len(tallies[j].members) < g {
+			if tallies[j].spent {
+				continue
+			}
+			// **A wildcard tops a group up; it never seeds one** *(2026-09-07)*. A tally is a
+			// candidate if its own members plus the wilds still unspent can reach g, and the
+			// ranking below is on its *own* members - so a wildcard joins whichever value already
+			// had the most of itself, which is the reading a player would make looking at the row.
+			take, ok := fill(tallies[j].members, wilds, g)
+			if !ok {
 				continue
 			}
 			// **The earliest g of the tally**, since the cards are already in the order they were
 			// played. Strictly greater below, so a tie goes to the earlier tally - which is the
 			// value whose first card was played first.
-			if len(tallies[j].members) > bestCount {
-				best, bestCount, bestTake = j, len(tallies[j].members), tallies[j].members[:g]
+			if len(tallies[j].members) > bestCount || best < 0 {
+				best, bestCount, bestTake = j, len(tallies[j].members), take
 			}
 		}
 		if best < 0 {
 			return nil, -1, false
 		}
 		tallies[best].spent = true
+		wilds = spend(wilds, bestTake)
 		if lead < 0 {
 			lead = bestTake[0]
 		}
@@ -602,4 +628,50 @@ func scaleDamage(base, pct int) int {
 		return 0
 	}
 	return base * pct / multiplierScale
+}
+
+// fill takes the earliest g cards for one group: as many of the tally's own members as it needs,
+// topped up from the unspent wildcards. It reports false when the two together cannot reach g.
+//
+// **Own members first, and only then wilds.** A wildcard is the scarcer resource — there is at
+// most a handful in a deck and a turn holds five cards — so spending one where a real member would
+// have done is how a hand that could have formed fails to. Taking the earliest of each keeps the
+// rule deterministic without a tie-break: the turn is already in the order it was played.
+func fill(members, wilds []int, g int) ([]int, bool) {
+	if len(members) >= g {
+		return append([]int(nil), members[:g]...), true
+	}
+	need := g - len(members)
+	if need > len(wilds) {
+		return nil, false
+	}
+	out := append([]int(nil), members...)
+	out = append(out, wilds[:need]...)
+	// Back into play order. The two sources are each ordered and are being concatenated, so a
+	// group holding both would otherwise report a lead that is not its earliest card.
+	sort.Ints(out)
+	return out, true
+}
+
+// spend removes from wilds every index the group actually took. The group's cards are a mix of
+// the tally's own members and wildcards, and only the latter are in this list — so the members
+// simply do not match anything and fall through.
+func spend(wilds, taken []int) []int {
+	if len(wilds) == 0 {
+		return wilds
+	}
+	out := wilds[:0:0]
+	for _, w := range wilds {
+		used := false
+		for _, t := range taken {
+			if t == w {
+				used = true
+				break
+			}
+		}
+		if !used {
+			out = append(out, w)
+		}
+	}
+	return out
 }

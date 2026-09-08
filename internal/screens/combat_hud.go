@@ -417,7 +417,7 @@ func (s *CombatScene) drawRoundTimer(gs *state.GlobalState, screen *ebiten.Image
 
 		// An unspent round is the ground's ink at a quarter strength: present enough to be
 		// counted, quiet enough not to read as a round already gone. `ColorToward` rather than
-		// `ColorAtStrength`, because the table is cream — see CLAUDE.md.
+		// `ColorAtStrength`, because the table is light — see CLAUDE.md.
 		fill := systems.ColorToward(groundInk, screenGround, 75)
 		if i < spent {
 			fill = groundInk

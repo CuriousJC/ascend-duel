@@ -1,6 +1,9 @@
 package combat
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // The ring grammar: what registration refuses, and what wearing one actually does.
 //
@@ -1335,5 +1338,41 @@ func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
 	ice := Of(Slice, Ice)
 	if got := wearer.CardDamage(ice); got != duelist(10, 5, 100).CardDamage(ice) {
 		t.Errorf("an ice card was moved to %d by a fire ring", got)
+	}
+}
+
+// **The badge is always one decimal place, and that is a promise the card's layout is built on**
+// *(owner's call, 2026-09-09)*. The disc behind the figure is sized for two or three characters and
+// a fourth is allowed to spill past its curve; a second decimal would make every multiplier past
+// 10x a five-character figure and the spill would stop being a spill. `%.1f` is what holds it, so
+// this is the test that fails if anyone reaches for `%v` or a variable precision.
+//
+// **The flat branch carries no point at all**, which is the other half of the reading: a decimal
+// point means a multiplier and a `+` means a flat figure, which is what let the `x` go.
+func TestTheCounterLabelIsAlwaysOneDecimalPlace(t *testing.T) {
+	scaling := ring(t, "counter-scaling",
+		RingRule{When: MomentCardDamage, Then: []RingEffect{{Do: DoScaleDamage, Amount: 100}}},
+		RingRule{When: MomentTurnTaken, Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 20}}},
+	)
+	flat := ring(t, "counter-flat",
+		RingRule{When: MomentFightStart, Then: []RingEffect{{Do: DoAddHP, Amount: 5}}},
+		RingRule{When: MomentTurnTaken, Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 5}}},
+	)
+
+	for _, grown := range []int{0, 5, 20, 60, 400, 950, 4900} {
+		got := CounterLabel(WornRing{Ring: scaling, Grown: grown})
+		point := strings.IndexByte(got, '.')
+		if point < 0 {
+			t.Errorf("a multiplier grown %d reads %q, which has no decimal point", grown, got)
+			continue
+		}
+		if rest := got[point+1:]; len(rest) != 1 {
+			t.Errorf("a multiplier grown %d reads %q, which has %d digits after the point, want 1",
+				grown, got, len(rest))
+		}
+
+		if got := CounterLabel(WornRing{Ring: flat, Grown: grown}); strings.ContainsRune(got, '.') {
+			t.Errorf("a flat figure grown %d reads %q, which carries a decimal point", grown, got)
+		}
 	}
 }

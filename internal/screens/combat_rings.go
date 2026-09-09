@@ -405,14 +405,7 @@ func drawDraggedRing(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag
 // nothing. That is the whole distinction the badge is for — a card carrying one is a card whose
 // number is still moving.
 func ringCounter(w combat.WornRing) string {
-	e, ok := combat.GrowthEffect(w)
-	if !ok {
-		return ""
-	}
-	if combat.Scaling(e.Do) {
-		return fmt.Sprintf("%.1fx", float64(e.Amount)/100)
-	}
-	return fmt.Sprintf("%+d", e.Amount)
+	return combat.CounterLabel(w)
 }
 
 // ringCounters is a badge per worn ring, by record key.

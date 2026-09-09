@@ -93,6 +93,21 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
   art box inset <code>{{index .Style "artInset"}}</code> from
   <code>y={{index .Style "artTop"}}</code>, at most
   <code>{{index .Style "artMaxH"}}</code> tall.
+  Accumulator badge <code>{{index .Style "counterSize"}}pt</code> on a
+  <code>{{index .Style "counterDiameter"}}</code>-pixel disc,
+  <code>{{index .Style "counterRight"}}</code> in from the right and
+  <code>{{index .Style "counterBottom"}}</code> up from the bottom.
+</p>
+<p class="note">
+  The badge is drawn at <strong>Grown&nbsp;0</strong> &mdash; what a fresh copy wears, which is the
+  card the shelf shows. It is also the narrowest the figure gets: a run late in a climb reads
+  <code>10.5</code> or <code>+100</code>, so judge the size against those rather than against
+  <code>1.0</code>. A ring with no badge is one that does not grow, which is most of the catalogue.
+  <strong>A decimal point means a multiplier and a <code>+</code> means a flat figure</strong>;
+  there is no <code>x</code> after the multiplier, because the point already says so, and a
+  multiplier is <strong>always one decimal place</strong> — so four characters is the widest the
+  figure ever gets. <strong>A wide figure is meant to outgrow the disc a little</strong>; what it
+  may not do is leave the card.
   Shown at 1:1 on the ground the rings are actually drawn on.
 </p>
 <p class="note">
@@ -135,6 +150,7 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
         <div class="record">{{.Record}}</div>
         <p class="price">{{.Price}} vitae, sells back for {{.Sell}}</p>
         <p class="text">{{.Text}}</p>
+        {{if .Counter}}<p class="art">badge: <code>{{.Counter}}</code> at Grown 0</p>{{end}}
         <ul class="rules">
           {{range .Rules}}<li>{{.}}</li>{{end}}
         </ul>

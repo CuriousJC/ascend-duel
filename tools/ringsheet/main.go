@@ -58,6 +58,7 @@ import (
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
 
@@ -109,6 +110,7 @@ func run(dir string) error {
 			Name:    record.FaceName(),
 			Element: cards.Ring,
 			Art:     art,
+			Counter: counterFor(key),
 			Enabled: true,
 		}
 		cell, err := write(dir, faces, spec, cards.RingStyle, "ring-"+key+".png", record.Name)
@@ -129,6 +131,7 @@ func run(dir string) error {
 			Rarity:  string(record.Rarity),
 			Sell:    session.SellValue(key),
 			Art:     record.Art,
+			Counter: spec.Counter,
 			Default: record.Art == "",
 			Rules:   ruleLines(record),
 		})
@@ -289,7 +292,12 @@ func write(dir string, f *cards.Faces, s cards.Spec, st cards.Style, name, label
 	if err := png.Encode(out, img); err != nil {
 		return cell{}, fmt.Errorf("encoding %s: %w", name, err)
 	}
-	return cell{File: name, Label: label, Width: st.Width, Height: st.Height}, nil
+	// **The image’s own size, not the style’s** *(2026-09-09)*. A ring card renders larger than the
+	// card by Style.Bleed, so that the accumulator badge can hang off the bottom-right corner — and
+	// a page quoting the style’s size would scale the picture down to fit it and show every ring
+	// very slightly squashed.
+	b := img.Bounds()
+	return cell{File: name, Label: label, Width: b.Dx(), Height: b.Dy()}, nil
 }
 
 // artwork decodes one embedded picture. **A key that is in no embed is an error rather than a
@@ -347,14 +355,35 @@ func groupByRarity(plates []plate) []tier {
 // template, so the page cannot quote a card it is not showing.
 func styleFacts(st cards.Style) map[string]int {
 	return map[string]int{
-		"width":        st.Width,
-		"height":       st.Height,
-		"cornerRadius": st.CornerRadius,
-		"borderWidth":  st.BorderWidth,
-		"artTop":       st.ArtTop,
-		"artInset":     st.ArtInset,
-		"artMaxH":      st.ArtMaxH,
+		"width":           st.Width,
+		"height":          st.Height,
+		"cornerRadius":    st.CornerRadius,
+		"borderWidth":     st.BorderWidth,
+		"artTop":          st.ArtTop,
+		"artInset":        st.ArtInset,
+		"artMaxH":         st.ArtMaxH,
+		"counterHeight":   st.CounterHeight,
+		"counterDiameter": 2 * st.CounterRadius,
+		"counterRight":    st.CounterRight,
+		"counterBottom":   st.CounterBottom,
+		"counterSize":     int(st.CounterSize),
 	}
+}
+
+// counterFor is the accumulator badge a fresh copy of this ring would wear — `1.0` for a ring
+// that grows a multiplier, `+5` for one that grows a flat figure, and nothing at all for the rest
+// of the catalogue, which is most of it.
+//
+// **It is `combat.CounterLabel` and not a second formatter**, which is the whole reason that
+// function is exported: a sheet the sizing is judged on has to draw the figure the game draws,
+// down to the decimal point. **Grown is zero on purpose** — this is the shelf's card, the one a
+// player reads before buying, and it is also the widest the figure is *not*: see the page note.
+func counterFor(key string) string {
+	id, ok := combat.RingByKey(key)
+	if !ok {
+		return ""
+	}
+	return combat.CounterLabel(combat.WornRing{Ring: id})
 }
 
 type cell struct {
@@ -374,6 +403,7 @@ type plate struct {
 	Rarity  string
 	Sell    int
 	Art     string
+	Counter string
 	Default bool
 	Rules   []string
 }

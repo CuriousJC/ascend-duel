@@ -166,6 +166,25 @@ type Style struct {
 	CounterRight  int
 	CounterBottom int
 	CounterSize   float64
+
+	// CounterRadius is the disc behind the figure. A zero radius draws none, which is what every
+	// style but RingStyle has, and it is the same box: the disc is `2*CounterRadius` square,
+	// measured in from CounterRight and up from CounterBottom.
+	CounterRadius int
+
+	// Bleed is how far past the card’s right and bottom edges the rendered image extends.
+	//
+	// **A card image is the card’s own size everywhere else, and that is worth keeping true**:
+	// every caller draws it at a top-left point and measures its hit box off the style, so an image
+	// that is quietly larger than the card is a thing to be able to point at. This is the one
+	// reason there is a field for it rather than a constant — the accumulator badge is centred on
+	// the bottom-right corner, so three quarters of it lies outside the card, and a badge clipped
+	// to the card would be a quarter disc filling the corner instead.
+	//
+	// **It grows the image, never the card.** The face is still drawn at the origin at Width x
+	// Height, so nothing about the layout moves; what changes is that there are pixels to the right
+	// of it and below it for a corner ornament to live in.
+	Bleed int
 }
 
 // NameLinesAbove is how many lines of name this style can draw before its ink would reach
@@ -353,6 +372,17 @@ func (st Style) Scaled(num, den int) Style {
 	out.HealthTextSize = f(st.HealthTextSize)
 
 	out.EffectSize, out.EffectTop, out.EffectGap = i(st.EffectSize), i(st.EffectTop), i(st.EffectGap)
+
+	// **The counter was missing from this list until 2026-09-09**, which meant the one field block
+	// on Style authored in one space and drawn in another: the offsets are measured from the card's
+	// own edges, so an unscaled CounterBottom on a card a quarter taller put the figure a quarter
+	// of the growth further from the bottom than it was authored to be. The numbers in ringAuthored
+	// were re-tuned in the same commit, so the comments there now describe what is drawn.
+	out.CounterHeight, out.CounterRight = i(st.CounterHeight), i(st.CounterRight)
+	out.CounterBottom, out.CounterRadius = i(st.CounterBottom), i(st.CounterRadius)
+	out.CounterSize = f(st.CounterSize)
+
+	out.Bleed = i(st.Bleed)
 
 	// GlyphScale is a whole-number pixel repeat, not a measurement. Scaling it would ask for a
 	// fractional repeat, which is the one thing a derived rim cannot survive.
@@ -695,18 +725,37 @@ var ringAuthored = Style{
 	// name off it.
 	ArtTop:   62,
 	ArtInset: 16,
-	ArtMaxH:  130,
+	ArtMaxH:  120,
 
-	// The accumulator figure, in the bottom-right corner of the strip the art leaves: the art box
-	// ends at 192 and the inside of the bottom border is 218, so a 22-pixel band on a small margin
-	// sits in the 26 pixels between them without touching either.
+	// The accumulator figure, on a disc **tucked into the bottom-right corner** — flush to both
+	// edges, so the disc's own curve meets the card's rather than sitting a margin inside it. That
+	// is what the zero offsets mean, and it is why drawCounter clips the disc to the card's
+	// silhouette: a circle tangent to both edges overlaps the corner curve unless its radius
+	// happens to equal the card's, and an unclipped one would square the corner off.
+	//
+	// **The band is what pays for the figure, and the art pays for the band** *(owner’s call,
+	// 2026-09-09)*. It was 15pt in a 22-pixel band, which is a number a player has to lean in to
+	// read on the one card whose whole job is to be read at a glance — this is the ring saying
+	// how big it has grown. The art is square and fitted, so ten pixels off ArtMaxH is ten pixels
+	// off every side of it and nothing else on the card moves; the box ends at 182 and the disc
+	// starts at 196, so the two still do not meet.
+	//
+	// **These are authored numbers and Scaled multiplies them**, so the 14 here is a 35-pixel disc
+	// on the drawn card and the 21 is a 26pt figure in it — which is the discards-left badge's own
+	// type size, on a disc a little larger than its 34.
 	//
 	// **Only rings have one**, because only rings grow. Nothing else on the card is displaced by
 	// it: the corner it takes was empty on every ring in the file.
-	CounterHeight: 22,
-	CounterRight:  12,
-	CounterBottom: 7,
-	CounterSize:   15,
+	CounterHeight: 28,
+	CounterRight:  0,
+	CounterBottom: 0,
+	CounterSize:   21,
+	CounterRadius: 14,
+
+	// Enough for the disc’s overhang and for the widest figure past it: `+100` is about
+	// forty pixels centred on the corner, so twenty-two is the half of that rather than the
+	// radius. A figure wider than the bleed is pulled back inside it rather than cut.
+	Bleed: 22,
 }
 
 // Token is a card reduced to the three things a hand is counted on: its **element**, its

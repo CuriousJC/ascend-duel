@@ -1639,3 +1639,28 @@ func GrowthEffect(w WornRing) (RingEffect, bool) {
 	}
 	return RingEffect{}, false
 }
+
+// CounterLabel is the accumulator badge's figure: what a growing ring is doing right now, written
+// in the units its own effect is written in. A ring that does not grow reads as the empty string,
+// which is most of the catalogue and is what says "draw nothing".
+//
+// **It is here rather than in the screen because it has two readers** — the worn-ring row and
+// `tools/ringsheet`, which cannot import a package that links a window. Two copies of this
+// formatting is two badges that can disagree about the same ring, which is the failure
+// `tools/hands` exists to prevent one axis over.
+//
+// It is formatting and not a rule: it reads figures the resolver produced and computes none.
+func CounterLabel(w WornRing) string {
+	e, ok := GrowthEffect(w)
+	if !ok {
+		return ""
+	}
+	if Scaling(e.Do) {
+		// **No `x` after it** *(owner’s call, 2026-09-09)*. The decimal point is what says this is
+		// a multiplier, and the `+` on the other branch is what says the flat one is not — so the
+		// letter was a third of the badge’s width spent restating what the figure already reads
+		// as, on the one card whose number is meant to be caught at a glance.
+		return fmt.Sprintf("%.1f", float64(e.Amount)/100)
+	}
+	return fmt.Sprintf("%+d", e.Amount)
+}

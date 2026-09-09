@@ -43,9 +43,9 @@ func TestTheBadgeSaysWhatTheRingIsDoing(t *testing.T) {
 	}{
 		{"heart-ring", 0, "+5"},
 		{"heart-ring", 45, "+50"},
-		{"enflamed-ring", 0, "1.0x"},
-		{"enflamed-ring", 50, "1.5x"},
-		{"momentum-ring", 60, "1.6x"},
+		{"enflamed-ring", 0, "1.0"},
+		{"enflamed-ring", 50, "1.5"},
+		{"momentum-ring", 60, "1.6"},
 	} {
 		id, ok := combat.RingByKey(tc.key)
 		if !ok {
@@ -185,7 +185,7 @@ func TestTheBadgeFollowsTheSumMidBlow(t *testing.T) {
 	if worn[0].Grown != 0 {
 		t.Error("withGrown wrote back into the fight's own worn set")
 	}
-	if got := ringCounter(stepped[0]); got != "1.2x" {
-		t.Errorf("the badge reads %q part way through the sum, want 1.2x", got)
+	if got := ringCounter(stepped[0]); got != "1.2" {
+		t.Errorf("the badge reads %q part way through the sum, want 1.2", got)
 	}
 }

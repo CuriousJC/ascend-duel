@@ -66,7 +66,10 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		return nil, fmt.Errorf("cards: no fonts")
 	}
 
-	img := image.NewRGBA(image.Rect(0, 0, st.Width, st.Height))
+	// **The card is drawn at the origin at its own size; the bleed is room past its right and
+	// bottom edges** for an ornament that hangs off the corner. See Style.Bleed — it is zero on
+	// every style but the ring’s.
+	img := image.NewRGBA(image.Rect(0, 0, st.Width+st.Bleed, st.Height+st.Bleed))
 
 	// The back is drawn before anything else is considered, and returns. Every other field
 	// on the Spec describes the face, so a face-down card that consulted them would be
@@ -141,23 +144,39 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	return img, nil
 }
 
-// drawCounter puts Spec.Counter in the bottom-right corner.
+// drawCounter puts Spec.Counter on a disc centred on the card’s bottom-right corner.
 //
 // **Last, over everything**, because it is the one thing on the face that says how far a ring has
 // got rather than what the ring is — a figure painted over by the artwork underneath it would be
 // the one part of the card the player cannot read.
 //
-// **No badge behind it** *(owner's call, 2026-08-26)*. It was a filled pill for an afternoon, which
-// is a second surface on a card that already has one and reads as a sticker applied to the ring
-// rather than as something the ring says. What carries it instead is the colour: the figure is
-// drawn in the card's own border ink, taken *after* state, so a ring's counter is the same pink as
-// its border and fades with the rest of the card rather than staying the loudest thing on one you
-// cannot act on.
+// **There is a disc behind it** *(owner’s call, 2026-09-09)*, which reverses the 2026-08-26 call
+// that there should not be. The argument then was that a second surface reads as a sticker applied
+// to the ring rather than as something the ring says, and that is still true — what changed is
+// which of the two matters: a bare figure in the card’s own border pink, on a card that is mostly
+// artwork, does not read as a *count* at all.
 //
-// **Right-aligned to the corner and top-aligned in its band**, so a figure that grows a character
-// wider grows leftwards into empty card. Nothing clamps that width — a style whose counter could
-// reach halfway across the card is a style, not a renderer, problem, and
-// TestARingCounterStaysInItsCorner is what fails on one.
+// **Centred on the corner rather than tucked inside it** *(owner’s call, 2026-09-09)*, which is
+// the discards-left badge’s own arrangement — see screens.drawDiscardsLeft, which centres on the
+// Discard button’s corner for the same reason. Most of the disc hangs off the card, so it reads as
+// a counter attached to the ring instead of a second thing printed on it, and it costs the artwork
+// nothing at all. **Style.Bleed is what pays for it**: the rendered image is that much larger than
+// the card on the right and the bottom, because a badge clipped to the card would be a quarter
+// disc filling the corner.
+//
+// **The disc is the border ink and the figure is the card’s surface**, an inversion of what was
+// there rather than a new colour: the palette has no hue left to claim, so the badge is made
+// obvious by swapping the two colours the card already carries. Both are taken *after* state, like
+// the border, so a ring you cannot act on fades with the rest of its card.
+//
+// **Centred on the disc, and allowed to outgrow it.** Two characters sit inside; `10.5` and `+100`
+// spill past the curve on both sides, which is the readable failure — the alternative is a figure
+// shrunk to fit the widest case it will ever reach and small for every case it actually shows. The
+// clamp is the image’s own edge, which is the bleed rather than the card.
+//
+// **Hard-edged, like every other shape in this package.** A disc this size shows its steps more
+// than a card corner does; antialiasing it would put two rendering idioms on one face, and that is
+// a decision to take deliberately rather than to slip in with a badge.
 func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) error {
 	if st.CounterHeight <= 0 || s.Counter == "" {
 		return nil
@@ -168,10 +187,27 @@ func drawCounter(dst *image.RGBA, s Spec, st Style, f *Faces, ink color.RGBA) er
 		return err
 	}
 
-	right := st.Width - st.CounterRight
-	top := st.Height - st.CounterBottom - st.CounterHeight + (st.CounterHeight-lineHeight)/2
+	// The centre, measured in from the card’s right and bottom edges like everything else here.
+	// Both offsets are zero on the one style that has a counter, which is what puts it on the
+	// corner; they are kept so a style can pull it inboard without a second rule.
+	cx := st.Width - st.CounterRight
+	cy := st.Height - st.CounterBottom
 
-	return drawTextRightAligned(dst, f, st.CounterSize, s.Counter, right, top, ink)
+	if r := st.CounterRadius; r > 0 {
+		roundedRect(dst, cx-r, cy-r, 2*r, 2*r, r, ink)
+	}
+
+	width, err := TextWidth(f, st.CounterSize, s.Counter)
+	if err != nil {
+		return err
+	}
+
+	x, y := cx-width/2, cy-lineHeight/2
+	if b := dst.Bounds(); x+width > b.Max.X {
+		x = b.Max.X - width
+	}
+
+	return drawText(dst, f, st.CounterSize, s.Counter, x, y, Surface)
 }
 
 // drawEffects lays the status badges out in a centred row along the bottom of the card.

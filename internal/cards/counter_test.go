@@ -44,15 +44,23 @@ func TestARingCounterStaysInItsCorner(t *testing.T) {
 	st := RingStyle
 	bare := render(t, ringWithCounter(""), st)
 
-	for _, counter := range []string{"+5", "1.5x", "12.5x", "+100"} {
+	// **Every shape the label actually takes** — see combat.CounterLabel: a multiplier is always
+	// one decimal place, so the widest it reaches is `10.5`, and a flat figure carries a sign. The
+	// figure is allowed to outgrow its disc; what it may not do is leave the card.
+	for _, counter := range []string{"+5", "1.5", "10.5", "+100"} {
 		got := differs(bare, render(t, ringWithCounter(counter), st))
 		if got.Empty() {
 			t.Errorf("counter %q drew nothing", counter)
 			continue
 		}
 
-		corner := image.Rect(st.Width/2, st.ArtTop+st.ArtMaxH, st.Width-st.BorderWidth,
-			st.Height-st.BorderWidth)
+		// **Out to the bleed, not to the card's own edges** *(2026-09-09)*: the badge is centred
+		// on the bottom-right corner, so most of it lies outside the card in the room Style.Bleed
+		// makes for it. What the box still holds is the half of the card it may not cross, the art
+		// box it may not reach back into, and the edge of the image — a figure wider than the
+		// bleed is pulled back inside rather than cut, and this is what fails if it stops being.
+		corner := image.Rect(st.Width/2, st.ArtTop+st.ArtMaxH,
+			st.Width+st.Bleed, st.Height+st.Bleed)
 		if !got.In(corner) {
 			t.Errorf("counter %q drew at %v, which is outside the corner %v", counter, got, corner)
 		}
@@ -77,47 +85,77 @@ func TestOnlyARingCardDrawsACounter(t *testing.T) {
 	}
 }
 
-// **There is nothing behind the figure.** It was a filled pill for an afternoon and that is a second
-// surface on a card that already has one; what says the counter belongs to the ring is the ink,
-// which is the card's own border colour at the card's own state.
+// **There is a disc behind the figure, and the figure is the card’s surface showing through it.**
+// That reverses the 2026-08-26 call that the counter should be bare ink; see drawCounter for why.
 //
-// The check is that the pixels a counter adds are *ink* and not a block: everything the figure
-// changes has to be near the border colour, and the card's surface has to still be showing between
-// the characters.
-func TestTheCounterIsInkAndNotABadge(t *testing.T) {
+// The check is the inversion, read *inside the circle*, where the badge is the only thing there is:
+// every pixel has to be either the card’s border colour or the card’s own surface, and both have
+// to be present — all border would be a disc with no figure on it, all surface no disc at all.
+func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 	st := RingStyle
-	bare := render(t, ringWithCounter(""), st)
-	img := render(t, ringWithCounter("1.5x"), st)
+	img := render(t, ringWithCounter("1.5"), st)
 
-	// The border, read off the same card, because a border is drawn at the card's state and an
+	// The border, read off the same card, because a border is drawn at the card’s state and an
 	// enabled ring rests short of full strength.
 	border := img.RGBAAt(st.BorderWidth-1, st.Height/2)
 
-	box := differs(bare, img)
-	if box.Empty() {
-		t.Fatal("the counter drew nothing")
+	r := st.CounterRadius
+	cx, cy := st.Width-st.CounterRight, st.Height-st.CounterBottom
+
+	// The disc’s left edge, which is inside the circle and clear of a figure centred on the
+	// middle of it — so it is the border colour whatever the figure happens to be.
+	if got := img.RGBAAt(cx-r+1, cy); !near(got, border) {
+		t.Errorf("the disc reads %v at its left edge, want the border %v", got, border)
 	}
 
-	changed, surface := 0, 0
-	for y := box.Min.Y; y < box.Max.Y; y++ {
-		for x := box.Min.X; x < box.Max.X; x++ {
-			was, now := bare.RGBAAt(x, y), img.RGBAAt(x, y)
-			if was == now {
-				surface++
+	disc, surface := 0, 0
+	for dy := -r; dy <= r; dy++ {
+		for dx := -r; dx <= r; dx++ {
+			if dx*dx+dy*dy > (r-1)*(r-1) {
 				continue
 			}
-			changed++
-			if !near(now, border) && !between(now, was, border) {
-				t.Fatalf("the counter painted %v at (%d,%d), which is neither the surface %v nor the border %v",
-					now, x, y, was, border)
+			switch got := img.RGBAAt(cx+dx, cy+dy); {
+			case near(got, border):
+				disc++
+			case near(got, Surface):
+				surface++
+			case between(got, Surface, border):
+			default:
+				t.Fatalf("the badge painted %v at (%d,%d), which is neither the surface %v nor the border %v",
+					got, cx+dx, cy+dy, Surface, border)
 			}
 		}
 	}
-	if changed == 0 {
-		t.Fatal("the counter changed nothing inside its own bounds")
+	if disc == 0 {
+		t.Error("nothing inside the circle is the border colour, so there is no disc")
 	}
 	if surface == 0 {
-		t.Error("the counter filled its whole box, so it is a badge and not ink")
+		t.Error("nothing inside the circle is the card’s surface, so the figure is not showing through")
+	}
+}
+
+// **Most of the badge lies outside the card**, which is what centring it on the corner means and
+// what Style.Bleed exists to make room for. A card image that went back to being exactly its style
+// size would clip it to a quarter disc in the corner, and nothing else in the package would notice.
+func TestTheBadgeHangsOffTheCard(t *testing.T) {
+	st := RingStyle
+	img := render(t, ringWithCounter("1.5"), st)
+
+	if got := img.Bounds(); got.Dx() != st.Width+st.Bleed || got.Dy() != st.Height+st.Bleed {
+		t.Fatalf("a ring renders %dx%d, want %dx%d",
+			got.Dx(), got.Dy(), st.Width+st.Bleed, st.Height+st.Bleed)
+	}
+
+	painted := 0
+	for y := st.Height; y < st.Height+st.Bleed; y++ {
+		for x := st.Width; x < st.Width+st.Bleed; x++ {
+			if img.RGBAAt(x, y).A > 0 {
+				painted++
+			}
+		}
+	}
+	if painted == 0 {
+		t.Error("nothing is drawn past the card's corner, so the badge is not on it")
 	}
 }
 

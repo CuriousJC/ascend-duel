@@ -133,6 +133,25 @@ const (
 	// KindHealed makes for not being a negative KindDamage.
 	KindTimeUp
 
+	// KindGrantedDMG is a golden card's gamble coming up damage. Action is the card that rolled it,
+	// Amount is the DMG granted, and Side and Target are both the duelist who played it.
+	//
+	// **The rules have already moved the fighting duelist by the time this is emitted**, so the
+	// grant is worth something for the rest of the fight. What it cannot do is move the *run*, which
+	// is what owns a permanent bonus — so this is the announcement the layer above reads and acts
+	// on. See screens.settleGrants, and KindVitae, which is the same division of labour.
+	//
+	// **Its own kind rather than a flag on one grant event.** The two grants travel to different
+	// places on screen — a DMG figure to the stat, a life figure to the bar — and read as different
+	// sentences in the feed, which is the argument KindHealed already makes for not being a negative
+	// KindDamage.
+	KindGrantedDMG
+
+	// KindGrantedLife is a golden card's gamble coming up life. Amount is the life granted, and it
+	// is added to the duelist's maximum *and* to what they are currently standing on — a bonus that
+	// raised only the ceiling would read as nothing happening. Life is what they are on afterwards.
+	KindGrantedLife
+
 	KindRoundEnd
 )
 

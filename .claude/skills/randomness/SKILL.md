@@ -14,6 +14,12 @@ it, and the second kind is invisible until the day someone tries to replay somet
 rules were written to survive, so follow them rather than reading the first roll as permission
 for the second.
 
+**`internal/combat` takes two sources as of 2026-09-09**, not one: `combat.Sources` is a struct
+with a `Roll` for the shock and a `Luck` for a gold or silver card's gamble. That is the shape the
+"the deck lives on the scene" note below already prescribed for a second roll in the rules — its
+**own** injected parameter, never the lightning source — and it is why `ResolveRound`'s last
+argument is a struct rather than a `*rand.Rand`. The zero value rolls nothing.
+
 ## The three rules that are never bent
 
 - **Never call the `math/rand` package-level functions** — `rand.Intn`, `rand.Float64`,
@@ -100,7 +106,7 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which rings are for sale, on any change to the worm catalogue |
 | `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the ring shelf |
 | `seeds.CanStock` | fight | `dealCanWorms` and `dealCanOffer` (`internal/screens/shop_goods.go`) | which four worms a can holds, on any change to the free offer |
-| `seeds.LuckRoll` | fight | `luckRNG` (`internal/screens/combat_parasite.go`) | what every gamble in the run grants, on any change to the rock shower |
+| `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
 | Loot offers | — | **not built** | — |
 | Floor offers | — | **not built** | — |
 
@@ -184,8 +190,8 @@ particular deck, and changing the deck silently deals something else.
 ## Adding a roll — the argument comes before the code
 
 **Rewrite a random-sounding rule rather than let it in.** Lightning is the deliberate
-exception, not the precedent. **The luck parasite is the second one** *(2026-09-07)* and it made its
-own argument in `MECHANICS.md` rather than appealing to lightning's: every other random-sounding
+exception, not the precedent. **The gamble on a gold or silver card is the second one** *(2026-09-07, moved onto a card
+2026-09-09)* and it made its own argument in `MECHANICS.md` rather than appealing to lightning's: every other random-sounding
 rule had a deterministic rewrite at least as good, and a consumable whose whole subject is luck does
 not — a gamble that always pays is a purchase. Note what it still had to do: name the alternative it
 declined (two independent rolls), say what the roll costs, and take its own stream. It was taken because unreliability is what lightning *is*, and
@@ -218,15 +224,18 @@ before it landed and both are now paid:
 
 ## The rest of the discipline
 
-- **`internal/combat` has no clock and exactly one roll.** It is otherwise integer arithmetic,
-  and `TestRoundIsDeterministic` pins that a nil source resolves identically every time. The
-  source is a `*rand.Rand` parameter on `ResolveRound`; a nil one means no rolls, which is what
-  every test and every headless caller passes.
+- **`internal/combat` has no clock and exactly two rolls** — the shock, and a gold or silver card's
+  gamble. It is otherwise integer arithmetic, and `TestRoundIsDeterministic` pins that an empty
+  `Sources` resolves identically every time. Every field of `Sources` may be nil and a nil one
+  rolls nothing, which is what every test and every headless caller passes.
+- **A third roll goes in `Sources` as its own field.** That is the rule the second one followed and
+  it is not negotiable: two concerns advancing one cursor means a change to either silently rerolls
+  the other. Adding a field costs nothing at the call sites, because they name what they pass.
 - **The deck lives on the scene, not in `internal/combat`.** Keeping the shuffle out of the
   rules package is what preserves its purity, its tests and any headless caller. Moving draw into
-  `combat` is a real option later, but it has to arrive as its **own** injected source parameter on
-  `ResolveRound` — never the lightning source, since a shuffle and a miss-roll are different
-  concerns — and it changes `TestRoundIsDeterministic`.
+  `combat` is a real option later, but it has to arrive as its **own** field on `Sources` — never
+  the lightning source or the luck one, since a shuffle, a miss-roll and a gamble are three
+  different concerns — and it changes `TestRoundIsDeterministic`.
 - **Do not pre-roll randomness into fixed-size slices.** A seeded `*rand.Rand` already is an
   infinite deterministic list, and the planned endless tower gives no worst case to size an
   array against. A reroll simply advances the cursor.

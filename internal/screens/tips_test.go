@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/carddesc"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
@@ -87,50 +89,153 @@ func TestADiscountRingStillReachesTheCost(t *testing.T) {
 	}
 }
 
-func TestTheTooltipShowsEveryTermOfTheDamage(t *testing.T) {
-	// **Term by term, not a total.** The question in front of a hand is not "what is this worth" but
-	// "why is that one worth more", and a single number answers only the first.
+// **The block leads with what the card is, and the figure in it is what the card will deal.**
+// A headline number that did not carry the rings would be the wrong one at the top of a panel whose
+// next four lines explain a bigger one.
+func TestTheTooltipOpensWithTheStatBlock(t *testing.T) {
 	card := aSlash(t)
 	h := wearing(t, 12, "keen-ring")
 
 	title, lines := cardTip(card, h)
-	if title != card.Label() {
-		t.Errorf("the panel is titled %q, want %q", title, card.Label())
+	if want := carddesc.Title(card); title != want {
+		t.Errorf("the panel is titled %q, want %q", title, want)
+	}
+	if len(lines) < 2 {
+		t.Fatalf("the tooltip is %d lines: %v", len(lines), lines)
 	}
 
+	// The engine's own figure, not a second sum: DMG x card x ring.
+	d := combat.Duelist{DMG: h.dmg}
+	for _, w := range h.worn {
+		d = d.Wearing(w)
+	}
+	if want := itoa(h.cost) + " AP"; lines[0] != want {
+		t.Errorf("the first line is %q, want %q", lines[0], want)
+	}
+	if want := itoa(d.CardDamage(card)) + " DMG"; lines[1] != want {
+		t.Errorf("the second line is %q, want %q", lines[1], want)
+	}
+}
+
+// **The chain is printed when a ring has moved something**, and the terms are the rings themselves
+// — that is the whole reason the panel exists, and it survived the block landing on top of it.
+func TestTheTooltipShowsEveryTermOfTheDamage(t *testing.T) {
+	card := aSlash(t)
+	h := wearing(t, 12, "keen-ring")
+
+	_, lines := cardTip(card, h)
 	joined := strings.Join(lines, " | ")
-	for _, want := range []string{"12 DMG", "the card", "Keen Ring", "before the hand"} {
+
+	for _, want := range []string{"the card", "Keen Ring", "before the hand"} {
 		if !strings.Contains(joined, want) {
 			t.Errorf("the tooltip is missing %q: %s", want, joined)
 		}
 	}
 
-	// And the figure it lands on is the engine's, not a second sum: DMG x card x ring.
-	d := combat.Duelist{DMG: h.dmg}
-	for _, w := range h.worn {
-		d = d.Wearing(w)
+	// **And it does not print the total twice.** The block already stated it; a second copy is a
+	// number that can disagree with the first, which is the bug nobody would be able to see.
+	if strings.Contains(joined, "= ") {
+		t.Errorf("the chain totalled a figure the block had already printed: %s", joined)
 	}
-	want := "= " + itoa(d.CardDamage(card)) + " DMG"
-	if !strings.Contains(joined, want) {
-		t.Errorf("the tooltip totals to something other than %q: %s", want, joined)
+}
+
+// **A card nothing has touched derives to itself, so it says nothing.** Three lines restating a
+// figure the block printed is a tooltip that trains the player not to read it.
+func TestTheTooltipIsSilentWhenNoRingChangedTheCard(t *testing.T) {
+	card := aSlash(t)
+
+	_, lines := cardTip(card, held{dmg: 12})
+	joined := strings.Join(lines, " | ")
+
+	for _, unwanted := range []string{"the card", "before the hand"} {
+		if strings.Contains(joined, unwanted) {
+			t.Errorf("a bare card printed a derivation (%q): %s", unwanted, joined)
+		}
+	}
+	if len(lines) != 2 {
+		t.Errorf("a bare attack is %d lines, want the cost and the damage: %v", len(lines), lines)
 	}
 }
 
 func TestTheTooltipStatesMultipliersWhenNobodyIsHoldingTheCard(t *testing.T) {
 	// Between fights there is no duelist — a run's stats belong to a fight — so a card offered on
-	// the reward screen has to say "4x your DMG" rather than a number worked out against a strength
+	// the reward screen has to say "4x DMG" rather than a number worked out against a strength
 	// nobody has.
 	card := aSlash(t)
 
 	_, lines := cardTip(card, wearing(t, 0, "keen-ring"))
 	joined := strings.Join(lines, " | ")
 
-	if strings.Contains(joined, "DMG, yours") {
-		t.Errorf("a card nobody is holding claimed a strength: %s", joined)
-	}
-	if !strings.Contains(joined, "your DMG") {
+	if !strings.Contains(joined, "X DMG") {
 		t.Errorf("the tooltip does not state the multiplier: %s", joined)
 	}
+}
+
+// **Every rider is mentioned.** A parasite the player spent whose effect the tooltip does not name
+// is the same failure as one with no drawing, in the other direction.
+func TestEveryRiderKindHasTipLines(t *testing.T) {
+	for _, k := range combat.RiderKinds() {
+		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 5})
+		if lines := carddesc.RiderLines(c); len(lines) == 0 {
+			t.Errorf("rider %s adds no line to a card's tooltip", k)
+		}
+	}
+	if lines := carddesc.RiderLines(combat.Plain(combat.Strike)); len(lines) != 0 {
+		t.Errorf("an unridden card claimed an upgrade: %v", lines)
+	}
+}
+
+// **The two examples the owner wrote out**, held against what the panel actually builds. They are
+// the specification for the format and this is the one place they exist as one.
+func TestTheTooltipReadsTheWayItWasSpecified(t *testing.T) {
+	jab := cardNamed(t, "Jab")
+	jab.Element = combat.Fire
+	jab = jab.SetRider(combat.Rider{Kind: combat.RiderHealOnPlay, Amount: 10})
+
+	// **A DMG of 10, because a Jab is a half-multiplier card.** The owner's example wrote `5 DMG`,
+	// and the figure a Jab prints is the holder's DMG times the card's own 50% — so the duelist
+	// that example describes hits for 10.
+	title, lines := cardTip(jab, held{cost: jab.Cost(), dmg: 10})
+	want := []string{"1 AP", "5 DMG", "+10 HEAL ON PLAY"}
+	if title != "FIRE JAB" || !equal(lines, want) {
+		t.Errorf("a fire Jab with a Leech reads %q %v, want %q %v", title, lines, "FIRE JAB", want)
+	}
+
+	ward := cardNamed(t, "Ward")
+	ward.Element = combat.Ice
+	ward = ward.SetRider(combat.Rider{Kind: combat.RiderVitaeInHand, Amount: 3})
+
+	title, lines = cardTip(ward, held{cost: ward.Cost()})
+	want = []string{"1 AP", "1 SHIELD", "+3 VITAE IN HAND"}
+	if title != "ICE WARD" || !equal(lines, want) {
+		t.Errorf("an ice Ward with a Brood reads %q %v, want %q %v", title, lines, "ICE WARD", want)
+	}
+}
+
+// cardNamed is the shipped card of this label, or a fatal failure. It reads the registry rather
+// than being built by hand, so a test writing a cost or an amount the catalogue does not have
+// fails here instead of passing against a card the game does not deal.
+func cardNamed(t *testing.T, label string) combat.Card {
+	t.Helper()
+	for _, id := range combat.AllConcepts() {
+		if combat.ConceptOf(id).Label == label {
+			return combat.Plain(id)
+		}
+	}
+	t.Fatalf("no card is called %q", label)
+	return combat.Card{}
+}
+
+func equal(got, want []string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func TestADiscountRingExplainsThePrice(t *testing.T) {
@@ -220,4 +325,60 @@ func itoa(n int) string {
 		return "-" + string(out)
 	}
 	return string(out)
+}
+
+// **A wildcard is CHROMATIC, not the element it happens to be** *(owner's call, 2026-09-09)*. The
+// card still is an arcane Lunge and everything else goes on reading it as one; what changes is the
+// title, because `ARCANE LUNGE` over a line reading `COUNTS AS EVERY ELEMENT` is a panel
+// contradicting itself in two lines.
+func TestAWildcardsTitleIsChromatic(t *testing.T) {
+	card := combat.Of(combat.Strike, combat.Arcane)
+
+	if got := carddesc.Title(card); got != "ARCANE STRIKE" {
+		t.Errorf("an ordinary arcane card is titled %q", got)
+	}
+
+	wild := card.SetRider(combat.Rider{Kind: combat.RiderWildElement})
+	if got := carddesc.Title(wild); got != carddesc.Chromatic+" STRIKE" {
+		t.Errorf("a wildcard is titled %q, want %q", got, carddesc.Chromatic+" STRIKE")
+	}
+	// The card is still arcane, and everything that is not the title still says so.
+	if wild.Element != combat.Arcane {
+		t.Error("naming a wildcard chromatic changed what element it is")
+	}
+}
+
+// **The element word in a title is written in its element's colour.** It was the one place in the
+// game that rule did not reach, because `models.Tooltip.Title` was a plain string — and a card's
+// title is where an element word is most worth colouring.
+func TestTheElementInATitleIsColoured(t *testing.T) {
+	title := tipLine(carddesc.Title(combat.Of(combat.Strike, combat.Fire)))
+
+	if title.Text() != "FIRE STRIKE" {
+		t.Fatalf("the title reads %q", title.Text())
+	}
+	if len(title) < 2 {
+		t.Fatalf("the title is one run, so nothing in it is coloured: %v", title)
+	}
+
+	want := cards.BorderOf(cards.Fire)
+	for _, run := range title {
+		if run.Text == "FIRE" && run.Ink == want {
+			return
+		}
+	}
+	t.Errorf("FIRE is not written in the fire red: %v", title)
+}
+
+// **CHROMATIC is deliberately not coloured.** The wheel has no hue left for "all of them", and a
+// word written in one of the five would be claiming the one thing it exists to deny.
+func TestChromaticTakesNoElementColour(t *testing.T) {
+	title := tipLine(carddesc.Title(
+		combat.Of(combat.Strike, combat.Arcane).SetRider(combat.Rider{Kind: combat.RiderWildElement})))
+
+	for _, run := range title {
+		if run.Ink.A != 0 {
+			t.Errorf("a chromatic title carries a colour: %v", title)
+		}
+	}
 }

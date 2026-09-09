@@ -84,26 +84,6 @@ const (
 	// are not interchangeable — see ApplyParasite.
 	ParasiteClone
 
-	// ParasiteLuck gambles. It touches no card and takes none: it rolls once and, on the strength
-	// of that one roll, adds a point of DMG to the duelist for the rest of the run, or five to the
-	// life they can carry, or nothing at all.
-	//
-	// **One roll with three outcomes, not two rolls** *(owner's call, 2026-09-07)*. A d5 where 1
-	// is the damage, 2 is the life and 3-5 is nothing — so the two rewards are mutually exclusive
-	// on any one spending and the card cannot pay twice. Two independent rolls would have made a
-	// double payout possible at 4%, which is a headline outcome rare enough that most runs would
-	// never see it and the ones that did would price the card off it.
-	//
-	// **It is the second thing in the game that rolls, and it is a gamble on purpose.** The
-	// `randomness` skill is explicit that lightning is the exception rather than the precedent, so
-	// the argument is made from scratch: a parasite whose whole subject is luck is the one case
-	// where certainty would delete the mechanic rather than tighten it. See MECHANICS.md.
-	//
-	// **What it grants is permanent and run-level**, so it lands on the same two figures a potion
-	// moves — `dmgBonus` and `lifeBonus` — rather than on the duelist a fight is using. A bonus
-	// written onto the fighter would be gone at the end of the round.
-	ParasiteLuck
-
 	// ParasiteChimera fires whatever the run spent last, again.
 	//
 	// **It carries no effect of its own** and is resolved through `Session.Echoes` before anything
@@ -127,12 +107,75 @@ const (
 	ParasiteChimera
 )
 
+// ParasiteChange is what class of alteration a parasite makes to a card.
+//
+// **The grammar it belongs to** *(owner's call, 2026-09-09)*: a card has a form, an element and an
+// action, and those three compose freely — a Jab painted fire and reformed to crush is all three at
+// once, and no parasite that moves one of them has any opinion about the others. Then it has **one
+// upgrade**, which is a rider, and there is only ever one: writing it discards whatever was there.
+//
+// **The distinction is worth naming because it is invisible in the effect.** Bulwark turns a card
+// into a Guard and Golden makes it gold, and from the outside both are "a parasite changed my
+// card". What separates them is what the *next* parasite does — the second normal change leaves the
+// first standing, and the second upgrade erases it — and a player who cannot tell which class a
+// card in the shop belongs to cannot plan two purchases ahead.
+//
+// **A closed vocabulary and a required field**, the posture every other word a data file may write
+// is under. It is authored rather than derived: see data.ParasiteData.Change.
+type ParasiteChange int
+
+const (
+	// ParasiteNormal moves the form, the element or the action, and leaves the card's upgrade
+	// exactly where it was. It is the zero value because it is what almost every parasite is.
+	ParasiteNormal ParasiteChange = iota
+
+	// ParasiteUpgrade writes the card's one upgrade slot, discarding whatever it held.
+	ParasiteUpgrade
+)
+
+// ParasiteChanges is every change class in a fixed order, for anything that walks them.
+func ParasiteChanges() []ParasiteChange {
+	return []ParasiteChange{ParasiteNormal, ParasiteUpgrade}
+}
+
+func (c ParasiteChange) String() string {
+	if c == ParasiteUpgrade {
+		return "upgrade"
+	}
+	return "normal"
+}
+
+// ParseParasiteChange resolves a change class from its name, reporting failure rather than falling
+// back to one — including for the empty string, so a record that never declared its class is
+// refused at load rather than quietly filed as normal.
+func ParseParasiteChange(name string) (ParasiteChange, bool) {
+	for _, c := range ParasiteChanges() {
+		if c.String() == name {
+			return c, true
+		}
+	}
+	return ParasiteNormal, false
+}
+
+// changeFor is the class a target actually makes, which is what an authored Change is checked
+// against.
+//
+// **A rider is the only upgrade there is.** Everything else in the catalogue moves one of the three
+// facts a card composes freely, or touches no card at all — and a parasite that touches no card is
+// normal by the same argument, since there is nothing for it to overwrite.
+func changeFor(t ParasiteTarget) ParasiteChange {
+	if t == ParasiteRider {
+		return ParasiteUpgrade
+	}
+	return ParasiteNormal
+}
+
 // ParasiteTargets is every target in a fixed order, for anything that walks them.
 func ParasiteTargets() []ParasiteTarget {
 	return []ParasiteTarget{
 		ParasiteRider, ParasiteRemove, ParasiteSwap, ParasiteVitae,
 		ParasiteDuplicate, ParasiteElement, ParasiteForm, ParasiteStones, ParasiteClone,
-		ParasiteLuck, ParasiteChimera,
+		ParasiteChimera,
 	}
 }
 
@@ -154,8 +197,6 @@ func (t ParasiteTarget) String() string {
 		return "stones"
 	case ParasiteClone:
 		return "clone"
-	case ParasiteLuck:
-		return "luck"
 	case ParasiteChimera:
 		return "chimera"
 	default:
@@ -191,6 +232,10 @@ type Parasite struct {
 	Name   string
 	Text   string
 	Target ParasiteTarget
+
+	// Change is the class of alteration this parasite makes — see ParasiteChange. It is what says
+	// whether spending it discards the card's existing upgrade.
+	Change ParasiteChange
 
 	// Count is how many cards of the run this parasite takes. Zero for vitae, at least one for
 	// everything else.
@@ -283,15 +328,27 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 			r.ParasiteRecord, r.Target, parasiteTargetList())
 	}
 
+	change, ok := ParseParasiteChange(r.Change)
+	if !ok {
+		return Parasite{}, fmt.Errorf("%s declares change %q, which is not one of normal/upgrade",
+			r.ParasiteRecord, r.Change)
+	}
+	// **The record's claim is checked against what its target actually does.** An authored field
+	// that nothing verified would be a second source of truth free to drift from the first, which
+	// is worse than deriving it — see data.ParasiteData.Change for why it is authored at all.
+	if want := changeFor(target); change != want {
+		return Parasite{}, fmt.Errorf("%s targets %s and calls itself a %s change, and that is a %s one",
+			r.ParasiteRecord, target, change, want)
+	}
+
 	p := Parasite{Record: r.ParasiteRecord, Name: r.Name, Text: r.Text,
-		Target: target, Count: r.Count, Concept: combat.NoConcept,
+		Target: target, Change: change, Count: r.Count, Concept: combat.NoConcept,
 		Element: combat.Basic, Form: combat.FormNone}
 
 	// **The count is checked against the target rather than in general.** A parasite aimed at no
 	// card and one aimed at two are both legal, and the mistake worth catching is the mismatch: a
 	// remove that eats nothing, or a vitae that asks the player to pick a card it will not touch.
-	if target == ParasiteVitae || target == ParasiteStones ||
-		target == ParasiteLuck || target == ParasiteChimera {
+	if target == ParasiteVitae || target == ParasiteStones || target == ParasiteChimera {
 		// **A chimera is in this group because its own record names no cards.** How many it
 		// actually asks for comes from the parasite it copies, and is read through `Echoes` long
 		// after this — so the record itself is a zero-target one and is checked as one.
@@ -341,6 +398,16 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 		if n <= 0 {
 			return Parasite{}, fmt.Errorf("%s attaches a rider worth %d, which is nothing at all",
 				r.ParasiteRecord, n)
+		}
+		// **The two metals read their figure as a denominator, so it has a floor.** Below the
+		// number of outcomes there is no losing face left: a golden card on a d2 grants something
+		// every single time it is played, which is a different card entirely and is the mistake a
+		// number in a JSON file could make silently. See combat.LuckOutcomes.
+		if kind == combat.RiderGolden || kind == combat.RiderSilver {
+			if n < combat.LuckOutcomes {
+				return Parasite{}, fmt.Errorf("%s gambles on 1 in %d, and %d outcomes always pay",
+					r.ParasiteRecord, n, combat.LuckOutcomes)
+			}
 		}
 		p.Rider, p.Number = kind, n
 		return p, nil
@@ -417,22 +484,6 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 			// could not be honoured, and it is refused rather than quietly shortened.
 			return Parasite{}, fmt.Errorf("%s hands over %d stones and the catalogue holds %d",
 				r.ParasiteRecord, n, len(stoneOrder))
-		}
-		p.Number = n
-		return p, nil
-
-	case ParasiteLuck:
-		n, err := strconv.Atoi(r.Value)
-		if err != nil {
-			return Parasite{}, fmt.Errorf("%s gambles and its value %q is not a number",
-				r.ParasiteRecord, r.Value)
-		}
-		if n < LuckOutcomes {
-			// **Below the number of outcomes there is no losing face left.** A d2 would pay every
-			// time, which is a different card — see LuckOutcomes, which is what the roll is read
-			// against.
-			return Parasite{}, fmt.Errorf("%s gambles on 1 in %d, and %d outcomes always pay",
-				r.ParasiteRecord, n, LuckOutcomes)
 		}
 		p.Number = n
 		return p, nil
@@ -579,7 +630,7 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 	if !ok {
 		return false
 	}
-	if (p.Target == ParasiteStones || p.Target == ParasiteLuck) && rng == nil {
+	if p.Target == ParasiteStones && rng == nil {
 		return false
 	}
 	// **Remembered on the way in rather than on the way out.** Every branch below returns from
@@ -591,13 +642,6 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 	switch p.Target {
 	case ParasiteVitae:
 		s.AddVitae(p.Number)
-		return true
-
-	case ParasiteLuck:
-		// **The roll is taken whatever it comes to.** A dud is a real outcome of this card rather
-		// than a reason to refuse it, so this returns true on a roll that granted nothing — the
-		// parasite was spent, which is what the player gambled.
-		s.rollLuck(p.Number, rng)
 		return true
 
 	case ParasiteRemove:
@@ -694,12 +738,11 @@ func (s *Session) ApplyParasiteRolling(p Parasite, ids []int, rng *rand.Rand) bo
 		return true
 
 	default:
+		// **The upgrade replaces whatever the card was carrying** — see combat.Card.SetRider, and
+		// ParasiteChange, which is the declaration in the record that says this parasite is one of
+		// the ones allowed to do it.
 		for _, i := range s.positionsOf(ids) {
-			card, ok := s.deck[i].AddRider(combat.Rider{Kind: p.Rider, Amount: p.Number})
-			if !ok {
-				return false
-			}
-			s.deck[i] = card
+			s.deck[i] = s.deck[i].SetRider(combat.Rider{Kind: p.Rider, Amount: p.Number})
 		}
 		return true
 	}
@@ -754,7 +797,12 @@ func (s *Session) CanApplyParasite(p Parasite, ids []int) bool {
 				return false
 			}
 		case ParasiteRider:
-			if card.RiderCount() >= combat.MaxCardRiders {
+			// **A card already carrying exactly this upgrade is the only illegal pick.** It used
+			// to be a card carrying its maximum, which is a different question and stopped making
+			// sense the day the maximum became one: a gold card the player wants to make silver is
+			// full and is also the pick they came for. What is refused now is the pick that would
+			// change nothing, which is the rule every other target here is under.
+			if card.Rider() == (combat.Rider{Kind: p.Rider, Amount: p.Number}) {
 				return false
 			}
 		}

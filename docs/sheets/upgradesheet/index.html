@@ -55,24 +55,57 @@
   img { display: block; image-rendering: pixelated; }
   img.big { width: 609px; height: auto; }
   .grants { margin: 8px 0 0; font-size: 13px; }
+   
+  .tip {
+    display: inline-block; margin: 12px 0 0; padding: 9px 14px 11px;
+    background: #f0eee8; border: 2px solid #8d8b84; border-radius: 7px;
+    font: 12.5px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .04em; min-width: 190px;
+  }
+  .tip b { display: block; font-weight: 700; margin-bottom: 3px; }
   .grants code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 </style>
 
 <h1>Upgrade sheet</h1>
 <p class="facts">
-  Every <em>visible upgrade</em> a card can carry, drawn on all four form marks in all
-  1 × 3 combinations of ink and mark. The card is
-  <code>cards.Hand</code>, 203×280; the form mark's box is
-  <code>32px</code> at (10,10);
-  the ticks are 20×5. Every ink is authored at
-  32×32. The game draws <code>project</code>.
+  All 10 <em>visible upgrades</em> a card can carry, each drawn on all four form
+  marks. The card is <code>cards.Hand</code>, 203×280;
+  the form mark's box is <code>32px</code> at
+  (10,10); the ticks are
+  20×5. Every ink is
+  32×32; a washed card goes <code>55%</code> of the way toward it and a
+  washed border <code>80%</code>. The game draws <code>wash-face</code>.
 </p>
 <p class="note">
-  An upgrade takes the card's <strong>left column</strong> — the form mark and the cost ticks under
-  it — and paints it from a picture instead of from the element's one colour. That is the column
-  that already states the element, so an upgrade is not a fourth thing on a card with three: it is
-  the same statement about a card whose answer has changed. Everything else on the face is
-  untouched, and <code>Spec.Element</code> is still what the card <em>is</em>.
+  A card has a form, an element and an action — and then <strong>one upgrade</strong>. A second
+  upgrade replaces the first outright. <code>Spec.Element</code> is still what the card <em>is</em>,
+  and the left column still states it; the wildcard is the one upgrade that takes the hue off the
+  form mark, because it is the one whose subject is that the card counts as every element at once.
+</p>
+<p class="note">
+  <strong>Three styles, and the question is which one to keep.</strong> <code>border</code> paints
+  the 3px ring and leaves the face alone — the border was freed up in August when the element moved
+  off it, and what is left in that slot is the card's <em>state</em>, which is a wash away from
+  neutral rather than a hue. <code>wash</code> takes the whole card, border included: nobody misses
+  a gold card, and nothing on the face is unaffected. <code>wash-face</code> is the middle answer.
+  Read them against the plain row above, and against a whole hand rather than one card — five loud
+  cards in a row is the failure mode the border style exists to avoid.
+</p>
+<p class="note">
+  <strong>Eight of these colours are placeholders.</strong> Hue is spent — five elements, the ring
+  pink, the two verbs, the two duelists, the ground — so what is here is picked to be told apart
+  rather than to mean anything. Gold and silver are the exception: they are metals, and they are
+  what the mechanic is called. Retune the rest in <code>systems.upgradeTint</code> and re-run.
+</p>
+
+<p class="note">
+  Each upgrade below carries the <strong>tooltip a card wearing it actually shows</strong>, built by
+  <code>internal/carddesc</code> — the same call <code>screens.cardTip</code> makes, not a copy of
+  it. The card is a fire Lunge and the duelist behind it hits for 10, so a figure that looks wrong
+  can be checked by eye. There are no rings on, which is why the block is the whole panel: the game
+  appends its damage chain only when a ring has moved something. <strong>The colouring is the game's
+  too</strong> — the same <code>cards.ElementRuns</code> table the screen reads — which is why FIRE
+  is red and CHROMATIC is not: the wheel has no hue left for "all of them".
 </p>
 
 <h2>The plain card</h2>
@@ -110,78 +143,82 @@
   Rider: <code>wild-element</code>.
   Granted by Motley (motley).
 </p>
+<div class="tip">
+  <b><span>CHROMATIC LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>COUNTS AS EVERY ELEMENT</span></div>
+</div>
 
 
-<h4><code>project</code><span class="tag">the game draws this</span></h4>
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
 <div class="row">
   
   <div class="cardbox">
-    <img src="wild-project-stab.png" width="203" height="280" alt="Lunge">
+    <img src="wild-wash-face-stab.png" width="203" height="280" alt="Lunge">
     <div class="cap">stab · fire</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-project-slash.png" width="203" height="280" alt="Cleave">
+    <img src="wild-wash-face-slash.png" width="203" height="280" alt="Cleave">
     <div class="cap">slash · ice</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-project-crush.png" width="203" height="280" alt="Smash">
+    <img src="wild-wash-face-crush.png" width="203" height="280" alt="Smash">
     <div class="cap">crush · lightning</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-project-defend.png" width="203" height="280" alt="Guard">
+    <img src="wild-wash-face-defend.png" width="203" height="280" alt="Guard">
     <div class="cap">defend · earth</div>
   </div>
   
 </div>
 
-<h4><code>weave</code></h4>
+<h4><code>border</code></h4>
 <div class="row">
   
   <div class="cardbox">
-    <img src="wild-weave-stab.png" width="203" height="280" alt="Lunge">
+    <img src="wild-border-stab.png" width="203" height="280" alt="Lunge">
     <div class="cap">stab · fire</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-weave-slash.png" width="203" height="280" alt="Cleave">
+    <img src="wild-border-slash.png" width="203" height="280" alt="Cleave">
     <div class="cap">slash · ice</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-weave-crush.png" width="203" height="280" alt="Smash">
+    <img src="wild-border-crush.png" width="203" height="280" alt="Smash">
     <div class="cap">crush · lightning</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-weave-defend.png" width="203" height="280" alt="Guard">
+    <img src="wild-border-defend.png" width="203" height="280" alt="Guard">
     <div class="cap">defend · earth</div>
   </div>
   
 </div>
 
-<h4><code>ramp</code></h4>
+<h4><code>wash</code></h4>
 <div class="row">
   
   <div class="cardbox">
-    <img src="wild-ramp-stab.png" width="203" height="280" alt="Lunge">
+    <img src="wild-wash-stab.png" width="203" height="280" alt="Lunge">
     <div class="cap">stab · fire</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-ramp-slash.png" width="203" height="280" alt="Cleave">
+    <img src="wild-wash-slash.png" width="203" height="280" alt="Cleave">
     <div class="cap">slash · ice</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-ramp-crush.png" width="203" height="280" alt="Smash">
+    <img src="wild-wash-crush.png" width="203" height="280" alt="Smash">
     <div class="cap">crush · lightning</div>
   </div>
   
   <div class="cardbox">
-    <img src="wild-ramp-defend.png" width="203" height="280" alt="Guard">
+    <img src="wild-wash-defend.png" width="203" height="280" alt="Guard">
     <div class="cap">defend · earth</div>
   </div>
   
@@ -190,54 +227,31 @@
 
 <h4>enlarged, 3×</h4>
 <p class="note">
-  The same files, blown up nearest-neighbour. Read it <em>after</em> the rows above, never instead
-  of them.
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
 </p>
 
 <div class="row">
   
   <div class="cardbox">
-    <img class="big" src="wild-project-stab.png" alt="Lunge">
-    <div class="cap">3× · stab · fire</div>
+    <img class="big" src="wild-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
   </div>
   
   <div class="cardbox">
-    <img class="big" src="wild-project-slash.png" alt="Cleave">
-    <div class="cap">3× · slash · ice</div>
+    <img class="big" src="wild-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
   </div>
   
   <div class="cardbox">
-    <img class="big" src="wild-project-crush.png" alt="Smash">
-    <div class="cap">3× · crush · lightning</div>
+    <img class="big" src="wild-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
   </div>
   
   <div class="cardbox">
-    <img class="big" src="wild-project-defend.png" alt="Guard">
-    <div class="cap">3× · defend · earth</div>
-  </div>
-  
-</div>
-
-<div class="row">
-  
-  <div class="cardbox">
-    <img class="big" src="wild-weave-stab.png" alt="Lunge">
-    <div class="cap">3× · stab · fire</div>
-  </div>
-  
-  <div class="cardbox">
-    <img class="big" src="wild-weave-slash.png" alt="Cleave">
-    <div class="cap">3× · slash · ice</div>
-  </div>
-  
-  <div class="cardbox">
-    <img class="big" src="wild-weave-crush.png" alt="Smash">
-    <div class="cap">3× · crush · lightning</div>
-  </div>
-  
-  <div class="cardbox">
-    <img class="big" src="wild-weave-defend.png" alt="Guard">
-    <div class="cap">3× · defend · earth</div>
+    <img class="big" src="wild-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
   </div>
   
 </div>
@@ -245,23 +259,47 @@
 <div class="row">
   
   <div class="cardbox">
-    <img class="big" src="wild-ramp-stab.png" alt="Lunge">
-    <div class="cap">3× · stab · fire</div>
+    <img class="big" src="wild-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
   </div>
   
   <div class="cardbox">
-    <img class="big" src="wild-ramp-slash.png" alt="Cleave">
-    <div class="cap">3× · slash · ice</div>
+    <img class="big" src="wild-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
   </div>
   
   <div class="cardbox">
-    <img class="big" src="wild-ramp-crush.png" alt="Smash">
-    <div class="cap">3× · crush · lightning</div>
+    <img class="big" src="wild-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
   </div>
   
   <div class="cardbox">
-    <img class="big" src="wild-ramp-defend.png" alt="Guard">
-    <div class="cap">3× · defend · earth</div>
+    <img class="big" src="wild-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="wild-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="wild-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="wild-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="wild-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
   </div>
   
 </div>
@@ -269,9 +307,10 @@
 
 <h4>states</h4>
 <p class="note">
-  The mark and the ticks are one statement and share one state switch, so a card that cannot be
-  afforded fades both together and a queued one lights both together. A row where they disagree is
-  a bug in <code>Spec.atState</code>, not a matter of taste.
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
 </p>
 <div class="row">
   
@@ -287,6 +326,1743 @@
   
   <div class="cardbox">
     <img src="wild-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">golden</h3>
+<p class="grants">
+  Rider: <code>golden</code>.
+  Granted by Golden (golden).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>1 IN 5 ON PLAY: &#43;1 DMG</span></div><div><span>1 IN 5 ON PLAY: &#43;5 MAX LIFE</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="golden-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="golden-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="golden-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="golden-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="golden-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="golden-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="golden-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">silver</h3>
+<p class="grants">
+  Rider: <code>silver</code>.
+  Granted by Silver (silver).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>1 IN 5 ON PLAY: &#43;10 VITAE</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="silver-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="silver-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="silver-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="silver-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="silver-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="silver-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="silver-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">heal</h3>
+<p class="grants">
+  Rider: <code>heal-on-play</code>.
+  Granted by Leech (leech).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>&#43;10 HEAL ON PLAY</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="heal-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="heal-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="heal-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="heal-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="heal-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="heal-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="heal-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">shield</h3>
+<p class="grants">
+  Rider: <code>shield-on-play</code>.
+  Granted by Carapace (carapace).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>&#43;1 SHIELD ON PLAY</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="shield-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="shield-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="shield-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="shield-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="shield-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="shield-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="shield-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">damage</h3>
+<p class="grants">
+  Rider: <code>damage-on-play</code>.
+  Granted by Goad (goad).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>&#43;10 DMG ON PLAY</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="damage-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="damage-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="damage-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="damage-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="damage-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="damage-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="damage-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">combo</h3>
+<p class="grants">
+  Rider: <code>scale-in-combo</code>.
+  Granted by Hunger (hunger).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>2X DMG IF IT SCORES</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="combo-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="combo-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="combo-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="combo-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="combo-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="combo-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="combo-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">held-damage</h3>
+<p class="grants">
+  Rider: <code>damage-in-hand</code>.
+  Granted by Spite (spite).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>&#43;10 DMG IN HAND</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-damage-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-damage-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-damage-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-damage-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">held-scale</h3>
+<p class="grants">
+  Rider: <code>scale-in-hand</code>.
+  Granted by Patience (patience).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>2X DMG IN HAND</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-scale-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-scale-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-scale-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-scale-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
+    <div class="cap">more AP than the turn has left</div>
+  </div>
+  
+</div>
+
+<h3 class="group">held-vitae</h3>
+<p class="grants">
+  Rider: <code>vitae-in-hand</code>.
+  Granted by Brood (brood).
+</p>
+<div class="tip">
+  <b><span style="color:#eb782d">FIRE</span><span> LUNGE</span></b>
+  <div><span>3 AP</span></div><div><span>30 DMG</span></div><div><span>&#43;3 VITAE IN HAND</span></div>
+</div>
+
+
+<h4><code>wash-face</code><span class="tag">the game draws this</span></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-face-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-face-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-face-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-face-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>border</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-vitae-border-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-border-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-border-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-border-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+<h4><code>wash</code></h4>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-stab.png" width="203" height="280" alt="Lunge">
+    <div class="cap">stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-slash.png" width="203" height="280" alt="Cleave">
+    <div class="cap">slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-crush.png" width="203" height="280" alt="Smash">
+    <div class="cap">crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-wash-defend.png" width="203" height="280" alt="Guard">
+    <div class="cap">defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>enlarged, 3×</h4>
+<p class="note">
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
+</p>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-face-stab.png" alt="Lunge">
+    <div class="cap">3× · wash-face · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-face-slash.png" alt="Cleave">
+    <div class="cap">3× · wash-face · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-face-crush.png" alt="Smash">
+    <div class="cap">3× · wash-face · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-face-defend.png" alt="Guard">
+    <div class="cap">3× · wash-face · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-border-stab.png" alt="Lunge">
+    <div class="cap">3× · border · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-border-slash.png" alt="Cleave">
+    <div class="cap">3× · border · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-border-crush.png" alt="Smash">
+    <div class="cap">3× · border · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-border-defend.png" alt="Guard">
+    <div class="cap">3× · border · defend · earth</div>
+  </div>
+  
+</div>
+
+<div class="row">
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-stab.png" alt="Lunge">
+    <div class="cap">3× · wash · stab · fire</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-slash.png" alt="Cleave">
+    <div class="cap">3× · wash · slash · ice</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-crush.png" alt="Smash">
+    <div class="cap">3× · wash · crush · lightning</div>
+  </div>
+  
+  <div class="cardbox">
+    <img class="big" src="held-vitae-wash-defend.png" alt="Guard">
+    <div class="cap">3× · wash · defend · earth</div>
+  </div>
+  
+</div>
+
+
+<h4>states</h4>
+<p class="note">
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
+</p>
+<div class="row">
+  
+  <div class="cardbox">
+    <img src="held-vitae-state-rest.png" width="203" height="280" alt="resting in the hand">
+    <div class="cap">resting in the hand</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-state-selected.png" width="203" height="280" alt="queued for the turn">
+    <div class="cap">queued for the turn</div>
+  </div>
+  
+  <div class="cardbox">
+    <img src="held-vitae-state-disabled.png" width="203" height="280" alt="more AP than the turn has left">
     <div class="cap">more AP than the turn has left</div>
   </div>
   

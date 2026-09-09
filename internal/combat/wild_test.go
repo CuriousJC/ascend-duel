@@ -7,11 +7,7 @@ func slots(cards []Card) []Slot { return ResolutionOrder(cards, nil) }
 
 // wild is a card carrying the wildcard rider, which is the whole of what these tests set up.
 func wild(id ConceptID, e Element) Card {
-	c, ok := Of(id, e).AddRider(Rider{Kind: RiderWildElement})
-	if !ok {
-		panic("no room for a wildcard rider on a fresh card")
-	}
-	return c
+	return Of(id, e).SetRider(Rider{Kind: RiderWildElement})
 }
 
 // **A wildcard tops an elemental group up.** Three fire attacks and a wild ice one are a Four of a

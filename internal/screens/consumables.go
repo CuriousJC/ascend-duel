@@ -193,7 +193,7 @@ func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 		if !at.In(seat) {
 			continue
 		}
-		tip.Point(seat, p.Name, tipLines(parasiteTipLines(p)))
+		tip.Point(seat, tipLine(p.Name), tipLines(parasiteTipLines(p)))
 		return true
 	}
 	return false

@@ -524,11 +524,20 @@ func riderText(card combat.Card) string {
 		switch r.Kind {
 		case combat.RiderHealOnPlay:
 			out += "\n+" + strconv.Itoa(r.Amount) + " LIFE"
+		case combat.RiderGolden:
+			// **The odds are on the face and the payouts are not.** Two figures and a die will not
+			// fit in a dozen-character column, and what the player is choosing between when they
+			// hold a gold card and a silver one is the metal, not the arithmetic — which the
+			// tooltip and the parasite's own card both carry in full.
+			out += "\nGOLD"
+		case combat.RiderSilver:
+			out += "\nSILVER"
 		case combat.RiderWildElement:
-			// **The line and the rainbow column say the same thing on purpose.** The colour is
-			// what carries at a glance across a row of eight cards; the words are what answers
-			// "what does that mean" without a hover. Neither is redundant with the other, and a
-			// card that only did the colour would be one nobody could learn from.
+			// **The line and the wash say the same thing on purpose.** The colour is what carries
+			// at a glance across a row of eight cards; the words are what answers "what does that
+			// mean" without a hover. Neither is redundant with the other, and a card that only did
+			// the colour would be one nobody could learn from — which is the argument for every
+			// line in this switch, not just this one.
 			out += "\nANY ELEMENT"
 		}
 	}

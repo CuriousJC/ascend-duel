@@ -2,24 +2,44 @@ package cards
 
 import (
 	"image"
-	"image/color"
 	"testing"
 
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
-// upgradeSpec is a card in one upgrade, for comparing two renderings of the same card.
-func upgradeSpec(u systems.Upgrade, mode TintMode) Spec {
+// upgradeSpec is a card in one upgrade, drawn in the style the game draws, for comparing two
+// renderings of the same card.
+func upgradeSpec(u systems.Upgrade) Spec { return styledSpec(u, DefaultUpgradeStyle) }
+
+// styledSpec is upgradeSpec in a named style, for the tests that are about where the ink lands.
+func styledSpec(u systems.Upgrade, style UpgradeStyle) Spec {
 	return Spec{
-		Name:        "Lunge",
-		Form:        FormStab,
-		Cost:        3,
-		Element:     Fire,
-		Upgrade:     u,
-		UpgradeTint: mode,
-		Text:        "2x DMG",
-		Enabled:     true,
+		Name:         "Lunge",
+		Form:         FormStab,
+		Cost:         3,
+		Element:      Fire,
+		Upgrade:      u,
+		UpgradeStyle: style,
+		Text:         "2x DMG",
+		Enabled:      true,
 	}
+}
+
+// theFace and theBorder are the two regions the styles divide the card into, as rectangles a
+// pixel comparison can be taken over.
+//
+// **Not the geometry the renderer uses**, deliberately: these are a rectangle well inside the
+// border and a strip of the top edge, so a test that passes is one where the difference is
+// unmistakable rather than one where it is a rounding away from the boundary.
+func theFace() image.Rectangle {
+	st := Hand
+	in := st.BorderWidth + st.CornerRadius
+	return image.Rect(in, in, st.Width-in, st.Height-in)
+}
+
+func theBorder() image.Rectangle {
+	st := Hand
+	return image.Rect(st.Width/3, 0, 2*st.Width/3, st.BorderWidth)
 }
 
 // render is one card, or a fatal test failure.
@@ -32,110 +52,134 @@ func renderOrFail(t *testing.T, s Spec) *image.RGBA {
 	return img
 }
 
-// **An upgrade takes the whole left column or none of it.** The form mark and the cost ticks are
-// one statement about the card, and a rainbow mark over fire-red ticks would say two different
-// things in the one place the card says one. Both halves are checked, because wiring one and
-// forgetting the other is the failure this is written against.
-func TestAnUpgradeTakesTheWholeLeftColumn(t *testing.T) {
-	plain := renderOrFail(t, upgradeSpec(systems.UpgradeNone, DefaultTintMode))
-	wild := renderOrFail(t, upgradeSpec(systems.UpgradeWild, DefaultTintMode))
+// **Each style paints exactly the region it names.** They are a review knob and the owner picks one
+// by looking — but a style that reached somewhere it did not claim to would make that comparison a
+// comparison of two bugs. This is the table that says what each one promises.
+func TestEachStylePaintsTheRegionItNames(t *testing.T) {
+	for _, tc := range []struct {
+		style        UpgradeStyle
+		face, border bool
+		what         string
+	}{
+		{UpgradeBorder, false, true, "the border and nothing else"},
+		{UpgradeWash, true, true, "the whole card, border included"},
+		{UpgradeWashFace, true, false, "the face, leaving the border alone"},
+	} {
+		plain := renderOrFail(t, styledSpec(systems.UpgradeNone, tc.style))
+		gold := renderOrFail(t, styledSpec(systems.UpgradeGolden, tc.style))
+
+		if changed := !same(plain, gold, theFace()); changed != tc.face {
+			t.Errorf("%s: the face changed=%v, and this style paints %s", tc.style, changed, tc.what)
+		}
+		if changed := !same(plain, gold, theBorder()); changed != tc.border {
+			t.Errorf("%s: the border changed=%v, and this style paints %s", tc.style, changed, tc.what)
+		}
+	}
+}
+
+// **The wash reaches every part of the face it covers.** Reaching some of the card and not the rest
+// is exactly what the left-column mechanism this replaced did, so the parts are named rather than
+// the whole being compared in one go.
+func TestTheWashReachesTheWholeFace(t *testing.T) {
+	plain := renderOrFail(t, styledSpec(systems.UpgradeNone, UpgradeWash))
+	gold := renderOrFail(t, styledSpec(systems.UpgradeGolden, UpgradeWash))
 
 	st := Hand
-	mark := image.Rect(st.GlyphInset, st.FormTop,
-		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
-	stack, ok := dashStack(upgradeSpec(systems.UpgradeWild, DefaultTintMode), st)
-	if !ok {
-		t.Fatal("a three-cost card has no tick stack")
-	}
-
 	for _, tc := range []struct {
 		what string
 		box  image.Rectangle
 	}{
-		{"the form mark", mark},
-		{"the cost ticks", stack},
+		{"the left column", image.Rect(st.GlyphInset, st.FormTop,
+			st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)},
+		{"the text band", image.Rect(st.TextColumnLeft, st.TextBandTop, st.Width, st.TextBandBottom)},
+		{"the right border", image.Rect(st.Width-st.BorderWidth, 0, st.Width, st.Height)},
+		{"the bottom half", image.Rect(0, st.Height/2, st.Width, st.Height)},
 	} {
-		if same(plain, wild, tc.box) {
-			t.Errorf("%s is identical on an upgraded card and a plain one — the upgrade did not "+
+		if same(plain, gold, tc.box) {
+			t.Errorf("%s is identical on an upgraded card and a plain one — the wash did not "+
 				"reach it", tc.what)
 		}
 	}
 }
 
-// **Everything outside the left column is untouched.** An upgrade says one thing about the card
-// and the rest of the face is not its business — the name, the effect text and the border all
-// belong to the card, not to what has been done to it.
-func TestAnUpgradeLeavesTheRestOfTheCardAlone(t *testing.T) {
-	plain := renderOrFail(t, upgradeSpec(systems.UpgradeNone, DefaultTintMode))
-	wild := renderOrFail(t, upgradeSpec(systems.UpgradeWild, DefaultTintMode))
-
-	st := Hand
-	// **The text band and the right border, not simply "right of TextColumnLeft".** The form
-	// mark's 32px box starts at GlyphInset and runs past TextColumnLeft: the mark sits *above*
-	// the text rather than beside it, so a rectangle taken from the column's left edge to the
-	// card's right edge contains the mark itself and would fail on the change it is checking is
-	// contained.
-	for _, tc := range []struct {
-		what string
-		box  image.Rectangle
-	}{
-		{"the text band", image.Rect(st.TextColumnLeft, st.TextBandTop, st.Width, st.TextBandBottom)},
-		{"the right border", image.Rect(st.Width-st.BorderWidth, 0, st.Width, st.Height)},
-		{"everything below the left column", image.Rect(0, st.Height/2, st.Width, st.Height)},
-	} {
-		if !same(plain, wild, tc.box) {
-			t.Errorf("an upgrade changed %s", tc.what)
+// **Every style's name round-trips through the sheet's file names**, which is the only place one is
+// written down. Two styles spelling themselves the same would overwrite each other's PNGs and the
+// page would show one picture twice.
+func TestEveryUpgradeStyleHasItsOwnName(t *testing.T) {
+	seen := map[string]UpgradeStyle{}
+	for _, u := range UpgradeStyles() {
+		if first, ok := seen[u.String()]; ok {
+			t.Errorf("styles %d and %d both spell themselves %q", first, u, u.String())
 		}
+		seen[u.String()] = u
+	}
+	if len(seen) != len(UpgradeStyles()) {
+		t.Errorf("%d styles share %d names", len(UpgradeStyles()), len(seen))
+	}
+	// The zero value has to be the style the game draws — Spec.UpgradeStyle documents its zero as
+	// that, and every caller but the sheet leaves the field alone.
+	if DefaultUpgradeStyle != UpgradeStyle(0) {
+		t.Errorf("the default style is %s, which is not the zero value", DefaultUpgradeStyle)
 	}
 }
 
-// **The three modes are three different pictures.** They exist so the owner can choose between
-// them off tools/upgradesheet, and two that rendered the same would be a choice that is not one.
-func TestTheThreeTintModesDiffer(t *testing.T) {
-	st := Hand
-	mark := image.Rect(st.GlyphInset, st.FormTop,
-		st.GlyphInset+st.FormSize, st.FormTop+st.FormSize)
-
-	seen := map[TintMode]*image.RGBA{}
-	for _, m := range TintModes() {
-		seen[m] = renderOrFail(t, upgradeSpec(systems.UpgradeWild, m))
+// **The transparent corners stay transparent.** The wash walks the rounded silhouette rather than
+// the image rectangle, which is what stops an upgraded card squaring itself off — the same
+// property drawMark's traversal has, and the reason the two share one.
+func TestAnUpgradeLeavesTheCornersAlone(t *testing.T) {
+	gold := renderOrFail(t, upgradeSpec(systems.UpgradeGolden))
+	if c := gold.RGBAAt(0, 0); c.A != 0 {
+		t.Errorf("the top-left corner of an upgraded card is %+v, not transparent", c)
 	}
-	for i, a := range TintModes() {
-		for _, b := range TintModes()[i+1:] {
-			if same(seen[a], seen[b], mark) {
-				t.Errorf("%s and %s draw the same mark", a, b)
+}
+
+// **Every upgrade draws a different card**, or two parasites the player spent would look like one
+// they spent twice. It is the aggregate version of TestEveryUpgradeHasAnInk below: an ink can exist
+// and still be close enough to its neighbour to be indistinguishable on a card.
+func TestNoTwoUpgradesDrawTheSameCard(t *testing.T) {
+	whole := image.Rect(0, 0, Hand.Width, Hand.Height)
+	seen := map[systems.Upgrade]*image.RGBA{}
+	for _, u := range systems.Upgrades() {
+		seen[u] = renderOrFail(t, upgradeSpec(u))
+	}
+	for i, a := range systems.Upgrades() {
+		for _, b := range systems.Upgrades()[i+1:] {
+			if same(seen[a], seen[b], whole) {
+				t.Errorf("%s and %s draw the same card", a, b)
 			}
 		}
 	}
 }
 
-// **The ticks and the mark still share one state.** That is the rule
-// TestTheTicksAndTheBorderShareOneState holds for an ordinary card, and an upgrade drawing its own
-// ticks is exactly the place a second state switch gets written by accident.
-func TestAnUpgradedColumnStillStates(t *testing.T) {
-	rest := upgradeSpec(systems.UpgradeWild, DefaultTintMode)
+// **The wildcard is the one upgrade that leaves the form mark hueless**, because it is the one
+// whose subject is that the card has no single element. Every other upgrade leaves the element's
+// tint where it was — see systems.Upgrade.HuelessForm.
+func TestOnlyTheWildcardTakesTheHueOffTheFormMark(t *testing.T) {
+	for _, u := range systems.Upgrades() {
+		if got, want := u.HuelessForm(), u == systems.UpgradeWild; got != want {
+			t.Errorf("%s reports HuelessForm %v, want %v", u, got, want)
+		}
+	}
+}
+
+// **An upgraded card still states.** A disabled one has to read as unavailable whatever has been
+// done to it, and a wash applied after the state colouring is exactly where that gets lost.
+func TestAnUpgradedCardStillStates(t *testing.T) {
+	rest := upgradeSpec(systems.UpgradeGolden)
 	dim := rest
 	dim.Enabled = false
 
-	a, b := renderOrFail(t, rest), renderOrFail(t, dim)
-	stack, ok := dashStack(rest, Hand)
-	if !ok {
-		t.Fatal("a three-cost card has no tick stack")
-	}
-	if same(a, b, stack) {
-		t.Error("an upgraded card's ticks look the same afforded and unafforded")
+	whole := image.Rect(0, 0, Hand.Width, Hand.Height)
+	if same(renderOrFail(t, rest), renderOrFail(t, dim), whole) {
+		t.Error("an upgraded card looks the same afforded and unafforded")
 	}
 }
 
 // **A cost of zero draws no ticks and does not panic.** Ring and worm cards carry no cost, and an
-// upgraded one is not yet possible but costs nothing to be safe about — the flat path has always
-// had this guard and the upgraded one has to have it too.
-func TestAnUpgradedCardWithNoCostDrawsNoTicks(t *testing.T) {
-	s := upgradeSpec(systems.UpgradeWild, DefaultTintMode)
+// upgraded one is not yet possible but costs nothing to be safe about.
+func TestAnUpgradedCardWithNoCostRenders(t *testing.T) {
+	s := upgradeSpec(systems.UpgradeGolden)
 	s.Cost = 0
-	if _, ok := dashStack(s, Hand); ok {
-		t.Fatal("a zero-cost card reports a tick stack")
-	}
 	renderOrFail(t, s) // must not panic
 }
 
@@ -155,6 +199,10 @@ func same(a, b *image.RGBA, box image.Rectangle) bool {
 // **Every upgrade in the vocabulary has an ink.** One without would draw as an ordinary card and
 // be invisible, which is the exact failure the whole idea exists to fix — so it fails here rather
 // than shipping a parasite that appears to do nothing.
+//
+// **It no longer requires the ink to be more than one colour.** That check belonged to the left
+// column, where a flat ink would have said something an element could already say; a whole-card
+// wash in one tint is what nine of the ten upgrades are, and the wildcard's bands are the exception.
 func TestEveryUpgradeHasAnInk(t *testing.T) {
 	for _, u := range systems.Upgrades() {
 		ink := systems.UpgradeInk(u)
@@ -166,39 +214,27 @@ func TestEveryUpgradeHasAnInk(t *testing.T) {
 			t.Errorf("upgrade %q's ink is %dx%d, want %d square",
 				u, b.Dx(), b.Dy(), systems.UpgradeInkSize)
 		}
-		if flat(ink) {
-			t.Errorf("upgrade %q's ink is one colour, so the column it paints says nothing an "+
-				"element could not have said", u)
-		}
 	}
 }
 
-// **UpgradeNone has no ink, which is what a caller checks to fall back to the element.**
+// **UpgradeNone has no ink, which is what a caller checks to leave a card alone.**
 func TestNoUpgradeHasNoInk(t *testing.T) {
 	if systems.UpgradeInk(systems.UpgradeNone) != nil {
 		t.Error("UpgradeNone returned an ink")
 	}
 }
 
-// flat reports whether every opaque pixel of an ink is the same colour.
-func flat(ink *image.RGBA) bool {
-	b := ink.Bounds()
-	var first color.RGBA
-	found := false
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			c := ink.RGBAAt(x, y)
-			if c.A == 0 {
-				continue
-			}
-			if !found {
-				first, found = c, true
-				continue
-			}
-			if c != first {
-				return false
-			}
+// **Every upgrade's name round-trips.** Nothing serializes one today — an upgrade is derived from
+// the rider a card carries, and riders are stored by name — but the vocabulary is the sheet's
+// index and a name that does not parse back is a page that cannot be linked to.
+func TestEveryUpgradeNameParsesBack(t *testing.T) {
+	for _, u := range systems.Upgrades() {
+		got, ok := systems.ParseUpgrade(u.String())
+		if !ok || got != u {
+			t.Errorf("upgrade %d spells itself %q, which parses back as %d/%v", u, u.String(), got, ok)
 		}
 	}
-	return true
+	if _, ok := systems.ParseUpgrade("no-such-upgrade"); ok {
+		t.Error("an unknown upgrade name resolved to something")
+	}
 }

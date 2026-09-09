@@ -130,7 +130,7 @@ func blowDamage(t *testing.T, d Duelist) int {
 	target := Duelist{DMG: 10, Actions: 6, MaxLife: 500, CurrentLife: 500}
 	cards := []Card{Plain(Strike), Plain(Strike)}
 
-	_, _, after := ResolveRound(d, target, cards, nil, 1, nil)
+	_, _, after := ResolveRound(d, target, cards, nil, 1, Sources{})
 	return target.CurrentLife - after.CurrentLife
 }
 

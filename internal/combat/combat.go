@@ -7,13 +7,14 @@ import "math/rand"
 //
 // Inputs are taken by value and never mutated, so a caller can re-run a round from
 // the same starting state — the returned duelists are the authority on what changed.
-// **`rng` is the round's randomness and may be nil.** It is the seat CLAUDE.md's determinism
-// rules require — an injected source, never a package global — and today the only thing that
-// draws from it is a shock roll. A nil source means no roll ever lands, which is what a caller
-// with no business being random should pass: a preview, or a test pinning the parts of the
-// engine that are still exact.
-func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
-	return resolveRound(a, b, aCards, bCards, nil, nil, round, handTable, rng)
+// **`src` is the round's randomness and every field of it may be nil.** It is the seat CLAUDE.md's
+// determinism rules require — injected sources, never a package global — and there are two of them:
+// the shock roll and the gamble a golden or a silver card takes. **The zero value rolls nothing**,
+// which is what a caller with no business being random should pass: a preview, or a test pinning
+// the parts of the engine that are still exact. See Sources, which is where the rule that the two
+// streams are never interchanged is written down.
+func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, src Sources) (events []Event, aAfter, bAfter Duelist) {
+	return resolveRound(a, b, aCards, bCards, nil, nil, round, handTable, src)
 }
 
 // ResolveRoundHolding is ResolveRound told what each side did **not** play.
@@ -30,13 +31,13 @@ func ResolveRound(a, b Duelist, aCards, bCards []Card, round int, rng *rand.Rand
 // `aHeld` and `bHeld` are the cards still in each side's hand at the moment the round was
 // committed — not the draw pile, and not the cards being played. An opponent has no hand to hold,
 // so `bHeld` is nil for every fight the game plays today.
-func ResolveRoundHolding(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
-	return resolveRound(a, b, aCards, bCards, aHeld, bHeld, round, handTable, rng)
+func ResolveRoundHolding(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, src Sources) (events []Event, aAfter, bAfter Duelist) {
+	return resolveRound(a, b, aCards, bCards, aHeld, bHeld, round, handTable, src)
 }
 
 // resolveRound is ResolveRound with the catalogue injected. It exists so a test can drive a
 // synthetic hand through the whole engine rather than only through the matcher.
-func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, hands []Hand, rng *rand.Rand) (events []Event, aAfter, bAfter Duelist) {
+func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, hands []Hand, src Sources) (events []Event, aAfter, bAfter Duelist) {
 	events = make([]Event, 0, 16)
 	events = append(events, Event{Kind: KindRoundStart, Round: round})
 
@@ -50,13 +51,13 @@ func resolveRound(a, b Duelist, aCards, bCards, aHeld, bHeld []Card, round int, 
 	// a chill is spent at it, and a hand's position is an index *within* it — so the turn
 	// became worth naming. ResolutionOrder is still the authority on order: playTurn walks
 	// exactly the slots it produced for that side.
-	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), aHeld, round, hands, rng)
+	events, a, b = playTurn(events, SideA, a, b, appendTurn(nil, SideA, aCards), aHeld, round, hands, src)
 
 	// B still loses its standing defenses even in a round it never gets to act in, which is
 	// why this is not inside playTurn's early return: expiry is a property of the turn
 	// arriving, not of anything happening in it.
 	if a.Alive() && b.Alive() {
-		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), bHeld, round, hands, rng)
+		events, b, a = playTurn(events, SideB, b, a, appendTurn(nil, SideB, bCards), bHeld, round, hands, src)
 	} else {
 		events, b = expireDefenses(events, SideB, b, round)
 	}
@@ -104,7 +105,7 @@ func playTurn(
 	held []Card,
 	round int,
 	hands []Hand,
-	rng *rand.Rand,
+	src Sources,
 ) ([]Event, Duelist, Duelist) {
 	events, actor = expireDefenses(events, side, actor, round)
 
@@ -146,12 +147,12 @@ func playTurn(
 	// ate was never played. Putting it in front of the attack phase is what makes a heal arrive in
 	// time to matter to the turn it was spent in, rather than after the round it was meant to
 	// survive. See rider.go.
-	events, actor = playRiders(events, side, actor, turn, held, round)
+	events, actor = playRiders(events, side, actor, turn, held, round, src.Luck)
 
 	// **The attack phase is one blow, whatever it was made of.** Every attack card queued is
 	// announced, then the hand they form is announced, then a single figure of damage lands. Five
 	// Strikes are not five hits; they are one Four of a Kind.
-	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, rng)
+	events, actor, target = resolveAttackPhase(events, side, actor, target, turn, held, round, hands, src.Roll)
 
 	// **The defend phase comes second, and that is what a defence needs** *(2026-08-15)*. A guard
 	// and a shield both answer the *opponent's* blow, and the opponent acts after this turn ends —
@@ -867,7 +868,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 // that fired and changed nothing, and emitting a zero would put a line in the feed saying life was
 // restored when none was — so the cap is applied first and a no-op is silent. The rider is still
 // spent, because it is a property of the card rather than a charge.
-func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Card, round int) ([]Event, Duelist) {
+func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Card, round int, luck *rand.Rand) ([]Event, Duelist) {
 	for _, slot := range turn {
 		// **Shields first, and from the same seat a defend card raises them.** A rider is not a
 		// defend card — it is on a Jab, and the Jab is about to swing — so this cannot wait for
@@ -884,6 +885,66 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 				Life:   actor.Shields,
 				Round:  round,
 			})
+		}
+
+		// **The metals gamble here, on every play, for the rest of the run.** A golden card is not
+		// a consumable that was spent once: it is what the card permanently became, so the roll
+		// belongs to the moment the card is played and happens as often as the card is.
+		//
+		// **The grant lands on the fighting duelist and is announced for the run.** Moving `actor`
+		// is what makes the point of DMG worth something for the rest of this fight; the event is
+		// what lets `internal/screens` move the figure the run owns. Doing only one of the two
+		// would be a bonus that evaporated at the round boundary, or one the player could not use
+		// until the next fight.
+		if odds := slot.Card.GoldenOdds(); odds > 0 {
+			dmg, life := rollGolden(odds, luck)
+			if dmg > 0 {
+				actor.DMG += dmg
+				events = append(events, Event{
+					Kind:    KindGrantedDMG,
+					Side:    side,
+					Target:  side,
+					Action:  slot.Card.Concept,
+					Element: slot.Card.Element,
+					Amount:  dmg,
+					Life:    actor.CurrentLife,
+					Round:   round,
+				})
+			}
+			if life > 0 {
+				// **The ceiling and the floor together.** A maximum that rose while the player
+				// stood where they were would read as nothing having happened, which is the same
+				// pairing `session.Equip` makes when it applies the run's life bonus.
+				actor.MaxLife += life
+				actor.CurrentLife += life
+				events = append(events, Event{
+					Kind:    KindGrantedLife,
+					Side:    side,
+					Target:  side,
+					Action:  slot.Card.Concept,
+					Element: slot.Card.Element,
+					Amount:  life,
+					Life:    actor.CurrentLife,
+					Round:   round,
+				})
+			}
+		}
+
+		// **Silver needs no grant event**, because vitae already has a way out of a resolved round:
+		// the purse the duel closes with, less the one it opened with. See KindVitae.
+		if odds := slot.Card.SilverOdds(); odds > 0 {
+			if paid := rollSilver(odds, luck); paid > 0 {
+				actor.Vitae += paid
+				events = append(events, Event{
+					Kind:    KindVitae,
+					Side:    side,
+					Target:  side,
+					Action:  slot.Card.Concept,
+					Element: slot.Card.Element,
+					Amount:  paid,
+					Round:   round,
+				})
+			}
 		}
 
 		heal := slot.Card.HealOnPlay()

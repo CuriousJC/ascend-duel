@@ -86,12 +86,14 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 	vector.StrokeRect(screen, float32(at.X), float32(at.Y), float32(w), float32(h), 1, tipEdgeInk, false)
 
 	y := at.Y + tipPad
-	if t.Title != "" {
-		drawTipLine(screen, t.Title, titleFace, at.X+tipPad, y, tipTitle)
+	if len(t.Title) > 0 {
+		// **The title's runs are drawn by the same function the body's are**, so a coloured word in
+		// a title cannot end up placed differently from the same word one line down.
+		drawTipRuns(screen, t.Title, titleFace, at.X+tipPad, y, tipTitle)
 		y += int(tipTitleSize) + tipLineGap
 	}
 	for _, line := range t.Lines {
-		drawTipRuns(screen, line, face, at.X+tipPad, y)
+		drawTipRuns(screen, line, face, at.X+tipPad, y, tipInk)
 		y += int(tipLineSize) + tipLineGap
 	}
 }
@@ -102,16 +104,17 @@ func DrawTooltip(gs *state.GlobalState, screen *ebiten.Image, t *models.Tooltip)
 // face — overdrawing a coloured run on top of the whole line composites two sets of antialiased
 // edges and reads as a smudge. The two rasterisers are unrelated and the rule is the same.
 //
-// **A run with no ink takes the panel's own**, so a caller that never thinks about colour is drawn
-// exactly as it was before runs existed.
-func drawTipRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int) {
+// **A run with no ink takes `plain`**, so a caller that never thinks about colour is drawn exactly
+// as it was before runs existed. It is a parameter rather than a constant because the title and the
+// body have different default inks and share this drawing.
+func drawTipRuns(screen *ebiten.Image, line models.TipLine, face *text.GoTextFace, x, y int, plain color.RGBA) {
 	for _, run := range line {
 		if run.Text == "" {
 			continue
 		}
 		ink := run.Ink
 		if ink.A == 0 {
-			ink = tipInk
+			ink = plain
 		}
 		drawTipLine(screen, run.Text, face, x, y, ink)
 		w, _ := text.Measure(run.Text, face, 0)
@@ -131,8 +134,14 @@ func drawTipLine(screen *ebiten.Image, s string, face *text.GoTextFace, x, y int
 // carries a wide glyph and shows up as text running out of a box.
 func tipSize(t *models.Tooltip, face, titleFace *text.GoTextFace) (w, h int) {
 	widest := 0.0
-	if t.Title != "" {
-		widest, _ = text.Measure(t.Title, titleFace, 0)
+	if len(t.Title) > 0 {
+		// Run by run and summed, for the reason the body's lines are: the title is drawn that way
+		// too now, and measuring the joined string would let kerning across a join make the panel a
+		// pixel narrower than what goes in it.
+		for _, run := range t.Title {
+			w, _ := text.Measure(run.Text, titleFace, 0)
+			widest += w
+		}
 		h += int(tipTitleSize) + tipLineGap
 	}
 	for _, line := range t.Lines {

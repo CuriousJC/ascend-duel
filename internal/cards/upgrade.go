@@ -1,30 +1,37 @@
 package cards
 
-// Upgrades on a card face: **painting the left column from a picture instead of from a colour.**
+// Upgrades on a card face: **washing the whole finished card in the upgrade's own ink.**
 //
-// A card states its element in the left column — the tinted form mark and the cost ticks under it
-// — and everywhere else on the card that decision is already made: the border is neutral, the
-// surface is constant, and the only other hue on the face belongs to a ring. See CLAUDE.md, which
-// records the swap.
+// An upgrade is what the run has permanently made a card, and a card carries exactly one — see
+// `systems.Upgrade`, which is where the vocabulary and the argument for it live. This file is the
+// drawing: the ink sampled across the card's rectangle and every pixel of the card pulled toward
+// what it finds there.
 //
-// A *visible upgrade* is something the run has done to a card that the face has to say. The first
-// one is the wildcard, whose whole subject is that the card no longer has one element — so it takes
-// the column over and paints it from **the five element colours themselves**, in five bands. That
-// is not a fourth thing on a card with three; it is the same fact the column always stated, stated
-// about a card whose answer is now "all of them".
+// # It took the left column until 2026-09-09
 //
-// # The three ways a mark and an ink can be combined
+// The first upgrade was the wildcard, and it painted the form mark and the cost ticks from a
+// rainbow rather than from one element's colour. That mechanism — three tint modes, a sampled
+// glyph, a gradient projected across the cost stack — was deleted rather than kept beside this one,
+// on the rule that a removal is a deletion: nine of the ten upgrades have nothing to say about the
+// element, so a left column in gold would be the element slot saying something that is not about
+// the element. `tools/upgradesheet` is where the comparison lived and it now shows whole cards.
 //
-// They are here rather than chosen once and written in because which one reads best at 32 pixels
-// on an off-white card is a question to answer by looking, not by arguing — `tools/upgradesheet`
-// draws all three against all four form marks at card scale and enlarged. **The looking was done
-// on 2026-09-07 and TintProject won**; the other two are kept because the answer turned out to
-// depend on the ink rather than on the mode, so a future ink may well pick differently. See
-// TintProject.
+// # Where it goes is a question to settle by looking, so all three answers are here
 //
-// **All three are premultiplied throughout**, for tintInk's reason: the form marks arrive
-// downsampled, so their edge pixels are partly transparent, and brightness has to come off the
-// *unpremultiplied* value or every soft edge comes out darker than the ink it belongs to.
+// `UpgradeStyle` is the border, the whole card, or the face-without-the-border. It is a review knob
+// in exactly the shape `TintMode` was — the game draws one and `tools/upgradesheet` draws all of
+// them — because "does a gold border say enough" is not a question anybody wins by arguing.
+//
+// # It is washInside, and that is on purpose
+//
+// The mark file already had to pull a whole card toward a colour — the tutorial's red, the
+// shatter's dim — so the only thing new here is that the colour varies per pixel. Sharing the
+// traversal is what keeps an upgraded card and a marked one agreeing about which pixels are inside
+// the rounded silhouette and which are the transparent corners.
+//
+// **The order is upgrade first, mark second, and mark.go says why.** An upgrade is what the card
+// *is* and belongs in the face; a mark is the card's situation and belongs on top of it. A gold
+// card the tutorial is pointing at reads as gold and pointed-at, in that order.
 
 import (
 	"image"
@@ -33,189 +40,121 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
-// TintMode is how an upgrade's ink and a glyph's drawing are combined.
+// UpgradeStyle is *where* an upgrade is painted on the card.
 //
-// **Not append-only and not serialized.** It is a review knob: nothing outside this package and
-// `tools/upgradesheet` names one, and no file writes it down.
-type TintMode int
+// **Two answers, kept side by side because the question is one to settle by looking.** That is the
+// shape `TintMode` had before it: a review knob, drawn in every value by `tools/upgradesheet` and
+// in exactly one by the game. Nothing outside this package and that tool names one, and no file
+// writes it down — **not append-only and never serialized.**
+//
+// **What settled it is that the border is already saying something** *(owner's call, 2026-09-09)*.
+// It carries the card's state — resting, selected, unaffordable, dragged — so the default washes
+// everything *but* the ring: the card goes gold and the ring goes on saying what it was saying. The
+// other two are kept because how loud an upgrade should be is still open.
+type UpgradeStyle int
 
 const (
-	// TintProject maps the mark's ink box onto the ink and takes the colour flat, discarding the
-	// art's own shading entirely. **It is what the game draws** *(owner's call, 2026-09-07)*.
+	// UpgradeWashFace washes everything *but* the border: the card goes gold and the ring around it
+	// stays exactly what it was. **It is what the game draws** *(owner's call, 2026-09-09)*, and it
+	// is **first in the enum so it is the zero value** — the rule `Spec.UpgradeStyle` documents:
+	// every caller but the sheet never thinks about this, and they must all get the picture the game
+	// draws.
 	//
-	// **It won because of what the ink became.** While the ink was a broad diagonal gradient, the
-	// question was "how do I keep this drawing readable through a wash of colour" and TintWeave
-	// was the answer. The ink is now the five element colours in five bands, and that changes what
-	// the mark is for: it is no longer "a rainbow means wild", it is "these five specific colours
-	// are the five elements". Weave runs each band through a dark-to-light ramp, which pastels it
-	// — ice all but vanishes — and at the 32 pixels the card actually draws, the *saturation* is
-	// the message and the bevel is not legible anyway. So the loudest mode is the right one here,
-	// which is the opposite of what was true a day earlier.
+	// **The border is the card's *state* and the upgrade is not.** Resting, selected, unaffordable
+	// and being dragged are all said by the ring, in a wash away from the neutral grey; an upgrade
+	// painted over that is a second thing in the one place the card says the first. Keeping them
+	// apart is what lets a queued gold card read as queued *and* gold rather than as one or the
+	// other winning.
 	//
-	// **What it costs is the outline**, and that is a real loss rather than a free win: the rim is
-	// why the form marks are drawn art rather than generated silhouettes. It is paid knowingly.
-	//
-	// **It is first in the enum so that it is the zero value.** `Spec.UpgradeTint` documents its
-	// zero as "the mode the game uses", and a caller that never thinks about tint modes — which is
-	// every caller but the sheet — must get the right picture. A DefaultTintMode that was not the
-	// zero value would be a constant nothing reads.
-	TintProject TintMode = iota
+	// **It also keeps the card's outline.** A card washed to its very edge sits on the table with
+	// nothing separating it from the table, and a hand of eight is eight shapes that have to be told
+	// apart before any of them is read.
+	UpgradeWashFace UpgradeStyle = iota
 
-	// TintWeave takes the *hue* from the ink at the pixel's own position in the mark, and the
-	// light and shade from the pixel's own brightness — the ramp between a dark and a light
-	// version of that hue that tintInk already builds, with a different hue at every pixel.
-	//
-	// It is the mode that keeps the drawing: outline stays the darkest thing on the mark and the
-	// specular stays the brightest, so a spear still reads as a spear rather than as a
-	// spear-shaped hole in the ink. **It was the default until the ink became the element
-	// colours** — see TintProject, which is where that argument is written down. It stays because
-	// it is the right answer for any future ink whose bands are wide and whose colours are not
-	// themselves the meaning.
-	TintWeave
+	// UpgradeBorder paints the card's border band and nothing else — the opposite of the default,
+	// and the one that costs the state signal it would be sharing the ring with. Kept because it is
+	// the quietest answer and the question of how loud an upgrade should be is not closed.
+	UpgradeBorder
 
-	// TintRamp takes the pixel's brightness and uses it to walk the ink's own diagonal: dark ink
-	// lands at one end of the gradient, a specular at the other.
-	//
-	// It is the literal extension of tintInk — brightness picks a colour off a ramp — and it has
-	// failed on every ink tried against it: a diagonal rainbow, vertical stripes, and the element
-	// bands all collapse to one flat colour per mark. The reason is structural rather than bad
-	// luck: an ink worth having varies in *hue*, a mark's own pixels cluster in a narrow band of
-	// *brightness*, and this mode asks brightness to choose the hue. **It is kept only so the
-	// sheet can show why it does not work**; nothing should reach for it.
-	TintRamp
+	// UpgradeWash pulls the whole finished face toward the ink, the border included. It is the
+	// loudest of the three and the most unambiguous — nobody misses a gold card — and it is the one
+	// that costs the most legibility.
+	UpgradeWash
 )
 
-// DefaultTintMode is what the game draws with. See TintProject for why, and note that it is the
-// zero value on purpose.
-const DefaultTintMode = TintProject
+// DefaultUpgradeStyle is what the game draws. See UpgradeWashFace for why it is the zero value.
+const DefaultUpgradeStyle = UpgradeWashFace
 
-func (m TintMode) String() string {
-	switch m {
-	case TintRamp:
-		return "ramp"
-	case TintWeave:
-		return "weave"
+func (u UpgradeStyle) String() string {
+	switch u {
+	case UpgradeWash:
+		return "wash"
+	case UpgradeBorder:
+		return "border"
 	default:
-		return "project"
+		return "wash-face"
 	}
 }
 
-// TintModes is every mode in a fixed order, for the sheet that compares them. **The default
+// UpgradeStyles is every style in a fixed order, for the sheet that compares them. **The default
 // leads**, so the page reads as "here is what the game draws, and here is what it declined".
-func TintModes() []TintMode { return []TintMode{TintProject, TintWeave, TintRamp} }
+func UpgradeStyles() []UpgradeStyle {
+	return []UpgradeStyle{UpgradeWashFace, UpgradeBorder, UpgradeWash}
+}
 
-// tintUpgrade recolours a glyph from an upgrade's ink rather than from one hue.
+// drawUpgrade paints a finished card's upgrade, in whichever style the spec asked for.
 //
-// It is tintInk's counterpart and takes the same contract: a fresh image rather than a write
-// through the one it was handed, because `systems` caches what RenderGlyphAt returns and tinting
-// in place would paint the first card drawn onto every card that asked afterwards.
+// **The ink is projected across the whole card in every style, not across the region being
+// painted.** A flat ink gives a flat tint either way; the wildcard's five bands give five bands
+// running down the *card*, so the border variant picks up the band each edge pixel sits in and the
+// two styles agree about which colour belongs where. Projecting across the border ring instead
+// would put a whole rainbow on each of four edges.
 //
-// **Sampling is by the mark's *inked* bounds, not its canvas.** Every glyph is drawn on a square
-// canvas and none of them fills it — the same fact placeInk exists for — so projecting the ink
-// across the canvas would put the middle of the gradient wherever the drawing's margin happened
-// to leave it, and two marks with different margins would take their colours from different parts
-// of the picture.
-func tintUpgrade(src *image.RGBA, ink *image.RGBA, mode TintMode) *image.RGBA {
-	b := src.Bounds()
-	out := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+// A card with no upgrade is left exactly as it was, which is almost every card.
+func drawUpgrade(dst *image.RGBA, s Spec, st Style) {
+	ink := systems.UpgradeInk(s.Upgrade)
 	if ink == nil {
-		return out
+		return
 	}
+	w, h, radius := st.Width, st.Height, st.CornerRadius
+	box := image.Rect(0, 0, w, h)
+	at := func(x, y int) color.RGBA { return sampleBox(ink, image.Pt(x, y), box) }
 
-	box := inkBounds(src)
-	if box.Empty() {
-		return out
+	switch s.UpgradeStyle {
+	case UpgradeWash:
+		washInsideFrom(dst, w, h, radius, systems.UpgradeWashPct, at)
+	case UpgradeBorder:
+		washRegionFrom(dst, w, h, radius, systems.UpgradeBorderPct, at, borderOf(st))
+	default:
+		washRegionFrom(dst, w, h, radius, systems.UpgradeWashPct, at, faceOf(st))
 	}
-
-	for y := 0; y < b.Dy(); y++ {
-		for x := 0; x < b.Dx(); x++ {
-			c := src.RGBAAt(b.Min.X+x, b.Min.Y+y)
-			if c.A == 0 {
-				continue
-			}
-			a := int(c.A)
-			lum := brightness(c)
-
-			var hue color.RGBA
-			switch mode {
-			case TintRamp:
-				hue = sampleDiagonal(ink, lum)
-			default:
-				hue = sampleBox(ink, image.Pt(b.Min.X+x, b.Min.Y+y), box)
-			}
-
-			if mode == TintWeave {
-				out.SetRGBA(x, y, rampToward(hue, lum, a, c.A))
-				continue
-			}
-			// Ramp and project both take the ink's colour as it stands and only have to put it
-			// back into premultiplied space against the glyph pixel's own alpha.
-			out.SetRGBA(x, y, color.RGBA{
-				R: uint8(int(hue.R) * a / 255),
-				G: uint8(int(hue.G) * a / 255),
-				B: uint8(int(hue.B) * a / 255),
-				A: c.A,
-			})
-		}
-	}
-	return out
 }
 
-// brightness is a pixel's own light, unpremultiplied, 0..255.
+// borderOf reports whether a pixel is in the card's border ring, and faceOf whether it is inside
+// that ring.
 //
-// **The brightest channel rather than a luminance average**, which is tintInk's rule and is kept
-// here so the two paths cannot disagree about how bright a pixel is: the art is nearly hueless
-// already, and an average would take a near-white specular down to a mid grey.
-func brightness(c color.RGBA) int {
-	if c.A == 0 {
-		return 0
-	}
-	lum := int(c.R)
-	if int(c.G) > lum {
-		lum = int(c.G)
-	}
-	if int(c.B) > lum {
-		lum = int(c.B)
-	}
-	if lum = lum * 255 / int(c.A); lum > 255 {
-		lum = 255
-	}
-	return lum
+// **One geometry, read two ways**, so the border style and the wash-the-face style cannot disagree
+// about where the boundary is and leave a card with a one-pixel seam between them. The inner shape
+// is the one `roundedBorder` fills — inset by the border width, with the radius shrunk to match, so
+// the two curves stay parallel.
+func borderOf(st Style) func(x, y int) bool {
+	inside := faceOf(st)
+	return func(x, y int) bool { return !inside(x, y) }
 }
 
-// rampToward is tintInk's body for one pixel: the hue at a third strength for the dark end, the
-// hue most of the way to white for the light end, and the pixel's own brightness deciding where
-// between them it lands.
-func rampToward(hue color.RGBA, lum, a int, alpha uint8) color.RGBA {
-	dark := systems.ColorAtStrength(hue, tintDarkPct)
-	light := systems.ColorToward(hue, color.RGBA{R: 255, G: 255, B: 255, A: 255}, tintLightToward)
-
-	mix := func(d, l uint8) uint8 {
-		v := int(d) + (int(l)-int(d))*lum/255
-		return uint8(v * a / 255)
+func faceOf(st Style) func(x, y int) bool {
+	bw := st.BorderWidth
+	iw, ih := st.Width-2*bw, st.Height-2*bw
+	if bw <= 0 || iw <= 0 || ih <= 0 {
+		// A style with no border — the deck panel's, at zero width — is all face. Reporting the
+		// whole card as border would paint a borderless card entirely in the upgrade's ink.
+		return func(int, int) bool { return true }
 	}
-	return color.RGBA{
-		R: mix(dark.R, light.R), G: mix(dark.G, light.G), B: mix(dark.B, light.B), A: alpha,
-	}
+	return func(x, y int) bool { return insideRounded(iw, ih, st.CornerRadius-bw, x-bw, y-bw) }
 }
 
-// sampleDiagonal walks the ink's main diagonal by a 0..255 position. The diagonal rather than a
-// row or a column because the wildcard ink's bands run corner to corner: a row crosses one band
-// and reads as a single colour, where the diagonal crosses all of them.
-func sampleDiagonal(ink *image.RGBA, at int) color.RGBA {
-	b := ink.Bounds()
-	last := b.Dx() - 1
-	if b.Dy()-1 < last {
-		last = b.Dy() - 1
-	}
-	if last < 0 {
-		return color.RGBA{}
-	}
-	p := at * last / 255
-	return unpremultiply(ink.RGBAAt(b.Min.X+p, b.Min.Y+p))
-}
-
-// sampleBox maps a point inside box onto the ink and returns the colour there.
+// sampleBox maps a point inside box onto the ink and returns the colour there, unpremultiplied —
+// which is what a caller mixing toward it wants, since the ink's own alpha is not the card's.
 func sampleBox(ink *image.RGBA, at image.Point, box image.Rectangle) color.RGBA {
 	b := ink.Bounds()
 	x := scaleInto(at.X-box.Min.X, box.Dx(), b.Dx())
@@ -223,27 +162,8 @@ func sampleBox(ink *image.RGBA, at image.Point, box image.Rectangle) color.RGBA 
 	return unpremultiply(ink.RGBAAt(b.Min.X+x, b.Min.Y+y))
 }
 
-// scaleInto maps v in 0..span onto 0..into-1, clamped. Nearest rather than interpolated: the ink
-// is a small authored picture and averaging its bands would mud the colours it exists to state.
-func scaleInto(v, span, into int) int {
-	if into <= 0 {
-		return 0
-	}
-	if span <= 0 {
-		return 0
-	}
-	out := v * into / span
-	if out < 0 {
-		return 0
-	}
-	if out >= into {
-		return into - 1
-	}
-	return out
-}
-
-// unpremultiply takes a stored pixel back to straight colour, which is what every caller here
-// wants: a hue to ramp, or a colour to re-multiply against a different alpha.
+// unpremultiply takes a stored pixel back to straight colour, which is what a wash wants: a hue to
+// mix toward rather than a colour already scaled by somebody else's alpha.
 func unpremultiply(c color.RGBA) color.RGBA {
 	if c.A == 0 || c.A == 255 {
 		return c
@@ -258,45 +178,18 @@ func unpremultiply(c color.RGBA) color.RGBA {
 	return color.RGBA{R: up(c.R), G: up(c.G), B: up(c.B), A: 255}
 }
 
-// drawUpgradedDashes is drawDashes painted from an upgrade's ink instead of from one colour.
-//
-// **The ink is projected across the whole stack, not across each tick.** A tick is four pixels
-// tall and a gradient inside one is invisible; a gradient across the stack is what makes three
-// ticks read as one rainbow column rather than as three arbitrary colours. It follows that a
-// one-cost card shows a slice of the ink rather than all of it, which is correct — the column is
-// as tall as the cost is.
-//
-// **State is applied per pixel**, through the same Spec.atState the flat path uses, so a selected
-// or unaffordable wildcard fades with the rest of its card. That is the rule TestTheTicksAndTheBorderShareOneState
-// holds, kept by going through one switch rather than by writing a second one.
-func drawUpgradedDashes(dst *image.RGBA, s Spec, st Style, ink *image.RGBA) {
-	stack, ok := dashStack(s, st)
-	if !ok || ink == nil {
-		return
+// scaleInto maps v in 0..span onto 0..into-1, clamped. Nearest rather than interpolated: the ink
+// is a small authored picture and averaging its bands would mud the colours it exists to state.
+func scaleInto(v, span, into int) int {
+	if into <= 0 || span <= 0 {
+		return 0
 	}
-	for i := 0; i < s.Cost; i++ {
-		y0 := st.DashTop + i*(st.DashHeight+st.DashGap)
-		if y0+st.DashHeight > st.Height {
-			return
-		}
-		for y := y0; y < y0+st.DashHeight; y++ {
-			for x := st.DashLeft; x < st.DashLeft+st.DashWidth; x++ {
-				c := sampleBox(ink, image.Pt(x, y), stack)
-				dst.SetRGBA(x, y, s.atState(c))
-			}
-		}
+	out := v * into / span
+	if out < 0 {
+		return 0
 	}
-}
-
-// dashStack is the rectangle the whole cost column occupies, which is what the ink is projected
-// across. It reports false for a style or a card with no ticks at all.
-//
-// **The geometry is stated once here and read by both paths**, so the flat ticks and the
-// upgraded ones cannot end up in different places.
-func dashStack(s Spec, st Style) (image.Rectangle, bool) {
-	if s.Cost <= 0 || st.DashWidth <= 0 || st.DashHeight <= 0 {
-		return image.Rectangle{}, false
+	if out >= into {
+		return into - 1
 	}
-	h := s.Cost*st.DashHeight + (s.Cost-1)*st.DashGap
-	return image.Rect(st.DashLeft, st.DashTop, st.DashLeft+st.DashWidth, st.DashTop+h), true
+	return out
 }

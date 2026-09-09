@@ -2238,13 +2238,13 @@ concept, element, form override, the worm-written cost and damage deltas, and th
 
 - **The identity does not travel.** `combat.Card.ID` says *which* card this is rather than what it
   is, so the run holds the same cards it held before, each findable by the handle it has always had.
-- **The riders travel with it, and that is a real balance consequence.** A graft is a way to
-  duplicate a wildcard — the most valuable thing a card can carry. It is what the card promises, and
-  the alternative was a carve-out for one rider that nobody could predict from reading the card.
-  The visible upgrade follows for free, because `screens.upgradeOf` derives the mark from the riders
-  rather than being copied separately.
-- **A parasite that changes the *run* rather than a card cannot be grafted**, by construction. Luck
-  takes no targets, so there is nothing on a card for the graft to find.
+- **The upgrade travels with it, and that is a real balance consequence.** A graft is a way to
+  duplicate a wildcard, or a gold card — the most valuable thing a card can carry. It is what the
+  card promises, and the alternative was a carve-out for one rider that nobody could predict from
+  reading the card. The wash follows for free, because `screens.upgradeOf` derives it from the rider
+  rather than it being copied separately.
+- **A parasite that changes the *run* rather than a card cannot be grafted**, by construction. Hoard
+  and Rock Beetle take no targets, so there is nothing on a card for the graft to find.
 - **The offer moved with the rule.** It refused any pair sharing a concept, which made two colours
   of one card an illegal pick — the pick a player reaching for this most obviously wants. It now
   compares everything the apply copies.
@@ -2337,23 +2337,48 @@ the player confirmed.
 
 ### The grammar: a target, a count and a value
 
-A parasite record is the worm record's shape plus the one field a worm never needed — **how many
-cards it takes**. See `data/parasites.json` and `internal/session/parasite.go`, where a record is
-validated.
+A parasite record is the worm record's shape plus the two fields a worm never needed — **how many
+cards it takes**, and **what class of change it makes**. See `data/parasites.json` and
+`internal/session/parasite.go`, where a record is validated.
 
-| Target | Value | Count | What it does |
-|---|---|---|---|
-| `rider` | a figure, plus a `Rider` name | 1–2 | attaches a lasting rule to a card |
-| `remove` | — | 1–2 | takes cards out of the run |
-| `swap` | a concept key | 1–2 | turns a card into a different card the game already defines |
-| `vitae` | a figure | **0** | fills the purse and touches no card |
-| `duplicate` | — | 1–2 | copies a card — **and the copy joins the dealt hand** |
-| `element` | an element name | 1–2 | recolours cards |
-| `form` | a form name | 1–2 | changes what cards **count as** on the form axis |
-| `stones` | how many | **0** | puts that many random stones in the run's **pouch** |
-| `clone` | — | **2** | the first card picked becomes the second |
-| `luck` | the odds denominator | **0** | gambles once: +1 DMG, +5 max life, or nothing |
-| `chimera` | — | **0** | fires the run's last parasite again |
+| Target | Change | Value | Count | What it does |
+|---|---|---|---|---|
+| `rider` | **upgrade** | a figure, plus a `Rider` name | 1–2 | writes the card's one upgrade |
+| `remove` | normal | — | 1–2 | takes cards out of the run |
+| `swap` | normal | a concept key | 1–2 | turns a card into a different card the game already defines |
+| `vitae` | normal | a figure | **0** | fills the purse and touches no card |
+| `duplicate` | normal | — | 1–2 | copies a card — **and the copy joins the dealt hand** |
+| `element` | normal | an element name | 1–2 | recolours cards |
+| `form` | normal | a form name | 1–2 | changes what cards **count as** on the form axis |
+| `stones` | normal | how many | **0** | puts that many random stones in the run's **pouch** |
+| `clone` | normal | — | **2** | the first card picked becomes the second |
+| `chimera` | normal | — | **0** | fires the run's last parasite again |
+
+### Normal and upgrade: the two classes of change *(owner's call, 2026-09-09)*
+
+**A card is a form, an element and an action — and then one upgrade.** The first three compose
+freely: a Jab painted fire and reformed to crush is all three at once, and a parasite that moves one
+of them has no opinion about the others. The fourth is different. **A card carries exactly one
+upgrade, and writing it discards whatever was there** — `combat.MaxCardRiders` is 1, and
+`Card.SetRider` replaces rather than stacks.
+
+**So a Leech on a golden card leaves a card that heals and has forgotten it was ever gold**, and a
+Bulwark on that same card leaves a Guard that still heals. That is the whole distinction, and it is
+worth naming because it is **invisible in the effect**: Bulwark and Golden both read as "a parasite
+changed my card", and what separates them is what the *next* parasite does.
+
+- **`Change` is a required field on every record**, `normal` or `upgrade`, from a closed vocabulary.
+- **It is authored rather than derived, and the loader refuses a record that disagrees with its own
+  target.** Every `rider` parasite is an upgrade and nothing else is, so it *could* have been
+  computed — and a computed field says nothing, where an authored one is a claim the record makes
+  and the loader checks. Same posture as `Match` in the tutorial script: the thing the author meant,
+  written where the author is looking.
+- **The illegal pick is the one that changes nothing.** A card already carrying exactly this upgrade
+  is refused; a gold card the player wants to make silver is offered, which is the pick they came
+  for. That replaces the old rule — a card carrying its maximum — which stopped meaning anything the
+  day the maximum became one.
+- **Riders stacked until 2026-09-09**, three to a card, and two Leeches were twenty life. They no
+  longer do, and that is a real nerf to the parasite economy taken deliberately.
 
 **Four targets landed on 2026-09-02** *(owner's call)*, and three of them are worth saying twice:
 
@@ -2382,45 +2407,58 @@ validated.
   template — so the picker's click order is a rule rather than a detail. It copies the concept and
   keeps the first card's identity, riders and modifiers, exactly as `swap` does.
 
-### `luck` is the second roll in the game, and the argument is made from scratch *(owner's call, 2026-09-07)*
+### Gold and silver: the second roll in the game, and it is on a card now *(owner's call, 2026-09-09)*
 
-**One roll, three outcomes.** A d5: on a 1 the duelist gains **+1 DMG** for the rest of the run, on
-a 2 they gain **+5 max life**, and on a 3, 4 or 5 nothing happens. So it pays 40% of the time, the
-two rewards are mutually exclusive on any one spending, and the card cannot pay twice.
+**Golden and Silver are upgrades, and they gamble every time their card is played.** A **gold** card
+rolls a d5: on a 1 the run gains **+1 DMG** permanently, on a 2 it gains **+5 max life**, and on a 3,
+4 or 5 nothing happens. A **silver** card rolls the same die and pays **+10 vitae** on a 1 and
+nothing otherwise. Both are `rider` parasites, both take one card, and the `Value` is the
+denominator.
 
-**Two independent rolls were the alternative and were declined.** Two d5s would have paid something
-36% of the time and *both* 4% of the time — and a headline outcome that rare is one most runs never
-see, while the runs that do see it price the card off it for ever. One die with a losing face is a
-gamble a player can hold in their head.
+**They were a consumable that rolled once and touched no card**, from 2026-09-07 to 2026-09-09. What
+changed is where the luck lives: it is now what a card permanently *became*, so it rides through the
+shuffle and rolls again on every play, for the rest of the run.
+
+**One roll, three outcomes — two independent rolls were the alternative and were declined.** Two d5s
+would have paid something 36% of the time and *both* 4% of the time, and a headline outcome that
+rare is one most runs never see while the runs that do see it price the card off it for ever. One
+die with a losing face is a gamble a player can hold in their head.
 
 **A roll needs its own argument and this is it.** The `randomness` skill is explicit that lightning
 is the exception rather than the precedent: certainty is usually the better game as well as the
 cheaper code. The exception here is that **the card's whole subject is luck**. Every other
-random-sounding rule in the game had a deterministic rewrite that was at least as good; this one
-does not, because a luck parasite that always paid is a purchase, and a purchase is a thing the
-catalogue already has thirty-four of.
+random-sounding rule in the game had a deterministic rewrite that was at least as good; this one does
+not, because a metal that always paid is a purchase, and a purchase is a thing the catalogue already
+has thirty-four of.
 
+- **The roll is in `internal/combat`, because the card is played there.** It is the second thing in
+  that package that rolls, and it takes **its own injected source** — `combat.Sources` is a struct
+  with a `Roll` for the shock and a `Luck` for the gamble, never one field. Sharing would make every
+  shock in a run a function of how many gold cards were played, and every gamble a function of how
+  often the player was shocked.
+- **`seeds.LuckRoll` is still the stream**, per fight, and it is now a **live cursor** rather than a
+  seed plus a counter: a roll that happens inside a resolved round has the round's own sequence to
+  advance, where a consumable spent between turns needed the run's tally of rolls to separate one
+  from the next. `Session.LuckRolls` is gone with it.
 - **What it grants is permanent and run-level**, so it lands on `dmgBonus` and `lifeBonus` — the two
-  figures a potion moves — rather than on the duelist a fight is using. A bonus written onto the
-  fighter would be gone at the end of the round.
-- **`seeds.LuckRoll` is the stream**, per fight, with **the number of rolls the run has already
-  made** mixed in. That is the rock shower's shape and it is needed for the shower's reason: a run
-  may spend two of these in one fight. **The counter is dedicated rather than derived from the
-  bonuses**, because three rolls in five pay nothing — keying off `dmgBonus + lifeBonus` would seed
-  two consecutive duds identically and they would come up empty for ever.
-- **The counter steps on a dud.** It is the stream's cursor, not a tally of winnings.
-- **A dud is a success.** `ApplyParasite` returns true on a roll that granted nothing: the parasite
-  was spent, which is exactly what the player gambled. Refusing would make the card free to try.
-- **`LuckOutcomes` is 3 and a record naming fewer faces is refused at init**, because a die with no
+  figures a potion moves. **The rules move both halves**: the fighting duelist, so the point of DMG
+  is worth something for the rest of the fight, *and* the run, through `KindGrantedDMG` and
+  `KindGrantedLife` read off the resolved log by `screens.settleGrants`. Doing only the first would
+  be a bonus that evaporated at the round boundary; only the second, one the player could not use
+  until the next fight.
+- **Silver needs no grant event.** Vitae already travels out of a resolved round as the difference
+  between the purse the duel opened with and the one it closes with, so a silver card steps
+  `Duelist.Vitae` and announces a `KindVitae` like any other payment.
+- **`LuckOutcomes` is 3 and a record naming fewer faces is refused at load**, because a die with no
   losing face is a different card and the mistake is one a number in a JSON file could make quietly.
-- **The two payouts are Go constants rather than record fields.** A record has one `Value` and this
-  needs two figures, and **the odds are the interesting dial** — a second tier of luck is written by
-  moving the denominator, not by paying more per hit. The day somebody wants a greater luck granting
-  three DMG is the day they become fields.
+- **The payouts are Go constants rather than record fields.** A record has one `Value` and gold needs
+  two figures, and **the odds are the interesting dial** — a richer metal is written by moving the
+  denominator, not by paying more per hit.
 
-**What nothing catches is the balance.** A 40% payout on a 5-vitae consumable is a guess, and
-nothing in the repo simulates a run — so if luck turns out to be the only parasite worth buying, the
-dial to move is the denominator in `data/parasites.json` and no code changes.
+**What nothing catches is the balance, and it got much bigger.** A card that gambles once cost one
+purchase; a card that gambles on every play is worth however often the player plays it, which on a
+cheap card in the starting deck is dozens of times a run. Nothing in the repo simulates a run, so
+the dial to move is the denominator in `data/parasites.json` and no code changes.
 
 ### `chimera` fires the last one again *(owner's call, 2026-09-07)*
 
@@ -2508,14 +2546,16 @@ hand and the discard, and fires only when that card is played.
   parasite does happens to the run; a rider is the one thing read while a round resolves, and that
   package is at the bottom of the graph and reads no JSON. The *amount* rides on the card, so the
   rules need no lookup table and nothing to keep in step with a catalogue.
-- **A card carries at most `MaxCardRiders` — three** — and the number is a layout constraint as
-  much as a rules one: a card whose face cannot say what it carries is the failure the whole
-  alteration mechanic exists to avoid.
+- **A card carries one rider — `MaxCardRiders` is 1** *(owner's call, 2026-09-09)*, because a rider
+  *is* the card's one upgrade. See §Normal and upgrade above, which is where the grammar it belongs
+  to is written down.
 - **`Card.Riders` is a fixed array, and it has to be.** `combat.Card` must stay comparable — the
   screen's face cache and `TestRoundIsDeterministic` both depend on it — so a slice would end
-  both. Same constraint that made `Duelist.Rings` an array.
-- **Riders stack rather than merge.** Two ten-point heals are two riders of ten, which is what
-  keeps the badge honest about how many parasites have been spent on a card.
+  both. Same constraint that made `Duelist.Rings` an array. It stayed an array when the count came
+  down to one, because a seat is what makes "no upgrade" the zero value rather than a case.
+- **Last one wins, and nothing stacks.** `Card.SetRider` replaces. Riders stacked three to a card
+  until 2026-09-09 and two ten-point heals were twenty life; they are now one card forgetting the
+  other, which is a real nerf to the parasite economy taken deliberately.
 - **A card a chill ate heals nothing**, which is why riders fire after the chill and before the
   blow. A rider on the front card of a turn is exposed to the one thing that can delete it.
 - **A heal that restores nothing is silent.** The cap is applied first and the event carries what
@@ -2523,17 +2563,59 @@ hand and the discard, and fires only when that card is played.
 
 ### The card says what the card carries
 
-Effect text reads the card, so a ridden card prints an extra line — `+10 LIFE` — under its own.
-The band holds seven lines at that pitch and no card writes more than three, so three riders still
-fit. **It is not written in the ring pink**: that colour means "a ring did this" everywhere else,
-and a parasite is not a ring.
+Effect text reads the card, so an upgraded card prints an extra line — `+10 LIFE`, `GOLD` — under
+its own. **It is not written in the ring pink**: that colour means "a ring did this" everywhere
+else, and a parasite is not a ring.
 
-**Seven of the eight rider kinds are still invisible on the face**, and the tooltip prose is the
-only place any of them is stated. `MaxCardRiders` is 3 *because the face has room for three
-badges*, and the badge row has never been built. See TODO.md — the owner asked for it to be tracked
-on 2026-09-02. The wildcard below is the first exception, and it is deliberately not a badge.
+**Every rider is visible as of 2026-09-09**, in three places: the line on the face, the wash over
+the card, and the tooltip. None is redundant with the others — the colour carries at a glance across
+a row of eight, the face's line answers "what does that mean" without a hover, and the tooltip
+carries the figures neither has room for. See §An upgrade is painted on the card, and §The tooltip.
 
-### The wildcard, and the first *visible* upgrade *(owner's call, 2026-09-07)*
+### The tooltip is a stat block first *(owner's call, 2026-09-09)*
+
+A card's tooltip opens with what the card **is**, in four lines or so:
+
+```
+FIRE JAB
+1 AP
+5 DMG
++10 HEAL ON PLAY
+```
+
+The title is the element and the name; then the AP the *holder* pays, the figure the card is worth
+in the unit its verb is measured in — DMG for an attack, `1 SHIELD` for a shield, `50% OFF ONE BLOW`
+for a defence — and then a line per thing the upgrade adds.
+
+**It used to be arithmetic and nothing else** — `5 DMG, yours` / `1x the card` / `= 5 DMG` — which
+is three lines deriving a number the player wanted to be told. The derivation is still the reason
+the panel exists, and it is still printed: **underneath the block, and only when a ring or a worm
+has actually moved something.** A card nothing has touched derives to itself, and three lines saying
+so is a panel that trains the player not to read it.
+
+- **The block's figure carries the rings.** `screens.cardTip` hands `carddesc` the compounded ring
+  scale, so the headline number is what the card will deal rather than its bare worth over a chain
+  ending in a bigger one. The chain therefore prints **no total** — the block already stated it, and
+  two copies of one number is a pair that can disagree.
+- **The wording lives in `internal/carddesc`, which is windowless.** That is what lets
+  `tools/upgradesheet` print the same strings the game shows rather than a hand-written snapshot of
+  them — the trade `tools/cardsheet` makes for card names, taken the other way because the sheet's
+  whole job here is "does this read right".
+- **Gold gets two lines and every other upgrade gets one.** Its payouts are mutually exclusive, and
+  one line joining them with "or" reads as a card that pays both.
+- **The element word in the title *is* coloured** *(owner's call, 2026-09-09)*.
+  `models.Tooltip.Title` was a plain string where `Lines` were runs, which made it the one place the
+  "every element word is written in its element's colour" rule did not reach — and a card's title is
+  `FIRE JAB`, so it was the place that mattered most. Both are `TipLine` now and go through one
+  drawing.
+- **A wildcard is CHROMATIC, not the element it happens to be.** The card still *is* an arcane
+  Lunge — it burns as one, it is drawn from the arcane row, `Blow.Elements` reports arcane — but the
+  title says what the player is holding, and `ARCANE LUNGE` over a line reading `COUNTS AS EVERY
+  ELEMENT` is a panel contradicting itself in two lines. **CHROMATIC takes no colour**: the wheel
+  has none left for "all of them", and writing it in one of the five would claim the one thing the
+  word exists to deny.
+
+### The wildcard *(owner's call, 2026-09-07)*
 
 `RiderWildElement` makes one card count as **every element at once** when a hand is formed. It is
 attached by the **Motley** parasite and it is the eighth rider kind.
@@ -2570,41 +2652,73 @@ into a four, and the elemental rungs are high on the ladder — so what a run pa
 the number to watch, and that number is the parasite's place in `data/parasites.json` rather than
 anything in the rules.
 
-### A visible upgrade takes the left column, not a badge
+### An upgrade is painted on the card, and where is still open *(2026-09-09)*
 
-The card's **left column** — the tinted form mark and the cost ticks under it — is what states the
-element, and everywhere else on the face that decision is already made. A wildcard's whole subject
-is that the card no longer has one element, so it says so by taking that column over and painting
-it from a picture instead of from a colour.
+**A card has a form, an element and an action, and then one upgrade.** There are ten of them, one
+per rider kind, and every one draws: a card the run has altered says so from across the table.
 
-**That is not a fourth thing on a card with three.** It is the same statement the column always
-made, about a card whose answer has changed — which is why it is not a badge, and why the three
-reserved badge seats are still reserved for the riders that genuinely add something rather than
-change something.
+**The card goes gold and the border does not** *(owner's call, 2026-09-09)*. `wash-face` is what
+`cards.DefaultUpgradeStyle` names: every pixel inside the ring is pulled toward the upgrade's ink and
+the ring itself is left exactly as it was.
+
+**What settled it is that the border is already saying something.** It carries the card's *state* —
+resting, selected, unaffordable, being dragged — in a wash away from the neutral grey, so an upgrade
+painted over it would be a second thing in the one place the card says the first. Keeping them apart
+is what lets a queued gold card read as queued *and* gold rather than as one of the two winning. It
+also keeps the card's outline against the table, which is what tells eight cards in a row apart
+before any of them is read.
+
+**Two other answers are kept as a review knob**, drawn by `go run ./tools/upgradesheet` beside the
+default: `border` paints the 3px ring and nothing else — the quietest answer, at the cost of the
+state signal it would be sharing the ring with — and `wash` takes the whole card including the
+border, which nobody misses and nothing on the face escapes. It is the shape `TintMode` had, for the
+same reason: how loud an upgrade should be is not a question anybody wins by arguing.
+
+- **A ring card is the one card this must never touch**, and it does not: a ring carries no rider,
+  so its pink is never washed.
+- **`UpgradeBorderPct` is 80 rather than 100**, for the `border` style, so a fifth of the state
+  colour still shows through the ink.
+
+**It took the left column until 2026-09-09**, painting the form mark and the cost ticks from a
+rainbow rather than from one element's colour. That was the right answer while there was one upgrade
+and its whole subject was the element; it stopped being right the moment there were ten, because
+nine of them have nothing to do with the element and a left column in gold is the element slot
+saying something that is not about the element. **The old mechanism was deleted rather than kept** —
+three tint modes, a sampled glyph, a gradient projected across the cost stack — on the rule that a
+removal is a deletion.
 
 - **`systems.Upgrade` is the vocabulary** and it is *presentation*: something visible has happened
   to this card, and here is what to paint it with. `internal/screens` is where a rider becomes one,
   on exactly the terms `Spec.TextInk` is where a ring becomes a colour — neither `internal/cards`
   nor `internal/systems` learns what a rider is.
-- **The whole column or none of it.** A rainbow mark over fire-red ticks would say two different
-  things in the one place the card says one, so `Spec.atState` is the single switch both go
-  through and `TestAnUpgradeTakesTheWholeLeftColumn` fails on a change that wires one and forgets
-  the other.
-- **The ink is authored, not generated**, which makes it the second thing on a card with a
-  provenance question after the ring art. It lives in its own `assets/upgrade/` group rather than
-  with the form marks, because the next visible upgrade will have nothing to do with the form mark.
-- **The line and the colour both appear.** The face prints `ANY ELEMENT` under the card's own text
-  as well as painting the column. The colour is what carries at a glance across a row of eight; the
-  words are what answer "what does that mean" without a hover.
-- **The ink is the five element colours, and the mark takes them flat** *(owner's call,
-  2026-09-07)*. The bands are `cards.BorderOf` for fire, ice, lightning, earth and arcane —
-  arcane split across both edges so the strip is one symmetric cycle rather than a repeat with a
-  seam — and `cards.TintProject` paints the mark from them without the drawing's own shading.
-  **What that costs is the outline**, which is the thing that made the form marks drawn art; it is
-  paid knowingly, because at 32 pixels the saturation is legible and the bevel is not, and because
-  the colours *are* the message. `cards.TintMode` keeps the two rejected answers so the sheet can
-  show why: the choice turned out to depend on the ink rather than on the mode, so a future ink may
-  pick differently. `go run ./tools/upgradesheet` is that comparison.
+- **An upgrade is painted into the face; a mark is painted over it.** Under the `wash` style both
+  cover the whole card, so the drawing does not tell them apart — what does is ownership. An upgrade is what the card
+  permanently *is*; a `cards.Mark` is the card's situation. A shattered gold card reads as gold and
+  broken, in that order, and the order is fixed in `Render` so one pair of facts draws one way.
+- **Every upgrade is an ink, and nine of the ten are one flat colour.** The tenth is the wildcard,
+  whose wash is the five element colours in bands — and a vocabulary where one entry is a picture
+  and nine are colours would be two mechanisms with a `switch` between them. An ink holds both: the
+  authored PNG for the one that needs a picture, a generated square for the rest, and one sampling
+  path that never asks which it got.
+- **The wildcard is the one upgrade that leaves the form mark hueless.** The left column exists to
+  state the element; a wildcard's element is still what the card *is*, but what it *counts as* is
+  every element at once, so a column stating one of them states the less useful half of the truth.
+  Every other upgrade leaves the element's tint alone, because none of them is about the element.
+- **Eight of the ten colours are placeholders and they are standing on a full wheel** *(2026-09-09)*.
+  Hue is spent — five elements, the ring pink, the two verbs, the two duelists, the ground — so what
+  is there is picked to be *told apart* rather than to mean anything. Gold and silver are the
+  exception: they are metals, and they are what the mechanic is called. `go run ./tools/upgradesheet`
+  is the page to retune them against.
+- **The wash is 55% of the way toward the ink, and the two metals are a *sheen* rather than a flat
+  colour.** Both of those are the card's own surface pushing back: it is a pale warm neutral, so a
+  gentle wash of gold moves the hue a little and the lightness not at all, and the card comes out as
+  warm paper. 22, 34 and 40 were all tried and all read as cream. What makes metal read as metal is a
+  light running across it, so gold and silver are generated as a diagonal band — dark shoulders, a
+  bright crest — through the same ink mechanism the wildcard's picture uses.
+- **The eight flat placeholders are loud at that strength**, which is the right direction for a
+  placeholder to be wrong in. One of them — the heal's rose — sits close to the ring pink, which is
+  exactly the kind of collision the "hue is spent" note predicts and the reason these are marked
+  temporary rather than settled.
 
 ### Targets come out of the hand *(taken while building it, and the one most worth revisiting)*
 

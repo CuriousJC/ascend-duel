@@ -249,6 +249,14 @@ var choreography = map[combat.EventKind]flightSpec{
 		anchorNone, anchorNone, gestureNone,
 		"vitae is not on this screen - the purse lives between fights, so the figure has nowhere to land and the feed is where the player is told",
 	},
+	combat.KindGrantedDMG: {
+		anchorActorSeat, anchorActorCard, gestureFly,
+		"a gamble is a property of the card that took it, so the DMG flies out of that card's seat into the duelist it belongs to now",
+	},
+	combat.KindGrantedLife: {
+		anchorActorSeat, anchorActorCard, gestureFly,
+		"the heal's flight, for the same reason: it is life arriving on the bar, and the card that rolled it is where it comes from",
+	},
 	combat.KindTimeUp: {
 		anchorNone, anchorTargetCard, gesturePop,
 		"nothing travels - the clock is not a blow, so the figure pops on the card whose bar it empties",

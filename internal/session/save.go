@@ -49,7 +49,6 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Plays:        s.PlayCounts(),
 		Held:         s.Held(),
 		LastParasite: s.lastParasite,
-		LuckRolls:    s.luckRolls,
 		Pouch:        s.Carried(),
 		NextCardID:   s.nextCardID,
 		Spoils: profile.SpoilsSnapshot{
@@ -209,17 +208,18 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		// **A rider this build has not got is refused rather than dropped.** A card resumed
 		// without the parasite spent on it is the one mistake that cannot be repaired afterwards,
 		// and it would look like a rider that had simply stopped working.
+		//
+		// **A file written before 2026-09-09 can hold more than one**, back when a card stacked
+		// three. The seat count came down to one and a resume is not the place to argue with a file
+		// that was legal when it was written, so the last one on it is the upgrade the card resumes
+		// with — which is the same answer SetRider gives to two parasites spent in a row.
 		for _, r := range c.Riders {
 			kind, ok := combat.ParseRiderKind(r.Kind)
 			if !ok {
 				return nil, 0, fmt.Errorf("card %q carries rider %q, which the rules do not have",
 					c.Concept, r.Kind)
 			}
-			card, ok = card.AddRider(combat.Rider{Kind: kind, Amount: r.Amount})
-			if !ok {
-				return nil, 0, fmt.Errorf("card %q carries more than %d riders",
-					c.Concept, combat.MaxCardRiders)
-			}
+			card = card.SetRider(combat.Rider{Kind: kind, Amount: r.Amount})
 		}
 		deck = append(deck, card)
 	}
@@ -237,7 +237,6 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		bossWins:   snap.BossWins,
 		dmgBonus:   snap.DMGBonus,
 		lifeBonus:  snap.LifeBonus,
-		luckRolls:  snap.LuckRolls,
 		phase:      phase,
 		roundLimit: resumeRoundLimit(snap.RoundLimit),
 		grown:      map[string]int{},

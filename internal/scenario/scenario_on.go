@@ -188,14 +188,17 @@ func riders(names []string) ([]combat.Rider, error) {
 	return out, nil
 }
 
-// ridden is a card with every rider on it, or the card unchanged if it has none.
+// ridden is a card with its upgrade on it, or the card unchanged if the fixture named none.
+//
+// **A card holds one, so this list is at most one long** — check() has already refused a fixture
+// naming more, which is what keeps the loop honest rather than silently keeping the last.
 func ridden(c combat.Card, names []string) combat.Card {
 	list, err := riders(names)
 	if err != nil {
 		return c // unreachable: check() has already refused anything riders() would reject
 	}
 	for _, r := range list {
-		c, _ = c.AddRider(r)
+		c = c.SetRider(r)
 	}
 	return c
 }

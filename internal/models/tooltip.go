@@ -9,6 +9,16 @@ import (
 // one colour, which is what most of them are.
 type TipLine []TextRun
 
+// Text is the line's words with the colouring dropped — what a caller keying on a tooltip's
+// identity compares, and what a test asserts against.
+func (l TipLine) Text() string {
+	out := ""
+	for _, run := range l {
+		out += run.Text
+	}
+	return out
+}
+
 // TextRun is one stretch of a line drawn in its own colour.
 //
 // **A zero-alpha Ink means the panel's own ink**, which is the convention every optional colour in
@@ -43,7 +53,12 @@ type Tooltip struct {
 	// element can be drawn in that element's colour where the rest of the line is not. This package
 	// knows nothing about why a run has a colour — the caller decides that, exactly as it decides
 	// where a line breaks.
-	Title string
+	//
+	// **The title is runs too, as of 2026-09-09** *(owner's call)*. It was a plain string, which
+	// made it the one place in the game an element word was not written in its element's colour —
+	// and a card's title is `FIRE JAB`, so it was the place that mattered most. The two now take
+	// the same type and go through the same drawing.
+	Title TipLine
 	Lines []TipLine
 
 	// Anchor is the thing being explained. The panel is placed beside it rather than under the
@@ -69,8 +84,12 @@ type Tooltip struct {
 
 // Point aims the tooltip at something, and is called every tick the cursor is still on it. It
 // restarts the dwell when the thing under the cursor changes.
-func (t *Tooltip) Point(at image.Rectangle, title string, lines []TipLine) {
-	key := title + at.String()
+//
+// **The key is the title's *words*, not its runs.** Recolouring a title without changing what it
+// says is not a different thing under the cursor, and restarting the dwell on it would make a
+// tooltip flicker at whatever recoloured it.
+func (t *Tooltip) Point(at image.Rectangle, title TipLine, lines []TipLine) {
+	key := title.Text() + at.String()
 	if key != t.key {
 		t.key, t.Dwell = key, 0
 	}
@@ -87,11 +106,11 @@ func (t *Tooltip) Release() { t.pointed = false }
 
 // Showing reports whether the panel has waited long enough to be drawn.
 func (t *Tooltip) Showing() bool {
-	return t.key != "" && t.Dwell >= t.DwellTicks && (t.Title != "" || len(t.Lines) > 0)
+	return t.key != "" && t.Dwell >= t.DwellTicks && (len(t.Title) > 0 || len(t.Lines) > 0)
 }
 
 // Forget hides it immediately, for a scene that has just done something the tooltip was describing —
 // a card bought out from under the cursor, say.
 func (t *Tooltip) Forget() {
-	t.key, t.Dwell, t.Title, t.Lines = "", 0, "", nil
+	t.key, t.Dwell, t.Title, t.Lines = "", 0, nil, nil
 }

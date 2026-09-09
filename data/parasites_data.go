@@ -34,6 +34,21 @@ type ParasiteData struct {
 	// Name is what is written across the top of the card.
 	Name string `json:"Name"`
 
+	// Change is what class of alteration this parasite makes, from a closed vocabulary resolved by
+	// `session.ParseParasiteChange`: `normal` or `upgrade`. **Required on every record.**
+	//
+	// **A card has a form, an element and an action — and then one upgrade** *(owner's call,
+	// 2026-09-09)*. A `normal` parasite moves one of the first three and leaves the upgrade alone:
+	// Emberbore paints a card fire, Bulwark turns it into a Guard, and a gold card is still gold
+	// afterwards. An `upgrade` parasite writes the one upgrade slot, and whatever was in it is gone.
+	//
+	// **It is authored rather than derived, and the loader refuses a record that disagrees with its
+	// own target.** Every `rider` parasite is an upgrade and nothing else is, so this could have
+	// been computed — and a computed field would say nothing, where an authored one is a claim the
+	// record makes and the loader checks. It is the same posture `Match` takes in the tutorial
+	// script: the thing the author meant, written down where the author is looking.
+	Change string `json:"Change"`
+
 	// Target is what this parasite does, from a closed vocabulary resolved by
 	// `session.ParseParasiteTarget`: `rider`, `remove`, `swap`, `vitae`.
 	//

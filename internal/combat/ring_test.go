@@ -1048,9 +1048,9 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 	held := []Card{Of(Strike, Fire), Of(Strike, Fire)}
 
 	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
-		played, nil, held, nil, 1, nil)
+		played, nil, held, nil, 1, Sources{})
 	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRing{Ring: smoulder}),
-		duelist(10, 5, 100000), played, nil, held, nil, 1, nil)
+		duelist(10, 5, 100000), played, nil, held, nil, 1, Sources{})
 
 	before := handEventOf(t, bare, SideA)
 	after := handEventOf(t, worn, SideA)
@@ -1082,7 +1082,7 @@ func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
 
 	for round := 1; round <= 3; round++ {
 		events, _, _ := ResolveRoundHolding(wearer, duelist(10, 5, 100000),
-			played, nil, held, nil, round, nil)
+			played, nil, held, nil, round, Sources{})
 		e := handEventOf(t, events, SideA)
 		if e.HeldBonus != 5 {
 			t.Errorf("round %d paid %d for the same held card, want 5", round, e.HeldBonus)
@@ -1213,7 +1213,7 @@ func TestThePurseIsReReadEveryBlow(t *testing.T) {
 	// buys 13 on round one, and the bonus climbs by 3 a round after that.
 	for round, want := 1, 13; round <= 3; round, want = round+1, want+3 {
 		events, after, _ := ResolveRoundHolding(wearer, duelist(10, 5, 100000),
-			played, nil, held, nil, round, nil)
+			played, nil, held, nil, round, Sources{})
 
 		e := handEventOf(t, events, SideA)
 		if e.VitaeBonus != want {

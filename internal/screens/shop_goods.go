@@ -384,7 +384,7 @@ func (g *goods) hover(gs *state.GlobalState) {
 			return
 		}
 		title, lines := cardTip(card, heldByRun(gs, card))
-		g.tip.Point(seat, title, tipLines(lines))
+		g.tip.Point(seat, tipLine(title), tipLines(lines))
 		return
 	}
 
@@ -401,10 +401,10 @@ func (g *goods) hover(gs *state.GlobalState) {
 			return
 		case g.kind == goodBag:
 			st := g.stones[i]
-			g.tip.Point(g.slot(gs, i), st.Name, tipLines(stoneTipLines(gs, st)))
+			g.tip.Point(g.slot(gs, i), tipLine(st.Name), tipLines(stoneTipLines(gs, st)))
 		case g.kind == goodBucket:
 			p := g.parasites[i]
-			g.tip.Point(g.slot(gs, i), p.Name, tipLines(parasiteTipLines(p)))
+			g.tip.Point(g.slot(gs, i), tipLine(p.Name), tipLines(parasiteTipLines(p)))
 		}
 		return
 	}

@@ -149,5 +149,56 @@
       "Nothing fancy has ever needed to be."
     ],
     "Trigger": { "Kind": "count", "Counter": "concept:Strike", "N": 200 }
+  },
+  {
+    "AchievementRecord": "tiny-but-fierce",
+    "Name": "TINY BUT FIERCE",
+    "How": "Play five free attacks of the same card in one turn.",
+    "Said": [
+      "Five of them, and the round cost you nothing at all.",
+      "A turn is bounded twice — by what you can pay and by how many cards you can put down. You found the second wall."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        {
+          "Clauses": [
+            { "Of": "attack", "Cost": 0, "Mode": "count", "N": 5 },
+            { "Of": "attack", "Cost": 0, "Axis": "concept", "Mode": "same" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "godslayer",
+    "Name": "GODSLAYER",
+    "How": "Play five 4 AP attacks of the same card in one turn.",
+    "Said": [
+      "Five of the heaviest thing the deck can become, in one breath.",
+      "Twenty points of action out of a budget that was never meant to stretch that far.",
+      "Whatever that was, it was not a duel."
+    ],
+    "Trigger": {
+      "Kind": "turn",
+      "Patterns": [
+        {
+          "Clauses": [
+            { "Of": "attack", "Cost": 4, "Mode": "count", "N": 5 },
+            { "Of": "attack", "Cost": 4, "Axis": "concept", "Mode": "same" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "AchievementRecord": "invulnerable",
+    "Name": "INVULNERABLE",
+    "How": "Stand behind ten shields at once.",
+    "Said": [
+      "Ten of them, and a turn can only throw five.",
+      "Five more than anything in the tower can reach. You bought the ones nobody could take."
+    ],
+    "Trigger": { "Kind": "moment", "Moment": "shields-raised", "N": 10 }
   }
 ]

@@ -168,21 +168,26 @@ func (c Card) Amount() int {
 const maxDefendPct = 99
 
 // maxShields is the most one card may raise, and it is baseMaxActions because that is the most
-// attacks an opposing turn can contain. A sixth shield could never be spent — it is not a bigger
-// reward, it is a number the readout has to draw and nothing can ever take away.
+// attacks an opposing turn can contain. A card raising a sixth could never see it spent by its own
+// turn, so the figure on its face would be a promise the round cannot keep.
 //
-// **It bounds one card, not a duelist.** Three Guards in a turn is nine shields and is meant to be:
-// what stops that is the action budget, exactly as it stops nine attacks.
+// **It bounds one card, not a duelist** *(the clamp that said otherwise went on 2026-09-09)*.
+// Three Guards in a turn is nine shields and is meant to be: what stops that is the action budget,
+// exactly as it stops nine attacks. See Duelist.raiseShields, which no longer holds a total to
+// this.
 const maxShields = baseMaxActions
 
-// MaxShields is the same number for a caller outside this package.
+// MaxShields is the same number for a caller outside this package, and it is **a bound on one
+// card** — not on what a duelist may be standing behind.
 //
 // **The screen needs it because it draws a shield before the engine raises one** *(2026-09-02)*: a
 // defend card's pips fly to the duelist card on the beat that card is scored into the hand, which
-// is the attack phase — several beats before the defend phase raises them. The flight predicts,
-// and a prediction has to know the ceiling the raise will be held to or it can draw a sixth pip on
-// a row that holds five. See screens.shieldFlight, and Duelist.raiseShields, which is the cap
-// itself.
+// is the attack phase — several beats before the defend phase raises them. The flight predicts what
+// one card will raise, and this is the ceiling that card is held to.
+//
+// **How many pips the row can draw is a different number and lives in the screen** —
+// screens.maxShieldPips. It was this one while a duelist was clamped here too, which is exactly
+// how a layout measurement came to be enforced as a rule.
 const MaxShields = maxShields
 
 // Category is which phase this card resolves in, and it falls out of the verb: an attack resolves

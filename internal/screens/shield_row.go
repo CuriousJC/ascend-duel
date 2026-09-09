@@ -3,8 +3,22 @@ package screens
 import (
 	"image/color"
 
-	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/cards"
 )
+
+// maxShieldPips is how many pips the row can draw, and it is **a measurement of the card rather
+// than a rule** *(2026-09-09)*.
+//
+// The row sits in the seat the enemy's status badges occupy — 20px squares on a 6px pitch along the
+// bottom band of a 162px card — and `cards.MaxEffects` records that six is the last one that fits
+// inside the borders. A seventh is a redesign of the band, not a bigger number.
+//
+// **It was `combat.MaxShields` until the duelist's own clamp came off.** While the engine held a
+// duelist to five, one constant could honestly serve as both the cap and the row's width; now that
+// a duelist may stand behind ten, they are two questions and this is the one the screen owns. A
+// duelist holding more than this draws a full row — the count is on the engine, and the card is
+// what is short. See Duelist.raiseShields.
+const maxShieldPips = cards.MaxEffects
 
 // The standing shields on one duelist card, as playback has reached them.
 //
@@ -43,9 +57,9 @@ type shieldRow struct {
 // count is how many shields the row is showing.
 func (r *shieldRow) count() int { return len(r.pips) }
 
-// add appends what one landing flight raised, held to the cap the engine holds a duelist to.
+// add appends what one landing flight raised, held to what the row can draw.
 func (r *shieldRow) add(ink color.RGBA, n int) {
-	for i := 0; i < n && len(r.pips) < combat.MaxShields; i++ {
+	for i := 0; i < n && len(r.pips) < maxShieldPips; i++ {
 		r.pips = append(r.pips, ink)
 	}
 	r.seen = true
@@ -60,8 +74,8 @@ func (r *shieldRow) add(ink color.RGBA, n int) {
 // mark, which reads as a different kind of shield rather than as one nobody watched being raised.
 func (r *shieldRow) hold(n int, fill color.RGBA) {
 	r.seen = true
-	if n > combat.MaxShields {
-		n = combat.MaxShields
+	if n > maxShieldPips {
+		n = maxShieldPips
 	}
 	switch {
 	case n <= 0:

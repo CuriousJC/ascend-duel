@@ -33,12 +33,31 @@ const (
 	// Value. **The label rather than the worm**, because what the player did is "made a Flinch" and
 	// several worms can arrive at one — a demote from a Ward today, something else tomorrow.
 	MomentCardAltered = "card-altered"
+
+	// MomentShieldsRaised is the player standing behind a count of shields, carried in N. **A
+	// threshold rather than an equality**, like floor-reached, so eleven earns the row asking ten.
+	//
+	// **It is a moment rather than a turn pattern, and that is the whole reason it exists**
+	// *(2026-09-09)*. A turn pattern reads the cards played; shields are what those cards *did*,
+	// after Card.Amount has been scaled by a worm and after a rider has added its own. Counting
+	// Guards would be counting the receipt rather than the money.
+	//
+	// **It is read off the resolved event log, never off the playback** — see
+	// screens.recordShieldsRaised, which is written under the same rule payHeldVitae and
+	// recordHandsPlayed are.
+	MomentShieldsRaised = "shields-raised"
 )
 
 // moments is the same list, for validation and for the error message.
 var moments = []string{
 	MomentDuelWon, MomentTutorialFinished, MomentFloorReached, MomentCardAltered,
+	MomentShieldsRaised,
 }
+
+// momentsCarryingN is the moments whose N is set by the raiser, and so may be asked for in a
+// record. **A moment carrying a field its raiser never sets is a condition that can never be met**,
+// which is the failure this whole file exists to refuse.
+var momentsCarryingN = []string{MomentFloorReached, MomentShieldsRaised}
 
 // The two counter families. **A prefix rather than a bare name**, so a counter is self-describing
 // on disk and two axes cannot collide — `slash` is both a form and nothing like the concept
@@ -93,6 +112,10 @@ type pattern struct{ clauses []clause }
 type clause struct {
 	// of is the category filter. `anyCategory` means the whole turn.
 	of category
+
+	// cost narrows the selection further, to cards of exactly this AP. Nil is no filter — see
+	// data.ClauseData.Cost for why zero could not have meant that.
+	cost *int
 
 	axis combat.Axis
 	mode string
@@ -211,13 +234,14 @@ func parseTrigger(t data.TriggerData) (trigger, error) {
 		if !known(moments, t.Moment) {
 			return trigger{}, fmt.Errorf("no moment named %q; the game raises %v", t.Moment, moments)
 		}
-		// **N belongs to floor-reached and to nothing else**, and Value to card-altered. A moment
-		// carrying a field its raiser never sets is a condition that can never be met.
-		if t.N != 0 && t.Moment != MomentFloorReached {
+		// **N belongs to the moments that carry one**, and Value to card-altered. A moment carrying
+		// a field its raiser never sets is a condition that can never be met.
+		carriesN := known(momentsCarryingN, t.Moment)
+		if t.N != 0 && !carriesN {
 			return trigger{}, fmt.Errorf("moment %q carries no N", t.Moment)
 		}
-		if t.Moment == MomentFloorReached && t.N < 1 {
-			return trigger{}, fmt.Errorf("floor-reached needs the floor in N")
+		if carriesN && t.N < 1 {
+			return trigger{}, fmt.Errorf("moment %q needs its figure in N", t.Moment)
 		}
 		if t.Value != "" && t.Moment != MomentCardAltered {
 			return trigger{}, fmt.Errorf("moment %q carries no Value", t.Moment)
@@ -252,7 +276,13 @@ func parsePattern(p data.PatternData) (pattern, error) {
 // second time — through `combat.ParseAxis`, so the two files cannot disagree about what `form`
 // means.
 func parseClause(c data.ClauseData) (clause, error) {
-	out := clause{mode: c.Mode, n: c.N}
+	out := clause{mode: c.Mode, n: c.N, cost: c.Cost}
+
+	// **A negative cost matches nothing**, because Card.Cost is floored at zero. A record asking
+	// for one is a row that can never light up, which is the one failure mode this package is for.
+	if c.Cost != nil && *c.Cost < 0 {
+		return clause{}, fmt.Errorf("a cost filter of %d matches no card; costs are floored at 0", *c.Cost)
+	}
 
 	switch c.Of {
 	case "":

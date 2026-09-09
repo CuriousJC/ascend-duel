@@ -208,9 +208,14 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   rather than converted, so those decks are pure attack now and are modestly stronger for it;
   `GatheredAP`, `BonusAP`, `KindGathered` and the whole AP-flight animation went with them, and
   **`Duelist.ActionPoints()` is the stat and nothing else**.
-- **A duelist holds at most five shields**, which is `MaxActions` — the most attacks a turn can
-  throw — and is also what the pip row on the duelist card can draw. The cap is in
-  `Duelist.raiseShields` and the row inherits it; do not clamp in the screen.
+- **One card raises at most five shields; a duelist holds as many as the turn paid for**
+  *(owner's call, 2026-09-09)*. The five is `combat.MaxShields` = `MaxActions`, refused at
+  `RegisterConcept` and clamped in `Card.Amount`. **`Duelist.raiseShields` clamped the total to the
+  same figure until now and no longer does** — that contradicted `maxShields`' own doc comment
+  ("three Guards in a turn is nine shields and is meant to be"), and what bounds a turn is the
+  action budget. **The pip row is a separate number in a separate package**: `screens.maxShieldPips`
+  is `cards.MaxEffects`, six, being what the bottom band fits — so a duelist behind ten draws a full
+  row and the true count is on the engine. A row that can say a big number has not been designed.
 - **The deck shape moved on 2026-09-01** *(owner's call)*: Guard went to zero copies, so the
   defences are 2 concepts × 5 elements and the starting deck is 55 cards rather than 60. That is a
   balance change and was taken as one — `tools/handodds` and `tools/seeds` were both re-run, four

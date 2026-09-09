@@ -242,3 +242,33 @@ func TestFlownSeatsAreForgottenEachRound(t *testing.T) {
 		t.Error("this round's defence in the same seat did not fly its pips")
 	}
 }
+
+// **The shield count an achievement is asked about comes off the resolved log, not the playback**
+// *(2026-09-09)*. Same rule recordHandsPlayed and payHeldVitae are written under: the round is
+// decided before a frame of it is drawn, so a record earned as the animation reached a pip would be
+// one the player could miss by walking away from the screen.
+//
+// **It is the peak rather than the count at the end.** KindRaised carries what is standing after
+// its own card, so two Guards announce 3 and then 6 — and a shield eaten later in the round was
+// still raised.
+func TestTheShieldPeakIsReadOffTheLog(t *testing.T) {
+	s := &CombatScene{}
+
+	s.noteShieldsRaised([]combat.Event{
+		{Kind: combat.KindRaised, Side: combat.SideA, Life: 3},
+		{Kind: combat.KindRaised, Side: combat.SideA, Life: 6},
+		// The opponent's row is not the player's achievement.
+		{Kind: combat.KindRaised, Side: combat.SideB, Life: 11},
+		// A blow eats one, and the peak does not follow it down.
+		{Kind: combat.KindBlocked, Side: combat.SideB, Life: 5},
+	})
+	if s.shieldPeak != 6 {
+		t.Errorf("the round peaked at %d shields, want the 6 the second raise announced", s.shieldPeak)
+	}
+
+	// A round that raised nothing leaves nothing to award.
+	s.noteShieldsRaised([]combat.Event{{Kind: combat.KindHand, Side: combat.SideA}})
+	if s.shieldPeak != 0 {
+		t.Errorf("a round with no raise left a peak of %d, want none", s.shieldPeak)
+	}
+}

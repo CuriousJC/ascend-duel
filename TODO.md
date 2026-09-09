@@ -14,18 +14,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Now — quick wins, independent of any design decision
 
-- [ ] **A card's face does not say what riders it carries** *(owner asked for this to be tracked,
-      2026-09-02)*. Sixteen parasites now attach seven kinds of rider, and a ridden card looks
-      exactly like an unridden one — the only place a rider is visible is the tooltip prose. That
-      was tolerable at one rider on one parasite and is not at seven: a hand's worth of held-back
-      cards paying vitae, doubling DMG or raising shields is a turn the player cannot read.
-      `combat.MaxCardRiders` is 3 **because the face has room for three badges**, so the room was
-      reserved and never used. What it needs: a badge per rider kind (the `assets/effect` route, or
-      generated glyphs), a row on the card face that does not collide with the cost column or the
-      text band, and something in the hand row that marks a card as worth *not* playing — the four
-      in-hand riders are the first mechanic in the game that rewards leaving a card alone, and
-      nothing on screen says so.
-
 - [?] **Three parasites from the owner's list still need a design decision before they can be
       written as data** *(owner asked for this to be tracked, 2026-08-27; trimmed 2026-09-02 as
       the rest landed)*. **Lucky card**; **chance to increase a ring** (which ring, and increase
@@ -94,17 +82,16 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 ## Later
 
-- [ ] **Show the run seed, and allow entering one.** `GlobalState.RunSeed` is set once by
-      `main` and logged; enemy selection is the first stream reading it. Without a way to see a
-      seed and type one back, replayable runs are invisible to the player.
-      - **This is the one typed-text field in the whole game**, per the input vocabulary.
-      - **The spelling is done** *(2026-08-25)*: a seed is a six-character Crockford base32
-        code, `seeds.Code` / `seeds.Parse` — case-insensitive in, upper case out, with `O`/`I`/`L`
-        folded to the digits they look like — and `main` prints it every launch. What is left is
-        somewhere to show it and a field to type it into.
-      - Both card shuffles read `RunSeed` now, salted per side and per fight by
-        `CombatScene.shuffleSeeds`, so a typed seed already reaches the cards. `deckSeed` is
-        the debugging pin over the top of it.
+- [ ] **Let a run seed be typed in.** A player can *read* a code — the run-over splash and the
+      settings screen both draw it — but cannot hand one back, so a run is reproducible and not
+      replayable.
+      - **This is the one typed-text field in the whole game**, per the input vocabulary, and it
+        is the trigger `internal/models/doc.go` names for revisiting the hand-rolled-UI decision:
+        a caret, a selection and a clipboard are the one widget cheaper to take than to build.
+      - **Everything under it is done.** `seeds.Parse` reads a code, `state.SeedPinned` says a
+        seed was chosen rather than rolled, and both card shuffles derive from `RunSeed` — so a
+        typed seed already reaches the cards. What is missing is the field and where New Run
+        offers it.
 - [ ] **Don't pre-roll into a fixed array — keep a seeded stream per concern.** A
       `*rand.Rand` seeded once *is* an infinite deterministic list; a pre-generated slice
       is just the first N entries of it, and N has to be guessed. The endless tower has
@@ -130,16 +117,6 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         than given, and `profile.Profile.HandsDiscovered` is the field waiting for it. Gating the
         table is a balance change and belongs in a commit where its effect can be seen, not in the
         one that added the file.
-- [ ] **An achievement the player is *told* about.** The achievements screen landed on 2026-09-03
-      and is reachable from the title menu, so the record is visible — but an award still happens
-      silently mid-run and nothing says so at the moment it is earned. `Profile.Award` already
-      reports whether an award was new, which is what a toast would hang off.
-      - A toast is a new widget and the frame in `internal/game/chrome.go` is the only thing that
-        outlives a scene, so it is the natural home and the bar for joining it is high — see
-        CLAUDE.md. Worth deciding whether this is a toast at all or a line on a between-fights
-        screen.
-      - Steam's overlay draws its own popup when that lands, so this may turn out to be a thing
-        only the non-Steam build needs.
 - [ ] **Several profiles, and the second text screen.** Explicitly a later problem, split out
       so that "one profile for now" does not quietly become "one profile forever". Multiple
       profiles need naming, naming needs typing, and typing makes the one-text-field rule in

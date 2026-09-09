@@ -220,6 +220,14 @@ type CombatScene struct {
 	// GlobalState to award against. See drainTurn.
 	playedTurn []combat.Card
 
+	// shieldPeak is the most shields the player stood behind at any point in the last resolved
+	// round, stashed beside playedTurn and drained on the same tick.
+	//
+	// **The peak rather than the count at the end**, because a shield that was raised and then eaten
+	// in the same round was still raised — and the round the player builds ten in is very likely the
+	// round something spends them. See achieve.MomentShieldsRaised.
+	shieldPeak int
+
 	// run is the run these piles were dealt out of, or nil for the callers that deal a hand
 	// without one — `OpeningHand`, `tools/seeds` and the flight tests.
 	//
@@ -985,6 +993,30 @@ func (s *CombatScene) recordHandsPlayed(log []combat.Event) {
 	}
 }
 
+// noteShieldsRaised is the most shields the player stood behind during the resolved round.
+//
+// **Off the log, never off the playback**, the rule recordHandsPlayed and payHeldVitae are both
+// under: the round is decided before a frame of it is drawn, and an achievement earned as the
+// animation reached a pip would be one the player could miss by leaving the screen.
+//
+// **KindRaised carries the count after its own card in `Life`**, so the peak is the largest of them
+// rather than a sum — two Guards announce 3 and then 6, and adding those would claim nine.
+//
+// **The player's side only.** Nothing in the shipped game gives a creature a shield, and the
+// achievement is the player's either way.
+func (s *CombatScene) noteShieldsRaised(log []combat.Event) {
+	peak := 0
+	for _, e := range log {
+		if e.Kind != combat.KindRaised || e.Side != combat.SideA {
+			continue
+		}
+		if e.Life > peak {
+			peak = e.Life
+		}
+	}
+	s.shieldPeak = peak
+}
+
 // drainTurn asks the achievements about the turn just resolved, and adds it to the lifetime
 // tallies.
 //
@@ -1001,8 +1033,14 @@ func (s *CombatScene) drainTurn(gs *state.GlobalState) {
 	turn := s.playedTurn
 	s.playedTurn = s.playedTurn[:0]
 
+	peak := s.shieldPeak
+	s.shieldPeak = 0
+
 	earnTurn(gs, turn)
 	bumpCounters(gs, turn)
+	if peak > 0 {
+		earnMoment(gs, achieve.ShieldsRaised(peak))
+	}
 }
 
 // startRound resolves a single round and hands playback an event log. It does not
@@ -1096,6 +1134,7 @@ func (s *CombatScene) startRound() {
 	s.payHeldVitae(fighterAfter)
 	s.settleGrants(log)
 	s.recordHandsPlayed(log)
+	s.noteShieldsRaised(log)
 
 	// **The turn as it was played, kept for the achievements.** Taken here, beside the other two
 	// readings of the resolved round, and for the same reason: this is the last moment the queue

@@ -277,20 +277,22 @@ func ClearDefenses(d Duelist) Duelist {
 
 // raiseShields adds to the shield count, and it is the whole of what VerbShield does.
 //
-// **The total is capped at maxShields, not just each card** *(2026-08-31)*. A turn is capped at
-// MaxActions cards, so an opposing turn can contain at most five attacks and a sixth shield could
-// never be spent by anything. Clamping rather than refusing follows Card.Amount: a Guard played
-// into four standing shields raises one and is a poor play, where a Guard that did nothing at all
-// would look like a bug.
+// **A duelist's total is not capped; maxShields bounds one card** *(owner's call, 2026-09-09)*.
+// The clamp here said the opposite for nine days, against maxShields' own doc comment — three
+// Guards is nine shields "and is meant to be" — so one of the two was wrong and this was it. What
+// bounds a turn is the action budget, exactly as it bounds nine attacks; a second bound on the
+// total was a cap on a resource the player had already paid for.
 //
-// It is also what keeps the duelist card honest. The shield row draws one pip per shield in the
-// seat the enemy's status badges occupy, and that row holds five — so a count this could not draw
-// would be a readout quietly disagreeing with the rules.
+// **The argument the clamp was written on does not survive the round limit.** It said a sixth
+// shield could never be spent, because a turn holds MaxActions cards and so throws at most five
+// attacks. That is true of *one* turn and shields last exactly one — but it prices a shield at
+// what it stops rather than at what it cost, and the player buying a tenth is buying insurance
+// against a turn they cannot see. Overpaying for it is a poor play, not an impossible one.
+//
+// The readout is what actually pays for this, and it is a screen problem rather than a rule:
+// the pip row on the duelist card fits six at its current pitch. See screens.maxShieldPips.
 func (d Duelist) raiseShields(n int) Duelist {
 	d.Shields += n
-	if d.Shields > maxShields {
-		d.Shields = maxShields
-	}
 	return d
 }
 

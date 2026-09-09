@@ -162,16 +162,17 @@ on it would make the top card the only one worth holding.
 **Flinch raises a shield for nothing, and that is the floor rather than a mistake** *(owner's call,
 2026-09-06)*. A shield eats a whole blow, so there is no fraction of one to fall to: where Poke is a
 Jab at a quarter of the damage, Flinch is a Ward at none of the cost. What bounds it is the count —
-a turn plays at most `MaxActions` cards however cheap they are, and a duelist holds at most
-`maxShields` — rather than the budget, which is the same shift `minCardCost` took when Whetworm
-could drive a card to free.
+a turn plays at most `MaxActions` cards however cheap they are — rather than the budget, which is
+the same shift `minCardCost` took when Whetworm could drive a card to free. **The duelist's own
+shield cap is not part of that bound any more**; see §Shields.
 
 **`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so a Grow promotes a Ward and
 a Shrink demotes a Guard. **This reverses the 2026-08-31 call** that kept the worms to the damage
 ladders on the argument that a free shield changes how many hits a run takes for the rest of the
 tower — which is still true, and is now something a run is allowed to build toward: a deck of ten
-defences shrunk to Flinches is five free shields a turn against the five-shield cap. It is matched on
-the *verb* rather than pinned to attacks, so the two ladders can never step onto each other.
+defences shrunk to Flinches is five free shields a turn, and since 2026-09-09 nothing takes the
+fifth away. It is matched on the *verb* rather than pinned to attacks, so the two ladders can never
+step onto each other.
 
 **`Strike` is the 1× reference the ladder is written against**, and that is why the crush form
 holds the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, so the figure the player reads
@@ -247,9 +248,22 @@ already on, and `expireDefenses` is the one function that says when. **An unspen
 and is announced when it does — a stockpile carried through quiet rounds and cashed at a boss is
 the banking mechanic these cards replaced.
 
-**A duelist holds at most five.** That is `MaxActions`, the most attacks an opposing turn can
-contain, so a sixth could never be spent by anything; it is also what the pip row on the duelist
-card can draw, and the two agree on purpose.
+**One card raises at most five; a duelist holds as many as the turn can pay for** *(owner's call,
+2026-09-09)*. The five is `MaxActions` — a card promising a sixth shield would be promising one its
+own turn can never see thrown at it — and `RegisterConcept` refuses a concept declaring more.
+
+**A duelist was clamped to the same figure from 2026-08-31 until now, and that was the mistake.**
+The argument was the same one: a turn throws at most five attacks, so a sixth standing shield could
+never be spent. It prices a shield at what it stops rather than at what it cost — and a player
+paying six AP for two Guards has bought six shields, whether or not the next turn happens to throw
+six blows. **What bounds a turn is the action budget**, exactly as it bounds nine attacks. Three
+Guards is nine shields.
+
+**The pip row on the duelist card holds six**, which is what fits the bottom band at the current
+pitch, and it is now a *readout* limit rather than a rule — `screens.maxShieldPips`, not
+`combat.MaxShields`. A duelist standing behind ten draws a full row of six and the count is on the
+engine. **A row that says what a big count actually is has not been designed**; a seventh pip is a
+redesign of the band rather than a bigger number.
 
 #### The asymmetry is the mechanic, not a gap in it
 
@@ -3172,7 +3186,7 @@ that is what lets an achievement be reworded or retired without orphaning the th
 Nothing is gated on one yet; the bridge is a field on the record so the day one is, it is a line of
 JSON.
 
-**Eleven of them, in `data/achievements.json`.** The catalogue was a Go table on the achievements
+**Fourteen of them, in `data/achievements.json`.** The catalogue was a Go table on the achievements
 screen until this change, on the argument that one record whose fields were a name and a sentence
 did not earn a loader. That argument stopped holding the moment a record had to say *what earns it*.
 
@@ -3182,14 +3196,16 @@ The list looks heterogeneous and is not. It is three families, and only one of t
 
 - **A turn shape** — what the player put on the table together. Spectrum (four elements at once),
   Elementalist (five), Weaponmaster (three attack forms), Arsenal (three attack forms and a
-  defence), Prism (one form or one card, in all five colours). **This family is pure grammar**, and
-  four of the five were rungs of the hand ladder until 2026-09-05 — cut because the ladder could not
-  *price* them, not because they could not be matched. This is where they went, and it is the right
-  home: a shape worth naming that is not worth paying for.
+  defence), Prism (one form or one card, in all five colours), and since 2026-09-09 the two ends of
+  the cost ladder — Tiny But Fierce (five free attacks of one card) and Godslayer (five 4 AP ones).
+  **This family is pure grammar**, and four of them were rungs of the hand ladder until 2026-09-05 —
+  cut because the ladder could not *price* them, not because they could not be matched. This is
+  where they went, and it is the right home: a shape worth naming that is not worth paying for.
 - **A lifetime count** — three hundred slashing cards, two hundred Strikes. A tally on the profile,
   not a predicate over anything the process is holding.
 - **A named moment** — a duel won, the tutorial finished, the fifth floor reached, a card altered
-  into a Flinch. The only family that costs a line of Go each, and deliberately the short one.
+  into a Flinch, ten shields standing at once. The only family that costs a line of Go each, and
+  deliberately the short one.
 
 **The turn family reads the turn, not the hand.** A hand counts the cards that scored it and leaves
 the rest out; these are about what was played together, which is why Arsenal can ask for a defence
@@ -3197,8 +3213,45 @@ beside three attack forms — something no rung on the ladder can say, because a
 what its cards must *agree* on.
 
 **Thresholds are at-least, everywhere** *(owner's call)*. A five-element turn earns Spectrum as well
-as Elementalist, and arriving on floor six earns the fifth-floor row. The alternative makes a player
-who jumped a step permanently miss it, which reads as a bug in the page.
+as Elementalist, arriving on floor six earns the fifth-floor row, and standing behind eleven shields
+earns the row that asked for ten. The alternative makes a player who jumped a step permanently miss
+it, which reads as a bug in the page.
+
+### A clause may filter on cost *(2026-09-09)*
+
+**`Cost` narrows a clause's selection to cards of exactly that AP**, on top of `Of`, and it exists
+for the two ends of the promote ladder. Every attack ladder in `duelist_cards.json` runs five rungs
+from 0 AP to 4 AP with the two ends shipped at zero copies, so a run reaches them only by promoting
+or demoting — which makes "five 4 AP attacks of one card" a statement about a deck the player
+*built*, and the reason those two achievements are worth naming at all.
+
+**It reads `Card.Cost()` and not the concept's figure.** A worm's `CostDelta` is part of what the
+turn cost, so five Lunges a Grow pushed to 4 AP count and five Impales a Whetworm made cheap do not.
+The achievement is about what was paid.
+
+**Zero is a filter and not an absence**, which is why the field is a pointer in the JSON struct —
+the free rung is exactly the thing Tiny But Fierce is about, and an int could not say "the free
+ones" without also saying "any".
+
+### Two of them are unreachable today, and that is deliberate
+
+**Godslayer is five 4 AP cards against a six AP budget** — twenty points out of six. Nothing in the
+game grants AP on that scale, so it cannot be earned until something does; a brand is the likeliest
+door, since brands alter the container. It is written now because the *pattern* is what a brand
+would have to be judged against.
+
+**This is the one place the reachability rule below is knowingly bent**, and it is bent in the half
+that is safe: `TestEveryShippedAchievementIsReachable` proves the pattern is satisfiable by some
+turn of five cards, which is what stops a row that no turn could ever match at any price. It says
+nothing about the budget, and the test now says so out loud.
+
+**Tiny But Fierce is reachable, and is the pair to it.** Five Pokes cost nothing at all, and five
+cards is exactly `MaxActions` — so it is the turn that hits the *count* bound rather than the
+budget, which is the shift Flinch and `minCardCost` both made. Getting there is five Shrinks over a
+run, which is a long grind and not a special case.
+
+**Invulnerable needed the duelist shield cap lifted** — see §Shields, where the clamp that made ten
+impossible came off on the same day.
 
 ### What a record says, and what it says twice
 

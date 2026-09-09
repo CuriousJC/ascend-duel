@@ -21,18 +21,21 @@ type Moment struct {
 	// Value is a concept's label, on MomentCardAltered.
 	Value string
 
-	// N is the floor, on MomentFloorReached.
+	// N is the figure the moment carries: the floor on MomentFloorReached, the shield count on
+	// MomentShieldsRaised.
 	N int
 }
 
-// DuelWon, TutorialFinished, FloorReached and CardAltered are the four raisers, so a call site
-// spells a moment once and cannot misspell it.
+// The raisers, so a call site spells a moment once and cannot misspell it.
 func DuelWon() Moment               { return Moment{Name: MomentDuelWon} }
 func TutorialFinished() Moment      { return Moment{Name: MomentTutorialFinished} }
 func FloorReached(floor int) Moment { return Moment{Name: MomentFloorReached, N: floor} }
 func CardAltered(label string) Moment {
 	return Moment{Name: MomentCardAltered, Value: label}
 }
+
+// ShieldsRaised is the count a duelist ended up standing behind.
+func ShieldsRaised(n int) Moment { return Moment{Name: MomentShieldsRaised, N: n} }
 
 // ByMoment is every achievement this moment satisfies.
 func (c *Catalogue) ByMoment(m Moment) []string {
@@ -43,8 +46,8 @@ func (c *Catalogue) ByMoment(m Moment) []string {
 			continue
 		}
 		switch m.Name {
-		case MomentFloorReached:
-			// A threshold, not an equality. See the constant.
+		case MomentFloorReached, MomentShieldsRaised:
+			// A threshold, not an equality. See the constants.
 			if m.N < t.n {
 				continue
 			}
@@ -114,7 +117,7 @@ func (p pattern) holds(turn []combat.Card) bool {
 
 // holds reports whether one clause is satisfied.
 func (c clause) holds(turn []combat.Card) bool {
-	cards := c.of.filter(turn)
+	cards := c.costs(c.of.filter(turn))
 
 	switch c.mode {
 	case data.ModeCount:
@@ -142,6 +145,24 @@ func (c clause) holds(turn []combat.Card) bool {
 	default:
 		return false
 	}
+}
+
+// costs narrows a selection to the cards of one AP, or leaves it alone when the clause named none.
+//
+// **`Card.Cost()` rather than the concept's figure**, so a worm's CostDelta is read — which is what
+// makes "five 4 AP attacks" true of five promoted Lunges and false of five Impales a Whetworm has
+// made cheap. See data.ClauseData.Cost.
+func (c clause) costs(cards []combat.Card) []combat.Card {
+	if c.cost == nil {
+		return cards
+	}
+	out := make([]combat.Card, 0, len(cards))
+	for _, card := range cards {
+		if card.Cost() == *c.cost {
+			out = append(out, card)
+		}
+	}
+	return out
 }
 
 // filter picks the cards a clause looks at.

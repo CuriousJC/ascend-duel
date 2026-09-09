@@ -33,7 +33,7 @@ import (
 // **The flight predicts and the announcement corrects.** `noteShields` writes the standing count
 // absolutely off `KindRaised`, so the raise arriving later either agrees with what is already drawn
 // or fixes it — there is no double count to guard against, and a mispredicted pip lives for a few
-// beats rather than for the round. The cap is `combat.MaxShields`, because a prediction has to know
+// beats rather than for the round. The cap is `maxShieldPips`, because a prediction has to know
 // the ceiling the raise will be held to.
 //
 // **It cannot change an outcome**, like everything else on this screen that moves.
@@ -97,13 +97,18 @@ func (s *CombatScene) row(side combat.Side) *shieldRow {
 
 // noteShieldFlight raises the pips for one defend card being scored.
 //
-// **The count is what the card raises, held to the standing cap.** Predicting past the cap would
-// draw a pip the row has no seat for; predicting under it is the ordinary case and needs nothing.
+// **The count is what the card raises, held to the seats the row still has.** Predicting past the
+// row's width would draw a pip it has nowhere to put; predicting under it is the ordinary case and
+// needs nothing.
+//
+// **The bound is maxShieldPips, not combat.MaxShields** *(2026-09-09)*. It was the engine's number
+// while a duelist was clamped to it as well, and reading it here after the clamp came off would
+// have made the prediction stop one pip short of a row that has six seats.
 func (s *CombatScene) noteShieldFlight(side combat.Side, seat, count, standing int) {
 	if count <= 0 {
 		return
 	}
-	if room := combat.MaxShields - standing; count > room {
+	if room := maxShieldPips - standing; count > room {
 		count = room
 	}
 	if count <= 0 {

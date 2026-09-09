@@ -70,8 +70,14 @@ func TestTheCatalogueLoads(t *testing.T) {
 // turn could satisfy.** The first two are checked at load; this is the third, and it is checked by
 // actually building a turn that satisfies each one.
 func TestEveryShippedAchievementIsReachable(t *testing.T) {
-	// The widest legal turn: five cards, which is combat.MaxShields' reason for existing and the
-	// most a turn can hold. Every turn achievement in the file has to be satisfiable inside it.
+	// The widest legal turn: five cards, which is combat.MaxActions and the most a turn can hold.
+	// Every turn achievement in the file has to be satisfiable inside a turn of that size.
+	//
+	// **This checks the pattern, not the price.** A turn here is a set of cards with no budget in
+	// front of it, so a pattern that is expressible but unaffordable passes — godslayer is five
+	// 4 AP cards against a 6 AP budget and is deliberately out of reach today. What the test
+	// refuses is the other failure: a pattern no turn could satisfy at any price, which is a row
+	// that looks identical to one nobody has earned yet.
 	//
 	// Four attack forms are not available at once — there are three — so this is three attack
 	// forms across five elements, plus a defence, which is deliberately the hardest single turn the
@@ -93,8 +99,28 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 		card("Impale", combat.Arcane),
 	}
 
+	// Five of one concept at the bottom of the stab ladder, for tiny-but-fierce. `Poke` is the
+	// 0 AP rung `duelist_cards.json` ships with no copies — the deck reaches it by demoting Jabs.
+	free := []combat.Card{
+		card("Poke", combat.Fire),
+		card("Poke", combat.Ice),
+		card("Poke", combat.Lightning),
+		card("Poke", combat.Earth),
+		card("Poke", combat.Arcane),
+	}
+
+	// The same turn at the top of that ladder, for godslayer. Twenty AP, which no run can pay for
+	// today; see the note above about what this test does and does not check.
+	heaviest := []combat.Card{
+		card("Impale", combat.Fire),
+		card("Impale", combat.Ice),
+		card("Impale", combat.Lightning),
+		card("Impale", combat.Earth),
+		card("Impale", combat.Arcane),
+	}
+
 	reachable := map[string]bool{}
-	for _, turn := range [][]combat.Card{widest, prism} {
+	for _, turn := range [][]combat.Card{widest, prism, free, heaviest} {
 		for _, key := range Loaded().ByTurn(turn) {
 			reachable[key] = true
 		}
@@ -435,5 +461,104 @@ func TestAnAxisReadsTheSameWayTheHandMatcherDoes(t *testing.T) {
 	}
 	if v, ok := axisValue(fire, combat.AxisForm); !ok || v != int(combat.FormStab) {
 		t.Error("a Jab counts as a stab")
+	}
+}
+
+// **A cost clause reads the card's cost, not its concept's** *(2026-09-09)*. That is what makes
+// godslayer true of five promoted Lunges and false of five Impales a Whetworm has made cheap — the
+// achievement is about what the turn actually cost, and Card.Cost is where a worm's CostDelta lands.
+func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
+	turn := func(delta int) []combat.Card {
+		out := make([]combat.Card, 0, 5)
+		for _, e := range []combat.Element{
+			combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane,
+		} {
+			c := card("Impale", e)
+			c.CostDelta = delta
+			out = append(out, c)
+		}
+		return out
+	}
+
+	earned := func(cards []combat.Card) bool {
+		for _, k := range Loaded().ByTurn(cards) {
+			if k == "godslayer" {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !earned(turn(0)) {
+		t.Error("five plain Impales are five 4 AP attacks of one card and must earn godslayer")
+	}
+	if earned(turn(-1)) {
+		t.Error("five Impales a worm made 3 AP are not five 4 AP attacks")
+	}
+
+	// And the other direction: a Lunge a worm made dearer *is* a 4 AP attack.
+	lunges := make([]combat.Card, 0, 5)
+	for _, e := range []combat.Element{
+		combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane,
+	} {
+		c := card("Lunge", e)
+		c.CostDelta = 1
+		lunges = append(lunges, c)
+	}
+	if !earned(lunges) {
+		t.Error("five Lunges a worm made 4 AP are five 4 AP attacks of one card")
+	}
+}
+
+// **Zero is a real cost filter and not an absent one**, which is the whole reason ClauseData.Cost is
+// a pointer. `duelist_cards.json` ships a 0 AP rung on every attack ladder, so "the free ones" is a
+// question the grammar has to be able to ask.
+func TestAZeroCostClauseFiltersRatherThanMatchingEverything(t *testing.T) {
+	free := []combat.Card{
+		card("Poke", combat.Fire), card("Poke", combat.Ice), card("Poke", combat.Lightning),
+		card("Poke", combat.Earth), card("Poke", combat.Arcane),
+	}
+	paid := []combat.Card{
+		card("Jab", combat.Fire), card("Jab", combat.Ice), card("Jab", combat.Lightning),
+		card("Jab", combat.Earth), card("Jab", combat.Arcane),
+	}
+
+	earned := func(cards []combat.Card) bool {
+		for _, k := range Loaded().ByTurn(cards) {
+			if k == "tiny-but-fierce" {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !earned(free) {
+		t.Error("five Pokes are five free attacks of one card")
+	}
+	if earned(paid) {
+		t.Error("five 1 AP Jabs are not free; a zero cost filter must not match every card")
+	}
+}
+
+// **shields-raised is a threshold, like floor-reached.** Standing behind eleven earns the row that
+// asked for ten — a player who overshot should not be missing the step they went past.
+func TestTheShieldsMomentIsAThreshold(t *testing.T) {
+	earned := func(n int) bool {
+		for _, k := range Loaded().ByMoment(ShieldsRaised(n)) {
+			if k == "invulnerable" {
+				return true
+			}
+		}
+		return false
+	}
+
+	if earned(9) {
+		t.Error("nine shields is not ten")
+	}
+	if !earned(10) {
+		t.Error("ten shields is the achievement")
+	}
+	if !earned(11) {
+		t.Error("eleven shields must earn the row asking for ten")
 	}
 }

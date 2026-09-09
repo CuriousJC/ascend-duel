@@ -158,17 +158,31 @@ func TestUnspentShieldsLapseBeforeTheirOwnerActsAgain(t *testing.T) {
 	}
 }
 
-// **A duelist cannot hold more shields than an opposing turn can throw attacks.** MaxActions caps
-// a turn at five cards, so a sixth shield could never be spent by anything — it would be a figure
-// on the card that nothing in the game can take away.
-func TestShieldsAreCappedAtWhatATurnCanThrow(t *testing.T) {
+// **maxShields bounds one card and not a duelist** *(owner's call, 2026-09-09)*. Three Guards is
+// nine shields and is meant to be: what stops a turn raising them is the action budget, exactly as
+// it stops nine attacks. This test asserted the opposite for nine days — see Duelist.raiseShields
+// for why the argument behind the clamp did not hold.
+func TestATurnMayRaiseMoreShieldsThanOneCardCan(t *testing.T) {
 	a := duelist(10, 12, 200)
 	b := duelist(10, 6, 200)
 
 	// Three Guards is nine shields' worth, paid for out of a budget that can afford it.
 	_, after, _ := resolve(a, b, PlainCards(Guard, Guard, Guard), nil, 1)
-	if after.Shields != maxShields {
-		t.Errorf("nine shields' worth left %d standing, want %d", after.Shields, maxShields)
+	if after.Shields != 9 {
+		t.Errorf("three Guards left %d standing, want the nine they raised", after.Shields)
+	}
+}
+
+// **One card still cannot raise more than maxShields**, which is the half of the rule that
+// survived. RegisterConcept refuses a concept declaring more, and Card.Amount clamps a worm that
+// scaled one past it — a card whose face promised a sixth shield would be promising something its
+// own turn can never see spent.
+func TestOneCardStillCannotRaisePastTheCap(t *testing.T) {
+	swollen := PlainCards(Guard)[0]
+	swollen.AmountPct = 1000
+
+	if got := swollen.Amount(); got != maxShields {
+		t.Errorf("a Guard scaled ten times raises %d, want it held to %d", got, maxShields)
 	}
 }
 

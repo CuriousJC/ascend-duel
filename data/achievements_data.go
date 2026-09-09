@@ -91,6 +91,20 @@ type ClauseData struct {
 
 	// N is how many, read against the mode. `same` ignores it.
 	N int `json:"N,omitempty"`
+
+	// Cost narrows the selection to cards of exactly this AP, on top of Of *(2026-09-09)*.
+	//
+	// **A pointer, because zero is a real filter.** `duelist_cards.json` ships a 0 AP rung on every
+	// attack ladder — Poke, Nick, Tap — so "the free ones" and "any cost" are different questions
+	// and an int could not tell them apart.
+	//
+	// **It reads the card's cost, not its concept's**, so a worm that made a Lunge dearer counts it
+	// and one that made an Impale cheaper does not. That is the right way round: the achievement is
+	// about what the player paid for the turn, and the card's own face is what says it.
+	//
+	// It is on the clause rather than on the pattern for the reason Of is — Godslayer wants five
+	// cards that agree on concept *and* all cost 4, which is one selection asked two questions.
+	Cost *int `json:"Cost,omitempty"`
 }
 
 // PatternData is a set of clauses that must all hold.

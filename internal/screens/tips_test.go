@@ -370,15 +370,23 @@ func TestTheElementInATitleIsColoured(t *testing.T) {
 	t.Errorf("FIRE is not written in the fire red: %v", title)
 }
 
-// **CHROMATIC is deliberately not coloured.** The wheel has no hue left for "all of them", and a
-// word written in one of the five would be claiming the one thing it exists to deny.
+// **CHROMATIC takes no *single* element's colour, and that is still the rule** *(owner's call,
+// 2026-09-09)*. The wheel has no hue left for "all of them" and a word written in one of the five
+// would be claiming the one thing it exists to deny — so it is written in all five at once, sampled
+// out of the wildcard's own wash. What this holds is the half that did not change: no letter of it
+// is an element's ink, and the card's *element* is not what the title is coloured by.
 func TestChromaticTakesNoElementColour(t *testing.T) {
 	title := tipLine(carddesc.Title(
 		combat.Of(combat.Strike, combat.Arcane).SetRider(combat.Rider{Kind: combat.RiderWildElement})))
 
+	elements := map[cards.Element]bool{
+		cards.Fire: true, cards.Ice: true, cards.Lightning: true, cards.Earth: true, cards.Arcane: true,
+	}
 	for _, run := range title {
-		if run.Ink.A != 0 {
-			t.Errorf("a chromatic title carries a colour: %v", title)
+		for e := range elements {
+			if run.Ink == cards.BorderOf(e) {
+				t.Errorf("%q in a chromatic title is written in the %v ink: %v", run.Text, e, title)
+			}
 		}
 	}
 }

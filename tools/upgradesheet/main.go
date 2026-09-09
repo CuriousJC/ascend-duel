@@ -259,24 +259,32 @@ func specFor(form cards.Form, name string, e cards.Element, u systems.Upgrade, s
 	}
 }
 
-// textFor is the line an upgraded card carries under its name.
+// textFor is the text an upgraded card carries under its name, exactly as the game prints it.
 //
-// **It is hand-written here and that is a knowingly accepted duplicate.** The real wording is
-// `screens.riderText`, which sits above this tool's whole import set — `internal/screens` links
-// Ebitengine, so a command-line tool cannot reach it. `tools/cardsheet` keeps its own snapshot of
-// the card names and costs for exactly this reason and says so. What that costs is a line that can
-// drift; what it buys is a sheet that runs with no window.
+// **It was a hand-written snapshot of `screens.riderText` and no longer is** *(2026-09-09)*. The
+// wording moved down into `internal/carddesc`, which is windowless precisely so a command-line tool
+// can reach it — the same trade the tooltip block already makes on this page. What that removes is
+// the one line on the sheet that could disagree with the card it is a picture of.
+//
+// The demonstration card is the row's own: the same fire Lunge `tipFor` builds, so the face and the
+// tooltip beside it are two readings of one card rather than two cards.
 func textFor(u systems.Upgrade) string {
-	switch u {
-	case systems.UpgradeWild:
-		return "2x DMG\nANY ELEMENT"
-	case systems.UpgradeGolden:
-		return "2x DMG\nGOLD"
-	case systems.UpgradeSilver:
-		return "2x DMG\nSILVER"
-	default:
-		return "2x DMG"
+	out := "2x DMG"
+	for _, line := range carddesc.FaceLines(demoRidden(u)) {
+		out += "\n" + line
 	}
+	return out
+}
+
+// demoRidden is the demonstration card carrying this upgrade's rider, or a bare one for an upgrade
+// nothing grants. **One builder for the face and the tooltip**, so a figure on the picture and the
+// same figure in the panel cannot come from two different amounts.
+func demoRidden(u systems.Upgrade) combat.Card {
+	c := combat.Of(demoConcept(), combat.Fire)
+	if k := riderOf(u); k != combat.RiderNone {
+		c = c.SetRider(combat.Rider{Kind: k, Amount: demoRiderAmount(k)})
+	}
+	return c
 }
 
 // ridersFor is the rider kinds that produce this upgrade, as the page names them.
@@ -344,10 +352,7 @@ func grantsFor(u systems.Upgrade) string {
 // chain only when a ring has moved something, and a page about upgrades is not the place to explain
 // a ring.
 func tipFor(u systems.Upgrade) tip {
-	c := combat.Of(demoConcept(), combat.Fire)
-	if k := riderOf(u); k != combat.RiderNone {
-		c = c.SetRider(combat.Rider{Kind: k, Amount: demoRiderAmount(k)})
-	}
+	c := demoRidden(u)
 	out := tip{Title: tipRuns(carddesc.Title(c))}
 	for _, line := range carddesc.Lines(c, c.Cost(), demoDMG, 100) {
 		out.Lines = append(out.Lines, tipRuns(line))
@@ -361,12 +366,8 @@ func tipFor(u systems.Upgrade) tip {
 // lives in `internal/cards`: the page cannot import the screen, but it can import the table the
 // screen reads. A word coloured here is coloured under the cursor.
 func tipRuns(line string) []tipRun {
-	runs := cards.ElementRuns(line)
-	if len(runs) == 0 {
-		return []tipRun{{Text: line}}
-	}
 	var out []tipRun
-	for _, seg := range cards.SplitRuns(line, runs) {
+	for _, seg := range washed(line) {
 		r := tipRun{Text: seg.Text}
 		if seg.Ink.A != 0 {
 			r.Ink = fmt.Sprintf("#%02x%02x%02x", seg.Ink.R, seg.Ink.G, seg.Ink.B)
@@ -374,6 +375,21 @@ func tipRuns(line string) []tipRun {
 		out = append(out, r)
 	}
 	return out
+}
+
+// washed is one line cut into its coloured segments — the element words first, then CHROMATIC into
+// the wildcard's own wash.
+//
+// **The order is a rule.** cards.SplitWash only touches a segment nothing has coloured, so running
+// the element vocabulary first is what lets a word be an element or the wildcard and never both.
+// `screens.chromatic` is the same two lines against the same two functions; what stops the two
+// drifting is that both cuts live in `internal/cards`.
+func washed(line string) []cards.Segment {
+	var out []cards.Segment
+	for _, seg := range cards.SplitRuns(line, cards.ElementRuns(line)) {
+		out = append(out, cards.SplitWash(seg, carddesc.Chromatic, systems.UpgradeWild)...)
+	}
+	return cards.SplitMetals(out)
 }
 
 // riderOf is the rider this upgrade is drawn for, or RiderNone. It is riderUpgrade read backwards.

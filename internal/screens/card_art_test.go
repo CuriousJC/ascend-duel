@@ -9,8 +9,10 @@ import (
 
 	"github.com/curiousjc/ascend-duel/assets"
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/carddesc"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // **This is the first test in internal/screens, and it is a deliberate narrow exception
@@ -620,5 +622,196 @@ func TestEveryOpponentNameFitsItsCard(t *testing.T) {
 		// will print the title, and measuring it here would fail the file for a string the card
 		// never draws.
 		fits("boss", key, bosses[key].Name)
+	}
+}
+
+// **Every rider is on the face, not only in the tooltip** *(2026-09-09)*. A card the player spent a
+// parasite on carries a wash whatever the rider is, and the wash is what carries across a row of
+// eight cards — but it is not what answers "what does that mean". Six of the ten riders said
+// nothing at all until this test existed.
+//
+// **The two metals are the exception and are named here rather than skipped by a rule**
+// *(owner's call, 2026-09-09)*. Their wash is a sheen rather than a placeholder tint, and gold and
+// silver are what the mechanic is called — so the picture names them and a word would be the same
+// fact twice. A third silent rider has to be argued for by editing this list.
+func TestEveryRiderKindIsOnTheFace(t *testing.T) {
+	silent := map[combat.RiderKind]bool{combat.RiderGolden: true, combat.RiderSilver: true}
+
+	for _, k := range combat.RiderKinds() {
+		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 5})
+		switch got := riderText(c); {
+		case silent[k] && got != "":
+			t.Errorf("rider %s writes %q on the face, and its sheen is what names it", k, got)
+		case !silent[k] && got == "":
+			t.Errorf("rider %s adds nothing to the card's face", k)
+		}
+	}
+	if got := riderText(combat.Plain(combat.Strike)); got != "" {
+		t.Errorf("an unridden card claimed an upgrade on its face: %q", got)
+	}
+}
+
+// **A metal explains itself in the tooltip: named first, then the odds.** The face says nothing at
+// all about a metal — its sheen is what names it — so the panel is the whole explanation, and it
+// opens by saying which metal rather than with two rate lines about a card the player has to
+// identify from the wash.
+func TestAMetalStillExplainsItselfInTheTooltip(t *testing.T) {
+	for _, metal := range []struct {
+		kind combat.RiderKind
+		word string
+	}{
+		{combat.RiderGolden, carddesc.Gold},
+		{combat.RiderSilver, carddesc.Silver},
+	} {
+		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
+		lines := carddesc.RiderLines(c)
+		if len(lines) < 2 {
+			t.Errorf("%s says %d lines, and the name alone is not an explanation", metal.kind, len(lines))
+			continue
+		}
+		if lines[0] != metal.word+" CARD" {
+			t.Errorf("%s opens with %q, want %q", metal.kind, lines[0], metal.word+" CARD")
+		}
+		for _, line := range lines[1:] {
+			if !strings.Contains(line, "1 IN 5") || !strings.Contains(line, "ON PLAY") {
+				t.Errorf("%s's tooltip line %q is neither the odds nor the moment", metal.kind, line)
+			}
+		}
+	}
+}
+
+// **The name is written in the metal's own colour**, sampled out of the sheen the card is washed in
+// rather than written down anywhere — so a repaint of the ink moves the word with it. Lifted for the
+// dark panel; see cards.WashLight.
+func TestAMetalsNameIsLitInTheTooltip(t *testing.T) {
+	for _, metal := range []struct {
+		kind combat.RiderKind
+		word string
+	}{
+		{combat.RiderGolden, carddesc.Gold},
+		{combat.RiderSilver, carddesc.Silver},
+	} {
+		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: metal.kind, Amount: 5})
+		runs := tipLine(carddesc.RiderLines(c)[0])
+
+		lit := ""
+		for _, run := range runs {
+			if run.Ink.A != 0 {
+				lit += run.Text
+			}
+		}
+		if lit != metal.word {
+			t.Errorf("%s's name line lights %q, want %q: %v", metal.kind, lit, metal.word, runs)
+		}
+	}
+}
+
+// **Every rider says *when*, except the one that has no when.** What the player has to learn off an
+// upgraded card is whether it happens as the card is played or while it merely sits in the hand,
+// and that is exactly the thing a figure alone cannot say. A wildcard is the deliberate exception:
+// it is something the card permanently is.
+func TestEveryRiderSaysWhenItHappens(t *testing.T) {
+	for _, k := range combat.RiderKinds() {
+		// The wildcard has no moment — it is something the card permanently is — and the two metals
+		// write nothing on the face at all; see TestEveryRiderKindIsOnTheFace.
+		if k == combat.RiderWildElement || k == combat.RiderGolden || k == combat.RiderSilver {
+			continue
+		}
+		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 5})
+		lines := carddesc.FaceLines(c)
+		if len(lines) == 0 {
+			t.Errorf("rider %s has no face lines", k)
+			continue
+		}
+		switch lines[0] {
+		case "ON PLAY", "IN HAND", "SCORING":
+		default:
+			t.Errorf("rider %s opens with %q, which is not a moment the player can read", k, lines[0])
+		}
+	}
+}
+
+// **An upgraded card's whole face still fits the band**, which is what the plain concepts are held
+// to above. A rider adds lines to a card that already carries two, so this is the case that runs
+// out of room first — and it runs out silently, by drawing off the bottom edge.
+func TestEveryUpgradedCardTextFitsItsBand(t *testing.T) {
+	ttf := assets.LoadFontData()["kubasta"]
+	if len(ttf) == 0 {
+		t.Fatal("no kubasta font data embedded")
+	}
+	f, err := cards.NewFaces(ttf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := cards.Hand
+	width := st.Width - st.TextColumnLeft - st.TextInset
+
+	for _, a := range combat.AllConcepts() {
+		for _, k := range combat.RiderKinds() {
+			// **A two-digit amount, because the figure is part of the measure.** A rider drawn at 5
+			// and shipped at 25 is a card that passed this test and overruns in play.
+			c := combat.Plain(a).SetRider(combat.Rider{Kind: k, Amount: 25})
+			text := cardEffect(c) + riderText(c)
+			lines, err := cards.WrapText(f, st.TextSize, text, width)
+			if err != nil {
+				t.Fatalf("%v + %v: %v", a, k, err)
+			}
+			if len(lines) > st.TextLines() {
+				t.Errorf("%v carrying %v wraps to %d lines and the band holds %d: %q",
+					combat.ConceptOf(a).Key, k, len(lines), st.TextLines(), text)
+			}
+		}
+	}
+}
+
+// **No word an upgrade writes is wider than the column.** Wrapping breaks on spaces only, so a long
+// word overruns rather than wrapping — and the upgrade vocabulary is where the long words are:
+// SHIELDS, ELEMENT, SCORES.
+func TestNoUpgradeWordIsWiderThanItsColumn(t *testing.T) {
+	ttf := assets.LoadFontData()["kubasta"]
+	if len(ttf) == 0 {
+		t.Fatal("no kubasta font data embedded")
+	}
+	f, err := cards.NewFaces(ttf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := cards.Hand
+	width := st.Width - st.TextColumnLeft - st.TextInset
+
+	for _, k := range combat.RiderKinds() {
+		c := combat.Plain(combat.Strike).SetRider(combat.Rider{Kind: k, Amount: 25})
+		for _, line := range carddesc.FaceLines(c) {
+			for _, word := range strings.Fields(line) {
+				w, err := cards.TextWidth(f, st.TextSize, word)
+				if err != nil {
+					t.Fatalf("%v: %v", k, err)
+				}
+				if w > width {
+					t.Errorf("%v writes %q, %d wide in a %d column", k, word, w, width)
+				}
+			}
+		}
+	}
+}
+
+// **The word carddesc writes and the word cards lights are the same word.** They are two packages
+// with no arrow between them — see cards.MetalWords — so nothing but this stops the tooltip writing
+// GOLD while the highlight looks for GOLDEN, which fails as a line that is simply never coloured.
+func TestTheMetalWordsAgree(t *testing.T) {
+	written := map[systems.Upgrade]string{
+		systems.UpgradeGolden: carddesc.Gold,
+		systems.UpgradeSilver: carddesc.Silver,
+	}
+	if len(cards.MetalWords) != len(written) {
+		t.Fatalf("cards knows %d metal words and carddesc writes %d",
+			len(cards.MetalWords), len(written))
+	}
+	for _, w := range cards.MetalWords {
+		if want := written[w.Upgrade]; w.Word != want {
+			t.Errorf("cards lights %q for %v where carddesc writes %q", w.Word, w.Upgrade, want)
+		}
 	}
 }

@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/carddesc"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
@@ -504,42 +505,28 @@ func cardEffect(card combat.Card) string {
 	return attackVerb(c.Form) + "\nDMG " + multiplierText(amount)
 }
 
-// riderText is the lines a card's riders add under its own, one line each.
+// riderText is the lines a card's upgrade adds under its own, one authored line each.
 //
 // **The face has to say what a parasite did to a card.** CLAUDE.md's rule about an altered card
 // printing what it actually does is the whole reason effect text reads the card rather than the
 // concept, and a rider is the largest thing a card can carry that the concept knows nothing about.
-// An extra line is the cheapest honest answer: the band holds seven lines at this pitch and no card
-// in the deck writes more than three, so three riders still fit inside it.
+// An extra line is the cheapest honest answer: the band holds seven lines at this pitch, the card's
+// own verb takes two, and no rider writes more than three.
 //
-// **Each line is an authored break**, honoured by cards.WrapText before the width is measured — the
-// same mechanism the elemental worms use to stop four cards reading as four layouts of one.
+// **The wording is `carddesc.FaceLines` and not this function's** *(2026-09-09)*. It said four of
+// the ten riders and was silent about the other six — a card the player had spent a parasite on
+// that carried a wash and no words — and `tools/upgradesheet` kept a hand-written snapshot of it
+// because `internal/screens` links Ebitengine. Moving it down to the windowless package fixes both:
+// the face is total over `combat.RiderKinds()`, and the sheet prints the game's own strings rather
+// than a copy that can drift.
 //
 // **It is not written in the ring pink.** That colour means "a ring did this" everywhere else on
 // screen, and a parasite is not a ring; borrowing it would say something untrue about where the
 // figure came from.
 func riderText(card combat.Card) string {
 	out := ""
-	for _, r := range card.RiderList() {
-		switch r.Kind {
-		case combat.RiderHealOnPlay:
-			out += "\n+" + strconv.Itoa(r.Amount) + " LIFE"
-		case combat.RiderGolden:
-			// **The odds are on the face and the payouts are not.** Two figures and a die will not
-			// fit in a dozen-character column, and what the player is choosing between when they
-			// hold a gold card and a silver one is the metal, not the arithmetic — which the
-			// tooltip and the parasite's own card both carry in full.
-			out += "\nGOLD"
-		case combat.RiderSilver:
-			out += "\nSILVER"
-		case combat.RiderWildElement:
-			// **The line and the wash say the same thing on purpose.** The colour is what carries
-			// at a glance across a row of eight cards; the words are what answers "what does that
-			// mean" without a hover. Neither is redundant with the other, and a card that only did
-			// the colour would be one nobody could learn from — which is the argument for every
-			// line in this switch, not just this one.
-			out += "\nANY ELEMENT"
-		}
+	for _, line := range carddesc.FaceLines(card) {
+		out += "\n" + line
 	}
 	return out
 }

@@ -15,8 +15,10 @@ package screens
 // does.
 
 import (
+	"github.com/curiousjc/ascend-duel/internal/carddesc"
 	"github.com/curiousjc/ascend-duel/internal/cards"
 	"github.com/curiousjc/ascend-duel/internal/models"
+	"github.com/curiousjc/ascend-duel/internal/systems"
 )
 
 // tipLines is a set of authored lines with their element words picked out — what every caller hands
@@ -41,14 +43,27 @@ func tipLines(lines []string) []models.TipLine {
 // **A line with nothing to colour comes back as one run**, which is what most of them are and is
 // drawn exactly as it was before runs existed.
 func tipLine(line string) models.TipLine {
-	runs := cards.ElementRuns(line)
-	if len(runs) == 0 {
-		return models.TipLine{{Text: line}}
-	}
-
 	var out models.TipLine
-	for _, seg := range cards.SplitRuns(line, runs) {
+	for _, seg := range chromatic(line) {
 		out = append(out, models.TextRun{Text: seg.Text, Ink: seg.Ink})
 	}
 	return out
+}
+
+// chromatic is one line cut into its coloured segments — the element words first, then CHROMATIC
+// into the wildcard's own wash.
+//
+// **The two passes are in that order and cannot be swapped.** `SplitWash` only touches a segment
+// nothing has coloured, so running the element vocabulary first is what lets a word be an element
+// or the wildcard and never both.
+//
+// **The wash cut is `internal/cards`' and not this file's**, because `tools/upgradesheet` prints
+// this same title and cannot import a package that links Ebitengine — the argument `ElementRuns`
+// already exists for, and the one that put the tooltip's wording in `internal/carddesc`.
+func chromatic(line string) []cards.Segment {
+	var out []cards.Segment
+	for _, seg := range cards.SplitRuns(line, cards.ElementRuns(line)) {
+		out = append(out, cards.SplitWash(seg, carddesc.Chromatic, systems.UpgradeWild)...)
+	}
+	return cards.SplitMetals(out)
 }

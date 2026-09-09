@@ -200,16 +200,24 @@ func specFor(p session.Parasite, art image.Image, enabled, selected bool) cards.
 func ruleLine(p session.Parasite) string {
 	switch p.Target {
 	case session.ParasiteRider:
-		return fmt.Sprintf("rider %s, value %d", p.Rider, p.Number)
+		// **The two metals read their figure as a denominator rather than as a payout**, so a bare
+		// "value 5" beside them would read as five of something. They are the only riders whose
+		// number is odds, which is why this is a case here and not a widening of the line below.
+		switch p.Rider {
+		case combat.RiderGolden:
+			return fmt.Sprintf("upgrade: 1 in %d on play: +%d DMG; 1 in %d: +%d max life; else nothing",
+				p.Number, combat.LuckDMG, p.Number, combat.LuckLife)
+		case combat.RiderSilver:
+			return fmt.Sprintf("upgrade: 1 in %d on play: +%d vitae; else nothing",
+				p.Number, combat.SilverVitae)
+		}
+		return fmt.Sprintf("upgrade: rider %s, value %d", p.Rider, p.Number)
 	case session.ParasiteRemove:
 		return fmt.Sprintf("removes %d card(s) from the run", p.Count)
 	case session.ParasiteSwap:
 		return "becomes " + combat.Of(p.Concept, combat.Basic).Label()
 	case session.ParasiteVitae:
 		return fmt.Sprintf("+%d vitae, touching no card", p.Number)
-	case session.ParasiteLuck:
-		return fmt.Sprintf("1 in %d: +%d DMG; 1 in %d: +%d max life; else nothing",
-			p.Number, session.LuckDMG, p.Number, session.LuckLife)
 	case session.ParasiteChimera:
 		// **The page cannot say what it copies**, because that is a fact about a run in progress
 		// and this sheet is drawn against no run at all. Saying so is better than saying nothing.
@@ -223,7 +231,7 @@ func ruleLine(p session.Parasite) string {
 // Read off the resolved parasite rather than the JSON, so it is what the rules hold.
 func valueOf(p session.Parasite) string {
 	switch p.Target {
-	case session.ParasiteRider, session.ParasiteVitae, session.ParasiteLuck:
+	case session.ParasiteRider, session.ParasiteVitae:
 		return strconv.Itoa(p.Number)
 	case session.ParasiteSwap:
 		return combat.Of(p.Concept, combat.Basic).Label()

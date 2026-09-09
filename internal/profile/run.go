@@ -126,11 +126,6 @@ type RunSnapshot struct {
 	// under. Empty on a run that has spent none, which is what makes a chimera refuse.
 	LastParasite string `json:"lastParasite,omitempty"`
 
-	// LuckRolls is how many times the run has gambled on a luck parasite. It is saved because it
-	// is the cursor into that roll's stream — a resumed run has to roll what it would have rolled
-	// rather than starting the sequence again. See `seeds.LuckRoll`.
-	LuckRolls int `json:"luckRolls,omitempty"`
-
 	// Spoils is what the last win still owes, unclaimed. A run saved at the reward station has a
 	// payout part-narrated, and dropping it would pay the player less for quitting.
 	Spoils SpoilsSnapshot `json:"spoils"`

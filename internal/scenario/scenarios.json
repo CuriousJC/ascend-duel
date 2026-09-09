@@ -1,23 +1,83 @@
 [
   {
     "ScenarioRecord": "wildcards",
-    "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the left column, where the form mark and the cost ticks come off the rainbow instead of off the element, and the hand line, which names an elemental rung off a set of cards that share no colour at all. A Motley is in the bucket too, for spending on a card that is not wild yet.",
+    "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no colour at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the bucket too, for spending on a card that is not wild yet.",
     "Rings": [],
     "Deck": [
-      { "Card": "Jab", "Element": "fire", "Copies": 4, "Riders": ["wild-element"] },
-      { "Card": "Cut", "Element": "ice", "Copies": 4, "Riders": ["wild-element"] },
-      { "Card": "Bash", "Element": "earth", "Copies": 4 },
-      { "Card": "Strike", "Element": "lightning", "Copies": 4 },
-      { "Card": "Ward", "Element": "arcane", "Copies": 4, "Riders": ["wild-element"] },
-      { "Card": "Slice", "Element": "arcane", "Copies": 4 }
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 4,
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Copies": 4,
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth",
+        "Copies": 4
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning",
+        "Copies": 4
+      },
+      {
+        "Card": "Ward",
+        "Element": "arcane",
+        "Copies": 4,
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Copies": 4
+      }
     ],
     "Hand": [
-      { "Card": "Jab", "Element": "fire", "Riders": ["wild-element"] },
-      { "Card": "Cut", "Element": "ice", "Riders": ["wild-element"] },
-      { "Card": "Bash", "Element": "earth" },
-      { "Card": "Strike", "Element": "lightning" },
-      { "Card": "Ward", "Element": "arcane", "Riders": ["wild-element"] },
-      { "Card": "Slice", "Element": "arcane" }
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Ward",
+        "Element": "arcane",
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane"
+      }
     ],
     "Parasites": [
       "motley"
@@ -26,6 +86,200 @@
     "Fight": 0,
     "Vitae": 0,
     "Life": 0
+  },
+  {
+    "ScenarioRecord": "metals",
+    "Note": "The two gambling upgrades, already on cards, so the roll can be watched rather than bought towards. Four gold Jabs and four silver Cuts, with an ordinary Strike and Bash beside them for comparison; the opening hand holds one of each. Play the metals every turn and read the feed: gold announces +1 DMG or +5 max life on roughly two turns in five and the fighter card's stats move as it does, silver drops 10 into the purse on one in five. What to check is that a grant survives the round - the bonus lands on the run, so the next fight opens with it - and that a losing roll says nothing rather than saying nothing happened. A Golden and a Silver are in the bucket for putting one metal over the other, which is what last-one-wins looks like.",
+    "Rings": [],
+    "Deck": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 8,
+        "Riders": [
+          "golden:5"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Copies": 8,
+        "Riders": [
+          "silver:5"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning",
+        "Copies": 4
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth",
+        "Copies": 4
+      }
+    ],
+    "Hand": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Riders": [
+          "golden:5"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Riders": [
+          "silver:5"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      }
+    ],
+    "Parasites": [
+      "golden",
+      "silver"
+    ]
+  },
+  {
+    "ScenarioRecord": "upgrades",
+    "Note": "Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal's rose against the ring pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.",
+    "Rings": [],
+    "Deck": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 4,
+        "Riders": [
+          "heal-on-play:10"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Copies": 4,
+        "Riders": [
+          "shield-on-play:1"
+        ]
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth",
+        "Copies": 4,
+        "Riders": [
+          "damage-on-play:10"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning",
+        "Copies": 4,
+        "Riders": [
+          "scale-in-combo:200"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Copies": 4,
+        "Riders": [
+          "damage-in-hand:10"
+        ]
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Copies": 4,
+        "Riders": [
+          "scale-in-hand:200"
+        ]
+      },
+      {
+        "Card": "Ward",
+        "Element": "ice",
+        "Copies": 4,
+        "Riders": [
+          "vitae-in-hand:3"
+        ]
+      },
+      {
+        "Card": "Lunge",
+        "Element": "arcane",
+        "Copies": 4,
+        "Riders": [
+          "wild-element"
+        ]
+      }
+    ],
+    "Hand": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Riders": [
+          "heal-on-play:10"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Riders": [
+          "shield-on-play:1"
+        ]
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth",
+        "Riders": [
+          "damage-on-play:10"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning",
+        "Riders": [
+          "scale-in-combo:200"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Riders": [
+          "damage-in-hand:10"
+        ]
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Riders": [
+          "scale-in-hand:200"
+        ]
+      },
+      {
+        "Card": "Ward",
+        "Element": "ice",
+        "Riders": [
+          "vitae-in-hand:3"
+        ]
+      },
+      {
+        "Card": "Lunge",
+        "Element": "arcane",
+        "Riders": [
+          "wild-element"
+        ]
+      }
+    ],
+    "Parasites": [
+      "motley",
+      "leech"
+    ]
   },
   {
     "ScenarioRecord": "tutorial",

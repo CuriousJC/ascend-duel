@@ -440,7 +440,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		}
 		if record, ok := gs.Rings[item.key]; ok {
 			title, lines := shopRingTip(record)
-			s.tip.Point(seat, title, tipLines(lines))
+			s.tip.Point(seat, tipLine(title), tipLines(lines))
 		}
 		return
 	}
@@ -451,7 +451,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 			continue
 		}
 		title, lines := goodTip(kind)
-		s.tip.Point(seat, title, tipLines(lines))
+		s.tip.Point(seat, tipLine(title), tipLines(lines))
 		return
 	}
 
@@ -461,7 +461,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 			continue
 		}
 		title, lines := potionTip(potion)
-		s.tip.Point(seat, title, tipLines(lines))
+		s.tip.Point(seat, tipLine(title), tipLines(lines))
 		return
 	}
 
@@ -469,7 +469,7 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 	// has a tooltip: a dim card with no explanation is one the player keeps clicking.
 	if seat := brandSeat(gs); at.In(seat) {
 		title, lines := brandTip()
-		s.tip.Point(seat, title, tipLines(lines))
+		s.tip.Point(seat, tipLine(title), tipLines(lines))
 		return
 	}
 

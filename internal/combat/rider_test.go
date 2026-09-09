@@ -2,13 +2,9 @@ package combat
 
 import "testing"
 
-// ridden is a card carrying one heal rider, which is the only rider that exists.
+// ridden is a card carrying one heal rider.
 func ridden(id ConceptID, heal int) Card {
-	c, ok := Plain(id).AddRider(Rider{Kind: RiderHealOnPlay, Amount: heal})
-	if !ok {
-		panic("a fresh card had no room for a rider")
-	}
-	return c
+	return Plain(id).SetRider(Rider{Kind: RiderHealOnPlay, Amount: heal})
 }
 
 // healedBy is the total life a side restored across a whole round.
@@ -37,26 +33,22 @@ func TestARiddenCardHealsItsOwnerAsItIsPlayed(t *testing.T) {
 	}
 }
 
-func TestTwoRidersOnOneCardBothFire(t *testing.T) {
-	// **Riders stack rather than merge** — see Card.AddRider. Two tens are twenty, and the reason
-	// to hold it is that it is what keeps the card's face honest about how many parasites have
-	// been spent on it.
-	c := ridden(Strike, 10)
-	c, ok := c.AddRider(Rider{Kind: RiderHealOnPlay, Amount: 10})
-	if !ok {
-		t.Fatal("a card with one rider had no room for a second")
-	}
+func TestASecondRiderReplacesTheFirst(t *testing.T) {
+	// **Last one wins** — see Card.SetRider. A card holds one upgrade, so a second heal is not a
+	// second ten: it is the card forgetting the first one. This is the test that would go red if
+	// stacking came back in.
+	c := ridden(Strike, 10).SetRider(Rider{Kind: RiderHealOnPlay, Amount: 7})
 
 	a := duelist(10, 3, 100)
 	a.CurrentLife = 50
 
 	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{c}, nil, 1)
 
-	if got := healedBy(events, SideA); got != 20 {
-		t.Errorf("two riders worth 10 healed %d, wanted 20", got)
+	if got := healedBy(events, SideA); got != 7 {
+		t.Errorf("the replacing rider healed %d, wanted 7", got)
 	}
-	if after.CurrentLife != 70 {
-		t.Errorf("life ended at %d, wanted 70", after.CurrentLife)
+	if after.CurrentLife != 57 {
+		t.Errorf("life ended at %d, wanted 57", after.CurrentLife)
 	}
 }
 
@@ -120,19 +112,24 @@ func TestAnUnriddenCardIsTheZeroValue(t *testing.T) {
 	}
 }
 
-func TestACardTakesNoMoreRidersThanTheFaceCanShow(t *testing.T) {
-	// MaxCardRiders is a layout number as much as a rules one — a card whose face cannot say what
-	// it carries is the failure the alteration mechanic exists to avoid — so the refusal is here
-	// rather than a silent drop.
-	c := Plain(Strike)
-	for i := 0; i < MaxCardRiders; i++ {
-		var ok bool
-		if c, ok = c.AddRider(Rider{Kind: RiderHealOnPlay, Amount: 1}); !ok {
-			t.Fatalf("rider %d of %d was refused", i+1, MaxCardRiders)
-		}
+func TestACardCarriesOneUpgradeAndNoMore(t *testing.T) {
+	// A card has a form, an element and an action, and then **one** upgrade. This is the rules
+	// half of that; upgradeOf in internal/screens is the drawing half, and both would have to be
+	// changed together for a card to wear two.
+	if MaxCardRiders != 1 {
+		t.Fatalf("a card holds %d riders; the whole upgrade grammar assumes one", MaxCardRiders)
 	}
-	if _, ok := c.AddRider(Rider{Kind: RiderHealOnPlay, Amount: 1}); ok {
-		t.Errorf("a card took more than %d riders", MaxCardRiders)
+	c := Plain(Strike).
+		SetRider(Rider{Kind: RiderHealOnPlay, Amount: 1}).
+		SetRider(Rider{Kind: RiderWildElement})
+	if c.RiderCount() != 1 {
+		t.Errorf("a card ridden twice carries %d riders", c.RiderCount())
+	}
+	if c.HealOnPlay() != 0 {
+		t.Errorf("the replaced heal still pays %d", c.HealOnPlay())
+	}
+	if !c.Wild(AxisElement) {
+		t.Error("the replacing rider did not take")
 	}
 }
 
@@ -162,19 +159,15 @@ func TestARiderDoesNotStopACardBeingComparable(t *testing.T) {
 	}
 }
 
-// carrying is a card with one rider of a named kind, for the six kinds that are not a heal.
+// carrying is a card with one rider of a named kind, for the kinds that are not a heal.
 func carrying(id ConceptID, kind RiderKind, amount int) Card {
-	c, ok := Plain(id).AddRider(Rider{Kind: kind, Amount: amount})
-	if !ok {
-		panic("a fresh card had no room for a rider")
-	}
-	return c
+	return Plain(id).SetRider(Rider{Kind: kind, Amount: amount})
 }
 
 // holding is a round told what the player kept back, which is the only way to reach the four
 // in-hand riders.
 func holding(a, b Duelist, aCards, held []Card, round int) ([]Event, Duelist, Duelist) {
-	return ResolveRoundHolding(a, b, aCards, nil, held, nil, round, nil)
+	return ResolveRoundHolding(a, b, aCards, nil, held, nil, round, Sources{})
 }
 
 // blowOf is the damage one side dealt across a whole round.

@@ -254,9 +254,11 @@ func (s *CombatScene) spendParasite(gs *state.GlobalState, i int) {
 // shower's stream rather than none — which is the whole reason this is a switch rather than the
 // single `showerRNG` it replaced.
 //
-// **Two streams and never one.** Sharing would make what a gamble grants a function of how many
-// rock showers the run had spent, and vice versa; the `randomness` skill's test is what a shared
-// stream would silently reroll, and the answer here is "both of them".
+// **One stream today and it is still asked for by target rather than assumed.** The gamble used to
+// be the second caller and moved into the resolver on 2026-09-09, when it stopped being a
+// consumable and became something a card permanently carries — see combat.RiderGolden. What is left
+// is the shower, and the shape stays because the question "which stream does this parasite draw
+// from" is the one a second rolling target has to answer again.
 func (s *CombatScene) parasiteRNG(gs *state.GlobalState, p session.Parasite) *rand.Rand {
 	if gs.Run == nil {
 		return nil
@@ -269,8 +271,6 @@ func (s *CombatScene) parasiteRNG(gs *state.GlobalState, p session.Parasite) *ra
 	switch echoed.Target {
 	case session.ParasiteStones:
 		return s.showerRNG(gs)
-	case session.ParasiteLuck:
-		return s.luckRNG(gs)
 	default:
 		return nil
 	}
@@ -290,22 +290,6 @@ func (s *CombatScene) showerRNG(gs *state.GlobalState) *rand.Rand {
 	seed := seeds.ForFight(gs.RunSeed, seeds.StoneShower, gs.Run.Fight()) + int64(placed)*stoneShowerStride
 	return rand.New(rand.NewSource(seed))
 }
-
-// luckRNG is the source a luck parasite rolls against.
-//
-// **The shower's shape, with the run's roll count as the cursor** — see `seeds.LuckRoll`. The count
-// steps on a dud as well as on a win, which is what stops two consecutive empty rolls being seeded
-// identically and coming up empty for ever.
-func (s *CombatScene) luckRNG(gs *state.GlobalState) *rand.Rand {
-	seed := seeds.ForFight(gs.RunSeed, seeds.LuckRoll, gs.Run.Fight()) +
-		int64(gs.Run.LuckRolls())*luckRollStride
-	return rand.New(rand.NewSource(seed))
-}
-
-// luckRollStride separates one gamble from the next inside a fight, on the argument
-// `stoneShowerStride` is under. A different number from the shower's, so two consumables spent at
-// the same count do not land on neighbouring seeds.
-const luckRollStride int64 = 0x7F4A_7C15
 
 // stoneShowerStride separates one shower from the next inside a fight. A large odd number, on the
 // argument `seeds.fightStride` is under: consecutive draws should not be consecutive seeds.
@@ -346,10 +330,33 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 
 // parasiteRiderLine is what a rider is called in the fight log and anywhere else a sentence has to
 // name one. It is here rather than in prose.go because the vocabulary is the parasite's.
+//
+// **Total over combat.RiderKinds(), and TestEveryRiderKindHasALine holds it that way** *(2026-09-09)*.
+// It had one arm and a `default` of "does nothing", which was a lie about seven of the eight kinds
+// that existed and would have been a lie about ten of ten — the same failure the choreography
+// table's missing default exists to prevent.
 func parasiteRiderLine(k combat.RiderKind) string {
 	switch k {
 	case combat.RiderHealOnPlay:
 		return "heals its owner"
+	case combat.RiderShieldOnPlay:
+		return "raises a shield"
+	case combat.RiderDamageOnPlay:
+		return "adds DMG to the blow"
+	case combat.RiderDamageInHand:
+		return "adds DMG while held"
+	case combat.RiderScaleInHand:
+		return "multiplies the blow while held"
+	case combat.RiderVitaeInHand:
+		return "pays vitae while held"
+	case combat.RiderScaleInCombo:
+		return "multiplies the blow it makes"
+	case combat.RiderWildElement:
+		return "counts as every element"
+	case combat.RiderGolden:
+		return "gambles for DMG or life"
+	case combat.RiderSilver:
+		return "gambles for vitae"
 	default:
 		return "does nothing"
 	}

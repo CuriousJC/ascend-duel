@@ -308,23 +308,131 @@ func TestAParasiteRefusesTheWrongNumberOfTargets(t *testing.T) {
 	}
 }
 
-func TestARiderIsRefusedOnACardWithNoRoom(t *testing.T) {
-	// The board piece asks before it offers, so a card with a full row of badges is dim rather
-	// than a click that silently does nothing.
+// **The only illegal rider pick is the one that would change nothing** *(owner's call, 2026-09-09)*.
+// It used to be a card carrying its maximum, which stopped making sense the day the maximum became
+// one: a card already upgraded is the pick a player reaching for a second parasite most obviously
+// wants. What is refused is the same upgrade twice, which is the rule every other target is under.
+func TestARiderIsRefusedOnlyWhenItWouldChangeNothing(t *testing.T) {
 	run := runWith(combat.Plain(combat.Strike))
 	id := ids(run)[0]
 
 	leech := anyWithRider(t, combat.RiderHealOnPlay)
-	for i := 0; i < combat.MaxCardRiders; i++ {
-		if !run.ApplyParasite(leech, []int{id}) {
-			t.Fatalf("rider %d was refused", i+1)
-		}
+	if !run.ApplyParasite(leech, []int{id}) {
+		t.Fatal("a plain card refused its first upgrade")
 	}
 	if run.CanApplyParasite(leech, []int{id}) {
-		t.Error("a full card was offered as a legal target")
+		t.Error("the same upgrade twice was offered as a legal target")
 	}
 	if run.ApplyParasite(leech, []int{id}) {
-		t.Error("a full card took another rider")
+		t.Error("a card took the same upgrade twice")
+	}
+
+	// A *different* upgrade is legal and replaces the first outright.
+	motley := anyWithRider(t, combat.RiderWildElement)
+	if !run.CanApplyParasite(motley, []int{id}) {
+		t.Fatal("an upgraded card refused a different upgrade")
+	}
+	if !run.ApplyParasite(motley, []int{id}) {
+		t.Fatal("a different upgrade did not take")
+	}
+
+	card, _ := run.CardByID(id)
+	if card.RiderCount() != 1 {
+		t.Errorf("a card upgraded twice carries %d upgrades", card.RiderCount())
+	}
+	if card.HealOnPlay() != 0 {
+		t.Errorf("the replaced heal still pays %d", card.HealOnPlay())
+	}
+	if !card.Wild(combat.AxisElement) {
+		t.Error("the replacing upgrade did not take")
+	}
+}
+
+// **A normal change leaves the card's upgrade exactly where it was.** That is the whole of what the
+// two classes are for — see ParasiteChange — and it is the half a test can catch, since the
+// difference between Bulwark and Golden is invisible until a *second* parasite is spent.
+func TestANormalChangeLeavesTheUpgradeAlone(t *testing.T) {
+	// **Two cards, because the element and form parasites take two.** The gold goes on the first
+	// and every assertion below is about that one; the second is only somebody for the pair
+	// parasites to name.
+	run := runWith(combat.Plain(combat.Strike), combat.Plain(combat.Jab))
+	held := ids(run)
+	id := held[0]
+
+	golden := anyWithRider(t, combat.RiderGolden)
+	if !run.ApplyParasite(golden, []int{id}) {
+		t.Fatal("a plain card refused gold")
+	}
+
+	for _, target := range []ParasiteTarget{ParasiteSwap, ParasiteElement, ParasiteForm} {
+		p := anyWithTarget(t, target)
+		if p.Change != ParasiteNormal {
+			t.Fatalf("%s calls itself a %s change", p.Record, p.Change)
+		}
+		if !run.ApplyParasite(p, held[:p.Count]) {
+			t.Fatalf("%s was refused on a gold card", p.Record)
+		}
+		card, _ := run.CardByID(id)
+		if card.GoldenOdds() == 0 {
+			t.Errorf("%s, a normal change, took the gold off the card", p.Record)
+		}
+	}
+}
+
+// **Every record declares its class and the loader agrees with it.** The field is authored rather
+// than derived so it is a claim the record makes; this is the check that makes the claim worth
+// something — see data.ParasiteData.Change.
+func TestEveryParasiteDeclaresTheChangeItActuallyMakes(t *testing.T) {
+	for _, p := range Parasites() {
+		want := ParasiteNormal
+		if p.Target == ParasiteRider {
+			want = ParasiteUpgrade
+		}
+		if p.Change != want {
+			t.Errorf("%s targets %s and resolved as a %s change, want %s",
+				p.Record, p.Target, p.Change, want)
+		}
+	}
+}
+
+// **A record whose declaration disagrees with its target is refused at load**, which is what stops
+// the authored field becoming a second source of truth free to drift from the first.
+func TestAMisdeclaredChangeIsRefused(t *testing.T) {
+	for _, tc := range []struct {
+		what   string
+		record data.ParasiteData
+	}{
+		{"a swap calling itself an upgrade", data.ParasiteData{
+			ParasiteRecord: "liar", Name: "Liar", Text: "X", Change: "upgrade",
+			Target: "swap", Value: "Strike", Count: 1}},
+		{"a rider calling itself normal", data.ParasiteData{
+			ParasiteRecord: "liar", Name: "Liar", Text: "X", Change: "normal",
+			Target: "rider", Rider: "heal-on-play", Value: "10", Count: 1}},
+		{"a record declaring nothing", data.ParasiteData{
+			ParasiteRecord: "mute", Name: "Mute", Text: "X",
+			Target: "swap", Value: "Strike", Count: 1}},
+		{"a record declaring a word that is not one", data.ParasiteData{
+			ParasiteRecord: "odd", Name: "Odd", Text: "X", Change: "sideways",
+			Target: "swap", Value: "Strike", Count: 1}},
+	} {
+		if _, err := resolveParasite(tc.record); err == nil {
+			t.Errorf("%s was accepted", tc.what)
+		}
+	}
+}
+
+// **A gambling rider is refused below the number of outcomes.** Under that there is no losing face
+// left, and a card that pays every time it is played is a different card entirely — the mistake a
+// number in a JSON file could make silently. See combat.LuckOutcomes.
+func TestAGambleThatAlwaysPaysIsRefused(t *testing.T) {
+	for _, rider := range []string{"golden", "silver"} {
+		bad := data.ParasiteData{
+			ParasiteRecord: "sure-thing", Name: "Sure Thing", Text: "X", Change: "upgrade",
+			Target: "rider", Rider: rider, Value: "2", Count: 1,
+		}
+		if _, err := resolveParasite(bad); err == nil {
+			t.Errorf("a %s card on a d2 was accepted", rider)
+		}
 	}
 }
 

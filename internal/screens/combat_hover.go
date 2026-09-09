@@ -67,7 +67,7 @@ func (s *CombatScene) hoverRoundTimer(gs *state.GlobalState, at image.Point) boo
 		return false
 	}
 	title, lines := roundTimerTip(s.roundTimerSpent(limit), limit)
-	s.tip.Point(r, title, tipLines(lines))
+	s.tip.Point(r, tipLine(title), tipLines(lines))
 	return true
 }
 
@@ -94,7 +94,7 @@ func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
 		}
 		card := s.hand[i].actionCard
 		title, lines := cardTip(card, heldBy(s.fighter.Duelist, card))
-		s.tip.Point(slot, title, tipLines(lines))
+		s.tip.Point(slot, tipLine(title), tipLines(lines))
 		return true
 	}
 	return false
@@ -124,7 +124,7 @@ func (s *CombatScene) hoverRings(gs *state.GlobalState, at image.Point) bool {
 			continue
 		}
 		title, lines := ringTip(record, i, len(worn))
-		s.tip.Point(slot, title, tipLines(lines))
+		s.tip.Point(slot, tipLine(title), tipLines(lines))
 		return true
 	}
 	return false
@@ -138,11 +138,11 @@ func (s *CombatScene) hoverRings(gs *state.GlobalState, at image.Point) bool {
 func (s *CombatScene) hoverFighters(gs *state.GlobalState, at image.Point) {
 	if seat := s.enemyCardRect(gs); at.In(seat) {
 		title, lines := duelistTip(s.enemy.Name, s.enemy.Duelist)
-		s.tip.Point(seat, title, tipLines(lines))
+		s.tip.Point(seat, tipLine(title), tipLines(lines))
 		return
 	}
 	if seat := s.duelistCardRect(gs); at.In(seat) {
 		title, lines := duelistTip(s.fighter.Name, s.fighter.Duelist)
-		s.tip.Point(seat, title, tipLines(lines))
+		s.tip.Point(seat, tipLine(title), tipLines(lines))
 	}
 }

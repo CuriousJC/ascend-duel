@@ -15,12 +15,12 @@ import (
 // The rolled path has its own tests, which pass a decided source deliberately — see below and
 // status_test.go.
 func resolve(a, b Duelist, aCards, bCards []Card, round int) ([]Event, Duelist, Duelist) {
-	return ResolveRound(a, b, aCards, bCards, round, nil)
+	return ResolveRound(a, b, aCards, bCards, round, Sources{})
 }
 
 // resolveWith is the same round with a source, for the tests that are about the roll.
 func resolveWith(rng *rand.Rand, a, b Duelist, aCards, bCards []Card, round int) ([]Event, Duelist, Duelist) {
-	return ResolveRound(a, b, aCards, bCards, round, rng)
+	return ResolveRound(a, b, aCards, bCards, round, Sources{Roll: rng})
 }
 
 // fixedSource always hands back the same value, so a test can *say* "this attack misses" instead

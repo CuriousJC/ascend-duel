@@ -118,17 +118,31 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 // becomes a colour up here and the renderer is handed the answer. It is why an upgrade is a
 // closed vocabulary in `systems` rather than a field on `combat.Rider`.
 //
-// **A card may carry three riders and only some of them show.** Today exactly one kind does, so
-// the first match wins and the question of what two visible upgrades on one card look like is not
-// yet a question. When it becomes one the answer is a row of badges, which is what
-// `combat.MaxCardRiders` reserved the room for — see TODO.md.
+// **A card carries one rider and every kind of rider shows** *(owner's call, 2026-09-09)*. That is
+// the whole grammar: form, element and action compose freely, and then there is one upgrade, which
+// is a rider, and it is painted. The question of what two visible upgrades on one card look like
+// cannot arise, because a card cannot carry two — see `combat.MaxCardRiders`.
+//
+// **The table is total on purpose, and TestEveryRiderKindIsDrawn is what holds it that way.** A
+// rider with no upgrade would be a parasite the player spent and cannot see they spent, which is
+// the failure the whole mechanic is written to avoid.
 func upgradeOf(c combat.Card) systems.Upgrade {
-	for _, r := range c.RiderList() {
-		if r.Kind == combat.RiderWildElement {
-			return systems.UpgradeWild
-		}
-	}
-	return systems.UpgradeNone
+	return upgradeForRider[c.Rider().Kind]
+}
+
+// upgradeForRider is which upgrade paints each rider. **RiderNone is deliberately absent**, so an
+// unridden card falls out as UpgradeNone — the zero value — rather than needing a case.
+var upgradeForRider = map[combat.RiderKind]systems.Upgrade{
+	combat.RiderWildElement:  systems.UpgradeWild,
+	combat.RiderGolden:       systems.UpgradeGolden,
+	combat.RiderSilver:       systems.UpgradeSilver,
+	combat.RiderHealOnPlay:   systems.UpgradeHeal,
+	combat.RiderShieldOnPlay: systems.UpgradeShield,
+	combat.RiderDamageOnPlay: systems.UpgradeDamage,
+	combat.RiderScaleInCombo: systems.UpgradeCombo,
+	combat.RiderDamageInHand: systems.UpgradeHeldDamage,
+	combat.RiderScaleInHand:  systems.UpgradeHeldScale,
+	combat.RiderVitaeInHand:  systems.UpgradeHeldVitae,
 }
 
 // boostInk is what a figure a ring has changed is written in. **The ring pink** — `cards.Ring` is

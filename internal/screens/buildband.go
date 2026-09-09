@@ -228,7 +228,7 @@ func hoverBuildRings(gs *state.GlobalState, at image.Point, tip *models.Tooltip)
 			return false
 		}
 		title, lines := ringTip(record, i, len(worn))
-		tip.Point(seat, title, tipLines(lines))
+		tip.Point(seat, tipLine(title), tipLines(lines))
 		return true
 	}
 	return false

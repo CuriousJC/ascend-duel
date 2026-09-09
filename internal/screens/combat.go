@@ -83,8 +83,14 @@ var eventDwells = map[combat.EventKind]float64{
 	combat.KindBurned:     1,
 	combat.KindHealed:     1,
 	combat.KindVitae:      1,
-	combat.KindTimeUp:     2,
-	combat.KindRoundEnd:   1,
+	// **Two beats, because a permanent bonus is the rarest thing that happens on this screen.**
+	// Everything else in a round is spent by the end of it; this one follows the player up the
+	// tower, and a grant that went past on the same beat as a shield pip would be the least
+	// noticed of the most important. It is the round limit's argument at a different scale.
+	combat.KindGrantedDMG:  2,
+	combat.KindGrantedLife: 2,
+	combat.KindTimeUp:      2,
+	combat.KindRoundEnd:    1,
 }
 
 // eventDwell is how long one kind is held, in ticks: the speed times the kind's multiplier.
@@ -241,6 +247,20 @@ type CombatScene struct {
 	//
 	// Seeded from the run seed with its own salt, so a replayed run rolls the same shocks.
 	combatRNG *rand.Rand
+
+	// The source the gamble on a golden or a silver card draws from, injected into ResolveRound
+	// beside combatRNG — see combat.Sources, which is why the two travel together and are never
+	// interchanged.
+	//
+	// **Its own stream, and per fight** — see seeds.LuckRoll. Sharing the shock roll would make
+	// every gamble in a run a function of how often the player was shocked, and every shock a
+	// function of how many gold cards were played.
+	//
+	// **It is a live cursor rather than a seed plus a counter** *(2026-09-09)*. The gamble used to
+	// be a consumable spent between turns, so the count of rolls the run had taken was what
+	// separated one from the next; a roll that now happens inside a resolved round has the round's
+	// own sequence to advance instead.
+	luckRNG *rand.Rand
 
 	// The opponent's deck, in the same three piles. It lives in internal/decks rather than
 	// here so an enemy deck can be built without a window — see that package's header.
@@ -490,6 +510,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	playerSeed, enemySeed := s.shuffleSeeds(gs)
 	s.rng = rand.New(rand.NewSource(playerSeed))
 	s.combatRNG = rand.New(rand.NewSource(seeds.For(gs.RunSeed, seeds.CombatRoll)))
+	s.luckRNG = rand.New(rand.NewSource(seeds.ForFight(gs.RunSeed, seeds.LuckRoll, fightIndex(gs.Run))))
 	s.resetDeck(gs.Run)
 
 	// The queue starts empty every visit and is derived from what is selected in hand.
@@ -891,6 +912,48 @@ func (s *CombatScene) payHeldVitae(after combat.Duelist) {
 	}
 }
 
+// fightIndex is which fight of the run this is, and zero for a scene with no run behind it — a
+// scenario, or the scripted demo. It exists so seeding a per-fight stream is one expression rather
+// than a nil check at every seeding site.
+func fightIndex(run *session.Session) int {
+	if run == nil {
+		return 0
+	}
+	return run.Fight()
+}
+
+// settleGrants hands the run whatever a golden card's gamble came up with this round.
+//
+// **The rules have already moved the fighting duelist**, so this is not the grant arriving — it is
+// the grant being made permanent. Two figures on the run, applied to the fighter by `Equip` at the
+// top of every duel from here on.
+//
+// **It reads the resolved log rather than watching the playback**, which is the rule payHeldVitae
+// and recordHandsPlayed are both under: the round is decided before a frame of it is drawn, and a
+// bonus applied as the animation reached it would be one the player could change by walking away.
+//
+// **The player's side only.** A creature has no run behind it to make anything permanent in, and
+// nothing deals a creature a golden card — but the check is here rather than assumed, because the
+// event carries a side and reading it is cheaper than trusting that.
+func (s *CombatScene) settleGrants(log []combat.Event) {
+	if s.run == nil {
+		return
+	}
+	dmg, life := 0, 0
+	for _, e := range log {
+		if e.Side != combat.SideA {
+			continue
+		}
+		switch e.Kind {
+		case combat.KindGrantedDMG:
+			dmg += e.Amount
+		case combat.KindGrantedLife:
+			life += e.Amount
+		}
+	}
+	s.run.Grant(dmg, life)
+}
+
 // recordHandsPlayed adds this round's hands to the run's tally - see session/play.go, which owns
 // what a play count is for and why it is not a stone.
 //
@@ -1014,7 +1077,7 @@ func (s *CombatScene) startRound() {
 		s.fighterActions, s.enemyActions,
 		s.heldCards(), nil,
 		s.round,
-		s.combatRNG,
+		combat.Sources{Roll: s.combatRNG, Luck: s.luckRNG},
 	)
 
 	s.fighterAfter = fighterAfter
@@ -1031,6 +1094,7 @@ func (s *CombatScene) startRound() {
 	// the animation has got, which is the presentation-may-never-change-an-outcome rule pointing
 	// the other way for once.
 	s.payHeldVitae(fighterAfter)
+	s.settleGrants(log)
 	s.recordHandsPlayed(log)
 
 	// **The turn as it was played, kept for the achievements.** Taken here, beside the other two

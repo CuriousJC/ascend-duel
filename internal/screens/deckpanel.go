@@ -189,7 +189,7 @@ func hoverDeckPanel(gs *state.GlobalState, at image.Point, v deckView, d deckCon
 			continue
 		}
 		title, lines := cardTip(slot.card, heldBy(d.holder, slot.card))
-		tip.Point(slot.at, title, tipLines(lines))
+		tip.Point(slot.at, tipLine(title), tipLines(lines))
 		return
 	}
 }

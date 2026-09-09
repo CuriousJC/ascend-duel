@@ -2,6 +2,7 @@
   {
     "ParasiteRecord": "graft",
     "Name": "Graft",
+    "Change": "normal",
     "Target": "clone",
     "Count": 2,
     "Text": "LEFT CARD BECOMES RIGHT CARD"
@@ -9,6 +10,7 @@
   {
     "ParasiteRecord": "mimic",
     "Name": "Mimic",
+    "Change": "normal",
     "Target": "duplicate",
     "Count": 1,
     "Text": "COPY CARD"
@@ -16,6 +18,7 @@
   {
     "ParasiteRecord": "arcbore",
     "Name": "Arcbore",
+    "Change": "normal",
     "Target": "element",
     "Value": "lightning",
     "Count": 2,
@@ -24,6 +27,7 @@
   {
     "ParasiteRecord": "emberbore",
     "Name": "Emberbore",
+    "Change": "normal",
     "Target": "element",
     "Value": "fire",
     "Count": 2,
@@ -32,6 +36,7 @@
   {
     "ParasiteRecord": "hexbore",
     "Name": "Hexbore",
+    "Change": "normal",
     "Target": "element",
     "Value": "arcane",
     "Count": 2,
@@ -40,6 +45,7 @@
   {
     "ParasiteRecord": "loambore",
     "Name": "Loambore",
+    "Change": "normal",
     "Target": "element",
     "Value": "earth",
     "Count": 2,
@@ -48,6 +54,7 @@
   {
     "ParasiteRecord": "rimebore",
     "Name": "Rimebore",
+    "Change": "normal",
     "Target": "element",
     "Value": "ice",
     "Count": 2,
@@ -56,6 +63,7 @@
   {
     "ParasiteRecord": "edgegrub",
     "Name": "Edgegrub",
+    "Change": "normal",
     "Target": "form",
     "Value": "slash",
     "Count": 2,
@@ -64,6 +72,7 @@
   {
     "ParasiteRecord": "maulgrub",
     "Name": "Maulgrub",
+    "Change": "normal",
     "Target": "form",
     "Value": "crush",
     "Count": 2,
@@ -72,6 +81,7 @@
   {
     "ParasiteRecord": "thorngrub",
     "Name": "Thorngrub",
+    "Change": "normal",
     "Target": "form",
     "Value": "stab",
     "Count": 2,
@@ -80,6 +90,7 @@
   {
     "ParasiteRecord": "wardgrub",
     "Name": "Wardgrub",
+    "Change": "normal",
     "Target": "form",
     "Value": "defend",
     "Count": 2,
@@ -88,6 +99,7 @@
   {
     "ParasiteRecord": "gnaw",
     "Name": "Gnaw",
+    "Change": "normal",
     "Target": "remove",
     "Count": 2,
     "Text": "2 CARDS DESTROYED"
@@ -95,6 +107,7 @@
   {
     "ParasiteRecord": "brood",
     "Name": "Brood",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "vitae-in-hand",
     "Value": "3",
@@ -104,6 +117,7 @@
   {
     "ParasiteRecord": "motley",
     "Name": "Motley",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "wild-element",
     "Count": 1,
@@ -112,6 +126,7 @@
   {
     "ParasiteRecord": "carapace",
     "Name": "Carapace",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "shield-on-play",
     "Value": "1",
@@ -121,6 +136,7 @@
   {
     "ParasiteRecord": "goad",
     "Name": "Goad",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "damage-on-play",
     "Value": "10",
@@ -130,6 +146,7 @@
   {
     "ParasiteRecord": "hunger",
     "Name": "Hunger",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "scale-in-combo",
     "Value": "200",
@@ -139,6 +156,7 @@
   {
     "ParasiteRecord": "leech",
     "Name": "Leech",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "heal-on-play",
     "Value": "10",
@@ -148,6 +166,7 @@
   {
     "ParasiteRecord": "patience",
     "Name": "Patience",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "scale-in-hand",
     "Value": "200",
@@ -157,6 +176,7 @@
   {
     "ParasiteRecord": "spite",
     "Name": "Spite",
+    "Change": "upgrade",
     "Target": "rider",
     "Rider": "damage-in-hand",
     "Value": "10",
@@ -166,6 +186,7 @@
   {
     "ParasiteRecord": "rockbeetle",
     "Name": "Rock Beetle",
+    "Change": "normal",
     "Target": "stones",
     "Value": "2",
     "Count": 0,
@@ -174,6 +195,7 @@
   {
     "ParasiteRecord": "effigy",
     "Name": "Effigy",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Strike",
     "Count": 1,
@@ -182,6 +204,7 @@
   {
     "ParasiteRecord": "totem",
     "Name": "Totem",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Thrust",
     "Count": 1,
@@ -190,6 +213,7 @@
   {
     "ParasiteRecord": "husk",
     "Name": "Husk",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Slice",
     "Count": 1,
@@ -198,6 +222,7 @@
   {
     "ParasiteRecord": "cocoon",
     "Name": "Cocoon",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Brace",
     "Count": 1,
@@ -206,6 +231,7 @@
   {
     "ParasiteRecord": "barb",
     "Name": "Barb",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Jab",
     "Count": 1,
@@ -214,6 +240,7 @@
   {
     "ParasiteRecord": "scab",
     "Name": "Scab",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Cut",
     "Count": 1,
@@ -222,6 +249,7 @@
   {
     "ParasiteRecord": "knot",
     "Name": "Knot",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Bash",
     "Count": 1,
@@ -230,6 +258,7 @@
   {
     "ParasiteRecord": "shell",
     "Name": "Shell",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Ward",
     "Count": 1,
@@ -238,6 +267,7 @@
   {
     "ParasiteRecord": "spur",
     "Name": "Spur",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Lunge",
     "Count": 1,
@@ -246,6 +276,7 @@
   {
     "ParasiteRecord": "fang",
     "Name": "Fang",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Cleave",
     "Count": 1,
@@ -254,6 +285,7 @@
   {
     "ParasiteRecord": "growth",
     "Name": "Growth",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Smash",
     "Count": 1,
@@ -262,6 +294,7 @@
   {
     "ParasiteRecord": "bulwark",
     "Name": "Bulwark",
+    "Change": "normal",
     "Target": "swap",
     "Value": "Guard",
     "Count": 1,
@@ -270,22 +303,36 @@
   {
     "ParasiteRecord": "hoard",
     "Name": "Hoard",
+    "Change": "normal",
     "Target": "vitae",
     "Value": "20",
     "Count": 0,
     "Text": "+20 VITAE"
   },
   {
-    "ParasiteRecord": "luck",
-    "Name": "Luck",
-    "Target": "luck",
+    "ParasiteRecord": "golden",
+    "Name": "Golden",
+    "Change": "upgrade",
+    "Target": "rider",
+    "Rider": "golden",
     "Value": "5",
-    "Count": 0,
-    "Text": "1 IN 5:\n+1 DMG\nOR +5 HP"
+    "Count": 1,
+    "Text": "CARD IS GOLD\n1 IN 5 ON PLAY:\n+1 DMG OR\n+5 LIFE"
+  },
+  {
+    "ParasiteRecord": "silver",
+    "Name": "Silver",
+    "Change": "upgrade",
+    "Target": "rider",
+    "Rider": "silver",
+    "Value": "5",
+    "Count": 1,
+    "Text": "CARD IS SILVER\n1 IN 5 ON PLAY:\n+10 VITAE"
   },
   {
     "ParasiteRecord": "chimera",
     "Name": "Chimera",
+    "Change": "normal",
     "Target": "chimera",
     "Count": 0,
     "Text": "REPEAT LAST\nPARASITE"

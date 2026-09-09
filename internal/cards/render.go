@@ -115,14 +115,12 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	// *(owner's call, 2026-08-23)*. They are the other thing in the left column, so leaving them
 	// the border's neutral grey would have made the corner the only coloured mark on an
 	// otherwise monochrome column. Same state treatment as the border, different base colour.
-	// **An upgrade takes the whole column or none of it** *(2026-09-07)*. The mark and the ticks
-	// are one statement about the card, and a rainbow mark over fire-red ticks would say two
-	// different things in the one place the card says one.
-	if ink := systems.UpgradeInk(s.Upgrade); ink != nil {
-		drawUpgradedDashes(img, s, st, ink)
-	} else {
-		drawDashes(img, s, st, s.atState(BorderOf(s.Element)))
-	}
+	//
+	// **An upgrade no longer touches the column** *(owner's call, 2026-09-09)*. It took the mark
+	// and the ticks over while the wildcard was the only one there was; now that there are ten and
+	// nine of them say nothing about the element, an upgrade washes the whole card instead — see
+	// upgrade.go. The column goes back to stating one thing, which is the element.
+	drawDashes(img, s, st, s.atState(BorderOf(s.Element)))
 
 	if err := drawEffectText(img, s, st, f, ink); err != nil {
 		return nil, err
@@ -137,9 +135,13 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 		return nil, err
 	}
 
-	// **The mark goes on last, over everything including the border.** It is not part of what the
-	// card is — see mark.go — it is what has happened to it, so it sits on top of a finished face
-	// rather than being woven into one.
+	// **Both go on last, over everything including the border, and the order is fixed.** An upgrade
+	// is what the card permanently is, so it belongs in the face; a mark is what has happened to it,
+	// so it sits on top of a finished face rather than being woven into one — see mark.go.
+	//
+	// **The upgrade goes down before the mark, and the two are different things.** A shattered gold
+	// card is gold *and* broken, in that order.
+	drawUpgrade(img, s, st)
 	drawMark(img, s.Mark, s.Name, st.Width, st.Height, st.CornerRadius)
 	return img, nil
 }
@@ -398,10 +400,13 @@ func drawForm(dst *image.RGBA, s Spec, st Style) {
 	// size it was authored at and be centred in whatever box the style named, which is how the
 	// overlay's half-size card ended up carrying a full-size mark. Drawn art can be halved; see
 	// systems.RenderGlyphAt for why a generated silhouette still cannot.
+	// **The wildcard is the one upgrade that leaves the mark hueless** — see
+	// systems.Upgrade.HuelessForm, which is where that is argued. Everything else keeps the
+	// element's tint, because nothing else is about the element.
 	drawn := systems.RenderGlyphAt(kind, systems.PaletteWhite, st.FormSize)
-	glyph := tintInk(drawn, BorderOf(s.Element))
-	if ink := systems.UpgradeInk(s.Upgrade); ink != nil {
-		glyph = tintUpgrade(drawn, ink, s.UpgradeTint)
+	glyph := drawn
+	if !s.Upgrade.HuelessForm() {
+		glyph = tintInk(drawn, BorderOf(s.Element))
 	}
 	at := placeInk(dst, glyph, box, st.GlyphScale, st)
 	if !s.Enabled && !at.Empty() {

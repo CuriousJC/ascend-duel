@@ -188,9 +188,11 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   multiplier over the whole turn and cannot reorder two cards, so projecting the pipeline per card
   would be a second resolver agreeing with the first. **The screen draws it as a broken window** —
   `cards.MarkShattered` for the settled mark, `internal/screens/combat_shatter.go` for the pip
-  crossing the table and the crack opening. **A mark is not an upgrade**: an upgrade is what a card
-  permanently *is* and takes the left column, a mark is the card's situation and covers the face.
-  See MECHANICS.md §Shields.
+  crossing the table and the crack opening. **A mark is not an upgrade, and since 2026-09-09 the
+  drawing no longer tells them apart** — both cover the whole face, so what separates them is
+  ownership: an upgrade is what a card permanently *is* and is painted into the face, a mark is the
+  card's situation and is painted over the top of it. `Render` fixes that order. See MECHANICS.md
+  §Shields and §An upgrade washes the whole card.
 - **`cards.Mark` is a bitmask and marks compose** *(2026-09-08)*. A card can be broken *and* pointed
   at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
   draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
@@ -241,28 +243,48 @@ vocabulary the rules have to read, and `internal/screens/combat_parasite.go` is 
 there is no board piece any more. **The `P` button and its dialog went on 2026-09-06** *(owner's
 call)*: a parasite is a card in the **consumables pane** on the top row (`consumables.go`), and it
 is aimed by **selecting the cards in the hand first and clicking the parasite second** — the rule
-that joins the two is `targeting.go`. See MECHANICS.md §Parasites. Three things to know before
-touching any of it:
+that joins the two is `targeting.go`. See MECHANICS.md §Parasites. A handful of things to know
+before touching any of it:
 
 - **Between turns, never inside one.** Spending is gated on `planning()`, because `ResolveRound`
   decides a whole round before playback starts and a card altered mid-playback would show a face
   disagreeing with a blow already computed. This is the presentation-may-never-change-an-outcome
   rule meeting the one mechanic that wanted to break it.
-- **A rider is a rule carried by one card**, and `combat.Card.Riders` is a **fixed array** because
-  a card must stay comparable — the screen's face cache and `TestRoundIsDeterministic` both depend
-  on it. A slice there would end both, exactly as it would on `Duelist.Rings`.
-- **A rider may now reach the *face*, and the wildcard is the first that does** *(owner's call,
-  2026-09-07)*. `combat.RiderWildElement` makes a card count as every element when a hand is
-  matched — the one rider read while the hand is *formed* rather than while the turn resolves, so
-  it lives in `matchCountOf` rather than in `playRiders`. It is drawn by **taking the card's left
-  column over**: `systems.Upgrade` is the presentation vocabulary, `internal/screens.upgradeOf` is
-  where a rider becomes one, and neither `internal/cards` nor `internal/systems` learns what a
-  rider is. **The mark and the ticks move together or the card is lying** — one `Spec.atState`,
-  one test. The ink is the **five element colours** in five bands, read out of `cards.BorderOf` so it
-  cannot say a different fire from the cards, and `cards.TintProject` paints the mark from them
-  flat — which loses the mark's outline, knowingly, because at 32 pixels the saturation carries and
-  the bevel does not. `cards.TintMode` keeps the two rejected combinations so
-  `tools/upgradesheet` can show why they lost. See MECHANICS.md §The wildcard.
+- **A card is a form, an element and an action — and then one upgrade** *(owner's call,
+  2026-09-09)*. The first three compose freely and a `normal` parasite moves one of them; an
+  `upgrade` parasite writes the fourth, and **whatever was there is gone**. `combat.MaxCardRiders`
+  is **1**, `Card.SetRider` replaces rather than stacks, and `data/parasites.json` declares
+  `"Change": "normal"|"upgrade"` on every record — authored, and refused at load if it disagrees
+  with what its target actually does. Riders stacked three to a card until then; two Leeches were
+  twenty life and are now one card forgetting the other. See MECHANICS.md §Normal and upgrade.
+- **`combat.Card.Riders` is still a fixed array** because a card must stay comparable — the screen's
+  face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Rings` does. A
+  seat is also what makes "no upgrade" the zero value rather than a case.
+- **The card goes gold and the border does not** *(owner's call, 2026-09-09)*. `cards.UpgradeStyle`
+  is `wash-face` / `border` / `wash` and `DefaultUpgradeStyle` is **`wash-face`** — everything inside
+  the ring washed, the ring left alone. **The border is already saying the card's state**, so an
+  upgrade over it would be a second thing in the one place the card says the first; it also keeps the
+  card's outline against the table. `tools/upgradesheet` draws all three, same review-knob shape
+  `TintMode` had, because how loud an upgrade should be is still open.
+- **Every rider draws** *(owner's call, 2026-09-09)*.
+  `systems.Upgrade` is the presentation vocabulary — ten of them, one per rider kind —
+  `internal/screens.upgradeForRider` is the total table where a rider becomes one, and neither
+  `internal/cards` nor `internal/systems` learns what a rider is. **It took the left column until
+  then and that mechanism was deleted**, three tint modes and all: nine of the ten upgrades say
+  nothing about the element, so a left column in gold was the element slot saying something that is
+  not about the element. **Eight of the ten colours are placeholders on a full wheel** — see
+  `systems.upgradeTint`, and `go run ./tools/upgradesheet` to retune them. The wildcard is the one
+  that keeps a picture for its ink and the one that leaves the form mark hueless.
+- **The wildcard is read while the hand is *formed*, not while the turn resolves**, so it lives in
+  `matchCountOf` rather than in `playRiders` — the one rider that does. `combat.RiderWildElement`.
+- **Gold and silver gamble on every play, and the roll is in the resolver** *(owner's call,
+  2026-09-09)*. `combat.RiderGolden` and `RiderSilver`; `combat.Sources` is the struct carrying
+  **two** streams into `ResolveRound` — `Roll` for the shock, `Luck` for the gamble — and they are
+  never interchanged. The grant moves the fighting duelist *and* announces `KindGrantedDMG` /
+  `KindGrantedLife` for `screens.settleGrants` to make permanent on the run; silver goes through the
+  purse and needs no event. **A card that gambles on every play is worth however often it is
+  played**, which on a cheap starting card is dozens of times a run — the dial is the denominator in
+  `data/parasites.json`. See MECHANICS.md §Gold and silver.
 - **Targets are card identities, not deck positions.** A parasite may name two cards and is spent
   while three piles hold copies of the same cards, so `combat.Card.ID` is what makes it possible.
   The note in MECHANICS.md saying mid-fight alteration would need one is now satisfied rather than
@@ -1106,8 +1128,9 @@ entry. Four things to know before touching it:
   `combat.Card.Riders` is under one package over. `TestEveryTextFitsItsHighlights` holds the whole
   authored catalogue against `MaxTextHighlights`, so an author who runs out of room fails a test
   rather than shipping a half-lit sentence.
-- **`models.Tooltip.Lines` is runs rather than strings**, and `screens.tipLines` is the one door
-  every `Point` call goes through — which is what stops a new tooltip shipping as the only panel in
+- **`models.Tooltip.Title` and `.Lines` are both runs rather than strings** *(owner's call,
+  2026-09-09 for the title)*, and `screens.tipLine`/`tipLines` are the one door every `Point` call
+  goes through — which is what stops a new tooltip shipping as the only panel in
   the game whose ring text is grey. `internal/systems` draws the runs and never learns why one is
   coloured, because it cannot see `internal/cards` at all.
 - **The fight log colours through the ledger's *named* inks**, not through a stored colour. A line is
@@ -1554,6 +1577,7 @@ go list -f '{{.Name}}: {{join .Imports " "}}' ./... | grep curiousjc
 | `combat` | data |
 | `tutorial` | data |
 | `achieve` | data, combat |
+| `carddesc` | combat |
 | `decks` | data, combat |
 | `entities` | data, combat, pyramid |
 | `session` | data, combat, pyramid, profile, seeds, tutorial |
@@ -1582,6 +1606,11 @@ Six facts about it that are load-bearing:
   rectangle behind an anchor is `screens`, because a rectangle is a fact about a layout.
 - **`seeds` imports nothing and `combat` deliberately does not import it.** The rules take an
   injected `*rand.Rand` and stay ignorant of where it came from.
+- **`carddesc` is the words a card says about itself**, and it is here rather than in
+  `internal/screens` for `decks`' reason: the review sheets have to print the *same* strings the
+  game shows, and a tool cannot import a package that links Ebitengine. It holds the tooltip's stat
+  block — the title, the AP, the effect figure, the upgrade's lines — and no colour, no widths and
+  no arithmetic that needs a worn ring. `screens.cardTip` calls it and appends its own damage chain.
 - **`decks` sits above `combat` and `data` and below `screens`**, which is the whole reason it is
   a package: it is the one place allowed to turn a JSON card list into rules types, reachable
   without importing a screen. `pyramid` exists for the same reason on the other axis — the climb is

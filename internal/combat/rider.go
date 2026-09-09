@@ -103,6 +103,32 @@ const (
 	// into a four, and the elemental rungs are high on the ladder — so what a run pays for it is
 	// the number to watch, and that number is in `data/parasites.json` rather than here.
 	RiderWildElement
+
+	// RiderGolden gambles every time its card is played. Amount is the denominator: a golden card
+	// at 5 rolls a d5, and one face grants the run a point of DMG, one grants it five life, and
+	// the other three grant nothing.
+	//
+	// **It is the luck parasite moved onto a card** *(owner's call, 2026-09-09)*. It used to roll
+	// once, in `internal/session`, at the moment it was spent — a consumable that touched no card
+	// at all. Now it is what a card permanently *becomes*: the gold rides through the shuffle and
+	// rolls again on every play, for the rest of the run.
+	//
+	// **What it grants is run-level and permanent, which is why it cannot be finished here.** The
+	// rules move the fighting duelist so the grant is worth something for the rest of the fight,
+	// and announce KindGrantedDMG or KindGrantedLife so the run can be moved by the layer that
+	// owns it — the same division of labour KindVitae is under, and for the same reason.
+	//
+	// **The odds are the dial and the payouts are constants.** See LuckOutcomes.
+	RiderGolden
+
+	// RiderSilver is RiderGolden's cheaper sibling: one face in Amount pays SilverVitae into the
+	// purse and the rest pay nothing.
+	//
+	// **It needs no grant event**, which is the whole difference in the plumbing. Vitae already
+	// travels out of a resolved round as the difference between the purse the duel opened with and
+	// the one it closes with, so a silver card steps `Duelist.Vitae` and announces a KindVitae like
+	// any other payment. Gold moves two figures the purse mechanism knows nothing about.
+	RiderSilver
 )
 
 // RiderKinds is every kind in a fixed order, for anything that walks them.
@@ -116,6 +142,8 @@ func RiderKinds() []RiderKind {
 		RiderVitaeInHand,
 		RiderScaleInCombo,
 		RiderWildElement,
+		RiderGolden,
+		RiderSilver,
 	}
 }
 
@@ -137,6 +165,10 @@ func (k RiderKind) String() string {
 		return "scale-in-combo"
 	case RiderWildElement:
 		return "wild-element"
+	case RiderGolden:
+		return "golden"
+	case RiderSilver:
+		return "silver"
 	default:
 		return "none"
 	}
@@ -169,16 +201,24 @@ type Rider struct {
 // TestRoundIsDeterministic compares rounds by value. A slice field would end both. The same
 // constraint made `Duelist.Rings` a fixed array of WornRing, and this follows it.
 //
-// **Three, because the face has room for three badges** and a card whose face cannot say what it
-// carries is the failure the whole alteration mechanic is written to avoid. It is a layout number
-// as much as a rules one; raising it means finding the room first.
-const MaxCardRiders = 3
-
-// RiderList is the riders a card actually carries, in the order they were attached.
+// **One, and it went from three on 2026-09-09** *(owner's call)*. The rule now is that a card has a
+// form, an element and an action — those compose freely and a parasite may change any of them —
+// and then **one upgrade**, which is what a rider is. A second upgrade replaces the first outright:
+// the card the run has just made is the card it is, and what was on it before is gone.
 //
-// **Attachment order is the order they fire**, on the same terms worn order is a rule for rings:
-// it is the only order the player can see. Nothing today is order-sensitive — a heal is a heal
-// whichever ran first — but the moment one is, the answer has to already be the visible one.
+// The array survives the count because that is the shape that keeps `Card` comparable and keeps
+// every `Card{Concept: x}` literal working, and because a seat is what makes "the card carries no
+// upgrade" the zero value rather than a case. See SetRider, which is where last-one-wins lives.
+const MaxCardRiders = 1
+
+// Rider is the upgrade this card carries, or the zero Rider if it carries none.
+//
+// **The single reader to prefer** now that a card holds one. RiderList and RiderCount are kept
+// because callers that walk a card's upgrades read the same whether there is room for one or for
+// three, and because the seat count is a decision that has already moved once.
+func (c Card) Rider() Rider { return c.Riders[0] }
+
+// RiderList is the riders a card actually carries — at most one, since MaxCardRiders is 1.
 func (c Card) RiderList() []Rider {
 	out := make([]Rider, 0, MaxCardRiders)
 	for _, r := range c.Riders {
@@ -201,22 +241,19 @@ func (c Card) RiderCount() int {
 	return n
 }
 
-// AddRider attaches one, and reports whether there was room.
+// SetRider puts an upgrade on a card, replacing whatever it was carrying.
 //
-// **It stacks rather than merging.** Two heal riders on one card are two riders of ten, not one
-// of twenty — which is what keeps the badge row honest about how many parasites have been spent
-// on a card, and matches the way `amount` worms compound rather than replace.
-func (c Card) AddRider(r Rider) (Card, bool) {
-	if r.Kind == RiderNone {
-		return c, false
-	}
-	for i, seat := range c.Riders {
-		if seat.Kind == RiderNone {
-			c.Riders[i] = r
-			return c, true
-		}
-	}
-	return c, false
+// **Last one wins, and nothing stacks** *(owner's call, 2026-09-09)*. It replaced an AddRider that
+// filled the next free seat of three and refused a fourth, and the reason for the change is what an
+// upgrade now *is*: not a thing hung on a card but the card's own second identity, the one fact
+// beside its form, its element and its action. Two Leeches on one card were twenty life; one Leech
+// on a golden card now leaves a card that heals and has forgotten it was ever gold.
+//
+// **A RiderNone clears the seat**, which is what a "normal" parasite must never do and what nothing
+// today asks for — it is here so the operation has an identity rather than a hole.
+func (c Card) SetRider(r Rider) Card {
+	c.Riders[0] = r
+	return c
 }
 
 // riderTotal sums one kind's amounts over a card's riders.
@@ -280,6 +317,12 @@ func (c Card) HealOnPlay() int {
 	}
 	return total
 }
+
+// GoldenOdds is the denominator a golden card gambles on, or zero for a card that is not golden.
+func (c Card) GoldenOdds() int { return c.riderTotal(RiderGolden) }
+
+// SilverOdds is the denominator a silver card gambles on, or zero for a card that is not silver.
+func (c Card) SilverOdds() int { return c.riderTotal(RiderSilver) }
 
 // blowDMG is the duelist's DMG for one blow, after every rider with something to say about it.
 //

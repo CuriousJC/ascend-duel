@@ -12,6 +12,11 @@ package screens
 // attack is worth; the tooltip states why. That is the whole reason it exists — a slash reading 4x
 // with no explanation is a better lie than one reading 2x, because it is believable.
 //
+// **A card's tooltip opens with a stat block rather than with the derivation** *(owner's call,
+// 2026-09-09)*, and the derivation is printed underneath it only when a ring or a worm has actually
+// moved something. See cardTip. The block's wording lives in `internal/carddesc`, which is
+// windowless, so the review sheets print the same strings the game does.
+//
 // **Nothing here recomputes a rule.** The multipliers come off `combat.RingContributionsAt`, the
 // same walk `Duelist.CardDamage` compounds, and the costs off the same ring moment the AP bar reads.
 // A tooltip that did its own arithmetic would be a second implementation of the engine, printed in
@@ -23,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/curiousjc/ascend-duel/data"
+	"github.com/curiousjc/ascend-duel/internal/carddesc"
 	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/session"
 )
@@ -38,83 +44,77 @@ import (
 // The point of a dwell is that resting is deliberate where crossing is not.
 var tipDwell = beat(3, 2)
 
-// cardTip explains one card: what it will deal, and every step between the holder's DMG and that
-// figure.
+// cardTip explains one card: what it is, what it costs, what it is worth, and what its upgrade
+// adds — then, only when something has moved one of those figures, where that came from.
 //
-// **The chain is printed term by term rather than as a total**, because the question a player has in
-// front of a hand is not "what is this worth" but "why is that one worth more". A single number
-// answers the first and hides the second, and the second is what a build is made of.
+// **The stat block leads and the arithmetic follows** *(owner's call, 2026-09-09)*. It used to be
+// arithmetic and nothing else: `5 DMG, yours` / `1x the card` / `= 5 DMG`, which is three lines
+// deriving a number the player wanted to be told. The derivation is still the reason this panel
+// exists — a slash reading 4x with no explanation is a better lie than one reading 2x — but it is
+// the answer to "why is that one worth more", and that is the *second* question. The first is
+// "what is this", and the block is that.
+//
+// **The chain is printed only when there is a chain.** A ringless Jab derives to itself, so a card
+// nothing has touched says four lines and stops. Put a ring on and every term comes back.
+//
+// **The block itself is `internal/carddesc`**, which is windowless, so `tools/upgradesheet` prints
+// the same strings this panel does rather than a snapshot of them.
 func cardTip(c actionCard, h held) (string, []string) {
-	spec := c.Spec()
-	var lines []string
-
-	if spec.Verb == combat.VerbAttack {
-		lines = attackTipLines(c, h)
-	} else {
-		lines = planTipLines(c)
-	}
-
+	lines := carddesc.Lines(c, h.cost, h.dmg, ringScale(c, h))
+	lines = append(lines, damageChainLines(c, h)...)
 	if c.AmountPct != 0 {
 		lines = append(lines, "a worm changed this card")
 	}
 	lines = append(lines, costTipLines(c, h)...)
 
-	return c.Label(), lines
+	return carddesc.Title(c), lines
 }
 
-// attackTipLines is the damage arithmetic: strength, the card's own multiplier, every ring that
-// matches, and the result.
+// damageChainLines is the damage arithmetic: the card's own multiplier, every ring that matches, and
+// the result — **or nothing at all when no ring matches.**
 //
-// **With no DMG figure it states the multipliers and stops.** Between fights there is no duelist —
-// a run's stats belong to a fight — so the honest answer is "four times your DMG" rather than a
-// number worked out against a strength nobody has yet.
-func attackTipLines(c actionCard, h held) []string {
-	var lines []string
-
-	if h.dmg > 0 {
-		lines = append(lines, strconv.Itoa(h.dmg)+" DMG, yours")
+// **Silence is the common case and is the point.** Every card in a ringless deck derives to the
+// figure the block above already printed, and three lines saying so is a tooltip that trains the
+// player not to read it. What earns the space is a ring having changed something.
+//
+// **It is only ever asked of an attack.** A shield and a defence have no ring moment on their
+// figure, so a chain under one would be a heading with nothing beneath it.
+func damageChainLines(c actionCard, h held) []string {
+	if c.Spec().Verb != combat.VerbAttack {
+		return nil
 	}
-	lines = append(lines, multiplierText(c.Amount())+" the card")
+	contributions := combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c)
+	if len(contributions) == 0 {
+		return nil
+	}
 
-	scale := 100
-	for _, contribution := range combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c) {
-		scale = scale * contribution.Effect.Amount / 100
+	lines := []string{multiplierText(c.Amount()) + " the card"}
+	for _, contribution := range contributions {
 		lines = append(lines, multiplierText(contribution.Effect.Amount)+" "+
 			combat.RingOf(contribution.Ring).Name)
 	}
 
-	total := c.Amount() * scale / 100
-	if h.dmg > 0 {
-		lines = append(lines, "= "+strconv.Itoa(h.dmg*total/100)+" DMG")
-	} else {
-		lines = append(lines, "= "+multiplierText(total)+" your DMG")
-	}
-
-	// **Said on every attack, not only on a big one.** The hand is the largest multiplier in the
-	// game and it is decided by what else is selected, so a figure here that did not say it was
-	// pre-hand would be the same kind of half-truth the face was telling before today.
+	// **The chain has no total, because the block already printed it** — see cardTip, where the
+	// ring scale is handed to `carddesc` precisely so the headline figure is the one the card will
+	// deal. A `= 24 DMG` under these terms would be the same number twice, and the moment the two
+	// disagreed one of them would be the bug nobody could see.
+	//
+	// **The caveat is said whenever the chain is.** The figure at the top of the panel is a card's
+	// own worth and says nothing about a hand, which is the largest multiplier in the game.
 	return append(lines, "before the hand multiplies it")
 }
 
-// planTipLines says what a second-phase card's figure buys, in the terms the round uses. **The face
-// states the rule and this states the consequence** — "3 shields" is what the card does, "eats three
-// attacks outright" is why anyone would.
-func planTipLines(c actionCard) []string {
-	amount := c.Amount()
-
-	switch c.Spec().Verb {
-	case combat.VerbDefend:
-		return []string{
-			"takes " + strconv.Itoa(amount) + "% off one blow",
-			"the round it is played",
-		}
-	case combat.VerbShield:
-		return []string{
-			"eats " + attackWord(amount) + " outright",
-			"until the start of your next turn",
-		}
+// ringScale is every ring that reaches this card's damage, compounded, as a percentage.
+//
+// **It walks `combat.RingContributionsAt`, which is the same walk `Duelist.CardDamage` compounds.**
+// A tooltip that did its own arithmetic would be a second implementation of the engine, printed in
+// a box, and it would be wrong on exactly the days it mattered.
+func ringScale(c actionCard, h held) int {
+	scale := 100
+	for _, contribution := range combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c) {
+		scale = scale * contribution.Effect.Amount / 100
 	}
-	return nil
+	return scale
 }
 
 // costTipLines explains a price a ring has moved. **Only when one has** — a card costing what it

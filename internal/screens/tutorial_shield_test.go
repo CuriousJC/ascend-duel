@@ -58,7 +58,7 @@ func TestTheTutorialsShieldEatsTheCreaturesHeaviestBlow(t *testing.T) {
 	}
 	theirs := pile.Plan(creature)
 
-	log, after, _ := combat.ResolveRound(fighter, creature, taught, theirs, 1, nil)
+	log, after, _ := combat.ResolveRound(fighter, creature, taught, theirs, 1, combat.Sources{})
 
 	// **The block has to happen at all.** A taught set that stopped holding a shield, or a blow that
 	// started killing, would leave the step explaining something the player never sees.

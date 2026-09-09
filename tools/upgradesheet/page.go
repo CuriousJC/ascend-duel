@@ -2,8 +2,8 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "change a tint mode, re-run
-// the tool, refresh the tab", the same loop every other tool here has.
+// The page. One static file, no JavaScript, no build step: the loop is "change a style or a tint,
+// re-run the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size first with image-rendering: pixelated.** A card's rim is
 // one pixel thick and a browser that scales it resamples that rim into a blur, which makes the
@@ -14,8 +14,8 @@ import "html/template"
 // **The actual-size row comes first on purpose**, which is the glyph sheet's rule: reviewing only
 // the enlarged row is how a mark comes to look acceptable in review and clunky in play.
 //
-// **The ground is the one the cards actually sit on.** A rainbow column on white is a different
-// column from a rainbow column on the game's own blue.
+// **The ground is the one the cards actually sit on.** A gold card on white is a different card
+// from a gold card on the game's own blue.
 var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doctype html>
 <meta charset="utf-8">
 <title>Ascending Duel — upgrade sheet</title>
@@ -73,24 +73,58 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   img { display: block; image-rendering: pixelated; }
   img.big { width: {{mul (index .Style "width") .Zoom}}px; height: auto; }
   .grants { margin: 8px 0 0; font-size: 13px; }
+  /* The tooltip as the game draws it: a titled box of short lines, dark on the game's own panel
+     colours rather than on the page, so a line is judged against the ground it lands on. */
+  .tip {
+    display: inline-block; margin: 12px 0 0; padding: 9px 14px 11px;
+    background: #f0eee8; border: 2px solid #8d8b84; border-radius: 7px;
+    font: 12.5px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .04em; min-width: 190px;
+  }
+  .tip b { display: block; font-weight: 700; margin-bottom: 3px; }
   .grants code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 </style>
 
 <h1>Upgrade sheet</h1>
 <p class="facts">
-  Every <em>visible upgrade</em> a card can carry, drawn on all four form marks in all
-  {{len .Plates}} × 3 combinations of ink and mark. The card is
-  <code>cards.Hand</code>, {{index .Style "width"}}×{{index .Style "height"}}; the form mark's box is
-  <code>{{index .Style "formSize"}}px</code> at ({{index .Style "dashLeft"}},{{index .Style "formTop"}});
-  the ticks are {{index .Style "dashWidth"}}×{{index .Style "dashHeight"}}. Every ink is authored at
-  {{.InkSize}}×{{.InkSize}}. The game draws <code>{{.Default}}</code>.
+  All {{len .Plates}} <em>visible upgrades</em> a card can carry, each drawn on all four form
+  marks. The card is <code>cards.Hand</code>, {{index .Style "width"}}×{{index .Style "height"}};
+  the form mark's box is <code>{{index .Style "formSize"}}px</code> at
+  ({{index .Style "dashLeft"}},{{index .Style "formTop"}}); the ticks are
+  {{index .Style "dashWidth"}}×{{index .Style "dashHeight"}}. Every ink is
+  {{.InkSize}}×{{.InkSize}}; a washed card goes <code>{{.WashPct}}%</code> of the way toward it and a
+  washed border <code>{{.BorderPct}}%</code>. The game draws <code>{{.Default}}</code>.
 </p>
 <p class="note">
-  An upgrade takes the card's <strong>left column</strong> — the form mark and the cost ticks under
-  it — and paints it from a picture instead of from the element's one colour. That is the column
-  that already states the element, so an upgrade is not a fourth thing on a card with three: it is
-  the same statement about a card whose answer has changed. Everything else on the face is
-  untouched, and <code>Spec.Element</code> is still what the card <em>is</em>.
+  A card has a form, an element and an action — and then <strong>one upgrade</strong>. A second
+  upgrade replaces the first outright. <code>Spec.Element</code> is still what the card <em>is</em>,
+  and the left column still states it; the wildcard is the one upgrade that takes the hue off the
+  form mark, because it is the one whose subject is that the card counts as every element at once.
+</p>
+<p class="note">
+  <strong>Three styles, and the question is which one to keep.</strong> <code>border</code> paints
+  the 3px ring and leaves the face alone — the border was freed up in August when the element moved
+  off it, and what is left in that slot is the card's <em>state</em>, which is a wash away from
+  neutral rather than a hue. <code>wash</code> takes the whole card, border included: nobody misses
+  a gold card, and nothing on the face is unaffected. <code>wash-face</code> is the middle answer.
+  Read them against the plain row above, and against a whole hand rather than one card — five loud
+  cards in a row is the failure mode the border style exists to avoid.
+</p>
+<p class="note">
+  <strong>Eight of these colours are placeholders.</strong> Hue is spent — five elements, the ring
+  pink, the two verbs, the two duelists, the ground — so what is here is picked to be told apart
+  rather than to mean anything. Gold and silver are the exception: they are metals, and they are
+  what the mechanic is called. Retune the rest in <code>systems.upgradeTint</code> and re-run.
+</p>
+
+<p class="note">
+  Each upgrade below carries the <strong>tooltip a card wearing it actually shows</strong>, built by
+  <code>internal/carddesc</code> — the same call <code>screens.cardTip</code> makes, not a copy of
+  it. The card is a fire Lunge and the duelist behind it hits for 10, so a figure that looks wrong
+  can be checked by eye. There are no rings on, which is why the block is the whole panel: the game
+  appends its damage chain only when a ring has moved something. <strong>The colouring is the game's
+  too</strong> — the same <code>cards.ElementRuns</code> table the screen reads — which is why FIRE
+  is red and CHROMATIC is not: the wheel has no hue left for "all of them".
 </p>
 
 <h2>The plain card</h2>
@@ -113,9 +147,13 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   Rider: <code>{{.Riders}}</code>.
   {{if .Grants}}Granted by {{.Grants}}.{{else}}<span class="alarm">Nothing in data/parasites.json grants it — this upgrade cannot be acquired.</span>{{end}}
 </p>
+<div class="tip">
+  <b>{{range .Tip.Title}}<span{{if .Ink}} style="color:{{.Ink}}"{{end}}>{{.Text}}</span>{{end}}</b>
+  {{range .Tip.Lines}}<div>{{range .}}<span{{if .Ink}} style="color:{{.Ink}}"{{end}}>{{.Text}}</span>{{end}}</div>{{end}}
+</div>
 
-{{range .Modes}}
-<h4><code>{{.Mode}}</code>{{if .Default}}<span class="tag">the game draws this</span>{{end}}</h4>
+{{range .Styles}}
+<h4><code>{{.Style}}</code>{{if .Default}}<span class="tag">the game draws this</span>{{end}}</h4>
 <div class="row">
   {{range .Cells}}
   <div class="cardbox">
@@ -128,15 +166,16 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 
 <h4>enlarged, {{$.Zoom}}×</h4>
 <p class="note">
-  The same files, blown up nearest-neighbour. Read it <em>after</em> the rows above, never instead
-  of them.
+  The same files, blown up nearest-neighbour, one row per style in the same order. Read it
+  <em>after</em> the rows above, never instead of them — a border that only works at 3× is a border
+  that does not work.
 </p>
-{{range .Modes}}
+{{range $s := .Styles}}
 <div class="row">
-  {{range .Cells}}
+  {{range $s.Cells}}
   <div class="cardbox">
     <img class="big" src="{{.File}}" alt="{{.Label}}">
-    <div class="cap">{{$.Zoom}}× · {{.Note}}</div>
+    <div class="cap">{{$.Zoom}}× · {{$s.Style}} · {{.Note}}</div>
   </div>
   {{end}}
 </div>
@@ -144,9 +183,10 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 
 <h4>states</h4>
 <p class="note">
-  The mark and the ticks are one statement and share one state switch, so a card that cannot be
-  afforded fades both together and a queued one lights both together. A row where they disagree is
-  a bug in <code>Spec.atState</code>, not a matter of taste.
+  In the style the game draws. The upgrade goes on after the state colouring, so a card that cannot
+  be afforded has to still read as unavailable through it and a queued one has to still read as
+  queued — which is the sharpest test of the border style, since state is what the border was
+  already saying. A row where the three look the same is a bug in the order, not a matter of taste.
 </p>
 <div class="row">
   {{range .States}}

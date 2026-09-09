@@ -188,6 +188,28 @@ func (s *Session) Drink(key string) bool {
 	return true
 }
 
+// Grant adds a permanent bonus the rules rolled up during a fight — a golden card's gamble coming
+// good. See combat.RiderGolden.
+//
+// **It lands on the same two figures a potion moves**, which is what makes it permanent: they ride
+// on the run, are saved with it, and are applied to the fighter by `Equip` at the top of every duel.
+// The rules moved the *fighting* duelist when they rolled it, so the bonus was already worth
+// something for the rest of that fight; this is what makes it worth something for the rest of the
+// run.
+//
+// **It is called off the resolved event log, never off the playback** — see
+// screens.settleGrants, which is the rule payHeldVitae and recordHandsPlayed are both under. A
+// bonus applied as an animation reached it would be a bonus the player could change by leaving the
+// screen.
+func (s *Session) Grant(dmg, life int) {
+	if dmg > 0 {
+		s.dmgBonus += dmg
+	}
+	if life > 0 {
+		s.lifeBonus += life
+	}
+}
+
 // DMGBonus and LifeBonus are what the run has drunk, read by `Equip` and by anything drawing the
 // duelist as they actually are. **Two plain figures rather than a list of bottles**: a potion is
 // gone the moment it is drunk, so what a run carries is the sum and not the receipts — the same

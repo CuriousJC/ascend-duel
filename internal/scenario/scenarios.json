@@ -149,6 +149,82 @@
     ]
   },
   {
+    "ScenarioRecord": "metal-chromatic",
+    "Note": "A silver card and a chromatic one in the same hand, which neither the metals nor the wildcards entry can give you: the question is how the two upgrades read against each other on one table. The silver Cut writes nothing about its metal on the face at all - the sheen is what names it - where the wild Jab carries the five-band wash, keeps its form mark hueless, and says ANY ELEMENT. Both explain themselves in the tooltip and both are titled in their own ink: CHROMATIC letter by letter across the five bands, SILVER in one lifted grey over the odds it gambles at. Hover both, and check the silver card is identifiable without the hover. A gold Thrust and two plain cards are beside them so a sheen has something to be a sheen against. A Motley and a Silver are in the bucket for putting either upgrade onto a card that has neither.",
+    "Rings": [],
+    "Deck": [
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Copies": 8,
+        "Riders": [
+          "silver:5"
+        ]
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 8,
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Copies": 4,
+        "Riders": [
+          "golden:5"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning",
+        "Copies": 4
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth",
+        "Copies": 4
+      }
+    ],
+    "Hand": [
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Riders": [
+          "silver:5"
+        ]
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Riders": [
+          "wild-element"
+        ]
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Riders": [
+          "golden:5"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Bash",
+        "Element": "earth"
+      }
+    ],
+    "Parasites": [
+      "motley",
+      "silver"
+    ]
+  },
+  {
     "ScenarioRecord": "upgrades",
     "Note": "Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal's rose against the ring pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.",
     "Rings": [],
@@ -416,7 +492,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn — and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u00e2\u20ac\u201d and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Rings": [
       "atrophy-ring",
       "momentum-ring"

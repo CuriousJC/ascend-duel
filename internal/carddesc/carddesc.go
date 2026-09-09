@@ -164,13 +164,19 @@ func RiderLines(c combat.Card) []string {
 		case combat.RiderWildElement:
 			out = append(out, "COUNTS AS EVERY ELEMENT")
 		case combat.RiderGolden:
+			// **The metal is named first and the odds are the fine print under it** *(owner's call,
+			// 2026-09-09)*. The panel opens with what the card *is* — the same line its face carries,
+			// in the same colour — and only then says what that costs and pays. Two rate lines
+			// arriving with nothing over them read as arithmetic about a card whose name the player
+			// has to work out from the wash.
+			//
 			// The odds are the record's; the payouts are combat's constants. Both are read rather
-			// than written out, so a retune moves this line with the rule.
-			out = append(out,
+			// than written out, so a retune moves these lines with the rule.
+			out = append(out, Gold+" CARD",
 				"1 IN "+strconv.Itoa(r.Amount)+" ON PLAY: "+plus(combat.LuckDMG)+" DMG",
 				"1 IN "+strconv.Itoa(r.Amount)+" ON PLAY: "+plus(combat.LuckLife)+" MAX LIFE")
 		case combat.RiderSilver:
-			out = append(out,
+			out = append(out, Silver+" CARD",
 				"1 IN "+strconv.Itoa(r.Amount)+" ON PLAY: "+plus(combat.SilverVitae)+" VITAE")
 		}
 	}
@@ -219,4 +225,126 @@ func upper(s string) string {
 		}
 	}
 	return string(out)
+}
+
+// FaceLines is what the card's upgrade says on the card itself, one authored line each.
+//
+// **It is the column version of RiderLines, and both live here on purpose.** The tooltip sets
+// sentences in a panel; the face sets labels in a 128-pixel column under the card's own verb, so
+// the two cannot share one string — `+10 HEAL ON PLAY` is a sentence and `ON PLAY` over `+10 LIFE`
+// is a column. What keeping them in one file buys is that the difference is *readable*: the two
+// functions sit a screen apart and a wording that has drifted shows as two lines that no longer
+// say the same thing, instead of as a disagreement between a screen and a panel nobody diffs.
+//
+// **The timing is the heading and the payload sits under it** *(2026-09-09)*. The face already
+// carries a figure — `DMG 2X` — so a rider's own figure pressed straight underneath is two numbers
+// running together with the thing that separates them arriving last. A heading first makes the
+// upgrade read as a new clause, and it puts the word the player is actually learning — whether this
+// happens when the card is *played* or while it is merely *held* — at the top of the block.
+//
+// **What a caller controls is the order, not the breaks.** `cards.WrapText` has set the face one
+// word to a line since 2026-09-05 — a figure joined to its unit and nothing else — so a heading of
+// two words is two lines whatever this returns, and there is no way to buy it back. The budget is
+// what that costs: the band holds seven lines, the card's own verb takes two, and the longest
+// upgrade here — `IF IT SCORES` over `DMG 1.5X` — takes four. Gold and silver are the reason the
+// odds are not on the face; see below.
+//
+// **Total over combat.RiderKinds(), like RiderLines.** A rider with no face line is a parasite the
+// player spent that the card does not mention — the same failure as a rider with no drawing, and
+// the one the wash on its own cannot fix: a colour is what carries across a row of eight cards, and
+// the words are what answers "what does that mean" without a hover.
+func FaceLines(c combat.Card) []string {
+	var out []string
+	for _, r := range c.RiderList() {
+		switch r.Kind {
+		case combat.RiderHealOnPlay:
+			out = append(out, onPlay, plus(r.Amount)+" LIFE")
+		case combat.RiderShieldOnPlay:
+			out = append(out, onPlay, plus(r.Amount)+" "+shieldWord(r.Amount))
+		case combat.RiderDamageOnPlay:
+			out = append(out, onPlay, plus(r.Amount)+" DMG")
+		case combat.RiderDamageInHand:
+			out = append(out, inHand, plus(r.Amount)+" DMG")
+		case combat.RiderScaleInHand:
+			out = append(out, inHand, FaceMultiplier(r.Amount)+" DMG")
+		case combat.RiderVitaeInHand:
+			out = append(out, inHand, plus(r.Amount)+" VITAE")
+		case combat.RiderScaleInCombo:
+			// **"IF IT SCORES" rather than "ON PLAY"**, for RiderLines' reason: a turn can play a
+			// card that pays nothing into the scoring set, and that distinction is the whole of what
+			// separates this rider from damage-on-play.
+			out = append(out, scoring, FaceMultiplier(r.Amount)+" DMG")
+		case combat.RiderWildElement:
+			// **No heading, because there is no moment.** Every other rider happens at a time; this
+			// one is something the card permanently *is*, and a timing word over it would be
+			// answering a question the card does not raise.
+			out = append(out, "ANY ELEMENT")
+		case combat.RiderGolden, combat.RiderSilver:
+			// **The metals say nothing on the face, and they are the only two that may**
+			// *(owner's call, 2026-09-09)*. Every other upgrade is a placeholder tint standing on a
+			// full wheel, so its colour cannot be relied on to name it and the words are what a
+			// player learns it from — see systems.upgradeTint. Gold and silver are the exception in
+			// exactly that respect: systems.upgradeSheen is not a placeholder, because gold and
+			// silver are what the mechanic is *called*, and a sheen running across a card is
+			// something nothing else on the table does. A card whose picture already says GOLD does
+			// not need the word.
+			//
+			// **The whole gamble is the tooltip's**, where there is room for a sentence — see
+			// RiderLines, which names the metal and then prints the odds under it. This is the one
+			// place the face is deliberately quieter than the panel, and the sheen is what pays
+			// for it.
+		}
+	}
+	return out
+}
+
+// The three headings a face may carry. **Constants rather than literals** so the set is countable:
+// a fourth moment is a line here, which is where the question "does the player already know this
+// word" gets asked, rather than a string typed into one case.
+//
+// **SCORING is one word where the other two are phrases, and the budget is why.** One word to a
+// line makes the tooltip's `IF IT SCORES` three lines, which is a heading longer than the card it
+// heads; `ON PLAY` and `IN HAND` cost two each and the band can afford those. It is the register
+// the rest of the face is already in — HITS, CUTS, SHIELD — so it does not read as a fourth voice.
+const (
+	onPlay  = "ON PLAY"
+	inHand  = "IN HAND"
+	scoring = "SCORING"
+)
+
+// FaceMultiplier is Multiplier in the case the card faces are set in — 200 as `2x`.
+//
+// **Lower case, and that is not a style preference.** `cards.WrapText` keeps a figure on its unit's
+// line, and `isFigure` reads a trailing `x` and not a trailing `X` — so `2X DMG` breaks into two
+// lines where `2x DMG` stays as one. The card's own multiplier has always been written this way;
+// this is the upgrade's line joining it rather than a second convention.
+func FaceMultiplier(amount int) string {
+	return lower(Multiplier(amount))
+}
+
+func lower(s string) string {
+	out := []byte(s)
+	for i := range out {
+		if out[i] >= 'A' && out[i] <= 'Z' {
+			out[i] += 'a' - 'A'
+		}
+	}
+	return string(out)
+}
+
+// Gold and Silver are what the two gambling upgrades are called, on a card and in a panel alike.
+//
+// **Constants because two packages have to agree on the string.** `internal/screens` colours the
+// word by looking for it in the face's text, so a card writing GOLD and a highlight looking for
+// GOLDEN would be a word that is never lit — the same trap `carddesc.Chromatic` exists to close.
+const (
+	Gold   = "GOLD"
+	Silver = "SILVER"
+)
+
+func shieldWord(n int) string {
+	if n == 1 || n == -1 {
+		return "SHIELD"
+	}
+	return "SHIELDS"
 }

@@ -688,9 +688,14 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 	label := fmt.Sprintf("%d/%d AP", spent, budget)
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(left), float64(barBottom+apFigureBelowBar))
+	// **The figure is written in the bar's own colours** *(owner's call, 2026-09-10)*, so the
+	// caption and the thing it captions say one thing: amber for a spend the budget covers, the
+	// game's red once it does not. It was the table's near-black ink until then, which left the
+	// bar and its own figure looking like two readouts that happened to be adjacent.
+	//
 	// One ScaleWithColor, never two — the scale multiplies, so setting the ink and then the
 	// warning colour would give a near-black red rather than the red.
-	ink := groundInk
+	ink := apSpentColor
 	if spent > budget {
 		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
 		ink = apOverColor
@@ -733,16 +738,25 @@ func buttonStripSlots(gs *state.GlobalState, discardWidth, duelWidth int) (int, 
 // the bar answers "how much room is left" without being read.
 //
 // **The bar rescales rather than overflowing.** Its full width is the budget until the
-// selection exceeds it, and the whole spend after that, with a tick left standing where the
-// budget ends. So the fill never runs off the end and the tick shows how far past it you
-// are, in the same picture, at whatever the overspend happens to be. A fixed-scale bar can
-// only pin at 100% and say nothing about by how much.
+// selection exceeds it, and the whole spend after that. So the fill never runs off the end and
+// the overspend shows how far past it you are, in the same picture, at whatever the overspend
+// happens to be. A fixed-scale bar can only pin at 100% and say nothing about by how much.
 // **One cell per action point.** Action points are whole numbers spent in ones and twos, and
 // a continuous fill made the player read the `3/6 AP` line to find out how many were left —
 // which is the small text the bar exists to save them from. Segmented, the count is
 // countable: three lit cells and three dark ones says "three left" without a number.
 //
-// The cells also make the budget boundary draw itself. Where blue meets red *is* the edge of
+// **It is the round timer's picture, one row down** *(owner's call, 2026-09-10)*. Both bars
+// answer the same shape of question — a discrete resource being spent down over a fight — and
+// they were answering it two different ways: flat rectangles here, bevelled cells up there. The
+// cells now come off `systems.BevelRect` at `PaneBevelWidth` on the same rule the timer uses, so
+// **an unspent point is sunken and a spent one is raised**: the bar fills with bubbles standing
+// out of the row rather than with a stripe growing along it, which is what makes the spend read
+// as something arriving rather than as a level. The two bars deliberately keep their own
+// dimensions — this one is 8px tall in the hand band and the timer is 14 in the left column — so
+// what is shared is the treatment, not the footprint.
+//
+// The cells still make the budget boundary draw itself. Where amber meets red *is* the edge of
 // what can be afforded, so the white tick that used to mark it is gone — it was pointing at
 // something the colours now say on their own.
 func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) {
@@ -759,47 +773,45 @@ func (s *CombatScene) drawAPBar(screen *ebiten.Image, left, top, width float32) 
 		cells = spent
 	}
 
-	// **Toward the ground, not toward black.** ColorAtStrength would scale the blue down to
-	// {14,26,46}, which on a light screen is the darkest thing in the bar and reads as the
-	// *filled* part — the empty cells stepping in front of the spent ones. See
-	// systems.ColorToward.
-	//
-	// **It stops short of the ground now that the ground is blue** *(2026-09-07)*. Eighty percent
-	// of the way to a cream table left an empty cell clearly not-the-table; eighty percent of the
-	// way to a *blue* one lands almost on it, so the bar stopped having a length at all — an empty
-	// cell and the gap beside it were the same colour. Fifty is what keeps the row readable as a
-	// row. **This is the AP bar's share of a wider collision**: the ground is now the same hue as
-	// the bar, and CLAUDE.md's rule is that the wheel is full. See apBarColor.
-	empty := systems.ColorToward(apBarColor, screenGround, 50)
+	// **The empty cell is the round timer's, not a dimmed version of the fill.** It was
+	// `ColorToward(bar colour, ground, 50)` while the fill was blue, which made an unspent cell a
+	// quiet copy of a spent one; now that a spent cell is red, a red at half strength would read
+	// as a *partly* spent point. The ground's ink at a quarter strength is present enough to be
+	// counted and says nothing about the resource. `ColorToward` rather than `ColorAtStrength`,
+	// because the table is light — see CLAUDE.md.
+	empty := systems.ColorToward(groundInk, screenGround, 75)
 	cellWidth := (width - float32(cells-1)*apBarGap) / float32(cells)
 
 	// A cell narrower than a couple of pixels is a smear rather than a count, which a big
 	// enough bonus could produce. Fall back to one unbroken bar at that point: it stops
 	// being countable either way, and stripes are the worse of the two.
 	if cellWidth < apBarMinCell {
-		vector.DrawFilledRect(screen, left, top, width, apBarHeight, empty, false)
+		systems.BevelRect(screen, int(left), int(top), int(width), apBarHeight,
+			systems.PaneBevelWidth, empty, true)
 		filled := width * float32(min(spent, budget)) / float32(cells)
-		vector.DrawFilledRect(screen, left, top, filled, apBarHeight, apBarColor, false)
+		systems.BevelRect(screen, int(left), int(top), int(filled), apBarHeight,
+			systems.PaneBevelWidth, apSpentColor, false)
 		if spent > budget {
 			over := width * float32(spent-budget) / float32(cells)
-			vector.DrawFilledRect(screen, left+filled, top, over, apBarHeight, apOverColor, false)
+			systems.BevelRect(screen, int(left+filled), int(top), int(over), apBarHeight,
+				systems.PaneBevelWidth, apOverColor, false)
 		}
 		return
 	}
 
 	for i := 0; i < cells; i++ {
-		fill := empty
+		fill, sunken := empty, true
 		switch {
 		case i >= spent: // still available
 		case i < budget:
-			fill = apBarColor
+			fill, sunken = apSpentColor, false
 		default:
-			fill = apOverColor
+			fill, sunken = apOverColor, false
 		}
 
-		vector.DrawFilledRect(screen,
-			left+float32(i)*(cellWidth+apBarGap), top,
-			cellWidth, apBarHeight, fill, false)
+		systems.BevelRect(screen,
+			int(left+float32(i)*(cellWidth+apBarGap)), int(top),
+			int(cellWidth), apBarHeight, systems.PaneBevelWidth, fill, sunken)
 	}
 }
 

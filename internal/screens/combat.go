@@ -176,15 +176,31 @@ func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) 
 // not a balanced one.
 const discardsPerRound = 4
 
-// apBarColor is the action-point bar's blue. It is deliberately not the palette's green:
-// the bar reports the budget rather than belonging to the cards, and giving it its own
-// colour stops it reading as a summary of the list underneath it.
-var apBarColor = color.RGBA{R: 70, G: 130, B: 230, A: 255}
+// panelBlue is the stroke around a dialog and the toast's dismiss button. It was the
+// action-point bar's own blue until 2026-09-10, when the bar's cells went red and the name
+// stopped describing what it does — every remaining caller is a panel edge, so it is named
+// for that rather than for the widget it used to belong to.
+var panelBlue = color.RGBA{R: 70, G: 130, B: 230, A: 255}
 
-// apOverColor paints the part of the selection the budget will not cover. Red rather than a
-// dimmer blue: over-allocation is a state you have to leave before you can duel, so it reads
-// as a warning rather than as more of the same bar.
-var apOverColor = color.RGBA{R: 225, G: 60, B: 60, A: 255}
+// apSpentColor fills an action point already committed to the round *(owner's call,
+// 2026-09-10)*. The bar is the round timer's picture one row down — a cell per point, bevelled,
+// sunken while it is still yours and raised once it is gone — so what a spent cell needs is a
+// colour the eye reads as the bar advancing on you.
+//
+// **Amber rather than the game's red** *(owner's call, same day, having tried it the other way
+// round first)*. Spending an action point is the ordinary business of a turn and happens six
+// times a round; red is the colour of a thing ended, and a bar that is fully red the moment you
+// have queued a legal hand says something has gone wrong when nothing has. It is deep rather
+// than bright because the `0/6 AP` figure under the bar is written in it too, and a light yellow
+// on the light table is a line nobody can read.
+var apSpentColor = color.RGBA{R: 196, G: 124, B: 12, A: 255}
+
+// apOverColor paints the part of the selection the budget will not cover, and writes the
+// `+N over` tail beside it. **The game's one red, `modalCloseColor`, since 2026-09-10** — the
+// colour the destructive answer on a confirm dialog takes. Over-allocation is a state you have
+// to leave before you can duel, so it reads as a warning rather than as more of the same bar,
+// and this is the existing meaning of that red rather than a new claim on a hue.
+var apOverColor = modalCloseColor
 
 // CombatScene runs one duel: the player plans a set of actions against an action
 // point budget, presses DUEL!, watches the round play out, and plans again.

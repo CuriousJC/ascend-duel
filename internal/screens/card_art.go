@@ -371,16 +371,16 @@ func effectArt(gs *state.GlobalState, id combat.StatusID) image.Image {
 // Every distinct set of figures is a cache entry, like the enemy's life. Bounded by how many
 // values a fight passes through, which is a handful.
 // `life` is passed in for the reason enemySpec's is — the bar lags a figure still on its way.
-func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string, vitae, life, ap, shields int,
-	inks ...color.RGBA) cards.Spec {
+func duelistSpec(gs *state.GlobalState, c *entities.Combatant, name string,
+	dmg, vitae, life, maxLife, ap, shields int, inks ...color.RGBA) cards.Spec {
 	spec := cards.Spec{
 		Name:    name,
 		Element: cards.Basic,
 		Life:    life,
-		MaxLife: c.MaxLife,
+		MaxLife: maxLife,
 		Enabled: true,
 	}
-	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(c.DMG)}
+	spec.Stats[0] = cards.StatLine{Label: "DMG", Value: strconv.Itoa(dmg)}
 	spec.Stats[1] = cards.StatLine{Label: "AP", Value: strconv.Itoa(ap)}
 	spec.Stats[2] = cards.StatLine{Label: "VITAE", Value: strconv.Itoa(vitae), ValueInk: vitaeInk}
 

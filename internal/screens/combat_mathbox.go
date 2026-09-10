@@ -265,6 +265,12 @@ type mathItem struct {
 	// beat cannot launch them once a frame.
 	shieldsFlown bool
 
+	// signalsSent says this item's card has already thrown whatever its riders parked, on the same
+	// once-per-item terms shieldsFlown is on. **The signals themselves are not stored here** — the
+	// scene parked them against a seat when the events went past, and this only says when the seat
+	// is up. See combat_signal.go, and takeSignalSeat below.
+	signalsSent bool
+
 	// shakeRings are worn seats that shake as this item runs without their figure being the one
 	// flying: the echo ring behind an extra landing, which buys a *term* rather than a multiplier
 	// and so has no number of its own in the line.
@@ -534,6 +540,16 @@ func (s *CombatScene) startHandMath(gs *state.GlobalState, e combat.Event) {
 	box.shoutAt = s.handShoutAt(gs)
 
 	s.theatre.mathBox = box
+
+	// **Everything the hand kept back fires now, before the box has run a frame** *(owner's call,
+	// 2026-09-10)*. The sum does not begin until those figures have finished their journey — the
+	// held cards pay, the figures land on the duelist card, and only then does the hand start
+	// counting. `advancePlayback` freezes the box while any signal is up, so releasing them here is
+	// what puts them in front of the shout rather than beside it.
+	//
+	// **Together, because what the turn kept back is one fact about the turn.** A hand holding four
+	// paying cards would otherwise be four pauses in front of a sum that has not started.
+	s.releaseHeldSignals()
 }
 
 // mathScript is the sum as a list of things to write, in the order they appear: a figure per card
@@ -992,6 +1008,27 @@ func (b *handMathBox) takeShields() (int, bool) {
 	}
 	it.shieldsFlown = true
 	return it.shields, true
+}
+
+// takeSignalSeat hands back the played seat of the item now running, once, so whatever its riders
+// parked can be thrown on the beat that card's own figure sets off.
+//
+// **It is takeShields with a different payload**, and deliberately the same shape: a card's shields
+// and a card's signals are two things one card did, and staggering either against the figure would
+// make it read as a consequence of the sum rather than of the card.
+func (b *handMathBox) takeSignalSeat() (int, bool) {
+	if !b.active || b.at >= len(b.items) {
+		return 0, false
+	}
+	it := &b.items[b.at]
+	if it.signalsSent {
+		return 0, false
+	}
+	it.signalsSent = true
+	if it.cardSeat <= 0 {
+		return 0, false
+	}
+	return it.cardSeat - 1, true
 }
 
 // runningSeat is the played seat the item now running belongs to, and false for an item that

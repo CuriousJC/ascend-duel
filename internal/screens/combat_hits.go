@@ -186,13 +186,18 @@ func (s *CombatScene) blowSeat(e combat.Event) int {
 // KindDamage cannot be reached until the first is finished and dropped. Relying on that here would
 // mean this function quietly breaks the day the hold is shortened or a kind starts flying two
 // figures — and it would break as a bar showing a life nobody has, which is hard to attribute.
+// **A rider's grant is added to whichever answer comes back** *(2026-09-10)*. Life a heal or a
+// golden card put on is not in `actual` yet — the screen's copy of the duelist does not take it up
+// until `endOfRound` — so it rides on top of both branches, and it is zero until the figure that
+// carries it has landed. See signalShown, which is this idea pointing the other way.
 func (s *CombatScene) shownLife(side combat.Side, actual int) int {
+	granted := s.theatre.shownFor(side).life
 	for _, h := range s.theatre.hits {
 		if h.target == side && !h.arrived() {
-			return h.held
+			return h.held + granted
 		}
 	}
-	return actual
+	return actual + granted
 }
 
 // drawHits writes every figure at wherever it has got to.

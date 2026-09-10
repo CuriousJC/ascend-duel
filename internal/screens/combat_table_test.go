@@ -128,7 +128,7 @@ func TestTheTableSitsBetweenTheRingRowAndTheFeed(t *testing.T) {
 
 	// Below the top row, whose lowest ink is the row of ring cards itself. **The rule and the
 	// count used to hang under it and moved into the caption column on 2026-09-04**, which is the
-	// 44 pixels that let the card grow to five quarters — see ringPaneRect.
+	// 44 pixels that let the card grow to its present size — see ringPaneRect.
 	ringBottom := s.ringPaneBackRect(gs).Max.Y
 	if top < ringBottom {
 		t.Errorf("the table starts at y=%d, into the ring row's count ending at y=%d", top, ringBottom)

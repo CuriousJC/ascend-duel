@@ -209,7 +209,7 @@ func (st Style) NameLinesAbove(floor, lineHeight int) int {
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
-// for. 162x224 — roughly a playing card's proportions, a little squarer than one.
+// for. 200x280 — five by seven, exactly a playing card's proportions.
 //
 // **It was 180x264 until 2026-08-11**, when every size came down by a tenth across and by
 // 15% down the face to give the screen back some room. The y offsets below did *not* scale
@@ -256,18 +256,18 @@ func (st Style) NameLinesAbove(floor, lineHeight int) int {
 // under a badge. What it costs is measure — 128 pixels, and the wording has to be short words.
 // `TestEveryCardTextFitsItsBand` holds the line count against the band and
 // `TestNoEffectTextWordIsWiderThanItsColumn` holds each word against the measure.
-var handAuthored = Style{
-	Width: 162, Height: 224,
+var Hand = Style{
+	Width: 200, Height: 280,
 
-	CornerRadius: 12,
-	BorderWidth:  3,
+	CornerRadius: 15,
+	BorderWidth:  4,
 
 	ShowName: true,
 	ShowForm: true,
 
-	TextLeft:     12,
-	NameTop:      14,
-	NameSize:     20,
+	TextLeft:     15,
+	NameTop:      18,
+	NameSize:     25,
 	NameCentered: true,
 
 	// The mark is centred on its ink in this box, so the box is what the layout tests hold.
@@ -276,32 +276,35 @@ var handAuthored = Style{
 	// placed at 0,0 is cropped by the card's own curve, which a silhouette survives — it loses a
 	// corner and still reads as itself — but which costs a mark carrying detail its top-left
 	// quarter. The clip in blitGlyph still applies; this is the box moving, not the crop going.
-	FormTop:  8,
+	//
+	// **FormSize is 32 because that is what the art is**, not because it is a proportion of the
+	// card: the four form marks are PNGs authored at 32x32 — see systems.formArtSize — and a box
+	// asking for more would upsample a one-pixel rim. The box around it is free to move; this
+	// number is not, until the marks are re-exported.
+	FormTop:  10,
 	FormSize: 32,
 
-	// **Half the height and a quarter longer, 2026-08-23** *(owner's call)*. 13x8 was a bar; 16x4
-	// is a tick, and four of them stack in 31 pixels where they used to take 47 — so the cost
-	// column ends higher up the face without its top edge moving. The gap holds at 5, which is
-	// what keeps four ticks reading as four rather than as a hatched block.
+	// The cost ticks, hamburger-style, under the form mark. A tick rather than a bar: four of
+	// them have to stack without reading as a hatched block, which is what the gap holds.
 	//
-	// **16 is the width the column has, not a round number.** DashLeft is 8 and TextColumnLeft is
-	// 26, so 18 is the wall; TestTheCostColumnStaysOutOfTheTextColumn is what fails on a wider
+	// **20 is the width the column has, not a round number.** DashLeft is 10 and TextColumnLeft
+	// is 33, so 23 is the wall; TestTheCostColumnStaysOutOfTheTextColumn is what fails on a wider
 	// one, and widening past it means moving the text column rather than nudging this.
-	DashLeft:   8,
-	DashTop:    48,
-	DashWidth:  16,
-	DashHeight: 4,
-	DashGap:    5,
+	DashLeft:   10,
+	DashTop:    60,
+	DashWidth:  20,
+	DashHeight: 5,
+	DashGap:    6,
 
 	GlyphScale: 1,
-	GlyphInset: 10,
+	GlyphInset: 13,
 
-	TextColumnLeft: 26,
-	TextInset:      8,
-	TextBandTop:    44,
-	TextBandBottom: 214,
-	TextSize:       18,
-	TextLineHeight: 22,
+	TextColumnLeft: 33,
+	TextInset:      10,
+	TextBandTop:    55,
+	TextBandBottom: 268,
+	TextSize:       22.5,
+	TextLineHeight: 28,
 }
 
 // TextLines is how many lines of effect text the band holds at this style's line height.
@@ -389,7 +392,7 @@ func (st Style) Scaled(num, den int) Style {
 	return out
 }
 
-// Mini is the deck overlay's card: **Hand at exactly half size**, 81x112.
+// Mini is the deck overlay's card: **Hand at exactly half size**, 100x140.
 //
 // **It is derived rather than authored** *(2026-08-23)*. See Scaled for what that fixed and why
 // the owner asked for it. The consequence to know: there is no longer a place to tune the small
@@ -401,60 +404,21 @@ func (st Style) Scaled(num, den int) Style {
 // text lands at 9pt in a 64-pixel measure. The panel is a list of what you own rather than a
 // place cards are played from, so the name and the mark carry it; look at `tools/cardsheet`
 // before assuming the sentence can be read.
-// The face is drawn at five quarters of the size it is authored at.
+// The card is 200x280 — five by seven, a playing card's proportions.
 //
-// **The screen went to 1920x1080 on 2026-09-04 and the card did not follow on its own**
-// *(owner's call)*. Every offset in this file is absolute, so a wider screen leaves the card
-// exactly the size it was and simply puts more space around it — and because Layout's buffer
-// used to be stretched by 1.125 to reach a 1080p window and now is not, an unchanged card would
-// have come out *smaller* on the same monitor than it was before the change. Five quarters puts
-// it about a tenth larger than it used to read, which is the direction the extra room was for.
+// **Every number in this file is the number that is drawn**, and a card size is changed by
+// editing these rather than by multiplying them on the way out. A scale between the authored
+// figure and the drawn one makes the border width and the corner radius rounding artifacts
+// nobody chose, and every asset drawn at the card's real size — the form marks, the ring art —
+// then needs an exemption from it.
 //
-// **Five quarters is what the combat screen's vertical stack allows once the floor-and-room
-// caption is out of it.** The width was never the binding constraint — a hand of eight fits flat
-// well past this. The height is: that screen stacks three card heights — the top row, the table row
-// and the hand — plus the furniture above, between and below them. The caption used to hang under
-// the duelist card and cost 54 pixels of that budget, which capped the card at 266 and put this at
-// seven sixths for about an hour on the day of the change. Moving it beside the card instead —
-// there is room at 1920 and there was none at 1280 — leaves `3h + 200 <= 1080`, so the cap is 293
-// and 280 clears it by 13. Three halves still overruns, by 82.
+// **The height is what fixes the size, and 280 is near the ceiling.** The combat screen stacks
+// three card heights — the top row, the table row and the hand — plus the furniture above,
+// between and below them, leaving `3h + 200 <= 1080`. The cap is 293 and 280 clears it by 13.
+// The width has never been the binding constraint: a hand of eight fits flat well past this.
 //
-// **The other thing that had to give was the direction the screen is measured in.** The hand was
-// pinned at a percentage from the top with everything below derived downwards, so the top-down
-// chain and the fixed line along the bottom edge only agreed at one screen height and one card
-// size. `handTop` now measures up from the bottom edge and the slack lands above the hand, which
-// is what makes the card size a free choice rather than a hunt for a percentage that lands.
-
-// **`Style.Scaled` was already here and is what makes this one number rather than thirty.** It
-// existed for `Mini`, which is `Hand` halved; the same rounding applies, so nothing in this file
-// had to be re-derived by hand.
-const cardScaleNum, cardScaleDen = 5, 4
-
-// atCardScale is the authored style as it is actually drawn.
-//
-// **It puts `FormSize` back afterwards** *(owner's call, 2026-09-04)*. The four form marks are
-// drawn PNGs authored at 32x32 — see systems.glyphArt — and `RenderGlyphAt` resamples drawn art
-// to whatever size the box asks for, so scaling the field would silently upscale a 32-pixel mark
-// carrying a one-pixel rim to 40. Until they are re-exported at the size the bigger card wants,
-// the mark renders at its own size and `placeInk` centres it in the corner: proportionally
-// smaller on the face, and sharp rather than soft. The box around it still moves with the card,
-// which is what makes the gap visible instead of hidden.
-func atCardScale(st Style) Style {
-	out := st.Scaled(cardScaleNum, cardScaleDen)
-	out.FormSize = st.FormSize
-	return out
-}
-
-// The eight faces the game draws, each at the scale above.
-var (
-	Hand         = atCardScale(handAuthored)
-	Stack        = stackOf(Hand)
-	EnemyStyle   = atCardScale(enemyAuthored)
-	DuelistStyle = atCardScale(duelistAuthored)
-	WormStyle    = atCardScale(wormAuthored)
-	RingStyle    = atCardScale(ringAuthored)
-	Token        = centringItsMark(atCardScale(tokenAuthored))
-)
+// **`Style.Scaled` stays**, because Mini and Stack are genuinely derived sizes and a field added
+// to Hand has to reach them without anyone remembering to halve it.
 
 // centringItsMark puts the glyph inset back on the centre line of a card that has no text column
 // to line a mark up against.
@@ -469,6 +433,12 @@ func centringItsMark(st Style) Style {
 }
 
 var Mini = Hand.Scaled(1, 2)
+
+// Stack is the draw pile's card, derived from Hand — see stackOf.
+var Stack = stackOf(Hand)
+
+// Token is the hands panel's card, centred on its mark — see tokenBase and centringItsMark.
+var Token = centringItsMark(tokenBase)
 
 // Stack is the draw pile's card: a back, and nothing else, at **three quarters of Hand**
 // *(2026-09-04, owner's call)*.
@@ -505,12 +475,12 @@ func stackOf(st Style) Style {
 //
 // The face reads top to bottom: name, portrait, bar, numbers.
 //
-//	 12  name              centred   (12..36 at 20pt)
-//	 44  portrait          44..156   (Spec.Art, scaled to fit and centred)
-//	161  health bar        161..175
-//	180  hit points        "42/60", centred
-//	197  status badges     197..217  (Spec.Effects, a centred row)
-//	218  inside of the bottom border
+//	 15  name              centred   (15..46 at 25pt)
+//	 55  portrait          55..195   (Spec.Art, scaled to fit and centred)
+//	201  health bar        201..219
+//	225  hit points        "42/60", centred
+//	246  status badges     246..271  (Spec.Effects, a centred row)
+//	272  inside of the bottom border
 //
 // **The badges are on this card and not the duelist's** *(2026-08-16)*, which breaks the
 // twins rule everywhere except where that rule actually bites — the bar and the fraction are
@@ -521,7 +491,7 @@ func stackOf(st Style) Style {
 // per shield. The band is at the same offsets on both cards, so the two still read as twins.
 //
 // **The strip they sit in is what was left, not what was wanted.** The fraction's ink ends
-// around y=197 at 18pt and the border starts at 218, so the badges get twenty pixels — small
+// around y=246 and the border starts at 272, so the badges get twenty-five pixels — small
 // for a 500-pixel drawing, and legible because what a badge has to say is a colour and a rough
 // shape rather than a picture. `TestStatusBadgesClearTheHealthTextAndTheBorder` holds both
 // ends of that strip; making them bigger means moving the fraction on *both* fighter cards.
@@ -545,33 +515,33 @@ func stackOf(st Style) Style {
 // damage badge — for the same reason RingStyle does: none of them are things an enemy card
 // is. `Element` is Basic, so the border is the neutral mid grey rather than claiming the
 // opponent is made of fire.
-var enemyAuthored = Style{
-	Width: 162, Height: 224,
+var EnemyStyle = Style{
+	Width: 200, Height: 280,
 
-	CornerRadius: 12,
-	BorderWidth:  3,
+	CornerRadius: 15,
+	BorderWidth:  4,
 
 	ShowName: true,
 	ShowForm: false,
 
-	TextLeft:     12,
-	NameTop:      12,
-	NameSize:     20,
+	TextLeft:     15,
+	NameTop:      15,
+	NameSize:     25,
 	NameCentered: true,
 
-	ArtTop:   44,
-	ArtInset: 12,
-	ArtMaxH:  112,
+	ArtTop:   55,
+	ArtInset: 15,
+	ArtMaxH:  140,
 
-	HealthBarInset:  12,
-	HealthBarTop:    161,
-	HealthBarHeight: 14,
-	HealthTextTop:   180,
-	HealthTextSize:  18,
+	HealthBarInset:  15,
+	HealthBarTop:    201,
+	HealthBarHeight: 18,
+	HealthTextTop:   225,
+	HealthTextSize:  22.5,
 
-	EffectSize: 20,
-	EffectTop:  197,
-	EffectGap:  6,
+	EffectSize: 25,
+	EffectTop:  246,
+	EffectGap:  8,
 }
 
 // DuelistStyle is the player, in the card format *(2026-08-12)*.
@@ -585,14 +555,14 @@ var enemyAuthored = Style{
 //
 // The face reads top to bottom: name, stat rows, bar, numbers.
 //
-//	 14  name              centred   (14..38 at 20pt)
-//	 56  DMG               56..77     label left, figure right
-//	 86  AP                86..107
-//	116  Vitae            116..137
-//	161  health bar        161..175
-//	180  hit points        "42/60", centred
-//	197  shield pips       197..217  (Spec.Effects, a centred row)
-//	218  inside of the bottom border
+//	 18  name              centred   (18..48 at 25pt)
+//	 70  DMG               70..96     label left, figure right
+//	108  AP               108..134
+//	146  Vitae            146..172
+//	201  health bar        201..219
+//	225  hit points        "42/60", centred
+//	246  shield pips       246..271  (Spec.Effects, a centred row)
+//	272  inside of the bottom border
 //
 // **The shield row is the enemy's badge row, seat for seat** *(2026-08-31)*. It holds five, which
 // is `combat`'s cap on a duelist's shields for the same reason — a turn is five cards, so a sixth
@@ -610,33 +580,33 @@ var enemyAuthored = Style{
 // mid grey — the same as the enemy's, since neither card is made of an element. If the two
 // corners ever need telling apart by colour, that is one entry in the Element enum and not a
 // change here.
-var duelistAuthored = Style{
-	Width: 162, Height: 224,
+var DuelistStyle = Style{
+	Width: 200, Height: 280,
 
-	CornerRadius: 12,
-	BorderWidth:  3,
+	CornerRadius: 15,
+	BorderWidth:  4,
 
 	ShowName: true,
 	ShowForm: false,
 
-	TextLeft:     12,
-	NameTop:      14,
-	NameSize:     20,
+	TextLeft:     15,
+	NameTop:      18,
+	NameSize:     25,
 	NameCentered: true,
 
-	StatsTop:     56,
-	StatRowPitch: 30,
-	StatSize:     17,
+	StatsTop:     70,
+	StatRowPitch: 38,
+	StatSize:     21.25,
 
-	HealthBarInset:  12,
-	HealthBarTop:    161,
-	HealthBarHeight: 14,
-	HealthTextTop:   180,
-	HealthTextSize:  18,
+	HealthBarInset:  15,
+	HealthBarTop:    201,
+	HealthBarHeight: 18,
+	HealthTextTop:   225,
+	HealthTextSize:  22.5,
 
-	EffectSize: 20,
-	EffectTop:  197,
-	EffectGap:  6,
+	EffectSize: 25,
+	EffectTop:  246,
+	EffectGap:  8,
 }
 
 // WormStyle is a worm, in the card format *(2026-08-22)*.
@@ -654,36 +624,35 @@ var duelistAuthored = Style{
 // **The art is a placeholder for every worm today.** `Spec.Art` is filled from the shared default
 // image, so the box is the seat the art goes into rather than a box that will have to be invented
 // when there is some.
-var wormAuthored = Style{
-	Width: 162, Height: 224,
+var WormStyle = Style{
+	Width: 200, Height: 280,
 
-	CornerRadius: 12,
-	BorderWidth:  3,
+	CornerRadius: 15,
+	BorderWidth:  4,
 
 	ShowName: true,
 	ShowForm: false,
 
-	TextLeft:     12,
-	NameTop:      14,
-	NameSize:     20,
+	TextLeft:     15,
+	NameTop:      18,
+	NameSize:     25,
 	NameCentered: true,
 
-	// Between the name and the text band. **The band took 36 pixels back on 2026-09-05**, when
-	// effect text went to one word a line and the longest worm needed five of them; what is left
-	// after a line of name above and five lines of text below is a 60-pixel box.
-	ArtTop:   44,
-	ArtInset: 26,
-	ArtMaxH:  60,
+	// Between the name and the text band. What is left after a line of name above and five lines
+	// of text below is a 75-pixel box, which is why the art is the smallest thing on this card.
+	ArtTop:   55,
+	ArtInset: 33,
+	ArtMaxH:  75,
 
 	// The full width, unlike Hand — there is no cost column to leave room for. Centred in the band
 	// under the art for the same reason Hand centres in its own: a one-line worm and a two-line one
 	// should look like the same card.
-	TextColumnLeft: 12,
-	TextInset:      8,
-	TextBandTop:    112,
-	TextBandBottom: 212,
-	TextSize:       17,
-	TextLineHeight: 20,
+	TextColumnLeft: 15,
+	TextInset:      10,
+	TextBandTop:    140,
+	TextBandBottom: 265,
+	TextSize:       21.25,
+	TextLineHeight: 25,
 }
 
 // RingStyle is a ring, in the card format.
@@ -695,37 +664,33 @@ var wormAuthored = Style{
 //
 // **Not wired into the game.** Nothing builds one of these yet — it exists so the design
 // can be looked at on the contact sheet before rings become real.
-var ringAuthored = Style{
-	Width: 162, Height: 224,
+var RingStyle = Style{
+	Width: 200, Height: 280,
 
-	CornerRadius: 12,
-	BorderWidth:  3,
+	CornerRadius: 15,
+	BorderWidth:  4,
 
 	ShowName: true,
 	ShowForm: false,
 
-	TextLeft:     12,
-	NameTop:      14,
-	NameSize:     20,
+	TextLeft:     15,
+	NameTop:      18,
+	NameSize:     25,
 	NameCentered: true,
 
 	// **One word to a line** *(2026-08-21)*, which is what buys the art box below its room:
-	// a two-word ring is two lines of 20pt, and 22 is that size plus the gap that keeps two
+	// a two-word ring is two lines of 25pt, and 28 is that size plus the gap that keeps two
 	// capitals from touching.
 	NameWordPerLine: true,
-	NameLinePitch:   22,
+	NameLinePitch:   28,
 
-	// Scaled with the card, like the enemy's: the artwork is fitted to this box rather than
-	// drawn at its own size, so there is nothing here that a smaller card breaks.
-	//
-	// **The box moved down and shrank when names went to two lines**, from 46..206 to 62..192,
-	// and the art did not move: it is square, so its height was already set by the 130-pixel
-	// width of the box rather than by ArtMaxH, and it was already being centred at about 61.
-	// What changed is that the box now states that, which is what lets a test hold a two-line
-	// name off it.
-	ArtTop:   62,
-	ArtInset: 16,
-	ArtMaxH:  120,
+	// The artwork is fitted to this box rather than drawn at its own size. **The art is square, so
+	// its height is set by the 160-pixel width of the box rather than by ArtMaxH**; what ArtMaxH
+	// does is state the floor a two-line name has to clear, which is what TestARingNameClearsItsArt
+	// holds it to.
+	ArtTop:   78,
+	ArtInset: 20,
+	ArtMaxH:  150,
 
 	// The accumulator figure, on a disc **tucked into the bottom-right corner** — flush to both
 	// edges, so the disc's own curve meets the card's rather than sitting a margin inside it. That
@@ -733,29 +698,24 @@ var ringAuthored = Style{
 	// silhouette: a circle tangent to both edges overlaps the corner curve unless its radius
 	// happens to equal the card's, and an unclipped one would square the corner off.
 	//
-	// **The band is what pays for the figure, and the art pays for the band** *(owner’s call,
-	// 2026-09-09)*. It was 15pt in a 22-pixel band, which is a number a player has to lean in to
-	// read on the one card whose whole job is to be read at a glance — this is the ring saying
-	// how big it has grown. The art is square and fitted, so ten pixels off ArtMaxH is ten pixels
-	// off every side of it and nothing else on the card moves; the box ends at 182 and the disc
-	// starts at 196, so the two still do not meet.
-	//
-	// **These are authored numbers and Scaled multiplies them**, so the 14 here is a 35-pixel disc
-	// on the drawn card and the 21 is a 26pt figure in it — which is the discards-left badge's own
-	// type size, on a disc a little larger than its 34.
+	// **The band is what pays for the figure, and the art pays for the band** *(owner's call,
+	// 2026-09-09)*. This is the ring saying how big it has grown, on the one card whose whole job
+	// is to be read at a glance, so it is set large enough not to be leaned into. The art is square
+	// and fitted, so trimming ArtMaxH trims every side of it and nothing else on the card moves;
+	// the box ends at 228 and the disc starts at 245, so the two still do not meet.
 	//
 	// **Only rings have one**, because only rings grow. Nothing else on the card is displaced by
 	// it: the corner it takes was empty on every ring in the file.
-	CounterHeight: 28,
+	CounterHeight: 35,
 	CounterRight:  0,
 	CounterBottom: 0,
-	CounterSize:   21,
-	CounterRadius: 14,
+	CounterSize:   26.25,
+	CounterRadius: 18,
 
-	// Enough for the disc’s overhang and for the widest figure past it: `+100` is about
-	// forty pixels centred on the corner, so twenty-two is the half of that rather than the
-	// radius. A figure wider than the bleed is pulled back inside it rather than cut.
-	Bleed: 22,
+	// Enough for the disc's overhang and for the widest figure past it: the disc is 36 across and
+	// centred on the corner, so this is a little over the half of it. A figure wider than the bleed
+	// is pulled back inside it rather than cut.
+	Bleed: 28,
 }
 
 // Token is a card reduced to the three things a hand is counted on: its **element**, its
@@ -763,11 +723,11 @@ var ringAuthored = Style{
 // its area — and it carries no name, no effect text and no picture.
 //
 // **It is authored rather than derived, and that is the one place it departs from Mini's rule**
-// *(2026-08-24)*. `Hand.Scaled(1, 4)` gives an 8px form mark and a 4x1 tick, which is a mark
-// with its detail averaged away and a tick that reads as a scratch — the same floor the glyph
-// rules describe. The mark therefore stays at Mini's 16, which the drawn art can be halved to
-// twice and still be read, and the ticks stay at Hand's own 16x4. **So this is not a small card;
-// it is a different object**, which is why deriving it would be claiming something untrue.
+// *(2026-08-24)*. A quarter of Hand gives an 8px form mark and a 5x1 tick, which is a mark with
+// its detail averaged away and a tick that reads as a scratch — the same floor the glyph rules
+// describe. The mark therefore stays at Mini's 16, which the drawn art can be halved to twice and
+// still be read, and the ticks stay at Hand's own 20x5. **So this is not a small card; it is a
+// different object**, which is why deriving it would be claiming something untrue.
 //
 // **The left column, standing on its own.** Everything it draws — a tinted form mark with the
 // cost ticks under it — is exactly what a Hand card puts down its left edge, so a row of these
@@ -775,30 +735,29 @@ var ringAuthored = Style{
 // for except by that column moving.
 //
 // The hands panel is the caller: eighteen rungs, each shown as the cards that build it, is a
-// hundred-odd cards on one screen, and at Mini's 81x112 that is a panel of cards with no room
+// hundred-odd cards on one screen, and at Mini's 100x140 that is a panel of cards with no room
 // left for the ladder.
-var tokenAuthored = Style{
-	Width: 40, Height: 56,
+var tokenBase = Style{
+	Width: 50, Height: 70,
 
-	CornerRadius: 6,
-	BorderWidth:  2,
+	CornerRadius: 8,
+	BorderWidth:  3,
 
 	ShowName: false,
 	ShowForm: true,
 
-	// Centred rather than in the corner: with no text column to the right of it there is
-	// nothing for a left-aligned mark to line up with, the same reason a ring centres its name.
-	FormTop:    6,
-	FormSize:   16,
-	GlyphInset: (40 - 16) / 2,
-	GlyphScale: 1,
+	// **The mark stays at 16 and the ticks at Hand's own footprint**, which is the whole reason
+	// this style is written out rather than derived: a quarter of Hand gives an 8px mark with its
+	// detail averaged away and a tick that reads as a scratch.
+	FormTop:  8,
+	FormSize: 16,
 
-	// Hand's own tick, centred under the mark. The gap is 3 rather than 5 so a four-point card
-	// still lands its fourth tick inside the border — TestATokenHoldsFourTicks is what fails if
-	// it stops doing that, and drawDashes would otherwise drop the tick silently.
-	DashLeft:   (40 - 16) / 2,
-	DashTop:    26,
-	DashWidth:  16,
-	DashHeight: 4,
-	DashGap:    3,
+	DashLeft:   15,
+	DashTop:    33,
+	DashWidth:  20,
+	DashHeight: 5,
+	DashGap:    4,
+
+	GlyphScale: 1,
+	GlyphInset: 17,
 }

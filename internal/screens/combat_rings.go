@@ -133,7 +133,7 @@ func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle 
 // **The row is exactly a card deep** *(2026-09-04)*. It used to reserve a gap under itself for a
 // rule with the worn count beneath it; the rule is gone and the count hangs off the backing's
 // corner, so the pane ends where the cards do. That is 44 pixels the top band gives back, which is
-// what let the card grow to five quarters — see cardScaleNum in internal/cards/style.go.
+// what let the card grow to its present height — see Hand in internal/cards/style.go.
 func (s *CombatScene) topRowPanes(gs *state.GlobalState) (rings, consumables image.Rectangle) {
 	left, right := ringRowSpan(gs)
 	return topRowPanes(left, right, duelistCardRect(gs).Min.Y+ringPaneTopDrop)

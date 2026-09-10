@@ -108,7 +108,7 @@ func shopSeatTotal() int {
 //
 // **Capped at the row's own comfortable gap**, like every other row in the game: a shelf that
 // spread to whatever it was given would stop reading as one shelf. The cap does not bite today —
-// nine seats solve to about 184 against a 203-pixel card — and it is what keeps the row honest if a
+// nine seats solve to about 184 against a 200-pixel card — and it is what keeps the row honest if a
 // pane is ever taken off it.
 func shopPitch(gs *state.GlobalState) int {
 	n := len(shopPaneOrder())

@@ -36,7 +36,7 @@ import "image"
 // DissolveCellSize is the side of one square of the grid, in pixels.
 //
 // **Small enough that the edge reads as ragged and large enough that a card is not a thousand draw
-// calls.** At 9 pixels a 162x224 card is 18 by 25 squares, which is 450 quads a frame per face —
+// calls.** At 9 pixels a 200x280 card is 22 by 31 squares, which is 682 quads a frame per face —
 // nothing to a GPU, and fine enough that the boundary between the old card and the new one looks
 // torn rather than pixellated.
 const DissolveCellSize = 9

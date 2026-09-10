@@ -104,7 +104,7 @@ func TestTheRingRowSitsBelowTheCardsBesideIt(t *testing.T) {
 
 	// **The row is exactly a card deep** *(2026-09-04)*. It used to be a card plus ringRuleGap,
 	// reserving room under itself for the rule and the worn count; both moved into the caption
-	// column beside the duelist card, which is the height that let the card grow to five quarters.
+	// column beside the duelist card, which is the height that let the card grow to its present size.
 	if want := cards.RingStyle.Height; rings.Dy() != want {
 		t.Errorf("the ring row is %dpx tall, want %d — exactly a ring card", rings.Dy(), want)
 	}

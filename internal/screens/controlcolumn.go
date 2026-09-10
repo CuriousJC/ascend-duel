@@ -53,7 +53,11 @@ const (
 	// at 18, so this is the label with half again around it. A control taking a card's width to
 	// carry one word reads as a pane rather than a button, which is what these two open rather
 	// than what they are.
-	ControlButtonWidth = 200
+	//
+	// **It was 200 and the column was 203**, which is three pixels of a distinction nobody could
+	// see and is not what the paragraph above asks for. TestThePanelButtonsStackUpFromTheAPBar only
+	// caught it when the card came down to 200 and the two became equal.
+	ControlButtonWidth = 120
 
 	// sortTabWidth is the block's width, and it is the enemy card's so the block, the cards it
 	// arranges and the corner above it are one measure.

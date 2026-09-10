@@ -26,7 +26,7 @@ import (
 // and no keyboard anywhere in this game.
 const (
 	// The card is a fixed portrait rectangle and nothing inside it may change that.
-	// 162x224 is roughly a playing card's proportions, and it is written here as two plain
+	// 200x280 is exactly a playing card's proportions, and it is written here as two plain
 	// numbers on purpose: cardWidth used to be *derived* from the glyph row, so adding a
 	// badge silently widened every card in the game and the layout could not be reasoned
 	// about without doing the arithmetic. The contents now fit the card, never the reverse.
@@ -35,15 +35,17 @@ const (
 	// screen back some room. It has to stay equal to cards.Hand's footprint — that package
 	// draws the picture and this one places it — and TestCardFootprintMatchesTheRenderer is
 	// what says so.
-	// **Up a quarter on 2026-09-04**, from 162x224, following cards.Hand — see
-	// cardScaleNum in internal/cards/style.go for why the face grew when the screen went to
+	// **Up a quarter on 2026-09-04**, from 162x224, following cards.Hand when the screen went to
 	// 1920x1080. The gap went 12 to 15 with it, so a row of cards keeps the same rhythm rather than
 	// becoming a denser one; the pair is what handPitch measures a hand of eight against.
+	//
+	// **200x280 since 2026-09-10** — five by seven, a playing card's proportions, and the size the
+	// styles are now written in rather than scaled to.
 	//
 	// **Still two plain numbers rather than a read of cards.Hand.Width**, for the reason above:
 	// deriving them would make TestCardFootprintMatchesTheRenderer tautological, and that test is
 	// the only thing standing between the picture and the placement drifting apart.
-	cardWidth  = 203
+	cardWidth  = 200
 	cardHeight = 280
 	cardGap    = 15
 

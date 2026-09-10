@@ -64,7 +64,7 @@ const topRowPaneGap = 2 * ringPaneGap
 // row that spread to whatever it was given stopped reading as one build.
 //
 // **Overlap is the expected result on the combat screen and it is fine** *(owner's call)*. Between
-// the two fighter cards the span is 1443, which gives a pitch of 201 against a 203-pixel card — the
+// the two fighter cards the span is 1443, which gives a pitch of 201 against a 200-pixel card — the
 // two-pixel overlap the row closes up by rather than shrinking a card that cannot be shrunk. On the
 // shop and the reward screen there is no opponent card, the span is 1662, and the cap bites first,
 // so nothing overlaps at all.

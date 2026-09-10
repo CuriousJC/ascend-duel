@@ -336,7 +336,7 @@ func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image)
 // **It is under the tower place because it is the same kind of fact.** Where you are and how long
 // you have got are both the frame around the fight rather than parts of it, and the left column is
 // already one thing: who you are, where you are, what is left to draw. It goes below the two lines
-// rather than beside them because the column is only 203 pixels wide.
+// rather than beside them because the column is only 200 pixels wide.
 //
 // **It is segments, not a sliding fill, and that is the whole design.** A round is a discrete
 // thing the player spends, so what they need read off the bar is a count — three cells dark, two
@@ -409,7 +409,7 @@ func (s *CombatScene) drawRoundTimer(gs *state.GlobalState, screen *ebiten.Image
 	spent := s.roundTimerSpent(limit)
 
 	// **The cells are laid out by their own edges rather than by a width times an index**, so the
-	// rounding left over from dividing 203 pixels by five lands in the gaps instead of leaving the
+	// rounding left over from dividing 200 pixels by five lands in the gaps instead of leaving the
 	// last cell short of the column it is supposed to end at.
 	for i := 0; i < limit; i++ {
 		x0 := r.Min.X + i*r.Dx()/limit

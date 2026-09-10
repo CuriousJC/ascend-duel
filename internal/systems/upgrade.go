@@ -363,3 +363,21 @@ func decodeInk(key string) *image.RGBA {
 	draw.Draw(out, out.Bounds(), src, b.Min, draw.Src)
 	return out
 }
+
+// UpgradeTint is the flat colour an upgrade is identified by, for a caller that wants the colour
+// without the ink square UpgradeInk hands out.
+//
+// **It exists so a signal on the combat screen is drawn in the colour of the rider that threw it**
+// *(2026-09-10)* — see screens.cardSignal. A firework in a colour of its own would be a second
+// vocabulary for something the card face already says, and the two would drift the first time a
+// placeholder tint was retuned.
+//
+// **The metals answer with their sheen's own colour**, since those two are pictures rather than
+// flat tints and the sheen is what the card is washed in. UpgradeNone and anything unlisted answer
+// with a zero colour, which a caller checks the same way it checks UpgradeInk for nil.
+func UpgradeTint(u Upgrade) color.RGBA {
+	if c, ok := upgradeSheen[u]; ok {
+		return c
+	}
+	return upgradeTint[u]
+}

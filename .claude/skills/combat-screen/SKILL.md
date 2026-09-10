@@ -472,6 +472,92 @@ between them.
   that would break the day the hold is shortened, and it would break as a bar showing a life nobody
   has, which is hard to attribute.
 
+### A card that fires says so: the signal widget
+
+*`combat_signal.go`, 2026-09-10.* A rider firing used to be **completely silent**. A golden card
+came up on its one face in five, the run gained a permanent point of DMG, and the screen drew
+nothing at all — no figure, no mark, no line. The choreography table had said `KindGrantedDMG`,
+`KindGrantedLife` and `KindHealed` flew from the acting seat to the acting card since the day those
+kinds landed, and nothing ever drew one. This is that promise kept, plus the vocabulary the table
+had no word for.
+
+**Two halves, and the burst is the new one.**
+
+- **The burst** is the firework: rays thrown out of the card that fired. It is an *emphasis at the
+  source*, not a journey, which is why it is deliberately **not a `gesture` in the theatre table** —
+  it composes with whatever row that table already has, and that is what lets the next thing wanting
+  fireworks (a scored card, a ring firing) reuse it without the table growing a row per decoration.
+  A `gestureBurst` is worth adding the day something bursts and sends nothing anywhere.
+- **The flight** is the figure travelling into the figure it changed: the DMG row, the VITAE row or
+  the health bar. The rows come off `cards.DuelistStyle`'s own `StatsTop`/`StatRowPitch` rather than
+  from constants typed here, so a card that re-lays out moves the target with it.
+
+**A signal is drawn in the tint of the rider that threw it** — `upgradeForRider` into
+`systems.UpgradeTint`, the same table the card's own face is washed with. The wheel is full, so a
+hue of its own would be claiming one; and the burst then matches the card it comes out of, so the
+two read as one object rather than as a card and an effect near it. Gold sparks for a gold card,
+silver for silver, sparks and figure alike — **one card, one colour, burst to landing**.
+
+**`RiderVitaeInHand` is the one exception, and it is the game's rather than this widget's.**
+`vitaeInk` is the crimson vitae is written in everywhere it is written, and it is the only red on
+the table precisely so a figure in it says "money" before it is read; that rider's whole subject is
+vitae, so its placeholder blue-grey was the one tint saying the wrong thing. **Silver is deliberately
+not swept up in it** although it also pays the purse: what a silver card says is that the *metal*
+came up, and the row it lands on is already crimson without the figure agreeing. The core of a burst
+is lifted only a quarter toward white for the same reason — at more than half, a pale tint like
+silver's put a white disc back in the middle of the thing that had just stopped being one.
+
+**When they fire took the real decision.** Riders resolve *before* the attack phase — `playTurn`
+runs chill, then riders, then the blow — so every one of these events sits in the log ahead of
+`KindHand` and the sum. Drawing them where they sit would put four fireworks up before the hand was
+named. So the screen defers *(owner's call, 2026-09-10)*:
+
+- **Every held card signals first, and the sum does not begin until they have landed** *(owner's
+  call, 2026-09-10)*. `startHandMath` calls `releaseHeldSignals` after building the box and before
+  it has run a frame; `advancePlayback` freezes the box while any signal is up, so the held figures
+  fly to the duelist card and only then does the hand start counting. Together, because what the
+  turn kept back is one fact about the turn rather than several about cards.
+- **Then each played card signals as it scores**, released by `handMathBox.takeSignalSeat` on the
+  beat that card's own term starts. That is **`takeShields` generalised** — a defend card's pips
+  already leave with its figure for the same reason.
+- **The resolver was not reordered to achieve this.** A heal arriving before the blow is a rules
+  decision with its own argument in `playRiders`. The screen owns when it draws; the log owns what
+  happened.
+- **A turn that never scores flushes at the boundary** — the acting side changing, or the round
+  ending. A hand of nothing but defences forms no hand, so there is no sequence to hang anything on;
+  `noteShieldRaise` keeps the same fallback for pips.
+
+**Every signal holds the playback cursor** *(owner's call: every signal of a card firing holds)*,
+including inside the sum — the box waits on `running(theatre.signals)` before its next term.
+
+**`signalShown` is `shownLife`'s idea pointing the other way.** A damage figure lands on a life the
+model has already spent, so the drawing lags. A grant lands on a figure the screen's copy of the
+duelist does not hold until `endOfRound`, so the drawing *leads*: the tally grows when a figure
+arrives and `theatre.adopted()` drops it on the frame the authoritative duelists are taken up.
+`duelistSpec` therefore takes DMG and MaxLife as arguments too, for the reason it already took life.
+
+**`combat.Event.Rider` was added for this** *(2026-09-10)*, on `Event.Ring`'s argument: the thing
+that caused this is something the player can see and nothing else on the event could name it. Two
+riders emit `KindVitae` — a played `RiderSilver` and a held `RiderVitaeInHand` — and the fight log
+printed **"kept back for N vitae" over a card that had just been played** until the field existed.
+`Event.Slot` is now set on rider events too, so a signal knows its seat rather than guessing from
+the firing list.
+
+**`riderDraws` is the tripwire**, and it is the choreography table's argument one layer down: every
+rider kind says whether it reaches the log, as which kind, and — when it draws nothing — why. An
+absent entry and a deliberate silence read identically in a switch;
+`TestEverySignalRiderIsAccountedFor` walks `combat.RiderKinds()` against the table *and* against
+`noteSignal`, so the two cannot drift.
+
+**The burst pattern is derived from the rider and the seat, never rolled** — the crack pattern's
+rule and the dissolve's, and the explicit exception the `randomness` skill records.
+
+**What is still missing:** gold, silver and the heal write **no line in the fight log**, and the
+vitae line only appears when some earlier row is open — `attach` drops a line when `cur` is -1, and
+rider events arrive before anything on that turn has opened a row. Fixing it means deciding whether
+these `announce` their own line, which is a change to the log's shape rather than to this widget.
+See `internal/scenario`'s `signals` entry for looking at any of it.
+
 ### The round timer under the tower place
 
 *`combat_hud.go`, 2026-09-06.* Every fight lasts five rounds and the duelist still standing at the

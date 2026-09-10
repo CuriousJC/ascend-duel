@@ -1226,7 +1226,25 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// **It still cannot change an outcome.** The round was decided before a frame of this was
 	// drawn; what waits is the drawing of it.
 	if s.theatre.mathBox.running() {
+		// **A card firing holds the sum where it is** *(owner's call, 2026-09-10)*. The signals are
+		// launched one card's at a time, so letting the script run on would put the next term on
+		// screen over a firework belonging to the last one — and the cards the hand kept back are
+		// released by `startHandMath` before this branch has run once, so this is also what stops
+		// the sum beginning until their figures have landed. Only the signals: the shield pips
+		// below deliberately fly alongside the sum rather than stopping it, because a pip lands on
+		// a row two inches away and a signal crosses the screen.
+		if running(s.theatre.signals) {
+			return
+		}
+
 		s.theatre.mathBox.tick()
+
+		// **A played card's riders fire on the beat its own figure sets off**, which is the same
+		// beat and the same argument as the pips below. See combat_signal.go, where the deferral is
+		// argued: these events were reached several beats ago and are drawn here.
+		if seat, ok := s.theatre.mathBox.takeSignalSeat(); ok {
+			s.releaseSeatSignals(s.theatre.mathBox.side, seat)
+		}
 
 		// **A defend card's pips set off with its figure.** The box is the only thing that knows
 		// which card is being scored right now, and this is the frame it starts on. See
@@ -1307,6 +1325,12 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 	// strike-through arrives that event will want this same handoff, so keep them together.
 	if s.theatre.mathBox.active && !s.theatre.mathBox.running() {
 		s.theatre.mathBox.clear()
+
+		// **Anything the sum never claimed fires now.** A card can be played and earn no term — a
+		// lone Ward beside a pair, a third element in a two-card hand — so it has no beat in the
+		// script to be thrown on, and a signal parked for a seat nobody scored would otherwise sit
+		// there until the side changed. See combat_signal.go.
+		s.flushSignals()
 	}
 
 	s.applyEvent(s.log[s.cursor])
@@ -1340,6 +1364,11 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 func (s *CombatScene) endOfRound() {
 	s.fighter.Duelist = s.fighterAfter
 	s.enemy.Duelist = s.enemyAfter
+
+	// **The figures the cards were drawing on top of the model are now in the model.** Everything a
+	// rider granted this round arrives with the adoption above, so a tally kept a frame longer
+	// would be counted twice. See signalShown.
+	s.theatre.adopted()
 
 	// **The adoption above is where banked points become `BonusAP`**, so what the cards have been
 	// drawing on top of it since the figures landed is now in the model and has to stop being
@@ -1415,6 +1444,12 @@ func (s *CombatScene) planEnemyRound() {
 // began, so these are three ways of showing the same log and the screen could stop calling
 // any of them without changing a result.
 func (s *CombatScene) applyEvent(e combat.Event) {
+	// **A turn that never scored throws its signals here.** The sum is what normally sequences
+	// them, and a turn of nothing but defences forms no hand — so the fallback is the boundary:
+	// the moment the acting side changes, or the round ends. Before anything else, so the parked
+	// signals belong to the turn that is finishing rather than to the one starting.
+	s.flushSignalsAtBoundary(e)
+
 	// A card of the player's has fired: lift it out of the hand and start it toward the pile.
 	s.noteResolved(e)
 
@@ -1433,6 +1468,12 @@ func (s *CombatScene) applyEvent(e combat.Event) {
 	// sentence next to it.
 	if e.Kind == combat.KindStatus {
 		s.applyStatusBadge(e)
+		return
+	}
+
+	// A rider fired: park its burst and its figure for the beat the card is scored on. See
+	// combat_signal.go, which owns everything about when that is.
+	if s.noteSignal(e) {
 		return
 	}
 
@@ -1615,6 +1656,12 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// invisible, and the pip crossing to it has to ride over everything it passes, exactly as the
 	// other pips do. See combat_shatter.go.
 	s.drawShieldBreaks(gs, screen)
+
+	// **The signals, over everything on the table and under the panels.** A burst thrown out of a
+	// card has to ride over the card and its neighbours, and the figure that leaves with it is the
+	// damage figure's gesture in the other direction — so it sits exactly where those do. See
+	// combat_signal.go.
+	s.drawSignals(gs, screen)
 
 	// **The banked figures, over the card they are flying out of and the fighter card they raise.**
 	// Beside the damage figures because they are the same gesture in the other direction, and after

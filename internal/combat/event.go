@@ -188,6 +188,27 @@ type Event struct {
 	// that sets it.
 	Slot int
 
+	// Rider is which rider on the card is responsible for this event, and RiderNone - the zero
+	// value - is every event no rider caused.
+	//
+	// **It is here for Event.Ring's reason: the thing that caused this is something the player can
+	// see, and nothing else on the event can name it** *(2026-09-10)*. Two riders emit KindVitae -
+	// a played RiderSilver coming up heads, and a held RiderVitaeInHand paying for being kept back
+	// - and until this field existed the two arrived indistinguishable. The fight log printed "kept
+	// back for 8 vitae" over a card that had just been played, which is a sentence that is wrong
+	// about the one thing the player did.
+	//
+	// **It also says where a signal comes from.** A rider on a played card fires from its seat on
+	// the table and a held one fires from the hand, and RiderVitaeInHand is the only one of the two
+	// that can be held - so the screen reads the rider rather than searching the turn for a card
+	// that might match. See screens.cardSignal.
+	//
+	// **Set on every event a rider produces**, which is KindHealed, KindRaised from a shielding
+	// attack, KindVitae from either metal, and both grants. It is deliberately not set on the
+	// events a *card* produces - a Ward's KindRaised carries RiderNone, because the card raising
+	// shields is the card doing its own job.
+	Rider RiderKind
+
 	// Element is the card's element on KindAction, KindMissed and KindStatus. Basic everywhere
 	// else, which is also the zero value — an event with nothing to say about colour says `basic`,
 	// exactly as a plain card does.

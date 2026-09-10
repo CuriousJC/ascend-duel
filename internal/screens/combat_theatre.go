@@ -246,8 +246,8 @@ var choreography = map[combat.EventKind]flightSpec{
 		"a rider is a property of the card, so the life flies out of that card's seat into the bar it fills",
 	},
 	combat.KindVitae: {
-		anchorNone, anchorNone, gestureNone,
-		"vitae is not on this screen - the purse lives between fights, so the figure has nowhere to land and the feed is where the player is told",
+		anchorActorSeat, anchorActorCard, gestureFly,
+		"the duelist card carries a VITAE row, so the payment has somewhere to land after all - a held card flies from its seat in the hand",
 	},
 	combat.KindGrantedDMG: {
 		anchorActorSeat, anchorActorCard, gestureFly,
@@ -325,6 +325,16 @@ type combatTheatre struct {
 	firingSeats      []int
 	enemyFiringSeats []int
 
+	// Riders firing: the burst on the card that fired and the figure travelling into the figure it
+	// moved. **pending is the half that is not on stage yet** — a played card's signal waits for the
+	// beat that card scores, and a held card's waits for the sum to start — and shown is what the
+	// fighter cards draw on top of their model until the round is adopted. Both are view state
+	// feeding this stage, which is why they live here and are taken down by clear() with everything
+	// else. See combat_signal.go.
+	signals []cardSignal
+	pending []cardSignal
+	shown   [2]signalShown
+
 	// hits are the damage figures currently travelling into a fighter card, and the reason a
 	// health bar can lag the life behind it. See combat_hits.go — the model is already correct
 	// while one of these is up; what waits is the drawing.
@@ -399,6 +409,11 @@ func (t *combatTheatre) tick() {
 	// vanished. See advanceBreaks.
 	t.breaks = t.advanceBreaks()
 
+	// **The signals tick and land in one pass**, for the breaks' reason: a figure has to be noticed
+	// on the frame it *arrives*, which is when the figure it moved starts showing the new value.
+	// See advanceSignals.
+	t.signals = t.advanceSignals()
+
 	// The two rows on the table never expire: cards arrive and stay until the round is spent, so
 	// they are advanced in place rather than filtered.
 	for i := range t.resolved {
@@ -420,7 +435,7 @@ func (t *combatTheatre) tick() {
 // holds it up; a damage figure crossing to a health bar does, because the bar must not drop before
 // the number reaches it. Adding a mover here is deciding that the round should wait for it.
 func (t *combatTheatre) running() bool {
-	return running(t.hits) || running(t.shields) || running(t.breaks)
+	return running(t.hits) || running(t.shields) || running(t.breaks) || running(t.signals)
 }
 
 // clear takes the whole stage down, view state included.

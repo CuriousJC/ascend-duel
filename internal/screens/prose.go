@@ -348,10 +348,15 @@ func (s *CombatScene) ledgerLines(events []combat.Event) []session.LedgerLine {
 			attach(fmt.Sprintf("%s up", shieldCount(e.Life)))
 
 		case combat.KindVitae:
-			// **The one line in the feed about something outside the duel.** A card held back pays
-			// into the purse, and the purse is not on this screen — so the sentence is the only
-			// place the player is told it happened at all. See combat.KindVitae.
-			attach(fmt.Sprintf("kept back for %d vitae", e.Amount))
+			// **Two riders pay vitae and they are different sentences** *(2026-09-10)*. A held card
+			// is paid for being kept back; a played silver card gambled and came up. This said
+			// "kept back for 8 vitae" over both until `Event.Rider` existed, which was wrong about
+			// the one thing the player had just decided. See combat.Event.Rider.
+			if e.Rider == combat.RiderSilver {
+				attach(fmt.Sprintf("silver pays %d vitae", e.Amount))
+			} else {
+				attach(fmt.Sprintf("kept back for %d vitae", e.Amount))
+			}
 
 		case combat.KindExpired:
 			// **A line of its own, because the row emptying needs a reason beside it.** Shields

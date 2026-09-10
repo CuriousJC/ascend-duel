@@ -869,7 +869,7 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 // restored when none was — so the cap is applied first and a no-op is silent. The rider is still
 // spent, because it is a property of the card rather than a charge.
 func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Card, round int, luck *rand.Rand) ([]Event, Duelist) {
-	for _, slot := range turn {
+	for i, slot := range turn {
 		// **Shields first, and from the same seat a defend card raises them.** A rider is not a
 		// defend card — it is on a Jab, and the Jab is about to swing — so this cannot wait for
 		// the defend phase without a shielding attack being the only card in the game whose two
@@ -881,6 +881,8 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 				Kind:   KindRaised,
 				Side:   side,
 				Action: slot.Card.Concept,
+				Slot:   i,
+				Rider:  RiderShieldOnPlay,
 				Amount: up,
 				Life:   actor.Shields,
 				Round:  round,
@@ -905,6 +907,8 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 					Side:    side,
 					Target:  side,
 					Action:  slot.Card.Concept,
+					Slot:    i,
+					Rider:   RiderGolden,
 					Element: slot.Card.Element,
 					Amount:  dmg,
 					Life:    actor.CurrentLife,
@@ -922,6 +926,8 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 					Side:    side,
 					Target:  side,
 					Action:  slot.Card.Concept,
+					Slot:    i,
+					Rider:   RiderGolden,
 					Element: slot.Card.Element,
 					Amount:  life,
 					Life:    actor.CurrentLife,
@@ -940,6 +946,8 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 					Side:    side,
 					Target:  side,
 					Action:  slot.Card.Concept,
+					Slot:    i,
+					Rider:   RiderSilver,
 					Element: slot.Card.Element,
 					Amount:  paid,
 					Round:   round,
@@ -963,6 +971,8 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 			Side:    side,
 			Target:  side,
 			Action:  slot.Card.Concept,
+			Slot:    i,
+			Rider:   RiderHealOnPlay,
 			Element: slot.Card.Element,
 			Amount:  actor.CurrentLife - before,
 			Life:    actor.CurrentLife,
@@ -986,6 +996,7 @@ func playRiders(events []Event, side Side, actor Duelist, turn []Slot, held []Ca
 			Side:    side,
 			Target:  side,
 			Action:  c.Concept,
+			Rider:   RiderVitaeInHand,
 			Element: c.Element,
 			Amount:  paid,
 			Round:   round,

@@ -492,7 +492,7 @@
   },
   {
     "ScenarioRecord": "momentum-and-atrophy",
-    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn \u00e2\u20ac\u201d and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
+    "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Rings": [
       "atrophy-ring",
       "momentum-ring"
@@ -660,6 +660,96 @@
     "Parasites": [
       "luck",
       "chimera"
+    ],
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "signals",
+    "Note": "Every kind of card signal in one hand, so the fireworks can be looked at rather than played towards. The metals are at 5, the shipping odds - a gold Jab pays on two plays in five and a silver Cut on one in five, so several turns may be wanted; the heal Thrust and the two vitae-in-hand Slices fire on every single play, which is what makes the hand worth queueing even on a turn the metals miss. Certainty is not available and that is the design: combat.LuckOutcomes refuses a die with no losing face, because a gamble that always pays is a purchase. Queue the gold Jab, the silver Cut and the heal Thrust together and press DUEL!. The order is the thing to check: the two Slices left in the hand throw their crimson vitae first, together, and the sum does not begin until their figures have landed on the duelist card - then each played card bursts on the beat its own figure sets off into the sum, and every signal holds the sum where it is so nothing overlaps. The burst and the figure leave together, in one colour per card: gold for the gold Jab, silver for the silver Cut, the rose for the heal, crimson for the cards kept back. And a losing roll says nothing at all, which is the mechanic rather than a missing picture.",
+    "Rings": [],
+    "Deck": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 8,
+        "Riders": [
+          "golden:5"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Copies": 8,
+        "Riders": [
+          "silver:5"
+        ]
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Copies": 6,
+        "Riders": [
+          "heal-on-play:10"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Copies": 8,
+        "Riders": [
+          "vitae-in-hand:5"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning",
+        "Copies": 4
+      }
+    ],
+    "Hand": [
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Riders": [
+          "golden:5"
+        ]
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Riders": [
+          "silver:5"
+        ]
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Riders": [
+          "heal-on-play:10"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Riders": [
+          "vitae-in-hand:5"
+        ]
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Riders": [
+          "vitae-in-hand:5"
+        ]
+      },
+      {
+        "Card": "Strike",
+        "Element": "lightning"
+      }
     ],
     "Screen": "combat",
     "Seed": "0000HX",

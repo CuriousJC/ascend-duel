@@ -115,7 +115,7 @@ func drawModalFrame(gs *state.GlobalState, screen *ebiten.Image, head modalHead)
 	systems.BevelRect(screen, r.Min.X, r.Min.Y, r.Dx(), r.Dy(),
 		systems.PaneBevelWidth, color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
 	vector.StrokeRect(screen, float32(r.Min.X), float32(r.Min.Y),
-		float32(r.Dx()), float32(r.Dy()), 2, apBarColor, false)
+		float32(r.Dx()), float32(r.Dy()), 2, panelBlue, false)
 
 	// **A panel with no title writes nothing at all up here**, rather than a blank line's worth of
 	// air. The body starts higher instead; see modalBareBodyTop.

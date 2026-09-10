@@ -140,7 +140,7 @@ func (d *confirmDialog) draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.BevelRect(screen, box.Min.X, box.Min.Y, box.Dx(), box.Dy(),
 		systems.PaneBevelWidth, color.RGBA{R: 30, G: 30, B: 38, A: 255}, false)
 	vector.StrokeRect(screen, float32(box.Min.X), float32(box.Min.Y),
-		float32(box.Dx()), float32(box.Dy()), 2, apBarColor, false)
+		float32(box.Dx()), float32(box.Dy()), 2, panelBlue, false)
 
 	centre := float64(box.Min.X + box.Dx()/2)
 

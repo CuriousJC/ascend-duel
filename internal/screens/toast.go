@@ -105,7 +105,7 @@ func (t *AchievementToast) Update(gs *state.GlobalState) {
 
 	if t.dismiss == nil {
 		t.dismiss = models.NewButton(toastButtonWidth, toastButtonHeight, toastButtonLabel, nil)
-		t.dismiss.BaseColor = apBarColor
+		t.dismiss.BaseColor = panelBlue
 	}
 
 	// **Rebound every frame**, for confirm.go's reason: one widget serves every achievement, so a
@@ -154,7 +154,7 @@ func (t *AchievementToast) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	systems.BevelRect(screen, box.Min.X, box.Min.Y, box.Dx(), box.Dy(),
 		systems.PaneBevelWidth, toastPanelFill, false)
 	vector.StrokeRect(screen, float32(box.Min.X), float32(box.Min.Y),
-		float32(box.Dx()), float32(box.Dy()), 2, apBarColor, false)
+		float32(box.Dx()), float32(box.Dy()), 2, panelBlue, false)
 
 	centre := float64(box.Min.X + box.Dx()/2)
 

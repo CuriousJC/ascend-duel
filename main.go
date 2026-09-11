@@ -178,6 +178,10 @@ func main() {
 	// debug seat a hand-edited list would use, so nothing new has to be able to force a worn row.
 	// See internal/scenario.
 	if scenario.Active() {
+		// **The fingers are set before the rings**, and both before the run is built: `New` wears
+		// the list as it goes, so a cap raised after the fact would arrive too late to let a sixth
+		// ring on. See session.StartingRingSlots.
+		session.StartingRingSlots = scenario.RingSlots()
 		session.StartingRings = scenario.Rings()
 
 		// **A chosen deck, where the rings are a chosen row.** Nil unless the fixture says
@@ -230,6 +234,14 @@ func main() {
 		if n := scenario.RoundLimit(); n > 0 && g.GlobalState.Run != nil {
 			g.GlobalState.Run.SetRoundLimit(n)
 			log.Printf("scenario %s: a %d-round clock", scenario.Name(), n)
+		}
+
+		// **And it may widen the hand.** Unlike the clock this had to be in place *before* the run
+		// was built — see the StartingRingSlots line above — so what happens here is a resumed run
+		// being brought up to the fixture's number, and a log line saying what the hand is on.
+		if n := scenario.RingSlots(); n > 0 && g.GlobalState.Run != nil {
+			g.GlobalState.Run.SetRingSlots(n)
+			log.Printf("scenario %s: %d ring slots", scenario.Name(), n)
 		}
 	}
 

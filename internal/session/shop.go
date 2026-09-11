@@ -1,7 +1,5 @@
 package session
 
-import "github.com/curiousjc/ascend-duel/internal/combat"
-
 // The shop's rules: what a ring costs, what it sells back for, and the two ways the row changes.
 //
 // **The screen draws a shelf; this decides what a purchase is.** Buying and selling both move the
@@ -56,7 +54,7 @@ func (s *Session) canWear(key string) bool {
 	if _, ok := registeredRings[key]; !ok {
 		return false
 	}
-	if len(s.worn) >= combat.MaxWornRings {
+	if len(s.worn) >= s.RingSlots() {
 		return false
 	}
 	for _, k := range s.worn {

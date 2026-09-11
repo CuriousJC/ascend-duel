@@ -1,75 +1,39 @@
 # Rings still to draw
 
-**The specific blocks, one per ring, for the 120 rings with no artwork yet.** The general block
-they all share is in `ring_art_prompt.MD` and is pasted verbatim above whichever of these is
-being generated; this file is only ever the second half.
+**The subject paragraphs, one per ring, for the 114 rings with no artwork yet.** The prompt they
+all share is in `card_art_prompt.MD` and is pasted verbatim — with its **whole card** composition
+block — above whichever of these is being generated; this file is only ever the last line.
 
 ## How to use it
 
-1. Fill in the `Draw:` line under a ring — what the object *is* and what the effect is doing to
-   it, in one paragraph. The general block never names the object, so this is the only place the
+1. Fill in the `Draw:` line under a ring — what the object _is_ and what the effect is doing to
+   it, in one paragraph. The prompt never names the object, so this is the only place the
    generator learns there is a ring on fire rather than a ring made of teeth.
-2. Paste the general block, then the paragraph, into the generator.
-3. Save the result to `.scratch/ring-art/<key>.png`, reduce it to 200x280, and commit it as
-   `assets/ring/<key>.png` — see `README.md` for why the reduction is not optional.
-4. Set `"Art": "<key>"` on the record in `data/rings.json`, and strike the ring from this file.
+2. Paste the prompt and its whole-card composition block, then the paragraph, into the generator.
+3. Save the result as `.scratch/to-process-ring-art/<key>.png` — the **key is the filename**, and
+   nothing else about the file matters.
+4. Run `go run ./tools/ringart`. It reduces each picture to the card's own size, commits it to
+   `assets/ring/`, sets `"Art"` on the record in `data/rings.json`, strikes the ring from this
+   file, recomputes the counts in every heading above, and moves the original to
+   `.scratch/processed-rings/`. `-n` says what it would do and writes nothing.
 
 **The key is the filename and the filename is the key**, so `aftershock-ring` here is
 `assets/ring/aftershock-ring.png` and `"Art": "aftershock-ring"`. It is already the record id, so
 there is nothing to invent.
 
-**A ring card carries no title** *(owner's call, 2026-09-11)*, so the picture is doing all of the
+**A ring card carries no title** _(owner's call, 2026-09-11)_, so the picture is doing all of the
 work of saying which ring this is. Two rings that scale damage on two different elements have to
-be told apart by their art alone — which is the argument for making the *element* the loudest
+be told apart by their art alone — which is the argument for making the _element_ the loudest
 thing in a picture whenever a ring has one.
 
-**Delete a ring from this file when its art lands.** A worklist that keeps finished entries is a
-worklist nobody trusts the length of.
+**Nothing here is struck by hand any more** _(2026-09-11)_. A worklist that keeps finished entries
+is a worklist nobody trusts the length of, and the four steps that used to end an entry — reduce,
+commit, record, strike — were done once per ring, a hundred and twenty times, with two of them
+failing _silently_: an `"Art"` left empty just draws `default-ring.png`, and an entry left standing
+is a ring that gets drawn twice. `tools/ringart` does all four off the filename, and refuses a file
+whose stem names no record rather than filing it somewhere nothing will look.
 
-## Common — 46 rings
-
-### Attuned
-
-- **Key:** `element-three-of-a-kind-hand-ring`
-- **Full name:** Attuned Ring
-- **Rule:** A Elemental Three of a Kind deals 3 more DMG before the multiplier.
-- **Draw:**
-
-### Banker
-
-- **Key:** `banker-ring`
-- **Full name:** Banker Ring
-- **Rule:** Vitae propagates twice as fast.
-- **Draw:**
-
-### Basher
-
-- **Key:** `basher-ring`
-- **Full name:** Basher Ring
-- **Rule:** Every Bash deals double DMG.
-- **Draw:**
-
-### Bedrock
-
-- **Key:** `bedrock-ring`
-- **Full name:** Bedrock Ring
-- **Rule:** Deals 5 more DMG for each earth card
-kept in hand.
-- **Draw:**
-
-### Boxer
-
-- **Key:** `boxer-ring`
-- **Full name:** Boxer Ring
-- **Rule:** Every Jab deals double DMG.
-- **Draw:**
-
-### Bulwark
-
-- **Key:** `bulwark-ring`
-- **Full name:** Bulwark Ring
-- **Rule:** +25 HP for every fight.
-- **Draw:**
+## Common — 40 rings
 
 ### Cleaver
 
@@ -83,7 +47,7 @@ kept in hand.
 - **Key:** `coiled-ring`
 - **Full name:** Coiled Ring
 - **Rule:** Deals 5 more DMG for each crush card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ### Confluent
@@ -140,7 +104,7 @@ kept in hand.
 - **Key:** `frostbank-ring`
 - **Full name:** Frostbank Ring
 - **Rule:** Deals 5 more DMG for each ice card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ### Grinder
@@ -253,7 +217,7 @@ kept in hand.
 - **Key:** `poised-ring`
 - **Full name:** Poised Ring
 - **Rule:** Deals 5 more DMG for each stab card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ### Potential
@@ -261,7 +225,7 @@ kept in hand.
 - **Key:** `potential-ring`
 - **Full name:** Potential Ring
 - **Rule:** Deals 5 more DMG for each lightning card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ### Prodder
@@ -283,7 +247,7 @@ kept in hand.
 - **Key:** `sheathed-ring`
 - **Full name:** Sheathed Ring
 - **Rule:** Deals 5 more DMG for each slash card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ### Skirmisher
@@ -298,7 +262,7 @@ kept in hand.
 - **Key:** `slicer-ring`
 - **Full name:** Slicer Ring
 - **Rule:** Every Slice card
-deals double DMG.
+  deals double DMG.
 - **Draw:**
 
 ### Smasher
@@ -313,7 +277,7 @@ deals double DMG.
 - **Key:** `smoulder-ring`
 - **Full name:** Smoulder Ring
 - **Rule:** Deals 5 more DMG for each fire card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ### Soul Taker
@@ -356,7 +320,7 @@ kept in hand.
 - **Key:** `wellspring-ring`
 - **Full name:** Wellspring Ring
 - **Rule:** Deals 5 more DMG for each arcane card
-kept in hand.
+  kept in hand.
 - **Draw:**
 
 ## Uncommon — 51 rings
@@ -401,7 +365,7 @@ kept in hand.
 - **Key:** `dual-wield-ring`
 - **Full name:** Dual Wield Ring
 - **Rule:** A pair built from two
-different forms deals 3x DMG.
+  different forms deals 3x DMG.
 - **Draw:**
 
 ### Dust Storm
@@ -430,7 +394,7 @@ different forms deals 3x DMG.
 - **Key:** `fire-of-life-ring`
 - **Full name:** Fire of Life Ring
 - **Rule:** Fire cards gain 0.1x DMG
-for every 10 vitae you hold.
+  for every 10 vitae you hold.
 - **Draw:**
 
 ### Firestorm
@@ -536,7 +500,7 @@ for every 10 vitae you hold.
 - **Key:** `house-of-pain-ring`
 - **Full name:** House of Pain Ring
 - **Rule:** Every Full House
-deals 3x DMG.
+  deals 3x DMG.
 - **Draw:**
 
 ### Landslide
@@ -642,7 +606,7 @@ deals 3x DMG.
 - **Key:** `sharp-as-ice-ring`
 - **Full name:** Sharp as Ice Ring
 - **Rule:** Every ice slash card
-deals 3x DMG.
+  deals 3x DMG.
 - **Draw:**
 
 ### Sharpening
@@ -671,7 +635,7 @@ deals 3x DMG.
 - **Key:** `struck-by-lightning-ring`
 - **Full name:** Struck by Lightning Ring
 - **Rule:** Every lightning stab card
-deals 3x DMG.
+  deals 3x DMG.
 - **Draw:**
 
 ### Sundering
@@ -700,7 +664,7 @@ deals 3x DMG.
 - **Key:** `triplicate-form-ring`
 - **Full name:** Triplicate Form Ring
 - **Rule:** Every Three of a Kind
-deals 3x DMG.
+  deals 3x DMG.
 - **Draw:**
 
 ### Unravelled
@@ -715,7 +679,7 @@ deals 3x DMG.
 - **Key:** `weight-of-the-earth-ring`
 - **Full name:** Weight of the Earth Ring
 - **Rule:** Every earth crush card
-deals 3x DMG.
+  deals 3x DMG.
 - **Draw:**
 
 ### Witchfire
@@ -774,8 +738,8 @@ deals 3x DMG.
 - **Key:** `ebb-and-flow-ring`
 - **Full name:** Ebb & Flow Ring
 - **Rule:** Every card gains 0.2x DMG
-for each shield card
-you play. Grows while worn.
+  for each shield card
+  you play. Grows while worn.
 - **Draw:**
 
 ### Eerie
@@ -818,7 +782,7 @@ you play. Grows while worn.
 - **Key:** `oak-ring`
 - **Full name:** Oak Ring
 - **Rule:** Every Four of a Kind
-deals 4x DMG.
+  deals 4x DMG.
 - **Draw:**
 
 ### Onslaught
@@ -840,7 +804,7 @@ deals 4x DMG.
 - **Key:** `pentacle-ring`
 - **Full name:** Pentacle Ring
 - **Rule:** Every Five of a Kind
-deals 5x DMG.
+  deals 5x DMG.
 - **Draw:**
 
 ### Rampant
@@ -848,7 +812,7 @@ deals 5x DMG.
 - **Key:** `rampant-ring`
 - **Full name:** Rampant Ring
 - **Rule:** Every blow deals 1 more DMG
-for each vitae you hold.
+  for each vitae you hold.
 - **Draw:**
 
 ### Static
@@ -892,4 +856,3 @@ for each vitae you hold.
 - **Full name:** Whittle Ring
 - **Rule:** Every 1 AP attack is dealt as its 0 AP version.
 - **Draw:**
-

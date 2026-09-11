@@ -85,6 +85,13 @@ type RunSnapshot struct {
 	// zero value is not a default, and the reading is where that gets fixed.
 	RoundLimit int `json:"roundLimit,omitempty"`
 
+	// RingSlots is how many rings this run may wear at once.
+	//
+	// **Zero is an older save, not a run that may wear none**, on exactly the terms above:
+	// `session.Resume` reads a number below one as the default rather than as an answer. A run
+	// resumed onto zero fingers would be a run that had quietly lost every ring it had bought.
+	RingSlots int `json:"ringSlots,omitempty"`
+
 	// Worn is the rings, by record key, **in worn order** — which is a rule and not a presentation
 	// detail, since rings fire left to right and compound. A list rather than a set for that
 	// reason.

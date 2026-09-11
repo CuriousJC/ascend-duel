@@ -424,7 +424,7 @@
   {
     "RingRecord": "boxer-ring",
     "Name": "Boxer Ring",
-    "Art": "",
+    "Art": "boxer-ring",
     "Text": "Every Jab deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -562,9 +562,9 @@
     ]
   },
   {
-    "RingRecord": "basher-ring",
-    "Name": "Basher Ring",
-    "Art": "",
+    "RingRecord": "brass-knuckles-ring",
+    "Name": "Brass Knuckles Ring",
+    "Art": "brass-knuckles-ring",
     "Text": "Every Bash deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -760,7 +760,7 @@
   {
     "RingRecord": "bedrock-ring",
     "Name": "Bedrock Ring",
-    "Art": "",
+    "Art": "bedrock-ring",
     "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1289,7 +1289,7 @@
   {
     "RingRecord": "element-three-of-a-kind-hand-ring",
     "Name": "Attuned Ring",
-    "Art": "",
+    "Art": "element-three-of-a-kind-hand-ring",
     "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1785,7 +1785,7 @@
   {
     "RingRecord": "bulwark-ring",
     "Name": "Bulwark Ring",
-    "Art": "",
+    "Art": "bulwark-ring",
     "Text": "+25 HP for every fight.",
     "Rarity": "common",
     "Rules": [
@@ -2015,7 +2015,7 @@
   {
     "RingRecord": "banker-ring",
     "Name": "Banker Ring",
-    "Art": "",
+    "Art": "banker-ring",
     "Text": "Vitae propagates twice as fast.",
     "Rarity": "common",
     "Rules": [

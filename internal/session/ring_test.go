@@ -57,11 +57,11 @@ func TestARingIsWornOnceAndNoMoreThanFiveAreWornAtAll(t *testing.T) {
 	run := bare(t)
 
 	all := Rings()
-	if len(all) < combat.MaxWornRings+1 {
-		t.Skipf("only %d rings authored; this needs %d", len(all), combat.MaxWornRings+1)
+	if len(all) < combat.DefaultRingSlots+1 {
+		t.Skipf("only %d rings authored; this needs %d", len(all), combat.DefaultRingSlots+1)
 	}
 
-	for _, key := range all[:combat.MaxWornRings] {
+	for _, key := range all[:combat.DefaultRingSlots] {
 		if !run.Wear(key) {
 			t.Fatalf("%s would not go on", key)
 		}
@@ -69,8 +69,8 @@ func TestARingIsWornOnceAndNoMoreThanFiveAreWornAtAll(t *testing.T) {
 	if run.Wear(all[0]) {
 		t.Error("the same ring went on twice")
 	}
-	if run.Wear(all[combat.MaxWornRings]) {
-		t.Errorf("a %dth ring went on, cap is %d", combat.MaxWornRings+1, combat.MaxWornRings)
+	if run.Wear(all[combat.DefaultRingSlots]) {
+		t.Errorf("a %dth ring went on, cap is %d", combat.DefaultRingSlots+1, combat.DefaultRingSlots)
 	}
 	if run.Wear("no-such-ring") {
 		t.Error("a record the catalogue does not hold went on")

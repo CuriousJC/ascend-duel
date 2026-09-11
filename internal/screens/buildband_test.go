@@ -6,6 +6,7 @@ import (
 
 	"github.com/curiousjc/ascend-duel/data"
 	"github.com/curiousjc/ascend-duel/internal/cards"
+	"github.com/curiousjc/ascend-duel/internal/combat"
 	"github.com/curiousjc/ascend-duel/internal/models"
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
@@ -95,7 +96,7 @@ func TestTheRingRowIsCentredAndGrowsOutwards(t *testing.T) {
 	row := buildRingRect(gs)
 
 	var last int
-	for n := 1; n <= maxRings; n++ {
+	for n := 1; n <= combat.DefaultRingSlots; n++ {
 		left := ringSlotAt(row, 0, n).X
 		right := ringSlotRect(row, n-1, n).Max.X
 
@@ -138,8 +139,9 @@ func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 	s := &CombatScene{}
 	pane := s.ringPaneRect(gs)
 
-	first := ringSlotAt(pane, 0, maxRings).X
-	last := ringSlotRect(pane, maxRings-1, maxRings).Max.X
+	slots := combat.DefaultRingSlots
+	first := ringSlotAt(pane, 0, slots).X
+	last := ringSlotRect(pane, slots-1, slots).Max.X
 
 	if first < pane.Min.X {
 		t.Errorf("the first of five rings sits at x=%d, left of the pane's edge x=%d", first, pane.Min.X)
@@ -149,6 +151,36 @@ func TestAFullRowStillFillsTheCombatPane(t *testing.T) {
 	}
 	if before, after := first-pane.Min.X, pane.Max.X-last; before != after {
 		t.Errorf("the row is not centred: %dpx before it and %dpx after", before, after)
+	}
+}
+
+// **The widest row the array allows still lands inside the pane**, which is the weaker half of the
+// pair above and the half that has to hold past the shipped cap.
+//
+// The two are split because they are different claims *(2026-09-11)*. Exact centring and strictly
+// outward growth are properties of the row a player can actually reach — five — and they come apart
+// by a pixel further up, where `ringSlotPitch` divides the pane by one more seat and the remainder
+// has nowhere to go. What must hold at any width is that nothing is drawn off the end of the pane,
+// because `combat.MaxWornRings` is how many rings a fixture may put on and a row drawn past the
+// table would be the screen lying about what the duelist is wearing.
+func TestTheWidestPossibleRingRowStaysInsideThePane(t *testing.T) {
+	gs := testState()
+	s := &CombatScene{}
+	pane := s.ringPaneRect(gs)
+
+	for n := combat.DefaultRingSlots; n <= maxRings; n++ {
+		first := ringSlotAt(pane, 0, n).X
+		last := ringSlotRect(pane, n-1, n).Max.X
+
+		if first < pane.Min.X {
+			t.Errorf("a row of %d starts at x=%d, left of the pane's x=%d", n, first, pane.Min.X)
+		}
+		if last > pane.Max.X {
+			t.Errorf("a row of %d ends at x=%d, past the pane's x=%d", n, last, pane.Max.X)
+		}
+		if before, after := first-pane.Min.X, pane.Max.X-last; before-after > 1 || after-before > 1 {
+			t.Errorf("a row of %d is off centre: %dpx before it and %dpx after", n, before, after)
+		}
 	}
 }
 

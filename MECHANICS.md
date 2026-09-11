@@ -1914,7 +1914,7 @@ can be current, because a table of 139 rows in a file loaded every session is a 
 
 | Family | Count | Tier | What it is |
 |---|---|---|---|
-| **concept rings** | 14 + Striker | common | one per attack card — Prodder, Boxer, Lancer, Fencer, Impaler; Skirmisher, Cutter, Slasher, Cleaver, Headsman; Knocker, Basher, Smasher, Grinder. `scale-damage 200`, exactly Striker's shape |
+| **concept rings** | 14 + Striker | common | one per attack card — Prodder, Boxer, Lancer, Fencer, Impaler; Skirmisher, Cutter, Slasher, Cleaver, Headsman; Knocker, Brass Knuckles, Smasher, Grinder. `scale-damage 200`, exactly Striker's shape |
 | **form cost rings** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's colour family |
 | **form status / growth** | 3 + 3 | uncommon | Sundering / Bruising / Pinning, and Sharpening / Pounding / Quickening |
 | **tier rings** | 4 | rare / uncommon | Erode and Whittle demote; Swarm and Crown pay a tier |

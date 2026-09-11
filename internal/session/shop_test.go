@@ -104,26 +104,55 @@ func TestAnEmptyPurseBuysNothingAndChangesNothing(t *testing.T) {
 	}
 }
 
+func TestTheShopReadsTheRunsOwnFingerCount(t *testing.T) {
+	// **The cap is the run's, not the rules'.** The shelf and the fighter read one number, so a
+	// run that has been given a sixth finger can buy a sixth ring — and a run that has not, cannot.
+	// This is the half that would fail silently: Equip clamps on its own, so a shop still reading
+	// combat.DefaultRingSlots would refuse a purchase the fighter would happily have worn.
+	run := rich(t)
+
+	all := Rings()
+	if len(all) < combat.DefaultRingSlots+1 {
+		t.Skipf("only %d rings authored; this needs %d", len(all), combat.DefaultRingSlots+1)
+	}
+	run.SetRingSlots(combat.DefaultRingSlots + 1)
+
+	for _, key := range all[:combat.DefaultRingSlots+1] {
+		if !run.Buy(key) {
+			t.Fatalf("%s would not go on a run with %d fingers", key, run.RingSlots())
+		}
+	}
+	if got := len(run.WornRings()); got != combat.DefaultRingSlots+1 {
+		t.Errorf("a run with %d fingers is wearing %d rings", run.RingSlots(), got)
+	}
+
+	// And the cap still refuses to close the hand, exactly as the clock refuses to stop.
+	run.SetRingSlots(0)
+	if run.RingSlots() < 1 {
+		t.Errorf("a cap of zero left the run with %d fingers", run.RingSlots())
+	}
+}
+
 func TestTheSixthRingIsRefusedRatherThanSwapped(t *testing.T) {
 	// **The cap surfaces when you try to buy a sixth** — MECHANICS.md — and selling is what frees a
 	// finger. A purchase that quietly threw a ring away would be a ring lost to a misread click.
 	run := rich(t)
 
 	all := Rings()
-	if len(all) < combat.MaxWornRings+1 {
-		t.Skipf("only %d rings authored; this needs %d", len(all), combat.MaxWornRings+1)
+	if len(all) < combat.DefaultRingSlots+1 {
+		t.Skipf("only %d rings authored; this needs %d", len(all), combat.DefaultRingSlots+1)
 	}
-	for _, key := range all[:combat.MaxWornRings] {
+	for _, key := range all[:combat.DefaultRingSlots] {
 		if !run.Buy(key) {
 			t.Fatalf("%s would not go on", key)
 		}
 	}
 
-	sixth := all[combat.MaxWornRings]
+	sixth := all[combat.DefaultRingSlots]
 	held := run.Vitae()
 
 	if run.CanBuy(sixth) || run.Buy(sixth) {
-		t.Fatalf("a %dth ring went on", combat.MaxWornRings+1)
+		t.Fatalf("a %dth ring went on", combat.DefaultRingSlots+1)
 	}
 	if run.Vitae() != held {
 		t.Error("the purse moved on a refused sixth ring")

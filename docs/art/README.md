@@ -8,12 +8,13 @@ and both are things the repo produced. These are things the repo consumes.
 
 ## The rules
 
-- **One file per card style, not one per record.** A prompt is a general block plus a
-  specific block, and the general block is the whole reason the file exists: it is what makes
-  forty rings look like forty rings from one game rather than forty separate commissions.
-- **The general block is pasted verbatim and is never edited for one record.** A record that
-  needs the general block changed is a record that needs a new file, or a design decision that
-  should move the general block for everything.
+- **One prompt for every card, not one per catalogue.** A prompt is the shared block plus a
+  subject paragraph, and the shared block is the whole reason the file exists: it is what makes
+  forty rings look like forty rings from one game rather than forty separate commissions. It is
+  shared across the catalogues too — a ring, a relic and a parasite are the same card with a
+  different picture in it, and three copies of one paragraph is three paragraphs drifting apart.
+- **The shared block is pasted verbatim and is never edited for one record.** A record that
+  needs it changed is a design decision that should move it for everything.
 - **The canvas and the reserved areas are facts about a card style**, taken from
   `internal/cards/style.go`. They are the one part of a prompt that can go quietly wrong: the
   art is *fitted* into a box by `drawArt` — scaled to fit and centred, never cropped — so a
@@ -27,16 +28,21 @@ and both are things the repo produced. These are things the repo consumes.
   prompt spends most of its words demanding, and 1.1 MB a card is about 155 MB across a 137-ring
   catalogue. At the card's size it is ~57 KB and nothing resamples at all.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
+- **`go run ./tools/ringart` is what does the filing**, so the reduction, the `"Art"` field and the
+  worklist entry are one command rather than four steps remembered in order. Drop the generator's
+  PNG into `.scratch/to-process-ring-art/` named after the record and run it. Only rings have one
+  today; a second catalogue reaching this volume should get the same treatment rather than a
+  second set of manual steps.
 - **Nothing here is loaded by the game**, which is why it is not in `data/`. Everything in
   `data/` is the game's own catalogue, `//go:embed`ed and read at launch.
 
 ## What is here
 
-| File | Card style | Draws |
-|---|---|---|
-| `ring_art_prompt.MD` | `cards.RingStyle` | the rings in `data/rings.json` |
-| `relic_art_prompt.MD` | `cards.RingStyle` | relics, which reuse the ring card |
-| `parasite_art_prompt.MD` | `cards.WormStyle` | the parasites in `data/parasites.json`, and the worms and stones that share the style |
+| File | Holds |
+|---|---|
+| `card_art_prompt.MD` | the prompt, for every card that carries a picture — rings and relics on `cards.RingStyle`, parasites and worms and stones on `cards.WormStyle`. Two composition blocks, one per style; pick one |
+| `parasite_art_prompt.MD` | the closed list of parasite body plans, pasted into that prompt. A creature needs a shape where an object does not |
+| `rings_to_draw.md` | the worklist: one subject paragraph per ring with no artwork yet |
 
 **Neither bleeding card names itself** *(owner's call, 2026-09-11)*, so no prompt has to keep a
 title band clear: the picture is the card. What a ring card draws over its art is one counter

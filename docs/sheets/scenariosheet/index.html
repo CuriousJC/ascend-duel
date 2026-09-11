@@ -63,7 +63,7 @@
 <div class="wrap">
   <h1>Scenario sheet</h1>
   <p class="note">
-    The 24 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
+    The 25 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
     that launches it. Compiled out of every build that is not <code>-tags scenario</code>, so none
     of this is reachable from a shipped binary.
   </p>
@@ -75,7 +75,43 @@
 
   
     <div class="plate first">
-      <div class="record">arsenal-on-a-dummy<span class="default">first in the file — the bare launch</span></div>
+      <div class="record">new-ring-art<span class="default">first in the file — the bare launch</span></div>
+      <div class="facts">opens on combat · room 0 · DUMMY -- nothing dies · 15 AP a turn · 6 ring slots</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=new-ring-art go run -tags scenario .</code>
+      <p class="blurb">The six rings drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RingSlots is 6: the shipped cap is combat.DefaultRingSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four rings firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="new-ring-art-worn.png" width="1418" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="new-ring-art-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">bulwark-ring</td><td>Bulwark Ring</td><td class="said">&#43;25 HP for every fight.</td></tr><tr><td class="key">banker-ring</td><td>Banker Ring</td><td class="said">Vitae propagates twice as fast.</td></tr><tr><td class="key">bedrock-ring</td><td>Bedrock Ring</td><td class="said">Deals 5 more DMG for each earth card kept in hand.</td></tr><tr><td class="key">boxer-ring</td><td>Boxer Ring</td><td class="said">Every Jab deals double DMG.</td></tr><tr><td class="key">brass-knuckles-ring</td><td>Brass Knuckles Ring</td><td class="said">Every Bash deals double DMG.</td></tr><tr><td class="key">element-three-of-a-kind-hand-ring</td><td>Attuned Ring</td><td class="said">A Elemental Three of a Kind deals 3 more DMG before the multiplier.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Strike</td><td>earth</td><td>2</td><td class="rider"></td></tr><tr><td>Tap</td><td>earth</td><td>0</td><td class="rider"></td></tr><tr><td>Ward</td><td>earth</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">arsenal-on-a-dummy</div>
       <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=arsenal-on-a-dummy go run -tags scenario .</code>
       <p class="blurb">The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the ring fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the ring&#39;s term sits inside the sum rather than on the end of it, and the figure it moved is written in the ring pink. The ring pane is where the new artwork is.</p>

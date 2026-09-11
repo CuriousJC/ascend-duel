@@ -153,6 +153,19 @@ type record struct {
 	// either. See combat.DefaultRoundLimit and session/clock.go.
 	RoundLimit int `json:"RoundLimit"`
 
+	// RingSlots is how many rings the run may wear at once, overriding combat.DefaultRingSlots.
+	//
+	// **Zero means the run's own**, which is the five every climb is on. It exists because the
+	// whole catalogue is looked at five at a time otherwise, and a batch of new art or a new
+	// interaction is a batch: a sixth ring meant playing to a shop, selling one and buying
+	// another, per ring, forever.
+	//
+	// **It is bounded by `combat.MaxWornRings`**, the width of the duelist's ring array — not by
+	// the design cap, which is the thing this overrides. `session.SetRingSlots` clamps to the same
+	// figure, so a fixture asking for more gets the width rather than a disagreement between the
+	// shop and the fighter.
+	RingSlots int `json:"RingSlots"`
+
 	// Teach starts the tutorial on this run.
 	//
 	// **The real trigger is the profile now** — a player it has not recorded as taught is taught on
@@ -359,6 +372,17 @@ func check(r *record) error {
 	if r.RoundLimit < 0 {
 		return fmt.Errorf("round limit %d is not a number of rounds", r.RoundLimit)
 	}
+	if r.RingSlots < 0 {
+		return fmt.Errorf("%d ring slots is not a number of fingers", r.RingSlots)
+	}
+	if r.RingSlots > combat.MaxWornRings {
+		return fmt.Errorf("%d ring slots, and a duelist's hand is %d wide — raise "+
+			"combat.MaxWornRings if a fixture genuinely needs more", r.RingSlots, combat.MaxWornRings)
+	}
+	if n := len(r.Rings); n > 0 && n > r.effectiveRingSlots() {
+		return fmt.Errorf("wears %d rings on %d fingers, so %d of them would never go on",
+			n, r.effectiveRingSlots(), n-r.effectiveRingSlots())
+	}
 	if r.Fight < 0 {
 		return fmt.Errorf("fight %d is before the first room", r.Fight)
 	}
@@ -468,6 +492,18 @@ func Dummy() bool { return current.Dummy }
 
 // Actions is the action-point budget to fight on, or zero for the record's own.
 func Actions() int { return current.Actions }
+
+// effectiveRingSlots is the cap this record will actually fight on, so check() and RingSlots()
+// cannot come to different conclusions about whether a list of rings fits.
+func (r *record) effectiveRingSlots() int {
+	if r.RingSlots > 0 {
+		return r.RingSlots
+	}
+	return combat.DefaultRingSlots
+}
+
+// RingSlots is how many fingers this scenario wants, or zero for the run's own.
+func RingSlots() int { return current.RingSlots }
 
 // RoundLimit is the clock this scenario wants, or zero for the run's own.
 //

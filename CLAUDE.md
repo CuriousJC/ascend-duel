@@ -149,6 +149,7 @@ go run ./tools/parasitesheet # every parasite: the line it prints against the ru
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
+go run ./tools/ringart      # files generated ring art: reduce, commit, set "Art", strike the worklist
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```

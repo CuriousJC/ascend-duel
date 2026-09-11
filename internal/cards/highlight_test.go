@@ -54,7 +54,7 @@ func inkedPixels(img *image.RGBA, want color.RGBA) int {
 
 func TestOnlyTheMarkedRunTakesTheSecondColour(t *testing.T) {
 	// **The figure, not the sentence** *(owner's call, 2026-08-21)*. Colouring the whole line says a
-	// ring changed the card; colouring "4x" says it changed the number, which is what happened.
+	// relic changed the card; colouring "4x" says it changed the number, which is what happened.
 	f := faces(t)
 
 	marked, err := Render(markedSpec(TextRun{Run: "4x", Ink: pinkInk}), Hand, f)
@@ -102,7 +102,7 @@ func TestAMarkThatIsNotInTheTextChangesNothing(t *testing.T) {
 }
 
 func TestTwoRunsTakeTwoColoursOnOneCard(t *testing.T) {
-	// The case the single-run version could not draw: a ring naming an element and a status that
+	// The case the single-run version could not draw: a relic naming an element and a status that
 	// belongs to a different one. Both have to appear, in their own colours, on one face.
 	f := faces(t)
 

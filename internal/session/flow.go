@@ -29,7 +29,7 @@ const (
 	// PhaseReward is the worm and the card it eats: the post-battle screen.
 	PhaseReward
 
-	// PhaseShop is spending what the fight paid: rings bought and sold with vitae. Built on
+	// PhaseShop is spending what the fight paid: relics bought and sold with vitae. Built on
 	// 2026-08-21, and it cost one entry in the screens table and nothing here — which is what the
 	// phase leaving the scenes was for.
 	PhaseShop

@@ -4,7 +4,7 @@ package combat
 // colour. They lived on the combat screen as an unexported `element` until then, painting a
 // border and meaning nothing — which is why three separate mechanics were all blocked on the
 // same sentence in MECHANICS.md: *element must cross into `internal/combat`*. This file is that
-// crossing, and it unblocks the element hands, the ring discount and the flip ring together.
+// crossing, and it unblocks the element hands, the relic discount and the flip relic together.
 //
 // **An element does two things.** It is matchable by a hand `Step`, and a landed attack applies
 // its element's status to whoever took the blow. Everything else about an element — its colour,
@@ -14,13 +14,13 @@ package combat
 // and discount purposes and applies nothing. The alternative was every card applying its status,
 // which would make the 1-AP Jab and the 1-AP Ward equally good status delivery and turn the
 // defend phase into the status engine. The cost of the rule chosen: element is mechanically
-// inert on the eight concepts that are not attacks, and it buys them nothing until rings land.
+// inert on the eight concepts that are not attacks, and it buys them nothing until relics land.
 
 // Element is what a card is made of. `Basic` is the absence of an element rather than a fifth
 // colour, which is why it is the zero value: a card that names no element is a plain card, and
 // so is a zero `Card`.
 //
-// **Append-only, like GlyphKind.** `Duelist.Statuses` and `Duelist.Rings` are arrays indexed by
+// **Append-only, like GlyphKind.** `Duelist.Statuses` and `Duelist.Relics` are arrays indexed by
 // this value, so inserting an element mid-enum silently re-points every status a duelist is
 // carrying. Add at the end.
 type Element int

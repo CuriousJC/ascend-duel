@@ -22,19 +22,19 @@ func rich(t *testing.T) *Session {
 func priceOf(t *testing.T, key string) int {
 	t.Helper()
 
-	price, ok := RingPrice(key)
+	price, ok := RelicPrice(key)
 	if !ok {
 		t.Fatalf("%s has no price", key)
 	}
 	return price
 }
 
-func TestEveryRingIsPricedAndSellsForSomething(t *testing.T) {
+func TestEveryRelicIsPricedAndSellsForSomething(t *testing.T) {
 	// **A price is registered rather than trusted** — a record with none panics at load, so
 	// reaching this test is most of the check. What it adds is the floor on the sale: rounding a
-	// A written per-tier figure is what stops the cheapest ring being worth nothing to take off.
-	for _, key := range Rings() {
-		price, ok := RingPrice(key)
+	// A written per-tier figure is what stops the cheapest relic being worth nothing to take off.
+	for _, key := range Relics() {
+		price, ok := RelicPrice(key)
 		if !ok || price <= 0 {
 			t.Errorf("%s is priced at %d", key, price)
 			continue
@@ -68,7 +68,7 @@ func TestEachTierPaysBackItsOwnFigure(t *testing.T) {
 	}
 }
 
-func TestBuyingPaysAndPutsTheRingOn(t *testing.T) {
+func TestBuyingPaysAndPutsTheRelicOn(t *testing.T) {
 	run := rich(t)
 	price := priceOf(t, "keen-ring")
 	before := run.Vitae()
@@ -86,7 +86,7 @@ func TestBuyingPaysAndPutsTheRingOn(t *testing.T) {
 
 func TestAnEmptyPurseBuysNothingAndChangesNothing(t *testing.T) {
 	// **A run cannot go into debt**, and a refused purchase has to leave it exactly as it was —
-	// the failure this guards is a ring going on before the purse is asked.
+	// the failure this guards is a relic going on before the purse is asked.
 	run := bare(t)
 	run.vitae = priceOf(t, "keen-ring") - 1
 
@@ -94,7 +94,7 @@ func TestAnEmptyPurseBuysNothingAndChangesNothing(t *testing.T) {
 		t.Error("CanBuy said yes on a short purse")
 	}
 	if run.Buy("keen-ring") {
-		t.Fatal("a ring was bought that could not be afforded")
+		t.Fatal("a relic was bought that could not be afforded")
 	}
 	if got := run.Vitae(); got != priceOf(t, "keen-ring")-1 {
 		t.Errorf("the purse moved to %d on a refused purchase", got)
@@ -106,68 +106,68 @@ func TestAnEmptyPurseBuysNothingAndChangesNothing(t *testing.T) {
 
 func TestTheShopReadsTheRunsOwnFingerCount(t *testing.T) {
 	// **The cap is the run's, not the rules'.** The shelf and the fighter read one number, so a
-	// run that has been given a sixth finger can buy a sixth ring — and a run that has not, cannot.
+	// run that has been given a sixth finger can buy a sixth relic — and a run that has not, cannot.
 	// This is the half that would fail silently: Equip clamps on its own, so a shop still reading
-	// combat.DefaultRingSlots would refuse a purchase the fighter would happily have worn.
+	// combat.DefaultRelicSlots would refuse a purchase the fighter would happily have worn.
 	run := rich(t)
 
-	all := Rings()
-	if len(all) < combat.DefaultRingSlots+1 {
-		t.Skipf("only %d rings authored; this needs %d", len(all), combat.DefaultRingSlots+1)
+	all := Relics()
+	if len(all) < combat.DefaultRelicSlots+1 {
+		t.Skipf("only %d relics authored; this needs %d", len(all), combat.DefaultRelicSlots+1)
 	}
-	run.SetRingSlots(combat.DefaultRingSlots + 1)
+	run.SetRelicSlots(combat.DefaultRelicSlots + 1)
 
-	for _, key := range all[:combat.DefaultRingSlots+1] {
+	for _, key := range all[:combat.DefaultRelicSlots+1] {
 		if !run.Buy(key) {
-			t.Fatalf("%s would not go on a run with %d fingers", key, run.RingSlots())
+			t.Fatalf("%s would not go on a run with %d fingers", key, run.RelicSlots())
 		}
 	}
-	if got := len(run.WornRings()); got != combat.DefaultRingSlots+1 {
-		t.Errorf("a run with %d fingers is wearing %d rings", run.RingSlots(), got)
+	if got := len(run.WornRelics()); got != combat.DefaultRelicSlots+1 {
+		t.Errorf("a run with %d fingers is wearing %d relics", run.RelicSlots(), got)
 	}
 
 	// And the cap still refuses to close the hand, exactly as the clock refuses to stop.
-	run.SetRingSlots(0)
-	if run.RingSlots() < 1 {
-		t.Errorf("a cap of zero left the run with %d fingers", run.RingSlots())
+	run.SetRelicSlots(0)
+	if run.RelicSlots() < 1 {
+		t.Errorf("a cap of zero left the run with %d fingers", run.RelicSlots())
 	}
 }
 
-func TestTheSixthRingIsRefusedRatherThanSwapped(t *testing.T) {
+func TestTheSixthRelicIsRefusedRatherThanSwapped(t *testing.T) {
 	// **The cap surfaces when you try to buy a sixth** — MECHANICS.md — and selling is what frees a
-	// finger. A purchase that quietly threw a ring away would be a ring lost to a misread click.
+	// finger. A purchase that quietly threw a relic away would be a relic lost to a misread click.
 	run := rich(t)
 
-	all := Rings()
-	if len(all) < combat.DefaultRingSlots+1 {
-		t.Skipf("only %d rings authored; this needs %d", len(all), combat.DefaultRingSlots+1)
+	all := Relics()
+	if len(all) < combat.DefaultRelicSlots+1 {
+		t.Skipf("only %d relics authored; this needs %d", len(all), combat.DefaultRelicSlots+1)
 	}
-	for _, key := range all[:combat.DefaultRingSlots] {
+	for _, key := range all[:combat.DefaultRelicSlots] {
 		if !run.Buy(key) {
 			t.Fatalf("%s would not go on", key)
 		}
 	}
 
-	sixth := all[combat.DefaultRingSlots]
+	sixth := all[combat.DefaultRelicSlots]
 	held := run.Vitae()
 
 	if run.CanBuy(sixth) || run.Buy(sixth) {
-		t.Fatalf("a %dth ring went on", combat.DefaultRingSlots+1)
+		t.Fatalf("a %dth relic went on", combat.DefaultRelicSlots+1)
 	}
 	if run.Vitae() != held {
-		t.Error("the purse moved on a refused sixth ring")
+		t.Error("the purse moved on a refused sixth relic")
 	}
 
 	// Selling one is what makes room, and the sixth then goes on.
 	if !run.Sell(all[0]) {
-		t.Fatal("the first ring would not come off")
+		t.Fatal("the first relic would not come off")
 	}
 	if !run.Buy(sixth) {
-		t.Error("the sixth ring was still refused with a finger free")
+		t.Error("the sixth relic was still refused with a finger free")
 	}
 }
 
-func TestABoughtRingIsNotOfferedAgain(t *testing.T) {
+func TestABoughtRelicIsNotOfferedAgain(t *testing.T) {
 	run := rich(t)
 	if !run.Buy("banker-ring") {
 		t.Fatal("the purchase was refused")
@@ -175,14 +175,14 @@ func TestABoughtRingIsNotOfferedAgain(t *testing.T) {
 	held := run.Vitae()
 
 	if run.CanBuy("banker-ring") || run.Buy("banker-ring") {
-		t.Error("the same ring went on twice")
+		t.Error("the same relic went on twice")
 	}
 	if run.Vitae() != held {
-		t.Error("the purse paid for a ring already worn")
+		t.Error("the purse paid for a relic already worn")
 	}
 }
 
-func TestSellingTakesTheRingOffAndPaysBack(t *testing.T) {
+func TestSellingTakesTheRelicOffAndPaysBack(t *testing.T) {
 	run := wearing(t, "fire-ring", "keen-ring", "banker-ring")
 	run.vitae = 0
 
@@ -205,16 +205,16 @@ func TestSellingSomethingYouAreNotWearingDoesNothing(t *testing.T) {
 	held := run.Vitae()
 
 	if run.Sell("keen-ring") {
-		t.Fatal("a ring that was not worn was sold")
+		t.Fatal("a relic that was not worn was sold")
 	}
 	if run.Vitae() != held {
-		t.Error("the purse was paid for a ring nobody owned")
+		t.Error("the purse was paid for a relic nobody owned")
 	}
 }
 
-func TestASoldRingLosesItsGrowth(t *testing.T) {
+func TestASoldRelicLosesItsGrowth(t *testing.T) {
 	// **The accumulator resets on removal** *(owner's call, 2026-08-21)*. `grown` is keyed by record
-	// so a ring taken off and put back on is the same ring; the decision is that it is not the same
+	// so a relic taken off and put back on is the same relic; the decision is that it is not the same
 	// number. It is what stops a Heart Ring being parked in the shop between fights.
 	run := rich(t)
 	if !run.Buy("heart-ring") {
@@ -231,7 +231,7 @@ func TestASoldRingLosesItsGrowth(t *testing.T) {
 		t.Fatal("the sale was refused")
 	}
 	if got := run.Grown("heart-ring"); got != 0 {
-		t.Errorf("a sold ring kept %d of its growth", got)
+		t.Errorf("a sold relic kept %d of its growth", got)
 	}
 
 	if !run.Buy("heart-ring") {
@@ -244,10 +244,10 @@ func TestASoldRingLosesItsGrowth(t *testing.T) {
 
 func TestTheRoundTripCosts(t *testing.T) {
 	// **A swap is meant to cost**, or the shelf is a free rerolling of the hand every visit. Buying
-	// and immediately selling has to leave the run poorer for every ring in the file.
+	// and immediately selling has to leave the run poorer for every relic in the file.
 	run := rich(t)
 
-	for _, key := range Rings() {
+	for _, key := range Relics() {
 		before := run.Vitae()
 		if !run.Buy(key) || !run.Sell(key) {
 			t.Fatalf("%s would not go on and off", key)
@@ -261,7 +261,7 @@ func TestTheRoundTripCosts(t *testing.T) {
 func TestTheRarityInTheFileIsThePriceCharged(t *testing.T) {
 	// The shop reads the run, the run reads the tier, and the tier is the only place a price is
 	// written. A screen quoting one number while the purse pays another is the drift this rules out.
-	records := data.LoadRings()
+	records := data.LoadRelics()
 
 	for key, record := range records {
 		if !record.Rarity.Valid() {
@@ -272,7 +272,7 @@ func TestTheRarityInTheFileIsThePriceCharged(t *testing.T) {
 			t.Errorf("%s is %s and should cost %d, and the registry charges %d",
 				key, record.Rarity, record.Rarity.Price(), got)
 		}
-		if got, want := RingWeight(key), record.Rarity.Weight(); got != want {
+		if got, want := RelicWeight(key), record.Rarity.Weight(); got != want {
 			t.Errorf("%s is %s and should be drawn at %d, and the shop draws it at %d",
 				key, record.Rarity, want, got)
 		}

@@ -89,7 +89,7 @@ func (s *CombatScene) updateStoneFlights() {
 // drawStoneFlights draws whatever is in the air.
 //
 // **Drawn late, over everything**, for the reason the dragged card is: a stone crossing the screen
-// passes the ring pane, the table and the hand, and one that went behind any of them would read as
+// passes the relic pane, the table and the hand, and one that went behind any of them would read as
 // having been dropped rather than carried.
 func (s *CombatScene) drawStoneFlights(gs *state.GlobalState, screen *ebiten.Image) {
 	for _, f := range s.stones {

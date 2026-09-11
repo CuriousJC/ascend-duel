@@ -3,7 +3,7 @@ package screens
 // The potions pane, and the brand seat beside it.
 //
 // **A potion is the one thing in the shop that changes the duelist** *(owner's call, 2026-09-06)*.
-// A ring is worn, a stone raises a rung, a worm eats a card, a parasite waits in a bucket; a potion
+// A relic is worn, a stone raises a rung, a worm eats a card, a parasite waits in a bucket; a potion
 // is drunk on the spot and moves one of the three figures the fighter is made of. See
 // `internal/session/potion.go`, which owns what each one does and refuses a record the rules cannot
 // apply.
@@ -44,14 +44,14 @@ func shopPotions() []session.Potion { return session.Potions() }
 // `brands.json` — see MECHANICS.md §Brands, which is the whole of what exists.
 const (
 	brandName  = "SIXTH FINGER"
-	brandLine  = "WEAR SIX RINGS\nnever comes off"
+	brandLine  = "WEAR SIX RELICS\nnever comes off"
 	brandPrice = 12
 
-	// brandArtKey is the placeholder picture: the ring catalogue's own fallback. **A ring's
+	// brandArtKey is the placeholder picture: the relic catalogue's own fallback. **A relic's
 	// default rather than a drawing of its own**, on the argument the bucket already borrowed the
 	// worm's: a placeholder something else already wears is better than a blank face, and it will
 	// be replaced by a key on a record the day brands become one.
-	brandArtKey = "default-ring"
+	brandArtKey = "default-relic"
 )
 
 // potionSeat and brandSeat are where a card in either pane is drawn and clicked.
@@ -136,7 +136,7 @@ func (s *ShopScene) drinkPotion(gs *state.GlobalState, key string) {
 		return
 	}
 
-	// **The seat empties for the rest of the visit**, the sealed goods' rule rather than the ring
+	// **The seat empties for the rest of the visit**, the sealed goods' rule rather than the relic
 	// shelf's: a potion is not taken off a shelf of one-offs, but three of one bottle bought in a
 	// row would be a shop that sells the same thing until the purse is empty.
 	s.drunk[key] = true

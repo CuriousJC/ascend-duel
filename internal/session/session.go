@@ -51,8 +51,8 @@ type Session struct {
 	vitae int
 
 	// worn is what the player is wearing, by record key, **in worn order** — which is a rule and not
-	// a presentation detail: rings fire left to right and compound, so the order has to be one the
-	// player can see. See ring.go.
+	// a presentation detail: relics fire left to right and compound, so the order has to be one the
+	// player can see. See relic.go.
 	worn []string
 
 	// climb is the run's fight order — who stands in each room, in the order they will be met.
@@ -65,7 +65,7 @@ type Session struct {
 
 	// lifeLeft is the life the fighter finished the last fight on. **Run-level because a screen
 	// after the fight has to draw the duelist as they came out of it** — the reward screen puts the
-	// player's card up beside their rings, and there is no combatant left to ask by then.
+	// player's card up beside their relics, and there is no combatant left to ask by then.
 	lifeLeft int
 
 	// hurt is how much life the run is down, carried from room to room and cleared only by a
@@ -88,8 +88,8 @@ type Session struct {
 	// post-battle screen as it narrates each part. See spoils.go.
 	spoils Spoils
 
-	// grown is each growing ring's accumulator, keyed by record. **Keyed by record rather than by
-	// position**, because it is the first ring state that will have to be serialized and a position
+	// grown is each growing relic's accumulator, keyed by record. **Keyed by record rather than by
+	// position**, because it is the first relic state that will have to be serialized and a position
 	// would mean nothing in a save file.
 	grown map[string]int
 
@@ -146,27 +146,27 @@ type Session struct {
 
 	// roundLimit is how many rounds a fight of this run gets before the clock kills the duelist.
 	// **The run's number, not the rules'** — `combat.DefaultRoundLimit` is what a run opens at and
-	// this is what it is actually on, so a ring or a brand that buys a sixth round has one field to
+	// this is what it is actually on, so a relic or a brand that buys a sixth round has one field to
 	// move rather than a constant it cannot reach. See clock.go, and Equip, which is where it
 	// reaches a fighter.
 	roundLimit int
 
-	// ringSlots is how many rings this run may wear at once. **The run's number, not the rules'** —
-	// `combat.DefaultRingSlots` is what a run opens at and this is what it is actually on, for the
+	// relicSlots is how many relics this run may wear at once. **The run's number, not the rules'** —
+	// `combat.DefaultRelicSlots` is what a run opens at and this is what it is actually on, for the
 	// reason roundLimit is a field: a brand that buys a sixth finger has one place to write. See
-	// ring.go, and Equip, which is where it reaches a fighter.
-	ringSlots int
+	// relic.go, and Equip, which is where it reaches a fighter.
+	relicSlots int
 }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
 // card. The slice is copied, so the caller's starting list cannot be edited by a worm.
 //
-// **It opens wearing StartingRings**, which is empty as shipped — see ring.go, where the list and
-// the reason live. A run buys its rings.
+// **It opens wearing StartingRelics**, which is empty as shipped — see relic.go, where the list and
+// the reason live. A run buys its relics.
 func New(deck []combat.Card) *Session {
 	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{},
 		stones: map[string]int{}, plays: map[string]int{}, roundLimit: combat.DefaultRoundLimit,
-		ringSlots: combat.DefaultRingSlots}
+		relicSlots: combat.DefaultRelicSlots}
 	copy(s.deck, deck)
 
 	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a
@@ -176,14 +176,14 @@ func New(deck []combat.Card) *Session {
 		s.deck[i].ID = s.mintCardID()
 	}
 
-	// **The fingers are counted before the rings go on**, which is the whole reason
-	// StartingRingSlots is a var rather than something set on the run afterwards: Wear checks the
-	// cap, so a sixth ring named by a fixture is refused by a hand that has not been widened yet.
-	if StartingRingSlots > 0 {
-		s.SetRingSlots(StartingRingSlots)
+	// **The fingers are counted before the relics go on**, which is the whole reason
+	// StartingRelicSlots is a var rather than something set on the run afterwards: Wear checks the
+	// cap, so a sixth relic named by a fixture is refused by a hand that has not been widened yet.
+	if StartingRelicSlots > 0 {
+		s.SetRelicSlots(StartingRelicSlots)
 	}
 
-	for _, key := range StartingRings {
+	for _, key := range StartingRelics {
 		s.Wear(key)
 	}
 	// **The bucket is filled the same way the fingers are**, and a key the catalogue has not got is
@@ -292,7 +292,7 @@ func (s *Session) Fight() int { return s.fight }
 // put the same opponent back up rather than skipping past it.
 //
 // **It is the `fight-won` moment**, so it is also where the win's payout is decided and where every
-// growing ring takes its step. Both happen before the room counter moves, which is the order
+// growing relic takes its step. Both happen before the room counter moves, which is the order
 // MECHANICS.md states: interest is on what the run walked out of the fight holding, not on what the
 // win is about to pay it.
 //
@@ -307,7 +307,7 @@ func (s *Session) Fight() int { return s.fight }
 func (s *Session) WonFight(lifeLeft, maxLife int) {
 	s.lifeLeft = lifeLeft
 	s.spoils = s.spoilsFor(lifeLeft)
-	s.growRings()
+	s.growRelics()
 
 	if hurt := maxLife - lifeLeft; hurt > 0 {
 		s.hurt = hurt
@@ -339,7 +339,7 @@ func (s *Session) mintCardID() int {
 	return s.nextCardID
 }
 
-// CardByID is the card the run owns under an identity — **what a card looked like before any ring
+// CardByID is the card the run owns under an identity — **what a card looked like before any relic
 // touched it**, which is the question a drawn card cannot answer for itself.
 //
 // It reports false for an id the run has not got, which covers the two honest cases: a card with

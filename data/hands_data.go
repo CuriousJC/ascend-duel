@@ -10,7 +10,7 @@ package data
 //
 // **One list, and a hand is only ever a damage multiplier** *(2026-08-17)*. A hand counts cards that
 // agree on one axis — the same concept, the same form or the same element — and pays a multiplier;
-// that is the whole vocabulary. Statuses come from elements and rings, and nothing a hand forms
+// that is the whole vocabulary. Statuses come from elements and relics, and nothing a hand forms
 // buys anything besides damage.
 //
 // **What is deliberately not here: any meaning.** The strings below are names, and joining them to
@@ -41,7 +41,7 @@ type handFile struct {
 //
 // **`"any"` is the fourth thing `match` can say** *(owner's call, 2026-09-05)*, and it means the
 // rung is read on whichever of the three the turn satisfies. The Pair is the only entry using it:
-// three rungs, three stones and three rings all said the same thing about the same two cards.
+// three rungs, three stones and three relics all said the same thing about the same two cards.
 type HandData struct {
 	// Key is a stable slug — `pair`, `four-of-a-kind`. It is how a caller asks for a rung without
 	// knowing its number, and it is deliberately independent of Name so a hand can be renamed

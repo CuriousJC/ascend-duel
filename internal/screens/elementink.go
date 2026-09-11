@@ -25,7 +25,7 @@ import (
 // `models.Tooltip.Point`.
 //
 // **One door, so a tooltip cannot be built uncoloured.** Every scene that points a tooltip goes
-// through this, which is what stops a new one shipping as the only panel in the game whose ring
+// through this, which is what stops a new one shipping as the only panel in the game whose relic
 // text is grey.
 func tipLines(lines []string) []models.TipLine {
 	if len(lines) == 0 {

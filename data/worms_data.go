@@ -27,7 +27,7 @@ var wormsJSON []byte
 
 // WormData is one alteration the player can be offered.
 type WormData struct {
-	// WormRecord is the key, and what anything holding a worm stores. Kebab-case, like a ring's.
+	// WormRecord is the key, and what anything holding a worm stores. Kebab-case, like a relic's.
 	WormRecord string `json:"WormRecord"`
 
 	// Name is what is written across the top of the card.

@@ -4,9 +4,9 @@ package data
 //
 // **A status is its own thing as of 2026-08-17, and no longer the same object as an element.**
 // Fire did not burn because it was fire — it burned because the rules held four constants indexed
-// by colour, which made "a second fire status" inexpressible and left every ring with the same
-// one thing to sell. The colour is now only a *predicate* a ring matches on; what happens is a
-// record in this file, named by a ring's `apply-status` effect. See the `rings` skill.
+// by colour, which made "a second fire status" inexpressible and left every relic with the same
+// one thing to sell. The colour is now only a *predicate* a relic matches on; what happens is a
+// record in this file, named by a relic's `apply-status` effect. See the `relics` skill.
 //
 // **`internal/combat` reads this file directly**, which is the third such file after
 // `hands.json` and `duelist_cards.json` and passes the same who-consumes-it test: how much a
@@ -14,7 +14,7 @@ package data
 // engine cannot resolve a round without them, and its own tests could not run if a screen had to
 // hand them over.
 //
-// **`Badge` is the exception and the engine ignores it**, exactly as it ignores a ring's `Art`. A
+// **`Badge` is the exception and the engine ignores it**, exactly as it ignores a relic's `Art`. A
 // badge belongs to the status rather than to whatever applied it — a status arriving by an affix
 // or a boss rule has to draw the same picture — so the key lives beside the rest of the record and
 // `internal/screens` is the layer that resolves it.
@@ -29,7 +29,7 @@ var statusesJSON []byte
 
 // StatusData is one status, whole.
 type StatusData struct {
-	// StatusRecord is the rules identity, and what a ring's `apply-status` effect names.
+	// StatusRecord is the rules identity, and what a relic's `apply-status` effect names.
 	// Kebab-case, like every other record key in `data/`.
 	//
 	// **It is what a save file would write**, because a registered status is named by an
@@ -49,7 +49,7 @@ type StatusData struct {
 	// `miss-chance`, `damage-reduction` or `damage-amplification`.
 	//
 	// **A status is a file entry; a *kind* of status is a Go change.** The same posture the card
-	// verbs and the ring effects take, and for the same reason: a vocabulary that could express
+	// verbs and the relic effects take, and for the same reason: a vocabulary that could express
 	// anything would be a scripting language, and the rules would stop being readable in one file.
 	Effect string `json:"Effect"`
 
@@ -74,7 +74,7 @@ type StatusData struct {
 	Text string `json:"Text"`
 
 	// Element is which of the five colours this status belongs to, by the name `combat.ParseElement`
-	// reads. **The engine ignores it, exactly as it ignores Badge** — a status is applied by a ring
+	// reads. **The engine ignores it, exactly as it ignores Badge** — a status is applied by a relic
 	// naming it, and the rules never ask what colour it is.
 	//
 	// **It exists so the words that name a status are drawn in that element's colour** *(owner's
@@ -86,7 +86,7 @@ type StatusData struct {
 
 	// Verb is how prose says this status happening rather than standing: BURN against BURNING.
 	//
-	// **Ignored by the engine too**, and it exists for the same reason Element does — a ring reading
+	// **Ignored by the engine too**, and it exists for the same reason Element does — a relic reading
 	// "Fire attacks BURN and CHILL the target." names two statuses and neither by its Name. Without
 	// it, half the catalogue's sentences would colour and half would not.
 	Verb string `json:"Verb"`
@@ -96,7 +96,7 @@ type StatusData struct {
 //
 // **File order is registration order, and therefore ID order** — the same contract
 // `LoadDuelistCards` has. A map would hand the registry a different set of IDs every launch, which
-// is the determinism breach `RingOrder` and `EnemyOrder` exist to prevent from the other side.
+// is the determinism breach `RelicOrder` and `EnemyOrder` exist to prevent from the other side.
 func LoadStatuses() []StatusData {
 	var list []StatusData
 	if err := json.Unmarshal(statusesJSON, &list); err != nil {

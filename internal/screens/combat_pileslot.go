@@ -33,7 +33,7 @@ const (
 // right end of the same line.
 //
 // **Both edges come off the pile**, never off a percentage — a control placed any other way would
-// drift the first time the pile moved, which is the staleness ringPaneRect was rewritten to avoid
+// drift the first time the pile moved, which is the staleness relicPaneRect was rewritten to avoid
 // and which this file has now survived twice.
 //
 // **It moved above the pile with it on 2026-09-04** *(owner's call)*. It stood to the pile's left

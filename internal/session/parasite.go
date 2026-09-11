@@ -518,7 +518,7 @@ func parasiteTargetList() string {
 
 // StartingParasites is what a run opens holding in its bucket, by record key.
 //
-// **Empty as shipped, and it is a debug seat**, the counterpart of StartingRings and for the same
+// **Empty as shipped, and it is a debug seat**, the counterpart of StartingRelics and for the same
 // reason: a parasite is bought from the shelf and spent in the fight after it, so the board piece
 // is two screens away from any launch. `internal/scenario` is what fills it; nothing else may.
 var StartingParasites []string
@@ -537,8 +537,8 @@ func (s *Session) Held() []string {
 
 // MaxHeld is how many parasites the run can carry at once.
 //
-// **Two, and it is a rule rather than a number the layout chose** — the same standing `MaxWornRings`
-// has, and for the same reason: the top row draws the bucket as `held/2` beside the rings' `worn/5`,
+// **Two, and it is a rule rather than a number the layout chose** — the same standing `MaxWornRelics`
+// has, and for the same reason: the top row draws the bucket as `held/2` beside the relics' `worn/5`,
 // and a row saying two while the run carried a third is exactly the drift a displayed cap invites.
 //
 // **The bucket was uncapped until 2026-09-06** *(owner's call)*. What that cost was not storage —

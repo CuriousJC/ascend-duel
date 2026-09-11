@@ -70,7 +70,7 @@ func NewEnemyFrom(d data.EnemyData, fight int) *Combatant {
 
 			// **Enemies do not form hands** *(2026-08-17)*. Their cards resolve one at a time, in the
 			// order the planner chose them. It is set here because this is the one place an
-			// opponent is built from a record — the same seat `Rings` deliberately leaves at its
+			// opponent is built from a record — the same seat `Relics` deliberately leaves at its
 			// zero value for the mirror-image reason.
 			SoloAttacks: true,
 		},

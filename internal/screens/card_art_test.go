@@ -115,7 +115,7 @@ func TestEveryFormHasItsOwnMark(t *testing.T) {
 }
 
 // plainText is a card's face text, which is now the only face text there is: **a face says what the
-// card does and no ring reaches it** *(owner's call, 2026-08-26)*. The pairing is still passed around
+// card does and no relic reaches it** *(owner's call, 2026-08-26)*. The pairing is still passed around
 // for the cost.
 func plainText(a combat.ConceptID) string {
 	return cardEffect(combat.Plain(a))
@@ -316,17 +316,17 @@ func TestEveryStatusHasABadge(t *testing.T) {
 	}
 }
 
-func TestEveryRingDrawsSomething(t *testing.T) {
-	// A ring's face is either its own picture or the default one, and both are assets keys that
-	// nothing resolves until a card is drawn — so a typo in `rings.json` is a pink border around
+func TestEveryRelicDrawsSomething(t *testing.T) {
+	// A relic's face is either its own picture or the default one, and both are assets keys that
+	// nothing resolves until a card is drawn — so a typo in `relics.json` is a pink border around
 	// an empty face, on a screen nobody reaches until they have played to a shop. `ArtKey` is
 	// what closes the empty case; this closes the misspelled one.
 	//
-	// **It does not fail a ring for having no art of its own.** Most of the catalogue has none
-	// and is meant to draw the default until somebody paints one — see tools/ringsheet, which
+	// **It does not fail a relic for having no art of its own.** Most of the catalogue has none
+	// and is meant to draw the default until somebody paints one — see tools/relicsheet, which
 	// says how many that is.
-	records := data.LoadRings()
-	for _, key := range data.RingOrder(records) {
+	records := data.LoadRelics()
+	for _, key := range data.RelicOrder(records) {
 		art := records[key].ArtKey()
 		if _, ok := assets.LoadImageData()[art]; !ok {
 			t.Errorf("%s draws %q, which is not an embedded image", key, art)
@@ -454,7 +454,7 @@ func TestTheDeckPanelHidesNothing(t *testing.T) {
 	width := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct)
 	room := width - deckRowLabelWidth - deckRowMargin
 
-	// Well past anything a run can produce: 48 cards is the whole starting deck, and a flip ring
+	// Well past anything a run can produce: 48 cards is the whole starting deck, and a flip relic
 	// recolouring every one of them into a single element is the worst case the panel has.
 	for n := 1; n <= 64; n++ {
 		pitch := rowPitchFor(n, room)
@@ -478,7 +478,7 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 	deck := session.StartingDeck()
 	d := deckContents{draw: deck}
 
-	// Every card recoloured into one element, which is what a flip ring does and what used to
+	// Every card recoloured into one element, which is what a flip relic does and what used to
 	// overflow the row cap by a factor of four.
 	oneRow := make([]combat.Card, 0, len(deck))
 	for _, c := range deck {
@@ -501,7 +501,7 @@ func TestTheDeckPanelDrawsEveryCardItIsGiven(t *testing.T) {
 }
 
 func TestEveryBossDrawsItsPortrait(t *testing.T) {
-	// The same failure as the ring above, one catalogue over, and worse: a boss has no default
+	// The same failure as the relic above, one catalogue over, and worse: a boss has no default
 	// picture to fall back on, so a mistyped `Portrait` is a stairway fight against a card with a
 	// hole in it — and the earliest one of those is three fights into a run.
 	//
@@ -540,9 +540,9 @@ func TestNoBossPortraitIsAnEnemyPortrait(t *testing.T) {
 // TestEveryOpponentNameFitsItsCard holds both opponent pools against the width of the card they
 // are drawn on.
 //
-// **`EnemyStyle` sets a name as one centred line and never wraps it** — `NameWordPerLine` is off,
-// so `nameLines` hands the whole string back — which means a name too wide is not a name that
-// spills onto a second line, it is a name with a letter clipped off each end. That is what
+// **`EnemyStyle` sets a name as one centred line and never wraps it**, which means a name too
+// wide is not a name that spills onto a second line, it is a name with a letter clipped off each
+// end. That is what
 // `Jerry the Toll-Taker` did to half the boss roster until the title moved into its own field on
 // 2026-08-24, and it was invisible until `tools/bosssheet` drew all thirty on one page.
 //
@@ -782,18 +782,18 @@ func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
 	// most of its words demanding. Authored at the card's own size, nothing resamples at all.
 	//
 	// **The weight is the other half of it, and it is the half that fails silently.** The
-	// generator hands back 1060x1484, which is about 1.1 MB a ring. Committing those would be
+	// generator hands back 1060x1484, which is about 1.1 MB a relic. Committing those would be
 	// roughly 155 MB across a 137-ring catalogue, against a repo whose CLAUDE.md already counts
 	// 4.9 MB of sheets as a cost worth managing. At the card's size it is about 57 KB each.
 	//
-	// So: keep the generator's output in `.scratch/ring-art`, and commit the 200x280 reduction.
-	for _, st := range []cards.Style{cards.RingStyle, cards.WormStyle} {
+	// So: keep the generator's output in `.scratch/relic-art`, and commit the 200x280 reduction.
+	for _, st := range []cards.Style{cards.RelicStyle, cards.WormStyle} {
 		if !st.ArtBleed {
 			t.Fatal("a style in this list no longer bleeds — the test is checking the wrong thing")
 		}
 	}
 
-	w, h := cards.RingStyle.Width, cards.RingStyle.Height
+	w, h := cards.RelicStyle.Width, cards.RelicStyle.Height
 	for key, raw := range assets.LoadImageData() {
 		if !strings.HasSuffix(key, "-ring") && !strings.HasSuffix(key, "-worm") {
 			continue

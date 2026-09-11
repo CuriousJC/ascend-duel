@@ -28,7 +28,7 @@ var parasitesJSON []byte
 // ParasiteData is one consumable the player can be sold.
 type ParasiteData struct {
 	// ParasiteRecord is the key, and what anything holding a parasite stores. Kebab-case, like a
-	// worm's and a ring's.
+	// worm's and a relic's.
 	ParasiteRecord string `json:"ParasiteRecord"`
 
 	// Name is what is written across the top of the card.

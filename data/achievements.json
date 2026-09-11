@@ -50,7 +50,7 @@
     "How": "Attack with all five elements in one turn.",
     "Said": [
       "Fire, ice, lightning, earth and arcane, all in the same swing.",
-      "Every ring you own fired at once, and every one you do not sat out."
+      "Every relic you own fired at once, and every one you do not sat out."
     ],
     "Trigger": {
       "Kind": "turn",

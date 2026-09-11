@@ -103,8 +103,8 @@ the salt table, so inserting one mid-list re-points every stream after it.
 | `seeds.EnemyDeck` | fight | `decks.EnemyPile` | the player's opening hand, per the entry below |
 | `seeds.RewardHand` | fight | `dealOffer` (`internal/screens/postbattle.go`) | which cards a win offers you to alter |
 | `seeds.WormOffer` | fight | `dealWorms` (`internal/screens/postbattle.go`) | which alterations are offered, on any change to the reward hand |
-| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which rings are for sale, on any change to the worm catalogue |
-| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the ring shelf |
+| `seeds.ShopStock` | fight | `dealShelf` (`internal/screens/shop.go`) | which relics are for sale, on any change to the worm catalogue |
+| `seeds.BagStock` | fight | `dealStones` (`internal/screens/shop_goods.go`) | which four stones a bag of rocks holds, on any change to the relic shelf |
 | `seeds.CanStock` | fight | `dealCanWorms` and `dealCanOffer` (`internal/screens/shop_goods.go`) | which four worms a can holds, on any change to the free offer |
 | `seeds.LuckRoll` | fight | `CombatScene.luckRNG`, injected into `ResolveRound` as `Sources.Luck` | what every gold and silver card in the run rolls, on any change to the shock roll |
 | Loot offers | — | **not built** | — |
@@ -241,7 +241,7 @@ before it landed and both are now paid:
   array against. A reroll simply advances the cursor.
 - **Never let map iteration order affect an outcome.** Go deliberately randomises it.
   `gs.Combatants` is a map, and so is the enemy roster — iterate a sorted key slice
-  (`data.EnemyOrder`, `data.RingOrder`) whenever a choice depends on order.
+  (`data.EnemyOrder`, `data.RelicOrder`) whenever a choice depends on order.
 - **No `time.Now()` in game rules.** Wall-clock decisions cannot be replayed. Tick counters are
   fine; they are part of the simulation. The one exception is choosing the run seed, above.
 - **`internal/music` has no `math/rand` either.** Its drum noise is a 15-bit shift register

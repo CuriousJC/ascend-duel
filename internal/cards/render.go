@@ -68,7 +68,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 
 	// **The card is drawn at the origin at its own size; the bleed is room past its right and
 	// bottom edges** for an ornament that hangs off the corner. See Style.Bleed — it is zero on
-	// every style but the ring’s.
+	// every style but the relic’s.
 	img := image.NewRGBA(image.Rect(0, 0, st.Width+st.Bleed, st.Height+st.Bleed))
 
 	// The back is drawn before anything else is considered, and returns. Every other field
@@ -105,11 +105,8 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 				return drawTextHCentered(dst, f, size, s, st.Width, y, c)
 			}
 		}
-		for i, line := range nameLines(s.Name, st) {
-			y := st.NameTop + i*st.NameLinePitch
-			if err := draw(img, f, st.NameSize, line, st.TextLeft, y, ink(NameInk)); err != nil {
-				return nil, err
-			}
+		if err := draw(img, f, st.NameSize, s.Name, st.TextLeft, st.NameTop, ink(NameInk)); err != nil {
+			return nil, err
 		}
 	}
 	if err := drawStats(img, s, st, f, ink); err != nil {
@@ -159,20 +156,20 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 
 // drawCounter puts Spec.Counter on a disc centred on the card’s bottom-right corner.
 //
-// **Last, over everything**, because it is the one thing on the face that says how far a ring has
-// got rather than what the ring is — a figure painted over by the artwork underneath it would be
+// **Last, over everything**, because it is the one thing on the face that says how far a relic has
+// got rather than what the relic is — a figure painted over by the artwork underneath it would be
 // the one part of the card the player cannot read.
 //
 // **There is a disc behind it** *(owner’s call, 2026-09-09)*, which reverses the 2026-08-26 call
 // that there should not be. The argument then was that a second surface reads as a sticker applied
-// to the ring rather than as something the ring says, and that is still true — what changed is
+// to the relic rather than as something the relic says, and that is still true — what changed is
 // which of the two matters: a bare figure in the card’s own border pink, on a card that is mostly
 // artwork, does not read as a *count* at all.
 //
 // **Centred on the corner rather than tucked inside it** *(owner’s call, 2026-09-09)*, which is
 // the discards-left badge’s own arrangement — see screens.drawDiscardsLeft, which centres on the
 // Discard button’s corner for the same reason. Most of the disc hangs off the card, so it reads as
-// a counter attached to the ring instead of a second thing printed on it, and it costs the artwork
+// a counter attached to the relic instead of a second thing printed on it, and it costs the artwork
 // nothing at all. **Style.Bleed is what pays for it**: the rendered image is that much larger than
 // the card on the right and the bottom, because a badge clipped to the card would be a quarter
 // disc filling the corner.
@@ -180,7 +177,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 // **The disc is the border ink and the figure is the card’s surface**, an inversion of what was
 // there rather than a new colour: the palette has no hue left to claim, so the badge is made
 // obvious by swapping the two colours the card already carries. Both are taken *after* state, like
-// the border, so a ring you cannot act on fades with the rest of its card.
+// the border, so a relic you cannot act on fades with the rest of its card.
 //
 // **Centred on the disc, and allowed to outgrow it.** Two characters sit inside; `10.5` and `+100`
 // spill past the curve on both sides, which is the readable failure — the alternative is a figure
@@ -663,7 +660,7 @@ type Segment struct {
 // **Every occurrence of every run is coloured**, so one entry carries a word a sentence repeats —
 // "apply BURNING status … BURNING enemies" — without spending a second seat in a fixed array.
 //
-// **Matching ignores case and the line keeps its own spelling.** Rings write "Fire" and worms write
+// **Matching ignores case and the line keeps its own spelling.** Relics write "Fire" and worms write
 // "FIRE", and neither the file nor the caller's vocabulary should have to pick one.
 //
 // **A run only matches at a word boundary**: ICE is inside SLICE and BURN is inside BURNING, and a
@@ -902,28 +899,10 @@ func blitGlyph(dst *image.RGBA, at image.Rectangle, glyph *image.RGBA, scale int
 	}
 }
 
-// nameLines is the name as the style wants it drawn: one line, or one word to a line.
-//
-// **A style that has not asked for the break gets its name back whole**, spaces and all, so
-// this is one call rather than a branch at the draw site and the hand, mini, enemy and duelist
-// cards are provably unchanged by it.
-func nameLines(name string, st Style) []string {
-	if !st.NameWordPerLine {
-		return []string{name}
-	}
-	// Fields rather than Split, so a double space or a stray trailing one does not produce a
-	// blank line and push the rest of the name down the card.
-	lines := strings.Fields(name)
-	if len(lines) == 0 {
-		return []string{name}
-	}
-	return lines
-}
-
 // drawArt scales Spec.Art to fit the style's art box and centres it there.
 //
 // **Smoothly resampled, unlike everything else here.** The generated glyphs are pixel art
-// and must never be filtered; a ring is a photograph-like asset several times the size of
+// and must never be filtered; a relic is a photograph-like asset several times the size of
 // the box it lands in, and nearest-neighbour downsampling one of those drops every other
 // row and produces visible stair-stepping. CatmullRom is the expensive option and this
 // runs once per distinct card, not per frame.

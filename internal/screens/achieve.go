@@ -72,7 +72,7 @@ func settleCounters(gs *state.GlobalState) {
 //
 // **An unlock is a second key on a second list** *(owner's call, 2026-09-06)*. `profile.go` draws
 // the line — an achievement is a record and changes nothing, an unlock is an input to the rules —
-// so a ring behind an achievement reads the unlock and never the award. Nothing carries one yet;
+// so a relic behind an achievement reads the unlock and never the award. Nothing carries one yet;
 // the bridge is here so that the day one does, it is a field in the JSON rather than a change here.
 func earn(gs *state.GlobalState, keys []string) {
 	if gs == nil || gs.Profile == nil || len(keys) == 0 {

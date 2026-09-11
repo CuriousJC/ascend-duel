@@ -26,7 +26,7 @@ import (
 
 // shopkeeperLines is the greeting *(owner's wording, 2026-08-22)*.
 //
-// **The rasp is one run in the ring pink**, the colour this game already spends on rings and on
+// **The rasp is one run in the relic pink**, the colour this game already spends on relics and on
 // the chrome around them — so the sentence that is the creature talking is visibly not the
 // sentence that is the room being described.
 func shopkeeperLines() []proseLine {

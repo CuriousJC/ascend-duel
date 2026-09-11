@@ -62,7 +62,7 @@ func TestTheBossBonusCompounds(t *testing.T) {
 }
 
 // TestAWoundNeverStartsAFightDead. A wound outliving the ceiling that was holding it is reachable
-// by selling the ring that raised the ceiling, and a run that cannot start a fight is worse than
+// by selling the relic that raised the ceiling, and a run that cannot start a fight is worse than
 // one that starts it on a sliver.
 func TestAWoundNeverStartsAFightDead(t *testing.T) {
 	run := bare(t)

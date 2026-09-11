@@ -16,12 +16,12 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/state"
 )
 
-// panelRun is a run wearing the named rings, with a deck small enough to reason about by hand.
-func panelRun(t *testing.T, deck []combat.Card, rings ...string) *session.Session {
+// panelRun is a run wearing the named relics, with a deck small enough to reason about by hand.
+func panelRun(t *testing.T, deck []combat.Card, relics ...string) *session.Session {
 	t.Helper()
 
 	run := session.New(deck)
-	for _, key := range rings {
+	for _, key := range relics {
 		if !run.Wear(key) {
 			t.Fatalf("could not wear %s", key)
 		}
@@ -29,7 +29,7 @@ func panelRun(t *testing.T, deck []combat.Card, rings ...string) *session.Sessio
 	return run
 }
 
-// panelDeck is two lightning cards and a fire one — enough for a flip ring to have something to
+// panelDeck is two lightning cards and a fire one — enough for a flip relic to have something to
 // take and something to leave alone.
 func panelDeck() []combat.Card {
 	return []combat.Card{
@@ -46,7 +46,7 @@ func laidOut(d deckContents, v deckView) pileGridLayout {
 
 func TestAlterationsAreOnByDefault(t *testing.T) {
 	// **The default is the deck you will be dealt, not the deck you own** *(owner's call,
-	// 2026-08-24)*. A run wearing a flip ring never draws a lightning card, so a panel opening on a
+	// 2026-08-24)*. A run wearing a flip relic never draws a lightning card, so a panel opening on a
 	// list of lightning cards is showing a deck that does not exist for the length of that run.
 	//
 	// The zero deckView is what every caller starts from, so this pins the field's sense as well as
@@ -76,7 +76,7 @@ func TestAlterationsAreOnByDefault(t *testing.T) {
 func TestTheAlterationsToggleShowsBothFacesOfOneCard(t *testing.T) {
 	// **A card in the discard has been through a draw and holds only what it became.** Showing it
 	// as the run owns it is a lookup by ID and nothing else — no inversion of the flip, which could
-	// not be done anyway once two rings converge on one colour.
+	// not be done anyway once two relics converge on one colour.
 	run := panelRun(t, panelDeck(), "frozen-lightning-ring")
 
 	owned := run.Deck()

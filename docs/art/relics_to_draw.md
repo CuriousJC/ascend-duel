@@ -1,39 +1,39 @@
-# Rings still to draw
+# Relics still to draw
 
-**The subject paragraphs, one per ring, for the 114 rings with no artwork yet.** The prompt they
+**The subject paragraphs, one per relic, for the 114 relics with no artwork yet.** The prompt they
 all share is in `card_art_prompt.MD` and is pasted verbatim — with its **whole card** composition
 block — above whichever of these is being generated; this file is only ever the last line.
 
 ## How to use it
 
-1. Fill in the `Draw:` line under a ring — what the object _is_ and what the effect is doing to
+1. Fill in the `Draw:` line under a relic — what the object _is_ and what the effect is doing to
    it, in one paragraph. The prompt never names the object, so this is the only place the
-   generator learns there is a ring on fire rather than a ring made of teeth.
+   generator learns there is a relic on fire rather than a relic made of teeth.
 2. Paste the prompt and its whole-card composition block, then the paragraph, into the generator.
-3. Save the result as `.scratch/to-process-ring-art/<key>.png` — the **key is the filename**, and
+3. Save the result as `.scratch/to-process-relic-art/<key>.png` — the **key is the filename**, and
    nothing else about the file matters.
-4. Run `go run ./tools/ringart`. It reduces each picture to the card's own size, commits it to
-   `assets/ring/`, sets `"Art"` on the record in `data/rings.json`, strikes the ring from this
+4. Run `go run ./tools/relicart`. It reduces each picture to the card's own size, commits it to
+   `assets/relic/`, sets `"Art"` on the record in `data/relics.json`, strikes the relic from this
    file, recomputes the counts in every heading above, and moves the original to
    `.scratch/processed-rings/`. `-n` says what it would do and writes nothing.
 
 **The key is the filename and the filename is the key**, so `aftershock-ring` here is
-`assets/ring/aftershock-ring.png` and `"Art": "aftershock-ring"`. It is already the record id, so
+`assets/relic/aftershock-ring.png` and `"Art": "aftershock-ring"`. It is already the record id, so
 there is nothing to invent.
 
-**A ring card carries no title** _(owner's call, 2026-09-11)_, so the picture is doing all of the
-work of saying which ring this is. Two rings that scale damage on two different elements have to
+**A relic card carries no title** _(owner's call, 2026-09-11)_, so the picture is doing all of the
+work of saying which relic this is. Two relics that scale damage on two different elements have to
 be told apart by their art alone — which is the argument for making the _element_ the loudest
-thing in a picture whenever a ring has one.
+thing in a picture whenever a relic has one.
 
 **Nothing here is struck by hand any more** _(2026-09-11)_. A worklist that keeps finished entries
 is a worklist nobody trusts the length of, and the four steps that used to end an entry — reduce,
-commit, record, strike — were done once per ring, a hundred and twenty times, with two of them
-failing _silently_: an `"Art"` left empty just draws `default-ring.png`, and an entry left standing
-is a ring that gets drawn twice. `tools/ringart` does all four off the filename, and refuses a file
+commit, record, strike — were done once per relic, a hundred and twenty times, with two of them
+failing _silently_: an `"Art"` left empty just draws `default-relic.png`, and an entry left standing
+is a relic that gets drawn twice. `tools/relicart` does all four off the filename, and refuses a file
 whose stem names no record rather than filing it somewhere nothing will look.
 
-## Common — 40 rings
+## Common — 40 relics
 
 ### Cleaver
 
@@ -48,7 +48,7 @@ whose stem names no record rather than filing it somewhere nothing will look.
 - **Full name:** Coiled Ring
 - **Rule:** Deals 5 more DMG for each crush card
   kept in hand.
-- **Draw:**
+- **Draw:** tightly braided jade metal relic
 
 ### Confluent
 
@@ -323,7 +323,7 @@ whose stem names no record rather than filing it somewhere nothing will look.
   kept in hand.
 - **Draw:**
 
-## Uncommon — 51 rings
+## Uncommon — 51 relics
 
 ### Aftershock
 
@@ -689,7 +689,7 @@ whose stem names no record rather than filing it somewhere nothing will look.
 - **Rule:** Every fire card is dealt as an arcane card.
 - **Draw:**
 
-## Rare — 23 rings
+## Rare — 23 relics
 
 ### Atrophy
 

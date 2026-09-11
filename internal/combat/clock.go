@@ -17,7 +17,7 @@ package combat
 //
 // **It is a default and not the rule.** Nothing in this package reads it: a duelist's own
 // `RoundLimit` is what the clock is checked against, and this is the number a run starts that
-// field at. The indirection is what a ring or a brand that buys the player a sixth round will
+// field at. The indirection is what a relic or a brand that buys the player a sixth round will
 // move — see session.Session.RoundLimit, which is where a run's copy lives.
 const DefaultRoundLimit = 5
 

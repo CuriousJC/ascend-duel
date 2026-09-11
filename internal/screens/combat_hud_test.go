@@ -6,13 +6,13 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/cards"
 )
 
-// The top row is three things sharing one line: the duelist card, the ring row, the enemy
+// The top row is three things sharing one line: the duelist card, the relic row, the enemy
 // card. It is arithmetic and therefore checkable without a window — the same narrow
 // exception the other tests in this package take. Nothing here creates an ebiten.Image.
 //
-// It exists because the ring row's right edge was a hardcoded 79% chosen to clear an enemy
+// It exists because the relic row's right edge was a hardcoded 79% chosen to clear an enemy
 // card centred at 88%, and that card moved to the corner the next day. A percentage standing
-// in for something else's position goes stale silently: the failure is a ring drawn
+// in for something else's position goes stale silently: the failure is a relic drawn
 // underneath a card, which looks like a drawing bug rather than a stale constant.
 
 // A zero CombatScene is enough for all three: none of the placements reads the fighter, the
@@ -22,37 +22,37 @@ func TestTheTopRowIsThreeThingsThatDoNotOverlap(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	duelist, rings, enemy := s.duelistCardRect(gs), s.ringPaneRect(gs), s.enemyCardRect(gs)
+	duelist, relics, enemy := s.duelistCardRect(gs), s.relicPaneRect(gs), s.enemyCardRect(gs)
 
-	if rings.Min.X <= duelist.Max.X {
-		t.Errorf("the ring row starts at x=%d, inside the duelist card ending at x=%d",
-			rings.Min.X, duelist.Max.X)
+	if relics.Min.X <= duelist.Max.X {
+		t.Errorf("the relic row starts at x=%d, inside the duelist card ending at x=%d",
+			relics.Min.X, duelist.Max.X)
 	}
-	if rings.Max.X >= enemy.Min.X {
-		t.Errorf("the ring row ends at x=%d, inside the enemy card starting at x=%d",
-			rings.Max.X, enemy.Min.X)
+	if relics.Max.X >= enemy.Min.X {
+		t.Errorf("the relic row ends at x=%d, inside the enemy card starting at x=%d",
+			relics.Max.X, enemy.Min.X)
 	}
 
 	// **What is deliberately not checked is that the cards do not overlap** *(owner's call,
-	// 2026-09-06)*. They do, and that is the design: the top row packs five ring seats and two
+	// 2026-09-06)*. They do, and that is the design: the top row packs five relic seats and two
 	// consumable seats at one shared pitch, and between the two fighter cards that pitch is two
-	// pixels tighter than a card. ringSlotPitch closes a row up rather than shrinking a card,
-	// because a smaller ring is a different drawing — so an assertion that five cards fit at full
+	// pixels tighter than a card. relicSlotPitch closes a row up rather than shrinking a card,
+	// because a smaller relic is a different drawing — so an assertion that five cards fit at full
 	// width was a fact about a row with nothing beside it, and it went stale the moment the row was
 	// divided.
 	//
 	// The floor kept here is a sanity bound and not a layout rule: a pitch that has collapsed to
 	// nothing means the span arithmetic is wrong rather than that the row is snug.
-	if pitch := ringSlotPitch(rings, maxRings); pitch <= 0 {
-		t.Errorf("%d rings sit at a pitch of %dpx in a %dpx row", maxRings, pitch, rings.Dx())
+	if pitch := relicSlotPitch(relics, maxRelics); pitch <= 0 {
+		t.Errorf("%d relics sit at a pitch of %dpx in a %dpx row", maxRelics, pitch, relics.Dx())
 	}
 
 	// The consumables pane is the other half of the row, and it must clear the enemy card and the
-	// rings on either side of it. It is fixed width, so this is what catches the row being narrowed
+	// relics on either side of it. It is fixed width, so this is what catches the row being narrowed
 	// under it rather than the pane being resized.
-	if cons := s.consumablePaneRect(gs); cons.Min.X <= rings.Max.X || cons.Max.X > enemy.Min.X {
-		t.Errorf("the consumables pane runs %d..%d, against a ring row ending at %d and an enemy card at %d",
-			cons.Min.X, cons.Max.X, rings.Max.X, enemy.Min.X)
+	if cons := s.consumablePaneRect(gs); cons.Min.X <= relics.Max.X || cons.Max.X > enemy.Min.X {
+		t.Errorf("the consumables pane runs %d..%d, against a relic row ending at %d and an enemy card at %d",
+			cons.Min.X, cons.Max.X, relics.Max.X, enemy.Min.X)
 	}
 }
 
@@ -88,25 +88,25 @@ func TestBothCornerCardsAreOnScreenWithEqualMargins(t *testing.T) {
 	}
 }
 
-func TestTheRingRowSitsBelowTheCardsBesideIt(t *testing.T) {
+func TestTheRelicRowSitsBelowTheCardsBesideIt(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
-	duelist, rings := s.duelistCardRect(gs), s.ringPaneRect(gs)
+	duelist, relics := s.duelistCardRect(gs), s.relicPaneRect(gs)
 
 	// **The drop is deliberate and the amount is the point.** The row was flush with the two
 	// cards' tops until the backing panel arrived: three things on one line, with a surface
 	// behind the middle one, read as a single wide object with two cards embedded in it. The
 	// offset breaks that line.
-	if got := rings.Min.Y - duelist.Min.Y; got != ringPaneTopDrop {
-		t.Errorf("the ring row sits %dpx below the duelist card, want %d", got, ringPaneTopDrop)
+	if got := relics.Min.Y - duelist.Min.Y; got != relicPaneTopDrop {
+		t.Errorf("the relic row sits %dpx below the duelist card, want %d", got, relicPaneTopDrop)
 	}
 
-	// **The row is exactly a card deep** *(2026-09-04)*. It used to be a card plus ringRuleGap,
+	// **The row is exactly a card deep** *(2026-09-04)*. It used to be a card plus relicRuleGap,
 	// reserving room under itself for the rule and the worn count; both moved into the caption
 	// column beside the duelist card, which is the height that let the card grow to its present size.
-	if want := cards.RingStyle.Height; rings.Dy() != want {
-		t.Errorf("the ring row is %dpx tall, want %d — exactly a ring card", rings.Dy(), want)
+	if want := cards.RelicStyle.Height; relics.Dy() != want {
+		t.Errorf("the relic row is %dpx tall, want %d — exactly a relic card", relics.Dy(), want)
 	}
 }
 
@@ -121,7 +121,7 @@ func TestTheTowerLinesFitBetweenTheCardAndTheTable(t *testing.T) {
 	card, place := s.duelistCardRect(gs), s.towerPlaceRect(gs)
 
 	// **The caption is back under the card** *(2026-09-04, owner's call)*. It stood in a column
-	// beside it for a day, which bought the top band height and cost the ring row — and therefore
+	// beside it for a day, which bought the top band height and cost the relic row — and therefore
 	// the hand, which is laid out to it — 166 pixels of width. See towerPlaceRect.
 	if place.Min.X != card.Min.X || place.Max.X != card.Max.X {
 		t.Errorf("the tower lines run x=%d..%d, want the duelist card's column %d..%d",
@@ -132,17 +132,17 @@ func TestTheTowerLinesFitBetweenTheCardAndTheTable(t *testing.T) {
 			place.Min.Y, towerLineGap, card.Max.Y)
 	}
 
-	// And clear of the ring row, which now starts at the card's own right edge.
-	if pane := s.ringPaneRect(gs); place.Max.X > pane.Min.X {
-		t.Errorf("the tower lines reach x=%d, into the ring row at x=%d", place.Max.X, pane.Min.X)
+	// And clear of the relic row, which now starts at the card's own right edge.
+	if pane := s.relicPaneRect(gs); place.Max.X > pane.Min.X {
+		t.Errorf("the tower lines reach x=%d, into the relic row at x=%d", place.Max.X, pane.Min.X)
 	}
 
 	// The whole top band has to finish above the table row — the caption included, since it is
 	// under the card now rather than beside it.
 	top := tableRowTop(gs)
-	if s.ringCountRect(gs).Max.Y > top {
-		t.Errorf("the ring count reaches y=%d, into the table row at y=%d",
-			s.ringCountRect(gs).Max.Y, top)
+	if s.relicCountRect(gs).Max.Y > top {
+		t.Errorf("the relic count reaches y=%d, into the table row at y=%d",
+			s.relicCountRect(gs).Max.Y, top)
 	}
 	if place.Max.Y > top {
 		t.Errorf("the tower lines reach y=%d, into the table row at y=%d", place.Max.Y, top)
@@ -173,17 +173,17 @@ func TestEveryRoomOnAFloorIsNamed(t *testing.T) {
 	}
 }
 
-func TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards(t *testing.T) {
+func TestTheRelicBackingHoldsTheWholeRowWithoutTouchingTheCards(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
 	duelist, enemy := s.duelistCardRect(gs), s.enemyCardRect(gs)
-	rings, back := s.ringPaneRect(gs), s.ringPaneBackRect(gs)
+	relics, back := s.relicPaneRect(gs), s.relicPaneBackRect(gs)
 
 	// It has to reach past the row on every side, or the two end cards sit on its edge and it
 	// reads as a border drawn around them.
-	if !rings.In(back) {
-		t.Errorf("the backing %v does not cover the row %v", back, rings)
+	if !relics.In(back) {
+		t.Errorf("the backing %v does not cover the row %v", back, relics)
 	}
 
 	// And it must not reach the fighter cards, or the three-part row becomes one object again.
@@ -198,9 +198,9 @@ func TestTheRingBackingHoldsTheWholeRowWithoutTouchingTheCards(t *testing.T) {
 
 	// **The fraction is no longer under the row** *(2026-09-04)*, so the backing is simply the row
 	// padded rather than extended to cover it. What still has to be true is that it holds the cards
-	// on every side; see ringCountRect for where the count went and why.
-	if back.Max.Y < rings.Max.Y {
+	// on every side; see relicCountRect for where the count went and why.
+	if back.Max.Y < relics.Max.Y {
 		t.Errorf("the backing ends at y=%d, above the row it stands behind at y=%d",
-			back.Max.Y, rings.Max.Y)
+			back.Max.Y, relics.Max.Y)
 	}
 }

@@ -9,7 +9,7 @@ package session
 //
 // **The wound is stored, not the life left.** `MaxLife` is rebuilt from the record every visit and
 // then moved by whatever the run is wearing — a flat +25 here, a percentage there — so a stored
-// "you have 40 life" would silently become a different fraction the moment a ring was bought or
+// "you have 40 life" would silently become a different fraction the moment a relic was bought or
 // sold. A wound is the same wound whatever ceiling it sits under, and its zero value is the honest
 // one: a run that has not been hurt yet is healthy, where a stored life of zero would be a corpse.
 //
@@ -27,7 +27,7 @@ const bossLifePct = 133
 // in under. It is the wound subtracted from that ceiling.
 //
 // **It never returns less than one.** A wound deeper than the ceiling is only reachable by taking
-// off the rings that were holding the ceiling up, and a run that cannot start a fight is a worse
+// off the relics that were holding the ceiling up, and a run that cannot start a fight is a worse
 // failure than a run that starts one on a sliver.
 func (s *Session) LifeAtFightStart(maxLife int) int {
 	life := maxLife - s.hurt
@@ -45,8 +45,8 @@ func (s *Session) Hurt() int { return s.hurt }
 func (s *Session) BossWins() int { return s.bossWins }
 
 // scaleLifeForBosses raises a ceiling by what the run's beaten bosses are worth. It is applied to
-// the record's own figure **before** any ring touches it, so a flat +25 stays worth 25 and a
-// percentage ring scales the whole grown body — which keeps the ring grammar's own ordering note
+// the record's own figure **before** any relic touches it, so a flat +25 stays worth 25 and a
+// percentage relic scales the whole grown body — which keeps the relic grammar's own ordering note
 // in Equip true rather than adding a third rule to remember.
 func (s *Session) scaleLifeForBosses(maxLife int) int {
 	for i := 0; i < s.bossWins; i++ {

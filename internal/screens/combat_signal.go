@@ -20,7 +20,7 @@ package screens
 //
 // The burst is deliberately not a `gesture` in that table. It is an *emphasis at the source* rather
 // than a journey of its own, so it composes with whatever the row already says a kind does — which
-// is what lets the next thing that wants fireworks (a scored card, a ring firing) reuse it without
+// is what lets the next thing that wants fireworks (a scored card, a relic firing) reuse it without
 // the table gaining a row per decoration. A `gestureBurst` is worth adding the day something bursts
 // and sends nothing anywhere.
 //
@@ -111,14 +111,14 @@ const (
 	signalFromScale = 1.0
 	signalToScale   = 0.74
 
-	// signalRays is how many arms the outer ring throws, and signalSparks how many the inner one
-	// does. **Both odd, and coprime** — an even count reads as a star sitting still, and two rings
+	// signalRays is how many arms the outer relic throws, and signalSparks how many the inner one
+	// does. **Both odd, and coprime** — an even count reads as a star sitting still, and two relics
 	// whose counts share a factor line up into spokes.
 	signalRays   = 15
 	signalSparks = 11
 
 	// signalRayLen is how far the longest outer arm reaches past its own inner radius, and
-	// signalSparkLen how far the inner ring's do.
+	// signalSparkLen how far the inner relic's do.
 	//
 	// **Both are large deliberately** *(owner's call, 2026-09-10)*. A burst the size of the card it
 	// came out of is a decoration on that card; one that reaches well past it is the card doing
@@ -502,8 +502,8 @@ func (s *CombatScene) drawSignals(gs *state.GlobalState, screen *ebiten.Image) {
 // drawBurst throws the sparks. **They grow out of the card and fade rather than travelling**,
 // because what a firework says is "here", and an arm that drifts is an arm going somewhere.
 //
-// **Two rings and a core, drawn back to front.** The long ring carries the reach, the short ring
-// carries the density — a single ring of fifteen is legible as fifteen lines, where two rings at
+// **Two relics and a core, drawn back to front.** The long relic carries the reach, the short relic
+// carries the density — a single relic of fifteen is legible as fifteen lines, where two relics at
 // different lengths read as a scatter — and the core is the one place they are all still touching,
 // which is what makes them one object instead of twenty-six.
 func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGBA) {
@@ -518,11 +518,11 @@ func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGB
 
 	arm := ink
 	arm.A = uint8(255 * fade)
-	drawSparkRing(screen, x, y, inner, signalRayLen, signalRayWidth, p, arm, burstRays(c, 0))
+	drawSparkRelic(screen, x, y, inner, signalRayLen, signalRayWidth, p, arm, burstRays(c, 0))
 
-	// The inner ring is offset half a step so its arms sit between the long ones rather than under
+	// The inner relic is offset half a step so its arms sit between the long ones rather than under
 	// them, and it is thinner: it is the shower, not the reach.
-	drawSparkRing(screen, x, y, inner*0.7, signalSparkLen, signalRayWidth*0.6, p, arm,
+	drawSparkRelic(screen, x, y, inner*0.7, signalSparkLen, signalRayWidth*0.6, p, arm,
 		burstRays(c, 1))
 
 	// **The core is the ink lifted a little toward white**, not white itself — a saturated colour
@@ -538,8 +538,8 @@ func drawBurst(screen *ebiten.Image, at image.Point, c cardSignal, ink color.RGB
 		float32(float64(cardWidth)*signalCoreSize*(1-0.55*p)), core, true)
 }
 
-// drawSparkRing throws one ring of arms, each to its own fraction of the ring's reach.
-func drawSparkRing(screen *ebiten.Image, x, y float32, inner, reach, width float64,
+// drawSparkRelic throws one relic of arms, each to its own fraction of the relic's reach.
+func drawSparkRelic(screen *ebiten.Image, x, y float32, inner, reach, width float64,
 	p float64, ink color.RGBA, rays []float64) {
 
 	step := 2 * math.Pi / float64(len(rays))
@@ -554,22 +554,22 @@ func drawSparkRing(screen *ebiten.Image, x, y float32, inner, reach, width float
 	}
 }
 
-// burstRays is how far each arm of one ring reaches, as fractions of that ring's own length.
+// burstRays is how far each arm of one relic reaches, as fractions of that relic's own length.
 //
-// **Derived from the rider, the seat and the ring, never rolled** — the crack pattern's rule and
+// **Derived from the rider, the seat and the relic, never rolled** — the crack pattern's rule and
 // the dissolve's, and the explicit exception the randomness skill records. So one card's burst is
 // the same burst through a resize, an interruption or a re-entry, and nothing here touches a
 // stream.
 //
 // **The spread is wide on purpose.** Arms of nearly one length are a circle with a fringe; arms
 // between two fifths and full reach are an explosion.
-func burstRays(c cardSignal, ring int) []float64 {
+func burstRays(c cardSignal, relic int) []float64 {
 	n := signalRays
-	if ring > 0 {
+	if relic > 0 {
 		n = signalSparks
 	}
 	out := make([]float64, n)
-	h := uint32(int(c.rider)*2654435761) ^ uint32(c.seat*40503+7) ^ uint32(ring*2246822519)
+	h := uint32(int(c.rider)*2654435761) ^ uint32(c.seat*40503+7) ^ uint32(relic*2246822519)
 	for i := range out {
 		h ^= h << 13
 		h ^= h >> 17

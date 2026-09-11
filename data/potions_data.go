@@ -2,7 +2,7 @@ package data
 
 // The potions: **what the player may do to the duelist themself.**
 //
-// A ring is worn and comes off; a stone raises a rung; a worm eats a card. A potion is the one
+// A relic is worn and comes off; a stone raises a rung; a worm eats a card. A potion is the one
 // thing in the shop that changes the *body* — the life it is carrying, the ceiling that life sits
 // under, or the damage it hits for — and it is drunk on the spot, so nothing is carried and nothing
 // is held. That is what keeps it out of the consumables pane the parasites live in.
@@ -25,7 +25,7 @@ var potionsJSON []byte
 
 // PotionData is one potion as written in the file.
 type PotionData struct {
-	// PotionRecord is the key, and what anything naming a potion stores. Kebab-case, like a ring's,
+	// PotionRecord is the key, and what anything naming a potion stores. Kebab-case, like a relic's,
 	// a worm's and a stone's.
 	PotionRecord string `json:"PotionRecord"`
 
@@ -44,7 +44,7 @@ type PotionData struct {
 	Amount int `json:"Amount"`
 
 	// Price is what the shop charges. **Written per record rather than derived from a tier**,
-	// unlike a ring: there is no rarity here and no shelf draw to weight, so a tier would be a
+	// unlike a relic: there is no rarity here and no shelf draw to weight, so a tier would be a
 	// pricing mechanism with one member per band.
 	Price int `json:"Price"`
 

@@ -33,12 +33,12 @@ package systems
 // **What this package must not learn is what a rider is.** An Upgrade is a *presentation* value:
 // something visible has happened to this card, and here is what to paint it with.
 // `internal/screens` is where a rider becomes an Upgrade, on the same terms `Spec.TextInk` is
-// where a ring becomes a colour.
+// where a relic becomes a colour.
 //
 // # The colours are placeholders and they are standing on a full wheel
 //
 // **Said out loud because it is a real cost** *(2026-09-09)*. CLAUDE.md records that hue is spent:
-// five elements, a ring's pink, the two verbs, the two duelists and now the ground. Ten upgrades
+// five elements, a relic's pink, the two verbs, the two duelists and now the ground. Ten upgrades
 // wanting ten distinguishable tints is more hue than the game has left, so what is here is
 // deliberately temporary — gold and silver are metals rather than hues and are safe, and the other
 // eight are picked to be *told apart* rather than to mean anything. The permanent answer is

@@ -76,7 +76,7 @@ type tutorialHost interface {
 
 // The bubble's footprint and the furniture inside it.
 const (
-	// Bob is drawn at RingStyle's 200x280 — a card with a name and a picture and nothing else,
+	// Bob is drawn at RelicStyle's 200x280 — a card with a name and a picture and nothing else,
 	// which is exactly what he is. EnemyStyle would give him a health bar.
 	tutorialCardW = 200
 	tutorialCardH = 280
@@ -356,7 +356,7 @@ func (t *tutorialOverlay) place(gs *state.GlobalState, host tutorialHost,
 	// **Top-centre is second, ahead of the corners** *(owner's call, 2026-08-25)*. Most of what a
 	// step points at during a duel spans the screen — the hand, the AP bar, the band the blow is
 	// added up in — so the first seat is out and the fallback used to be a top corner, which is
-	// where the two fighter cards and their life bars are. The middle of the top row is the ring
+	// where the two fighter cards and their life bars are. The middle of the top row is the relic
 	// pane, which is the least costly thing on this screen to cover.
 	//
 	// The dead centre stays last, because it is over the table: it is where a seat lands only when
@@ -500,7 +500,7 @@ func edgeToward(r image.Rectangle, at image.Point) image.Point {
 // which, and the card rows read the same focus list this function is given, so what is lit and what
 // is clickable stay the same set.
 //
-// **A step that locks anything gets the scrim; one that locks nothing gets only the ring.** The
+// **A step that locks anything gets the scrim; one that locks nothing gets only the relic.** The
 // darkened area is exactly the area that has stopped accepting clicks, so a player never learns
 // that a dimmed thing is still clickable.
 //
@@ -585,7 +585,7 @@ func (t *tutorialOverlay) drawBubble(gs *state.GlobalState, screen *ebiten.Image
 		float32(r.Dx()), float32(r.Dy()), 2, tutorialGlow, false)
 
 	blitCard(gs, screen, image.Pt(r.Min.X+tutorialPad, r.Min.Y+tutorialPad),
-		guideSpec(gs), cards.RingStyle)
+		guideSpec(gs), cards.RelicStyle)
 
 	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: tutorialTextSize}
 	x := r.Min.X + tutorialPad*2 + tutorialCardW
@@ -645,7 +645,7 @@ var waitingWords = map[tutorial.Condition]string{
 	tutorial.CondPhaseReward:  "win the fight",
 	tutorial.CondPhaseShop:    "take your prize",
 	tutorial.CondLedgerOpened: "open the ledger",
-	tutorial.CondRingsWorn:    "buy them",
+	tutorial.CondRelicsWorn:   "buy them",
 	tutorial.CondDMGBought:    "drink it",
 }
 
@@ -653,12 +653,12 @@ func waitingFor(c tutorial.Condition) string { return waitingWords[c] }
 
 // guideSpec is Bob as a card: his name, his face, and nothing else.
 //
-// **RingStyle's shape rather than an opponent's.** He has no life to draw and no statuses to
+// **RelicStyle's shape rather than an opponent's.** He has no life to draw and no statuses to
 // carry, and a health bar on the character explaining the game would be the single most confusing
 // thing on the screen — the player would spend the tutorial waiting to fight him.
 //
 // `cards.Basic` is the mid grey every non-elemental card borders in, which is what he should be:
-// the pink is a ring, and the four colours are things that can be played.
+// the pink is a relic, and the four colours are things that can be played.
 func guideSpec(gs *state.GlobalState) cards.Spec {
 	return cards.Spec{
 		Name:    "Bob",

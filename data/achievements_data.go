@@ -142,7 +142,7 @@ type TriggerData struct {
 type AchievementData struct {
 	// AchievementRecord is the key, and **it is the disk contract**: it is written into
 	// `profile.json` and is the thing that must never be renamed once a build has shipped. Every
-	// other field here can be rewritten any afternoon. Kebab-case, like a ring's and a worm's.
+	// other field here can be rewritten any afternoon. Kebab-case, like a relic's and a worm's.
 	AchievementRecord string `json:"AchievementRecord"`
 
 	// Name is what the page calls it, in caps, like the rows already on that screen.
@@ -161,8 +161,8 @@ type AchievementData struct {
 	//
 	// **An achievement never gates anything itself** *(owner's call, 2026-09-06)*. profile.go draws
 	// the line: an achievement is a record and changes nothing, an unlock is an input to the rules.
-	// So a ring behind an achievement reads the *unlock*, and this field is the bridge — two keys
-	// rather than one, which is what lets an achievement be retired without orphaning a ring.
+	// So a relic behind an achievement reads the *unlock*, and this field is the bridge — two keys
+	// rather than one, which is what lets an achievement be retired without orphaning a relic.
 	//
 	// Nothing is behind an achievement yet, so every record ships without one.
 	Unlocks []string `json:"Unlocks,omitempty"`

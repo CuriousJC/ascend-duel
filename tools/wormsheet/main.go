@@ -3,13 +3,13 @@
 //
 //	go run ./tools/wormsheet
 //
-// It exists for the reason tools/ringsheet does. A worm is offered two at a time, once per won
+// It exists for the reason tools/relicsheet does. A worm is offered two at a time, once per won
 // fight, from a catalogue of ten — so seeing all of them in a launched game means winning five
 // fights and being lucky about the shuffle. This draws all of them at once.
 //
 // # It is a report, not a drawing-board
 //
-// Same split as ringsheet against cardsheet: this reads the real file, because the question it
+// Same split as relicsheet against cardsheet: this reads the real file, because the question it
 // answers is "what does the catalogue actually hold". It goes through internal/session, which
 // means the catalogue is *validated* before anything is drawn — an unknown target, a value on a
 // target that takes none, a missing one on a target that needs it, all panic at init exactly as
@@ -19,7 +19,7 @@
 // # What to look at
 //
 // **The authored line against the rule beside it.** worms.json carries a Text field that the
-// card prints verbatim and nothing checks against the rule that fires — the same hazard a ring's
+// card prints verbatim and nothing checks against the rule that fires — the same hazard a relic's
 // sentence carries, and this is the only place the two are visible together.
 //
 // **The border colours.** A worm's border carries the element it grants; the ones that grant no
@@ -209,7 +209,7 @@ func artFor(e combat.Element) cards.Element {
 
 // ruleLine is what the worm does, in the file's own vocabulary.
 //
-// **Deliberately not prose**, for ringsheet's reason: the sentence a player reads is Text,
+// **Deliberately not prose**, for relicsheet's reason: the sentence a player reads is Text,
 // printed beside this, and generating a second English sentence would give the page two
 // descriptions and no way to tell which one the game agrees with.
 func ruleLine(w session.Worm) string {
@@ -256,7 +256,7 @@ func elementName(w session.Worm) string {
 
 // groupByTarget splits the catalogue by what a worm changes, in session.WormTargets' order.
 //
-// **By target rather than alphabetically**, for the reason ringsheet groups by rarity: the target
+// **By target rather than alphabetically**, for the reason relicsheet groups by rarity: the target
 // is the design axis, so what a review needs is every recolour side by side and then the count of
 // everything else. An empty group still gets a heading, because a target nobody has authored into
 // is a fact worth seeing rather than a section to omit.

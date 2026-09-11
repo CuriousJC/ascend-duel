@@ -9,7 +9,7 @@ import (
 // **This file is the map, not the machinery** *(2026-08-18)*. It says, for every kind of event the
 // engine can emit, where the thing it produced sets off from and where it lands. The drawings
 // themselves live with the code that already owns each region — the sum in `combat_mathbox.go`, the
-// seats in `combat_table.go`, the ring row in `combat_rings.go` — because a generic renderer over
+// seats in `combat_table.go`, the relic row in `combat_relics.go` — because a generic renderer over
 // nine genuinely different gestures would be more machinery than the nine gestures.
 //
 // **The rule it exists to hold is one sentence: everything travels from the thing that caused it to
@@ -24,7 +24,7 @@ import (
 // never told about. A kind that genuinely has no picture says so with `anchorNone` and a reason.
 //
 // **It is deliberately not JSON** *(2026-08-18, owner asked)*. The five-tuple is real, but every
-// anchor below is a geometry *function* that already exists and takes arguments — `ringSlotAt`,
+// anchor below is a geometry *function* that already exists and takes arguments — `relicSlotAt`,
 // `enemySeatAt`, `enemyCardRect` — and a file can only name one by string, so the Go table a file
 // would need underneath it is this table. And `data/*.json` is `//go:embed`ed, so a beat in a file
 // costs the same rebuild as a beat in a constant: the one argument that usually wins for data does
@@ -56,10 +56,10 @@ const (
 	// card. It is where a status that is *already standing* acts from, as against one landing.
 	anchorActorBadges
 
-	// anchorRing is one worn ring's card in the ring row, named by `Event.Ring`. This is the
-	// anchor the engine gained a field for: nothing else on screen can say which ring caused a
+	// anchorRelic is one worn relic's card in the relic row, named by `Event.Relic`. This is the
+	// anchor the engine gained a field for: nothing else on screen can say which relic caused a
 	// status.
-	anchorRing
+	anchorRelic
 
 	// anchorSumLine is the hand dialog's line of figures, in the feed's collapsed band.
 	anchorSumLine
@@ -108,8 +108,8 @@ func (a anchor) String() string {
 		return "the target fighter's card"
 	case anchorActorBadges:
 		return "the acting fighter's badge row"
-	case anchorRing:
-		return "the ring named on the event"
+	case anchorRelic:
+		return "the relic named on the event"
 	case anchorSumLine:
 		return "the sum line"
 	case anchorBlow:
@@ -230,8 +230,8 @@ var choreography = map[combat.EventKind]flightSpec{
 		"the chill stands on the duelist losing the card, so it acts from their own badge row",
 	},
 	combat.KindStatus: {
-		anchorRing, anchorTargetCard, gestureFly,
-		"a status has a cause the player is wearing; Event.Ring exists so this can be drawn",
+		anchorRelic, anchorTargetCard, gestureFly,
+		"a status has a cause the player is wearing; Event.Relic exists so this can be drawn",
 	},
 	combat.KindMissed: {
 		anchorNone, anchorSumLine, gestureStrike,

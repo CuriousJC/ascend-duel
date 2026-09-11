@@ -1,46 +1,46 @@
 package session
 
-// The shop's rules: what a ring costs, what it sells back for, and the two ways the row changes.
+// The shop's rules: what a relic costs, what it sells back for, and the two ways the row changes.
 //
 // **The screen draws a shelf; this decides what a purchase is.** Buying and selling both move the
 // purse and both move the worn row, and those are two things the run owns — so they are one method
 // each here rather than a scene reaching into `Wear` with a `SpendVitae` beside it and getting the
 // order wrong on the day it fails.
 //
-// **A price is a fact about a ring's rarity** *(owner's call, 2026-08-22)*, not a number the ring
-// writes down: `rings.json` names one of three tiers and `data.Rarity` turns it into both a price
-// and a draw weight. A common ring is 3 — the base, the plainest thing the grammar can say — and the
-// two tiers above it are 5 and 7. What a ring *sells* for comes off the same tier: 1, 2 or 3,
+// **A price is a fact about a relic's rarity** *(owner's call, 2026-08-22)*, not a number the relic
+// writes down: `relics.json` names one of three tiers and `data.Rarity` turns it into both a price
+// and a draw weight. A common relic is 3 — the base, the plainest thing the grammar can say — and the
+// two tiers above it are 5 and 7. What a relic *sells* for comes off the same tier: 1, 2 or 3,
 // written down rather than derived, because a quarter rounded up paid an uncommon and a rare alike.
 //
-// **Nothing prices these numbers but judgement.** Nothing in the repo measures what a ring does to a
+// **Nothing prices these numbers but judgement.** Nothing in the repo measures what a relic does to a
 // duel, so what a doubling of every slash card is worth in vitae is a guess that has never been
 // checked. Said out loud here because the alternative is a table of figures that looks derived.
 
-// RingPrice is what the shop charges for a ring, and whether the catalogue holds one at all.
-func RingPrice(key string) (int, bool) {
-	p, ok := ringPrices[key]
+// RelicPrice is what the shop charges for a relic, and whether the catalogue holds one at all.
+func RelicPrice(key string) (int, bool) {
+	p, ok := relicPrices[key]
 	return p, ok
 }
 
-// RingWeight is how many tickets a ring holds in the shelf draw, from its rarity. Zero for a ring
-// the catalogue does not hold, which is a ring nothing can offer.
+// RelicWeight is how many tickets a relic holds in the shelf draw, from its rarity. Zero for a relic
+// the catalogue does not hold, which is a relic nothing can offer.
 //
-// **The shelf asks rather than reading a record**, the same line RingPrice draws: what a tier is
+// **The shelf asks rather than reading a record**, the same line RelicPrice draws: what a tier is
 // worth in tickets is the shop's arithmetic, not a screen's.
-func RingWeight(key string) int { return ringWeights[key] }
+func RelicWeight(key string) int { return relicWeights[key] }
 
-// SellValue is what taking a ring off pays back: the tier's own figure — 1, 2 or 3. Zero for a ring
-// the catalogue does not hold, which is a ring nothing can be wearing.
-func SellValue(key string) int { return ringSells[key] }
+// SellValue is what taking a relic off pays back: the tier's own figure — 1, 2 or 3. Zero for a relic
+// the catalogue does not hold, which is a relic nothing can be wearing.
+func SellValue(key string) int { return relicSells[key] }
 
-// CanBuy reports whether this run could buy that ring right now: the catalogue holds it, it is not
+// CanBuy reports whether this run could buy that relic right now: the catalogue holds it, it is not
 // already on, there is a finger free, and the purse covers it.
 //
 // **It exists so the shelf can dim a card rather than swallow a click.** Buy checks the same four
 // things itself — this is the question, not the guard.
 func (s *Session) CanBuy(key string) bool {
-	price, ok := ringPrices[key]
+	price, ok := relicPrices[key]
 	if !ok || price > s.vitae {
 		return false
 	}
@@ -51,10 +51,10 @@ func (s *Session) CanBuy(key string) bool {
 // the fifth finger is not spoken for. Shared with Wear so the shelf and the purchase cannot come to
 // different conclusions.
 func (s *Session) canWear(key string) bool {
-	if _, ok := registeredRings[key]; !ok {
+	if _, ok := registeredRelics[key]; !ok {
 		return false
 	}
-	if len(s.worn) >= s.RingSlots() {
+	if len(s.worn) >= s.RelicSlots() {
 		return false
 	}
 	for _, k := range s.worn {
@@ -65,36 +65,36 @@ func (s *Session) canWear(key string) bool {
 	return true
 }
 
-// Buy pays for a ring and puts it on, and **reports whether it could**. A caller that does not
-// check has handed out a free ring.
+// Buy pays for a relic and puts it on, and **reports whether it could**. A caller that does not
+// check has handed out a free relic.
 //
-// **The purse moves first and the ring goes on second**, and the order matters: `SpendVitae` is the
+// **The purse moves first and the relic goes on second**, and the order matters: `SpendVitae` is the
 // one place a purse goes down and the one place that refuses to go into debt, so asking it before
 // wearing anything means a refusal leaves the run exactly as it was.
 //
-// **A sixth ring is refused here rather than swapped for.** Selling is what frees a finger — see
+// **A sixth relic is refused here rather than swapped for.** Selling is what frees a finger — see
 // Sell — so the trade is two decisions with a price between them rather than one click that quietly
-// throws a ring away.
+// throws a relic away.
 func (s *Session) Buy(key string) bool {
 	if !s.canWear(key) {
 		return false
 	}
-	price, ok := ringPrices[key]
+	price, ok := relicPrices[key]
 	if !ok || !s.SpendVitae(price) {
 		return false
 	}
 	return s.Wear(key)
 }
 
-// Sell takes a worn ring off and pays its tier's sell-back figure. It reports whether
+// Sell takes a worn relic off and pays its tier's sell-back figure. It reports whether
 // the run was wearing it.
 //
-// **It is the only way a ring comes off** *(owner's call, 2026-08-21)*, which is what makes the
+// **It is the only way a relic comes off** *(owner's call, 2026-08-21)*, which is what makes the
 // fifth finger a decision: swapping means selling something at a loss first, so a shelf full of
-// tempting rings cannot be worn one after another for free.
+// tempting relics cannot be worn one after another for free.
 //
-// **A growing ring's accumulator is reset, not kept** *(owner's call, 2026-08-21)*. `grown` is keyed
-// by record precisely so a ring taken off and put back on is the same ring — and the decision is
+// **A growing relic's accumulator is reset, not kept** *(owner's call, 2026-08-21)*. `grown` is keyed
+// by record precisely so a relic taken off and put back on is the same relic — and the decision is
 // that it is not the same *number*: the growth is what wearing it through fights paid for, so
 // selling it forfeits that and re-buying starts again at the record's own amount. It is what stops
 // a Heart Ring being parked in the shop between fights.
@@ -118,7 +118,7 @@ func (s *Session) Sell(key string) bool {
 
 // The two sealed goods: **a bag of rocks and a can of worms.**
 //
-// A ring on the shelf is a thing you can read before you buy it. These are not: what is inside is
+// A relic on the shelf is a thing you can read before you buy it. These are not: what is inside is
 // four of something, drawn when the bag is opened, and the choice is which one to keep. That is
 // the whole design — the price buys the *choice*, and the three that are not chosen are gone.
 //
@@ -129,9 +129,9 @@ func (s *Session) Sell(key string) bool {
 
 // bagPrice and canPrice are what the two sealed goods cost.
 //
-// **Five vitae, which is a ring's middle tier** *(owner's call, 2026-08-27)*. A win pays three to
+// **Five vitae, which is a relic's middle tier** *(owner's call, 2026-08-27)*. A win pays three to
 // five from the room plus a tenth of the life left, so a good is about a fight's takings — bought
-// instead of a ring rather than alongside one.
+// instead of a relic rather than alongside one.
 const (
 	bagPrice    = 5
 	canPrice    = 5
@@ -151,7 +151,7 @@ const (
 
 // BagPrice, CanPrice, BagSize and CanSize are the figures a screen writes on the cards. **Asked
 // rather than repeated**: a price printed on a face and charged by a method are two numbers that
-// can disagree, and the shop is where that has already been avoided once for rings.
+// can disagree, and the shop is where that has already been avoided once for relics.
 func BagPrice() int { return bagPrice }
 func CanPrice() int { return canPrice }
 func BagSize() int  { return bagSize }

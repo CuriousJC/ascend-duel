@@ -4,7 +4,7 @@ package cards
 //
 // A mark says something happened *to* a card and leaves it the card it was (see mark.go). A
 // dissolve is the other thing that can happen to a face: it stops being this card and starts
-// being a different one. A worm eating a card's element, a parasite overwriting one, a ring
+// being a different one. A worm eating a card's element, a parasite overwriting one, a relic
 // turning every ice card in the hand to fire — all of them are one card replaced by another,
 // and what this file holds is the pattern that replacement runs on.
 //

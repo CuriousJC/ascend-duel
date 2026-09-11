@@ -2,7 +2,7 @@ package screens
 
 // **One card becoming another, in front of the player.**
 //
-// A worm eats a card's element and hands back a different card. A parasite overwrites one. A ring
+// A worm eats a card's element and hands back a different card. A parasite overwrites one. A relic
 // will turn every ice card in the hand to fire. In all three the deck has changed, and the change
 // used to happen between two frames: the card the player was looking at was simply not the card
 // that was there next. That is the same failure "cards fly; they never appear" was written against,

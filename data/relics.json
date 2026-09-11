@@ -1,6 +1,6 @@
 [
   {
-    "RingRecord": "fire-ring",
+    "RelicRecord": "fire-ring",
     "Name": "Fire Ring",
     "Art": "fire-ring",
     "Text": "Fire cards deal 2x DMG.",
@@ -14,7 +14,7 @@
     ]
   },
   {
-    "RingRecord": "burning-ring",
+    "RelicRecord": "burning-ring",
     "Name": "Burning Ring",
     "Art": "burning-ring",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
@@ -28,7 +28,7 @@
     ]
   },
   {
-    "RingRecord": "ice-ring",
+    "RelicRecord": "ice-ring",
     "Name": "Ice Ring",
     "Art": "ice-ring",
     "Text": "Ice cards deal 2x DMG.",
@@ -42,7 +42,7 @@
     ]
   },
   {
-    "RingRecord": "chilling-ring",
+    "RelicRecord": "chilling-ring",
     "Name": "Chilling Ring",
     "Art": "chilling-ring",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
@@ -56,7 +56,7 @@
     ]
   },
   {
-    "RingRecord": "lightning-ring",
+    "RelicRecord": "lightning-ring",
     "Name": "Lightning Ring",
     "Art": "lightning-ring",
     "Text": "Lightning cards deal 2x DMG.",
@@ -70,7 +70,7 @@
     ]
   },
   {
-    "RingRecord": "shocking-ring",
+    "RelicRecord": "shocking-ring",
     "Name": "Shocking Ring",
     "Art": "shocking-ring",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
@@ -84,7 +84,7 @@
     ]
   },
   {
-    "RingRecord": "earth-ring",
+    "RelicRecord": "earth-ring",
     "Name": "Earth Ring",
     "Art": "earth-ring",
     "Text": "Earth cards deal 2x DMG.",
@@ -98,7 +98,7 @@
     ]
   },
   {
-    "RingRecord": "weighted-ring",
+    "RelicRecord": "weighted-ring",
     "Name": "Weighted Ring",
     "Art": "weighted-ring",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
@@ -112,7 +112,7 @@
     ]
   },
   {
-    "RingRecord": "arcane-ring",
+    "RelicRecord": "arcane-ring",
     "Name": "Arcane Ring",
     "Art": "arcane-ring",
     "Text": "Arcane cards deal 2x DMG.",
@@ -126,7 +126,7 @@
     ]
   },
   {
-    "RingRecord": "weakening-ring",
+    "RelicRecord": "weakening-ring",
     "Name": "Weakening Ring",
     "Art": "weakening-ring",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
@@ -140,7 +140,7 @@
     ]
   },
   {
-    "RingRecord": "storm-ring",
+    "RelicRecord": "storm-ring",
     "Name": "Storm Ring",
     "Art": "storm-ring",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
@@ -157,7 +157,7 @@
     ]
   },
   {
-    "RingRecord": "scald-ring",
+    "RelicRecord": "scald-ring",
     "Name": "Scald Ring",
     "Art": "scald-ring",
     "Text": "Fire attacks BURN and CHILL the target.",
@@ -174,7 +174,7 @@
     ]
   },
   {
-    "RingRecord": "wildfire-ring",
+    "RelicRecord": "wildfire-ring",
     "Name": "Wildfire Ring",
     "Art": "wildfire-ring",
     "Text": "Fire attacks BURN and SHOCK the target.",
@@ -191,7 +191,7 @@
     ]
   },
   {
-    "RingRecord": "hoarfrost-ring",
+    "RelicRecord": "hoarfrost-ring",
     "Name": "Hoarfrost Ring",
     "Art": "",
     "Text": "Ice attacks CHILL and WEIGH the target.",
@@ -208,7 +208,7 @@
     ]
   },
   {
-    "RingRecord": "brittle-ring",
+    "RelicRecord": "brittle-ring",
     "Name": "Brittle Ring",
     "Art": "",
     "Text": "Ice attacks CHILL and WEAKEN the target.",
@@ -225,7 +225,7 @@
     ]
   },
   {
-    "RingRecord": "palsy-ring",
+    "RelicRecord": "palsy-ring",
     "Name": "Palsy Ring",
     "Art": "",
     "Text": "Lightning attacks SHOCK and WEAKEN the target.",
@@ -242,7 +242,7 @@
     ]
   },
   {
-    "RingRecord": "caldera-ring",
+    "RelicRecord": "caldera-ring",
     "Name": "Caldera Ring",
     "Art": "",
     "Text": "Earth attacks WEIGH and BURN the target.",
@@ -259,7 +259,7 @@
     ]
   },
   {
-    "RingRecord": "tremor-ring",
+    "RelicRecord": "tremor-ring",
     "Name": "Tremor Ring",
     "Art": "",
     "Text": "Earth attacks WEIGH and SHOCK the target.",
@@ -276,7 +276,7 @@
     ]
   },
   {
-    "RingRecord": "blightfire-ring",
+    "RelicRecord": "blightfire-ring",
     "Name": "Blightfire Ring",
     "Art": "",
     "Text": "Arcane attacks WEAKEN and BURN the target.",
@@ -293,7 +293,7 @@
     ]
   },
   {
-    "RingRecord": "millstone-ring",
+    "RelicRecord": "millstone-ring",
     "Name": "Millstone Ring",
     "Art": "",
     "Text": "Arcane attacks WEAKEN and WEIGH the target.",
@@ -310,7 +310,7 @@
     ]
   },
   {
-    "RingRecord": "sundering-ring",
+    "RelicRecord": "sundering-ring",
     "Name": "Sundering Ring",
     "Art": "",
     "Text": "Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
@@ -324,7 +324,7 @@
     ]
   },
   {
-    "RingRecord": "bruising-ring",
+    "RelicRecord": "bruising-ring",
     "Name": "Bruising Ring",
     "Art": "",
     "Text": "Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
@@ -338,7 +338,7 @@
     ]
   },
   {
-    "RingRecord": "pinning-ring",
+    "RelicRecord": "pinning-ring",
     "Name": "Pinning Ring",
     "Art": "",
     "Text": "Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
@@ -352,7 +352,7 @@
     ]
   },
   {
-    "RingRecord": "keen-ring",
+    "RelicRecord": "keen-ring",
     "Name": "Keen Ring",
     "Art": "keen-ring",
     "Text": "Every slash card deals double DMG.",
@@ -366,7 +366,7 @@
     ]
   },
   {
-    "RingRecord": "heavy-ring",
+    "RelicRecord": "heavy-ring",
     "Name": "Heavy Ring",
     "Art": "",
     "Text": "Every crush card deals double DMG.",
@@ -380,7 +380,7 @@
     ]
   },
   {
-    "RingRecord": "needle-ring",
+    "RelicRecord": "needle-ring",
     "Name": "Needle Ring",
     "Art": "needle-ring",
     "Text": "Every stab card deals double DMG.",
@@ -394,7 +394,7 @@
     ]
   },
   {
-    "RingRecord": "striker-ring",
+    "RelicRecord": "striker-ring",
     "Name": "Striker Ring",
     "Art": "",
     "Text": "Every Strike deals double DMG.",
@@ -408,7 +408,7 @@
     ]
   },
   {
-    "RingRecord": "prodder-ring",
+    "RelicRecord": "prodder-ring",
     "Name": "Prodder Ring",
     "Art": "",
     "Text": "Every Poke deals double DMG.",
@@ -422,7 +422,7 @@
     ]
   },
   {
-    "RingRecord": "boxer-ring",
+    "RelicRecord": "boxer-ring",
     "Name": "Boxer Ring",
     "Art": "boxer-ring",
     "Text": "Every Jab deals double DMG.",
@@ -436,7 +436,7 @@
     ]
   },
   {
-    "RingRecord": "lancer-ring",
+    "RelicRecord": "lancer-ring",
     "Name": "Lancer Ring",
     "Art": "",
     "Text": "Every Thrust deals double DMG.",
@@ -450,7 +450,7 @@
     ]
   },
   {
-    "RingRecord": "fencer-ring",
+    "RelicRecord": "fencer-ring",
     "Name": "Fencer Ring",
     "Art": "",
     "Text": "Every Lunge deals double DMG.",
@@ -464,7 +464,7 @@
     ]
   },
   {
-    "RingRecord": "impaler-ring",
+    "RelicRecord": "impaler-ring",
     "Name": "Impaler Ring",
     "Art": "",
     "Text": "Every Impale deals double DMG.",
@@ -478,7 +478,7 @@
     ]
   },
   {
-    "RingRecord": "skirmisher-ring",
+    "RelicRecord": "skirmisher-ring",
     "Name": "Skirmisher Ring",
     "Art": "",
     "Text": "Every Nick deals double DMG.",
@@ -492,7 +492,7 @@
     ]
   },
   {
-    "RingRecord": "cutter-ring",
+    "RelicRecord": "cutter-ring",
     "Name": "Cutter Ring",
     "Art": "",
     "Text": "Every Cut deals double DMG.",
@@ -506,7 +506,7 @@
     ]
   },
   {
-    "RingRecord": "slicer-ring",
+    "RelicRecord": "slicer-ring",
     "Name": "Slicer Ring",
     "Art": "",
     "Text": "Every Slice card\ndeals double DMG.",
@@ -520,7 +520,7 @@
     ]
   },
   {
-    "RingRecord": "cleaver-ring",
+    "RelicRecord": "cleaver-ring",
     "Name": "Cleaver Ring",
     "Art": "",
     "Text": "Every Cleave deals double DMG.",
@@ -534,7 +534,7 @@
     ]
   },
   {
-    "RingRecord": "headsman-ring",
+    "RelicRecord": "headsman-ring",
     "Name": "Headsman Ring",
     "Art": "",
     "Text": "Every Sever deals double DMG.",
@@ -548,7 +548,7 @@
     ]
   },
   {
-    "RingRecord": "knocker-ring",
+    "RelicRecord": "knocker-ring",
     "Name": "Knocker Ring",
     "Art": "",
     "Text": "Every Tap deals double DMG.",
@@ -562,7 +562,7 @@
     ]
   },
   {
-    "RingRecord": "brass-knuckles-ring",
+    "RelicRecord": "brass-knuckles-ring",
     "Name": "Brass Knuckles Ring",
     "Art": "brass-knuckles-ring",
     "Text": "Every Bash deals double DMG.",
@@ -576,7 +576,7 @@
     ]
   },
   {
-    "RingRecord": "smasher-ring",
+    "RelicRecord": "smasher-ring",
     "Name": "Smasher Ring",
     "Art": "",
     "Text": "Every Smash deals double DMG.",
@@ -590,7 +590,7 @@
     ]
   },
   {
-    "RingRecord": "grinder-ring",
+    "RelicRecord": "grinder-ring",
     "Name": "Grinder Ring",
     "Art": "",
     "Text": "Every Pulverize deals double DMG.",
@@ -604,7 +604,7 @@
     ]
   },
   {
-    "RingRecord": "flurry-ring",
+    "RelicRecord": "flurry-ring",
     "Name": "Flurry Ring",
     "Art": "",
     "Text": "Every stab card lands twice, both at full DMG.",
@@ -618,7 +618,7 @@
     ]
   },
   {
-    "RingRecord": "rend-ring",
+    "RelicRecord": "rend-ring",
     "Name": "Rend Ring",
     "Art": "",
     "Text": "Every slash card lands twice, both at full DMG.",
@@ -632,7 +632,7 @@
     ]
   },
   {
-    "RingRecord": "aftershock-ring",
+    "RelicRecord": "aftershock-ring",
     "Name": "Aftershock Ring",
     "Art": "",
     "Text": "Every crush card lands twice, both at full DMG.",
@@ -646,7 +646,7 @@
     ]
   },
   {
-    "RingRecord": "backdraft-ring",
+    "RelicRecord": "backdraft-ring",
     "Name": "Backdraft Ring",
     "Art": "",
     "Text": "Every fire card lands twice, both at full DMG.",
@@ -660,7 +660,7 @@
     ]
   },
   {
-    "RingRecord": "shatter-ring",
+    "RelicRecord": "shatter-ring",
     "Name": "Shatter Ring",
     "Art": "",
     "Text": "Every ice card lands twice, both at full DMG.",
@@ -674,7 +674,7 @@
     ]
   },
   {
-    "RingRecord": "forked-ring",
+    "RelicRecord": "forked-ring",
     "Name": "Forked Ring",
     "Art": "",
     "Text": "Every lightning card lands twice, both at full DMG.",
@@ -688,7 +688,7 @@
     ]
   },
   {
-    "RingRecord": "landslide-ring",
+    "RelicRecord": "landslide-ring",
     "Name": "Landslide Ring",
     "Art": "",
     "Text": "Every earth card lands twice, both at full DMG.",
@@ -702,7 +702,7 @@
     ]
   },
   {
-    "RingRecord": "recursion-ring",
+    "RelicRecord": "recursion-ring",
     "Name": "Recursion Ring",
     "Art": "",
     "Text": "Every arcane card lands twice, both at full DMG.",
@@ -716,7 +716,7 @@
     ]
   },
   {
-    "RingRecord": "smoulder-ring",
+    "RelicRecord": "smoulder-ring",
     "Name": "Smoulder Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
@@ -730,7 +730,7 @@
     ]
   },
   {
-    "RingRecord": "frostbank-ring",
+    "RelicRecord": "frostbank-ring",
     "Name": "Frostbank Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
@@ -744,7 +744,7 @@
     ]
   },
   {
-    "RingRecord": "potential-ring",
+    "RelicRecord": "potential-ring",
     "Name": "Potential Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
@@ -758,7 +758,7 @@
     ]
   },
   {
-    "RingRecord": "bedrock-ring",
+    "RelicRecord": "bedrock-ring",
     "Name": "Bedrock Ring",
     "Art": "bedrock-ring",
     "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
@@ -772,7 +772,7 @@
     ]
   },
   {
-    "RingRecord": "wellspring-ring",
+    "RelicRecord": "wellspring-ring",
     "Name": "Wellspring Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
@@ -786,7 +786,7 @@
     ]
   },
   {
-    "RingRecord": "poised-ring",
+    "RelicRecord": "poised-ring",
     "Name": "Poised Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
@@ -800,7 +800,7 @@
     ]
   },
   {
-    "RingRecord": "sheathed-ring",
+    "RelicRecord": "sheathed-ring",
     "Name": "Sheathed Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
@@ -814,7 +814,7 @@
     ]
   },
   {
-    "RingRecord": "coiled-ring",
+    "RelicRecord": "coiled-ring",
     "Name": "Coiled Ring",
     "Art": "",
     "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
@@ -828,9 +828,8 @@
     ]
   },
   {
-    "RingRecord": "ebb-and-flow-ring",
+    "RelicRecord": "ebb-and-flow-ring",
     "Name": "Ebb & Flow Ring",
-    "Face": "Ebb Flow",
     "Art": "",
     "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
     "Rarity": "rare",
@@ -847,7 +846,7 @@
     ]
   },
   {
-    "RingRecord": "momentum-ring",
+    "RelicRecord": "momentum-ring",
     "Name": "Momentum Ring",
     "Art": "",
     "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
@@ -869,7 +868,7 @@
     ]
   },
   {
-    "RingRecord": "enflamed-ring",
+    "RelicRecord": "enflamed-ring",
     "Name": "Enflamed Ring",
     "Art": "",
     "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
@@ -888,7 +887,7 @@
     ]
   },
   {
-    "RingRecord": "frostbitten-ring",
+    "RelicRecord": "frostbitten-ring",
     "Name": "Frostbitten Ring",
     "Art": "",
     "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
@@ -907,7 +906,7 @@
     ]
   },
   {
-    "RingRecord": "lithium-ring",
+    "RelicRecord": "lithium-ring",
     "Name": "Lithium Ring",
     "Art": "",
     "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
@@ -926,7 +925,7 @@
     ]
   },
   {
-    "RingRecord": "granite-ring",
+    "RelicRecord": "granite-ring",
     "Name": "Granite Ring",
     "Art": "",
     "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
@@ -945,7 +944,7 @@
     ]
   },
   {
-    "RingRecord": "unravelled-ring",
+    "RelicRecord": "unravelled-ring",
     "Name": "Unravelled Ring",
     "Art": "",
     "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
@@ -964,7 +963,7 @@
     ]
   },
   {
-    "RingRecord": "sharpening-ring",
+    "RelicRecord": "sharpening-ring",
     "Name": "Sharpening Ring",
     "Art": "",
     "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
@@ -983,7 +982,7 @@
     ]
   },
   {
-    "RingRecord": "pounding-ring",
+    "RelicRecord": "pounding-ring",
     "Name": "Pounding Ring",
     "Art": "",
     "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
@@ -1002,7 +1001,7 @@
     ]
   },
   {
-    "RingRecord": "quickening-ring",
+    "RelicRecord": "quickening-ring",
     "Name": "Quickening Ring",
     "Art": "",
     "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
@@ -1021,7 +1020,7 @@
     ]
   },
   {
-    "RingRecord": "echo-ring",
+    "RelicRecord": "echo-ring",
     "Name": "Echo Ring",
     "Art": "",
     "Text": "Your first attack lands 3 times: full DMG, then 2/3, then 1/3.",
@@ -1035,7 +1034,7 @@
     ]
   },
   {
-    "RingRecord": "atrophy-ring",
+    "RelicRecord": "atrophy-ring",
     "Name": "Atrophy Ring",
     "Art": "",
     "Text": "Every 3 AP attack is dealt as its 2 AP version.",
@@ -1049,7 +1048,7 @@
     ]
   },
   {
-    "RingRecord": "erode-ring",
+    "RelicRecord": "erode-ring",
     "Name": "Erode Ring",
     "Art": "",
     "Text": "Every 2 AP card is dealt as its 1 AP version.",
@@ -1063,7 +1062,7 @@
     ]
   },
   {
-    "RingRecord": "whittle-ring",
+    "RelicRecord": "whittle-ring",
     "Name": "Whittle Ring",
     "Art": "",
     "Text": "Every 1 AP attack is dealt as its 0 AP version.",
@@ -1077,7 +1076,7 @@
     ]
   },
   {
-    "RingRecord": "swarm-ring",
+    "RelicRecord": "swarm-ring",
     "Name": "Swarm Ring",
     "Art": "",
     "Text": "Every 1 AP card deals 3x DMG.",
@@ -1091,7 +1090,7 @@
     ]
   },
   {
-    "RingRecord": "crown-ring",
+    "RelicRecord": "crown-ring",
     "Name": "Crown Ring",
     "Art": "",
     "Text": "Every 3 AP card deals 2.5x DMG.",
@@ -1105,7 +1104,7 @@
     ]
   },
   {
-    "RingRecord": "high-card-hand-ring",
+    "RelicRecord": "high-card-hand-ring",
     "Name": "Lone Ring",
     "Art": "",
     "Text": "A High Card deals 2 more DMG before the multiplier.",
@@ -1119,7 +1118,7 @@
     ]
   },
   {
-    "RingRecord": "pair-hand-ring",
+    "RelicRecord": "pair-hand-ring",
     "Name": "Twinned Ring",
     "Art": "",
     "Text": "A Pair deals 2 more DMG before the multiplier.",
@@ -1133,7 +1132,7 @@
     ]
   },
   {
-    "RingRecord": "concept-two-pair-hand-ring",
+    "RelicRecord": "concept-two-pair-hand-ring",
     "Name": "Doubled Ring",
     "Art": "",
     "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
@@ -1147,7 +1146,7 @@
     ]
   },
   {
-    "RingRecord": "concept-three-of-a-kind-hand-ring",
+    "RelicRecord": "concept-three-of-a-kind-hand-ring",
     "Name": "Trined Ring",
     "Art": "",
     "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
@@ -1161,7 +1160,7 @@
     ]
   },
   {
-    "RingRecord": "concept-full-house-hand-ring",
+    "RelicRecord": "concept-full-house-hand-ring",
     "Name": "Laden Ring",
     "Art": "",
     "Text": "A Card Full House deals 8 more DMG before the multiplier.",
@@ -1175,7 +1174,7 @@
     ]
   },
   {
-    "RingRecord": "concept-four-of-a-kind-hand-ring",
+    "RelicRecord": "concept-four-of-a-kind-hand-ring",
     "Name": "Quartered Ring",
     "Art": "",
     "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
@@ -1189,7 +1188,7 @@
     ]
   },
   {
-    "RingRecord": "concept-five-of-a-kind-hand-ring",
+    "RelicRecord": "concept-five-of-a-kind-hand-ring",
     "Name": "Perfect Ring",
     "Art": "",
     "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
@@ -1203,7 +1202,7 @@
     ]
   },
   {
-    "RingRecord": "form-two-pair-hand-ring",
+    "RelicRecord": "form-two-pair-hand-ring",
     "Name": "Paired Ring",
     "Art": "",
     "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
@@ -1217,7 +1216,7 @@
     ]
   },
   {
-    "RingRecord": "form-three-of-a-kind-hand-ring",
+    "RelicRecord": "form-three-of-a-kind-hand-ring",
     "Name": "Forged Ring",
     "Art": "",
     "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
@@ -1231,7 +1230,7 @@
     ]
   },
   {
-    "RingRecord": "form-full-house-hand-ring",
+    "RelicRecord": "form-full-house-hand-ring",
     "Name": "Armoury Ring",
     "Art": "form-full-house-hand-ring",
     "Text": "A Form Full House deals 6 more DMG before the multiplier.",
@@ -1245,7 +1244,7 @@
     ]
   },
   {
-    "RingRecord": "form-four-of-a-kind-hand-ring",
+    "RelicRecord": "form-four-of-a-kind-hand-ring",
     "Name": "Arsenal Ring",
     "Art": "form-four-of-a-kind-hand-ring",
     "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
@@ -1259,7 +1258,7 @@
     ]
   },
   {
-    "RingRecord": "form-five-of-a-kind-hand-ring",
+    "RelicRecord": "form-five-of-a-kind-hand-ring",
     "Name": "Panoply Ring",
     "Art": "",
     "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
@@ -1273,7 +1272,7 @@
     ]
   },
   {
-    "RingRecord": "element-two-pair-hand-ring",
+    "RelicRecord": "element-two-pair-hand-ring",
     "Name": "Twinflame Ring",
     "Art": "",
     "Text": "A Elemental Two Pair deals 3 more DMG before the multiplier.",
@@ -1287,7 +1286,7 @@
     ]
   },
   {
-    "RingRecord": "element-three-of-a-kind-hand-ring",
+    "RelicRecord": "element-three-of-a-kind-hand-ring",
     "Name": "Attuned Ring",
     "Art": "element-three-of-a-kind-hand-ring",
     "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
@@ -1301,7 +1300,7 @@
     ]
   },
   {
-    "RingRecord": "element-full-house-hand-ring",
+    "RelicRecord": "element-full-house-hand-ring",
     "Name": "Convergent Ring",
     "Art": "",
     "Text": "A Elemental Full House deals 7 more DMG before the multiplier.",
@@ -1315,7 +1314,7 @@
     ]
   },
   {
-    "RingRecord": "element-four-of-a-kind-hand-ring",
+    "RelicRecord": "element-four-of-a-kind-hand-ring",
     "Name": "Confluent Ring",
     "Art": "",
     "Text": "A Elemental Four of a Kind deals 7 more DMG before the multiplier.",
@@ -1329,7 +1328,7 @@
     ]
   },
   {
-    "RingRecord": "element-five-of-a-kind-hand-ring",
+    "RelicRecord": "element-five-of-a-kind-hand-ring",
     "Name": "Elemental Ring",
     "Art": "",
     "Text": "A Elemental Five of a Kind deals 14 more DMG before the multiplier.",
@@ -1343,7 +1342,7 @@
     ]
   },
   {
-    "RingRecord": "onslaught-ring",
+    "RelicRecord": "onslaught-ring",
     "Name": "Onslaught Ring",
     "Art": "",
     "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
@@ -1360,7 +1359,7 @@
     ]
   },
   {
-    "RingRecord": "warm-ring",
+    "RelicRecord": "warm-ring",
     "Name": "Warm Ring",
     "Art": "",
     "Text": "Fire cards cost 1 AP less.",
@@ -1374,7 +1373,7 @@
     ]
   },
   {
-    "RingRecord": "cold-ring",
+    "RelicRecord": "cold-ring",
     "Name": "Cold Ring",
     "Art": "",
     "Text": "Ice cards cost 1 AP less.",
@@ -1388,7 +1387,7 @@
     ]
   },
   {
-    "RingRecord": "static-ring",
+    "RelicRecord": "static-ring",
     "Name": "Static Ring",
     "Art": "",
     "Text": "Lightning cards cost 1 AP less.",
@@ -1402,7 +1401,7 @@
     ]
   },
   {
-    "RingRecord": "dirty-ring",
+    "RelicRecord": "dirty-ring",
     "Name": "Dirty Ring",
     "Art": "",
     "Text": "Earth cards cost 1 AP less.",
@@ -1416,7 +1415,7 @@
     ]
   },
   {
-    "RingRecord": "eerie-ring",
+    "RelicRecord": "eerie-ring",
     "Name": "Eerie Ring",
     "Art": "",
     "Text": "Arcane cards cost 1 AP less.",
@@ -1430,7 +1429,7 @@
     ]
   },
   {
-    "RingRecord": "whetted-ring",
+    "RelicRecord": "whetted-ring",
     "Name": "Whetted Ring",
     "Art": "",
     "Text": "Slash cards cost 1 AP less.",
@@ -1444,7 +1443,7 @@
     ]
   },
   {
-    "RingRecord": "hefted-ring",
+    "RelicRecord": "hefted-ring",
     "Name": "Hefted Ring",
     "Art": "",
     "Text": "Crush cards cost 1 AP less.",
@@ -1458,7 +1457,7 @@
     ]
   },
   {
-    "RingRecord": "tapered-ring",
+    "RelicRecord": "tapered-ring",
     "Name": "Tapered Ring",
     "Art": "",
     "Text": "Stab cards cost 1 AP less.",
@@ -1472,7 +1471,7 @@
     ]
   },
   {
-    "RingRecord": "braced-ring",
+    "RelicRecord": "braced-ring",
     "Name": "Braced Ring",
     "Art": "",
     "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
@@ -1490,7 +1489,7 @@
     ]
   },
   {
-    "RingRecord": "frozen-lightning-ring",
+    "RelicRecord": "frozen-lightning-ring",
     "Name": "Frozen Lightning Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an ice card.",
@@ -1504,7 +1503,7 @@
     ]
   },
   {
-    "RingRecord": "permafrost-ring",
+    "RelicRecord": "permafrost-ring",
     "Name": "Permafrost Ring",
     "Art": "",
     "Text": "Every earth card is dealt as an ice card.",
@@ -1518,7 +1517,7 @@
     ]
   },
   {
-    "RingRecord": "frostbite-ring",
+    "RelicRecord": "frostbite-ring",
     "Name": "Frostbite Ring",
     "Art": "",
     "Text": "Every fire card is dealt as an ice card.",
@@ -1532,7 +1531,7 @@
     ]
   },
   {
-    "RingRecord": "meltdown-ring",
+    "RelicRecord": "meltdown-ring",
     "Name": "Meltdown Ring",
     "Art": "",
     "Text": "Every ice card is dealt as a fire card.",
@@ -1546,7 +1545,7 @@
     ]
   },
   {
-    "RingRecord": "firestorm-ring",
+    "RelicRecord": "firestorm-ring",
     "Name": "Firestorm Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as a fire card.",
@@ -1560,7 +1559,7 @@
     ]
   },
   {
-    "RingRecord": "magma-ring",
+    "RelicRecord": "magma-ring",
     "Name": "Magma Ring",
     "Art": "",
     "Text": "Every earth card is dealt as a fire card.",
@@ -1574,7 +1573,7 @@
     ]
   },
   {
-    "RingRecord": "thundersnow-ring",
+    "RelicRecord": "thundersnow-ring",
     "Name": "Thundersnow Ring",
     "Art": "",
     "Text": "Every ice card is dealt as a lightning card.",
@@ -1588,7 +1587,7 @@
     ]
   },
   {
-    "RingRecord": "heat-lightning-ring",
+    "RelicRecord": "heat-lightning-ring",
     "Name": "Heat Lightning Ring",
     "Art": "",
     "Text": "Every fire card is dealt as a lightning card.",
@@ -1602,7 +1601,7 @@
     ]
   },
   {
-    "RingRecord": "dust-storm-ring",
+    "RelicRecord": "dust-storm-ring",
     "Name": "Dust Storm Ring",
     "Art": "",
     "Text": "Every earth card is dealt as a lightning card.",
@@ -1616,7 +1615,7 @@
     ]
   },
   {
-    "RingRecord": "glacier-ring",
+    "RelicRecord": "glacier-ring",
     "Name": "Glacier Ring",
     "Art": "",
     "Text": "Every ice card is dealt as an earth card.",
@@ -1630,7 +1629,7 @@
     ]
   },
   {
-    "RingRecord": "obsidian-ring",
+    "RelicRecord": "obsidian-ring",
     "Name": "Obsidian Ring",
     "Art": "",
     "Text": "Every fire card is dealt as an earth card.",
@@ -1644,7 +1643,7 @@
     ]
   },
   {
-    "RingRecord": "fulgurite-ring",
+    "RelicRecord": "fulgurite-ring",
     "Name": "Fulgurite Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an earth card.",
@@ -1658,7 +1657,7 @@
     ]
   },
   {
-    "RingRecord": "witchfire-ring",
+    "RelicRecord": "witchfire-ring",
     "Name": "Witchfire Ring",
     "Art": "",
     "Text": "Every fire card is dealt as an arcane card.",
@@ -1672,7 +1671,7 @@
     ]
   },
   {
-    "RingRecord": "runefrost-ring",
+    "RelicRecord": "runefrost-ring",
     "Name": "Runefrost Ring",
     "Art": "",
     "Text": "Every ice card is dealt as an arcane card.",
@@ -1686,7 +1685,7 @@
     ]
   },
   {
-    "RingRecord": "spellbolt-ring",
+    "RelicRecord": "spellbolt-ring",
     "Name": "Spellbolt Ring",
     "Art": "",
     "Text": "Every lightning card is dealt as an arcane card.",
@@ -1700,7 +1699,7 @@
     ]
   },
   {
-    "RingRecord": "leyline-ring",
+    "RelicRecord": "leyline-ring",
     "Name": "Leyline Ring",
     "Art": "",
     "Text": "Every earth card is dealt as an arcane card.",
@@ -1714,7 +1713,7 @@
     ]
   },
   {
-    "RingRecord": "hexfire-ring",
+    "RelicRecord": "hexfire-ring",
     "Name": "Hexfire Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as a fire card.",
@@ -1728,7 +1727,7 @@
     ]
   },
   {
-    "RingRecord": "hexfrost-ring",
+    "RelicRecord": "hexfrost-ring",
     "Name": "Hexfrost Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as an ice card.",
@@ -1742,7 +1741,7 @@
     ]
   },
   {
-    "RingRecord": "hexbolt-ring",
+    "RelicRecord": "hexbolt-ring",
     "Name": "Hexbolt Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as a lightning card.",
@@ -1756,7 +1755,7 @@
     ]
   },
   {
-    "RingRecord": "hexstone-ring",
+    "RelicRecord": "hexstone-ring",
     "Name": "Hexstone Ring",
     "Art": "",
     "Text": "Every arcane card is dealt as a earth card.",
@@ -1770,7 +1769,7 @@
     ]
   },
   {
-    "RingRecord": "might-ring",
+    "RelicRecord": "might-ring",
     "Name": "Might Ring",
     "Art": "",
     "Text": "+10 DMG for every fight.",
@@ -1783,7 +1782,7 @@
     ]
   },
   {
-    "RingRecord": "bulwark-ring",
+    "RelicRecord": "bulwark-ring",
     "Name": "Bulwark Ring",
     "Art": "bulwark-ring",
     "Text": "+25 HP for every fight.",
@@ -1796,7 +1795,7 @@
     ]
   },
   {
-    "RingRecord": "heart-ring",
+    "RelicRecord": "heart-ring",
     "Name": "Heart Ring",
     "Art": "",
     "Text": "+5 HP, and 5 more for every fight won.",
@@ -1813,7 +1812,7 @@
     ]
   },
   {
-    "RingRecord": "rampant-ring",
+    "RelicRecord": "rampant-ring",
     "Name": "Rampant Ring",
     "Art": "",
     "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
@@ -1826,9 +1825,8 @@
     ]
   },
   {
-    "RingRecord": "weight-of-the-earth-ring",
+    "RelicRecord": "weight-of-the-earth-ring",
     "Name": "Weight of the Earth Ring",
-    "Face": "Earthweight",
     "Art": "",
     "Text": "Every earth crush card\ndeals 3x DMG.",
     "Rarity": "uncommon",
@@ -1841,9 +1839,8 @@
     ]
   },
   {
-    "RingRecord": "struck-by-lightning-ring",
+    "RelicRecord": "struck-by-lightning-ring",
     "Name": "Struck by Lightning Ring",
-    "Face": "Lightningstruck",
     "Art": "",
     "Text": "Every lightning stab card\ndeals 3x DMG.",
     "Rarity": "uncommon",
@@ -1856,9 +1853,8 @@
     ]
   },
   {
-    "RingRecord": "sharp-as-ice-ring",
+    "RelicRecord": "sharp-as-ice-ring",
     "Name": "Sharp as Ice Ring",
-    "Face": "Icesharp",
     "Art": "",
     "Text": "Every ice slash card\ndeals 3x DMG.",
     "Rarity": "uncommon",
@@ -1871,9 +1867,8 @@
     ]
   },
   {
-    "RingRecord": "fire-of-life-ring",
+    "RelicRecord": "fire-of-life-ring",
     "Name": "Fire of Life Ring",
-    "Face": "Firelife",
     "Art": "",
     "Text": "Fire cards gain 0.1x DMG\nfor every 10 vitae you hold.",
     "Rarity": "uncommon",
@@ -1886,9 +1881,8 @@
     ]
   },
   {
-    "RingRecord": "dual-wield-ring",
+    "RelicRecord": "dual-wield-ring",
     "Name": "Dual Wield Ring",
-    "Face": "Dualwield",
     "Art": "",
     "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
     "Rarity": "uncommon",
@@ -1901,7 +1895,7 @@
     ]
   },
   {
-    "RingRecord": "pairing-ring",
+    "RelicRecord": "pairing-ring",
     "Name": "Pairing Ring",
     "Art": "",
     "Text": "Every pair deals 2x DMG.",
@@ -1915,9 +1909,8 @@
     ]
   },
   {
-    "RingRecord": "triplicate-form-ring",
+    "RelicRecord": "triplicate-form-ring",
     "Name": "Triplicate Form Ring",
-    "Face": "Triplicate",
     "Art": "",
     "Text": "Every Three of a Kind\ndeals 3x DMG.",
     "Rarity": "uncommon",
@@ -1940,9 +1933,8 @@
     ]
   },
   {
-    "RingRecord": "house-of-pain-ring",
+    "RelicRecord": "house-of-pain-ring",
     "Name": "House of Pain Ring",
-    "Face": "Painhouse",
     "Art": "",
     "Text": "Every Full House\ndeals 3x DMG.",
     "Rarity": "uncommon",
@@ -1965,7 +1957,7 @@
     ]
   },
   {
-    "RingRecord": "oak-ring",
+    "RelicRecord": "oak-ring",
     "Name": "Oak Ring",
     "Art": "",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
@@ -1989,7 +1981,7 @@
     ]
   },
   {
-    "RingRecord": "pentacle-ring",
+    "RelicRecord": "pentacle-ring",
     "Name": "Pentacle Ring",
     "Art": "",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
@@ -2013,7 +2005,7 @@
     ]
   },
   {
-    "RingRecord": "banker-ring",
+    "RelicRecord": "banker-ring",
     "Name": "Banker Ring",
     "Art": "banker-ring",
     "Text": "Vitae propagates twice as fast.",
@@ -2026,7 +2018,7 @@
     ]
   },
   {
-    "RingRecord": "soul-taker-ring",
+    "RelicRecord": "soul-taker-ring",
     "Name": "Soul Taker Ring",
     "Art": "",
     "Text": "A won room pays 5 more vitae.",
@@ -2039,7 +2031,7 @@
     ]
   },
   {
-    "RingRecord": "hungry-ring",
+    "RelicRecord": "hungry-ring",
     "Name": "Hungry Ring",
     "Art": "",
     "Text": "Two prizes after a fight instead of one.",

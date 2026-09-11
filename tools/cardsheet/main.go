@@ -217,27 +217,27 @@ func run(dir string) error {
 		page.Deck = append(page.Deck, stack)
 	}
 
-	// Section six: the first ring. Same format, pink border, artwork instead of glyphs,
-	// and nothing about cost or phase because a ring is not played from a hand.
-	rings, err := ringSpecs()
+	// Section six: the first relic. Same format, pink border, artwork instead of glyphs,
+	// and nothing about cost or phase because a relic is not played from a hand.
+	relics, err := relicSpecs()
 	if err != nil {
 		return err
 	}
-	ringRow := row{Label: "rings — same format, pink border"}
-	for _, spec := range rings {
+	relicRow := row{Label: "relics — same format, pink border"}
+	for _, spec := range relics {
 		state := "at rest"
 		if spec.Dragging {
 			state = "being dragged"
 		}
-		cell, err := write(dir, faces, spec, cards.RingStyle,
-			fmt.Sprintf("ring-%s-%t.png", spec.Name, spec.Dragging),
+		cell, err := write(dir, faces, spec, cards.RelicStyle,
+			fmt.Sprintf("relic-%s-%t.png", spec.Name, spec.Dragging),
 			fmt.Sprintf("%s — %s", spec.Name, state))
 		if err != nil {
 			return err
 		}
-		ringRow.Cells = append(ringRow.Cells, cell)
+		relicRow.Cells = append(relicRow.Cells, cell)
 	}
-	page.Rings = append(page.Rings, ringRow)
+	page.Relics = append(page.Relics, relicRow)
 
 	// Section seven: the enemy. Same format again, a portrait instead of glyphs, and a health
 	// bar and a life fraction where an action card puts its cost and damage.
@@ -255,7 +255,7 @@ func run(dir string) error {
 		}
 		enemyRow.Cells = append(enemyRow.Cells, cell)
 	}
-	page.Rings = append(page.Rings, enemyRow)
+	page.Relics = append(page.Relics, enemyRow)
 
 	// Section eight: the player. The enemy card's twin — same format, same health bar at the
 	// same offsets, three stat rows where the opponent has a portrait. Four states, because
@@ -270,7 +270,7 @@ func run(dir string) error {
 		}
 		duelistRow.Cells = append(duelistRow.Cells, cell)
 	}
-	page.Rings = append(page.Rings, duelistRow)
+	page.Relics = append(page.Relics, duelistRow)
 
 	out := filepath.Join(dir, "index.html")
 	f, err := os.Create(out)
@@ -362,12 +362,12 @@ type page struct {
 	Shapes  []row
 	Backs   []row
 	Deck    []stack
-	Rings   []row
+	Relics  []row
 }
 
 func (p page) count() int {
 	n := 0
-	for _, rs := range [][]row{p.Borders, p.Forms, p.States, p.Shapes, p.Backs, p.Rings} {
+	for _, rs := range [][]row{p.Borders, p.Forms, p.States, p.Shapes, p.Backs, p.Relics} {
 		for _, r := range rs {
 			n += len(r.Cells)
 		}

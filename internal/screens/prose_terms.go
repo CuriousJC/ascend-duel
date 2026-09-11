@@ -1,6 +1,6 @@
 package screens
 
-// **The working under a blow: what each card was worth, and which ring priced it.**
+// **The working under a blow: what each card was worth, and which relic priced it.**
 //
 // The fight log printed the total and none of the arithmetic — `(144 x 1.9 = 273)` — so a
 // multiplier read as a number the game had decided rather than one the player had built. The hand
@@ -9,7 +9,7 @@ package screens
 // read back after the fight, which is the one thing the dialog cannot do. *(2026-09-02)*
 //
 // **Every figure comes off the event and nothing here multiplies, adds or rounds.** `HandAmounts`,
-// `HandRingScale`, `HandLanding` and `HandGrown` are all filled by the resolver — see
+// `HandRelicScale`, `HandLanding` and `HandGrown` are all filled by the resolver — see
 // combat.Event, where each says why it is on the event rather than being re-derived. This is a
 // second *drawing* of one event, exactly as combat_mathbox.go is, and it is under the same rule: a
 // figure it wanted that the event does not carry goes on the event.
@@ -41,7 +41,7 @@ func (s *CombatScene) handTermLines(e combat.Event, played []combat.Card) []sess
 		return nil
 	}
 
-	rings := s.wornBy(e.Side)
+	relics := s.wornBy(e.Side)
 	out := make([]session.LedgerLine, 0, e.HandCardCount+1)
 
 	for i := 0; i < e.HandCardCount && i < len(e.HandAmounts); i++ {
@@ -56,7 +56,7 @@ func (s *CombatScene) handTermLines(e combat.Event, played []combat.Card) []sess
 			{Text: fmt.Sprintf("%-14s", termCardName(card)), Ink: ink},
 			{Text: fmt.Sprintf("%4d", termBase(e, i)), Ink: ink},
 		}
-		runs = append(runs, termNotes(e, i, rings)...)
+		runs = append(runs, termNotes(e, i, relics)...)
 
 		out = append(out, session.LedgerLine{Voice: session.VoiceTerm, Runs: runs})
 	}
@@ -68,7 +68,7 @@ func (s *CombatScene) handTermLines(e combat.Event, played []combat.Card) []sess
 	return out
 }
 
-// termBase is the figure a term's own card was worth **before its rings** — the number the ring's
+// termBase is the figure a term's own card was worth **before its relics** — the number the relic's
 // multiplier is written beside, so the two together read as the arithmetic that was done.
 //
 // **It falls back to the landed figure** when the event carries no base for the term, which is what
@@ -92,41 +92,41 @@ func termCardName(c combat.Card) string {
 	return name + " (" + lower(c.Element.String()) + ")"
 }
 
-// termNotes is what the rings did to one term: the landings they bought, then the figures they
+// termNotes is what the relics did to one term: the landings they bought, then the figures they
 // priced it at, in worn order — which is firing order.
 //
 // **A landing and a multiplier are said differently because they are different things.** An echo
-// ring buys a *term* and contributes no figure, so a line reading `x Echo 1x` would credit it with
+// relic buys a *term* and contributes no figure, so a line reading `x Echo 1x` would credit it with
 // arithmetic it did not do; see combat.Event.HandLanding, which is a separate array for exactly
 // that reason.
 //
-// **A ring firing at the identity still fired.** A fresh Enflamed is 1x and is written, on
-// ringNote's rule: leaving it out is how a growing ring's climb off 1x becomes invisible.
-func termNotes(e combat.Event, term int, rings []combat.WornRing) []session.LedgerRun {
+// **A relic firing at the identity still fired.** A fresh Enflamed is 1x and is written, on
+// relicNote's rule: leaving it out is how a growing relic's climb off 1x becomes invisible.
+func termNotes(e combat.Event, term int, relics []combat.WornRelic) []session.LedgerRun {
 	var notes []session.LedgerRun
 
 	for seat := range e.HandLanding[term] {
 		if e.HandLanding[term][seat] {
 			notes = append(notes, session.LedgerRun{
-				Text: "  + " + ringName(rings, seat) + " lands it again",
-				Ink:  session.InkRing,
+				Text: "  + " + relicName(relics, seat) + " lands it again",
+				Ink:  session.InkRelic,
 			})
 		}
 	}
 
-	for seat, pct := range e.HandRingScale[term] {
+	for seat, pct := range e.HandRelicScale[term] {
 		if pct <= 0 {
 			continue
 		}
-		note := "  x " + ringName(rings, seat) + " " + handMultiplierText(pct) + "x"
+		note := "  x " + relicName(relics, seat) + " " + handMultiplierText(pct) + "x"
 
-		// **What the ring stood at after this term**, and only when it moved. A growing ring is
-		// the one case where the same ring prices two terms of one blow differently, and the
+		// **What the relic stood at after this term**, and only when it moved. A growing relic is
+		// the one case where the same relic prices two terms of one blow differently, and the
 		// player watching it climb during the blow has nothing to read it off afterwards.
 		if grown := e.HandGrown[term][seat]; term > 0 && grown != e.HandGrown[term-1][seat] {
 			note += fmt.Sprintf(" (grown %d)", grown)
 		}
-		notes = append(notes, session.LedgerRun{Text: note, Ink: session.InkRing})
+		notes = append(notes, session.LedgerRun{Text: note, Ink: session.InkRelic})
 	}
 
 	return notes
@@ -135,9 +135,9 @@ func termNotes(e combat.Event, term int, rings []combat.WornRing) []session.Ledg
 // handMathRuns is the blow written out as the sum it is, in the colours the hand dialog uses:
 // `10 + 10 + (10 x 2) x 2.5 = 100`.
 //
-// **A ring's figure stays with the term it priced**, in brackets, rather than being folded into the
+// **A relic's figure stays with the term it priced**, in brackets, rather than being folded into the
 // term or hung on the end of the whole sum. Folding it in was what the line did until 2026-09-02
-// and it hid the ring; hanging it on the end would read as multiplying every term, which is not
+// and it hid the relic; hanging it on the end would read as multiplying every term, which is not
 // what happened and does not come to the total.
 //
 // **Every figure comes off the event.** Base, Multiplier, the per-term amounts and the total are
@@ -155,7 +155,7 @@ func handMathRuns(e combat.Event, played []combat.Card) []session.LedgerRun {
 			ink = elementInk(played[idx].Element)
 		}
 
-		base, scales := termBase(e, i), ringFactors(e, i)
+		base, scales := termBase(e, i), relicFactors(e, i)
 		if len(scales) == 0 {
 			runs = append(runs, session.LedgerRun{Text: strconv.Itoa(base), Ink: ink})
 			continue
@@ -164,7 +164,7 @@ func handMathRuns(e combat.Event, played []combat.Card) []session.LedgerRun {
 		runs = append(runs, session.LedgerRun{Text: "(" + strconv.Itoa(base), Ink: ink})
 		for _, pct := range scales {
 			runs = append(runs, session.LedgerRun{
-				Text: " x " + handMultiplierText(pct), Ink: session.InkRing,
+				Text: " x " + handMultiplierText(pct), Ink: session.InkRelic,
 			})
 		}
 		runs = append(runs, session.LedgerRun{Text: ")", Ink: ink})
@@ -187,13 +187,13 @@ func handMathRuns(e combat.Event, played []combat.Card) []session.LedgerRun {
 	return runs
 }
 
-// ringFactors is every ring multiplier that priced one term, in worn order — which is firing order.
+// relicFactors is every relic multiplier that priced one term, in worn order — which is firing order.
 //
-// **A ring firing at the identity still fired.** A fresh Enflamed is 1x and is written, on
-// ringNote's rule: leaving it out is how a growing ring's climb off 1x becomes invisible.
-func ringFactors(e combat.Event, term int) []int {
+// **A relic firing at the identity still fired.** A fresh Enflamed is 1x and is written, on
+// relicNote's rule: leaving it out is how a growing relic's climb off 1x becomes invisible.
+func relicFactors(e combat.Event, term int) []int {
 	var out []int
-	for _, pct := range e.HandRingScale[term] {
+	for _, pct := range e.HandRelicScale[term] {
 		if pct > 0 {
 			out = append(out, pct)
 		}
@@ -201,20 +201,20 @@ func ringFactors(e combat.Event, term int) []int {
 	return out
 }
 
-// ringName is the ring on a worn seat. **A seat the wearer does not have is named rather than
-// blank** — a saved account has to read as something, and "a ring" is honest where an empty gap is
+// relicName is the relic on a worn seat. **A seat the wearer does not have is named rather than
+// blank** — a saved account has to read as something, and "a relic" is honest where an empty gap is
 // a line the player would read as a bug.
-func ringName(rings []combat.WornRing, seat int) string {
-	if seat < 0 || seat >= len(rings) {
-		return "a ring"
+func relicName(relics []combat.WornRelic, seat int) string {
+	if seat < 0 || seat >= len(relics) {
+		return "a relic"
 	}
-	return combat.RingOf(rings[seat].Ring).Name
+	return combat.RelicOf(relics[seat].Relic).Name
 }
 
 // wornBy is what a side is wearing, in worn order. The opponent wears nothing today — creatures
 // have no fingers — so this is the player's row in every case that matters, and it is asked by
-// side rather than assumed so that the day one does, the account says which ring.
-func (s *CombatScene) wornBy(side combat.Side) []combat.WornRing {
+// side rather than assumed so that the day one does, the account says which relic.
+func (s *CombatScene) wornBy(side combat.Side) []combat.WornRelic {
 	c := s.fighter
 	if side == combat.SideB {
 		c = s.enemy
@@ -222,5 +222,5 @@ func (s *CombatScene) wornBy(side combat.Side) []combat.WornRing {
 	if c == nil {
 		return nil
 	}
-	return c.Duelist.WornRings()
+	return c.Duelist.WornRelics()
 }

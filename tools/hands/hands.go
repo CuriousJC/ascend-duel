@@ -60,7 +60,7 @@ const (
 )
 
 // MaxCards is the count bound on a turn, read off the rules rather than repeated. It asks a bare
-// duelist because a ring or a brand is meant to be able to raise it.
+// duelist because a relic or a brand is meant to be able to raise it.
 var MaxCards = combat.Duelist{}.MaxActions()
 
 // Budget is the fighter's action points. **Named, never the first entry of the map** — the roster

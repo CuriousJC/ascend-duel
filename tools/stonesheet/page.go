@@ -6,7 +6,7 @@ import "html/template"
 // the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason the
-// ring sheet's template gives: a card's rim is one pixel thick and a browser that scales it
+// relic sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
 // **The ground is the one the stones actually sit on.** A grey border on white is a different

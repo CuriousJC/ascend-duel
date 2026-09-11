@@ -18,7 +18,7 @@ package profile
 // enemies.
 //
 // **Everything is a name or a count.** A concept is its registry key, an element is its name, a
-// phase is its name, a ring is its record key. No ordinals — see doc.go.
+// phase is its name, a relic is its record key. No ordinals — see doc.go.
 
 // runFile is the run snapshot's name inside the store's directory.
 const runFile = "run.json"
@@ -59,7 +59,7 @@ type RunSnapshot struct {
 	//
 	// **A wound and a count, rather than a life total and a ceiling.** The ceiling is rebuilt from
 	// the record every fight and moved by whatever is worn, so a stored total would mean a
-	// different fraction of it the moment a ring changed hands; and a stored multiplier is a
+	// different fraction of it the moment a relic changed hands; and a stored multiplier is a
 	// second copy of a fact the count already carries. Both are omitted when zero, so a save from
 	// a run that has taken no damage and climbed no stairway reads the way it did before either
 	// field existed.
@@ -85,25 +85,25 @@ type RunSnapshot struct {
 	// zero value is not a default, and the reading is where that gets fixed.
 	RoundLimit int `json:"roundLimit,omitempty"`
 
-	// RingSlots is how many rings this run may wear at once.
+	// RelicSlots is how many relics this run may wear at once.
 	//
 	// **Zero is an older save, not a run that may wear none**, on exactly the terms above:
 	// `session.Resume` reads a number below one as the default rather than as an answer. A run
-	// resumed onto zero fingers would be a run that had quietly lost every ring it had bought.
-	RingSlots int `json:"ringSlots,omitempty"`
+	// resumed onto zero fingers would be a run that had quietly lost every relic it had bought.
+	RelicSlots int `json:"relicSlots,omitempty"`
 
-	// Worn is the rings, by record key, **in worn order** — which is a rule and not a presentation
-	// detail, since rings fire left to right and compound. A list rather than a set for that
+	// Worn is the relics, by record key, **in worn order** — which is a rule and not a presentation
+	// detail, since relics fire left to right and compound. A list rather than a set for that
 	// reason.
 	Worn []string `json:"worn"`
 
-	// Grown is each growing ring's accumulator, by record key. Keyed by record rather than by
+	// Grown is each growing relic's accumulator, by record key. Keyed by record rather than by
 	// position, which is the reason `Session.grown` was already keyed that way: a position means
 	// nothing in a file.
 	Grown map[string]int `json:"grown"`
 
 	// Stones is how many stones the run has put on each rung of the hand ladder, by **hand key**.
-	// A name rather than a seat, on the same terms `Worn` names a ring record: a seat is a position
+	// A name rather than a seat, on the same terms `Worn` names a relic record: a seat is a position
 	// in the catalogue this build loaded, and a file outlives the build that wrote it.
 	Stones map[string]int `json:"stones"`
 
@@ -186,7 +186,7 @@ type LedgerRoundSnapshot struct {
 // LedgerLineSnapshot is one line of the account.
 //
 // **Runs rather than one string**, because the panel colours a line in pieces: the verb by its
-// category, a figure by its card's element, a ring's multiplier in the ring pink. Voice and Ink are
+// category, a figure by its card's element, a relic's multiplier in the relic pink. Voice and Ink are
 // short closed vocabularies written as words, on the rule every other name in this file is under —
 // a colour in a save file would be a palette decision frozen into a run.
 type LedgerLineSnapshot struct {
@@ -211,7 +211,7 @@ type SpoilsSnapshot struct {
 // CardSnapshot is one owned card.
 //
 // **Its identity is stored.** Two cards that look identical are still two cards, and the number is
-// what lets a drawn card be asked what it looked like before a ring touched it — see combat.Card.ID.
+// what lets a drawn card be asked what it looked like before a relic touched it — see combat.Card.ID.
 // A resumed run whose ids were reassigned would be a run where that question got a different answer.
 type CardSnapshot struct {
 	ID int `json:"id"`

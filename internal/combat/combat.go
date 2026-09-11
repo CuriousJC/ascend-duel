@@ -367,7 +367,7 @@ func resolveAttackPhase(
 	// `attacks` count above is only about announcements: every attack card gets its own beat, and a
 	// defence gets one later in its own phase. What used to stop here was the whole scoring of the
 	// turn, so a hand of nothing but shields was the one hand the ladder could not see — which
-	// makes a shield build unreachable the moment a ring or an authored card wants one. The blow it
+	// makes a shield build unreachable the moment a relic or an authored card wants one. The blow it
 	// forms sums to zero and is declined below, before anything of the target's is spent.
 	_ = attacks
 
@@ -387,7 +387,7 @@ func resolveAttackPhase(
 	//
 	// **A hand buys damage and nothing else** *(2026-08-17)*. It used to be able to bank action
 	// points or take actions off the opponent's next turn, which is why there was a phase here
-	// paying those out before the blow landed. Statuses come from elements and rings now, so the
+	// paying those out before the blow landed. Statuses come from elements and relics now, so the
 	// multiplier is the whole reward and there is nothing to pay before the roll.
 	swung, grown := handEvent(side, blow, turn, held, actor, round)
 	events = append(events, swung)
@@ -395,7 +395,7 @@ func resolveAttackPhase(
 	// **A blow of nothing is counted and not thrown** *(owner's call, 2026-09-02)*. The hand above
 	// is named, multiplied and written into the account like any other; what stops here is the
 	// *attack*, so a turn of shields cannot spend the target's shield, clear the defences they
-	// raised, roll for a miss, land a status or grow a ring. The gate is the sum the hand carries,
+	// raised, roll for a miss, land a status or grow a relic. The gate is the sum the hand carries,
 	// which is the same figure the screen has just drawn — a card given damage, or a shield card
 	// authored with some, walks straight past it and is an attack like any other.
 	if swung.Amount <= 0 {
@@ -460,17 +460,17 @@ func resolveAttackPhase(
 		Round:  round,
 	})
 
-	// **The blow lands whatever the attacker's rings say it does, and it does so because the hand
+	// **The blow lands whatever the attacker's relics say it does, and it does so because the hand
 	// was formed rather than because the blow hurt.** A hand halved by a Defend still connected, and
 	// making the status conditional on the final figure would mean a defensive card silently
 	// un-applied something the attacker had already paid for.
 	//
-	// **Every status comes off a worn ring** *(2026-08-16, re-expressed in the grammar 2026-08-17)*.
-	// A rainbow thrown by a duelist wearing two elemental rings lands two statuses; thrown by an
-	// enemy it lands none. The colours still count toward the hand either way — what a ring buys is
+	// **Every status comes off a worn relic** *(2026-08-16, re-expressed in the grammar 2026-08-17)*.
+	// A rainbow thrown by a duelist wearing two elemental relics lands two statuses; thrown by an
+	// enemy it lands none. The colours still count toward the hand either way — what a relic buys is
 	// the status, not the multiplier.
 	//
-	// The cards of the hand are what the rings match against, so a form ring or a concept ring
+	// The cards of the hand are what the relics match against, so a form relic or a concept relic
 	// reaches this the same way an elemental one does. `statusesFrom` deduplicates, which is what
 	// keeps two fire cards from announcing one burn twice.
 	blowCards := make([]Card, 0, len(blow.Cards))
@@ -478,7 +478,7 @@ func resolveAttackPhase(
 		blowCards = append(blowCards, turn[i].Card)
 	}
 	// **The accumulator was moved inside the sum**, term by term, and this is where it is adopted:
-	// after the miss check above, so a blow that never connected pays no ring, and after the damage
+	// after the miss check above, so a blow that never connected pays no relic, and after the damage
 	// has landed, so the first attack of a fight is never already wearing its own bonus. See
 	// handEvent and Duelist.GrowOnLanding.
 	actor = grown
@@ -494,7 +494,7 @@ func resolveAttackPhase(
 			Side:   side,
 			Target: targetSide,
 			Status: a.Status,
-			Ring:   a.Ring,
+			Relic:  a.Relic,
 			Amount: amount,
 			Life:   target.CurrentLife,
 			Round:  round,
@@ -671,7 +671,7 @@ func resolveSoloAttacks(
 			Round:  round,
 		})
 
-		// One card, and the same rings the other phase reads. An enemy wears none, so this does
+		// One card, and the same relics the other phase reads. An enemy wears none, so this does
 		// nothing for the only duelists that are solo attackers today — it is here because the rule
 		// belongs to attacking, not to hand-forming.
 		for _, a := range actor.statusesFrom([]Card{slot.Card}) {
@@ -686,7 +686,7 @@ func resolveSoloAttacks(
 				Target:  targetSide,
 				Element: slot.Card.Element,
 				Status:  a.Status,
-				Ring:    a.Ring,
+				Relic:   a.Relic,
 				Amount:  amount,
 				Life:    target.CurrentLife,
 				Round:   round,
@@ -764,15 +764,15 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	// not turn a Pair into Trips; it pays into the hand the real cards formed.
 	// **The accumulator moves inside this loop as of 2026-08-26** *(owner's call)*. It used to step
 	// once, after the whole blow had landed, so every fire card of a turn was counted at the figure
-	// the ring opened the turn with. It now steps on every landing, which makes the order of the
+	// the relic opened the turn with. It now steps on every landing, which makes the order of the
 	// cards a decision: the first fire card fires bare and pays for the second one to fire bigger.
 	//
 	// **The shape is settled per card and the figures are asked for per landing.** How many times a
-	// card lands is a fact about the rings when the card is reached; what each landing is worth is
+	// card lands is a fact about the relics when the card is reached; what each landing is worth is
 	// asked again at the accumulator the landing before it left. See LandingShape.
 	for n, i := range blow.Cards {
 		card := turn[i].Card
-		shape := LandingsOf(actor.WornRings(), card, n == 0)
+		shape := LandingsOf(actor.WornRelics(), card, n == 0)
 
 		for t := 0; t < shape.Count(); t++ {
 			d := shape.Amount(t, actor.CardDamage(card))
@@ -783,19 +783,19 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 				e.HandCards[at] = i
 				e.HandAmounts[at] = d
 				e.HandCardBase[at] = shape.Amount(t, card.Damage(actor.DMG))
-				e.HandRingScale[at] = CardScaleBySeat(actor.WornRings(), card)
+				e.HandRelicScale[at] = CardScaleBySeat(actor.WornRelics(), card)
 				e.HandCardCount++
 				if t > 0 {
 					e.EchoTerms++
-					// **Only the extra landings are attributed to a ring.** The card's own first
-					// landing is the card being played, which needed no ring to seat it.
-					e.HandLanding[at] = LandingSeats(actor.WornRings(), card, n == 0)
+					// **Only the extra landings are attributed to a relic.** The card's own first
+					// landing is the card being played, which needed no relic to seat it.
+					e.HandLanding[at] = LandingSeats(actor.WornRelics(), card, n == 0)
 				}
 
 				// **After the step, not before**, so the row of badges reads as the number this
 				// term has just earned rather than as the number it was counted at.
 				actor = actor.GrowOnLanding(card)
-				for seat, w := range actor.WornRings() {
+				for seat, w := range actor.WornRelics() {
 					e.HandGrown[at][seat] = w.Grown
 				}
 				continue
@@ -813,13 +813,13 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	// **The hand's own term is added last, and it is inside Base** *(owner's call, 2026-09-05)*.
 	// Every term above is a card; this one is the rung the turn built, so it lands after the cards
 	// are counted and before the multiplier — which is what makes it read as damage the *hand*
-	// contributed rather than as damage a ring moved on a card.
-	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRings(), blow.Hand.ID)
+	// contributed rather than as damage a relic moved on a card.
+	e.HandBonus, e.HandBonusSeats = HandBonus(actor.WornRelics(), blow.Hand.ID)
 	e.Base += e.HandBonus
 
 	// **And the cards the turn kept back pay after the ones it spent.** Same seat, same reason: it
-	// is a term the hand contributed rather than a number a ring moved on a card.
-	e.HeldBonus, e.HeldBonusSeats = HeldBonus(actor.WornRings(), held)
+	// is a term the hand contributed rather than a number a relic moved on a card.
+	e.HeldBonus, e.HeldBonusSeats = HeldBonus(actor.WornRelics(), held)
 	e.Base += e.HeldBonus
 
 	// **And the purse pays last of the three.** It is not a card, not the rung and not the cards
@@ -828,23 +828,23 @@ func handEvent(side Side, blow Blow, turn []Slot, held []Card, actor Duelist, ro
 	//
 	// **Read at the blow, never cached** *(owner's call, 2026-09-05)*. The purse moves during a
 	// fight, so a figure resolved at fight-start would be a turn-three blow paid at turn-one prices.
-	e.VitaeBonus, e.VitaeBonusSeats = DamagePerVitae(actor.WornRings())*actor.Vitae,
-		seatsDoing(actor.WornRings(), DoAddDamagePerVitae)
+	e.VitaeBonus, e.VitaeBonusSeats = DamagePerVitae(actor.WornRelics())*actor.Vitae,
+		seatsDoing(actor.WornRelics(), DoAddDamagePerVitae)
 	e.Base += e.VitaeBonus
 
-	// **A rung ring is a second multiplier, never a bigger hand** *(owner's call, 2026-09-05)*.
+	// **A rung relic is a second multiplier, never a bigger hand** *(owner's call, 2026-09-05)*.
 	// `Multiplier` is the ladder's own figure and stays it — the banner, the hand row and the sum
-	// all show the rung the player actually built. What a ring adds is another term in the
+	// all show the rung the player actually built. What a relic adds is another term in the
 	// arithmetic, applied after it. Folding the two into one number was the first version of this
-	// and it made a ring look like the hand having changed.
-	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRings(), blow.Hand.ID, scoringCards(blow, turn))
+	// and it made a relic look like the hand having changed.
+	e.HandScale, e.HandScaleSeats = HandScale(actor.WornRelics(), blow.Hand.ID, scoringCards(blow, turn))
 
 	// **The multiplier multiplies the cards** *(2026-08-18)*. There is no separate swing term: a
 	// hand is worth a proportion of what its own cards deal, so a Pair of Lunges is worth more
 	// than a Pair of Jabs by exactly the margin the cards themselves are worth.
 	e.Amount = scaleDamage(e.Base, blow.Multiplier)
 
-	// **And the ring's own multiplier last**, as a second scaling rather than a bigger first one.
+	// **And the relic's own multiplier last**, as a second scaling rather than a bigger first one.
 	// Two steps rather than one product, so the figure the player is shown at each stage is the
 	// figure the rules used.
 	if e.HandScale != 0 && e.HandScale != 100 {

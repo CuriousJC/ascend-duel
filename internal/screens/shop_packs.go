@@ -8,12 +8,12 @@ package screens
 // something to read — and it is what buys the room the potions pane needed on a row that was
 // already too long. All three catalogues stay reachable; which two you meet is the roll.
 //
-// **Its own stream, `seeds.PackOffer`.** Sharing the ring shelf's would make authoring a ring change
-// which packs every run was ever offered, and would reroll the packs every time the rings were
+// **Its own stream, `seeds.PackOffer`.** Sharing the relic shelf's would make authoring a relic change
+// which packs every run was ever offered, and would reroll the packs every time the relics were
 // rerolled — see internal/seeds, where the argument is written down beside the other four.
 //
 // **Rerolls are per pane and they escalate** *(owner's call, 2026-09-06)*: 2 vitae, then 4, then 8,
-// doubling within a visit and starting again at the next shop. The rings and the packs each have
+// doubling within a visit and starting again at the next shop. The relics and the packs each have
 // their own button and their own count, so pressing one does not make the other dearer. The potions
 // and the brand have no button at all — the potion pane is the whole catalogue every visit, so a
 // reroll would offer what is already offered, and the brand is one seat.
@@ -60,7 +60,7 @@ func (s *ShopScene) rerollPrice(p shopPane) int {
 }
 
 // rerollable is whether a pane has a button under it at all.
-func rerollable(p shopPane) bool { return p == shopPanePacks || p == shopPaneRings }
+func rerollable(p shopPane) bool { return p == shopPanePacks || p == shopPaneRelics }
 
 // shopRNG is one of the visit's two streams, seeded per fight.
 func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
@@ -73,7 +73,7 @@ func shopRNG(gs *state.GlobalState, stream seeds.Stream) *rand.Rand {
 // dealPacks picks which two of the three stand on the shelf.
 //
 // **A shuffle of the catalogue, cut to two** rather than two draws without replacement, because the
-// three are equally weighted: there is no rarity here, so a weighted draw would be the ring shelf's
+// three are equally weighted: there is no rarity here, so a weighted draw would be the relic shelf's
 // machinery doing nothing. The order is the roll's, so the bag is not always on the left.
 func dealPacks(rng *rand.Rand) []goodKind {
 	kinds := goodKinds()
@@ -126,28 +126,28 @@ func (s *ShopScene) rerollPacks(gs *state.GlobalState) {
 	s.offered = out
 }
 
-// rerollRings redraws the whole shelf, bought seats included.
+// rerollRelics redraws the whole shelf, bought seats included.
 //
 // **A reroll refills every seat** *(owner's call, 2026-09-08)*, which reverses the rule that a
 // bought seat stays spent for the visit. What that rule was protecting against — one reroll being
-// worth three rings — is already paid for twice over: the escalating price is charged whatever the
-// shelf looks like, and the ring that emptied the seat was bought at full price. What it cost was a
+// worth three relics — is already paid for twice over: the escalating price is charged whatever the
+// shelf looks like, and the relic that emptied the seat was bought at full price. What it cost was a
 // player who bought early having less shelf to reroll than one who had not, which is the shop
 // punishing the purchase it just made.
 //
-// **The ring just bought cannot come back**, because dealShelf draws from what the run is not
-// wearing and it is now worn. A ring that was bought and then sold again can, which is correct: the
+// **The relic just bought cannot come back**, because dealShelf draws from what the run is not
+// wearing and it is now worn. A relic that was bought and then sold again can, which is correct: the
 // shelf offers what the run does not have.
 //
-// **A ring that was standing and was not taken may be dealt again** *(owner's call, 2026-09-08)*,
+// **A relic that was standing and was not taken may be dealt again** *(owner's call, 2026-09-08)*,
 // and it is drawn on exactly its rarity's tickets like anything else in the pool. The fresh deal
 // has no memory of the old shelf, which is the point: excluding what was just offered would give a
-// rejected ring worse odds than its rarity says it has, and the shelf is a weighted sample of what
+// rejected relic worse odds than its rarity says it has, and the shelf is a weighted sample of what
 // the run does not own rather than a queue through the catalogue.
 //
-// A short pool — fewer unworn rings left than seats — leaves the remaining seats empty rather than
-// keeping what was standing there, so the row never shows a ring the fresh draw did not pick.
-func (s *ShopScene) rerollRings(gs *state.GlobalState) {
+// A short pool — fewer unworn relics left than seats — leaves the remaining seats empty rather than
+// keeping what was standing there, so the row never shows a relic the fresh draw did not pick.
+func (s *ShopScene) rerollRelics(gs *state.GlobalState) {
 	fresh := dealShelf(gs, s.stockRNG)
 
 	for i := range s.shelf {
@@ -162,13 +162,13 @@ func (s *ShopScene) rerollRings(gs *state.GlobalState) {
 // paneHasSomethingToReroll is whether a press would change anything. A pane whose every seat is
 // spent has nothing to redraw, and taking vitae for that would be the shop selling nothing.
 //
-// **The rings pane asks the catalogue rather than the shelf**, because a reroll refills bought
+// **The relics pane asks the catalogue rather than the shelf**, because a reroll refills bought
 // seats: a shelf where all three have been taken still has something to redraw, so long as the run
-// is not wearing every ring there is.
+// is not wearing every relic there is.
 func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) bool {
 	switch p {
-	case shopPaneRings:
-		return s.unwornRingExists(gs)
+	case shopPaneRelics:
+		return s.unwornRelicExists(gs)
 	case shopPanePacks:
 		for _, kind := range s.offered {
 			if !s.goodTaken(kind) {
@@ -179,9 +179,9 @@ func (s *ShopScene) paneHasSomethingToReroll(gs *state.GlobalState, p shopPane) 
 	return false
 }
 
-// unwornRingExists is whether the catalogue still holds a ring the run is not wearing — the one
-// thing a ring reroll needs, since the shelf itself is replaced wholesale.
-func (s *ShopScene) unwornRingExists(gs *state.GlobalState) bool {
+// unwornRelicExists is whether the catalogue still holds a relic the run is not wearing — the one
+// thing a relic reroll needs, since the shelf itself is replaced wholesale.
+func (s *ShopScene) unwornRelicExists(gs *state.GlobalState) bool {
 	if gs.Run == nil {
 		return false
 	}
@@ -189,7 +189,7 @@ func (s *ShopScene) unwornRingExists(gs *state.GlobalState) bool {
 	for _, key := range gs.Run.Worn() {
 		worn[key] = true
 	}
-	for _, key := range session.Rings() {
+	for _, key := range session.Relics() {
 		if !worn[key] {
 			return true
 		}
@@ -221,8 +221,8 @@ func (s *ShopScene) reroll(gs *state.GlobalState, p shopPane) {
 
 	s.rerolls[p]++
 	switch p {
-	case shopPaneRings:
-		s.rerollRings(gs)
+	case shopPaneRelics:
+		s.rerollRelics(gs)
 	case shopPanePacks:
 		s.rerollPacks(gs)
 	}
@@ -234,8 +234,8 @@ func (s *ShopScene) reroll(gs *state.GlobalState, p shopPane) {
 }
 
 func paneName(p shopPane) string {
-	if p == shopPaneRings {
-		return "rings"
+	if p == shopPaneRelics {
+		return "relics"
 	}
 	return "packs"
 }
@@ -243,7 +243,7 @@ func paneName(p shopPane) string {
 // initRerollButtons builds the two, once. **The crimson is not theirs** — a reroll is not a thing
 // that cannot be taken back, so it wears the Leave button's slate rather than the sell tab's red.
 func (s *ShopScene) initRerollButtons() {
-	if s.ringReroll != nil {
+	if s.relicReroll != nil {
 		return
 	}
 	// `build` rather than `make`, which is a builtin worth not shadowing.
@@ -255,7 +255,7 @@ func (s *ShopScene) initRerollButtons() {
 		b.TextSize = shopRerollText
 		return b
 	}
-	s.ringReroll = build(shopPaneRings)
+	s.relicReroll = build(shopPaneRelics)
 	s.packReroll = build(shopPanePacks)
 }
 
@@ -267,7 +267,7 @@ func (s *ShopScene) updateRerollButtons(gs *state.GlobalState) {
 		return
 	}
 
-	for _, p := range []shopPane{shopPaneRings, shopPanePacks} {
+	for _, p := range []shopPane{shopPaneRelics, shopPanePacks} {
 		b := s.rerollButton(p)
 		at := shopRerollRect(gs, p)
 		b.ScreenX, b.ScreenY = (at.Min.X+at.Max.X)/2, (at.Min.Y+at.Max.Y)/2
@@ -278,13 +278,13 @@ func (s *ShopScene) updateRerollButtons(gs *state.GlobalState) {
 }
 
 func (s *ShopScene) drawRerollButtons(gs *state.GlobalState, screen *ebiten.Image) {
-	systems.DrawButton(gs, screen, s.ringReroll)
+	systems.DrawButton(gs, screen, s.relicReroll)
 	systems.DrawButton(gs, screen, s.packReroll)
 }
 
 func (s *ShopScene) rerollButton(p shopPane) *models.Button {
-	if p == shopPaneRings {
-		return s.ringReroll
+	if p == shopPaneRelics {
+		return s.relicReroll
 	}
 	return s.packReroll
 }

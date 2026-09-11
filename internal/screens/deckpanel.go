@@ -5,7 +5,7 @@ package screens
 // It was the combat screen's own overlay until 2026-08-22 — drawn and hit-tested off
 // `CombatScene`'s three piles, so no other scene could show it. The reward screen and the shop
 // both want it, for the same reason and behind the same kind of button: a player choosing a worm
-// or a ring is making a decision about a deck, and being unable to look at that deck while
+// or a relic is making a decision about a deck, and being unable to look at that deck while
 // deciding is the one thing this panel exists to fix.
 //
 // **So the panel takes a `deckContents` rather than a scene.** Which cards are in which pile,
@@ -53,7 +53,7 @@ type deckContents struct {
 	// run is where a card's *original* lives, looked up by ID.
 	//
 	// **It is what the alterations toggle is made of** *(2026-08-24)*. A card in the hand or the
-	// discard has been through a draw and carries only the colour a flip ring made it; it does not
+	// discard has been through a draw and carries only the colour a flip relic made it; it does not
 	// remember what it was, deliberately, because a rule reading what a card used to be is an
 	// ordering the owner ruled out. The original is not gone — it is on the card the run owns, and
 	// the ID is the way back to it. See combat.Card.ID.
@@ -70,11 +70,11 @@ type deckContents struct {
 }
 
 // ownedContents is the panel between fights: the run's whole deck, none of it spent, priced by
-// the rings the player is wearing.
+// the relics the player is wearing.
 //
 // **It reads `Session.Deck` rather than `FightDeck`**, which is the difference between what you
-// own and what a flip ring would deal you next fight. This panel answers the first question — it
-// is what a worm is about to edit and what a ring is being bought against.
+// own and what a flip relic would deal you next fight. This panel answers the first question — it
+// is what a worm is about to edit and what a relic is being bought against.
 func ownedContents(gs *state.GlobalState) deckContents {
 	d := deckContents{run: gs.Run}
 	if gs.Run != nil {
@@ -86,7 +86,7 @@ func ownedContents(gs *state.GlobalState) deckContents {
 	return d
 }
 
-// ownedOf is a card as the run owns it: what it was before a demoting or flipping ring got to it.
+// ownedOf is a card as the run owns it: what it was before a demoting or flipping relic got to it.
 //
 // **The card itself when there is no original to find**, which covers a panel with no run behind
 // it, a card with no identity, and a card whose original a worm has since eaten. Drawing the card
@@ -103,7 +103,7 @@ func (d deckContents) ownedOf(c combat.Card) combat.Card {
 }
 
 // faceOf is the card the panel draws, which is a question about the view rather than about the
-// card: the one the run owns, or the one the rings will hand over.
+// card: the one the run owns, or the one the relics will hand over.
 //
 // **Both faces are computed from the owned card**, never from the card in the pile. That is what
 // makes the two views agree for a card wherever it happens to be sitting: an ice card in the

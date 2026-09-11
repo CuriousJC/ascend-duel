@@ -18,7 +18,7 @@ package screens
 // already has two of rather than a new kind of thing.
 //
 // **The tabs are the worn row's confirm gesture.** A stone is armed by a click and two tabs hang
-// under it, which is how selling a ring already works — and the reason it works that way applies
+// under it, which is how selling a relic already works — and the reason it works that way applies
 // twice over here: spending a stone puts a rung up that cannot be taken back down.
 
 import (

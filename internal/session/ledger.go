@@ -5,11 +5,11 @@ package session
 // The fight log used to be `CombatScene.rounds` — this fight's events, thrown away by the next
 // `Init` — so the account of a run was something the player had to have been watching. The ledger
 // is the same record kept for the length of the run and read back from anywhere: what a blow came
-// to, which ring priced which term of it, and, at run scale, how a climb went and where it went
+// to, which relic priced which term of it, and, at run scale, how a climb went and where it went
 // wrong. *(owner's call, 2026-09-02)*
 //
 // **Lines, not events, and that is the whole design decision.** `combat.Event` is a fat comparable
-// struct — `HandGrown`, `HandRingScale` and `HandLanding` are 25x5 arrays each, about 2.5 KB an
+// struct — `HandGrown`, `HandRelicScale` and `HandLanding` are 25x5 arrays each, about 2.5 KB an
 // event, nearly all of it zero on everything that is not a `KindHand` — so keeping a run of them
 // would be several megabytes held for a session to say what a few hundred kilobytes of sentences
 // say. The events are still the source: `internal/screens` words them the instant a round ends,
@@ -36,7 +36,7 @@ const (
 	// VoiceHand is the blow: the attack phase's one line, what the hand formed and what it came to.
 	VoiceHand = "hand"
 
-	// VoiceTerm is one term of that blow's arithmetic — a card's own figure, what a ring did to it,
+	// VoiceTerm is one term of that blow's arithmetic — a card's own figure, what a relic did to it,
 	// the sum underneath. **It is what the log never had**: the total was printed and none of the
 	// working was, so a multiplier read as a number the game had decided rather than one the player
 	// had built.
@@ -61,13 +61,13 @@ const (
 	// InkHand is the hand: its name, and the multiplier in the sum that came off it.
 	//
 	// **It resolves to no colour at all** *(owner's call, 2026-09-02)*. Hue belongs to the elements
-	// — five of them, plus pink for a ring and red and blue for the two verbs — and there is none
+	// — five of them, plus pink for a relic and red and blue for the two verbs — and there is none
 	// left that is not a near-collision. A hand is marked by weight and by the amber swatch on its
 	// row instead, which is why these runs carry Mark. See screens.inkNamed.
 	InkHand = "hand"
 
-	// InkRing is what a worn ring did — the figure it priced a term at, or the landing it bought.
-	InkRing = "ring"
+	// InkRelic is what a worn relic did — the figure it priced a term at, or the landing it bought.
+	InkRelic = "relic"
 
 	// InkTotal is what the blow came to. The damage colour rather than the hand's, because that is
 	// the figure that leaves the sum and lands in a life bar.
@@ -84,8 +84,8 @@ const (
 // LedgerRun is one run of text inside a line, with the colour it is written in.
 //
 // **A line is runs rather than one string**, because the ledger is trying to look like the screen
-// it is an account of: the verb coloured by category, a figure by its card's element, a ring's
-// multiplier in the ring pink. One ink a line could say none of that.
+// it is an account of: the verb coloured by category, a figure by its card's element, a relic's
+// multiplier in the relic pink. One ink a line could say none of that.
 type LedgerRun struct {
 	Text string
 

@@ -445,7 +445,7 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 			Of(Strike, Arcane),
 		}, []Element{Ice, Fire, Earth, Lightning, Arcane}},
 	} {
-		a, b := ringed(duelist(10, 4, 10000)), duelist(10, 4, 10000)
+		a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 		_, _, bAfter := resolve(a, b, tc.turn, nil, 1)
 
 		for _, e := range AllElements {
@@ -468,7 +468,7 @@ func TestTheHandsColoursDecideWhichStatusesLand(t *testing.T) {
 // **Only the cards in the hand carry colour.** An off-colour card that contributed to no hand
 // cannot put its status on anybody.
 func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
-	a, b := ringed(duelist(10, 4, 5000)), duelist(10, 4, 5000)
+	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Of(Jab, Fire), Of(Strike, Ice)}, nil, 1)
 
@@ -481,9 +481,9 @@ func TestACardOutsideTheHandDoesNotColourIt(t *testing.T) {
 }
 
 // **One status per colour in the hand**, so one colour lands one and four land four — for a
-// duelist wearing all four rings, which is what a status needs since 2026-08-16.
+// duelist wearing all four relics, which is what a status needs since 2026-08-16.
 func TestEveryColourInTheHandLandsItsStatus(t *testing.T) {
-	a, b := ringed(duelist(10, 4, 10000)), duelist(10, 4, 10000)
+	a, b := reliced(duelist(10, 4, 10000)), duelist(10, 4, 10000)
 
 	events, _, bAfter := resolve(a, b, []Card{
 		Of(Strike, Fire), Of(Strike, Ice), Of(Strike, Earth), Of(Strike, Lightning),
@@ -512,7 +512,7 @@ func TestAColourlessHandLandsNoStatus(t *testing.T) {
 // A lone attack that formed no hand still applies its own element, which is the rule that
 // predates hands and was deliberately kept.
 func TestALoneAttackStillAppliesItsElement(t *testing.T) {
-	a, b := ringed(duelist(10, 4, 5000)), duelist(10, 4, 5000)
+	a, b := reliced(duelist(10, 4, 5000)), duelist(10, 4, 5000)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice), Plain(Jab)}, nil, 1)
 

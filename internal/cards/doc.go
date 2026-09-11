@@ -30,7 +30,7 @@
 //     from full strength to whatever the card's state wants; the border hands it the
 //     neutral grey and the ticks hand it the element. They are different colours and the
 //     same mark, so they must dim and light together.
-//   - **Ring keeps its pink.** Pink was never an element — it is the "you cannot play
+//   - **Relic keeps its pink.** Pink was never an element — it is the "you cannot play
 //     this" signal — so it survives a change that neutralises the four element borders.
 //   - **The form marks are drawn art, tinted rather than repainted.** tintInk maps each
 //     pixel's own brightness onto a ramp between a dark and a light version of the
@@ -97,7 +97,7 @@
 //
 // Spec is plain data — a name, a category, a cost, an element, optional artwork, a state — rather
 // than a rules type, so the sheet can draw combinations the rules cannot produce: a border colour
-// nothing uses, a ring.
+// nothing uses, a relic.
 //
 // # The border carries the element, not the surface
 //

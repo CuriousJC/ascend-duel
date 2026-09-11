@@ -106,14 +106,14 @@ func roundedBorder(dst *image.RGBA, x, y, w, h, radius, width int, border, fill 
 	if iw <= 0 || ih <= 0 {
 		return
 	}
-	bevelRing(dst, x, y, w, h, radius, border)
+	bevelRelic(dst, x, y, w, h, radius, border)
 	// The inner radius shrinks by the border width so the two curves stay parallel. A
 	// constant radius would leave the border visibly thicker at the corners than along
 	// the edges, which is the usual giveaway of a hand-rolled rounded rect.
 	roundedRect(dst, x+width, y+width, iw, ih, radius-width, fill)
 }
 
-// bevelRing lights the outer BorderBevel pixels of a shape already filled with `border`: the
+// bevelRelic lights the outer BorderBevel pixels of a shape already filled with `border`: the
 // top-left side of the card's diagonal takes the lit colour and the bottom-right side the shade.
 //
 // **The split is the anti-diagonal, not the four edges.** Deciding by edge — top is light, right is
@@ -121,7 +121,7 @@ func roundedBorder(dst *image.RGBA, x, y, w, h, radius, width int, border, fill 
 // curve. Comparing a pixel's position across the card against its position down it puts the
 // changeover exactly on the two corners the light does not reach, which is where a real bevel's
 // is.
-func bevelRing(dst *image.RGBA, x, y, w, h, radius int, border color.RGBA) {
+func bevelRelic(dst *image.RGBA, x, y, w, h, radius int, border color.RGBA) {
 	if BorderBevel <= 0 || w <= 2*BorderBevel || h <= 2*BorderBevel {
 		return
 	}

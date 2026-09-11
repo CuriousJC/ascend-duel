@@ -2,7 +2,7 @@ package main
 
 import "html/template"
 
-// The page. One static file, no JavaScript, no build step: the loop is "edit rings.json,
+// The page. One static file, no JavaScript, no build step: the loop is "edit relics.json,
 // re-run the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason
@@ -10,15 +10,15 @@ import "html/template"
 // it — even by the fraction a max-width rule can introduce — resamples that rim into a blur
 // and makes the sheet lie about the art.
 //
-// **The ground is the one the rings actually sit on**, not a page colour chosen to flatter
+// **The ground is the one the relics actually sit on**, not a page colour chosen to flatter
 // them. A pink border on white is a different card from a pink border on the game's own blue.
 //
 // The layout is a card beside a block of text rather than a grid of cards, because what is
 // being reviewed here is not only the picture: it is the picture against the price, the
 // authored line, and the rules — four things nothing else in the project shows together.
-var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
+var tmpl = template.Must(template.New("relicsheet").Parse(`<!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — ring sheet</title>
+<title>Ascending Duel — relic sheet</title>
 <style>
   :root {
     --ground: {{.Ground}};
@@ -51,8 +51,8 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
     margin-left: 10px;
   }
   /* The tier is a colour as well as a word, so a card can be placed at a glance while
-     scrolling. Common is the ground itself; rare is the ring pink the game already spends
-     on "a ring did this". */
+     scrolling. Common is the ground itself; rare is the relic pink the game already spends
+     on "a relic did this". */
   h3.tier.common { border-bottom-color: var(--rule); }
   h3.tier.uncommon { border-bottom-color: #6c8fb5; }
   h3.tier.rare { border-bottom-color: var(--pink); }
@@ -84,10 +84,10 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
-<h1>Ring sheet</h1>
+<h1>Relic sheet</h1>
 <p class="facts">
-  {{.Count}} rings, {{.Undrawn}} of them drawing the default face.
-  Ring card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
+  {{.Count}} relics, {{.Undrawn}} of them drawing the default face.
+  Relic card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
   art box inset <code>{{index .Style "artInset"}}</code> from
@@ -102,32 +102,32 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
   The badge is drawn at <strong>Grown&nbsp;0</strong> &mdash; what a fresh copy wears, which is the
   card the shelf shows. It is also the narrowest the figure gets: a run late in a climb reads
   <code>10.5</code> or <code>+100</code>, so judge the size against those rather than against
-  <code>1.0</code>. A ring with no badge is one that does not grow, which is most of the catalogue.
+  <code>1.0</code>. A relic with no badge is one that does not grow, which is most of the catalogue.
   <strong>A decimal point means a multiplier and a <code>+</code> means a flat figure</strong>;
   there is no <code>x</code> after the multiplier, because the point already says so, and a
   multiplier is <strong>always one decimal place</strong> — so four characters is the widest the
   figure ever gets. <strong>A wide figure is meant to outgrow the disc a little</strong>; what it
   may not do is leave the card.
-  Shown at 1:1 on the ground the rings are actually drawn on.
+  Shown at 1:1 on the ground the relics are actually drawn on.
 </p>
 <p class="note">
-  Regenerate with <code>go run ./tools/ringsheet</code> and refresh. Every card here is
+  Regenerate with <code>go run ./tools/relicsheet</code> and refresh. Every card here is
   drawn by <code>internal/cards</code>, the same code the game blits, and every word beside
-  it is read out of <code>data/rings.json</code> through the same registration the game
-  runs at start-up — so a ring this page refuses to draw is a ring the game refuses to start
+  it is read out of <code>data/relics.json</code> through the same registration the game
+  runs at start-up — so a relic this page refuses to draw is a relic the game refuses to start
   with.
 </p>
 <p class="note">
   <strong>Read the sentence against the rules.</strong> The line under each name is the
   <code>Text</code> field, which is what the hover tooltip prints verbatim; the monospace
   lines under it are the rules that actually fire. Nothing in the codebase checks one
-  against the other, so a rule edited without its sentence is a ring that lies to the
+  against the other, so a rule edited without its sentence is a relic that lies to the
   player, and this is the only place the two are visible together.
 </p>
 
 <h2>The catalogue, by rarity</h2>
 <p class="note">
-  <strong>Grouped by tier because that is the pricing decision.</strong> A ring is rebalanced by
+  <strong>Grouped by tier because that is the pricing decision.</strong> A relic is rebalanced by
   moving it between these three, never by writing a number, so what a review needs is every
   common side by side. The share is how often a single shelf seat lands in that tier — the
   tier's tickets over the whole catalogue's.
@@ -136,12 +136,12 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
 {{range .Tiers}}
 <h3 class="tier {{.Rarity}}">
   {{.Rarity}}
-  <span>{{.Count}} rings &middot; {{.Price}} vitae, sells for {{.Sell}} &middot;
+  <span>{{.Count}} relics &middot; {{.Price}} vitae, sells for {{.Sell}} &middot;
     weight {{.Weight}} each &middot; {{.Share}}% of a shelf draw</span>
 </h3>
-{{if not .Rings}}<p class="note">Nothing is authored at this tier.</p>{{end}}
+{{if not .Relics}}<p class="note">Nothing is authored at this tier.</p>{{end}}
 <div class="plates">
-  {{range .Rings}}
+  {{range .Relics}}
     <div class="plate">
       <img src="{{.Cell.File}}" width="{{.Cell.Width}}" height="{{.Cell.Height}}"
            alt="{{.Name}}">
@@ -155,7 +155,7 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
           {{range .Rules}}<li>{{.}}</li>{{end}}
         </ul>
         {{if .Default}}
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         {{else}}
           <p class="art">art: <code>{{.Art}}</code></p>
         {{end}}
@@ -167,7 +167,7 @@ var tmpl = template.Must(template.New("ringsheet").Parse(`<!doctype html>
 
 <h2>Card states</h2>
 <p class="note">
-  The three states a ring card is drawn in. A ring the run neither owns nor has been offered
+  The three states a relic card is drawn in. A relic the run neither owns nor has been offered
   is not on screen at all, so there is no fourth.
 </p>
 <div class="cells">

@@ -27,25 +27,9 @@ type Style struct {
 	NameSize float64
 
 	// NameCentered centres the name across the card instead of starting it at TextLeft.
-	// Rings use it: with no glyph column down the left there is nothing for a
+	// Relics use it: with no glyph column down the left there is nothing for a
 	// left-aligned name to line up with, and it reads as having slipped off centre.
 	NameCentered bool
-
-	// NameWordPerLine breaks the name at every space, one word to a line, and
-	// NameLinePitch is how far apart those lines sit.
-	//
-	// **A break at every space rather than a wrap at the card's width** *(owner's call,
-	// 2026-08-21)*. The two-word names are what a width-wrap handles worst: "Frozen Lightning"
-	// either fits by a hair and reads as a sentence squeezed into a card, or misses by a hair and
-	// breaks anyway — and which of those happens depends on the font, so the same catalogue lays
-	// out differently for a change nothing about it caused. Breaking always is a layout that
-	// cannot drift.
-	//
-	// **No style sets it today.** The ring card did until 2026-09-11, when full-bleed art took
-	// its title away; `cards.WrapText` still honours an authored line break on the same argument,
-	// which is where the reasoning is now load-bearing.
-	NameWordPerLine bool
-	NameLinePitch   int
 
 	// The form mark, above the cost stack: the box its art is centred in.
 	//
@@ -164,7 +148,7 @@ type Style struct {
 	EffectGap  int
 
 	// Spec.Counter drawn as a badge in the bottom-right corner. A zero CounterHeight means the
-	// style shows none, which is every style but RingStyle.
+	// style shows none, which is every style but RelicStyle.
 	//
 	// **It is measured from the card's own right and bottom edges**, unlike everything else here,
 	// which is measured from the top-left. The badge belongs to the corner: a top-left offset
@@ -173,14 +157,14 @@ type Style struct {
 	//
 	// **CounterHeight is the band the figure is centred in, not a box drawn around it.** There is
 	// nothing behind the text; the height is fixed so a two-character figure and a four-character
-	// one sit on the same line, which is what lets a row of rings be read across.
+	// one sit on the same line, which is what lets a row of relics be read across.
 	CounterHeight int
 	CounterRight  int
 	CounterBottom int
 	CounterSize   float64
 
 	// CounterRadius is the disc behind the figure. A zero radius draws none, which is what every
-	// style but RingStyle has, and it is the same box: the disc is `2*CounterRadius` square,
+	// style but RelicStyle has, and it is the same box: the disc is `2*CounterRadius` square,
 	// measured in from CounterRight and up from CounterBottom.
 	CounterRadius int
 
@@ -197,27 +181,6 @@ type Style struct {
 	// Height, so nothing about the layout moves; what changes is that there are pixels to the right
 	// of it and below it for a corner ornament to live in.
 	Bleed int
-}
-
-// NameLinesAbove is how many lines of name this style can draw before its ink would reach
-// `floor` — the top of whatever sits under the name — given a line's height in the font the
-// caller measured.
-//
-// **The line height is passed in rather than derived**, because the only honest source of one
-// is a parsed font at the style's point size, and this package's geometry is deliberately
-// readable without a font in hand. The caller has the Faces; this has the offsets.
-//
-// A style that does not break its name gets 1, which is the truth: it draws one line whatever
-// is under it.
-func (st Style) NameLinesAbove(floor, lineHeight int) int {
-	if !st.NameWordPerLine || st.NameLinePitch <= 0 {
-		return 1
-	}
-	n := 0
-	for st.NameTop+n*st.NameLinePitch+lineHeight <= floor {
-		n++
-	}
-	return n
 }
 
 // Hand is the card as the hand draws it, and the size every constant here is written
@@ -365,7 +328,6 @@ func (st Style) Scaled(num, den int) Style {
 	out.CornerRadius, out.BorderWidth = i(st.CornerRadius), i(st.BorderWidth)
 
 	out.TextLeft, out.NameTop, out.NameSize = i(st.TextLeft), i(st.NameTop), f(st.NameSize)
-	out.NameLinePitch = i(st.NameLinePitch)
 
 	out.FormTop, out.FormSize = i(st.FormTop), i(st.FormSize)
 
@@ -391,7 +353,7 @@ func (st Style) Scaled(num, den int) Style {
 	// **The counter was missing from this list until 2026-09-09**, which meant the one field block
 	// on Style authored in one space and drawn in another: the offsets are measured from the card's
 	// own edges, so an unscaled CounterBottom on a card a quarter taller put the figure a quarter
-	// of the growth further from the bottom than it was authored to be. The numbers in ringAuthored
+	// of the growth further from the bottom than it was authored to be. The numbers in relicAuthored
 	// were re-tuned in the same commit, so the comments there now describe what is drawn.
 	out.CounterHeight, out.CounterRight = i(st.CounterHeight), i(st.CounterRight)
 	out.CounterBottom, out.CounterRadius = i(st.CounterBottom), i(st.CounterRadius)
@@ -421,7 +383,7 @@ func (st Style) Scaled(num, den int) Style {
 // **Every number in this file is the number that is drawn**, and a card size is changed by
 // editing these rather than by multiplying them on the way out. A scale between the authored
 // figure and the drawn one makes the border width and the corner radius rounding artifacts
-// nobody chose, and every asset drawn at the card's real size — the form marks, the ring art —
+// nobody chose, and every asset drawn at the card's real size — the form marks, the relic art —
 // then needs an exemption from it.
 //
 // **The height is what fixes the size, and 280 is near the ceiling.** The combat screen stacks
@@ -497,7 +459,7 @@ func stackOf(st Style) Style {
 // **The badges are on this card and not the duelist's** *(2026-08-16)*, which breaks the
 // twins rule everywhere except where that rule actually bites — the bar and the fraction are
 // still at identical offsets, and the band under them is the same free strip on both. The
-// reason was that nothing could put a status on the player: the enemy wears no rings and a ring
+// reason was that nothing could put a status on the player: the enemy wears no relics and a relic
 // is what makes a status happen. **`DuelistStyle` gained the row on 2026-08-31**, in the three
 // lines this comment promised, and what fills it is not a status — it is the shield count, one pip
 // per shield. The band is at the same offsets on both cards, so the two still read as twins.
@@ -510,7 +472,7 @@ func stackOf(st Style) Style {
 //
 // **The name moved above the portrait on 2026-08-12**, having sat between the portrait and
 // the bar since the card was built. It puts the name where every other card in the game
-// carries it — Hand, Mini and RingStyle all name themselves across the top — so the enemy
+// carries it — Hand, Mini and RelicStyle all name themselves across the top — so the enemy
 // reads as one of the set rather than as a card with its own reading order. What it costs is
 // the portrait's proximity to its name; they are still adjacent, only the other way round.
 //
@@ -524,7 +486,7 @@ func stackOf(st Style) Style {
 // height decide the scale.
 //
 // What it drops is everything describing a *play* — no category glyph, no cost dashes, no
-// damage badge — for the same reason RingStyle does: none of them are things an enemy card
+// damage badge — for the same reason RelicStyle does: none of them are things an enemy card
 // is. `Element` is Basic, so the border is the neutral mid grey rather than claiming the
 // opponent is made of fire.
 var EnemyStyle = Style{
@@ -587,7 +549,7 @@ var EnemyStyle = Style{
 // differ, because that is where the two cards say different things — a portrait against three
 // numbers.
 //
-// What it drops is everything describing a *play*, like EnemyStyle and RingStyle: a duelist
+// What it drops is everything describing a *play*, like EnemyStyle and RelicStyle: a duelist
 // is not something you put down from a hand. `Element` is Basic, so the border is the neutral
 // mid grey — the same as the enemy's, since neither card is made of an element. If the two
 // corners ever need telling apart by colour, that is one entry in the Element enum and not a
@@ -629,8 +591,8 @@ var DuelistStyle = Style{
 // beside the empty space where a form mark was not.
 //
 // What it drops is everything describing a *play* — no form mark, no cost dashes — for the reason
-// RingStyle drops them: a worm is not played from a hand and resolves in no phase. What it gains
-// over RingStyle is the text band, because a worm's whole content is the sentence saying what it
+// RelicStyle drops them: a worm is not played from a hand and resolves in no phase. What it gains
+// over RelicStyle is the text band, because a worm's whole content is the sentence saying what it
 // does to a card.
 //
 // **The art is a placeholder for every worm today.** `Spec.Art` is filled from the shared default
@@ -643,7 +605,7 @@ var WormStyle = Style{
 	BorderWidth:  4,
 
 	// **A bleeding card does not name itself** *(owner's call, 2026-09-11)*. The picture is the
-	// card: a ring is recognised by its art the way a playing card is recognised by its suit, and
+	// card: a relic is recognised by its art the way a playing card is recognised by its suit, and
 	// a title bar across the top of a full-bleed illustration covers the one thing worth looking
 	// at to repeat what it already says. The full name still titles every tooltip, which is where
 	// a player who does not recognise a picture yet goes.
@@ -652,7 +614,7 @@ var WormStyle = Style{
 
 	TextLeft: 15,
 
-	// The picture is the card, exactly as it is on a ring *(owner's call, 2026-09-11)*. The art
+	// The picture is the card, exactly as it is on a relic *(owner's call, 2026-09-11)*. The art
 	// was fitted into a 75-pixel box here — the smallest thing on the face, squeezed between a
 	// name and five lines of sentence — and the sentence now sits on a scrim over a full-bleed
 	// picture instead. What that costs is the bottom half of the art being under words, and it is
@@ -670,24 +632,24 @@ var WormStyle = Style{
 	TextLineHeight: 25,
 }
 
-// RingStyle is a ring, in the card format.
+// RelicStyle is a relic, in the card format.
 //
 // Same footprint, corners and border treatment as Hand, so the two read as one game.
-// What it drops is everything that describes a *play*: no category glyph, because a ring
+// What it drops is everything that describes a *play*: no category glyph, because a relic
 // has no phase; no cost dashes, because it is not played from a hand; no damage badge.
 // What it gains is Spec.Art across the face.
 //
 // **The art is the face** *(owner's call, 2026-09-11)*. It was fitted into a 160x150 box with
 // the off-white surface showing around it until then, against square 500x500 art; it now bleeds
 // to the border, against art authored at the card's own 200x280. See `ArtBleed` and bleed.go.
-var RingStyle = Style{
+var RelicStyle = Style{
 	Width: 200, Height: 280,
 
 	CornerRadius: 15,
 	BorderWidth:  4,
 
 	// **A bleeding card does not name itself** *(owner's call, 2026-09-11)*. The picture is the
-	// card: a ring is recognised by its art the way a playing card is recognised by its suit, and
+	// card: a relic is recognised by its art the way a playing card is recognised by its suit, and
 	// a title bar across the top of a full-bleed illustration covers the one thing worth looking
 	// at to repeat what it already says. The full name still titles every tooltip, which is where
 	// a player who does not recognise a picture yet goes.
@@ -706,13 +668,13 @@ var RingStyle = Style{
 	// happens to equal the card's, and an unclipped one would square the corner off.
 	//
 	// **The band is what pays for the figure, and the art pays for the band** *(owner's call,
-	// 2026-09-09)*. This is the ring saying how big it has grown, on the one card whose whole job
+	// 2026-09-09)*. This is the relic saying how big it has grown, on the one card whose whole job
 	// is to be read at a glance, so it is set large enough not to be leaned into. The art is square
 	// and fitted, so trimming ArtMaxH trims every side of it and nothing else on the card moves;
 	// the box ends at 228 and the disc starts at 245, so the two still do not meet.
 	//
-	// **Only rings have one**, because only rings grow. Nothing else on the card is displaced by
-	// it: the corner it takes was empty on every ring in the file.
+	// **Only relics have one**, because only relics grow. Nothing else on the card is displaced by
+	// it: the corner it takes was empty on every relic in the file.
 	CounterHeight: 35,
 	CounterRight:  0,
 	CounterBottom: 0,

@@ -1,12 +1,12 @@
 // Package session holds what belongs to a *run* rather than to a fight or a screen.
 //
-// **It is the hole every run-level feature has been blocked on.** Rings cannot be bought, the
+// **It is the hole every run-level feature has been blocked on.** Relics cannot be bought, the
 // deck cannot be altered and vitae cannot be spent for one reason: nothing survives a fight.
 // `CombatScene` is rebuilt on every entry — `Init` is how the next fight starts — so anything
 // kept there is thrown away between rooms. This is where a run keeps its things.
 //
 // **No Ebitengine, ever**, and no screen state. What lands here is what more than one scene
-// needs and what has to outlive a fight: the deck today, the rings and the purse next. If a
+// needs and what has to outlive a fight: the deck today, the relics and the purse next. If a
 // field is only read by one screen, it belongs on that screen.
 //
 // The package sits below `screens` and above `combat`, and `state.GlobalState` carries a
@@ -23,17 +23,17 @@
 //   - climb.go — who stands in each room, over internal/pyramid. This is what the room choice will
 //     write to.
 //   - flow.go — where the run is in its loop, and the one place that moves it on.
-//   - ring.go — the rings being worn, in worn order, and the ring moments that fire between fights
+//   - relic.go — the relics being worn, in worn order, and the relic moments that fire between fights
 //     rather than during one.
 //   - worm.go — the deck alterations offered after a fight.
 //   - parasite.go — the consumables carried into a fight and spent between its turns. The worm's
 //     grammar plus a target *count*, aimed at card identities rather than deck positions, and the
 //     one alteration that can happen while a duel is going on.
 //
-// # Four of the ten ring moments are answered here
+// # Four of the ten relic moments are answered here
 //
 // deck-built in FightDeck, fight-start in Equip, and fight-won in WonFight — which is also where
-// vitae propagates and where a growing ring takes its step. The fourth, card-drawn, is answered by
+// vitae propagates and where a growing relic takes its step. The fourth, card-drawn, is answered by
 // DrawnAs and *fired* by the combat screen, once per card as it deals one: the flip belongs to a run
 // and the draw pile belongs to a fight. The order matters and MECHANICS.md
 // states it: propagation is interest on what the run walked out of the fight holding, not on what

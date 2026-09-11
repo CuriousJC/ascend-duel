@@ -1,6 +1,6 @@
 ---
 name: data
-description: The game's static data - the ten JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or rings or tutorial steps, or writing a loader.
+description: The game's static data - the ten JSON files in data/, the loader pattern, the card language every card in the game is written in, who is allowed to read which file, and where validation happens. Load before adding a file to data/, adding or changing a field on one, authoring cards or enemies or bosses or relics or tutorial steps, or writing a loader.
 ---
 
 # The data files
@@ -15,7 +15,7 @@ is what lets every layer above read it, and it **must never import upward**.
 | `enemies.json` | `LoadEnemies` | 96 opponents: three stats, their own deck, portrait, valid floors |
 | `bosses.json` | `LoadBosses` | 30 stairway protectors: the enemy shape, with one floor instead of a band |
 | `duelist_cards.json` | `LoadDuelistCards` | the player's deck, in the card language |
-| `rings.json` | `LoadRings` | the rings that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
+| `relics.json` | `LoadRelics` | the relics that exist: name, art key, a line of text, a price, and a list of `When`/`If`/`Then` rules |
 | `statuses.json` | `LoadStatuses` | what a landed attack can leave standing: a name, a badge, one of four effect kinds, an amount and a duration |
 | `hands.json` | `LoadHands` | the hand ladder over four matching axes, and what each rung multiplies a blow by |
 | `worms.json` | `LoadWorms` | the deck alterations offered between fights |
@@ -31,11 +31,11 @@ is what lets every layer above read it, and it **must never import upward**.
 **`statuses.json` joined them on 2026-08-17** and passes the same test: how much a status is worth,
 how long it lasts and which of four things it does are rules by definition — the engine cannot
 resolve a round without them, and its own tests could not run if a screen had to hand them over.
-Its `Badge` is the exception the engine ignores, exactly as it ignores a ring's `Art`.
+Its `Badge` is the exception the engine ignores, exactly as it ignores a relic's `Art`.
 
-**`rings.json` is the counter-example, and it is read by `internal/session`.** A ring's rules *are*
-rules, but the record carries an art key and a ring belongs to a *run* — so `session` parses the
-strings into `combat` types and calls `RegisterRing`. Same shape as `decks` for enemy cards.
+**`relics.json` is the counter-example, and it is read by `internal/session`.** A relic's rules *are*
+rules, but the record carries an art key and a relic belongs to a *run* — so `session` parses the
+strings into `combat` types and calls `RegisterRelic`. Same shape as `decks` for enemy cards.
 
 **The test is who consumes a file, not whether it is data.** A card's cost and damage are rules
 by definition; a portrait key, an art key and a floor band are a screen's or a roster's
@@ -57,12 +57,12 @@ that unmarshals it, and — for anything returning a map — a sorted `…Order`
 - **`//go:embed`, never a file read.** The data ships inside the binary.
 - **A bad file panics**, with the filename in the message. It fails at launch rather than
   producing a roster quietly missing a record.
-- **`EnemyOrder` and `RingOrder` are not optional.** `LoadEnemies` and `LoadRings` return maps
+- **`EnemyOrder` and `RelicOrder` are not optional.** `LoadEnemies` and `LoadRelics` return maps
   and Go randomises map iteration, so anything whose *outcome* depends on order must walk a
   sorted key slice. See the `randomness` skill.
 - **`LoadDuelistCards` returns a slice**, deliberately: the deck is built by walking it in
   order, and file order is grid order, so the JSON reads as the table in `MECHANICS.md`.
-- **Loaded once.** `main` puts the roster, the duelists and the rings on `GlobalState`;
+- **Loaded once.** `main` puts the roster, the duelists and the relics on `GlobalState`;
   `internal/combat` and `internal/decks` read their own files at package init.
 
 ## The card language
@@ -78,13 +78,13 @@ enemies'. Eight fields:
   — has only `Copies`, so that field carries its whole deck size.
 - **Deck size is a consequence of a file you can read**: 9 attacks × 5 colours plus 2 defences × 5
   colours = **55** *(Guard went to zero copies on 2026-09-01)*. That is the deck a run *starts*
-  with — see MECHANICS.md §The deck is a starting position, because worms and rings change it.
+  with — see MECHANICS.md §The deck is a starting position, because worms and relics change it.
 - **There is no `Category` column.** Which phase a card is in falls out of the verb. Carrying both would
   let a file say a card is an attack that raises shields.
 - **`Copies` is the difficulty dial and it is sharper than it looks** — four copies of a 1 AP
   card in one turn is a Four of a Kind at 5x. Four is also the ceiling of the hand ladder.
 - **No player card is drab** *(2026-08-25)*. Every card in the deck ships in one of the five
-  elements, the defences included — a colour is worth a hand axis and a ring discount even
+  elements, the defences included — a colour is worth a hand axis and a relic discount even
   where nothing the card does is elemental.
 - **Enemy cards are all `basic` and `FormNone`**, and that is deliberate rather than sloppy.
   The colour is read and carried, but `MECHANICS.md` has affixes *transforming* a basic deck
@@ -170,27 +170,27 @@ trust the floors.
   collides with an enemy's panics too — the deck registry is keyed by record and would otherwise be
   ambiguous.
 
-### Rings
+### Relics
 
-**A ring is what makes its element do anything** *(2026-08-16)*: an attack applies a status only
-if its owner wears that element's ring, so an unringed fire Strike is a plain Strike with a red
+**A relic is what makes its element do anything** *(2026-08-16)*: an attack applies a status only
+if its owner wears that element's relic, so a bare fire Strike is a plain Strike with a red
 border. `Element` is the field that carries it — parsed in `internal/screens` with
 `combat.ParseElement`, because `internal/combat` may not read this file. A name the rules do not
 have is logged rather than dropped.
 
 **What is worn is on the run, not in the file.** A run opens wearing nothing *(2026-08-21)* and
-buys its rings in the shop, so every element is inert until the first one is bought.
-`session.StartingRings` is the debug seat for putting one on without playing to a shop — the ring
+buys its relics in the shop, so every element is inert until the first one is bought.
+`session.StartingRelics` is the debug seat for putting one on without playing to a shop — the relic
 counterpart of `deckSeedName`, and it ships empty.
 
 **`Art` is an assets key, not a path**, and specifically a `LoadImageData` key rather than a
-`LoadAssets` one, because a ring's picture is drawn *into* a card by `internal/cards`, which has
+`LoadAssets` one, because a relic's picture is drawn *into* a card by `internal/cards`, which has
 no graphics context.
 
 **`Rarity` is the price and the odds at once** *(2026-08-22, replacing a per-ring `Price`)*. One of
 `common`, `uncommon` or `rare`; `data.Rarity` turns it into what the shop charges — 3, 5, 7 — and how
-many tickets the ring holds in the shelf draw — 10, 4, 1. Three tiers rather than seventeen numbers,
-because a per-ring price could only be judged one ring at a time. **What a ring sells back for is
+many tickets the relic holds in the shelf draw — 10, 4, 1. Three tiers rather than seventeen numbers,
+because a per-ring price could only be judged one relic at a time. **What a relic sells back for is
 deliberately not a field** — it is the tier's own figure, 1 / 2 / 3, computed in
 `internal/session/shop.go`. A record whose rarity is absent or misspelled **panics at load**, like
 every other word this file gets wrong.
@@ -345,7 +345,7 @@ the plain budget cannot reach.
 
 **A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. There is no
 reward vocabulary to extend, no mix axis counting distinct colours, and no `scope` field — statuses
-come from elements and rings, and the matcher counts every card in the turn because that is what it
+come from elements and relics, and the matcher counts every card in the turn because that is what it
 does, not because an entry asked it to — what a card is worth to a hand is decided by the axis it is
 counted on. **Adding a rung is one entry in the JSON**;
 adding anything a hand can *buy* is a design decision, not a field.
@@ -371,9 +371,9 @@ to a registry that grows.
    it needs a `decks`-shaped package in between.
 2. Four lines: `//go:embed`, the tagged struct, the `Load…`, and a sorted `…Order` if it returns
    a map.
-3. **Do not grow a rules vocabulary in JSON ahead of the rules.** The ring grammar is the worked
+3. **Do not grow a rules vocabulary in JSON ahead of the rules.** The relic grammar is the worked
    example of doing it the other way round *(2026-08-17)*: every moment, predicate and effect verb
-   in `rings.json` has a Go seat that refuses it at load if it is used wrongly, and a word the file
+   in `relics.json` has a Go seat that refuses it at load if it is used wrongly, and a word the file
    invents does not exist. `CostTier` is what happens when a file declares something the rules also
    know.
 4. If the file describes a mechanic, the *design* goes in `MECHANICS.md`. This skill is the
@@ -383,12 +383,12 @@ to a registry that grows.
 
 The data is about to grow three ways at once, which is why this was carved out of `CLAUDE.md`:
 
-- **More rings.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
+- **More relics.** The grammar is built and seventeen are authored; growing the *vocabulary* — a new
   moment or a new effect verb — is a Go change, and is meant to be. Buying and selling landed on
   2026-08-21, so a new record needs a `Rarity` as well as its rules.
 - **More worms.** `worms.json` exists and holds ten across seven targets. Growing it is one record
   each; growing the *target vocabulary* is not, and MECHANICS.md says why.
-- **Brands** — permanent for the run, altering the container where rings alter the contents. The
+- **Brands** — permanent for the run, altering the container where relics alter the contents. The
   mechanic is decided in `MECHANICS.md`; there is no `brands.json` and no acquisition.
 
 Each is a new file or a new field asking the same question at step 1 above.

@@ -32,7 +32,7 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 
 	// **The pile is the outermost thing drawn** *(2026-08-24)*, so the bounds are what has to fit
 	// rather than the front card: the backs are drawn up and to the left of it.
-	ring := deckStackBounds(gs)
+	relic := deckStackBounds(gs)
 	card := s.duelistCardRect(gs)
 
 	if deckStackRect(gs).Min.X != card.Min.X {
@@ -42,8 +42,8 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 
 	// Clear of the hand, which is what is to its right — the bar included, since that spans the
 	// whole band and reaches further down than the cards do.
-	if left := handBandLeft(gs); ring.Max.X > left {
-		t.Errorf("the pile reaches x=%d, into the hand band starting at x=%d", ring.Max.X, left)
+	if left := handBandLeft(gs); relic.Max.X > left {
+		t.Errorf("the pile reaches x=%d, into the hand band starting at x=%d", relic.Max.X, left)
 	}
 
 	// The count sits under it, left edges level, and the whole column has to stay on the screen.
@@ -54,8 +54,8 @@ func TestTheDeckPileStandsInTheDuelistsColumn(t *testing.T) {
 	if count.Max.Y > gs.ScreenHeight-deckStackBottomInset {
 		t.Errorf("the count ends at y=%d, past the %dpx bottom inset", count.Max.Y, deckStackBottomInset)
 	}
-	if ring.Min.X < 0 || ring.Min.Y < 0 {
-		t.Errorf("the pile %v runs off the screen", ring)
+	if relic.Min.X < 0 || relic.Min.Y < 0 {
+		t.Errorf("the pile %v runs off the screen", relic)
 	}
 
 	// The bucket button is on the line above it, and that line must clear the played row.
@@ -147,11 +147,11 @@ func TestThePlayedRowFitsOnScreen(t *testing.T) {
 	// rather than against the row's resting y — the moment a card is firing is the moment it is
 	// highest, and a row that only fitted at rest would clip exactly when it mattered.
 	//
-	// The widest row the rules can produce, asked of the rules rather than written down: a ring
+	// The widest row the rules can produce, asked of the rules rather than written down: a relic
 	// raising the action cap must not be able to push the row off the screen quietly.
 	//
-	// **This measured the yellow hand ring until 2026-08-19**, which stood off the cards and so
-	// set the margins. The ring is gone and the cards themselves are what has to fit.
+	// **This measured the yellow hand relic until 2026-08-19**, which stood off the cards and so
+	// set the margins. The relic is gone and the cards themselves are what has to fit.
 	first := playedSeatAt(gs, 0, combat.Duelist{}.MaxActions(), 0)
 	if first.X < 0 {
 		t.Errorf("the played row starts at x=%d, off the left of the screen", first.X)
@@ -203,8 +203,8 @@ func TestTheButtonsAreCentredUnderTheHand(t *testing.T) {
 	}
 }
 
-// The bottom of the screen runs from the ring row's left edge to the control column
-// *(2026-09-04, owner's call)*: the rings and the hand start together, and the cards stop a gap
+// The bottom of the screen runs from the relic row's left edge to the control column
+// *(2026-09-04, owner's call)*: the relics and the hand start together, and the cards stop a gap
 // short of the sort buttons, which stand on the enemy card's left edge.
 //
 // It is checked at both ends rather than on the width alone: a band of the right size in the
@@ -214,8 +214,8 @@ func TestTheHandIsLaidOutBetweenTheFighterCards(t *testing.T) {
 	s := &CombatScene{}
 	left := handBandLeft(gs)
 
-	if want := s.duelistCardRect(gs).Max.X + ringPaneGap; left != want {
-		t.Errorf("the band starts at x=%d, want the ring row's own left edge at %d", left, want)
+	if want := s.duelistCardRect(gs).Max.X + relicPaneGap; left != want {
+		t.Errorf("the band starts at x=%d, want the relic row's own left edge at %d", left, want)
 	}
 
 	// The cards stop a gap short of the control column, and are centred on what is left.

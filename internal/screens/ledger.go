@@ -10,7 +10,7 @@ package screens
 //     that wrote it and answers "how did my whole climb go" as well as "what just happened".
 //   - **A dragged scrollbar** *(owner's call)*, because the input vocabulary is clicks, drags and
 //     hover and a wheel would be a fourth verb. See models.Scrollbar.
-//   - **The arithmetic.** Every term of a blow, with the ring that priced it named beside it. See
+//   - **The arithmetic.** Every term of a blow, with the relic that priced it named beside it. See
 //     prose_terms.go.
 //
 // **The current fight is expanded and the past is one line a fight, opened by clicking it**

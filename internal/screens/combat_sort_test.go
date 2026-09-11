@@ -419,8 +419,8 @@ func TestTheSortColumnStandsClearOfTheCards(t *testing.T) {
 			t.Errorf("a hand of %d reaches x=%d, into the sort block at %d",
 				n, band.Max.X, col.Min.X)
 		}
-		if left, _ := ringRowSpan(gs); band.Min.X < left {
-			t.Errorf("a hand of %d starts at x=%d, left of the ring row it aligns to at %d",
+		if left, _ := relicRowSpan(gs); band.Min.X < left {
+			t.Errorf("a hand of %d starts at x=%d, left of the relic row it aligns to at %d",
 				n, band.Min.X, left)
 		}
 	}

@@ -42,7 +42,7 @@ func TestTheRoomIsWorthThreeFourFive(t *testing.T) {
 	}
 }
 
-// TestSoulTakerPaysTheRoomFlat. The `prizes-dealt` ring was retargeted when the vitae card went;
+// TestSoulTakerPaysTheRoomFlat. The `prizes-dealt` relic was retargeted when the vitae card went;
 // what it moves now is the room award, and it is still flat rather than a scaling.
 func TestSoulTakerPaysTheRoomFlat(t *testing.T) {
 	run := wearing(t, "soul-taker-ring")

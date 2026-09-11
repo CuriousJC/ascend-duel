@@ -1,25 +1,25 @@
 package screens
 
-// The shop: **three rings on a shelf, five fingers, and one purse.**
+// The shop: **three relics on a shelf, five fingers, and one purse.**
 //
 // It is the second of the between-fight scenes — the worm, then this, then the room choice — and
 // like the first it is an ordinary scene in the registry rather than a mode of anything. Nothing
 // here names what comes next: the scene says it is finished and `advanceRun` decides where that
 // leads. See flow.go.
 //
-// **It is what makes thirteen of the seventeen rings reachable.** The grammar has been built since
+// **It is what makes thirteen of the seventeen relics reachable.** The grammar has been built since
 // 2026-08-17 and a run opened wearing three of them with no way to get a fourth, so most of the
 // catalogue existed only in the file. What was missing was never the rules — `Session.Wear`, the
 // purse and the `fight-won` accumulator were all already there — it was the screen.
 //
 // **Two rows, and they are the same object twice.** The shelf is what you can have and the row
-// beneath is what you have; both are ring cards, both are clicked, and the difference is which
-// direction the vitae moves. A shop built as a list with buttons would have made a ring a line of
+// beneath is what you have; both are relic cards, both are clicked, and the difference is which
+// direction the vitae moves. A shop built as a list with buttons would have made a relic a line of
 // text on the one screen where it is a thing you are choosing to wear.
 //
 // **The rules of the trade live on the run, not here** — see session/shop.go. This file decides
-// where a card is drawn and what a click means; what a ring costs, what it sells back for, and
-// what happens to a growing ring's accumulator when it comes off are the run's business, and a
+// where a card is drawn and what a click means; what a relic costs, what it sells back for, and
+// what happens to a growing relic's accumulator when it comes off are the run's business, and a
 // screen holding a second opinion about any of them is the failure that separation prevents.
 
 import (
@@ -42,7 +42,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// shelfSize is how many rings a visit puts up.
+// shelfSize is how many relics a visit puts up.
 //
 // **Three, matching the reward screen's row**, so the two between-fight screens read as one
 // language: a short row of cards, and you take what you can afford. A shelf of seventeen would be
@@ -52,10 +52,10 @@ const shelfSize = 3
 // Where the two rows sit. Percentages anchor the groups; offsets inside a group stay in pixels,
 // per CLAUDE.md.
 const (
-	// The narration clears the band, whose ring row can now carry a sell price under it. The
-	// reward screen's own prose starts at 296 against a band with nothing under the rings.
+	// The narration clears the band, whose relic row can now carry a sell price under it. The
+	// reward screen's own prose starts at 296 against a band with nothing under the relics.
 	// **360 since 2026-09-04**, from 310. The band above it is a card tall and the card grew by a
-	// sixth, so the sell figure under a worn ring — and the confirm tab that replaces it — now
+	// sixth, so the sell figure under a worn relic — and the confirm tab that replaces it — now
 	// reach further down than the narration used to start. TestTheSellFiguresClearTheNarration and
 	// TestTheSellTabClearsTheNarration are what hold the gap.
 	shopProseTop = 360
@@ -69,21 +69,21 @@ const (
 	shopFigureGap  = 10
 	shopFigureSize = 22
 
-	// The confirm tab that hangs under an armed ring, in the seat the sell figure was written in.
-	// **Narrower than the card it hangs off**, so it reads as attached to that ring rather than as
+	// The confirm tab that hangs under an armed relic, in the seat the sell figure was written in.
+	// **Narrower than the card it hangs off**, so it reads as attached to that relic rather than as
 	// a row of its own.
 	sellTabWidth    = 200
 	sellTabHeight   = 30
 	sellTabTextSize = 26
 )
 
-// shopMoveTicks is how long a ring takes to reach its new place — a bought one crossing to the
-// finger it lands on, and every ring that shifts along when one is sold.
+// shopMoveTicks is how long a relic takes to reach its new place — a bought one crossing to the
+// finger it lands on, and every relic that shifts along when one is sold.
 //
 // **A proportion of the game's one speed**, like everything else that moves. See clock.go.
 var shopMoveTicks = beat(1, 1)
 
-// shelfItem is one ring on the shelf.
+// shelfItem is one relic on the shelf.
 type shelfItem struct {
 	key string
 
@@ -93,9 +93,9 @@ type shelfItem struct {
 	bought bool
 }
 
-// ShopScene sells rings and buys them back.
+// ShopScene sells relics and buys them back.
 type ShopScene struct {
-	// shelf is what this visit offers, drawn from the rings the run is not already wearing.
+	// shelf is what this visit offers, drawn from the relics the run is not already wearing.
 	shelf []shelfItem
 
 	// leaveButton is the only control that is not a card or a confirm tab. **There is no basket,
@@ -107,28 +107,28 @@ type ShopScene struct {
 	// tut is Bob, when a run is being taught. See tutorial.go, and combat.go for the same field.
 	tut tutorialOverlay
 
-	// armed is the worn ring a confirm tab is hanging under, by record key, and empty for none.
+	// armed is the worn relic a confirm tab is hanging under, by record key, and empty for none.
 	//
 	// **Selling is the one thing on this screen that asks twice** *(owner's call, 2026-08-22)*.
 	// Buying does not and should not: it is refused when it cannot be afforded, the price is on
 	// the card, and a run cannot go into debt — so there is nothing a confirmation would protect.
-	// A sale is the opposite. The ring is *already yours*, the row it sits in is the row the whole
-	// screen invites you to read, and a click meant for a tooltip took a ring off your hand for
-	// less than it cost. It is also not symmetric to undo: a growing ring's accumulator goes with
+	// A sale is the opposite. The relic is *already yours*, the row it sits in is the row the whole
+	// screen invites you to read, and a click meant for a tooltip took a relic off your hand for
+	// less than it cost. It is also not symmetric to undo: a growing relic's accumulator goes with
 	// it, and buying it back starts that over.
 	armed string
 
-	// ringDrag is the press in progress over the worn row. **A press there is now two gestures
+	// relicDrag is the press in progress over the worn row. **A press there is now two gestures
 	// sharing one button**: a click still arms the sell tab, and a press that travels reorders the
 	// row instead. The threshold in carddrag.go is what tells them apart, and it is the same
 	// threshold the hand has used since the action box was built.
-	ringDrag cardDrag
+	relicDrag cardDrag
 
 	// selling is the tab's request, consumed by Update, for the reason `leaving` is: a button's
 	// OnClick reaches no global state and a sale needs the run.
 	selling string
 
-	// sellButton is the tab itself — **one button moved under whichever ring is armed**, not one
+	// sellButton is the tab itself — **one button moved under whichever relic is armed**, not one
 	// per finger. Only one can be armed, so a second button would be a second thing to keep in
 	// step with the row's own re-centring.
 	sellButton *models.Button
@@ -137,10 +137,10 @@ type ShopScene struct {
 	// state, and advancing the run needs it.
 	leaving bool
 
-	// from is where each worn ring was sitting before the last change, keyed by record, and move
+	// from is where each worn relic was sitting before the last change, keyed by record, and move
 	// is the one clock they all travel on.
 	//
-	// **Every ring in the row moves when one is bought or sold**, because the row is centred: the
+	// **Every relic in the row moves when one is bought or sold**, because the row is centred: the
 	// seats themselves shift. So this is a map rather than a single mover, and it is *seats* being
 	// remembered rather than journeys — the destination is recomputed from the layout every frame,
 	// which is what lets a flight survive the window being resized. See travel.go.
@@ -152,11 +152,11 @@ type ShopScene struct {
 	// cadence rather than for the claims.
 	prose typewriter
 
-	// deck is the D button in the corner and the panel behind it. A ring is bought against a deck,
+	// deck is the D button in the corner and the panel behind it. A relic is bought against a deck,
 	// and until 2026-08-22 the deck could not be looked at from here. See deckpanel.go.
 	deck deckToggle
 
-	// hands is the C button beside it: every hand the deck can build, and what each pays. A ring
+	// hands is the C button beside it: every hand the deck can build, and what each pays. A relic
 	// is bought against a deck for the hands that deck can make, which is the question this
 	// answers and the shelf does not. See handspanel.go.
 	hands handsToggle
@@ -171,9 +171,9 @@ type ShopScene struct {
 	stockRNG *rand.Rand
 	packRNG  *rand.Rand
 
-	// ringReroll and packReroll are the two buttons under those panes. **Two buttons rather than
+	// relicReroll and packReroll are the two buttons under those panes. **Two buttons rather than
 	// one moved between two places**, unlike the worn row's sell tab, because both are up at once.
-	ringReroll, packReroll *models.Button
+	relicReroll, packReroll *models.Button
 
 	// rerolling is the pane a button asked to redraw, consumed on the next frame for the reason
 	// `selling` is: a button's OnClick reaches no global state and a reroll needs the purse.
@@ -207,7 +207,7 @@ type ShopScene struct {
 	// room left for a fourth row of cards - see shop_pouch.go.
 	pouch pouchToggle
 
-	// tip explains a ring: what it does, what it costs, and where it would sit in the firing order.
+	// tip explains a relic: what it does, what it costs, and where it would sit in the firing order.
 	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
 	// and nothing at all about slashes.
 	tip models.Tooltip
@@ -271,22 +271,22 @@ func shelfKeys(items []shelfItem) []string {
 	return out
 }
 
-// dealShelf picks which rings are for sale: three weighted draws from everything the run is not
+// dealShelf picks which relics are for sale: three weighted draws from everything the run is not
 // wearing.
 //
-// **Rarity is the weight** *(owner's call, 2026-08-22)*. A common ring holds ten tickets to a
-// rare one's, so a rare ring is something a run mostly does not see rather than something it sees
+// **Rarity is the weight** *(owner's call, 2026-08-22)*. A common relic holds ten tickets to a
+// rare one's, so a rare relic is something a run mostly does not see rather than something it sees
 // and cannot afford — see data.Rarity for why the price ladder is much flatter than that.
 //
 // **The stream is handed in rather than built here** *(2026-09-06)*, so the reroll button can deal
 // a second shelf off the same cursor. A function that rebuilt the rng from the seed would hand back
-// the same three rings however many times it was pressed.
+// the same three relics however many times it was pressed.
 //
 // **Its own stream** (`seeds.ShopStock`), and per fight — so a defeat and a retry walk into the
 // same shop, exactly as they meet the same opponent. Sharing the worm offer's stream would have
-// made authoring a worm change which rings every run was ever sold; see internal/seeds.
+// made authoring a worm change which relics every run was ever sold; see internal/seeds.
 //
-// **What is already worn is off the shelf**, rather than shown and refused. A ring on your hand
+// **What is already worn is off the shelf**, rather than shown and refused. A relic on your hand
 // offered back to you is a seat spent saying nothing, and `Buy` would turn the click down anyway.
 func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 	if gs.Run == nil || rng == nil {
@@ -299,7 +299,7 @@ func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 	}
 
 	var pool []string
-	for _, key := range session.Rings() {
+	for _, key := range session.Relics() {
 		if !worn[key] {
 			pool = append(pool, key)
 		}
@@ -318,11 +318,11 @@ func dealShelf(gs *state.GlobalState, rng *rand.Rand) []shelfItem {
 // worth, and it is where the rarity mechanic actually bites.
 //
 // **Without replacement, which is why it is a draw per seat rather than one weighted shuffle.** A
-// shelf offering the same ring twice would be a seat spent saying nothing; the caller removes what
+// shelf offering the same relic twice would be a seat spent saying nothing; the caller removes what
 // this returns and asks again, so the weights re-normalise over what is left.
 //
 // **A key the catalogue does not weight holds one ticket rather than none.** The registry refuses a
-// bad rarity at load, so reaching here with a zero is a ring the run knows about and the shop does
+// bad rarity at load, so reaching here with a zero is a relic the run knows about and the shop does
 // not — and dropping it from every shelf forever is a worse failure than offering it as a common.
 func drawWeighted(pool []string, rng *rand.Rand) int {
 	total := 0
@@ -341,7 +341,7 @@ func drawWeighted(pool []string, rng *rand.Rand) int {
 }
 
 func weightOf(key string) int {
-	if w := session.RingWeight(key); w > 0 {
+	if w := session.RelicWeight(key); w > 0 {
 		return w
 	}
 	return 1
@@ -361,7 +361,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 
 	// **The greeting is the whole screen while it types.** A click skips it rather than buying
 	// something, which is the reward screen's rule for its payout and for the same reason: a
-	// sentence half-read while a ring is already being bought is two things at once.
+	// sentence half-read while a relic is already being bought is two things at once.
 	//
 	// **It releases itself the moment it is complete**, which is where the two screens part
 	// *(2026-09-08)*. The payout is held for a second click because its figures are the thing the
@@ -413,7 +413,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	s.updateRerollButtons(gs)
 
 	s.click(gs)
-	s.updateRingRow(gs)
+	s.updateRelicRow(gs)
 
 	s.leaveButton.ScreenX, s.leaveButton.ScreenY = gs.PctX(50), gs.PctY(offerButtonsPct)
 	systems.UpdateButton(gs, s.leaveButton)
@@ -423,7 +423,7 @@ func (s *ShopScene) Update(gs *state.GlobalState) error {
 	return nil
 }
 
-// hover points the tooltip at whichever ring the cursor is resting on. **The shelf first, then the
+// hover points the tooltip at whichever relic the cursor is resting on. **The shelf first, then the
 // hand**, which is the order they are drawn and the order they are read.
 func (s *ShopScene) hover(gs *state.GlobalState) {
 	at := image.Pt(gs.MouseX, gs.MouseY)
@@ -438,8 +438,8 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		if item.bought || !at.In(seat) {
 			continue
 		}
-		if record, ok := gs.Rings[item.key]; ok {
-			title, lines := shopRingTip(record)
+		if record, ok := gs.Relics[item.key]; ok {
+			title, lines := shopRelicTip(record)
 			s.tip.Point(seat, tipLine(title), tipLines(lines))
 		}
 		return
@@ -473,19 +473,19 @@ func (s *ShopScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	hoverBuildRings(gs, at, &s.tip)
+	hoverBuildRelics(gs, at, &s.tip)
 }
 
 // click is the press on either row. **Both rows are live at once**, unlike the reward screen's two
 // stages: buying and selling are not steps of one decision, and needing to be in "sell mode" to
-// free a finger for the ring you are looking at would be a mode where a click would do.
+// free a finger for the relic you are looking at would be a mode where a click would do.
 //
 // **A press on the worn row arms a confirm tab rather than selling** *(owner's call, 2026-08-22)*.
 // The worn row is the build band now, which is the row the player hovers all run to read what they
 // are wearing — so the seat a tooltip is asked for and the seat a sale is committed in are the
-// same pixels, and a click that missed by a frame sold a ring. That is not a mode: nothing else
-// on the screen changes while a tab is up, the other rings stay clickable, and clicking the armed
-// ring again puts it away.
+// same pixels, and a click that missed by a frame sold a relic. That is not a mode: nothing else
+// on the screen changes while a tab is up, the other relics stay clickable, and clicking the armed
+// relic again puts it away.
 func (s *ShopScene) click(gs *state.GlobalState) {
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) || !gs.CursorAllowed() {
 		return
@@ -525,10 +525,10 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 		}
 	}
 
-	// **A press on a worn ring is not this function's** *(2026-08-26)*. It became two gestures when
-	// the row became reorderable — a click arms the sale, a drag moves the ring — and only the
+	// **A press on a worn relic is not this function's** *(2026-08-26)*. It became two gestures when
+	// the row became reorderable — a click arms the sale, a drag moves the relic — and only the
 	// release knows which it was, so it is answered by the shared drag's rowClick. Leaving the
-	// press here as well would arm a ring on the way into a drag.
+	// press here as well would arm a relic on the way into a drag.
 	worn := gs.Run.Worn()
 	for i := range worn {
 		if at.In(s.wornSlot(gs, i, len(worn))) {
@@ -543,10 +543,10 @@ func (s *ShopScene) click(gs *state.GlobalState) {
 	}
 }
 
-// arm puts the question under one ring, or takes it away again if that ring is already asking it.
+// arm puts the question under one relic, or takes it away again if that relic is already asking it.
 //
 // **Pulled out of `click` so it can be tested**: the press needs a cursor and a window, and what
-// is worth pinning is that arming a ring changes nothing about the run.
+// is worth pinning is that arming a relic changes nothing about the run.
 func (s *ShopScene) arm(key string) {
 	if s.armed == key {
 		s.armed = ""
@@ -555,9 +555,9 @@ func (s *ShopScene) arm(key string) {
 	s.armed = key
 }
 
-// updateSellTab positions the tab under whichever ring is armed and runs it.
+// updateSellTab positions the tab under whichever relic is armed and runs it.
 //
-// **It disarms a ring that is no longer worn**, which is what stops a tab surviving the sale it
+// **It disarms a relic that is no longer worn**, which is what stops a tab surviving the sale it
 // asked about — or a scenario arriving with a key the run does not hold.
 func (s *ShopScene) updateSellTab(gs *state.GlobalState) {
 	if s.armed == "" {
@@ -578,7 +578,7 @@ func (s *ShopScene) updateSellTab(gs *state.GlobalState) {
 	systems.UpdateButton(gs, s.sellButton)
 }
 
-// wornSeatOf is where one worn ring is sitting, by key.
+// wornSeatOf is where one worn relic is sitting, by key.
 func (s *ShopScene) wornSeatOf(gs *state.GlobalState, key string) (image.Rectangle, bool) {
 	worn := gs.Run.Worn()
 	for i, k := range worn {
@@ -590,7 +590,7 @@ func (s *ShopScene) wornSeatOf(gs *state.GlobalState, key string) (image.Rectang
 }
 
 // sellTabRect is where the confirm tab hangs: **the seat the sell figure is written in**, centred
-// under the armed ring. One rectangle, drawn in and hit-tested against.
+// under the armed relic. One rectangle, drawn in and hit-tested against.
 func (s *ShopScene) sellTabRect(gs *state.GlobalState) image.Rectangle {
 	seat, ok := s.wornSeatOf(gs, s.armed)
 	if !ok {
@@ -601,7 +601,7 @@ func (s *ShopScene) sellTabRect(gs *state.GlobalState) image.Rectangle {
 	return image.Rect(left, top, left+sellTabWidth, top+sellTabHeight)
 }
 
-// buy takes a ring off the shelf and puts it on the hand.
+// buy takes a relic off the shelf and puts it on the hand.
 //
 // **The flight is raised after the run has already changed**, so it is a ghost of something that
 // has happened rather than an animation the model is waiting on — the same rule every other mover
@@ -614,7 +614,7 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 	}
 
 	seats := s.seats(gs)
-	// The bought ring sets off from the shelf seat the player clicked, so the card that travels is
+	// The bought relic sets off from the shelf seat the player clicked, so the card that travels is
 	// the card they were looking at.
 	seats[key] = s.shelfSlot(gs, i)
 
@@ -625,15 +625,15 @@ func (s *ShopScene) buy(gs *state.GlobalState, i int) {
 	s.start(seats)
 	s.tip.Forget()
 
-	price, _ := session.RingPrice(key)
+	price, _ := session.RelicPrice(key)
 	trace.Logf("shop", "bought %s for %d, %d vitae left, wearing %d",
 		key, price, gs.Run.Vitae(), len(gs.Run.Worn()))
 }
 
-// sell takes a ring off and pays its tier's sell-back figure.
+// sell takes a relic off and pays its tier's sell-back figure.
 //
-// **The sold ring has nothing to fly**, which is the documented exception to cards always
-// travelling: what happened is an absence. What does travel is every ring to its right, sliding
+// **The sold relic has nothing to fly**, which is the documented exception to cards always
+// travelling: what happened is an absence. What does travel is every relic to its right, sliding
 // into the seats the row's re-centring gives them.
 func (s *ShopScene) sell(gs *state.GlobalState, key string) {
 	seats := s.seats(gs)
@@ -648,7 +648,7 @@ func (s *ShopScene) sell(gs *state.GlobalState, key string) {
 		key, session.SellValue(key), gs.Run.Vitae(), len(gs.Run.Worn()))
 }
 
-// seats is where every worn ring is sitting right now, keyed by record — the picture taken before a
+// seats is where every worn relic is sitting right now, keyed by record — the picture taken before a
 // change, so the row can be seen moving from it.
 func (s *ShopScene) seats(gs *state.GlobalState) map[string]image.Rectangle {
 	worn := gs.Run.Worn()
@@ -664,22 +664,22 @@ func (s *ShopScene) start(from map[string]image.Rectangle) {
 	s.from, s.move = from, newTravel(0, shopMoveTicks)
 }
 
-// shelfSlot is where one offered ring is drawn, and the rectangle it is clicked in. **One function
+// shelfSlot is where one offered relic is drawn, and the rectangle it is clicked in. **One function
 // for both**, the same rule every other row in the game follows: a card hit-tested against a
 // rectangle it is not drawn in is exactly the bug this shape prevents.
 func (s *ShopScene) shelfSlot(gs *state.GlobalState, i int) image.Rectangle {
-	return shopSeatRect(gs, shopPaneRings, i)
+	return shopSeatRect(gs, shopPaneRelics, i)
 }
 
-// wornSlot is where one worn ring is drawn — **a finger in the build band**, not a row of the
+// wornSlot is where one worn relic is drawn — **a finger in the build band**, not a row of the
 // shop's own. It takes the count rather than reading it, because the row it is being drawn into
 // may be the one from before a sale.
 //
-// **It is `buildRingRect` and `ringSlotAt`, which is what the combat screen and the reward screen
-// use.** A ring is in the same place on every screen that shows one, so selling is a click on the
+// **It is `buildRelicRect` and `relicSlotAt`, which is what the combat screen and the reward screen
+// use.** A relic is in the same place on every screen that shows one, so selling is a click on the
 // row the player has been reading all run rather than on a second copy of it.
 func (s *ShopScene) wornSlot(gs *state.GlobalState, i, n int) image.Rectangle {
-	return ringSlotRect(buildRingRect(gs), i, n)
+	return relicSlotRect(buildRelicRect(gs), i, n)
 }
 
 func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
@@ -697,17 +697,17 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	}
 
 	// **The duelist card, then the worn row drawn by this screen** — the band's two halves, split
-	// because a ring here carries a price and moves when the row re-centres. See buildband.go.
+	// because a relic here carries a price and moves when the row re-centres. See buildband.go.
 	drawBuildCard(gs, screen, gs.Run.Vitae())
-	// **The pane, without its fraction** *(2026-09-06)*. Every ring in this row carries a sell
+	// **The pane, without its fraction** *(2026-09-06)*. Every relic in this row carries a sell
 	// figure under it and the count hangs off the same corner on the same line, so with five worn
-	// the `5/5 rings` and the last `sell +3` are two numbers in one place. The pane is what was
+	// the `5/5 relics` and the last `sell +3` are two numbers in one place. The pane is what was
 	// missing here; the fraction is already said by a row you can count.
-	drawRingPaneBack(screen, buildRingRect(gs))
+	drawRelicPaneBack(screen, buildRelicRect(gs))
 	s.drawWorn(gs, screen, small)
 
 	// **The parasites the run is carrying, in the pane the fight draws them in** *(2026-09-06)*.
-	// The shop draws the band's two halves itself, because a ring here carries a price — and the
+	// The shop draws the band's two halves itself, because a relic here carries a price — and the
 	// consumables pane went missing in the split, so a run walked into a shop and its bucket
 	// vanished. nil: a parasite is carried on this screen, not spent. See buildband.go.
 	drawConsumablePane(gs, screen, buildConsumableRect(gs), nil)
@@ -751,11 +751,11 @@ func (s *ShopScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 // drawShelf draws what is for sale, with its price under it.
 //
-// **A ring that cannot be bought is dimmed rather than hidden**, so the row still says what was
+// **A relic that cannot be bought is dimmed rather than hidden**, so the row still says what was
 // offered and the reason one of them is unavailable is visible instead of a click that silently
 // does nothing. The price is dimmed with it: the figure and the card say the same thing at once.
 func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
-	drawShopPaneBack(gs, screen, shopPaneRings)
+	drawShopPaneBack(gs, screen, shopPaneRelics)
 
 	for i, item := range s.shelf {
 		at := s.shelfSlot(gs, i)
@@ -767,26 +767,26 @@ func (s *ShopScene) drawShelf(gs *state.GlobalState, screen *ebiten.Image) {
 			continue
 		}
 
-		record, ok := gs.Rings[item.key]
+		record, ok := gs.Relics[item.key]
 		if !ok {
 			continue
 		}
 		affordable := gs.Run.CanBuy(item.key)
-		price, _ := session.RingPrice(item.key)
+		price, _ := session.RelicPrice(item.key)
 
-		// **No badge on the shelf**, whatever the ring is: an accumulator belongs to a worn ring,
-		// and a shelf ring is one nobody has ever put on. A ring the run once wore and sold has
+		// **No badge on the shelf**, whatever the relic is: an accumulator belongs to a worn relic,
+		// and a shelf relic is one nobody has ever put on. A relic the run once wore and sold has
 		// had its number reset, so there is nothing to show there either.
-		drawRingCard(gs, screen, at.Min, record, "", affordable, false)
+		drawRelicCard(gs, screen, at.Min, record, "", affordable, false)
 		s.figure(gs, screen, at, fmt.Sprintf("%d vitae", price), affordable)
 	}
 }
 
 // drawWorn draws the hand: what the run is wearing, in worn order, with what each would pay back.
 //
-// **Worn order is a rule and not a presentation detail** — rings fire left to right and compound —
+// **Worn order is a rule and not a presentation detail** — relics fire left to right and compound —
 // so the row is the firing order, and selling out of the middle changes it. That is a real cost of
-// letting a ring come off, and it is visible here rather than hidden.
+// letting a relic come off, and it is visible here rather than hidden.
 func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 	face *text.GoTextFace) {
 
@@ -794,12 +794,12 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 	counters := runCounters(gs)
 
 	for i, key := range worn {
-		record, ok := gs.Rings[key]
+		record, ok := gs.Relics[key]
 		if !ok {
 			continue
 		}
-		// The seat a dragged ring left stays empty; see the combat screen's row.
-		if s.ringDrag.dragging() && i == s.ringDrag.origin() {
+		// The seat a dragged relic left stays empty; see the combat screen's row.
+		if s.relicDrag.dragging() && i == s.relicDrag.origin() {
 			continue
 		}
 		seat := s.wornSlot(gs, i, len(worn))
@@ -808,13 +808,13 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 			at = flyingTo(was, seat, s.move)
 		}
 
-		drawRingCard(gs, screen, at, record, counters[key], true, false)
+		drawRelicCard(gs, screen, at, record, counters[key], true, false)
 
 		// **The price is only offered once the shopkeeper has finished speaking**, like everything
-		// else on this screen — a sell figure under a ring during the greeting would be an offer
+		// else on this screen — a sell figure under a relic during the greeting would be an offer
 		// standing before it was made.
 		//
-		// **An armed ring shows the tab in that seat instead of the figure**, rather than both:
+		// **An armed relic shows the tab in that seat instead of the figure**, rather than both:
 		// the tab carries the same number and asks the question the figure only stated, so
 		// drawing the pair would be the price said twice with one of them clickable.
 		if !s.prose.finished() {
@@ -824,38 +824,38 @@ func (s *ShopScene) drawWorn(gs *state.GlobalState, screen *ebiten.Image,
 			systems.DrawButton(gs, screen, s.sellButton)
 			continue
 		}
-		// **The figure follows the card, not the seat**, so a ring still sliding to its new
+		// **The figure follows the card, not the seat**, so a relic still sliding to its new
 		// finger keeps its price under it.
 		flown := image.Rectangle{Min: at,
-			Max: at.Add(image.Pt(cards.RingStyle.Width, cards.RingStyle.Height))}
+			Max: at.Add(image.Pt(cards.RelicStyle.Width, cards.RelicStyle.Height))}
 		s.figure(gs, screen, flown, fmt.Sprintf("sell +%d", session.SellValue(key)), true)
 	}
 
-	// Last, so the ring riding the cursor rides over the sell figures too.
-	drawDraggedRing(gs, screen, &s.ringDrag, counters)
+	// Last, so the relic riding the cursor rides over the sell figures too.
+	drawDraggedRelic(gs, screen, &s.relicDrag, counters)
 }
 
-// updateRingRow runs the drag over the worn row.
+// updateRelicRow runs the drag over the worn row.
 //
-// **A click here arms the sell tab**, which is the one screen where a press on a ring means
+// **A click here arms the sell tab**, which is the one screen where a press on a relic means
 // something besides reordering it — see click, which no longer handles that row.
 //
 // **The row is dead while the shopkeeper is still speaking and under either panel**, exactly as
 // buying and selling are: the greeting is the whole screen while it runs.
-func (s *ShopScene) updateRingRow(gs *state.GlobalState) {
+func (s *ShopScene) updateRelicRow(gs *state.GlobalState) {
 	worn := gs.Run.Worn()
-	row := buildRingRow(gs, func(i int) {
+	row := buildRelicRow(gs, func(i int) {
 		if i >= 0 && i < len(worn) {
 			s.arm(worn[i])
 		}
 	})
 
 	if !gs.CursorAllowed() {
-		s.ringDrag.cancel(row)
+		s.relicDrag.cancel(row)
 		return
 	}
 
-	s.ringDrag.update(gs, row)
+	s.relicDrag.update(gs, row)
 }
 
 // figure writes the number under a card, centred on it. Dimmed toward the ground rather than
@@ -879,14 +879,14 @@ func (s *ShopScene) figure(gs *state.GlobalState, screen *ebiten.Image, at image
 // hint is the line between the narration and the shelf, and **it is usually empty** *(2026-08-22)*.
 //
 // **The cap surfaces here rather than being displayed as empty slots** — MECHANICS.md's rule is
-// that it is never shown until it binds, and a hand of five with rings still on the shelf is the
+// that it is never shown until it binds, and a hand of five with relics still on the shelf is the
 // moment it binds. That is the whole of what this line is for now.
 //
 // It used to open with the purse as well. The duelist card in the build band writes the purse in
 // crimson two hundred pixels above, so saying it again here would be the screen's only sentence
 // spent on a figure already on it.
 func (s *ShopScene) hint(gs *state.GlobalState) string {
-	if len(gs.Run.Worn()) >= combat.MaxWornRings && s.anyLeft() {
+	if len(gs.Run.Worn()) >= combat.MaxWornRelics && s.anyLeft() {
 		return fmt.Sprintf("%d vitae - every finger is spoken for, sell one to make room",
 			gs.Run.Vitae())
 	}
@@ -905,12 +905,12 @@ func (s *ShopScene) anyLeft() bool {
 }
 
 // Compile-time assurance that the record the shelf draws still carries what this screen reads off
-// it. A ring losing its price would otherwise be a shelf of free rings rather than a build failure.
-var _ = func(r data.RingData) (string, data.Rarity) { return r.Name, r.Rarity }
+// it. A relic losing its price would otherwise be a shelf of free relics rather than a build failure.
+var _ = func(r data.RelicData) (string, data.Rarity) { return r.Name, r.Rarity }
 
 // The sealed goods on the shelf: where they sit, what a click on one does, and what they say.
 //
-// **They are a row of their own under the rings** — see goodsRowPct, and shop_goods.go for the
+// **They are a row of their own under the relics** — see goodsRowPct, and shop_goods.go for the
 // dialog a purchase opens.
 
 // goodSlot is where one good is drawn, and the rectangle it is clicked in. **Two seats, centred**,
@@ -942,7 +942,7 @@ func (s *ShopScene) goodTaken(kind goodKind) bool {
 }
 
 // goodAffordable is whether the purse covers one. **Asked of the run rather than compared here**,
-// which is the line RingPrice already draws: what a thing costs is the shop's arithmetic and this
+// which is the line RelicPrice already draws: what a thing costs is the shop's arithmetic and this
 // file only decides where it is drawn.
 func goodAffordable(gs *state.GlobalState, kind goodKind) bool {
 	if gs.Run == nil {
@@ -979,7 +979,7 @@ func goodAvailable(gs *state.GlobalState, kind goodKind) bool {
 
 // openGood pays for a sealed good and opens it.
 //
-// **The purse moves first and the dialog opens second**, exactly as `Buy` wears the ring after
+// **The purse moves first and the dialog opens second**, exactly as `Buy` wears the relic after
 // spending: a refusal has to leave the run as it was, and `SpendVitae` is the one place that
 // refuses. A dialog opened before the payment would be four cards the player could take for free
 // if the purse turned out to be short.

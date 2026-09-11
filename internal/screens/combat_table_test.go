@@ -18,7 +18,7 @@ import (
 // a confrontation and becomes one row of ten.
 
 // tableSeats is the widest row the rules can produce. Asked of the rules rather than written
-// down, because a ring raising the cap is an expected change and must not quietly break the
+// down, because a relic raising the cap is an expected change and must not quietly break the
 // layout instead of failing here.
 func tableSeats() int { return combat.Duelist{}.MaxActions() }
 
@@ -120,23 +120,23 @@ func TestEachRowIsPinnedToItsOwnEdge(t *testing.T) {
 	}
 }
 
-func TestTheTableSitsBetweenTheRingRowAndTheFeed(t *testing.T) {
+func TestTheTableSitsBetweenTheRelicRowAndTheFeed(t *testing.T) {
 	gs := testState()
 	s := &CombatScene{}
 
 	top := tableRowTop(gs)
 
-	// Below the top row, whose lowest ink is the row of ring cards itself. **The rule and the
+	// Below the top row, whose lowest ink is the row of relic cards itself. **The rule and the
 	// count used to hang under it and moved into the caption column on 2026-09-04**, which is the
-	// 44 pixels that let the card grow to its present size — see ringPaneRect.
-	ringBottom := s.ringPaneBackRect(gs).Max.Y
-	if top < ringBottom {
-		t.Errorf("the table starts at y=%d, into the ring row's count ending at y=%d", top, ringBottom)
+	// 44 pixels that let the card grow to its present size — see relicPaneRect.
+	relicBottom := s.relicPaneBackRect(gs).Max.Y
+	if top < relicBottom {
+		t.Errorf("the table starts at y=%d, into the relic row's count ending at y=%d", top, relicBottom)
 	}
 
 	// And clear of the hand. **The band the sum is written in is no longer reserved**
 	// *(2026-09-04, owner's call)*: the arithmetic overlays the bottom of the played row instead of
-	// pushing it up, which is what let the row drop clear of the ring pane's backing above it.
+	// pushing it up, which is what let the row drop clear of the relic pane's backing above it.
 	if bottom, handTop := top+cardHeight, handTop(gs)-mathBandGapAboveCards; bottom > handTop {
 		t.Errorf("the table ends at y=%d, into the hand at y=%d", bottom, handTop)
 	}
@@ -321,7 +321,7 @@ func TestTheWholeAttackHandIsRaisedAndTheHandKeepsWhatEarnedIt(t *testing.T) {
 	}
 
 	// The Jab built no hand, so the hand takes it back down. **Raising is the whole of what says
-	// which cards earned the hand** since the yellow ring went on 2026-08-19, which is why this is
+	// which cards earned the hand** since the yellow relic went on 2026-08-19, which is why this is
 	// the only assertion left here.
 	hand := combat.Event{Kind: combat.KindHand, Side: combat.SideA, HandCardCount: 2}
 	hand.HandCards[0], hand.HandCards[1] = 0, 1

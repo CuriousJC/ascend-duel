@@ -21,6 +21,6 @@
 // # Order
 //
 // Never walk a loaded map where order decides an outcome — Go randomises map iteration
-// deliberately. EnemyOrder and RingOrder are the sorted walks, and they exist so a run seeded from
+// deliberately. EnemyOrder and RelicOrder are the sorted walks, and they exist so a run seeded from
 // one number deals the same game twice. See the randomness skill.
 package data

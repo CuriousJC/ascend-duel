@@ -188,12 +188,12 @@ type GlobalState struct {
 	Bosses   map[string]data.BossData
 	Duelists map[string]data.DuelistData
 
-	// Rings is what the player can equip. **Genuinely global for the same reason the rosters
-	// are** — it is loaded once from data/rings.json and no screen owns it. What is *equipped*
+	// Relics is what the player can equip. **Genuinely global for the same reason the rosters
+	// are** — it is loaded once from data/relics.json and no screen owns it. What is *equipped*
 	// is not here: that is run state and belongs on Run, below — bought and sold in the shop.
-	Rings map[string]data.RingData
+	Relics map[string]data.RelicData
 
-	// Run is what the player is carrying up the tower — the deck today, the worn rings and the
+	// Run is what the player is carrying up the tower — the deck today, the worn relics and the
 	// purse next. **Genuinely global**: the combat screen deals from it and the post-battle
 	// screen alters it, and it has to outlive a fight, which no scene does.
 	//
@@ -289,7 +289,7 @@ type GlobalState struct {
 	// to decode itself rather than take as an *ebiten.Image.
 	//
 	// **Only the images that need it are in here**, not everything in Assets. What needs it
-	// is anything drawn *into* a card — the ring art, the enemy portraits — because
+	// is anything drawn *into* a card — the relic art, the enemy portraits — because
 	// internal/cards renders to a plain Go image with no graphics context. Both maps read
 	// the same embedded bytes, so the game and the contact sheet cannot end up showing
 	// different pictures.
@@ -338,7 +338,7 @@ const (
 	// ordinary scene here rather than a mode of the combat screen.
 	PostBattle
 
-	// Shop is the second between-fight scene: rings on a shelf, bought and sold with vitae.
+	// Shop is the second between-fight scene: relics on a shelf, bought and sold with vitae.
 	Shop
 
 	Credits

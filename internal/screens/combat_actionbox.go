@@ -248,7 +248,7 @@ type paletteCard struct {
 // handRow is the hand as a draggable row of cards. **The lifecycle is carddrag.go's**; this is the
 // half of it that knows what a card in the hand is.
 //
-// **Lifting really does take the card out of `s.hand`**, unlike the ring row, which only remembers
+// **Lifting really does take the card out of `s.hand`**, unlike the relic row, which only remembers
 // which seat is empty. The list is the hand — nothing else holds it — so removing the card is what
 // makes the gap close under the cursor, and `syncQueue` keeps the round's queue reading off it the
 // whole time.
@@ -432,7 +432,7 @@ func handPitch(gs *state.GlobalState, n int) int {
 //
 // **The band is derived rather than written down as percentages** *(2026-09-04, owner's call)*.
 // It used to run 2% to 96%, which agreed with nothing above it; it now runs between the two
-// fighter cards, so the left edge of the hand is the left edge of the ring row and its right edge
+// fighter cards, so the left edge of the hand is the left edge of the relic row and its right edge
 // is the enemy card's. The cards pay for the narrowing in overlap, which is what handPitch is for.
 //
 // **One function rather than the arithmetic written twice**, because the pitch and the row's
@@ -441,16 +441,16 @@ func cardBandWidth(gs *state.GlobalState) int {
 	return ControlColumnLeft(gs) - sortColumnGap - handBandLeft(gs)
 }
 
-// handBandLeft is where the bottom of the screen starts: the same line the ring row starts on,
+// handBandLeft is where the bottom of the screen starts: the same line the relic row starts on,
 // which is the duelist card's right edge.
 //
 // **The two ends are decided by different things** *(2026-09-04, owner's call)*, which is why this
-// is one figure rather than a span. The left is the ring row's, so the rings and the hand start
+// is one figure rather than a span. The left is the relic row's, so the relics and the hand start
 // together; the right is the control column — the enemy card's *left* edge, where the sort buttons
 // stand — see ControlColumnLeft. Nothing is laid out to the enemy card's *right* edge any more:
 // DUEL! was, for an afternoon, and it is centred under the hand now.
 func handBandLeft(gs *state.GlobalState) int {
-	l, _ := ringRowSpan(gs)
+	l, _ := relicRowSpan(gs)
 	return l
 }
 

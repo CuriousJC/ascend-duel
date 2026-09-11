@@ -291,7 +291,7 @@ func (t *modalToggle) init(label string, w, h int, textSize float64,
 //
 // **It returns whether the panel is covering the screen**, which is the caller's cue to stop
 // running everything else: the scene's own rows are still where they were, and a click reaching
-// one through a dialog would be a ring bought while reading a deck.
+// one through a dialog would be a relic bought while reading a deck.
 func (t *modalToggle) update(gs *state.GlobalState,
 	hover func(at image.Point, tip *models.Tooltip)) bool {
 

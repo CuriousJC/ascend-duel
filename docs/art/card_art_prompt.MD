@@ -1,6 +1,6 @@
 # Card art prompt
 
-**One prompt for every card that carries a picture** — rings, relics, parasites, worms and
+**One prompt for every card that carries a picture** — relics, parasites, worms and
 stones. They are all the same card: a full-bleed 5:7 portrait behind a face that writes no
 title, so a separate prompt per catalogue was three copies of one paragraph drifting apart.
 
@@ -11,19 +11,19 @@ title, so a separate prompt per catalogue was three copies of one paragraph drif
    about the card style, not a preference — see the table.
 3. Replace the last line with the subject: what the object or creature *is*, and what the
    effect is doing to it, in one paragraph. The prompt never names the subject, so this is the
-   only place the generator learns there is a ring on fire rather than a ring made of teeth.
-   The per-record paragraphs live in the worklists — `rings_to_draw.md` for rings.
+   only place the generator learns there is a relic on fire rather than a relic made of teeth.
+   The per-record paragraphs live in the worklists — `relics_to_draw.md` for relics.
 4. Save the result to `.scratch/<kind>-art/<key>.png`, reduce it to 200x280, and commit it as
    `assets/<kind>/<key>.png`. The reduction is not optional — see [README.md](README.md).
 5. Set `"Art": "<key>"` on the record and strike it from the worklist.
 
 | Card style | Draws | Composition | What covers the art |
 |---|---|---|---|
-| `cards.RingStyle` | rings, relics | **Whole card** | a counter disc in the bottom-right corner |
+| `cards.RelicStyle` | relics | **Whole card** | a counter disc in the bottom-right corner |
 | `cards.WormStyle` | parasites, worms, stones | **Upper band** | the text band, from y 140 to y 265 |
 
 **A parasite needs one thing more**: a body plan, from the closed list in
-[parasite_art_prompt.MD](parasite_art_prompt.MD). A ring is an object and can be described from
+[parasite_art_prompt.MD](parasite_art_prompt.MD). A relic is an object and can be described from
 nothing; a creature handed no shape is a different animal every time.
 
 ---

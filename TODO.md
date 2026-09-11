@@ -16,7 +16,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
 
 - [?] **Three parasites from the owner's list still need a design decision before they can be
       written as data** *(owner asked for this to be tracked, 2026-08-27; trimmed 2026-09-02 as
-      the rest landed)*. **Lucky card**; **chance to increase a ring** (which ring, and increase
+      the rest landed)*. **Lucky card**; **chance to increase a relic** (which relic, and increase
       what?); **wild card** (matches any axis, or any one axis you name?). Two of them are random,
       which needs its own stream and its own argument in `MECHANICS.md` per the `randomness` skill.
 
@@ -28,10 +28,10 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       `audio.NewInfiniteLoopWithIntro` already supports it and the loop point would need
       to come from the file (a marker meta-event) rather than from arithmetic.
 - [ ] **Brands need a data file and a way to be acquired.** The mechanic is already decided —
-      see `MECHANICS.md`'s Brands section: they alter the container where rings alter the
+      see `MECHANICS.md`'s Brands section: they alter the container where relics alter the
       contents, they are permanent *for the run*, and nothing takes one off. What does not
       exist is any of it in code: no `brands.json`, no acquisition, no seat on the duelist.
-      `session.Session` is where a worn brand would live, beside the worn rings.
+      `session.Session` is where a worn brand would live, beside the worn relics.
 
 ## Next — where the game actually starts
 
@@ -69,7 +69,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         compute.
 
 - [ ] **The tooltip does not reach every card on screen** *(2026-08-21)*. Hand cards, the deck
-      overlay, worn rings, the shop's two rows, both fighter cards, the reward screen's prizes and
+      overlay, worn relics, the shop's two rows, both fighter cards, the reward screen's prizes and
       its offered cards all explain themselves. What does not:
       - **The table's two rows during playback** — the cards actually being resolved. They are the
         one place a player is watching rather than deciding, which is the argument for leaving them
@@ -107,7 +107,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         concern. Never borrow the loot stream to pick an enemy.
 - [ ] **Split the rest of `GlobalState`** into `Resources` (assets/fonts/data, read-only) and
       `Layout`. **The `Session` third of this already landed** — `internal/session` holds the deck,
-      the fight index, the purse, the worn rings in worn order, and the run's phase — so what is
+      the fight index, the purse, the worn relics in worn order, and the run's phase — so what is
       left is the read-only half. Deferred: the remaining fields are not crowding anything.
 - [ ] **What actually unlocks.** The profile exists and holds an `unlocks` set — `internal/profile`
       — and nothing writes to it. Undecided: cards for the starting deck, enemies in the pool,
@@ -142,7 +142,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         "this is a fire floor" — plus whatever other levers exist by then. The specific
         options are undecided; the mechanism is the part that matters.
       - Run progress lives in `session.Session`, which already carries the fight index, the
-        purse and the worn rings. **The floor is what it does not have**: `fight` is a room count
+        purse and the worn relics. **The floor is what it does not have**: `fight` is a room count
         and `pyramid` derives the floor from it, so a run that chooses its own floors needs one
         stored rather than computed.
 - [ ] **Save format: seed plus choice log, not serialized state.** Falls out of seeding
@@ -159,7 +159,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         than being fixed size. Still trivial. It survives every change to the shape of
         in-memory state, and doubles as a replay file and a reproducible bug report.
       - Recording action plans is what makes hand-editing a save interesting: loot picks
-        only answer "what if I took the other ring", where plans answer "what if I had
+        only answer "what if I took the other relic", where plans answer "what if I had
         guarded on round 3".
       - **Serialize card *keys*, not `ConceptID`s.** This got sharper on 2026-08-16: an ID is an
         index into a registry built by walking `duelist_cards.json` and then every enemy's deck,
@@ -170,7 +170,7 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
         balance tweak does not shift every later roll in a run. `shockMisses` short-circuits when
         the attacker carries no shock, so the stream only advances when lightning is in play —
         which is exactly the drift the rule forbids. **It got narrower on 2026-08-16**: a shock
-        now needs a thunder ring on the attacker to exist at all, so an unringed duel advances
+        now needs a thunder relic on the attacker to exist at all, so a bare duel advances
         the stream never. Nothing depends on stored seeds yet, so it
         is cheap to fix now and expensive to fix after a save format exists.
       - Serializing live state instead means a migration every time state changes — the

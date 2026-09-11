@@ -175,7 +175,7 @@ func TestAnUpgradedCardStillStates(t *testing.T) {
 	}
 }
 
-// **A cost of zero draws no ticks and does not panic.** Ring and worm cards carry no cost, and an
+// **A cost of zero draws no ticks and does not panic.** Relic and worm cards carry no cost, and an
 // upgraded one is not yet possible but costs nothing to be safe about.
 func TestAnUpgradedCardWithNoCostRenders(t *testing.T) {
 	s := upgradeSpec(systems.UpgradeGolden)

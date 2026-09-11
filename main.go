@@ -164,27 +164,27 @@ func main() {
 	g.GlobalState.Enemies = data.LoadEnemies()
 	g.GlobalState.Bosses = data.LoadBosses()
 	g.GlobalState.Duelists = data.LoadDuelists()
-	g.GlobalState.Rings = data.LoadRings()
+	g.GlobalState.Relics = data.LoadRelics()
 
 	// **The run starts here** *(2026-08-17)*, because a run outlives every screen and no scene
 	// may build one — two would be two runs. It carries the deck, which the combat screen deals
-	// from and the post-battle screen alters, and it is where the worn rings and the purse go
+	// from and the post-battle screen alters, and it is where the worn relics and the purse go
 	// when buying exists.
 	//
 	// Built from the authored starting list. When a title-screen "New Run" arrives this moves
 	// there and becomes one line in that action instead.
 	// **A scenario dresses the run before it starts.** Compiled out unless `-tags scenario`, in
-	// which case this is the seat that puts a chosen set of rings on — `StartingRings` is the same
+	// which case this is the seat that puts a chosen set of relics on — `StartingRelics` is the same
 	// debug seat a hand-edited list would use, so nothing new has to be able to force a worn row.
 	// See internal/scenario.
 	if scenario.Active() {
-		// **The fingers are set before the rings**, and both before the run is built: `New` wears
+		// **The fingers are set before the relics**, and both before the run is built: `New` wears
 		// the list as it goes, so a cap raised after the fact would arrive too late to let a sixth
-		// ring on. See session.StartingRingSlots.
-		session.StartingRingSlots = scenario.RingSlots()
-		session.StartingRings = scenario.Rings()
+		// relic on. See session.StartingRelicSlots.
+		session.StartingRelicSlots = scenario.RelicSlots()
+		session.StartingRelics = scenario.Relics()
 
-		// **A chosen deck, where the rings are a chosen row.** Nil unless the fixture says
+		// **A chosen deck, where the relics are a chosen row.** Nil unless the fixture says
 		// otherwise, so this is the authored deck for every scenario that does not care.
 		session.StartingDeckList = scenario.Deck()
 
@@ -237,11 +237,11 @@ func main() {
 		}
 
 		// **And it may widen the hand.** Unlike the clock this had to be in place *before* the run
-		// was built — see the StartingRingSlots line above — so what happens here is a resumed run
+		// was built — see the StartingRelicSlots line above — so what happens here is a resumed run
 		// being brought up to the fixture's number, and a log line saying what the hand is on.
-		if n := scenario.RingSlots(); n > 0 && g.GlobalState.Run != nil {
-			g.GlobalState.Run.SetRingSlots(n)
-			log.Printf("scenario %s: %d ring slots", scenario.Name(), n)
+		if n := scenario.RelicSlots(); n > 0 && g.GlobalState.Run != nil {
+			g.GlobalState.Run.SetRelicSlots(n)
+			log.Printf("scenario %s: %d relic slots", scenario.Name(), n)
 		}
 	}
 
@@ -277,7 +277,7 @@ func startScenarioAt(g *game.Game) {
 	gs := g.GlobalState
 
 	// **The record's own ceiling is what the fixture's Life is measured against.** A run wearing a
-	// ring that raises max life is carrying the same *wound* under a higher ceiling, which is how
+	// relic that raises max life is carrying the same *wound* under a higher ceiling, which is how
 	// the game treats every wound — see Session.LifeAtFightStart.
 	max := 0
 	if d, ok := gs.Duelists["Fighter1"]; ok {

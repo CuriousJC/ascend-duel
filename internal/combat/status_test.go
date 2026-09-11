@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// The four element statuses, the ring that switches each of them on, and the lifecycle all of
+// The four element statuses, the relic that switches each of them on, and the lifecycle all of
 // them share.
 //
 // **Every test here is written against the rule rather than the constant** where it can be —
@@ -14,12 +14,12 @@ import (
 // is the thing that must not move without somebody deciding it should.
 
 // **These tests talk in colours and the rules no longer do** *(2026-08-17)*. A status is its own
-// record and a ring is what connects the two, so the four rings below are built here — this package
-// cannot read `rings.json`, which is parsed in `internal/session` — and every element-shaped helper
+// record and a relic is what connects the two, so the four relics below are built here — this package
+// cannot read `relics.json`, which is parsed in `internal/session` — and every element-shaped helper
 // goes through them. What that buys is that a test about the *lifecycle* stays written the way the
 // mechanic is discussed, while the decoupling is exercised by the wiring underneath it.
 
-// statusOf is the status the named colour's ring applies, by the pairing `rings.json` ships.
+// statusOf is the status the named colour's relic applies, by the pairing `relics.json` ships.
 func statusOf(e Element) StatusID {
 	switch e {
 	case Fire:
@@ -46,18 +46,18 @@ func statusRounds() int { return StatusOf(statusOf(Fire)).Rounds }
 func weightPct() int    { return StatusOf(statusOf(Earth)).Amount }
 func amplifyPct() int   { return StatusOf(statusOf(Arcane)).Amount }
 
-// testRings is the five elemental rings, registered once for the whole test binary. **Registered
-// rather than faked**, so what the tests exercise is the same `RegisterRing` path the game loads
+// testRelics is the five elemental relics, registered once for the whole test binary. **Registered
+// rather than faked**, so what the tests exercise is the same `RegisterRelic` path the game loads
 // through — a rule the registry would refuse fails here too.
-var testRings = registerTestRings()
+var testRelics = registerTestRelics()
 
-func registerTestRings() map[Element]RingID {
-	out := map[Element]RingID{}
+func registerTestRelics() map[Element]RelicID {
+	out := map[Element]RelicID{}
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
-		id, err := RegisterRing("test."+e.String(), "Test "+e.String(), []RingRule{{
+		id, err := RegisterRelic("test."+e.String(), "Test "+e.String(), []RelicRule{{
 			When: MomentAttackLands,
-			If:   RingCondition{Element: e, HasElement: true},
-			Then: []RingEffect{{Do: DoApplyStatus, Status: statusOf(e)}},
+			If:   RelicCondition{Element: e, HasElement: true},
+			Then: []RelicEffect{{Do: DoApplyStatus, Status: statusOf(e)}},
 		}})
 		if err != nil {
 			panic(err)
@@ -67,21 +67,21 @@ func registerTestRings() map[Element]RingID {
 	return out
 }
 
-// wearing returns the duelist with rings for the named elements on. **Every status test needs
-// one**, which is the whole point of the 2026-08-16 rule: without a ring an element is a border
+// wearing returns the duelist with relics for the named elements on. **Every status test needs
+// one**, which is the whole point of the 2026-08-16 rule: without a relic an element is a border
 // colour and a hand axis and nothing else.
 func wearing(d Duelist, es ...Element) Duelist {
 	for _, e := range es {
-		d = d.Wearing(WornRing{Ring: testRings[e]})
+		d = d.Wearing(WornRelic{Relic: testRelics[e]})
 	}
 	return d
 }
 
-// ringed is a duelist wearing all five, for tests about the lifecycle rather than about rings.
-// **Five is exactly MaxWornRings**, so an element added past arcane cannot join this hand.
-func ringed(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth, Arcane) }
+// reliced is a duelist wearing all five, for tests about the lifecycle rather than about relics.
+// **Five is exactly MaxWornRelics**, so an element added past arcane cannot join this hand.
+func reliced(d Duelist) Duelist { return wearing(d, Fire, Ice, Lightning, Earth, Arcane) }
 
-// statusEvents returns the KindStatus events for the status one colour's ring applies.
+// statusEvents returns the KindStatus events for the status one colour's relic applies.
 func statusEvents(events []Event, e Element) []Event {
 	var out []Event
 	for _, ev := range events {
@@ -102,10 +102,10 @@ func countKind(events []Event, k EventKind) int {
 	return n
 }
 
-// --- the ring gate ---------------------------------------------------------------------------
+// --- the relic gate ---------------------------------------------------------------------------
 
-func TestAnElementAppliesNothingWithoutItsRing(t *testing.T) {
-	// **The headline rule** *(2026-08-16)*. A coloured attack from a duelist wearing no ring is a
+func TestAnElementAppliesNothingWithoutItsRelic(t *testing.T) {
+	// **The headline rule** *(2026-08-16)*. A coloured attack from a duelist wearing no relic is a
 	// plain attack: it still counts toward the mix multiplier, and it leaves nothing behind.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		a, b := duelist(10, 5, 500), duelist(10, 5, 500)
@@ -113,17 +113,17 @@ func TestAnElementAppliesNothingWithoutItsRing(t *testing.T) {
 		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
 
 		if n := len(statusEvents(events, e)); n != 0 {
-			t.Errorf("an unringed %v Strike applied %d statuses, want 0", e, n)
+			t.Errorf("a bare %v Strike applied %d statuses, want 0", e, n)
 		}
 		if bAfter.Statuses[statusOf(e)].Active() {
-			t.Errorf("an unringed %v Strike left a %v status behind", e, e)
+			t.Errorf("a bare %v Strike left a %v status behind", e, e)
 		}
 	}
 }
 
-func TestOnlyTheRingWornSwitchesItsOwnElementOn(t *testing.T) {
-	// One ring is one element. A duelist wearing fire and swinging a rainbow lands a burn and
-	// nothing else, which is what makes the second and third rings worth buying.
+func TestOnlyTheRelicWornSwitchesItsOwnElementOn(t *testing.T) {
+	// One relic is one element. A duelist wearing fire and swinging a rainbow lands a burn and
+	// nothing else, which is what makes the second and third relics worth buying.
 	a := wearing(duelist(10, 8, 500), Fire)
 	b := duelist(10, 5, 500)
 
@@ -131,33 +131,33 @@ func TestOnlyTheRingWornSwitchesItsOwnElementOn(t *testing.T) {
 		[]Card{Of(Jab, Fire), Of(Jab, Ice), Of(Jab, Lightning), Of(Jab, Earth)}, nil, 1)
 
 	if !bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the fire ring's own colour left no burn")
+		t.Error("the fire relic's own colour left no burn")
 	}
 	for _, e := range []Element{Ice, Lightning, Earth} {
 		if bAfter.Statuses[statusOf(e)].Active() {
-			t.Errorf("a %v card left a status on a duelist wearing no %v ring", e, e)
+			t.Errorf("a %v card left a status on a duelist wearing no %v relic", e, e)
 		}
 	}
 }
 
-func TestTheRingIsReadOffTheAttackerNotTheVictim(t *testing.T) {
-	// Your ring makes your attacks burn. It does nothing about attacks aimed at you — otherwise a
-	// ring would be a liability and buying one would be a decision with a wrong answer.
+func TestTheRelicIsReadOffTheAttackerNotTheVictim(t *testing.T) {
+	// Your relic makes your attacks burn. It does nothing about attacks aimed at you — otherwise a
+	// relic would be a liability and buying one would be a decision with a wrong answer.
 	a := duelist(10, 5, 500)
 	b := wearing(duelist(10, 5, 500), Fire)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Fire)}, nil, 1)
 
 	if bAfter.Statuses[statusOf(Fire)].Active() {
-		t.Error("the victim's own fire ring lit a burn on themselves")
+		t.Error("the victim's own fire relic lit a burn on themselves")
 	}
 }
 
-func TestABasicAttackAppliesNothingHoweverManyRingsAreWorn(t *testing.T) {
-	// Basic is the absence of an element rather than a fifth colour, so no elemental ring can match
+func TestABasicAttackAppliesNothingHoweverManyRelicsAreWorn(t *testing.T) {
+	// Basic is the absence of an element rather than a fifth colour, so no elemental relic can match
 	// it. A duelist wearing all four and swinging a plain card leaves nothing behind — which is what
-	// keeps "drab lands none" true from the ring's side as well as the card's.
-	a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
+	// keeps "drab lands none" true from the relic's side as well as the card's.
+	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b, []Card{Plain(Strike)}, nil, 1)
 
@@ -171,26 +171,26 @@ func TestABasicAttackAppliesNothingHoweverManyRingsAreWorn(t *testing.T) {
 	}
 }
 
-func TestARingNotWornDoesNothing(t *testing.T) {
-	// WearsRing is a query over the worn set rather than a flag read, so this is the shape of the
-	// gate now: a registered ring nobody put on is a ring that never fires.
+func TestARelicNotWornDoesNothing(t *testing.T) {
+	// WearsRelic is a query over the worn set rather than a flag read, so this is the shape of the
+	// gate now: a registered relic nobody put on is a relic that never fires.
 	d := wearing(duelist(10, 5, 500), Fire)
 
-	if !d.WearsRing(testRings[Fire]) {
-		t.Error("a duelist wearing the fire ring reported not wearing it")
+	if !d.WearsRelic(testRelics[Fire]) {
+		t.Error("a duelist wearing the fire relic reported not wearing it")
 	}
-	if d.WearsRing(testRings[Ice]) {
-		t.Error("a duelist reported wearing a ring nobody put on")
+	if d.WearsRelic(testRelics[Ice]) {
+		t.Error("a duelist reported wearing a relic nobody put on")
 	}
 }
 
 // --- what applies a status -------------------------------------------------------------------
 
 func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
-	// The trigger rule: an attack that connects applies its element, given the ring, and nothing
+	// The trigger rule: an attack that connects applies its element, given the relic, and nothing
 	// else does.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
-		a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
+		a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(a, b, []Card{Of(Strike, e)}, nil, 1)
 
 		if got := statusEvents(events, e); len(got) != 1 {
@@ -203,11 +203,11 @@ func TestALandedElementalAttackAppliesItsStatus(t *testing.T) {
 }
 
 func TestOnlyAttacksApplyAStatus(t *testing.T) {
-	// **Decided 2026-08-12**: a plan card carries its element for hands and for the ring
+	// **Decided 2026-08-12**: a plan card carries its element for hands and for the relic
 	// discount and applies nothing. Otherwise a 1-AP Ward would be as good a status delivery
 	// as a 1-AP Jab, and the plan phase would quietly become the status engine.
 	for _, a := range []ConceptID{Brace, Ward, testGuard} {
-		attacker, target := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
+		attacker, target := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 		events, _, bAfter := resolve(attacker, target, []Card{Of(a, Fire)}, nil, 1)
 
 		if n := len(statusEvents(events, Fire)); n != 0 {
@@ -227,7 +227,7 @@ func TestABlockedBlowStillAppliesItsStatus(t *testing.T) {
 	// attacker had already paid for, and under one blow per turn that would be every defensive
 	// card in the game.
 	for _, defence := range []ConceptID{testGuard} {
-		a, b := ringed(duelist(10, 5, 500)), duelist(10, 8, 500)
+		a, b := reliced(duelist(10, 5, 500)), duelist(10, 8, 500)
 
 		// B raises the defence in round one, A swings into it in round two.
 		_, a1, b1 := resolve(a, b, nil, []Card{Plain(defence)}, 1)
@@ -246,7 +246,7 @@ func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
 	// The mix counts **distinct** colours, not coloured cards, so this is the rule that decides
 	// status volume now. Two fire Jabs are a mono fire Pair and land one burn — where under the
 	// per-card model they landed two.
-	a, b := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
+	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
 
@@ -261,8 +261,8 @@ func TestOneColourInAHandIsOneStatusHoweverManyCardsCarryIt(t *testing.T) {
 
 func TestEachColourInTheHandLandsItsOwnStatus(t *testing.T) {
 	// The other end of the same rule: a duo hand lands both, which is what the mix multiplier is
-	// paying for besides damage — given a ring for each colour.
-	a, b := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
+	// paying for besides damage — given a relic for each colour.
+	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Ice)}, nil, 1)
 
@@ -278,7 +278,7 @@ func TestACardOutsideTheHandCarriesNoColour(t *testing.T) {
 	// Attack cards that build no hand are announced and contribute nothing — not damage and not
 	// an element. `Strike, Jab, Strike` is a Strike Pair and the Jab is not in it, so a fire Jab
 	// alongside two plain Strikes burns nobody.
-	a, b := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
+	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b,
 		[]Card{Plain(Strike), Of(Jab, Fire), Plain(Strike)}, nil, 1)
@@ -295,7 +295,7 @@ func TestAHalvedAttackStillAppliesItsStatus(t *testing.T) {
 	// **The status lands because the blow did, not because it hurt.** A testGuard halves the hit
 	// and the hit still connected, so making the status conditional on the final figure would
 	// let a defensive card silently un-apply an element the attacker had already paid for.
-	a, b := ringed(duelist(10, 5, 500)), duelist(10, 8, 500)
+	a, b := reliced(duelist(10, 5, 500)), duelist(10, 8, 500)
 
 	_, a1, b1 := resolve(a, b, nil, []Card{Plain(testGuard)}, 1)
 	events, _, bAfter := resolve(a1, b1, []Card{Of(Strike, Ice)}, nil, 2)
@@ -314,7 +314,7 @@ func TestASecondHitResetsTheClockAndDoesNotStack(t *testing.T) {
 	// **Nothing stacks as of 2026-08-16.** Two fire hits burn for what one burns for; what the
 	// second buys is the clock going back to full. Amounts added until then, which made a status
 	// something to pile on rather than something to keep up.
-	a, b := ringed(duelist(10, 8, 500)), duelist(10, 5, 500)
+	a, b := reliced(duelist(10, 8, 500)), duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Jab, Fire)}, nil, 1)
 	one := b1.Statuses[statusOf(Fire)].Amount
@@ -335,7 +335,7 @@ func TestAStatusIsGoneByTheEndOfTheRoundAfterItLanded(t *testing.T) {
 	// The lifecycle, pinned as a relationship rather than as a number. A status has to survive
 	// the round-end of the round that applied it — otherwise one applied by side B, who acts
 	// second, would never bite anything at all — and it must not survive the next one.
-	a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
+	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 
 	_, a1, b1 := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
 	if !b1.Statuses[statusOf(Ice)].Active() {
@@ -411,7 +411,7 @@ func TestAStatusNoLongerTouchesTheBudget(t *testing.T) {
 	// Ice cut the action-point budget until 2026-08-16. Nothing does now, and the check is here
 	// rather than deleted because a duelist whose budget quietly moved is the failure this rule
 	// change could reintroduce without anyone noticing.
-	a, b := ringed(duelist(10, 5, 500)), duelist(10, 5, 500)
+	a, b := reliced(duelist(10, 5, 500)), duelist(10, 5, 500)
 	before := b.ActionPoints()
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Ice)}, nil, 1)
@@ -724,7 +724,7 @@ func TestBluntingRoundsTowardZeroLikeEveryOtherReduction(t *testing.T) {
 func TestStatusesLeaveARoundStillDeterministic(t *testing.T) {
 	// The rule the whole package is built on, re-checked against the one feature added since
 	// that could plausibly have broken it. Nothing in a status consults a clock or a map.
-	a, b := ringed(duelist(10, 6, 500)), ringed(duelist(10, 6, 500))
+	a, b := reliced(duelist(10, 6, 500)), reliced(duelist(10, 6, 500))
 	aPlan := []Card{Of(Strike, Fire), Of(Jab, Ice)}
 	bPlan := []Card{Of(Jab, Lightning), Of(Jab, Earth)}
 

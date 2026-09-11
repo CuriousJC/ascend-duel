@@ -13,8 +13,8 @@ import (
 // The shelf's arithmetic and the two rows' geometry, both of which need no window — the same narrow
 // exception the other tests in this package take. Nothing here creates an ebiten.Image.
 
-func TestTheShelfHoldsThreeRingsTheRunIsNotWearing(t *testing.T) {
-	// A ring already on your hand offered back to you is a seat spent saying nothing, and `Buy`
+func TestTheShelfHoldsThreeRelicsTheRunIsNotWearing(t *testing.T) {
+	// A relic already on your hand offered back to you is a seat spent saying nothing, and `Buy`
 	// would refuse the click anyway.
 	gs := testRun()
 
@@ -36,7 +36,7 @@ func TestTheShelfHoldsThreeRingsTheRunIsNotWearing(t *testing.T) {
 		if seen[item.key] {
 			t.Errorf("%s is on the shelf twice", item.key)
 		}
-		if _, ok := session.RingPrice(item.key); !ok {
+		if _, ok := session.RelicPrice(item.key); !ok {
 			t.Errorf("%s is for sale and is in no record", item.key)
 		}
 		seen[item.key] = true
@@ -50,7 +50,7 @@ func TestTheSameFightWalksIntoTheSameShop(t *testing.T) {
 	again := shelfKeys(dealShelfFor(testRun()))
 
 	if len(first) != len(again) {
-		t.Fatalf("two deals of one fight offered %d and %d rings", len(first), len(again))
+		t.Fatalf("two deals of one fight offered %d and %d relics", len(first), len(again))
 	}
 	for i := range first {
 		if first[i] != again[i] {
@@ -88,16 +88,16 @@ func sameKeys(a, b []string) bool {
 
 func TestTheShelfIsCutToThreeAndNotPaddedToIt(t *testing.T) {
 	// **The row is what is left, cut to three**, so a catalogue smaller than the shelf draws a short
-	// row rather than one with holes in it. That case is unreachable today — seventeen rings against
+	// row rather than one with holes in it. That case is unreachable today — seventeen relics against
 	// a cap of five leaves at least twelve unworn — so what is checkable is the cut itself, and the
 	// case that *is* reachable: a scene reached before main built a run.
 	if got := len(dealShelfFor(testRun())); got != shelfSize {
-		t.Errorf("a fresh run was offered %d rings, want %d", got, shelfSize)
+		t.Errorf("a fresh run was offered %d relics, want %d", got, shelfSize)
 	}
-	if len(session.Rings())-combat.MaxWornRings < shelfSize {
-		t.Errorf("the catalogue holds %d rings, which is no longer enough to fill a shelf against a "+
+	if len(session.Relics())-combat.MaxWornRelics < shelfSize {
+		t.Errorf("the catalogue holds %d relics, which is no longer enough to fill a shelf against a "+
 			"cap of %d — dealShelf's cut is now load-bearing and wants a test of its own",
-			len(session.Rings()), combat.MaxWornRings)
+			len(session.Relics()), combat.MaxWornRelics)
 	}
 
 	if got := dealShelf(&state.GlobalState{}, nil); got != nil {
@@ -147,28 +147,28 @@ func TestTheFourPanesFitOnOneRow(t *testing.T) {
 		}
 	}
 
-	if top := shopPaneRect(gs, shopPaneRings).Min.Y; top-shopFigureSize <= shopHintTop {
+	if top := shopPaneRect(gs, shopPaneRelics).Min.Y; top-shopFigureSize <= shopHintTop {
 		t.Errorf("the shelf starts at %d and the hint sits at %d", top, shopHintTop)
 	}
 
 	// The prices hang under the panes and the two reroll buttons hang under those, so it is the
 	// buttons rather than the figures that have to clear the Leave button.
-	bottom := shopRerollRect(gs, shopPaneRings).Max.Y
+	bottom := shopRerollRect(gs, shopPaneRelics).Max.Y
 	if bottom >= gs.PctY(offerButtonsPct)-offerButtonHeight/2 {
 		t.Errorf("a reroll button ends at %d and Leave starts at %d",
 			bottom, gs.PctY(offerButtonsPct)-offerButtonHeight/2)
 	}
 }
 
-// **The band's ring row is the shop's worn row now**, so what has to be checked is that the sell
-// figure hung under a ring clears the narration that starts below the band — the collision the old
+// **The band's relic row is the shop's worn row now**, so what has to be checked is that the sell
+// figure hung under a relic clears the narration that starts below the band — the collision the old
 // two-row layout could not have, and the one the title and hint were silently losing to before
 // this screen had a band at all.
 func TestTheSellFiguresClearTheNarration(t *testing.T) {
 	gs := &state.GlobalState{ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight}
 
 	var shop ShopScene
-	for n := 1; n <= combat.MaxWornRings; n++ {
+	for n := 1; n <= combat.MaxWornRelics; n++ {
 		seat := shop.wornSlot(gs, n-1, n)
 		if seat.Max.X > gs.ScreenWidth {
 			t.Errorf("a worn row of %d runs to %d", n, seat.Max.X)
@@ -192,10 +192,10 @@ func TestTheShopkeeperFitsAboveTheShelf(t *testing.T) {
 	}
 }
 
-// **A click on a worn ring arms the tab; it does not sell.** The bug this exists for is a click
-// aimed at a tooltip taking a ring off the player's hand, and it would come back silently — a
+// **A click on a worn relic arms the tab; it does not sell.** The bug this exists for is a click
+// aimed at a tooltip taking a relic off the player's hand, and it would come back silently — a
 // sale looks exactly like a sale the player meant.
-func TestClickingAWornRingOnlyArmsIt(t *testing.T) {
+func TestClickingAWornRelicOnlyArmsIt(t *testing.T) {
 	gs := shopState(t)
 	before := gs.Run.Worn()
 
@@ -203,19 +203,19 @@ func TestClickingAWornRingOnlyArmsIt(t *testing.T) {
 	shop.arm(before[0])
 
 	if got := gs.Run.Worn(); len(got) != len(before) {
-		t.Errorf("arming sold a ring: wearing %v, was %v", got, before)
+		t.Errorf("arming sold a relic: wearing %v, was %v", got, before)
 	}
 	if shop.armed != before[0] {
 		t.Errorf("armed %q, want %q", shop.armed, before[0])
 	}
 
-	// The same ring again puts the question away, rather than a second click confirming it.
+	// The same relic again puts the question away, rather than a second click confirming it.
 	shop.arm(before[0])
 	if shop.armed != "" {
 		t.Errorf("a second click left %q armed", shop.armed)
 	}
 	if got := gs.Run.Worn(); len(got) != len(before) {
-		t.Errorf("a second click sold a ring: wearing %v", got)
+		t.Errorf("a second click sold a relic: wearing %v", got)
 	}
 }
 
@@ -234,14 +234,14 @@ func TestTheSellTabClearsTheNarration(t *testing.T) {
 
 	seat, _ := shop.wornSeatOf(gs, shop.armed)
 	if tab.Min.Y < seat.Max.Y {
-		t.Errorf("the tab starts at %d, above the bottom of its ring at %d", tab.Min.Y, seat.Max.Y)
+		t.Errorf("the tab starts at %d, above the bottom of its relic at %d", tab.Min.Y, seat.Max.Y)
 	}
 	if wide := seat.Dx(); tab.Dx() > wide {
-		t.Errorf("the tab is %d wide against a %d-wide ring", tab.Dx(), wide)
+		t.Errorf("the tab is %d wide against a %d-wide relic", tab.Dx(), wide)
 	}
 }
 
-// shopState is a run wearing a ring, at the game’s internal resolution.
+// shopState is a run wearing a relic, at the game’s internal resolution.
 func shopState(t *testing.T) *state.GlobalState {
 	t.Helper()
 
@@ -249,13 +249,13 @@ func shopState(t *testing.T) *state.GlobalState {
 		ScreenWidth: state.ScreenWidth, ScreenHeight: state.ScreenHeight,
 		Run: session.New(session.StartingDeck()),
 	}
-	for _, key := range session.Rings() {
+	for _, key := range session.Relics() {
 		if gs.Run.Wear(key) {
 			break
 		}
 	}
 	if len(gs.Run.Worn()) == 0 {
-		t.Fatal("the fixture could not put a single ring on")
+		t.Fatal("the fixture could not put a single relic on")
 	}
 	return gs
 }
@@ -350,8 +350,8 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 			t.Errorf("the pile at %v stands on pane %d at %v", pile, p, back)
 		}
 	}
-	if !pile.Intersect(shopRerollRect(gs, shopPaneRings)).Empty() {
-		t.Error("the pile stands on the rings' reroll button")
+	if !pile.Intersect(shopRerollRect(gs, shopPaneRelics)).Empty() {
+		t.Error("the pile stands on the relics' reroll button")
 	}
 }
 
@@ -360,7 +360,7 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 // visit. A player who bought early otherwise had less shelf to reroll than one who had not, while
 // paying the same escalating price for it.
 //
-// It is two-sided: the seat comes back, and it does not come back holding the ring that was just
+// It is two-sided: the seat comes back, and it does not come back holding the relic that was just
 // bought — dealShelf draws from what the run is not wearing, and the check is what says so.
 func TestARerollRefillsABoughtSeat(t *testing.T) {
 	gs := testRun()
@@ -376,11 +376,11 @@ func TestARerollRefillsABoughtSeat(t *testing.T) {
 	}
 	s.shelf[0].bought = true
 
-	if !s.paneHasSomethingToReroll(gs, shopPaneRings) {
+	if !s.paneHasSomethingToReroll(gs, shopPaneRelics) {
 		t.Error("a shelf with a spent seat says it has nothing to reroll")
 	}
 
-	s.rerollRings(gs)
+	s.rerollRelics(gs)
 
 	for i, item := range s.shelf {
 		if item.bought {

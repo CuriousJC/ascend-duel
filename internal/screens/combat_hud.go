@@ -71,8 +71,8 @@ func drawBox(gs *state.GlobalState, screen *ebiten.Image, r image.Rectangle, c c
 const (
 	duelistCardLeftPct = 1
 
-	// **Both cards share this top**, and the ring row between them aligns to it as well —
-	// see ringPaneRect. One percentage rather than three, because what is wanted is that the
+	// **Both cards share this top**, and the relic row between them aligns to it as well —
+	// see relicPaneRect. One percentage rather than three, because what is wanted is that the
 	// whole band starts on one line, not that each thing happens to be near the top.
 	topRowTopPct = 2
 )
@@ -86,16 +86,16 @@ const (
 // delete it if a second thing has to be said about that.
 var lifeColor = color.RGBA{R: 225, G: 65, B: 65, A: 255}
 
-// duelistCardRect is where the player's card sits. **The ring row starts from its right
+// duelistCardRect is where the player's card sits. **The relic row starts from its right
 // edge**, so this is the one place its geometry is written and both read it — see
-// ringPaneRect.
+// relicPaneRect.
 func (s *CombatScene) duelistCardRect(gs *state.GlobalState) image.Rectangle {
 	return duelistCardRect(gs)
 }
 
 // duelistCardRect is the same rectangle without a scene, because the hand row's width is now
-// measured against the ring row between the two corner cards and nothing about that geometry is
-// a fact about a duel. See ringRowSpan.
+// measured against the relic row between the two corner cards and nothing about that geometry is
+// a fact about a duel. See relicRowSpan.
 func duelistCardRect(gs *state.GlobalState) image.Rectangle {
 	left, top := gs.PctX(duelistCardLeftPct), gs.PctY(topRowTopPct)
 	return image.Rect(left, top,
@@ -151,7 +151,7 @@ const (
 
 	// **towerLineGap is the drop from the duelist card's bottom edge to the first line**
 	// *(2026-09-04, owner's call)*. The caption stood in a column beside the card for a day, which
-	// bought the top band height and cost the ring row 166 pixels of its width — and the hand row
+	// bought the top band height and cost the relic row 166 pixels of its width — and the hand row
 	// is laid out to that width now, so the column was being paid for twice. It is back under the
 	// card, where the whole left column is one thing: who you are, where you are, what is left to
 	// draw.
@@ -282,8 +282,8 @@ func (s *CombatScene) drawDiscardsLeft(gs *state.GlobalState, screen *ebiten.Ima
 // equal margins are the whole of what "in the corners" means.
 const enemyCardRightPct = 99
 
-// enemyCardRect is where the opponent's card sits. **The ring row ends at its left edge**,
-// the same way it starts at the duelist card's right — see ringPaneRect. That replaced a
+// enemyCardRect is where the opponent's card sits. **The relic row ends at its left edge**,
+// the same way it starts at the duelist card's right — see relicPaneRect. That replaced a
 // hardcoded 79%, which was a percentage picked to clear a card whose position it could not
 // see and would have gone stale the moment either moved.
 func (s *CombatScene) enemyCardRect(gs *state.GlobalState) image.Rectangle {
@@ -301,9 +301,9 @@ func enemyCardRect(gs *state.GlobalState) image.Rectangle {
 // life left as a fraction.
 //
 // **It is in the top-right corner** *(2026-08-12)*, where it was centred at 88%,34% before —
-// floating in the middle of the band the rings want, at a height nothing else on the screen
+// floating in the middle of the band the relics want, at a height nothing else on the screen
 // shared. The corner puts it opposite the player's card and hands the whole band between them
-// to the ring row.
+// to the relic row.
 //
 // **All of it is one cached image from internal/cards**, health bar included, so there is no
 // second drawing path for the contact sheet to disagree with. The cost is a re-render on
@@ -341,7 +341,7 @@ func (s *CombatScene) drawEnemyCard(gs *state.GlobalState, screen *ebiten.Image)
 // **It is segments, not a sliding fill, and that is the whole design.** A round is a discrete
 // thing the player spends, so what they need read off the bar is a count — three cells dark, two
 // left — rather than a proportion they have to convert. It is also what keeps the readout honest
-// at a limit a ring has moved: six cells is six rounds, with nothing to rescale.
+// at a limit a relic has moved: six cells is six rounds, with nothing to rescale.
 const (
 	// roundTimerGap is the drop from the tower lines to the bar, and roundTimerHeight is how tall
 	// it is. **There are 23 pixels between the tower lines and the table row** and these spend 20

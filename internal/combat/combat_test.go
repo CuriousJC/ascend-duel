@@ -425,7 +425,7 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 
 // **A round's budget is the stat and nothing else** *(2026-08-31)*, so this is a short test about
 // a number that is now a constant for the whole fight. It stays because ActionPoints is a method
-// rather than a field read, and a method is somewhere a ring can one day bite.
+// rather than a field read, and a method is somewhere a relic can one day bite.
 func TestActionPointsIsTheStat(t *testing.T) {
 	for _, actions := range []int{4, 5, 6} {
 		d := Duelist{Actions: actions}

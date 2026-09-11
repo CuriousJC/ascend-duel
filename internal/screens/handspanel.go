@@ -153,7 +153,7 @@ type handsRow struct {
 	level int
 
 	// raised is whether a stone has moved this rung, which is what the figure is written in the
-	// ring pink for. **A colour rather than a second number**: the panel says what a hand pays
+	// relic pink for. **A colour rather than a second number**: the panel says what a hand pays
 	// this run, and the pink is what stops that reading as the catalogue having changed.
 	raised bool
 }
@@ -496,8 +496,8 @@ func drawHandRow(gs *state.GlobalState, screen *ebiten.Image, c handsContents, r
 
 	multInk := handsMultInk
 	if row.raised {
-		// **A raised rung is written in `boostInk`, which is the ring pink.** It is reused rather
-		// than given a hue of its own: on a card it means "a ring moved this figure", and here it
+		// **A raised rung is written in `boostInk`, which is the relic pink.** It is reused rather
+		// than given a hue of its own: on a card it means "a relic moved this figure", and here it
 		// means "a stone did" — the shared reading is *something you bought moved this number*,
 		// which is the thing a player needs to see. A second pink-ish hue for the second source
 		// would be two colours a player has to tell apart to learn the same fact.
@@ -551,7 +551,7 @@ const handsOrWord = "OR"
 // handsTitleText is the rung's name and the level this run has it at. **The level is a
 // parenthetical on the title** *(owner's call, 2026-09-07)*, because it says what this rung *is*
 // here rather than what has happened to it — the same thing the multiplier beside the cards is
-// already written in the ring pink to say.
+// already written in the relic pink to say.
 //
 // **Shouted, and it is free.** kubasta is monospaced, so the capitals measure exactly what the
 // catalogue's own casing did; nothing about the layout depends on this and the whole of what it
@@ -624,7 +624,7 @@ func (t *handsToggle) draw(gs *state.GlobalState, screen *ebiten.Image, c handsC
 	t.modalToggle.draw(gs, screen, func() { drawHandPanel(gs, screen, c) })
 }
 
-// ownedHands is the panel between fights: the run's whole deck, priced by the rings worn but by
+// ownedHands is the panel between fights: the run's whole deck, priced by the relics worn but by
 // no duelist's strength, because a run's stats belong to a fight.
 func ownedHands(gs *state.GlobalState) handsContents {
 	c := handsContents{}

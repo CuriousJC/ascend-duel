@@ -94,7 +94,7 @@ const (
 	// that gave way while the panel was covering it would have Bob talking to a closed door.
 	AnchorLedgerButton
 
-	// AnchorShopWorn is the row of rings the run is actually wearing, in the build band.
+	// AnchorShopWorn is the row of relics the run is actually wearing, in the build band.
 	//
 	// **The argument against it expired** *(2026-09-06)*. It was deliberately absent because a run
 	// reaches its first shop wearing nothing, so a step pointing at the row would have pointed at
@@ -302,12 +302,12 @@ const (
 	// frame: there is nothing else the player could have been doing.
 	CondLedgerOpened
 
-	// CondRingsWorn is the run wearing at least the step's [Step.Count] rings.
+	// CondRelicsWorn is the run wearing at least the step's [Step.Count] relics.
 	//
 	// **The only condition that reads a number off the script**, because "buy two" is a fact about
-	// the lesson rather than about the game — a second tutorial teaching a single ring would want
+	// the lesson rather than about the game — a second tutorial teaching a single relic would want
 	// the same condition with a different figure. Parse refuses it without one.
-	CondRingsWorn
+	CondRelicsWorn
 
 	// CondDMGBought is the Draught drunk: the run carrying a damage bonus it did not have.
 	//
@@ -329,7 +329,7 @@ var conditionNames = map[Condition]string{
 	CondPhaseReward:  "phase-reward",
 	CondPhaseShop:    "phase-shop",
 	CondLedgerOpened: "ledger-opened",
-	CondRingsWorn:    "rings-worn",
+	CondRelicsWorn:   "relics-worn",
 	CondDMGBought:    "dmg-bought",
 }
 
@@ -366,7 +366,7 @@ func ParseCondition(s string) (Condition, error) {
 func (c Condition) isAction() bool {
 	switch c {
 	case CondCardsQueued, CondHandEmptied, CondMatchQueued, CondDuelPressed, CondLedgerOpened,
-		CondRingsWorn, CondDMGBought:
+		CondRelicsWorn, CondDMGBought:
 		return true
 	}
 	return false
@@ -496,12 +496,12 @@ type Facts struct {
 	// that way — see below.
 	LedgerOpens int
 
-	// RingsWorn is how many rings the run has on, and DMGBonus what its potions have added to the
-	// duelist's damage. [CondRingsWorn] and [CondDMGBought] read them — the second against a
-	// baseline, the first as a total, because a ring can be sold again and a step asking for two
-	// rings wants two rings on the hand rather than two purchases ever made.
-	RingsWorn int
-	DMGBonus  int
+	// RelicsWorn is how many relics the run has on, and DMGBonus what its potions have added to the
+	// duelist's damage. [CondRelicsWorn] and [CondDMGBought] read them — the second against a
+	// baseline, the first as a total, because a relic can be sold again and a step asking for two
+	// relics wants two relics on the hand rather than two purchases ever made.
+	RelicsWorn int
+	DMGBonus   int
 
 	// RoundsPlayed is how many rounds this fight has resolved. [CondRoundDone] reads it rather
 	// than watching `Resolving` fall, because a step that arrived *during* playback would see
@@ -657,15 +657,15 @@ func Parse(in data.TutorialData) (Script, error) {
 		}
 
 		// **A count belongs to exactly the conditions that read one.** Required where it is read,
-		// because a step waiting for "at least zero rings" is satisfied before it is drawn;
+		// because a step waiting for "at least zero relics" is satisfied before it is drawn;
 		// refused everywhere else, because a number nothing acts on is a script saying something
 		// it is not doing.
-		if until == CondRingsWorn && r.Count < 1 {
+		if until == CondRelicsWorn && r.Count < 1 {
 			return Script{}, fmt.Errorf(
 				"step %q waits on %v and names no Count, so it is satisfied before it is shown",
 				r.StepRecord, until)
 		}
-		if until != CondRingsWorn && r.Count != 0 {
+		if until != CondRelicsWorn && r.Count != 0 {
 			return Script{}, fmt.Errorf("step %q carries Count %d, which %v does not read",
 				r.StepRecord, r.Count, until)
 		}
@@ -809,12 +809,12 @@ func (r *Run) satisfied(step Step, f Facts, nextPressed bool) bool {
 		return f.ShieldBreaks > r.baseBreaks
 	case CondLedgerOpened:
 		return f.LedgerOpens > r.baseLedger
-	case CondRingsWorn:
+	case CondRelicsWorn:
 		// **A step with no count is never satisfied**, rather than satisfied immediately. Parse
 		// refuses one in a real script, but the zero value has to stall like everything else here
 		// — a condition that sails through on Facts nobody published is the failure the whole of
 		// this switch is written to avoid.
-		return step.Count > 0 && f.RingsWorn >= step.Count
+		return step.Count > 0 && f.RelicsWorn >= step.Count
 	case CondDMGBought:
 		return f.DMGBonus > r.baseDMG
 	case CondPhaseFight:

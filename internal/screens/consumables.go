@@ -1,9 +1,9 @@
 package screens
 
-// The consumables pane: the parasites a run is carrying, drawn beside the rings it is wearing.
+// The consumables pane: the parasites a run is carrying, drawn beside the relics it is wearing.
 //
 // **The top row is two panes now** *(owner's call, 2026-09-06)*. It was one — the duelist card, a
-// row of worn rings, and the opponent's card at the far end — and the rings pane has said `worn/5`
+// row of worn relics, and the opponent's card at the far end — and the relics pane has said `worn/5`
 // on its corner since the count moved there. This puts a second pane on the same line saying
 // `held/2`, because a parasite is the other thing a run carries into a fight and the only place it
 // was visible was behind the `P` button, two clicks into a dialog that only exists mid-duel.
@@ -13,12 +13,12 @@ package screens
 // internal/session/parasite.go, and the shop's bucket seat, which goes dim rather than selling a
 // parasite there is no room for.
 //
-// **It is the rings pane's twin and shares everything it can**: the same backing colour, the same
+// **It is the relics pane's twin and shares everything it can**: the same backing colour, the same
 // eight pixels of padding, the same drop below the cards on either side, and the same count hung
 // off the bottom-right corner. Two panes that were nearly alike would read as an inconsistency; two
 // that are identical apart from their width read as one row divided.
 //
-// **The whole row packs at one pitch**, so a ring and a parasite sit the same distance apart and
+// **The whole row packs at one pitch**, so a relic and a parasite sit the same distance apart and
 // close up together when the span is tight. See topRowPitch.
 
 import (
@@ -35,32 +35,32 @@ import (
 )
 
 // maxHeld is how many parasites can be carried at once, and it reads the run's rule rather than
-// declaring a second two — exactly as maxRings reads combat.MaxWornRings. A pane saying `held/2`
+// declaring a second two — exactly as maxRelics reads combat.MaxWornRelics. A pane saying `held/2`
 // while the bucket took a third is the drift that indirection prevents.
 const maxHeld = session.MaxHeld
 
 // topRowPaneGap is the bare ground between the two panes' backings.
 //
-// **Twice ringPaneGap**, so the gutter inside the row is visibly wider than the sixteen pixels
+// **Twice relicPaneGap**, so the gutter inside the row is visibly wider than the sixteen pixels
 // separating the row from the cards at either end. Each pane's backing eats eight of it, so what is
 // actually seen between them is sixteen — the same air the row keeps from the duelist card, which is
 // what stops the split reading as one pane with a scratch down it.
-const topRowPaneGap = 2 * ringPaneGap
+const topRowPaneGap = 2 * relicPaneGap
 
-// topRowPitch is the one pitch the whole top row packs at: the rings and the consumables alike.
+// topRowPitch is the one pitch the whole top row packs at: the relics and the consumables alike.
 //
 // **One rhythm across both panes** *(owner's call, 2026-09-06)*. The first split gave the
-// consumables a full pitch and let the rings close up to pay for it, which read as two rows at two
+// consumables a full pitch and let the relics close up to pay for it, which read as two rows at two
 // spacings rather than one row divided. This solves for the pitch that makes both panes full at the
-// same time, so a ring and a parasite sit the same distance apart on the same line.
+// same time, so a relic and a parasite sit the same distance apart on the same line.
 //
-// **The arithmetic.** The span holds five ring seats and two consumable seats, which is five pitches
+// **The arithmetic.** The span holds five relic seats and two consumable seats, which is five pitches
 // and two whole cards, plus the gutter between the panes:
 //
-//	span = (maxRings-1)*pitch + width + gap + (maxHeld-1)*pitch + width
+//	span = (maxRelics-1)*pitch + width + gap + (maxHeld-1)*pitch + width
 //
 // Solved for pitch, and then capped at the row's own maximum so a wide span spreads to a comfortable
-// gap rather than to a sparse one — the same cap ringSlotPitch is under, and for the same reason: a
+// gap rather than to a sparse one — the same cap relicSlotPitch is under, and for the same reason: a
 // row that spread to whatever it was given stopped reading as one build.
 //
 // **Overlap is the expected result on the combat screen and it is fine** *(owner's call)*. Between
@@ -69,18 +69,18 @@ const topRowPaneGap = 2 * ringPaneGap
 // shop and the reward screen there is no opponent card, the span is 1662, and the cap bites first,
 // so nothing overlaps at all.
 func topRowPitch(span int) int {
-	w := cards.RingStyle.Width
-	steps := (maxRings - 1) + (maxHeld - 1)
+	w := cards.RelicStyle.Width
+	steps := (maxRelics - 1) + (maxHeld - 1)
 
 	pitch := (span - 2*w - topRowPaneGap) / steps
-	if max := w + ringSlotMaxGap; pitch > max {
+	if max := w + relicSlotMaxGap; pitch > max {
 		return max
 	}
 	return pitch
 }
 
 // topRowPanes divides the band between the duelist card and whatever ends the row into the two panes
-// that stand in it: the rings on the left, the consumables on the right.
+// that stand in it: the relics on the left, the consumables on the right.
 //
 // **One function for both screens and both panes**, which is the rule every row in this game is
 // under: the combat screen and the build band ask the same question of different spans, and a second
@@ -88,43 +88,43 @@ func topRowPitch(span int) int {
 //
 // **Both panes are sized from the shared pitch**, so neither is the one that absorbs the slack. The
 // consumables pane is two seats whether or not anything is in them — a promise the count on its
-// corner is making — and the rings pane is five, and what is left over after both sits outside the
+// corner is making — and the relics pane is five, and what is left over after both sits outside the
 // row rather than inside either.
-func topRowPanes(left, right, top int) (rings, consumables image.Rectangle) {
-	bottom := top + cards.RingStyle.Height
+func topRowPanes(left, right, top int) (relics, consumables image.Rectangle) {
+	bottom := top + cards.RelicStyle.Height
 
 	pitch := topRowPitch(right - left)
-	held := (maxHeld-1)*pitch + cards.RingStyle.Width
+	held := (maxHeld-1)*pitch + cards.RelicStyle.Width
 
 	consumables = image.Rect(right-held, top, right, bottom)
-	rings = image.Rect(left, top, consumables.Min.X-topRowPaneGap, bottom)
-	return rings, consumables
+	relics = image.Rect(left, top, consumables.Min.X-topRowPaneGap, bottom)
+	return relics, consumables
 }
 
 // consumableSlotAt is where the i'th carried parasite's card sits.
 //
-// **The row's own pitch, over the seats it has rather than the cards in it** — ringSlotPitch, the
-// function the rings use, asked for maxHeld every time. That is what makes the two panes share a
+// **The row's own pitch, over the seats it has rather than the cards in it** — relicSlotPitch, the
+// function the relics use, asked for maxHeld every time. That is what makes the two panes share a
 // rhythm: the pane was sized from the same pitch, so a full row lands exactly on its edges.
 //
-// **Left-aligned and never re-centred**, deliberately unlike the ring row. This row is two fixed
+// **Left-aligned and never re-centred**, deliberately unlike the relic row. This row is two fixed
 // seats with the empty one drawn, so a card that shifted as the bucket filled would move the one
-// thing the player is being shown. The rings centre because their seats appear and disappear.
+// thing the player is being shown. The relics centre because their seats appear and disappear.
 func consumableSlotAt(r image.Rectangle, i int) image.Point {
-	return image.Pt(r.Min.X+i*ringSlotPitch(r, maxHeld), r.Min.Y)
+	return image.Pt(r.Min.X+i*relicSlotPitch(r, maxHeld), r.Min.Y)
 }
 
 // consumableSlotRect is one seat as a rectangle, for anything hit-testing the row. Same shape as
-// ringSlotRect, and for the same drawn-here-clicked-there reason.
+// relicSlotRect, and for the same drawn-here-clicked-there reason.
 func consumableSlotRect(r image.Rectangle, i int) image.Rectangle {
 	at := consumableSlotAt(r, i)
-	return image.Rect(at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height)
+	return image.Rect(at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height)
 }
 
-// consumablePaneBackRect is the surface the cards stand on: the row padded, exactly as the ring
-// pane's backing is derived from the ring row.
+// consumablePaneBackRect is the surface the cards stand on: the row padded, exactly as the relic
+// pane's backing is derived from the relic row.
 func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
-	return r.Inset(-ringPaneBackPad)
+	return r.Inset(-relicPaneBackPad)
 }
 
 // drawConsumablePane puts the pane up: the backing, whatever is held, an empty seat for whatever is
@@ -132,7 +132,7 @@ func consumablePaneBackRect(r image.Rectangle) image.Rectangle {
 //
 // **An empty seat draws nothing at all** *(owner's call, 2026-09-07)*. It was outlined for a day
 // on the argument that two bare seats would read as something failing to draw — and on screen the
-// outline was the loudest thing in the top row, two heavy black rectangles beside the ring pane
+// outline was the loudest thing in the top row, two heavy black rectangles beside the relic pane
 // saying only that the run is carrying nothing. **The pane's own surface is the hole.** The count
 // on the corner is what says how much room is left. Nothing anywhere outlines an absent card now —
 // the reward screen was the last place doing it, and gave it up on 2026-09-08.
@@ -146,7 +146,7 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	back := consumablePaneBackRect(r)
 	vector.DrawFilledRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
-		ringPaneBackColor, false)
+		relicPaneBackColor, false)
 
 	held := heldParasites(gs)
 	for i := 0; i < maxHeld; i++ {
@@ -164,26 +164,26 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 	drawConsumableCount(gs, screen, back, len(held))
 }
 
-// drawConsumableCount writes `held / cap` on the pane's bottom-right corner — the ring pane's
-// figure, in the ring pane's seat, at the ring pane's size.
+// drawConsumableCount writes `held / cap` on the pane's bottom-right corner — the relic pane's
+// figure, in the relic pane's seat, at the relic pane's size.
 //
 // **It names parasites and not consumables**, which is what is actually in it. The pane is called
 // consumables because that is the shape of the thing — a seat for something a run spends — and if a
 // stone or another spendable ever stands here the label is what changes.
 func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image.Rectangle, held int) {
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+ringCountTopGap))
+	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+relicCountTopGap))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
 	text.Draw(screen, fmt.Sprintf("%d/%d parasites", held, maxHeld),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
 // hoverConsumables explains whichever carried parasite the cursor is resting on, and reports whether
 // it found one.
 //
-// **Every screen that draws the pane gets it for free**, which is the lesson hoverBuildRings records:
-// the ring row was drawn on three screens and explained on one, and the row a player reads their
+// **Every screen that draws the pane gets it for free**, which is the lesson hoverBuildRelics records:
+// the relic row was drawn on three screens and explained on one, and the row a player reads their
 // build off went silent exactly where they were choosing what to do to it.
 func hoverConsumables(gs *state.GlobalState, r image.Rectangle, at image.Point,
 	tip *models.Tooltip) bool {

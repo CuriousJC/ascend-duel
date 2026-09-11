@@ -12,12 +12,12 @@ import (
 
 // **The lesson makes the player buy three things, so the three have to be affordable.**
 //
-// The shop steps gate on `rings-worn` and `dmg-bought` and lock the screen to the shelf and to the
+// The shop steps gate on `relics-worn` and `dmg-bought` and lock the screen to the shelf and to the
 // Draught's seat. A player who cannot afford what the step demands has no legal click that
 // satisfies it and no way past — the tutorial simply stops, on the last screen before the climb
 // starts, which is the worst place in the game for it to happen.
 //
-// Nothing enforces it: a ring's rarity in `rings.json` decides its price, the shelf is a weighted
+// Nothing enforces it: a relic's rarity in `relics.json` decides its price, the shelf is a weighted
 // draw off the run seed, and the potion's price is its own record. Any of the three can move for
 // its own reasons and leave the lesson demanding 14 vitae from a 13-vitae purse.
 //
@@ -31,8 +31,8 @@ func TestTheTutorialsShopCanAffordWhatTheLessonDemands(t *testing.T) {
 	// What the taught run walks into the shop holding, observed in play on 2026-09-06.
 	const purse = 13
 
-	// The lesson buys two rings and one Draught.
-	const ringsToBuy = 2
+	// The lesson buys two relics and one Draught.
+	const relicsToBuy = 2
 
 	script := tutorial.Load()
 	runSeed, err := seeds.Parse(script.Seed)
@@ -51,24 +51,24 @@ func TestTheTutorialsShopCanAffordWhatTheLessonDemands(t *testing.T) {
 	gs.Run.WonFight(48, 60)
 
 	shelf := dealShelf(gs, shopRNG(gs, seeds.ShopStock))
-	if len(shelf) < ringsToBuy {
-		t.Fatalf("the shelf stands %d rings and the lesson tells the player to buy %d",
-			len(shelf), ringsToBuy)
+	if len(shelf) < relicsToBuy {
+		t.Fatalf("the shelf stands %d relics and the lesson tells the player to buy %d",
+			len(shelf), relicsToBuy)
 	}
 
 	prices := make([]int, 0, len(shelf))
 	for _, item := range shelf {
-		p, ok := session.RingPrice(item.key)
+		p, ok := session.RelicPrice(item.key)
 		if !ok {
-			t.Fatalf("shelf ring %q has no price", item.key)
+			t.Fatalf("shelf relic %q has no price", item.key)
 		}
 		prices = append(prices, p)
 	}
 	sort.Ints(prices)
 
-	rings := 0
-	for _, p := range prices[:ringsToBuy] {
-		rings += p
+	relics := 0
+	for _, p := range prices[:relicsToBuy] {
+		relics += p
 	}
 
 	draught := 0
@@ -81,11 +81,11 @@ func TestTheTutorialsShopCanAffordWhatTheLessonDemands(t *testing.T) {
 		t.Fatal("no potion in the catalogue adds DMG, and the lesson tells the player to drink one")
 	}
 
-	t.Logf("shelf %v, cheapest %d rings cost %d, draught %d, purse %d",
-		prices, ringsToBuy, rings, draught, purse)
+	t.Logf("shelf %v, cheapest %d relics cost %d, draught %d, purse %d",
+		prices, relicsToBuy, relics, draught, purse)
 
-	if total := rings + draught; total > purse {
-		t.Errorf("the lesson demands %d rings and a Draught for %d vitae against a purse of %d: "+
-			"the shop steps cannot be satisfied and the tutorial stops there", ringsToBuy, total, purse)
+	if total := relics + draught; total > purse {
+		t.Errorf("the lesson demands %d relics and a Draught for %d vitae against a purse of %d: "+
+			"the shop steps cannot be satisfied and the tutorial stops there", relicsToBuy, total, purse)
 	}
 }

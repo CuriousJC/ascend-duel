@@ -10,7 +10,7 @@
 //
 // # It is a report, and it draws from the real deck
 //
-// Same posture as tools/ringsheet: every hand comes from `internal/combat`'s live catalogue and
+// Same posture as tools/relicsheet: every hand comes from `internal/combat`'s live catalogue and
 // every example is built out of cards that are actually in `data/duelist_cards.json`. A rung the
 // shipping deck cannot form at all is therefore visible as a rung with no example, which is a
 // fact about the deck worth seeing rather than a gap to paper over with an invented card.

@@ -3,7 +3,7 @@ package systems
 // The behaviour half of models.Slider: dragging a knob along a track, and drawing the result.
 //
 // **A slider is a drag, and drag is already in the game's input vocabulary** — the action box and
-// the ring row are built on it. What is new here is that the thing being dragged never leaves its
+// the relic row are built on it. What is new here is that the thing being dragged never leaves its
 // track, so there is no drop target and no way to fail: wherever the cursor goes while the button
 // is held, the knob follows along one axis and the value follows the knob.
 //

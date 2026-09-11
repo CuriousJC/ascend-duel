@@ -146,7 +146,7 @@ in `MECHANICS.md`; these are what matter to the screen.
   cannot be zero without deleting the blow. See MECHANICS.md.
 - **`Event.HandAmounts` is what each of the hand's cards deals**, parallel to `HandCards` and to
   the same count, summing to `Base`. It exists so the hand dialog can show the sum term by term
-  without the screen owning `CardDamage`, the strength scaling and every ring that touches a card's
+  without the screen owning `CardDamage`, the strength scaling and every relic that touches a card's
   damage — which would be a second resolver, the thing `Base` and `Multiplier` are on the event to
   prevent.
 - **A fired hand keeps its own cards raised, and the list comes from the event**.
@@ -303,7 +303,7 @@ number the game had decided rather than one they had built.
   loudest word on the screen was wearing a hue that also means "this card is lightning". **The
   multiplier follows the word rather than staying behind**: it flies *out* of it, and a figure
   leaving a pink word in yellow reads as a second thing appearing. `attentionYellow` has one user
-  left, the ring round the deck stack. Pink already means ring and pane chrome, which is the
+  left, the ring round the deck stack. Pink already means relic and pane chrome, which is the
   question to answer before a third pink is proposed.
 - **The arithmetic doubled with the name** *(2026-08-19, owner's call)*: terms 38 → 76, operators
   30 → 60, the total 50 → 100 — it was being overwhelmed by the cards and the shout around it. The
@@ -486,7 +486,7 @@ had no word for.
 - **The burst** is the firework: rays thrown out of the card that fired. It is an *emphasis at the
   source*, not a journey, which is why it is deliberately **not a `gesture` in the theatre table** —
   it composes with whatever row that table already has, and that is what lets the next thing wanting
-  fireworks (a scored card, a ring firing) reuse it without the table growing a row per decoration.
+  fireworks (a scored card, a relic firing) reuse it without the table growing a row per decoration.
   A `gestureBurst` is worth adding the day something bursts and sends nothing anywhere.
 - **The flight** is the figure travelling into the figure it changed: the DMG row, the VITAE row or
   the health bar. The rows come off `cards.DuelistStyle`'s own `StatsTop`/`StatRowPitch` rather than
@@ -536,7 +536,7 @@ duelist does not hold until `endOfRound`, so the drawing *leads*: the tally grow
 arrives and `theatre.adopted()` drops it on the frame the authoritative duelists are taken up.
 `duelistSpec` therefore takes DMG and MaxLife as arguments too, for the reason it already took life.
 
-**`combat.Event.Rider` was added for this** *(2026-09-10)*, on `Event.Ring`'s argument: the thing
+**`combat.Event.Rider` was added for this** *(2026-09-10)*, on `Event.Relic`'s argument: the thing
 that caused this is something the player can see and nothing else on the event could name it. Two
 riders emit `KindVitae` — a played `RiderSilver` and a held `RiderVitaeInHand` — and the fight log
 printed **"kept back for N vitae" over a card that had just been played** until the field existed.
@@ -570,10 +570,10 @@ round, filled for the rounds already spent.
   the cursor cannot buy a player a sixth round. Same constraint as everything else on this screen.
 - **The limit is read off the fighter, never off the run.** `session.Session.RoundLimit` reaches a
   duel through `Equip`, and a bar reading the run directly would keep drawing five while the duelist
-  fought to whatever a ring had moved it to. A screen with no fighter draws no bar.
+  fought to whatever a relic had moved it to. A screen with no fighter draws no bar.
 - **Segments rather than a sliding fill.** A round is a discrete thing the player spends, so what
   the bar has to say is a count — three dark, two left — not a proportion. It also survives a limit
-  a ring has moved with nothing to rescale: six cells is six rounds.
+  a relic has moved with nothing to rescale: six cells is six rounds.
 - **The last cell takes `modalCloseColor`, and only once the fight reaches it.** There is no hue
   left to claim, so this is not claiming one: it is the existing meaning of the game's one red —
   "this ends something" — arriving at the moment it becomes true.
@@ -732,7 +732,7 @@ it again to take it out, drag sideways to move it along the row.
 - **The cap lives in `internal/combat`, not here.** It was `maxSelected` on this screen until
   It had to move: it is a rule, and **the opponent's planner obeys it exactly as
   the player's selection does** — a cap enforced only by the screen was one the enemy ignored.
-  It is a method on `Duelist` so a ring raising it has somewhere to bite.
+  It is a method on `Duelist` so a relic raising it has somewhere to bite.
 - **A press is not a drag until the cursor moves past `dragThreshold`.** Without it every
   click jitters into a one-pixel reorder and selecting a card is a coin toss. The card
   leaves the row at that moment rather than on release, so the gap closes under the cursor
@@ -767,7 +767,7 @@ The active one latches darker than the other two.
 
 - **Sorting a queued hand re-prices it** *(owner's call, 2026-08-26)*. Cross-category order is still
   regrouped away by `ResolutionOrder` and a hand is still counted rather than read in sequence, but a
-  growing ring now steps between the cards of one blow — so the order of the queue decides what the
+  growing relic now steps between the cards of one blow — so the order of the queue decides what the
   cards are worth. The buttons stay live and a bad sort can cost damage; that is the intent, not an
   oversight. This paragraph used to say the opposite and it is the one thing to unlearn about the
   file.
@@ -778,18 +778,18 @@ The active one latches darker than the other two.
   dealt card flies to the slot it will actually occupy. A drag still works and survives until the
   next deal, at which point the sort reclaims the row.
 - **Every figure in the hand dialog's sum comes from a card, and that card shakes as it is written**
-  *(owner's call, 2026-08-26)*. A card's damage flies out of the played card, a ring's multiplier out
-  of that ring's card, and an echo's extra term shakes the ring that bought the landing even though
-  it puts no figure on the line. The box runs its items strictly one at a time, so putting the ring
+  *(owner's call, 2026-08-26)*. A card's damage flies out of the played card, a relic's multiplier out
+  of that relic's card, and an echo's extra term shakes the relic that bought the landing even though
+  it puts no figure on the line. The box runs its items strictly one at a time, so putting the relic
   figures *in* the script is the whole of the sequencing — there is no second clock. `mathItem`'s
-  `ringSeat` / `cardSeat` / `shakeRings` are the marks, and `handMathBox.shaking` is what the screen
+  `relicSeat` / `cardSeat` / `shakeRelics` are the marks, and `handMathBox.shaking` is what the screen
   reads each tick.
 - **Sideways, never a jump.** Vertical is spoken for twice already — a selected card lifts in the
   hand, and a card that built the hand lifts on the table for the whole blow. The shake says "this
   one is paying *now*", so it needed a direction nothing else uses.
-- **The drag runs on the shared controller in `carddrag.go`** *(2026-08-26)*, which the worn ring
+- **The drag runs on the shared controller in `carddrag.go`** *(2026-08-26)*, which the worn relic
   row also uses on all three screens that draw it. The hand's adapter is `handRow`; it really does
-  remove the card from `s.hand`, where the ring row's removes nothing and lets the run stay the
+  remove the card from `s.hand`, where the relic row's removes nothing and lets the run stay the
   authority.
 - **`sortHand` returns the permutation it applied** — for each new position, the index that card
   came from — and that is why it sorts a slice of indices and rebuilds rather than sorting the

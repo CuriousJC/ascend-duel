@@ -4,8 +4,8 @@ package screens
 //
 // **A bag of rocks and a can of worms** *(owner's call, 2026-08-27)*. Both cost five vitae, both
 // hold four of something, and both give the player exactly one of the four — the other three are
-// gone. What is bought is the *choice*, which is what makes them different from a ring on the
-// shelf: a ring is a thing you read and then pay for, and these are paid for and then read.
+// gone. What is bought is the *choice*, which is what makes them different from a relic on the
+// shelf: a relic is a thing you read and then pay for, and these are paid for and then read.
 //
 // **The bag is the only way a stone is ever got.** A stone raises one rung of the hand ladder by a
 // tenth of its catalogue multiplier, for the rest of the run — see `internal/session/stone.go`.
@@ -114,7 +114,7 @@ const (
 //
 // **It holds no purse and no run.** The vitae is taken by the shop the moment a good is clicked —
 // see `ShopScene.openGood` — so what is here is the offer and the choice, exactly as the shelf
-// holds a ring's key and not its price.
+// holds a relic's key and not its price.
 type goods struct {
 	kind  goodKind
 	stage goodsStage
@@ -185,7 +185,7 @@ func (g *goods) count() int {
 
 // dealStones is what a bag holds: four of the catalogue, without repeats.
 //
-// **Its own stream** (`seeds.BagStock`), separate from the shelf's rings and from both worm draws —
+// **Its own stream** (`seeds.BagStock`), separate from the shelf's relics and from both worm draws —
 // see internal/seeds, where the argument is written down. **Without repeats**, because a bag
 // offering the same rock twice is a seat spent saying nothing, exactly as the shelf is.
 //

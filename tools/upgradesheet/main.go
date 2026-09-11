@@ -12,7 +12,7 @@
 //
 // Every rider draws as of 2026-09-09, and there are ten of them — so the review question is not
 // "does this one look right" but "do these read as a *set*, and can a player tell two of them apart
-// at 162 pixels". A page per upgrade could never answer that, which is the ring sheet's argument.
+// at 162 pixels". A page per upgrade could never answer that, which is the relic sheet's argument.
 //
 // **Eight of the ten colours are placeholders standing on a full wheel**, which is exactly what
 // this page is for: `systems.upgradeTint` is one line each, so retuning them is a change to that
@@ -57,7 +57,7 @@
 //
 // # It is a report, not a drawing-board
 //
-// Same split as ringsheet against cardsheet. The upgrades come from `systems.Upgrades()`, the
+// Same split as relicsheet against cardsheet. The upgrades come from `systems.Upgrades()`, the
 // riders from `combat.RiderKinds()` and the parasites from `internal/session`, which validates the
 // catalogue at init — so an upgrade this page cannot draw is one the game cannot draw either.
 //
@@ -348,9 +348,9 @@ func grantsFor(u systems.Upgrade) string {
 // demoCost: the pictures are all drawn at one cost so the tick columns line up, and a tooltip
 // quoting that instead of the card's own price would be the sheet's layout leaking into its text.
 //
-// **No rings**, which is what makes the block the whole panel: `screens.cardTip` appends its damage
-// chain only when a ring has moved something, and a page about upgrades is not the place to explain
-// a ring.
+// **No relics**, which is what makes the block the whole panel: `screens.cardTip` appends its damage
+// chain only when a relic has moved something, and a page about upgrades is not the place to explain
+// a relic.
 func tipFor(u systems.Upgrade) tip {
 	c := demoRidden(u)
 	out := tip{Title: tipRuns(carddesc.Title(c))}

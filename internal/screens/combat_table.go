@@ -65,7 +65,7 @@ const (
 //
 // **The band the sum is written in is no longer subtracted** *(2026-09-04, owner's call)*. It
 // used to be reserved here, so the arithmetic had a row of the screen to itself and pushed the
-// played cards 82 pixels up — into the ring pane's backing, which is what the rows were actually
+// played cards 82 pixels up — into the relic pane's backing, which is what the rows were actually
 // overlapping. The sum is an overlay now: it is drawn last, over the bottom of these cards, and
 // the space it used to claim went back to the table. See handMathRect.
 //
@@ -101,7 +101,7 @@ func tableHalfWidth(gs *state.GlobalState) int {
 //
 // **Side by side until they do not fit, then overlapped — the same shape as handPitch**, and
 // the derived form matters for the same reason: the cap on how many actions a round holds is
-// a rule that a ring or a brand is expected to raise, so a pitch that only worked for five
+// a rule that a relic or a brand is expected to raise, so a pitch that only worked for five
 // would put a rendering bug behind a balance change.
 //
 // **The group gap is taken out of the room before the pitch is worked out**, which is what makes
@@ -325,9 +325,9 @@ func (s *CombatScene) drawEnemyQueue(gs *state.GlobalState, screen *ebiten.Image
 	split := s.enemySplit()
 	for i, d := range s.theatre.enemyDealt {
 		at := s.enemyCardAt(gs, d, i, len(s.theatre.enemyDealt), split, lit(s.theatre.enemyFiringSeats, i))
-		// **The opponent's own cost, not the player's** — a discount ring is the player's and a
+		// **The opponent's own cost, not the player's** — a discount relic is the player's and a
 		// queued enemy card printing a discounted price would be the screen telling a lie about
-		// whose ring it is.
+		// whose relic it is.
 		//
 		// **A seat a shield broke wears the break**, and it wears it for the rest of the round: the
 		// row is the account of what the turn was, and a card that never fired has to still say so

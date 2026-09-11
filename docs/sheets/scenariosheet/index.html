@@ -75,27 +75,27 @@
 
   
     <div class="plate first">
-      <div class="record">new-ring-art<span class="default">first in the file — the bare launch</span></div>
-      <div class="facts">opens on combat · room 0 · DUMMY -- nothing dies · 15 AP a turn · 6 ring slots</div>
-      <code class="cmd">ASCEND_DUEL_SCENARIO=new-ring-art go run -tags scenario .</code>
-      <p class="blurb">The six rings drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RingSlots is 6: the shipped cap is combat.DefaultRingSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four rings firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.</p>
+      <div class="record">new-relic-art<span class="default">first in the file — the bare launch</span></div>
+      <div class="facts">opens on combat · room 0 · DUMMY -- nothing dies · 15 AP a turn · 6 relic slots</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=new-relic-art go run -tags scenario .</code>
+      <p class="blurb">The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.</p>
 
       
         <div class="strip">
           <div class="cap">worn, in the bucket, and in the pouch</div>
-          <div class="scroll"><img src="new-ring-art-worn.png" width="1418" height="308" alt="worn, in the bucket, and in the pouch"></div>
+          <div class="scroll"><img src="new-relic-art-worn.png" width="1418" height="308" alt="worn, in the bucket, and in the pouch"></div>
         </div>
       
         <div class="strip">
           <div class="cap">the opening hand, dealt over the shuffle</div>
-          <div class="scroll"><img src="new-ring-art-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+          <div class="scroll"><img src="new-relic-art-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
         </div>
       
 
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">bulwark-ring</td><td>Bulwark Ring</td><td class="said">&#43;25 HP for every fight.</td></tr><tr><td class="key">banker-ring</td><td>Banker Ring</td><td class="said">Vitae propagates twice as fast.</td></tr><tr><td class="key">bedrock-ring</td><td>Bedrock Ring</td><td class="said">Deals 5 more DMG for each earth card kept in hand.</td></tr><tr><td class="key">boxer-ring</td><td>Boxer Ring</td><td class="said">Every Jab deals double DMG.</td></tr><tr><td class="key">brass-knuckles-ring</td><td>Brass Knuckles Ring</td><td class="said">Every Bash deals double DMG.</td></tr><tr><td class="key">element-three-of-a-kind-hand-ring</td><td>Attuned Ring</td><td class="said">A Elemental Three of a Kind deals 3 more DMG before the multiplier.</td></tr>
           </table>
         
@@ -114,7 +114,7 @@
       <div class="record">arsenal-on-a-dummy</div>
       <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=arsenal-on-a-dummy go run -tags scenario .</code>
-      <p class="blurb">The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the ring fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the ring&#39;s term sits inside the sum rather than on the end of it, and the figure it moved is written in the ring pink. The ring pane is where the new artwork is.</p>
+      <p class="blurb">The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic&#39;s term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.</p>
 
       
         <div class="strip">
@@ -136,7 +136,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">form-four-of-a-kind-hand-ring</td><td>Arsenal Ring</td><td class="said">A Form Four of a Kind deals 6 more DMG before the multiplier.</td></tr>
           </table>
         
@@ -157,32 +157,32 @@
     </div>
   
     <div class="plate">
-      <div class="record">form-hand-rings</div>
+      <div class="record">form-hand-relics</div>
       <div class="facts">opens on combat · room 0</div>
-      <code class="cmd">ASCEND_DUEL_SCENARIO=form-hand-rings go run -tags scenario .</code>
-      <p class="blurb">The two new form-hand rings on the fingers, Armoury and Arsenal, so the artwork can be looked at on the ring pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the ring term, and the ring pane for whether the two pictures are tellable apart at the size they are drawn - they are two rings about the same axis, and the card carries no title.</p>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=form-hand-relics go run -tags scenario .</code>
+      <p class="blurb">The two new form-hand relics on the fingers, Armoury and Arsenal, so the artwork can be looked at on the relic pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.</p>
 
       
         <div class="strip">
           <div class="cap">worn, in the bucket, and in the pouch</div>
-          <div class="scroll"><img src="form-hand-rings-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+          <div class="scroll"><img src="form-hand-relics-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
         </div>
       
         <div class="strip">
           <div class="cap">the opening hand, dealt over the shuffle</div>
-          <div class="scroll"><img src="form-hand-rings-hand.png" width="650" height="140" alt="the opening hand, dealt over the shuffle"></div>
+          <div class="scroll"><img src="form-hand-relics-hand.png" width="650" height="140" alt="the opening hand, dealt over the shuffle"></div>
         </div>
       
         <div class="strip">
           <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
-          <div class="scroll"><img src="form-hand-rings-deck.png" width="650" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+          <div class="scroll"><img src="form-hand-relics-deck.png" width="650" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
         </div>
       
 
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">form-full-house-hand-ring</td><td>Armoury Ring</td><td class="said">A Form Full House deals 6 more DMG before the multiplier.</td></tr><tr><td class="key">form-four-of-a-kind-hand-ring</td><td>Arsenal Ring</td><td class="said">A Form Four of a Kind deals 6 more DMG before the multiplier.</td></tr>
           </table>
         
@@ -206,7 +206,7 @@
       <div class="record">training-dummy</div>
       <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=training-dummy go run -tags scenario .</code>
-      <p class="blurb">A fight that cannot end, on the real starting deck against whichever creature the climb dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Rings, Deck or Parasites to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.</p>
+      <p class="blurb">A fight that cannot end, on the real starting deck against whichever creature the climb dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Relics, Deck or Parasites to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.</p>
 
       
 
@@ -222,7 +222,7 @@
       <div class="record">one-form-deck</div>
       <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=one-form-deck go run -tags scenario .</code>
-      <p class="blurb">A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand ring, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.</p>
+      <p class="blurb">A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand relic, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.</p>
 
       
         <div class="strip">
@@ -386,7 +386,7 @@
       <div class="record">upgrades</div>
       <div class="facts">opens on combat · room 0</div>
       <code class="cmd">ASCEND_DUEL_SCENARIO=upgrades go run -tags scenario .</code>
-      <p class="blurb">Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal&#39;s rose against the ring pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.</p>
+      <p class="blurb">Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal&#39;s rose against the relic pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.</p>
 
       
         <div class="strip">
@@ -460,7 +460,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">heart-ring</td><td>Heart Ring</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr>
           </table>
         
@@ -486,7 +486,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">heart-ring</td><td>Heart Ring</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr><tr><td class="key">keen-ring</td><td>Keen Ring</td><td class="said">Every slash card deals double DMG.</td></tr>
           </table>
         
@@ -522,7 +522,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">heart-ring</td><td>Heart Ring</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr>
           </table>
         
@@ -558,7 +558,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">echo-ring</td><td>Echo Ring</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">enflamed-ring</td><td>Enflamed Ring</td><td class="said">Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.</td></tr><tr><td class="key">fire-ring</td><td>Fire Ring</td><td class="said">Fire cards deal 2x DMG.</td></tr>
           </table>
         
@@ -594,7 +594,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">echo-ring</td><td>Echo Ring</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">aftershock-ring</td><td>Aftershock Ring</td><td class="said">Every crush card lands twice, both at full DMG.</td></tr>
           </table>
         
@@ -630,7 +630,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">atrophy-ring</td><td>Atrophy Ring</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr><tr><td class="key">momentum-ring</td><td>Momentum Ring</td><td class="said">Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.</td></tr>
           </table>
         
@@ -661,7 +661,7 @@
       <div class="cols">
         
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             <tr><td class="key">magma-ring</td><td>Magma Ring</td><td class="said">Every earth card is dealt as a fire card.</td></tr><tr><td class="key">firestorm-ring</td><td>Firestorm Ring</td><td class="said">Every lightning card is dealt as a fire card.</td></tr><tr><td class="key">atrophy-ring</td><td>Atrophy Ring</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr>
           </table>
         

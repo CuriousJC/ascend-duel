@@ -25,8 +25,8 @@
 // # What to look at
 //
 // **The Note against what the fixture actually plugs in.** A scenario's Note is a promise about the
-// cards, the rings and the opponent, and nothing checks it — this is the only place the sentence
-// and the contents are visible together, exactly as the ring sheet does for a ring's authored line.
+// cards, the relics and the opponent, and nothing checks it — this is the only place the sentence
+// and the contents are visible together, exactly as the relic sheet does for a relic's authored line.
 //
 // **Whether any two fixtures are the same fixture.** They accumulate, and two entries plugging in
 // the same deck to look at different things are one entry with two notes.
@@ -116,7 +116,7 @@ func run(dir, src string) error {
 			Record:  r.ScenarioRecord,
 			Note:    r.Note,
 			Facts:   factsOf(r),
-			Rings:   ringLines(r.Rings),
+			Relics:  relicLines(r.Relics),
 			Held:    heldLines(r),
 			Hand:    handLines(r),
 			Deck:    deckLines(r.Deck),
@@ -188,7 +188,7 @@ func load(src string) ([]record, error) {
 type record struct {
 	ScenarioRecord string     `json:"ScenarioRecord"`
 	Note           string     `json:"Note"`
-	Rings          []string   `json:"Rings"`
+	Relics         []string   `json:"Relics"`
 	Hand           []handCard `json:"Hand"`
 	Parasites      []string   `json:"Parasites"`
 	Stones         []string   `json:"Stones"`
@@ -202,7 +202,7 @@ type record struct {
 	Dummy          bool       `json:"Dummy"`
 	Actions        int        `json:"Actions"`
 	RoundLimit     int        `json:"RoundLimit"`
-	RingSlots      int        `json:"RingSlots"`
+	RelicSlots     int        `json:"RelicSlots"`
 	Teach          bool       `json:"Teach"`
 }
 
@@ -266,27 +266,27 @@ func sectionsOf(r record) []section {
 	return out
 }
 
-// wornSpecs is the rings, the bucket and the pouch on one row, split apart by the wider gap.
+// wornSpecs is the relics, the bucket and the pouch on one row, split apart by the wider gap.
 //
 // **One row rather than three**, because all three are things the run is *carrying* and a fixture
 // rarely has more than a couple of each — three near-empty rows would say less than one.
 func wornSpecs(r record) section {
-	s := section{name: "worn", label: "worn, in the bucket, and in the pouch", style: cards.RingStyle}
+	s := section{name: "worn", label: "worn, in the bucket, and in the pouch", style: cards.RelicStyle}
 
-	rings := data.LoadRings()
-	for _, key := range r.Rings {
-		rec, ok := rings[key]
+	relics := data.LoadRelics()
+	for _, key := range r.Relics {
+		rec, ok := relics[key]
 		if !ok {
 			s.specs = append(s.specs, missingSpec(key))
 			continue
 		}
 		s.specs = append(s.specs, cards.Spec{
-			Name: rec.FaceName(), Element: cards.Ring, Art: artwork(rec.ArtKey()), Enabled: true,
+			Name: rec.Name, Element: cards.Relic, Art: artwork(rec.ArtKey()), Enabled: true,
 		})
 	}
 
-	// **The parasites and the stones are drawn in the ring style too**, because a strip is one
-	// style wide: WormStyle and RingStyle are the same size, and mixing them in a row would be the
+	// **The parasites and the stones are drawn in the relic style too**, because a strip is one
+	// style wide: WormStyle and RelicStyle are the same size, and mixing them in a row would be the
 	// only place in the project two card formats stand side by side pretending to be a set.
 	if len(r.Parasites) > 0 {
 		s.splits = append(s.splits, len(s.specs))
@@ -318,14 +318,14 @@ func wornSpecs(r record) section {
 // does is `tools/parasitesheet` and `tools/stonesheet`'s subject, and repeating their text here
 // would be a third place the same sentence can go stale.
 func goodSpec(name string) cards.Spec {
-	return cards.Spec{Name: name, Element: cards.Ring, Art: artwork(wormArtKey), Enabled: true}
+	return cards.Spec{Name: name, Element: cards.Relic, Art: artwork(wormArtKey), Enabled: true}
 }
 
 // missingSpec is a key nothing in the catalogues answers to. **Drawn rather than fatal**, unlike
 // the game, which refuses the launch: the sheet's job is to show what the file says, and a page
-// that would not render because one fixture names a deleted ring would hide the other twenty.
+// that would not render because one fixture names a deleted relic would hide the other twenty.
 func missingSpec(key string) cards.Spec {
-	return cards.Spec{Name: "?" + key, Element: cards.Ring, Art: artwork(wormArtKey), Enabled: false}
+	return cards.Spec{Name: "?" + key, Element: cards.Relic, Art: artwork(wormArtKey), Enabled: false}
 }
 
 // cardSpec is one player card as the hand draws it. A key the registry does not hold is drawn
@@ -441,8 +441,8 @@ func factsOf(r record) []string {
 	if r.RoundLimit > 0 {
 		out = append(out, strconv.Itoa(r.RoundLimit)+"-round clock")
 	}
-	if r.RingSlots > 0 {
-		out = append(out, strconv.Itoa(r.RingSlots)+" ring slots")
+	if r.RelicSlots > 0 {
+		out = append(out, strconv.Itoa(r.RelicSlots)+" relic slots")
 	}
 	if r.Teach {
 		out = append(out, "runs the tutorial")
@@ -450,15 +450,15 @@ func factsOf(r record) []string {
 	return out
 }
 
-// ringLines names each worn ring, with the sentence it prints. The order is the fixture's, because
-// worn order is a rule: rings fire left to right and two multiplicative ones do not commute.
-func ringLines(keys []string) []named {
-	rings := data.LoadRings()
+// relicLines names each worn relic, with the sentence it prints. The order is the fixture's, because
+// worn order is a rule: relics fire left to right and two multiplicative ones do not commute.
+func relicLines(keys []string) []named {
+	relics := data.LoadRelics()
 	out := make([]named, 0, len(keys))
 	for _, key := range keys {
-		rec, ok := rings[key]
+		rec, ok := relics[key]
 		if !ok {
-			out = append(out, named{Key: key, Name: "-- no such ring --"})
+			out = append(out, named{Key: key, Name: "-- no such relic --"})
 			continue
 		}
 		out = append(out, named{Key: key, Name: rec.Name, Text: oneLine(rec.Text)})

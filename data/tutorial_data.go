@@ -73,7 +73,7 @@ type TutorialData struct {
 
 // TutorialStepData is one thing Bob says.
 type TutorialStepData struct {
-	// StepRecord is the key, kebab-case like a ring's or a worm's. Nothing stores it yet — the
+	// StepRecord is the key, kebab-case like a relic's or a worm's. Nothing stores it yet — the
 	// cursor is an index, because a script is walked rather than looked up — but a step needs a
 	// name to be talked about in a bug report, and the day a save file records how far a player
 	// got, this is the thing it writes rather than the number.
@@ -98,7 +98,7 @@ type TutorialStepData struct {
 	Until string `json:"Until"`
 
 	// Count is how many of something the step waits for, read by the counting conditions alone —
-	// `rings-worn` is the only one today. **Refused where the condition cannot read it**, so a
+	// `relics-worn` is the only one today. **Refused where the condition cannot read it**, so a
 	// figure never sits in the file doing nothing; see `tutorial.Parse`.
 	Count int `json:"Count,omitempty"`
 }

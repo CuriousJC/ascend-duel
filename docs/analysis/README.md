@@ -22,4 +22,4 @@ the same thing that makes it go stale.
 
 | File | Skill | Answers |
 |---|---|---|
-| `ring-balance-2026-09-06.md` | `ring-balance` | what the 137-ring catalogue adds up to — category, payload, breadth, scope and shelf share |
+| `relic-balance-2026-09-06.md` | `relic-balance` | what the 137-ring catalogue adds up to — category, payload, breadth, scope and shelf share |

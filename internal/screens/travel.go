@@ -7,7 +7,7 @@ import "image"
 // `travel` is the clock every mover in the game shares: a delay before it sets off, an age, a
 // duration, and an eased progress between them. A card flying to the discard, a damage figure
 // crossing the table, a won card settling into the middle of the post-battle screen and — when
-// they exist — a bought ring leaving the shop are all one struct read at different speeds.
+// they exist — a bought relic leaving the shop are all one struct read at different speeds.
 //
 // **It was declared in combat_flight.go until the refactor of 2026-08-21**, which meant the
 // post-battle screen borrowed the combat screen's animation machinery by reaching into its

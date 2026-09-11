@@ -36,13 +36,13 @@ type cell struct {
 	Height int
 }
 
-// named is a ring, a parasite or a stone: what the fixture wrote, what it is called, and the
+// named is a relic, a parasite or a stone: what the fixture wrote, what it is called, and the
 // sentence it prints.
 type named struct {
 	Key  string
 	Name string
 	Text string
-	Kind string // "bucket" or "pouch" for a held good; empty for a ring
+	Kind string // "bucket" or "pouch" for a held good; empty for a relic
 }
 
 // line is one row of a hand or a deck, as the fixture writes it.
@@ -60,7 +60,7 @@ type plate struct {
 	Note    string
 	Facts   []string
 	Strips  []cell
-	Rings   []named
+	Relics  []named
 	Held    []named
 	Hand    []line
 	Deck    []line
@@ -179,9 +179,9 @@ var tmpl = template.Must(template.New("scenariosheet").Parse(`<!doctype html>
       {{end}}
 
       <div class="cols">
-        {{with $p.Rings}}
+        {{with $p.Relics}}
           <table>
-            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><th>Worn, in order</th><th>Relic</th><th>Says</th></tr>
             {{range .}}<tr><td class="key">{{.Key}}</td><td>{{.Name}}</td><td class="said">{{.Text}}</td></tr>{{end}}
           </table>
         {{end}}

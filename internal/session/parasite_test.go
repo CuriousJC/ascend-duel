@@ -551,7 +551,7 @@ func TestASoldStonePaysAndNeverReachesTheLadder(t *testing.T) {
 
 func TestThePouchSurvivesASnapshot(t *testing.T) {
 	// **A run resumed one consumable lighter is a run the player would have to work out had
-	// changed** — the rule the bucket and the worn rings are both under.
+	// changed** — the rule the bucket and the worn relics are both under.
 	run := runWith(combat.Plain(combat.Strike))
 	p := anyWithTarget(t, ParasiteStones)
 	run.ApplyParasiteRolling(p, nil, rand.New(rand.NewSource(9)))

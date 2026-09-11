@@ -678,6 +678,19 @@ func (s *CombatScene) relicCountRect(gs *state.GlobalState) image.Rectangle {
 // **The rule is drawn even with no relics equipped**, which is deliberate — a line with an empty
 // figure under it says the row exists and is empty, where nothing at all says the screen forgot to
 // draw something.
+//
+// **It is the bare fraction, and the noun went on 2026-09-11** *(owner's call)*. What the corner
+// has to say is how many seats are spoken for; the pane under it is full of relic cards, so the
+// word was the figure repeating what the cards it sits on already say. The same call took
+// `parasites` off the consumables pane — see drawConsumableCount, which is this figure in the same
+// seat at the same size and has to stay its twin.
+//
+// **The denominator is relicSlots, not maxRelics** *(bug, 2026-09-11)*. It drew `0/8` — the width
+// of the duelist's relic array — from the day the two numbers were split, telling the player they
+// had eight fingers when the cap is five. This is precisely the drift maxRelics' own doc comment
+// says it is guarding against, and it went wrong in the one place that comment points at, so the
+// warning is now a line of code: the run is the authority on how many relics may be worn, and the
+// constant is only ever how wide the row is willing to draw.
 func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image, worn int) {
 	r := s.relicCountRect(gs)
 
@@ -685,7 +698,7 @@ func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image
 	op.GeoM.Translate(float64(r.Max.X), float64(r.Min.Y))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d relics", worn, maxRelics),
+	text.Draw(screen, fmt.Sprintf("%d/%d", worn, relicSlots(gs)),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 

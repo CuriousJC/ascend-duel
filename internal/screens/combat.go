@@ -193,6 +193,14 @@ var panelBlue = color.RGBA{R: 70, G: 130, B: 230, A: 255}
 // have queued a legal hand says something has gone wrong when nothing has. It is deep rather
 // than bright because the `0/6 AP` figure under the bar is written in it too, and a light yellow
 // on the light table is a line nobody can read.
+//
+// **Darkening it further was tried on 2026-09-11 and reversed the same day** *(owner's call)*. The
+// figure under the bar was hard to read, and the two obvious moves — a shadow, then a deeper amber
+// at {148,92,8} — each made it worse rather than better: the deeper colour muddied the bar's cells
+// without buying the caption a legible stroke, because what was thin was the *stroke*, not the
+// value. **What fixed it was more ink at the same colour** — the figure is faux-bold and set at the
+// relic pane's size now. Anything proposing to move this value again has to answer that: the colour
+// was not the problem, and the bar is the louder of its two readers.
 var apSpentColor = color.RGBA{R: 196, G: 124, B: 12, A: 255}
 
 // apOverColor paints the part of the selection the budget will not cover, and writes the

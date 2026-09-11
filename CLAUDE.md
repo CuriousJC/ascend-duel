@@ -8,13 +8,14 @@ Ascending Duel — a roguelike where you duel your way up a tower, collecting ri
 
 ## Where things are written down
 
-Five streams, each with one job. Reach for the right one rather than searching all of them.
+Six streams, each with one job. Reach for the right one rather than searching all of them.
 
 | Stream | File | Read it when |
 |---|---|---|
 | **How to work** | `CLAUDE.md` — this file | always; it is loaded every session |
 | **Procedure** | `.claude/skills/*/SKILL.md` | on trigger — see the index below |
 | **What the game *is*** | [MECHANICS.md](MECHANICS.md) | designing or implementing any mechanic, before proposing a design change |
+| **What the game *contains*** | `data/*.json` | any question about a catalogue — what is in it, how many, what one record says |
 | **What to build next** | [TODO.md](TODO.md) | picking up work |
 | **Unfiltered** | [ideas.md](ideas.md) | the inbox; entries get promoted into MECHANICS or TODO and struck from here |
 
@@ -30,6 +31,24 @@ Five streams, each with one job. Reach for the right one rather than searching a
   in `MECHANICS.md`: an open question is filed because the owner wants it open, not because the
   work turned one up.
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
+- **`data/` is the catalogue, and this file never says what is in it** *(owner's call,
+  2026-09-11)*. How many rings there are, which worms exist, what a parasite's line reads — all of
+  that is a `data/*.json` read or a `docs/sheets/` page away, and it is **pre-v1 and changing
+  constantly**, so a count written down here is wrong within the week and wrong *silently*: nothing
+  compiles it, nothing tests it, and it is loaded into context every session to mislead. Every
+  count this file used to carry had already rotted by the time it was found.
+
+  So the rule is a capability rather than a fact: **say which file answers the question and which
+  tool draws it, never the answer.** "The ring catalogue is in `data/rings.json`, reviewed with
+  `go run ./tools/ringsheet`" survives any amount of authoring; "forty-six rings" did not survive a
+  fortnight. The same goes for anything else that grows by someone authoring a record — creatures,
+  bosses, achievements, stones, hand rungs, portraits.
+
+  **A closed vocabulary is the exception and is not a catalogue.** The five elements, the four
+  forms, the three verbs, the three axes are design invariants: a sixth element is a decision, not
+  an edit, so naming them here is naming a rule. If a list can grow by authoring, it belongs in
+  `data/`; if growing it is a design change, it belongs here.
+
 - **Cut means deleted, not tombstoned.** When something is taken out of the design, remove
   every trace of it rather than leaving a note saying it was removed and why. These files are
   loaded into context; a record of things that do not exist is a running cost paid on every
@@ -123,34 +142,34 @@ go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then 
 go run ./tools/ringsheet    # every ring to PNGs + a page grouped by rarity: art, price, text, rules
 go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
-go run ./tools/enemysheet   # all 96 creatures by floor band: card, stat line, whole deck
-go run ./tools/bosssheet    # the 30 stairway protectors, the same way, by floor
+go run ./tools/enemysheet   # every creature by floor band: card, stat line, whole deck
+go run ./tools/bosssheet    # the stairway protectors, the same way, by floor
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
 go run ./tools/parasitesheet # every parasite: the line it prints against the rule that fires
-go run ./tools/upgradesheet  # every visible card upgrade, on all four form marks, in all three tint modes
+go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
-**The nine sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write
-there rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone
-opens to see every card, ring, worm, hand, stone, parasite, upgrade, creature and boss in the game. That
+**The sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write there
+rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
+see every card, ring, worm, hand, stone, parasite, upgrade, creature and boss in the game. That
 reverses the older rule that a regenerated artefact is not worth committing: the argument it left
 out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
 only ever seen by whoever just changed the thing it shows.
 
-**The cost is history weight, so regenerate deliberately.** About 4.9 MB across 423 binary files
-is rewritten by a full run, and a sheet rebuilt in a commit that changed nothing about it is pure
-weight. **Three quarters of that is the two roster sheets**, which carry 126 photographic
-portraits between them — so a commit touching only `rings.json` should regenerate the ring sheet
-alone rather than reaching for the one command out of habit. **`go run ./tools/sheets` is the one
-command** — it runs all nine and rewrites the index, because nine commands remembered in the
-right order is how eight end up current and one ends up lying. A stale sheet is worse than none:
-it is a picture of a catalogue that no longer exists.
+**The cost is history weight, so regenerate deliberately.** A full run rewrites every binary under
+`docs/sheets/`, and a sheet rebuilt in a commit that changed nothing about it is pure weight. **Most
+of that weight is the two roster sheets**, which carry a photographic portrait per creature and per
+boss — so a commit touching only `rings.json` should regenerate the ring sheet alone rather than
+reaching for the one command out of habit. **`go run ./tools/sheets` is the one command** — it runs
+them all and rewrites the index, because a handful of commands remembered in the right order is how
+all but one end up current and one ends up lying. A stale sheet is worse than none: it is a picture
+of a catalogue that no longer exists.
 
 **A seed is an opening hand**, because the shuffle is deterministic. `internal/screens/seeds.go`
-holds a catalogue of named seeds — `three-strikes`, `four-strikes`, `all-shields` — so a
-hand that demonstrates something can be asked for by name instead of found by relaunching.
+holds a catalogue of named seeds, so a hand that demonstrates something can be asked for by name
+instead of found by relaunching.
 `deckSeedName` picks which one a launch deals.
 
 **Stones raise a rung for one run and never touch the catalogue** *(2026-08-27)*. `data/stones.json`
@@ -173,9 +192,8 @@ Pair became **one entry, `pair`**, written `"match": "any"` in `data/hands.json`
 whichever of concept / form / element the turn satisfies — `combat.Hand.Axes` is the list and
 `Hand.On(axis)` is one reading. **It pays 1x**, the identity, so the loader now allows a multi-card
 rung *at* 100 and refuses one below it: what a pair buys is that two cards are summed where a High
-Card lands one. **Prism, Spectrum, Arsenal, Rising Attack and Weaponmaster were cut in the same
-change**, leaving eighteen rungs. **`combat.Axis` is three values** — concept, form, element — and
-a hand can only say what its cards must *agree* on.
+Card lands one. **`combat.Axis` is three values** — concept, form, element — and a hand can only
+say what its cards must *agree* on.
 
 **Shields replaced the plan form on 2026-08-31** *(owner's call)*. The player's three defend cards —
 `Ward`, `Brace`, `Guard` at 1/2/3 AP — raise that many shields, and **one shield eats one incoming
@@ -204,8 +222,8 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   whole turn, which is what `maxDefendPct` exists to forbid. `combat.blockedByShield` carries the
   note; the rules do not enforce it.
 - **`VerbBank` and `VerbDraw` are both gone** *(owner's call)*. The verb vocabulary is
-  attack / defend / shield. Thirty-six creature bank cards were **deleted** from `enemies.json`
-  rather than converted, so those decks are pure attack now and are modestly stronger for it;
+  attack / defend / shield. The creature bank cards were **deleted** from `enemies.json` rather
+  than converted, so those decks are pure attack now and are modestly stronger for it;
   `GatheredAP`, `BonusAP`, `KindGathered` and the whole AP-flight animation went with them, and
   **`Duelist.ActionPoints()` is the stat and nothing else**.
 - **One card raises at most five shields; a duelist holds as many as the turn paid for**
@@ -217,7 +235,7 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   is `cards.MaxEffects`, six, being what the bottom band fits — so a duelist behind ten draws a full
   row and the true count is on the engine. A row that can say a big number has not been designed.
 - **The deck shape moved on 2026-09-01** *(owner's call)*: Guard went to zero copies, so the
-  defences are 2 concepts × 5 elements and the starting deck is 55 cards rather than 60. That is a
+  defences are 2 concepts × 5 elements and the starting deck is 55 cards. That is a
   balance change and was taken as one — `tools/handodds` and `tools/seeds` were both re-run, four
   catalogued seeds were repointed and the tutorial's seed was replaced. **Re-run both after any
   further edit here**, and read MECHANICS.md §The deck is a starting position before drawing a
@@ -272,12 +290,12 @@ before touching any of it:
   card's outline against the table. `tools/upgradesheet` draws all three, same review-knob shape
   `TintMode` had, because how loud an upgrade should be is still open.
 - **Every rider draws** *(owner's call, 2026-09-09)*.
-  `systems.Upgrade` is the presentation vocabulary — ten of them, one per rider kind —
+  `systems.Upgrade` is the presentation vocabulary — one entry per rider kind —
   `internal/screens.upgradeForRider` is the total table where a rider becomes one, and neither
   `internal/cards` nor `internal/systems` learns what a rider is. **It took the left column until
-  then and that mechanism was deleted**, three tint modes and all: nine of the ten upgrades say
-  nothing about the element, so a left column in gold was the element slot saying something that is
-  not about the element. **Eight of the ten colours are placeholders on a full wheel** — see
+  then and that mechanism was deleted**: almost every upgrade says nothing about the element, so a
+  left column in gold was the element slot saying something that is not about the element. **Most of
+  the colours are placeholders on a full wheel** — see
   `systems.upgradeTint`, and `go run ./tools/upgradesheet` to retune them. The wildcard is the one
   that keeps a picture for its ink and the one that leaves the form mark hueless.
 - **The wildcard is read while the hand is *formed*, not while the turn resolves**, so it lives in
@@ -321,12 +339,13 @@ something else. The tool re-checks the catalogue before it searches and says whi
 longer match — a change to the deck size has invalidated every entry at once before. A demo
 testing a Three of a Kind against a hand with two Strikes in it is worse than no demo, because it passes.
 
-**A rarer hand needs a bigger search, and the impossible ones are worth re-checking.** `four-strikes` is four of
-four of the five Strikes in a hand of eight from 60 cards and turns up around seed 900; the default 20,000
-finds it. **A hand wanting five copies of a concept became dealable on 2026-08-25**, when arcane made a
-concept five cards where it had been four — so check the arithmetic against the current deck before
-concluding either way, because that sentence was true for nine days. A hand the tool
-reports as unfindable usually means the search was too short, but not always.
+**A rarer hand needs a bigger search, and the impossible ones are worth re-checking.** Whether a
+hand is dealable at all is arithmetic over the *current* deck — how many copies of a concept there
+are, the hand size, the action budget — and all three have moved. **Do that arithmetic against
+`data/duelist_cards.json` before concluding a hand cannot be dealt**: a hand wanting five copies of
+a concept was impossible until an element grew one to five cards, and the note here saying so was
+true for nine days. A hand the tool reports as unfindable usually means the search was too short,
+but not always.
 
 **Four build tags, and they compose.** Each selects a different file in its package, so one
 configuration can compile while another does not. Vet and build every one you might have
@@ -611,11 +630,11 @@ that has ended and there is nowhere to put the player back to.
   gets opened without its phase being set. The explicit list is what says which screens may work this
   way.
 - **The achievements catalogue moved to `data/achievements.json` on 2026-09-06**, which is exactly
-  what the old note here said would happen once there were enough to scroll. Eleven records is past
-  that line, and the "a name and a sentence does not earn a loader" argument stopped holding the
+  what the old note here said would happen once there were enough to scroll, and the "a name and a
+  sentence does not earn a loader" argument stopped holding the
   moment a record had to say *what earns it*. `internal/achieve` is the loader and the validator;
   the screen draws what it hands over and decides nothing. See MECHANICS.md §Achievements.
-- **The title menu is six rows and `TitleScene.menu()` is the one list.** Init, Update and Draw all
+- **`TitleScene.menu()` is the one list the title menu is built from.** Init, Update and Draw all
   read it, because three hand-written orders are three places a new entry gets forgotten — which is
   how a button ends up drawn and not clickable.
 
@@ -626,7 +645,7 @@ the tutorial's bubble; this is a small centred box with two answers, and it is d
 than a drift.
 
 - **A confirm is a question, not a page.** A modal takes the screen because what it holds *is* a
-  page — fifty-five cards, a ladder, a run's account. A dialog that covers the screen to ask six
+  page — a whole deck, a ladder, a run's account. A dialog that covers the screen to ask six
   words reads as something having gone wrong, and it hides the thing being asked about.
 - **It stays in the family**: same scrim, same bevelled panel, same pink stroke, and the destructive
   answer takes `modalCloseColor` — the only red in the game. It does **not** borrow the X: an X means
@@ -1030,26 +1049,54 @@ are easy to re-break:
   cost now** *(2026-08-16)*, so nothing stops a data file writing 5 — which is a reason to
   read this line before authoring one, not a reason for the renderer to clamp.
 
-Rings reuse the whole format with a pink border and artwork instead of glyphs, and no cost
-or category because a ring is neither played from a hand nor resolved in a round. **A ring card
-names itself in one word to a line, and drops the word "Ring"** *(2026-08-21)* — the border, the
-picture and the row it sits in all say "ring" already, so the noun costs the name its width and
-says nothing. `data.RingData.FaceName` is the trim, `Style.NameWordPerLine` the break, and the
-full name still titles every tooltip. Two lines is what the card has room for above its art;
-`TestEveryRingNameFitsItsCard` fails on a ring named a word too long. **Most of
-them have no artwork and draw `default-ring.png`** — `data.RingData.ArtKey` is the fallback and
-`TestEveryRingDrawsSomething` fails on a key naming no file, so a blank face means art nobody
-has painted rather than a name nobody spelled right.
+**A card's picture is either a panel on it or the whole of it, and `Style.ArtBleed` is which**
+*(owner's call, 2026-09-11)*. `internal/cards/bleed.go` owns the second path: the art is scaled to
+*cover* the card, clipped to the border's inner curve, and drawn first with everything else on
+top. `RingStyle` and `WormStyle` bleed — so rings, relics, parasites, worms, stones and the two
+sealed goods are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
+`ArtTop`/`ArtInset`/`ArtMaxH`. The two do not compose, and the art is authored against the choice:
+a fitted box wants a square and a bleeding card wants the card's own 200x280. Five things follow:
+
+- **A bleeding card carries no title** *(owner's call, 2026-09-11)*. `ShowName` is false on both,
+  reversing the 2026-08-21 call that a ring names itself a word to a line: the picture is the
+  card, and a title bar across a full-bleed illustration covers the one thing worth looking at in
+  order to repeat it. The full name still titles every tooltip, which is where a player who does
+  not recognise a picture yet goes. `TestTheEnemyNamesItselfAboveItsPortrait` holds both halves —
+  a naming card centres its name across the top, a bleeding card has none.
+- **What survives on top of the art is one scrim each.** A ring draws its counter disc in the
+  bottom-right; a worm draws the sentence saying what it does, on a dark band from 140 to 265.
+  The band is derived from the offsets the type is drawn at, never authored twice.
+- **The surface was carrying the text, so the ink set flips.** Every ink in `internal/cards` is
+  near-black because it was written against the off-white `Surface`; `cards.onScrim` swaps the
+  three named inks for light ones and lifts an authored element colour toward white. **The one
+  place that table is not a straight translation is `LabelInk`**, which is a stat row's quiet word
+  everywhere else and is a worm's whole sentence here.
+- **Art is committed at 200x280 and the generator's output stays in `.scratch`.** The batch came
+  back at 1060x1484 — 1.1 MB a ring, about 155 MB across the catalogue — and a 5.3x reduction at
+  draw time softens exactly the hard block edges the prompt spends its words demanding. Reduced
+  once, it is ~57 KB each and nothing resamples.
+  `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
+- **The prompts that produce it live in `docs/art/`**, not in `data/` — nothing there is loaded by
+  the game. `rings_to_draw.md` is the worklist of rings with no picture yet.
+
+**Ring and worm art is a globbed family, keyed by filename stem** *(2026-09-11)* —
+`ring/fire-ring.png` is `fire-ring`, which is what `data/rings.json` writes in its `Art` field.
+Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
+tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
+walk all four families go through. **Most rings still have no artwork and draw
+`default-ring.png`** — `data.RingData.ArtKey` is the fallback and `TestEveryRingDrawsSomething`
+fails on a key naming no file, so a blank face means art nobody has painted rather than a name
+nobody spelled right.
 
 **`go run ./tools/ringsheet` is how the catalogue gets looked at.** A run wears five and the
-shelf offers three, so seeing forty-six in a launched game means playing to a shop over and
+shelf offers three, so seeing the catalogue in a launched game means playing to a shop over and
 over. The sheet draws each with its price, its authored `Text` and its rules side by side —
 which is also the only place the sentence a player reads can be checked against the rules that
 actually fire.
 
 **`tools/wormsheet` and `tools/handsheet` are the same idea on the other two catalogues**
 *(2026-08-23)*. A worm is offered two at a time after a won fight, so the whole catalogue is five
-fights away; the sheet draws all eleven grouped by what each one changes about a card, with the
+fights away; the sheet draws them all grouped by what each one changes about a card, with the
 authored `Text` against the rule that fires, exactly as the ring sheet does. The hand sheet draws
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
 that best *illustrates* the rung — ordered by ascending multiplier across every axis at once,
@@ -1085,9 +1132,9 @@ interleaves all three by multiplier because a player forming a hand chooses amon
 once, where a stone is bought against one rung. **It is also the only place the ladder and the +N
 are visible together**, and the +N is computed from `hands.json` rather than authored, so a retuned
 rung moves the card's face with nothing edited in `stones.json`. The parasite sheet is ring-sheet
-shaped — the authored line against the resolved rule — and earns a page at four records because a
-parasite is the least readable record in `data/`: which of `Rider`, `Value` and `Count` the rules
-read depends entirely on the target.
+shaped — the authored line against the resolved rule — and earned a page before it had many
+records, because a parasite is the least readable record in `data/`: which of `Rider`, `Value` and
+`Count` the rules read depends entirely on the target.
 
 **`tools/enemysheet` and `tools/bosssheet` do it for the two opponent pools** *(2026-08-23)*. A
 creature is met one at a time, three rooms to a floor, and its whole personality is a deck the
@@ -1112,7 +1159,7 @@ in the table under it.
 
 **It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
 the whole pricing decision — a ring is rebalanced by moving it, never by writing a number — so the
-review question is "does any of these forty-odd commons belong a tier up", which an alphabetical list
+review question is "does any of these commons belong a tier up", which an alphabetical list
 cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
 because a scarce tier rounds to `0%` and would read as unreachable.
 
@@ -1728,24 +1775,24 @@ refiling something is one line there and nothing anywhere else.
 file was refiled. A named asset is three edits: the file, an `//go:embed` var, and a map entry.
 
 **The enemy portraits are the exception, and they are a *family* rather than named
-assets.** There are 96 of them, so `//go:embed enemy/*-portrait.png` pulls
+assets.** There are too many to name one at a time, so `//go:embed enemy/*-portrait.png` pulls
 the directory in as an `embed.FS` and `LoadImageData` walks it, keying each by filename
 stem — `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what
 `data/enemies.json` writes in its `Portrait` field. **The consequence is exactly what the
 three-edit rule protects against: a portrait's key is tied to its filename**, so renaming
-one means editing the JSON. That is the price of not hand-maintaining 192 lines nobody
-could review. Reach for the glob only when a *set* of files is being added; a one-off asset
+one means editing the JSON. That is the price of not hand-maintaining two lines per portrait that
+nobody could review. Reach for the glob only when a *set* of files is being added; a one-off asset
 still gets its own var.
 
-**The thirty boss portraits are a second family, in `assets/boss/`**, globbed the same way and
+**The boss portraits are a second family, in `assets/boss/`**, globbed the same way and
 keyed by stem — so `boss/bayaz-boss.png` is `bayaz-boss`, which is what `data/bosses.json` writes.
 The `-boss` suffix is load-bearing: both families land in one flat map, and a boss whose key
 collided with a creature's would silently draw that creature.
 `TestNoBossPortraitIsAnEnemyPortrait` fails on it.
 
 They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a card by
-`internal/cards`, which has no graphics context, and decoding 96 at startup would cost
-~20 MB of resident memory for pictures most runs never show.
+`internal/cards`, which has no graphics context, and decoding every one of them at startup would
+cost tens of megabytes of resident memory for pictures most runs never show.
 
 **`assets/effect/` is the status badges**, drawn as a centred row along the bottom of the enemy
 card by `internal/cards` — so they go through `LoadImageData` as bytes, exactly like the ring art

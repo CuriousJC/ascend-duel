@@ -151,37 +151,29 @@ var portraits embed.FS
 //go:embed boss/*-boss.png
 var bossPortraits embed.FS
 
-//go:embed ring/fire-ring.png
-var firering_png []byte
-
-//go:embed ring/ice-ring.png
-var icering_png []byte
-
-//go:embed ring/lightning-ring.png
-var lightningring_png []byte
-
-//go:embed ring/needle-ring.png
-var needlering_png []byte
-
-//go:embed ring/earth-ring.png
-var earthring_png []byte
-
-// The face a ring with no artwork of its own falls back to. Most of `data/rings.json` is
-// rings written since the four elemental ones were drawn — a form multiplier, the two vitae
-// rings, the growing stat rings — and none of them has a picture yet. Without this they draw
-// as a pink border around an empty face, which reads as a card that failed to load rather
-// than as one waiting for art. Same choice as `default-effect.png`, one layer up.
+// The ring faces, globbed as a family and keyed by filename stem — `ring/fire-ring.png` is
+// `fire-ring`, which is what `data/rings.json` writes in its Art field.
 //
-//go:embed ring/default-ring.png
-var defaultring_png []byte
-
-// The face every worm draws, until worms have art of their own. **A copy of the ring's default
-// rather than a share of it** *(owner's call, 2026-08-22)*: two files that happen to look alike
-// today are two files that can be replaced one at a time, where one file used by both would have
-// to be forked the moment either gets a real picture.
+// **It became a family on 2026-09-11**, having been one `//go:embed` var per file. Five pictures
+// is three edits each and readable; a catalogue of a hundred and thirty-seven rings being drawn
+// is not, and the var names were the key, so every one of them was also a line in two loaders.
+// The cost is the documented one — a ring's key is now tied to its filename, so renaming a file
+// means editing `rings.json`.
 //
-//go:embed worm/default-worm.png
-var defaultworm_png []byte
+// `ring/default-ring.png` is in here like any other and is what a ring with no Art of its own
+// falls back to: most of `data/rings.json` has no picture yet, and a pink border around an empty
+// face reads as a card that failed to load rather than as one waiting for art.
+//
+//go:embed ring/*.png
+var ringArt embed.FS
+
+// The worm faces, the same way and for the same reason. `worm/default-worm.png` is what every
+// worm and every parasite draws until they have art of their own — **a copy of the ring's
+// default rather than a share of it** *(owner's call, 2026-08-22)*: two files that happen to
+// look alike today are two files that can be replaced one at a time.
+//
+//go:embed worm/*.png
+var wormArt embed.FS
 
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
@@ -228,13 +220,6 @@ func LoadAssets() map[string]*ebiten.Image {
 
 	assets["title_png"] = loadImage(title_png)
 	assets["titleEaster_png"] = loadImage(titleEaster_png)
-	assets["firering_png"] = loadImage(firering_png)
-	assets["icering_png"] = loadImage(icering_png)
-	assets["lightningring_png"] = loadImage(lightningring_png)
-	assets["needlering_png"] = loadImage(needlering_png)
-	assets["earthring_png"] = loadImage(earthring_png)
-	assets["defaultring_png"] = loadImage(defaultring_png)
-	assets["defaultworm_png"] = loadImage(defaultworm_png)
 	assets["fireeffect_png"] = loadImage(fireeffect_png)
 	assets["frozeneffect_png"] = loadImage(frozeneffect_png)
 	assets["thundereffect_png"] = loadImage(thundereffect_png)
@@ -244,6 +229,12 @@ func LoadAssets() map[string]*ebiten.Image {
 	// internal/cards, which has no graphics context, so they are handed out as bytes by
 	// LoadImageData instead — and decoding 96 of them here at startup would cost about
 	// 20 MB of resident memory for pictures most of which no run ever shows.
+	//
+	// **The ring and worm art joined them on 2026-09-11**, having been decoded here as well as
+	// handed over as bytes. Nothing ever read the decoded copy — every caller goes through
+	// `screens.artwork`, which decodes out of `ImageData` and caches — and full-bleed art is
+	// authored at 1060x1484, which is 6 MB of RGBA each. Fifteen of those is ninety megabytes
+	// nothing looks at.
 	return assets
 }
 
@@ -281,13 +272,12 @@ func LoadFonts() map[string]*text.GoTextFaceSource {
 func LoadImageData() map[string][]byte {
 	images := make(map[string][]byte)
 
-	images["firering_png"] = firering_png
-	images["icering_png"] = icering_png
-	images["lightningring_png"] = lightningring_png
-	images["needlering_png"] = needlering_png
-	images["earthring_png"] = earthring_png
-	images["defaultring_png"] = defaultring_png
-	images["defaultworm_png"] = defaultworm_png
+	// The four families read out of an embedded directory rather than listed one by one. See
+	// embedFamily, and the //go:embed lines above for what each key ends up being.
+	embedFamily(images, ringArt, "ring")
+	embedFamily(images, wormArt, "worm")
+	embedFamily(images, portraits, "enemy")
+	embedFamily(images, bossPortraits, "boss")
 
 	// Bob's face, for the reason the ring art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
@@ -318,39 +308,32 @@ func LoadImageData() map[string][]byte {
 	// has no graphics context.
 	images["wildcardupgrade_png"] = wildcardupgrade_png
 
-	// The enemy portraits, keyed by filename stem: `enemy/ogrewarlord-portrait.png` is
-	// `ogrewarlord-portrait`, which is what `data/enemies.json` writes in its Portrait
-	// field. Read out of the embedded directory rather than listed, for the reason above the
-	// //go:embed.
-	//
-	// A read failure here is impossible in a built binary — the files are compiled in — so a
-	// panic is the honest response to one rather than a silent short roster.
-	entries, err := portraits.ReadDir("enemy")
+	return images
+}
+
+// embedFamily files every PNG in one embedded directory into images, keyed by filename stem —
+// `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what `data/enemies.json`
+// writes in its Portrait field, and `ring/fire-ring.png` is `fire-ring`.
+//
+// **Four directories read the same way, so it is one function** *(2026-09-11)*. It was two
+// hand-written walks for the two portrait families; the ring and worm art joined them and a
+// third and fourth copy of the same eight lines is how one of them comes to skip a file or key
+// it differently.
+//
+// **A read failure is impossible in a built binary** — the files are compiled in — so a panic is
+// the honest response to one rather than a silently short roster.
+func embedFamily(images map[string][]byte, fsys embed.FS, dir string) {
+	entries, err := fsys.ReadDir(dir)
 	if err != nil {
-		log.Fatal("failed to read the embedded portraits: ", err)
+		log.Fatalf("failed to read the embedded %s directory: %v", dir, err)
 	}
 	for _, e := range entries {
-		raw, err := portraits.ReadFile("enemy/" + e.Name())
+		raw, err := fsys.ReadFile(dir + "/" + e.Name())
 		if err != nil {
-			log.Fatal("failed to read embedded portrait: ", err)
+			log.Fatalf("failed to read embedded %s/%s: %v", dir, e.Name(), err)
 		}
 		images[strings.TrimSuffix(e.Name(), ".png")] = raw
 	}
-
-	// The boss portraits, read the same way out of their own directory.
-	bosses, err := bossPortraits.ReadDir("boss")
-	if err != nil {
-		log.Fatal("failed to read the embedded boss portraits: ", err)
-	}
-	for _, e := range bosses {
-		raw, err := bossPortraits.ReadFile("boss/" + e.Name())
-		if err != nil {
-			log.Fatal("failed to read embedded boss portrait: ", err)
-		}
-		images[strings.TrimSuffix(e.Name(), ".png")] = raw
-	}
-
-	return images
 }
 
 // LoadFontData returns the raw bytes of each embedded font, keyed like the other maps.

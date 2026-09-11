@@ -51,7 +51,7 @@ const (
 	// default rather than a drawing of its own**, on the argument the bucket already borrowed the
 	// worm's: a placeholder something else already wears is better than a blank face, and it will
 	// be replaced by a key on a record the day brands become one.
-	brandArtKey = "defaultring_png"
+	brandArtKey = "default-ring"
 )
 
 // potionSeat and brandSeat are where a card in either pane is drawn and clicked.

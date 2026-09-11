@@ -153,7 +153,7 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 // and has no phase. What it keeps is the footprint, the corners and the border, so it
 // reads as the same game.
 func ringSpecs() ([]cards.Spec, error) {
-	art, err := loadPNG("firering_png")
+	art, err := loadPNG("fire-ring")
 	if err != nil {
 		return nil, err
 	}

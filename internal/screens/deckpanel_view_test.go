@@ -1,11 +1,11 @@
 package screens
 
-// The deck panel's two toggles: what each one changes about the picture, and what neither of them
-// is allowed to change.
+// The deck panel's column: what each control changes about the picture, and what none of them is
+// allowed to change.
 //
-// **These need no window.** The grid is a layout function and the tallies count a laid-out grid,
+// **These need no window.** The grid is a layout function and the figures count a laid-out grid,
 // which is the whole reason both were pulled out of the drawing in the first place — see
-// pileGridLayout and tallyOf.
+// pileGridLayout and countsOf.
 
 import (
 	"testing"
@@ -178,16 +178,16 @@ func TestNothingIsEverPlayedBetweenFights(t *testing.T) {
 	}
 }
 
-func TestTheTalliesCountWhatIsLit(t *testing.T) {
-	// **The tallies count the grid, not the piles** — so the two toggles reach them for free and
+func TestTheFiguresCountWhatIsLit(t *testing.T) {
+	// **The figures count the grid, not the piles** — so the two toggles reach them for free and
 	// there is no second answer to "which cards is this panel about" to keep in step.
 	run := panelRun(t, panelDeck())
 	owned := run.Deck()
 
 	d := deckContents{draw: owned[:2], spent: owned[2:], run: run, inFight: true}
 
-	full := tallyOf(laidOut(d, deckView{}).slots, d.holder)
-	played := tallyOf(laidOut(d, deckView{played: true}).slots, d.holder)
+	full := countsOf(laidOut(d, deckView{}).slots, d.holder, deckFilter{})
+	played := countsOf(laidOut(d, deckView{played: true}).slots, d.holder, deckFilter{})
 
 	if full.total != 2 {
 		t.Errorf("FULL counts %d cards, want the 2 still to draw", full.total)
@@ -203,14 +203,14 @@ func TestTheTalliesCountWhatIsLit(t *testing.T) {
 	}
 }
 
-func TestTheTalliesFollowTheAlterationsToggle(t *testing.T) {
-	// A tally that disagreed with the grid above it would mean one of the two is lying, and the
+func TestTheFiguresFollowTheAlterationsToggle(t *testing.T) {
+	// A figure that disagreed with the grid beside it would mean one of the two is lying, and the
 	// grid is the one being looked at.
 	run := panelRun(t, panelDeck(), "frozen-lightning-ring")
 	d := deckContents{draw: run.Deck(), run: run}
 
-	dealt := tallyOf(laidOut(d, deckView{}).slots, d.holder)
-	asOwned := tallyOf(laidOut(d, deckView{unaltered: true}).slots, d.holder)
+	dealt := countsOf(laidOut(d, deckView{}).slots, d.holder, deckFilter{})
+	asOwned := countsOf(laidOut(d, deckView{unaltered: true}).slots, d.holder, deckFilter{})
 
 	if dealt.byElement[cards.Ice] != 2 || dealt.byElement[cards.Lightning] != 0 {
 		t.Errorf("dealt: %d ice and %d lightning, want 2 and 0",
@@ -222,102 +222,262 @@ func TestTheTalliesFollowTheAlterationsToggle(t *testing.T) {
 	}
 }
 
-func TestEveryCardIsCountedOnceInEachTally(t *testing.T) {
+func TestEveryCardIsCountedOnceInEachBlock(t *testing.T) {
 	// Three ways of counting one deck have to agree on how big it is, or one of the three has a
 	// card falling between its buckets — a form with no mark, a cost past the walk's ceiling.
 	run := session.New(session.StartingDeck())
 	d := deckContents{draw: run.Deck(), run: run}
 
-	t2 := tallyOf(laidOut(d, deckView{}).slots, d.holder)
+	c := countsOf(laidOut(d, deckView{}).slots, d.holder, deckFilter{})
 
 	byForm, byElement, byCost := 0, 0, 0
-	for _, n := range t2.byForm {
+	for _, n := range c.byForm {
 		byForm += n
 	}
-	for _, n := range t2.byElement {
+	for _, n := range c.byElement {
 		byElement += n
 	}
-	for _, row := range t2.byFormCost {
-		for _, n := range row {
-			byCost += n
-		}
+	for _, n := range c.byCost {
+		byCost += n
 	}
 
-	for name, got := range map[string]int{"form": byForm, "element": byElement, "form and AP": byCost} {
-		if got != t2.total {
-			t.Errorf("the %s tally counts %d of %d cards", name, got, t2.total)
+	for name, got := range map[string]int{"form": byForm, "element": byElement, "AP": byCost} {
+		if got != c.total {
+			t.Errorf("the %s block counts %d of %d cards", name, got, c.total)
 		}
 	}
-	if t2.total != run.Size() {
-		t.Errorf("the tallies count %d cards and the run owns %d", t2.total, run.Size())
+	if c.total != run.Size() {
+		t.Errorf("the column counts %d cards and the run owns %d", c.total, run.Size())
+	}
+
+	// And every price a card carries gets a button, or the AP block would be a filter that cannot
+	// reach part of the deck.
+	priced := map[int]bool{}
+	for _, cost := range c.costs {
+		priced[cost] = true
+	}
+	for cost, n := range c.byCost {
+		if n > 0 && !priced[cost] {
+			t.Errorf("%d cards cost %d AP and there is no button for it", n, cost)
+		}
 	}
 }
 
-func TestEveryFormInATallyHasAMark(t *testing.T) {
-	// A row with no drawing at the head of it is a count of nothing anyone can name. The tally
-	// writes out its own form order, so this is what catches a fifth form arriving in the rules and
-	// not here.
+func TestEveryFormInTheColumnHasAMark(t *testing.T) {
+	// A button with no drawing on it is a bare word beside a bare number. The column writes out its
+	// own form order, so this is what catches a fifth form arriving in the rules and not here.
 	for _, f := range combat.Forms() {
 		if f == combat.FormNone {
 			continue
 		}
 		if _, ok := form(f).Glyph(); !ok {
-			t.Errorf("%v has no mark, so its tally row would be a bare number", f)
+			t.Errorf("%v has no mark, so its button would be a bare number", f)
 		}
 	}
 
 	listed := map[combat.Form]bool{}
-	for _, f := range tallyForms() {
+	for _, f := range deckFilterForms() {
 		listed[f] = true
 	}
 	for _, f := range combat.Forms() {
 		if f != combat.FormNone && !listed[f] {
-			t.Errorf("%v is a form the rules have and the tally does not count", f)
+			t.Errorf("%v is a form the rules have and the column cannot filter on", f)
 		}
 	}
 }
 
-func TestTheTallyBandFitsBetweenTheGridAndTheButtons(t *testing.T) {
+func TestTheFilterColumnFitsThePanel(t *testing.T) {
 	// **Height is the panel's dimension with no give**, which is already true of the grid — see
-	// deckRowGap. The band underneath is four rows plus a heading, and the buttons stand under
-	// that, so this is the arithmetic that says the three still fit.
+	// deckRowGap. The column is now the taller of the two things inside the panel, so this is the
+	// arithmetic that says it still ends above the bottom margin.
 	//
 	// The internal resolution, which Layout fixes. Written out rather than imported because game
 	// imports screens and not the reverse.
-	const screenH = state.ScreenHeight
-	pctY := func(p int) int { return screenH * p / 100 }
+	bottom := state.ScreenHeight*modalPanelBottomPct/100 - modalBodyBottom
 
-	top := pctY(modalPanelTopPct)
-	bottom := pctY(modalPanelBottomPct)
-
-	gridBottom := top + modalBareBodyTop + deckRowCount*(cards.Mini.Height+deckRowGap)
-	bandTop := gridBottom + tallyTop
-	bandBottom := bandTop + tallyHeadDrop + len(tallyForms())*tallyRowHeight
-
-	buttonTop := bottom - deckViewButtonBottom - deckViewButtonHeight/2
-
-	if bandBottom > buttonTop {
-		t.Errorf("the tally band ends at %d and the buttons start at %d — they overlap",
-			bandBottom, buttonTop)
-	}
-	if buttonTop+deckViewButtonHeight/2 > bottom-modalBodyBottom {
-		t.Errorf("the buttons run past the panel's bottom margin")
+	// Three toggles is what a fight shows: ALTERATIONS, FULL and SHOW ALL. Four prices is the
+	// shipping deck's spread with room for one more.
+	if got := deckColumnBottom(3, 4); got > bottom {
+		t.Errorf("the column ends at %d and the panel's margin is at %d", got, bottom)
 	}
 }
 
-func TestTheTwoToggleButtonsDoNotOverlap(t *testing.T) {
-	// They are placed as a pair from the panel's centre, so this is the arithmetic that says the
-	// pair fits the panel and that neither sits on the other.
-	const screenW = state.ScreenWidth
-	pctX := func(p int) int { return screenW * p / 100 }
+func TestTheFilterColumnAndTheGridDoNotOverlap(t *testing.T) {
+	// The column is drawn from the panel's left edge and the grid from what is left of it, and both
+	// derive that boundary from deckGridSpan — this is what says the pair actually fits.
+	left := state.ScreenWidth * modalPanelLeftPct / 100
+	right := state.ScreenWidth * modalPanelRightPct / 100
 
-	span := 2*deckViewButtonWidth + deckViewButtonGap
-	panel := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct)
-
-	if span > panel {
-		t.Errorf("the two buttons need %d pixels and the panel is %d wide", span, panel)
+	gridLeft, gridRight := deckGridSpan(left, right)
+	if columnRight := left + deckColumnInset + deckColumnWidth; gridLeft <= columnRight {
+		t.Errorf("the grid starts at %d and the column ends at %d", gridLeft, columnRight)
 	}
-	if deckViewButtonGap <= 0 {
-		t.Error("the buttons touch, so they read as one widget")
+	if gridRight <= gridLeft {
+		t.Errorf("the column leaves the grid %d pixels", gridRight-gridLeft)
+	}
+}
+
+// The filter itself: what a set of pressed buttons means, and what it is never allowed to touch.
+
+func TestAnEmptyFilterPicksNothing(t *testing.T) {
+	// **The panel opens pointing at nothing**, or every card in it would be marked and the mark
+	// would say nothing at all.
+	run := session.New(session.StartingDeck())
+	d := deckContents{draw: run.Deck(), run: run}
+
+	for _, s := range laidOut(d, deckView{}).slots {
+		if s.picked {
+			t.Fatal("a card is marked on a panel with no filter set")
+		}
+	}
+}
+
+func TestAxesAreAndedAndValuesWithinOneAreOred(t *testing.T) {
+	// **The combining rule** *(owner's call, 2026-09-11)*: crush with fire is the cards that are
+	// both, crush with slash is either. It is the only rule under which every button both adds and
+	// removes something.
+	var f deckFilter
+	f.toggleForm(combat.FormCrush)
+	f.toggleElement(cards.Fire)
+
+	cases := []struct {
+		form    combat.Form
+		element cards.Element
+		want    bool
+	}{
+		{combat.FormCrush, cards.Fire, true},
+		{combat.FormCrush, cards.Ice, false},
+		{combat.FormSlash, cards.Fire, false},
+	}
+	for _, c := range cases {
+		if got := f.matches(c.form, 1, c.element, axisNone); got != c.want {
+			t.Errorf("%v %v matched %v, want %v", c.form, c.element, got, c.want)
+		}
+	}
+
+	// A second value on an axis widens that axis and narrows nothing.
+	f.toggleForm(combat.FormSlash)
+	if !f.matches(combat.FormSlash, 1, cards.Fire, axisNone) {
+		t.Error("picking slash beside crush did not widen the form axis")
+	}
+	if f.matches(combat.FormCrush, 1, cards.Ice, axisNone) {
+		t.Error("a second form loosened the element axis")
+	}
+}
+
+func TestPressingAValueTwiceTakesItBackOff(t *testing.T) {
+	// Every one of these is a toggle, so the way out of a selection is the button that made it.
+	var f deckFilter
+	f.toggleCost(2)
+	if !f.onCost(2) {
+		t.Fatal("the first press did not pick 2 AP")
+	}
+	f.toggleCost(2)
+	if f.onCost(2) {
+		t.Error("the second press did not take 2 AP back off")
+	}
+	if !f.empty() {
+		t.Error("an axis emptied by a toggle still reads as a filter")
+	}
+}
+
+func TestClearDropsEveryAxis(t *testing.T) {
+	var f deckFilter
+	f.toggleForm(combat.FormStab)
+	f.toggleCost(1)
+	f.toggleElement(cards.Earth)
+
+	f.clear()
+	if !f.empty() {
+		t.Error("SHOW ALL left something picked")
+	}
+}
+
+func TestAButtonsFigureIgnoresItsOwnAxis(t *testing.T) {
+	// **This is what stops a number lying.** Counted under the whole filter, every unpicked value of
+	// a picked axis reads zero — slash would say 0 beside a press that adds fourteen cards. The
+	// count is taken with the button's own axis set aside, so it says what pressing it is worth.
+	run := session.New(session.StartingDeck())
+	d := deckContents{draw: run.Deck(), run: run}
+	slots := laidOut(d, deckView{}).slots
+
+	whole := countsOf(slots, d.holder, deckFilter{})
+
+	var f deckFilter
+	f.toggleForm(combat.FormCrush)
+	picked := countsOf(slots, d.holder, f)
+
+	if picked.byForm[combat.FormSlash] != whole.byForm[combat.FormSlash] {
+		t.Errorf("with crush picked, slash reads %d and the deck holds %d",
+			picked.byForm[combat.FormSlash], whole.byForm[combat.FormSlash])
+	}
+	if picked.total != whole.byForm[combat.FormCrush] {
+		t.Errorf("the heading counts %d cards and the deck holds %d crush",
+			picked.total, whole.byForm[combat.FormCrush])
+	}
+
+	// The other axes do narrow — that is the recount the column is for.
+	narrowed := 0
+	for _, n := range picked.byElement {
+		narrowed += n
+	}
+	if narrowed != picked.total {
+		t.Errorf("the element block counts %d against a selection of %d", narrowed, picked.total)
+	}
+	if narrowed >= whole.total {
+		t.Errorf("the element block counts %d of %d cards — it did not narrow", narrowed, whole.total)
+	}
+}
+
+func TestTheGridMarksExactlyTheCardsTheHeadingCounts(t *testing.T) {
+	// The figure and the marked cards are two readings of one answer, and the panel is unusable if
+	// they disagree: the number would send the player looking for cards that are not lit.
+	run := session.New(session.StartingDeck())
+	d := deckContents{draw: run.Deck(), run: run}
+
+	v := deckView{}
+	v.filter.toggleForm(combat.FormStab)
+	v.filter.toggleElement(cards.Fire)
+
+	slots := laidOut(d, v).slots
+	marked := 0
+	for _, s := range slots {
+		if s.picked {
+			marked++
+		}
+	}
+
+	if c := countsOf(slots, d.holder, v.filter); marked != c.total {
+		t.Errorf("%d cards are marked and the heading says %d", marked, c.total)
+	}
+	if marked == 0 {
+		t.Fatal("fire stabs picked nothing, so this test is checking two zeroes")
+	}
+}
+
+func TestTheFilterMovesNoCardAndDimsNothing(t *testing.T) {
+	// **The panel's governing idea**: a card does not move when something changes about the view, it
+	// only changes how it is drawn. The filter is a mark, on a separate channel from the dimming —
+	// see cards.MarkPicked — so neither a seat nor a lit flag may differ under one.
+	owned := session.New(session.StartingDeck())
+	deck := owned.Deck()
+	d := deckContents{draw: deck[:20], spent: deck[20:], run: owned, inFight: true}
+
+	plain := laidOut(d, deckView{}).slots
+
+	v := deckView{}
+	v.filter.toggleForm(combat.FormCrush)
+	filtered := laidOut(d, v).slots
+
+	if len(plain) != len(filtered) {
+		t.Fatalf("the filter changed the grid from %d cards to %d", len(plain), len(filtered))
+	}
+	for i := range plain {
+		if plain[i].at != filtered[i].at {
+			t.Fatalf("card %d sits at %v unfiltered and %v filtered", i, plain[i].at, filtered[i].at)
+		}
+		if plain[i].lit != filtered[i].lit {
+			t.Fatalf("card %d is lit %v unfiltered and %v filtered", i, plain[i].lit, filtered[i].lit)
+		}
 	}
 }

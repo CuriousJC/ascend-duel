@@ -232,8 +232,9 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
 - **`cards.Mark` is a bitmask and marks compose** *(2026-09-08)*. A card can be broken *and* pointed
   at; `internal/cards/mark.go`'s `drawMark` owns the order they are painted in, so one pair of facts
   draws one way. **Append-only, and worse to insert into than an ordinal enum** — claiming a bit in
-  the middle changes what every existing value means, not just the ones after it. Two marks today:
-  `MarkShattered` and `MarkHighlit`.
+  the middle changes what every existing value means, not just the ones after it. Three marks today:
+  `MarkShattered`, `MarkHighlit` and `MarkPicked` — the last being the deck panel's filter column
+  pointing at the cards its figures counted, in the relic pink rather than a sixth hue.
 - **The asymmetry is the mechanic.** Only the player raises shields and only creatures raise
   percentage guards, because every creature is a solo attacker (`SoloAttacks`, one blow per card)
   while the player forms hands and lands one figure a turn. A count facing a hand would delete a

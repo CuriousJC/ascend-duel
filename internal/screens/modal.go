@@ -46,7 +46,7 @@ const (
 	// **3 and 96 since 2026-09-04**, from 4 and 95. The panel's contents are cards and the card
 	// grew by a quarter while the screen grew by an eighth, so the deck view's five rows of Mini
 	// plus its tally band no longer fitted between the margins — see
-	// TestTheTallyBandFitsBetweenTheGridAndTheButtons, which is the arithmetic that says they do.
+	// TestTheFilterColumnFitsThePanel, which is the arithmetic that says they do.
 	modalPanelTopPct    = 3
 	modalPanelBottomPct = 96
 

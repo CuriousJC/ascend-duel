@@ -21,20 +21,20 @@ func (s *ShopScene) tutorialFacts(gs *state.GlobalState) tutorial.Facts {
 
 		// **Both read off the run, which is the only thing that knows.** What is worn and what has
 		// been drunk outlive this visit, and a count kept by the scene would be a second opinion
-		// about a purchase — wrong the moment a ring is sold, or the screen re-entered.
-		RingsWorn: len(gs.Run.Worn()),
-		DMGBonus:  gs.Run.DMGBonus(),
+		// about a purchase — wrong the moment a relic is sold, or the screen re-entered.
+		RelicsWorn: len(gs.Run.Worn()),
+		DMGBonus:   gs.Run.DMGBonus(),
 	}
 }
 
 // tutorialRect answers for the shelf.
 //
-// **The whole row rather than one card**, exactly as the reward screen's worms are: which ring to
+// **The whole row rather than one card**, exactly as the reward screen's worms are: which relic to
 // buy is the player's decision, and a spotlight on one of three would be making it for them.
 //
 // **The worn row now has one** *(2026-09-06)*. It deliberately did not, because a run reaches its
 // first shop wearing nothing and a step pointing at that row would have pointed at an empty band.
-// The lesson now buys two rings before it says a word about them, so the row has something in it by
+// The lesson now buys two relics before it says a word about them, so the row has something in it by
 // the time it is pointed at — and it still reports false when empty, which is what keeps the old
 // argument's teeth.
 func (s *ShopScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]image.Rectangle, bool) {
@@ -47,7 +47,7 @@ func (s *ShopScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]i
 	if a == tutorial.AnchorShopLeave {
 		return one(buttonRect(s.leaveButton)), true
 	}
-	// The rings the run actually has on. **False for an empty row**, so a step that reached it too
+	// The relics the run actually has on. **False for an empty row**, so a step that reached it too
 	// early drops its gate and is visible as a mistake rather than lighting an empty band.
 	if a == tutorial.AnchorShopWorn {
 		worn := gs.Run.Worn()
@@ -71,9 +71,9 @@ func (s *ShopScene) tutorialRects(gs *state.GlobalState, a tutorial.Anchor) ([]i
 	if a != tutorial.AnchorShopShelf {
 		return nil, false
 	}
-	// **The rings only, not the two sealed goods beside them** *(2026-08-27)*. The shelf became a
+	// **The relics only, not the two sealed goods beside them** *(2026-08-27)*. The shelf became a
 	// five-seat row that day and the anchor deliberately did not grow with it: the lock leaves only
-	// what is lit clickable, so a lesson about buying a ring cannot be answered by opening a bag of
+	// what is lit clickable, so a lesson about buying a relic cannot be answered by opening a bag of
 	// rocks — and a first shop is not where a player should meet the stones.
 	return rowUnion(shelfSize, func(i int) image.Rectangle { return s.shelfSlot(gs, i) })
 }

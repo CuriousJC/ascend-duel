@@ -16,8 +16,8 @@ package data
 // knows the verb vocabulary and rejects a record naming one it does not have.
 //
 // **A card never names a status, and that is load-bearing.** What an element *does* is decided by
-// the source of that element on the card's owner — a ring for the player, an elemental affix for
-// an enemy — and a ring may later decide which of several fire statuses a fire card applies. A
+// the source of that element on the card's owner — a relic for the player, an elemental affix for
+// an enemy — and a relic may later decide which of several fire statuses a fire card applies. A
 // card that named its own status would be deciding something that is not its to decide. So the
 // schema carries a colour and a target and stops there.
 

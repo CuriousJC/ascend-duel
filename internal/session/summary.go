@@ -2,7 +2,7 @@ package session
 
 // **What a run came to, once it is over.**
 //
-// A run ends and its `Session` is thrown away — the deck, the rings, the purse, the account. This
+// A run ends and its `Session` is thrown away — the deck, the relics, the purse, the account. This
 // is the handful of numbers that outlive it long enough to be put on a screen: how far up, how many
 // fell, how much was dealt, and the code that would deal the whole thing again.
 //

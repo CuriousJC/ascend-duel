@@ -75,12 +75,12 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // cardSpec turns the screen's own types into the plain data internal/cards draws from.
 //
 // **The face says what the *card* does and nothing about who is holding it** *(owner's call,
-// 2026-08-26)*, damage-wise. A ring's multiplier was written into the figure and coloured pink from
-// 2026-08-21 until today; what took it off is that the figure stopped being stable. A growing ring
+// 2026-08-26)*, damage-wise. A relic's multiplier was written into the figure and coloured pink from
+// 2026-08-21 until today; what took it off is that the figure stopped being stable. A growing relic
 // steps between the cards of one blow, so the same Strike is worth one thing queued first and
 // another queued third — and a face stating either would be wrong somewhere. The owner's call went
-// further than the accumulator: **no ring reaches the printed damage at all**, growing or not, so a
-// Strike reads `1x DMG` whatever is on the fingers. What the rings did is shown where it happens,
+// further than the accumulator: **no relic reaches the printed damage at all**, growing or not, so a
+// Strike reads `1x DMG` whatever is on the fingers. What the relics did is shown where it happens,
 // in the sum — see the hand dialog, `combat.GrowthScale` and `Event.HandGrowth`.
 //
 // **Cost is the exception and stays the pairing's** — see below. A discount is not order-dependent
@@ -92,7 +92,7 @@ func faces(gs *state.GlobalState) *cards.Faces {
 // is the rule, where "14" was the rule already multiplied out by this duelist's strength and
 // was the same fact said twice. `combat.Card.Damage` is still what the engine resolves with, and
 // the duelist card still shows a DMG stat.
-// **The cost is passed in rather than read off the card** *(2026-08-17)*, because a discount ring
+// **The cost is passed in rather than read off the card** *(2026-08-17)*, because a discount relic
 // makes it a property of the pairing: the same card costs 2 to a duelist wearing the discount and 3
 // to one who is not. Every caller names the wearer it is drawing for, which is what keeps an enemy's
 // queued card out of the player's discounts.
@@ -114,7 +114,7 @@ func cardSpec(c actionCard, h held, enabled, selected bool) cards.Spec {
 // becomes a drawing one.
 //
 // **`internal/cards` may not do this and neither may `internal/systems`.** Neither knows what a
-// rider is, and neither should: this is the same separation Spec.TextInk draws, where a ring
+// rider is, and neither should: this is the same separation Spec.TextInk draws, where a relic
 // becomes a colour up here and the renderer is handed the answer. It is why an upgrade is a
 // closed vocabulary in `systems` rather than a field on `combat.Rider`.
 //
@@ -145,22 +145,22 @@ var upgradeForRider = map[combat.RiderKind]systems.Upgrade{
 	combat.RiderVitaeInHand:  systems.UpgradeHeldVitae,
 }
 
-// boostInk is what a figure a ring has changed is written in. **The ring pink** — `cards.Ring` is
-// the border colour a ring card carries, so the colour already means "a ring did this" everywhere
+// boostInk is what a figure a relic has changed is written in. **The relic pink** — `cards.Relic` is
+// the border colour a relic card carries, so the colour already means "a relic did this" everywhere
 // else on screen, and spending a second hue on the same fact would be saying it twice.
-var boostInk = cards.BorderOf(cards.Ring)
+var boostInk = cards.BorderOf(cards.Relic)
 
 // held is the pairing a card is drawn in: what it costs the holder, what the holder hits for, and
-// which rings the holder is wearing.
+// which relics the holder is wearing.
 //
-// **Cost travelled alone until 2026-08-21 and that was already the same idea** — a discount ring
-// makes a cost a property of the pairing rather than of the card, and a damage ring does exactly
+// **Cost travelled alone until 2026-08-21 and that was already the same idea** — a discount relic
+// makes a cost a property of the pairing rather than of the card, and a damage relic does exactly
 // that to the figure on the face. Grouping them is what stops the two drifting apart at a call site
 // that remembered one and not the other.
 //
-// **The zero value is a card nobody is holding**: no rings, no strength, and its own printed cost.
+// **The zero value is a card nobody is holding**: no relics, no strength, and its own printed cost.
 // `tools/cardsheet` and any panel drawing the catalogue want that, and so does an enemy's queued
-// card — rings are the duelist's only.
+// card — relics are the duelist's only.
 type held struct {
 	cost int
 
@@ -169,33 +169,33 @@ type held struct {
 	// the reward and shop screens are the second case, since a run's stats belong to a fight.
 	dmg int
 
-	worn []combat.WornRing
+	worn []combat.WornRelic
 }
 
 // heldBy is the pairing for a card in a duelist's hands, which is what every call site inside a
 // fight has.
 func heldBy(d combat.Duelist, c actionCard) held {
-	return held{cost: d.CardCost(c), dmg: d.DMG, worn: ungrown(d.WornRings())}
+	return held{cost: d.CardCost(c), dmg: d.DMG, worn: ungrown(d.WornRelics())}
 }
 
 // ungrown is a worn set with every accumulator at zero.
 //
-// **The tooltip explains a card's rings at their record, never at how far one has counted**
-// *(owner's call, 2026-08-26)*. The card's *face* carries no ring at all now — see cardSpec — and
+// **The tooltip explains a card's relics at their record, never at how far one has counted**
+// *(owner's call, 2026-08-26)*. The card's *face* carries no relic at all now — see cardSpec — and
 // what is left reading a worn set is the hover, which is the one place a player can ask what their
-// rings do to a card before committing it. The accumulator is kept out of that answer for the reason
+// relics do to a card before committing it. The accumulator is kept out of that answer for the reason
 // it was kept off the face: it depends on where in the turn the card is counted, so any figure
 // quoted before the turn is resolved would be wrong somewhere. The growth is said in the sum, beside
 // the term it priced — see combat.GrowthScale and the hand dialog.
 //
-// **Cost is untouched by this**, because no growing ring adjusts a cost and a discount does not move
+// **Cost is untouched by this**, because no growing relic adjusts a cost and a discount does not move
 // with the queue.
-func ungrown(worn []combat.WornRing) []combat.WornRing {
+func ungrown(worn []combat.WornRelic) []combat.WornRelic {
 	if len(worn) == 0 {
 		return nil
 	}
 
-	out := make([]combat.WornRing, len(worn))
+	out := make([]combat.WornRelic, len(worn))
 	for i, w := range worn {
 		w.Grown = 0
 		out[i] = w
@@ -204,12 +204,12 @@ func ungrown(worn []combat.WornRing) []combat.WornRing {
 }
 
 // heldByRun is the pairing for a card drawn between fights, where there is a run and no duelist:
-// the run's rings price it and no strength is known.
+// the run's relics price it and no strength is known.
 func heldByRun(gs *state.GlobalState, c actionCard) held {
 	if gs.Run == nil {
 		return held{cost: c.Cost()}
 	}
-	return held{cost: gs.Run.CardCost(c), worn: ungrown(gs.Run.WornRings())}
+	return held{cost: gs.Run.CardCost(c), worn: ungrown(gs.Run.WornRelics())}
 }
 
 // cardImage returns the card for this spec, rendering and caching it on a miss.
@@ -239,7 +239,7 @@ func cardImage(gs *state.GlobalState, spec cards.Spec, st cards.Style) *ebiten.I
 	return img
 }
 
-// artworkCache holds the decoded pictures that go *on* a card — enemy portraits, ring art —
+// artworkCache holds the decoded pictures that go *on* a card — enemy portraits, relic art —
 // keyed by their assets name.
 //
 // **Decoded once and held**, for the same reason the cards themselves are cached: these are
@@ -249,7 +249,7 @@ func cardImage(gs *state.GlobalState, spec cards.Spec, st cards.Style) *ebiten.I
 // context.
 //
 // **One cache for both, rather than one per kind of art.** It was `portraitCache` until the
-// ring pane arrived on 2026-08-11; a second map would have been the same six lines keyed the
+// relic pane arrived on 2026-08-11; a second map would have been the same six lines keyed the
 // same way, and the thing they have in common — a file that has to be decoded before it can
 // be drawn into a card — is the whole of what either needs.
 //
@@ -324,9 +324,9 @@ func enemySpec(gs *state.GlobalState, c *entities.Combatant, name string, life i
 // statusBadges is the art key each status is drawn with, **read off `statuses.json`** rather than
 // held in a table here *(2026-08-17)*.
 //
-// **A badge belongs to the status and not to the ring that switches it on**, which is why the key
+// **A badge belongs to the status and not to the relic that switches it on**, which is why the key
 // sits in the status record: a status arriving by some other route — an affix, a boss rule — has to
-// draw the same picture, and reading the art key off a ring the enemy is not wearing would be the
+// draw the same picture, and reading the art key off a relic the enemy is not wearing would be the
 // wrong lookup by construction. It was a table keyed by element until statuses stopped being
 // elements, at which point the table would have had to be keyed by the record anyway — so the
 // record carries it.
@@ -462,19 +462,19 @@ func tintedPip(src image.Image, ink color.RGBA) image.Image {
 	return out
 }
 
-// ringSpec is an equipped ring as a card: its name and its artwork, and nothing else.
+// relicSpec is an equipped relic as a card: its name and its artwork, and nothing else.
 //
-// **The element on the record does not reach the Spec**, deliberately. `cards.Ring` is the
-// element a ring card carries, which paints the border pink whatever the ring is about — the
-// one thing that must never happen is reaching for a ring thinking it is a card you can play.
-// `RingData.Element` says which element the ring will eventually *discount*; it is a rule, not
+// **The element on the record does not reach the Spec**, deliberately. `cards.Relic` is the
+// element a relic card carries, which paints the border pink whatever the relic is about — the
+// one thing that must never happen is reaching for a relic thinking it is a card you can play.
+// `RelicData.Element` says which element the relic will eventually *discount*; it is a rule, not
 // a colour, and it has nowhere to be read yet.
 //
-// No cost, no category, no damage: a ring is not played from a hand and has no phase.
-func ringSpec(gs *state.GlobalState, r data.RingData, counter string, enabled, lit bool) cards.Spec {
+// No cost, no category, no damage: a relic is not played from a hand and has no phase.
+func relicSpec(gs *state.GlobalState, r data.RelicData, counter string, enabled, lit bool) cards.Spec {
 	return cards.Spec{
-		Name:     r.FaceName(),
-		Element:  cards.Ring,
+		Name:     r.Name,
+		Element:  cards.Relic,
 		Art:      artwork(gs, r.ArtKey()),
 		Counter:  counter,
 		Enabled:  enabled,
@@ -588,11 +588,11 @@ func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 }
 
 // wormArtKey is the picture every worm draws today: `assets/worm/default-worm.png`, a placeholder
-// of its own rather than a borrowed ring.
+// of its own rather than a borrowed relic.
 //
 // **Keys are not file paths** — `LoadImageData` files this under `default-worm`, which is what a
 // lookup has to spell. Writing the filename here is why the first version of this drew nothing and
-// logged `no artwork named "default-ring"`.
+// logged `no artwork named "default-relic"`.
 //
 // It is one constant rather than a field on the record because when worms get art it becomes a key
 // per worm, and that change should be a `data/worms.json` field appearing, not a fallback being

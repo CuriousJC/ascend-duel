@@ -10,7 +10,7 @@ package screens
 // **It opens by reading the win out** *(2026-08-22)*. Before anything is offered, the screen types
 // what the fight paid — interest, a tenth of the life you kept, what the room is worth — and each
 // figure flies to the duelist card as its sentence lands. The build is on screen the whole time: the
-// player's card in the corner and their rings beside it, so a worm is chosen against the thing it
+// player's card in the corner and their relics beside it, so a worm is chosen against the thing it
 // would be changing. See postbattle_prose.go and buildband.go.
 //
 // **Two stages after that, worm first** *(2026-08-17)*. Two worms are drawn from the catalogue and offered
@@ -65,7 +65,7 @@ const wormsOffered = 2
 // the catalogue record has no business carrying.
 type prize struct {
 	// taken is set once this prize has been picked. **It stays in the row rather than being removed
-	// from it** — a card leaving would move the one beside it. Only a ring that adds a pick can
+	// from it** — a card leaving would move the one beside it. Only a relic that adds a pick can
 	// produce a row with a taken card still in it.
 	taken bool
 	worm  session.Worm
@@ -96,7 +96,7 @@ const (
 	// own drop. **They were absolute pixels until 2026-09-05** — 262, 300 and 296, written when the
 	// band ended around y=253 — and the band has moved twice since: the screen went to 1920x1080
 	// and the cards grew a quarter with it. The band now ends at 311, so all three were being drawn
-	// *inside* it, which is the worn ring struck through the first line of the payout. These are
+	// *inside* it, which is the worn relic struck through the first line of the payout. These are
 	// the same three gaps that arithmetic produced, measured from the band rather than from the top
 	// of the screen, so the next time either moves the text follows.
 	offerTitleDrop = 9
@@ -194,10 +194,10 @@ type PostBattleScene struct {
 	// the prose has just described: two creatures fleeing the enemy you beat.
 	entry []travel
 
-	// ringDrag is the press in progress over the worn ring row in the build band. **The row is
+	// relicDrag is the press in progress over the worn relic row in the build band. **The row is
 	// reorderable here like everywhere else** — worn order is a rule, and between fights is when a
 	// player is thinking about their build.
-	ringDrag cardDrag
+	relicDrag cardDrag
 
 	// **Skipping is a button again** *(2026-08-22)*, after the vitae card that replaced it was
 	// removed. It takes neither worm and pays nothing extra — the win has already paid — so it is
@@ -287,7 +287,7 @@ type PostBattleScene struct {
 	slides []cardSlide
 
 	// picksLeft is how many prizes this visit still owes the player, from `session.Picks` — the
-	// `prizes-dealt` moment, which the Hungry ring is what moves off 1.
+	// `prizes-dealt` moment, which the Hungry relic is what moves off 1.
 	//
 	// **A second pick is another card out of the same row**, not a fresh row: the offer was dealt
 	// once, and re-dealing it would make the second pick a different draw of the same fight. The card
@@ -454,11 +454,11 @@ func (s *PostBattleScene) Update(gs *state.GlobalState) error {
 		return nil
 	}
 
-	// **The ring row is live from the moment the narration ends**, under the panels rather than
+	// **The relic row is live from the moment the narration ends**, under the panels rather than
 	// over them: a drag started behind an open deck panel would be a card moving where the player
 	// cannot see it. It runs before the stage branches below, because the settled stage returns
 	// early and the row is still on screen through it.
-	s.updateRingRow(gs)
+	s.updateRelicRow(gs)
 
 	// The settled stage is a held picture rather than a choice: the card that was won is on
 	// screen, and when the hold runs out the screen leaves by itself.
@@ -547,11 +547,11 @@ func (s *PostBattleScene) hover(gs *state.GlobalState) {
 		return
 	}
 
-	// **The band is live at every stage, so its rings are explained at every stage.** They are not
+	// **The band is live at every stage, so its relics are explained at every stage.** They are not
 	// a choice this screen offers — which is exactly why the rule above does not cover them: a
-	// worn ring is what the choice is being *judged against*, and "what does the one I am wearing
+	// worn relic is what the choice is being *judged against*, and "what does the one I am wearing
 	// actually do" is the question a worm is picked by.
-	if hoverBuildRings(gs, at, &s.tip) {
+	if hoverBuildRelics(gs, at, &s.tip) {
 		return
 	}
 
@@ -983,7 +983,7 @@ func (s *PostBattleScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 
 	// **The build is on screen for the whole visit**, every stage of it: what the payout landed on,
 	// and what a worm is about to change.
-	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.ringDrag)
+	drawBuildBand(gs, screen, gs.Run.Vitae(), &s.relicDrag)
 
 	// **The narration stays up while the offer is made**, and only clears once a worm is chosen.
 	if s.stage == narrate {
@@ -1175,18 +1175,18 @@ func (s *PostBattleScene) hint(gs *state.GlobalState) string {
 	}
 }
 
-// updateRingRow runs the drag over the worn row in the build band.
+// updateRelicRow runs the drag over the worn row in the build band.
 //
-// **A click on a ring does nothing here**, as on the combat screen: this screen's clicks belong to
-// the worms it is offering, and a ring that did something on a press would be a second meaning for
+// **A click on a relic does nothing here**, as on the combat screen: this screen's clicks belong to
+// the worms it is offering, and a relic that did something on a press would be a second meaning for
 // the gesture that reorders it.
-func (s *PostBattleScene) updateRingRow(gs *state.GlobalState) {
-	row := buildRingRow(gs, nil)
+func (s *PostBattleScene) updateRelicRow(gs *state.GlobalState) {
+	row := buildRelicRow(gs, nil)
 
 	if !gs.CursorAllowed() {
-		s.ringDrag.cancel(row)
+		s.relicDrag.cancel(row)
 		return
 	}
 
-	s.ringDrag.update(gs, row)
+	s.relicDrag.update(gs, row)
 }

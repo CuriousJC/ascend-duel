@@ -533,12 +533,12 @@ func TestAnUntaughtRunHasNoMatchingSet(t *testing.T) {
 	}
 }
 
-// wearTwo puts two rings on the run, so that the worn row an anchor points at has something in it.
-// **Any two the catalogue holds**, because the anchor is the row and not a particular ring.
+// wearTwo puts two relics on the run, so that the worn row an anchor points at has something in it.
+// **Any two the catalogue holds**, because the anchor is the row and not a particular relic.
 func wearTwo(t *testing.T, gs *state.GlobalState) {
 	t.Helper()
 	worn := 0
-	for _, key := range session.Rings() {
+	for _, key := range session.Relics() {
 		if worn == 2 {
 			return
 		}
@@ -546,5 +546,5 @@ func wearTwo(t *testing.T, gs *state.GlobalState) {
 			worn++
 		}
 	}
-	t.Fatalf("could not put two rings on the run; the catalogue offered %d", worn)
+	t.Fatalf("could not put two relics on the run; the catalogue offered %d", worn)
 }

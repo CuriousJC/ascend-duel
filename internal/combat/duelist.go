@@ -59,7 +59,7 @@ type Duelist struct {
 	//
 	// **The rules hold a copy, not the purse itself** *(owner's call, 2026-09-05)*. A rider paying
 	// vitae for a card kept in hand is still announced rather than applied — the run's own figure
-	// is the screen's to move — but a ring that reads the purse has to see what an earlier turn of
+	// is the screen's to move — but a relic that reads the purse has to see what an earlier turn of
 	// the same fight paid, so a duel cannot be handed one number at fight-start and left with it.
 	// The copy is rebuilt on the next Equip, so it can only ever drift inside one fight.
 	Vitae int
@@ -110,7 +110,7 @@ type Duelist struct {
 	// Statuses is what has been done to this duelist, **indexed by status** — see status.go for
 	// the lifecycle, which is one rule for all of them.
 	//
-	// **It was indexed by element until 2026-08-17**, which is the array the ring grammar could not
+	// **It was indexed by element until 2026-08-17**, which is the array the relic grammar could not
 	// use: one element applying two statuses is the case that breaks it, and a status arriving from
 	// something that is not a colour at all has no seat in it. The price moves with the index —
 	// `statuses.json` is now the append-only file, because inserting a record mid-file re-points
@@ -123,37 +123,37 @@ type Duelist struct {
 	// status, and filing it in this table would say it was one.
 	Statuses [MaxStatuses]Status
 
-	// Rings is what this duelist is wearing, in worn order, and RingCount is how many of the
-	// array is in use. See ring.go for the grammar and WornRings for why the order is a rule.
+	// Relics is what this duelist is wearing, in worn order, and RelicCount is how many of the
+	// array is in use. See relic.go for the grammar and WornRelics for why the order is a rule.
 	//
 	// **It is what makes an element do anything at all** *(2026-08-16)*. A fire attack from a
-	// duelist with no fire ring is a plain attack with a red border: it counts toward a hand, it
+	// duelist with no fire relic is a plain attack with a red border: it counts toward a hand, it
 	// is discounted by nothing, and it applies no burn. See status.go for the argument, which is
-	// that statuses given away free left the first three rings with no mechanic of their own.
+	// that statuses given away free left the first three relics with no mechanic of their own.
 	//
 	// **It was `[ElementCount]bool` until 2026-08-17**, and the grammar is what took the flags
-	// away: a form multiplier and a vitae ring have no element to be a bit under.
+	// away: a form multiplier and a vitae relic have no element to be a bit under.
 	//
-	// **The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire
+	// **The relic is read off the attacker, never the victim.** Your fire relic makes *your* fire
 	// attacks burn; it does nothing when a fire attack is aimed at you.
 	//
 	// **A fixed array plus a count rather than a slice**, exactly like the defend set above and
-	// for the same reason: Duelist has to stay comparable. A WornRing is an ID and a number, so
-	// the ring's own rules stay in the registry where they can be a slice.
+	// for the same reason: Duelist has to stay comparable. A WornRelic is an ID and a number, so
+	// the relic's own rules stay in the registry where they can be a slice.
 	//
 	// **Enemies never wear one.** The zero value is an empty hand and nothing sets it for them, so
 	// an enemy's elements are inert by construction rather than by a rule written down somewhere
 	// else. Statuses reaching the player by some other route later is expected; it will not be by
 	// an enemy putting on jewellery.
-	Rings     [MaxWornRings]WornRing
-	RingCount int
+	Relics     [MaxWornRelics]WornRelic
+	RelicCount int
 
-	// RingSlots is how many of those seats this duelist may actually fill. **Zero means
-	// DefaultRingSlots**, which is the five every duelist in the tower fights on — see
-	// ringSlots(), where that reading lives, and session/ring.go, where a run hands its own
+	// RelicSlots is how many of those seats this duelist may actually fill. **Zero means
+	// DefaultRelicSlots**, which is the five every duelist in the tower fights on — see
+	// relicSlots(), where that reading lives, and session/relic.go, where a run hands its own
 	// number over. It is a separate field from the array's width because the width is a fact
 	// about keeping Duelist comparable and the cap is a rule a brand can move.
-	RingSlots int
+	RelicSlots int
 
 	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
 	// were queued**, each landing its own blow — instead of being read as a set and scored
@@ -187,9 +187,9 @@ type Duelist struct {
 	// **A run's opinion about the ladder, carried by the fighter rather than by the catalogue.**
 	// `handTable` is package state shared by every fight and every tool, so a run raising a rung in
 	// place would raise it for the enemy planner and for the review sheets. Equipping is where a
-	// run's stones reach a duelist, which is the same seat `Rings` arrives in.
+	// run's stones reach a duelist, which is the same seat `Relics` arrives in.
 	//
-	// **A fixed array rather than a map**, exactly like the defend set and the ring row above and
+	// **A fixed array rather than a map**, exactly like the defend set and the relic row above and
 	// for the same reason: Duelist has to stay comparable, and `TestRoundIsDeterministic` compares
 	// two resolved duelists with `==`.
 	//
@@ -208,7 +208,7 @@ type Duelist struct {
 	//
 	// **It is a property of the duelist rather than an argument to ResolveRound** for the reason
 	// HandStones is one: the run's opinion reaches a fight through Equip, which is the same seat
-	// the rings and the stones arrive in, and a ring or a brand that moves the limit later moves
+	// the relics and the stones arrive in, and a relic or a brand that moves the limit later moves
 	// this field rather than a signature every caller and test would have to grow.
 	//
 	// **The engine has no idea which side is a person**, so both sides are asked about their own
@@ -321,9 +321,9 @@ const baseMaxActions = 5
 
 // MaxEchoLandings is the most times one card can land inside a blow, echoes and repeats included.
 //
-// **A width rather than a design cap**, exactly like MaxWornRings and MaxStatuses: Event's hand
+// **A width rather than a design cap**, exactly like MaxWornRelics and MaxStatuses: Event's hand
 // arrays are fixed so an Event stays comparable, and every landing is a term in them. Five is
-// generous against the one echo ring that exists, which lands a card three times.
+// generous against the one echo relic that exists, which lands a card three times.
 const MaxEchoLandings = 5
 
 // MaxActions is the second of the two bounds on a round. **A round is bounded by cost and
@@ -334,7 +334,7 @@ const MaxEchoLandings = 5
 // It is a method rather than the bare constant it used to be, and it lives here rather than
 // on the screen where `maxSelected` used to. Both were deliberate: it is a **rule**, so the
 // opponent's planner has to obey it exactly as the player's selection does, and making it a
-// function of the duelist is what gives a ring or a brand raising the cap somewhere to bite
+// function of the duelist is what gives a relic or a brand raising the cap somewhere to bite
 // without touching a single call site. See MECHANICS.md.
 func (d Duelist) MaxActions() int { return baseMaxActions }
 
@@ -347,7 +347,7 @@ func (d Duelist) MaxActions() int { return baseMaxActions }
 // whole fight.
 //
 // **It stays a method rather than becoming a field read**, for the reason MaxActions is one: a
-// ring or a brand raising a budget wants somewhere to bite that is not every call site.
+// relic or a brand raising a budget wants somewhere to bite that is not every call site.
 //
 // **No status touches it.** A chill did until 2026-08-16, and it is now a card off the front of
 // the turn instead — see playTurn. What that costs is the one thing the old version had going for
@@ -359,8 +359,8 @@ func (d Duelist) ActionPoints() int { return d.Actions }
 // enforces this while the player builds a set; ResolveRound trusts what it is given
 // so that a balance sim can deliberately probe outside the rules.
 //
-// **It is the duelist's own costs that are totalled** — see CostOf in ring.go — because a discount
-// ring makes a cost a property of the pairing rather than of the card.
+// **It is the duelist's own costs that are totalled** — see CostOf in relic.go — because a discount
+// relic makes a cost a property of the pairing rather than of the card.
 func (d Duelist) CanAfford(cards []Card) bool {
 	return d.CostOf(cards) <= d.ActionPoints()
 }

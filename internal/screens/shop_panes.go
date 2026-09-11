@@ -3,12 +3,12 @@ package screens
 // The shop's four panes, and the one rhythm they pack at.
 //
 // **The shelf is four panes on one line since 2026-09-06** *(owner's call)*: the sealed packs, the
-// rings, the potions and the brand, left to right, each standing on the pane the top row already
+// relics, the potions and the brand, left to right, each standing on the pane the top row already
 // draws — a flat fill one step off the ground, eight pixels of padding, no border and no title. It
 // was one flat row of six seats told apart by the labels under them, and the panes are what let a
 // fourth kind of thing join the shelf without a fifth label to read.
 //
-// **There are no labels at all now** *(owner's call)*. The cards say what they are: a ring borders
+// **There are no labels at all now** *(owner's call)*. The cards say what they are: a relic borders
 // pink, a pack is a crate and says what is inside it, a potion is a flask, and the brand stands
 // alone. A caption under each pane would be the fourth thing on screen naming what the picture
 // already names.
@@ -35,14 +35,14 @@ type shopPane int
 
 const (
 	shopPanePacks shopPane = iota
-	shopPaneRings
+	shopPaneRelics
 	shopPanePotions
 	shopPaneBrand
 )
 
 // shopPaneOrder is the four in standing order, for anything that walks them.
 func shopPaneOrder() []shopPane {
-	return []shopPane{shopPanePacks, shopPaneRings, shopPanePotions, shopPaneBrand}
+	return []shopPane{shopPanePacks, shopPaneRelics, shopPanePotions, shopPaneBrand}
 }
 
 const (
@@ -72,13 +72,13 @@ const (
 // shopPaneSeats is how many cards a pane holds, full or empty.
 //
 // **A pane is its seats whether or not anything is standing in them**, exactly as the consumables
-// pane above is two: a bought ring leaves an empty seat and the row does not close up, so nothing
+// pane above is two: a bought relic leaves an empty seat and the row does not close up, so nothing
 // moves under the hand of a player who is still reading it.
 func shopPaneSeats(p shopPane) int {
 	switch p {
 	case shopPanePacks:
 		return packsOffered
-	case shopPaneRings:
+	case shopPaneRelics:
 		return shelfSize
 	case shopPanePotions:
 		return len(shopPotions())
@@ -112,15 +112,15 @@ func shopSeatTotal() int {
 // pane is ever taken off it.
 func shopPitch(gs *state.GlobalState) int {
 	n := len(shopPaneOrder())
-	usable := gs.ScreenWidth - 2*shopPaneMargin - n*2*ringPaneBackPad - (n-1)*shopPaneGutter
+	usable := gs.ScreenWidth - 2*shopPaneMargin - n*2*relicPaneBackPad - (n-1)*shopPaneGutter
 
 	steps := shopSeatTotal() - n
 	if steps <= 0 {
-		return cardWidth + ringSlotMaxGap
+		return cardWidth + relicSlotMaxGap
 	}
 
 	pitch := (usable - n*cardWidth) / steps
-	if max := cardWidth + ringSlotMaxGap; pitch > max {
+	if max := cardWidth + relicSlotMaxGap; pitch > max {
 		return max
 	}
 	return pitch
@@ -132,17 +132,17 @@ func shopPaneWidth(gs *state.GlobalState, p shopPane) int {
 }
 
 // shopPaneRect is one pane's card extent — what the seats are cut out of, and what the backing is
-// derived from. **The cards and not the backing**, which is the distinction ringPaneRect draws and
+// derived from. **The cards and not the backing**, which is the distinction relicPaneRect draws and
 // for the same reason: growing the padding must not be able to move a card.
 func shopPaneRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 	top := gs.PctY(shopPaneTopPct)
 
-	left := shopPaneMargin + ringPaneBackPad
+	left := shopPaneMargin + relicPaneBackPad
 	for _, before := range shopPaneOrder() {
 		if before == p {
 			break
 		}
-		left += shopPaneWidth(gs, before) + 2*ringPaneBackPad + shopPaneGutter
+		left += shopPaneWidth(gs, before) + 2*relicPaneBackPad + shopPaneGutter
 	}
 
 	return image.Rect(left, top, left+shopPaneWidth(gs, p), top+cardHeight)
@@ -151,7 +151,7 @@ func shopPaneRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 // shopPaneBackRect is the surface a pane's cards stand on: its extent, grown by the padding every
 // pane in the game uses.
 func shopPaneBackRect(gs *state.GlobalState, p shopPane) image.Rectangle {
-	return shopPaneRect(gs, p).Inset(-ringPaneBackPad)
+	return shopPaneRect(gs, p).Inset(-relicPaneBackPad)
 }
 
 // shopSeatRect is where one card in a pane is drawn, and the rectangle it is clicked in. **One
@@ -166,7 +166,7 @@ func shopSeatRect(gs *state.GlobalState, p shopPane, i int) image.Rectangle {
 // to clear. The figures are written under the *backing* rather than under the cards, so a pane's
 // own edge is not struck through by its prices.
 func shopFigureBottom(gs *state.GlobalState) int {
-	return shopPaneBackRect(gs, shopPaneRings).Max.Y + shopFigureGap + shopFigureSize
+	return shopPaneBackRect(gs, shopPaneRelics).Max.Y + shopFigureGap + shopFigureSize
 }
 
 // shopRerollRect is where a pane's reroll button hangs: centred under it, below the prices.
@@ -179,12 +179,12 @@ func shopRerollRect(gs *state.GlobalState, p shopPane) image.Rectangle {
 
 // drawShopPaneBack paints one pane's surface.
 //
-// **Flat, and the same colour the worn rings stand on.** It covers nothing, so there is no lit edge
-// to say it is in front of anything — the argument drawRingPane already makes, and the reason the
+// **Flat, and the same colour the worn relics stand on.** It covers nothing, so there is no lit edge
+// to say it is in front of anything — the argument drawRelicPane already makes, and the reason the
 // bevelled cards standing on it are what gets read.
 func drawShopPaneBack(gs *state.GlobalState, screen *ebiten.Image, p shopPane) {
 	back := shopPaneBackRect(gs, p)
 	vector.DrawFilledRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
-		ringPaneBackColor, false)
+		relicPaneBackColor, false)
 }

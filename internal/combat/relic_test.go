@@ -5,19 +5,19 @@ import (
 	"testing"
 )
 
-// The ring grammar: what registration refuses, and what wearing one actually does.
+// The relic grammar: what registration refuses, and what wearing one actually does.
 //
-// **The rings here are built rather than loaded**, because this package cannot read `rings.json` —
-// see the file comment in ring.go. That is the point of the split and it is what these tests
-// exercise: a rules-level ring is a key, a name and a list of rules, and everything about how it was
+// **The relics here are built rather than loaded**, because this package cannot read `relics.json` —
+// see the file comment in relic.go. That is the point of the split and it is what these tests
+// exercise: a rules-level relic is a key, a name and a list of rules, and everything about how it was
 // spelled in a file is somebody else's problem.
 
-// ring registers one ring for a test and fails the test rather than the process if it will not take.
+// relic registers one relic for a test and fails the test rather than the process if it will not take.
 // Keys are prefixed so nothing here can collide with the four `internal/session` registers.
-func ring(t *testing.T, key string, rules ...RingRule) RingID {
+func relic(t *testing.T, key string, rules ...RelicRule) RelicID {
 	t.Helper()
 
-	id, err := RegisterRing("ringtest."+key, key, rules)
+	id, err := RegisterRelic("relictest."+key, key, rules)
 	if err != nil {
 		t.Fatalf("%s did not register: %v", key, err)
 	}
@@ -56,10 +56,10 @@ func cardOfTier(t *testing.T, f Form, tier int) Card {
 func crushCard(t *testing.T) Card { t.Helper(); return cardOfForm(t, FormCrush) }
 func slashCard(t *testing.T) Card { t.Helper(); return cardOfForm(t, FormSlash) }
 
-func refused(t *testing.T, key string, rules ...RingRule) {
+func refused(t *testing.T, key string, rules ...RelicRule) {
 	t.Helper()
 
-	if _, err := RegisterRing("ringtest.refused."+key, key, rules); err == nil {
+	if _, err := RegisterRelic("relictest.refused."+key, key, rules); err == nil {
 		t.Errorf("%s registered, and it should not have", key)
 	}
 }
@@ -68,50 +68,50 @@ func refused(t *testing.T, key string, rules ...RingRule) {
 
 func TestAVerbAtTheWrongMomentIsRefused(t *testing.T) {
 	// **The failure this prevents is the quiet one**: a rule that loads, never fires, and looks
-	// exactly like a ring that does nothing. Every verb belongs to one moment and the table in
-	// ring.go is the authority.
-	refused(t, "cost at fight-start", RingRule{
+	// exactly like a relic that does nothing. Every verb belongs to one moment and the table in
+	// relic.go is the authority.
+	refused(t, "cost at fight-start", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoAdjustCost, Amount: -1}},
+		Then: []RelicEffect{{Do: DoAdjustCost, Amount: -1}},
 	})
-	refused(t, "status at card-cost", RingRule{
+	refused(t, "status at card-cost", RelicRule{
 		When: MomentCardCost,
-		Then: []RingEffect{{Do: DoApplyStatus, Status: 0}},
+		Then: []RelicEffect{{Do: DoApplyStatus, Status: 0}},
 	})
 }
 
 func TestAPredicateOnACardlessMomentIsRefused(t *testing.T) {
 	// `fight-start`, `fight-won` and `prizes-dealt` have no card to match an If against, so a rule
 	// carrying one is either a misunderstanding or a rule that would silently match everything.
-	refused(t, "fight-start with an If", RingRule{
+	refused(t, "fight-start with an If", RelicRule{
 		When: MomentFightStart,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoAddDMG, Amount: 10}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoAddDMG, Amount: 10}},
 	})
 }
 
 func TestAnEffectWithNothingToDoIsRefused(t *testing.T) {
 	// A zero is a typo in a file authored once, not a reward to be clamped — see checkEffect for
 	// why this is the opposite call from the one a worm's amount takes.
-	refused(t, "zero damage scale", RingRule{
+	refused(t, "zero damage scale", RelicRule{
 		When: MomentCardDamage,
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 0}},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 0}},
 	})
-	refused(t, "zero cost delta", RingRule{
+	refused(t, "zero cost delta", RelicRule{
 		When: MomentCardCost,
-		Then: []RingEffect{{Do: DoAdjustCost, Amount: 0}},
+		Then: []RelicEffect{{Do: DoAdjustCost, Amount: 0}},
 	})
-	refused(t, "a flip to basic", RingRule{
+	refused(t, "a flip to basic", RelicRule{
 		When: MomentDeckBuilt,
-		Then: []RingEffect{{Do: DoSetElement, Element: Basic}},
+		Then: []RelicEffect{{Do: DoSetElement, Element: Basic}},
 	})
-	refused(t, "a ring with no rules at all")
+	refused(t, "a relic with no rules at all")
 }
 
 func TestAStatusTheFilesDoNotHoldIsRefused(t *testing.T) {
-	refused(t, "unknown status", RingRule{
+	refused(t, "unknown status", RelicRule{
 		When: MomentAttackLands,
-		Then: []RingEffect{{Do: DoApplyStatus, Status: StatusID(StatusCount() + 1)}},
+		Then: []RelicEffect{{Do: DoApplyStatus, Status: StatusID(StatusCount() + 1)}},
 	})
 }
 
@@ -120,14 +120,14 @@ func TestAStatusTheFilesDoNotHoldIsRefused(t *testing.T) {
 func TestADiscountIsAPropertyOfThePairing(t *testing.T) {
 	// The whole reason cost moved off the card: the same Strike costs one duelist less than
 	// another, so nothing may ask a card what it costs without saying who is holding it.
-	thrifty := ring(t, "thrifty", RingRule{
+	thrifty := relic(t, "thrifty", RelicRule{
 		When: MomentCardCost,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoAdjustCost, Amount: -1}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoAdjustCost, Amount: -1}},
 	})
 
 	bare := duelist(10, 5, 100)
-	worn := bare.Wearing(WornRing{Ring: thrifty})
+	worn := bare.Wearing(WornRelic{Relic: thrifty})
 
 	hot, cold := Of(Strike, Fire), Of(Strike, Ice)
 
@@ -142,93 +142,93 @@ func TestADiscountIsAPropertyOfThePairing(t *testing.T) {
 func TestNoDiscountTakesACardBelowFree(t *testing.T) {
 	// Free is the floor and the count cap is what bounds a turn of free cards — see minCardCost.
 	// What must not happen is a negative cost paying for the card beside it.
-	free := ring(t, "free", RingRule{
+	free := relic(t, "free", RelicRule{
 		When: MomentCardCost,
-		Then: []RingEffect{{Do: DoAdjustCost, Amount: -9}},
+		Then: []RelicEffect{{Do: DoAdjustCost, Amount: -9}},
 	})
 
-	d := duelist(10, 5, 100).Wearing(WornRing{Ring: free})
+	d := duelist(10, 5, 100).Wearing(WornRelic{Relic: free})
 	if got := d.CardCost(Plain(Smash)); got != 0 {
 		t.Errorf("a deeply discounted Smash costs %d, want 0", got)
 	}
 }
 
-func TestAFormRingDoublesEveryMatchingCardInTheTurn(t *testing.T) {
+func TestAFormRelicDoublesEveryMatchingCardInTheTurn(t *testing.T) {
 	// **Per card is the point** — three slash cards in a turn are three doublings inside the same
 	// blow, not one. This checks the per-card figure, which is what the blow is summed from.
-	keen := ring(t, "keen", RingRule{
+	keen := relic(t, "keen", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Form: FormSlash, HasForm: true},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		If:   RelicCondition{Form: FormSlash, HasForm: true},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
 	bare := duelist(10, 5, 100)
-	worn := bare.Wearing(WornRing{Ring: keen})
+	worn := bare.Wearing(WornRelic{Relic: keen})
 
 	if got, want := worn.CardDamage(Plain(Slice)), bare.CardDamage(Plain(Slice))*2; got != want {
-		t.Errorf("a Slice under the keen ring deals %d, want %d", got, want)
+		t.Errorf("a Slice under the keen relic deals %d, want %d", got, want)
 	}
 	if got, want := worn.CardDamage(Plain(Strike)), bare.CardDamage(Plain(Strike)); got != want {
-		t.Errorf("the slash ring reached a crush card: %d, want %d", got, want)
+		t.Errorf("the slash relic reached a crush card: %d, want %d", got, want)
 	}
 }
 
-func TestTwoMatchingRingsCompound(t *testing.T) {
-	// **Compounding is intended**: two slash rings are x4 and that is a build. It is also why worn
+func TestTwoMatchingRelicsCompound(t *testing.T) {
+	// **Compounding is intended**: two slash relics are x4 and that is a build. It is also why worn
 	// order is a rule — multiplicative effects are order-sensitive.
-	a := ring(t, "keen a", RingRule{
+	a := relic(t, "keen a", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Form: FormSlash, HasForm: true},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		If:   RelicCondition{Form: FormSlash, HasForm: true},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
-	b := ring(t, "keen b", RingRule{
+	b := relic(t, "keen b", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Form: FormSlash, HasForm: true},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		If:   RelicCondition{Form: FormSlash, HasForm: true},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
 	bare := duelist(10, 5, 100)
-	both := bare.Wearing(WornRing{Ring: a}).Wearing(WornRing{Ring: b})
+	both := bare.Wearing(WornRelic{Relic: a}).Wearing(WornRelic{Relic: b})
 
 	if got, want := both.CardDamage(Plain(Slice)), bare.CardDamage(Plain(Slice))*4; got != want {
-		t.Errorf("two slash rings deal %d, want %d", got, want)
+		t.Errorf("two slash relics deal %d, want %d", got, want)
 	}
 }
 
-func TestAConceptRingReachesOneCardOnly(t *testing.T) {
-	// A concept ring is a much narrower object than a form ring — 4 cards against 12 — which is
+func TestAConceptRelicReachesOneCardOnly(t *testing.T) {
+	// A concept relic is a much narrower object than a form relic — 4 cards against 12 — which is
 	// the distinction this holds and the reason the two must not be priced alike.
-	striker := ring(t, "striker", RingRule{
+	striker := relic(t, "striker", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Concept: Strike, HasConcept: true},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		If:   RelicCondition{Concept: Strike, HasConcept: true},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
 	bare := duelist(10, 5, 100)
-	worn := bare.Wearing(WornRing{Ring: striker})
+	worn := bare.Wearing(WornRelic{Relic: striker})
 
 	if got, want := worn.CardDamage(Plain(Strike)), bare.CardDamage(Plain(Strike))*2; got != want {
-		t.Errorf("a Strike under the striker ring deals %d, want %d", got, want)
+		t.Errorf("a Strike under the striker relic deals %d, want %d", got, want)
 	}
 	for _, id := range []ConceptID{Bash, Smash, Slice} {
 		if got, want := worn.CardDamage(Plain(id)), bare.CardDamage(Plain(id)); got != want {
-			t.Errorf("%v under a Strike ring deals %d, want %d", ConceptOf(id).Label, got, want)
+			t.Errorf("%v under a Strike relic deals %d, want %d", ConceptOf(id).Label, got, want)
 		}
 	}
 }
 
 func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
-	both := ring(t, "fire slash", RingRule{
+	both := relic(t, "fire slash", RelicRule{
 		When: MomentCardDamage,
-		If: RingCondition{
+		If: RelicCondition{
 			Element: Fire, HasElement: true,
 			Form: FormSlash, HasForm: true,
 		},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
 	bare := duelist(10, 5, 100)
-	worn := bare.Wearing(WornRing{Ring: both})
+	worn := bare.Wearing(WornRelic{Relic: both})
 
 	if got, want := worn.CardDamage(Of(Slice, Fire)), bare.CardDamage(Of(Slice, Fire))*2; got != want {
 		t.Errorf("a fire slash deals %d, want %d", got, want)
@@ -240,63 +240,63 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 	}
 }
 
-func TestAStatusNamesTheRingThatAppliedIt(t *testing.T) {
-	// **The screen flies the word out of the ring that caused it**, so the event has to say which
-	// ring that was. Nothing else can: the card's colour is not the answer, because a ring may
+func TestAStatusNamesTheRelicThatAppliedIt(t *testing.T) {
+	// **The screen flies the word out of the relic that caused it**, so the event has to say which
+	// relic that was. Nothing else can: the card's colour is not the answer, because a relic may
 	// match on a form or a concept and apply a status with no colour involved at all - which is
 	// the case the second half of this test pins.
 	burning := MustStatus("burning")
 	chilled := MustStatus("chilled")
 
-	fire := ring(t, "names-fire", RingRule{
+	fire := relic(t, "names-fire", RelicRule{
 		When: MomentAttackLands,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoApplyStatus, Status: burning}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
 	})
-	// A ring that reads the form rather than the colour, which is what makes deriving the ring
+	// A relic that reads the form rather than the colour, which is what makes deriving the relic
 	// from the element impossible rather than merely fragile.
-	slash := ring(t, "names-slash", RingRule{
+	slash := relic(t, "names-slash", RelicRule{
 		When: MomentAttackLands,
-		If:   RingCondition{Form: FormSlash, HasForm: true},
-		Then: []RingEffect{{Do: DoApplyStatus, Status: chilled}},
+		If:   RelicCondition{Form: FormSlash, HasForm: true},
+		Then: []RelicEffect{{Do: DoApplyStatus, Status: chilled}},
 	})
 
-	a := duelist(10, 8, 500).Wearing(WornRing{Ring: fire}).Wearing(WornRing{Ring: slash})
+	a := duelist(10, 8, 500).Wearing(WornRelic{Relic: fire}).Wearing(WornRelic{Relic: slash})
 	b := duelist(10, 5, 500)
 
-	// One fire slash matches both rings at once, so both statuses land off one card.
+	// One fire slash matches both relics at once, so both statuses land off one card.
 	events, _, _ := resolve(a, b, []Card{Of(Slice, Fire)}, nil, 1)
 
-	got := map[StatusID]RingID{}
+	got := map[StatusID]RelicID{}
 	for _, e := range events {
 		if e.Kind == KindStatus {
-			got[e.Status] = e.Ring
+			got[e.Status] = e.Relic
 		}
 	}
 	if len(got) != 2 {
-		t.Fatalf("a fire slash under two rings announced %d statuses, want 2", len(got))
+		t.Fatalf("a fire slash under two relics announced %d statuses, want 2", len(got))
 	}
 	if got[burning] != fire {
-		t.Errorf("the burn is credited to ring %d, want the fire ring %d", got[burning], fire)
+		t.Errorf("the burn is credited to relic %d, want the fire relic %d", got[burning], fire)
 	}
 	if got[chilled] != slash {
-		t.Errorf("the chill is credited to ring %d, want the slash ring %d", got[chilled], slash)
+		t.Errorf("the chill is credited to relic %d, want the slash relic %d", got[chilled], slash)
 	}
 }
 
-func TestTheFirstRingToApplyAStatusIsTheOneCredited(t *testing.T) {
-	// Two rings, one status, one blow. The dedup keeps it to a single event; worn order decides
+func TestTheFirstRelicToApplyAStatusIsTheOneCredited(t *testing.T) {
+	// Two relics, one status, one blow. The dedup keeps it to a single event; worn order decides
 	// whose it is, which is the tie-break every other compounding effect already takes.
 	burning := MustStatus("burning")
-	rule := RingRule{
+	rule := RelicRule{
 		When: MomentAttackLands,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoApplyStatus, Status: burning}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
 	}
-	first := ring(t, "credit-first", rule)
-	second := ring(t, "credit-second", rule)
+	first := relic(t, "credit-first", rule)
+	second := relic(t, "credit-second", rule)
 
-	a := duelist(10, 8, 500).Wearing(WornRing{Ring: first}).Wearing(WornRing{Ring: second})
+	a := duelist(10, 8, 500).Wearing(WornRelic{Relic: first}).Wearing(WornRelic{Relic: second})
 	events, _, _ := resolve(a, duelist(10, 5, 500), []Card{Of(Jab, Fire)}, nil, 1)
 
 	n := 0
@@ -305,27 +305,27 @@ func TestTheFirstRingToApplyAStatusIsTheOneCredited(t *testing.T) {
 			continue
 		}
 		n++
-		if e.Ring != first {
-			t.Errorf("the burn is credited to ring %d, want the one worn first, %d", e.Ring, first)
+		if e.Relic != first {
+			t.Errorf("the burn is credited to relic %d, want the one worn first, %d", e.Relic, first)
 		}
 	}
 	if n != 1 {
-		t.Errorf("two rings applying one status announced it %d times, want 1", n)
+		t.Errorf("two relics applying one status announced it %d times, want 1", n)
 	}
 }
 
 func TestOneBlowLandsOneOfEachStatus(t *testing.T) {
-	// Two fire cards match a fire ring twice. The status does not stack, so applying it twice is
+	// Two fire cards match a fire relic twice. The status does not stack, so applying it twice is
 	// the same as applying it once — but announcing it twice would describe two things that did
 	// not happen. See statusesFrom.
 	burning := MustStatus("burning")
-	fire := ring(t, "fire", RingRule{
+	fire := relic(t, "fire", RelicRule{
 		When: MomentAttackLands,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoApplyStatus, Status: burning}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoApplyStatus, Status: burning}},
 	})
 
-	a := duelist(10, 8, 500).Wearing(WornRing{Ring: fire})
+	a := duelist(10, 8, 500).Wearing(WornRelic{Relic: fire})
 	b := duelist(10, 5, 500)
 
 	events, _, bAfter := resolve(a, b, []Card{Of(Jab, Fire), Of(Jab, Fire)}, nil, 1)
@@ -339,19 +339,19 @@ func TestOneBlowLandsOneOfEachStatus(t *testing.T) {
 }
 
 func TestOneRuleCanApplyTwoStatuses(t *testing.T) {
-	// **`Then` is a list**, which is what buys a ring that shocks *and* chills with no new
-	// vocabulary at all — the Storm ring, whole, in one entry.
+	// **`Then` is a list**, which is what buys a relic that shocks *and* chills with no new
+	// vocabulary at all — the Storm relic, whole, in one entry.
 	shocked, chilled := MustStatus("shocked"), MustStatus("chilled")
-	storm := ring(t, "storm", RingRule{
+	storm := relic(t, "storm", RelicRule{
 		When: MomentAttackLands,
-		If:   RingCondition{Element: Lightning, HasElement: true},
-		Then: []RingEffect{
+		If:   RelicCondition{Element: Lightning, HasElement: true},
+		Then: []RelicEffect{
 			{Do: DoApplyStatus, Status: shocked},
 			{Do: DoApplyStatus, Status: chilled},
 		},
 	})
 
-	a := duelist(10, 5, 500).Wearing(WornRing{Ring: storm})
+	a := duelist(10, 5, 500).Wearing(WornRelic{Relic: storm})
 	b := duelist(10, 5, 500)
 
 	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
@@ -366,18 +366,18 @@ func TestFlipsDoNotCompose(t *testing.T) {
 	// Every flip reads the card's *original* element, so lightning->ice and fire->ice both land on
 	// their own sources and cannot chain. Without it, two flips could cascade a deck to one colour
 	// and the order they were bought in would change the result.
-	toIce := ring(t, "lightning to ice", RingRule{
+	toIce := relic(t, "lightning to ice", RelicRule{
 		When: MomentCardDrawn,
-		If:   RingCondition{Element: Lightning, HasElement: true},
-		Then: []RingEffect{{Do: DoSetElement, Element: Ice}},
+		If:   RelicCondition{Element: Lightning, HasElement: true},
+		Then: []RelicEffect{{Do: DoSetElement, Element: Ice}},
 	})
-	toEarth := ring(t, "ice to earth", RingRule{
+	toEarth := relic(t, "ice to earth", RelicRule{
 		When: MomentCardDrawn,
-		If:   RingCondition{Element: Ice, HasElement: true},
-		Then: []RingEffect{{Do: DoSetElement, Element: Earth}},
+		If:   RelicCondition{Element: Ice, HasElement: true},
+		Then: []RelicEffect{{Do: DoSetElement, Element: Earth}},
 	})
 
-	worn := []WornRing{{Ring: toIce}, {Ring: toEarth}}
+	worn := []WornRelic{{Relic: toIce}, {Relic: toEarth}}
 
 	if e, ok := FlipElement(worn, Of(Strike, Lightning)); !ok || e != Ice {
 		t.Errorf("a lightning card became %v (flipped %v), want ice — the second flip chained", e, ok)
@@ -386,131 +386,131 @@ func TestFlipsDoNotCompose(t *testing.T) {
 		t.Errorf("an ice card became %v (flipped %v), want earth", e, ok)
 	}
 	if _, ok := FlipElement(worn, Of(Strike, Fire)); ok {
-		t.Error("a fire card was flipped by rings that do not name it")
+		t.Error("a fire card was flipped by relics that do not name it")
 	}
 }
 
-func TestTheAccumulatorRidesOnTheWornRing(t *testing.T) {
-	// A growing ring's own amounts are read as `Amount + accumulator`, and the accumulator travels
-	// with the worn ring because it belongs to a run rather than to the registry.
-	heart := ring(t, "heart",
-		RingRule{When: MomentFightStart, Then: []RingEffect{{Do: DoAddHP, Amount: 5}}},
-		RingRule{When: MomentFightWon, Then: []RingEffect{{Do: DoGrowOnWin, Amount: 5}}})
+func TestTheAccumulatorRidesOnTheWornRelic(t *testing.T) {
+	// A growing relic's own amounts are read as `Amount + accumulator`, and the accumulator travels
+	// with the worn relic because it belongs to a run rather than to the registry.
+	heart := relic(t, "heart",
+		RelicRule{When: MomentFightStart, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
+		RelicRule{When: MomentFightWon, Then: []RelicEffect{{Do: DoGrowOnWin, Amount: 5}}})
 
-	fresh := []WornRing{{Ring: heart}}
-	grown := []WornRing{{Ring: heart, Grown: 20}}
+	fresh := []WornRelic{{Relic: heart}}
+	grown := []WornRelic{{Relic: heart, Grown: 20}}
 
 	if got := AddedHP(fresh); got != 5 {
-		t.Errorf("a fresh heart ring adds %d HP, want 5", got)
+		t.Errorf("a fresh heart relic adds %d HP, want 5", got)
 	}
 	if got := AddedHP(grown); got != 25 {
-		t.Errorf("a heart ring at +20 adds %d HP, want 25", got)
+		t.Errorf("a heart relic at +20 adds %d HP, want 25", got)
 	}
 	if got := Growth(fresh[0]); got != 5 {
-		t.Errorf("a heart ring grows by %d, want 5", got)
+		t.Errorf("a heart relic grows by %d, want 5", got)
 	}
 	if got := Growth(grown[0]); got != 5 {
-		t.Errorf("a grown heart ring grows by %d, want 5 — growth must not compound on itself", got)
+		t.Errorf("a grown heart relic grows by %d, want 5 — growth must not compound on itself", got)
 	}
 }
 
 func TestPropagationScalesAndCompounds(t *testing.T) {
-	// The ring scales what the run's own cap produced, and two of them compound like every other
-	// ring effect. The cap itself is the run's business — see session.propagate.
-	banker := ring(t, "banker", RingRule{
+	// The relic scales what the run's own cap produced, and two of them compound like every other
+	// relic effect. The cap itself is the run's business — see session.propagate.
+	banker := relic(t, "banker", RelicRule{
 		When: MomentFightWon,
-		Then: []RingEffect{{Do: DoScalePropagation, Amount: 200}},
+		Then: []RelicEffect{{Do: DoScalePropagation, Amount: 200}},
 	})
 
 	if got := ScalePropagation(nil, 5); got != 5 {
 		t.Errorf("bare propagation of 5 came out as %d", got)
 	}
-	if got := ScalePropagation([]WornRing{{Ring: banker}}, 5); got != 10 {
+	if got := ScalePropagation([]WornRelic{{Relic: banker}}, 5); got != 10 {
 		t.Errorf("one banker turned 5 into %d, want 10", got)
 	}
-	if got := ScalePropagation([]WornRing{{Ring: banker}, {Ring: banker}}, 5); got != 20 {
+	if got := ScalePropagation([]WornRelic{{Relic: banker}, {Relic: banker}}, 5); got != 20 {
 		t.Errorf("two bankers turned 5 into %d, want 20", got)
 	}
 }
 
-func TestARingIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
-	// Five worn at once, until brands expand it. RingSlots is the cap and Wearing is where it
+func TestARelicIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
+	// Five worn at once, until brands expand it. RelicSlots is the cap and Wearing is where it
 	// bites; a sixth is dropped rather than overwriting the fifth.
 	//
 	// **The array is no longer the cap**, which is the thing this test now has to say twice: a
-	// duelist carrying no number of its own wears DefaultRingSlots, and one carrying a number wears
-	// that — up to MaxWornRings, which is only how wide the array is.
-	worn := ring(t, "filler", RingRule{
+	// duelist carrying no number of its own wears DefaultRelicSlots, and one carrying a number wears
+	// that — up to MaxWornRelics, which is only how wide the array is.
+	worn := relic(t, "filler", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoAddDMG, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDMG, Amount: 1}},
 	})
 
 	fill := func(d Duelist) Duelist {
-		for i := 0; i < MaxWornRings+3; i++ {
-			d = d.Wearing(WornRing{Ring: worn})
+		for i := 0; i < MaxWornRelics+3; i++ {
+			d = d.Wearing(WornRelic{Relic: worn})
 		}
 		return d
 	}
 
 	d := fill(duelist(10, 5, 100))
-	if d.RingCount != DefaultRingSlots {
-		t.Errorf("a duelist ended up wearing %d rings, cap is %d", d.RingCount, DefaultRingSlots)
+	if d.RelicCount != DefaultRelicSlots {
+		t.Errorf("a duelist ended up wearing %d relics, cap is %d", d.RelicCount, DefaultRelicSlots)
 	}
-	if got := AddedDMG(d.WornRings()); got != DefaultRingSlots {
-		t.Errorf("%d rings added %d DMG, want %d", d.RingCount, got, DefaultRingSlots)
+	if got := AddedDMG(d.WornRelics()); got != DefaultRelicSlots {
+		t.Errorf("%d relics added %d DMG, want %d", d.RelicCount, got, DefaultRelicSlots)
 	}
 
 	raised := duelist(10, 5, 100)
-	raised.RingSlots = DefaultRingSlots + 1
-	if raised = fill(raised); raised.RingCount != DefaultRingSlots+1 {
-		t.Errorf("a duelist with %d slots wore %d rings", DefaultRingSlots+1, raised.RingCount)
+	raised.RelicSlots = DefaultRelicSlots + 1
+	if raised = fill(raised); raised.RelicCount != DefaultRelicSlots+1 {
+		t.Errorf("a duelist with %d slots wore %d relics", DefaultRelicSlots+1, raised.RelicCount)
 	}
 
 	// A cap past the array's width is clamped to it rather than writing off the end. The run is
 	// free to be wrong about this; the struct is not.
 	past := duelist(10, 5, 100)
-	past.RingSlots = MaxWornRings + 5
-	if past = fill(past); past.RingCount != MaxWornRings {
-		t.Errorf("a duelist with %d slots wore %d rings, and the array holds %d",
-			MaxWornRings+5, past.RingCount, MaxWornRings)
+	past.RelicSlots = MaxWornRelics + 5
+	if past = fill(past); past.RelicCount != MaxWornRelics {
+		t.Errorf("a duelist with %d slots wore %d relics, and the array holds %d",
+			MaxWornRelics+5, past.RelicCount, MaxWornRelics)
 	}
 }
 
 func TestAnEnemyWearsNothing(t *testing.T) {
-	// **Rings are the duelist's only.** The zero value is an empty hand, which is what an enemy is
+	// **Relics are the duelist's only.** The zero value is an empty hand, which is what an enemy is
 	// hydrated with — so an enemy's colours are inert by construction rather than by a rule written
 	// down somewhere else.
 	var enemy Duelist
-	if n := len(enemy.WornRings()); n != 0 {
-		t.Errorf("a zero duelist wears %d rings", n)
+	if n := len(enemy.WornRelics()); n != 0 {
+		t.Errorf("a zero duelist wears %d relics", n)
 	}
 	if got := enemy.statusesFrom([]Card{Of(Strike, Fire)}); len(got) != 0 {
-		t.Errorf("a ringless duelist's fire Strike applied %d statuses", len(got))
+		t.Errorf("a relicless duelist's fire Strike applied %d statuses", len(got))
 	}
 }
 
 func TestHPScalingCompoundsAndDefaultsToWhole(t *testing.T) {
 	// Onslaught's half of the grammar: a fight-start scaling that goes *below* 100, which no other
-	// scaling verb does. A bare duelist has to come out untouched, or every ring in the file would
+	// scaling verb does. A bare duelist has to come out untouched, or every relic in the file would
 	// be quietly resizing a life bar.
 	if got := HPScale(nil); got != 100 {
 		t.Errorf("nothing worn scales life to %d%%, want 100%%", got)
 	}
 
-	quarterOff := ring(t, "onslaught", RingRule{
+	quarterOff := relic(t, "onslaught", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoScaleHP, Amount: 75}},
+		Then: []RelicEffect{{Do: DoScaleHP, Amount: 75}},
 	})
 
-	if got := HPScale([]WornRing{{Ring: quarterOff}}); got != 75 {
-		t.Errorf("one drawback ring scales life to %d%%, want 75%%", got)
+	if got := HPScale([]WornRelic{{Relic: quarterOff}}); got != 75 {
+		t.Errorf("one drawback relic scales life to %d%%, want 75%%", got)
 	}
 
 	// Compounding rather than adding, like every other multiplicative effect: two quarters off
 	// leave 56%, not half.
-	two := []WornRing{{Ring: quarterOff}, {Ring: quarterOff}}
+	two := []WornRelic{{Relic: quarterOff}, {Relic: quarterOff}}
 	if got := HPScale(two); got != 56 {
-		t.Errorf("two drawback rings scale life to %d%%, want 56%% — they are adding, not "+
+		t.Errorf("two drawback relics scale life to %d%%, want 56%% — they are adding, not "+
 			"compounding", got)
 	}
 }
@@ -518,10 +518,10 @@ func TestHPScalingCompoundsAndDefaultsToWhole(t *testing.T) {
 func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 	// Echo's whole shape in one place: the lead card of the blow pays three terms rather than one,
 	// the sum grows by exactly those terms, and the hand the cards formed is untouched.
-	echo := ring(t, "echo", RingRule{
+	echo := relic(t, "echo", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Lead: true},
-		Then: []RingEffect{{Do: DoEchoAttack, Amount: 3}},
+		If:   RelicCondition{Lead: true},
+		Then: []RelicEffect{{Do: DoEchoAttack, Amount: 3}},
 	})
 
 	card := Of(Strike, Fire)
@@ -530,7 +530,7 @@ func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 		t.Errorf("a bare duelist pays %v for a 30 card, want [30]", got)
 	}
 
-	worn := []WornRing{{Ring: echo}}
+	worn := []WornRelic{{Relic: echo}}
 	if got := LandingAmounts(worn, card, true, 30); len(got) != 3 ||
 		got[0] != 30 || got[1] != 20 || got[2] != 10 {
 		t.Errorf("Echo pays %v for a 30 lead card, want [30 20 10]", got)
@@ -542,8 +542,8 @@ func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 	}
 
 	// Two of them add a landing each rather than multiplying: five landings, not nine.
-	if got := LandingAmounts([]WornRing{{Ring: echo}, {Ring: echo}}, card, true, 30); len(got) != 5 {
-		t.Errorf("two echo rings pay %v, want five terms", got)
+	if got := LandingAmounts([]WornRelic{{Relic: echo}, {Relic: echo}}, card, true, 30); len(got) != 5 {
+		t.Errorf("two echo relics pay %v, want five terms", got)
 	}
 
 	// The ladder itself: full, two thirds, one third, and nothing outside the range.
@@ -560,14 +560,14 @@ func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 }
 
 func TestARepeatLandsEveryMatchingCardAtFullDamage(t *testing.T) {
-	// The form repeat rings: every card the rule matches lands twice, both at full strength — where
+	// The form repeat relics: every card the rule matches lands twice, both at full strength — where
 	// an echo diminishes and only takes the lead card.
-	repeat := ring(t, "aftershock", RingRule{
+	repeat := relic(t, "aftershock", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Form: FormCrush, HasForm: true},
-		Then: []RingEffect{{Do: DoRepeatCard, Amount: 2}},
+		If:   RelicCondition{Form: FormCrush, HasForm: true},
+		Then: []RelicEffect{{Do: DoRepeatCard, Amount: 2}},
 	})
-	worn := []WornRing{{Ring: repeat}}
+	worn := []WornRelic{{Relic: repeat}}
 
 	crush, slash := crushCard(t), slashCard(t)
 
@@ -586,20 +586,20 @@ func TestARepeatLandsEveryMatchingCardAtFullDamage(t *testing.T) {
 }
 
 func TestRepeatsComeBeforeEchoesAndBothAreCapped(t *testing.T) {
-	repeat := ring(t, "aftershock-2", RingRule{
+	repeat := relic(t, "aftershock-2", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Form: FormCrush, HasForm: true},
-		Then: []RingEffect{{Do: DoRepeatCard, Amount: 2}},
+		If:   RelicCondition{Form: FormCrush, HasForm: true},
+		Then: []RelicEffect{{Do: DoRepeatCard, Amount: 2}},
 	})
-	echo := ring(t, "echo-2", RingRule{
+	echo := relic(t, "echo-2", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Lead: true},
-		Then: []RingEffect{{Do: DoEchoAttack, Amount: 3}},
+		If:   RelicCondition{Lead: true},
+		Then: []RelicEffect{{Do: DoEchoAttack, Amount: 3}},
 	})
 
 	// Repeat first, then the echo ladder over the echo's own count: 30, 30 (the copy), then
 	// two thirds and one third.
-	got := LandingAmounts([]WornRing{{Ring: repeat}, {Ring: echo}}, crushCard(t), true, 30)
+	got := LandingAmounts([]WornRelic{{Relic: repeat}, {Relic: echo}}, crushCard(t), true, 30)
 	want := []int{30, 30, 20, 10}
 	if len(got) != len(want) {
 		t.Fatalf("a repeated and echoed crush card pays %v, want %v", got, want)
@@ -611,21 +611,21 @@ func TestRepeatsComeBeforeEchoesAndBothAreCapped(t *testing.T) {
 	}
 
 	// Nothing may seat more landings than the event's arrays are wide.
-	many := []WornRing{{Ring: repeat}, {Ring: repeat}, {Ring: repeat}, {Ring: echo}, {Ring: echo}}
+	many := []WornRelic{{Relic: repeat}, {Relic: repeat}, {Relic: repeat}, {Relic: echo}, {Relic: echo}}
 	if got := LandingAmounts(many, crushCard(t), true, 30); len(got) > MaxEchoLandings {
-		t.Errorf("five stacked rings pay %d terms, want at most %d", len(got), MaxEchoLandings)
+		t.Errorf("five stacked relics pay %d terms, want at most %d", len(got), MaxEchoLandings)
 	}
 }
 
 func TestAtrophyStepsThreeAPAttacksDownOneRung(t *testing.T) {
 	// Atrophy's whole shape: the top rung of each form becomes the middle rung, nothing else moves,
 	// and the ladder is read off the declared cost rather than off what the wearer pays.
-	atrophy := ring(t, "atrophy", RingRule{
+	atrophy := relic(t, "atrophy", RelicRule{
 		When: MomentDeckBuilt,
-		If:   RingCondition{Tier: 3, HasTier: true},
-		Then: []RingEffect{{Do: DoDemoteCard, Amount: 1}},
+		If:   RelicCondition{Tier: 3, HasTier: true},
+		Then: []RelicEffect{{Do: DoDemoteCard, Amount: 1}},
 	})
-	worn := []WornRing{{Ring: atrophy}}
+	worn := []WornRelic{{Relic: atrophy}}
 
 	for _, f := range []Form{FormStab, FormSlash, FormCrush} {
 		top, mid := cardOfTier(t, f, 3), cardOfTier(t, f, 2)
@@ -649,48 +649,48 @@ func TestAtrophyStepsThreeAPAttacksDownOneRung(t *testing.T) {
 	}
 }
 
-func TestAGrowOnHitRingGetsStrongerInsideOneFight(t *testing.T) {
+func TestAGrowOnHitRelicGetsStrongerInsideOneFight(t *testing.T) {
 	// The Enflamed family: the accumulator moves as a blow lands, so the second fire attack of a
-	// fight is already worth more than the first — where every other growing ring waits for the
+	// fight is already worth more than the first — where every other growing relic waits for the
 	// win. What is checked here is the arithmetic; the seat in resolveAttackPhase is what makes a
 	// real blow reach it.
-	enflamed := ring(t, "enflamed",
-		RingRule{
+	enflamed := relic(t, "enflamed",
+		RelicRule{
 			When: MomentCardDamage,
-			If:   RingCondition{Element: Fire, HasElement: true},
-			Then: []RingEffect{{Do: DoScaleDamage, Amount: 100}},
+			If:   RelicCondition{Element: Fire, HasElement: true},
+			Then: []RelicEffect{{Do: DoScaleDamage, Amount: 100}},
 		},
-		RingRule{
+		RelicRule{
 			When: MomentAttackLands,
-			If:   RingCondition{Element: Fire, HasElement: true},
-			Then: []RingEffect{{Do: DoGrowOnHit, Amount: 10}},
+			If:   RelicCondition{Element: Fire, HasElement: true},
+			Then: []RelicEffect{{Do: DoGrowOnHit, Amount: 10}},
 		})
 
-	d := duelist(100, 5, 100).Wearing(WornRing{Ring: enflamed})
+	d := duelist(100, 5, 100).Wearing(WornRelic{Relic: enflamed})
 
 	fire, ice := Of(Strike, Fire), Of(Strike, Ice)
 
-	// Fresh, the ring is worth nothing: 100% of the card is the card.
+	// Fresh, the relic is worth nothing: 100% of the card is the card.
 	if got, want := d.CardDamage(fire), d.CardDamage(ice); got != want {
 		t.Errorf("an ungrown Enflamed deals %d where a plain card deals %d", got, want)
 	}
 
 	// A landing of a fire card steps the accumulator; an ice one does not.
 	d = d.GrowOnLanding(ice)
-	if got := d.WornRings()[0].Grown; got != 0 {
-		t.Errorf("an ice landing grew a fire ring to %d, want 0", got)
+	if got := d.WornRelics()[0].Grown; got != 0 {
+		t.Errorf("an ice landing grew a fire relic to %d, want 0", got)
 	}
 
 	d = d.GrowOnLanding(fire)
-	if got := d.WornRings()[0].Grown; got != 10 {
-		t.Errorf("one fire landing grew the ring to %d, want 10", got)
+	if got := d.WornRelics()[0].Grown; got != 10 {
+		t.Errorf("one fire landing grew the relic to %d, want 10", got)
 	}
 
 	// **Once per landing** *(owner's call, 2026-08-22, and per card inside the blow since
 	// 2026-08-26)*: two fire cards in one hand are two steps, where a status would land once.
 	d = d.GrowOnLanding(fire).GrowOnLanding(fire)
-	if got := d.WornRings()[0].Grown; got != 30 {
-		t.Errorf("three fire landings left the ring at %d, want 30", got)
+	if got := d.WornRelics()[0].Grown; got != 30 {
+		t.Errorf("three fire landings left the relic at %d, want 30", got)
 	}
 
 	// Three landings in, fire cards are worth 1.3x and nothing else has moved.
@@ -699,45 +699,45 @@ func TestAGrowOnHitRingGetsStrongerInsideOneFight(t *testing.T) {
 	}
 
 	// **The growth does not itself grow.** Reading the step as Amount+Grown would compound it.
-	before := d.WornRings()[0].Grown
+	before := d.WornRelics()[0].Grown
 	d = d.GrowOnLanding(fire)
-	if got := d.WornRings()[0].Grown - before; got != 10 {
-		t.Errorf("the fourth fire landing stepped the ring by %d, want 10 — the step is compounding", got)
+	if got := d.WornRelics()[0].Grown - before; got != 10 {
+		t.Errorf("the fourth fire landing stepped the relic by %d, want 10 — the step is compounding", got)
 	}
 }
 
-func TestEchoAndAGrowOnHitRingCompound(t *testing.T) {
-	// **The combination is the point.** A card an echo ring seats three times hit three times, so an
+func TestEchoAndAGrowOnHitRelicCompound(t *testing.T) {
+	// **The combination is the point.** A card an echo relic seats three times hit three times, so an
 	// Enflamed Ring worn beside Echo grows three steps off one card rather than one. If this ever
-	// starts counting cards again, the two rings quietly stop being a build.
-	enflamed := ring(t, "enflamed-echo",
-		RingRule{
+	// starts counting cards again, the two relics quietly stop being a build.
+	enflamed := relic(t, "enflamed-echo",
+		RelicRule{
 			When: MomentAttackLands,
-			If:   RingCondition{Element: Fire, HasElement: true},
-			Then: []RingEffect{{Do: DoGrowOnHit, Amount: 10}},
+			If:   RelicCondition{Element: Fire, HasElement: true},
+			Then: []RelicEffect{{Do: DoGrowOnHit, Amount: 10}},
 		})
-	echo := ring(t, "echo-enflamed", RingRule{
+	echo := relic(t, "echo-enflamed", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Lead: true},
-		Then: []RingEffect{{Do: DoEchoAttack, Amount: 3}},
+		If:   RelicCondition{Lead: true},
+		Then: []RelicEffect{{Do: DoEchoAttack, Amount: 3}},
 	})
 
 	fire := Of(Strike, Fire)
 
 	// **Through the real round**, because the echo's extra landings are seated by the sum: they are
 	// terms of one blow rather than cards of a turn, so nothing below the round can see them.
-	alone := duelist(100, 5, 100).Wearing(WornRing{Ring: enflamed})
+	alone := duelist(100, 5, 100).Wearing(WornRelic{Relic: enflamed})
 	_, grown, _ := resolve(alone, duelist(10, 5, 100000), []Card{fire}, nil, 1)
-	if got := grown.WornRings()[0].Grown; got != 10 {
-		t.Errorf("one fire card without Echo grew the ring by %d, want 10", got)
+	if got := grown.WornRelics()[0].Grown; got != 10 {
+		t.Errorf("one fire card without Echo grew the relic by %d, want 10", got)
 	}
 
 	both := duelist(100, 5, 100).
-		Wearing(WornRing{Ring: enflamed}).
-		Wearing(WornRing{Ring: echo})
+		Wearing(WornRelic{Relic: enflamed}).
+		Wearing(WornRelic{Relic: echo})
 	_, grown, _ = resolve(both, duelist(10, 5, 100000), []Card{fire}, nil, 1)
-	if got := grown.WornRings()[0].Grown; got != 30 {
-		t.Errorf("one echoed fire card grew the ring by %d, want 30 — the echo's landings are "+
+	if got := grown.WornRelics()[0].Grown; got != 30 {
+		t.Errorf("one echoed fire card grew the relic by %d, want 30 — the echo's landings are "+
 			"not being counted", got)
 	}
 }
@@ -746,34 +746,34 @@ func TestAFourOfAKindGrowsOnceForEachCard(t *testing.T) {
 	// **Through the real round, not through the applier**, because the bug this guards against is a
 	// seat rather than a formula: a four of a kind is one *blow*, and an accumulator that took the
 	// blow as its unit would step once where the player threw four attacks.
-	enflamed := ring(t, "enflamed-round",
-		RingRule{
+	enflamed := relic(t, "enflamed-round",
+		RelicRule{
 			When: MomentCardDamage,
-			If:   RingCondition{Element: Fire, HasElement: true},
-			Then: []RingEffect{{Do: DoScaleDamage, Amount: 100}},
+			If:   RelicCondition{Element: Fire, HasElement: true},
+			Then: []RelicEffect{{Do: DoScaleDamage, Amount: 100}},
 		},
-		RingRule{
+		RelicRule{
 			When: MomentAttackLands,
-			If:   RingCondition{Element: Fire, HasElement: true},
-			Then: []RingEffect{{Do: DoGrowOnHit, Amount: 10}},
+			If:   RelicCondition{Element: Fire, HasElement: true},
+			Then: []RelicEffect{{Do: DoGrowOnHit, Amount: 10}},
 		})
 
-	attacker := duelist(10, 8, 100).Wearing(WornRing{Ring: enflamed})
+	attacker := duelist(10, 8, 100).Wearing(WornRelic{Relic: enflamed})
 	fire := Of(Strike, Fire)
 
 	_, after, _ := resolve(attacker, duelist(10, 5, 1000),
 		[]Card{fire, fire, fire, fire}, nil, 1)
 
-	if got := after.WornRings()[0].Grown; got != 40 {
-		t.Errorf("a fire Four of a Kind grew the ring by %d, want 40 — one step per card that "+
+	if got := after.WornRelics()[0].Grown; got != 40 {
+		t.Errorf("a fire Four of a Kind grew the relic by %d, want 40 — one step per card that "+
 			"landed, not one per blow", got)
 	}
 
 	// A hand of one colour among others still only pays for its own colour.
 	_, mixed, _ := resolve(attacker, duelist(10, 5, 1000),
 		[]Card{fire, Of(Strike, Ice), fire}, nil, 1)
-	if got := mixed.WornRings()[0].Grown; got != 20 {
-		t.Errorf("two fire cards beside an ice one grew the ring by %d, want 20", got)
+	if got := mixed.WornRelics()[0].Grown; got != 20 {
+		t.Errorf("two fire cards beside an ice one grew the relic by %d, want 20", got)
 	}
 }
 
@@ -781,73 +781,73 @@ func TestMomentumBuildsAcrossTurnsAndADefenceWipesIt(t *testing.T) {
 	// Momentum through the real round, because what it measures is a *turn* — the one unit no
 	// applier-level test can see. Written as two rules with no negation anywhere: one grows on every
 	// turn, one resets on a turn holding a defence, and the reset is applied second.
-	momentum := ring(t, "momentum",
-		RingRule{
+	momentum := relic(t, "momentum",
+		RelicRule{
 			When: MomentCardDamage,
-			Then: []RingEffect{{Do: DoScaleDamage, Amount: 100}},
+			Then: []RelicEffect{{Do: DoScaleDamage, Amount: 100}},
 		},
-		RingRule{
+		RelicRule{
 			When: MomentTurnTaken,
-			Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 20}},
+			Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 20}},
 		},
-		RingRule{
+		RelicRule{
 			When: MomentTurnTaken,
-			If:   RingCondition{Form: FormDefend, HasForm: true},
-			Then: []RingEffect{{Do: DoResetGrowth}},
+			If:   RelicCondition{Form: FormDefend, HasForm: true},
+			Then: []RelicEffect{{Do: DoResetGrowth}},
 		})
 
-	d := duelist(100, 8, 100).Wearing(WornRing{Ring: momentum})
+	d := duelist(100, 8, 100).Wearing(WornRelic{Relic: momentum})
 	target := duelist(10, 5, 100000)
 	strike := Of(Strike, Basic)
 
 	_, d, target = resolve(d, target, []Card{strike}, nil, 1)
-	if got := d.WornRings()[0].Grown; got != 20 {
+	if got := d.WornRelics()[0].Grown; got != 20 {
 		t.Errorf("one attacking turn left Momentum at %d, want 20", got)
 	}
 
 	_, d, target = resolve(d, target, []Card{strike}, nil, 2)
-	if got := d.WornRings()[0].Grown; got != 40 {
+	if got := d.WornRelics()[0].Grown; got != 40 {
 		t.Errorf("two attacking turns left Momentum at %d, want 40", got)
 	}
 
 	// A turn with any plan card in it nets zero, however much else it held.
 	_, d, target = resolve(d, target, []Card{strike, Plain(Ward)}, nil, 3)
-	if got := d.WornRings()[0].Grown; got != 0 {
+	if got := d.WornRelics()[0].Grown; got != 0 {
 		t.Errorf("a turn holding a plan card left Momentum at %d, want 0", got)
 	}
 
 	// And it starts again from nothing.
 	_, d, _ = resolve(d, target, []Card{strike}, nil, 4)
-	if got := d.WornRings()[0].Grown; got != 20 {
+	if got := d.WornRelics()[0].Grown; got != 20 {
 		t.Errorf("the turn after a reset left Momentum at %d, want 20", got)
 	}
 
 	// **An empty turn is still a turn taken**, which is the reading that makes a streak about
 	// planning rather than about swinging.
 	_, d, _ = resolve(d, target, nil, nil, 5)
-	if got := d.WornRings()[0].Grown; got != 40 {
+	if got := d.WornRelics()[0].Grown; got != 40 {
 		t.Errorf("an empty turn left Momentum at %d, want 40", got)
 	}
 }
 
-func TestARingThatResetsItselfDoesNotBankItsGrowth(t *testing.T) {
+func TestARelicThatResetsItselfDoesNotBankItsGrowth(t *testing.T) {
 	// The other half of Momentum: a streak belongs to the duel it was built in. KeepsGrowth is what
 	// the run reads, and getting it wrong would turn one good fight into a permanent bonus.
-	momentum := ring(t, "momentum-keeps",
-		RingRule{When: MomentTurnTaken, Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 20}}},
-		RingRule{
+	momentum := relic(t, "momentum-keeps",
+		RelicRule{When: MomentTurnTaken, Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 20}}},
+		RelicRule{
 			When: MomentTurnTaken,
-			If:   RingCondition{Form: FormDefend, HasForm: true},
-			Then: []RingEffect{{Do: DoResetGrowth}},
+			If:   RelicCondition{Form: FormDefend, HasForm: true},
+			Then: []RelicEffect{{Do: DoResetGrowth}},
 		})
-	heart := ring(t, "heart-keeps",
-		RingRule{When: MomentFightWon, Then: []RingEffect{{Do: DoGrowOnWin, Amount: 5}}})
+	heart := relic(t, "heart-keeps",
+		RelicRule{When: MomentFightWon, Then: []RelicEffect{{Do: DoGrowOnWin, Amount: 5}}})
 
 	if KeepsGrowth(momentum) {
-		t.Error("a ring holding a reset is banked between fights")
+		t.Error("a relic holding a reset is banked between fights")
 	}
 	if !KeepsGrowth(heart) {
-		t.Error("a ring with no reset is not banked between fights")
+		t.Error("a relic with no reset is not banked between fights")
 	}
 }
 
@@ -868,20 +868,20 @@ func handEventOf(t *testing.T, events []Event, side Side) Event {
 
 func TestAHandRuleIsRefusedAnywhereButBlowFormed(t *testing.T) {
 	// **Only blow-formed knows what formed**, exactly as only blow-formed knows which card leads.
-	// A `Hand` predicate anywhere else would match nothing and read as a ring that does nothing.
+	// A `Hand` predicate anywhere else would match nothing and read as a relic that does nothing.
 	pair, ok := HandIDForKey("pair")
 	if !ok {
 		t.Fatal("the ladder has no concept-pair, so this test cannot say what it means")
 	}
 
-	refused(t, "hand at card-damage", RingRule{
+	refused(t, "hand at card-damage", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Hand: pair, HasHand: true},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		If:   RelicCondition{Hand: pair, HasHand: true},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
-	refused(t, "add-hand-damage at card-damage", RingRule{
+	refused(t, "add-hand-damage at card-damage", RelicRule{
 		When: MomentCardDamage,
-		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 5}},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 5}},
 	})
 }
 
@@ -891,15 +891,15 @@ func TestAHandRuleMayNotAlsoNameACard(t *testing.T) {
 	// be fire? It is refused rather than resolved to one reading nobody wrote down.
 	pair, _ := HandIDForKey("pair")
 
-	refused(t, "hand and element", RingRule{
+	refused(t, "hand and element", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: pair, HasHand: true, Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 5}},
+		If:   RelicCondition{Hand: pair, HasHand: true, Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 5}},
 	})
 }
 
-func TestAHandRingPaysOnlyItsOwnRung(t *testing.T) {
-	// **The predicate is the whole ring**, so the test that matters is the negative one: a ring
+func TestAHandRelicPaysOnlyItsOwnRung(t *testing.T) {
+	// **The predicate is the whole relic**, so the test that matters is the negative one: a relic
 	// naming Form Three of a Kind must be worth nothing on the turns that build something else.
 	// **Three of one concept, which is the rung three identical cards actually build.** Card
 	// Three of a Kind pays 250 where the form rung pays 150, and the matcher takes the best — so a
@@ -908,17 +908,17 @@ func TestAHandRingPaysOnlyItsOwnRung(t *testing.T) {
 	if !ok {
 		t.Fatal("the ladder has no concept-three-of-a-kind")
 	}
-	forged := ring(t, "forged", RingRule{
+	forged := relic(t, "forged", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: trips, HasHand: true},
-		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 3}},
+		If:   RelicCondition{Hand: trips, HasHand: true},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 3}},
 	})
 
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: forged})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: forged})
 	slash := slashCard(t)
 	crush := crushCard(t)
 
-	// Three of one form is the rung the ring names.
+	// Three of one form is the rung the relic names.
 	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash, slash}, nil, 1)
 	trip := handEventOf(t, events, SideA)
 	if trip.HandBonus != 3 {
@@ -939,20 +939,20 @@ func TestAHandRingPaysOnlyItsOwnRung(t *testing.T) {
 func TestTheHandBonusIsAddedBeforeTheMultiplier(t *testing.T) {
 	// **This is the whole design decision** *(owner's call, 2026-09-05)*: the bonus is a term of
 	// the base sum rather than something added to the answer, so a rung's bonus is worth more on
-	// the rung that pays more. A bonus applied after the multiplier would be the same ring at
+	// the rung that pays more. A bonus applied after the multiplier would be the same relic at
 	// every rung, and nothing on screen would say which it was.
 	trips, _ := HandIDForKey("concept-three-of-a-kind")
-	forged := ring(t, "forged-order", RingRule{
+	forged := relic(t, "forged-order", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: trips, HasHand: true},
-		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 3}},
+		If:   RelicCondition{Hand: trips, HasHand: true},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 3}},
 	})
 
 	slash := slashCard(t)
 	cards := []Card{slash, slash, slash}
 
 	bare, _, _ := resolve(duelist(10, 5, 100), duelist(10, 5, 100000), cards, nil, 1)
-	worn, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRing{Ring: forged}),
+	worn, _, _ := resolve(duelist(10, 5, 100).Wearing(WornRelic{Relic: forged}),
 		duelist(10, 5, 100000), cards, nil, 1)
 
 	before := handEventOf(t, bare, SideA)
@@ -970,29 +970,29 @@ func TestTheHandBonusIsAddedBeforeTheMultiplier(t *testing.T) {
 	}
 }
 
-func TestTwoHandRingsOnOneRungAdd(t *testing.T) {
+func TestTwoHandRelicsOnOneRungAdd(t *testing.T) {
 	// **Flat terms in a sum, so there is nothing to compound** — unlike the multipliers, where worn
-	// order decides the result. This is what makes the rung rings the one family whose order on the
+	// order decides the result. This is what makes the rung relics the one family whose order on the
 	// hand does not matter.
 	pair, _ := HandIDForKey("pair")
-	rule := RingRule{
+	rule := RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: pair, HasHand: true},
-		Then: []RingEffect{{Do: DoAddHandDamage, Amount: 4}},
+		If:   RelicCondition{Hand: pair, HasHand: true},
+		Then: []RelicEffect{{Do: DoAddHandDamage, Amount: 4}},
 	}
-	one := ring(t, "pairbonus-one", rule)
-	two := ring(t, "pairbonus-two", rule)
+	one := relic(t, "pairbonus-one", rule)
+	two := relic(t, "pairbonus-two", rule)
 
 	slash := slashCard(t)
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: one}).Wearing(WornRing{Ring: two})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: one}).Wearing(WornRelic{Relic: two})
 
 	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
 	e := handEventOf(t, events, SideA)
 	if e.HandBonus != 8 {
-		t.Errorf("two rings on one rung paid %d, want 8", e.HandBonus)
+		t.Errorf("two relics on one rung paid %d, want 8", e.HandBonus)
 	}
 	if !e.HandBonusSeats[0] || !e.HandBonusSeats[1] {
-		t.Error("both rings paid, so both seats have to be attributable")
+		t.Error("both relics paid, so both seats have to be attributable")
 	}
 }
 
@@ -1004,36 +1004,36 @@ func TestAHeldRuleIsRefusedAlongsideABlowPredicate(t *testing.T) {
 	// two halves are about different things.
 	pair, _ := HandIDForKey("pair")
 
-	refused(t, "held and lead", RingRule{
+	refused(t, "held and lead", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Lead: true},
-		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		If:   RelicCondition{Lead: true},
+		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
-	refused(t, "held and hand", RingRule{
+	refused(t, "held and hand", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: pair, HasHand: true},
-		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		If:   RelicCondition{Hand: pair, HasHand: true},
+		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
-	refused(t, "held at card-damage", RingRule{
+	refused(t, "held at card-damage", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 }
 
 func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
-	// **Once per match, not once per turn.** The whole point of the ring is that a second held
+	// **Once per match, not once per turn.** The whole point of the relic is that a second held
 	// fire card is worth as much as the first — a flat per-card term, which is what makes holding
 	// a colour a decision rather than a threshold.
-	smoulder := ring(t, "smoulder", RingRule{
+	smoulder := relic(t, "smoulder", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 
 	fire := Of(Strike, Fire)
 	ice := Of(Strike, Ice)
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: smoulder})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: smoulder})
 
 	for _, tc := range []struct {
 		name string
@@ -1046,7 +1046,7 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 		{"the wrong colour held", []Card{ice, ice}, 0},
 		{"one of each", []Card{fire, ice}, 5},
 	} {
-		got, seats := HeldBonus(wearer.WornRings(), tc.held)
+		got, seats := HeldBonus(wearer.WornRelics(), tc.held)
 		if got != tc.want {
 			t.Errorf("%s paid %d, want %d", tc.name, got, tc.want)
 		}
@@ -1060,10 +1060,10 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 	// **Through the real round**, because the seat is the thing being tested: the held hand is a
 	// parameter of ResolveRound that only the blow's own sum ever reads, and a verb wired to the
 	// wrong pile would still pass every unit test of HeldBonus.
-	smoulder := ring(t, "smoulder-round", RingRule{
+	smoulder := relic(t, "smoulder-round", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 
 	played := []Card{Of(Slice, Earth), Of(Slice, Earth)}
@@ -1071,7 +1071,7 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 
 	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
 		played, nil, held, nil, 1, Sources{})
-	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRing{Ring: smoulder}),
+	worn, _, _ := ResolveRoundHolding(duelist(10, 5, 100).Wearing(WornRelic{Relic: smoulder}),
 		duelist(10, 5, 100000), played, nil, held, nil, 1, Sources{})
 
 	before := handEventOf(t, bare, SideA)
@@ -1090,15 +1090,15 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 }
 
 func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
-	// **It is a fact about the hand, not an event.** A card kept back is not spent, so the ring
+	// **It is a fact about the hand, not an event.** A card kept back is not spent, so the relic
 	// pays for it again next turn — which is what separates this from anything that fires once.
-	bedrock := ring(t, "bedrock", RingRule{
+	bedrock := relic(t, "bedrock", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Element: Earth, HasElement: true},
-		Then: []RingEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
+		If:   RelicCondition{Element: Earth, HasElement: true},
+		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: bedrock})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: bedrock})
 	played := []Card{Of(Slice, Fire), Of(Slice, Fire)}
 	held := []Card{Of(Strike, Earth)}
 
@@ -1127,57 +1127,57 @@ func defendCardForTest(t *testing.T) Card {
 
 // TestGrowPerCardCountsRatherThanFires. The whole difference between the two turn-taken growth
 // verbs: grow-on-turn takes one step for a turn holding any match, this one takes a step per match.
-// A ring worth the same for one shield as for three would be grow-on-turn under a longer name.
+// A relic worth the same for one shield as for three would be grow-on-turn under a longer name.
 func TestGrowPerCardCountsRatherThanFires(t *testing.T) {
-	id := ring(t, "ebbtest.perCard", RingRule{
+	id := relic(t, "ebbtest.perCard", RelicRule{
 		When: MomentTurnTaken,
-		If:   RingCondition{Form: FormDefend, HasForm: true},
-		Then: []RingEffect{{Do: DoGrowPerCard, Amount: 20}},
+		If:   RelicCondition{Form: FormDefend, HasForm: true},
+		Then: []RelicEffect{{Do: DoGrowPerCard, Amount: 20}},
 	})
 
 	shield := defendCardForTest(t)
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 
 	after := wearer.TurnTaken([]Card{shield, shield, shield, slashCard(t)})
-	if after.Rings[0].Grown != 60 {
-		t.Errorf("three shields grew the ring by %d, want 60", after.Rings[0].Grown)
+	if after.Relics[0].Grown != 60 {
+		t.Errorf("three shields grew the relic by %d, want 60", after.Relics[0].Grown)
 	}
 }
 
 // TestGrowPerCardIgnoresATurnWithNoMatch. A turn of pure attacks is not a step of zero, it is no
 // step at all — the same reading anyMatches gives grow-on-turn.
 func TestGrowPerCardIgnoresATurnWithNoMatch(t *testing.T) {
-	id := ring(t, "ebbtest.noMatch", RingRule{
+	id := relic(t, "ebbtest.noMatch", RelicRule{
 		When: MomentTurnTaken,
-		If:   RingCondition{Form: FormDefend, HasForm: true},
-		Then: []RingEffect{{Do: DoGrowPerCard, Amount: 20}},
+		If:   RelicCondition{Form: FormDefend, HasForm: true},
+		Then: []RelicEffect{{Do: DoGrowPerCard, Amount: 20}},
 	})
 
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
-	if after := wearer.TurnTaken([]Card{slashCard(t)}); after.Rings[0].Grown != 0 {
-		t.Errorf("a turn with no shield in it grew the ring by %d, want 0", after.Rings[0].Grown)
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
+	if after := wearer.TurnTaken([]Card{slashCard(t)}); after.Relics[0].Grown != 0 {
+		t.Errorf("a turn with no shield in it grew the relic by %d, want 0", after.Relics[0].Grown)
 	}
 }
 
 // TestGrowPerCardIsRefusedWithNothingToCount. A per-card step with no predicate would count every
 // card of the turn, which is a thing the file cannot say it meant — and is grow-on-turn's job.
 func TestGrowPerCardIsRefusedWithNothingToCount(t *testing.T) {
-	refused(t, "perCardBare", RingRule{
+	refused(t, "perCardBare", RelicRule{
 		When: MomentTurnTaken,
-		Then: []RingEffect{{Do: DoGrowPerCard, Amount: 20}},
+		Then: []RelicEffect{{Do: DoGrowPerCard, Amount: 20}},
 	})
 }
 
 // TestTheVitaeBonusReachesTheBlowAndIsMultiplied. Rampant's figure is a fact about the run, not
 // about a card, so it joins Base after every card term and is scaled with the rest of them.
 func TestTheVitaeBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
-	id := ring(t, "rampanttest.pays", RingRule{
+	id := relic(t, "rampanttest.pays", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
 	})
 
 	slash := slashCard(t)
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 	wearer.Vitae = 30 // the purse session.Equip seeded the duel with
 
 	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
@@ -1187,28 +1187,28 @@ func TestTheVitaeBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 		t.Errorf("the purse paid %d, want 30", e.VitaeBonus)
 	}
 	if !e.VitaeBonusSeats[0] {
-		t.Error("the ring that pays has to be attributable, or the figure cannot fly from it")
+		t.Error("the relic that pays has to be attributable, or the figure cannot fly from it")
 	}
 	if want := scaleDamage(e.Base, e.Multiplier); e.Amount != want {
 		t.Errorf("the blow landed %d where its own base and multiplier say %d", e.Amount, want)
 	}
 }
 
-// TestDamagePerVitaeIsAskedOfTheRingsAndNotTheDuelist. The seam that keeps the purse out of the
+// TestDamagePerVitaeIsAskedOfTheRelicsAndNotTheDuelist. The seam that keeps the purse out of the
 // rules: combat reports the *rate*, and whoever knows what the run is carrying does the sum.
-func TestDamagePerVitaeIsAskedOfTheRingsAndNotTheDuelist(t *testing.T) {
-	one := ring(t, "rampanttest.rateOne", RingRule{
+func TestDamagePerVitaeIsAskedOfTheRelicsAndNotTheDuelist(t *testing.T) {
+	one := relic(t, "rampanttest.rateOne", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
 	})
-	two := ring(t, "rampanttest.rateTwo", RingRule{
+	two := relic(t, "rampanttest.rateTwo", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 2}},
+		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 2}},
 	})
 
-	worn := []WornRing{{Ring: one}, {Ring: two}}
+	worn := []WornRelic{{Relic: one}, {Relic: two}}
 	if got := DamagePerVitae(worn); got != 3 {
-		t.Errorf("two rings rated %d a vitae between them, want 3", got)
+		t.Errorf("two relics rated %d a vitae between them, want 3", got)
 	}
 	if got := DamagePerVitae(nil); got != 0 {
 		t.Errorf("a bare duelist is rated %d a vitae, want 0", got)
@@ -1216,16 +1216,16 @@ func TestDamagePerVitaeIsAskedOfTheRingsAndNotTheDuelist(t *testing.T) {
 }
 
 // TestThePurseIsReReadEveryBlow. The correction that made Rampant right: vitae moves *during* a
-// fight — a card kept in hand pays one every turn it is held — so a ring reading the purse has to
+// fight — a card kept in hand pays one every turn it is held — so a relic reading the purse has to
 // be re-asked at each blow. A figure resolved once at fight-start pays a late turn at opening
 // prices, which is the bug this holds against.
 func TestThePurseIsReReadEveryBlow(t *testing.T) {
-	id := ring(t, "rampanttest.reread", RingRule{
+	id := relic(t, "rampanttest.reread", RelicRule{
 		When: MomentFightStart,
-		Then: []RingEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
+		Then: []RelicEffect{{Do: DoAddDamagePerVitae, Amount: 1}},
 	})
 
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 	wearer.Vitae = 10
 	played := []Card{slashCard(t), slashCard(t)}
 	held := []Card{carrying(Jab, RiderVitaeInHand, 3)}
@@ -1246,58 +1246,58 @@ func TestThePurseIsReReadEveryBlow(t *testing.T) {
 }
 
 // TestAHandScalerIsASecondMultiplierAndNotABiggerHand. The rule the owner set: `Multiplier` is the
-// ladder's own figure and a ring may not move it — the banner, the hand row and the sum all show
-// the rung the player actually built. What the ring does is scale the result afterwards.
+// ladder's own figure and a relic may not move it — the banner, the hand row and the sum all show
+// the rung the player actually built. What the relic does is scale the result afterwards.
 func TestAHandScalerIsASecondMultiplierAndNotABiggerHand(t *testing.T) {
 	pair, _ := HandIDForKey("pair")
-	id := ring(t, "pairing", RingRule{
+	id := relic(t, "pairing", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: pair, HasHand: true},
-		Then: []RingEffect{{Do: DoScaleHandDamage, Amount: 200}},
+		If:   RelicCondition{Hand: pair, HasHand: true},
+		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 200}},
 	})
 
 	slash := slashCard(t)
 	bare := duelist(10, 5, 100)
-	wearer := bare.Wearing(WornRing{Ring: id})
+	wearer := bare.Wearing(WornRelic{Relic: id})
 
 	plain, _, _ := resolve(bare, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
 	scaled, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
 
 	was, now := handEventOf(t, plain, SideA), handEventOf(t, scaled, SideA)
 	if now.HandScale != 200 {
-		t.Errorf("the ring scaled the hand by %d, want 200", now.HandScale)
+		t.Errorf("the relic scaled the hand by %d, want 200", now.HandScale)
 	}
 	if now.Multiplier != was.Multiplier {
-		t.Errorf("the ring moved the hand's own multiplier from %d to %d, and it may not",
+		t.Errorf("the relic moved the hand's own multiplier from %d to %d, and it may not",
 			was.Multiplier, now.Multiplier)
 	}
 	if now.Base != was.Base {
-		t.Errorf("the ring moved Base from %d to %d, and it may only scale the result", was.Base, now.Base)
+		t.Errorf("the relic moved Base from %d to %d, and it may only scale the result", was.Base, now.Base)
 	}
 	if now.Amount != was.Amount*2 {
 		t.Errorf("the blow landed %d against %d unworn, want double", now.Amount, was.Amount)
 	}
 	if !now.HandScaleSeats[0] {
-		t.Error("the ring that scaled has to be attributable, or the figure cannot fly from it")
+		t.Error("the relic that scaled has to be attributable, or the figure cannot fly from it")
 	}
 }
 
-// TestAHandScalerPaysOnlyItsOwnRung. Same guard the flat rung rings carry: the matcher reports one
-// rung, so a ring naming a different one is silent.
+// TestAHandScalerPaysOnlyItsOwnRung. Same guard the flat rung relics carry: the matcher reports one
+// rung, so a relic naming a different one is silent.
 func TestAHandScalerPaysOnlyItsOwnRung(t *testing.T) {
 	trips, _ := HandIDForKey("concept-three-of-a-kind")
-	id := ring(t, "tripsonly", RingRule{
+	id := relic(t, "tripsonly", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: trips, HasHand: true},
-		Then: []RingEffect{{Do: DoScaleHandDamage, Amount: 300}},
+		If:   RelicCondition{Hand: trips, HasHand: true},
+		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 300}},
 	})
 
 	slash := slashCard(t)
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 
 	events, _, _ := resolve(wearer, duelist(10, 5, 100000), []Card{slash, slash}, nil, 1)
 	if e := handEventOf(t, events, SideA); e.HandScale != 100 {
-		t.Errorf("a pair paid a Three of a Kind ring %d, want the identity", e.HandScale)
+		t.Errorf("a pair paid a Three of a Kind relic %d, want the identity", e.HandScale)
 	}
 }
 
@@ -1305,13 +1305,13 @@ func TestAHandScalerPaysOnlyItsOwnRung(t *testing.T) {
 // pays, and a pair of the same weapon does not.
 func TestMinFormsCountsTheScoringSet(t *testing.T) {
 	pair, _ := HandIDForKey("pair")
-	id := ring(t, "dualwield", RingRule{
+	id := relic(t, "dualwield", RelicRule{
 		When: MomentBlowFormed,
-		If:   RingCondition{Hand: pair, HasHand: true, MinForms: 2},
-		Then: []RingEffect{{Do: DoScaleHandDamage, Amount: 300}},
+		If:   RelicCondition{Hand: pair, HasHand: true, MinForms: 2},
+		Then: []RelicEffect{{Do: DoScaleHandDamage, Amount: 300}},
 	})
 
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 
 	// Two fire cards of different forms: an elemental pair covering two weapons.
 	mixed, _, _ := resolve(wearer, duelist(10, 5, 100000),
@@ -1331,24 +1331,24 @@ func TestMinFormsCountsTheScoringSet(t *testing.T) {
 // TestMinFormsIsRefusedAnywhereButBlowFormed. Same seam Hand and Lead sit on: only one moment knows
 // what formed.
 func TestMinFormsIsRefusedAnywhereButBlowFormed(t *testing.T) {
-	refused(t, "minFormsAtCardDamage", RingRule{
+	refused(t, "minFormsAtCardDamage", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{MinForms: 2},
-		Then: []RingEffect{{Do: DoScaleDamage, Amount: 200}},
+		If:   RelicCondition{MinForms: 2},
+		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 }
 
 // TestTheVitaeScalerGrowsWithThePurse. Fire of Life: a percentage point a vitae, read against the
 // live purse rather than a figure fixed at the door.
 func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
-	id := ring(t, "fireoflife", RingRule{
+	id := relic(t, "fireoflife", RelicRule{
 		When: MomentCardDamage,
-		If:   RingCondition{Element: Fire, HasElement: true},
-		Then: []RingEffect{{Do: DoScaleDamagePerVitae, Amount: 1}},
+		If:   RelicCondition{Element: Fire, HasElement: true},
+		Then: []RelicEffect{{Do: DoScaleDamagePerVitae, Amount: 1}},
 	})
 
 	card := Of(Slice, Fire)
-	wearer := duelist(10, 5, 100).Wearing(WornRing{Ring: id})
+	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: id})
 
 	bare := wearer.CardDamage(card)
 	wearer.Vitae = 50
@@ -1359,7 +1359,7 @@ func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
 	// And it says nothing about a card it does not name.
 	ice := Of(Slice, Ice)
 	if got := wearer.CardDamage(ice); got != duelist(10, 5, 100).CardDamage(ice) {
-		t.Errorf("an ice card was moved to %d by a fire ring", got)
+		t.Errorf("an ice card was moved to %d by a fire relic", got)
 	}
 }
 
@@ -1372,17 +1372,17 @@ func TestTheVitaeScalerGrowsWithThePurse(t *testing.T) {
 // **The flat branch carries no point at all**, which is the other half of the reading: a decimal
 // point means a multiplier and a `+` means a flat figure, which is what let the `x` go.
 func TestTheCounterLabelIsAlwaysOneDecimalPlace(t *testing.T) {
-	scaling := ring(t, "counter-scaling",
-		RingRule{When: MomentCardDamage, Then: []RingEffect{{Do: DoScaleDamage, Amount: 100}}},
-		RingRule{When: MomentTurnTaken, Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 20}}},
+	scaling := relic(t, "counter-scaling",
+		RelicRule{When: MomentCardDamage, Then: []RelicEffect{{Do: DoScaleDamage, Amount: 100}}},
+		RelicRule{When: MomentTurnTaken, Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 20}}},
 	)
-	flat := ring(t, "counter-flat",
-		RingRule{When: MomentFightStart, Then: []RingEffect{{Do: DoAddHP, Amount: 5}}},
-		RingRule{When: MomentTurnTaken, Then: []RingEffect{{Do: DoGrowOnTurn, Amount: 5}}},
+	flat := relic(t, "counter-flat",
+		RelicRule{When: MomentFightStart, Then: []RelicEffect{{Do: DoAddHP, Amount: 5}}},
+		RelicRule{When: MomentTurnTaken, Then: []RelicEffect{{Do: DoGrowOnTurn, Amount: 5}}},
 	)
 
 	for _, grown := range []int{0, 5, 20, 60, 400, 950, 4900} {
-		got := CounterLabel(WornRing{Ring: scaling, Grown: grown})
+		got := CounterLabel(WornRelic{Relic: scaling, Grown: grown})
 		point := strings.IndexByte(got, '.')
 		if point < 0 {
 			t.Errorf("a multiplier grown %d reads %q, which has no decimal point", grown, got)
@@ -1393,7 +1393,7 @@ func TestTheCounterLabelIsAlwaysOneDecimalPlace(t *testing.T) {
 				grown, got, len(rest))
 		}
 
-		if got := CounterLabel(WornRing{Ring: flat, Grown: grown}); strings.ContainsRune(got, '.') {
+		if got := CounterLabel(WornRelic{Relic: flat, Grown: grown}); strings.ContainsRune(got, '.') {
 			t.Errorf("a flat figure grown %d reads %q, which carries a decimal point", grown, got)
 		}
 	}

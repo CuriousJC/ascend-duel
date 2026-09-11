@@ -47,7 +47,7 @@ func TestARunSurvivesARoundTrip(t *testing.T) {
 		t.Errorf("worn order is a rule, not a presentation detail: got %v", got.Worn)
 	}
 	if got.Grown["ember"] != 3 {
-		t.Errorf("a growing ring's accumulator was lost: got %v", got.Grown)
+		t.Errorf("a growing relic's accumulator was lost: got %v", got.Grown)
 	}
 	if len(got.Deck) != 2 || got.Deck[1].AmountPct != 150 || got.Deck[1].ID != 7 {
 		t.Errorf("the deck was lost: got %+v", got.Deck)

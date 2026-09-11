@@ -7,7 +7,7 @@ import "html/template"
 // One static file, no JavaScript, no build step: the loop is "edit enemies.json, re-run the tool,
 // refresh the tab", the same loop every other sheet here has.
 //
-// **Grouped by floor rather than listed alphabetically**, for the reason the ring sheet groups by
+// **Grouped by floor rather than listed alphabetically**, for the reason the relic sheet groups by
 // rarity: the floor is the whole placement decision, so the review question is "does anything in
 // this band belong a floor deeper", which a flat list of ninety-six records cannot answer. Each
 // heading carries the band's stat spread, so an outlier shows up as a number before it shows up as

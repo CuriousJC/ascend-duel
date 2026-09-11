@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Ascending Duel — ring sheet</title>
+<title>Ascending Duel — relic sheet</title>
 <style>
   :root {
     --ground: #a8bcd4;
@@ -64,10 +64,10 @@
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
 </style>
 
-<h1>Ring sheet</h1>
+<h1>Relic sheet</h1>
 <p class="facts">
-  137 rings, 114 of them drawing the default face.
-  Ring card <code>200&times;280</code>,
+  137 relics, 114 of them drawing the default face.
+  Relic card <code>200&times;280</code>,
   corner radius <code>15</code>,
   border <code>4</code>,
   art box inset <code>0</code> from
@@ -82,32 +82,32 @@
   The badge is drawn at <strong>Grown&nbsp;0</strong> &mdash; what a fresh copy wears, which is the
   card the shelf shows. It is also the narrowest the figure gets: a run late in a climb reads
   <code>10.5</code> or <code>+100</code>, so judge the size against those rather than against
-  <code>1.0</code>. A ring with no badge is one that does not grow, which is most of the catalogue.
+  <code>1.0</code>. A relic with no badge is one that does not grow, which is most of the catalogue.
   <strong>A decimal point means a multiplier and a <code>+</code> means a flat figure</strong>;
   there is no <code>x</code> after the multiplier, because the point already says so, and a
   multiplier is <strong>always one decimal place</strong> — so four characters is the widest the
   figure ever gets. <strong>A wide figure is meant to outgrow the disc a little</strong>; what it
   may not do is leave the card.
-  Shown at 1:1 on the ground the rings are actually drawn on.
+  Shown at 1:1 on the ground the relics are actually drawn on.
 </p>
 <p class="note">
-  Regenerate with <code>go run ./tools/ringsheet</code> and refresh. Every card here is
+  Regenerate with <code>go run ./tools/relicsheet</code> and refresh. Every card here is
   drawn by <code>internal/cards</code>, the same code the game blits, and every word beside
-  it is read out of <code>data/rings.json</code> through the same registration the game
-  runs at start-up — so a ring this page refuses to draw is a ring the game refuses to start
+  it is read out of <code>data/relics.json</code> through the same registration the game
+  runs at start-up — so a relic this page refuses to draw is a relic the game refuses to start
   with.
 </p>
 <p class="note">
   <strong>Read the sentence against the rules.</strong> The line under each name is the
   <code>Text</code> field, which is what the hover tooltip prints verbatim; the monospace
   lines under it are the rules that actually fire. Nothing in the codebase checks one
-  against the other, so a rule edited without its sentence is a ring that lies to the
+  against the other, so a rule edited without its sentence is a relic that lies to the
   player, and this is the only place the two are visible together.
 </p>
 
 <h2>The catalogue, by rarity</h2>
 <p class="note">
-  <strong>Grouped by tier because that is the pricing decision.</strong> A ring is rebalanced by
+  <strong>Grouped by tier because that is the pricing decision.</strong> A relic is rebalanced by
   moving it between these three, never by writing a number, so what a review needs is every
   common side by side. The share is how often a single shelf seat lands in that tier — the
   tier's tickets over the whole catalogue's.
@@ -116,14 +116,14 @@
 
 <h3 class="tier common">
   common
-  <span>55 rings &middot; 3 vitae, sells for 1 &middot;
+  <span>55 relics &middot; 3 vitae, sells for 1 &middot;
     weight 10 each &middot; 68.8% of a shelf draw</span>
 </h3>
 
 <div class="plates">
   
     <div class="plate">
-      <img src="ring-arcane-ring.png" width="228" height="308"
+      <img src="relic-arcane-ring.png" width="228" height="308"
            alt="Arcane Ring">
       <div class="about">
         <p class="name">Arcane Ring</p>
@@ -141,7 +141,7 @@
     </div>
   
     <div class="plate">
-      <img src="ring-banker-ring.png" width="228" height="308"
+      <img src="relic-banker-ring.png" width="228" height="308"
            alt="Banker Ring">
       <div class="about">
         <p class="name">Banker Ring</p>
@@ -159,7 +159,7 @@
     </div>
   
     <div class="plate">
-      <img src="ring-bedrock-ring.png" width="228" height="308"
+      <img src="relic-bedrock-ring.png" width="228" height="308"
            alt="Bedrock Ring">
       <div class="about">
         <p class="name">Bedrock Ring</p>
@@ -178,7 +178,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-boxer-ring.png" width="228" height="308"
+      <img src="relic-boxer-ring.png" width="228" height="308"
            alt="Boxer Ring">
       <div class="about">
         <p class="name">Boxer Ring</p>
@@ -196,7 +196,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-brass-knuckles-ring.png" width="228" height="308"
+      <img src="relic-brass-knuckles-ring.png" width="228" height="308"
            alt="Brass Knuckles Ring">
       <div class="about">
         <p class="name">Brass Knuckles Ring</p>
@@ -214,7 +214,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-bulwark-ring.png" width="228" height="308"
+      <img src="relic-bulwark-ring.png" width="228" height="308"
            alt="Bulwark Ring">
       <div class="about">
         <p class="name">Bulwark Ring</p>
@@ -232,7 +232,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-cleaver-ring.png" width="228" height="308"
+      <img src="relic-cleaver-ring.png" width="228" height="308"
            alt="Cleaver Ring">
       <div class="about">
         <p class="name">Cleaver Ring</p>
@@ -244,13 +244,13 @@ kept in hand.</p>
           <li>when card-damage, if Cleave → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-coiled-ring.png" width="228" height="308"
+      <img src="relic-coiled-ring.png" width="228" height="308"
            alt="Coiled Ring">
       <div class="about">
         <p class="name">Coiled Ring</p>
@@ -263,13 +263,13 @@ kept in hand.</p>
           <li>when blow-formed, if crush → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-concept-five-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-concept-five-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Perfect Ring">
       <div class="about">
         <p class="name">Perfect Ring</p>
@@ -281,13 +281,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;16</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-concept-four-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-concept-four-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Quartered Ring">
       <div class="about">
         <p class="name">Quartered Ring</p>
@@ -299,13 +299,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-concept-full-house-hand-ring.png" width="228" height="308"
+      <img src="relic-concept-full-house-hand-ring.png" width="228" height="308"
            alt="Laden Ring">
       <div class="about">
         <p class="name">Laden Ring</p>
@@ -317,13 +317,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;8</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-concept-three-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-concept-three-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Trined Ring">
       <div class="about">
         <p class="name">Trined Ring</p>
@@ -335,13 +335,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-concept-two-pair-hand-ring.png" width="228" height="308"
+      <img src="relic-concept-two-pair-hand-ring.png" width="228" height="308"
            alt="Doubled Ring">
       <div class="about">
         <p class="name">Doubled Ring</p>
@@ -353,13 +353,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;4</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-cutter-ring.png" width="228" height="308"
+      <img src="relic-cutter-ring.png" width="228" height="308"
            alt="Cutter Ring">
       <div class="about">
         <p class="name">Cutter Ring</p>
@@ -371,13 +371,13 @@ kept in hand.</p>
           <li>when card-damage, if Cut → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-earth-ring.png" width="228" height="308"
+      <img src="relic-earth-ring.png" width="228" height="308"
            alt="Earth Ring">
       <div class="about">
         <p class="name">Earth Ring</p>
@@ -395,7 +395,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-element-five-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-element-five-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Elemental Ring">
       <div class="about">
         <p class="name">Elemental Ring</p>
@@ -407,13 +407,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;14</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-element-four-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-element-four-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Confluent Ring">
       <div class="about">
         <p class="name">Confluent Ring</p>
@@ -425,13 +425,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;7</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-element-full-house-hand-ring.png" width="228" height="308"
+      <img src="relic-element-full-house-hand-ring.png" width="228" height="308"
            alt="Convergent Ring">
       <div class="about">
         <p class="name">Convergent Ring</p>
@@ -443,13 +443,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;7</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-element-three-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-element-three-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Attuned Ring">
       <div class="about">
         <p class="name">Attuned Ring</p>
@@ -467,7 +467,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-element-two-pair-hand-ring.png" width="228" height="308"
+      <img src="relic-element-two-pair-hand-ring.png" width="228" height="308"
            alt="Twinflame Ring">
       <div class="about">
         <p class="name">Twinflame Ring</p>
@@ -479,13 +479,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-fencer-ring.png" width="228" height="308"
+      <img src="relic-fencer-ring.png" width="228" height="308"
            alt="Fencer Ring">
       <div class="about">
         <p class="name">Fencer Ring</p>
@@ -497,13 +497,13 @@ kept in hand.</p>
           <li>when card-damage, if Lunge → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-fire-ring.png" width="228" height="308"
+      <img src="relic-fire-ring.png" width="228" height="308"
            alt="Fire Ring">
       <div class="about">
         <p class="name">Fire Ring</p>
@@ -521,7 +521,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-form-five-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-form-five-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Panoply Ring">
       <div class="about">
         <p class="name">Panoply Ring</p>
@@ -533,13 +533,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;12</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-form-four-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-form-four-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Arsenal Ring">
       <div class="about">
         <p class="name">Arsenal Ring</p>
@@ -557,7 +557,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-form-full-house-hand-ring.png" width="228" height="308"
+      <img src="relic-form-full-house-hand-ring.png" width="228" height="308"
            alt="Armoury Ring">
       <div class="about">
         <p class="name">Armoury Ring</p>
@@ -575,7 +575,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-form-three-of-a-kind-hand-ring.png" width="228" height="308"
+      <img src="relic-form-three-of-a-kind-hand-ring.png" width="228" height="308"
            alt="Forged Ring">
       <div class="about">
         <p class="name">Forged Ring</p>
@@ -587,13 +587,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-form-two-pair-hand-ring.png" width="228" height="308"
+      <img src="relic-form-two-pair-hand-ring.png" width="228" height="308"
            alt="Paired Ring">
       <div class="about">
         <p class="name">Paired Ring</p>
@@ -605,13 +605,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-frostbank-ring.png" width="228" height="308"
+      <img src="relic-frostbank-ring.png" width="228" height="308"
            alt="Frostbank Ring">
       <div class="about">
         <p class="name">Frostbank Ring</p>
@@ -624,13 +624,13 @@ kept in hand.</p>
           <li>when blow-formed, if ice → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-grinder-ring.png" width="228" height="308"
+      <img src="relic-grinder-ring.png" width="228" height="308"
            alt="Grinder Ring">
       <div class="about">
         <p class="name">Grinder Ring</p>
@@ -642,13 +642,13 @@ kept in hand.</p>
           <li>when card-damage, if Pulverize → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-headsman-ring.png" width="228" height="308"
+      <img src="relic-headsman-ring.png" width="228" height="308"
            alt="Headsman Ring">
       <div class="about">
         <p class="name">Headsman Ring</p>
@@ -660,13 +660,13 @@ kept in hand.</p>
           <li>when card-damage, if Sever → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-heart-ring.png" width="228" height="308"
+      <img src="relic-heart-ring.png" width="228" height="308"
            alt="Heart Ring">
       <div class="about">
         <p class="name">Heart Ring</p>
@@ -678,13 +678,13 @@ kept in hand.</p>
           <li>when fight-start → add-hp &#43;5</li><li>when fight-won → grow-on-win &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-heavy-ring.png" width="228" height="308"
+      <img src="relic-heavy-ring.png" width="228" height="308"
            alt="Heavy Ring">
       <div class="about">
         <p class="name">Heavy Ring</p>
@@ -696,13 +696,13 @@ kept in hand.</p>
           <li>when card-damage, if crush → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-high-card-hand-ring.png" width="228" height="308"
+      <img src="relic-high-card-hand-ring.png" width="228" height="308"
            alt="Lone Ring">
       <div class="about">
         <p class="name">Lone Ring</p>
@@ -714,13 +714,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hungry-ring.png" width="228" height="308"
+      <img src="relic-hungry-ring.png" width="228" height="308"
            alt="Hungry Ring">
       <div class="about">
         <p class="name">Hungry Ring</p>
@@ -732,13 +732,13 @@ kept in hand.</p>
           <li>when prizes-dealt → adjust-picks &#43;1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-ice-ring.png" width="228" height="308"
+      <img src="relic-ice-ring.png" width="228" height="308"
            alt="Ice Ring">
       <div class="about">
         <p class="name">Ice Ring</p>
@@ -756,7 +756,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-impaler-ring.png" width="228" height="308"
+      <img src="relic-impaler-ring.png" width="228" height="308"
            alt="Impaler Ring">
       <div class="about">
         <p class="name">Impaler Ring</p>
@@ -768,13 +768,13 @@ kept in hand.</p>
           <li>when card-damage, if Impale → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-keen-ring.png" width="228" height="308"
+      <img src="relic-keen-ring.png" width="228" height="308"
            alt="Keen Ring">
       <div class="about">
         <p class="name">Keen Ring</p>
@@ -792,7 +792,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-knocker-ring.png" width="228" height="308"
+      <img src="relic-knocker-ring.png" width="228" height="308"
            alt="Knocker Ring">
       <div class="about">
         <p class="name">Knocker Ring</p>
@@ -804,13 +804,13 @@ kept in hand.</p>
           <li>when card-damage, if Tap → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-lancer-ring.png" width="228" height="308"
+      <img src="relic-lancer-ring.png" width="228" height="308"
            alt="Lancer Ring">
       <div class="about">
         <p class="name">Lancer Ring</p>
@@ -822,13 +822,13 @@ kept in hand.</p>
           <li>when card-damage, if Thrust → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-lightning-ring.png" width="228" height="308"
+      <img src="relic-lightning-ring.png" width="228" height="308"
            alt="Lightning Ring">
       <div class="about">
         <p class="name">Lightning Ring</p>
@@ -846,7 +846,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-might-ring.png" width="228" height="308"
+      <img src="relic-might-ring.png" width="228" height="308"
            alt="Might Ring">
       <div class="about">
         <p class="name">Might Ring</p>
@@ -858,13 +858,13 @@ kept in hand.</p>
           <li>when fight-start → add-dmg &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-momentum-ring.png" width="228" height="308"
+      <img src="relic-momentum-ring.png" width="228" height="308"
            alt="Momentum Ring">
       <div class="about">
         <p class="name">Momentum Ring</p>
@@ -876,13 +876,13 @@ kept in hand.</p>
           <li>when card-damage → scale-damage &#43;100</li><li>when turn-taken → grow-on-turn &#43;20</li><li>when turn-taken, if defend → reset-growth</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-needle-ring.png" width="228" height="308"
+      <img src="relic-needle-ring.png" width="228" height="308"
            alt="Needle Ring">
       <div class="about">
         <p class="name">Needle Ring</p>
@@ -900,7 +900,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-pair-hand-ring.png" width="228" height="308"
+      <img src="relic-pair-hand-ring.png" width="228" height="308"
            alt="Twinned Ring">
       <div class="about">
         <p class="name">Twinned Ring</p>
@@ -912,13 +912,13 @@ kept in hand.</p>
           <li>when blow-formed → add-hand-damage &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-poised-ring.png" width="228" height="308"
+      <img src="relic-poised-ring.png" width="228" height="308"
            alt="Poised Ring">
       <div class="about">
         <p class="name">Poised Ring</p>
@@ -931,13 +931,13 @@ kept in hand.</p>
           <li>when blow-formed, if stab → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-potential-ring.png" width="228" height="308"
+      <img src="relic-potential-ring.png" width="228" height="308"
            alt="Potential Ring">
       <div class="about">
         <p class="name">Potential Ring</p>
@@ -950,13 +950,13 @@ kept in hand.</p>
           <li>when blow-formed, if lightning → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-prodder-ring.png" width="228" height="308"
+      <img src="relic-prodder-ring.png" width="228" height="308"
            alt="Prodder Ring">
       <div class="about">
         <p class="name">Prodder Ring</p>
@@ -968,13 +968,13 @@ kept in hand.</p>
           <li>when card-damage, if Poke → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-sheathed-ring.png" width="228" height="308"
+      <img src="relic-sheathed-ring.png" width="228" height="308"
            alt="Sheathed Ring">
       <div class="about">
         <p class="name">Sheathed Ring</p>
@@ -987,13 +987,13 @@ kept in hand.</p>
           <li>when blow-formed, if slash → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-skirmisher-ring.png" width="228" height="308"
+      <img src="relic-skirmisher-ring.png" width="228" height="308"
            alt="Skirmisher Ring">
       <div class="about">
         <p class="name">Skirmisher Ring</p>
@@ -1005,13 +1005,13 @@ kept in hand.</p>
           <li>when card-damage, if Nick → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-slicer-ring.png" width="228" height="308"
+      <img src="relic-slicer-ring.png" width="228" height="308"
            alt="Slicer Ring">
       <div class="about">
         <p class="name">Slicer Ring</p>
@@ -1024,13 +1024,13 @@ deals double DMG.</p>
           <li>when card-damage, if Slice → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-smasher-ring.png" width="228" height="308"
+      <img src="relic-smasher-ring.png" width="228" height="308"
            alt="Smasher Ring">
       <div class="about">
         <p class="name">Smasher Ring</p>
@@ -1042,13 +1042,13 @@ deals double DMG.</p>
           <li>when card-damage, if Smash → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-smoulder-ring.png" width="228" height="308"
+      <img src="relic-smoulder-ring.png" width="228" height="308"
            alt="Smoulder Ring">
       <div class="about">
         <p class="name">Smoulder Ring</p>
@@ -1061,13 +1061,13 @@ kept in hand.</p>
           <li>when blow-formed, if fire → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-soul-taker-ring.png" width="228" height="308"
+      <img src="relic-soul-taker-ring.png" width="228" height="308"
            alt="Soul Taker Ring">
       <div class="about">
         <p class="name">Soul Taker Ring</p>
@@ -1079,13 +1079,13 @@ kept in hand.</p>
           <li>when prizes-dealt → adjust-prize-vitae &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-striker-ring.png" width="228" height="308"
+      <img src="relic-striker-ring.png" width="228" height="308"
            alt="Striker Ring">
       <div class="about">
         <p class="name">Striker Ring</p>
@@ -1097,13 +1097,13 @@ kept in hand.</p>
           <li>when card-damage, if Strike → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-wellspring-ring.png" width="228" height="308"
+      <img src="relic-wellspring-ring.png" width="228" height="308"
            alt="Wellspring Ring">
       <div class="about">
         <p class="name">Wellspring Ring</p>
@@ -1116,7 +1116,7 @@ kept in hand.</p>
           <li>when blow-formed, if arcane → add-damage-per-held &#43;5</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
@@ -1125,14 +1125,14 @@ kept in hand.</p>
 
 <h3 class="tier uncommon">
   uncommon
-  <span>56 rings &middot; 5 vitae, sells for 2 &middot;
+  <span>56 relics &middot; 5 vitae, sells for 2 &middot;
     weight 4 each &middot; 28.0% of a shelf draw</span>
 </h3>
 
 <div class="plates">
   
     <div class="plate">
-      <img src="ring-aftershock-ring.png" width="228" height="308"
+      <img src="relic-aftershock-ring.png" width="228" height="308"
            alt="Aftershock Ring">
       <div class="about">
         <p class="name">Aftershock Ring</p>
@@ -1144,13 +1144,13 @@ kept in hand.</p>
           <li>when blow-formed, if crush → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-backdraft-ring.png" width="228" height="308"
+      <img src="relic-backdraft-ring.png" width="228" height="308"
            alt="Backdraft Ring">
       <div class="about">
         <p class="name">Backdraft Ring</p>
@@ -1162,13 +1162,13 @@ kept in hand.</p>
           <li>when blow-formed, if fire → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-braced-ring.png" width="228" height="308"
+      <img src="relic-braced-ring.png" width="228" height="308"
            alt="Braced Ring">
       <div class="about">
         <p class="name">Braced Ring</p>
@@ -1180,13 +1180,13 @@ kept in hand.</p>
           <li>when card-cost, if defend → adjust-cost -1</li><li>when fight-start → add-hp &#43;15</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-bruising-ring.png" width="228" height="308"
+      <img src="relic-bruising-ring.png" width="228" height="308"
            alt="Bruising Ring">
       <div class="about">
         <p class="name">Bruising Ring</p>
@@ -1198,13 +1198,13 @@ kept in hand.</p>
           <li>when attack-lands, if crush → apply-status weighted</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-burning-ring.png" width="228" height="308"
+      <img src="relic-burning-ring.png" width="228" height="308"
            alt="Burning Ring">
       <div class="about">
         <p class="name">Burning Ring</p>
@@ -1222,7 +1222,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-chilling-ring.png" width="228" height="308"
+      <img src="relic-chilling-ring.png" width="228" height="308"
            alt="Chilling Ring">
       <div class="about">
         <p class="name">Chilling Ring</p>
@@ -1240,7 +1240,7 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-crown-ring.png" width="228" height="308"
+      <img src="relic-crown-ring.png" width="228" height="308"
            alt="Crown Ring">
       <div class="about">
         <p class="name">Crown Ring</p>
@@ -1252,13 +1252,13 @@ kept in hand.</p>
           <li>when card-damage → scale-damage &#43;250</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-dual-wield-ring.png" width="228" height="308"
+      <img src="relic-dual-wield-ring.png" width="228" height="308"
            alt="Dual Wield Ring">
       <div class="about">
         <p class="name">Dual Wield Ring</p>
@@ -1271,13 +1271,13 @@ different forms deals 3x DMG.</p>
           <li>when blow-formed → scale-hand-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-dust-storm-ring.png" width="228" height="308"
+      <img src="relic-dust-storm-ring.png" width="228" height="308"
            alt="Dust Storm Ring">
       <div class="about">
         <p class="name">Dust Storm Ring</p>
@@ -1289,13 +1289,13 @@ different forms deals 3x DMG.</p>
           <li>when card-drawn, if earth → set-element lightning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-echo-ring.png" width="228" height="308"
+      <img src="relic-echo-ring.png" width="228" height="308"
            alt="Echo Ring">
       <div class="about">
         <p class="name">Echo Ring</p>
@@ -1307,13 +1307,13 @@ different forms deals 3x DMG.</p>
           <li>when blow-formed → echo-attack &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-enflamed-ring.png" width="228" height="308"
+      <img src="relic-enflamed-ring.png" width="228" height="308"
            alt="Enflamed Ring">
       <div class="about">
         <p class="name">Enflamed Ring</p>
@@ -1325,13 +1325,13 @@ different forms deals 3x DMG.</p>
           <li>when card-damage, if fire → scale-damage &#43;100</li><li>when attack-lands, if fire → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-fire-of-life-ring.png" width="228" height="308"
+      <img src="relic-fire-of-life-ring.png" width="228" height="308"
            alt="Fire of Life Ring">
       <div class="about">
         <p class="name">Fire of Life Ring</p>
@@ -1344,13 +1344,13 @@ for every 10 vitae you hold.</p>
           <li>when card-damage, if fire → scale-damage-per-vitae &#43;1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-firestorm-ring.png" width="228" height="308"
+      <img src="relic-firestorm-ring.png" width="228" height="308"
            alt="Firestorm Ring">
       <div class="about">
         <p class="name">Firestorm Ring</p>
@@ -1362,13 +1362,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if lightning → set-element fire</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-flurry-ring.png" width="228" height="308"
+      <img src="relic-flurry-ring.png" width="228" height="308"
            alt="Flurry Ring">
       <div class="about">
         <p class="name">Flurry Ring</p>
@@ -1380,13 +1380,13 @@ for every 10 vitae you hold.</p>
           <li>when blow-formed, if stab → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-forked-ring.png" width="228" height="308"
+      <img src="relic-forked-ring.png" width="228" height="308"
            alt="Forked Ring">
       <div class="about">
         <p class="name">Forked Ring</p>
@@ -1398,13 +1398,13 @@ for every 10 vitae you hold.</p>
           <li>when blow-formed, if lightning → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-frostbite-ring.png" width="228" height="308"
+      <img src="relic-frostbite-ring.png" width="228" height="308"
            alt="Frostbite Ring">
       <div class="about">
         <p class="name">Frostbite Ring</p>
@@ -1416,13 +1416,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if fire → set-element ice</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-frostbitten-ring.png" width="228" height="308"
+      <img src="relic-frostbitten-ring.png" width="228" height="308"
            alt="Frostbitten Ring">
       <div class="about">
         <p class="name">Frostbitten Ring</p>
@@ -1434,13 +1434,13 @@ for every 10 vitae you hold.</p>
           <li>when card-damage, if ice → scale-damage &#43;100</li><li>when attack-lands, if ice → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-frozen-lightning-ring.png" width="228" height="308"
+      <img src="relic-frozen-lightning-ring.png" width="228" height="308"
            alt="Frozen Lightning Ring">
       <div class="about">
         <p class="name">Frozen Lightning Ring</p>
@@ -1452,13 +1452,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if lightning → set-element ice</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-fulgurite-ring.png" width="228" height="308"
+      <img src="relic-fulgurite-ring.png" width="228" height="308"
            alt="Fulgurite Ring">
       <div class="about">
         <p class="name">Fulgurite Ring</p>
@@ -1470,13 +1470,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if lightning → set-element earth</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-glacier-ring.png" width="228" height="308"
+      <img src="relic-glacier-ring.png" width="228" height="308"
            alt="Glacier Ring">
       <div class="about">
         <p class="name">Glacier Ring</p>
@@ -1488,13 +1488,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if ice → set-element earth</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-granite-ring.png" width="228" height="308"
+      <img src="relic-granite-ring.png" width="228" height="308"
            alt="Granite Ring">
       <div class="about">
         <p class="name">Granite Ring</p>
@@ -1506,13 +1506,13 @@ for every 10 vitae you hold.</p>
           <li>when card-damage, if earth → scale-damage &#43;100</li><li>when attack-lands, if earth → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-heat-lightning-ring.png" width="228" height="308"
+      <img src="relic-heat-lightning-ring.png" width="228" height="308"
            alt="Heat Lightning Ring">
       <div class="about">
         <p class="name">Heat Lightning Ring</p>
@@ -1524,13 +1524,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if fire → set-element lightning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hexbolt-ring.png" width="228" height="308"
+      <img src="relic-hexbolt-ring.png" width="228" height="308"
            alt="Hexbolt Ring">
       <div class="about">
         <p class="name">Hexbolt Ring</p>
@@ -1542,13 +1542,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if arcane → set-element lightning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hexfire-ring.png" width="228" height="308"
+      <img src="relic-hexfire-ring.png" width="228" height="308"
            alt="Hexfire Ring">
       <div class="about">
         <p class="name">Hexfire Ring</p>
@@ -1560,13 +1560,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if arcane → set-element fire</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hexfrost-ring.png" width="228" height="308"
+      <img src="relic-hexfrost-ring.png" width="228" height="308"
            alt="Hexfrost Ring">
       <div class="about">
         <p class="name">Hexfrost Ring</p>
@@ -1578,13 +1578,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if arcane → set-element ice</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hexstone-ring.png" width="228" height="308"
+      <img src="relic-hexstone-ring.png" width="228" height="308"
            alt="Hexstone Ring">
       <div class="about">
         <p class="name">Hexstone Ring</p>
@@ -1596,13 +1596,13 @@ for every 10 vitae you hold.</p>
           <li>when card-drawn, if arcane → set-element earth</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-house-of-pain-ring.png" width="228" height="308"
+      <img src="relic-house-of-pain-ring.png" width="228" height="308"
            alt="House of Pain Ring">
       <div class="about">
         <p class="name">House of Pain Ring</p>
@@ -1615,13 +1615,13 @@ deals 3x DMG.</p>
           <li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-landslide-ring.png" width="228" height="308"
+      <img src="relic-landslide-ring.png" width="228" height="308"
            alt="Landslide Ring">
       <div class="about">
         <p class="name">Landslide Ring</p>
@@ -1633,13 +1633,13 @@ deals 3x DMG.</p>
           <li>when blow-formed, if earth → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-leyline-ring.png" width="228" height="308"
+      <img src="relic-leyline-ring.png" width="228" height="308"
            alt="Leyline Ring">
       <div class="about">
         <p class="name">Leyline Ring</p>
@@ -1651,13 +1651,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if earth → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-lithium-ring.png" width="228" height="308"
+      <img src="relic-lithium-ring.png" width="228" height="308"
            alt="Lithium Ring">
       <div class="about">
         <p class="name">Lithium Ring</p>
@@ -1669,13 +1669,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if lightning → scale-damage &#43;100</li><li>when attack-lands, if lightning → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-magma-ring.png" width="228" height="308"
+      <img src="relic-magma-ring.png" width="228" height="308"
            alt="Magma Ring">
       <div class="about">
         <p class="name">Magma Ring</p>
@@ -1687,13 +1687,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if earth → set-element fire</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-meltdown-ring.png" width="228" height="308"
+      <img src="relic-meltdown-ring.png" width="228" height="308"
            alt="Meltdown Ring">
       <div class="about">
         <p class="name">Meltdown Ring</p>
@@ -1705,13 +1705,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if ice → set-element fire</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-obsidian-ring.png" width="228" height="308"
+      <img src="relic-obsidian-ring.png" width="228" height="308"
            alt="Obsidian Ring">
       <div class="about">
         <p class="name">Obsidian Ring</p>
@@ -1723,13 +1723,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if fire → set-element earth</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-pairing-ring.png" width="228" height="308"
+      <img src="relic-pairing-ring.png" width="228" height="308"
            alt="Pairing Ring">
       <div class="about">
         <p class="name">Pairing Ring</p>
@@ -1741,13 +1741,13 @@ deals 3x DMG.</p>
           <li>when blow-formed → scale-hand-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-permafrost-ring.png" width="228" height="308"
+      <img src="relic-permafrost-ring.png" width="228" height="308"
            alt="Permafrost Ring">
       <div class="about">
         <p class="name">Permafrost Ring</p>
@@ -1759,13 +1759,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if earth → set-element ice</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-pinning-ring.png" width="228" height="308"
+      <img src="relic-pinning-ring.png" width="228" height="308"
            alt="Pinning Ring">
       <div class="about">
         <p class="name">Pinning Ring</p>
@@ -1777,13 +1777,13 @@ deals 3x DMG.</p>
           <li>when attack-lands, if stab → apply-status shocked</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-pounding-ring.png" width="228" height="308"
+      <img src="relic-pounding-ring.png" width="228" height="308"
            alt="Pounding Ring">
       <div class="about">
         <p class="name">Pounding Ring</p>
@@ -1795,13 +1795,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if crush → scale-damage &#43;100</li><li>when attack-lands, if crush → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-quickening-ring.png" width="228" height="308"
+      <img src="relic-quickening-ring.png" width="228" height="308"
            alt="Quickening Ring">
       <div class="about">
         <p class="name">Quickening Ring</p>
@@ -1813,13 +1813,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if stab → scale-damage &#43;100</li><li>when attack-lands, if stab → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-recursion-ring.png" width="228" height="308"
+      <img src="relic-recursion-ring.png" width="228" height="308"
            alt="Recursion Ring">
       <div class="about">
         <p class="name">Recursion Ring</p>
@@ -1831,13 +1831,13 @@ deals 3x DMG.</p>
           <li>when blow-formed, if arcane → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-rend-ring.png" width="228" height="308"
+      <img src="relic-rend-ring.png" width="228" height="308"
            alt="Rend Ring">
       <div class="about">
         <p class="name">Rend Ring</p>
@@ -1849,13 +1849,13 @@ deals 3x DMG.</p>
           <li>when blow-formed, if slash → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-runefrost-ring.png" width="228" height="308"
+      <img src="relic-runefrost-ring.png" width="228" height="308"
            alt="Runefrost Ring">
       <div class="about">
         <p class="name">Runefrost Ring</p>
@@ -1867,13 +1867,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if ice → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-sharp-as-ice-ring.png" width="228" height="308"
+      <img src="relic-sharp-as-ice-ring.png" width="228" height="308"
            alt="Sharp as Ice Ring">
       <div class="about">
         <p class="name">Sharp as Ice Ring</p>
@@ -1886,13 +1886,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if ice and slash → scale-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-sharpening-ring.png" width="228" height="308"
+      <img src="relic-sharpening-ring.png" width="228" height="308"
            alt="Sharpening Ring">
       <div class="about">
         <p class="name">Sharpening Ring</p>
@@ -1904,13 +1904,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if slash → scale-damage &#43;100</li><li>when attack-lands, if slash → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-shatter-ring.png" width="228" height="308"
+      <img src="relic-shatter-ring.png" width="228" height="308"
            alt="Shatter Ring">
       <div class="about">
         <p class="name">Shatter Ring</p>
@@ -1922,13 +1922,13 @@ deals 3x DMG.</p>
           <li>when blow-formed, if ice → repeat-card &#43;2</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-shocking-ring.png" width="228" height="308"
+      <img src="relic-shocking-ring.png" width="228" height="308"
            alt="Shocking Ring">
       <div class="about">
         <p class="name">Shocking Ring</p>
@@ -1946,7 +1946,7 @@ deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-spellbolt-ring.png" width="228" height="308"
+      <img src="relic-spellbolt-ring.png" width="228" height="308"
            alt="Spellbolt Ring">
       <div class="about">
         <p class="name">Spellbolt Ring</p>
@@ -1958,13 +1958,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if lightning → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-struck-by-lightning-ring.png" width="228" height="308"
+      <img src="relic-struck-by-lightning-ring.png" width="228" height="308"
            alt="Struck by Lightning Ring">
       <div class="about">
         <p class="name">Struck by Lightning Ring</p>
@@ -1977,13 +1977,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if lightning and stab → scale-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-sundering-ring.png" width="228" height="308"
+      <img src="relic-sundering-ring.png" width="228" height="308"
            alt="Sundering Ring">
       <div class="about">
         <p class="name">Sundering Ring</p>
@@ -1995,13 +1995,13 @@ deals 3x DMG.</p>
           <li>when attack-lands, if slash → apply-status weakened</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-swarm-ring.png" width="228" height="308"
+      <img src="relic-swarm-ring.png" width="228" height="308"
            alt="Swarm Ring">
       <div class="about">
         <p class="name">Swarm Ring</p>
@@ -2013,13 +2013,13 @@ deals 3x DMG.</p>
           <li>when card-damage → scale-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-thundersnow-ring.png" width="228" height="308"
+      <img src="relic-thundersnow-ring.png" width="228" height="308"
            alt="Thundersnow Ring">
       <div class="about">
         <p class="name">Thundersnow Ring</p>
@@ -2031,13 +2031,13 @@ deals 3x DMG.</p>
           <li>when card-drawn, if ice → set-element lightning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-triplicate-form-ring.png" width="228" height="308"
+      <img src="relic-triplicate-form-ring.png" width="228" height="308"
            alt="Triplicate Form Ring">
       <div class="about">
         <p class="name">Triplicate Form Ring</p>
@@ -2050,13 +2050,13 @@ deals 3x DMG.</p>
           <li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-unravelled-ring.png" width="228" height="308"
+      <img src="relic-unravelled-ring.png" width="228" height="308"
            alt="Unravelled Ring">
       <div class="about">
         <p class="name">Unravelled Ring</p>
@@ -2068,13 +2068,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if arcane → scale-damage &#43;100</li><li>when attack-lands, if arcane → grow-on-hit &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-weakening-ring.png" width="228" height="308"
+      <img src="relic-weakening-ring.png" width="228" height="308"
            alt="Weakening Ring">
       <div class="about">
         <p class="name">Weakening Ring</p>
@@ -2092,7 +2092,7 @@ deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-weight-of-the-earth-ring.png" width="228" height="308"
+      <img src="relic-weight-of-the-earth-ring.png" width="228" height="308"
            alt="Weight of the Earth Ring">
       <div class="about">
         <p class="name">Weight of the Earth Ring</p>
@@ -2105,13 +2105,13 @@ deals 3x DMG.</p>
           <li>when card-damage, if earth and crush → scale-damage &#43;300</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-weighted-ring.png" width="228" height="308"
+      <img src="relic-weighted-ring.png" width="228" height="308"
            alt="Weighted Ring">
       <div class="about">
         <p class="name">Weighted Ring</p>
@@ -2129,7 +2129,7 @@ deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-witchfire-ring.png" width="228" height="308"
+      <img src="relic-witchfire-ring.png" width="228" height="308"
            alt="Witchfire Ring">
       <div class="about">
         <p class="name">Witchfire Ring</p>
@@ -2141,7 +2141,7 @@ deals 3x DMG.</p>
           <li>when card-drawn, if fire → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
@@ -2150,14 +2150,14 @@ deals 3x DMG.</p>
 
 <h3 class="tier rare">
   rare
-  <span>26 rings &middot; 7 vitae, sells for 3 &middot;
+  <span>26 relics &middot; 7 vitae, sells for 3 &middot;
     weight 1 each &middot; 3.2% of a shelf draw</span>
 </h3>
 
 <div class="plates">
   
     <div class="plate">
-      <img src="ring-atrophy-ring.png" width="228" height="308"
+      <img src="relic-atrophy-ring.png" width="228" height="308"
            alt="Atrophy Ring">
       <div class="about">
         <p class="name">Atrophy Ring</p>
@@ -2169,13 +2169,13 @@ deals 3x DMG.</p>
           <li>when deck-built → demote-card &#43;1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-blightfire-ring.png" width="228" height="308"
+      <img src="relic-blightfire-ring.png" width="228" height="308"
            alt="Blightfire Ring">
       <div class="about">
         <p class="name">Blightfire Ring</p>
@@ -2187,13 +2187,13 @@ deals 3x DMG.</p>
           <li>when attack-lands, if arcane → apply-status weakened and apply-status burning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-brittle-ring.png" width="228" height="308"
+      <img src="relic-brittle-ring.png" width="228" height="308"
            alt="Brittle Ring">
       <div class="about">
         <p class="name">Brittle Ring</p>
@@ -2205,13 +2205,13 @@ deals 3x DMG.</p>
           <li>when attack-lands, if ice → apply-status chilled and apply-status weakened</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-caldera-ring.png" width="228" height="308"
+      <img src="relic-caldera-ring.png" width="228" height="308"
            alt="Caldera Ring">
       <div class="about">
         <p class="name">Caldera Ring</p>
@@ -2223,13 +2223,13 @@ deals 3x DMG.</p>
           <li>when attack-lands, if earth → apply-status weighted and apply-status burning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-cold-ring.png" width="228" height="308"
+      <img src="relic-cold-ring.png" width="228" height="308"
            alt="Cold Ring">
       <div class="about">
         <p class="name">Cold Ring</p>
@@ -2241,13 +2241,13 @@ deals 3x DMG.</p>
           <li>when card-cost, if ice → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-dirty-ring.png" width="228" height="308"
+      <img src="relic-dirty-ring.png" width="228" height="308"
            alt="Dirty Ring">
       <div class="about">
         <p class="name">Dirty Ring</p>
@@ -2259,13 +2259,13 @@ deals 3x DMG.</p>
           <li>when card-cost, if earth → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-ebb-and-flow-ring.png" width="228" height="308"
+      <img src="relic-ebb-and-flow-ring.png" width="228" height="308"
            alt="Ebb &amp; Flow Ring">
       <div class="about">
         <p class="name">Ebb &amp; Flow Ring</p>
@@ -2279,13 +2279,13 @@ you play. Grows while worn.</p>
           <li>when card-damage → scale-damage &#43;100</li><li>when turn-taken, if defend → grow-per-card &#43;20</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-eerie-ring.png" width="228" height="308"
+      <img src="relic-eerie-ring.png" width="228" height="308"
            alt="Eerie Ring">
       <div class="about">
         <p class="name">Eerie Ring</p>
@@ -2297,13 +2297,13 @@ you play. Grows while worn.</p>
           <li>when card-cost, if arcane → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-erode-ring.png" width="228" height="308"
+      <img src="relic-erode-ring.png" width="228" height="308"
            alt="Erode Ring">
       <div class="about">
         <p class="name">Erode Ring</p>
@@ -2315,13 +2315,13 @@ you play. Grows while worn.</p>
           <li>when deck-built → demote-card &#43;1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hefted-ring.png" width="228" height="308"
+      <img src="relic-hefted-ring.png" width="228" height="308"
            alt="Hefted Ring">
       <div class="about">
         <p class="name">Hefted Ring</p>
@@ -2333,13 +2333,13 @@ you play. Grows while worn.</p>
           <li>when card-cost, if crush → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-hoarfrost-ring.png" width="228" height="308"
+      <img src="relic-hoarfrost-ring.png" width="228" height="308"
            alt="Hoarfrost Ring">
       <div class="about">
         <p class="name">Hoarfrost Ring</p>
@@ -2351,13 +2351,13 @@ you play. Grows while worn.</p>
           <li>when attack-lands, if ice → apply-status chilled and apply-status weighted</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-millstone-ring.png" width="228" height="308"
+      <img src="relic-millstone-ring.png" width="228" height="308"
            alt="Millstone Ring">
       <div class="about">
         <p class="name">Millstone Ring</p>
@@ -2369,13 +2369,13 @@ you play. Grows while worn.</p>
           <li>when attack-lands, if arcane → apply-status weakened and apply-status weighted</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-oak-ring.png" width="228" height="308"
+      <img src="relic-oak-ring.png" width="228" height="308"
            alt="Oak Ring">
       <div class="about">
         <p class="name">Oak Ring</p>
@@ -2388,13 +2388,13 @@ deals 4x DMG.</p>
           <li>when blow-formed → scale-hand-damage &#43;400</li><li>when blow-formed → scale-hand-damage &#43;400</li><li>when blow-formed → scale-hand-damage &#43;400</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-onslaught-ring.png" width="228" height="308"
+      <img src="relic-onslaught-ring.png" width="228" height="308"
            alt="Onslaught Ring">
       <div class="about">
         <p class="name">Onslaught Ring</p>
@@ -2406,13 +2406,13 @@ deals 4x DMG.</p>
           <li>when card-cost → adjust-cost -1</li><li>when fight-start → scale-hp &#43;75</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-palsy-ring.png" width="228" height="308"
+      <img src="relic-palsy-ring.png" width="228" height="308"
            alt="Palsy Ring">
       <div class="about">
         <p class="name">Palsy Ring</p>
@@ -2424,13 +2424,13 @@ deals 4x DMG.</p>
           <li>when attack-lands, if lightning → apply-status shocked and apply-status weakened</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-pentacle-ring.png" width="228" height="308"
+      <img src="relic-pentacle-ring.png" width="228" height="308"
            alt="Pentacle Ring">
       <div class="about">
         <p class="name">Pentacle Ring</p>
@@ -2443,13 +2443,13 @@ deals 5x DMG.</p>
           <li>when blow-formed → scale-hand-damage &#43;500</li><li>when blow-formed → scale-hand-damage &#43;500</li><li>when blow-formed → scale-hand-damage &#43;500</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-rampant-ring.png" width="228" height="308"
+      <img src="relic-rampant-ring.png" width="228" height="308"
            alt="Rampant Ring">
       <div class="about">
         <p class="name">Rampant Ring</p>
@@ -2462,13 +2462,13 @@ for each vitae you hold.</p>
           <li>when fight-start → add-damage-per-vitae &#43;1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-scald-ring.png" width="228" height="308"
+      <img src="relic-scald-ring.png" width="228" height="308"
            alt="Scald Ring">
       <div class="about">
         <p class="name">Scald Ring</p>
@@ -2486,7 +2486,7 @@ for each vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-static-ring.png" width="228" height="308"
+      <img src="relic-static-ring.png" width="228" height="308"
            alt="Static Ring">
       <div class="about">
         <p class="name">Static Ring</p>
@@ -2498,13 +2498,13 @@ for each vitae you hold.</p>
           <li>when card-cost, if lightning → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-storm-ring.png" width="228" height="308"
+      <img src="relic-storm-ring.png" width="228" height="308"
            alt="Storm Ring">
       <div class="about">
         <p class="name">Storm Ring</p>
@@ -2522,7 +2522,7 @@ for each vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="ring-tapered-ring.png" width="228" height="308"
+      <img src="relic-tapered-ring.png" width="228" height="308"
            alt="Tapered Ring">
       <div class="about">
         <p class="name">Tapered Ring</p>
@@ -2534,13 +2534,13 @@ for each vitae you hold.</p>
           <li>when card-cost, if stab → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-tremor-ring.png" width="228" height="308"
+      <img src="relic-tremor-ring.png" width="228" height="308"
            alt="Tremor Ring">
       <div class="about">
         <p class="name">Tremor Ring</p>
@@ -2552,13 +2552,13 @@ for each vitae you hold.</p>
           <li>when attack-lands, if earth → apply-status weighted and apply-status shocked</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-warm-ring.png" width="228" height="308"
+      <img src="relic-warm-ring.png" width="228" height="308"
            alt="Warm Ring">
       <div class="about">
         <p class="name">Warm Ring</p>
@@ -2570,13 +2570,13 @@ for each vitae you hold.</p>
           <li>when card-cost, if fire → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-whetted-ring.png" width="228" height="308"
+      <img src="relic-whetted-ring.png" width="228" height="308"
            alt="Whetted Ring">
       <div class="about">
         <p class="name">Whetted Ring</p>
@@ -2588,13 +2588,13 @@ for each vitae you hold.</p>
           <li>when card-cost, if slash → adjust-cost -1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-whittle-ring.png" width="228" height="308"
+      <img src="relic-whittle-ring.png" width="228" height="308"
            alt="Whittle Ring">
       <div class="about">
         <p class="name">Whittle Ring</p>
@@ -2606,13 +2606,13 @@ for each vitae you hold.</p>
           <li>when deck-built → demote-card &#43;1</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="ring-wildfire-ring.png" width="228" height="308"
+      <img src="relic-wildfire-ring.png" width="228" height="308"
            alt="Wildfire Ring">
       <div class="about">
         <p class="name">Wildfire Ring</p>
@@ -2634,7 +2634,7 @@ for each vitae you hold.</p>
 
 <h2>Card states</h2>
 <p class="note">
-  The three states a ring card is drawn in. A ring the run neither owns nor has been offered
+  The three states a relic card is drawn in. A relic the run neither owns nor has been offered
   is not on screen at all, so there is no fourth.
 </p>
 <div class="cells">

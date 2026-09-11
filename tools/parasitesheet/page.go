@@ -6,7 +6,7 @@ import "html/template"
 // re-run the tool, refresh the tab", the same loop every other tool here has.
 //
 // **Images are shown at their natural size with image-rendering: pixelated**, for the reason the
-// ring sheet's template gives: a card's rim is one pixel thick and a browser that scales it
+// relic sheet's template gives: a card's rim is one pixel thick and a browser that scales it
 // resamples that rim into a blur, which makes the sheet lie about the art.
 //
 // **The ground is the one the parasites actually sit on**, which for these is the panel over a

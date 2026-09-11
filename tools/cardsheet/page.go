@@ -207,10 +207,10 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   </div>
 {{end}}
 
-<h2>Rings — the same format, pink border</h2>
+<h2>Relics — the same format, pink border</h2>
 <p class="note">
   Same footprint, corners and border treatment as a card, so the two read as one game. No
-  cost dashes, no category glyph, no effect text: a ring is not played from a hand and has
+  cost dashes, no category glyph, no effect text: a relic is not played from a hand and has
   no phase. <strong>Not wired into the game</strong> &mdash; nothing builds one of these yet.
 </p>
 <p class="note">
@@ -219,7 +219,7 @@ var tmpl = template.Must(template.New("cardsheet").Parse(`<!doctype html>
   sheets prefixed <code>tyrian_</code> come from the Tyrian set that CLAUDE.md names as a
   release blocker; this is not one of them.
 </p>
-{{range .Rings}}
+{{range .Relics}}
   <div class="row">
     <div class="row-label">{{.Label}}</div>
     <div class="cells">

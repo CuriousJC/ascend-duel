@@ -16,8 +16,8 @@
 // `combat.Card` plus the two numbers the holder brings — what it costs them and what they hit for.
 // Nothing in it needs a window, a layout or a font.
 //
-// **The arithmetic does not.** A ring's contribution to a card's damage is `internal/screens`'
-// business and stays there: it needs the worn rings, which are a fact about a duelist in a fight
+// **The arithmetic does not.** A relic's contribution to a card's damage is `internal/screens`'
+// business and stays there: it needs the worn relics, which are a fact about a duelist in a fight
 // rather than about a card. `screens.cardTip` calls this for the block and appends its own chain.
 //
 // **No colour, no widths, no line breaks.** This hands back plain strings; the caller decides how
@@ -79,14 +79,14 @@ func ElementWord(c combat.Card) string {
 
 // Lines is the tooltip's stat block: what the card costs, what it does, and what its upgrade adds.
 //
-// `cost` is what the holder pays — a discount ring makes that a property of the pairing rather than
+// `cost` is what the holder pays — a discount relic makes that a property of the pairing rather than
 // of the card — and `dmg` is the holder's own DMG. **A dmg of zero means nobody is holding it**,
 // which is the honest state between fights: a run's stats belong to a fight, so the block says
 // `2x DMG` rather than a figure worked out against a strength nobody has yet.
 //
-// `scale` is every ring that reaches this card's damage, compounded, as a percentage — 100 for a
-// bare card. **It is passed in rather than worked out**, because the rings belong to a duelist in a
-// fight and this package knows about cards; the caller walks `combat.RingContributionsAt` and hands
+// `scale` is every relic that reaches this card's damage, compounded, as a percentage — 100 for a
+// bare card. **It is passed in rather than worked out**, because the relics belong to a duelist in a
+// fight and this package knows about cards; the caller walks `combat.RelicContributionsAt` and hands
 // over the product, so the figure printed here is the engine's rather than a second sum.
 func Lines(c combat.Card, cost, dmg, scale int) []string {
 	lines := []string{strconv.Itoa(cost) + " AP"}
@@ -102,9 +102,9 @@ func Lines(c combat.Card, cost, dmg, scale int) []string {
 // defence is a percentage off one blow. A single "amount" line would be the same number meaning
 // three different things.
 //
-// **`scale` reaches the attack line and nothing else**, because no ring moment touches a shield's
+// **`scale` reaches the attack line and nothing else**, because no relic moment touches a shield's
 // count or a defence's percentage. A scale of zero is read as 100, so a caller that has not thought
-// about rings gets the bare card rather than a card worth nothing.
+// about relics gets the bare card rather than a card worth nothing.
 func EffectLine(c combat.Card, dmg, scale int) string {
 	amount := c.Amount()
 	if scale <= 0 {
@@ -112,7 +112,7 @@ func EffectLine(c combat.Card, dmg, scale int) string {
 	}
 	switch c.Spec().Verb {
 	case combat.VerbAttack:
-		// **The rings are in the figure**, so the headline number is what the card will actually
+		// **The relics are in the figure**, so the headline number is what the card will actually
 		// deal. A block stating the card's bare worth over a chain ending in a bigger number would
 		// be two DMG figures on one panel with the wrong one at the top.
 		amount = amount * scale / 100

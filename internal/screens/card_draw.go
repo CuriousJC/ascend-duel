@@ -43,7 +43,7 @@ func blitCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec 
 //
 // **The pairing is passed rather than derived** — see `held`. What a card costs and what its
 // damage figure reads as are both facts about who is holding it, and an enemy's queued card must not
-// be drawn through the player's rings.
+// be drawn through the player's relics.
 func drawCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, st cards.Style,
 	c actionCard, h held, enabled, selected bool) {
 
@@ -64,26 +64,26 @@ func drawMarkedCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
 	blitCard(gs, screen, at, spec, st)
 }
 
-// drawSpecCard draws a card that is not out of the deck — a prize, a ring, a worm — at hand
+// drawSpecCard draws a card that is not out of the deck — a prize, a relic, a worm — at hand
 // size. The caller has already said what it looks like.
 func drawSpecCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point, spec cards.Spec) {
 	blitCard(gs, screen, at, spec, cards.Hand)
 }
 
-// drawRingCard draws a ring in the card format: the pink border, artwork across the face, and
-// neither a cost nor a form. Every row that holds rings goes through it — the combat screen's worn
-// row, the build band and the shop's two — which is what keeps a ring one picture rather than four.
+// drawRelicCard draws a relic in the card format: the pink border, artwork across the face, and
+// neither a cost nor a form. Every row that holds relics goes through it — the combat screen's worn
+// row, the build band and the shop's two — which is what keeps a relic one picture rather than four.
 //
-// **`counter` is the badge in the corner and an empty one draws nothing**, which is what a ring that
-// does not grow passes and what the shop's shelf passes for every ring on it: a ring nobody is
-// wearing has no accumulator to show. See ringCounter for what the figure means.
-// **`lit` is the toast**: a ring drawn while it is firing into a blow's sum. It reuses the card
+// **`counter` is the badge in the corner and an empty one draws nothing**, which is what a relic that
+// does not grow passes and what the shop's shelf passes for every relic on it: a relic nobody is
+// wearing has no accumulator to show. See relicCounter for what the figure means.
+// **`lit` is the toast**: a relic drawn while it is firing into a blow's sum. It reuses the card
 // format's selected state — a brighter border — because that is already what "this card is the one
 // doing something" looks like everywhere else in the game.
-func drawRingCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
-	r data.RingData, counter string, enabled, lit bool) {
+func drawRelicCard(gs *state.GlobalState, screen *ebiten.Image, at image.Point,
+	r data.RelicData, counter string, enabled, lit bool) {
 
-	blitCard(gs, screen, at, ringSpec(gs, r, counter, enabled, lit), cards.RingStyle)
+	blitCard(gs, screen, at, relicSpec(gs, r, counter, enabled, lit), cards.RelicStyle)
 }
 
 // drawWormCard draws a worm as the card it is offered as.

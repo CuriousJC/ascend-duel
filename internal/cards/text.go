@@ -67,8 +67,8 @@ func (f *Faces) at(size float64) (font.Face, error) {
 // Measure is how wide a string is at a point size, and how tall one line of it is.
 //
 // **Exported so a caller outside this package can ask whether something fits** without being
-// handed a font.Face and left to get the DPI right. `internal/screens` uses it to check the ring
-// names in `data/rings.json` against the room a ring card leaves above its artwork — the file is
+// handed a font.Face and left to get the DPI right. `internal/screens` uses it to check the relic
+// names in `data/relics.json` against the room a relic card leaves above its artwork — the file is
 // read there and the geometry lives here, so the join needs one of the two to be askable.
 func (f *Faces) Measure(size float64, s string) (width, lineHeight int, err error) {
 	face, err := f.at(size)
@@ -102,8 +102,8 @@ func drawText(dst *image.RGBA, f *Faces, size float64, s string, x, y int, c col
 
 // drawTextHCentered draws a string centred horizontally on the card, top-aligned at y.
 //
-// Rings use it. An action card's name lines up with the glyph column beneath it, so
-// left-aligned is right there; a ring has no column, and the same name then reads as
+// Relics use it. An action card's name lines up with the glyph column beneath it, so
+// left-aligned is right there; a relic has no column, and the same name then reads as
 // having slipped off centre rather than as being aligned to anything.
 func drawTextHCentered(dst *image.RGBA, f *Faces, size float64, s string, width, y int, c color.RGBA) error {
 	face, err := f.at(size)
@@ -165,7 +165,7 @@ func TextWidth(f *Faces, size float64, s string) (int, error) {
 //
 // **It breaks at every space** *(owner's call, 2026-09-05)*, one word to a line — except that a
 // figure stays on its unit's line, `-1 AP` drawn as `AP -1`; see unitLines. Which is what a
-// ring's name already does. Width no longer decides where a line ends, so a *set* of cards breaks
+// relic's name already does. Width no longer decides where a line ends, so a *set* of cards breaks
 // in the same place for free: the elemental worms differ only in the colour they name, and FIRE
 // used to fit the line where LIGHTNING all but filled it, which made four layouts of one card.
 // That is what the authored newline was for, and it is why there is no longer one — a newline in
@@ -180,9 +180,9 @@ func WrapText(f *Faces, size float64, s string, width int) ([]string, error) {
 		return nil, err
 	}
 
-	// **One word to a line**, which is what a ring's name already does — see Style.NameWordPerLine.
-	// The face is still resolved above, because a word wider than the column is the one thing this
-	// cannot fix and TestNoEffectTextWordIsWiderThanItsColumn is what reports it.
+	// **One word to a line.** The face is still resolved above, because a word wider than the
+	// column is the one thing this cannot fix and TestNoEffectTextWordIsWiderThanItsColumn is
+	// what reports it.
 	_, _ = face, width
 
 	return unitLines(strings.Fields(strings.ReplaceAll(s, "\n", " "))), nil

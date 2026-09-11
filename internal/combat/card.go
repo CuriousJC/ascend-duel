@@ -53,7 +53,7 @@ type Card struct {
 	// attack axis, which is a legal weird thing rather than a bug *(owner's call, 2026-09-02)*.
 	//
 	// **Only `Card.Form` reads it**, which is the one chokepoint the whole game already asks —
-	// the matcher, the form rings, the sort and the card face all go through it.
+	// the matcher, the form relics, the sort and the card face all go through it.
 	FormOverride Form
 
 	// ID is which card in the run this is, and it is the card's identity rather than its
@@ -63,7 +63,7 @@ type Card struct {
 	// other field says what a card *is*; this says *which one*. A run assigns one to every card it
 	// owns and the number survives the shuffle, the hand, the discard and the reshuffle — so
 	// something holding a card in a pile can always ask the run what that same card looked like
-	// before a ring got to it.
+	// before a relic got to it.
 	//
 	// **That is what the element flip needs.** A flip fires as a card is drawn and the drawn card
 	// carries only the colour it became — it does not remember what it was, because a rule reading
@@ -73,7 +73,7 @@ type Card struct {
 	//
 	// **Zero means no identity, and that is the common case in this package.** Every enemy card,
 	// every card a test writes as a literal and every `Plain`/`Of` has ID 0 — an enemy wears no
-	// rings and a test deck has no run behind it. Nothing here may *require* an ID; it is a handle
+	// relics and a test deck has no run behind it. Nothing here may *require* an ID; it is a handle
 	// the layers above use, and the rules go on resolving a card that has none.
 	//
 	// **It does not make a card less comparable.** The screen's face cache keys on `cards.Spec`,
@@ -112,8 +112,8 @@ func (c Card) Spec() Concept { return ConceptOf(c.Concept) }
 
 // Cost is what this card takes out of the round's budget.
 //
-// **It is a method on the card rather than on the concept, and that is the seat the ring discount
-// sits in.** MECHANICS.md records that a matching ring makes cost a property of the *pairing*
+// **It is a method on the card rather than on the concept, and that is the seat the relic discount
+// sits in.** MECHANICS.md records that a matching relic makes cost a property of the *pairing*
 // rather than of the concept; nothing discounts anything yet, so this delegates. Cutting the
 // seat now costs nothing and saves rewriting every call site a second time.
 func (c Card) Cost() int {

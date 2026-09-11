@@ -15,7 +15,7 @@
 // So the pool is the parameter and everything else is here. `tools/enemysheet` and
 // `tools/bosssheet` are the two commands, and each is a `Pool` plus a `main`.
 //
-// # It is a report, like the ring and worm sheets
+// # It is a report, like the relic and worm sheets
 //
 // It reads `data/enemies.json` and `data/bosses.json` rather than writing its own contents out.
 // It also imports `internal/decks`, which registers every enemy and boss concept at init — so a
@@ -357,8 +357,8 @@ func cardSpec(c data.CardData) cards.Spec {
 // effectText is what the card face says it does.
 //
 // **A copy of `screens.cardEffect`'s unheld branch**, and knowingly so: that function reads the
-// holder's rings and a worm's scaling, neither of which an enemy card has — an enemy wears no
-// rings and no worm reaches its deck. Importing `internal/screens` to reach the real one would
+// holder's relics and a worm's scaling, neither of which an enemy card has — an enemy wears no
+// relics and no worm reaches its deck. Importing `internal/screens` to reach the real one would
 // pull Ebitengine into a review tool, which is the thing every sheet here is built to avoid.
 // `tools/cardsheet` keeps its own snapshot of the player's wording for the same reason. If the
 // two ever disagree, prose.go is the one that is right.

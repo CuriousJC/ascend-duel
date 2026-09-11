@@ -28,21 +28,21 @@ const (
 	// insertion.
 	Arcane
 
-	// Ring is not an element and never appears on an action card. Rings reuse the whole
+	// Relic is not an element and never appears on an action card. Relics reuse the whole
 	// card format — same size, same corners, same border treatment — with a pink border
 	// and artwork instead of glyphs, so they read as belonging to the same game while
 	// never being mistaken for something playable from the hand.
 	//
 	// It is deliberately outside Elements(): anything iterating the elements is asking
-	// about cards, and a ring is not one.
-	Ring
+	// about cards, and a relic is not one.
+	Relic
 )
 
 // Elements is every element a card can have, in a fixed order, for the contact sheet and
 // for anything else that iterates them. A slice rather than a map, because Go randomises
 // map order and a sheet whose rows moved between runs would be useless as a diff.
 //
-// Ring is not in it. See the constant.
+// Relic is not in it. See the constant.
 func Elements() []Element {
 	return []Element{Basic, Fire, Ice, Lightning, Earth, Arcane}
 }
@@ -54,7 +54,7 @@ var elementNames = [...]string{
 	Lightning: "lightning",
 	Earth:     "earth",
 	Arcane:    "arcane",
-	Ring:      "ring",
+	Relic:     "relic",
 }
 
 func (e Element) String() string {
@@ -83,16 +83,16 @@ var borderColors = [...]color.RGBA{
 	Lightning: {R: 214, G: 152, B: 12, A: 255},
 	Earth:     {R: 76, G: 140, B: 52, A: 255},
 
-	// Purple, and deliberately deeper than the ring pink it sits next to in this table — the two
+	// Purple, and deliberately deeper than the relic pink it sits next to in this table — the two
 	// are the only two magenta-ish entries and the one thing that must never happen is an arcane
-	// card reading as a ring. It is dark enough to hold its own against the off-white surface,
+	// card reading as a relic. It is dark enough to hold its own against the off-white surface,
 	// which is the constraint that pushed lightning down in 2026-08-19.
 	Arcane: {R: 138, G: 84, B: 200, A: 255},
 
-	// Pink, and deliberately unlike any of the four above — a ring has to be
+	// Pink, and deliberately unlike any of the four above — a relic has to be
 	// unmistakable at a glance, because the one thing that must never happen is reaching
-	// for a ring thinking it is a card you can play.
-	Ring: {R: 232, G: 106, B: 168, A: 255},
+	// for a relic thinking it is a card you can play.
+	Relic: {R: 232, G: 106, B: 168, A: 255},
 }
 
 // BorderOf is the colour this element's border is drawn in at full strength. States
@@ -119,7 +119,7 @@ func BorderOf(e Element) color.RGBA {
 type Form int
 
 const (
-	// FormNone draws nothing. Rings and the two fighter cards use it: they belong to no form.
+	// FormNone draws nothing. Relics and the two fighter cards use it: they belong to no form.
 	FormNone Form = iota
 	FormStab
 	FormSlash
@@ -150,7 +150,7 @@ func Forms() []Form {
 // formGlyphs is the picture each form carries in the card's corner: a spear, a sword, an axe and
 // a shield, which say the form without a legend.
 //
-// **FormNone is absent on purpose**, so the lookup below reports it as having no glyph — a ring
+// **FormNone is absent on purpose**, so the lookup below reports it as having no glyph — a relic
 // and both fighter cards belong to no form, and the slot has to stay empty for them.
 var formGlyphs = map[Form]systems.GlyphKind{
 	FormStab:   systems.GlyphFormStab,
@@ -296,7 +296,7 @@ type StatLine struct {
 
 // MaxTextHighlights is how many separately coloured runs one card's text can carry.
 //
-// **Four, because the wordiest ring in the catalogue names three things** — an element and two
+// **Four, because the wordiest relic in the catalogue names three things** — an element and two
 // statuses — and a fixed array needs a number. `TestEveryTextFitsItsHighlights` in
 // internal/screens holds the authored catalogue against it, so an entry wanting a fifth fails a
 // test rather than losing its last colour to an array that silently ran out.
@@ -364,7 +364,7 @@ type Spec struct {
 	// element, and the difference matters the moment a status has to land.
 	//
 	// **This package does not know what a rider is**, on the same terms it does not know what a
-	// ring is: `internal/screens` decides that a card carrying combat.RiderWildElement is drawn
+	// relic is: `internal/screens` decides that a card carrying combat.RiderWildElement is drawn
 	// as systems.UpgradeWild, and hands over the answer. See Spec.TextInk, which is the same
 	// separation one field up.
 	Upgrade systems.Upgrade
@@ -411,7 +411,7 @@ type Spec struct {
 	//
 	// **It exists so the words that name a thing with a colour are drawn in it** *(owner's call,
 	// 2026-09-08)*: a worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple, and a
-	// ring reading "Fire attacks BURN and CHILL the target." sets three words across two colours.
+	// relic reading "Fire attacks BURN and CHILL the target." sets three words across two colours.
 	// The state colouring still applies on top, so a disabled card fades with everything else.
 	//
 	// **A run is matched at word boundaries and every occurrence of it is coloured**, which is
@@ -432,7 +432,7 @@ type Spec struct {
 	// the decision that the two go together is internal/screens, which is where the wording lives.
 	Highlights [MaxTextHighlights]TextRun
 
-	// Art is optional artwork drawn on the face, scaled to fit and centred. Rings use
+	// Art is optional artwork drawn on the face, scaled to fit and centred. Relics use
 	// it; action cards do not, and their art is the generated glyphs instead.
 	//
 	// **This is the one thing on a card that is not generated**, so it is the one thing
@@ -477,7 +477,7 @@ type Spec struct {
 	Life, MaxLife int
 
 	// Counter is a short figure drawn as a badge in the bottom-right corner — the growing
-	// rings' accumulators, which is the only thing that has one today.
+	// relics' accumulators, which is the only thing that has one today.
 	//
 	// **A string rather than a number, because the unit is not this package's to know.** Heart
 	// grows flat life and Enflamed grows a multiplier, so one of them wants "+50" and the other
@@ -487,7 +487,7 @@ type Spec struct {
 	//
 	// **Empty draws nothing**, so a card that has no counter is the card that always was — and a
 	// style with no CounterHeight draws none whatever the Spec says, which is every style but
-	// RingStyle.
+	// RelicStyle.
 	Counter string
 
 	// Enabled is whether the fighter can currently afford it. Disabled reads as
@@ -503,7 +503,7 @@ type Spec struct {
 	// It is its own state rather than a reuse of Enabled because it means the opposite
 	// thing: a disabled card is one you cannot act on, and a dragged card is the one you
 	// are acting on. Rendering them the same way would be the same mistake as dimming a
-	// border on a light card. The hand's drag-to-reorder will want this; the ring on the
+	// border on a light card. The hand's drag-to-reorder will want this; the relic on the
 	// contact sheet is the first thing to use it.
 	Dragging bool
 
@@ -541,11 +541,11 @@ type Spec struct {
 // — was painted in one hueless palette. Swapping them spends the colour on the mark and gives the
 // border back to state, which is what borderRestToward and the rest were always about.
 //
-// **Ring keeps its pink**, because pink was never an element. It is the "this is not something
+// **Relic keeps its pink**, because pink was never an element. It is the "this is not something
 // you can play" signal, and it has to survive a change that is about elements.
 func borderBase(e Element) color.RGBA {
-	if e == Ring {
-		return borderColors[Ring]
+	if e == Relic {
+		return borderColors[Relic]
 	}
 	return borderColors[Basic]
 }

@@ -2,7 +2,7 @@ package combat
 
 // Riders: **a rule carried by one card rather than by the duelist.**
 //
-// A ring waits on a finger and fires for every card that matches it. A rider is the same idea
+// A relic waits on a finger and fires for every card that matches it. A rider is the same idea
 // aimed the other way: it belongs to one card of the run, travels with it through the shuffle,
 // the hand and the discard, and fires only when that card is played. It is what a parasite
 // leaves behind — see `internal/session/parasite.go`, which is the only thing that attaches one.
@@ -72,7 +72,7 @@ const (
 	// RiderVitaeInHand pays vitae while this card sits unplayed in the hand. Amount is the figure.
 	//
 	// **The rules hold a copy of the purse, not the purse** *(owner's call, 2026-09-05)*. This
-	// steps `Duelist.Vitae` so a ring that reads vitae sees it — Rampant — and announces a
+	// steps `Duelist.Vitae` so a relic that reads vitae sees it — Rampant — and announces a
 	// KindVitae for the feed. The *run* is paid the difference between the purse the duel opened
 	// with and the one it closes with, which is the same direction of travel every other run-level
 	// consequence takes: `internal/combat` decides, and the layer that owns the thing being
@@ -199,7 +199,7 @@ type Rider struct {
 // **A fixed array rather than a slice, and that is not an optimisation.** `combat.Card` must stay
 // comparable: the combat screen caches a rendered face on a struct holding one, and
 // TestRoundIsDeterministic compares rounds by value. A slice field would end both. The same
-// constraint made `Duelist.Rings` a fixed array of WornRing, and this follows it.
+// constraint made `Duelist.Relics` a fixed array of WornRelic, and this follows it.
 //
 // **One, and it went from three on 2026-09-09** *(owner's call)*. The rule now is that a card has a
 // form, an element and an action — those compose freely and a parasite may change any of them —

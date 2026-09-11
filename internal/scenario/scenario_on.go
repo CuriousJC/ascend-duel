@@ -47,9 +47,9 @@ type record struct {
 	// startup, because a fixture nobody can remember the purpose of is a fixture that gets deleted.
 	Note string `json:"Note"`
 
-	// Rings is what the run opens wearing, in worn order — and worn order matters, since rings
+	// Relics is what the run opens wearing, in worn order — and worn order matters, since relics
 	// fire left to right and two multiplicative ones do not commute.
-	Rings []string `json:"Rings"`
+	Relics []string `json:"Relics"`
 
 	// Hand is the opening hand, dealt over whatever the shuffle produced.
 	Hand []handCard `json:"Hand"`
@@ -60,7 +60,7 @@ type record struct {
 	// spent between the turns of the fight after it, so seeing the dialog at all meant playing to
 	// a shop, buying the bucket, taking one of four, winning the room and opening it — which is
 	// the twenty-minute question this package exists to answer. Keys are checked by the caller,
-	// exactly as Rings are: a parasite key is internal/session's to resolve.
+	// exactly as Relics are: a parasite key is internal/session's to resolve.
 	Parasites []string `json:"Parasites"`
 
 	// Stones is what the run opens carrying in its pouch, by record key. The caller resolves them,
@@ -153,18 +153,18 @@ type record struct {
 	// either. See combat.DefaultRoundLimit and session/clock.go.
 	RoundLimit int `json:"RoundLimit"`
 
-	// RingSlots is how many rings the run may wear at once, overriding combat.DefaultRingSlots.
+	// RelicSlots is how many relics the run may wear at once, overriding combat.DefaultRelicSlots.
 	//
 	// **Zero means the run's own**, which is the five every climb is on. It exists because the
 	// whole catalogue is looked at five at a time otherwise, and a batch of new art or a new
-	// interaction is a batch: a sixth ring meant playing to a shop, selling one and buying
-	// another, per ring, forever.
+	// interaction is a batch: a sixth relic meant playing to a shop, selling one and buying
+	// another, per relic, forever.
 	//
-	// **It is bounded by `combat.MaxWornRings`**, the width of the duelist's ring array — not by
-	// the design cap, which is the thing this overrides. `session.SetRingSlots` clamps to the same
+	// **It is bounded by `combat.MaxWornRelics`**, the width of the duelist's relic array — not by
+	// the design cap, which is the thing this overrides. `session.SetRelicSlots` clamps to the same
 	// figure, so a fixture asking for more gets the width rather than a disagreement between the
 	// shop and the fighter.
-	RingSlots int `json:"RingSlots"`
+	RelicSlots int `json:"RelicSlots"`
 
 	// Teach starts the tutorial on this run.
 	//
@@ -267,7 +267,7 @@ func ridden(c combat.Card, names []string) combat.Card {
 var current = resolve()
 
 // resolve reads the file once, at package init, and **fails the launch on anything it cannot
-// resolve**. A misspelled ring or card in a fixture is a scenario that quietly tests something
+// resolve**. A misspelled relic or card in a fixture is a scenario that quietly tests something
 // else, which is worse than a game that will not start: the whole point of this package is to
 // look at a specific combination, and it must never be allowed to look at a different one.
 //
@@ -303,7 +303,7 @@ func resolve() *record {
 
 	log.Printf("scenario %s: %s", chosen.ScenarioRecord, chosen.Note)
 	log.Printf("scenario %s: wearing %v, hand of %d, enemy %q",
-		chosen.ScenarioRecord, chosen.Rings, len(chosen.Hand), chosen.Enemy)
+		chosen.ScenarioRecord, chosen.Relics, len(chosen.Hand), chosen.Enemy)
 	if chosen.Dummy {
 		log.Printf("scenario %s: DUMMY — %d life each way and a %d-round clock, so nothing ends",
 			chosen.ScenarioRecord, DummyLife, DummyRounds)
@@ -326,8 +326,8 @@ func keysOf(list []record) []string {
 // than through it, and a fixture wanting nine cards to show an interaction is a fixture, not a
 // rules change — the action-point budget still refuses to play them all.
 //
-// **The rings are checked by the caller, not here.** A ring key is `internal/session`'s to resolve
-// and this package sits below it — `main` hands the list to `session.StartingRings`, which already
+// **The relics are checked by the caller, not here.** A relic key is `internal/session`'s to resolve
+// and this package sits below it — `main` hands the list to `session.StartingRelics`, which already
 // refuses a key the catalogue does not hold.
 func check(r *record) error {
 	// **A hand is only required of a scenario that opens on a duel.** One jumping straight to the
@@ -372,16 +372,16 @@ func check(r *record) error {
 	if r.RoundLimit < 0 {
 		return fmt.Errorf("round limit %d is not a number of rounds", r.RoundLimit)
 	}
-	if r.RingSlots < 0 {
-		return fmt.Errorf("%d ring slots is not a number of fingers", r.RingSlots)
+	if r.RelicSlots < 0 {
+		return fmt.Errorf("%d relic slots is not a number of fingers", r.RelicSlots)
 	}
-	if r.RingSlots > combat.MaxWornRings {
-		return fmt.Errorf("%d ring slots, and a duelist's hand is %d wide — raise "+
-			"combat.MaxWornRings if a fixture genuinely needs more", r.RingSlots, combat.MaxWornRings)
+	if r.RelicSlots > combat.MaxWornRelics {
+		return fmt.Errorf("%d relic slots, and a duelist's hand is %d wide — raise "+
+			"combat.MaxWornRelics if a fixture genuinely needs more", r.RelicSlots, combat.MaxWornRelics)
 	}
-	if n := len(r.Rings); n > 0 && n > r.effectiveRingSlots() {
-		return fmt.Errorf("wears %d rings on %d fingers, so %d of them would never go on",
-			n, r.effectiveRingSlots(), n-r.effectiveRingSlots())
+	if n := len(r.Relics); n > 0 && n > r.effectiveRelicSlots() {
+		return fmt.Errorf("wears %d relics on %d fingers, so %d of them would never go on",
+			n, r.effectiveRelicSlots(), n-r.effectiveRelicSlots())
 	}
 	if r.Fight < 0 {
 		return fmt.Errorf("fight %d is before the first room", r.Fight)
@@ -416,11 +416,11 @@ func Name() string { return current.ScenarioRecord }
 // Note is the authored sentence saying what the scenario is for.
 func Note() string { return current.Note }
 
-// Rings is what the run should open wearing, in worn order.
-func Rings() []string { return current.Rings }
+// Relics is what the run should open wearing, in worn order.
+func Relics() []string { return current.Relics }
 
 // Parasites is what the run opens holding in its bucket, by record key. The caller resolves them,
-// for the reason it resolves the rings.
+// for the reason it resolves the relics.
 func Parasites() []string { return current.Parasites }
 
 // Stones is what the run opens carrying in its pouch, by record key.
@@ -493,17 +493,17 @@ func Dummy() bool { return current.Dummy }
 // Actions is the action-point budget to fight on, or zero for the record's own.
 func Actions() int { return current.Actions }
 
-// effectiveRingSlots is the cap this record will actually fight on, so check() and RingSlots()
-// cannot come to different conclusions about whether a list of rings fits.
-func (r *record) effectiveRingSlots() int {
-	if r.RingSlots > 0 {
-		return r.RingSlots
+// effectiveRelicSlots is the cap this record will actually fight on, so check() and RelicSlots()
+// cannot come to different conclusions about whether a list of relics fits.
+func (r *record) effectiveRelicSlots() int {
+	if r.RelicSlots > 0 {
+		return r.RelicSlots
 	}
-	return combat.DefaultRingSlots
+	return combat.DefaultRelicSlots
 }
 
-// RingSlots is how many fingers this scenario wants, or zero for the run's own.
-func RingSlots() int { return current.RingSlots }
+// RelicSlots is how many fingers this scenario wants, or zero for the run's own.
+func RelicSlots() int { return current.RelicSlots }
 
 // RoundLimit is the clock this scenario wants, or zero for the run's own.
 //

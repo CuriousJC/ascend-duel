@@ -32,7 +32,7 @@ hand" below.
 **The primary thrust of the game is building a deck and an engine that bend the rules in a
 way that lets the player win.**
 
-Rings and brands are rule-modifiers first and stat-boosters second — more actions, cheaper
+Relics and brands are rule-modifiers first and stat-boosters second — more actions, cheaper
 cards, free cards, and stats too, since a stat is just another rule to bend. Every constant
 below is a candidate for something to bend.
 
@@ -45,7 +45,7 @@ becomes a function of the card *and* that carrier, the way `Damage` is already a
 the action and the wielder.
 
 Attributes do **not** need this. `DMG`, `Actions` and `HP` are already fields on `Duelist`, and
-`ResolveRound` takes duelists by value, so a ring granting `+5 DMG` just hands it a different
+`ResolveRound` takes duelists by value, so a relic granting `+5 DMG` just hands it a different
 duelist. Base values live in `data/duelists.json` and `data/enemies.json`, and are expected to
 move with playtesting. **There is no conversion left to freeze** *(2026-08-16)* — see below.
 
@@ -321,13 +321,13 @@ painted in belongs to the renderer rather than to whoever asks. The second is **
 highlight**: a card the lesson is pointing at is washed in the tutorial's red rather than having a
 red frame drawn round it. A frame outside a card is a thing near the card; a tinted card is the card
 answering — and where a step names several cards, a frame each is a row of loose rectangles while a
-tint each is just the cards. Rings and worms are expected to take marks too.
+tint each is just the cards. Relics and worms are expected to take marks too.
 
 ### Concepts and deck composition
 
 **An attack concept ships as five cards: one per primary element.** That is the rule for adding an
 attack, not just a description of the starting deck. **A defence ships in the same five**, because
-it carries a colour for the ring discount and for the hand axis even though nothing it does is
+it carries a colour for the relic discount and for the hand axis even though nothing it does is
 elemental.
 
 45 + 10 = **55 cards** *(2026-09-01, down from 60 when Guard left the deck)*. A hand of eight
@@ -351,38 +351,38 @@ deck is half ice" from being confused with "my deck contains more ice cards".
   an aspect — `element`, `remove`, `duplicate`, `cost`, `amount`, `promote`, `demote`. After a
   `remove` the card is gone from every pile and the deck is genuinely smaller; after Grow or Shrink
   it is a different concept from then on. Nothing takes a worm back.
-- **A ring can rewrite the deck as a fight's deck is built** — the `deck-built` moment. Atrophy
+- **A relic can rewrite the deck as a fight's deck is built** — the `deck-built` moment. Atrophy
   steps every 3 AP attack one rung down its own form's ladder, so a Lunge is dealt as a Thrust for
-  the whole fight. It lasts as long as the ring is worn and no longer.
-- **A ring can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
+  the whole fight. It lasts as long as the relic is worn and no longer.
+- **A relic can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
   the fight's deck alone. Frozen Lightning and Hexfrost both `set-element` to ice, which is why a
   run wearing the pair reads as zero lightning and zero arcane; take them off and the colours come
-  back. `card-cost` rings are the same shape applied to the price rather than the colour.
+  back. `card-cost` relics are the same shape applied to the price rather than the colour.
 
 **The deck panel shows the *effective* deck** — what the run will actually be dealt, with every one
 of the three applied — which is the number to trust when reasoning about a live run, and is not the
 composition any tool prints.
 
 **Every axis a hand is scored on can be moved, so a build can manufacture any of them.**
-Elements are the loudest case: two common rings fold two colours into a third, and a deck that is
+Elements are the loudest case: two common relics fold two colours into a third, and a deck that is
 half one element makes an Elemental Five of a Kind an ordinary turn rather than the hand
-the round-one simulation reports at a 0.29% score. **Cost moves too**: a ring or a worm taking a point off a card changes which cost tier it sits in,
+the round-one simulation reports at a 0.29% score. **Cost moves too**: a relic or a worm taking a point off a card changes which cost tier it sits in,
 and no rung counts cost today, so what that moves is what a turn can *afford* rather than what it
 forms. **Concepts and forms move too** — promote and demote walk a card along
 its form's ladder, so Shrink and Atrophy both turn dear cards into copies of the cheap card below
 them, which is a Card Two Pair the starting deck could not deal. Only the *form* survives a rung change,
 since a ladder is one form's. **All of it is the intended shape of a build, not a leak**: the ladder
-is priced against the starting deck on purpose, and out-earning that price is what rings and worms
+is priced against the starting deck on purpose, and out-earning that price is what relics and worms
 are for.
 
 **So read `tools/handodds` and `tools/handsheet` as describing fight one.** Both deal from the
-shipping deck with no rings worn, which is the only composition that can be stated without naming a
+shipping deck with no relics worn, which is the only composition that can be stated without naming a
 particular run. Neither says anything about a deck that has been played with.
 
 **Five copies of a concept is the ceiling of the *starting deck*, and it shapes the hand table.**
 No attack concept ships more than five times, so **a Card Four of a Kind necessarily shows four of
 the five colours** — copies of a concept are all different elements, so it is also the hand that
-lands most of the statuses the player is ringed for. **A Card Five of a Kind became dealable on
+lands most of the statuses the player is reliced for. **A Card Five of a Kind became dealable on
 2026-08-25** and is the whole colour set in one concept; it was reachable only after a `duplicate`
 worm while the deck held four copies. See the reachability table below.
 
@@ -428,7 +428,7 @@ Eight fields, and the player's twelve are written in the same language as every 
   grid. A bad record panics at init.
 
 **A card never names a status, and that is load-bearing.** See *Elements* — what a colour does is
-decided by the source of that colour on the card's owner, and a ring may later decide *which* fire
+decided by the source of that colour on the card's owner, and a relic may later decide *which* fire
 a fire card applies. A card that named its own status would be deciding something that is not its
 to decide.
 
@@ -446,8 +446,8 @@ un-occludes, long press explains* — and the reversal is the point rather than 
 thing a player needs from a card is not a bigger picture of it but the arithmetic behind its figure.
 
 **Resting the cursor on something explains it.** A card gives the whole damage chain term by term —
-your DMG, the card's own multiplier, every ring that matches, the result, and a line saying the hand
-multiplier comes after; a ring gives its authored line from `rings.json` and where it fires in the
+your DMG, the card's own multiplier, every relic that matches, the result, and a line saying the hand
+multiplier comes after; a relic gives its authored line from `relics.json` and where it fires in the
 worn order; a fighter card gives its figures and every status standing on it, which is the only
 place a badge can be read.
 
@@ -462,7 +462,7 @@ place a badge can be read.
 - **The panel is placed beside the thing, not under the cursor**, so it never covers what it is
   about and does not slide around inside one card.
 - **Nothing in it recomputes a rule.** Every figure comes off the same walk the engine compounds,
-  `combat.RingContributionsAt`. A tooltip doing its own arithmetic would be a second implementation
+  `combat.RelicContributionsAt`. A tooltip doing its own arithmetic would be a second implementation
   of the engine printed in a box.
 
 **Long press is what a touchscreen or a controller would use for the same reveal**, and it is not
@@ -497,8 +497,8 @@ cards; the cards were one line of JSON.
 - **The deck overlay ran out of room.** Five rows of cards plus the tally band did not fit the
   modal, and the fix came out of three places at once — see `internal/screens/deckpanel.go`. The
   card itself could not shrink: the form mark is pixel art on a 32px canvas.
-- **Twelve rings, not one.** Each colour carries four of its own — damage, status, discount, growth
-  — and the flip rings are a full cross-product, which went from 12 to 20.
+- **Twelve relics, not one.** Each colour carries four of its own — damage, status, discount, growth
+  — and the flip relics are a full cross-product, which went from 12 to 20.
 - **Every catalogued deck seed had to be re-checked**, and two of the five were re-found.
 
 `basic` is the absence of an element, not a fifth colour. It replaced `none`/`plain` in the
@@ -520,7 +520,7 @@ grey rather than the near-white it used to be, because the surface went off-whit
 near-white border on it is invisible.
 
 **Every word that names an element is written in that element's colour** *(owner's call,
-2026-09-08)*. A worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a ring reading
+2026-09-08)*. A worm reading "CARD BECOMES ARCANE" sets ARCANE in the arcane purple; a relic reading
 "Fire attacks BURN and CHILL the target." sets three words across two colours. It reaches the card
 faces, the tooltips and the fight log, because the words are the same words wherever they are read.
 
@@ -547,7 +547,7 @@ takes a green far enough from `playerSwatch` to read as a different idea.
 ### Statuses
 
 *Implemented in `internal/combat/status.go`.* Each element has a status it applies **to whoever
-took the blow** — **and only if the attacker is wearing that element's ring**:
+took the blow** — **and only if the attacker is wearing that element's relic**:
 
 | Element | Status | What it does |
 |---|---|---|
@@ -564,7 +564,7 @@ whoever is acting. WEAKENED modifies what its carrier *takes*, so it is read off
 acted upon, and it is the first thing in the damage pipeline to be read off the victim. Two
 consequences follow and both are intended:
 
-- **A ring applying it is worth more against a slow opponent than a fast one**, because the value
+- **A relic applying it is worth more against a slow opponent than a fast one**, because the value
   is in the blows that land during its two rounds rather than in the ones you throw.
 - **It amplifies a burn tick as well as a blow.** A tick is damage the carrier takes, and exempting
   it would have made the rule *"damage, except the kind that arrives at the end of the round"* —
@@ -575,35 +575,35 @@ consequences follow and both are intended:
   with no natural ceiling — a miss chance and a weight both stop at *nothing reduces a blow to
   zero*, and this one stops nowhere at all.
 
-**Statuses are off by default, and the ring is what switches one on** *(2026-08-16)*. An
-unringed fire attack is a plain attack with a red border: it forms hands exactly as any other
-card does and it leaves nothing behind. `combat.Duelist.Rings` is the flag array, indexed by
+**Statuses are off by default, and the relic is what switches one on** *(2026-08-16)*. A
+bare fire attack is a plain attack with a red border: it forms hands exactly as any other
+card does and it leaves nothing behind. `combat.Duelist.Relics` is the flag array, indexed by
 element exactly as `Statuses` is, and `resolveAttackPhase` reads it off the **attacker** before
 applying anything.
 
-**Why the reversal.** Statuses given away free left the first three rings with nothing to *be* —
-every ring had to invent a second mechanic to sell, because the thing its element does was
-already happening. Charging a ring for it makes the element set a hand axis on its own terms and
-makes a ring the thing that turns a colour into a rule. It also gives the loot a shape: what a
-ring buys is legible in one line of card text, and the second and third rings are worth buying
-because one ring is one element.
+**Why the reversal.** Statuses given away free left the first three relics with nothing to *be* —
+every relic had to invent a second mechanic to sell, because the thing its element does was
+already happening. Charging a relic for it makes the element set a hand axis on its own terms and
+makes a relic the thing that turns a colour into a rule. It also gives the loot a shape: what a
+relic buys is legible in one line of card text, and the second and third relics are worth buying
+because one relic is one element.
 
-**Enemies never wear rings.** The zero value is what an enemy is hydrated with and nothing sets
+**Enemies never wear relics.** The zero value is what an enemy is hydrated with and nothing sets
 it, so an enemy's colours are inert by construction rather than by a rule written down somewhere
 else.
 
 ### One rule, two sources — the intersection *(2026-08-16, owner's call)*
 
 **An element does something only where a card's colour meets a source of that colour on its
-owner.** The player's source is a **ring**. An enemy's is an **elemental affix** — its own, or the
+owner.** The player's source is a **relic**. An enemy's is an **elemental affix** — its own, or the
 floor's. Neither side gets statuses free; both get them at an intersection.
 
-What this buys is that `Duelist.Rings` turns out to be the general mechanism rather than the
+What this buys is that `Duelist.Relics` turns out to be the general mechanism rather than the
 player's half of one: an affix sets flags in the same array. Nothing new is needed for it, and the
 name is what should eventually change rather than the machinery.
 
 **A card still never names a status**, and that is the reason the rule is worth stating this way. A
-ring may later confer *which* fire a fire card applies — different rings, different burns — so the
+relic may later confer *which* fire a fire card applies — different relics, different burns — so the
 decision belongs to the source and not to the card. See *The card language*.
 
 **Enemy statuses are blocked on affixes, which do not exist.** Every enemy card is authored
@@ -611,20 +611,20 @@ decision belongs to the source and not to the card. See *The card language*.
 card before an affix can gate it would hand it a free status, which is exactly what this rule
 forbids.
 
-**A run opens wearing no rings at all** *(owner's call, 2026-08-21)*, so **every element is inert
+**A run opens wearing no relics at all** *(owner's call, 2026-08-21)*, so **every element is inert
 until the first one is bought**: an ice Strike is a plain Strike with a blue border. That is what
-makes the shop the first thing a run saves for. `session.StartingRings` is the seat for putting one
-on without playing to a shop — the ring counterpart of `deckSeedName` — and it ships empty.
+makes the shop the first thing a run saves for. `session.StartingRelics` is the seat for putting one
+on without playing to a shop — the relic counterpart of `deckSeedName` — and it ships empty.
 
 **A status shows as a badge along the bottom of the enemy card** *(2026-08-16)*, from
 `assets/effect/`. It is the only place a standing status is stated, and it has to be: two of the
 four bite something the player has not done yet — a chill takes a card off a turn not yet queued,
 a weight blunts a blow not yet swung — so without a badge they are learned by being surprised.
 The row is centred and closes up as it fills. Earth's art is a placeholder. **The player's card
-carries no badges**, because nothing can put a status on the player: the enemy wears no rings.
+carries no badges**, because nothing can put a status on the player: the enemy wears no relics.
 
 **Element crossed into `internal/combat` on 2026-08-12**, which is what this section had been
-waiting on and what unblocked ring discounts and the flip ring with it.
+waiting on and what unblocked relic discounts and the flip relic with it.
 `combat.Element` is a rules type, `combat.Card` is a concept plus an element, and `[]Card`
 replaced `[]ActionKind` (now `ConceptID`) through `ResolveRound`, `ResolutionOrder`, `Slot`, `PlanFor`, `CostOf`
 and every planner. The screen's own `element` type and its `actionCard` struct are gone —
@@ -637,12 +637,12 @@ is what everything that spends or checks a budget reads.
 
 #### The trigger: the cards in the hand that formed
 
-**Decided, rewritten by one blow per turn, and rewritten again by the ring grammar** *(2026-08-17)*.
-The rings match against **the cards that formed the attack**, and each `apply-status` they fire lands
-once however many cards matched it — so the four elemental rings still read as "one status per
-distinct non-basic colour", and a form or concept ring reaches the same moment by the same route.
+**Decided, rewritten by one blow per turn, and rewritten again by the relic grammar** *(2026-08-17)*.
+The relics match against **the cards that formed the attack**, and each `apply-status` they fire lands
+once however many cards matched it — so the four elemental relics still read as "one status per
+distinct non-basic colour", and a form or concept relic reaches the same moment by the same route.
 An all-basic hand lands nothing, because no elemental rule matches a colourless card. A defend card
-carries its element for the ring discount and applies nothing itself;
+carries its element for the relic discount and applies nothing itself;
 the alternative — every card applying its status — would make a 1-AP Ward as good a delivery as
 a 1-AP Jab and turn the defend phase into the status engine. (This
 is a rule waiting for a card rather than one currently biting.)
@@ -680,7 +680,7 @@ it ever bit anything.
 
 **Stacking went on 2026-08-16.** Amounts added until then, which made a status something to pile
 on rather than something to keep up — and with one blow a turn, four stacks was four cards spent
-saying one word louder. A ring that *does* stack is a ring someone can design; the base rule
+saying one word louder. A relic that *does* stack is a relic someone can design; the base rule
 being "no" is what leaves it somewhere to go. The two caps went with it: `shockMissCapPct` and
 `weightCapPct` existed to stop four stacks reaching a certainty, and there is no longer a fourth
 stack to cap.
@@ -838,9 +838,9 @@ buys action points and never buys priority.
 **Order within a category is queue order, and two things read it** *(the second added 2026-08-26)*.
 `groupsOf` fills largest-count-first and breaks a tie by whose first card was played first, so the
 lead card — the one that names the hand and carries its element — is chosen by where the player put
-it. And **a growing ring steps between the cards of the blow**, so the order the attacks are queued
-in decides what each of them is worth: the first fire card is counted bare, steps the ring, and the
-second is counted at the bigger multiplier. See *Growing rings step inside the blow* below.
+it. And **a growing relic steps between the cards of the blow**, so the order the attacks are queued
+in decides what each of them is worth: the first fire card is counted bare, steps the relic, and the
+second is counted at the bigger multiplier. See *Growing relics step inside the blow* below.
 
 A defense still cannot be dragged ahead of an attack, a counted hand still reads the turn as a set
 for the purpose of *naming* it, and defends still compose without an order.
@@ -855,7 +855,7 @@ mechanism that pays for that choice.
 
 **A hand is a damage multiplier and nothing else** *(2026-08-17, owner's call)*. It buys no
 status, no action points and no action off the opponent's turn. Statuses come from **elements
-and the rings that arm them**, and that split is the whole reason this section is now short:
+and the relics that arm them**, and that split is the whole reason this section is now short:
 there is one axis, one number per rung, and one place to look for what a hand is worth.
 
 Hands are **discovered**, not given, and discovery persists on the **profile** — part of the
@@ -1004,7 +1004,7 @@ question on damage. `Blow.Formed()` draws the same line for the screen's hand pr
 Card is a hand, and it is not something anybody built.
 
 **Colour buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
-formed hand each land their status, gated on the attacker wearing that element's ring; basic is
+formed hand each land their status, gated on the attacker wearing that element's relic; basic is
 not a colour and never counts, so two basic Strikes and an ice Strike show one colour. That list
 is all that survives of the second axis.
 
@@ -1041,7 +1041,7 @@ a full house and can never be satisfied by five cards sharing one value.
 
 **Card Pair, Form Pair and Elemental Pair are now one entry called Pair**, keyed `pair`, written
 `"match": "any"`, and read on **concept, form or element — whichever the turn satisfies**. They were
-three rungs, three stones and three rings describing the same two cards, and a player forming a pair
+three rungs, three stones and three relics describing the same two cards, and a player forming a pair
 does not care which axis let them.
 
 **It pays 1x.** That is the identity, and it is deliberately what the High Card pays: what a pair
@@ -1127,13 +1127,13 @@ What that changed, in order of how much it matters:
 - **A hand of nothing but shields is real and lands nothing**, which is the accepted cost — see the
   decision below the table. **It is scored as of 2026-09-02** *(owner's call)*: the attack phase used
   to return before naming a hand whenever the turn queued no attack card, so the one hand the ladder
-  could not see was the shield build — which is a build a ring or an authored card should be able to
+  could not see was the shield build — which is a build a relic or an authored card should be able to
   reward. The hand is named and multiplied like any other and the blow sums to zero.
 - **A blow of zero is counted and not thrown** *(owner's call, 2026-09-02)*. The gate is the sum the
   hand carries: below it the turn spends nothing of the target's — no shield eaten, no raised guard
-  cleared, no miss rolled, no status landed and no ring grown — because a shield build stripping an
+  cleared, no miss rolled, no status landed and no relic grown — because a shield build stripping an
   opponent's defences for free is an attack in everything but the arithmetic. **It reads the sum
-  rather than the cards**, so a shield card authored with damage, or a ring that gives a defence
+  rather than the cards**, so a shield card authored with damage, or a relic that gives a defence
   some, is an attack like any other with nothing else to change.
 
 The ladders are **not** the same numbers, and no two of them are. The starting deck is 55 cards —
@@ -1319,7 +1319,7 @@ a tidy one: **the opponent's planner has to obey it exactly as the player's sele
 and a cap enforced only by the screen was a cap the enemy ignored.
 
 **The cap is five permanently, and nothing may ever raise it**. This
-reverses the reason it was made a method — "so a brand or ring raising it has somewhere to bite"
+reverses the reason it was made a method — "so a brand or relic raising it has somewhere to bite"
 — and the reversal is the point:
 
 - **A fixed five is what makes hand concepts possible.** Poker hands exist *because* you always
@@ -1332,16 +1332,16 @@ reverses the reason it was made a method — "so a brand or ring raising it has 
 - **A growable cap would dilute every shape as it grew.** A Four of a Kind is an all-in commitment
   at a cap of five and routine at a cap of seven. The hands would quietly get cheaper every time
   capacity went up, which is the opposite of a reward for building toward them.
-- **It is still a method, and still should be.** Rings and brands need somewhere to bite for
+- **It is still a method, and still should be.** Relics and brands need somewhere to bite for
   everything *else* they do, and a method that reads the duelist costs nothing. What changed is
-  that this particular lever is off the table: **no ring, brand or hand raises `MaxActions`.**
+  that this particular lever is off the table: **no relic, brand or hand raises `MaxActions`.**
 
 The consequence a banking card would face, if one were ever written again: it could not buy action
 slots, so it would have to buy points. An earlier draft of a 4-AP bank granted +2 AP and +2 slots specifically to reach
 six- and seven-card hand hands; that is exactly the dilution above and it was cut.
 
 Discounts **can take a card to free**, which is what makes the count bound load-bearing rather
-than incidental — and with the cap frozen, a discount ring's ceiling is five free cards rather
+than incidental — and with the cap frozen, a discount relic's ceiling is five free cards rather
 than an ever-widening round.
 
 ---
@@ -1379,8 +1379,8 @@ the end of the round and after every other way the round could have finished:
 
 **The number belongs to the run.** `session.Session.RoundLimit` is what a fight is actually on,
 seeded from `combat.DefaultRoundLimit` and carried to the fighter by `Equip` — the same seat the
-rings and the stones arrive in. Nothing moves it today, and the reason it is a field rather than a
-constant is that **a ring or a brand buying the player a sixth round is expected**, and when one
+relics and the stones arrive in. Nothing moves it today, and the reason it is a field rather than a
+constant is that **a relic or a brand buying the player a sixth round is expected**, and when one
 lands it writes to one place and every fight of the run is on the new number. It is saved with the
 run; a save written before the clock existed resumes onto the default rather than onto no clock.
 
@@ -1397,90 +1397,90 @@ an argument for a headless duel simulator rather than against the clock.
 
 ---
 
-## Rings
+## Relics
 
 - **Bought after every fight, with vitae.** *(Built 2026-08-21 — see The shop, below.)*
 - **Five at once**, until brands expand capacity. *(ideas.md's "extra fingers bought from a
   shop" is superseded.)*
 - **The cap is never displayed.** It surfaces naturally when you try to buy a sixth.
-- **No ring changes how many cards can be played.** `MaxActions` is frozen at five — see *A
-  round is bounded twice*. A ring may make five cards cheaper, never make it six.
-- **Rings are the duelist's only** *(2026-08-17)*. An enemy wears none; affixes are the
+- **No relic changes how many cards can be played.** `MaxActions` is frozen at five — see *A
+  round is bounded twice*. A relic may make five cards cheaper, never make it six.
+- **Relics are the duelist's only** *(2026-08-17)*. An enemy wears none; affixes are the
   enemy-side counterpart.
 
-### A ring is written in a grammar *(2026-08-17, owner's call)*
+### A relic is written in a grammar *(2026-08-17, owner's call)*
 
-**Every ring is data, in a `When` / `If` / `Then` grammar**, and it is **built** *(2026-08-17)*:
-`data/rings.json` is written in it, `internal/session` parses it, and `internal/combat/ring.go`
+**Every relic is data, in a `When` / `If` / `Then` grammar**, and it is **built** *(2026-08-17)*:
+`data/relics.json` is written in it, `internal/session` parses it, and `internal/combat/relic.go`
 holds the vocabulary and refuses a rule that misuses it. The full vocabulary, the code seat each
-moment lands on, and the questions to put to a new ring idea live in
-[.claude/skills/rings/SKILL.md](.claude/skills/rings/SKILL.md); this is the argument for the
+moment lands on, and the questions to put to a new relic idea live in
+[.claude/skills/relics/SKILL.md](.claude/skills/relics/SKILL.md); this is the argument for the
 shape.
 
-**A ring is the only collected thing that is never played.** A card resolves in the turn you
+**A relic is the only collected thing that is never played.** A card resolves in the turn you
 queued it, a worm fires when you pick it, a hand is scored when the attack phase runs — each
-already knows *when*. A ring waits, so it says so itself, and that is the third part the card
+already knows *when*. A relic waits, so it says so itself, and that is the third part the card
 language does not need.
 
-- **A ring holds a *list* of rules.** Forced by the growing stat rings, which accumulate at one
-  moment and apply at another; it generalises to any ring wanting two.
-- **`Then` is a list too**, which is what buys a lightning ring that shocks *and* chills with no
+- **A relic holds a *list* of rules.** Forced by the growing stat relics, which accumulate at one
+  moment and apply at another; it generalises to any relic wanting two.
+- **`Then` is a list too**, which is what buys a lightning relic that shocks *and* chills with no
   new vocabulary.
 - **Seven moments, and only four are in `internal/combat`.** The other three fire in `session`
-  and on the post-battle screen, which is what makes a ring a **run** concept the rules consult
-  rather than a combat one. `rings.json` is therefore parsed in `internal/session`, beside the
+  and on the post-battle screen, which is what makes a relic a **run** concept the rules consult
+  rather than a combat one. `relics.json` is therefore parsed in `internal/session`, beside the
   worms and for the same reason.
-- **Rings fire left to right, in worn order.** A determinism rule, not a preference: multiplicative
+- **Relics fire left to right, in worn order.** A determinism rule, not a preference: multiplicative
   effects are order-sensitive, and worn order is the only order the player can see. **Compounding
-  is intended** — two slash rings are ×4.
-- **A ring may only bend a rule the game already has.** Banker scales vitae propagation, so
-  propagation had to be designed first. This is the test to apply to any new ring.
+  is intended** — two slash relics are ×4.
+- **A relic may only bend a rule the game already has.** Banker scales vitae propagation, so
+  propagation had to be designed first. This is the test to apply to any new relic.
 
-#### Growing rings step inside the blow *(owner's call, 2026-08-26)*
+#### Growing relics step inside the blow *(owner's call, 2026-08-26)*
 
-A `grow-on-hit` ring used to take one step after the whole blow had landed, so every fire card of a
-turn was counted at the figure the ring opened the turn with. **It now steps on every landing, inside
+A `grow-on-hit` relic used to take one step after the whole blow had landed, so every fire card of a
+turn was counted at the figure the relic opened the turn with. **It now steps on every landing, inside
 the sum**, and each landing is counted at the accumulator the one before it left.
 
 - **The order of the queue is therefore a rule.** The card that goes first pays for the card behind
   it. This replaces "the hand's order is not a rule", which was true until this landed and is the one
   thing to unlearn — the sort buttons and the hand's drag are no longer guaranteed to be
   presentation, and they stay live anyway: paying attention to the order is the point.
-- **Landings, not cards.** A card an echo or a repeat seats three times steps the ring three times,
+- **Landings, not cards.** A card an echo or a repeat seats three times steps the relic three times,
   and each of those landings is itself counted at the figure the previous one left — so an echo
   ladder compounds inside itself.
 - **The shape is settled per card and the figures are asked per landing.** How many times a card
   lands is fixed when the card is reached; what each landing is worth is not. See
   `combat.LandingShape`.
 - **A miss pays nothing.** The growth is worked out with the sum and adopted only after the shock
-  roll, so a blow that never connected leaves the ring where it was.
-- **Every ring's figure moved off the card and into the sum** *(owner's call, 2026-08-26)*. A card
+  roll, so a blow that never connected leaves the relic where it was.
+- **Every relic's figure moved off the card and into the sum** *(owner's call, 2026-08-26)*. A card
   face now says what the *card* does and nothing else — `1x DMG` whatever is on the fingers — because
-  a growing ring's multiplier depends on where in the turn the card is counted and no printed figure
-  could be right in every queue position. The owner's call took the flat rings with it: a fire ring
+  a growing relic's multiplier depends on where in the turn the card is counted and no printed figure
+  could be right in every queue position. The owner's call took the flat relics with it: a fire relic
   doubling every fire card was invisible in the term's figure with nothing accounting for it.
-  So the sum is where the rings are read. **Every figure flies out of the card that produced it and
+  So the sum is where the relics are read. **Every figure flies out of the card that produced it and
   that card shakes as it lands, one at a time, in the order the engine applied them** — the card's
-  damage from the played card, each ring's multiplier from its own ring, and an echo's extra term
-  shaking the ring that bought the landing even though it puts no figure on the line. The ring's
+  damage from the played card, each relic's multiplier from its own relic, and an echo's extra term
+  shaking the relic that bought the landing even though it puts no figure on the line. The relic's
   badge steps as the sum is read. `combat.CardScaleBySeat` is the multiplier per worn seat,
-  `combat.LandingSeats` is who bought an extra landing, and `Event.HandRingScale` /
+  `combat.LandingSeats` is who bought an extra landing, and `Event.HandRelicScale` /
   `Event.HandLanding` / `Event.HandGrown` carry them.
 - **Cost is the exception and stays on the face.** A discount is not order-dependent, and a card face
   disagreeing with the AP bar is the failure that rule has always existed to prevent.
 
 **What the grammar cost, and every item was real work:**
 
-- `Duelist.Rings` was `[ElementCount]bool`, which a form multiplier had no element to be a bit
-  under. It is a fixed array of `WornRing` — a `RingID` and its accumulator — plus a count, which is
+- `Duelist.Relics` was `[ElementCount]bool`, which a form multiplier had no element to be a bit
+  under. It is a fixed array of `WornRelic` — a `RelicID` and its accumulator — plus a count, which is
   the shape the defend set already used and the reason a duelist is still comparable.
 - `Duelist.Statuses` was indexed by element and is indexed by **status** — see below.
-- **Growing rings hold state**, the first ring thing that does, and the first that must be
-  **serialized**: an accumulator on `Session`, keyed by `RingRecord`, which is why the record key
-  is the identity rather than an index. **Uncapped, by decision** — a +5 HP ring is +100 by the
-  top of the tower and that is the intent. **One numeric effect per growing ring**, so the
+- **Growing relics hold state**, the first relic thing that does, and the first that must be
+  **serialized**: an accumulator on `Session`, keyed by `RelicRecord`, which is why the record key
+  is the identity rather than an index. **Uncapped, by decision** — a +5 HP relic is +100 by the
+  top of the tower and that is the intent. **One numeric effect per growing relic**, so the
   accumulator never has to say which of two it feeds.
-- **Nothing measures any of this**, so **a ring's balance is unknown** — say so rather than guessing
+- **Nothing measures any of this**, so **a relic's balance is unknown** — say so rather than guessing
   at a multiplier.
 
 ### Statuses are their own collection, and no longer an element *(2026-08-17, owner's call)*
@@ -1488,9 +1488,9 @@ the sum**, and each landing is counted at the accumulator the one before it left
 **A status is data**, in `statuses.json`: a key, a name, a badge, one of four closed effect kinds
 (`damage-over-time`, `lose-actions`, `miss-chance`, `damage-reduction`), an amount and a duration.
 
-**Fully decoupled — fire does not burn on its own**, including for the four rings that ship. This
+**Fully decoupled — fire does not burn on its own**, including for the four relics that ship. This
 holds the 2026-08-16 position rather than reversing it: the statuses being free is what left
-rings with nothing to be, and a *second* fire status arriving on a different ring later is only
+relics with nothing to be, and a *second* fire status arriving on a different relic later is only
 possible if the first was never inherent to the colour.
 
 **What it cost, all of it paid on 2026-08-17:** `Duelist.Statuses` re-indexed from element to
@@ -1503,45 +1503,45 @@ than a redesign. `effectKeys` in `card_art.go` was a table keyed by element and 
 off each status record's `Badge`. And `StatusID` is append-only, carrying the hazard `Element` and
 `GlyphKind` already carry — with the file, not the enum, deciding the order.
 
-### The rings that are designed
+### The relics that are designed
 
-**Every row below is in `data/rings.json` and works** *(2026-08-17)*. **Only the discount and the
+**Every row below is in `data/relics.json` and works** *(2026-08-17)*. **Only the discount and the
 flip predate the grammar**; the rest came out of it. **All of them are reachable in a run since
 2026-08-21**, bought and sold in the shop — see The shop, below.
 
 **This table is the original set and stopped being the catalogue on 2026-09-05**, when nine more
 families landed and the count reached 139. It is kept because each row is the *argument* for a
-shape; for what is actually in the game, read `docs/sheets/ringsheet/index.html`. **The rarities in
+shape; for what is actually in the game, read `docs/sheets/relicsheet/index.html`. **The rarities in
 it are also stale** — see "The catalogue tripled, and the tiers moved", below.
 
 **Bulwark** (+25 HP) is the one name still invented rather than taken from this table — Heart is the
-skill's own name for the growing one. The discount ring was **Thrifty** until 2026-08-22, when it
+skill's own name for the growing one. The discount relic was **Thrifty** until 2026-08-22, when it
 became **Warm** and grew three siblings.
 
-| Ring | Moment | Does |
+| Relic | Moment | Does |
 |---|---|---|
-| **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colours' status rings, split off on 2026-08-22 and priced uncommon |
+| **Burning / Chilling / Shocking / Weighted / Weakening** | `attack-lands` | the five colours' status relics, split off on 2026-08-22 and priced uncommon |
 | **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that colour — *element* multipliers, where Keen/Heavy/Needle are form ones |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
-| **Striker** | `card-damage` | doubles every Strike — a concept ring, 5 cards where a form covers 15, and priced accordingly |
+| **Striker** | `card-damage` | doubles every Strike — a concept relic, 5 cards where a form covers 15, and priced accordingly |
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
-| **stat rings** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
+| **stat relics** | `fight-start` | +10 DMG, +25 HP — and growing variants that gain per fight |
 | **Momentum** | `card-damage` + `turn-taken` | every card gains +0.2x DMG per turn with no defend card in it; a defend card wipes the streak |
 | **Enflamed / Frostbitten / Lithium / Granite / Unravelled** | `card-damage` + `attack-lands` | their colour gains +0.1x DMG per landed hit of that colour, and keeps it while worn |
 | **Echo** | `blow-formed` | the blow's first attack card lands three times: full, 2/3, 1/3 |
 | **Flurry / Rend / Aftershock** | `blow-formed` | every stab / slash / crush card lands **twice**, both at full DMG |
 | **Atrophy** | `deck-built` | every 3 AP attack is dealt as its 2 AP version |
-| **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the first ring with a drawback, and the first rare |
+| **Onslaught** | `card-cost` + `fight-start` | every card 1 AP cheaper, and a quarter off your life — the first relic with a drawback, and the first rare |
 | **Warm / Cold / Static / Dirty / Eerie** | `card-cost` | every card of that colour costs 1 AP less — one per colour |
 | **flip x20** | `card-drawn` | recolours a card of one colour as another **as it is drawn** — one for each ordered pair; see below |
 
-**A concept ring and a form ring are not the same object** and must not be priced as one.
+**A concept relic and a form relic are not the same object** and must not be priced as one.
 Striker covers 5 cards, Keen covers 15.
 
-**Arcane brought twelve rings, not one** *(2026-08-25)*, and that is the number to expect from a
+**Arcane brought twelve relics, not one** *(2026-08-25)*, and that is the number to expect from a
 sixth colour rather than the one a card list suggests. Four are the colour's own seats in families
 that already existed — **Arcane** (2x DMG), **Weakening** (applies WEAKENED), **Eerie** (1 AP off),
 **Unravelled** (grows +0.1x per landed arcane hit). The other eight are the flip cross-product,
@@ -1549,11 +1549,11 @@ which is quadratic: **Witchfire / Runefrost / Spellbolt / Leyline** turn fire, i
 earth into arcane, and **Hexfire / Hexfrost / Hexbolt / Hexstone** turn arcane into each of them.
 Twelve ordered pairs became twenty. **A sixth colour would bring fourteen**, ten of them flips.
 
-**Weakening is the strongest of the five status rings and is priced the same as the others.** That
+**Weakening is the strongest of the five status relics and is priced the same as the others.** That
 is deliberate rather than unexamined: WEAKENED doubles everything the target takes for two rounds,
 where a weight blunts a quarter and a chill takes one card, so its tier is the thing to move first
-if the arcane build turns out to dominate. Nothing in the repo measures what a ring does to a duel,
-so the price is judgement — see the rings skill.
+if the arcane build turns out to dominate. Nothing in the repo measures what a relic does to a duel,
+so the price is judgement — see the relics skill.
 
 ### Momentum — a streak that belongs to the duel *(2026-08-22, owner's call)*
 
@@ -1574,21 +1574,21 @@ predicate at all, so the streak is worth the same on every card in the hand.
 - **A duelist who falls mid-turn never reaches it**, since `playTurn` returns early on a death — a
   streak is a fact about turns taken and a corpse takes none.
 - **The streak does not survive the fight**, and that needed a rule: `combat.KeepsGrowth` reports
-  false for any ring holding a `reset-growth`, and `Session.AbsorbGrowth` skips it. Otherwise one
+  false for any relic holding a `reset-growth`, and `Session.AbsorbGrowth` skips it. Otherwise one
   good duel would bank a permanent bonus that a single defend card had once wiped.
-- **It became a sharper ring when shields landed** *(2026-08-31)*. It used to price the cards that
+- **It became a sharper relic when shields landed** *(2026-08-31)*. It used to price the cards that
   rebuilt a hand, which is an abstract cost; it now prices *taking a hit*, and the question it asks
   the player is legible in a way the old one never was — swing into the next blow, or spend the turn
   and lose the streak. Whether 0.2x a turn is enough to make a player eat an attack is unmeasured,
-  like every other ring.
+  like every other relic.
 
 ### The Enflamed family — growth inside a fight *(2026-08-22, owner's call)*
 
 **Enflamed (fire), Frostbitten (ice), Lithium (lightning), Granite (earth)**: their colour gains
-**+0.1x DMG every time an attack of that colour lands**, and keeps it for as long as the ring is
+**+0.1x DMG every time an attack of that colour lands**, and keeps it for as long as the relic is
 worn. Uncommon.
 
-**They are the first accumulator that moves during a fight.** Heart and the growing stat rings step
+**They are the first accumulator that moves during a fight.** Heart and the growing stat relics step
 once per win, at `fight-won` — `grow-on-win`, renamed from `grow` on 2026-08-22 so both growth verbs
 name their moment; these step at `attack-lands`, so the second fire attack of a duel is
 already stronger than the first. That needed a second verb — `grow-on-hit` — because a verb belongs
@@ -1598,23 +1598,23 @@ duelist away.
 
 - **Once per hit** *(owner's call, 2026-08-22)*, where a status is once per blow. Two fire cards in
   a hand are two steps, and a fire card that Echo seats three times is three — it counts **landings**
-  rather than cards. **That is the combination it exists for**: the rings that multiply landings and
-  the rings that grow per landing are meant to compound into a build, not to politely ignore each
+  rather than cards. **That is the combination it exists for**: the relics that multiply landings and
+  the relics that grow per landing are meant to compound into a build, not to politely ignore each
   other. Echo plus Enflamed is +0.3x off one card.
 - **A blow is paid for after it lands, never during** *(owner's call, 2026-08-22)*. The four fire
-  cards of a Four of a Kind all hit at the ring's old strength and the +0.4x shows up on the next
-  fire attack. A ring that strengthened the blow that grew it would mean the first attack of a fight
+  cards of a Four of a Kind all hit at the relic's old strength and the +0.4x shows up on the next
+  fire attack. A relic that strengthened the blow that grew it would mean the first attack of a fight
   already wearing its own bonus.
 - **The growth is linear, and deliberately.** The step reads the effect's raw `Amount`, never
-  `Amount + Grown` — a growth that grew would compound, and no growing ring in the game does.
+  `Amount + Grown` — a growth that grew would compound, and no growing relic in the game does.
 - **A lost fight forfeits what it earned**, which needs no rule of its own: a defeat ends the run.
   **Selling forfeits it too**, by the shop's existing rule.
-- **This is the first ring state that changes mid-fight**, so it is also the first thing a mid-fight
+- **This is the first relic state that changes mid-fight**, so it is also the first thing a mid-fight
   save would have to write down. Nothing saves yet.
 - **Uncapped, like every other accumulator.** +0.1x a blow across a long fight is a big number by
   the top of the tower, and nothing measures it.
 
-### Atrophy, and the ladder as a ring *(2026-08-22, owner's call)*
+### Atrophy, and the ladder as a relic *(2026-08-22, owner's call)*
 
 **Every 3 AP attack is dealt as its 2 AP version**: Lunge becomes Thrust, Cleave becomes Slash,
 Smash becomes Strike. Rare.
@@ -1622,7 +1622,7 @@ Smash becomes Strike. Rare.
 **It is the flip's shape applied to the other axis, at the other moment.** A flip changes a card's
 colour as that card is *drawn*; Atrophy changes its *concept* as the fight's draw pile is built, one
 rung down the same form's ladder. The two moments matter for how the deck panel shows a card and for
-nothing else in play — see the flip rings below. Everything downstream — cost, damage, the hand it forms, the card face — follows
+nothing else in play — see the flip relics below. Everything downstream — cost, damage, the hand it forms, the card face — follows
 because the card genuinely is a Thrust.
 
 - **What the player buys is a turn with more cards in it.** Three Lunges cost 9 AP and do not fit a
@@ -1631,13 +1631,13 @@ because the card genuinely is a Thrust.
   a Jab.
 - **`combat.Neighbour` already existed**, built for worms, so the ladder is still a consequence of
   `duelist_cards.json` rather than a table written twice. A card with no rung below it is left alone.
-- **`Tier` is a new predicate and it reads the *declared* cost.** A discount ring cannot move a card
-  out of Atrophy's reach, which would otherwise make two worn rings switch each other off in an
+- **`Tier` is a new predicate and it reads the *declared* cost.** A discount relic cannot move a card
+  out of Atrophy's reach, which would otherwise make two worn relics switch each other off in an
   order nobody chose.
-- **Two demoting rings do not chain.** `DemoteConcept` reads the card the run owns and takes the
-  deepest single step, exactly as flips read the original element. A ring wanting two rungs says
+- **Two demoting relics do not chain.** `DemoteConcept` reads the card the run owns and takes the
+  deepest single step, exactly as flips read the original element. A relic wanting two rungs says
   `Amount: 2`.
-- **Nothing measures it**, and this one is the most likely of the new rings to be badly priced:
+- **Nothing measures it**, and this one is the most likely of the new relics to be badly priced:
   `tools/handodds` measures which hands a deck can reach, and Atrophy changes that deck.
 
 ### Echo, and the one blow a turn *(2026-08-22, owner's call)*
@@ -1645,7 +1645,7 @@ because the card genuinely is a Thrust.
 **The Echo Ring makes the blow's first attack card land three times — full DMG, two thirds, one
 third.** Uncommon.
 
-**It is extra *terms in the sum*, not extra blows**, and that is the decision the ring forced. A
+**It is extra *terms in the sum*, not extra blows**, and that is the decision the relic forced. A
 turn lands one blow: every attack card is added up, the hand multiplies the total, and the result
 lands once. Three separate landings would have meant three misses to roll, three sets of defends and
 three status applications — a second shape for a round. So an echo seats the lead card again behind
@@ -1654,20 +1654,20 @@ times*.
 
 - **The echo never reaches the matcher.** `blowFor` has already run when `handEvent` adds the
   echoes, so an echoed Strike does not turn a Pair into Three of a Kind. It pays into the hand the
-  real cards formed — which is also what stops one ring rewriting the hand ladder.
+  real cards formed — which is also what stops one relic rewriting the hand ladder.
 - **The multiplier therefore multiplies the echoes too**, since they are in the base sum. Echo is
   worth about two thirds of the lead card, times the hand — strongest in a big hand, which is the
-  opposite of a ring that rescues a bad one.
+  opposite of a relic that rescues a bad one.
 - **The player watches it happen.** The echo terms are seated on the lead card, so the sum in the
   math box shows the first card's figure paying three times and each one flies out of that card.
   That was the owner's requirement, not a side effect.
 - **`blow-formed` is a new moment and `echo-attack` a new verb**, and this is the first moment that
   sees a *blow* rather than a card. `MaxEchoLandings` is 5 — a width on `Event`'s hand arrays,
   which have to stay fixed for an Event to be comparable.
-- **Two echo rings add landings rather than multiplying**: three and three is five, not nine.
+- **Two echo relics add landings rather than multiplying**: three and three is five, not nine.
 - **A seven-term sum is wider than the box was laid out for**, so `layOutMath` now shrinks a line
   that will not fit rather than letting a figure hang off the band.
-- **Nothing measures it**, like every other ring.
+- **Nothing measures it**, like every other relic.
 
 **Flurry, Rend and Aftershock repeat a whole form** *(2026-08-22, owner's call)*: every stab / slash
 / crush card in the blow lands **twice, both at full damage**, uncommon. `repeat-card` is the second
@@ -1690,14 +1690,14 @@ repeat is the card played again.
   `MaxEchoLandings` times. A repeat matches on form, so five crush cards is five cards landing
   twice, where an echo only ever touched one card.
 
-### The discount rings — one per colour *(2026-08-22, owner's call)*
+### The discount relics — one per colour *(2026-08-22, owner's call)*
 
 **Warm, Cold, Static and Dirty**: every card of one colour costs **1 AP less**, at `card-cost`. All
-four common. The discount was one ring named Thrifty, matching fire and named after nothing in the
+four common. The discount was one relic named Thrifty, matching fire and named after nothing in the
 game; naming it for the *colour it warms* generalises to four and drops a word the design never
 owned.
 
-**They are the third thing a colour ring can be**, after the damage doubler and the status ring, and
+**They are the third thing a colour relic can be**, after the damage doubler and the status relic, and
 the one that changes what a turn can hold rather than what it does: a 6 AP budget buying four cheap
 cards instead of three is a different hand ladder, not a bigger number. **Nothing measures that**, so
 what a colour's discount is worth against a colour's doubling is unknown, and reads as the bigger of
@@ -1706,26 +1706,26 @@ the two.
 **`static-ring` is the lightning discount and not the earth→lightning flip.** The flip held that key
 for a few hours on 2026-08-22 and is now **Dust Storm**; the record key moved with the name.
 
-### The colour rings
+### The colour relics
 
-`data/rings.json` holds them, each as one `attack-lands` rule matching one colour and applying one
+`data/relics.json` holds them, each as one `attack-lands` rule matching one colour and applying one
 status. **There is no special case for them in the engine** *(2026-08-17)* — they are the plainest
-thing the grammar can say, which is what the grammar was checked against. One ring is one element,
+thing the grammar can say, which is what the grammar was checked against. One relic is one element,
 so wearing one and swinging a hand of all four colours lands one status and nothing else — which is
 what makes the second and third worth buying.
 
-| Ring | Element | What wearing it does |
+| Relic | Element | What wearing it does |
 |---|---|---|
 | Burning Ring | fire | your fire attacks burn: 50% of your DMG at the end of each round |
 | Chilling Ring | ice | your ice attacks chill: one card off the front of each of their turns |
 | Shocking Ring | lightning | your lightning attacks shock: 25% chance their attack misses |
 | Weighted Ring | earth | your earth attacks weigh: they deal 25% less damage |
 
-### The flip rings — one for every ordered pair *(2026-08-22, owner's call)*
+### The flip relics — one for every ordered pair *(2026-08-22, owner's call)*
 
-**Twenty rings, each `card-drawn` / one colour in / another colour out.** Frozen Lightning was the
+**Twenty relics, each `card-drawn` / one colour in / another colour out.** Frozen Lightning was the
 only one for five days; the pattern generalised to every ordered pair, and all twenty are **common**.
-**It is a cross-product, so it grows quadratically**: four colours were twelve rings and five are
+**It is a cross-product, so it grows quadratically**: four colours were twelve relics and five are
 twenty. That is the cost line to read before proposing a sixth colour — it would be thirty. The names are thematic rather than mechanical — "Permafrost" says earth into
 ice without saying either word — which is a deliberate cost: the *card* has to be read to know what
 it does, and the tooltip is what says it.
@@ -1752,70 +1752,70 @@ outcome but a **place**: the draw pile holds the deck the run owns, and the alte
 that happens to a card, at a moment, on its way to the hand. That is the shape the next kind of
 alteration will need, and it is what the deck panel's ALTERATIONS toggle is a picture of.
 
-**A drawn card does not remember what it was.** It carries the colour it became; a `card-damage` ring
+**A drawn card does not remember what it was.** It carries the colour it became; a `card-damage` relic
 keyed on ice fires on a card that is ice *now*, and never on one that used to be. That was the
 owner's call and it is what stops an alteration turning every later rule into a question about
 history. What the original is still reachable from is the card's **identity** — every card a run owns
 carries an ID, so the deck panel can show either face of a card wherever it is sitting. **No rule may
 read that ID**; it is a handle for the screens.
 
-- **A flip is what makes a colour ring worth wearing**, which is the whole point of the pair: Fire
-  Ring doubles fire cards and there are only so many, so Frostbite-and-friends is how a deck is bent
-  toward the colour a run has bought into. It is also how the *status* rings get fed.
+- **A flip is what makes a colour relic worth wearing**, which is the whole point of the pair: Fire
+  Relic doubles fire cards and there are only so many, so Frostbite-and-friends is how a deck is bent
+  toward the colour a run has bought into. It is also how the *status* relics get fed.
 - **Flips do not compose**, and that is enforced rather than emergent — `combat.FlipElement` reads
   each card's **original** element, so Frostbite (fire→ice) and Meltdown (ice→fire) worn together do
   not cascade a deck to one colour. See `TestFlipsDoNotCompose`.
 - **Two flips naming the same source is the new case the twelve introduce, and last-worn wins**
-  *(owner's call, 2026-08-22)*. Frostbite and Heat Lightning both claim fire; the later ring in the
+  *(owner's call, 2026-08-22)*. Frostbite and Heat Lightning both claim fire; the later relic in the
   row takes it, by the same rule that orders every other multiplicative effect. Decided rather than
   merely observed — nothing warns the player and there is still no way to reorder the row, and both
   of those are accepted.
 - **They are twenty of fifty-eight records, and the dilution is accepted** *(owner's call,
-  2026-08-22, unchanged by arcane)*. The catalogue is now more than a third flips, so a common ring's ten tickets are ten
-  out of a much bigger pot than they were at seventeen rings — and more rings are coming, which is
+  2026-08-22, unchanged by arcane)*. The catalogue is now more than a third flips, so a common relic's ten tickets are ten
+  out of a much bigger pot than they were at seventeen relics — and more relics are coming, which is
   what makes that fine. If the shelf ever does need thinning, the lever is a weight or a tier, not
   a price.
 
-**Every colour is two rings as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning, Earth and
+**Every colour is two relics as of 2026-08-22** *(owner's call)*. **Fire, Ice, Lightning, Earth and
 Arcane** are now `card-damage` doublers on their colour — the first *element* multipliers, where Keen, Heavy
 and Needle multiply a form — each common and each keeping the colour's artwork. The status each used
-to apply moved to a second ring — **Burning, Chilling, Shocking, Weighted, Weakening** — all uncommon
-and all drawing the default ring face. So a colour offers cheap damage or a dearer, rarer status, and
-ten of the fifty-eight records are now colour rings.
+to apply moved to a second relic — **Burning, Chilling, Shocking, Weighted, Weakening** — all uncommon
+and all drawing the default relic face. So a colour offers cheap damage or a dearer, rarer status, and
+ten of the fifty-eight records are now colour relics.
 
 **Two records and two files were renamed with it**: `frozen-ring` → `ice-ring` and `thunder-ring` →
-`lightning-ring`, with `assets/ring/frozen-ring.png` → `ice-ring.png` and `thunder-ring.png` →
-`lightning-ring.png`. The ring naming now matches the element names the rules use. "Frozen" and
+`lightning-ring`, with `assets/relic/frozen-ring.png` → `ice-ring.png` and `thunder-ring.png` →
+`lightning-ring.png`. The relic naming now matches the element names the rules use. "Frozen" and
 "Thunder" are free again and may come back for something else.
 
 **BURNING went from 10% to 50% of the attacker's DMG in the same call**, over the same two rounds.
 That is a fivefold change to a status nothing measures, so it is a judgement, and a large one: at 50% over two rounds a burn is
 roughly a whole extra attack, which is what the uncommon tier is meant to be paying for.
 
-**The ring is read off the attacker, never the victim.** Your fire ring makes *your* fire attacks
-burn; it does nothing about fire aimed at you. The alternative would make a ring a liability and
+**The relic is read off the attacker, never the victim.** Your fire relic makes *your* fire attacks
+burn; it does nothing about fire aimed at you. The alternative would make a relic a liability and
 buying one a decision with a wrong answer.
 
 **A run opens wearing nothing** *(owner's call, 2026-08-21)*. It wore fire, ice and lightning for
-four days, which was always written down as temporary: the list existed because a ring could not
-otherwise be got at all. `session.StartingRings` stays as the seat for putting one on without
+four days, which was always written down as temporary: the list existed because a relic could not
+otherwise be got at all. `session.StartingRelics` stays as the seat for putting one on without
 playing to a shop, and ships empty. The worn set moved off the combat screen and onto the run on
-2026-08-17, which is what makes a bought ring survive a fight.
+2026-08-17, which is what makes a bought relic survive a fight.
 
-**What that costs, stated rather than discovered:** a run holds 5 vitae and a base ring is 3, so
+**What that costs, stated rather than discovered:** a run holds 5 vitae and a base relic is 3, so
 **the bare opening lasts exactly one fight** — the first shop can already afford a colour, and the
 first duel is the only one fought with every element inert. That is a much shorter gap than the
-first pricing draft produced, and it is the deliberate consequence of a base ring being cheap.
+first pricing draft produced, and it is the deliberate consequence of a base relic being cheap.
 
 ### The shop *(2026-08-21, owner's call; built the same day)*
 
-**Three rings on a shelf after every fight, and the row you are wearing under them.** Both rows are
-ring cards and both are clicked; the difference is which way the vitae moves. `internal/screens/shop.go`
+**Three relics on a shelf after every fight, and the row you are wearing under them.** Both rows are
+relic cards and both are clicked; the difference is which way the vitae moves. `internal/screens/shop.go`
 draws it, `internal/session/shop.go` holds the rules, and neither knows what comes after the shop —
 `session.PhaseShop` is a station of the run loop and `advanceRun` is what leaves.
 
-- **A ring declares a rarity, and the rarity is the price** *(owner's call, 2026-08-22)*. This
-  replaced a per-ring price. `rings.json` names one of three tiers and `data.Rarity` turns it into
+- **A relic declares a rarity, and the rarity is the price** *(owner's call, 2026-08-22)*. This
+  replaced a per-ring price. `relics.json` names one of three tiers and `data.Rarity` turns it into
   both what the shop charges and how often the shelf offers it:
 
   | Rarity | Price | Sells for | Draw weight |
@@ -1824,58 +1824,58 @@ draws it, `internal/session/shop.go` holds the rules, and neither knows what com
   | uncommon | 5 | 2 | 4 |
   | rare | 7 | 3 | 1 |
 
-  **A common ring is still 3, the base**, so the pacing below is unchanged: one of the four that
+  **A common relic is still 3, the base**, so the pacing below is unchanged: one of the four that
   give a colour its status is the plainest thing the grammar can say and the thing everything else
   is read against.
-- **Three tiers rather than seventeen numbers.** A per-ring price could only be judged one ring at a
+- **Three tiers rather than seventeen numbers.** A per-ring price could only be judged one relic at a
   time and was drifting; a tier can be read against the whole catalogue at a glance, and rebalancing
-  a ring is moving it rather than inventing a figure. **What that costs, said out loud:** two rings
+  a relic is moving it rather than inventing a figure. **What that costs, said out loud:** two relics
   in the same tier cost the same even when one is plainly stronger — the answer to that is which
   tier it belongs in, not a fourth tier.
-- **Scarcity and price are deliberately different curves.** A rare ring is a tenth as likely to
+- **Scarcity and price are deliberately different curves.** A rare relic is a tenth as likely to
   appear as a common one but only a bit over twice the price. The 3 / 5 / 7 ladder *(owner's call,
   2026-08-22)* spans exactly what the seventeen hand-written prices used to. What makes it rare is that a run mostly
   does not see it; a price tracking the odds would make it unbuyable on the one visit it turns up.
-- **Every ring is `common` as of 2026-08-22**, which is the migration's starting position and not a
+- **Every relic is `common` as of 2026-08-22**, which is the migration's starting position and not a
   judgement about any of them. The tiers are assigned by hand.
-- **That is a full ring or two a fight against an income of roughly 5–10**, so **the purse stops
+- **That is a full relic or two a fight against an income of roughly 5–10**, so **the purse stops
   binding once the five fingers are full** — around the fourth or fifth fight, after which vitae has
-  nothing to buy but swaps. The first draft priced a base ring at 20 and made the whole run about
+  nothing to buy but swaps. The first draft priced a base relic at 20 and made the whole run about
   affording one; this is deliberately the other side of that, and what it wants next is something
-  else to spend on rather than dearer rings. **That arrived on 2026-08-27**: the two sealed goods
+  else to spend on rather than dearer relics. **That arrived on 2026-08-27**: the two sealed goods
   below.
 - **Nothing measures whether any of those numbers is right.** Nothing in the repo measures what a
-  ring does to a duel, so what a doubling of every slash card is worth in vitae is a judgement. Recorded as a judgement rather than dressed up as a derivation.
+  relic does to a duel, so what a doubling of every slash card is worth in vitae is a judgement. Recorded as a judgement rather than dressed up as a derivation.
 - **Selling pays the tier's own figure — 1, 2 or 3** *(owner's call, 2026-08-22)*. It was a quarter
   of the price rounded up, which across three prices paid an uncommon and a rare the same 2: three
   tiers is three numbers, and writing them down beats arithmetic that has to be argued with. The
-  round trip still loses, and loses more the dearer the ring — a shelf you could try on for free
+  round trip still loses, and loses more the dearer the relic — a shelf you could try on for free
   would be a rerolling of your hand every visit rather than a decision.
-- **Selling is the only way a ring comes off, and it is how the sixth ring is bought.** A purchase at
+- **Selling is the only way a relic comes off, and it is how the sixth relic is bought.** A purchase at
   five worn is refused rather than swapped, so trading is two decisions with a price between them —
-  never one click that quietly throws a worn ring away.
-- **A sold ring's accumulator resets to zero.** `Session.grown` is keyed by record precisely so a
-  ring taken off and put back on is the *same ring*; the decision is that it is not the same
+  never one click that quietly throws a worn relic away.
+- **A sold relic's accumulator resets to zero.** `Session.grown` is keyed by record precisely so a
+  relic taken off and put back on is the *same relic*; the decision is that it is not the same
   *number*. The growth is what wearing it through fights paid for, so selling forfeits it. It is
   what stops a Heart Ring being parked in the shop between fights.
 - **What is already worn is off the shelf**, rather than shown and refused: a seat spent saying
   nothing.
-- **Selling out of the middle of the row changes the firing order**, since rings fire left to right
-  and a re-bought one goes on at the right-hand end. That is a real cost of letting a ring come off,
+- **Selling out of the middle of the row changes the firing order**, since relics fire left to right
+  and a re-bought one goes on at the right-hand end. That is a real cost of letting a relic come off,
   and **there is no re-ordering control**: the one thing a player cannot choose is the order two
-  rings apply in.
+  relics apply in.
 - **The shelf is its own random stream** (`seeds.ShopStock`), per fight, so a defeat and a retry walk
   into the same shop exactly as they meet the same opponent. **It is three weighted draws without
-  replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn ring leaves
-  the pool, so the shelf never offers the same ring twice.
+  replacement**, rather than a shuffle: each seat draws on rarity tickets and the drawn relic leaves
+  the pool, so the shelf never offers the same relic twice.
 
 ### The two sealed goods: a bag of rocks and a can of worms *(owner's call, 2026-08-27)*
 
-**The shelf is five seats now: three rings, a bag of rocks and a can of worms.** Both goods cost
+**The shelf is five seats now: three relics, a bag of rocks and a can of worms.** Both goods cost
 **5 vitae**, both hold **four of something**, and both give the player **exactly one of the four** —
 the other three are gone.
 
-- **What is bought is the choice, not the thing.** A ring is read and then paid for; a good is paid
+- **What is bought is the choice, not the thing.** A relic is read and then paid for; a good is paid
   for and then read. That is the whole design, and it is why neither card names its contents: the
   face says the shape of the offer ("4 stones, keep 1") and nothing about which four.
 - **A bag holds four stones; a can holds four worms.** See the stones section below. The can is the
@@ -1887,7 +1887,7 @@ the other three are gone.
   shelf is already under.
 - **They are the answer to "vitae has nothing to buy but swaps"**, which the shop section above
   records as the thing it wanted next. A run with five fingers full now has somewhere for its purse
-  to go that is not a ring it will sell back at a loss.
+  to go that is not a relic it will sell back at a loss.
 - **Each draws from its own seeded stream** — `seeds.BagStock` and `seeds.CanStock`, both per fight.
   The can's is deliberately not the reward screen's `WormOffer`: sharing would make the shop's four
   a function of which two had just been offered free, so buying the can could guarantee — or rule
@@ -1897,72 +1897,72 @@ the other three are gone.
   look at something; this one stands between a purchase and what it bought, so an exit that
   forfeited five vitae would be a trap wearing the same red X that means "close" everywhere else.
   Every card in it is an exit.
-- **The row is five seats rather than two rows, and the screen decided that.** A ring is worn and a
+- **The row is five seats rather than two rows, and the screen decided that.** A relic is worn and a
   good is opened, so two rows would have read better — but the shop is 960 tall with a build band,
   two sentences of narration and the Leave button at 88%, and a card is 224. There is room for one
   row of cards, not two.
 
 ### The catalogue tripled, and the tiers moved *(owner's call, 2026-09-05)*
 
-**139 rings.** The table above is the *original* set and is kept as the argument for each shape; it
-is no longer the catalogue. **`docs/sheets/ringsheet/index.html` is the catalogue** — art, price,
-authored text and resolved rules for every ring, grouped by rarity — and it is the only place that
+**139 relics.** The table above is the *original* set and is kept as the argument for each shape; it
+is no longer the catalogue. **`docs/sheets/relicsheet/index.html` is the catalogue** — art, price,
+authored text and resolved rules for every relic, grouped by rarity — and it is the only place that
 can be current, because a table of 139 rows in a file loaded every session is a cost paid forever.
 
 **Nine families landed in one sitting**, and every one of them is a cell the coverage grid in
-`.claude/skills/rings/coverage.py` reported empty:
+`.claude/skills/relics/coverage.py` reported empty:
 
 | Family | Count | Tier | What it is |
 |---|---|---|---|
-| **concept rings** | 14 + Striker | common | one per attack card — Prodder, Boxer, Lancer, Fencer, Impaler; Skirmisher, Cutter, Slasher, Cleaver, Headsman; Knocker, Brass Knuckles, Smasher, Grinder. `scale-damage 200`, exactly Striker's shape |
-| **form cost rings** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's colour family |
+| **concept relics** | 14 + Striker | common | one per attack card — Prodder, Boxer, Lancer, Fencer, Impaler; Skirmisher, Cutter, Slasher, Cleaver, Headsman; Knocker, Brass Knuckles, Smasher, Grinder. `scale-damage 200`, exactly Striker's shape |
+| **form cost relics** | 3 | rare | Whetted, Hefted, Tapered — the form counterparts of Warm's colour family |
 | **form status / growth** | 3 + 3 | uncommon | Sundering / Bruising / Pinning, and Sharpening / Pounding / Quickening |
-| **tier rings** | 4 | rare / uncommon | Erode and Whittle demote; Swarm and Crown pay a tier |
-| **rung rings, flat** | 19 | common | one per rung, `add-hand-damage`, bonus = the rung's multiplier over 50 |
-| **rung rings, multiplying** | 5 | uncommon / rare | Pairing, Triplicate Form, House of Pain; **Oak and Pentacle are rare** — 4x on a Four of a Kind and 5x on a Five of a Kind are 20x and 39x blows, and a ring that turns the two rarest hands in the game into those is not a common shelf offer |
+| **tier relics** | 4 | rare / uncommon | Erode and Whittle demote; Swarm and Crown pay a tier |
+| **rung relics, flat** | 19 | common | one per rung, `add-hand-damage`, bonus = the rung's multiplier over 50 |
+| **rung relics, multiplying** | 5 | uncommon / rare | Pairing, Triplicate Form, House of Pain; **Oak and Pentacle are rare** — 4x on a Four of a Kind and 5x on a Five of a Kind are 20x and 39x blows, and a relic that turns the two rarest hands in the game into those is not a common shelf offer |
 | **double-status** | 9 | rare | one per unordered status pair, each triggered by an element holding one of the two |
 | **element repeats** | 5 | uncommon | Backdraft, Shatter, Forked, Landslide, Recursion — the colour half of Flurry/Rend/Aftershock |
-| **held-card rings** | 8 | common | +5 DMG per matching card **kept back**, 5 colours and 3 forms |
+| **held-card relics** | 8 | common | +5 DMG per matching card **kept back**, 5 colours and 3 forms |
 
 **Four tier moves, and the reasoning is worth more than the list:**
 
 - **Every card-cost reducer is rare.** A discount is worth a fraction of a turn every turn, forever;
   nothing else at common compounds like that.
-- **Every flip ring is uncommon.** They were common as enablers, which undersold them: a flip is what
+- **Every flip relic is uncommon.** They were common as enablers, which undersold them: a flip is what
   makes a mono-colour build reachable at all, and the colour payoffs it feeds are uncommon already.
 - **Erode and Whittle are rare, with the cost family.** Demoting a whole tier is a discount written
   the other way round, and the narrow version being dearer than the wide one was the inconsistency.
-- **Heart, Momentum and the eight held-card rings are common.** Each is flat, self-capping and
+- **Heart, Momentum and the eight held-card relics are common.** Each is flat, self-capping and
   unable to compound. Momentum additionally has a dead case a player cannot always steer away from —
-  being attacked and having to defend — where a colour ring's dead case is a build you chose.
+  being attacked and having to defend — where a colour relic's dead case is a build you chose.
 
 **The weights invert what "adding a common" means, and this is the thing to know before adding
 another.** At 10 / 4 / 1 tickets, **anything added to common devalues every rare in the game**, because
-it grows the denominator every tier's share is taken over. Rare held 4 rings at the start of the day
-and about 2.9% of a shelf draw; it holds 26 and **3.2%**. Twenty-two rings arrived in the tier and its
+it grows the denominator every tier's share is taken over. Rare held 4 relics at the start of the day
+and about 2.9% of a shelf draw; it holds 26 and **3.2%**. Twenty-two relics arrived in the tier and its
 scarcity did not move, because 33 commons became 57 underneath it.
 
-### A rung ring is a second multiplier, never a bigger hand *(owner's call, 2026-09-05)*
+### A rung relic is a second multiplier, never a bigger hand *(owner's call, 2026-09-05)*
 
 `scale-hand-damage` scales the **blow**, after the ladder's own multiplier has been applied.
-`Event.Multiplier` stays the rung's figure and a ring may not touch it.
+`Event.Multiplier` stays the rung's figure and a relic may not touch it.
 
 **The first version folded the two together** — a Pair under Pairing displayed as 2.3x — and
 that is the reading to avoid: it says the *hand* changed, when what changed is that the player is
-wearing a ring. The banner, the hand row and the sum all show the rung actually built, and the
-ring's figure is drawn as its own term in the pane's pink, flying out of the ring that paid.
+wearing a relic. The banner, the hand row and the sum all show the rung actually built, and the
+relic's figure is drawn as its own term in the pane's pink, flying out of the relic that paid.
 
 The flat pair, `add-hand-damage`, does the opposite and joins `Base` **before** the multiplier, so a
-rung ring can be written either as a term the hand contributed or as a multiplier laid over it.
+rung relic can be written either as a term the hand contributed or as a multiplier laid over it.
 
-### The defensive half of the game has one ring, and no verb can reach it
+### The defensive half of the game has one relic, and no verb can reach it
 
 **Nothing in the vocabulary names a shield.** `CardDamage` returns zero immediately for a card that
 deals none, so a `card-damage` rule on a defend concept is a record that can never fire — which is
-why Ward, Brace and Guard got no concept ring when the other fourteen were written, and why
+why Ward, Brace and Guard got no concept relic when the other fourteen were written, and why
 **Braced** reaches shields sideways, through cost, rather than head on.
 
-It is recorded as a **gap rather than a decision**: 138 of 139 rings are about attacking, in a game
+It is recorded as a **gap rather than a decision**: 138 of 139 relics are about attacking, in a game
 whose one defensive mechanic — a shield eating a whole blow — is among its strongest. Filling it
 means a verb that raises, keeps or spends a shield, and that has not been designed.
 
@@ -1986,14 +1986,14 @@ of the figure `hands.json` writes down**, for the rest of the run.
 - **Using it is the whole of owning it.** There is no inventory: the click that picks a rock out of
   the bag is the click that puts it on the ladder. A run holds counts per rung, not stones.
 - **It belongs to the run, not to the profile.** Stones are gone when the run is — the same lifetime
-  as rings, worms and the deck — and they are written into `run.json` by hand *key*, so a rung this
+  as relics, worms and the deck — and they are written into `run.json` by hand *key*, so a rung this
   build has not got refuses the resume rather than being dropped.
 - **The bump rides on the duelist, never on the catalogue.** `combat.handTable` is package state
   shared by every fight, every review tool and every test, so a run raising a rung in place would
   raise it for the enemy planner and for `tools/handsheet`. A duelist carries a count per rung and
   the ladder is read *through* it; a duelist with no stones reads the shipped table untouched.
-- **The hands panel shows what a hand pays this run**, with a raised figure written in the ring pink
-  — the same colour a ring-moved figure takes on a card. The shared reading is *something you bought
+- **The hands panel shows what a hand pays this run**, with a raised figure written in the relic pink
+  — the same colour a relic-moved figure takes on a card. The shared reading is *something you bought
   moved this number*; a second hue for the second source would be two colours to learn one fact.
 - **A stone has no rarity and the bag is a flat draw.** Every rung is worth a tenth of itself, so a
   Card Five stone is not a better rock than a Pair stone — it is a rock for a rung you may
@@ -2111,7 +2111,7 @@ and shown as cards; pick one, pick the card it takes, **see what it would become
   ending, so what a win is worth was arithmetic nobody ever saw. **A click skips to the end**, and
   the fast path pays through the same claims as the slow one — presentation may never change an
   outcome.
-- **Your build is on screen throughout**: the duelist card in its usual corner and the worn rings
+- **Your build is on screen throughout**: the duelist card in its usual corner and the worn relics
   beside it, so a worm is chosen against the thing it would be changing, and the purse the payout
   lands in is visible while it climbs.
 - **The vitae card is gone and taking neither worm is a button again** *(owner's call,
@@ -2189,7 +2189,7 @@ choose one, and no attack card in the deck is drab.
 colours is a hole a player can see — every other colour can be built toward out of the post-battle
 offer and one cannot. The catalogue goes eleven, so the two seats a fight offers are drawn from a
 slightly bigger pot and every individual worm is a little rarer; that dilution is the same one the
-flip rings took and it is accepted for the same reason.
+flip relics took and it is accepted for the same reason.
 
 ### REMOVE is the strongest option, and that is accepted
 
@@ -2265,13 +2265,13 @@ concept, element, form override, the worm-written cost and damage deltas, and th
 
 ### The bucket holds two, and the top row says so *(owner's call, 2026-09-06)*
 
-**A run carries at most two parasites**, and the count is drawn where the worn rings' is: the top
-row of every screen that shows a build is now **two panes** — `worn/5` rings on the left, `held/2`
+**A run carries at most two parasites**, and the count is drawn where the worn relics' is: the top
+row of every screen that shows a build is now **two panes** — `worn/5` relics on the left, `held/2`
 parasites on the right.
 
 - **The cap came from the pane and not the other way round.** A row drawn as `n/2` has to be a rule
   or it is a lie the first time a third parasite arrives. `session.MaxHeld` is that rule, and it
-  reads the same way `combat.MaxWornRings` does — one number, read by the screen rather than
+  reads the same way `combat.MaxWornRelics` does — one number, read by the screen rather than
   restated in it.
 - **What it buys is that the third purchase is a decision.** An uncapped consumable is one a rich
   run hoards rather than spends; with two seats, a bucket bought while both are full is a parasite
@@ -2285,11 +2285,11 @@ parasites on the right.
   `P` button, two clicks into a dialog that exists mid-duel — so what a run was carrying was
   invisible on the two screens where it decides what to carry.
 - **The whole row packs at one pitch, and it overlaps** *(owner's call)*. The combat row spans 1443
-  pixels between the two fighter cards; five ring seats and two consumable seats do not fit at full
+  pixels between the two fighter cards; five relic seats and two consumable seats do not fit at full
   size there and no gutter arithmetic makes them. So the pitch is *solved* for the span rather than
   chosen — 201 against a 203-pixel card, a two-pixel overlap — and **both panes take the same one**,
   which is what makes the line read as one row divided rather than two rows at two spacings. A row
-  closes up rather than shrinking a card, because a smaller ring is a different drawing.
+  closes up rather than shrinking a card, because a smaller relic is a different drawing.
   **The shop and the reward screen pay nothing**: there is no opponent card, the span is 1662, and
   the pitch hits its cap at 229 before it hits the span, so nothing overlaps there.
 - **A fixture may still plant more than two.** `session.StartingParasites` goes past the cap on
@@ -2486,7 +2486,7 @@ asks for none.
   **saved with the run**, so a resume does not forget.
 - **It refuses only on a run that has spent nothing.** There is no effect to copy, and a consumable
   that landed and did nothing is something bought and taken away. The consumables pane draws it dim,
-  the same courtesy an unaffordable ring gets.
+  the same courtesy an unaffordable relic gets.
 - **The targets are picked again rather than inherited.** The copied parasite's cards are long gone
   from the hand by the time a chimera is spent — a different turn, sometimes a different fight — and
   re-firing against the same identities would be a no-op wherever the effect was idempotent, which
@@ -2515,7 +2515,7 @@ scrolled would be a menu to read rather than a decision to make — the two-worm
 
 ### Riders: a rule carried by one card
 
-**A ring waits on a finger and fires for every card that matches it; a rider is the same idea
+**A relic waits on a finger and fires for every card that matches it; a rider is the same idea
 aimed the other way.** It belongs to one card of the run, travels with it through the shuffle, the
 hand and the discard, and fires only when that card is played.
 
@@ -2553,7 +2553,7 @@ hand and the discard, and fires only when that card is played.
   reads that off the **resolved duelist**, not off the playback, so how fast a round is drawn cannot
   change what the player is paid. `KindVitae` is still emitted, but it is the feed's line rather
   than the payment — summing those events to move a purse is the old way and would now double-pay.
-  The rules got a purse because a ring wanted to read one: see Rampant, which pays damage per vitae
+  The rules got a purse because a relic wanted to read one: see Rampant, which pays damage per vitae
   held and would otherwise price a turn-three blow at turn-one rates.
 
 - **The vocabulary is a Go enum in `internal/combat`, not a data record.** Everything else a
@@ -2565,7 +2565,7 @@ hand and the discard, and fires only when that card is played.
   to is written down.
 - **`Card.Riders` is a fixed array, and it has to be.** `combat.Card` must stay comparable — the
   screen's face cache and `TestRoundIsDeterministic` both depend on it — so a slice would end
-  both. Same constraint that made `Duelist.Rings` an array. It stayed an array when the count came
+  both. Same constraint that made `Duelist.Relics` an array. It stayed an array when the count came
   down to one, because a seat is what makes "no upgrade" the zero value rather than a case.
 - **Last one wins, and nothing stacks.** `Card.SetRider` replaces. Riders stacked three to a card
   until 2026-09-09 and two ten-point heals were twenty life; they are now one card forgetting the
@@ -2578,8 +2578,8 @@ hand and the discard, and fires only when that card is played.
 ### The card says what the card carries
 
 Effect text reads the card, so an upgraded card prints an extra line — `+10 LIFE`, `GOLD` — under
-its own. **It is not written in the ring pink**: that colour means "a ring did this" everywhere
-else, and a parasite is not a ring.
+its own. **It is not written in the relic pink**: that colour means "a relic did this" everywhere
+else, and a parasite is not a relic.
 
 **Every rider is visible as of 2026-09-09**, in three places: the line on the face, the wash over
 the card, and the tooltip. None is redundant with the others — the colour carries at a glance across
@@ -2603,11 +2603,11 @@ for a defence — and then a line per thing the upgrade adds.
 
 **It used to be arithmetic and nothing else** — `5 DMG, yours` / `1x the card` / `= 5 DMG` — which
 is three lines deriving a number the player wanted to be told. The derivation is still the reason
-the panel exists, and it is still printed: **underneath the block, and only when a ring or a worm
+the panel exists, and it is still printed: **underneath the block, and only when a relic or a worm
 has actually moved something.** A card nothing has touched derives to itself, and three lines saying
 so is a panel that trains the player not to read it.
 
-- **The block's figure carries the rings.** `screens.cardTip` hands `carddesc` the compounded ring
+- **The block's figure carries the relics.** `screens.cardTip` hands `carddesc` the compounded relic
   scale, so the headline number is what the card will deal rather than its bare worth over a chain
   ending in a bigger one. The chain therefore prints **no total** — the block already stated it, and
   two copies of one number is a pair that can disagree.
@@ -2672,8 +2672,8 @@ anything in the rules.
 per rider kind, and every one draws: a card the run has altered says so from across the table.
 
 **The card goes gold and the border does not** *(owner's call, 2026-09-09)*. `wash-face` is what
-`cards.DefaultUpgradeStyle` names: every pixel inside the ring is pulled toward the upgrade's ink and
-the ring itself is left exactly as it was.
+`cards.DefaultUpgradeStyle` names: every pixel inside the border ring is pulled toward the
+upgrade's ink and the ring itself is left exactly as it was.
 
 **What settled it is that the border is already saying something.** It carries the card's *state* —
 resting, selected, unaffordable, being dragged — in a wash away from the neutral grey, so an upgrade
@@ -2688,7 +2688,7 @@ state signal it would be sharing the ring with — and `wash` takes the whole ca
 border, which nobody misses and nothing on the face escapes. It is the shape `TintMode` had, for the
 same reason: how loud an upgrade should be is not a question anybody wins by arguing.
 
-- **A ring card is the one card this must never touch**, and it does not: a ring carries no rider,
+- **A relic card is the one card this must never touch**, and it does not: a relic carries no rider,
   so its pink is never washed.
 - **`UpgradeBorderPct` is 80 rather than 100**, for the `border` style, so a fifth of the state
   colour still shows through the ink.
@@ -2703,7 +2703,7 @@ removal is a deletion.
 
 - **`systems.Upgrade` is the vocabulary** and it is *presentation*: something visible has happened
   to this card, and here is what to paint it with. `internal/screens` is where a rider becomes one,
-  on exactly the terms `Spec.TextInk` is where a ring becomes a colour — neither `internal/cards`
+  on exactly the terms `Spec.TextInk` is where a relic becomes a colour — neither `internal/cards`
   nor `internal/systems` learns what a rider is.
 - **An upgrade is painted into the face; a mark is painted over it.** Under the `wash` style both
   cover the whole card, so the drawing does not tell them apart — what does is ownership. An upgrade is what the card
@@ -2719,7 +2719,7 @@ removal is a deletion.
   every element at once, so a column stating one of them states the less useful half of the truth.
   Every other upgrade leaves the element's tint alone, because none of them is about the element.
 - **Eight of the ten colours are placeholders and they are standing on a full wheel** *(2026-09-09)*.
-  Hue is spent — five elements, the ring pink, the two verbs, the two duelists, the ground — so what
+  Hue is spent — five elements, the relic pink, the two verbs, the two duelists, the ground — so what
   is there is picked to be *told apart* rather than to mean anything. Gold and silver are the
   exception: they are metals, and they are what the mechanic is called. `go run ./tools/upgradesheet`
   is the page to retune them against.
@@ -2730,7 +2730,7 @@ removal is a deletion.
   light running across it, so gold and silver are generated as a diagonal band — dark shoulders, a
   bright crest — through the same ink mechanism the wildcard's picture uses.
 - **The eight flat placeholders are loud at that strength**, which is the right direction for a
-  placeholder to be wrong in. One of them — the heal's rose — sits close to the ring pink, which is
+  placeholder to be wrong in. One of them — the heal's rose — sits close to the relic pink, which is
   exactly the kind of collision the "hue is spent" note predicts and the reason these are marked
   temporary rather than settled.
 
@@ -2764,12 +2764,12 @@ consumable lighter is a run the player would have to work out had changed.
 
 ## Brands
 
-**Brands alter the container; rings alter the contents**. That is the
+**Brands alter the container; relics alter the contents**. That is the
 axis, and it is what tells you which of the two a new power belongs to:
 
-| | Brands | Rings |
+| | Brands | Relics |
 |---|---|---|
-| What they touch | the chassis — hand size, total discards per round, ring slots | the cards — elements, costs, and the stats that feed them |
+| What they touch | the chassis — hand size, total discards per round, relic slots | the cards — elements, costs, and the stats that feed them |
 | Removable | **never.** You brand yourself and you do not take it off | freely; five equipped, swap as you like |
 | Scope | **for the run** | for the run, but re-chosen after every fight |
 
@@ -2781,7 +2781,7 @@ axis, and it is what tells you which of the two a new power belongs to:
   size is the nearest legal thing and is a container change, so it fits the axis.
 - Otherwise still open — capacity and rule-bending, with the above as the test for what counts.
 
-Like rings, they have **concrete definitions that never really change**, which makes them a fit
+Like relics, they have **concrete definitions that never really change**, which makes them a fit
 for the `data/` pattern: JSON beside a small Go loader.
 
 ---
@@ -2809,7 +2809,7 @@ screen as it narrates them. See `internal/session/spoils.go`.
 | **The room** | **3** outer, **4** inner, **5** stairway (the floor's boss), flat for the whole climb |
 
 - **A share of the life *remaining*, not of the maximum.** It is a reward for fighting well rather
-  than a rebate, and a ring that raises max life pays out more here indirectly — which is intended.
+  than a rebate, and a relic that raises max life pays out more here indirectly — which is intended.
   A win on nine life pays nothing from this part.
 - **The room award does not scale with the floor.** What makes a later fight worth more is the life
   you manage to keep in it.
@@ -2826,19 +2826,19 @@ screen as it narrates them. See `internal/session/spoils.go`.
 So 5 held pays 1, 10 pays 2, and 25 pays the maximum 5 — holding more than 25 propagates no
 faster.
 
-- **It is a rule of the run, not a ring.** The Banker ring scales it, which means it has to exist
-  on its own first — a ring may only ever bend a rule the game already has.
+- **It is a rule of the run, not a relic.** The Banker relic scales it, which means it has to exist
+  on its own first — a relic may only ever bend a rule the game already has.
 - **The cap is what stops it running away.** Uncapped, +1 per 5 is roughly ×1.2 a purse per
   fight, which compounds across 24 fights into a number no shop can be priced against. Capping
   the *rate* rather than the purse leaves a big purse worth having and stops the curve.
 - **Rounded down**, like every other integer rule in the game.
-- **The cap binds the base rate, and a ring scales what the cap produced** *(2026-08-17, owner's
+- **The cap binds the base rate, and a relic scales what the cap produced** *(2026-08-17, owner's
   call)*. So at 25 held propagation is +5, and +10 wearing Banker. The alternative — an absolute
   cap on the figure that finally lands — would make Banker do nothing past 25 held, which is a
-  ring that stops working exactly when a run can afford it.
-- **Order of operations, therefore:** count the fives, clamp to +5, *then* apply every ring that
-  scales propagation, left to right in worn order. Two such rings compound, like every other
-  ring effect.
+  relic that stops working exactly when a run can afford it.
+- **Order of operations, therefore:** count the fives, clamp to +5, *then* apply every relic that
+  scales propagation, left to right in worn order. Two such relics compound, like every other
+  relic effect.
 - **It is decided in `Session.WonFight`**, before the room counter moves and before either award
   above: interest is on what the run walked out of the fight holding, not on what the win is about
   to pay it. **The figure is decided there and arrives on the reward screen**, when the sentence
@@ -2880,7 +2880,7 @@ climb: three rooms could be walked in the same condition, and the only thing a b
 the tenth of life-left the payout pays. A floor is now an attrition budget of three rooms.
 
 - **Beating the floor's stairway protector heals to full**, and it is the only thing that does. No
-  card, no ring and no room between fights returns life outside a duel. That is what makes the
+  card, no relic and no room between fights returns life outside a duel. That is what makes the
   third room of a floor the one worth arriving at holding something back.
 - **It also raises the ceiling by a third, compounding.** Each stairway is 33% more body than the
   run already had, not 33% of the body it started with — so a run standing on floor eight, seven
@@ -2892,7 +2892,7 @@ the tenth of life-left the payout pays. A floor is now an attrition budget of th
   reward for climbing is that the early rooms of a floor stop being able to end you.
 - **A defeat ends the run**, so nothing carries a wound past the bottom of the tower. There is no
   state where a run is alive and unable to start a fight; a wound deeper than the ceiling — only
-  reachable by selling the ring that was holding the ceiling up — starts the fight on one life
+  reachable by selling the relic that was holding the ceiling up — starts the fight on one life
   rather than on a corpse.
 - **The rounding is down at every step.** A ceiling is a whole number of hit points, so 100 becomes
   133, then 176, then 234 rather than the 235 the arithmetic in the round would give.
@@ -2901,7 +2901,7 @@ the tenth of life-left the payout pays. A floor is now an attrition budget of th
 
 `session.Session` stores **the wound and the count of bosses beaten**, not a life total and a
 ceiling. The ceiling is rebuilt from the record every fight and then moved by whatever is worn, so
-a stored total would mean a different fraction of it the moment a ring changed hands, and a stored
+a stored total would mean a different fraction of it the moment a relic changed hands, and a stored
 multiplier is a second copy of a fact the count already carries. See `internal/session/life.go`.
 
 ### The ascent curve
@@ -3003,7 +3003,7 @@ and fell through to the High Card. It now lands all three.
 Per-enemy decks, doubled enemy HP, enemies no longer forming hands and the 10% ascent curve all
 landed on top of each other and **none of them was absorbed by a retune**, which put the deep floors
 out of reach of a duelist wearing nothing. **That is the intent rather than a regression**: the
-player's ceiling is *supposed* to move and rings are how, so a bare fighter is not who those floors
+player's ceiling is *supposed* to move and relics are how, so a bare fighter is not who those floors
 are priced against and **the whole ascension is not expected to be winnable yet**.
 
 **A wall on a *shallow* floor is a different thing**, and is still a failure — the player has bought
@@ -3013,14 +3013,14 @@ nothing by then.
 
 `maxSelected` left the screen and became `Duelist.MaxActions()`. It had to: **the opponent's
 planner obeys the action cap exactly as the player's selection does**, and a cap enforced only
-by the screen was a cap the enemy ignored. A method rather than a constant, so a ring raising
+by the screen was a cap the enemy ignored. A method rather than a constant, so a relic raising
 it has somewhere to bite — which is what this file asked for.
 
 ---
 
 ## The profile — what survives a run
 
-**A run dies; a profile does not.** The tower is the run — the deck, the purse, the worn rings, the
+**A run dies; a profile does not.** The tower is the run — the deck, the purse, the worn relics, the
 room you are in — and the profile is the thin layer that outlives it: whether the tutorial has been
 watched, what has been achieved, what has been unlocked, **and what the player has chosen about the
 program** — how loud the score is and how fast the game moves. Standard roguelike shape, and the
@@ -3180,7 +3180,7 @@ slider setting a number nothing reads would be a control that lies about what it
 
 **An achievement is a record of something the player did, and it changes nothing.** That is the line
 `internal/profile` has drawn since it was written: an *unlock* is an input to the rules and something
-in the rules reads it; an achievement is a note. **A ring behind an achievement therefore reads the
+in the rules reads it; an achievement is a note. **A relic behind an achievement therefore reads the
 unlock, never the award** — the record *grants* an unlock key, which is two keys rather than one, and
 that is what lets an achievement be reworded or retired without orphaning the thing it opened.
 Nothing is gated on one yet; the bridge is a field on the record so the day one is, it is a line of
@@ -3335,7 +3335,7 @@ own earlier rows.
 What it is for is two questions at two scales, and the design answers both on one panel:
 
 - **"What just happened?"** — a blow written as the sum it was: each landing, what the card was
-  worth, which ring multiplied it and which ring bought the extra landing, and what the hand's
+  worth, which relic multiplied it and which relic bought the extra landing, and what the hand's
   multiplier did to the total. The hand dialog already acts this out while the blow lands and then
   it is gone; the ledger is where it keeps.
 - **"How did my run go, and where did it go wrong?"** — every fight as one line: floor, opponent,
@@ -3361,8 +3361,8 @@ The rules that hold it up:
 - **It is reachable everywhere**, from a button beside the cog rather than from the combat screen.
   It is chrome, not a screen — see CLAUDE.md, and note that a screen could not have done it:
   navigating away from a duel and back re-deals it.
-- **It is coloured like the screen it accounts for**: a figure in its card's element, a ring's
-  multiplier in the ring pink, a verb in its category's colour. The hand itself is *marked* rather
+- **It is coloured like the screen it accounts for**: a figure in its card's element, a relic's
+  multiplier in the relic pink, a verb in its category's colour. The hand itself is *marked* rather
   than coloured — bold and underlined — because hue belongs to the elements and there is none left
   that is not a near-collision. See CLAUDE.md.
 - **Scrolling is a dragged scrollbar** *(owner's call)*. The input vocabulary is clicks, drags and
@@ -3401,11 +3401,11 @@ Collected from above.
 
 - `[?]` **Every same-concept hand shows all-distinct colours**, because the deck holds one copy per
   concept per colour. It no longer costs a multiplier, but it does mean a built hand always lands
-  every status the player is ringed for — the colours are not a choice.
+  every status the player is reliced for — the colours are not a choice.
 - `[?]` **The shock roll is conditional**, against a written rule that it should be unconditional.
   Settle it before the save format lands.
 - `[?]` Duration, stacking and refresh for every status.
-- `[?]` Whether ring cards may be shorter than action cards, given they have no glyphs.
+- `[?]` Whether relic cards may be shorter than action cards, given they have no glyphs.
 - `[?]` What distinguishes one stairwell from another.
 - `[?]` Whether the shop and door choice are one screen or two.
 - `[?]` Whether earth becomes a floor affix.

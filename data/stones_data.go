@@ -30,7 +30,7 @@ var stonesJSON []byte
 
 // StoneData is one rung-raiser as written in the file.
 type StoneData struct {
-	// StoneRecord is the key, and what anything holding a stone stores. Kebab-case, like a ring's
+	// StoneRecord is the key, and what anything holding a stone stores. Kebab-case, like a relic's
 	// and a worm's.
 	StoneRecord string `json:"StoneRecord"`
 

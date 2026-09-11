@@ -13,15 +13,15 @@ import (
 // chill is read when a turn is taken; a miss is rolled against the attack it interrupts.
 //
 // **A status is data, and it is no longer the same object as an element** *(2026-08-17)*. It was
-// four constants indexed by colour until then, which made two things inexpressible that the ring
+// four constants indexed by colour until then, which made two things inexpressible that the relic
 // grammar needs: a second fire status, and a status arriving from something that is not a colour at
 // all. `data/statuses.json` is the catalogue; this file registers it and holds the lifecycle.
 //
 // **Nothing applies a status by itself.** A fire attack is a plain attack with a red border unless
-// something says otherwise, and the only thing that says otherwise today is a ring the attacker is
+// something says otherwise, and the only thing that says otherwise today is a relic the attacker is
 // wearing — an `apply-status` effect at the `attack-lands` moment, naming the status by its record
-// key. See ring.go. The reason is unchanged from 2026-08-16: statuses given away with the colour
-// left the first rings with nothing to *be*.
+// key. See relic.go. The reason is unchanged from 2026-08-16: statuses given away with the colour
+// left the first relics with nothing to *be*.
 //
 // **One lifecycle for all of them, so it is learned once**:
 //
@@ -30,7 +30,7 @@ import (
 //     same one card as one did, and the second simply buys two more round-ends of it. Amounts
 //     stacked until then, which made a status something to pile on rather than something to keep
 //     up — and with one blow a turn, four stacks of a thing was four cards spent saying one word
-//     louder. A ring that *does* stack is a ring that can be designed later; the base rule being
+//     louder. A relic that *does* stack is a relic that can be designed later; the base rule being
 //     "no" is what leaves it somewhere to go.
 //   - **Cleared at the end of the round after the one that applied them.** A record's `Rounds` is
 //     counted in round *ends*, and every status in the file says 2 for one reason: a status applied
@@ -67,7 +67,7 @@ const NoStatus StatusID = -1
 const MaxStatuses = 8
 
 // StatusEffect is what carrying a status does. **Five kinds, closed** — the same posture Verb and
-// the ring effects take. A status is a file entry; a kind of status is a Go change here plus the one
+// the relic effects take. A status is a file entry; a kind of status is a Go change here plus the one
 // place reading it.
 type StatusEffect int
 
@@ -93,7 +93,7 @@ const (
 	// 2026-08-25)*, and that is the shape worth knowing before reaching for it again: every other
 	// effect modifies what the afflicted duelist *does*, so it is read off whoever is acting. This
 	// one is read off whoever is being acted upon, which is a second site in the damage pipeline and
-	// the reason a ring applying it is worth more against a slow opponent than a fast one.
+	// the reason a relic applying it is worth more against a slow opponent than a fast one.
 	//
 	// **It amplifies a burn tick as well as a blow** *(owner's call, 2026-08-25)*. A tick is damage
 	// the carrier takes, and exempting it would have made the rule "damage, except the kind that
@@ -329,7 +329,7 @@ func applyStatus(d Duelist, id StatusID, by Duelist) (Duelist, int, bool) {
 }
 
 // totalOf sums the amounts of every active status of one kind. **Summed rather than picked**: the
-// ring grammar can put two chills on a duelist, and choosing between them silently would be a rule
+// relic grammar can put two chills on a duelist, and choosing between them silently would be a rule
 // nobody wrote down.
 func (d Duelist) totalOf(kind StatusEffect) int {
 	total := 0

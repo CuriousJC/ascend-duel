@@ -38,7 +38,7 @@ import (
 var elementWords = buildElementWords()
 
 // elementWord is one coloured term, held lower case. Case is not part of the match and a text keeps
-// its own spelling, so "Fire" on a ring and "FIRE" on a worm both colour and neither is rewritten.
+// its own spelling, so "Fire" on a relic and "FIRE" on a worm both colour and neither is rewritten.
 type elementWord struct {
 	word string
 	ink  color.RGBA
@@ -55,7 +55,7 @@ func buildElementWords() []elementWord {
 
 	// **The five, not Elements().** Basic is the absence of an element and its grey is what an
 	// uncoloured word already looks like, so a vocabulary entry for it would spend a highlight seat
-	// to change nothing. Ring is not an element at all.
+	// to change nothing. Relic is not an element at all.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		add(e.String(), e)
 	}
@@ -108,11 +108,11 @@ func ElementHighlights(text string) [MaxTextHighlights]TextRun {
 // Basic — the same contract combat.ParseElement has, and for the same reason: a word quietly read as
 // the wrong element is a colour nobody chose.
 //
-// **Ring is not parseable.** It is in elementNames because a ring card is drawn through this type,
-// but no data file names it and a text saying "ring" means the jewellery.
+// **Relic is not parseable.** It is in elementNames because a relic card is drawn through this type,
+// but no data file names it and a text saying "relic" means the jewellery.
 func ParseElement(name string) (Element, bool) {
 	for i, n := range elementNames {
-		if n == name && Element(i) != Ring {
+		if n == name && Element(i) != Relic {
 			return Element(i), true
 		}
 	}

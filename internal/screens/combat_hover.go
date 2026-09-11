@@ -23,7 +23,7 @@ import (
 
 // hover points the tooltip at whatever is under the cursor, or at nothing.
 //
-// **A modal wins outright.** The deck overlay covers the screen, so the hand and the rings beneath
+// **A modal wins outright.** The deck overlay covers the screen, so the hand and the relics beneath
 // it are not being looked at even though their rectangles are still where they were; the fight log
 // covers the same ground and explains itself in words already.
 func (s *CombatScene) hover(gs *state.GlobalState) {
@@ -44,7 +44,7 @@ func (s *CombatScene) hover(gs *state.GlobalState) {
 		hoverDeckPanel(gs, at, s.deckView, s.fightContents(), &s.tip)
 		return
 	}
-	if s.hoverHand(gs, at) || s.hoverRings(gs, at) {
+	if s.hoverHand(gs, at) || s.hoverRelics(gs, at) {
 		return
 	}
 	if s.hoverRoundTimer(gs, at) {
@@ -100,10 +100,10 @@ func (s *CombatScene) hoverHand(gs *state.GlobalState, at image.Point) bool {
 	return false
 }
 
-// hoverRings explains a worn ring, and says where it sits in the firing order. **The order is the
-// information**: rings fire left to right and compound, so which of two doublings applies first is
-// a fact about the row rather than about either ring.
-func (s *CombatScene) hoverRings(gs *state.GlobalState, at image.Point) bool {
+// hoverRelics explains a worn relic, and says where it sits in the firing order. **The order is the
+// information**: relics fire left to right and compound, so which of two doublings applies first is
+// a fact about the row rather than about either relic.
+func (s *CombatScene) hoverRelics(gs *state.GlobalState, at image.Point) bool {
 	// **The consumables pane shares this door**, exactly as it does on the build band: it is the
 	// other half of the same row, and a caller that had to remember two calls is a caller that will
 	// eventually make one.
@@ -111,19 +111,19 @@ func (s *CombatScene) hoverRings(gs *state.GlobalState, at image.Point) bool {
 		return true
 	}
 
-	worn := wornRings(gs)
+	worn := wornRelics(gs)
 	if len(worn) == 0 {
 		return false
 	}
 
-	r := s.ringPaneRect(gs)
+	r := s.relicPaneRect(gs)
 	for i, record := range worn {
-		corner := ringSlotAt(r, i, len(worn))
+		corner := relicSlotAt(r, i, len(worn))
 		slot := image.Rect(corner.X, corner.Y, corner.X+cardWidth, corner.Y+cardHeight)
 		if !at.In(slot) {
 			continue
 		}
-		title, lines := ringTip(record, i, len(worn))
+		title, lines := relicTip(record, i, len(worn))
 		s.tip.Point(slot, tipLine(title), tipLines(lines))
 		return true
 	}

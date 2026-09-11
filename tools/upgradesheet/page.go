@@ -111,7 +111,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   cards in a row is the failure mode the border style exists to avoid.
 </p>
 <p class="note">
-  <strong>Eight of these colours are placeholders.</strong> Hue is spent — five elements, the ring
+  <strong>Eight of these colours are placeholders.</strong> Hue is spent — five elements, the relic
   pink, the two verbs, the two duelists, the ground — so what is here is picked to be told apart
   rather than to mean anything. Gold and silver are the exception: they are metals, and they are
   what the mechanic is called. Retune the rest in <code>systems.upgradeTint</code> and re-run.
@@ -121,8 +121,8 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
   Each upgrade below carries the <strong>tooltip a card wearing it actually shows</strong>, built by
   <code>internal/carddesc</code> — the same call <code>screens.cardTip</code> makes, not a copy of
   it. The card is a fire Lunge and the duelist behind it hits for 10, so a figure that looks wrong
-  can be checked by eye. There are no rings on, which is why the block is the whole panel: the game
-  appends its damage chain only when a ring has moved something. <strong>The colouring is the game's
+  can be checked by eye. There are no relics on, which is why the block is the whole panel: the game
+  appends its damage chain only when a relic has moved something. <strong>The colouring is the game's
   too</strong> — the same <code>cards.ElementRuns</code> table the screen reads — which is why FIRE
   is red and CHROMATIC is not: the wheel has no hue left for "all of them".
 </p>

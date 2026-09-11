@@ -16,7 +16,7 @@ import (
 // The tool could import both and build the real deck, and it deliberately does not: a
 // review sheet that derives its contents from the rules can only show what the rules
 // currently produce, and the whole point is to look at cards the game cannot deal yet —
-// a fifth cost tier, a ring, a border colour nothing uses. It is a drawing-board, not a
+// a fifth cost tier, a relic, a border colour nothing uses. It is a drawing-board, not a
 // report.
 //
 // The cost of that is drift: the names and costs below are a snapshot of the nineteen
@@ -142,34 +142,32 @@ func selected(s cards.Spec) cards.Spec { s.Selected = true; return s }
 
 func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 
-// ringSpecs is the first pass at a ring, in the card format.
+// relicSpecs is the first pass at a relic, in the card format.
 //
 // The art is assets/fire-ring.png. **That is first-party work** — README credits the art
 // to CuriousJC and KingSherman1820, and only the sheets prefixed `tyrian_` come from the
 // Tyrian set. So it carries no provenance question and is not part of the release blocker
 // that set represents; it can ship.
 //
-// No cost dashes, no category glyph, no damage badge: a ring is not played from a hand
+// No cost dashes, no category glyph, no damage badge: a relic is not played from a hand
 // and has no phase. What it keeps is the footprint, the corners and the border, so it
 // reads as the same game.
-func ringSpecs() ([]cards.Spec, error) {
+func relicSpecs() ([]cards.Spec, error) {
 	art, err := loadPNG("fire-ring")
 	if err != nil {
 		return nil, err
 	}
-	// **"Fire", not "Fire Ring"** *(2026-08-21)*. A ring card drops the noun — the border, the
-	// picture and the row it sits in all say "ring" already — and breaks what is left a word to
-	// a line, so a name written out in full here would draw as two lines saying nothing on the
-	// second. `data.RingData.FaceName` is what the game and tools/ringsheet pass; this tool does
-	// not read the file, so it spells the result rather than deriving it.
+	// **The name is set and never drawn.** A relic card is a full-bleed picture with no title,
+	// so Spec.Name is what a mark's pattern is derived from and nothing else. It is written out
+	// in full here, as the game and tools/relicsheet pass it.
 	return []cards.Spec{
-		{Name: "Fire", Element: cards.Ring, Art: art, Enabled: true},
+		{Name: "Fire Ring", Element: cards.Relic, Art: art, Enabled: true},
 
-		// The same ring mid-drag. **Not "not equipped"** — a ring you do not have is not
+		// The same relic mid-drag. **Not "not equipped"** — a relic you do not have is not
 		// shown at all, so that state does not exist to draw. Being carried by the cursor
-		// does exist, and it is the one thing a ring in a card format has to look like
+		// does exist, and it is the one thing a relic in a card format has to look like
 		// besides sitting still.
-		{Name: "Fire", Element: cards.Ring, Art: art, Enabled: true, Dragging: true},
+		{Name: "Fire Ring", Element: cards.Relic, Art: art, Enabled: true, Dragging: true},
 	}, nil
 }
 
@@ -177,7 +175,7 @@ func ringSpecs() ([]cards.Spec, error) {
 // status badge.
 //
 // **The badges are drawn at every count from none to four** *(2026-08-16)*, because the row is
-// centred and closes up as it fills — the same property the ring row has, and the same failure
+// centred and closes up as it fills — the same property the relic row has, and the same failure
 // available: a row laid out against the maximum leaves a single badge hard left. Twenty pixels
 // is small enough that this is a thing to look at rather than to reason about.
 //

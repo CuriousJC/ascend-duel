@@ -13,12 +13,12 @@ package screens
 // with no explanation is a better lie than one reading 2x, because it is believable.
 //
 // **A card's tooltip opens with a stat block rather than with the derivation** *(owner's call,
-// 2026-09-09)*, and the derivation is printed underneath it only when a ring or a worm has actually
+// 2026-09-09)*, and the derivation is printed underneath it only when a relic or a worm has actually
 // moved something. See cardTip. The block's wording lives in `internal/carddesc`, which is
 // windowless, so the review sheets print the same strings the game does.
 //
-// **Nothing here recomputes a rule.** The multipliers come off `combat.RingContributionsAt`, the
-// same walk `Duelist.CardDamage` compounds, and the costs off the same ring moment the AP bar reads.
+// **Nothing here recomputes a rule.** The multipliers come off `combat.RelicContributionsAt`, the
+// same walk `Duelist.CardDamage` compounds, and the costs off the same relic moment the AP bar reads.
 // A tooltip that did its own arithmetic would be a second implementation of the engine, printed in
 // a box, and it would be wrong on exactly the days it mattered.
 
@@ -54,13 +54,13 @@ var tipDwell = beat(3, 2)
 // the answer to "why is that one worth more", and that is the *second* question. The first is
 // "what is this", and the block is that.
 //
-// **The chain is printed only when there is a chain.** A ringless Jab derives to itself, so a card
-// nothing has touched says four lines and stops. Put a ring on and every term comes back.
+// **The chain is printed only when there is a chain.** A relicless Jab derives to itself, so a card
+// nothing has touched says four lines and stops. Put a relic on and every term comes back.
 //
 // **The block itself is `internal/carddesc`**, which is windowless, so `tools/upgradesheet` prints
 // the same strings this panel does rather than a snapshot of them.
 func cardTip(c actionCard, h held) (string, []string) {
-	lines := carddesc.Lines(c, h.cost, h.dmg, ringScale(c, h))
+	lines := carddesc.Lines(c, h.cost, h.dmg, relicScale(c, h))
 	lines = append(lines, damageChainLines(c, h)...)
 	if c.AmountPct != 0 {
 		lines = append(lines, "a worm changed this card")
@@ -70,20 +70,20 @@ func cardTip(c actionCard, h held) (string, []string) {
 	return carddesc.Title(c), lines
 }
 
-// damageChainLines is the damage arithmetic: the card's own multiplier, every ring that matches, and
-// the result — **or nothing at all when no ring matches.**
+// damageChainLines is the damage arithmetic: the card's own multiplier, every relic that matches, and
+// the result — **or nothing at all when no relic matches.**
 //
-// **Silence is the common case and is the point.** Every card in a ringless deck derives to the
+// **Silence is the common case and is the point.** Every card in a relicless deck derives to the
 // figure the block above already printed, and three lines saying so is a tooltip that trains the
-// player not to read it. What earns the space is a ring having changed something.
+// player not to read it. What earns the space is a relic having changed something.
 //
-// **It is only ever asked of an attack.** A shield and a defence have no ring moment on their
+// **It is only ever asked of an attack.** A shield and a defence have no relic moment on their
 // figure, so a chain under one would be a heading with nothing beneath it.
 func damageChainLines(c actionCard, h held) []string {
 	if c.Spec().Verb != combat.VerbAttack {
 		return nil
 	}
-	contributions := combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c)
+	contributions := combat.RelicContributionsAt(h.worn, combat.MomentCardDamage, c)
 	if len(contributions) == 0 {
 		return nil
 	}
@@ -91,11 +91,11 @@ func damageChainLines(c actionCard, h held) []string {
 	lines := []string{multiplierText(c.Amount()) + " the card"}
 	for _, contribution := range contributions {
 		lines = append(lines, multiplierText(contribution.Effect.Amount)+" "+
-			combat.RingOf(contribution.Ring).Name)
+			combat.RelicOf(contribution.Relic).Name)
 	}
 
 	// **The chain has no total, because the block already printed it** — see cardTip, where the
-	// ring scale is handed to `carddesc` precisely so the headline figure is the one the card will
+	// relic scale is handed to `carddesc` precisely so the headline figure is the one the card will
 	// deal. A `= 24 DMG` under these terms would be the same number twice, and the moment the two
 	// disagreed one of them would be the bug nobody could see.
 	//
@@ -104,26 +104,26 @@ func damageChainLines(c actionCard, h held) []string {
 	return append(lines, "before the hand multiplies it")
 }
 
-// ringScale is every ring that reaches this card's damage, compounded, as a percentage.
+// relicScale is every relic that reaches this card's damage, compounded, as a percentage.
 //
-// **It walks `combat.RingContributionsAt`, which is the same walk `Duelist.CardDamage` compounds.**
+// **It walks `combat.RelicContributionsAt`, which is the same walk `Duelist.CardDamage` compounds.**
 // A tooltip that did its own arithmetic would be a second implementation of the engine, printed in
 // a box, and it would be wrong on exactly the days it mattered.
-func ringScale(c actionCard, h held) int {
+func relicScale(c actionCard, h held) int {
 	scale := 100
-	for _, contribution := range combat.RingContributionsAt(h.worn, combat.MomentCardDamage, c) {
+	for _, contribution := range combat.RelicContributionsAt(h.worn, combat.MomentCardDamage, c) {
 		scale = scale * contribution.Effect.Amount / 100
 	}
 	return scale
 }
 
-// costTipLines explains a price a ring has moved. **Only when one has** — a card costing what it
+// costTipLines explains a price a relic has moved. **Only when one has** — a card costing what it
 // says needs no line saying so, and a tooltip that repeats the face is a tooltip nobody reads twice.
 func costTipLines(c actionCard, h held) []string {
 	var lines []string
-	for _, contribution := range combat.RingContributionsAt(h.worn, combat.MomentCardCost, c) {
+	for _, contribution := range combat.RelicContributionsAt(h.worn, combat.MomentCardCost, c) {
 		lines = append(lines, fmt.Sprintf("%+d AP %s",
-			contribution.Effect.Amount, combat.RingOf(contribution.Ring).Name))
+			contribution.Effect.Amount, combat.RelicOf(contribution.Relic).Name))
 	}
 	if len(lines) == 0 {
 		return nil
@@ -131,22 +131,22 @@ func costTipLines(c actionCard, h held) []string {
 	return append(lines, "costs "+strconv.Itoa(h.cost)+" AP to you")
 }
 
-// ringTip explains a ring: the authored line from `rings.json`, and where it sits in the firing
+// relicTip explains a relic: the authored line from `relics.json`, and where it sits in the firing
 // order when it is being worn.
 //
 // **The authored text rather than a sentence generated from the rules.** The rules would always be
 // true and would read like a compiler — "card-damage, form slash, scale 200" — where the line in the
 // file is written for a player. The risk is drift, and it is a real one: the file is the only place
-// that says what a ring does in words, so a rule changed without its Text is a ring that lies.
-func ringTip(record data.RingData, wornAt, wornOf int) (string, []string) {
-	// **The authored text, split on its own line breaks.** A newline in `rings.json` is an authored
+// that says what a relic does in words, so a rule changed without its Text is a relic that lies.
+func relicTip(record data.RelicData, wornAt, wornOf int) (string, []string) {
+	// **The authored text, split on its own line breaks.** A newline in `relics.json` is an authored
 	// break for the *card face*, and a tooltip draws its own lines one at a time — handing the whole
 	// string to one line draws every line of it at the same y, which reads as garbled text rather
 	// than as a missing break. Same treatment `parasiteTipLines` gives a parasite.
 	lines := strings.Split(record.Text, "\n")
 
 	if wornAt >= 0 && wornOf > 1 {
-		// **Worn order is a rule** — rings fire left to right and compound — so where one sits is
+		// **Worn order is a rule** — relics fire left to right and compound — so where one sits is
 		// information about what it does, not about where it is drawn.
 		lines = append(lines, fmt.Sprintf("fires %s of %d, left to right",
 			ordinal(wornAt+1), wornOf))
@@ -154,13 +154,13 @@ func ringTip(record data.RingData, wornAt, wornOf int) (string, []string) {
 	return record.Name, lines
 }
 
-// shopRingTip is ringTip with the price under it, for a ring on the shelf.
-func shopRingTip(record data.RingData) (string, []string) {
-	title, lines := ringTip(record, -1, 0)
+// shopRelicTip is relicTip with the price under it, for a relic on the shelf.
+func shopRelicTip(record data.RelicData) (string, []string) {
+	title, lines := relicTip(record, -1, 0)
 
-	if price, ok := session.RingPrice(record.RingRecord); ok {
+	if price, ok := session.RelicPrice(record.RelicRecord); ok {
 		lines = append(lines, fmt.Sprintf("%d vitae, sells back for %d",
-			price, session.SellValue(record.RingRecord)))
+			price, session.SellValue(record.RelicRecord)))
 	}
 	return title, lines
 }
@@ -203,7 +203,7 @@ func statusRounds(n int) string {
 //
 // **Read here rather than carried on `combat.StatusSpec`**, exactly as the badge key is: what a
 // status is worth and how long it lasts are rules, and the sentence describing it to a player is
-// this layer's business. Same division the ring's art key draws.
+// this layer's business. Same division the relic's art key draws.
 func statusText(key string) string { return statusLines[key] }
 
 var statusLines = statusTexts()
@@ -219,7 +219,7 @@ func statusTexts() map[string]string {
 // **A worm has no tooltip** *(owner's call, 2026-09-05)*. The card's own face says what it does,
 // one word to a line, and a hover repeating that sentence beside it was the same words twice.
 
-// ordinal is 1st, 2nd, 3rd — for the five positions a ring can be worn in, and nothing else. Written
+// ordinal is 1st, 2nd, 3rd — for the five positions a relic can be worn in, and nothing else. Written
 // out rather than generalised, because the row is capped at five and a general one would be a rule
 // about English nobody here needs.
 func ordinal(n int) string {

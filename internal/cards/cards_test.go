@@ -419,7 +419,7 @@ func TestFormMarkIsDrawnAndDiffers(t *testing.T) {
 		seen[key] = fam
 	}
 
-	// And FormNone leaves the slot alone, which is what a ring and the opponent's cards need.
+	// And FormNone leaves the slot alone, which is what a relic and the opponent's cards need.
 	spec := strike(Fire)
 	spec.Form = FormNone
 	img := render(t, spec, st)
@@ -432,7 +432,7 @@ func TestFormMarkIsDrawnAndDiffers(t *testing.T) {
 
 func TestEveryFormHasItsOwnGlyph(t *testing.T) {
 	// The pixel test above would also catch this, slowly and by a hash. This says the actual
-	// rule: every form has a mark, no two forms share one, and FormNone has none at all — a ring
+	// rule: every form has a mark, no two forms share one, and FormNone has none at all — a relic
 	// and both fighter cards belong to no form and the slot must stay empty for them.
 	seen := map[systems.GlyphKind]Form{}
 	for _, fam := range Forms() {
@@ -451,33 +451,33 @@ func TestEveryFormHasItsOwnGlyph(t *testing.T) {
 	}
 }
 
-func TestRingBorderIsUnmistakable(t *testing.T) {
-	// The one thing that must never happen is reaching for a ring thinking it is a card
+func TestRelicBorderIsUnmistakable(t *testing.T) {
+	// The one thing that must never happen is reaching for a relic thinking it is a card
 	// you can play, so the pink has to be a long way from every element border.
 	const minDistance = 120
 
-	pink := BorderOf(Ring)
+	pink := BorderOf(Relic)
 	for _, e := range Elements() {
 		if d := distance(pink, BorderOf(e)); d < minDistance {
-			t.Errorf("the ring border is only %d from %s's — too close to tell apart at a glance", d, e)
+			t.Errorf("the relic border is only %d from %s's — too close to tell apart at a glance", d, e)
 		}
 	}
 	// And it is not in Elements(), because anything iterating elements means cards.
 	for _, e := range Elements() {
-		if e == Ring {
-			t.Error("Ring is in Elements(); a ring is not an element a card can have")
+		if e == Relic {
+			t.Error("Relic is in Elements(); a relic is not an element a card can have")
 		}
 	}
 }
 
-func TestRingDrawsArtAndNoCardFurniture(t *testing.T) {
-	st := RingStyle
+func TestRelicDrawsArtAndNoCardFurniture(t *testing.T) {
+	st := RelicStyle
 	art := image.NewRGBA(image.Rect(0, 0, 64, 64))
 	for i := range art.Pix {
 		art.Pix[i] = 255 // opaque white block, easy to find
 	}
 
-	s := Spec{Name: "Fire Ring", Element: Ring, Art: art, Enabled: true}
+	s := Spec{Name: "Fire Ring", Element: Relic, Art: art, Enabled: true}
 	img := render(t, s, st)
 
 	// The art lands in the middle of its box.
@@ -487,17 +487,17 @@ func TestRingDrawsArtAndNoCardFurniture(t *testing.T) {
 		t.Errorf("nothing drawn at the centre of the art box (%d,%d): %v", cx, cy, got)
 	}
 
-	// And none of the card's own furniture is on it: a ring has no cost and no phase, so
+	// And none of the card's own furniture is on it: a relic has no cost and no phase, so
 	// a stray dash or glyph would be claiming something untrue about it.
 	if st.ShowForm || st.TextLineHeight > 0 {
-		t.Error("the ring style claims to draw a form mark or effect text")
+		t.Error("the relic style claims to draw a form mark or effect text")
 	}
-	noCost := Spec{Name: "Fire Ring", Element: Ring, Art: art, Enabled: true, Cost: 0}
+	noCost := Spec{Name: "Fire Ring", Element: Relic, Art: art, Enabled: true, Cost: 0}
 	plain := render(t, noCost, st)
-	tick := systems.ColorToward(BorderOf(Ring), Surface, borderRestToward)
+	tick := systems.ColorToward(BorderOf(Relic), Surface, borderRestToward)
 	for y := 0; y < 40; y++ {
 		if plain.RGBAAt(st.DashLeft, y) == tick && st.DashWidth > 0 {
-			t.Errorf("a cost dash was drawn on a ring at y=%d", y)
+			t.Errorf("a cost dash was drawn on a relic at y=%d", y)
 		}
 	}
 }
@@ -924,7 +924,7 @@ func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
 			t.Errorf("%s does not centre a name across its top", name)
 		}
 	}
-	for name, st := range map[string]Style{"ring": RingStyle, "worm": WormStyle} {
+	for name, st := range map[string]Style{"relic": RelicStyle, "worm": WormStyle} {
 		if !st.ArtBleed {
 			t.Errorf("%s is no longer full-bleed — this test is checking the wrong styles", name)
 		}
@@ -1043,16 +1043,16 @@ func TestTheBorderIsTheSameWhateverTheElement(t *testing.T) {
 	}
 }
 
-// TestARingStillBordersPink guards the one colour the swap deliberately kept. Pink was never an
+// TestARelicStillBordersPink guards the one colour the swap deliberately kept. Pink was never an
 // element — it is the "you cannot play this" signal — so a change that neutralises the four
 // element borders must not take it with them.
-func TestARingStillBordersPink(t *testing.T) {
-	if got := borderBase(Ring); got != BorderOf(Ring) {
-		t.Errorf("ring border base is %v, want the pink %v", got, BorderOf(Ring))
+func TestARelicStillBordersPink(t *testing.T) {
+	if got := borderBase(Relic); got != BorderOf(Relic) {
+		t.Errorf("relic border base is %v, want the pink %v", got, BorderOf(Relic))
 	}
 	for _, e := range Elements() {
-		if borderBase(e) == borderBase(Ring) {
-			t.Errorf("%s borders in the ring pink — a card and a ring must not look alike", e)
+		if borderBase(e) == borderBase(Relic) {
+			t.Errorf("%s borders in the relic pink — a card and a relic must not look alike", e)
 		}
 	}
 }
@@ -1236,7 +1236,7 @@ func TestATokenHoldsFourTicks(t *testing.T) {
 }
 
 // **The mark and the ticks are centred**, because there is no text column to their right for a
-// left-aligned column to line up with — the same reason a ring centres its name.
+// left-aligned column to line up with — the same reason a relic centres its name.
 func TestATokenCentresItsColumn(t *testing.T) {
 	st := Token
 	if want := (st.Width - st.FormSize) / 2; st.GlyphInset != want {

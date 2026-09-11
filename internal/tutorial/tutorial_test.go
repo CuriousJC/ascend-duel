@@ -66,8 +66,8 @@ func satisfying(t *testing.T, step Step, baseRounds, baseLedger, baseDMG, baseBr
 		return Facts{Resolving: true, ShieldBreaks: baseBreaks + 1}, false
 	case CondLedgerOpened:
 		return Facts{LedgerOpens: baseLedger + 1}, false
-	case CondRingsWorn:
-		return Facts{RingsWorn: step.Count}, false
+	case CondRelicsWorn:
+		return Facts{RelicsWorn: step.Count}, false
 	case CondDMGBought:
 		return Facts{DMGBonus: baseDMG + 1}, false
 	case CondPhaseFight:

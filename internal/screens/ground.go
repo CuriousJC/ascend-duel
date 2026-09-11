@@ -152,7 +152,7 @@ func groundAtRow(y, h int) color.RGBA {
 }
 
 // groundInk is for text written straight onto the ground rather than onto a card, a pane or a
-// button — the action-point figure, the draw pile's count, the ring row's fraction, the
+// button — the action-point figure, the draw pile's count, the relic row's fraction, the
 // post-battle screen's heading. Near black and slightly warm.
 //
 // **It stayed warm when the ground went blue** *(2026-09-07)*, which is deliberate rather than an

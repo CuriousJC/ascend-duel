@@ -47,7 +47,7 @@ import "sort"
 //
 // **That is deliberately narrow.** Hands used to carry a second axis counting the distinct colours
 // in the formed hand, and a reward vocabulary that could bank action points or take actions off the
-// opponent's next turn. Both are gone: statuses come from **elements and the rings that arm them**,
+// opponent's next turn. Both are gone: statuses come from **elements and the relics that arm them**,
 // so a hand is one number and there is exactly one place to look for what a hand is worth.
 //
 // **Exactly one hand applies.** A hand wins on its multiplier — four Strikes are a Four of a Kind
@@ -206,7 +206,7 @@ type Hand struct {
 	// entry names one and `Axes` is `[Match]`; the Pair is the exception and names all three.
 	//
 	// **A merged rung is one entry read three ways, not three entries.** Card Pair, Form Pair and
-	// Elemental Pair were three rungs, three stones and three rings saying the same thing about
+	// Elemental Pair were three rungs, three stones and three relics saying the same thing about
 	// the same two cards, and a player forming a pair does not care which axis let them - so
 	// `hands.json` writes `"match": "any"` and the matcher tries each in turn.
 	Axes []Axis
@@ -543,7 +543,7 @@ func matchCountOf(turn []Slot, h Hand) ([]int, int, bool) {
 // a form and an element and every card is counted toward a hand, so the one turn that could not
 // name one was the turn whose cards all deal zero — which made a shield build a build the ladder
 // could not see. The blow it forms sums to nothing and lands nothing, and the hand is still named
-// and still multiplied by whatever a ring makes of it. See resolveAttackPhase, which is what
+// and still multiplied by whatever a relic makes of it. See resolveAttackPhase, which is what
 // declines to spend the target's shield on a blow of zero.
 //
 // **It is compared on the concept's damage rather than its cost**, because damage is what the
@@ -589,7 +589,7 @@ const damageRankDMG = 100
 // order.
 //
 // **Colour buys no damage, only statuses** *(2026-08-17)*. This list is read by the resolver to
-// decide what lands, gated on the rings the attacker wears; the count of it used to be a second
+// decide what lands, gated on the relics the attacker wears; the count of it used to be a second
 // multiplier and is not any more.
 //
 // **Basic is skipped.** It is the absence of an element, so a basic card neither adds a colour nor

@@ -93,7 +93,7 @@ func StartingDeck() []combat.Card {
 
 // StartingDeckList replaces the authored deck for one run, when something has set it.
 //
-// **The deck counterpart of StartingRings**, and it exists for the same narrow reason: there is
+// **The deck counterpart of StartingRelics**, and it exists for the same narrow reason: there is
 // otherwise no way to put a *chosen* set of cards in a player's hands without playing to it. Nil
 // is the shipped value and means the authored deck, so a normal launch never sees this.
 //
@@ -103,7 +103,7 @@ func StartingDeck() []combat.Card {
 // it, because that deals *over* a shuffle and leaves the rest of the deck behind it. What a
 // lesson needs is a deck with nothing else in it.
 //
-// It is a package var rather than an argument to Start for exactly the reason StartingRings is:
+// It is a package var rather than an argument to Start for exactly the reason StartingRelics is:
 // every other caller would have to pass nil, and a debug seat that changes a signature is a debug
 // seat that spreads.
 var StartingDeckList []combat.Card

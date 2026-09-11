@@ -12,7 +12,7 @@ import (
 //
 // **The whole point of a parasite is that it lands mid-fight**, and until 2026-09-08 no element
 // parasite did. `resyncHandFromRun` wrote the hand's old colour back over the run's new one, to
-// preserve a flip ring's recolour — so the run's card really did turn arcane and the card the player
+// preserve a flip relic's recolour — so the run's card really did turn arcane and the card the player
 // was holding did not. The round is played out of `s.hand`, so what a Hexbore bought was a change
 // that arrived next fight and a consumable that appeared to vanish for nothing.
 //

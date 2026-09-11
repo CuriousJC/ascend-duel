@@ -14,7 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-// Files are grouped into directories by what they are for — `game/`, `enemy/`, `ring/`,
+// Files are grouped into directories by what they are for — `game/`, `enemy/`, `relic/`,
 // `effect/`, `upgrade/`, `sounds/` — and the //go:embed paths below are relative to this file, so a
 // directory rename is a one-line edit per asset here and nothing anywhere else.
 //
@@ -151,24 +151,24 @@ var portraits embed.FS
 //go:embed boss/*-boss.png
 var bossPortraits embed.FS
 
-// The ring faces, globbed as a family and keyed by filename stem — `ring/fire-ring.png` is
-// `fire-ring`, which is what `data/rings.json` writes in its Art field.
+// The relic faces, globbed as a family and keyed by filename stem — `relic/fire-ring.png` is
+// `fire-ring`, which is what `data/relics.json` writes in its Art field.
 //
 // **It became a family on 2026-09-11**, having been one `//go:embed` var per file. Five pictures
-// is three edits each and readable; a catalogue of a hundred and thirty-seven rings being drawn
+// is three edits each and readable; a catalogue of a hundred and thirty-seven relics being drawn
 // is not, and the var names were the key, so every one of them was also a line in two loaders.
-// The cost is the documented one — a ring's key is now tied to its filename, so renaming a file
-// means editing `rings.json`.
+// The cost is the documented one — a relic's key is now tied to its filename, so renaming a file
+// means editing `relics.json`.
 //
-// `ring/default-ring.png` is in here like any other and is what a ring with no Art of its own
-// falls back to: most of `data/rings.json` has no picture yet, and a pink border around an empty
+// `relic/default-relic.png` is in here like any other and is what a relic with no Art of its own
+// falls back to: most of `data/relics.json` has no picture yet, and a pink border around an empty
 // face reads as a card that failed to load rather than as one waiting for art.
 //
-//go:embed ring/*.png
-var ringArt embed.FS
+//go:embed relic/*.png
+var relicArt embed.FS
 
 // The worm faces, the same way and for the same reason. `worm/default-worm.png` is what every
-// worm and every parasite draws until they have art of their own — **a copy of the ring's
+// worm and every parasite draws until they have art of their own — **a copy of the relic's
 // default rather than a share of it** *(owner's call, 2026-08-22)*: two files that happen to
 // look alike today are two files that can be replaced one at a time.
 //
@@ -230,7 +230,7 @@ func LoadAssets() map[string]*ebiten.Image {
 	// LoadImageData instead — and decoding 96 of them here at startup would cost about
 	// 20 MB of resident memory for pictures most of which no run ever shows.
 	//
-	// **The ring and worm art joined them on 2026-09-11**, having been decoded here as well as
+	// **The relic and worm art joined them on 2026-09-11**, having been decoded here as well as
 	// handed over as bytes. Nothing ever read the decoded copy — every caller goes through
 	// `screens.artwork`, which decodes out of `ImageData` and caches — and full-bleed art is
 	// authored at 1060x1484, which is 6 MB of RGBA each. Fifteen of those is ninety megabytes
@@ -274,16 +274,16 @@ func LoadImageData() map[string][]byte {
 
 	// The four families read out of an embedded directory rather than listed one by one. See
 	// embedFamily, and the //go:embed lines above for what each key ends up being.
-	embedFamily(images, ringArt, "ring")
+	embedFamily(images, relicArt, "relic")
 	embedFamily(images, wormArt, "worm")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 
-	// Bob's face, for the reason the ring art is here: the tutorial draws him into a card
+	// Bob's face, for the reason the relic art is here: the tutorial draws him into a card
 	// through internal/cards, which has no graphics context.
 	images["guide_png"] = guide_png
 
-	// The status badges, for the same reason as the ring art: they are drawn *into* the enemy
+	// The status badges, for the same reason as the relic art: they are drawn *into* the enemy
 	// card by internal/cards, which has no graphics context.
 	images["fireeffect_png"] = fireeffect_png
 	images["frozeneffect_png"] = frozeneffect_png
@@ -292,7 +292,7 @@ func LoadImageData() map[string][]byte {
 	images["defaulteffect_png"] = defaulteffect_png
 
 	// The glyph art. internal/systems takes the bytes rather than an *ebiten.Image for the
-	// same reason the ring art does: RenderGlyph draws into a plain Go image so the contact
+	// same reason the relic art does: RenderGlyph draws into a plain Go image so the contact
 	// sheets can be built with no window.
 	images["shermansword_png"] = shermansword_png
 	images["shermanshield_png"] = shermanshield_png
@@ -313,10 +313,10 @@ func LoadImageData() map[string][]byte {
 
 // embedFamily files every PNG in one embedded directory into images, keyed by filename stem —
 // `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what `data/enemies.json`
-// writes in its Portrait field, and `ring/fire-ring.png` is `fire-ring`.
+// writes in its Portrait field, and `relic/fire-ring.png` is `fire-ring`.
 //
 // **Four directories read the same way, so it is one function** *(2026-09-11)*. It was two
-// hand-written walks for the two portrait families; the ring and worm art joined them and a
+// hand-written walks for the two portrait families; the relic and worm art joined them and a
 // third and fourth copy of the same eight lines is how one of them comes to skip a file or key
 // it differently.
 //

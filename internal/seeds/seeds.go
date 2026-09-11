@@ -43,11 +43,11 @@ const (
 	// changing the game around it. That is the exact failure the salts exist to prevent.
 	WormOffer
 
-	// ShopStock is which rings the shop puts up after a fight. Per fight.
+	// ShopStock is which relics the shop puts up after a fight. Per fight.
 	//
 	// **Its own stream, and the question was asked.** Sharing WormOffer would draw the shop's
-	// three rings off the same sequence as the two worms, so authoring a new worm would change
-	// which rings every run was ever offered — the catalogue-retune failure this package exists to
+	// three relics off the same sequence as the two worms, so authoring a new worm would change
+	// which relics every run was ever offered — the catalogue-retune failure this package exists to
 	// prevent, one file over. Sharing RewardHand would make the shelf a function of the run deck's
 	// size, which is a thing the player changes on the screen immediately before the shop.
 	ShopStock
@@ -56,9 +56,9 @@ const (
 	//
 	// **Its own stream, and the question is the one ShopStock already answered.** Sharing
 	// ShopStock would draw the bag off the same sequence as the shelf, so authoring a stone would
-	// change which rings every run was ever offered. It is also drawn from a different list on a
+	// change which relics every run was ever offered. It is also drawn from a different list on a
 	// different schedule: `data/stones.json` grows a record per hand, and `hands.json` is tuned
-	// far more often than the rings are.
+	// far more often than the relics are.
 	BagStock
 
 	// CanStock is which four worms a can of worms holds. Per fight.
@@ -96,7 +96,7 @@ const (
 	// PackOffer is which two of the three sealed packs a shop visit puts up. Per fight.
 	//
 	// **Its own stream, on the argument every other shop stream is under.** Sharing ShopStock
-	// would make which packs appear a function of the ring shelf, so authoring a ring would
+	// would make which packs appear a function of the relic shelf, so authoring a relic would
 	// silently change which good every run was ever offered — and the shelf is redrawn by a
 	// reroll, which would then reroll the packs beside it. Sharing any of the three stock streams
 	// would be worse still: those decide what is *inside* a pack, and the choice of which two

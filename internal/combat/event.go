@@ -112,7 +112,7 @@ const (
 	//
 	// **It is an announcement to the feed, not the payment** *(and the payment moved on
 	// 2026-09-05)*. The rules do step `Duelist.Vitae` when this fires — they have to, because a
-	// ring reading the purse must see what an earlier turn of the round paid — but that is a copy
+	// relic reading the purse must see what an earlier turn of the round paid — but that is a copy
 	// for the length of one fight. What the run is actually paid is the difference between the
 	// purse the duel was handed and the one it hands back; see screens.payHeldVitae. **Do not sum
 	// these events to move a purse**: that was the old way and it made two counters over one
@@ -157,9 +157,9 @@ const (
 
 // Event is one entry in the replayable log for a single round.
 // maxHandTerms is the width of a hand event's two arrays: **every landing a legal turn can produce**
-// — each of its cards, each landing as many times as an echo or a repeat ring allows.
+// — each of its cards, each landing as many times as an echo or a repeat relic allows.
 //
-// It went from "one echoed card" to "every card" on 2026-08-22, when the form repeat rings landed:
+// It went from "one echoed card" to "every card" on 2026-08-22, when the form repeat relics landed:
 // a repeat matches on form, so five crush cards under Aftershock is five cards landing twice.
 // Over-long turns still drop terms from the *bracket* rather than from the sum.
 const maxHandTerms = baseMaxActions * MaxEchoLandings
@@ -184,14 +184,14 @@ type Event struct {
 	// next one to act; it matters now that shields pick the heaviest, since the card a shield ate
 	// may be the third of five and the screen has to shatter that one.
 	//
-	// **The zero value is a real slot**, like Status's and Ring's, so it is read only on the kind
+	// **The zero value is a real slot**, like Status's and Relic's, so it is read only on the kind
 	// that sets it.
 	Slot int
 
 	// Rider is which rider on the card is responsible for this event, and RiderNone - the zero
 	// value - is every event no rider caused.
 	//
-	// **It is here for Event.Ring's reason: the thing that caused this is something the player can
+	// **It is here for Event.Relic's reason: the thing that caused this is something the player can
 	// see, and nothing else on the event can name it** *(2026-09-10)*. Two riders emit KindVitae -
 	// a played RiderSilver coming up heads, and a held RiderVitaeInHand paying for being kept back
 	// - and until this field existed the two arrived indistinguishable. The fight log printed "kept
@@ -217,7 +217,7 @@ type Event struct {
 	// Status is which status is meant, on KindStatus and KindBurned.
 	//
 	// **It replaced reading Element for it** *(2026-08-17)*, because a status is no longer the same
-	// object as a colour: two rings can put two different statuses on the same fire card, and an
+	// object as a colour: two relics can put two different statuses on the same fire card, and an
 	// event naming the colour could not say which had landed. Element still carries the card's own
 	// colour on a KindStatus, which is what the feed's swatch and its sentence are drawn from.
 	//
@@ -225,22 +225,22 @@ type Event struct {
 	// concepts. It is set on the two kinds that mean it and read on no others.
 	Status StatusID
 
-	// Ring is the worn ring that applied the status, on KindStatus.
+	// Relic is the worn relic that applied the status, on KindStatus.
 	//
 	// **It is here because a status has a cause the player can see** *(2026-08-18)*. The screen
-	// flies the word out of the ring that caused it, and there is no other honest way for it to
-	// know which ring that was: reading it off the card's element would be a second rule about
-	// something the grammar already decides, and it would be wrong the first time a form ring or
-	// a concept ring applied a status - both of which RegisterRing accepts today.
+	// flies the word out of the relic that caused it, and there is no other honest way for it to
+	// know which relic that was: reading it off the card's element would be a second rule about
+	// something the grammar already decides, and it would be wrong the first time a form relic or
+	// a concept relic applied a status - both of which RegisterRelic accepts today.
 	//
-	// **Which ring, not which slot.** A RingID says something in a trace and in a test; a worn
+	// **Which relic, not which slot.** A RelicID says something in a trace and in a test; a worn
 	// index says nothing outside one duelist's array. The screen finds its position by walking the
-	// worn list, which is at most five entries and is the same order the ring row is drawn in.
+	// worn list, which is at most five entries and is the same order the relic row is drawn in.
 	//
-	// **The zero value is a real ring**, exactly as Status's is a real status, so it is set on the
-	// one kind that means it and read on no others. NoRing is the absence, for a caller that wants
+	// **The zero value is a real relic**, exactly as Status's is a real status, so it is set on the
+	// one kind that means it and read on no others. NoRelic is the absence, for a caller that wants
 	// to say so explicitly.
-	Ring RingID
+	Relic RelicID
 
 	// Hand is set on KindHand and names what the attack phase formed. The screen looks it up
 	// with HandByID rather than being told its name here, so a hand renamed is renamed once.
@@ -283,7 +283,7 @@ type Event struct {
 	//
 	// **A fixed array rather than a slice, because Event has to stay comparable** —
 	// TestHandsDoNotBreakDeterminism compares two logs entry by entry with ==. It is sized to
-	// maxHandTerms — every card a legal turn can hold, plus the extra landings an echo ring can
+	// maxHandTerms — every card a legal turn can hold, plus the extra landings an echo relic can
 	// add — and a balance sim deliberately queueing more gets its extra cards dropped from the
 	// *bracket* rather than from the hand, the same posture raiseDefend takes on an over-long
 	// defend list.
@@ -303,82 +303,82 @@ type Event struct {
 	//
 	// **It is here so the screen can show the arithmetic rather than assert it** *(2026-08-18)*.
 	// The hand dialog flies each card's own figure down into a sum, and re-deriving one on the
-	// screen would mean the screen owning `CardDamage`, the Strength scaling and every ring that
+	// screen would mean the screen owning `CardDamage`, the Strength scaling and every relic that
 	// touches a card's damage — a second resolver, exactly what Base and Multiplier are on the
 	// event to prevent. `Base` is the sum of the first HandCardCount entries.
 	//
 	// A fixed array for the reason HandCards is one: Event has to stay comparable.
 	HandAmounts [maxHandTerms]int
 
-	// HandCardBase is what each landing was worth **before any worn ring touched it** — the card's
+	// HandCardBase is what each landing was worth **before any worn relic touched it** — the card's
 	// own damage at the wielder's DMG, with an echo's fraction already taken off.
 	//
 	// **It is here so the sum can be written the way it is worked out** *(owner's call,
 	// 2026-09-02)*: `10 + 10 + (10 x 2) x 2.5 = 100` rather than `10 + 10 + 20 x 2.5 = 100`. The
-	// ring's figure is beside the term it priced everywhere else — on the card in the hand dialog,
+	// relic's figure is beside the term it priced everywhere else — on the card in the hand dialog,
 	// on the term line in the ledger — and the sum was the one place it was silently folded in.
 	//
-	// **A screen may not divide HandAmounts by HandRingScale to get it back.** Every ring rounds
+	// **A screen may not divide HandAmounts by HandRelicScale to get it back.** Every relic rounds
 	// and CardDamage floors at 1, so the quotient is wrong exactly where the arithmetic is
 	// interesting. That is the reason this is a field rather than a reading of two others.
 	HandCardBase [maxHandTerms]int
 
 	// EchoTerms is how many of those terms are echoes rather than cards — the tail of the list.
 	// Zero on almost every blow. It is here so a screen can say *why* one card paid three terms
-	// without re-deriving the ring that did it.
+	// without re-deriving the relic that did it.
 	EchoTerms int
 
-	// HandRingScale[i][seat] is what the ring on that worn seat multiplied term i by, as a percent,
+	// HandRelicScale[i][seat] is what the relic on that worn seat multiplied term i by, as a percent,
 	// and 0 for a seat that did not touch it.
 	//
-	// **Every ring's figure moved off the card and into the sum on 2026-08-26** *(owner's call)*.
-	// Nothing a ring does reaches a card's printed damage any more: the face says what the card does,
-	// because a growing ring steps between the cards of one blow and the same card is worth different
-	// things in different queue positions. So the sum is where the rings are accounted for — each one
+	// **Every relic's figure moved off the card and into the sum on 2026-08-26** *(owner's call)*.
+	// Nothing a relic does reaches a card's printed damage any more: the face says what the card does,
+	// because a growing relic steps between the cards of one blow and the same card is worth different
+	// things in different queue positions. So the sum is where the relics are accounted for — each one
 	// says its own figure beside the term it priced, and its card bounces on that beat. See
 	// combat.CardScaleBySeat, which is the only place these are worked out.
 	//
-	// **Per seat, so the screen knows which ring to bounce.** A product would say what the term came
+	// **Per seat, so the screen knows which relic to bounce.** A product would say what the term came
 	// to and leave five fingers unaccounted for.
-	HandRingScale [maxHandTerms][MaxWornRings]int
+	HandRelicScale [maxHandTerms][MaxWornRelics]int
 
-	// HandLanding[i][seat] reports whether the ring on that seat is why term i exists at all: an
+	// HandLanding[i][seat] reports whether the relic on that seat is why term i exists at all: an
 	// extra landing bought by `repeat-card` or `echo-attack`. False on a card's own first landing,
-	// which no ring had to seat.
+	// which no relic had to seat.
 	//
-	// **It is separate from HandRingScale because those rings contribute no multiplier.** An echo
-	// ring buys a *term*, not a figure, so it has nothing to say beside the number — and without
+	// **It is separate from HandRelicScale because those relics contribute no multiplier.** An echo
+	// relic buys a *term*, not a figure, so it has nothing to say beside the number — and without
 	// this it would be the one thing in the sum with no card accounting for it while the player
 	// watches three terms it alone is responsible for. See combat.LandingSeats.
-	HandLanding [maxHandTerms][MaxWornRings]bool
+	HandLanding [maxHandTerms][MaxWornRelics]bool
 
-	// HandGrown[i][seat] is what the ring on that worn seat had accumulated **after** term i was
-	// counted. The ring row reads it to step each badge on the beat the term lands, so the player
+	// HandGrown[i][seat] is what the relic on that worn seat had accumulated **after** term i was
+	// counted. The relic row reads it to step each badge on the beat the term lands, so the player
 	// watches the number that is about to price the next card go up.
 	//
 	// **Indexed by worn seat**, which is stable for the length of a blow: the row can be reordered
-	// between rounds and not inside one. A screen that wants a ring's identity has the row itself.
+	// between rounds and not inside one. A screen that wants a relic's identity has the row itself.
 	//
 	// It is the widest thing on an Event by some way — a hand of five, each landing five times, over
 	// five fingers. That is affordable because a KindHand event happens once per turn, and the
-	// alternative is a screen re-deriving which ring grew, which is the resolver-in-the-screen this
+	// alternative is a screen re-deriving which relic grew, which is the resolver-in-the-screen this
 	// whole block of fields exists to prevent.
-	HandGrown [maxHandTerms][MaxWornRings]int
+	HandGrown [maxHandTerms][MaxWornRelics]int
 
-	// HandBonus is flat damage a worn ring added to this blow **because of the rung it formed**,
+	// HandBonus is flat damage a worn relic added to this blow **because of the rung it formed**,
 	// and HandBonusSeats is which seats paid it.
 	//
 	// **It is a term of Base and it is the last one** *(owner's call, 2026-09-05)*: every other
 	// entry in the bracket is a card, so this is added after the cards are counted and before the
 	// multiplier is applied. The screen draws it as its own term at the end of the sum, in the
-	// ground's own ink rather than a ring's pink, because it is the hand paying rather than a
-	// number a ring moved.
+	// ground's own ink rather than a relic's pink, because it is the hand paying rather than a
+	// number a relic moved.
 	//
 	// Zero when nothing worn names this rung, which is the usual case.
 	HandBonus      int
-	HandBonusSeats [MaxWornRings]bool
+	HandBonusSeats [MaxWornRelics]bool
 
-	// HeldBonus is flat damage a worn ring added to this blow **for the cards the turn kept back**,
+	// HeldBonus is flat damage a worn relic added to this blow **for the cards the turn kept back**,
 	// and HeldBonusSeats is which seats paid it.
 	//
 	// **A second term of Base, beside HandBonus and on the same terms**: after the cards, before
@@ -386,18 +386,18 @@ type Event struct {
 	// because they are different sentences — one is what the hand formed, the other is what the
 	// hand still holds — and a screen that merged them could not say which.
 	HeldBonus      int
-	HeldBonusSeats [MaxWornRings]bool
+	HeldBonusSeats [MaxWornRelics]bool
 
 	// VitaeBonus is the duelist's Bounty as it joined this blow's Base, and VitaeBonusSeats is
-	// which worn rings put it there.
+	// which worn relics put it there.
 	VitaeBonus      int
-	VitaeBonusSeats [MaxWornRings]bool
+	VitaeBonusSeats [MaxWornRelics]bool
 
-	// HandScale is the percentage the worn rings moved this blow's Multiplier by — 100 when
-	// nothing did — and HandScaleSeats is which rings paid. **Multiplier already has it applied**;
+	// HandScale is the percentage the worn relics moved this blow's Multiplier by — 100 when
+	// nothing did — and HandScaleSeats is which relics paid. **Multiplier already has it applied**;
 	// this is kept so a screen can say the hand was improved rather than only show a bigger figure.
 	HandScale      int
-	HandScaleSeats [MaxWornRings]bool
+	HandScaleSeats [MaxWornRelics]bool
 }
 
 // Slot is one card's place in a round's resolution order: whose it is, where it sits

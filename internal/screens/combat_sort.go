@@ -18,7 +18,7 @@ import (
 // **The order of the queue is a rule as of 2026-08-26** *(owner's call)*. It was not one for the
 // first three months of this screen, and this file was written under the old rule: cross-category
 // order is still regrouped by `combat.ResolutionOrder` and a hand is still *counted* rather than
-// read in sequence, but a growing ring now steps between the cards of a single blow, so the card
+// read in sequence, but a growing relic now steps between the cards of a single blow, so the card
 // that goes first pays for the card behind it. Sorting a queued hand therefore re-prices it.
 //
 // **That is accepted rather than guarded** *(owner's call)*. These buttons stay live and a bad sort

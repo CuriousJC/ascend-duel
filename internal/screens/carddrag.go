@@ -4,7 +4,7 @@ package screens
 // reordered uses this, so the gesture is one gesture rather than one per screen.
 //
 // It was the action box's alone until 2026-08-26 — a press lifecycle written into the hand, over
-// the hand's own list, with the hand's own indices. The worn ring row then needed the same thing,
+// the hand's own list, with the hand's own indices. The worn relic row then needed the same thing,
 // and worn order is a *rule* there, so a second implementation would have been a second set of
 // off-by-ones on the one row where a mistake changes what a duel does.
 //
@@ -25,11 +25,11 @@ import (
 // dragRow is what a row of cards has to be able to answer for cardDrag to run on it.
 //
 // **Every method takes the state**, because a row's geometry is a function of the screen size and
-// none of these can be precomputed: the hand's pitch closes up as cards are drawn and the ring
-// row's spreads as rings are bought.
+// none of these can be precomputed: the hand's pitch closes up as cards are drawn and the relic
+// row's spreads as relics are bought.
 //
 // **`rowLift` and `rowReturn` are a pair and the row decides what they mean.** The hand actually
-// removes the card from its list, because the list is the hand. The ring row removes nothing: the
+// removes the card from its list, because the list is the hand. The relic row removes nothing: the
 // run is the authority on what is worn, so the row only remembers which seat is empty and commits
 // the whole move at the drop. Both end up in the same place, which is what `rowReturn(from, to)`
 // says — the card that was at `from` is now at `to`.

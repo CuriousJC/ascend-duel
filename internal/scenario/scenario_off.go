@@ -17,8 +17,8 @@ func Name() string { return "" }
 // Note is the authored sentence saying what the scenario is for. Empty here.
 func Note() string { return "" }
 
-// Rings is what the run should open wearing. Nil here.
-func Rings() []string { return nil }
+// Relics is what the run should open wearing. Nil here.
+func Relics() []string { return nil }
 
 // Hand is the opening hand to deal. Nil here.
 func Hand() []combat.Card { return nil }
@@ -66,5 +66,5 @@ func RoundLimit() int { return 0 }
 // Actions is the action-point budget the scenario wants. Zero here, so the record's own stands.
 func Actions() int { return 0 }
 
-// RingSlots is how many fingers the scenario wants. Zero here, so the run keeps its own five.
-func RingSlots() int { return 0 }
+// RelicSlots is how many fingers the scenario wants. Zero here, so the run keeps its own five.
+func RelicSlots() int { return 0 }

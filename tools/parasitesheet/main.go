@@ -3,14 +3,14 @@
 //
 //	go run ./tools/parasitesheet
 //
-// It exists for the reason tools/ringsheet does, and the catalogue being small today is not an
+// It exists for the reason tools/relicsheet does, and the catalogue being small today is not an
 // argument against it. A parasite is the least readable record in `data/` — a `Target`, a `Rider`,
 // a `Value` and a `Count`, where which of those the rules read depends entirely on the target, and
 // three of the four are refused outright on the targets that do not read them. The sentence the
 // card prints is authored separately and checked against none of it.
 //
 // **So the page's whole job is putting the authored line and the resolved rule side by side.**
-// That is the ring sheet's job too, and it is the one review a growing catalogue needs from the
+// That is the relic sheet's job too, and it is the one review a growing catalogue needs from the
 // first record rather than the fortieth.
 //
 // # It is a report, not a drawing-board
@@ -194,7 +194,7 @@ func specFor(p session.Parasite, art image.Image, enabled, selected bool) cards.
 
 // ruleLine is what the parasite does, in the file's own vocabulary.
 //
-// **Deliberately not prose**, for ringsheet's reason: the sentence a player reads is Text, printed
+// **Deliberately not prose**, for relicsheet's reason: the sentence a player reads is Text, printed
 // beside this, and generating a second English sentence would give the page two descriptions and
 // no way to tell which one the game agrees with.
 func ruleLine(p session.Parasite) string {

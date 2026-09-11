@@ -1,18 +1,18 @@
-// Command ringart takes the art generator's output and files it: every PNG in the inbox is
-// reduced to the ring card's own size, committed under assets/ring, recorded on its record in
-// data/rings.json, and struck from the worklist in docs/art/rings_to_draw.md.
+// Command relicart takes the art generator's output and files it: every PNG in the inbox is
+// reduced to the relic card's own size, committed under assets/relic, recorded on its record in
+// data/relics.json, and struck from the worklist in docs/art/relics_to_draw.md.
 //
-// It exists because that is four steps done by hand, once per ring, a hundred and twenty times —
+// It exists because that is four steps done by hand, once per relic, a hundred and twenty times —
 // and the two that fail silently are the ones a person gets wrong. A picture committed at the
 // generator's 1060x1484 is caught by TestEveryBleedingCardArtIsTheCardsOwnSize, but an "Art"
-// field left empty just draws default-ring.png, and a worklist entry left standing is a ring
+// field left empty just draws default-relic.png, and a worklist entry left standing is a relic
 // that gets drawn twice.
 //
-//	go run ./tools/ringart              # file everything in the inbox
-//	go run ./tools/ringart -n           # say what would happen and touch nothing
-//	go run ./tools/ringart -blocky      # quantize to the block grid on the way down
+//	go run ./tools/relicart              # file everything in the inbox
+//	go run ./tools/relicart -n           # say what would happen and touch nothing
+//	go run ./tools/relicart -blocky      # quantize to the block grid on the way down
 //
-// The stem of each file is the record id, exactly as assets/ring keys are: brass-knuckles-ring.png
+// The stem of each file is the record id, exactly as assets/relic keys are: brass-knuckles-ring.png
 // is the record "brass-knuckles-ring". A stem naming no record is refused rather than filed,
 // because a misspelled key is invisible in play — the card simply draws the fallback.
 package main
@@ -36,21 +36,21 @@ import (
 )
 
 const (
-	ringsJSON = "data/rings.json"
-	worklist  = "docs/art/rings_to_draw.md"
+	relicsJSON = "data/relics.json"
+	worklist   = "docs/art/relics_to_draw.md"
 )
 
 func main() {
-	in := flag.String("in", filepath.Join(".scratch", "to-process-ring-art"), "inbox of generated PNGs")
-	out := flag.String("out", filepath.Join("assets", "ring"), "where the reduced art is committed")
+	in := flag.String("in", filepath.Join(".scratch", "to-process-relic-art"), "inbox of generated PNGs")
+	out := flag.String("out", filepath.Join("assets", "relic"), "where the reduced art is committed")
 	done := flag.String("done", filepath.Join(".scratch", "processed-rings"), "where the originals are kept")
 	blocky := flag.Bool("blocky", false, "quantize to the 40x56 block grid, then scale up by a whole number")
 	dry := flag.Bool("n", false, "report what would happen and write nothing")
 	flag.Parse()
 
-	w, h := cards.RingStyle.Width, cards.RingStyle.Height
+	w, h := cards.RelicStyle.Width, cards.RelicStyle.Height
 
-	records, err := recordIDs(ringsJSON)
+	records, err := recordIDs(relicsJSON)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func main() {
 		}
 		key := strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
 		if !records[key] {
-			log.Fatalf("%s names no record in %s — a key that matches nothing draws the fallback and nothing fails", e.Name(), ringsJSON)
+			log.Fatalf("%s names no record in %s — a key that matches nothing draws the fallback and nothing fails", e.Name(), relicsJSON)
 		}
 		keys = append(keys, key)
 	}
@@ -98,17 +98,17 @@ func main() {
 	}
 
 	if *dry {
-		fmt.Printf("\n%d ring(s) would be filed; %s and %s untouched\n", len(keys), ringsJSON, worklist)
+		fmt.Printf("\n%d relic(s) would be filed; %s and %s untouched\n", len(keys), relicsJSON, worklist)
 		return
 	}
-	if err := setArt(ringsJSON, keys); err != nil {
+	if err := setArt(relicsJSON, keys); err != nil {
 		log.Fatal(err)
 	}
 	left, err := strike(worklist, keys)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("\n%d ring(s) filed. %d still to draw.\n", len(keys), left)
+	fmt.Printf("\n%d relic(s) filed. %d still to draw.\n", len(keys), left)
 }
 
 // reduce reads one generated PNG and scales it to the card's own size. The smooth path is
@@ -173,19 +173,19 @@ func recordIDs(path string) (map[string]bool, error) {
 		return nil, err
 	}
 	var file []struct {
-		RingRecord string `json:"RingRecord"`
+		RelicRecord string `json:"RelicRecord"`
 	}
 	if err := json.Unmarshal(raw, &file); err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	ids := make(map[string]bool, len(file))
 	for _, r := range file {
-		ids[r.RingRecord] = true
+		ids[r.RelicRecord] = true
 	}
 	return ids, nil
 }
 
-// setArt rewrites one line per record rather than re-encoding the file. data/rings.json is
+// setArt rewrites one line per record rather than re-encoding the file. data/relics.json is
 // hand-formatted — a rule's If clause sits on one line — and a round-trip through encoding/json
 // would reflow all of it, burying a six-line change in a twelve-hundred-line diff.
 func setArt(path string, keys []string) error {
@@ -195,7 +195,7 @@ func setArt(path string, keys []string) error {
 	}
 	s := string(raw)
 	for _, key := range keys {
-		re := regexp.MustCompile(`("RingRecord": "` + regexp.QuoteMeta(key) + `",\n(?:[^\n]*\n)??[ \t]*"Art": )"[^"]*"`)
+		re := regexp.MustCompile(`("RelicRecord": "` + regexp.QuoteMeta(key) + `",\n(?:[^\n]*\n)??[ \t]*"Art": )"[^"]*"`)
 		if !re.MatchString(s) {
 			return fmt.Errorf("%s: found no Art field on record %q", path, key)
 		}
@@ -206,11 +206,11 @@ func setArt(path string, keys []string) error {
 
 var (
 	entryRe   = regexp.MustCompile("(?m)^### [^\n]*\n\n- \\*\\*Key:\\*\\* `([a-z0-9-]+)`\n(?:[^\n]*\n)*?\n")
-	sectionRe = regexp.MustCompile(`(?m)^(## )(Common|Uncommon|Rare)( — )\d+( rings)$`)
-	totalRe   = regexp.MustCompile(`for the \d+ rings with no artwork yet`)
+	sectionRe = regexp.MustCompile(`(?m)^(## )(Common|Uncommon|Rare)( — )\d+( relics)$`)
+	totalRe   = regexp.MustCompile(`for the \d+ relics with no artwork yet`)
 )
 
-// strike removes the worklist entry for each ring that now has art, then recomputes the counts in
+// strike removes the worklist entry for each relic that now has art, then recomputes the counts in
 // the heading and in every section title. A worklist whose length is wrong is a worklist nobody
 // trusts the length of, which is the whole reason the file says to delete finished entries.
 func strike(path string, keys []string) (int, error) {
@@ -249,7 +249,7 @@ func strike(path string, keys []string) (int, error) {
 		p := sectionRe.FindStringSubmatch(m)
 		return fmt.Sprintf("%s%s%s%d%s", p[1], p[2], p[3], counts[p[2]], p[4])
 	})
-	s = totalRe.ReplaceAllString(s, fmt.Sprintf("for the %d rings with no artwork yet", left))
+	s = totalRe.ReplaceAllString(s, fmt.Sprintf("for the %d relics with no artwork yet", left))
 	return left, os.WriteFile(path, []byte(s), 0o644)
 }
 

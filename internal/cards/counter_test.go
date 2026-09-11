@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-// The accumulator badge: the figure a growing ring carries in the bottom-right corner of its card.
+// The accumulator badge: the figure a growing relic carries in the bottom-right corner of its card.
 
-func ringWithCounter(counter string) Spec {
-	return Spec{Name: "Enflamed", Element: Ring, Counter: counter, Enabled: true}
+func relicWithCounter(counter string) Spec {
+	return Spec{Name: "Enflamed", Element: Relic, Counter: counter, Enabled: true}
 }
 
 // differs reports where two renders of the same card are not the same picture.
@@ -25,12 +25,12 @@ func differs(a, b *image.RGBA) image.Rectangle {
 	return out
 }
 
-// **An empty counter draws nothing at all**, which is what every ring in the file passes today and
+// **An empty counter draws nothing at all**, which is what every relic in the file passes today and
 // what the shelf passes for all of them. A badge that drew an empty pill would put a mark on
 // forty-odd cards that have no number.
-func TestARingWithNoCounterIsTheCardThatAlwaysWas(t *testing.T) {
-	bare := render(t, ringWithCounter(""), RingStyle)
-	same := render(t, Spec{Name: "Enflamed", Element: Ring, Enabled: true}, RingStyle)
+func TestARelicWithNoCounterIsTheCardThatAlwaysWas(t *testing.T) {
+	bare := render(t, relicWithCounter(""), RelicStyle)
+	same := render(t, Spec{Name: "Enflamed", Element: Relic, Enabled: true}, RelicStyle)
 
 	if got := differs(bare, same); !got.Empty() {
 		t.Errorf("an empty counter drew something at %v", got)
@@ -38,17 +38,17 @@ func TestARingWithNoCounterIsTheCardThatAlwaysWas(t *testing.T) {
 }
 
 // **The badge stays in its corner.** It is the one thing on the card measured from the right and
-// bottom edges, so an over-wide figure is the failure this catches — and a ring's own art box ends
+// bottom edges, so an over-wide figure is the failure this catches — and a relic's own art box ends
 // at ArtTop+ArtMaxH, which the badge must not reach back into.
-func TestARingCounterStaysInItsCorner(t *testing.T) {
-	st := RingStyle
-	bare := render(t, ringWithCounter(""), st)
+func TestARelicCounterStaysInItsCorner(t *testing.T) {
+	st := RelicStyle
+	bare := render(t, relicWithCounter(""), st)
 
 	// **Every shape the label actually takes** — see combat.CounterLabel: a multiplier is always
 	// one decimal place, so the widest it reaches is `10.5`, and a flat figure carries a sign. The
 	// figure is allowed to outgrow its disc; what it may not do is leave the card.
 	for _, counter := range []string{"+5", "1.5", "10.5", "+100"} {
-		got := differs(bare, render(t, ringWithCounter(counter), st))
+		got := differs(bare, render(t, relicWithCounter(counter), st))
 		if got.Empty() {
 			t.Errorf("counter %q drew nothing", counter)
 			continue
@@ -67,10 +67,10 @@ func TestARingCounterStaysInItsCorner(t *testing.T) {
 	}
 }
 
-// **A style with no counter draws none whatever the Spec says.** Every style but RingStyle is one,
+// **A style with no counter draws none whatever the Spec says.** Every style but RelicStyle is one,
 // and a hand card sprouting a badge because a caller filled a field in would be a card saying
 // something the game does not mean.
-func TestOnlyARingCardDrawsACounter(t *testing.T) {
+func TestOnlyARelicCardDrawsACounter(t *testing.T) {
 	for name, st := range map[string]Style{
 		"hand": Hand, "mini": Mini, "token": Token,
 		"enemy": EnemyStyle, "duelist": DuelistStyle, "worm": WormStyle,
@@ -92,11 +92,11 @@ func TestOnlyARingCardDrawsACounter(t *testing.T) {
 // every pixel has to be either the card’s border colour or the card’s own surface, and both have
 // to be present — all border would be a disc with no figure on it, all surface no disc at all.
 func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
-	st := RingStyle
-	img := render(t, ringWithCounter("1.5"), st)
+	st := RelicStyle
+	img := render(t, relicWithCounter("1.5"), st)
 
 	// The border, read off the same card, because a border is drawn at the card’s state and an
-	// enabled ring rests short of full strength.
+	// enabled relic rests short of full strength.
 	border := img.RGBAAt(st.BorderWidth-1, st.Height/2)
 
 	r := st.CounterRadius
@@ -138,11 +138,11 @@ func TestTheCounterIsADiscWithTheSurfaceShowingThrough(t *testing.T) {
 // what Style.Bleed exists to make room for. A card image that went back to being exactly its style
 // size would clip it to a quarter disc in the corner, and nothing else in the package would notice.
 func TestTheBadgeHangsOffTheCard(t *testing.T) {
-	st := RingStyle
-	img := render(t, ringWithCounter("1.5"), st)
+	st := RelicStyle
+	img := render(t, relicWithCounter("1.5"), st)
 
 	if got := img.Bounds(); got.Dx() != st.Width+st.Bleed || got.Dy() != st.Height+st.Bleed {
-		t.Fatalf("a ring renders %dx%d, want %dx%d",
+		t.Fatalf("a relic renders %dx%d, want %dx%d",
 			got.Dx(), got.Dy(), st.Width+st.Bleed, st.Height+st.Bleed)
 	}
 

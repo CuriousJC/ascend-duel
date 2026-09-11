@@ -1,9 +1,9 @@
 [
   {
-    "ScenarioRecord": "new-ring-art",
-    "Note": "The six rings drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RingSlots is 6: the shipped cap is combat.DefaultRingSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four rings firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
-    "RingSlots": 6,
-    "Rings": [
+    "ScenarioRecord": "new-relic-art",
+    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
+    "RelicSlots": 6,
+    "Relics": [
       "bulwark-ring",
       "banker-ring",
       "bedrock-ring",
@@ -23,8 +23,8 @@
   },
   {
     "ScenarioRecord": "arsenal-on-a-dummy",
-    "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the ring fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the ring's term sits inside the sum rather than on the end of it, and the figure it moved is written in the ring pink. The ring pane is where the new artwork is.",
-    "Rings": [
+    "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic's term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.",
+    "Relics": [
       "form-four-of-a-kind-hand-ring"
     ],
     "Deck": [
@@ -175,9 +175,9 @@
     "Life": 0
   },
   {
-    "ScenarioRecord": "form-hand-rings",
-    "Note": "The two new form-hand rings on the fingers, Armoury and Arsenal, so the artwork can be looked at on the ring pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the ring term, and the ring pane for whether the two pictures are tellable apart at the size they are drawn - they are two rings about the same axis, and the card carries no title.",
-    "Rings": [
+    "ScenarioRecord": "form-hand-relics",
+    "Note": "The two new form-hand relics on the fingers, Armoury and Arsenal, so the artwork can be looked at on the relic pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.",
+    "Relics": [
       "form-full-house-hand-ring",
       "form-four-of-a-kind-hand-ring"
     ],
@@ -204,8 +204,8 @@
   },
   {
     "ScenarioRecord": "training-dummy",
-    "Note": "A fight that cannot end, on the real starting deck against whichever creature the climb dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Rings, Deck or Parasites to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.",
-    "Rings": [],
+    "Note": "A fight that cannot end, on the real starting deck against whichever creature the climb dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Relics, Deck or Parasites to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.",
+    "Relics": [],
     "Hand": [],
     "Dummy": true,
     "Actions": 15,
@@ -217,8 +217,8 @@
   },
   {
     "ScenarioRecord": "one-form-deck",
-    "Note": "A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand ring, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.",
-    "Rings": [],
+    "Note": "A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand relic, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.",
+    "Relics": [],
     "Deck": [
       {
         "Card": "Nick",
@@ -348,7 +348,7 @@
   {
     "ScenarioRecord": "wildcards",
     "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no colour at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the bucket too, for spending on a card that is not wild yet.",
-    "Rings": [],
+    "Relics": [],
     "Deck": [
       {
         "Card": "Jab",
@@ -436,7 +436,7 @@
   {
     "ScenarioRecord": "metals",
     "Note": "The two gambling upgrades, already on cards, so the roll can be watched rather than bought towards. Four gold Jabs and four silver Cuts, with an ordinary Strike and Bash beside them for comparison; the opening hand holds one of each. Play the metals every turn and read the feed: gold announces +1 DMG or +5 max life on roughly two turns in five and the fighter card's stats move as it does, silver drops 10 into the purse on one in five. What to check is that a grant survives the round - the bonus lands on the run, so the next fight opens with it - and that a losing roll says nothing rather than saying nothing happened. A Golden and a Silver are in the bucket for putting one metal over the other, which is what last-one-wins looks like.",
-    "Rings": [],
+    "Relics": [],
     "Deck": [
       {
         "Card": "Jab",
@@ -497,7 +497,7 @@
   {
     "ScenarioRecord": "metal-chromatic",
     "Note": "A silver card and a chromatic one in the same hand, which neither the metals nor the wildcards entry can give you: the question is how the two upgrades read against each other on one table. The silver Cut writes nothing about its metal on the face at all - the sheen is what names it - where the wild Jab carries the five-band wash, keeps its form mark hueless, and says ANY ELEMENT. Both explain themselves in the tooltip and both are titled in their own ink: CHROMATIC letter by letter across the five bands, SILVER in one lifted grey over the odds it gambles at. Hover both, and check the silver card is identifiable without the hover. A gold Thrust and two plain cards are beside them so a sheen has something to be a sheen against. A Motley and a Silver are in the bucket for putting either upgrade onto a card that has neither.",
-    "Rings": [],
+    "Relics": [],
     "Deck": [
       {
         "Card": "Cut",
@@ -572,8 +572,8 @@
   },
   {
     "ScenarioRecord": "upgrades",
-    "Note": "Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal's rose against the ring pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.",
-    "Rings": [],
+    "Note": "Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal's rose against the relic pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.",
+    "Relics": [],
     "Deck": [
       {
         "Card": "Jab",
@@ -706,7 +706,7 @@
   {
     "ScenarioRecord": "tutorial",
     "Note": "Bob, from the top, on the real starting deck. The seed and the opening creature are not here: they are in data/tutorial.json, because the lesson's promises - four cards of one colour, one of them a shield, a blow that wounds without killing so the creature swings back - are facts about that deal against that creature, and a second copy of them here is a second copy to drift. This entry now says only 'teach it whatever the profile thinks', which is the one thing the real trigger cannot do and the only way to see the tutorial twice.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Screen": "combat",
     "Teach": true,
@@ -717,7 +717,7 @@
   {
     "ScenarioRecord": "reward-payout",
     "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
-    "Rings": [
+    "Relics": [
       "heart-ring"
     ],
     "Hand": [],
@@ -729,7 +729,7 @@
   {
     "ScenarioRecord": "shop-shelf",
     "Note": "The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.",
-    "Rings": [
+    "Relics": [
       "heart-ring",
       "keen-ring"
     ],
@@ -745,7 +745,7 @@
   {
     "ScenarioRecord": "stairway-boss",
     "Note": "A stairway protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first stairway a run reaches is fight 2, which is where this opens.",
-    "Rings": [
+    "Relics": [
       "heart-ring"
     ],
     "Hand": [
@@ -776,7 +776,7 @@
   {
     "ScenarioRecord": "echo-and-growth",
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
-    "Rings": [
+    "Relics": [
       "echo-ring",
       "enflamed-ring",
       "fire-ring"
@@ -808,7 +808,7 @@
   {
     "ScenarioRecord": "seven-term-sum",
     "Note": "The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.",
-    "Rings": [
+    "Relics": [
       "echo-ring",
       "aftershock-ring"
     ],
@@ -839,7 +839,7 @@
   {
     "ScenarioRecord": "momentum-and-atrophy",
     "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
-    "Rings": [
+    "Relics": [
       "atrophy-ring",
       "momentum-ring"
     ],
@@ -866,7 +866,7 @@
   {
     "ScenarioRecord": "altered-deck",
     "Note": "Two flips and a demotion, so the deck panel's ALTERATIONS toggle has something to show. Open the draw pile: earth and lightning are dealt as fire, the 3 AP attacks are dealt a rung down, and AS OWNED puts all of it back. FULL/PLAYED after a round or two.",
-    "Rings": [
+    "Relics": [
       "magma-ring",
       "firestorm-ring",
       "atrophy-ring"
@@ -880,7 +880,7 @@
   {
     "ScenarioRecord": "bucket-of-parasites",
     "Note": "The board piece: a bucket holding one of each shape a parasite can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the parasite. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Strike, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Parasites": [
       "leech",
@@ -899,7 +899,7 @@
   {
     "ScenarioRecord": "held-back-riders",
     "Note": "The four riders that pay for a card you do NOT play, plus the two that pay for one you do. Attach Patience or Spite or Brood to a card, then leave that card in the hand and press DUEL! - the blow gets bigger, or the fight log says 'kept back for 3 vitae', on every turn you go on holding it. Hunger is the opposite question: it only pays if its card is one of the cards the hand was formed from, which a turn can play a card without doing. Carapace puts a Jab in the shield business. It is here because none of this is on a card face yet - the tooltip prose is the only readout, so the way to check the arithmetic is to hold the card and watch the sum.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Parasites": [
       "patience",
@@ -918,7 +918,7 @@
   {
     "ScenarioRecord": "element-and-form-borers",
     "Note": "The eight recolouring and reforming parasites, two cards each. The five bores paint a pair of cards an element; the three grubs change what a pair COUNTS AS on the form axis without changing the cards - so point Maulgrub at two Wards and you have two cards that still shield and now make a crush pair. That is a legal weird thing on the owner's call, not a hole in the checking. Watch the corner mark and the cost ticks for the recolour; watch the hands panel for the reform.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Parasites": [
       "emberbore",
@@ -935,7 +935,7 @@
   {
     "ScenarioRecord": "rock-shower",
     "Note": "Three rock showers in the bucket. Each one needs no target, so it is taken on the click, and the panel stays up showing the three stones it just handed over - they go into the run's POUCH, not onto the ladder. Win the fight and the shop's S button is where they are spent: Use puts one on its rung, Sell pays 5. For the shop half on its own without the fight, see stones-in-the-pouch.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Parasites": [
       "rockbeetle",
@@ -951,7 +951,7 @@
   {
     "ScenarioRecord": "stones-in-the-pouch",
     "Note": "Opens on the shop carrying five stones, which is the other half of the rock shower. The S button in the corner beside D and C is the pouch; click a stone to arm it and two tabs hang under it - green Use puts it on its rung for the rest of the run, crimson Sell pays 5 vitae. The hands panel next door is where to check a Use actually moved the rung. It is here because a carried stone is otherwise a parasite bought, a fight won and a shower spent away.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Parasites": [],
     "Stones": [
@@ -970,7 +970,7 @@
   {
     "ScenarioRecord": "achievement-toast",
     "Note": "Four cheap attacks across three forms and four elements, plus a defence: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Poke, Nick and Tap are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point ASCEND_DUEL_PROFILE at an empty directory to see them land again.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [
       {
         "Card": "Poke",
@@ -1001,7 +1001,7 @@
   {
     "ScenarioRecord": "luck-and-chimera",
     "Note": "A Luck and a Chimera in the bucket, which is the whole of it since the bucket holds two. Luck needs no target: click it and it rolls once - 1 in 5 for +1 DMG, 1 in 5 for +5 max life, 3 in 5 for nothing. Watch the duelist card's DMG and life bar, because a dud looks exactly like a click that did nothing and that is the mechanic rather than a bug. Then read the Chimera's face: it stops saying REPEAT LAST PARASITE and starts saying COPIES LUCK, and clicking it rolls again. Spend the Chimera FIRST to see the other half - with nothing spent yet it has nothing to copy and is drawn dim.",
-    "Rings": [],
+    "Relics": [],
     "Hand": [],
     "Parasites": [
       "luck",
@@ -1016,7 +1016,7 @@
   {
     "ScenarioRecord": "signals",
     "Note": "Every kind of card signal in one hand, so the fireworks can be looked at rather than played towards. The metals are at 5, the shipping odds - a gold Jab pays on two plays in five and a silver Cut on one in five, so several turns may be wanted; the heal Thrust and the two vitae-in-hand Slices fire on every single play, which is what makes the hand worth queueing even on a turn the metals miss. Certainty is not available and that is the design: combat.LuckOutcomes refuses a die with no losing face, because a gamble that always pays is a purchase. Queue the gold Jab, the silver Cut and the heal Thrust together and press DUEL!. The order is the thing to check: the two Slices left in the hand throw their crimson vitae first, together, and the sum does not begin until their figures have landed on the duelist card - then each played card bursts on the beat its own figure sets off into the sum, and every signal holds the sum where it is so nothing overlaps. The burst and the figure leave together, in one colour per card: gold for the gold Jab, silver for the silver Cut, the rose for the heal, crimson for the cards kept back. And a losing roll says nothing at all, which is the mechanic rather than a missing picture.",
-    "Rings": [],
+    "Relics": [],
     "Deck": [
       {
         "Card": "Jab",

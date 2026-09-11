@@ -2,7 +2,7 @@ package session
 
 // Potions: the run's own opinion about the duelist's body.
 //
-// **A ring is worn, a stone raises a rung, a worm eats a card — and a potion changes the duelist**
+// **A relic is worn, a stone raises a rung, a worm eats a card — and a potion changes the duelist**
 // *(owner's call, 2026-09-06)*. It is the only thing in the shop that moves one of the three
 // figures the fighter is actually made of: the life it has left, the ceiling that life sits under,
 // or the damage it hits for.
@@ -14,8 +14,8 @@ package session
 //
 // **Two of the three change the record and one changes the wound**, and that is the whole of the
 // mechanic. `+DMG` and `+max life` are stored on the run and added to the duelist's own figures in
-// `Equip`, *before* the boss bonus and before any ring — a potion is growth of the body, so a
-// percentage ring scales the boosted duelist, exactly as it scales one that has climbed a stairway.
+// `Equip`, *before* the boss bonus and before any relic — a potion is growth of the body, so a
+// percentage relic scales the boosted duelist, exactly as it scales one that has climbed a stairway.
 // Healing is not stored at all: it takes the wound down, which is the one number `life.go` keeps.
 //
 // **This file is where a record becomes something usable and where a bad one is refused**, the job
@@ -163,7 +163,7 @@ func (s *Session) CanDrink(key string) bool {
 
 // Drink pays for a potion and applies it, and reports whether it could.
 //
-// **The purse moves first**, exactly as `Buy` wears the ring after spending: `SpendVitae` is the
+// **The purse moves first**, exactly as `Buy` wears the relic after spending: `SpendVitae` is the
 // one place a refusal happens, so nothing can be applied to a run that could not pay for it.
 //
 // **A heal cannot take the wound below zero**, which is the only clamp here: the other two grow

@@ -84,24 +84,24 @@
 //   - title.go, ascend.go — the front screen, and two stubs.
 //   - postbattle.go — pick a worm, then pick the card it eats. The first of the between-fight
 //     scenes; a shop and a room choice come after it, and each is an ordinary scene rather than a
-//     mode of the combat screen. It is also the prizes-dealt ring moment. The row of cards a worm
+//     mode of the combat screen. It is also the prizes-dealt relic moment. The row of cards a worm
 //     is pointed at carries the same three sort tabs the hand does (2026-09-05), hung off the row's
 //     own right edge; see handsort.go. Nothing slides there — the row is dealt, read and clicked
 //     once, so there is no arrangement of it to preserve.
 //   - postbattle_prose.go, postbattle_payout.go — the typewriter and the payout it types. The
 //     typewriter is general: a block of lines, a character clock, a pause between sentences, and
 //     an optional `pays` per line. The shop reuses it with no claims on any line.
-//   - shop.go, shop_prose.go — three rings on a shelf, and the hooded creature who greets you.
-//     **The shop has no worn row of its own** (2026-08-22): the build band's ring row is the row
-//     that is clicked to sell, so a ring is in the same place on every screen that shows one —
-//     and that is why selling asks twice. A click arms a crimson "Sell for N?" tab under the ring
+//   - shop.go, shop_prose.go — three relics on a shelf, and the hooded creature who greets you.
+//     **The shop has no worn row of its own** (2026-08-22): the build band's relic row is the row
+//     that is clicked to sell, so a relic is in the same place on every screen that shows one —
+//     and that is why selling asks twice. A click arms a crimson "Sell for N?" tab under the relic
 //     and the tab commits it, because the seat a tooltip is asked for and the seat a sale is
 //     committed in are now the same pixels. Buying still has no confirm and should not: it is
 //     refused when it cannot be afforded, and it is not the click that costs you something you
 //     already had.
-//   - buildband.go — the duelist card and the worn rings, for a screen that is not a fight.
-//     drawBuildBand is both halves; drawBuildCard and drawBuildRings are the halves, split because
-//     the shop draws its own rings with a price under them. hoverBuildRings is the row's tooltip
+//   - buildband.go — the duelist card and the worn relics, for a screen that is not a fight.
+//     drawBuildBand is both halves; drawBuildCard and drawBuildRelics are the halves, split because
+//     the shop draws its own relics with a price under them. hoverBuildRelics is the row's tooltip
 //     for every screen that draws it — the reward screen had none for a day, which is a row a
 //     player reads their build off going silent on the screen where they change that build.
 //   - deckpanel.go — the deck overlay, as a widget over a `deckContents` rather than a method on
@@ -125,8 +125,8 @@
 //     the close button and nothing else.
 //   - deckpanel_view.go — how the panel is being *read*: two latched buttons along its bottom edge
 //     and the three tallies under the grid (2026-08-24, owner's call). ALTERATIONS / AS OWNED picks
-//     which face every card is drawn in — what the rings will deal, or what the run owns — and is
-//     on by default, because a run wearing a flip ring never draws the deck it owns. FULL / PLAYED
+//     which face every card is drawn in — what the relics will deal, or what the run owns — and is
+//     on by default, because a run wearing a flip relic never draws the deck it owns. FULL / PLAYED
 //     picks which half the tallies count and which half is lit; it inverts the dimming and moves
 //     nothing, which is the panel's governing idea applied to a second toggle, and it is not drawn
 //     between fights, where there is one pile. The tallies are by form, by form and AP, and by
@@ -151,28 +151,28 @@
 //   - combat_hud.go — everything around the round: the two fighter cards, drawBox, and the
 //     discards badge. Both duelists are cards, in opposite top corners, each holding
 //     name / DMG / AP / Vitae over a health bar and a fraction. duelistCardRect and enemyCardRect
-//     are the one place each geometry is written, and the ring row takes both of its edges from
+//     are the one place each geometry is written, and the relic row takes both of its edges from
 //     them.
-//   - combat_rings.go — the ring row: full-size cards.RingStyle cards from data/rings.json, a rule
+//   - combat_relics.go — the relic row: full-size cards.RelicStyle cards from data/relics.json, a rule
 //     under them running the row's width, and the cap written as worn/5 on that rule's right end.
 //     It draws what the run is wearing and decides nothing (2026-08-17): session.Session holds the
 //     worn keys in worn order and session.Equip puts them on the duelist, so this file is a lookup
-//     from key to record for the art and the name. maxRings reads combat.MaxWornRings rather than
-//     declaring a second five. Nothing buys or unequips a ring yet. It holds the 12–46% band,
-//     which is what pays for full-size ring cards. Its width is what the two fighter cards leave —
-//     ringPaneRect reads duelistCardRect and enemyCardRect rather than a percentage, so the right
+//     from key to record for the art and the name. maxRelics reads combat.MaxWornRelics rather than
+//     declaring a second five. Nothing buys or unequips a relic yet. It holds the 12–46% band,
+//     which is what pays for full-size relic cards. Its width is what the two fighter cards leave —
+//     relicPaneRect reads duelistCardRect and enemyCardRect rather than a percentage, so the right
 //     edge cannot go stale when a card moves. Two things it does deliberately: a fill, never a
 //     frame — a plain grey backing one step lighter than the screen, no border, no title, no hue,
 //     because a framed row reads as cards trapped in a panel while a bare row leaves nothing
 //     saying where the middle begins; and the row drops 10px below the two cards so the three do
 //     not share a top line and read as one wide object. The backing must never reach either card.
-//     And the pitch is a function of how many rings are worn, first card flush left and last flush
+//     And the pitch is a function of how many relics are worn, first card flush left and last flush
 //     right, so three stand apart and five close up and overlap by ~26px. Overlap rather than
-//     shrink, because a card cannot be scaled and there is no ring style below this one.
+//     shrink, because a card cannot be scaled and there is no relic style below this one.
 //   - combat_actionbox.go — the hand and its drag-to-reorder, over the shared controller in
 //     carddrag.go. Reordering a queued hand re-prices it; see combat_sort.go below.
 //   - carddrag.go — the press-and-drag lifecycle every reorderable row of cards shares: the hand,
-//     and the worn ring row on all three screens that draw it. dragRow is what a row supplies.
+//     and the worn relic row on all three screens that draw it. dragRow is what a row supplies.
 //   - handsort.go — the half of sorting that belongs to no screen (2026-09-05): the three modes,
 //     the comparison each makes, and sortTabs, the block of three tabs as a widget. A scene hands
 //     it where its rungs go and what to do when one is pressed. Cost is the default and every mode
@@ -186,7 +186,7 @@
 //   - combat_sort.go — what the combat screen does with that: the queue is resynced and every card
 //     that moved is sent sliding. The sort re-applies on every refill, so a drawn card lands where
 //     it belongs rather than on the right-hand end and a drag survives only until the next deal;
-//     and it *can* change an outcome as of 2026-08-26, since a growing ring steps between the cards
+//     and it *can* change an outcome as of 2026-08-26, since a growing relic steps between the cards
 //     of one blow and the queue's order therefore prices them. The buttons stay live anyway —
 //     owner's call. sortHand returns the permutation it applied — it sorts a slice of indices and
 //     rebuilds rather than sorting in place — because a card sliding to its new seat has to know
@@ -270,7 +270,7 @@
 //     anchors — timings are data, anchors are code.
 //   - combat_flight.go — every card that moves. Three things, all presentation-only, all on their
 //     own clock, and none of which may change an outcome. The deck stack and its yellow modal
-//     ring. cardFlight — the discard flying off left and the deal flying back in, turning face up
+//     relic. cardFlight — the discard flying off left and the deal flying back in, turning face up
 //     on the way; a flight is raised only after spendSelected has already moved the card, which is
 //     what keeps planning(), the budget and the row's layout ignorant of it. handSlide — a card
 //     moving from one slot in the row to another, a sort or the row closing up after cards were
@@ -283,7 +283,7 @@
 //     what a phase is. What says which cards earned the hand is which cards are still raised
 //     (2026-08-19): noteHand narrows the lifted set to the ones the engine names.
 //   - combat_table.go — the two hands facing each other: the player's played cards left-aligned,
-//     the opponent's queued cards right-aligned, both full size in the band between the ring row
+//     the opponent's queued cards right-aligned, both full size in the band between the relic row
 //     and the strip above the hand. It is what shows a round as a confrontation rather than as a
 //     list. Each row breaks between its attacks and its plans (tableGroupGap), and the split is
 //     read off combat.ResolutionOrder rather than counted here — the gap is spent out of the same
@@ -301,7 +301,7 @@
 //   - ledger.go — the run's account of itself, and the panel that reads it back (2026-09-02).
 //     Every fight, folded to a line each, with the fight in progress opened out; a dragged
 //     scrollbar, because the input vocabulary has no wheel; and the arithmetic under every blow,
-//     term by term, with the ring that priced each one named beside it. It replaced the fight log,
+//     term by term, with the relic that priced each one named beside it. It replaced the fight log,
 //     which held one fight, could not be scrolled, and dropped its oldest rows. **It is chrome
 //     rather than a scene** — internal/game holds it — for two reasons: it is wanted on every
 //     screen, and a screen could not be one, since leaving the combat screen and coming back
@@ -310,6 +310,6 @@
 //   - combat_ledger.go — the three call sites that put a duel into that account: a fight opening,
 //     a round finishing, a duel settling.
 //   - prose_terms.go — a blow's working: one line per landing, what the card was worth, and which
-//     ring bought or priced it. Every figure comes off the event, exactly as the hand dialog's do.
+//     relic bought or priced it. Every figure comes off the event, exactly as the hand dialog's do.
 //   - seeds.go — the named opening-hand catalogue.
 package screens

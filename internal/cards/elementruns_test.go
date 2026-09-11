@@ -30,7 +30,7 @@ func TestEveryStatusNamesAnElement(t *testing.T) {
 
 func TestEveryStatusWordIsColoured(t *testing.T) {
 	// The words themselves, through the real matcher: a status's Name and its Verb both have to
-	// come back as runs, or half the ring catalogue's sentences colour and half do not.
+	// come back as runs, or half the relic catalogue's sentences colour and half do not.
 	for _, s := range data.LoadStatuses() {
 		for _, word := range []string{s.Name, s.Verb} {
 			found := false
@@ -47,7 +47,7 @@ func TestEveryStatusWordIsColoured(t *testing.T) {
 }
 
 func TestTheFiveElementsAreColouredInBothCases(t *testing.T) {
-	// Rings write "Fire" and worms write "FIRE". Both colour, through one vocabulary entry, because
+	// Relics write "Fire" and worms write "FIRE". Both colour, through one vocabulary entry, because
 	// the match ignores case on both sides.
 	for _, e := range []Element{Fire, Ice, Lightning, Earth, Arcane} {
 		for _, word := range []string{strings.ToUpper(e.String()), e.String()} {
@@ -63,10 +63,10 @@ func TestTheFiveElementsAreColouredInBothCases(t *testing.T) {
 	}
 }
 
-func TestBasicAndRingAreNotColouredWords(t *testing.T) {
+func TestBasicAndRelicAreNotColouredWords(t *testing.T) {
 	// Basic is the absence of an element and its grey is what an uncoloured word already looks
-	// like. Ring is not an element at all, and a text saying "ring" means the jewellery.
-	for _, word := range []string{"BASIC", "RING"} {
+	// like. Relic is not an element at all, and a text saying "relic" means the jewellery.
+	for _, word := range []string{"BASIC", "RELIC"} {
 		if runs := ElementRuns("CARD BECOMES " + word); len(runs) != 0 {
 			t.Errorf("%q was coloured: %v", word, runs)
 		}
@@ -116,8 +116,8 @@ func TestEveryTextFitsItsHighlights(t *testing.T) {
 	for _, p := range data.LoadPotions() {
 		check("potion "+p.Name, p.Text)
 	}
-	for key, r := range data.LoadRings() {
-		check("ring "+key, r.Text)
+	for key, r := range data.LoadRelics() {
+		check("relic "+key, r.Text)
 	}
 	for _, s := range data.LoadStatuses() {
 		check("status "+s.StatusRecord, s.Text)

@@ -240,7 +240,7 @@ func (s *CombatScene) resetDeck(run *session.Session) {
 	s.run = run
 	s.deck = s.deck[:0]
 	if run != nil {
-		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a demoting ring steps
+		// **FightDeck rather than Deck**: this is the `deck-built` moment, so a demoting relic steps
 		// what is dealt without touching what the run owns. The element flips are *not* here — they
 		// fire per card in drawHand — so this pile holds cards in the colours the run owns. See
 		// session.FightDeck and combat.MomentCardDrawn.
@@ -299,14 +299,14 @@ func (s *CombatScene) shuffleDeck() {
 // Plan card used to bank a wider hand for the round after, so this read `handSize + BonusDraw`;
 // nothing widens a hand any more. It stays a function rather than becoming `handSize` at every
 // call site because "how many cards does a refill draw to" is a question with one answer and one
-// place to change it, and the ring grammar has a seat for a card-drawn moment already.
+// place to change it, and the relic grammar has a seat for a card-drawn moment already.
 func (s *CombatScene) handTarget() int { return handSize }
 
 // drawHand fills the hand up to handTarget, reshuffling the discard back into the draw pile
 // when it runs dry. A hand can come up short only if every card the player owns is already
 // in it, which cannot happen with a deck larger than the hand.
 //
-// **This is the `card-drawn` moment** *(2026-08-24)*. A flip ring recolours a card here, one card
+// **This is the `card-drawn` moment** *(2026-08-24)*. A flip relic recolours a card here, one card
 // at a time on its way out of the pile, which is what its text has always said — "every earth card
 // is dealt as a fire card". It used to recolour the whole fight deck in one pass at `deck-built`;
 // the cards dealt are the same either way, since a flip is unconditional over an element.
@@ -314,7 +314,7 @@ func (s *CombatScene) handTarget() int { return handSize }
 // **The invariant that makes it safe: the draw pile holds cards as the run owns them.** A flip
 // reads a card's original colour, so a discarded ice-that-was-lightning card folded back into the
 // pile and drawn again would be read as ice — and a second flip keyed on ice would fire, chaining
-// two rings into a deck of one colour, which is exactly what firing at `deck-built` prevented for
+// two relics into a deck of one colour, which is exactly what firing at `deck-built` prevented for
 // free. `restoreToDeck` is what pays for it now.
 func (s *CombatScene) drawHand() {
 	for len(s.hand) < s.handTarget() {
@@ -392,7 +392,7 @@ func (s *CombatScene) endRoundHand() {
 }
 
 // fightContents is the deck as a fight sees it: what is left to draw, what is spoken for, and the
-// duelist whose rings price the faces.
+// duelist whose relics price the faces.
 //
 // **The hand and the discard are one list here**, which is the panel's own split — see
 // deckpanel.go. Both are cards you cannot draw, and merging them is what lets a card stay where it
@@ -403,7 +403,7 @@ func (s *CombatScene) fightContents() deckContents {
 		spent: make([]combat.Card, 0, len(s.discard)+len(s.hand)),
 
 		// **The run, so the panel can find a card's original.** A card in the hand or the discard
-		// has been through a draw and holds only the colour a flip ring made it; the ID is the way
+		// has been through a draw and holds only the colour a flip relic made it; the ID is the way
 		// back to what the run owns. See deckContents.run.
 		run:     s.run,
 		inFight: true,

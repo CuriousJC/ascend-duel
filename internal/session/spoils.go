@@ -20,7 +20,7 @@ import "github.com/curiousjc/ascend-duel/internal/pyramid"
 // half of the payout.
 //
 // **It is a share of the life remaining, not of the maximum**, which is what makes it a reward for
-// fighting well rather than a rebate. A ring that raises max life pays out more here indirectly,
+// fighting well rather than a rebate. A relic that raises max life pays out more here indirectly,
 // and that is intended.
 const lifeShareDivisor = 10
 
@@ -55,7 +55,7 @@ type Spoils struct {
 	// FromLife is a tenth of the life the fighter finished on.
 	FromLife int
 
-	// FromRoom is what the room pays, rings included.
+	// FromRoom is what the room pays, relics included.
 	FromRoom int
 }
 

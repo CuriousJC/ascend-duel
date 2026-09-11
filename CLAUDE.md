@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Ascending Duel — a roguelike where you duel your way up a tower, collecting rings and brands of power. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
+Ascending Duel — a roguelike where you duel your way up a tower, collecting relics and brands of power. Written in Go with [Ebitengine v2](https://ebitengine.org/) (`github.com/hajimehoshi/ebiten/v2`). Module path: `github.com/curiousjc/ascend-duel`.
 
 ## Where things are written down
 
@@ -20,7 +20,7 @@ Six streams, each with one job. Reach for the right one rather than searching al
 | **Unfiltered** | [ideas.md](ideas.md) | the inbox; entries get promoted into MECHANICS or TODO and struck from here |
 
 - **`MECHANICS.md` is the design record.** Decided unless marked `[?]`. It holds the element
-  set and their statuses, cards and types, hands, rings, brands, vitae, the tower, enemies,
+  set and their statuses, cards and types, hands, relics, brands, vitae, the tower, enemies,
   and the phase-based resolution experiment.
 - **`TODO.md` is open work only.** Completed entries are deleted rather than archived, so it
   says what is left, not what happened. Prefer `MECHANICS.md` for "what should this do".
@@ -32,15 +32,15 @@ Six streams, each with one job. Reach for the right one rather than searching al
   work turned one up.
 - When the two disagree, `MECHANICS.md` is newer and wins — say so rather than guessing.
 - **`data/` is the catalogue, and this file never says what is in it** *(owner's call,
-  2026-09-11)*. How many rings there are, which worms exist, what a parasite's line reads — all of
+  2026-09-11)*. How many relics there are, which worms exist, what a parasite's line reads — all of
   that is a `data/*.json` read or a `docs/sheets/` page away, and it is **pre-v1 and changing
   constantly**, so a count written down here is wrong within the week and wrong *silently*: nothing
   compiles it, nothing tests it, and it is loaded into context every session to mislead. Every
   count this file used to carry had already rotted by the time it was found.
 
   So the rule is a capability rather than a fact: **say which file answers the question and which
-  tool draws it, never the answer.** "The ring catalogue is in `data/rings.json`, reviewed with
-  `go run ./tools/ringsheet`" survives any amount of authoring; "forty-six rings" did not survive a
+  tool draws it, never the answer.** "The relic catalogue is in `data/relics.json`, reviewed with
+  `go run ./tools/relicsheet`" survives any amount of authoring; "forty-six relics" did not survive a
   fortnight. The same goes for anything else that grows by someone authoring a record — creatures,
   bosses, achievements, stones, hand rungs, portraits.
 
@@ -48,6 +48,16 @@ Six streams, each with one job. Reach for the right one rather than searching al
   forms, the three verbs, the three axes are design invariants: a sixth element is a decision, not
   an edit, so naming them here is naming a rule. If a list can grow by authoring, it belongs in
   `data/`; if growing it is a design change, it belongs here.
+
+- **`README.md` is not one of the streams, and it is only touched when the owner asks for that
+  specific thing** *(owner's call, 2026-09-11)*. It is the front page a stranger reads, so it is
+  the owner's voice rather than a working document, and a change to it is a change to how the
+  project introduces itself — which is a decision, not a side effect of the work that happened to
+  touch the same subject. **The same no-counts rule applies to it**, and for the harder version of
+  the reason: nothing here is loaded into a session to mislead, but a stale figure on the front
+  page is read by people who have no way to check it. It says which catalogues exist and points at
+  `data/` and `docs/sheets/`; it does not say how many of anything there is. Noticing that it has
+  gone out of date is something to say in the reply, not something to fix.
 
 - **Cut means deleted, not tombstoned.** When something is taken out of the design, remove
   every trace of it rather than leaving a note saying it was removed and why. These files are
@@ -68,11 +78,11 @@ skill that does not exist.
 |---|---|
 | [`caveman`](.claude/skills/caveman/SKILL.md) | **every session, at the start** — see below; it is on by default in this repo |
 | [`github-workflow`](.claude/skills/github-workflow/SKILL.md) | any `git` or `gh` command — branching, committing, pushing, opening or merging a PR, cleaning up after one, or when a merge is refused |
-| [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / rings / worms, or writing a loader |
+| [`data`](.claude/skills/data/SKILL.md) | adding a file to `data/`, adding or changing a field on one, authoring cards / enemies / relics / worms, or writing a loader |
 | [`randomness`](.claude/skills/randomness/SKILL.md) | adding any roll, adding or seeding a stream, touching a salt or a seed, writing a shuffle, or deciding whether a mechanic should be random at all |
 | [`combat-screen`](.claude/skills/combat-screen/SKILL.md) | touching any `internal/screens/combat*.go`, `internal/combat`, or anything about how a round is drawn or played back |
-| [`rings`](.claude/skills/rings/SKILL.md) | designing, **discussing** or **analysing** a proposed ring, adding to `rings.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn ring |
-| [`ring-balance`](.claude/skills/ring-balance/SKILL.md) | any question about the ring catalogue **as a whole** — is offense over-weighted at common, does every element have a cost ring, what a batch of new rings does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
+| [`relics`](.claude/skills/relics/SKILL.md) | designing, **discussing** or **analysing** a proposed relic, adding to `relics.json` or `statuses.json`, adding a moment or an effect verb, or wiring anything that reads a worn relic |
+| [`relic-balance`](.claude/skills/relic-balance/SKILL.md) | any question about the relic catalogue **as a whole** — is offense over-weighted at common, does every element have a cost relic, what a batch of new relics does to the shape of the shelf — or adding a category, an axis, or a verb that has to be classified |
 
 **Loading is cheap and guessing is not.** Every one of these exists because something specific
 went wrong once and should not have to be rediscovered.
@@ -134,12 +144,12 @@ gofmt -l .          # list unformatted files
 go run -tags debugtrace .   # with internal/trace live: event log + trace/frame.png
 go run -tags idleexit .     # closes itself after two minutes with nobody at the controls
 go run -tags demoplay .     # plays a scripted round by itself, writes demo/*.png, exits
-go run -tags scenario .     # a chosen set of rings, a chosen opening hand, a chosen enemy
+go run -tags scenario .     # a chosen set of relics, a chosen opening hand, a chosen enemy
 ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .   # a named one
 go run ./tools/glyphsheet   # regenerate the committed glyph contact sheet
 go run ./tools/sheets       # regenerate every review sheet and the index that links them
 go run ./tools/cardsheet    # every card variation to PNGs + an HTML page, then refresh the tab
-go run ./tools/ringsheet    # every ring to PNGs + a page grouped by rarity: art, price, text, rules
+go run ./tools/relicsheet    # every relic to PNGs + a page grouped by rarity: art, price, text, rules
 go run ./tools/wormsheet    # every worm to PNGs + a page grouped by what it changes about a card
 go run ./tools/handsheet    # every rung of the hand ladder as a real hand, by multiplier, with its odds
 go run ./tools/enemysheet   # every creature by floor band: card, stat line, whole deck
@@ -149,14 +159,14 @@ go run ./tools/parasitesheet # every parasite: the line it prints against the ru
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
 go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
 go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
-go run ./tools/ringart      # files generated ring art: reduce, commit, set "Art", strike the worklist
+go run ./tools/relicart      # files generated relic art: reduce, commit, set "Art", strike the worklist
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
 
 **The sheets are committed, under `docs/sheets/`** *(owner's call, 2026-08-23)*. They write there
 rather than beside their own tools, and `docs/sheets/index.html` is the page a bare clone opens to
-see every card, ring, worm, hand, stone, parasite, upgrade, creature and boss in the game. That
+see every card, relic, worm, hand, stone, parasite, upgrade, creature and boss in the game. That
 reverses the older rule that a regenerated artefact is not worth committing: the argument it left
 out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
 only ever seen by whoever just changed the thing it shows.
@@ -169,7 +179,7 @@ and answered worst.
 **The cost is history weight, so regenerate deliberately.** A full run rewrites every binary under
 `docs/sheets/`, and a sheet rebuilt in a commit that changed nothing about it is pure weight. **Most
 of that weight is the two roster sheets**, which carry a photographic portrait per creature and per
-boss — so a commit touching only `rings.json` should regenerate the ring sheet alone rather than
+boss — so a commit touching only `relics.json` should regenerate the relic sheet alone rather than
 reaching for the one command out of habit. **`go run ./tools/sheets` is the one command** — it runs
 them all and rewrites the index, because a handful of commands remembered in the right order is how
 all but one end up current and one ends up lying. A stale sheet is worse than none: it is a picture
@@ -247,7 +257,7 @@ attack whole**. See MECHANICS.md §Shields. Four things to know before touching 
   balance change and was taken as one — `tools/handodds` and `tools/seeds` were both re-run, four
   catalogued seeds were repointed and the tutorial's seed was replaced. **Re-run both after any
   further edit here**, and read MECHANICS.md §The deck is a starting position before drawing a
-  conclusion from either: they describe fight one of a ringless run and nothing else.
+  conclusion from either: they describe fight one of a relicless run and nothing else.
 
 **Every fight is five rounds long, and the clock is a rule rather than a countdown** *(owner's
 call, 2026-09-06)*. A duelist still standing at the end of the last round dies, through the same
@@ -255,7 +265,7 @@ door a killing blow uses. `combat.Duelist.RoundLimit` is what the resolver check
 `combat.DefaultRoundLimit` is the five; **zero is no clock at all**, which is what every creature
 and every bare `Duelist{}` in a test carries — a default of five in the rules would have put the
 whole existing suite on a timer. The run owns the number (`session.Session.RoundLimit`, carried to
-the fighter by `Equip`, saved with the run) so a ring or a brand that buys a sixth round has one
+the fighter by `Equip`, saved with the run) so a relic or a brand that buys a sixth round has one
 field to write. See MECHANICS.md §The round limit. Two things to know before touching it:
 
 - **It is read last, after every other way a round can end.** A win on round five is a win and a
@@ -289,12 +299,12 @@ before touching any of it:
   with what its target actually does. Riders stacked three to a card until then; two Leeches were
   twenty life and are now one card forgetting the other. See MECHANICS.md §Normal and upgrade.
 - **`combat.Card.Riders` is still a fixed array** because a card must stay comparable — the screen's
-  face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Rings` does. A
+  face cache and `TestRoundIsDeterministic` both depend on it, exactly as `Duelist.Relics` does. A
   seat is also what makes "no upgrade" the zero value rather than a case.
 - **The card goes gold and the border does not** *(owner's call, 2026-09-09)*. `cards.UpgradeStyle`
   is `wash-face` / `border` / `wash` and `DefaultUpgradeStyle` is **`wash-face`** — everything inside
-  the ring washed, the ring left alone. **The border is already saying the card's state**, so an
-  upgrade over it would be a second thing in the one place the card says the first; it also keeps the
+  the border ring washed, the ring left alone. **The border is already saying the card's state**, so
+  an upgrade over it would be a second thing in the one place the card says the first; it also keeps the
   card's outline against the table. `tools/upgradesheet` draws all three, same review-knob shape
   `TintMode` had, because how loud an upgrade should be is still open.
 - **Every rider draws** *(owner's call, 2026-09-09)*.
@@ -558,7 +568,7 @@ included. The entire input vocabulary is:
 - **Left click** — buttons and selection.
 - **Drag and drop** — the action box, and anything else that needs ordering or moving.
 - **Hover** — rest the cursor on something and a tooltip explains it *(2026-08-21)*. A card's
-  damage arithmetic term by term, a ring's rule, a status badge's meaning. `models.Tooltip` and
+  damage arithmetic term by term, a relic's rule, a status badge's meaning. `models.Tooltip` and
   `systems.DrawTooltip` are the widget; the wording is `internal/screens/tips.go`.
 - **Long press** — the same reveal, for a touchscreen or a controller, where there is no cursor to
   rest. **Not built**, and it is the only reason hover did not simply replace it: see MECHANICS.md
@@ -789,7 +799,7 @@ for interface art in a game that will be sold.
 
 **A `GlyphKind` has two possible backings, and `RenderGlyphAt` dispatches between them.** Most are
 a generated silhouette; the four **form marks are authored PNGs** in `assets/form/`, listed in
-`glyphArt` and loaded by key like the ring and effect art. A caller asks for a kind and does not
+`glyphArt` and loaded by key like the relic and effect art. A caller asks for a kind and does not
 know which it got, which is what let drawn art in without a second drawing path.
 
 It is a **generator, not a bitmap**. A glyph is a filled silhouette described by horizontal
@@ -803,7 +813,7 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
   imposes and it drives every span in the file.
 - **A card's corner carries a drawn form mark** *(2026-08-23)*: a spear, a sword, an axe and a
   shield for stab, slash, crush and defend, from `assets/form/`. `cards.Form.glyph()` maps a form to
-  its kind and reports `FormNone` as having none, so a ring and both fighter cards leave the slot
+  its kind and reports `FormNone` as having none, so a relic and both fighter cards leave the slot
   empty. **The mark is tinted by the card's element** — see the card section below, which is where
   the element is said now.
 - **Glyphs are the deliberate exception to the colour rule below.** They carry a five-value
@@ -853,10 +863,10 @@ Nothing is hand-placed, so a shape can be nudged without repainting it.
 - **A card's picture is a function of the card *and who is holding it*** *(2026-08-21)*. It was a
   function of the card alone for a week, and that was the bug: a slash in the hands of someone
   wearing Keen read "2x DMG" and dealt four times their DMG, because the card's multiplier and the
-  ring's scaling are applied in different places. `screens.held` is the pairing — cost, DMG and
-  worn rings, travelling together — and **the figure a ring has moved is written in the ring
+  relic's scaling are applied in different places. `screens.held` is the pairing — cost, DMG and
+  worn relics, travelling together — and **the figure a relic has moved is written in the relic
   pink**, via `Spec.TextInk` and `Spec.TextHighlight`, which colours that run of the line and not
-  the sentence around it: a pink verb would say the ring changed the card rather than the number. The
+  the sentence around it: a pink verb would say the relic changed the card rather than the number. The
   *damage* is still not printed: the face carries the multiplier and the tooltip carries the
   arithmetic.
 - **The wording is the constraint now, not the space.** The text column is ~128px — a dozen or
@@ -1027,8 +1037,8 @@ are easy to re-break:
   fails if an element gets its border back. The argument for the swap: a border is the loudest
   thing on a card and it was naming the one fact the player already knows from the row the card is
   in, while the corner mark — the thing a hand is counted on — was hueless.
-- **Ring keeps its pink border.** Pink was never an element; it is the "you cannot play this"
-  signal, and `TestARingStillBordersPink` holds it against a change that neutralises the four.
+- **Relic keeps its pink border.** Pink was never an element; it is the "you cannot play this"
+  signal, and `TestARelicStillBordersPink` holds it against a change that neutralises the four.
 - **The ticks are the element too, and share the border's state.** `Spec.atState` is the one
   switch carrying a colour from full strength to whatever the card's state wants — the border
   passes it the neutral grey and the ticks pass it the element, so selection, dragging and
@@ -1060,18 +1070,18 @@ are easy to re-break:
 **A card's picture is either a panel on it or the whole of it, and `Style.ArtBleed` is which**
 *(owner's call, 2026-09-11)*. `internal/cards/bleed.go` owns the second path: the art is scaled to
 *cover* the card, clipped to the border's inner curve, and drawn first with everything else on
-top. `RingStyle` and `WormStyle` bleed — so rings, relics, parasites, worms, stones and the two
+top. `RelicStyle` and `WormStyle` bleed — so relics, parasites, worms, stones and the two
 sealed goods are all one format — and `EnemyStyle` and `DuelistStyle` still fit a picture into
 `ArtTop`/`ArtInset`/`ArtMaxH`. The two do not compose, and the art is authored against the choice:
 a fitted box wants a square and a bleeding card wants the card's own 200x280. Five things follow:
 
 - **A bleeding card carries no title** *(owner's call, 2026-09-11)*. `ShowName` is false on both,
-  reversing the 2026-08-21 call that a ring names itself a word to a line: the picture is the
+  reversing the 2026-08-21 call that a relic names itself a word to a line: the picture is the
   card, and a title bar across a full-bleed illustration covers the one thing worth looking at in
   order to repeat it. The full name still titles every tooltip, which is where a player who does
   not recognise a picture yet goes. `TestTheEnemyNamesItselfAboveItsPortrait` holds both halves —
   a naming card centres its name across the top, a bleeding card has none.
-- **What survives on top of the art is one scrim each.** A ring draws its counter disc in the
+- **What survives on top of the art is one scrim each.** A relic draws its counter disc in the
   bottom-right; a worm draws the sentence saying what it does, on a dark band from 140 to 265.
   The band is derived from the offsets the type is drawn at, never authored twice.
 - **The surface was carrying the text, so the ink set flips.** Every ink in `internal/cards` is
@@ -1080,23 +1090,23 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   place that table is not a straight translation is `LabelInk`**, which is a stat row's quiet word
   everywhere else and is a worm's whole sentence here.
 - **Art is committed at 200x280 and the generator's output stays in `.scratch`.** The batch came
-  back at 1060x1484 — 1.1 MB a ring, about 155 MB across the catalogue — and a 5.3x reduction at
+  back at 1060x1484 — 1.1 MB a relic, about 155 MB across the catalogue — and a 5.3x reduction at
   draw time softens exactly the hard block edges the prompt spends its words demanding. Reduced
   once, it is ~57 KB each and nothing resamples.
   `TestEveryBleedingCardArtIsTheCardsOwnSize` is the tripwire.
 - **The prompts that produce it live in `docs/art/`**, not in `data/` — nothing there is loaded by
-  the game. `rings_to_draw.md` is the worklist of rings with no picture yet.
+  the game. `relics_to_draw.md` is the worklist of relics with no picture yet.
 
-**Ring and worm art is a globbed family, keyed by filename stem** *(2026-09-11)* —
-`ring/fire-ring.png` is `fire-ring`, which is what `data/rings.json` writes in its `Art` field.
+**Relic and worm art is a globbed family, keyed by filename stem** *(2026-09-11)* —
+`relic/fire-ring.png` is `fire-ring`, which is what `data/relics.json` writes in its `Art` field.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
-walk all four families go through. **Most rings still have no artwork and draw
-`default-ring.png`** — `data.RingData.ArtKey` is the fallback and `TestEveryRingDrawsSomething`
+walk all four families go through. **Most relics still have no artwork and draw
+`default-relic.png`** — `data.RelicData.ArtKey` is the fallback and `TestEveryRelicDrawsSomething`
 fails on a key naming no file, so a blank face means art nobody has painted rather than a name
 nobody spelled right.
 
-**`go run ./tools/ringsheet` is how the catalogue gets looked at.** A run wears five and the
+**`go run ./tools/relicsheet` is how the catalogue gets looked at.** A run wears five and the
 shelf offers three, so seeing the catalogue in a launched game means playing to a shop over and
 over. The sheet draws each with its price, its authored `Text` and its rules side by side —
 which is also the only place the sentence a player reads can be checked against the rules that
@@ -1105,7 +1115,7 @@ actually fire.
 **`tools/wormsheet` and `tools/handsheet` are the same idea on the other two catalogues**
 *(2026-08-23)*. A worm is offered two at a time after a won fight, so the whole catalogue is five
 fights away; the sheet draws them all grouped by what each one changes about a card, with the
-authored `Text` against the rule that fires, exactly as the ring sheet does. The hand sheet draws
+authored `Text` against the rule that fires, exactly as the relic sheet does. The hand sheet draws
 every rung of the ladder as an *actual hand of real cards* — the set the shipping deck can form
 that best *illustrates* the rung — ordered by ascending multiplier across every axis at once,
 which is the comparison `hands.json`'s axis-by-axis layout hides. **The example varies everything
@@ -1139,7 +1149,7 @@ dropped rather than drawn empty, which is deliberately not the hand sheet's layo
 interleaves all three by multiplier because a player forming a hand chooses among all of them at
 once, where a stone is bought against one rung. **It is also the only place the ladder and the +N
 are visible together**, and the +N is computed from `hands.json` rather than authored, so a retuned
-rung moves the card's face with nothing edited in `stones.json`. The parasite sheet is ring-sheet
+rung moves the card's face with nothing edited in `stones.json`. The parasite sheet is relic-sheet
 shaped — the authored line against the resolved rule — and earned a page before it had many
 records, because a parasite is the least readable record in `data/`: which of `Rider`, `Value` and
 `Count` the rules read depends entirely on the target.
@@ -1166,7 +1176,7 @@ in the table under it.
   not have fails the sheet exactly as it fails a launch.
 
 **It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
-the whole pricing decision — a ring is rebalanced by moving it, never by writing a number — so the
+the whole pricing decision — a relic is rebalanced by moving it, never by writing a number — so the
 review question is "does any of these commons belong a tier up", which an alphabetical list
 cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
 because a scarce tier rounds to `0%` and would read as unreachable.
@@ -1174,7 +1184,7 @@ because a scarce tier rounds to `0%` and would read as unreachable.
 **Every word naming an element is written in that element's colour** *(owner's call, 2026-09-08)*.
 `cards.ElementRuns` is the one vocabulary — the five element names plus each status's `Name` and
 `Verb`, read off `statuses.json`, longest first — and `cards.SplitRuns` is the one cut, matching
-whole words only and ignoring case so a ring writing `Fire` and a worm writing `FIRE` share an
+whole words only and ignoring case so a relic writing `Fire` and a worm writing `FIRE` share an
 entry. Four things to know before touching it:
 
 - **The vocabulary lives in `internal/cards` because that is the only windowless package all three
@@ -1191,14 +1201,14 @@ entry. Four things to know before touching it:
 - **`models.Tooltip.Title` and `.Lines` are both runs rather than strings** *(owner's call,
   2026-09-09 for the title)*, and `screens.tipLine`/`tipLines` are the one door every `Point` call
   goes through — which is what stops a new tooltip shipping as the only panel in
-  the game whose ring text is grey. `internal/systems` draws the runs and never learns why one is
+  the game whose relic text is grey. `internal/systems` draws the runs and never learns why one is
   coloured, because it cannot see `internal/cards` at all.
 - **The fight log colours through the ledger's *named* inks**, not through a stored colour. A line is
   written once and read back three fights later, so a colour baked into it would be the colour the
   build that wrote it happened to use — see `session.LedgerRun.Ink` and `screens.elementInkNames`.
 
 **Hue belongs to the elements, and the wheel is full** *(owner's call, 2026-09-02)*. Fire, ice,
-lightning, earth and arcane take five hues; pink is a ring and a pane's chrome; red and blue are the
+lightning, earth and arcane take five hues; pink is a relic and a pane's chrome; red and blue are the
 attack and defend verbs; green and grey are the two duelists. **There is no unclaimed hue left**, so
 a new thing wanting to stand out is marked by *weight, case, a swatch or an underline* rather than by
 a colour. **The ground itself now takes blue** *(2026-09-07)*, which is a real collision with the
@@ -1206,7 +1216,7 @@ defend verb and is accepted rather than solved: the table is a surface and a ver
 so the two are never being compared, but it is why the AP bar's empty cells had to stop travelling
 80% of the way to the ground and settle at 50 — see `combat_actionbox.go`. A *new* thing wanting
 blue has nowhere left to stand. The hand is the case that established it: it was the screen's pink, which is also the
-colour a ring's multiplier takes — the two things that multiply a blow, in one colour, in the same
+colour a relic's multiplier takes — the two things that multiply a blow, in one colour, in the same
 sum — and moving it to deep purple immediately collided with arcane. It now takes the ground's own
 ink and is marked instead. See `screens.handNameInk` and `session.InkHand`, and note the second
 argument: three of the four axes a hand counts on are not elemental at all.
@@ -1229,7 +1239,7 @@ it from.
   on screen and the one where a heavy bevel reads as chrome rather than as a surface.
 - **Sunken is a meaning, not a variant.** A pressed or latched button swaps its two edges, which is
   how a face says "in" — brightness could not, since hover already owns the bright end of the ramp.
-  The deck panel and the fight log are raised because they cover the game; **the ring pane is flat**
+  The deck panel and the fight log are raised because they cover the game; **the relic pane is flat**
   *(owner's call)*, because it covers nothing and the bevelled cards standing on it are what should
   be read.
 - **Disabled has no bevel at all.** Unavailable first, itself second — the same argument that makes
@@ -1261,7 +1271,7 @@ ground needs one answer to "what colour is the table", and a per-pixel one would
 dimming depend on where it happened to be drawn. The gradient's two ends are derived from it.
 
 **A colour that is "one step off the ground" must be derived, never written down.**
-`ringPaneBackColor` was a hand-picked tan and would have silently stopped being one step off
+`relicPaneBackColor` was a hand-picked tan and would have silently stopped being one step off
 anything the moment the ground moved; it is `ColorAtStrength(screenGround, 91)` now. It still governs
 buttons, because a button paints its own dark face and its label is white — that face is the
 ground its states are scaled against, not the screen. Text written directly on the table takes
@@ -1357,7 +1367,7 @@ and gone by itself rather than holding a window open for the rest of a session.
 
 ### `internal/scenario` is a fifth thing, and it is compiled out too
 
-[internal/scenario](internal/scenario) plugs **a chosen set of rings, a chosen opening hand, a
+[internal/scenario](internal/scenario) plugs **a chosen set of relics, a chosen opening hand, a
 chosen enemy — and a chosen screen** into a launched game.
 
 ```powershell
@@ -1366,28 +1376,28 @@ ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .    # a named one
 go run .                                                       # nothing: every function is a zero value
 ```
 
-It exists because an interaction between rings is currently a twenty-minute question. A ring is
+It exists because an interaction between relics is currently a twenty-minute question. A relic is
 bought from a shelf of three, a hand is dealt from a shuffled deck, and an enemy is whoever the
 climb put in the room — so "does Echo actually multiply Enflamed's growth" cannot be *looked at*
 without playing towards it. The rules are unit-tested; what no test can answer is what the
-combination looks like on screen. It is the ring-and-hand counterpart of `deckSeedName` and
-`session.StartingRings`, which each do one axis of the same job.
+combination looks like on screen. It is the relic-and-hand counterpart of `deckSeedName` and
+`session.StartingRelics`, which each do one axis of the same job.
 
 - **`scenarios.json` lives beside the package, not in `data/`.** Everything in `data/` is the
   game's own catalogue, loaded by every build. A scenario describes a thing being *tested*, and
   filing it with the cards would embed a debug fixture in a release binary.
 - **A build tag for the reason trace and idle have one**, and the same two-file `_on`/`_off`
-  shape. This hands the player a chosen hand and a chosen row of rings; it must not ship, and it
+  shape. This hands the player a chosen hand and a chosen row of relics; it must not ship, and it
   has to stay deletable in one commit. The `//go:embed` is in the `_on` file, so an untagged build
   carries neither the fixture nor the reader.
 - **It deliberately changes outcomes, unlike everything else that is compiled out.** `trace`,
   `idle`, the demo and both debug flags are views and may never alter a result. This is a
   *fixture* — which is exactly the argument for the build tag rather than a runtime flag.
-- **Three call sites, each one guarded line**: `main` sets `session.StartingRings`, `Init` picks
+- **Three call sites, each one guarded line**: `main` sets `session.StartingRelics`, `Init` picks
   the enemy, `resetDeck` plugs the hand. Nothing else in the game knows the package exists.
 - **The hand is dealt over the shuffle rather than through it.** The draw pile is untouched, so
   the second hand of the fight is a normal one and the fixture is only the opening.
-- **A misspelled ring, card or enemy fails the launch**, at package init, before a window opens.
+- **A misspelled relic, card or enemy fails the launch**, at package init, before a window opens.
   A fixture that quietly tests something else is worse than a game that will not start.
 - **It also opens the game on a named screen** *(owner's call, 2026-08-22)*: `"Screen": "reward"`
   or `"shop"`, with `Fight`, `Vitae` and `Life` saying what state to arrive in. A between-fights
@@ -1398,7 +1408,7 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
 - **It can also pin the seed and replace the whole deck** *(2026-08-25)*. `"Seed"` is a six-character
   Crockford base32 run code and outranks `fixedRunSeed`, and `"Deck"` sets the run's deck outright rather than dealing over the shuffle
   the way `"Hand"` does — through `session.StartingDeckList`, which is the deck counterpart of
-  `StartingRings`. The tutorial is what wanted both: a first lesson has to be able to promise what
+  `StartingRelics`. The tutorial is what wanted both: a first lesson has to be able to promise what
   the player is holding, and "these five all match, play them all" stops being true the moment a
   refill deals a sixth card nobody mentioned.
 - **A deck line and a hand card may carry `"Riders"`** *(2026-09-07)*, by the names
@@ -1647,7 +1657,7 @@ toolchain reached first. `doc.go` is the only file whose comment goes above the 
 | what does this file hold | the header comment under its `package` clause |
 | what is the game supposed to *do* | [MECHANICS.md](MECHANICS.md) |
 | what is left to build | [TODO.md](TODO.md) |
-| how do I do X safely (git, data, rings, randomness, the combat screen) | the skill — see the index above |
+| how do I do X safely (git, data, relics, randomness, the combat screen) | the skill — see the index above |
 
 ### The dependency graph
 
@@ -1700,7 +1710,7 @@ Six facts about it that are load-bearing:
   `internal/screens` for `decks`' reason: the review sheets have to print the *same* strings the
   game shows, and a tool cannot import a package that links Ebitengine. It holds the tooltip's stat
   block — the title, the AP, the effect figure, the upgrade's lines — and no colour, no widths and
-  no arithmetic that needs a worn ring. `screens.cardTip` calls it and appends its own damage chain.
+  no arithmetic that needs a worn relic. `screens.cardTip` calls it and appends its own damage chain.
 - **`decks` sits above `combat` and `data` and below `screens`**, which is the whole reason it is
   a package: it is the one place allowed to turn a JSON card list into rules types, reachable
   without importing a screen. `pyramid` exists for the same reason on the other axis — the climb is
@@ -1772,7 +1782,7 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   *(owner's call, 2026-09-05)*. `Duelist.Vitae` is seeded from the run at the top of each round,
   stepped as the round pays, and the run is handed the **difference** — see `screens.payHeldVitae`.
   Summing `KindVitae` events to move a purse is the old way and now double-pays. The rules got a
-  purse because a ring wanted to read one; the doc comments saying they have none are corrected.
+  purse because a relic wanted to read one; the doc comments saying they have none are corrected.
 - **An achievement nobody can earn is invisible**, and that is what `internal/achieve` exists to
   refuse. Every word `data/achievements.json` may write — a trigger kind, a clause mode, an axis, a
   moment name, a counter name — is a closed vocabulary checked at package init, so a misspelling
@@ -1783,9 +1793,9 @@ fight  →  reward  →  shop  →  choice  →  fight ...
   2026-09-06)*. A card played is not a disk write; `screens.settleCounters` is the one place the
   tallies land, on a win and on a defeat alike. A crash mid-duel loses that duel's counts, which was
   taken deliberately rather than discovered.
-- **Re-run `tools/ringsheet` after touching `rings.json`, and delete the PNG of a ring you removed.**
-  The sheet writes a file per ring and never cleans up, so a deleted record leaves an orphan picture
-  in `docs/sheets/ringsheet/` that no page links and nothing fails on.
+- **Re-run `tools/relicsheet` after touching `relics.json`, and delete the PNG of a relic you removed.**
+  The sheet writes a file per relic and never cleans up, so a deleted record leaves an orphan picture
+  in `docs/sheets/relicsheet/` that no page links and nothing fails on.
 
 ### Drawing idioms
 
@@ -1805,7 +1815,7 @@ fight  →  reward  →  shop  →  choice  →  fight ...
 ## Art
 
 **`assets/` is grouped by what a file is for**: `game/` (fonts, title screens), `enemy/`,
-`ring/`, `effect/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
+`relic/`, `effect/`, `upgrade/`, `sounds/`. The `//go:embed` paths are relative to `embed.go`, so
 refiling something is one line there and nothing anywhere else.
 
 **A map key is not tied to a file path.** Keys are the lookup names used across the game and
@@ -1833,11 +1843,11 @@ They are handed out as **bytes, not `*ebiten.Image`** — they are drawn into a 
 cost tens of megabytes of resident memory for pictures most runs never show.
 
 **`assets/effect/` is the status badges**, drawn as a centred row along the bottom of the enemy
-card by `internal/cards` — so they go through `LoadImageData` as bytes, exactly like the ring art
+card by `internal/cards` — so they go through `LoadImageData` as bytes, exactly like the relic art
 and for the same reason. `effectKeys` in `internal/screens/card_art.go` maps an element to its
 badge; `default-effect.png` is the fallback, and `TestEveryStatusElementHasABadge` fails rather
 than letting a shipped element quietly draw it. **The table is keyed by element and not read off
-a ring**, because a badge belongs to the status: a status arriving by an affix or a boss rule has
+a relic**, because a badge belongs to the status: a status arriving by an affix or a boss rule has
 to draw the same picture.
 
 **Nothing in the game draws a loose sprite.** There are no creature sprites in `assets/`;
@@ -1845,7 +1855,7 @@ to draw the same picture.
 are cards**, in opposite corners, and both state their life the same way — a bar over a
 fraction, at identical offsets on the two styles so the pair can be compared across the
 screen without measuring. **The enemy's carries a badge row under its fraction and the
-player's does not**, which is not a break of that rule: an enemy wears no rings, so nothing can
+player's does not**, which is not a break of that rule: an enemy wears no relics, so nothing can
 put a status on the player to draw.
 
 **The full animation sheets stay in `.scratch/flat-creatures`** (gitignored) — that folder's

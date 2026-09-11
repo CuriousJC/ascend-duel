@@ -3,7 +3,7 @@ package combat
 import "testing"
 
 // **The Pair is one rung read three ways** *(owner's call, 2026-09-05)*. Card Pair, Form Pair and
-// Elemental Pair were three catalogue entries, three stones and three rings describing the same two
+// Elemental Pair were three catalogue entries, three stones and three relics describing the same two
 // cards; a player forming a pair does not care which axis let them, so the ladder says so once.
 //
 // This is the whole of what the merge has to be true for: two cards agreeing on *any* of the three

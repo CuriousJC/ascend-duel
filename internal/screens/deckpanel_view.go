@@ -56,7 +56,7 @@ const (
 // have to re-choose it every look.
 type deckView struct {
 	// unaltered inverts the default. **Alterations are on unless this is set** — a deck with a flip
-	// ring in it is dealt in colours the owned list does not have, and a panel showing the list is
+	// relic in it is dealt in colours the owned list does not have, and a panel showing the list is
 	// showing a deck the player will never draw.
 	unaltered bool
 
@@ -131,9 +131,9 @@ func (v *deckView) layout(gs *state.GlobalState) {
 // band they sit in.
 //
 // **The alterations button is live and latching even when it does nothing** *(owner's call,
-// 2026-08-24)*. Most runs wear no altering ring, and a button that vanished when it had nothing to
+// 2026-08-24)*. Most runs wear no altering relic, and a button that vanished when it had nothing to
 // do would be a control the player never learned existed — and would leave them unable to confirm
-// that a ring they have just bought is doing anything. It latches, the deck under it does not move,
+// that a relic they have just bought is doing anything. It latches, the deck under it does not move,
 // and that is the honest answer.
 func (v *deckView) draw(gs *state.GlobalState, screen *ebiten.Image, d deckContents) {
 	v.build()
@@ -211,7 +211,7 @@ type deckTally struct {
 	byElement map[cards.Element]int
 
 	// byFormCost is the cross-tab: how many of each form at each AP cost. **Cost is asked of the
-	// card as its holder pays it**, so a discount ring moves a card between columns here exactly as
+	// card as its holder pays it**, so a discount relic moves a card between columns here exactly as
 	// it moves the ticks on the card's own face.
 	byFormCost map[combat.Form]map[int]int
 

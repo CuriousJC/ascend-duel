@@ -81,7 +81,7 @@ func (m Mark) Has(bit Mark) bool { return m&bit != 0 }
 const shatterDim = 18
 
 // crackInk is what a crack is drawn in: a near-black at partial alpha, so it darkens whatever it
-// crosses rather than replacing it. **Not an element colour and not the ring pink** — a break is
+// crosses rather than replacing it. **Not an element colour and not the relic pink** — a break is
 // not a fifth thing wanting a hue, and the wheel is full (see CLAUDE.md). It reads as absence of
 // card rather than as a mark someone put there.
 var crackInk = color.RGBA{R: 30, G: 27, B: 34, A: 190}
@@ -151,20 +151,20 @@ func ShatterCracks(w, h int, seed uint32) []Crack {
 	// The chords, at three radii, joining each radial to the next one round. They arrive after the
 	// radials during a transition — the break spreads out from the impact, then the panes close.
 	//
-	// **Each vertex sits at a jittered radius rather than on a true circle.** Perfect rings read as
+	// **Each vertex sits at a jittered radius rather than on a true circle.** Perfect relics read as
 	// a spider web, which is a thing that was woven; glass breaks into panes of unequal size, and
 	// the unevenness is most of what tells the two apart at card size.
-	for _, ring := range []struct {
+	for _, relic := range []struct {
 		at    float64
 		delay float64
 	}{{0.30, 0.40}, {0.56, 0.62}, {0.84, 0.82}} {
 		at := make([]image.Point, len(angles))
 		for i := range angles {
-			at[i] = along(cx, cy, ends[i], ring.at*(0.78+r.unit()*0.44))
+			at[i] = along(cx, cy, ends[i], relic.at*(0.78+r.unit()*0.44))
 		}
 		for i := range at {
 			j := (i + 1) % len(at)
-			out = append(out, Crack{From: at[i], To: at[j], Width: 2, Delay: ring.delay})
+			out = append(out, Crack{From: at[i], To: at[j], Width: 2, Delay: relic.delay})
 		}
 	}
 	return out

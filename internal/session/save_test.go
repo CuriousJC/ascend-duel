@@ -30,8 +30,8 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 	s.AddVitae(9)
 	s.WonFight(41, 41)
 	s.SetPhase(PhaseShop)
-	if !s.Wear(Rings()[0]) {
-		t.Fatal("the catalogue should have a ring to wear")
+	if !s.Wear(Relics()[0]) {
+		t.Fatal("the catalogue should have a relic to wear")
 	}
 	s.SetElement(0, combat.Fire)
 
@@ -49,7 +49,7 @@ func TestARunSurvivesBeingSavedAndResumed(t *testing.T) {
 			back.Phase(), s.Phase(), back.LifeLeft(), s.LifeLeft())
 	}
 	if len(back.Worn()) != len(s.Worn()) || back.Worn()[0] != s.Worn()[0] {
-		t.Errorf("worn rings were lost: got %v want %v", back.Worn(), s.Worn())
+		t.Errorf("worn relics were lost: got %v want %v", back.Worn(), s.Worn())
 	}
 	if back.Size() != s.Size() {
 		t.Fatalf("the deck changed size: got %d want %d", back.Size(), s.Size())
@@ -148,8 +148,8 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 		{"a station of no loop", func(s *profile.RunSnapshot) { s.Phase = "interlude" }},
 		{"a card in no deck", func(s *profile.RunSnapshot) { s.Deck[0].Concept = "nonesuch" }},
 		{"a colour that is no element", func(s *profile.RunSnapshot) { s.Deck[0].Element = "beige" }},
-		{"a ring in no catalogue", func(s *profile.RunSnapshot) { s.Worn = []string{"nonesuch"} }},
-		{"a grown ring in no catalogue", func(s *profile.RunSnapshot) { s.Grown = map[string]int{"nonesuch": 1} }},
+		{"a relic in no catalogue", func(s *profile.RunSnapshot) { s.Worn = []string{"nonesuch"} }},
+		{"a grown relic in no catalogue", func(s *profile.RunSnapshot) { s.Grown = map[string]int{"nonesuch": 1} }},
 		{"a counter below the deck", func(s *profile.RunSnapshot) { s.NextCardID = 0 }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -163,15 +163,15 @@ func TestASnapshotNamingSomethingThisBuildHasNotGotIsRefused(t *testing.T) {
 	}
 }
 
-// TestAResumedRunDoesNotPutTheStartingRingsBackOn: Resume rebuilds a run exactly as it was, where
+// TestAResumedRunDoesNotPutTheStartingRelicsBackOn: Resume rebuilds a run exactly as it was, where
 // New and Start both dress a run that is beginning.
-func TestAResumedRunDoesNotPutTheStartingRingsBackOn(t *testing.T) {
+func TestAResumedRunDoesNotPutTheStartingRelicsBackOn(t *testing.T) {
 	enemies, bosses := rosters(t)
 	seed, _ := seeds.Parse(theSeed)
 
-	before := StartingRings
-	StartingRings = []string{Rings()[0]}
-	defer func() { StartingRings = before }()
+	before := StartingRelics
+	StartingRelics = []string{Relics()[0]}
+	defer func() { StartingRelics = before }()
 
 	s := Start(enemies, bosses, seed)
 	snap := s.Snapshot(seed)
@@ -238,7 +238,7 @@ func TestTheRunsStonesSurviveBeingSavedAndResumed(t *testing.T) {
 }
 
 // A snapshot naming a rung this build has not got is refused rather than dropped, on the terms a
-// ring the catalogue no longer holds is: a run quietly paying less than it did is worse than a run
+// relic the catalogue no longer holds is: a run quietly paying less than it did is worse than a run
 // that says it cannot be resumed.
 func TestASnapshotNamingARungThisBuildHasNotGotIsRefused(t *testing.T) {
 	s := New(nil)

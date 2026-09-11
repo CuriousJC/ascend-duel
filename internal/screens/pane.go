@@ -106,7 +106,7 @@ var paneEdge = color.RGBA{R: 235, G: 105, B: 170, A: 255}
 //
 // **A row is runs rather than three fixed slots** *(2026-09-02)*. It was prefix / verb / suffix,
 // which was exactly enough for a sentence with one coloured verb in it and not enough for the
-// ledger's arithmetic — a figure in its card's colour, a ring's multiplier in the ring pink, the
+// ledger's arithmetic — a figure in its card's colour, a relic's multiplier in the relic pink, the
 // hand's own multiplier in the hand's. Storing runs is what lets the panel look like the screen it
 // is an account of.
 type paneRun struct {

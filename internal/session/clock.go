@@ -7,7 +7,7 @@ package session
 // belongs to the run rather than to any one duel.
 //
 // **It is a field rather than a constant read at the point of use.** Nothing moves it today, and
-// the reason it can be moved is the whole point: a ring or a brand that buys the player a sixth
+// the reason it can be moved is the whole point: a relic or a brand that buys the player a sixth
 // round has one place to write, and every fight of the run is on the new number from the moment it
 // is worn. See combat.DefaultRoundLimit, which is what a run opens at.
 

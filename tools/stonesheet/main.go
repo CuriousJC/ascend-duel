@@ -10,7 +10,7 @@
 //
 // # It is a report, not a drawing-board
 //
-// Same split as ringsheet against cardsheet: this reads the real file, through internal/session,
+// Same split as relicsheet against cardsheet: this reads the real file, through internal/session,
 // which means the catalogue is *validated* before anything is drawn. A stone naming a rung the
 // rules have not got panics at init exactly as it would in the game, so a stone this page refuses
 // to draw is a stone the game refuses to start with.

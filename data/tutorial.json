@@ -126,12 +126,12 @@
       "StepRecord": "buy-two-rings",
       "Text": "Take two. Any two - they are yours for the rest of the climb.",
       "Anchor": "shop-shelf",
-      "Until": "rings-worn",
+      "Until": "relics-worn",
       "Count": 2
     },
     {
-      "StepRecord": "rings-stack",
-      "Text": "Both are on your hand now, and both are awake at once. Every card they match, they each take a turn at - so two rings that want the same card multiply together rather than taking turns. They fire left to right along this row.",
+      "StepRecord": "relics-stack",
+      "Text": "Both are on your hand now, and both are awake at once. Every card they match, they each take a turn at - so two relics that want the same card multiply together rather than taking turns. They fire left to right along this row.",
       "Anchor": "shop-worn",
       "Until": "next"
     },
@@ -143,7 +143,7 @@
     },
     {
       "StepRecord": "draught-is-permanent",
-      "Text": "That DMG is yours for good. A ring can be sold and a shield lasts a turn, but a draught changes the duelist - every blow you throw from here is bigger for it.",
+      "Text": "That DMG is yours for good. A relic can be sold and a shield lasts a turn, but a draught changes the duelist - every blow you throw from here is bigger for it.",
       "Anchor": "build-card",
       "Until": "next"
     },

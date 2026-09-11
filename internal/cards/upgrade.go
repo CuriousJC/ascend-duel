@@ -49,7 +49,7 @@ import (
 //
 // **What settled it is that the border is already saying something** *(owner's call, 2026-09-09)*.
 // It carries the card's state — resting, selected, unaffordable, dragged — so the default washes
-// everything *but* the ring: the card goes gold and the ring goes on saying what it was saying. The
+// everything *but* the relic: the card goes gold and the relic goes on saying what it was saying. The
 // other two are kept because how loud an upgrade should be is still open.
 type UpgradeStyle int
 
@@ -61,7 +61,7 @@ const (
 	// draws.
 	//
 	// **The border is the card's *state* and the upgrade is not.** Resting, selected, unaffordable
-	// and being dragged are all said by the ring, in a wash away from the neutral grey; an upgrade
+	// and being dragged are all said by the relic, in a wash away from the neutral grey; an upgrade
 	// painted over that is a second thing in the one place the card says the first. Keeping them
 	// apart is what lets a queued gold card read as queued *and* gold rather than as one or the
 	// other winning.

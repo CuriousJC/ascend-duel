@@ -11,7 +11,7 @@ package screens
 // which is what makes it impossible for a panel to disagree with the round it reports. It
 // computes nothing.
 //
-// **It is not the fight log's, either.** The log is one caller. A shop describing what a ring
+// **It is not the fight log's, either.** The log is one caller. A shop describing what a relic
 // does, and a room choice describing what an affix does, want the same vocabulary — which is
 // why this is its own file rather than a section of combat_log.go.
 //
@@ -126,7 +126,7 @@ func inkNamed(name string) color.RGBA {
 		// **No colour**: the panel's own ink, and the run's Mark is what says it is the hand. See
 		// session.InkHand, and handNameInk, which is the same decision on the combat screen.
 		return color.RGBA{}
-	case session.InkRing:
+	case session.InkRelic:
 		return boostInk
 	case session.InkTotal:
 		return verbInkFor(combat.CategoryAttack)
@@ -484,14 +484,14 @@ func multiplierText(amount int) string {
 // already a template over the value; what changed is which value it reads. A card whose face
 // disagreed with its behaviour would be the worst thing an alteration mechanic could produce.
 //
-// **And it reads the holder's rings** *(2026-08-21)*. A slash card in the hands of someone wearing
+// **And it reads the holder's relics** *(2026-08-21)*. A slash card in the hands of someone wearing
 // Keen said "Slashes for 2x DMG" and dealt four times its owner's DMG, because the multiplier is the
-// card's and the doubling is the ring's, applied later in `Duelist.CardDamage`. The face said a true
+// card's and the doubling is the relic's, applied later in `Duelist.CardDamage`. The face said a true
 // thing about the card and a false thing about the attack, which is the same failure the worm
 // scaling above was fixed for.
 //
-// **It hands back the run of text a ring changed, not a flag** *(2026-08-21)*. The caller colours
-// that run and nothing else: painting the verb and the unit with it says a ring changed the card
+// **It hands back the run of text a relic changed, not a flag** *(2026-08-21)*. The caller colours
+// that run and nothing else: painting the verb and the unit with it says a relic changed the card
 // rather than the number. An empty mark means nothing moved and the line is drawn in one colour.
 func cardEffect(card combat.Card) string {
 	c := card.Spec()
@@ -525,8 +525,8 @@ func cardEffect(card combat.Card) string {
 // the face is total over `combat.RiderKinds()`, and the sheet prints the game's own strings rather
 // than a copy that can drift.
 //
-// **It is not written in the ring pink.** That colour means "a ring did this" everywhere else on
-// screen, and a parasite is not a ring; borrowing it would say something untrue about where the
+// **It is not written in the relic pink.** That colour means "a relic did this" everywhere else on
+// screen, and a parasite is not a relic; borrowing it would say something untrue about where the
 // figure came from.
 func riderText(card combat.Card) string {
 	out := ""
@@ -638,7 +638,7 @@ func buildElementInkNames() map[string]string {
 // "applies chilled" says only that a rule fired.
 //
 // **Keyed by record rather than by element** *(2026-08-17)*, since a status is no longer a colour:
-// two rings can put two different statuses on the same fire card, and one phrase per colour could
+// two relics can put two different statuses on the same fire card, and one phrase per colour could
 // not tell them apart. The fallback is what a status with no sentence of its own narrates as — its
 // own name, which is at least true — so authoring a status in the file does not need a Go change to
 // read properly.
@@ -713,7 +713,7 @@ const duelistName = "DUELIST"
 
 // playerRecord is the key the playable duelist is filed under in duelists.json. **Two screens
 // hydrate the player now** — the combat screen for the fight and the reward screen for the card it
-// puts up beside the rings — so the key is written once rather than in each of them.
+// puts up beside the relics — so the key is written once rather than in each of them.
 const playerRecord = "Fighter1"
 
 // sideName is who a Resolution line belongs to, written out beside the swatch that already

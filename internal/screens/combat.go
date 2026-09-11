@@ -151,7 +151,7 @@ func (s *CombatScene) shuffleSeeds(gs *state.GlobalState) (player, enemy int64) 
 // It moved because it is a **rule**: a round is bounded by cost and by count independently,
 // and the opponent's planner has to obey the count exactly as the player's selection does.
 // A cap enforced only by the screen was a cap the enemy could ignore. Being a method on
-// Duelist also gives a ring or a brand raising it somewhere to bite, which MECHANICS.md
+// Duelist also gives a relic or a brand raising it somewhere to bite, which MECHANICS.md
 // asks for.
 //
 // The cap replaced the action-point budget as the gate on selection, and that is the whole
@@ -248,7 +248,7 @@ type CombatScene struct {
 	// without one — `OpeningHand`, `tools/seeds` and the flight tests.
 	//
 	// **It is here for the element flip and for the panel that shows it.** A flip fires as a card
-	// is drawn, and the two things that needs are the worn rings and the card as the run owns it:
+	// is drawn, and the two things that needs are the worn relics and the card as the run owns it:
 	// the first so the draw knows what to recolour, the second so a card coming back out of the
 	// discard is put back the way it was found instead of being flipped a second time. The deck
 	// panel reads it for the same reason — the alterations toggle is a choice between two faces of
@@ -302,17 +302,17 @@ type CombatScene struct {
 	drag   cardDrag
 	lifted paletteCard
 
-	// The press in progress over the worn ring row. **Its own controller rather than the hand's**,
+	// The press in progress over the worn relic row. **Its own controller rather than the hand's**,
 	// because the two rows are live at once and under different conditions: the hand is dead while
-	// a round resolves and the ring row is not.
-	ringDrag cardDrag
+	// a round resolves and the relic row is not.
+	relicDrag cardDrag
 
-	// ringShake is each worn seat's shake and cardShake each played card's, with shakeItem the item
+	// relicShake is each worn seat's shake and cardShake each played card's, with shakeItem the item
 	// of the hand dialog's script that was running when the last one was started — which is how one
 	// beat starts one shake rather than a new one every frame the box sits on the same figure.
-	ringShake [combat.MaxWornRings]travel
-	cardShake []travel
-	shakeItem int
+	relicShake [combat.MaxWornRelics]travel
+	cardShake  []travel
+	shakeItem  int
 
 	// deckView is how the deck overlay is being read — the alterations and FULL/PLAYED toggles
 	// along its bottom edge. **Not reset by Init**, exactly like sortMode: a reading preference is
@@ -325,7 +325,7 @@ type CombatScene struct {
 	showDeck bool
 
 	// tip is the panel explaining whatever the cursor is resting on — a card's arithmetic, a
-	// ring's rule, a status nobody has anywhere else to read. Aimed once a tick by `hover`, in
+	// relic's rule, a status nobody has anywhere else to read. Aimed once a tick by `hover`, in
 	// combat_hover.go, and hidden by the tick it is not aimed.
 	tip models.Tooltip
 
@@ -439,18 +439,18 @@ type CombatScene struct {
 // built once, everything else resets every visit.
 func (s *CombatScene) Init(gs *state.GlobalState) {
 	// **The fighter is rebuilt from the record on every visit, and then re-equipped**
-	// *(2026-08-17)*. It used to be built once, which was fine while a ring was a flag that never
-	// changed — a growing ring's accumulator moves between fights, so equipping once would have
+	// *(2026-08-17)*. It used to be built once, which was fine while a relic was a flag that never
+	// changed — a growing relic's accumulator moves between fights, so equipping once would have
 	// left every fight after the first paying fight one's figure. Rebuilding first is what stops
-	// the stat rings stacking on themselves instead.
+	// the stat relics stacking on themselves instead.
 	//
 	// Nothing is lost by rebuilding: a duel already restores full life below, and everything else
 	// on the combatant comes out of the record.
 	s.fighter = duelistFromRecord(gs, playerRecord)
 
 	// **What the player is wearing is part of hydrating them**, not part of resetting a duel:
-	// rings are run-level and a fight does not take them off. **The run puts them on**, which is
-	// also the `fight-start` moment — a stat ring's DMG and HP arrive here, and a growing one
+	// relics are run-level and a fight does not take them off. **The run puts them on**, which is
+	// also the `fight-start` moment — a stat relic's DMG and HP arrive here, and a growing one
 	// arrives with whatever it has accumulated. The screen used to parse an element off each
 	// record and set a flag; the grammar is in `session.Equip` now and this is one call.
 	if gs.Run != nil {
@@ -484,7 +484,7 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	}
 
 	// **And it may widen the budget**, which is what makes a bench a place to pick the cards you
-	// want rather than the cards six points can pay for. Set after Equip, so it overrides a ring
+	// want rather than the cards six points can pay for. Set after Equip, so it overrides a relic
 	// that moved the figure as well as the record. `combat.MaxActions` is untouched: a turn is
 	// still five cards however cheap they are.
 	if scenario.Active() && scenario.Actions() > 0 {
@@ -560,8 +560,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	// DUEL! is disabled until something is in it.
 	s.fighterActions = nil
 	s.drag = cardDrag{}
-	s.ringDrag = cardDrag{}
-	s.ringShake, s.cardShake, s.shakeItem = [combat.MaxWornRings]travel{}, nil, 0
+	s.relicDrag = cardDrag{}
+	s.relicShake, s.cardShake, s.shakeItem = [combat.MaxWornRelics]travel{}, nil, 0
 
 	// A fresh shuffled deck for the opponent too, dealt before it plans, off its own stream.
 	s.enemyPile = decks.NewEnemyPile(s.enemy.Record, enemySeed, decks.EnemyHandSize)
@@ -623,8 +623,8 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 // raised defence survived into the next fight — which is exactly the failure a screen
 // enumerating another package's state invites. It clears the shields too, so this reads as one
 // call rather than as a call plus whatever the screen remembered to add.
-// **The statuses go too, and the rings stay** *(2026-08-16)*. A burn is something one duel did
-// to you; a ring is something you are wearing, and clearing it here would strip the player between
+// **The statuses go too, and the relics stay** *(2026-08-16)*. A burn is something one duel did
+// to you; a relic is something you are wearing, and clearing it here would strip the player between
 // fights. Both are fields on `combat.Duelist` and the difference between them is what this
 // function exists to know.
 func resetCombatState(d combat.Duelist) combat.Duelist {
@@ -723,7 +723,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 	// nextFight so the run moves once, on the tick the screen actually leaves.
 	if s.won {
 		s.won = false
-		// **Before WonFight**, because a `grow-on-hit` ring grew the fighter's own copy during the
+		// **Before WonFight**, because a `grow-on-hit` relic grew the fighter's own copy during the
 		// duel and this is the last tick that copy exists.
 		gs.Run.AbsorbGrowth(s.fighter.Duelist)
 		gs.Run.WonFight(s.fighter.CurrentLife, s.fighter.MaxLife)
@@ -810,7 +810,7 @@ func (s *CombatScene) Update(gs *state.GlobalState) error {
 		s.updateActionBox(gs)
 	}
 
-	s.updateRingRow(gs)
+	s.updateRelicRow(gs)
 	s.tickShakes(gs)
 
 	// Above the branch below, because the column is live under exactly one condition and it is
@@ -935,10 +935,10 @@ func (s *CombatScene) heldCards() []combat.Card {
 //
 // **It is a delta rather than a sum over the log** *(owner's call, 2026-09-05)*. It used to walk
 // the events adding every `KindVitae` up itself, which meant two places counted the same money:
-// the resolver, which has to, because a ring reading the purse must see what this round paid, and
+// the resolver, which has to, because a relic reading the purse must see what this round paid, and
 // this, which did it again. Two counters over one figure is a pair that can disagree, and the way
 // it would have failed is silent — a future rule that moves vitae without announcing a KindVitae
-// would pay a ring and not the player. **Whatever the rules did to the purse is what the run is
+// would pay a relic and not the player. **Whatever the rules did to the purse is what the run is
 // told**, and there is nothing left to keep in step.
 //
 // **Only the player's side reaches this.** A creature has no run behind it, and it is handed the
@@ -1138,7 +1138,7 @@ func (s *CombatScene) startRound() {
 	// is passed for it.
 	// **The purse is handed to the rules before the round and taken back after it** *(owner's call,
 	// 2026-09-05)*. The run owns it *between* rounds — a parasite, a sale or a shop can move it
-	// while the player is planning — and the rules own it *inside* one, because a ring that reads
+	// while the player is planning — and the rules own it *inside* one, because a relic that reads
 	// the purse has to see what an earlier turn of the same round paid. Re-seeding here is what
 	// stops the duelist's copy going stale; `payHeldVitae` below is what brings the change back.
 	if s.run != nil {
@@ -1594,7 +1594,7 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	fillGround(screen)
 
 	// **The top of the screen is one row of three things** *(2026-08-12)*: the player's card
-	// in the left corner, the enemy's in the right, and the rings filling everything between
+	// in the left corner, the enemy's in the right, and the relics filling everything between
 	// them. All three share a top edge and the two cards are the same format, so the row reads
 	// as the two sides of the fight with what you are wearing laid out between them.
 	//
@@ -1612,10 +1612,10 @@ func (s *CombatScene) Draw(gs *state.GlobalState, screen *ebiten.Image) {
 	// to last, in the column that already says where it is being fought. See drawRoundTimer.
 	s.drawRoundTimer(gs, screen)
 
-	// **The ring pane is a sketch** *(2026-08-11)* — it draws what `data/rings.json` defines
+	// **The relic pane is a sketch** *(2026-08-11)* — it draws what `data/relics.json` defines
 	// and nothing equips, buys or reads one. Its width is what the two cards leave; see
-	// combat_rings.go.
-	s.drawRingPane(gs, screen)
+	// combat_relics.go.
+	s.drawRelicPane(gs, screen)
 	drawConsumablePane(gs, screen, s.consumablePaneRect(gs), s.parasiteSpendable(gs))
 
 	s.drawEnemyCard(gs, screen)
@@ -1795,14 +1795,14 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 		gs.ScreenWidth-tableInset, handTop(gs)-mathBandGapAboveCards))
 	trace.Rect("duelistCard", s.duelistCardRect(gs))
 	trace.Rect("enemyCard", s.enemyCardRect(gs))
-	trace.Rect("ringPane", s.ringPaneRect(gs))
-	trace.Rect("ringPane backing", s.ringPaneBackRect(gs))
+	trace.Rect("relicPane", s.relicPaneRect(gs))
+	trace.Rect("relicPane backing", s.relicPaneBackRect(gs))
 	// The slots as they currently stand, not as they would at the cap: the pitch is a function
-	// of how many rings are worn, so a dump of five would describe a row that is not on screen.
-	for i := 0; i < len(wornRings(gs)); i++ {
-		at := ringSlotAt(s.ringPaneRect(gs), i, len(wornRings(gs)))
-		trace.Rect(fmt.Sprintf("ringSlot[%d]", i), image.Rect(
-			at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height))
+	// of how many relics are worn, so a dump of five would describe a row that is not on screen.
+	for i := 0; i < len(wornRelics(gs)); i++ {
+		at := relicSlotAt(s.relicPaneRect(gs), i, len(wornRelics(gs)))
+		trace.Rect(fmt.Sprintf("relicSlot[%d]", i), image.Rect(
+			at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height))
 	}
 	trace.Rect("apBar", image.Rect(
 		band.Min.X, band.Max.Y+apBarBelow,

@@ -231,7 +231,7 @@ func TestTheWidestSumFitsItsBand(t *testing.T) {
 
 	// Deliberately over the top: **seven** terms of three digits, a three-digit multiplier written
 	// out, and a five-digit total. Seven is the widest a blow can read — five cards in a legal turn
-	// plus the two extra landings an echo ring seats behind the first — and three digits each is
+	// plus the two extra landings an echo relic seats behind the first — and three digits each is
 	// past anything the rules produce, which is the point: the margin is what a later type-size
 	// change is spending.
 	e := handEvent("concept-four-of-a-kind", []int{999, 999, 999, 999, 999, 999, 999}, 500, 19980)
@@ -351,15 +351,15 @@ func TestTheMultiplierLeavesTheBannerAtItsOwnSize(t *testing.T) {
 	}
 }
 
-// **Every ring that fired says its own figure beside the term it priced, not on the card.**
+// **Every relic that fired says its own figure beside the term it priced, not on the card.**
 //
-// The figure moves between the cards of one blow — the first fire card steps a growing ring and the
-// second is counted bigger — so it is a fact about the term. And a card face carries no ring at all
+// The figure moves between the cards of one blow — the first fire card steps a growing relic and the
+// second is counted bigger — so it is a fact about the term. And a card face carries no relic at all
 // now, so the sum is the only place any of it can be seen.
-func TestTheScriptAnnotatesEveryRingThatFired(t *testing.T) {
+func TestTheScriptAnnotatesEveryRelicThatFired(t *testing.T) {
 	e := handEvent("pair", []int{40, 44}, 150, 126)
-	e.HandRingScale[0] = [combat.MaxWornRings]int{200, 100}
-	e.HandRingScale[1] = [combat.MaxWornRings]int{200, 110}
+	e.HandRelicScale[0] = [combat.MaxWornRelics]int{200, 100}
+	e.HandRelicScale[1] = [combat.MaxWornRelics]int{200, 110}
 
 	got := scriptText(mathScript(e))
 	if want := "40 2x 1x + 44 2x 1.1x x 1.5 = 126"; got != want {
@@ -367,12 +367,12 @@ func TestTheScriptAnnotatesEveryRingThatFired(t *testing.T) {
 	}
 }
 
-// **A ring that did not fire says nothing**, which is the only thing the zero means. A flat ring on
+// **A relic that did not fire says nothing**, which is the only thing the zero means. A flat relic on
 // a card its predicate does not match has no beat and no figure.
-func TestARingThatDidNotFireIsNotInTheScript(t *testing.T) {
+func TestARelicThatDidNotFireIsNotInTheScript(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRingScale[0] = [combat.MaxWornRings]int{}
-	e.HandRingScale[1] = [combat.MaxWornRings]int{}
+	e.HandRelicScale[0] = [combat.MaxWornRelics]int{}
+	e.HandRelicScale[1] = [combat.MaxWornRelics]int{}
 
 	got := scriptText(mathScript(e))
 	if want := "20 + 20 x 1.5 = 60"; got != want {
@@ -380,13 +380,13 @@ func TestARingThatDidNotFireIsNotInTheScript(t *testing.T) {
 	}
 }
 
-// **A ring firing at the identity still says so.** A fresh Enflamed is 1x and its card bounces on
+// **A relic firing at the identity still says so.** A fresh Enflamed is 1x and its card bounces on
 // that beat; a bounce with no figure beside it would be a card jumping for no stated reason, and the
 // climb off 1x is the thing the player is meant to watch.
-func TestARingFiringAtTheIdentityStillSaysSo(t *testing.T) {
+func TestARelicFiringAtTheIdentityStillSaysSo(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRingScale[0] = [combat.MaxWornRings]int{100}
-	e.HandRingScale[1] = [combat.MaxWornRings]int{100}
+	e.HandRelicScale[0] = [combat.MaxWornRelics]int{100}
+	e.HandRelicScale[1] = [combat.MaxWornRelics]int{100}
 
 	got := scriptText(mathScript(e))
 	if want := "20 1x + 20 1x x 1.5 = 60"; got != want {
@@ -394,25 +394,25 @@ func TestARingFiringAtTheIdentityStillSaysSo(t *testing.T) {
 	}
 }
 
-// **Every figure flies out of the thing that produced it**, the rings included *(owner's call,
+// **Every figure flies out of the thing that produced it**, the relics included *(owner's call,
 // 2026-08-26)*. A multiplier appearing beside a term it had no visible part in was the one number on
 // the line with no source.
 //
 // What this holds is the bookkeeping that makes that safe: `startHandMath` pairs the flying items
-// with `HandCards` in order, so a ring's figure has to be tellable from a card's or every figure
-// after the first ring sets off from the wrong card. `ringSeat` is that mark.
-func TestEveryRingFigureFliesFromItsOwnRing(t *testing.T) {
+// with `HandCards` in order, so a relic's figure has to be tellable from a card's or every figure
+// after the first relic sets off from the wrong card. `relicSeat` is that mark.
+func TestEveryRelicFigureFliesFromItsOwnRelic(t *testing.T) {
 	e := handEvent("pair", []int{20, 22}, 150, 63)
-	e.HandRingScale[0] = [combat.MaxWornRings]int{200, 110}
-	e.HandRingScale[1] = [combat.MaxWornRings]int{200, 120}
+	e.HandRelicScale[0] = [combat.MaxWornRelics]int{200, 110}
+	e.HandRelicScale[1] = [combat.MaxWornRelics]int{200, 120}
 
-	cards, rings := 0, 0
+	cards, relics := 0, 0
 	for _, it := range mathScript(e) {
 		if !it.fly {
 			continue
 		}
-		if it.ringSeat > 0 {
-			rings++
+		if it.relicSeat > 0 {
+			relics++
 			continue
 		}
 		cards++
@@ -422,37 +422,37 @@ func TestEveryRingFigureFliesFromItsOwnRing(t *testing.T) {
 	if cards != 3 {
 		t.Errorf("%d non-ring items fly, want 3 — the walk would pair figures with the wrong cards", cards)
 	}
-	// Two rings on each of two terms.
-	if rings != 4 {
-		t.Errorf("%d ring figures fly, want 4", rings)
+	// Two relics on each of two terms.
+	if relics != 4 {
+		t.Errorf("%d relic figures fly, want 4", relics)
 	}
 }
 
-// A ring's figure has to name the seat it sets off from, and the seats have to be the ones that
+// A relic's figure has to name the seat it sets off from, and the seats have to be the ones that
 // fired — a figure flying out of an empty finger is worse than one that simply appeared.
-func TestARingFigureNamesTheSeatItFliesFrom(t *testing.T) {
+func TestARelicFigureNamesTheSeatItFliesFrom(t *testing.T) {
 	e := handEvent("pair", []int{20, 20}, 150, 60)
-	e.HandRingScale[0] = [combat.MaxWornRings]int{0, 0, 250}
+	e.HandRelicScale[0] = [combat.MaxWornRelics]int{0, 0, 250}
 
 	var seats []int
 	for _, it := range mathScript(e) {
-		if it.ringSeat > 0 {
-			seats = append(seats, it.ringSeat-1)
+		if it.relicSeat > 0 {
+			seats = append(seats, it.relicSeat-1)
 		}
 	}
 
 	if len(seats) != 1 || seats[0] != 2 {
-		t.Errorf("the ring figures fly from seats %v, want just seat 2", seats)
+		t.Errorf("the relic figures fly from seats %v, want just seat 2", seats)
 	}
 }
 
 // **The script is the sequencing.** The box runs its items strictly one at a time, so a card's
-// figure landing before its rings' figures is a property of the order they are written in — the
+// figure landing before its relics' figures is a property of the order they are written in — the
 // order the engine applied them.
-func TestTheRingFiguresFollowTheirOwnTerm(t *testing.T) {
+func TestTheRelicFiguresFollowTheirOwnTerm(t *testing.T) {
 	e := handEvent("pair", []int{20, 22}, 150, 63)
-	e.HandRingScale[0] = [combat.MaxWornRings]int{200}
-	e.HandRingScale[1] = [combat.MaxWornRings]int{210}
+	e.HandRelicScale[0] = [combat.MaxWornRelics]int{200}
+	e.HandRelicScale[1] = [combat.MaxWornRelics]int{210}
 
 	got := scriptText(mathScript(e))
 	if want := "20 2x + 22 2.1x x 1.5 = 63"; got != want {
@@ -461,33 +461,33 @@ func TestTheRingFiguresFollowTheirOwnTerm(t *testing.T) {
 }
 
 // **Everything in the sum is accompanied by a card shaking** *(owner's call, 2026-08-26)*: a card's
-// damage shakes the card, a ring's multiplier shakes that ring, and an echo's extra term shakes the
-// ring that bought the landing even though it has no figure on the line.
+// damage shakes the card, a relic's multiplier shakes that relic, and an echo's extra term shakes the
+// relic that bought the landing even though it has no figure on the line.
 //
 // This checks the script side of that — which item names what. The beat it happens on is the box's
 // own item cursor, which no test without a window can reach.
 func TestEachItemNamesWhatShakesWithIt(t *testing.T) {
 	e := handEvent("pair", []int{20, 14}, 150, 51)
 	e.HandCards[0], e.HandCards[1] = 3, 3
-	e.HandRingScale[1] = [combat.MaxWornRings]int{0, 180}
-	e.HandLanding[1] = [combat.MaxWornRings]bool{true}
+	e.HandRelicScale[1] = [combat.MaxWornRelics]int{0, 180}
+	e.HandLanding[1] = [combat.MaxWornRelics]bool{true}
 
-	var cards, rings []int
+	var cards, relics []int
 	for _, it := range mathScript(e) {
 		if it.cardSeat > 0 {
 			cards = append(cards, it.cardSeat-1)
 		}
-		if it.ringSeat > 0 {
-			rings = append(rings, it.ringSeat-1)
+		if it.relicSeat > 0 {
+			relics = append(relics, it.relicSeat-1)
 		}
 	}
 
 	// mathScript fills neither: the seats are a fact about the table and the row, which is
-	// startHandMath's half of the box. What it does fill is the ring the figure flies out of.
+	// startHandMath's half of the box. What it does fill is the relic the figure flies out of.
 	if len(cards) != 0 {
 		t.Errorf("mathScript filled card seats %v; that is startHandMath's job", cards)
 	}
-	if len(rings) != 1 || rings[0] != 1 {
-		t.Errorf("the ring figures name seats %v, want just seat 1", rings)
+	if len(relics) != 1 || relics[0] != 1 {
+		t.Errorf("the relic figures name seats %v, want just seat 1", relics)
 	}
 }

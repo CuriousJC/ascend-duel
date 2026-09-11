@@ -1,11 +1,11 @@
 # Ascending Duel
 
-Ascending Duel is a roguelike game where you must duel up a tower and build your skills while collecting magical rings and brands of power to aid you.
+Ascending Duel is a roguelike game where you must duel up a tower and build your skills while collecting magical relics and brands of power to aid you.
 
 It is still a prototype, but the shape of a run is there. A duel is a hand of cards, an
 action-point budget and an order you choose; cards that match make a *hand*, and a hand
 multiplies the whole blow. Win and you take a **worm** that rewrites a card in your deck,
-spend **vitae** in the shop on one of forty-odd **rings**, and climb — eight floors of
+spend **vitae** in the shop on a **relic** off a shelf of three, and climb — eight floors of
 three rooms, every third one a named stairway boss. Picking the room ahead is the one
 station of that loop still to be built.
 
@@ -50,17 +50,15 @@ nothing.
 
 ## What is in it
 
-| | |
-|---|---|
-| 18 duelist cards | four forms — stab, slash, crush and defend — across five elements |
-| 19 hands | three axes: concept, form and element, wearing poker's names |
-| 58 rings | bought and sold in the shop, priced by rarity |
-| 11 worms | each rewrites one card in your deck after a win |
-| 96 creatures | sorted into floor bands, each with its own deck |
-| 30 bosses | three or four authored per floor, guarding the stairway |
+**Duelist cards** in four forms — stab, slash, crush and defend — across five elements.
+**Hands** on three axes, concept, form and element, wearing poker's names. **Relics**, bought
+and sold in the shop and priced by rarity. **Worms**, each rewriting one card in your deck
+after a win. **Creatures** sorted into floor bands, each with its own deck, and **bosses**
+guarding every stairway. Every one of those is a file in [data/](data/), and they are still
+being authored.
 
 **Every catalogue is browsable without launching the game.** [docs/sheets/](docs/sheets/)
-holds a rendered page per catalogue — every card, ring, worm, hand, creature and boss, as
+holds a rendered page per catalogue — every card, relic, worm, hand, creature and boss, as
 the game actually draws them, with the rules that fire beside the text a player reads.
 Open [docs/sheets/index.html](docs/sheets/index.html).
 
@@ -80,7 +78,7 @@ Open [docs/sheets/index.html](docs/sheets/index.html).
 
 | File | What it holds |
 |---|---|
-| [MECHANICS.md](MECHANICS.md) | what the game *is* — elements, cards, hands, rings, the tower |
+| [MECHANICS.md](MECHANICS.md) | what the game *is* — elements, cards, hands, relics, the tower |
 | [TODO.md](TODO.md) | what to build next — open work only |
 | [ideas.md](ideas.md) | the unfiltered inbox |
 | [CLAUDE.md](CLAUDE.md) | how the code is organised and the conventions it follows |

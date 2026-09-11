@@ -1,17 +1,17 @@
 package screens
 
-// The ring pane: what the player is wearing, drawn as cards.
+// The relic pane: what the player is wearing, drawn as cards.
 //
 // **It draws what the run is wearing** *(2026-08-17)*. The worn set lives on `session.Session` —
-// which is what makes it survive a fight — and every rule a ring has is in `data/rings.json` in the
+// which is what makes it survive a fight — and every rule a relic has is in `data/relics.json` in the
 // `When` / `If` / `Then` grammar. This file is the row; it no longer decides anything. **The loop
-// around it landed on 2026-08-21** — see shop.go, which draws the same ring cards on a shelf and is
+// around it landed on 2026-08-21** — see shop.go, which draws the same relic cards on a shelf and is
 // the only thing that puts one on or takes one off.
 //
 // **It claims the band the full-height panes vacated.** Action Flow is built and not drawn,
 // and Resolution left for the three-line feed above the hand on 2026-08-11, so 12–46% was
-// empty. That is what paid for full-size ring cards; the alternative was a row of chips at deck
-// -stack size, which would have made the ring a different object from every other card in the
+// empty. That is what paid for full-size relic cards; the alternative was a row of chips at deck
+// -stack size, which would have made the relic a different object from every other card in the
 // game.
 
 import (
@@ -33,29 +33,29 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// maxRings is the widest ring row this screen can ever be asked to draw.
+// maxRelics is the widest relic row this screen can ever be asked to draw.
 //
 // **It is the array's width, not the cap** *(2026-09-11)*. The two were one number until the cap
-// became something a run carries — see combat.DefaultRingSlots — and this is deliberately the
-// larger of them: the row is a layout, and a layout has to survive the most rings a duelist could
+// became something a run carries — see combat.DefaultRelicSlots — and this is deliberately the
+// larger of them: the row is a layout, and a layout has to survive the most relics a duelist could
 // ever be holding rather than the most a shipped run is allowed to buy.
 //
-// **What the player is told is `ringSlots`**, which reads the run. The row saying `worn/5` while
+// **What the player is told is `relicSlots`**, which reads the run. The row saying `worn/5` while
 // the duelist held a sixth is the drift this file has always been guarding against, and a constant
 // can no longer say it.
-const maxRings = combat.MaxWornRings
+const maxRelics = combat.MaxWornRelics
 
-// ringSlots is how many rings this run may wear, which is what the fraction on the pane counts
+// relicSlots is how many relics this run may wear, which is what the fraction on the pane counts
 // against and what the row is willing to draw.
 //
-// **The run is the authority, exactly as it is for which rings are worn.** A screen that kept its
+// **The run is the authority, exactly as it is for which relics are worn.** A screen that kept its
 // own number would be the one place in the game that disagrees with the shop about whether a sixth
-// ring is allowed on.
-func ringSlots(gs *state.GlobalState) int {
+// relic is allowed on.
+func relicSlots(gs *state.GlobalState) int {
 	if gs.Run == nil {
-		return combat.DefaultRingSlots
+		return combat.DefaultRelicSlots
 	}
-	return gs.Run.RingSlots()
+	return gs.Run.RelicSlots()
 }
 
 const (
@@ -66,7 +66,7 @@ const (
 	// hardcoded 79%, chosen to clear an enemy card centred at 88% — a percentage standing in
 	// for a position it could not see, and one that would have quietly overlapped the moment
 	// either card moved. It moved the next day.
-	ringPaneGap = 16
+	relicPaneGap = 16
 
 	// **The row sits ten pixels below the cards on either side of it** *(2026-08-12)*, where
 	// it was flush with their tops for a day.
@@ -76,25 +76,25 @@ const (
 	// wide object with two cards embedded in it — which is the "cards trapped in a panel"
 	// failure the framed version was retired for, made worse by the frame now being wider than
 	// the row. Dropping the row breaks that line, and the offset is what makes the backing
-	// legible as a thing *behind* the rings rather than a border *around* everything.
-	ringPaneTopDrop = 10
+	// legible as a thing *behind* the relics rather than a border *around* everything.
+	relicPaneTopDrop = 10
 
 	// The cap fraction under the pane's bottom-right corner, sized and spaced like the deck
 	// pile's count, which is the same idea: a number saying how much of a fixed thing is in use.
-	ringCountSize   = 22
-	ringCountTopGap = 6
+	relicCountSize   = 22
+	relicCountTopGap = 6
 
-	// ringPaneBackPad is how far the backing extends past the row on every side. The pitch
+	// relicPaneBackPad is how far the backing extends past the row on every side. The pitch
 	// puts the first card flush left and the last flush right, so with no padding the two end
 	// cards would sit on the backing's edge and it would read as a border drawn around them
 	// rather than as a surface they stand on.
 	//
-	// **It has to stay under ringPaneGap**, or the backing runs into the fighter card beside
+	// **It has to stay under relicPaneGap**, or the backing runs into the fighter card beside
 	// it — 8 against 16 leaves half the gap still showing on each side.
-	ringPaneBackPad = 8
+	relicPaneBackPad = 8
 )
 
-// ringPaneBackColor is the surface the rings stand on: one step off `screenGround`, and
+// relicPaneBackColor is the surface the relics stand on: one step off `screenGround`, and
 // nothing else.
 //
 // **A fill, not a frame** *(2026-08-12)*, and the distinction is the whole history of this
@@ -118,25 +118,25 @@ const (
 // background" is a colour that silently stops being that the moment the background moves — which
 // is exactly what the ground going blue would have done to it. Nine percent is what the tan
 // actually was, kept so the pane reads as it always did.
-var ringPaneBackColor = systems.ColorAtStrength(screenGround, 91)
+var relicPaneBackColor = systems.ColorAtStrength(screenGround, 91)
 
-// ringPaneRect is the row's extent: the cards' own band, running between the two corner cards
-// and dropped ringPaneTopDrop below them.
+// relicPaneRect is the row's extent: the cards' own band, running between the two corner cards
+// and dropped relicPaneTopDrop below them.
 //
-// **It is the middle of a three-part row** — duelist card, rings, enemy card — so it takes its
+// **It is the middle of a three-part row** — duelist card, relics, enemy card — so it takes its
 // edges from its neighbours rather than from percentages of the screen. Whichever card moves,
-// the row follows, and the one thing that cannot happen is a ring drawn underneath one of them.
+// the row follows, and the one thing that cannot happen is a relic drawn underneath one of them.
 //
 // **The rectangle is the cards and the rule, not the backing.** It is what the slots are cut
 // out of and what the rule and the fraction hang off; the backing is derived from it — see
-// ringPaneBackRect — so growing the padding cannot silently move a ring.
+// relicPaneBackRect — so growing the padding cannot silently move a relic.
 //
 // **It is the left half of a two-pane row since 2026-09-06** *(owner's call)*. The consumables pane
-// takes a fixed two seats off the right-hand end and the rings take what is left — see topRowPanes,
+// takes a fixed two seats off the right-hand end and the relics take what is left — see topRowPanes,
 // and consumablePaneWidth for what that costs a full row of five.
-func (s *CombatScene) ringPaneRect(gs *state.GlobalState) image.Rectangle {
-	rings, _ := s.topRowPanes(gs)
-	return rings
+func (s *CombatScene) relicPaneRect(gs *state.GlobalState) image.Rectangle {
+	relics, _ := s.topRowPanes(gs)
+	return relics
 }
 
 // consumablePaneRect is the right half: the parasites the run is carrying. See consumables.go.
@@ -151,12 +151,12 @@ func (s *CombatScene) consumablePaneRect(gs *state.GlobalState) image.Rectangle 
 // rule with the worn count beneath it; the rule is gone and the count hangs off the backing's
 // corner, so the pane ends where the cards do. That is 44 pixels the top band gives back, which is
 // what let the card grow to its present height — see Hand in internal/cards/style.go.
-func (s *CombatScene) topRowPanes(gs *state.GlobalState) (rings, consumables image.Rectangle) {
-	left, right := ringRowSpan(gs)
-	return topRowPanes(left, right, duelistCardRect(gs).Min.Y+ringPaneTopDrop)
+func (s *CombatScene) topRowPanes(gs *state.GlobalState) (relics, consumables image.Rectangle) {
+	left, right := relicRowSpan(gs)
+	return topRowPanes(left, right, duelistCardRect(gs).Min.Y+relicPaneTopDrop)
 }
 
-// ringRowSpan is the horizontal extent of the ring row: where it starts after the duelist card
+// relicRowSpan is the horizontal extent of the relic row: where it starts after the duelist card
 // and its caption column, and where it stops short of the enemy card.
 //
 // **It is a function of its own because the hand row is measured against it** *(2026-09-04,
@@ -168,140 +168,140 @@ func (s *CombatScene) topRowPanes(gs *state.GlobalState) (rings, consumables ima
 // **It starts at the duelist card's right edge again** *(2026-09-04, owner's call)*. The floor
 // and the room stood in a 166-pixel column here for a day; they are back under the card, and the
 // row — and therefore the hand — got the width back. See towerPlaceRect.
-func ringRowSpan(gs *state.GlobalState) (left, right int) {
-	return duelistCardRect(gs).Max.X + ringPaneGap, enemyCardRect(gs).Min.X - ringPaneGap
+func relicRowSpan(gs *state.GlobalState) (left, right int) {
+	return duelistCardRect(gs).Max.X + relicPaneGap, enemyCardRect(gs).Min.X - relicPaneGap
 }
 
-// ringPaneBackRect is the surface drawn behind the row: the row padded on every side, and
+// relicPaneBackRect is the surface drawn behind the row: the row padded on every side, and
 // **deep enough to hold the rule and the fraction under it**.
 //
 // The fraction hanging off the bottom edge onto the bare ground would say the rule is the
 // panel's floor and the number is loose underneath it, which is backwards — the count belongs
 // to the row it counts.
-func (s *CombatScene) ringPaneBackRect(gs *state.GlobalState) image.Rectangle {
-	return ringPaneBackOf(s.ringPaneRect(gs))
+func (s *CombatScene) relicPaneBackRect(gs *state.GlobalState) image.Rectangle {
+	return relicPaneBackOf(s.relicPaneRect(gs))
 }
 
-// ringPaneBackOf is the backing for any ring row, whichever screen laid it out.
+// relicPaneBackOf is the backing for any relic row, whichever screen laid it out.
 //
 // **Simply the row padded, since 2026-09-04.** It used to be extended to cover the rule and the
 // count, which were under the row; those are in the caption column now.
 //
 // **A free function since 2026-09-06**, so the build band draws the same pane the fight does — it
-// drew bare cards on the shop and the reward screen, which is two screens showing the run's rings
+// drew bare cards on the shop and the reward screen, which is two screens showing the run's relics
 // as something other than what the fight shows.
-func ringPaneBackOf(row image.Rectangle) image.Rectangle {
-	return row.Inset(-ringPaneBackPad)
+func relicPaneBackOf(row image.Rectangle) image.Rectangle {
+	return row.Inset(-relicPaneBackPad)
 }
 
-// drawRingPaneBack paints that surface. Flat, one step off the ground, no border and no title — see
-// drawRingPane, which is where the argument for all three is written down.
-func drawRingPaneBack(screen *ebiten.Image, row image.Rectangle) {
-	back := ringPaneBackOf(row)
+// drawRelicPaneBack paints that surface. Flat, one step off the ground, no border and no title — see
+// drawRelicPane, which is where the argument for all three is written down.
+func drawRelicPaneBack(screen *ebiten.Image, row image.Rectangle) {
+	back := relicPaneBackOf(row)
 	vector.DrawFilledRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
-		ringPaneBackColor, false)
+		relicPaneBackColor, false)
 }
 
-// drawPaneCount writes a pane's fraction on its bottom-right corner: `3/5 rings`, `1/2 held`.
+// drawPaneCount writes a pane's fraction on its bottom-right corner: `3/5 relics`, `1/2 held`.
 //
 // **One function for every pane that has one**, so the two on the top row and the two on the band
 // cannot come to different conclusions about where a corner is or what size the figure is.
 func drawPaneCount(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle, msg string) {
-	back := ringPaneBackOf(row)
-	top := back.Max.Y + ringCountTopGap
+	back := relicPaneBackOf(row)
+	top := back.Max.Y + relicCountTopGap
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(back.Max.X), float64(top))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
+	text.Draw(screen, msg, &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
-// ringSlotMaxGap is the most bare table ever left between two ring cards.
+// relicSlotMaxGap is the most bare table ever left between two relic cards.
 //
 // **A row's pitch is capped and then the row is centred** *(2026-08-24)*. Without the cap the row
-// spread to whatever pane it was handed, so a run wearing two rings put one against the duelist
-// card and the other in the far corner of an empty screen — two rings reading as two unrelated
-// things rather than as one build. The cap is what makes a growing row *grow*: rings sit at a
+// spread to whatever pane it was handed, so a run wearing two relics put one against the duelist
+// card and the other in the far corner of an empty screen — two relics reading as two unrelated
+// things rather than as one build. The cap is what makes a growing row *grow*: relics sit at a
 // fixed pitch and the row widens outwards from the middle as one is added, up to the point where
 // five of them fill the pane and the pitch has to close up again.
 //
 // **26 since 2026-09-04**, from 22 — the same seven sixths the card grew by, so the row keeps its
 // rhythm rather than closing up around bigger cards.
 //
-// **It stopped being the gap five rings leave in the pane on the same day.** That was true while
-// the screen was 1280 wide: five rings filled the combat pane exactly, and the cap was read off
+// **It stopped being the gap five relics leave in the pane on the same day.** That was true while
+// the screen was 1280 wide: five relics filled the combat pane exactly, and the cap was read off
 // them. At 1920 the pane is 1443 pixels and a full row is 1039, so there is slack even at five and
 // the row is centred in it. Filling the pane again would mean a gap of 118 — most of a card of bare
-// table between rings, which is precisely the "two unrelated things rather than one build" failure
+// table between relics, which is precisely the "two unrelated things rather than one build" failure
 // the cap was written to prevent. So the cap is now a chosen pitch rather than a derived one.
-const ringSlotMaxGap = 26
+const relicSlotMaxGap = 26
 
-// ringSlotPitch is how far apart two ring cards start, **for the number actually worn**.
+// relicSlotPitch is how far apart two relic cards start, **for the number actually worn**.
 //
-// **The row spreads to fill the pane and closes up as it fills** *(2026-08-11)*. Three rings
+// **The row spreads to fill the pane and closes up as it fills** *(2026-08-11)*. Three relics
 // stand well apart and fully visible; five sit shoulder to shoulder with a few pixels between
 // them, since 5 x 162 is 810 against roughly 825 of pane. **It overlapped by 26 pixels each
 // until the cards came down a tenth in width later the same day**, and it would again the
 // moment the pane narrowed or a sixth slot was ever allowed — the pitch is derived, so the row
 // closes up by itself rather than by anyone redoing this arithmetic. Overlapping is the
-// accepted failure mode, not shrinking: a card cannot be scaled, a smaller ring is a
-// *different drawing*, and there is no ring style below this one.
+// accepted failure mode, not shrinking: a card cannot be scaled, a smaller relic is a
+// *different drawing*, and there is no relic style below this one.
 //
-// **The spread is capped at ringSlotMaxGap and the row is centred in the pane by ringSlotAt**, so
-// a pane wider than the rings in it leaves its slack at both ends rather than between the cards.
-func ringSlotPitch(r image.Rectangle, worn int) int {
+// **The spread is capped at relicSlotMaxGap and the row is centred in the pane by relicSlotAt**, so
+// a pane wider than the relics in it leaves its slack at both ends rather than between the cards.
+func relicSlotPitch(r image.Rectangle, worn int) int {
 	if worn < 2 {
 		return 0
 	}
-	pitch := (r.Dx() - cards.RingStyle.Width) / (worn - 1)
-	if max := cards.RingStyle.Width + ringSlotMaxGap; pitch > max {
+	pitch := (r.Dx() - cards.RelicStyle.Width) / (worn - 1)
+	if max := cards.RelicStyle.Width + relicSlotMaxGap; pitch > max {
 		return max
 	}
 	return pitch
 }
 
-// ringSlotRowWidth is how much of the pane the row actually occupies: every pitch but the last,
+// relicSlotRowWidth is how much of the pane the row actually occupies: every pitch but the last,
 // plus the card that sits on the final one.
-func ringSlotRowWidth(r image.Rectangle, worn int) int {
+func relicSlotRowWidth(r image.Rectangle, worn int) int {
 	if worn < 1 {
 		return 0
 	}
-	return (worn-1)*ringSlotPitch(r, worn) + cards.RingStyle.Width
+	return (worn-1)*relicSlotPitch(r, worn) + cards.RelicStyle.Width
 }
 
-// ringSlotAt is where the i'th ring card's top-left corner sits. **Flush with the pane's top**,
+// relicSlotAt is where the i'th relic card's top-left corner sits. **Flush with the pane's top**,
 // which is the top of the character block beside it — the two are aligned directly rather than
 // each being inset inside a frame of its own.
 //
 // **Horizontally the row is centred on the pane**, which is only visible once the pitch is capped:
 // a full row still starts where it always did, because there is no slack left to share out.
-func ringSlotAt(r image.Rectangle, i, worn int) image.Point {
-	left := r.Min.X + (r.Dx()-ringSlotRowWidth(r, worn))/2
-	return image.Pt(left+i*ringSlotPitch(r, worn), r.Min.Y)
+func relicSlotAt(r image.Rectangle, i, worn int) image.Point {
+	left := r.Min.X + (r.Dx()-relicSlotRowWidth(r, worn))/2
+	return image.Pt(left+i*relicSlotPitch(r, worn), r.Min.Y)
 }
 
-// wornRings is what the player is wearing, as records, in worn order.
+// wornRelics is what the player is wearing, as records, in worn order.
 //
 // **The run is the authority and this is the lookup** *(2026-08-17)*. `session.Session` holds the
-// worn keys — in worn order, which is a rule, since rings fire left to right — and `gs.Rings` holds
+// worn keys — in worn order, which is a rule, since relics fire left to right — and `gs.Relics` holds
 // the record each key names, for its art and its name. The screen decides nothing.
 //
 // **A worn key with no record is reported, not ignored.** It is the failure `ParseElement` refuses to
-// fall back on: a ring that quietly does not draw looks exactly like a ring that was never bought.
-func wornRings(gs *state.GlobalState) []data.RingData {
+// fall back on: a relic that quietly does not draw looks exactly like a relic that was never bought.
+func wornRelics(gs *state.GlobalState) []data.RelicData {
 	if gs.Run == nil {
 		return nil
 	}
 
-	slots := ringSlots(gs)
-	out := make([]data.RingData, 0, slots)
+	slots := relicSlots(gs)
+	out := make([]data.RelicData, 0, slots)
 	for _, key := range gs.Run.Worn() {
 		if len(out) == slots {
 			break
 		}
-		record, ok := gs.Rings[key]
+		record, ok := gs.Relics[key]
 		if !ok {
 			log.Printf("the run is wearing %q, which is in no record", key)
 			continue
@@ -311,12 +311,12 @@ func wornRings(gs *state.GlobalState) []data.RingData {
 	return out
 }
 
-// ringRow is the worn row as a draggable row of cards. **The lifecycle is carddrag.go's**; this is
+// relicRow is the worn row as a draggable row of cards. **The lifecycle is carddrag.go's**; this is
 // the half that knows the row's geometry and what a drop means.
 //
-// **Worn order is the order rings fire in**, so a drop here changes what a duel does — this is the
+// **Worn order is the order relics fire in**, so a drop here changes what a duel does — this is the
 // one draggable row in the game where the gesture is a rule and not an arrangement. See
-// Session.MoveRing.
+// Session.MoveRelic.
 //
 // **Nothing is lifted out of anything.** The run is the authority on what is worn and it is not
 // touched until the drop, so `rowLift` does nothing at all and the drawing skips the seat the drag
@@ -325,39 +325,39 @@ func wornRings(gs *state.GlobalState) []data.RingData {
 //
 // **Every screen that shows the row builds one of these**, with its own rectangle and its own idea
 // of what a click means: the combat screen's click does nothing, the shop's arms a sale.
-type ringRow struct {
+type relicRow struct {
 	rect  image.Rectangle
 	worn  int
 	click func(i int)
 	move  func(from, to int)
 }
 
-func (r ringRow) rowLen() int { return r.worn }
+func (r relicRow) rowLen() int { return r.worn }
 
-func (r ringRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle {
-	at := ringSlotAt(r.rect, i, r.worn)
-	return image.Rect(at.X, at.Y, at.X+cards.RingStyle.Width, at.Y+cards.RingStyle.Height)
+func (r relicRow) rowSlot(gs *state.GlobalState, i int) image.Rectangle {
+	at := relicSlotAt(r.rect, i, r.worn)
+	return image.Rect(at.X, at.Y, at.X+cards.RelicStyle.Width, at.Y+cards.RelicStyle.Height)
 }
 
 // rowZone is the row's own rectangle. **Tighter than the hand's band**, deliberately: the hand
 // stands alone at the bottom of the screen with nothing beside it, where this row has a duelist
 // card at one end and an enemy card or a margin at the other. A zone spanning the width would make
 // a drop on the duelist card a reorder.
-func (r ringRow) rowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
+func (r relicRow) rowZone(gs *state.GlobalState) image.Rectangle { return r.rect }
 
 // rowDropIndex is which seat the cursor is over, measured in pitches from the row's left edge and
-// from the middle of a step rather than its edge — the hand's arithmetic, over the ring row's
-// pitch, because once five rings are worn these overlap too.
+// from the middle of a step rather than its edge — the hand's arithmetic, over the relic row's
+// pitch, because once five relics are worn these overlap too.
 //
 // **Clamped to a seat that exists**, unlike the hand's, which may land one past the end: nothing is
-// being inserted here. Five rings reordered are still five rings.
-func (r ringRow) rowDropIndex(gs *state.GlobalState) int {
+// being inserted here. Five relics reordered are still five relics.
+func (r relicRow) rowDropIndex(gs *state.GlobalState) int {
 	if r.worn < 2 {
 		return 0
 	}
 
-	pitch := ringSlotPitch(r.rect, r.worn)
-	idx := (gs.MouseX - ringSlotAt(r.rect, 0, r.worn).X + pitch/2) / pitch
+	pitch := relicSlotPitch(r.rect, r.worn)
+	idx := (gs.MouseX - relicSlotAt(r.rect, 0, r.worn).X + pitch/2) / pitch
 	if idx < 0 {
 		idx = 0
 	}
@@ -368,80 +368,80 @@ func (r ringRow) rowDropIndex(gs *state.GlobalState) int {
 }
 
 // rowLift is deliberately empty. See the type comment.
-func (r ringRow) rowLift(int) {}
+func (r relicRow) rowLift(int) {}
 
-func (r ringRow) rowReturn(from, to int) {
+func (r relicRow) rowReturn(from, to int) {
 	if r.move != nil {
 		r.move(from, to)
 	}
 }
 
-func (r ringRow) rowClick(i int) {
+func (r relicRow) rowClick(i int) {
 	if r.click != nil {
 		r.click(i)
 	}
 }
 
-// moveWornRing is the run's half of a reorder, and the half every screen shares. A screen holding a
-// live duelist has a second half — see CombatScene.moveRing.
-func moveWornRing(gs *state.GlobalState, from, to int) bool {
+// moveWornRelic is the run's half of a reorder, and the half every screen shares. A screen holding a
+// live duelist has a second half — see CombatScene.moveRelic.
+func moveWornRelic(gs *state.GlobalState, from, to int) bool {
 	if gs.Run == nil {
 		return false
 	}
-	return gs.Run.MoveRing(from, to)
+	return gs.Run.MoveRelic(from, to)
 }
 
-// drawDraggedRing draws the ring riding the cursor, over everything else on the row.
+// drawDraggedRelic draws the relic riding the cursor, over everything else on the row.
 //
 // **It is drawn from the run rather than from anything the drag is carrying**, which is what the
 // empty rowLift buys: there is only ever one copy of what is worn, so a card in flight cannot
 // disagree with the row it came out of.
-func drawDraggedRing(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag,
+func drawDraggedRelic(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag,
 	counters map[string]string) {
 
 	if !drag.dragging() {
 		return
 	}
-	worn := wornRings(gs)
+	worn := wornRelics(gs)
 	if drag.origin() >= len(worn) {
 		return
 	}
 
 	record := worn[drag.origin()]
-	drawRingCard(gs, screen, drag.at(gs), record, counters[record.RingRecord], true, true)
+	drawRelicCard(gs, screen, drag.at(gs), record, counters[record.RelicRecord], true, true)
 }
 
-// ringCounter is one worn ring's accumulator, formatted for the badge in the corner of its card.
+// relicCounter is one worn relic's accumulator, formatted for the badge in the corner of its card.
 //
-// **The figure is what the ring is doing, not how far it has counted** *(owner's call,
-// 2026-08-26)*. Enflamed's accumulator is 50 when the ring is doing 1.5x damage, and a badge
+// **The figure is what the relic is doing, not how far it has counted** *(owner's call,
+// 2026-08-26)*. Enflamed's accumulator is 50 when the relic is doing 1.5x damage, and a badge
 // reading `50` would be a number in units nothing on screen explains. `combat.GrowthEffect` is what
 // resolves the one numeric effect the accumulator feeds and `combat.Scaling` says whether that
 // figure is a percentage — so a multiplier reads as a multiplier and flat life reads as life.
 //
-// **A ring that does not grow has no badge**, which is most of the catalogue: an empty string draws
+// **A relic that does not grow has no badge**, which is most of the catalogue: an empty string draws
 // nothing. That is the whole distinction the badge is for — a card carrying one is a card whose
 // number is still moving.
-func ringCounter(w combat.WornRing) string {
+func relicCounter(w combat.WornRelic) string {
 	return combat.CounterLabel(w)
 }
 
-// ringCounters is a badge per worn ring, by record key.
+// relicCounters is a badge per worn relic, by record key.
 //
 // **Keyed by record and not by position**, exactly as the accumulator itself is: the row is about
 // to become something the player can drag into a different order, and a badge indexed by seat would
-// follow the finger rather than the ring.
-func ringCounters(worn []combat.WornRing) map[string]string {
+// follow the finger rather than the relic.
+func relicCounters(worn []combat.WornRelic) map[string]string {
 	out := make(map[string]string, len(worn))
 	for _, w := range worn {
-		if c := ringCounter(w); c != "" {
-			out[combat.RingOf(w.Ring).Key] = c
+		if c := relicCounter(w); c != "" {
+			out[combat.RelicOf(w.Relic).Key] = c
 		}
 	}
 	return out
 }
 
-// runCounters is the badges as the run holds them: what a ring has banked between fights.
+// runCounters is the badges as the run holds them: what a relic has banked between fights.
 //
 // **The two callers are the screens with no duel on them** — the reward screen's build band and the
 // shop. The combat screen reads the duelist instead, and mid-blow the sum: see countersNow.
@@ -449,12 +449,12 @@ func runCounters(gs *state.GlobalState) map[string]string {
 	if gs.Run == nil {
 		return nil
 	}
-	return ringCounters(gs.Run.WornRings())
+	return relicCounters(gs.Run.WornRelics())
 }
 
 // countersNow is the badges as the *round being played back* has got to.
 //
-// **A growing ring steps between the terms of one blow as of 2026-08-26** *(owner's call)*, so the
+// **A growing relic steps between the terms of one blow as of 2026-08-26** *(owner's call)*, so the
 // duelist the screen is holding is a round behind while the sum is being read: `endOfRound` adopts
 // the resolved duelist only once playback is finished. The hand dialog carries the accumulator each
 // term left behind, so the row can step its badges on the beat the figure lands — which is the whole
@@ -464,19 +464,19 @@ func runCounters(gs *state.GlobalState) map[string]string {
 // **It reads figures the resolver produced and computes none**, exactly like the sum itself. Off the
 // dialog it falls back to the duelist, which is every frame outside a blow.
 func (s *CombatScene) countersNow() map[string]string {
-	worn := s.fighter.Duelist.WornRings()
+	worn := s.fighter.Duelist.WornRelics()
 	if grown, ok := s.theatre.mathBox.growthNow(combat.SideA); ok {
 		worn = withGrown(worn, grown)
 	}
-	return ringCounters(worn)
+	return relicCounters(worn)
 }
 
 // withGrown is a worn set with the accumulators one beat of a sum reached, as a copy.
 //
 // **A copy, because the duelist it came from is the fight's own** — this is a picture of a number
 // part way through a round, and writing it back would be presentation changing an outcome.
-func withGrown(worn []combat.WornRing, grown [combat.MaxWornRings]int) []combat.WornRing {
-	out := make([]combat.WornRing, len(worn))
+func withGrown(worn []combat.WornRelic, grown [combat.MaxWornRelics]int) []combat.WornRelic {
+	out := make([]combat.WornRelic, len(worn))
 	copy(out, worn)
 	for i := range out {
 		if i < len(grown) {
@@ -490,25 +490,25 @@ func withGrown(worn []combat.WornRing, grown [combat.MaxWornRings]int) []combat.
 //
 // **A card that does work should be seen doing it** *(owner's call, 2026-08-26)*. The figures leave
 // the cards and land in the sum; without the card moving, the number appears to come from nowhere
-// and the row of rings sits inert through the one moment it is earning its place.
+// and the row of relics sits inert through the one moment it is earning its place.
 //
 // **Side to side rather than a jump** *(owner's call)*. A card that leaps reads as being *picked*,
 // which is what the selected-card lift already means in the hand and what the played row's lift
 // means on the table — two vertical vocabularies already spoken for. Sideways is unused and reads as
 // a thing rattling as it fires.
 var (
-	// ringShakeTicks is how long one shake lasts. **Under a term's own flight**, because the figures
+	// relicShakeTicks is how long one shake lasts. **Under a term's own flight**, because the figures
 	// arrive one after another and a shake still running when the next one starts would smear the
 	// beats together.
-	ringShakeTicks = beat(3, 5)
+	relicShakeTicks = beat(3, 5)
 
-	// ringShakeSwings is how many times the card crosses its own centre. Three reads as a rattle;
+	// relicShakeSwings is how many times the card crosses its own centre. Three reads as a rattle;
 	// one reads as a nudge and five as a wobble.
-	ringShakeSwings = 3.0
+	relicShakeSwings = 3.0
 
-	// ringShakeWidth is how far it travels either side at the start. **It decays to nothing** over
+	// relicShakeWidth is how far it travels either side at the start. **It decays to nothing** over
 	// the shake, so the card settles rather than stopping mid-swing.
-	ringShakeWidth = 7
+	relicShakeWidth = 7
 )
 
 // shakeOffset is how far sideways a card sits this frame: a decaying oscillation that ends where it
@@ -522,7 +522,7 @@ func shakeOffset(t travel) int {
 		return 0
 	}
 	p := t.progress()
-	return int(math.Sin(p*math.Pi*2*ringShakeSwings) * (1 - p) * float64(ringShakeWidth))
+	return int(math.Sin(p*math.Pi*2*relicShakeSwings) * (1 - p) * float64(relicShakeWidth))
 }
 
 // tickShakes starts a shake on whatever the sum has just reached, and advances the ones already
@@ -534,8 +534,8 @@ func shakeOffset(t travel) int {
 //
 // **It may not change an outcome**, like every other thing on this screen that moves.
 func (s *CombatScene) tickShakes(gs *state.GlobalState) {
-	for i := range s.ringShake {
-		s.ringShake[i].tick()
+	for i := range s.relicShake {
+		s.relicShake[i].tick()
 	}
 	for i := range s.cardShake {
 		s.cardShake[i].tick()
@@ -547,13 +547,13 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 	}
 	s.shakeItem = at
 
-	rings, card, ok := s.theatre.mathBox.shaking(combat.SideA)
+	relics, card, ok := s.theatre.mathBox.shaking(combat.SideA)
 	if !ok {
 		return
 	}
-	for seat, shaking := range rings {
-		if shaking && seat < len(s.ringShake) {
-			s.ringShake[seat] = newTravel(0, ringShakeTicks)
+	for seat, shaking := range relics {
+		if shaking && seat < len(s.relicShake) {
+			s.relicShake[seat] = newTravel(0, relicShakeTicks)
 		}
 	}
 	if card > 0 {
@@ -564,8 +564,8 @@ func (s *CombatScene) tickShakes(gs *state.GlobalState) {
 // shakePlayedCard starts one played card rattling, growing the row of clocks if the table is holding
 // more cards than it has seen before.
 //
-// **A slice rather than a fixed array**, unlike the rings: a worn row is capped at five by a rule,
-// and the number of cards on the table is capped by an action budget that a ring can make cheaper.
+// **A slice rather than a fixed array**, unlike the relics: a worn row is capped at five by a rule,
+// and the number of cards on the table is capped by an action budget that a relic can make cheaper.
 func (s *CombatScene) shakePlayedCard(seat int) {
 	if seat < 0 {
 		return
@@ -573,7 +573,7 @@ func (s *CombatScene) shakePlayedCard(seat int) {
 	for len(s.cardShake) <= seat {
 		s.cardShake = append(s.cardShake, travel{})
 	}
-	s.cardShake[seat] = newTravel(0, ringShakeTicks)
+	s.cardShake[seat] = newTravel(0, relicShakeTicks)
 }
 
 // playedCardShake is how far sideways the played card in one seat sits this frame.
@@ -584,18 +584,18 @@ func (s *CombatScene) playedCardShake(seat int) int {
 	return shakeOffset(s.cardShake[seat])
 }
 
-// ringCardCentre is the middle of one worn seat's card, which is where that ring's multiplier sets
+// relicCardCentre is the middle of one worn seat's card, which is where that relic's multiplier sets
 // off from on its way into the sum.
 //
-// **It reads the same two functions the row is drawn with** — `ringPaneRect` and `ringSlotAt` — so a
+// **It reads the same two functions the row is drawn with** — `relicPaneRect` and `relicSlotAt` — so a
 // figure cannot set off from a seat the card is not in. That is the rule every origin on this screen
 // follows; see `handCardCentre`.
-func (s *CombatScene) ringCardCentre(gs *state.GlobalState, seat int) image.Point {
-	at := ringSlotAt(s.ringPaneRect(gs), seat, len(wornRings(gs)))
-	return image.Pt(at.X+cards.RingStyle.Width/2, at.Y+cards.RingStyle.Height/2)
+func (s *CombatScene) relicCardCentre(gs *state.GlobalState, seat int) image.Point {
+	at := relicSlotAt(s.relicPaneRect(gs), seat, len(wornRelics(gs)))
+	return image.Pt(at.X+cards.RelicStyle.Width/2, at.Y+cards.RelicStyle.Height/2)
 }
 
-// drawRingPane draws the backing, the rings, a rule under them, and the cap as a fraction on
+// drawRelicPane draws the backing, the relics, a rule under them, and the cap as a fraction on
 // its right end.
 //
 // **There is still no box** *(2026-08-12)*. The backing that arrived today is a fill and not a
@@ -603,7 +603,7 @@ func (s *CombatScene) ringCardCentre(gs *state.GlobalState, seat int) image.Poin
 // thing from the pink panel this pane started as and was stripped of on 2026-08-11. What that
 // stripping went too far on is legibility of the *edges*: with a fighter card at either end of
 // a row spanning most of the screen, nothing said where the middle began. See
-// ringPaneBackColor.
+// relicPaneBackColor.
 //
 // **Empty slots are not drawn.** They were the first sketch and the fraction replaced them:
 // five frames of which two are dashed outlines spends the loudest thing in the row on saying
@@ -611,120 +611,120 @@ func (s *CombatScene) ringCardCentre(gs *state.GlobalState, seat int) image.Poin
 // MECHANICS.md's "the cap is never displayed — it surfaces when you try to buy a sixth" is the
 // rule this softens, and softening it is the owner's call: the fraction is the deck pile's
 // idea, where a count of a fixed total is read without being looked for.
-func (s *CombatScene) drawRingPane(gs *state.GlobalState, screen *ebiten.Image) {
-	r := s.ringPaneRect(gs)
+func (s *CombatScene) drawRelicPane(gs *state.GlobalState, screen *ebiten.Image) {
+	r := s.relicPaneRect(gs)
 
 	// The surface first, so everything else stands on it.
-	back := s.ringPaneBackRect(gs)
+	back := s.relicPaneBackRect(gs)
 
 	// **Flat, where the deck panel and the fight log are bevelled** *(owner's call, 2026-08-24)*.
-	// It was sunken for an afternoon, on the argument that the ring cards stand *in* it. What that
+	// It was sunken for an afternoon, on the argument that the relic cards stand *in* it. What that
 	// misses is what is standing there: five bevelled cards on a bevelled tray on a bevelled
 	// screen is three depths in one corner, and the cards are the thing meant to be read. The two
 	// panels that keep their bevel are overlays — they cover the game, so a lit edge is what says
 	// they are in front of it. This backing covers nothing.
 	vector.DrawFilledRect(screen,
 		float32(back.Min.X), float32(back.Min.Y), float32(back.Dx()), float32(back.Dy()),
-		ringPaneBackColor, false)
+		relicPaneBackColor, false)
 
-	worn := wornRings(gs)
+	worn := wornRelics(gs)
 	counters := s.countersNow()
-	for i, ring := range worn {
-		// **The seat a dragged ring left is drawn empty rather than closed up**, which is the
+	for i, relic := range worn {
+		// **The seat a dragged relic left is drawn empty rather than closed up**, which is the
 		// hand's rule too: the row keeps its width and its pitch while a card is up, so nothing
 		// slides sideways under the cursor mid-drag.
-		if s.ringDrag.dragging() && i == s.ringDrag.origin() {
+		if s.relicDrag.dragging() && i == s.relicDrag.origin() {
 			continue
 		}
 
 		// **The shake and the toast go together**: the card rattles and its border lights, which is
-		// what says the ring is working rather than merely moving.
-		at := ringSlotAt(r, i, len(worn))
-		shake := shakeOffset(s.ringShake[i])
+		// what says the relic is working rather than merely moving.
+		at := relicSlotAt(r, i, len(worn))
+		shake := shakeOffset(s.relicShake[i])
 		at.X += shake
 
-		drawRingCard(gs, screen, at, ring, counters[ring.RingRecord], true, !s.ringShake[i].done())
+		drawRelicCard(gs, screen, at, relic, counters[relic.RelicRecord], true, !s.relicShake[i].done())
 	}
 
 	// **The count hangs off the pane's bottom-right corner** *(2026-09-04, owner's call)*, and the
 	// rule that used to run under the row is gone with the trip through the caption column: the
 	// backing has an edge of its own now, so a second line saying where the row ends was drawing
-	// the same fact twice. See ringCountRect.
-	s.drawRingCount(gs, screen, len(worn))
+	// the same fact twice. See relicCountRect.
+	s.drawRelicCount(gs, screen, len(worn))
 
-	// Last, so the ring riding the cursor is over the rule and the fraction as well as the row.
-	drawDraggedRing(gs, screen, &s.ringDrag, counters)
+	// Last, so the relic riding the cursor is over the rule and the fraction as well as the row.
+	drawDraggedRelic(gs, screen, &s.relicDrag, counters)
 }
 
-// ringCountRect is where the worn count stands: **hung off the bottom-right corner of the pane
-// the rings stand on** *(2026-09-04, owner's call)*. It spent a day in the caption column beside
+// relicCountRect is where the worn count stands: **hung off the bottom-right corner of the pane
+// the relics stand on** *(2026-09-04, owner's call)*. It spent a day in the caption column beside
 // the duelist card, which is where the floor and the room were; both have moved back under that
-// card, and a count of the rings belongs against the rings.
+// card, and a count of the relics belongs against the relics.
 //
 // The rectangle spans the whole backing and the figure is drawn right-aligned in it, so the number
 // sits on the corner however wide the pane gets.
-func (s *CombatScene) ringCountRect(gs *state.GlobalState) image.Rectangle {
-	back := s.ringPaneBackRect(gs)
-	top := back.Max.Y + ringCountTopGap
-	return image.Rect(back.Min.X, top, back.Max.X, top+ringCountSize)
+func (s *CombatScene) relicCountRect(gs *state.GlobalState) image.Rectangle {
+	back := s.relicPaneBackRect(gs)
+	top := back.Max.Y + relicCountTopGap
+	return image.Rect(back.Min.X, top, back.Max.X, top+relicCountSize)
 }
 
-// drawRingCount writes `worn / cap` on the pane's bottom-right corner.
+// drawRelicCount writes `worn / cap` on the pane's bottom-right corner.
 //
 // **`worn / cap`, exactly like the pile's `left / owned`.** The numerator is what moves and the
 // denominator deliberately never does, so the figure is read as "three of your five fingers are
 // spoken for" rather than as two unrelated numbers.
 //
-// **The rule is drawn even with no rings equipped**, which is deliberate — a line with an empty
+// **The rule is drawn even with no relics equipped**, which is deliberate — a line with an empty
 // figure under it says the row exists and is empty, where nothing at all says the screen forgot to
 // draw something.
-func (s *CombatScene) drawRingCount(gs *state.GlobalState, screen *ebiten.Image, worn int) {
-	r := s.ringCountRect(gs)
+func (s *CombatScene) drawRelicCount(gs *state.GlobalState, screen *ebiten.Image, worn int) {
+	r := s.relicCountRect(gs)
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(r.Max.X), float64(r.Min.Y))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d rings", worn, maxRings),
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: ringCountSize}, op)
+	text.Draw(screen, fmt.Sprintf("%d/%d relics", worn, maxRelics),
+		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 
-// updateRingRow runs the drag over the worn row. Called every tick from Update.
+// updateRelicRow runs the drag over the worn row. Called every tick from Update.
 //
 // **The row is live while a round resolves, unlike the hand** *(owner's call, 2026-08-26)*. The
-// hand goes dead there because a queue being replayed is not a queue you may edit; the ring row has
+// hand goes dead there because a queue being replayed is not a queue you may edit; the relic row has
 // no such reason. A round is decided in full by `combat.ResolveRound` before a frame of it is
 // drawn, so a reorder made while it plays back cannot reach it — it lands on the next one, which is
 // exactly what the player is told by watching the row move.
 //
-// **The one thing it must not leave behind is a disagreement.** See moveRing.
-func (s *CombatScene) updateRingRow(gs *state.GlobalState) {
-	row := s.ringRow(gs)
+// **The one thing it must not leave behind is a disagreement.** See moveRelic.
+func (s *CombatScene) updateRelicRow(gs *state.GlobalState) {
+	row := s.relicRow(gs)
 
 	// A modal covering the screen, or a tutorial step holding input elsewhere, takes the row with
 	// it — cancelling rather than returning, for the reason the action box cancels.
 	if s.modalUp() || !gs.CursorAllowed() {
-		s.ringDrag.cancel(row)
+		s.relicDrag.cancel(row)
 		return
 	}
 
-	s.ringDrag.update(gs, row)
+	s.relicDrag.update(gs, row)
 }
 
-// ringRow is this screen's worn row, addressed by the shared drag.
+// relicRow is this screen's worn row, addressed by the shared drag.
 //
-// **A click on a ring does nothing here.** The shop is where a ring is bought and sold; on the
+// **A click on a relic does nothing here.** The shop is where a relic is bought and sold; on the
 // combat screen the row is a thing you read and now a thing you can reorder, and a click that did
 // something would be a third meaning for the same press.
-func (s *CombatScene) ringRow(gs *state.GlobalState) ringRow {
-	return ringRow{
-		rect: s.ringPaneRect(gs),
-		worn: len(wornRings(gs)),
-		move: func(from, to int) { s.moveRing(gs, from, to) },
+func (s *CombatScene) relicRow(gs *state.GlobalState) relicRow {
+	return relicRow{
+		rect: s.relicPaneRect(gs),
+		worn: len(wornRelics(gs)),
+		move: func(from, to int) { s.moveRelic(gs, from, to) },
 	}
 }
 
-// moveRing commits a reorder to every copy of the row that exists.
+// moveRelic commits a reorder to every copy of the row that exists.
 //
 // **There are three, and missing one is silent** *(2026-08-26)*. The run holds what is worn; the
 // duelist in the fight holds their own copy with the accumulators this fight has grown; and, from
@@ -732,19 +732,19 @@ func (s *CombatScene) ringRow(gs *state.GlobalState) ringRow {
 // to end as — which `endOfRound` assigns over the live one. Moving only the first two would look
 // right for the rest of the round and then snap back the moment it ended.
 //
-// **What it deliberately does not do is re-Equip.** `Session.Equip` adds a ring's stats for the
+// **What it deliberately does not do is re-Equip.** `Session.Equip` adds a relic's stats for the
 // fight, so putting the row through it again would pay every `add-hp` and `add-dmg` a second time.
-// A reorder is a permutation and nothing else; `MoveRing` moves the accumulators with their rings.
+// A reorder is a permutation and nothing else; `MoveRelic` moves the accumulators with their relics.
 //
 // **The round already resolved is not touched**, which is the whole rule this feature is under: the
 // blow being played back was decided against the order the row was in when DUEL! was pressed.
-func (s *CombatScene) moveRing(gs *state.GlobalState, from, to int) {
-	if !moveWornRing(gs, from, to) {
+func (s *CombatScene) moveRelic(gs *state.GlobalState, from, to int) {
+	if !moveWornRelic(gs, from, to) {
 		return
 	}
 
-	s.fighter.Duelist = s.fighter.Duelist.MoveRing(from, to)
-	s.fighterAfter = s.fighterAfter.MoveRing(from, to)
+	s.fighter.Duelist = s.fighter.Duelist.MoveRelic(from, to)
+	s.fighterAfter = s.fighterAfter.MoveRelic(from, to)
 
-	trace.Logf("rings", "reordered %d -> %d, worn %v", from, to, gs.Run.Worn())
+	trace.Logf("relics", "reordered %d -> %d, worn %v", from, to, gs.Run.Worn())
 }

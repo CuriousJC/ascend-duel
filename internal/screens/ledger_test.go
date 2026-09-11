@@ -171,7 +171,7 @@ func TestTheScrollbarStandsInsideThePanel(t *testing.T) {
 }
 
 // **The working under a blow is what the ledger exists for**, so it is pinned: a line per landing,
-// each naming its card and its figure, with the ring that priced it beside it.
+// each naming its card and its figure, with the relic that priced it beside it.
 func TestABlowWritesItsWorkingOut(t *testing.T) {
 	s := &CombatScene{}
 
@@ -185,9 +185,9 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 	}
 	e.HandCards[0], e.HandCards[1] = 0, 1
 	e.HandAmounts[0], e.HandAmounts[1] = 20, 40
-	// What each landing was worth before its rings: the second card is a 20 the ring doubled.
+	// What each landing was worth before its relics: the second card is a 20 the relic doubled.
 	e.HandCardBase[0], e.HandCardBase[1] = 20, 20
-	e.HandRingScale[1][0] = 200
+	e.HandRelicScale[1][0] = 200
 	e.HandLanding[1][1] = true
 
 	played := []combat.Card{
@@ -202,8 +202,8 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 
 	// **The sum is the working's last line and is the one the player watched fly into place** —
 	// term by term, not the cards folded into one figure.
-	// **The ring's figure stays with the term it priced**, in brackets — folding it into the term
-	// hides the ring, and hanging it off the end of the sum would read as multiplying every term
+	// **The relic's figure stays with the term it priced**, in brackets — folding it into the term
+	// hides the relic, and hanging it off the end of the sum would read as multiplying every term
 	// and would not come to the total.
 	if got, want := lines[2].Text(), "20 + (20 x 2) x 1.5 = 90"; got != want {
 		t.Errorf("the sum reads %q, want %q", got, want)
@@ -217,10 +217,10 @@ func TestABlowWritesItsWorkingOut(t *testing.T) {
 		t.Errorf("the first term is %q, which does not say what card paid it", lines[0].Text())
 	}
 	if !strings.Contains(lines[1].Text(), "2x") {
-		t.Errorf("the second term is %q, which does not say what the ring did", lines[1].Text())
+		t.Errorf("the second term is %q, which does not say what the relic did", lines[1].Text())
 	}
 	if !strings.Contains(lines[1].Text(), "again") {
-		t.Errorf("the second term is %q, which does not say a ring landed it again", lines[1].Text())
+		t.Errorf("the second term is %q, which does not say a relic landed it again", lines[1].Text())
 	}
 }
 
@@ -257,37 +257,37 @@ func TestAHandIsNamedRungFirst(t *testing.T) {
 	}
 }
 
-// The account is coloured the way the screen is: a figure in its card's element, a ring's
-// multiplier in the ring pink, the hand's own in the hand's colour. **It is the reason a line is
+// The account is coloured the way the screen is: a figure in its card's element, a relic's
+// multiplier in the relic pink, the hand's own in the hand's colour. **It is the reason a line is
 // runs rather than a string**, and it is the part a refactor would quietly flatten.
 func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
 	s := &CombatScene{}
 
 	e := combat.Event{Kind: combat.KindHand, HandCardCount: 1, Multiplier: 200, Amount: 40}
 	e.HandAmounts[0], e.HandCardBase[0] = 20, 20
-	e.HandRingScale[0][0] = 200
+	e.HandRelicScale[0][0] = 200
 
 	lines := s.handTermLines(e, []combat.Card{{Concept: combat.Strike, Element: combat.Fire}})
 	rows := paneRowsFor(lines)
 
 	fire := cards.BorderOf(artFor(combat.Fire))
-	ring := boostInk
+	relic := boostInk
 
 	term := rows[0]
 	if term.runs[0].ink != fire {
 		t.Errorf("the card's name is in %v, want its element's %v", term.runs[0].ink, fire)
 	}
-	if last := term.runs[len(term.runs)-1]; last.ink != ring {
-		t.Errorf("the ring's note is in %v, want the ring pink %v", last.ink, ring)
+	if last := term.runs[len(term.runs)-1]; last.ink != relic {
+		t.Errorf("the relic's note is in %v, want the relic pink %v", last.ink, relic)
 	}
 
 	// **Nothing in the sum wears a hue that means something else**, and nothing in it is
 	// underlined: hue belongs to the elements and the wheel is full, and an underline mid-sum
 	// reads as a typesetting accident. This is the check that catches either coming back.
 	sum := rows[len(rows)-1]
-	var sawRing bool
+	var sawRelic bool
 	for _, r := range sum.runs {
-		sawRing = sawRing || r.ink == ring
+		sawRelic = sawRelic || r.ink == relic
 		if r.mark {
 			t.Errorf("a run of the sum is underlined: %q", r.text)
 		}
@@ -295,8 +295,8 @@ func TestTheWorkingIsColouredLikeTheScreen(t *testing.T) {
 			t.Errorf("a run of the sum is written in the arcane element's colour: %q", r.text)
 		}
 	}
-	if !sawRing {
-		t.Error("the ring's figure in the sum is not in the ring's colour")
+	if !sawRelic {
+		t.Error("the relic's figure in the sum is not in the relic's colour")
 	}
 }
 

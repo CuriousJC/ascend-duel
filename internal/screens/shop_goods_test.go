@@ -62,7 +62,7 @@ func TestTheSameFightOpensTheSameBag(t *testing.T) {
 }
 
 // **The bag is not the shelf and not the reward screen's worms.** Sharing a stream would make
-// authoring a stone change which rings a run was offered — the exact failure internal/seeds exists
+// authoring a stone change which relics a run was offered — the exact failure internal/seeds exists
 // to prevent, and one that nothing else would catch.
 func TestTheBagAndTheCanDrawFromTheirOwnStreams(t *testing.T) {
 	gs := testRun()
@@ -134,7 +134,7 @@ func TestTheGoodsStandInTheirPane(t *testing.T) {
 		t.Errorf("the bag at %d is not left of the can at %d", bag.Min.X, can.Min.X)
 	}
 	if bag.Min.Y != s.shelfSlot(gs, 0).Min.Y {
-		t.Errorf("the packs sit at %d and the rings at %d, so the shelf is not one row",
+		t.Errorf("the packs sit at %d and the relics at %d, so the shelf is not one row",
 			bag.Min.Y, s.shelfSlot(gs, 0).Min.Y)
 	}
 

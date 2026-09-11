@@ -55,10 +55,10 @@ var sheets = []sheet{
 			"show cards the rules cannot deal yet.",
 	},
 	{
-		Dir:   "ringsheet",
-		Tool:  "./tools/ringsheet",
-		Title: "Ring sheet",
-		Blurb: "Every ring, grouped by rarity, with its price, the sentence it prints and the " +
+		Dir:   "relicsheet",
+		Tool:  "./tools/relicsheet",
+		Title: "Relic sheet",
+		Blurb: "Every relic, grouped by rarity, with its price, the sentence it prints and the " +
 			"rules that actually fire side by side. The only place the authored line and the rule " +
 			"can be read against each other.",
 	},

@@ -43,7 +43,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		DMGBonus:     s.dmgBonus,
 		LifeBonus:    s.lifeBonus,
 		RoundLimit:   s.roundLimit,
-		RingSlots:    s.ringSlots,
+		RelicSlots:   s.relicSlots,
 		Worn:         s.Worn(),
 		Grown:        map[string]int{},
 		Stones:       s.StoneCounts(),
@@ -61,7 +61,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 		Ledger: s.ledgerSnapshot(),
 	}
 
-	// **Only rings actually worn.** `grown` can hold an accumulator for a ring since sold, and
+	// **Only relics actually worn.** `grown` can hold an accumulator for a relic since sold, and
 	// writing one down would be recording state for something the run no longer has.
 	for _, key := range s.worn {
 		if n := s.grown[key]; n != 0 {
@@ -94,7 +94,7 @@ func (s *Session) Snapshot(runSeed int64) *profile.RunSnapshot {
 // ledgerSnapshot writes the run's account out as plain records.
 //
 // **Prose is copied rather than resolved.** Every other conversion here turns a name back into a
-// thing this build has — a concept, an element, a ring — and refuses a snapshot naming something
+// thing this build has — a concept, an element, a relic — and refuses a snapshot naming something
 // it has not got. A ledger line names nothing: it is words that were true when they were written,
 // and the day a status is renamed is not a day a saved run should stop loading.
 func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
@@ -166,13 +166,13 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 // **The climb is rebuilt from the seed rather than restored**, which is what keeps the file small
 // and keeps one answer to who stands in which room — see profile/run.go.
 //
-// **Every name is resolved rather than trusted**, exactly as a ring record is: a concept key, an
-// element, a phase and a ring record are four vocabularies, and a snapshot naming something this
+// **Every name is resolved rather than trusted**, exactly as a relic record is: a concept key, an
+// element, a phase and a relic record are four vocabularies, and a snapshot naming something this
 // build has not got is a resumed run that is quietly wrong. It is refused instead, which costs the
 // player one run and is reported to the caller as a fresh start.
 //
-// **A ring the catalogue no longer holds is refused rather than dropped**, on the same grounds: a
-// run silently resuming without the ring it was wearing is a run the player would have to work out
+// **A relic the catalogue no longer holds is refused rather than dropped**, on the same grounds: a
+// run silently resuming without the relic it was wearing is a run the player would have to work out
 // had changed.
 func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, snap *profile.RunSnapshot) (*Session, int64, error) {
 	if snap == nil {
@@ -226,7 +226,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	}
 
 	// **Built bare rather than through New or Start.** Both of those mint fresh card identities and
-	// put `StartingRings` on, which is right for a run beginning and wrong for one being put back
+	// put `StartingRelics` on, which is right for a run beginning and wrong for one being put back
 	// exactly as it was.
 	s := &Session{
 		deck:       deck,
@@ -240,7 +240,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 		lifeBonus:  snap.LifeBonus,
 		phase:      phase,
 		roundLimit: resumeRoundLimit(snap.RoundLimit),
-		ringSlots:  resumeRingSlots(snap.RingSlots),
+		relicSlots: resumeRelicSlots(snap.RelicSlots),
 		grown:      map[string]int{},
 		stones:     map[string]int{},
 		plays:      map[string]int{},
@@ -255,11 +255,11 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 
 	for _, key := range snap.Worn {
 		if !s.Wear(key) {
-			return nil, 0, fmt.Errorf("ring %q is not one this build can wear", key)
+			return nil, 0, fmt.Errorf("relic %q is not one this build can wear", key)
 		}
 	}
 	// **A parasite the catalogue no longer holds is refused rather than dropped**, on the terms a
-	// ring is: a run resumed one consumable lighter is a run the player would have to work out had
+	// relic is: a run resumed one consumable lighter is a run the player would have to work out had
 	// changed. Order is acquisition order and is kept, because it is the order the bucket draws.
 	for _, key := range snap.Held {
 		if !s.Hold(key) {
@@ -290,7 +290,7 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	}
 
 	// **A stone naming a rung this build has not got is refused rather than dropped**, exactly as a
-	// ring the catalogue no longer holds is: a run resumed quietly paying less for its Card Pairs is
+	// relic the catalogue no longer holds is: a run resumed quietly paying less for its Card Pairs is
 	// a run the player would have to work out had changed.
 	for hand, n := range snap.Stones {
 		if _, ok := combat.HandSlot(hand); !ok {
@@ -315,8 +315,8 @@ func Resume(enemies map[string]data.EnemyData, bosses map[string]data.BossData, 
 	}
 
 	for key, n := range snap.Grown {
-		if _, ok := registeredRings[key]; !ok {
-			return nil, 0, fmt.Errorf("ring %q has grown, and is not in the catalogue", key)
+		if _, ok := registeredRelics[key]; !ok {
+			return nil, 0, fmt.Errorf("relic %q has grown, and is not in the catalogue", key)
 		}
 		s.grown[key] = n
 	}

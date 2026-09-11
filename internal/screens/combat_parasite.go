@@ -299,7 +299,7 @@ const stoneShowerStride int64 = 0x3B9A_CA07
 // it: an altered card is redrawn as it now is, and a card the run no longer owns leaves the row.
 //
 // **It walks by identity**, which is the whole reason a card has one. A card in the hand is a copy —
-// and, with a flip ring worn, a copy in a colour the run's card never had — so the match cannot be
+// and, with a flip relic worn, a copy in a colour the run's card never had — so the match cannot be
 // made by looking at the two cards.
 //
 // **A card the run has lost is dropped from the hand, the queue and the selection together.**
@@ -312,7 +312,7 @@ func (s *CombatScene) resyncHandFromRun(gs *state.GlobalState) {
 			continue
 		}
 		// **The card is re-dealt rather than re-coloured** *(2026-09-08)*. It used to take the
-		// element straight off the card in the hand, on the argument that a flip ring had recoloured
+		// element straight off the card in the hand, on the argument that a flip relic had recoloured
 		// it as it was drawn and that colour is a fact about the card in play. That argument is
 		// right about the flip and wrong about everything else, and it made every element parasite
 		// do nothing at all: Hexbore turned the run's card arcane, this line wrote the hand's fire

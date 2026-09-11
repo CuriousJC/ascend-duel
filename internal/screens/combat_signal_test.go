@@ -259,20 +259,20 @@ func TestABurstIsTheSameBurstEveryTime(t *testing.T) {
 		t.Error("two seats throw the same burst; the pattern says nothing about the card")
 	}
 
-	// **The two rings are different scatters**, or they line up into spokes — which is the one
-	// thing a second ring exists to avoid.
+	// **The two relics are different scatters**, or they line up into spokes — which is the one
+	// thing a second relic exists to avoid.
 	if same(burstRays(c, 0)[:signalSparks], burstRays(c, 1)) {
-		t.Error("both rings throw the same lengths")
+		t.Error("both relics throw the same lengths")
 	}
 	if got := len(burstRays(c, 1)); got != signalSparks {
-		t.Errorf("the inner ring has %d arms, want %d", got, signalSparks)
+		t.Errorf("the inner relic has %d arms, want %d", got, signalSparks)
 	}
 
-	for ring := 0; ring < 2; ring++ {
-		for i, r := range burstRays(c, ring) {
+	for relic := 0; relic < 2; relic++ {
+		for i, r := range burstRays(c, relic) {
 			if r <= 0 || r > 1 {
-				t.Errorf("ring %d arm %d reaches %v, outside the fraction of its own length it is "+
-					"meant to be", ring, i, r)
+				t.Errorf("relic %d arm %d reaches %v, outside the fraction of its own length it is "+
+					"meant to be", relic, i, r)
 			}
 		}
 	}

@@ -164,7 +164,7 @@ type RingEffectData struct {
 // before the grammar existed, and every ring written since — the form multipliers, the two vitae
 // rings, the growing stat rings — is a rule with no picture. A pink border around an empty face
 // reads as a card that failed to load; this reads as one waiting for art.
-const DefaultRingArt = "defaultring_png"
+const DefaultRingArt = "default-ring"
 
 // ArtKey is the picture this ring actually draws: its own if it has one, the default otherwise.
 //

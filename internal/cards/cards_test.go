@@ -682,91 +682,6 @@ func TestDraggingKeepsItsBorderAndGhostsItsFace(t *testing.T) {
 	}
 }
 
-func TestAWordPerLineNameClearsWhatIsUnderIt(t *testing.T) {
-	// The ring card is the one style that breaks a name across lines, and the thing directly
-	// under it is the artwork. A second line is 22 pixels the layout did not previously spend,
-	// so this is the join: how many lines the style has room for, measured in ink rather than
-	// assumed, against the top of the art box.
-	//
-	// **It does not know what a ring is called.** Whether the names in `rings.json` fit the room
-	// this leaves is `internal/screens`' question, since that is the package allowed to read the
-	// file — see TestEveryRingNameFitsItsCard.
-	st := RingStyle
-	if !st.NameWordPerLine {
-		t.Fatal("the ring card is not breaking its name a word to a line")
-	}
-	if st.NameLinePitch < int(st.NameSize) {
-		t.Errorf("a line pitch of %d under a %gpt name overlaps its own lines",
-			st.NameLinePitch, st.NameSize)
-	}
-
-	f := faces(t)
-	face, err := f.at(st.NameSize)
-	if err != nil {
-		t.Fatal(err)
-	}
-	m := face.Metrics()
-	lineHeight := m.Ascent.Ceil() + m.Descent.Ceil()
-
-	if lines := st.NameLinesAbove(st.ArtTop, lineHeight); lines < 2 {
-		t.Errorf("the ring card has room for %d line(s) of name above art at y=%d — a two-word "+
-			"ring would draw over its own picture", lines, st.ArtTop)
-	}
-
-	// And the pixels agree: a two-word name's ink stops above the art box.
-	img := render(t, Spec{Name: "Frozen Lightning", Element: Ring, Enabled: true}, st)
-	for y := st.ArtTop; y < st.ArtTop+8; y++ {
-		for x := st.BorderWidth; x < st.Width-st.BorderWidth; x++ {
-			if img.RGBAAt(x, y) != Surface {
-				t.Fatalf("ink at (%d,%d), inside the art box that starts at y=%d", x, y, st.ArtTop)
-			}
-		}
-	}
-}
-
-func TestRingNameIsCentered(t *testing.T) {
-	// A ring has no glyph column, so a left-aligned name has nothing to line up with and
-	// reads as having slipped. Measured by ink: the name's pixels must straddle the
-	// card's midline with roughly equal margins.
-	st := RingStyle
-	s := Spec{Name: "Fire Ring", Element: Ring, Enabled: true}
-	img := render(t, s, st)
-
-	left, right := st.Width, 0
-	for y := st.NameTop; y < st.NameTop+int(st.NameSize)+6; y++ {
-		for x := st.BorderWidth; x < st.Width-st.BorderWidth; x++ {
-			if img.RGBAAt(x, y) != Surface {
-				if x < left {
-					left = x
-				}
-				if x > right {
-					right = x
-				}
-			}
-		}
-	}
-	if right <= left {
-		t.Fatal("no name drawn on the ring")
-	}
-
-	leftMargin := left - st.BorderWidth
-	rightMargin := (st.Width - st.BorderWidth) - right
-	if d := leftMargin - rightMargin; d < -6 || d > 6 {
-		t.Errorf("ring name spans x=%d..%d: margins %d and %d, not centred",
-			left, right, leftMargin, rightMargin)
-	}
-
-	// Action cards are centred too now. The glyph moved into the top-left corner, so a
-	// left-aligned name would print straight over it — see TestNameClearsTheCategoryGlyph.
-	if !Hand.NameCentered {
-		t.Error("the hand card is not centring its name, which would put it under the glyph")
-	}
-}
-
-// The duelist card and the enemy card are the two halves of one idea — the same object in
-// opposite corners — so what has to be pinned is the things that make them a pair, plus the
-// ladder of stat rows the duelist adds.
-
 func duelist(life, of int) Spec {
 	s := Spec{Name: "Duelist", Element: Basic, Life: life, MaxLife: of, Enabled: true}
 	s.Stats[0] = StatLine{Label: "DMG", Value: "10"}
@@ -993,14 +908,28 @@ func TestABlankStatRowLeavesItsRowEmpty(t *testing.T) {
 }
 
 func TestTheEnemyNamesItselfAboveItsPortrait(t *testing.T) {
-	// **Every card in the game carries its name across the top** — Hand, Mini and RingStyle
-	// all do, and the enemy did not until 2026-08-12. This is the invariant, not the offset:
-	// a card whose name sits somewhere else reads as a different kind of object.
+	// **A card that names itself names itself across the top** — the enemy did not until
+	// 2026-08-12, and this is the invariant rather than the offset: a card whose name sits
+	// somewhere else reads as a different kind of object.
+	//
+	// **A card whose picture is its whole face names itself nowhere** *(owner's call,
+	// 2026-09-11)*, which is the other half of the same rule: a title bar over a full-bleed
+	// illustration covers the one thing worth looking at in order to repeat it. The two bleeding
+	// styles are checked for the absence, so turning a name back on is a decision rather than an
+	// accident.
 	for name, st := range map[string]Style{
-		"enemy": EnemyStyle, "ring": RingStyle, "duelist": DuelistStyle, "hand": Hand,
+		"enemy": EnemyStyle, "duelist": DuelistStyle, "hand": Hand,
 	} {
 		if !st.ShowName || !st.NameCentered {
 			t.Errorf("%s does not centre a name across its top", name)
+		}
+	}
+	for name, st := range map[string]Style{"ring": RingStyle, "worm": WormStyle} {
+		if !st.ArtBleed {
+			t.Errorf("%s is no longer full-bleed — this test is checking the wrong styles", name)
+		}
+		if st.ShowName {
+			t.Errorf("%s writes a title across its own picture", name)
 		}
 	}
 	if EnemyStyle.NameTop >= EnemyStyle.ArtTop {

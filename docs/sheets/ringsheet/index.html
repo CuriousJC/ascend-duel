@@ -66,13 +66,13 @@
 
 <h1>Ring sheet</h1>
 <p class="facts">
-  137 rings, 132 of them drawing the default face.
+  137 rings, 122 of them drawing the default face.
   Ring card <code>200&times;280</code>,
   corner radius <code>15</code>,
   border <code>4</code>,
-  art box inset <code>20</code> from
-  <code>y=78</code>, at most
-  <code>150</code> tall.
+  art box inset <code>0</code> from
+  <code>y=0</code>, at most
+  <code>0</code> tall.
   Accumulator badge <code>26pt</code> on a
   <code>36</code>-pixel disc,
   <code>0</code> in from the right and
@@ -135,7 +135,7 @@
           <li>when card-damage, if arcane → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>arcane-ring</code></p>
         
       </div>
     </div>
@@ -389,7 +389,7 @@ kept in hand.</p>
           <li>when card-damage, if earth → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art">art: <code>earthring_png</code></p>
+          <p class="art">art: <code>earth-ring</code></p>
         
       </div>
     </div>
@@ -515,7 +515,7 @@ kept in hand.</p>
           <li>when card-damage, if fire → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art">art: <code>firering_png</code></p>
+          <p class="art">art: <code>fire-ring</code></p>
         
       </div>
     </div>
@@ -750,7 +750,7 @@ kept in hand.</p>
           <li>when card-damage, if ice → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art">art: <code>icering_png</code></p>
+          <p class="art">art: <code>ice-ring</code></p>
         
       </div>
     </div>
@@ -786,7 +786,7 @@ kept in hand.</p>
           <li>when card-damage, if slash → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>keen-ring</code></p>
         
       </div>
     </div>
@@ -840,7 +840,7 @@ kept in hand.</p>
           <li>when card-damage, if lightning → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art">art: <code>lightningring_png</code></p>
+          <p class="art">art: <code>lightning-ring</code></p>
         
       </div>
     </div>
@@ -894,7 +894,7 @@ kept in hand.</p>
           <li>when card-damage, if stab → scale-damage &#43;200</li>
         </ul>
         
-          <p class="art">art: <code>needlering_png</code></p>
+          <p class="art">art: <code>needle-ring</code></p>
         
       </div>
     </div>
@@ -1216,7 +1216,7 @@ kept in hand.</p>
           <li>when attack-lands, if fire → apply-status burning</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>burning-ring</code></p>
         
       </div>
     </div>
@@ -1234,7 +1234,7 @@ kept in hand.</p>
           <li>when attack-lands, if ice → apply-status chilled</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>chilling-ring</code></p>
         
       </div>
     </div>
@@ -1940,7 +1940,7 @@ deals 3x DMG.</p>
           <li>when attack-lands, if lightning → apply-status shocked</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>shocking-ring</code></p>
         
       </div>
     </div>
@@ -2086,7 +2086,7 @@ deals 3x DMG.</p>
           <li>when attack-lands, if arcane → apply-status weakened</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>weakening-ring</code></p>
         
       </div>
     </div>
@@ -2123,7 +2123,7 @@ deals 3x DMG.</p>
           <li>when attack-lands, if earth → apply-status weighted</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>weighted-ring</code></p>
         
       </div>
     </div>
@@ -2480,7 +2480,7 @@ for each vitae you hold.</p>
           <li>when attack-lands, if fire → apply-status burning and apply-status chilled</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>scald-ring</code></p>
         
       </div>
     </div>
@@ -2516,7 +2516,7 @@ for each vitae you hold.</p>
           <li>when attack-lands, if lightning → apply-status shocked and apply-status chilled</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>storm-ring</code></p>
         
       </div>
     </div>
@@ -2624,7 +2624,7 @@ for each vitae you hold.</p>
           <li>when attack-lands, if fire → apply-status burning and apply-status shocked</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-ring.png</p>
+          <p class="art">art: <code>wildfire-ring</code></p>
         
       </div>
     </div>
@@ -2640,18 +2640,18 @@ for each vitae you hold.</p>
 <div class="cells">
   
     <figure>
-      <img src="state-rest.png" width="228" height="308" alt="Earth Ring — worn, or on the shelf and affordable">
-      <figcaption>Earth Ring — worn, or on the shelf and affordable</figcaption>
+      <img src="state-rest.png" width="228" height="308" alt="Arcane Ring — worn, or on the shelf and affordable">
+      <figcaption>Arcane Ring — worn, or on the shelf and affordable</figcaption>
     </figure>
   
     <figure>
-      <img src="state-disabled.png" width="228" height="308" alt="Earth Ring — on the shelf, more vitae than the run holds">
-      <figcaption>Earth Ring — on the shelf, more vitae than the run holds</figcaption>
+      <img src="state-disabled.png" width="228" height="308" alt="Arcane Ring — on the shelf, more vitae than the run holds">
+      <figcaption>Arcane Ring — on the shelf, more vitae than the run holds</figcaption>
     </figure>
   
     <figure>
-      <img src="state-dragging.png" width="228" height="308" alt="Earth Ring — carried by the cursor">
-      <figcaption>Earth Ring — carried by the cursor</figcaption>
+      <img src="state-dragging.png" width="228" height="308" alt="Arcane Ring — carried by the cursor">
+      <figcaption>Arcane Ring — carried by the cursor</figcaption>
     </figure>
   
 </div>

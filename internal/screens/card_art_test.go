@@ -1,6 +1,8 @@
 package screens
 
 import (
+	"bytes"
+	"image"
 	"strings"
 	"testing"
 
@@ -328,48 +330,6 @@ func TestEveryRingDrawsSomething(t *testing.T) {
 		art := records[key].ArtKey()
 		if _, ok := assets.LoadImageData()[art]; !ok {
 			t.Errorf("%s draws %q, which is not an embedded image", key, art)
-		}
-	}
-}
-
-func TestEveryRingNameFitsItsCard(t *testing.T) {
-	// A ring card breaks its name a word to a line, and the art starts a fixed distance down —
-	// so how many words a ring may be called is a layout fact, and `rings.json` is where it can
-	// be broken. A three-word ring draws its last word over its own picture, on a screen nobody
-	// reaches until they have played to a shop.
-	//
-	// **It measures the face name, not the record's**, because the face is what is drawn: the
-	// trailing "Ring" is dropped there and keeping it would fail the file for a word it does not
-	// print. And it measures ink rather than counting words, since a single word wider than the
-	// card is the other way this breaks.
-	faces, err := cards.NewFaces(assets.LoadFontData()["kubasta"])
-	if err != nil {
-		t.Fatal(err)
-	}
-	st := cards.RingStyle
-	_, lineHeight, err := faces.Measure(st.NameSize, "Frozen")
-	if err != nil {
-		t.Fatal(err)
-	}
-	room := st.NameLinesAbove(st.ArtTop, lineHeight)
-	usable := st.Width - 2*st.BorderWidth - 4
-
-	records := data.LoadRings()
-	for _, key := range data.RingOrder(records) {
-		words := strings.Fields(records[key].FaceName())
-		if len(words) > room {
-			t.Errorf("%s draws %d lines of name where the card has room for %d — the rest lands "+
-				"on the artwork", key, len(words), room)
-		}
-		for _, w := range words {
-			got, _, err := faces.Measure(st.NameSize, w)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got > usable {
-				t.Errorf("%s's %q is %dpx at %gpt, wider than the %dpx a ring card has",
-					key, w, got, st.NameSize, usable)
-			}
 		}
 	}
 }
@@ -812,6 +772,40 @@ func TestTheMetalWordsAgree(t *testing.T) {
 	for _, w := range cards.MetalWords {
 		if want := written[w.Upgrade]; w.Word != want {
 			t.Errorf("cards lights %q for %v where carddesc writes %q", w.Word, w.Upgrade, want)
+		}
+	}
+}
+
+func TestEveryBleedingCardArtIsTheCardsOwnSize(t *testing.T) {
+	// Full-bleed art covers the card, so a picture bigger than 200x280 is downsampled on the way
+	// in and a non-integer reduction softens exactly the hard block edges the art prompt spends
+	// most of its words demanding. Authored at the card's own size, nothing resamples at all.
+	//
+	// **The weight is the other half of it, and it is the half that fails silently.** The
+	// generator hands back 1060x1484, which is about 1.1 MB a ring. Committing those would be
+	// roughly 155 MB across a 137-ring catalogue, against a repo whose CLAUDE.md already counts
+	// 4.9 MB of sheets as a cost worth managing. At the card's size it is about 57 KB each.
+	//
+	// So: keep the generator's output in `.scratch/ring-art`, and commit the 200x280 reduction.
+	for _, st := range []cards.Style{cards.RingStyle, cards.WormStyle} {
+		if !st.ArtBleed {
+			t.Fatal("a style in this list no longer bleeds — the test is checking the wrong thing")
+		}
+	}
+
+	w, h := cards.RingStyle.Width, cards.RingStyle.Height
+	for key, raw := range assets.LoadImageData() {
+		if !strings.HasSuffix(key, "-ring") && !strings.HasSuffix(key, "-worm") {
+			continue
+		}
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+		if err != nil {
+			t.Errorf("%s: %v", key, err)
+			continue
+		}
+		if cfg.Width != w || cfg.Height != h {
+			t.Errorf("%s is %dx%d where a full-bleed card is %dx%d — reduce it before committing "+
+				"it, and keep the original in .scratch", key, cfg.Width, cfg.Height, w, h)
 		}
 	}
 }

@@ -590,14 +590,14 @@ func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 // wormArtKey is the picture every worm draws today: `assets/worm/default-worm.png`, a placeholder
 // of its own rather than a borrowed ring.
 //
-// **Keys are not file paths** — `LoadImageData` files this under `defaultworm_png`, which is what a
+// **Keys are not file paths** — `LoadImageData` files this under `default-worm`, which is what a
 // lookup has to spell. Writing the filename here is why the first version of this drew nothing and
 // logged `no artwork named "default-ring"`.
 //
 // It is one constant rather than a field on the record because when worms get art it becomes a key
 // per worm, and that change should be a `data/worms.json` field appearing, not a fallback being
 // unpicked.
-const wormArtKey = "defaultworm_png"
+const wormArtKey = "default-worm"
 
 // stoneSpec is a stone drawn as a card: a name, the rung it raises, and what it is worth.
 //

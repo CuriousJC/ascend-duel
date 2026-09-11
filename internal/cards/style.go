@@ -35,15 +35,15 @@ type Style struct {
 	// NameLinePitch is how far apart those lines sit.
 	//
 	// **A break at every space rather than a wrap at the card's width** *(owner's call,
-	// 2026-08-21)*. Rings use it. Their names are one or two words and the two-word ones are
-	// what a width-wrap handles worst: "Frozen Lightning" either fits by a hair and reads as a
-	// sentence squeezed into a card, or misses by a hair and breaks anyway — and which of those
-	// happens depends on the font, so the same catalogue lays out differently for a change
-	// nothing about rings caused. Breaking always is a layout that cannot drift.
+	// 2026-08-21)*. The two-word names are what a width-wrap handles worst: "Frozen Lightning"
+	// either fits by a hair and reads as a sentence squeezed into a card, or misses by a hair and
+	// breaks anyway — and which of those happens depends on the font, so the same catalogue lays
+	// out differently for a change nothing about it caused. Breaking always is a layout that
+	// cannot drift.
 	//
-	// **The style has to leave room for the lines it allows.** Nothing clamps a name to two
-	// words, so a three-word ring runs into whatever is under it; `TestARingNameClearsItsArt`
-	// checks the longest name the file actually holds rather than a hypothetical one.
+	// **No style sets it today.** The ring card did until 2026-09-11, when full-bleed art took
+	// its title away; `cards.WrapText` still honours an authored line break on the same argument,
+	// which is where the reasoning is now load-bearing.
 	NameWordPerLine bool
 	NameLinePitch   int
 
@@ -109,11 +109,23 @@ type Style struct {
 	TextSize       float64
 	TextLineHeight int
 
-	// ArtTop and ArtInset frame Spec.Art, used by rings. The art is scaled to fit the
-	// box they describe and centred in it.
+	// ArtTop and ArtInset frame Spec.Art on a style that does *not* bleed. The art is scaled to
+	// fit the box they describe and centred in it, leaving the off-white surface around it.
+	//
+	// **Ignored entirely when ArtBleed is set**, which is what makes the two paths a choice
+	// rather than a pair of numbers that can half-agree.
 	ArtTop   int
 	ArtInset int
 	ArtMaxH  int
+
+	// ArtBleed makes Spec.Art the whole face: scaled to *cover* the card, clipped to the inside
+	// of the border, and drawn under everything else, with a dark scrim behind each band of type
+	// so the light ink set can be read. See bleed.go, which owns the whole path.
+	//
+	// **The art has to be authored for it.** A bleeding style wants a picture at the card's own
+	// aspect — 200x280 — where a fitted one wants a square; hand a square to a bleeding style and
+	// the sides are cropped away. `docs/art/` holds the prompts that produce each.
+	ArtBleed bool
 
 	// The stat rows: Spec.Stats drawn one per row, label against the left margin and
 	// figure against the right. Zero StatRowPitch means the style has none, which is
@@ -630,19 +642,22 @@ var WormStyle = Style{
 	CornerRadius: 15,
 	BorderWidth:  4,
 
-	ShowName: true,
+	// **A bleeding card does not name itself** *(owner's call, 2026-09-11)*. The picture is the
+	// card: a ring is recognised by its art the way a playing card is recognised by its suit, and
+	// a title bar across the top of a full-bleed illustration covers the one thing worth looking
+	// at to repeat what it already says. The full name still titles every tooltip, which is where
+	// a player who does not recognise a picture yet goes.
+	ShowName: false,
 	ShowForm: false,
 
-	TextLeft:     15,
-	NameTop:      18,
-	NameSize:     25,
-	NameCentered: true,
+	TextLeft: 15,
 
-	// Between the name and the text band. What is left after a line of name above and five lines
-	// of text below is a 75-pixel box, which is why the art is the smallest thing on this card.
-	ArtTop:   55,
-	ArtInset: 33,
-	ArtMaxH:  75,
+	// The picture is the card, exactly as it is on a ring *(owner's call, 2026-09-11)*. The art
+	// was fitted into a 75-pixel box here — the smallest thing on the face, squeezed between a
+	// name and five lines of sentence — and the sentence now sits on a scrim over a full-bleed
+	// picture instead. What that costs is the bottom half of the art being under words, and it is
+	// the price of one card format rather than two.
+	ArtBleed: true,
 
 	// The full width, unlike Hand — there is no cost column to leave room for. Centred in the band
 	// under the art for the same reason Hand centres in its own: a one-line worm and a two-line one
@@ -662,35 +677,27 @@ var WormStyle = Style{
 // has no phase; no cost dashes, because it is not played from a hand; no damage badge.
 // What it gains is Spec.Art across the face.
 //
-// **Not wired into the game.** Nothing builds one of these yet — it exists so the design
-// can be looked at on the contact sheet before rings become real.
+// **The art is the face** *(owner's call, 2026-09-11)*. It was fitted into a 160x150 box with
+// the off-white surface showing around it until then, against square 500x500 art; it now bleeds
+// to the border, against art authored at the card's own 200x280. See `ArtBleed` and bleed.go.
 var RingStyle = Style{
 	Width: 200, Height: 280,
 
 	CornerRadius: 15,
 	BorderWidth:  4,
 
-	ShowName: true,
+	// **A bleeding card does not name itself** *(owner's call, 2026-09-11)*. The picture is the
+	// card: a ring is recognised by its art the way a playing card is recognised by its suit, and
+	// a title bar across the top of a full-bleed illustration covers the one thing worth looking
+	// at to repeat what it already says. The full name still titles every tooltip, which is where
+	// a player who does not recognise a picture yet goes.
+	ShowName: false,
 	ShowForm: false,
 
-	TextLeft:     15,
-	NameTop:      18,
-	NameSize:     25,
-	NameCentered: true,
+	TextLeft: 15,
 
-	// **One word to a line** *(2026-08-21)*, which is what buys the art box below its room:
-	// a two-word ring is two lines of 25pt, and 28 is that size plus the gap that keeps two
-	// capitals from touching.
-	NameWordPerLine: true,
-	NameLinePitch:   28,
-
-	// The artwork is fitted to this box rather than drawn at its own size. **The art is square, so
-	// its height is set by the 160-pixel width of the box rather than by ArtMaxH**; what ArtMaxH
-	// does is state the floor a two-line name has to clear, which is what TestARingNameClearsItsArt
-	// holds it to.
-	ArtTop:   78,
-	ArtInset: 20,
-	ArtMaxH:  150,
+	// The picture is the card, and it is the whole of what the card says about itself.
+	ArtBleed: true,
 
 	// The accumulator figure, on a disc **tucked into the bottom-right corner** — flush to both
 	// edges, so the disc's own curve meets the card's rather than sitting a margin inside it. That

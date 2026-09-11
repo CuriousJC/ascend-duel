@@ -64,7 +64,7 @@ const ground = "#a8bcd4"
 // wormArtKey is the picture every worm draws, and it is the constant of the same name in
 // internal/screens. **Keys are not file paths** — the file is assets/worm/default-worm.png and
 // LoadImageData files it under this.
-const wormArtKey = "defaultworm_png"
+const wormArtKey = "default-worm"
 
 // offered is how many worms a won fight puts up. It is dealWorms' cut, written down here because
 // that function lives in internal/screens and links Ebitengine. It is used for one derived

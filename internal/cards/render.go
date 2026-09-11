@@ -84,6 +84,17 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	border, surface, ink := s.colors()
 	roundedBorder(img, 0, 0, st.Width, st.Height, st.CornerRadius, st.BorderWidth, border, surface)
 
+	// **The bleeding card's picture is drawn before anything else, and everything else is drawn
+	// on top of it** — which is the whole difference between the two art paths and the reason
+	// this is here rather than beside the `drawArt` call further down. The scrims follow
+	// immediately, so the bands the type is read against are part of the ground rather than
+	// something painted over half-drawn words. See bleed.go.
+	if st.ArtBleed {
+		drawArtBleed(img, s, st)
+		drawScrims(img, st)
+		ink = onScrim(s)
+	}
+
 	if st.ShowName {
 		draw := drawText
 		if st.NameCentered {
@@ -104,7 +115,7 @@ func Render(s Spec, st Style, f *Faces) (*image.RGBA, error) {
 	if err := drawStats(img, s, st, f, ink); err != nil {
 		return nil, err
 	}
-	if s.Art != nil {
+	if s.Art != nil && !st.ArtBleed {
 		drawArt(img, s, st)
 	}
 	if st.ShowForm {

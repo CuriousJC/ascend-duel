@@ -2,7 +2,7 @@
   {
     "RingRecord": "fire-ring",
     "Name": "Fire Ring",
-    "Art": "firering_png",
+    "Art": "fire-ring",
     "Text": "Fire cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -16,7 +16,7 @@
   {
     "RingRecord": "burning-ring",
     "Name": "Burning Ring",
-    "Art": "",
+    "Art": "burning-ring",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -30,7 +30,7 @@
   {
     "RingRecord": "ice-ring",
     "Name": "Ice Ring",
-    "Art": "icering_png",
+    "Art": "ice-ring",
     "Text": "Ice cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -44,7 +44,7 @@
   {
     "RingRecord": "chilling-ring",
     "Name": "Chilling Ring",
-    "Art": "",
+    "Art": "chilling-ring",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -58,7 +58,7 @@
   {
     "RingRecord": "lightning-ring",
     "Name": "Lightning Ring",
-    "Art": "lightningring_png",
+    "Art": "lightning-ring",
     "Text": "Lightning cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -72,7 +72,7 @@
   {
     "RingRecord": "shocking-ring",
     "Name": "Shocking Ring",
-    "Art": "",
+    "Art": "shocking-ring",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
     "Rarity": "uncommon",
     "Rules": [
@@ -86,7 +86,7 @@
   {
     "RingRecord": "earth-ring",
     "Name": "Earth Ring",
-    "Art": "earthring_png",
+    "Art": "earth-ring",
     "Text": "Earth cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -100,7 +100,7 @@
   {
     "RingRecord": "weighted-ring",
     "Name": "Weighted Ring",
-    "Art": "",
+    "Art": "weighted-ring",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -114,7 +114,7 @@
   {
     "RingRecord": "arcane-ring",
     "Name": "Arcane Ring",
-    "Art": "",
+    "Art": "arcane-ring",
     "Text": "Arcane cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -128,7 +128,7 @@
   {
     "RingRecord": "weakening-ring",
     "Name": "Weakening Ring",
-    "Art": "",
+    "Art": "weakening-ring",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
     "Rarity": "uncommon",
     "Rules": [
@@ -142,7 +142,7 @@
   {
     "RingRecord": "storm-ring",
     "Name": "Storm Ring",
-    "Art": "",
+    "Art": "storm-ring",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -159,7 +159,7 @@
   {
     "RingRecord": "scald-ring",
     "Name": "Scald Ring",
-    "Art": "",
+    "Art": "scald-ring",
     "Text": "Fire attacks BURN and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -176,7 +176,7 @@
   {
     "RingRecord": "wildfire-ring",
     "Name": "Wildfire Ring",
-    "Art": "",
+    "Art": "wildfire-ring",
     "Text": "Fire attacks BURN and SHOCK the target.",
     "Rarity": "rare",
     "Rules": [
@@ -354,7 +354,7 @@
   {
     "RingRecord": "keen-ring",
     "Name": "Keen Ring",
-    "Art": "",
+    "Art": "keen-ring",
     "Text": "Every slash card deals double DMG.",
     "Rarity": "common",
     "Rules": [
@@ -382,7 +382,7 @@
   {
     "RingRecord": "needle-ring",
     "Name": "Needle Ring",
-    "Art": "needlering_png",
+    "Art": "needle-ring",
     "Text": "Every stab card deals double DMG.",
     "Rarity": "common",
     "Rules": [

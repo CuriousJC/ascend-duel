@@ -69,7 +69,7 @@ const ground = "#a8bcd4"
 //
 // **Keys are not file paths**: the file is assets/worm/default-worm.png and LoadImageData files it
 // under this.
-const wormArtKey = "defaultworm_png"
+const wormArtKey = "default-worm"
 
 func main() {
 	dir := flag.String("dir", filepath.Join("docs", "sheets", "parasitesheet"),

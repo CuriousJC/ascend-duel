@@ -1,5 +1,329 @@
 [
   {
+    "ScenarioRecord": "arsenal-on-a-dummy",
+    "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the ring fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the ring's term sits inside the sum rather than on the end of it, and the figure it moved is written in the ring pink. The ring pane is where the new artwork is.",
+    "Rings": [
+      "form-four-of-a-kind-hand-ring"
+    ],
+    "Deck": [
+      {
+        "Card": "Poke",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Poke",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Poke",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Poke",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Poke",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Jab",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Thrust",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Thrust",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Thrust",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Thrust",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Thrust",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Lunge",
+        "Element": "fire"
+      },
+      {
+        "Card": "Lunge",
+        "Element": "ice"
+      },
+      {
+        "Card": "Lunge",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Lunge",
+        "Element": "earth"
+      },
+      {
+        "Card": "Lunge",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Impale",
+        "Element": "fire"
+      },
+      {
+        "Card": "Impale",
+        "Element": "ice"
+      },
+      {
+        "Card": "Impale",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Impale",
+        "Element": "earth"
+      },
+      {
+        "Card": "Impale",
+        "Element": "arcane"
+      }
+    ],
+    "Hand": [
+      {
+        "Card": "Poke",
+        "Element": "fire"
+      },
+      {
+        "Card": "Jab",
+        "Element": "ice"
+      },
+      {
+        "Card": "Thrust",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Jab",
+        "Element": "earth"
+      },
+      {
+        "Card": "Ward",
+        "Element": "arcane"
+      }
+    ],
+    "Dummy": true,
+    "Actions": 15,
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "form-hand-rings",
+    "Note": "The two new form-hand rings on the fingers, Armoury and Arsenal, so the artwork can be looked at on the ring pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the ring term, and the ring pane for whether the two pictures are tellable apart at the size they are drawn - they are two rings about the same axis, and the card carries no title.",
+    "Rings": [
+      "form-full-house-hand-ring",
+      "form-four-of-a-kind-hand-ring"
+    ],
+    "Deck": [
+      { "Card": "Poke", "Element": "fire", "Copies": 6 },
+      { "Card": "Jab", "Element": "ice", "Copies": 6 },
+      { "Card": "Thrust", "Element": "lightning", "Copies": 4 },
+      { "Card": "Nick", "Element": "earth", "Copies": 6 },
+      { "Card": "Cut", "Element": "arcane", "Copies": 6 },
+      { "Card": "Slice", "Element": "fire", "Copies": 4 }
+    ],
+    "Hand": [
+      { "Card": "Poke", "Element": "fire" },
+      { "Card": "Poke", "Element": "ice" },
+      { "Card": "Jab", "Element": "lightning" },
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Nick", "Element": "arcane" },
+      { "Card": "Cut", "Element": "fire" }
+    ],
+    "Screen": "combat",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "training-dummy",
+    "Note": "A fight that cannot end, on the real starting deck against whichever creature the climb dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Rings, Deck or Parasites to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.",
+    "Rings": [],
+    "Hand": [],
+    "Dummy": true,
+    "Actions": 15,
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
+    "ScenarioRecord": "one-form-deck",
+    "Note": "A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand ring, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.",
+    "Rings": [],
+    "Deck": [
+      {
+        "Card": "Nick",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Nick",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Nick",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Nick",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Nick",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Cut",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Cut",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Cut",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Cut",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Cut",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Slice",
+        "Element": "fire",
+        "Copies": 2
+      },
+      {
+        "Card": "Slice",
+        "Element": "ice",
+        "Copies": 2
+      },
+      {
+        "Card": "Slice",
+        "Element": "lightning",
+        "Copies": 2
+      },
+      {
+        "Card": "Slice",
+        "Element": "earth",
+        "Copies": 2
+      },
+      {
+        "Card": "Slice",
+        "Element": "arcane",
+        "Copies": 2
+      },
+      {
+        "Card": "Cleave",
+        "Element": "fire"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "ice"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "earth"
+      },
+      {
+        "Card": "Cleave",
+        "Element": "arcane"
+      },
+      {
+        "Card": "Sever",
+        "Element": "fire"
+      },
+      {
+        "Card": "Sever",
+        "Element": "ice"
+      },
+      {
+        "Card": "Sever",
+        "Element": "lightning"
+      },
+      {
+        "Card": "Sever",
+        "Element": "earth"
+      },
+      {
+        "Card": "Sever",
+        "Element": "arcane"
+      }
+    ],
+    "Hand": [],
+    "Dummy": true,
+    "Actions": 15,
+    "Screen": "combat",
+    "Seed": "0000HX",
+    "Fight": 0,
+    "Vitae": 0,
+    "Life": 0
+  },
+  {
     "ScenarioRecord": "wildcards",
     "Note": "A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no colour at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the bucket too, for spending on a card that is not wild yet.",
     "Rings": [],

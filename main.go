@@ -221,6 +221,16 @@ func main() {
 	// Compiled out with the rest of the package.
 	if scenario.Active() {
 		startScenarioAt(g)
+
+		// **And it may move the clock**, which is a run-level number rather than a screen's —
+		// `session.SetRoundLimit` is the one door, and it clamps rather than obeying, so a fixture
+		// cannot stop the clock through it. A dummy fight needs this: five rounds is five rounds
+		// whoever is standing there, and an unkillable opponent otherwise kills the player on the
+		// clock at the end of round five. See internal/scenario.
+		if n := scenario.RoundLimit(); n > 0 && g.GlobalState.Run != nil {
+			g.GlobalState.Run.SetRoundLimit(n)
+			log.Printf("scenario %s: a %d-round clock", scenario.Name(), n)
+		}
 	}
 
 	// The score is a MIDI file synthesised to PCM here at startup rather than a

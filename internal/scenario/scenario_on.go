@@ -24,6 +24,20 @@ var scenariosJSON []byte
 //	ASCEND_DUEL_SCENARIO=echo-flurry go run -tags scenario .
 const scenarioEnvVar = "ASCEND_DUEL_SCENARIO"
 
+// DummyLife and DummyRounds are what `Dummy` sets, and they are constants rather than fields
+// because a training dummy is one thing rather than a dial.
+//
+// **The life is a big round number and not a very big one** *(2026-09-11)*. It is drawn on a health
+// bar over a fraction, so a figure with eight digits in it is a fraction nothing on the card can
+// read; six is enough that no hand in the game dents it. **The clock is 999 rather than off**,
+// because `session.SetRoundLimit` refuses to stop the clock — see session/clock.go, where zero is
+// a drawback reaching a number it must not reach — so the fixture goes the long way round rather
+// than being given a back door into the rules.
+const (
+	DummyLife   = 999999
+	DummyRounds = 999
+)
+
 // record is one scenario as the file writes it.
 type record struct {
 	// ScenarioRecord is the key the environment variable names.
@@ -104,6 +118,40 @@ type record struct {
 	// it: a fixture that is *about* a particular deal cannot be at the mercy of whether somebody
 	// left that constant at zero.
 	Seed string `json:"Seed"`
+
+	// Dummy makes the fight unkillable in both directions, so a scenario can be *played with*
+	// rather than survived. The opponent gets DummyLife and so does the duelist, and the round
+	// clock is lifted to DummyRounds.
+	//
+	// **It is not a creature in `data/enemies.json`, deliberately** *(owner's call, 2026-09-11)*.
+	// A training dummy is a fixture, and `data/` is the game's own catalogue — loaded by every
+	// build, drawn on the roster sheet, and reachable by the climb's own roll. So this changes the
+	// *stats* of whichever opponent the fixture or the climb already named, which means the fight
+	// still has a real portrait, a real deck and a real set of blows to watch. What it does not
+	// have is an end.
+	//
+	// **Nothing else in the package changes an outcome this hard**, and it is allowed to for the
+	// reason the whole package is: it is a fixture, compiled out, and the argument for a build tag
+	// rather than a runtime flag. A dummy must never be reachable from a launched game.
+	Dummy bool `json:"Dummy"`
+
+	// Actions is the duelist's action-point budget, overriding the record's.
+	//
+	// **Zero is the record's own**, which is the six every duelist fights on. It exists because a
+	// bench is a place to *pick the cards you want*, and a 6 AP budget means half the interesting
+	// hands cannot be paid for — so looking at what a rung does turns into shopping for cheap
+	// copies of it. **It does not lift `combat.MaxActions`**, the count bound, which is five cards
+	// a turn whatever they cost: this buys the freedom to pick any five, not a sixth.
+	Actions int `json:"Actions"`
+
+	// RoundLimit is how many rounds a fight of this run gets, overriding combat.DefaultRoundLimit.
+	//
+	// **Zero means the run's own**, which is the five every fight in the tower is on. It is here
+	// rather than only inside Dummy because the clock is a thing worth *looking at* on its own —
+	// a one-round fight is how the clock's own death is reached without playing four rounds first
+	// — and because `session.SetRoundLimit` refuses to stop the clock, so this cannot turn it off
+	// either. See combat.DefaultRoundLimit and session/clock.go.
+	RoundLimit int `json:"RoundLimit"`
 
 	// Teach starts the tutorial on this run.
 	//
@@ -243,6 +291,10 @@ func resolve() *record {
 	log.Printf("scenario %s: %s", chosen.ScenarioRecord, chosen.Note)
 	log.Printf("scenario %s: wearing %v, hand of %d, enemy %q",
 		chosen.ScenarioRecord, chosen.Rings, len(chosen.Hand), chosen.Enemy)
+	if chosen.Dummy {
+		log.Printf("scenario %s: DUMMY — %d life each way and a %d-round clock, so nothing ends",
+			chosen.ScenarioRecord, DummyLife, DummyRounds)
+	}
 	return chosen
 }
 
@@ -300,6 +352,12 @@ func check(r *record) error {
 	if r.Screen != "" && r.Screen != screenCombat && r.Screen != screenReward && r.Screen != screenShop {
 		return fmt.Errorf("%q is not a screen (want %q, %q or %q)",
 			r.Screen, screenCombat, screenReward, screenShop)
+	}
+	if r.Actions < 0 {
+		return fmt.Errorf("an action budget of %d is not a budget", r.Actions)
+	}
+	if r.RoundLimit < 0 {
+		return fmt.Errorf("round limit %d is not a number of rounds", r.RoundLimit)
 	}
 	if r.Fight < 0 {
 		return fmt.Errorf("fight %d is before the first room", r.Fight)
@@ -404,3 +462,24 @@ func Screen() string {
 func Fight() int { return current.Fight }
 func Vitae() int { return current.Vitae }
 func Life() int  { return current.Life }
+
+// Dummy reports whether this scenario's fight is unkillable in both directions.
+func Dummy() bool { return current.Dummy }
+
+// Actions is the action-point budget to fight on, or zero for the record's own.
+func Actions() int { return current.Actions }
+
+// RoundLimit is the clock this scenario wants, or zero for the run's own.
+//
+// **A dummy implies one**, because a fight nobody can win is a fight the five-round clock kills
+// the player at the end of — see combat.FightOver. An authored figure still wins, so a fixture
+// can have a dummy *and* a short clock if what it is looking at is the clock.
+func RoundLimit() int {
+	if current.RoundLimit > 0 {
+		return current.RoundLimit
+	}
+	if current.Dummy {
+		return DummyRounds
+	}
+	return 0
+}

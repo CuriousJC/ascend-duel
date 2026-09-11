@@ -167,15 +167,20 @@ func drawConsumablePane(gs *state.GlobalState, screen *ebiten.Image, r image.Rec
 // drawConsumableCount writes `held / cap` on the pane's bottom-right corner — the relic pane's
 // figure, in the relic pane's seat, at the relic pane's size.
 //
-// **It names parasites and not consumables**, which is what is actually in it. The pane is called
-// consumables because that is the shape of the thing — a seat for something a run spends — and if a
-// stone or another spendable ever stands here the label is what changes.
+// **It is the bare fraction and names nothing** *(owner's call, 2026-09-11)*. It read
+// `0/2 parasites` until then, and the noun was the figure repeating what the cards standing on the
+// pane already say. The relic pane's corner lost its word in the same call and the two have to stay
+// twins — see drawRelicCount.
+//
+// The pane is called consumables because that is the shape of the thing — a seat for something a
+// run spends — so a stone or another spendable standing here needs nothing changed here at all,
+// which is what the dropped noun buys.
 func drawConsumableCount(gs *state.GlobalState, screen *ebiten.Image, back image.Rectangle, held int) {
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(back.Max.X), float64(back.Max.Y+relicCountTopGap))
 	op.PrimaryAlign = text.AlignEnd
 	op.ColorScale.ScaleWithColor(groundInk)
-	text.Draw(screen, fmt.Sprintf("%d/%d parasites", held, maxHeld),
+	text.Draw(screen, fmt.Sprintf("%d/%d", held, maxHeld),
 		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: relicCountSize}, op)
 }
 

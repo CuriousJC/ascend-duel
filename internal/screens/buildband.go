@@ -177,7 +177,9 @@ func drawBuildRelics(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag
 // and still wants the pane under them.
 func drawBuildRelicPane(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
 	drawRelicPaneBack(screen, row)
-	drawPaneCount(gs, screen, row, fmt.Sprintf("%d/%d relics", len(wornRelics(gs)), relicSlots(gs)))
+	// The bare fraction, per drawRelicCount — the noun went on 2026-09-11 and this is the same
+	// figure on the band, so it moves with it.
+	drawPaneCount(gs, screen, row, fmt.Sprintf("%d/%d", len(wornRelics(gs)), relicSlots(gs)))
 }
 
 // buildRelicRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.

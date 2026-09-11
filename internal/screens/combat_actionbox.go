@@ -133,13 +133,21 @@ const (
 	// **apFigureReserve is a fixed column width, not the text's measured width**, because the
 	// buttons are spaced off its right edge and the text is not a constant length. Measuring
 	// would move both buttons the moment the figure went from `9/12 AP` to `10/12 AP`. The
-	// reserve holds the normal figure — `12/12 AP` measures 53 pixels at this size — and the
-	// `+N over` tail deliberately runs past it, into a gap hundreds of pixels wide.
+	// reserve holds the normal figure with room to spare — `12/12 AP` measured 53 pixels when the
+	// figure was 18 point — and the `+N over` tail deliberately runs past it, into a gap hundreds
+	// of pixels wide.
 	//
 	// apFigureBelowBar hangs it off the *bar*, not off the button line it started on. The
 	// figure is a caption on the bar and belongs against it; the buttons beside it are placed
 	// on their own line and the two only have to agree horizontally.
-	apFigureSize     = 18
+	//
+	// **apFigureSize is relicCountSize, not a size of its own** *(owner's call, 2026-09-11)*, up
+	// from 18. Both are a run's fraction written small in a corner of the bottom band — this one
+	// on the bar, the relic pane's and the consumables pane's on their own corners — and three
+	// readouts of the same kind set at two sizes read as one of them mattering less. It is also
+	// half of what made the amber figure hard to read; the other half is that it is bold now. The
+	// legibility argument is in drawAPFigure, and apSpentColor carries what was tried first.
+	apFigureSize     = relicCountSize
 	apFigureReserve  = 110
 	apFigureBelowBar = 8
 
@@ -702,9 +710,23 @@ func (s *CombatScene) drawAPFigure(gs *state.GlobalState, screen *ebiten.Image, 
 		label = fmt.Sprintf("%s  +%d over", label, spent-budget)
 		ink = apOverColor
 	}
+	// **The word is thickened rather than shadowed** *(owner's call, 2026-09-11)*. Amber at 18pt
+	// on the light table is the faintest figure on this screen — the ground went to a light slate
+	// blue on 2026-09-07 and the caption took the bar's colours on 2026-09-10, and neither
+	// decision was taken against the other. A shadow was tried first and does not help: it buys an
+	// edge on a stroke that is already too thin to read, where what the figure needs is more ink.
+	//
+	// **Faux bold, the pane's own two-pass idiom** — the same word drawn again a step right,
+	// because `text/v2` has no synthetic weight and kubasta ships one face. `mathBoldStep` is the
+	// shared step so this figure thickens by the same rule the sum and the log's live row do.
 	op.ColorScale.ScaleWithColor(ink)
-	text.Draw(screen, label,
-		&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: apFigureSize}, op)
+	face := &text.GoTextFace{Source: gs.Fonts["kubasta"], Size: apFigureSize}
+	text.Draw(screen, label, face, op)
+
+	bold := &text.DrawOptions{}
+	bold.GeoM.Translate(float64(left)+mathBoldStep(apFigureSize), float64(barBottom+apFigureBelowBar))
+	bold.ColorScale.ScaleWithColor(ink)
+	text.Draw(screen, label, face, bold)
 }
 
 // apFigureRight is where the figure's reserved column ends, and the left edge of the space the

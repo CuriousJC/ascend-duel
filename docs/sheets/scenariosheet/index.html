@@ -1,0 +1,856 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ascending Duel — scenario sheet</title>
+<style>
+  :root {
+    --ground: #a8bcd4;
+    --ink: #2c2822;
+    --dim: #5a6472;
+    --rule: #8fa3bd;
+    --panel: #c6d5e6;
+    --pink: #c8508c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 28px 64px;
+    background: var(--ground); color: var(--ink);
+    font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  .note { color: var(--dim); font-size: 12.5px; max-width: 76ch; margin: 8px 0 0; }
+  .note code, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+  .plate {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 18px 20px; margin-top: 22px;
+  }
+  .plate.first { border-color: var(--pink); border-width: 2px; }
+  .record { font-size: 17px; font-weight: 600; font-family: ui-monospace, monospace; }
+  .default {
+    font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--pink); margin-left: 10px;
+  }
+  .facts { color: var(--dim); font-size: 12px; margin: 4px 0 0; }
+  .cmd {
+    display: block; margin: 10px 0 0; padding: 8px 10px;
+    background: #edf3fa; border: 1px solid var(--rule); border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+    overflow-x: auto; white-space: pre;
+  }
+  .blurb { margin: 12px 0 0; font-size: 13px; max-width: 86ch; }
+
+  .strip { margin-top: 16px; }
+  .strip .cap {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--dim); font-weight: 600; margin-bottom: 6px;
+  }
+  .scroll { overflow-x: auto; padding-bottom: 4px; }
+  img { display: block; image-rendering: pixelated; }
+
+  table { border-collapse: collapse; margin-top: 14px; font-size: 12.5px; }
+  th {
+    text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--dim); border-bottom: 1px solid var(--rule);
+    padding: 3px 14px 4px 0;
+  }
+  td { padding: 3px 14px 3px 0; vertical-align: top; }
+  td.key, td.rider { font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--dim); }
+  td.said { color: var(--dim); max-width: 52ch; }
+  .cols { display: flex; flex-wrap: wrap; gap: 34px; }
+</style>
+
+<div class="wrap">
+  <h1>Scenario sheet</h1>
+  <p class="note">
+    The 24 fixtures in <code>internal/scenario/scenarios.json</code>: what each one plugs in, and the command
+    that launches it. Compiled out of every build that is not <code>-tags scenario</code>, so none
+    of this is reachable from a shipped binary.
+  </p>
+  <p class="note">
+    The cards are drawn by <code>internal/cards</code>, the same code the game blits — but
+    <strong>plain</strong>. A rider is printed as the word the file writes rather than painted onto
+    the face; what an upgrade looks like is the upgrade sheet's subject.
+  </p>
+
+  
+    <div class="plate first">
+      <div class="record">arsenal-on-a-dummy<span class="default">first in the file — the bare launch</span></div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=arsenal-on-a-dummy go run -tags scenario .</code>
+      <p class="blurb">The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the ring fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the ring&#39;s term sits inside the sum rather than on the end of it, and the figure it moved is written in the ring pink. The ring pane is where the new artwork is.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="arsenal-on-a-dummy-worn.png" width="228" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="arsenal-on-a-dummy-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="arsenal-on-a-dummy-deck.png" width="2740" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">form-four-of-a-kind-hand-ring</td><td>Arsenal Ring</td><td class="said">A Form Four of a Kind deals 6 more DMG before the multiplier.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Ward</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 40 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Poke</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Thrust</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Lunge</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Lunge</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Lunge</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Lunge</td><td>earth</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Lunge</td><td>arcane</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Impale</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>earth</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Impale</td><td>arcane</td><td>1</td><td>4</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">form-hand-rings</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=form-hand-rings go run -tags scenario .</code>
+      <p class="blurb">The two new form-hand rings on the fingers, Armoury and Arsenal, so the artwork can be looked at on the ring pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the ring term, and the ring pane for whether the two pictures are tellable apart at the size they are drawn - they are two rings about the same axis, and the card carries no title.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="form-hand-rings-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="form-hand-rings-hand.png" width="650" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="form-hand-rings-deck.png" width="650" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">form-full-house-hand-ring</td><td>Armoury Ring</td><td class="said">A Form Full House deals 6 more DMG before the multiplier.</td></tr><tr><td class="key">form-four-of-a-kind-hand-ring</td><td>Arsenal Ring</td><td class="said">A Form Four of a Kind deals 6 more DMG before the multiplier.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>ice</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>lightning</td><td>1</td><td class="rider"></td></tr><tr><td>Jab</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Nick</td><td>arcane</td><td>0</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 32 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Poke</td><td>fire</td><td>6</td><td>0</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>6</td><td>1</td><td class="rider"></td></tr><tr><td>Thrust</td><td>lightning</td><td>4</td><td>2</td><td class="rider"></td></tr><tr><td>Nick</td><td>earth</td><td>6</td><td>0</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>6</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>4</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">training-dummy</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=training-dummy go run -tags scenario .</code>
+      <p class="blurb">A fight that cannot end, on the real starting deck against whichever creature the climb dealt. Both duelists carry 999999 life and the clock is lifted to 999 rounds, so every blow, every shield break, every status and every signal can be played with for as long as it is interesting - the thing that is otherwise five rounds and a death away. The creature is a real record with a real portrait and a real deck, so it still swings back and the exchange still reads the way it reads in a run; what is gone is the ending. Add Rings, Deck or Parasites to this entry and it becomes a bench for whatever is being looked at. Note both health bars sit at a fraction nothing will visibly move, which is the mechanic rather than a broken bar.</p>
+
+      
+
+      <div class="cols">
+        
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">one-form-deck</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX · DUMMY -- nothing dies · 15 AP a turn</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=one-form-deck go run -tags scenario .</code>
+      <p class="blurb">A deck of nothing but slashes, against a dummy that cannot die, so a form-axis hand can be built over and over without a fight ending. Written by go run ./tools/scenariodeck -form slash -size 40 and pasted in literally, which is the whole argument for a generator over a filter vocabulary: what is in the file is the list, so it can be read and checked. Every rung of the form ladder up to Five of a Kind is reachable every turn here, which is the deal a real deck almost never gives you - so it is the bench for a form-hand ring, a stone on a form rung, or just watching what a Form Full House looks like when it lands. Swap the -form for stab or crush, or take the dummy off, and it is a different bench.</p>
+
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="one-form-deck-deck.png" width="2740" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+        
+        
+          <table>
+            <tr><th>Deck — 40 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Nick</td><td>fire</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>ice</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>lightning</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>earth</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>arcane</td><td>2</td><td>0</td><td class="rider"></td></tr><tr><td>Cut</td><td>fire</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>ice</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>lightning</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>earth</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Cut</td><td>arcane</td><td>2</td><td>1</td><td class="rider"></td></tr><tr><td>Slice</td><td>fire</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>ice</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>lightning</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>earth</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td>2</td><td class="rider"></td></tr><tr><td>Cleave</td><td>fire</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>lightning</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>earth</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>arcane</td><td>1</td><td>3</td><td class="rider"></td></tr><tr><td>Sever</td><td>fire</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>ice</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>lightning</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>earth</td><td>1</td><td>4</td><td class="rider"></td></tr><tr><td>Sever</td><td>arcane</td><td>1</td><td>4</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">wildcards</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=wildcards go run -tags scenario .</code>
+      <p class="blurb">A deck the wildcard parasite has already been spent on, so the first thing on screen is an altered card rather than a shop three fights away. Half the deck is wild - a fire Jab, an ice Cut and an arcane Ward - and the other half is ordinary, in four colours that agree with nothing. Watch two things: the wash over the whole card, which is where an upgrade is said as of 2026-09-09, and the hand line, which names an elemental rung off a set of cards that share no colour at all. Note the form mark stays hueless on a wild card and keeps its element on every other upgrade. A Motley is in the bucket too, for spending on a card that is not wild yet.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="wildcards-worn.png" width="228" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="wildcards-hand.png" width="650" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="wildcards-deck.png" width="650" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">motley</td><td>bucket</td><td class="said">CARD IS EVERY ELEMENT</td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Strike</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Ward</td><td>arcane</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 24 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>4</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Cut</td><td>ice</td><td>4</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Bash</td><td>earth</td><td>4</td><td>1</td><td class="rider"></td></tr><tr><td>Strike</td><td>lightning</td><td>4</td><td>2</td><td class="rider"></td></tr><tr><td>Ward</td><td>arcane</td><td>4</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Slice</td><td>arcane</td><td>4</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">metals</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=metals go run -tags scenario .</code>
+      <p class="blurb">The two gambling upgrades, already on cards, so the roll can be watched rather than bought towards. Four gold Jabs and four silver Cuts, with an ordinary Strike and Bash beside them for comparison; the opening hand holds one of each. Play the metals every turn and read the feed: gold announces &#43;1 DMG or &#43;5 max life on roughly two turns in five and the fighter card&#39;s stats move as it does, silver drops 10 into the purse on one in five. What to check is that a grant survives the round - the bonus lands on the run, so the next fight opens with it - and that a losing roll says nothing rather than saying nothing happened. A Golden and a Silver are in the bucket for putting one metal over the other, which is what last-one-wins looks like.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="metals-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="metals-hand.png" width="430" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="metals-deck.png" width="430" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">golden</td><td>bucket</td><td class="said">CARD IS GOLD 1 IN 5 ON PLAY: &#43;1 DMG OR &#43;5 LIFE</td></tr><tr><td class="key">silver</td><td>bucket</td><td class="said">CARD IS SILVER 1 IN 5 ON PLAY: &#43;10 VITAE</td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Strike</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 24 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>8</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Cut</td><td>ice</td><td>8</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Strike</td><td>lightning</td><td>4</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>4</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">metal-chromatic</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=metal-chromatic go run -tags scenario .</code>
+      <p class="blurb">A silver card and a chromatic one in the same hand, which neither the metals nor the wildcards entry can give you: the question is how the two upgrades read against each other on one table. The silver Cut writes nothing about its metal on the face at all - the sheen is what names it - where the wild Jab carries the five-band wash, keeps its form mark hueless, and says ANY ELEMENT. Both explain themselves in the tooltip and both are titled in their own ink: CHROMATIC letter by letter across the five bands, SILVER in one lifted grey over the odds it gambles at. Hover both, and check the silver card is identifiable without the hover. A gold Thrust and two plain cards are beside them so a sheen has something to be a sheen against. A Motley and a Silver are in the bucket for putting either upgrade onto a card that has neither.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="metal-chromatic-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="metal-chromatic-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="metal-chromatic-deck.png" width="540" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">motley</td><td>bucket</td><td class="said">CARD IS EVERY ELEMENT</td></tr><tr><td class="key">silver</td><td>bucket</td><td class="said">CARD IS SILVER 1 IN 5 ON PLAY: &#43;10 VITAE</td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Cut</td><td>ice</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Jab</td><td>fire</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider">golden:5</td></tr><tr><td>Strike</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 28 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Cut</td><td>ice</td><td>8</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Jab</td><td>fire</td><td>8</td><td>1</td><td class="rider">wild-element</td></tr><tr><td>Thrust</td><td>fire</td><td>4</td><td>2</td><td class="rider">golden:5</td></tr><tr><td>Strike</td><td>lightning</td><td>4</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>4</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">upgrades</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=upgrades go run -tags scenario .</code>
+      <p class="blurb">Every upgrade except the two metals, one to a card, filling the opening hand: heal, shield, damage-on-play, scale-in-combo, damage-in-hand, scale-in-hand, vitae-in-hand and the wildcard, in that order left to right. It exists to answer one question - are ten upgrades ten cards a player can tell apart at a glance, in a row, on the table rather than on a sheet. Eight of the colours are placeholders standing on a wheel that has no room left, so what to look for is the pairs that collide: the heal&#39;s rose against the ring pink, and the three cool held ones against each other. Note the wildcard is the only card whose form mark goes hueless. Run the metals scenario for gold and silver.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="upgrades-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="upgrades-hand.png" width="870" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="upgrades-deck.png" width="870" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">motley</td><td>bucket</td><td class="said">CARD IS EVERY ELEMENT</td></tr><tr><td class="key">leech</td><td>bucket</td><td class="said">&#43;10 HEAL ON PLAY</td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider">heal-on-play:10</td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider">shield-on-play:1</td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td class="rider">damage-on-play:10</td></tr><tr><td>Strike</td><td>lightning</td><td>2</td><td class="rider">scale-in-combo:200</td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td class="rider">damage-in-hand:10</td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider">scale-in-hand:200</td></tr><tr><td>Ward</td><td>ice</td><td>1</td><td class="rider">vitae-in-hand:3</td></tr><tr><td>Lunge</td><td>arcane</td><td>3</td><td class="rider">wild-element</td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 32 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>4</td><td>1</td><td class="rider">heal-on-play:10</td></tr><tr><td>Cut</td><td>ice</td><td>4</td><td>1</td><td class="rider">shield-on-play:1</td></tr><tr><td>Bash</td><td>earth</td><td>4</td><td>1</td><td class="rider">damage-on-play:10</td></tr><tr><td>Strike</td><td>lightning</td><td>4</td><td>2</td><td class="rider">scale-in-combo:200</td></tr><tr><td>Slice</td><td>arcane</td><td>4</td><td>2</td><td class="rider">damage-in-hand:10</td></tr><tr><td>Thrust</td><td>fire</td><td>4</td><td>2</td><td class="rider">scale-in-hand:200</td></tr><tr><td>Ward</td><td>ice</td><td>4</td><td>1</td><td class="rider">vitae-in-hand:3</td></tr><tr><td>Lunge</td><td>arcane</td><td>4</td><td>3</td><td class="rider">wild-element</td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">tutorial</div>
+      <div class="facts">opens on combat · room 0 · runs the tutorial</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=tutorial go run -tags scenario .</code>
+      <p class="blurb">Bob, from the top, on the real starting deck. The seed and the opening creature are not here: they are in data/tutorial.json, because the lesson&#39;s promises - four cards of one colour, one of them a shield, a blow that wounds without killing so the creature swings back - are facts about that deal against that creature, and a second copy of them here is a second copy to drift. This entry now says only &#39;teach it whatever the profile thinks&#39;, which is the one thing the real trigger cannot do and the only way to see the tutorial twice.</p>
+
+      
+
+      <div class="cols">
+        
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">reward-payout</div>
+      <div class="facts">opens on reward · room 3 · 22 vitae · 63 life</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=reward-payout go run -tags scenario .</code>
+      <p class="blurb">The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway&#39;s award. Watch the three sentences type and each figure fly to the duelist card.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="reward-payout-worn.png" width="228" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">heart-ring</td><td>Heart Ring</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr>
+          </table>
+        
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">shop-shelf</div>
+      <div class="facts">opens on shop · room 3 · 40 vitae · 30 life</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=shop-shelf go run -tags scenario .</code>
+      <p class="blurb">The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="shop-shelf-worn.png" width="728" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">heart-ring</td><td>Heart Ring</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr><tr><td class="key">keen-ring</td><td>Keen Ring</td><td class="said">Every slash card deals double DMG.</td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">graft</td><td>bucket</td><td class="said">LEFT CARD BECOMES RIGHT CARD</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">stairway-boss</div>
+      <div class="facts">opens on combat · room 2 · against Bayaz</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=stairway-boss go run -tags scenario .</code>
+      <p class="blurb">A stairway protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first stairway a run reaches is fight 2, which is where this opens.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="stairway-boss-worn.png" width="228" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="stairway-boss-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">heart-ring</td><td>Heart Ring</td><td class="said">&#43;5 HP, and 5 more for every fight won.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Strike</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Lunge</td><td>basic</td><td>3</td><td class="rider"></td></tr><tr><td>Guard</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Ward</td><td>fire</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">echo-and-growth</div>
+      <div class="facts">opens on combat · room 0 · against GiantRat</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=echo-and-growth go run -tags scenario .</code>
+      <p class="blurb">Does an echoed fire card grow Enflamed three times? Play the Lunge first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="echo-and-growth-worn.png" width="704" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="echo-and-growth-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">echo-ring</td><td>Echo Ring</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">enflamed-ring</td><td>Enflamed Ring</td><td class="said">Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.</td></tr><tr><td class="key">fire-ring</td><td>Fire Ring</td><td class="said">Fire cards deal 2x DMG.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Lunge</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Strike</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Strike</td><td>fire</td><td>2</td><td class="rider"></td></tr><tr><td>Jab</td><td>ice</td><td>1</td><td class="rider"></td></tr><tr><td>Ward</td><td>fire</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">seven-term-sum</div>
+      <div class="facts">opens on combat · room 0 · against GiantRat</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=seven-term-sum go run -tags scenario .</code>
+      <p class="blurb">The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="seven-term-sum-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="seven-term-sum-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">echo-ring</td><td>Echo Ring</td><td class="said">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</td></tr><tr><td class="key">aftershock-ring</td><td>Aftershock Ring</td><td class="said">Every crush card lands twice, both at full DMG.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Smash</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Strike</td><td>ice</td><td>2</td><td class="rider"></td></tr><tr><td>Strike</td><td>lightning</td><td>2</td><td class="rider"></td></tr><tr><td>Bash</td><td>earth</td><td>1</td><td class="rider"></td></tr><tr><td>Bash</td><td>fire</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">momentum-and-atrophy</div>
+      <div class="facts">opens on combat · room 0 · against OgreWarlord</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=momentum-and-atrophy go run -tags scenario .</code>
+      <p class="blurb">Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Brace at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="momentum-and-atrophy-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="momentum-and-atrophy-hand.png" width="430" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">atrophy-ring</td><td>Atrophy Ring</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr><tr><td class="key">momentum-ring</td><td>Momentum Ring</td><td class="said">Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.</td></tr>
+          </table>
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Lunge</td><td>fire</td><td>3</td><td class="rider"></td></tr><tr><td>Cleave</td><td>ice</td><td>3</td><td class="rider"></td></tr><tr><td>Smash</td><td>earth</td><td>3</td><td class="rider"></td></tr><tr><td>Brace</td><td>fire</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">altered-deck</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=altered-deck go run -tags scenario .</code>
+      <p class="blurb">Two flips and a demotion, so the deck panel&#39;s ALTERATIONS toggle has something to show. Open the draw pile: earth and lightning are dealt as fire, the 3 AP attacks are dealt a rung down, and AS OWNED puts all of it back. FULL/PLAYED after a round or two.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="altered-deck-worn.png" width="704" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+          <table>
+            <tr><th>Worn, in order</th><th>Ring</th><th>Says</th></tr>
+            <tr><td class="key">magma-ring</td><td>Magma Ring</td><td class="said">Every earth card is dealt as a fire card.</td></tr><tr><td class="key">firestorm-ring</td><td>Firestorm Ring</td><td class="said">Every lightning card is dealt as a fire card.</td></tr><tr><td class="key">atrophy-ring</td><td>Atrophy Ring</td><td class="said">Every 3 AP attack is dealt as its 2 AP version.</td></tr>
+          </table>
+        
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">bucket-of-parasites</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=bucket-of-parasites go run -tags scenario .</code>
+      <p class="blurb">The board piece: a bucket holding one of each shape a parasite can take, clicked in the consumables pane on the top row - select the cards in the hand first, then click the parasite. It is here because a parasite is otherwise two screens away - bought from the shop shelf, then spent between the turns of the fight after it - so seeing the dialog at all meant playing to a shop and winning a room. Leech is the rider (a card that heals you as it is played, for the rest of the run), Gnaw eats two cards, Mimic copies one and the copy joins the hand you are holding, Effigy turns one into a Strike, Graft makes the first card you click into the second, and Hoard needs no target at all and so fires with nothing selected.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="bucket-of-parasites-worn.png" width="1418" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">leech</td><td>bucket</td><td class="said">&#43;10 HEAL ON PLAY</td></tr><tr><td class="key">gnaw</td><td>bucket</td><td class="said">2 CARDS DESTROYED</td></tr><tr><td class="key">mimic</td><td>bucket</td><td class="said">COPY CARD</td></tr><tr><td class="key">effigy</td><td>bucket</td><td class="said">CARD BECOMES STRIKE</td></tr><tr><td class="key">graft</td><td>bucket</td><td class="said">LEFT CARD BECOMES RIGHT CARD</td></tr><tr><td class="key">hoard</td><td>bucket</td><td class="said">&#43;20 VITAE</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">held-back-riders</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=held-back-riders go run -tags scenario .</code>
+      <p class="blurb">The four riders that pay for a card you do NOT play, plus the two that pay for one you do. Attach Patience or Spite or Brood to a card, then leave that card in the hand and press DUEL! - the blow gets bigger, or the fight log says &#39;kept back for 3 vitae&#39;, on every turn you go on holding it. Hunger is the opposite question: it only pays if its card is one of the cards the hand was formed from, which a turn can play a card without doing. Carapace puts a Jab in the shield business. It is here because none of this is on a card face yet - the tooltip prose is the only readout, so the way to check the arithmetic is to hold the card and watch the sum.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="held-back-riders-worn.png" width="1418" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">patience</td><td>bucket</td><td class="said">2X DMG CARD IN HAND</td></tr><tr><td class="key">spite</td><td>bucket</td><td class="said">&#43;10 DMG CARD IN HAND</td></tr><tr><td class="key">brood</td><td>bucket</td><td class="said">3 VITAE CARD IN HAND</td></tr><tr><td class="key">hunger</td><td>bucket</td><td class="said">2X DMG ON PLAY</td></tr><tr><td class="key">carapace</td><td>bucket</td><td class="said">1 SHIELD ON PLAY</td></tr><tr><td class="key">goad</td><td>bucket</td><td class="said">&#43;10 DMG ON PLAY</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">element-and-form-borers</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=element-and-form-borers go run -tags scenario .</code>
+      <p class="blurb">The eight recolouring and reforming parasites, two cards each. The five bores paint a pair of cards an element; the three grubs change what a pair COUNTS AS on the form axis without changing the cards - so point Maulgrub at two Wards and you have two cards that still shield and now make a crush pair. That is a legal weird thing on the owner&#39;s call, not a hole in the checking. Watch the corner mark and the cost ticks for the recolour; watch the hands panel for the reform.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="element-and-form-borers-worn.png" width="942" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">emberbore</td><td>bucket</td><td class="said">2 CARDS BECOME FIRE</td></tr><tr><td class="key">arcbore</td><td>bucket</td><td class="said">2 CARDS BECOME LIGHTNING</td></tr><tr><td class="key">maulgrub</td><td>bucket</td><td class="said">2 CARDS BECOME CRUSH</td></tr><tr><td class="key">thorngrub</td><td>bucket</td><td class="said">2 CARDS BECOME STAB</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">rock-shower</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=rock-shower go run -tags scenario .</code>
+      <p class="blurb">Three rock showers in the bucket. Each one needs no target, so it is taken on the click, and the panel stays up showing the three stones it just handed over - they go into the run&#39;s POUCH, not onto the ladder. Win the fight and the shop&#39;s S button is where they are spent: Use puts one on its rung, Sell pays 5. For the shop half on its own without the fight, see stones-in-the-pouch.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="rock-shower-worn.png" width="704" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">rockbeetle</td><td>bucket</td><td class="said">&#43;2 STONES IN POUCH</td></tr><tr><td class="key">rockbeetle</td><td>bucket</td><td class="said">&#43;2 STONES IN POUCH</td></tr><tr><td class="key">rockbeetle</td><td>bucket</td><td class="said">&#43;2 STONES IN POUCH</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">stones-in-the-pouch</div>
+      <div class="facts">opens on shop · room 1 · seed 0000HX · 40 vitae</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=stones-in-the-pouch go run -tags scenario .</code>
+      <p class="blurb">Opens on the shop carrying five stones, which is the other half of the rock shower. The S button in the corner beside D and C is the pouch; click a stone to arm it and two tabs hang under it - green Use puts it on its rung for the rest of the run, crimson Sell pays 5 vitae. The hands panel next door is where to check a Use actually moved the rung. It is here because a carried stone is otherwise a parasite bought, a fight won and a shower spent away.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="stones-in-the-pouch-worn.png" width="1180" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">agate</td><td>pouch</td><td class="said">RAISE PAIR HAND</td></tr><tr><td class="key">jasper</td><td>pouch</td><td class="said">RAISE THREE OF A KIND HAND</td></tr><tr><td class="key">onyx</td><td>pouch</td><td class="said">RAISE FOUR OF A KIND HAND</td></tr><tr><td class="key">flint</td><td>pouch</td><td class="said"></td></tr><tr><td class="key">garnet</td><td>pouch</td><td class="said">RAISE ELEMENT FULL HOUSE</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">achievement-toast</div>
+      <div class="facts">opens on combat · room 0</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=achievement-toast go run -tags scenario .</code>
+      <p class="blurb">Four cheap attacks across three forms and four elements, plus a defence: one turn that earns Spectrum, Weaponmaster and Arsenal at once, which is three toasts in a row and the only way to see the queue drain. Poke, Nick and Tap are 1 AP, so the whole thing fits the 6 AP turn. Elementalist is deliberately not reachable from this hand - five elements needs five attacks, and a turn holds five cards, so it and Arsenal cannot both land on one turn. The awards are written to the real profile; point ASCEND_DUEL_PROFILE at an empty directory to see them land again.</p>
+
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="achievement-toast-hand.png" width="540" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Poke</td><td>fire</td><td>0</td><td class="rider"></td></tr><tr><td>Nick</td><td>ice</td><td>0</td><td class="rider"></td></tr><tr><td>Tap</td><td>lightning</td><td>0</td><td class="rider"></td></tr><tr><td>Poke</td><td>earth</td><td>0</td><td class="rider"></td></tr><tr><td>Ward</td><td>arcane</td><td>1</td><td class="rider"></td></tr>
+          </table>
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">luck-and-chimera</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=luck-and-chimera go run -tags scenario .</code>
+      <p class="blurb">A Luck and a Chimera in the bucket, which is the whole of it since the bucket holds two. Luck needs no target: click it and it rolls once - 1 in 5 for &#43;1 DMG, 1 in 5 for &#43;5 max life, 3 in 5 for nothing. Watch the duelist card&#39;s DMG and life bar, because a dud looks exactly like a click that did nothing and that is the mechanic rather than a bug. Then read the Chimera&#39;s face: it stops saying REPEAT LAST PARASITE and starts saying COPIES LUCK, and clicking it rolls again. Spend the Chimera FIRST to see the other half - with nothing spent yet it has nothing to copy and is drawn dim.</p>
+
+      
+        <div class="strip">
+          <div class="cap">worn, in the bucket, and in the pouch</div>
+          <div class="scroll"><img src="luck-and-chimera-worn.png" width="466" height="308" alt="worn, in the bucket, and in the pouch"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+          <table>
+            <tr><th>Carried</th><th>Where</th><th>Says</th></tr>
+            <tr><td class="key">luck</td><td>bucket</td><td class="said"></td></tr><tr><td class="key">chimera</td><td>bucket</td><td class="said">REPEAT LAST PARASITE</td></tr>
+          </table>
+        
+        
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <div class="record">signals</div>
+      <div class="facts">opens on combat · room 0 · seed 0000HX</div>
+      <code class="cmd">ASCEND_DUEL_SCENARIO=signals go run -tags scenario .</code>
+      <p class="blurb">Every kind of card signal in one hand, so the fireworks can be looked at rather than played towards. The metals are at 5, the shipping odds - a gold Jab pays on two plays in five and a silver Cut on one in five, so several turns may be wanted; the heal Thrust and the two vitae-in-hand Slices fire on every single play, which is what makes the hand worth queueing even on a turn the metals miss. Certainty is not available and that is the design: combat.LuckOutcomes refuses a die with no losing face, because a gamble that always pays is a purchase. Queue the gold Jab, the silver Cut and the heal Thrust together and press DUEL!. The order is the thing to check: the two Slices left in the hand throw their crimson vitae first, together, and the sum does not begin until their figures have landed on the duelist card - then each played card bursts on the beat its own figure sets off into the sum, and every signal holds the sum where it is so nothing overlaps. The burst and the figure leave together, in one colour per card: gold for the gold Jab, silver for the silver Cut, the rose for the heal, crimson for the cards kept back. And a losing roll says nothing at all, which is the mechanic rather than a missing picture.</p>
+
+      
+        <div class="strip">
+          <div class="cap">the opening hand, dealt over the shuffle</div>
+          <div class="scroll"><img src="signals-hand.png" width="650" height="140" alt="the opening hand, dealt over the shuffle"></div>
+        </div>
+      
+        <div class="strip">
+          <div class="cap">the replacement deck -- one card per line, the count is in the table</div>
+          <div class="scroll"><img src="signals-deck.png" width="540" height="140" alt="the replacement deck -- one card per line, the count is in the table"></div>
+        </div>
+      
+
+      <div class="cols">
+        
+        
+        
+          <table>
+            <tr><th>Opening hand</th><th>Element</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Cut</td><td>ice</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Thrust</td><td>fire</td><td>2</td><td class="rider">heal-on-play:10</td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td class="rider">vitae-in-hand:5</td></tr><tr><td>Slice</td><td>arcane</td><td>2</td><td class="rider">vitae-in-hand:5</td></tr><tr><td>Strike</td><td>lightning</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+        
+          <table>
+            <tr><th>Deck — 34 cards</th><th>Element</th><th>Copies</th><th>AP</th><th>Riders</th></tr>
+            <tr><td>Jab</td><td>fire</td><td>8</td><td>1</td><td class="rider">golden:5</td></tr><tr><td>Cut</td><td>ice</td><td>8</td><td>1</td><td class="rider">silver:5</td></tr><tr><td>Thrust</td><td>fire</td><td>6</td><td>2</td><td class="rider">heal-on-play:10</td></tr><tr><td>Slice</td><td>arcane</td><td>8</td><td>2</td><td class="rider">vitae-in-hand:5</td></tr><tr><td>Strike</td><td>lightning</td><td>4</td><td>2</td><td class="rider"></td></tr>
+          </table>
+        
+      </div>
+    </div>
+  
+</div>

@@ -472,6 +472,25 @@ func (s *CombatScene) Init(gs *state.GlobalState) {
 	}
 	s.enemy = enemyFromRecord(gs, enemyKey, s.fightIndex)
 
+	// **A scenario may also make the fight unkillable in both directions**, which is what a training
+	// dummy is: a real creature with a real portrait and a real deck, whose blows can be watched for
+	// as long as anybody wants to watch them. Both sides get the same ceiling, so it is not a
+	// one-sided view of a duel either — the creature still swings, statuses still land and shields
+	// still break; nothing ends. The clock is lifted in main.go, because it is a run-level number.
+	// Compiled out of every normal build; see internal/scenario.
+	if scenario.Active() && scenario.Dummy() {
+		s.enemy.MaxLife, s.enemy.CurrentLife = scenario.DummyLife, scenario.DummyLife
+		s.fighter.MaxLife, s.fighter.CurrentLife = scenario.DummyLife, scenario.DummyLife
+	}
+
+	// **And it may widen the budget**, which is what makes a bench a place to pick the cards you
+	// want rather than the cards six points can pay for. Set after Equip, so it overrides a ring
+	// that moved the figure as well as the record. `combat.MaxActions` is untouched: a turn is
+	// still five cards however cheap they are.
+	if scenario.Active() && scenario.Actions() > 0 {
+		s.fighter.Actions = scenario.Actions()
+	}
+
 	// The scene builds its own widgets and wires them to its own methods, so no other
 	// package needs to know this screen has buttons or what pressing them means.
 	if s.duelButton == nil {

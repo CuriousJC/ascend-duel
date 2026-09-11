@@ -147,6 +147,8 @@ go run ./tools/bosssheet    # the stairway protectors, the same way, by floor
 go run ./tools/stonesheet   # every stone against the rung it raises, grouped by axis
 go run ./tools/parasitesheet # every parasite: the line it prints against the rule that fires
 go run ./tools/upgradesheet  # every visible card upgrade, on every form mark, in every upgrade style
+go run ./tools/scenariosheet # every debug fixture: what it plugs in and the command that launches it
+go run ./tools/scenariodeck -form slash -size 40   # writes a scenario's Deck block to stdout
 go run ./tools/seeds        # re-check the named deck seeds, and search for new ones
 go run ./tools/handodds     # how often each rung of the hand ladder can actually be built
 ```
@@ -157,6 +159,11 @@ see every card, ring, worm, hand, stone, parasite, upgrade, creature and boss in
 reverses the older rule that a regenerated artefact is not worth committing: the argument it left
 out is the audience, since a sheet needing a Go toolchain and a remembered command each is a sheet
 only ever seen by whoever just changed the thing it shows.
+
+**The scenario sheet is the one page that is not a catalogue** *(2026-09-11)*: it is a picture of
+the debug fixtures in `internal/scenario/scenarios.json`, none of which is reachable from a shipped
+binary. It is on the index anyway, because "what can I boot into" is the question asked most often
+and answered worst.
 
 **The cost is history weight, so regenerate deliberately.** A full run rewrites every binary under
 `docs/sheets/`, and a sheet rebuilt in a commit that changed nothing about it is pure weight. **Most
@@ -1403,6 +1410,36 @@ combination looks like on screen. It is the ring-and-hand counterpart of `deckSe
   the tutorial section below.
 - **Every entry carries a `Note` saying what question it answers**, printed at startup. A fixture
   whose purpose nobody remembers is a fixture that gets deleted.
+- **`"Dummy": true` is a fight that cannot end** *(owner's call, 2026-09-11)*. Both duelists get
+  `scenario.DummyLife` and the clock goes to `scenario.DummyRounds`, so a scenario can be *played
+  with* rather than survived — every blow, every shield break, every status and every signal, for
+  as long as it is interesting. **It is not a creature in `data/enemies.json`, deliberately**: a
+  training dummy is a fixture and `data/` is the game's own catalogue, loaded by every build, drawn
+  on the roster sheet and reachable by the climb's own roll. So it changes the *stats* of whichever
+  opponent was already there, which means the fight keeps a real portrait, a real deck and a real
+  set of blows. **The clock is 999 rather than off**, because `session.SetRoundLimit` refuses to
+  stop the clock and the fixture goes the long way round rather than being given a back door into
+  the rules. `"RoundLimit": N` is the same dial on its own, for looking at the clock itself, and
+  `"Actions": N` widens the turn's budget — which is what makes a bench a place to pick the cards
+  you want rather than the cards six points can pay for. **It does not lift `combat.MaxActions`**,
+  the count bound: a turn is still five cards however cheap they are.
+- **`tools/scenariodeck` writes the `Deck` block, and that is deliberately a generator rather than
+  a filter vocabulary** *(owner's call, 2026-09-11)*. `-form slash -size 40`, `-elements fire,ice`,
+  `-cost 1-2`, `-riders golden:5`; it prints JSON to stdout and **never touches a file**. The
+  obvious alternative was `"DeckOf": {"Form": "slash", "Share": 50}` read at launch, and that is a
+  *second card-selection language* living in a debug fixture, which has to stay in step with
+  `data/duelist_cards.json` and with `internal/decks` — and being a debug fixture is exactly why
+  nobody would notice when it drifted. What lands in the file is the literal list the fixture
+  already supports, so `scenarios.json` stays a thing that can be read and checked. **The filters
+  are meant to be extended**: the next axis is one `flag.String` and one clause in `pick`.
+- **`tools/scenariosheet` is how the fixtures get found.** They are the fastest way to look at
+  anything in this game and were the least discoverable thing in the repo — the only ways to find
+  one were to read the JSON or to misspell a key. The page carries each fixture's Note against what
+  it actually plugs in, with the launch command ready to copy. **It reads the JSON off disk rather
+  than importing the package**, because importing it would mean building `tools/sheets` under
+  `-tags scenario`; the cost is a second view of the record struct and the tripwire is
+  `DisallowUnknownFields`, which fails the sheet loudly when a field is added to one and not the
+  other.
 
 ### `internal/profile` is what survives a run, and it is the only thing that touches the disk
 

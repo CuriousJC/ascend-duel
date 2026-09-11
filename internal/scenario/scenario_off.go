@@ -48,3 +48,20 @@ func Screen() string { return "combat" }
 func Fight() int { return 0 }
 func Vitae() int { return 0 }
 func Life() int  { return 0 }
+
+// DummyLife and DummyRounds are what a dummy fight would be given. Stated here as well as in
+// scenario_on.go so a call site can name them in either build — they are two constants, not the
+// fixture, and nothing reads them unless Dummy() is true.
+const (
+	DummyLife   = 999999
+	DummyRounds = 999
+)
+
+// Dummy reports whether the fight is unkillable in both directions. Always false here.
+func Dummy() bool { return false }
+
+// RoundLimit is the clock the scenario wants. Zero here, so the run keeps its own.
+func RoundLimit() int { return 0 }
+
+// Actions is the action-point budget the scenario wants. Zero here, so the record's own stands.
+func Actions() int { return 0 }

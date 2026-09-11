@@ -113,6 +113,16 @@ var sheets = []sheet{
 			"the plain card and against the upgrades already on the shelf.",
 	},
 	{
+		Dir:   "scenariosheet",
+		Tool:  "./tools/scenariosheet",
+		Title: "Scenario sheet",
+		Blurb: "Every fixture in `internal/scenario/scenarios.json` — what it plugs in, what " +
+			"question it was built to answer, and the one-line command that launches it. The " +
+			"scenarios are the fastest way to look at anything in this game and were the least " +
+			"discoverable thing in the repo. **Not a catalogue** — it is a picture of the debug " +
+			"fixtures, and none of it is reachable from a shipped binary.",
+	},
+	{
 		Dir:   "parasitesheet",
 		Tool:  "./tools/parasitesheet",
 		Title: "Parasite sheet",

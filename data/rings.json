@@ -1233,7 +1233,7 @@
   {
     "RingRecord": "form-full-house-hand-ring",
     "Name": "Armoury Ring",
-    "Art": "",
+    "Art": "form-full-house-hand-ring",
     "Text": "A Form Full House deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1247,7 +1247,7 @@
   {
     "RingRecord": "form-four-of-a-kind-hand-ring",
     "Name": "Arsenal Ring",
-    "Art": "",
+    "Art": "form-four-of-a-kind-hand-ring",
     "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [

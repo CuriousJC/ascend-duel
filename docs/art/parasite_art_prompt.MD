@@ -26,14 +26,22 @@ overlay is the counter disc in its bottom-right corner. Everything else below is
 
 ## General — identical for every parasite
 
+**Every figure in this block is a fraction of the canvas, never a count of pixels** — see
+`ring_art_prompt.MD`, which carries the measurement and the reasoning. The generator ignores
+a stated canvas size and renders at its own, so a `15 px` margin was being read against an
+image 5.3x larger than the one it described.
+
 Pixel art illustration of a single creature. No text anywhere in the image — no title, no
 label, no caption, no signature. The creature and its background, nothing else.
 
-Canvas: exactly 200 x 280 pixels, portrait.
+Canvas: portrait, aspect ratio exactly 5:7 (five wide to seven tall). Render at whatever
+resolution you work at natively; the image is reduced to 200 x 280 afterwards, so no detail
+smaller than about a two-hundredth of the width will survive. Draw for that.
 
-Pixel grid: every visible detail snaps to 5 x 5 pixel blocks, so the image reads as
-40 x 56 chunky pixels. Curves, legs, mandibles, carapace segments, outlines, highlights and
-texture must all be constructed from these discrete blocks. Hard edges only — no anti-aliasing,
+Chunky pixel blocks: build every visible detail out of square blocks roughly one fortieth
+of the canvas width, so the whole image reads as about 40 blocks across by 56 down. Curves,
+legs, mandibles, carapace segments, outlines, highlights and texture must all be constructed
+from these discrete blocks, aligned to one consistent grid. Hard edges only — no anti-aliasing,
 no gradients, no soft shadows, no blur, no dithering across block edges.
 
 Palette: at most 16 flat colours. Dark near-black outlines wherever shapes need
@@ -48,14 +56,15 @@ carries, the creature itself must remain clearly visible through it — do not b
 flames, sparks, smoke, frost, energy or decorative effects.
 
 Composition: subject centred horizontally and sitting in the upper two thirds of the canvas,
-filling roughly the middle 60% of the width and the band from 20 to 140 pixels down.
+filling roughly the middle 60% of the width and the band from 7% to 50% of the height down.
 
 Keep these areas simple and low-contrast, and draw nothing in them — they are covered
 after the fact by elements that are not part of this image, so nothing may be added to
 represent them:
 
-- the outer 15 px on all sides
-- everything below 140 px
+- a margin around all four sides: 7.5% of the width on the left and right edges, and 5.5%
+  of the height on the top and bottom edges
+- everything below 50% of the height
 
 Background: opaque, one dark tone with subtle blocky texture. Never transparent, never
 white. Background texture must remain substantially lower contrast than the creature.
@@ -64,7 +73,8 @@ Avoid environmental elements, scenery, props, characters, text of any kind, exce
 sparks, smoke or visual clutter. No host — the parasite is drawn alone, never attached to a card,
 a limb or a body.
 
-Reference: 16-bit console RPG bestiary art. Legible at 200 x 280 with no zoom.
+Reference: 16-bit console RPG bestiary art. It must stay legible after being reduced to
+200 x 280 and viewed with no zoom, which is the size it is actually seen at.
 
 Priority order: recognizable body plan -> convincing effect -> strong silhouette -> dimensional
 pixel-art shading -> subtle background texture.

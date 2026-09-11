@@ -1,6 +1,6 @@
 # Rings still to draw
 
-**The specific blocks, one per ring, for the 122 rings with no artwork yet.** The general block
+**The specific blocks, one per ring, for the 120 rings with no artwork yet.** The general block
 they all share is in `ring_art_prompt.MD` and is pasted verbatim above whichever of these is
 being generated; this file is only ever the second half.
 
@@ -26,21 +26,7 @@ thing in a picture whenever a ring has one.
 **Delete a ring from this file when its art lands.** A worklist that keeps finished entries is a
 worklist nobody trusts the length of.
 
-## Common — 48 rings
-
-### Armoury
-
-- **Key:** `form-full-house-hand-ring`
-- **Full name:** Armoury Ring
-- **Rule:** A Form Full House deals 6 more DMG before the multiplier.
-- **Draw:**
-
-### Arsenal
-
-- **Key:** `form-four-of-a-kind-hand-ring`
-- **Full name:** Arsenal Ring
-- **Rule:** A Form Four of a Kind deals 6 more DMG before the multiplier.
-- **Draw:**
+## Common — 46 rings
 
 ### Attuned
 

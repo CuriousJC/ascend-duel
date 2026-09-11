@@ -434,23 +434,45 @@ func TestPropagationScalesAndCompounds(t *testing.T) {
 }
 
 func TestARingIsOnlyWornOnceTheHandIsNotFull(t *testing.T) {
-	// Five worn at once, until brands expand it. The array is the cap and Wearing is where it
+	// Five worn at once, until brands expand it. RingSlots is the cap and Wearing is where it
 	// bites; a sixth is dropped rather than overwriting the fifth.
+	//
+	// **The array is no longer the cap**, which is the thing this test now has to say twice: a
+	// duelist carrying no number of its own wears DefaultRingSlots, and one carrying a number wears
+	// that — up to MaxWornRings, which is only how wide the array is.
 	worn := ring(t, "filler", RingRule{
 		When: MomentFightStart,
 		Then: []RingEffect{{Do: DoAddDMG, Amount: 1}},
 	})
 
-	d := duelist(10, 5, 100)
-	for i := 0; i < MaxWornRings+3; i++ {
-		d = d.Wearing(WornRing{Ring: worn})
+	fill := func(d Duelist) Duelist {
+		for i := 0; i < MaxWornRings+3; i++ {
+			d = d.Wearing(WornRing{Ring: worn})
+		}
+		return d
 	}
 
-	if d.RingCount != MaxWornRings {
-		t.Errorf("a duelist ended up wearing %d rings, cap is %d", d.RingCount, MaxWornRings)
+	d := fill(duelist(10, 5, 100))
+	if d.RingCount != DefaultRingSlots {
+		t.Errorf("a duelist ended up wearing %d rings, cap is %d", d.RingCount, DefaultRingSlots)
 	}
-	if got := AddedDMG(d.WornRings()); got != MaxWornRings {
-		t.Errorf("%d rings added %d DMG, want %d", d.RingCount, got, MaxWornRings)
+	if got := AddedDMG(d.WornRings()); got != DefaultRingSlots {
+		t.Errorf("%d rings added %d DMG, want %d", d.RingCount, got, DefaultRingSlots)
+	}
+
+	raised := duelist(10, 5, 100)
+	raised.RingSlots = DefaultRingSlots + 1
+	if raised = fill(raised); raised.RingCount != DefaultRingSlots+1 {
+		t.Errorf("a duelist with %d slots wore %d rings", DefaultRingSlots+1, raised.RingCount)
+	}
+
+	// A cap past the array's width is clamped to it rather than writing off the end. The run is
+	// free to be wrong about this; the struct is not.
+	past := duelist(10, 5, 100)
+	past.RingSlots = MaxWornRings + 5
+	if past = fill(past); past.RingCount != MaxWornRings {
+		t.Errorf("a duelist with %d slots wore %d rings, and the array holds %d",
+			MaxWornRings+5, past.RingCount, MaxWornRings)
 	}
 }
 

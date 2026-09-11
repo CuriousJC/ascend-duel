@@ -150,6 +150,12 @@ type Session struct {
 	// move rather than a constant it cannot reach. See clock.go, and Equip, which is where it
 	// reaches a fighter.
 	roundLimit int
+
+	// ringSlots is how many rings this run may wear at once. **The run's number, not the rules'** —
+	// `combat.DefaultRingSlots` is what a run opens at and this is what it is actually on, for the
+	// reason roundLimit is a field: a brand that buys a sixth finger has one place to write. See
+	// ring.go, and Equip, which is where it reaches a fighter.
+	ringSlots int
 }
 
 // New starts a run from a deck list — `startingDeck`, in practice, expanded to one entry per
@@ -159,7 +165,8 @@ type Session struct {
 // the reason live. A run buys its rings.
 func New(deck []combat.Card) *Session {
 	s := &Session{deck: make([]combat.Card, len(deck)), vitae: startingVitae, grown: map[string]int{},
-		stones: map[string]int{}, plays: map[string]int{}, roundLimit: combat.DefaultRoundLimit}
+		stones: map[string]int{}, plays: map[string]int{}, roundLimit: combat.DefaultRoundLimit,
+		ringSlots: combat.DefaultRingSlots}
 	copy(s.deck, deck)
 
 	// **Identity is stamped here and nowhere else on the way in.** `StartingDeck()` hands over a
@@ -167,6 +174,13 @@ func New(deck []combat.Card) *Session {
 	// where they stop being interchangeable.
 	for i := range s.deck {
 		s.deck[i].ID = s.mintCardID()
+	}
+
+	// **The fingers are counted before the rings go on**, which is the whole reason
+	// StartingRingSlots is a var rather than something set on the run afterwards: Wear checks the
+	// cap, so a sixth ring named by a fixture is refused by a hand that has not been widened yet.
+	if StartingRingSlots > 0 {
+		s.SetRingSlots(StartingRingSlots)
 	}
 
 	for _, key := range StartingRings {

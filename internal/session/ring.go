@@ -46,6 +46,56 @@ import (
 // It lived in `internal/screens` until 2026-08-17, where it could not survive a fight.
 var StartingRings []string
 
+// StartingRingSlots is how many fingers a run opens with, or zero for combat.DefaultRingSlots.
+//
+// **A package var beside StartingRings, and set from the same seat, because of an ordering**: New
+// wears StartingRings as it builds the run, so a cap raised afterwards would arrive to find the
+// extra rings already refused. A fixture wanting six rings has to be holding six fingers before
+// the first one goes on.
+//
+// **Zero is the shipped value and means five.** It is a debug seat like the two lists around it —
+// what moves this in a real run is a brand, through SetRingSlots.
+var StartingRingSlots int
+
+// RingSlots is how many rings this run may wear at once.
+func (s *Session) RingSlots() int {
+	if s.ringSlots <= 0 {
+		return combat.DefaultRingSlots
+	}
+	return s.ringSlots
+}
+
+// SetRingSlots moves the cap, and refuses to close the hand entirely.
+//
+// **A cap below one is clamped up rather than taken as "no rings"**, exactly as SetRoundLimit
+// refuses to stop the clock: a drawback that reached zero here would take the whole ring mechanic
+// off the run rather than making it harsher, which is the one direction a bug in this is invisible.
+// It is clamped down to `combat.MaxWornRings` as well, because that is how wide the duelist's array
+// is and a run asking for more would silently get the width anyway — better to agree about the
+// number than to have the shop and the fighter disagree.
+func (s *Session) SetRingSlots(n int) {
+	if n < 1 {
+		n = 1
+	}
+	if n > combat.MaxWornRings {
+		n = combat.MaxWornRings
+	}
+	s.ringSlots = n
+}
+
+// resumeRingSlots is a saved cap read back, with an old save's silence answered. Zero means a file
+// written before the cap was a field, not a run that may wear nothing — the trap resumeRoundLimit
+// documents, one field over.
+func resumeRingSlots(saved int) int {
+	if saved < 1 {
+		return combat.DefaultRingSlots
+	}
+	if saved > combat.MaxWornRings {
+		return combat.MaxWornRings
+	}
+	return saved
+}
+
 // registeredRings is every ring in the catalogue, registered with the rules at package init and
 // indexed by record key.
 //
@@ -392,6 +442,11 @@ func (s *Session) Equip(d combat.Duelist) combat.Duelist {
 	// this function is not an ordering anybody has to remember. What matters is that it is *here*:
 	// a fighter equipped without it carries a zero, and zero is no clock at all. See clock.go.
 	d.RoundLimit = s.roundLimit
+
+	// **The finger count goes over with it, and for the same reason.** A fighter equipped without
+	// it carries a zero, which the rules read as the default — so this is not load-bearing today
+	// and becomes load-bearing the moment anything moves it. See RingSlots below.
+	d.RingSlots = s.ringSlots
 
 	// **The stones go on last, and they touch nothing above.** Rings move DMG, life and what a card
 	// costs; a stone moves a rung of the hand ladder, which is read at the moment a blow is scored

@@ -148,6 +148,13 @@ type Duelist struct {
 	Rings     [MaxWornRings]WornRing
 	RingCount int
 
+	// RingSlots is how many of those seats this duelist may actually fill. **Zero means
+	// DefaultRingSlots**, which is the five every duelist in the tower fights on — see
+	// ringSlots(), where that reading lives, and session/ring.go, where a run hands its own
+	// number over. It is a separate field from the array's width because the width is a fact
+	// about keeping Duelist comparable and the cap is a rule a brand can move.
+	RingSlots int
+
 	// SoloAttacks makes this duelist's attack cards resolve **one at a time, in the order they
 	// were queued**, each landing its own blow — instead of being read as a set and scored
 	// through the hand table.

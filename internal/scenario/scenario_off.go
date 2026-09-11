@@ -65,3 +65,6 @@ func RoundLimit() int { return 0 }
 
 // Actions is the action-point budget the scenario wants. Zero here, so the record's own stands.
 func Actions() int { return 0 }
+
+// RingSlots is how many fingers the scenario wants. Zero here, so the run keeps its own five.
+func RingSlots() int { return 0 }

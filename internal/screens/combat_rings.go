@@ -33,13 +33,30 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// maxRings is how many rings can be worn at once.
+// maxRings is the widest ring row this screen can ever be asked to draw.
 //
-// **Five, and it is a rule rather than a number the layout chose** — brands are what expand it, and
-// nothing else may. It reads `combat.MaxWornRings` rather than declaring a second five: the rule
-// moved into the engine with the grammar on 2026-08-17, exactly as `maxSelected` did before it, and
-// the row saying `worn/5` while the duelist held a sixth is the drift this prevents.
+// **It is the array's width, not the cap** *(2026-09-11)*. The two were one number until the cap
+// became something a run carries — see combat.DefaultRingSlots — and this is deliberately the
+// larger of them: the row is a layout, and a layout has to survive the most rings a duelist could
+// ever be holding rather than the most a shipped run is allowed to buy.
+//
+// **What the player is told is `ringSlots`**, which reads the run. The row saying `worn/5` while
+// the duelist held a sixth is the drift this file has always been guarding against, and a constant
+// can no longer say it.
 const maxRings = combat.MaxWornRings
+
+// ringSlots is how many rings this run may wear, which is what the fraction on the pane counts
+// against and what the row is willing to draw.
+//
+// **The run is the authority, exactly as it is for which rings are worn.** A screen that kept its
+// own number would be the one place in the game that disagrees with the shop about whether a sixth
+// ring is allowed on.
+func ringSlots(gs *state.GlobalState) int {
+	if gs.Run == nil {
+		return combat.DefaultRingSlots
+	}
+	return gs.Run.RingSlots()
+}
 
 const (
 	// The gap on either side of the row: it starts where the duelist card ends and stops
@@ -278,9 +295,10 @@ func wornRings(gs *state.GlobalState) []data.RingData {
 		return nil
 	}
 
-	out := make([]data.RingData, 0, maxRings)
+	slots := ringSlots(gs)
+	out := make([]data.RingData, 0, slots)
 	for _, key := range gs.Run.Worn() {
-		if len(out) == maxRings {
+		if len(out) == slots {
 			break
 		}
 		record, ok := gs.Rings[key]

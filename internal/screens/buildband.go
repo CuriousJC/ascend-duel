@@ -177,7 +177,7 @@ func drawBuildRings(gs *state.GlobalState, screen *ebiten.Image, drag *cardDrag)
 // and still wants the pane under them.
 func drawBuildRingPane(gs *state.GlobalState, screen *ebiten.Image, row image.Rectangle) {
 	drawRingPaneBack(screen, row)
-	drawPaneCount(gs, screen, row, fmt.Sprintf("%d/%d rings", len(wornRings(gs)), maxRings))
+	drawPaneCount(gs, screen, row, fmt.Sprintf("%d/%d rings", len(wornRings(gs)), ringSlots(gs)))
 }
 
 // buildRingRow is the band's row, addressed by the shared drag: the reward screen's and the shop's.

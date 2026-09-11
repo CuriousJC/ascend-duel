@@ -202,6 +202,7 @@ type record struct {
 	Dummy          bool       `json:"Dummy"`
 	Actions        int        `json:"Actions"`
 	RoundLimit     int        `json:"RoundLimit"`
+	RingSlots      int        `json:"RingSlots"`
 	Teach          bool       `json:"Teach"`
 }
 
@@ -439,6 +440,9 @@ func factsOf(r record) []string {
 	}
 	if r.RoundLimit > 0 {
 		out = append(out, strconv.Itoa(r.RoundLimit)+"-round clock")
+	}
+	if r.RingSlots > 0 {
+		out = append(out, strconv.Itoa(r.RingSlots)+" ring slots")
 	}
 	if r.Teach {
 		out = append(out, "runs the tutorial")

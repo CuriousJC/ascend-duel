@@ -700,9 +700,24 @@ func RingKeys() []string {
 	return out
 }
 
-// MaxWornRings is how many rings can be worn at once. **Five, until brands expand it** — see
+// MaxWornRings is the width of a duelist's ring array, and **a width rather than a design cap**
+// — exactly like MaxEchoLandings and MaxStatuses. Duelist has to stay comparable, so the hand is a
+// fixed array; this is how long that array is and nothing about it is a rule.
+//
+// **What a duelist may actually wear is DefaultRingSlots, and it is five.** The two were one number
+// until 2026-09-11, which meant the cap could not be moved for a fixture without moving the width
+// for the shipped game — so a scenario wanting to look at six rings at once had nowhere to write.
+// Splitting them costs three more seats in a handful of Event arrays and buys a cap that a run can
+// carry, which is the shape a brand will want anyway.
+const MaxWornRings = 8
+
+// DefaultRingSlots is how many rings a duelist may wear. **Five, until brands expand it** — see
 // MECHANICS.md, where the cap is deliberately never displayed and surfaces when a sixth is bought.
-const MaxWornRings = 5
+//
+// It is what a run opens on, in the way DefaultRoundLimit is: `session.Session` carries the number
+// actually in force and hands it to the fighter through Equip, so something that buys a sixth
+// finger has one field to move. See Duelist.RingSlots.
+const DefaultRingSlots = 5
 
 // WornRing is one ring on a duelist's hand: which ring, and how far its accumulator has grown.
 //
@@ -719,6 +734,27 @@ type WornRing struct {
 	Grown int
 }
 
+// ringSlots is how many rings this duelist may wear, with the two ways the field can be wrong
+// answered in one place.
+//
+// **Zero is the default, not "no rings"** — every bare `Duelist{}` in a test and every enemy carries
+// a zero here, and reading that as a hand with no fingers would take rings off half the suite. That
+// is the opposite reading from RoundLimit's zero, and deliberately so: an unlimited clock is a
+// coherent fight and a duelist who can wear nothing is not.
+//
+// **And it can never exceed the array.** The cap travels from a run, which is free to be wrong; the
+// width is a fact about this struct.
+func (d Duelist) ringSlots() int {
+	n := d.RingSlots
+	if n <= 0 {
+		n = DefaultRingSlots
+	}
+	if n > MaxWornRings {
+		n = MaxWornRings
+	}
+	return n
+}
+
 // WornRings is what this duelist is wearing, in worn order.
 //
 // **Left to right, and it compounds.** That is a determinism rule rather than a preference:
@@ -729,8 +765,8 @@ func (d Duelist) WornRings() []WornRing {
 		return nil
 	}
 	n := d.RingCount
-	if n > MaxWornRings {
-		n = MaxWornRings
+	if slots := d.ringSlots(); n > slots {
+		n = slots
 	}
 	return d.Rings[:n]
 }
@@ -738,7 +774,7 @@ func (d Duelist) WornRings() []WornRing {
 // Wearing returns this duelist with one more ring on, or unchanged if the hand is full. It returns a
 // copy like everything else in this package.
 func (d Duelist) Wearing(w WornRing) Duelist {
-	if d.RingCount >= MaxWornRings {
+	if d.RingCount >= d.ringSlots() {
 		return d
 	}
 	d.Rings[d.RingCount] = w

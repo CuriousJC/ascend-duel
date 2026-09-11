@@ -1,5 +1,27 @@
 [
   {
+    "ScenarioRecord": "new-ring-art",
+    "Note": "The six rings drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RingSlots is 6: the shipped cap is combat.DefaultRingSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four rings firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Bash, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
+    "RingSlots": 6,
+    "Rings": [
+      "bulwark-ring",
+      "banker-ring",
+      "bedrock-ring",
+      "boxer-ring",
+      "brass-knuckles-ring",
+      "element-three-of-a-kind-hand-ring"
+    ],
+    "Hand": [
+      { "Card": "Jab", "Element": "earth" },
+      { "Card": "Bash", "Element": "earth" },
+      { "Card": "Strike", "Element": "earth" },
+      { "Card": "Tap", "Element": "earth" },
+      { "Card": "Ward", "Element": "earth" }
+    ],
+    "Actions": 15,
+    "Dummy": true
+  },
+  {
     "ScenarioRecord": "arsenal-on-a-dummy",
     "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the ring fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Ward beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the ring's term sits inside the sum rather than on the end of it, and the figure it moved is written in the ring pink. The ring pane is where the new artwork is.",
     "Rings": [

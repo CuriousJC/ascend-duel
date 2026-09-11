@@ -213,8 +213,7 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 	// The internal resolution, which Layout fixes. Written here rather than imported
 	// because game imports screens and not the reverse; if it ever changes, this test is
 	// the thing that should be updated to match.
-	const screenW, screenH = state.ScreenWidth, state.ScreenHeight
-	pctX := func(p int) int { return screenW * p / 100 }
+	const screenH = state.ScreenHeight
 	pctY := func(p int) int { return screenH * p / 100 }
 
 	// The comfortable pitch has to fit the row the shipping deck actually deals, which is the
@@ -226,9 +225,10 @@ func TestDeckPitchMatchesTheCard(t *testing.T) {
 			longest = n
 		}
 	}
-	row := rowWidth(longest, deckStackPitch) + deckRowLabelWidth
-	if panel := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct); row > panel-deckRowMargin {
-		t.Errorf("the deck's longest row is %dpx wide against a %dpx panel", row, panel)
+	row := rowWidth(longest, deckStackPitch)
+	// The room a row actually has is what the filter column left it — see deckGridRegion.
+	if room := deckGridRoom(); row > room {
+		t.Errorf("the deck's longest row is %dpx wide against %dpx of room", row, room)
 	}
 
 	// And every row has to fit inside the panel. Derived from the panel constants rather than
@@ -264,7 +264,7 @@ func TestEveryCardLandsInExactlyOneDeckRow(t *testing.T) {
 	}
 
 	for row, n := range counts {
-		if name, _ := deckRowLabel(row); n == 0 {
+		if name, _ := deckRowLabel(deckRowElements()[row]); n == 0 {
 			t.Errorf("the %q row is empty", name)
 		}
 	}
@@ -449,10 +449,7 @@ func deckRowCounts() []int {
 // under the grid saying so, which is at least honest; a pitch that clamps wrongly instead draws a
 // card off the right-hand edge of the panel, where nothing reports it and nothing is visible.
 func TestTheDeckPanelHidesNothing(t *testing.T) {
-	const screenW = state.ScreenWidth
-	pctX := func(p int) int { return screenW * p / 100 }
-	width := pctX(modalPanelRightPct) - pctX(modalPanelLeftPct)
-	room := width - deckRowLabelWidth - deckRowMargin
+	room := deckGridRoom()
 
 	// Well past anything a run can produce: 48 cards is the whole starting deck, and a flip relic
 	// recolouring every one of them into a single element is the worst case the panel has.

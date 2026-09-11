@@ -31,7 +31,6 @@ import (
 	"github.com/curiousjc/ascend-duel/internal/session"
 	"github.com/curiousjc/ascend-duel/internal/state"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // deckContents is what a panel is asked to show: the cards still to draw, the cards that are
@@ -283,17 +282,43 @@ func drawDeckPanel(gs *state.GlobalState, screen *ebiten.Image, v *deckView, d d
 	// of a deck and the cards say what they are — a title naming what the player has just clicked
 	// to open, a total they can see laid out in front of them, and a sentence explaining the
 	// dimming were three captions on something that needed none. What is left up here is the X.
-	r := drawModalFrame(gs, screen, modalHead{})
+	drawModalFrame(gs, screen, modalHead{})
 
-	grid := drawPileGrid(gs, screen, *v, float32(r.Min.X+r.Dx()/2), float32(r.Dx()),
-		float32(r.Min.Y+modalBareBodyTop), d)
+	drawPileGrid(gs, screen, *v, d)
 
-	// The tallies sit under the last row of cards, which is where the grid ends rather than a
-	// constant: the rows are one per element and a fifth colour would push the band down with them.
-	drawTallies(gs, screen, r, r.Min.Y+modalBareBodyTop+deckRowCount*grid.rowPitch+tallyTop,
-		tallyOf(grid.slots, d.holder))
-
+	// **The figures moved out from under the grid and onto the buttons that select them**
+	// *(owner's call, 2026-09-11)*. See deckpanel_view.go: a count that can be pressed is a count
+	// the player can act on, and three blocks of unpressable numbers under a grid of sixty cards
+	// were the panel telling you something and then leaving you to find it by eye.
 	v.draw(gs, screen, d)
+}
+
+// deckGridRegion is where the cards go: everything right of the filter column, less the panel's own
+// margin.
+//
+// **One answer, read by the drawing, by the cursor and by the column's own figures.** Three call
+// sites derive a grid on the same frame and a second piece of arithmetic saying where a card sits
+// is exactly the bug the one-rectangle rule prevents everywhere else on this screen.
+func deckGridRegion(gs *state.GlobalState) (centreX, width, top float32) {
+	r := modalPanelRect(gs)
+	left, right := deckGridSpan(r.Min.X, r.Max.X)
+	return float32(left+right) / 2, float32(right - left), float32(r.Min.Y + modalBareBodyTop)
+}
+
+// deckGridSpan is the grid's left and right edges given the panel's, and it is the one place the
+// column's footprint is subtracted. **Pure arithmetic over two ints**, so the sizing tests can ask
+// the same question the drawing does without building a GlobalState.
+func deckGridSpan(panelLeft, panelRight int) (left, right int) {
+	return panelLeft + deckColumnInset + deckColumnWidth + deckColumnGutter,
+		panelRight - deckColumnInset
+}
+
+// deckGridRoom is how much width a row of cards actually has, at the fixed internal resolution
+// Layout pins. It is what rowPitchFor is handed, and what the panel-fits tests measure against.
+func deckGridRoom() int {
+	left, right := deckGridSpan(
+		state.ScreenWidth*modalPanelLeftPct/100, state.ScreenWidth*modalPanelRightPct/100)
+	return right - left - deckRowMargin
 }
 
 // **Attacks, then defends, then prepares; within each, cheapest first.** The rows are
@@ -375,6 +400,15 @@ type pileEntry struct {
 	// inverts which half is dimmed and moves nothing at all. Between fights nothing is spent and
 	// everything is lit.
 	lit bool
+	// picked is whether the filter column is pointing at this card — see deckfilter.go. It is a
+	// third field rather than a narrowing of `lit` because the two are different channels on
+	// purpose: `lit` is dimming and says which half of the deck the panel is about, and a filter
+	// that reached for the same channel would draw a played card inside the selection and a
+	// drawable card outside it as the same picture. This one becomes a cards.Mark instead.
+	//
+	// **Nothing is picked while the filter is empty**, which is what stops the panel opening with
+	// every card in it marked.
+	picked bool
 }
 
 // deckRowElements is the colours the overlay gives a row to, in the fixed order internal/cards
@@ -427,10 +461,13 @@ func deckRowFor(c actionCard) int {
 	return 0
 }
 
-// deckRowLabel is what the gutter says beside a row, and the colour it says it in. Every row is a
-// colour now, so there is no longer a case for the one that was not.
-func deckRowLabel(row int) (string, color.RGBA) {
-	e := deckRowElements()[row]
+// deckRowLabel is what a row is called, and the colour it is said in.
+//
+// **It is keyed on the element rather than on the row index** *(2026-09-11)*, because the word moved:
+// it used to be drawn in a gutter beside the row and is now the label on that row's filter button,
+// which is reached by element. The row order and the button order are the same list either way —
+// see deckRowElements.
+func deckRowLabel(e cards.Element) (string, color.RGBA) {
 	return e.String(), cards.BorderOf(e)
 }
 
@@ -479,7 +516,7 @@ func (d deckContents) grid(v deckView, centerX, width, top float32) pileGridLayo
 	}
 
 	out := pileGridLayout{rowPitch: cards.Mini.Height + deckRowGap}
-	room := int(width) - deckRowLabelWidth - deckRowMargin
+	room := int(width) - deckRowMargin
 
 	// Each row gets its own pitch, so a row that has collected extra cards closes up without
 	// dragging the quiet rows in with it.
@@ -492,18 +529,14 @@ func (d deckContents) grid(v deckView, centerX, width, top float32) pileGridLayo
 		}
 	}
 
-	// The widest row sets the left edge and every row starts there, so the labels line up in one
-	// gutter and the block sits centred on the panel. **Rows do not each centre on their own
-	// count** — that would move a row sideways as cards were added to it, and the panel's whole
-	// idea is that a card stays where it is.
-	cardsLeft := int(centerX) - (deckRowLabelWidth+widest)/2 + deckRowLabelWidth
+	// The widest row sets the left edge and every row starts there, so the block sits centred in the
+	// space the filter column left it. **Rows do not each centre on their own count** — that would
+	// move a row sideways as cards were added to it, and the panel's whole idea is that a card stays
+	// where it is.
+	cardsLeft := int(centerX) - widest/2
 
 	for i, group := range rows {
 		rowTop := int(top) + i*out.rowPitch
-		out.labels = append(out.labels, pileRowLabel{
-			row: i,
-			at:  image.Pt(cardsLeft-12, rowTop+cards.Mini.Height/2),
-		})
 
 		for j, e := range group {
 			at := image.Pt(cardsLeft+j*pitches[i], rowTop)
@@ -526,7 +559,15 @@ func (d deckContents) entry(v deckView, c combat.Card, available bool) pileEntry
 	if d.inFight && v.played {
 		lit = !available
 	}
-	return pileEntry{card: d.faceOf(c, v.unaltered), available: available, lit: lit}
+	face := d.faceOf(c, v.unaltered)
+
+	// **The filter is asked about the face, not the card underneath**, exactly as the figures are:
+	// with alterations on, a lightning card dealt as ice answers the ice button, because that is the
+	// card in the picture and the picture is what is being read.
+	picked := !v.filter.empty() &&
+		v.filter.matches(face.Form(), d.holder.CardCost(face), artFor(face.Element), axisNone)
+
+	return pileEntry{card: face, available: available, lit: lit, picked: picked}
 }
 
 // rowWidth is how much of the panel n cards at this pitch occupy: the last card is drawn whole,
@@ -572,7 +613,6 @@ func rowPitchFor(n, room int) int {
 // rowPitchFor.
 type pileGridLayout struct {
 	slots    []pileSlot
-	labels   []pileRowLabel
 	rowPitch int
 }
 
@@ -583,29 +623,11 @@ type pileSlot struct {
 	at image.Rectangle
 }
 
-// pileRowLabel is one row's name in the gutter, at the point it is drawn from.
-type pileRowLabel struct {
-	row int
-	at  image.Point
-}
-
 func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, v deckView,
-	centerX, width, top float32, d deckContents) pileGridLayout {
+	d deckContents) pileGridLayout {
 
-	grid := d.grid(v, centerX, width, top)
-
-	for _, l := range grid.labels {
-		// A mini card says its own concept but nothing about which row it is in, so this is what
-		// names the row.
-		name, ink := deckRowLabel(l.row)
-		labelOp := &text.DrawOptions{}
-		labelOp.GeoM.Translate(float64(l.at.X), float64(l.at.Y))
-		labelOp.PrimaryAlign = text.AlignEnd
-		labelOp.SecondaryAlign = text.AlignCenter
-		labelOp.ColorScale.ScaleWithColor(ink)
-		text.Draw(screen, name,
-			&text.GoTextFace{Source: gs.Fonts["kubasta"], Size: 16}, labelOp)
-	}
+	centreX, width, top := deckGridRegion(gs)
+	grid := d.grid(v, centreX, width, top)
 
 	// **Left to right, so each card is covered on its *right* edge by the next one.** This was
 	// backwards and the screenshot showed it: drawing right to left puts card 0 on top of card 1,
@@ -620,8 +642,15 @@ func drawPileGrid(gs *state.GlobalState, screen *ebiten.Image, v deckView,
 		// has always meant; never "can be afforded", since dimming by the round's remaining AP
 		// would say something about a budget that has nothing to do with a pile you cannot play
 		// from.
-		drawCard(gs, screen, slot.at.Min, cards.Mini, slot.card,
-			heldBy(d.holder, slot.card), slot.lit, false)
+		// **The filter marks rather than dims**, which is what lets a card say both things at once:
+		// dimmed and picked is a card you have already played that answers what you asked. See
+		// cards.MarkPicked.
+		mark := cards.MarkNone
+		if slot.picked {
+			mark = cards.MarkPicked
+		}
+		drawMarkedCard(gs, screen, slot.at.Min, cards.Mini, slot.card,
+			heldBy(d.holder, slot.card), slot.lit, false, mark)
 	}
 
 	return grid

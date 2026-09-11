@@ -69,6 +69,23 @@ const (
 	// and a box round non-adjacent cards includes the ones between them — the exact bug the
 	// tutorial's matching-cards anchor had.
 	MarkHighlit
+
+	// MarkPicked is "this is one of the ones you asked for" — the deck panel's filter column
+	// pointing at every card that answers the buttons currently down.
+	//
+	// **It is a wash and not a dim, because the dim channel is spoken for.** That panel already
+	// says "still drawable" / "already spent" by dimming, and a filter reaching for the same
+	// channel would make a played card inside the selection and a drawable card outside it the
+	// same picture. A mark composes with the dimming instead, so both facts survive.
+	//
+	// **The ink is the relic pink, and it is not a sixth hue being claimed.** The wheel is full
+	// (see CLAUDE.md) and pink is already two things: a relic, and a pane's own chrome. This is the
+	// second of those — the panel pointing at a card — inside a panel whose stroke, buttons and
+	// close control are the only pink near it. Nothing in this grid is ever a relic, so the first
+	// meaning cannot be reached here. It is deliberately *not* HighlightInk: the tutorial pointing
+	// at a card and a filter answering a question are different sentences, and the red is the
+	// louder of the two because the tutorial is asking for a click.
+	MarkPicked
 )
 
 // Has reports whether a mark set carries one.
@@ -225,8 +242,8 @@ func maxInt(a, b int) int {
 // **They are drawn over everything, the border included.** A break that stopped at the frame would
 // read as being inside the card, and what a mark says is about the card as a whole.
 //
-// **The order is fixed here so two marks compose one way.** The break goes down first and the
-// highlight washes over it: a shattered card the tutorial is pointing at should read as pointed-at
+// **The order is fixed here so two marks compose one way.** The break goes down first, a filter's
+// pink washes over it, and the tutorial's red washes over both: a shattered card the tutorial is pointing at should read as pointed-at
 // *and* broken, and a break drawn over the wash would be the louder of the two when the sentence
 // being said is about the pointing.
 func drawMark(dst *image.RGBA, mark Mark, name string, w, h, radius int) {
@@ -236,10 +253,26 @@ func drawMark(dst *image.RGBA, mark Mark, name string, w, h, radius int) {
 			DrawCrack(dst, c, w, h, radius)
 		}
 	}
+	if mark.Has(MarkPicked) {
+		washInside(dst, w, h, radius, PickedInk, pickedWash)
+	}
 	if mark.Has(MarkHighlit) {
 		washInside(dst, w, h, radius, HighlightInk, highlightWash)
 	}
 }
+
+// PickedInk is the colour MarkPicked washes a card in: the relic pink, which is also a pane's own
+// chrome. **Read out of the border table rather than written down again**, so the panel's chrome
+// and the cards it is pointing at cannot drift apart.
+var PickedInk = borderColors[Relic]
+
+// pickedWash is how far a picked card is pulled toward that pink, in percent.
+//
+// **Lighter than highlightWash on purpose.** The tutorial marks one card in a row of eight and is
+// asking for a click; this marks up to sixty at once in a grid where each card shows a 75-pixel
+// strip of itself, so the same 30 would turn a whole panel pink and stop the unpicked cards
+// reading as the thing being compared against.
+const pickedWash = 22
 
 // HighlightInk is the colour MarkHighlit washes a card in.
 //

@@ -3,7 +3,7 @@
     "RelicRecord": "fire-ring",
     "Name": "Fire Ring",
     "Art": "fire-ring",
-    "Draw": "",
+    "Draw": "a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top",
     "Text": "Fire cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -18,7 +18,7 @@
     "RelicRecord": "burning-ring",
     "Name": "Burning Ring",
     "Art": "burning-ring",
-    "Draw": "",
+    "Draw": "a gold ring with a red gem, the flames should be licking up the sides of the ring",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -33,7 +33,7 @@
     "RelicRecord": "ice-ring",
     "Name": "Ice Ring",
     "Art": "ice-ring",
-    "Draw": "",
+    "Draw": "a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom",
     "Text": "Ice cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -48,7 +48,7 @@
     "RelicRecord": "chilling-ring",
     "Name": "Chilling Ring",
     "Art": "chilling-ring",
-    "Draw": "",
+    "Draw": "a gold ring with a blue gem, icicles hanging off the shoulders and frost dripping down the sides of the band",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
     "Rarity": "uncommon",
     "Rules": [
@@ -63,7 +63,7 @@
     "RelicRecord": "lightning-ring",
     "Name": "Lightning Ring",
     "Art": "lightning-ring",
-    "Draw": "",
+    "Draw": "a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top",
     "Text": "Lightning cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -78,7 +78,7 @@
     "RelicRecord": "shocking-ring",
     "Name": "Shocking Ring",
     "Art": "shocking-ring",
-    "Draw": "",
+    "Draw": "a gold ring with a yellow gem, electricity crackling up the sides of the ring",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
     "Rarity": "uncommon",
     "Rules": [
@@ -93,7 +93,7 @@
     "RelicRecord": "earth-ring",
     "Name": "Earth Ring",
     "Art": "earth-ring",
-    "Draw": "",
+    "Draw": "a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it",
     "Text": "Earth cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -108,7 +108,7 @@
     "RelicRecord": "weighted-ring",
     "Name": "Weighted Ring",
     "Art": "weighted-ring",
-    "Draw": "",
+    "Draw": "a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -123,7 +123,7 @@
     "RelicRecord": "arcane-ring",
     "Name": "Arcane Ring",
     "Art": "arcane-ring",
-    "Draw": "",
+    "Draw": "a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top",
     "Text": "Arcane cards deal 2x DMG.",
     "Rarity": "common",
     "Rules": [
@@ -138,7 +138,7 @@
     "RelicRecord": "weakening-ring",
     "Name": "Weakening Ring",
     "Art": "weakening-ring",
-    "Draw": "",
+    "Draw": "a gold ring with a purple gem, purple flames licking up the sides of the ring",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
     "Rarity": "uncommon",
     "Rules": [
@@ -153,7 +153,7 @@
     "RelicRecord": "storm-ring",
     "Name": "Storm Ring",
     "Art": "storm-ring",
-    "Draw": "",
+    "Draw": "a gold ring with a yellow gem and cold blue lightning burning off it, there should be 2 smaller blue gems beside it with some blue bleeding into the gold band",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
     "Rarity": "rare",
     "Rules": [
@@ -438,7 +438,7 @@
     "RelicRecord": "boxer-ring",
     "Name": "Boxer Ring",
     "Art": "boxer-ring",
-    "Draw": "",
+    "Draw": "a gold ring topped with a red boxing glove, laurel leaves along the shoulders and a star stamped on each side of the band",
     "Text": "Every Jab deals triple DMG.",
     "Rarity": "common",
     "Rules": [
@@ -588,7 +588,7 @@
     "RelicRecord": "brass-knuckles-ring",
     "Name": "Brass Knuckles Ring",
     "Art": "brass-knuckles-ring",
-    "Draw": "",
+    "Draw": "a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar",
     "Text": "Every Thump deals triple DMG.",
     "Rarity": "common",
     "Rules": [
@@ -813,7 +813,7 @@
     "RelicRecord": "bedrock-ring",
     "Name": "Bedrock Ring",
     "Art": "bedrock-ring",
-    "Draw": "",
+    "Draw": "a gold ring holding a rough grey unfaceted rock in gold claws, with scrollwork along the shoulders of the band",
     "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1315,7 +1315,7 @@
     "RelicRecord": "form-full-house-hand-ring",
     "Name": "Armoury Ring",
     "Art": "form-full-house-hand-ring",
-    "Draw": "",
+    "Draw": "a plain heavy steel ring standing in front of an armoury wall, swords and spears and an axe and a shield racked behind it under hanging banners",
     "Text": "A Form Full House deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1330,7 +1330,7 @@
     "RelicRecord": "form-four-of-a-kind-hand-ring",
     "Name": "Arsenal Ring",
     "Art": "form-four-of-a-kind-hand-ring",
-    "Draw": "",
+    "Draw": "a plain heavy steel ring standing in front of a heaped pile of weapons, swords and spears and axes and shields and helmets stacked behind it",
     "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1375,7 +1375,7 @@
     "RelicRecord": "element-three-of-a-kind-hand-ring",
     "Name": "Attuned Ring",
     "Art": "element-three-of-a-kind-hand-ring",
-    "Draw": "",
+    "Draw": "a gold ring set with three gems side by side, a red one and a blue one in the middle and a green one, with scrollwork on the shoulders",
     "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -1906,7 +1906,7 @@
     "RelicRecord": "bulwark-ring",
     "Name": "Bulwark Ring",
     "Art": "bulwark-ring",
-    "Draw": "",
+    "Draw": "a wide gold armband clasped around a thick bare bicep, a round gold boss in the centre holding a gem with a stud either side",
     "Text": "+25 HP for every fight.",
     "Rarity": "common",
     "Rules": [
@@ -2142,7 +2142,7 @@
     "RelicRecord": "banker-ring",
     "Name": "Banker Ring",
     "Art": "banker-ring",
-    "Draw": "",
+    "Draw": "a wide gold band woven from braided ropes of gold with rows of small red gems set between the braids",
     "Text": "Vitae propagates twice as fast.",
     "Rarity": "common",
     "Rules": [

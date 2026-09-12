@@ -20,6 +20,15 @@ Status: `[ ]` open · `[~]` in progress · `[?]` needs a decision
       what?); **wild card** (matches any axis, or any one axis you name?). Two of them are random,
       which needs its own stream and its own argument in `MECHANICS.md` per the `randomness` skill.
 
+- [ ] **Re-check the tutorial's taught shop after the relic key renames** *(owner asked for this
+      to be tracked, 2026-09-12)*. Thirty-seven records were renamed on `game-updates-118`, and the
+      shop shelf is a weighted draw over `relics.json`'s *sorted* keys — so what seed `0009D4`
+      lands on has moved. Nothing failed, because no test asserts which relics the taught shelf
+      offers; the shop step is the part of the lesson a catalogue edit can break silently.
+      `SEEDSEARCH=1 go test ./internal/screens -run TestFindATutorialSeed` is the search if the
+      shelf now reads badly. See the tutorial section of `CLAUDE.md`, which notes the seed has
+      already moved twice for this reason.
+
 - [ ] **The score's loop point is rounded, not authored.** `loopTicks` rounds the last
       note-off to the nearest bar, which for `ascending.mid` trims 60 ticks (about 62ms)
       of a drum tail past bar 13. That is inaudible and the tail is folded back over the

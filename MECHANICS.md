@@ -3371,6 +3371,27 @@ The rules that hold it up:
 - **Scrolling is a dragged scrollbar** *(owner's call)*. The input vocabulary is clicks, drags and
   hover; the wheel stays out of the game.
 
+### The gap between two fights is part of the account *(owner's call, 2026-09-12)*
+
+**Under each fight's rounds sits an `After` block: what the player did with what that fight paid
+them.** The card taken and the card cut on the reward screen, the worm spent on one of them, the
+relic bought or sold, the stone spent and the rung it raised, and what the purse gained and paid.
+
+- **It hangs off the fight rather than sitting between two of them.** The panel folds by fight, so
+  a block of its own would be a third thing to fold and a heading belonging to no record. Filed
+  under the duel it followed, it opens and closes with it — which is how the player remembers it:
+  *after fight one*.
+- **It is read off the run rather than announced by the screens.** A call beside every commit is a
+  list a new mechanic gets left off silently, since a missing announcement and a deliberate silence
+  are the same absence. The run is watched instead and whatever moved is worded — the rule
+  `internal/screens/combat_handmorph.go` already follows, where what a parasite did is read off the
+  card faces so that no parasite has a case in the drawing.
+- **Cards are told apart by `combat.Card.ID`.** That is what makes "this card became that one"
+  sayable at all: counting faces cannot distinguish a card altered from a card cut with another
+  taken in its place, and would report one act as two lines.
+- **Nothing is recorded during a fight.** A parasite spent mid-round is an event of that round and
+  belongs to the round's own lines.
+
 ---
 
 ## Overlays

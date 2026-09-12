@@ -52,7 +52,7 @@
       "jar-earth",
       "old-dagger",
       "brass-knuckles",
-      "element-three-of-a-kind-hand"
+      "dmg-element-three-of-a-kind-hand"
     ],
     "Hand": [
       { "Card": "Jab", "Element": "earth" },
@@ -68,7 +68,7 @@
     "ScenarioRecord": "arsenal-on-a-dummy",
     "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Brace beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic's term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.",
     "Relics": [
-      "form-four-of-a-kind-hand"
+      "dmg-form-four-of-a-kind-hand"
     ],
     "Deck": [
       {
@@ -221,8 +221,8 @@
     "ScenarioRecord": "form-hand-relics",
     "Note": "The two form-hand relics on the fingers, Full Ring and Quad Ring, so the rules can be made to fire and the two can be told apart on the relic pane in one launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Quad Ring adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Full Ring adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.",
     "Relics": [
-      "form-full-house-hand",
-      "form-four-of-a-kind-hand"
+      "dmg-form-full-house-hand",
+      "dmg-form-four-of-a-kind-hand"
     ],
     "Deck": [
       { "Card": "Poke", "Element": "fire", "Copies": 6 },
@@ -820,7 +820,7 @@
     "ScenarioRecord": "echo-and-growth",
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Skewer first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
     "Relics": [
-      "echo",
+      "lead-three-times",
       "enflamed",
       "fire"
     ],
@@ -852,7 +852,7 @@
     "ScenarioRecord": "seven-term-sum",
     "Note": "The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.",
     "Relics": [
-      "echo",
+      "lead-three-times",
       "aftershock"
     ],
     "Hand": [
@@ -884,7 +884,7 @@
     "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Relics": [
       "demotion-three",
-      "momentum"
+      "dmg-no-shield"
     ],
     "Hand": [
       {
@@ -910,8 +910,8 @@
     "ScenarioRecord": "altered-deck",
     "Note": "Two flips and a demotion, so the deck panel's ALTERATIONS toggle has something to show. Open the draw pile: earth and lightning are dealt as fire, the 3 AP attacks are dealt a rung down, and AS OWNED puts all of it back. FULL/PLAYED after a round or two.",
     "Relics": [
-      "magma",
-      "firestorm",
+      "flip-earth-to-fire",
+      "flip-lightning-to-fire",
       "demotion-three"
     ],
     "Hand": [],

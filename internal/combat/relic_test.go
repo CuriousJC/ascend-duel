@@ -497,7 +497,7 @@ func TestHPScalingCompoundsAndDefaultsToWhole(t *testing.T) {
 		t.Errorf("nothing worn scales life to %d%%, want 100%%", got)
 	}
 
-	quarterOff := relic(t, "onslaught", RelicRule{
+	quarterOff := relic(t, "cost-life-lost", RelicRule{
 		When: MomentFightStart,
 		Then: []RelicEffect{{Do: DoScaleHP, Amount: 75}},
 	})
@@ -518,7 +518,7 @@ func TestHPScalingCompoundsAndDefaultsToWhole(t *testing.T) {
 func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 	// Echo's whole shape in one place: the lead card of the blow pays three terms rather than one,
 	// the sum grows by exactly those terms, and the hand the cards formed is untouched.
-	echo := relic(t, "echo", RelicRule{
+	echo := relic(t, "lead-three-times", RelicRule{
 		When: MomentBlowFormed,
 		If:   RelicCondition{Lead: true},
 		Then: []RelicEffect{{Do: DoEchoAttack, Amount: 3}},
@@ -781,7 +781,7 @@ func TestMomentumBuildsAcrossTurnsAndADefenceWipesIt(t *testing.T) {
 	// Momentum through the real round, because what it measures is a *turn* — the one unit no
 	// applier-level test can see. Written as two rules with no negation anywhere: one grows on every
 	// turn, one resets on a turn holding a defence, and the reset is applied second.
-	momentum := relic(t, "momentum",
+	momentum := relic(t, "dmg-no-shield",
 		RelicRule{
 			When: MomentCardDamage,
 			Then: []RelicEffect{{Do: DoScaleDamage, Amount: 100}},

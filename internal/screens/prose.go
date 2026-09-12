@@ -507,7 +507,11 @@ func cardEffect(card combat.Card) string {
 		return "SHIELD\n" + strconv.Itoa(amount)
 	}
 
-	return attackVerb(c.Form) + "\nDMG " + multiplierText(amount)
+	// **The form is read off the card, not off its concept** *(2026-09-12)*. A worm that turns a
+	// Crush into a Stab writes `FormOverride`, which `Card.Form` honours and `Concept.Form` knows
+	// nothing about — so the corner mark became a spear while the line under it still read CRUSH.
+	// Same failure the figures above were fixed for, one field over.
+	return attackVerb(card.Form()) + "\nDMG " + multiplierText(amount)
 }
 
 // riderText is the lines a card's upgrade adds under its own, one authored line each.

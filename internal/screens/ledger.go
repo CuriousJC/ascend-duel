@@ -46,9 +46,13 @@ var ledgerPane = panePlacement{
 	ink:       color.RGBA{R: 34, G: 32, B: 38, A: 255},
 	nowInk:    color.RGBA{R: 178, G: 22, B: 106, A: 255},
 	rowHeight: ledgerRowHeight,
-	firstRow:  paneFirstRow,
+	firstRow:  ledgerFirstRow,
 	textSize:  ledgerTextSize,
 	bold:      true,
+
+	// The bar's whole column, so a heading's band stops before it rather than running underneath
+	// it. Derived from the bar rather than written down, for ledgerScrollRect's reason.
+	rightInset: ledgerScrollInset + ledgerScrollWidth + ledgerScrollGap,
 }
 
 // The two grounds a fight is drawn on.
@@ -91,6 +95,28 @@ const (
 	// The scrollbar's column, on the panel's right edge.
 	ledgerScrollWidth = 18
 	ledgerScrollInset = 10
+
+	// ledgerFirstRow is the gap from the panel's top edge to its first row.
+	//
+	// **Ten pixels below every other pane's** *(owner's call, 2026-09-12)*. A pane's first row
+	// clears its title and nothing else, and this panel carries the closing X in the same band —
+	// so the first heading's own dark band ran up to the bottom of the X. Derived from the shared
+	// figure rather than typed, so a pane that re-lays out its title moves this with it.
+	ledgerFirstRow = paneFirstRow + 10
+
+	// ledgerScrollGap is the air between the rows and the bar's column, so a banded heading stops
+	// short of it rather than ending under it.
+	ledgerScrollGap = 6
+
+	// ledgerScrollTopGap is the air between the closing X and the top of the bar's track.
+	//
+	// **The bar shares the panel's right edge with the X and has to start under it** *(owner's
+	// call, 2026-09-12)*. Both are measured from the same corner — the X spends
+	// modalCloseInset+modalCloseSize from the top and the bar's column overlaps its width — so a
+	// track starting at the pane's first row ran up behind the one control that closes the panel.
+	// It is derived from the X rather than written down, or a bigger X would silently sit on the
+	// bar again.
+	ledgerScrollTopGap = 8
 )
 
 // ledgerRow is one drawn line and what clicking it does.
@@ -282,8 +308,11 @@ func ledgerPanelRect(gs *state.GlobalState) image.Rectangle { return modalPanelR
 // ledgerScrollRect is the bar's column, down the panel's right edge and clear of the title.
 func ledgerScrollRect(r image.Rectangle) image.Rectangle {
 	right := r.Max.X - ledgerScrollInset
-	return image.Rect(right-ledgerScrollWidth, r.Min.Y+ledgerPane.firstRow,
-		right, r.Max.Y-ledgerBottomInset)
+	top := r.Min.Y + ledgerPane.firstRow
+	if under := r.Min.Y + modalCloseInset + modalCloseSize + ledgerScrollTopGap; under > top {
+		top = under
+	}
+	return image.Rect(right-ledgerScrollWidth, top, right, r.Max.Y-ledgerBottomInset)
 }
 
 // ledgerCapacity is how many rows the panel holds. **Derived from the panel and the pitch rather
@@ -320,6 +349,7 @@ func ledgerSignature(gs *state.GlobalState, expanded map[int]bool) ledgerKey {
 		for _, r := range f.Rounds {
 			key.lines += len(r.Lines)
 		}
+		key.lines += len(f.After)
 	}
 	for _, open := range expanded {
 		if open {
@@ -379,9 +409,28 @@ func ledgerRows(gs *state.GlobalState, expanded map[int]bool) []ledgerRow {
 				rows = append(rows, ledgerRow{row: l})
 			}
 		}
+
+		// **The aftermath is a heading of its own inside the fight's block**, on the rounds' own
+		// terms rather than as a fourth kind of thing to fold: what the player did with the spoils
+		// is read against the duel that paid for them, so it opens and closes with it.
+		if len(f.After) > 0 {
+			head := plainRow(ledgerAfterHeading)
+			head.band = ground
+			rows = append(rows, ledgerRow{row: head})
+
+			for _, l := range paneRowsFor(f.After) {
+				l.band = ground
+				rows = append(rows, ledgerRow{row: l})
+			}
+		}
 	}
 	return rows
 }
+
+// ledgerAfterHeading names the block between one fight and the next. **"After" rather than
+// "Shop"**, because the gap holds the reward screen as well and a heading naming one of its two
+// stations would file half the block under the wrong one.
+const ledgerAfterHeading = "- After -"
 
 // fightToggle is the fight number a heading folds, or 0 for one that cannot be folded.
 func fightToggle(f session.LedgerFight, live bool) int {

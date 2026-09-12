@@ -97,6 +97,15 @@ type panePlacement struct {
 	// title; the feed has no title and cannot afford to pretend it does — 45 pixels of
 	// reserved heading out of an 82-pixel box is most of the box.
 	firstRow int
+
+	// rightInset is a column down the pane's right edge that the rows may not use.
+	//
+	// **It narrows the content and never the frame** *(owner's call, 2026-09-12)*. The ledger runs
+	// a scrollbar down that edge, and a heading's band is drawn edge to edge inside the border —
+	// so the band ran under the bar and a centred heading was centred on a width half of which was
+	// behind it. The border still reaches the panel's own edge, because the pane is the thing the
+	// scrollbar sits *on*.
+	rightInset int
 }
 
 // paneEdge is the pink a pane is bordered and named in. Still a placeholder palette.
@@ -229,6 +238,10 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 	// point — the pane's pitch is now a property of the placement and free to change again.
 	_, lineHeight := text.Measure("Ag", face, 0)
 
+	// The width the rows actually have, which is the pane less whatever it keeps down its right
+	// edge. See panePlacement.rightInset.
+	contentW := w - float32(p.rightInset)
+
 	for i, row := range rows {
 		rowY := y + float32(p.firstRow) + float32(i*p.rowHeight)
 
@@ -237,7 +250,7 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 		// as stripes.
 		if row.band.A != 0 {
 			vector.DrawFilledRect(screen, x+paneBandInset, rowY-paneBandRise,
-				w-2*paneBandInset, float32(p.rowHeight), row.band, false)
+				contentW-2*paneBandInset, float32(p.rowHeight), row.band, false)
 		}
 
 		// **The row playback is on is set in the text itself — coloured, bold and underlined —
@@ -265,7 +278,7 @@ func drawPane(gs *state.GlobalState, screen *ebiten.Image, p panePlacement, r im
 			}
 
 			rowOp := &text.DrawOptions{}
-			rowOp.GeoM.Translate(float64(x+w/2), float64(rowY))
+			rowOp.GeoM.Translate(float64(x+contentW/2), float64(rowY))
 			rowOp.PrimaryAlign = text.AlignCenter
 			rowOp.ColorScale.ScaleWithColor(tint)
 			text.Draw(screen, row.runs[0].text, face, rowOp)

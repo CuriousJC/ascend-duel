@@ -79,7 +79,7 @@ func TestADiscountRelicStillReachesTheCost(t *testing.T) {
 	card := aSlash(t)
 
 	bare := held{}
-	worn := wearing(t, 12, "onslaught")
+	worn := wearing(t, 12, "cost-life-lost")
 
 	if worn.cost == bare.cost {
 		t.Skip("onslaught-ring does not discount this card")

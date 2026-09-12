@@ -45,7 +45,7 @@ func TestTheBadgeSaysWhatTheRelicIsDoing(t *testing.T) {
 		{"heart", 45, "+50"},
 		{"growth-fire", 0, "1.0"},
 		{"growth-fire", 50, "1.5"},
-		{"momentum", 60, "1.6"},
+		{"dmg-no-shield", 60, "1.6"},
 	} {
 		id, ok := combat.RelicByKey(tc.key)
 		if !ok {

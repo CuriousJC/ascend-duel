@@ -112,19 +112,46 @@ func (s *Session) ledgerSnapshot() []profile.LedgerFightSnapshot {
 			Rounds:  make([]profile.LedgerRoundSnapshot, 0, len(f.Rounds)),
 		}
 		for _, r := range f.Rounds {
-			lines := make([]profile.LedgerLineSnapshot, 0, len(r.Lines))
-			for _, l := range r.Lines {
-				runs := make([]profile.LedgerRunSnapshot, 0, len(l.Runs))
-				for _, run := range l.Runs {
-					runs = append(runs, profile.LedgerRunSnapshot{
-						Text: run.Text, Ink: run.Ink, Mark: run.Mark,
-					})
-				}
-				lines = append(lines, profile.LedgerLineSnapshot{Voice: l.Voice, Runs: runs})
-			}
-			rec.Rounds = append(rec.Rounds, profile.LedgerRoundSnapshot{Number: r.Number, Lines: lines})
+			rec.Rounds = append(rec.Rounds, profile.LedgerRoundSnapshot{
+				Number: r.Number, Lines: linesSnapshot(r.Lines),
+			})
 		}
+		rec.After = linesSnapshot(f.After)
 		out = append(out, rec)
+	}
+	return out
+}
+
+// linesSnapshot and resumeLines are the one conversion each way for a block of lines.
+//
+// **Shared because a fight now carries two blocks of them** — its rounds and its aftermath — and
+// the walk written out twice per direction is four places for a field to be added to three of.
+func linesSnapshot(in []LedgerLine) []profile.LedgerLineSnapshot {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]profile.LedgerLineSnapshot, 0, len(in))
+	for _, l := range in {
+		runs := make([]profile.LedgerRunSnapshot, 0, len(l.Runs))
+		for _, run := range l.Runs {
+			runs = append(runs, profile.LedgerRunSnapshot{Text: run.Text, Ink: run.Ink, Mark: run.Mark})
+		}
+		out = append(out, profile.LedgerLineSnapshot{Voice: l.Voice, Runs: runs})
+	}
+	return out
+}
+
+func resumeLines(in []profile.LedgerLineSnapshot) []LedgerLine {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]LedgerLine, 0, len(in))
+	for _, l := range in {
+		runs := make([]LedgerRun, 0, len(l.Runs))
+		for _, run := range l.Runs {
+			runs = append(runs, LedgerRun{Text: run.Text, Ink: run.Ink, Mark: run.Mark})
+		}
+		out = append(out, LedgerLine{Voice: l.Voice, Runs: runs})
 	}
 	return out
 }
@@ -146,16 +173,9 @@ func resumeLedger(snap []profile.LedgerFightSnapshot) Ledger {
 			dealt:   f.Dealt,
 		}
 		for _, r := range f.Rounds {
-			lines := make([]LedgerLine, 0, len(r.Lines))
-			for _, l := range r.Lines {
-				runs := make([]LedgerRun, 0, len(l.Runs))
-				for _, run := range l.Runs {
-					runs = append(runs, LedgerRun{Text: run.Text, Ink: run.Ink, Mark: run.Mark})
-				}
-				lines = append(lines, LedgerLine{Voice: l.Voice, Runs: runs})
-			}
-			rec.Rounds = append(rec.Rounds, LedgerRound{Number: r.Number, Lines: lines})
+			rec.Rounds = append(rec.Rounds, LedgerRound{Number: r.Number, Lines: resumeLines(r.Lines)})
 		}
+		rec.After = resumeLines(f.After)
 		out.Fights = append(out.Fights, rec)
 	}
 	return out

@@ -1,23 +1,563 @@
 [
   {
-    "RelicRecord": "fire-ring",
-    "Name": "Fire Ring",
-    "Art": "fire-ring",
-    "Draw": "a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top",
-    "Text": "Fire cards deal 2x DMG.",
-    "Rarity": "common",
+    "RelicRecord": "frozen-lightning",
+    "Name": "Frozen Lightning",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every lightning card is dealt as an ice card.",
+    "Rarity": "uncommon",
     "Rules": [
       {
-        "When": "card-damage",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "When": "card-drawn",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
       }
     ]
   },
   {
-    "RelicRecord": "burning-ring",
-    "Name": "Burning Ring",
-    "Art": "burning-ring",
+    "RelicRecord": "permafrost",
+    "Name": "Permafrost",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every earth card is dealt as an ice card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "frostbite",
+    "Name": "Frostbite",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every fire card is dealt as an ice card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "meltdown",
+    "Name": "Meltdown",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every ice card is dealt as a fire card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "firestorm",
+    "Name": "Firestorm",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every lightning card is dealt as a fire card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "magma",
+    "Name": "Magma",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every earth card is dealt as a fire card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "thundersnow",
+    "Name": "Thundersnow",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every ice card is dealt as a lightning card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "heat-lightning",
+    "Name": "Heat Lightning",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every fire card is dealt as a lightning card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "dust-storm",
+    "Name": "Dust Storm",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every earth card is dealt as a lightning card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "glacier",
+    "Name": "Glacier",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every ice card is dealt as an earth card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "obsidian",
+    "Name": "Obsidian",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every fire card is dealt as an earth card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "fulgurite",
+    "Name": "Fulgurite",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every lightning card is dealt as an earth card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "witchfire",
+    "Name": "Witchfire",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every fire card is dealt as an arcane card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "runefrost",
+    "Name": "Runefrost",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every ice card is dealt as an arcane card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "spellbolt",
+    "Name": "Spellbolt",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every lightning card is dealt as an arcane card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "leyline",
+    "Name": "Leyline",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every earth card is dealt as an arcane card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "set-element", "Element": "arcane" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "hexfire",
+    "Name": "Hexfire",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every arcane card is dealt as a fire card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "fire" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "hexfrost",
+    "Name": "Hexfrost",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every arcane card is dealt as an ice card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "ice" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "hexbolt",
+    "Name": "Hexbolt",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every arcane card is dealt as a lightning card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "lightning" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "hexstone",
+    "Name": "Hexstone",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every arcane card is dealt as a earth card.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-drawn",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "set-element", "Element": "earth" }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "high-card-hand",
+    "Name": "Lone",
+    "Art": "",
+    "Draw": "",
+    "Text": "A High Card deals 2 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "high-card" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "pair-hand",
+    "Name": "Twinned",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Pair deals 2 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "concept-two-pair-hand",
+    "Name": "Doubled",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-two-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 4 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "concept-three-of-a-kind-hand",
+    "Name": "Trined",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-three-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "concept-full-house-hand",
+    "Name": "Laden",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Card Full House deals 8 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-full-house" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 8 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "concept-four-of-a-kind-hand",
+    "Name": "Quartered",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-four-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "concept-five-of-a-kind-hand",
+    "Name": "Perfect",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-five-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 16 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "form-two-pair-hand",
+    "Name": "Paired",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-two-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "form-three-of-a-kind-hand",
+    "Name": "Forged",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-three-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "form-full-house-hand",
+    "Name": "Armoury",
+    "Art": "form-full-house-hand",
+    "Draw": "a plain heavy steel ring standing in front of an armoury wall, swords and spears and an axe and a shield racked behind it under hanging banners",
+    "Text": "A Form Full House deals 6 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-full-house" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "form-four-of-a-kind-hand",
+    "Name": "Arsenal",
+    "Art": "form-four-of-a-kind-hand",
+    "Draw": "a plain heavy steel ring standing in front of a heaped pile of weapons, swords and spears and axes and shields and helmets stacked behind it",
+    "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-four-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "form-five-of-a-kind-hand",
+    "Name": "Panoply",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-five-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 12 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "element-two-pair-hand",
+    "Name": "Twinflame",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Elemental Two Pair deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-two-pair" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "element-three-of-a-kind-hand",
+    "Name": "Attuned",
+    "Art": "element-three-of-a-kind-hand",
+    "Draw": "a gold ring set with three gems side by side, a red one and a blue one in the middle and a green one, with scrollwork on the shoulders",
+    "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-three-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "element-full-house-hand",
+    "Name": "Convergent",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Elemental Full House deals 7 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-full-house" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "element-four-of-a-kind-hand",
+    "Name": "Confluent",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Elemental Four of a Kind deals 7 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-four-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "element-five-of-a-kind-hand",
+    "Name": "Elemental",
+    "Art": "",
+    "Draw": "",
+    "Text": "A Elemental Five of a Kind deals 14 more DMG before the multiplier.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-five-of-a-kind" },
+        "Then": [{ "Do": "add-hand-damage", "Amount": 14 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "burning",
+    "Name": "Burning",
+    "Art": "burning",
     "Draw": "a gold ring with a red gem, the flames should be licking up the sides of the ring",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
     "Rarity": "uncommon",
@@ -30,24 +570,9 @@
     ]
   },
   {
-    "RelicRecord": "ice-ring",
-    "Name": "Ice Ring",
-    "Art": "ice-ring",
-    "Draw": "a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom",
-    "Text": "Ice cards deal 2x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "chilling-ring",
-    "Name": "Chilling Ring",
-    "Art": "chilling-ring",
+    "RelicRecord": "chilling",
+    "Name": "Chilling",
+    "Art": "chilling",
     "Draw": "a gold ring with a blue gem, icicles hanging off the shoulders and frost dripping down the sides of the band",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
     "Rarity": "uncommon",
@@ -60,24 +585,9 @@
     ]
   },
   {
-    "RelicRecord": "lightning-ring",
-    "Name": "Lightning Ring",
-    "Art": "lightning-ring",
-    "Draw": "a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top",
-    "Text": "Lightning cards deal 2x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "shocking-ring",
-    "Name": "Shocking Ring",
-    "Art": "shocking-ring",
+    "RelicRecord": "shocking",
+    "Name": "Shocking",
+    "Art": "shocking",
     "Draw": "a gold ring with a yellow gem, electricity crackling up the sides of the ring",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
     "Rarity": "uncommon",
@@ -90,24 +600,9 @@
     ]
   },
   {
-    "RelicRecord": "earth-ring",
-    "Name": "Earth Ring",
-    "Art": "earth-ring",
-    "Draw": "a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it",
-    "Text": "Earth cards deal 2x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "weighted-ring",
-    "Name": "Weighted Ring",
-    "Art": "weighted-ring",
+    "RelicRecord": "weighted",
+    "Name": "Weighted",
+    "Art": "weighted",
     "Draw": "a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
     "Rarity": "uncommon",
@@ -120,24 +615,9 @@
     ]
   },
   {
-    "RelicRecord": "arcane-ring",
-    "Name": "Arcane Ring",
-    "Art": "arcane-ring",
-    "Draw": "a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top",
-    "Text": "Arcane cards deal 2x DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "weakening-ring",
-    "Name": "Weakening Ring",
-    "Art": "weakening-ring",
+    "RelicRecord": "weakening",
+    "Name": "Weakening",
+    "Art": "weakening",
     "Draw": "a gold ring with a purple gem, purple flames licking up the sides of the ring",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
     "Rarity": "uncommon",
@@ -150,9 +630,9 @@
     ]
   },
   {
-    "RelicRecord": "storm-ring",
-    "Name": "Storm Ring",
-    "Art": "storm-ring",
+    "RelicRecord": "storm",
+    "Name": "Storm",
+    "Art": "storm",
     "Draw": "a gold ring with a yellow gem and cold blue lightning burning off it, there should be 2 smaller blue gems beside it with some blue bleeding into the gold band",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
     "Rarity": "rare",
@@ -168,9 +648,9 @@
     ]
   },
   {
-    "RelicRecord": "scald-ring",
-    "Name": "Scald Ring",
-    "Art": "scald-ring",
+    "RelicRecord": "scald",
+    "Name": "Scald",
+    "Art": "scald",
     "Draw": "a ring with a red gem surrounded by steam.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and CHILL the target.",
     "Rarity": "rare",
@@ -186,9 +666,9 @@
     ]
   },
   {
-    "RelicRecord": "wildfire-ring",
-    "Name": "Wildfire Ring",
-    "Art": "wildfire-ring",
+    "RelicRecord": "wildfire",
+    "Name": "Wildfire",
+    "Art": "wildfire",
     "Draw": "a ring with a red gem surrounded by yellow, the flames should be licking up the sides of the ring.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and SHOCK the target.",
     "Rarity": "rare",
@@ -204,9 +684,9 @@
     ]
   },
   {
-    "RelicRecord": "hoarfrost-ring",
-    "Name": "Hoarfrost Ring",
-    "Art": "hoarfrost-ring",
+    "RelicRecord": "hoarfrost",
+    "Name": "Hoarfrost",
+    "Art": "hoarfrost",
     "Draw": "a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  it should have two green gems along the side with some green bleeding into the copper band",
     "Text": "Ice attacks CHILL and WEIGH the target.",
     "Rarity": "rare",
@@ -222,9 +702,9 @@
     ]
   },
   {
-    "RelicRecord": "brittle-ring",
-    "Name": "Brittle Ring",
-    "Art": "brittle-ring",
+    "RelicRecord": "brittle",
+    "Name": "Brittle",
+    "Art": "brittle",
     "Draw": "a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band ",
     "Text": "Ice attacks CHILL and WEAKEN the target.",
     "Rarity": "rare",
@@ -240,9 +720,9 @@
     ]
   },
   {
-    "RelicRecord": "palsy-ring",
-    "Name": "Palsy Ring",
-    "Art": "palsy-ring",
+    "RelicRecord": "palsy",
+    "Name": "Palsy",
+    "Art": "palsy",
     "Draw": "a ring with a yellow gem sparking with electricity and with 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band",
     "Text": "Lightning attacks SHOCK and WEAKEN the target.",
     "Rarity": "rare",
@@ -258,9 +738,9 @@
     ]
   },
   {
-    "RelicRecord": "caldera-ring",
-    "Name": "Caldera Ring",
-    "Art": "caldera-ring",
+    "RelicRecord": "caldera",
+    "Name": "Caldera",
+    "Art": "caldera",
     "Draw": "a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
     "Text": "Earth attacks WEIGH and BURN the target.",
     "Rarity": "rare",
@@ -276,9 +756,9 @@
     ]
   },
   {
-    "RelicRecord": "tremor-ring",
-    "Name": "Tremor Ring",
-    "Art": "tremor-ring",
+    "RelicRecord": "tremor",
+    "Name": "Tremor",
+    "Art": "tremor",
     "Draw": "a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, the yellow gems should have some yellow bleeding into the copper band",
     "Text": "Earth attacks WEIGH and SHOCK the target.",
     "Rarity": "rare",
@@ -294,9 +774,9 @@
     ]
   },
   {
-    "RelicRecord": "blightfire-ring",
-    "Name": "Blightfire Ring",
-    "Art": "blightfire-ring",
+    "RelicRecord": "blightfire",
+    "Name": "Blightfire",
+    "Art": "blightfire",
     "Draw": "a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and BURN the target.",
     "Rarity": "rare",
@@ -312,9 +792,9 @@
     ]
   },
   {
-    "RelicRecord": "millstone-ring",
-    "Name": "Millstone Ring",
-    "Art": "millstone-ring",
+    "RelicRecord": "millstone",
+    "Name": "Millstone",
+    "Art": "millstone",
     "Draw": "a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, the green gems should have some green bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and WEIGH the target.",
     "Rarity": "rare",
@@ -326,6 +806,821 @@
           { "Do": "apply-status", "Status": "weakened" },
           { "Do": "apply-status", "Status": "weighted" }
         ]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "stick",
+    "Name": "The Stick",
+    "Art": "stick",
+    "Draw": "a sharpened stick",
+    "Text": "Every Poke deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Poke" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "old-dagger",
+    "Name": "The Old Dagger",
+    "Art": "old-dagger",
+    "Draw": "a rusty dagger",
+    "Text": "Every Jab deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Jab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "epee",
+    "Name": "The Epee",
+    "Art": "epee",
+    "Draw": "an epee with an oversized guard to differentiate from a foil",
+    "Text": "Every Thrust deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Thrust" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "skewer-spear",
+    "Name": "The Skewer",
+    "Art": "skewer-spear",
+    "Draw": "a wood spear with a copper tip that is longer like a sword tip",
+    "Text": "Every Skewer deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Skewer" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "lance",
+    "Name": "The Lance",
+    "Art": "lance",
+    "Draw": "A long obsidian lance with a silver hilt",
+    "Text": "Every Impale deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Impale" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "bread-knife",
+    "Name": "The Bread Knife",
+    "Art": "bread-knife",
+    "Draw": "a bread knife",
+    "Text": "Every Nick deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Nick" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "hunting-knife",
+    "Name": "The Hunting Knife",
+    "Art": "hunting-knife",
+    "Draw": "an extra large hunting knife",
+    "Text": "Every Cut deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Cut" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "katana-blade",
+    "Name": "The Blade",
+    "Art": "katana-blade",
+    "Draw": "a silver edge katana with wavy damascus steel pattern",
+    "Text": "Every Slice card\ndeals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Slice" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "cleaver",
+    "Name": "The Cleaver",
+    "Art": "cleaver",
+    "Draw": "large cleaver with a silver blade and a copper handle",
+    "Text": "Every Cleave deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Cleave" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "headsman",
+    "Name": "The Headsman",
+    "Art": "headsman",
+    "Draw": "Black steel executioner axe with a silver handle",
+    "Text": "Every Sever deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Sever" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "spoon",
+    "Name": "Mom's Spoon",
+    "Art": "spoon",
+    "Draw": "a wooden spoon",
+    "Text": "Every Tap deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Tap" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "brass-knuckles",
+    "Name": "The Knuckles",
+    "Art": "brass-knuckles",
+    "Draw": "a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar",
+    "Text": "Every Thump deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Thump" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "basher",
+    "Name": "The Basher",
+    "Art": "basher",
+    "Draw": "a mechanics hammer with a copper handle and a silver head",
+    "Text": "Every Bash deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Bash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "warhammer",
+    "Name": "The Warhammer",
+    "Art": "warhammer",
+    "Draw": "A silver warhammer with a black steel handle",
+    "Text": "Every Smash deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Smash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "stone-maul",
+    "Name": "The Maul",
+    "Art": "",
+    "Draw": "a large stone maul with a wooden handle",
+    "Text": "Every Pulverize deals 4x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Pulverize" },
+        "Then": [{ "Do": "scale-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "smoulder",
+    "Name": "Smoulder",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "frostbank",
+    "Name": "Frostbank",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "potential",
+    "Name": "Potential",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "bedrock",
+    "Name": "Bedrock",
+    "Art": "bedrock",
+    "Draw": "a gold ring holding a rough grey unfaceted rock in gold claws, with scrollwork along the shoulders of the band",
+    "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "wellspring",
+    "Name": "Wellspring",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "ballast",
+    "Name": "Ballast",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "fire",
+    "Name": "Fire",
+    "Art": "fire",
+    "Draw": "a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top",
+    "Text": "Fire cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "ice",
+    "Name": "Ice",
+    "Art": "ice",
+    "Draw": "a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom",
+    "Text": "Ice cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "lightning",
+    "Name": "Lightning",
+    "Art": "lightning",
+    "Draw": "a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top",
+    "Text": "Lightning cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "earth",
+    "Name": "Earth",
+    "Art": "earth",
+    "Draw": "a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it",
+    "Text": "Earth cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "arcane",
+    "Name": "Arcane",
+    "Art": "arcane",
+    "Draw": "a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top",
+    "Text": "Arcane cards deal 2x DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "backdraft",
+    "Name": "Backdraft",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every fire card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "shatter",
+    "Name": "Shatter",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every ice card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "forked",
+    "Name": "Forked",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every lightning card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "landslide",
+    "Name": "Landslide",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every earth card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "recursion",
+    "Name": "Recursion",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every arcane card lands twice, both at full DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "enflamed",
+    "Name": "Enflamed",
+    "Art": "",
+    "Draw": "",
+    "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "frostbitten",
+    "Name": "Frostbitten",
+    "Art": "",
+    "Draw": "",
+    "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "lithium",
+    "Name": "Lithium",
+    "Art": "",
+    "Draw": "",
+    "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "granite",
+    "Name": "Granite",
+    "Art": "",
+    "Draw": "",
+    "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "unravelled",
+    "Name": "Unravelled",
+    "Art": "",
+    "Draw": "",
+    "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "warm",
+    "Name": "Warm",
+    "Art": "",
+    "Draw": "",
+    "Text": "Fire cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "fire" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "cold",
+    "Name": "Cold",
+    "Art": "",
+    "Draw": "",
+    "Text": "Ice cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "ice" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "static",
+    "Name": "Static",
+    "Art": "",
+    "Draw": "",
+    "Text": "Lightning cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "lightning" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "dirty",
+    "Name": "Dirty",
+    "Art": "",
+    "Draw": "",
+    "Text": "Earth cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "earth" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "eerie",
+    "Name": "Eerie",
+    "Art": "",
+    "Draw": "",
+    "Text": "Arcane cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Element": "arcane" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "pairing",
+    "Name": "Pairing",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every pair deals 2x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "pair" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "triplicate-form",
+    "Name": "Triplicate Form",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every Three of a Kind\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-three-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-three-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-three-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "house-of-pain",
+    "Name": "House of Pain",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every Full House\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-full-house" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-full-house" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-full-house" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "oak",
+    "Name": "Oak",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every Four of a Kind\ndeals 4x DMG.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-four-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-four-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-four-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "pentacle",
+    "Name": "Pentacle",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every Five of a Kind\ndeals 5x DMG.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "concept-five-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "form-five-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
+      },
+      {
+        "When": "blow-formed",
+        "If": { "Hand": "element-five-of-a-kind" },
+        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "poised",
+    "Name": "Poised",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "sheathed",
+    "Name": "Sheathed",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "coiled",
+    "Name": "Coiled",
+    "Art": "coiled",
+    "Draw": "tightly braided jade metal relic",
+    "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "shouldered",
+    "Name": "Shouldered",
+    "Art": "",
+    "Draw": "",
+    "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "blow-formed",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
       }
     ]
   },
@@ -420,233 +1715,8 @@
     ]
   },
   {
-    "RelicRecord": "prodder-ring",
-    "Name": "Prodder Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Poke deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Poke" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "boxer-ring",
-    "Name": "Boxer Ring",
-    "Art": "boxer-ring",
-    "Draw": "a gold ring topped with a red boxing glove, laurel leaves along the shoulders and a star stamped on each side of the band",
-    "Text": "Every Jab deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Jab" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "lancer-ring",
-    "Name": "Lancer Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Thrust deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Thrust" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "fencer-ring",
-    "Name": "Fencer Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Skewer deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Skewer" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "impaler-ring",
-    "Name": "Impaler Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Impale deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Impale" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "skirmisher-ring",
-    "Name": "Skirmisher Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Nick deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Nick" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "cutter-ring",
-    "Name": "Cutter Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Cut deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Cut" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "slicer-ring",
-    "Name": "Slicer Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Slice card\ndeals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Slice" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "cleaver-ring",
-    "Name": "Cleaver Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Cleave deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Cleave" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "headsman-ring",
-    "Name": "Headsman Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Sever deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Sever" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "knocker-ring",
-    "Name": "Knocker Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Tap deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Tap" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "brass-knuckles-ring",
-    "Name": "Brass Knuckles Ring",
-    "Art": "brass-knuckles-ring",
-    "Draw": "a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar",
-    "Text": "Every Thump deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Thump" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "striker-ring",
-    "Name": "Striker Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Bash deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Bash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "smasher-ring",
-    "Name": "Smasher Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Smash deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Smash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "grinder-ring",
-    "Name": "Grinder Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Pulverize deals triple DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Pulverize" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "flurry-ring",
-    "Name": "Flurry Ring",
+    "RelicRecord": "flurry",
+    "Name": "Flurry",
     "Art": "",
     "Draw": "",
     "Text": "Every stab card lands twice, both at full DMG.",
@@ -660,8 +1730,8 @@
     ]
   },
   {
-    "RelicRecord": "rend-ring",
-    "Name": "Rend Ring",
+    "RelicRecord": "rend",
+    "Name": "Rend",
     "Art": "",
     "Draw": "",
     "Text": "Every slash card lands twice, both at full DMG.",
@@ -675,8 +1745,8 @@
     ]
   },
   {
-    "RelicRecord": "aftershock-ring",
-    "Name": "Aftershock Ring",
+    "RelicRecord": "aftershock",
+    "Name": "Aftershock",
     "Art": "",
     "Draw": "",
     "Text": "Every crush card lands twice, both at full DMG.",
@@ -690,203 +1760,233 @@
     ]
   },
   {
-    "RelicRecord": "backdraft-ring",
-    "Name": "Backdraft Ring",
+    "RelicRecord": "sharpening",
+    "Name": "Sharpening",
     "Art": "",
     "Draw": "",
-    "Text": "Every fire card lands twice, both at full DMG.",
+    "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
     "Rarity": "uncommon",
     "Rules": [
       {
-        "When": "blow-formed",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "shatter-ring",
-    "Name": "Shatter Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every ice card lands twice, both at full DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "forked-ring",
-    "Name": "Forked Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every lightning card lands twice, both at full DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "landslide-ring",
-    "Name": "Landslide Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every earth card lands twice, both at full DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "recursion-ring",
-    "Name": "Recursion Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every arcane card lands twice, both at full DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "repeat-card", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "smoulder-ring",
-    "Name": "Smoulder Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "frostbank-ring",
-    "Name": "Frostbank Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "potential-ring",
-    "Name": "Potential Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "bedrock-ring",
-    "Name": "Bedrock Ring",
-    "Art": "bedrock-ring",
-    "Draw": "a gold ring holding a rough grey unfaceted rock in gold claws, with scrollwork along the shoulders of the band",
-    "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "wellspring-ring",
-    "Name": "Wellspring Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "poised-ring",
-    "Name": "Poised Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Form": "stab" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "sheathed-ring",
-    "Name": "Sheathed Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
+        "When": "card-damage",
         "If": { "Form": "slash" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
       }
     ]
   },
   {
-    "RelicRecord": "coiled-ring",
-    "Name": "Coiled Ring",
-    "Art": "coiled-ring",
-    "Draw": "tightly braided jade metal relic",
-    "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
-    "Rarity": "common",
+    "RelicRecord": "pounding",
+    "Name": "Pounding",
+    "Art": "",
+    "Draw": "",
+    "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
+    "Rarity": "uncommon",
     "Rules": [
       {
-        "When": "blow-formed",
+        "When": "card-damage",
         "If": { "Form": "crush" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
       }
     ]
   },
   {
-    "RelicRecord": "ebb-and-flow-ring",
-    "Name": "Ebb & Flow Ring",
+    "RelicRecord": "quickening",
+    "Name": "Quickening",
+    "Art": "",
+    "Draw": "",
+    "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
+      },
+      {
+        "When": "attack-lands",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "atrophy",
+    "Name": "Atrophy",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every 3 AP attack is dealt as its 2 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Tier": 3 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "erode",
+    "Name": "Erode",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every 2 AP card is dealt as its 1 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Tier": 2 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "whittle",
+    "Name": "Whittle",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every 1 AP attack is dealt as its 0 AP version.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "deck-built",
+        "If": { "Tier": 1 },
+        "Then": [{ "Do": "demote-card", "Amount": 1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "whetted",
+    "Name": "Whetted",
+    "Art": "",
+    "Draw": "",
+    "Text": "Slash cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "slash" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "hefted",
+    "Name": "Hefted",
+    "Art": "",
+    "Draw": "",
+    "Text": "Crush cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "crush" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "tapered",
+    "Name": "Tapered",
+    "Art": "",
+    "Draw": "",
+    "Text": "Stab cards cost 1 AP less.",
+    "Rarity": "rare",
+    "Rules": [
+      {
+        "When": "card-cost",
+        "If": { "Form": "stab" },
+        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "weight-of-the-earth",
+    "Name": "Weight of the Earth",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every earth crush card\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "earth", "Form": "crush" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "struck-by-lightning",
+    "Name": "Struck by Lightning",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every lightning stab card\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "lightning", "Form": "stab" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "sharp-as-ice",
+    "Name": "Sharp as Ice",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every ice slash card\ndeals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Element": "ice", "Form": "slash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "swarm",
+    "Name": "Swarm",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every 1 AP card deals 3x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Tier": 1 },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "crown",
+    "Name": "Crown",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every 3 AP card deals 2.5x DMG.",
+    "Rarity": "uncommon",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Tier": 3 },
+        "Then": [{ "Do": "scale-damage", "Amount": 250 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "ebb-and-flow",
+    "Name": "Ebb & Flow",
     "Art": "",
     "Draw": "",
     "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
@@ -904,8 +2004,8 @@
     ]
   },
   {
-    "RelicRecord": "momentum-ring",
-    "Name": "Momentum Ring",
+    "RelicRecord": "momentum",
+    "Name": "Momentum",
     "Art": "",
     "Draw": "",
     "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
@@ -927,168 +2027,8 @@
     ]
   },
   {
-    "RelicRecord": "enflamed-ring",
-    "Name": "Enflamed Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "frostbitten-ring",
-    "Name": "Frostbitten Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "lithium-ring",
-    "Name": "Lithium Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "granite-ring",
-    "Name": "Granite Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "unravelled-ring",
-    "Name": "Unravelled Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "sharpening-ring",
-    "Name": "Sharpening Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Form": "slash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Form": "slash" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "pounding-ring",
-    "Name": "Pounding Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Form": "crush" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Form": "crush" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "quickening-ring",
-    "Name": "Quickening Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Form": "stab" },
-        "Then": [{ "Do": "scale-damage", "Amount": 100 }]
-      },
-      {
-        "When": "attack-lands",
-        "If": { "Form": "stab" },
-        "Then": [{ "Do": "grow-on-hit", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "echo-ring",
-    "Name": "Echo Ring",
+    "RelicRecord": "echo",
+    "Name": "Echo",
     "Art": "",
     "Draw": "",
     "Text": "Your first attack lands 3 times: full DMG, then 2/3, then 1/3.",
@@ -1102,338 +2042,8 @@
     ]
   },
   {
-    "RelicRecord": "atrophy-ring",
-    "Name": "Atrophy Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every 3 AP attack is dealt as its 2 AP version.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "deck-built",
-        "If": { "Tier": 3 },
-        "Then": [{ "Do": "demote-card", "Amount": 1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "erode-ring",
-    "Name": "Erode Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every 2 AP card is dealt as its 1 AP version.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "deck-built",
-        "If": { "Tier": 2 },
-        "Then": [{ "Do": "demote-card", "Amount": 1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "whittle-ring",
-    "Name": "Whittle Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every 1 AP attack is dealt as its 0 AP version.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "deck-built",
-        "If": { "Tier": 1 },
-        "Then": [{ "Do": "demote-card", "Amount": 1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "swarm-ring",
-    "Name": "Swarm Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every 1 AP card deals 3x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Tier": 1 },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "crown-ring",
-    "Name": "Crown Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every 3 AP card deals 2.5x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Tier": 3 },
-        "Then": [{ "Do": "scale-damage", "Amount": 250 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "high-card-hand-ring",
-    "Name": "Lone Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A High Card deals 2 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "high-card" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "pair-hand-ring",
-    "Name": "Twinned Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Pair deals 2 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 2 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "concept-two-pair-hand-ring",
-    "Name": "Doubled Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-two-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 4 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "concept-three-of-a-kind-hand-ring",
-    "Name": "Trined Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 5 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "concept-full-house-hand-ring",
-    "Name": "Laden Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Card Full House deals 8 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-full-house" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 8 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "concept-four-of-a-kind-hand-ring",
-    "Name": "Quartered Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 10 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "concept-five-of-a-kind-hand-ring",
-    "Name": "Perfect Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 16 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "form-two-pair-hand-ring",
-    "Name": "Paired Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-two-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "form-three-of-a-kind-hand-ring",
-    "Name": "Forged Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "form-full-house-hand-ring",
-    "Name": "Armoury Ring",
-    "Art": "form-full-house-hand-ring",
-    "Draw": "a plain heavy steel ring standing in front of an armoury wall, swords and spears and an axe and a shield racked behind it under hanging banners",
-    "Text": "A Form Full House deals 6 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-full-house" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "form-four-of-a-kind-hand-ring",
-    "Name": "Arsenal Ring",
-    "Art": "form-four-of-a-kind-hand-ring",
-    "Draw": "a plain heavy steel ring standing in front of a heaped pile of weapons, swords and spears and axes and shields and helmets stacked behind it",
-    "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 6 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "form-five-of-a-kind-hand-ring",
-    "Name": "Panoply Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 12 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "element-two-pair-hand-ring",
-    "Name": "Twinflame Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Two Pair deals 3 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-two-pair" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "element-three-of-a-kind-hand-ring",
-    "Name": "Attuned Ring",
-    "Art": "element-three-of-a-kind-hand-ring",
-    "Draw": "a gold ring set with three gems side by side, a red one and a blue one in the middle and a green one, with scrollwork on the shoulders",
-    "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-three-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 3 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "element-full-house-hand-ring",
-    "Name": "Convergent Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Full House deals 7 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-full-house" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "element-four-of-a-kind-hand-ring",
-    "Name": "Confluent Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Four of a Kind deals 7 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-four-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 7 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "element-five-of-a-kind-hand-ring",
-    "Name": "Elemental Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Five of a Kind deals 14 more DMG before the multiplier.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-five-of-a-kind" },
-        "Then": [{ "Do": "add-hand-damage", "Amount": 14 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "onslaught-ring",
-    "Name": "Onslaught Ring",
+    "RelicRecord": "onslaught",
+    "Name": "Onslaught",
     "Art": "",
     "Draw": "",
     "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
@@ -1450,128 +2060,8 @@
     ]
   },
   {
-    "RelicRecord": "warm-ring",
-    "Name": "Warm Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Fire cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "cold-ring",
-    "Name": "Cold Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Ice cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "static-ring",
-    "Name": "Static Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Lightning cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dirty-ring",
-    "Name": "Dirty Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Earth cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "eerie-ring",
-    "Name": "Eerie Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Arcane cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "whetted-ring",
-    "Name": "Whetted Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Slash cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Form": "slash" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "hefted-ring",
-    "Name": "Hefted Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Crush cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Form": "crush" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "tapered-ring",
-    "Name": "Tapered Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Stab cards cost 1 AP less.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "card-cost",
-        "If": { "Form": "stab" },
-        "Then": [{ "Do": "adjust-cost", "Amount": -1 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "braced-ring",
-    "Name": "Braced Ring",
+    "RelicRecord": "braced",
+    "Name": "Braced",
     "Art": "",
     "Draw": "",
     "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
@@ -1589,308 +2079,8 @@
     ]
   },
   {
-    "RelicRecord": "frozen-lightning-ring",
-    "Name": "Frozen Lightning Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every lightning card is dealt as an ice card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "set-element", "Element": "ice" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "permafrost-ring",
-    "Name": "Permafrost Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every earth card is dealt as an ice card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "set-element", "Element": "ice" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "frostbite-ring",
-    "Name": "Frostbite Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every fire card is dealt as an ice card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "set-element", "Element": "ice" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "meltdown-ring",
-    "Name": "Meltdown Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every ice card is dealt as a fire card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "set-element", "Element": "fire" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "firestorm-ring",
-    "Name": "Firestorm Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every lightning card is dealt as a fire card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "set-element", "Element": "fire" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "magma-ring",
-    "Name": "Magma Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every earth card is dealt as a fire card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "set-element", "Element": "fire" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "thundersnow-ring",
-    "Name": "Thundersnow Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every ice card is dealt as a lightning card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "set-element", "Element": "lightning" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "heat-lightning-ring",
-    "Name": "Heat Lightning Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every fire card is dealt as a lightning card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "set-element", "Element": "lightning" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "dust-storm-ring",
-    "Name": "Dust Storm Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every earth card is dealt as a lightning card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "set-element", "Element": "lightning" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "glacier-ring",
-    "Name": "Glacier Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every ice card is dealt as an earth card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "set-element", "Element": "earth" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "obsidian-ring",
-    "Name": "Obsidian Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every fire card is dealt as an earth card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "set-element", "Element": "earth" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "fulgurite-ring",
-    "Name": "Fulgurite Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every lightning card is dealt as an earth card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "set-element", "Element": "earth" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "witchfire-ring",
-    "Name": "Witchfire Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every fire card is dealt as an arcane card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "fire" },
-        "Then": [{ "Do": "set-element", "Element": "arcane" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "runefrost-ring",
-    "Name": "Runefrost Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every ice card is dealt as an arcane card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "ice" },
-        "Then": [{ "Do": "set-element", "Element": "arcane" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "spellbolt-ring",
-    "Name": "Spellbolt Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every lightning card is dealt as an arcane card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "lightning" },
-        "Then": [{ "Do": "set-element", "Element": "arcane" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "leyline-ring",
-    "Name": "Leyline Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every earth card is dealt as an arcane card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "set-element", "Element": "arcane" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "hexfire-ring",
-    "Name": "Hexfire Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every arcane card is dealt as a fire card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "set-element", "Element": "fire" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "hexfrost-ring",
-    "Name": "Hexfrost Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every arcane card is dealt as an ice card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "set-element", "Element": "ice" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "hexbolt-ring",
-    "Name": "Hexbolt Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every arcane card is dealt as a lightning card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "set-element", "Element": "lightning" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "hexstone-ring",
-    "Name": "Hexstone Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every arcane card is dealt as a earth card.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-drawn",
-        "If": { "Element": "arcane" },
-        "Then": [{ "Do": "set-element", "Element": "earth" }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "might-ring",
-    "Name": "Might Ring",
+    "RelicRecord": "might",
+    "Name": "Might",
     "Art": "",
     "Draw": "",
     "Text": "+10 DMG for every fight.",
@@ -1903,9 +2093,9 @@
     ]
   },
   {
-    "RelicRecord": "bulwark-ring",
-    "Name": "Bulwark Ring",
-    "Art": "bulwark-ring",
+    "RelicRecord": "bulwark",
+    "Name": "Bulwark",
+    "Art": "bulwark",
     "Draw": "a wide gold armband clasped around a thick bare bicep, a round gold boss in the centre holding a gem with a stud either side",
     "Text": "+25 HP for every fight.",
     "Rarity": "common",
@@ -1917,8 +2107,8 @@
     ]
   },
   {
-    "RelicRecord": "heart-ring",
-    "Name": "Heart Ring",
+    "RelicRecord": "heart",
+    "Name": "Heart",
     "Art": "",
     "Draw": "",
     "Text": "+5 HP, and 5 more for every fight won.",
@@ -1935,8 +2125,8 @@
     ]
   },
   {
-    "RelicRecord": "rampant-ring",
-    "Name": "Rampant Ring",
+    "RelicRecord": "rampant",
+    "Name": "Rampant",
     "Art": "",
     "Draw": "",
     "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
@@ -1949,53 +2139,8 @@
     ]
   },
   {
-    "RelicRecord": "weight-of-the-earth-ring",
-    "Name": "Weight of the Earth Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every earth crush card\ndeals 3x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "earth", "Form": "crush" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "struck-by-lightning-ring",
-    "Name": "Struck by Lightning Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every lightning stab card\ndeals 3x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "lightning", "Form": "stab" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "sharp-as-ice-ring",
-    "Name": "Sharp as Ice Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every ice slash card\ndeals 3x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Element": "ice", "Form": "slash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "fire-of-life-ring",
-    "Name": "Fire of Life Ring",
+    "RelicRecord": "fire-of-life",
+    "Name": "Fire of Life",
     "Art": "",
     "Draw": "",
     "Text": "Fire cards gain 0.1x DMG\nfor every 10 vitae you hold.",
@@ -2009,8 +2154,8 @@
     ]
   },
   {
-    "RelicRecord": "dual-wield-ring",
-    "Name": "Dual Wield Ring",
+    "RelicRecord": "dual-wield",
+    "Name": "Dual Wield",
     "Art": "",
     "Draw": "",
     "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
@@ -2024,124 +2169,9 @@
     ]
   },
   {
-    "RelicRecord": "pairing-ring",
-    "Name": "Pairing Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every pair deals 2x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "pair" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 200 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "triplicate-form-ring",
-    "Name": "Triplicate Form Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Three of a Kind\ndeals 3x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-three-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-three-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-three-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "house-of-pain-ring",
-    "Name": "House of Pain Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Full House\ndeals 3x DMG.",
-    "Rarity": "uncommon",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-full-house" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-full-house" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-full-house" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 300 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "oak-ring",
-    "Name": "Oak Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Four of a Kind\ndeals 4x DMG.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-four-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-four-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-four-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 400 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "pentacle-ring",
-    "Name": "Pentacle Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Five of a Kind\ndeals 5x DMG.",
-    "Rarity": "rare",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "concept-five-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "form-five-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
-      },
-      {
-        "When": "blow-formed",
-        "If": { "Hand": "element-five-of-a-kind" },
-        "Then": [{ "Do": "scale-hand-damage", "Amount": 500 }]
-      }
-    ]
-  },
-  {
-    "RelicRecord": "banker-ring",
-    "Name": "Banker Ring",
-    "Art": "banker-ring",
+    "RelicRecord": "banker",
+    "Name": "Banker",
+    "Art": "banker",
     "Draw": "a wide gold band woven from braided ropes of gold with rows of small red gems set between the braids",
     "Text": "Vitae propagates twice as fast.",
     "Rarity": "common",
@@ -2153,8 +2183,8 @@
     ]
   },
   {
-    "RelicRecord": "soul-taker-ring",
-    "Name": "Soul Taker Ring",
+    "RelicRecord": "soul-taker",
+    "Name": "Soul Taker",
     "Art": "",
     "Draw": "",
     "Text": "A won room pays 5 more vitae.",
@@ -2167,8 +2197,8 @@
     ]
   },
   {
-    "RelicRecord": "hungry-ring",
-    "Name": "Hungry Ring",
+    "RelicRecord": "hungry",
+    "Name": "Hungry",
     "Art": "",
     "Draw": "",
     "Text": "Two prizes after a fight instead of one.",

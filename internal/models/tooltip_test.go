@@ -103,7 +103,7 @@ func TestForgetHidesItImmediately(t *testing.T) {
 	// For a scene that has just done the thing the panel was describing — a relic bought out from
 	// under the cursor.
 	tip := &Tooltip{}
-	tip.Point(aSeat(0), aTitle("Keen Ring"), oneLine("doubles slashes"))
+	tip.Point(aSeat(0), aTitle("Keen"), oneLine("doubles slashes"))
 	tick(tip)
 
 	tip.Forget()

@@ -477,7 +477,7 @@ func TestRelicDrawsArtAndNoCardFurniture(t *testing.T) {
 		art.Pix[i] = 255 // opaque white block, easy to find
 	}
 
-	s := Spec{Name: "Fire Ring", Element: Relic, Art: art, Enabled: true}
+	s := Spec{Name: "Fire", Element: Relic, Art: art, Enabled: true}
 	img := render(t, s, st)
 
 	// The art lands in the middle of its box.
@@ -492,7 +492,7 @@ func TestRelicDrawsArtAndNoCardFurniture(t *testing.T) {
 	if st.ShowForm || st.TextLineHeight > 0 {
 		t.Error("the relic style claims to draw a form mark or effect text")
 	}
-	noCost := Spec{Name: "Fire Ring", Element: Relic, Art: art, Enabled: true, Cost: 0}
+	noCost := Spec{Name: "Fire", Element: Relic, Art: art, Enabled: true, Cost: 0}
 	plain := render(t, noCost, st)
 	tick := systems.ColorToward(BorderOf(Relic), Surface, borderRestToward)
 	for y := 0; y < 40; y++ {

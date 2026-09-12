@@ -1106,7 +1106,7 @@ a fitted box wants a square and a bleeding card wants the card's own 200x280. Fi
   `go run ./tools/relicsheet` counts both and marks both in pink.
 
 **Relic and worm art is a globbed family, keyed by filename stem** *(2026-09-11)* —
-`relic/fire-ring.png` is `fire-ring`, which is what `data/relics.json` writes in its `Art` field.
+`relic/fire.png` is `fire`, which is what `data/relics.json` writes in its `Art` field.
 Same exception to the three-edit rule the enemy portraits take, and the same cost: a key is
 tied to its filename, so renaming a file means editing the JSON. `assets.embedFamily` is the one
 walk all four families go through. **Most relics still have no artwork and draw

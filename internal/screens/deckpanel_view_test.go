@@ -59,7 +59,7 @@ func TestAlterationsAreOnByDefault(t *testing.T) {
 		t.Error("the panel opens on the whole deck")
 	}
 
-	run := panelRun(t, panelDeck(), "frozen-lightning-ring")
+	run := panelRun(t, panelDeck(), "frozen-lightning")
 	d := deckContents{draw: run.Deck(), run: run}
 
 	ice := 0
@@ -77,7 +77,7 @@ func TestTheAlterationsToggleShowsBothFacesOfOneCard(t *testing.T) {
 	// **A card in the discard has been through a draw and holds only what it became.** Showing it
 	// as the run owns it is a lookup by ID and nothing else — no inversion of the flip, which could
 	// not be done anyway once two relics converge on one colour.
-	run := panelRun(t, panelDeck(), "frozen-lightning-ring")
+	run := panelRun(t, panelDeck(), "frozen-lightning")
 
 	owned := run.Deck()
 	// The first card, drawn: this is what the combat screen puts in the hand.
@@ -206,7 +206,7 @@ func TestTheFiguresCountWhatIsLit(t *testing.T) {
 func TestTheFiguresFollowTheAlterationsToggle(t *testing.T) {
 	// A figure that disagreed with the grid beside it would mean one of the two is lying, and the
 	// grid is the one being looked at.
-	run := panelRun(t, panelDeck(), "frozen-lightning-ring")
+	run := panelRun(t, panelDeck(), "frozen-lightning")
 	d := deckContents{draw: run.Deck(), run: run}
 
 	dealt := countsOf(laidOut(d, deckView{}).slots, d.holder, deckFilter{})

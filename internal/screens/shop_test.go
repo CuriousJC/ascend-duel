@@ -364,6 +364,10 @@ func TestTheShopPileStandsClearOfTheColumnAndTheShelf(t *testing.T) {
 // bought — dealShelf draws from what the run is not wearing, and the check is what says so.
 func TestARerollRefillsABoughtSeat(t *testing.T) {
 	gs := testRun()
+	// The purchase is the setup, not the subject, so the purse is filled rather than left at
+	// what a run opens with: which tier lands in seat 0 is a function of the catalogue, and a
+	// rare there made this fail on affordability while saying nothing about rerolling.
+	gs.Run.AddVitae(20)
 	s := &ShopScene{stockRNG: shopRNG(gs, seeds.ShopStock)}
 	s.shelf = dealShelf(gs, s.stockRNG)
 	if len(s.shelf) == 0 {

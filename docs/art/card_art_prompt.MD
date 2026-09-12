@@ -58,6 +58,8 @@ what the object does and are never to be rendered — no title, no caption, no r
 numbers anywhere in the image. If `Draw` is empty, stop and say so rather than inventing a
 subject.
 
+All images should be named based on the provided RelicRecord and a link provided so I can easily click to download
+
 ```json
 {
   "RelicRecord": "coiled-ring",

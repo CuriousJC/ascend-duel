@@ -70,16 +70,16 @@ func TestEachTierPaysBackItsOwnFigure(t *testing.T) {
 
 func TestBuyingPaysAndPutsTheRelicOn(t *testing.T) {
 	run := rich(t)
-	price := priceOf(t, "sickle")
+	price := priceOf(t, "dmg-all-slash")
 	before := run.Vitae()
 
-	if !run.Buy("sickle") {
+	if !run.Buy("dmg-all-slash") {
 		t.Fatal("the purchase was refused")
 	}
 	if got := run.Vitae(); got != before-price {
 		t.Errorf("the purse came out %d, want %d", got, before-price)
 	}
-	if got := run.Worn(); len(got) != 1 || got[0] != "sickle" {
+	if got := run.Worn(); len(got) != 1 || got[0] != "dmg-all-slash" {
 		t.Errorf("the run is wearing %v", got)
 	}
 }
@@ -88,15 +88,15 @@ func TestAnEmptyPurseBuysNothingAndChangesNothing(t *testing.T) {
 	// **A run cannot go into debt**, and a refused purchase has to leave it exactly as it was —
 	// the failure this guards is a relic going on before the purse is asked.
 	run := bare(t)
-	run.vitae = priceOf(t, "sickle") - 1
+	run.vitae = priceOf(t, "dmg-all-slash") - 1
 
-	if run.CanBuy("sickle") {
+	if run.CanBuy("dmg-all-slash") {
 		t.Error("CanBuy said yes on a short purse")
 	}
-	if run.Buy("sickle") {
+	if run.Buy("dmg-all-slash") {
 		t.Fatal("a relic was bought that could not be afforded")
 	}
-	if got := run.Vitae(); got != priceOf(t, "sickle")-1 {
+	if got := run.Vitae(); got != priceOf(t, "dmg-all-slash")-1 {
 		t.Errorf("the purse moved to %d on a refused purchase", got)
 	}
 	if len(run.Worn()) != 0 {
@@ -183,14 +183,14 @@ func TestABoughtRelicIsNotOfferedAgain(t *testing.T) {
 }
 
 func TestSellingTakesTheRelicOffAndPaysBack(t *testing.T) {
-	run := wearing(t, "fire", "sickle", "banker")
+	run := wearing(t, "fire", "dmg-all-slash", "banker")
 	run.vitae = 0
 
-	if !run.Sell("sickle") {
+	if !run.Sell("dmg-all-slash") {
 		t.Fatal("the sale was refused")
 	}
-	if got := run.Vitae(); got != SellValue("sickle") {
-		t.Errorf("the sale paid %d, want %d", got, SellValue("sickle"))
+	if got := run.Vitae(); got != SellValue("dmg-all-slash") {
+		t.Errorf("the sale paid %d, want %d", got, SellValue("dmg-all-slash"))
 	}
 
 	// **Worn order is the firing order**, so what is left has to stay in the order it went on.
@@ -204,7 +204,7 @@ func TestSellingSomethingYouAreNotWearingDoesNothing(t *testing.T) {
 	run := wearing(t, "fire")
 	held := run.Vitae()
 
-	if run.Sell("sickle") {
+	if run.Sell("dmg-all-slash") {
 		t.Fatal("a relic that was not worn was sold")
 	}
 	if run.Vitae() != held {

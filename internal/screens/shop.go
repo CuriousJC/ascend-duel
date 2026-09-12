@@ -1067,14 +1067,21 @@ func goodPrice(kind goodKind) int {
 	}
 }
 
-// **The bucket borrows the worm's picture**, for the reason a parasite card does: there is no
-// parasite art, and a placeholder its sibling already wears is better than a blank face. The two
-// goods are told apart by their names and their lines until one of them gets a drawing.
+// **Each sealed good draws the placeholder of whatever is inside it** — the bag the boulder every
+// stone card draws, the can the worm catalogue's default face, the bucket the parasite
+// catalogue's. A third picture would be a third thing to recognise for no gain: what is in the
+// good is exactly what the picture shows, and the two that used to share one face now split for
+// the reason the two placeholders split, which is that a shared picture hides which catalogue is
+// still undrawn.
 func goodArt(gs *state.GlobalState, kind goodKind) image.Image {
-	if kind == goodBag {
+	switch kind {
+	case goodBag:
 		return stoneArt()
+	case goodBucket:
+		return artwork(gs, data.DefaultParasiteArt)
+	default:
+		return artwork(gs, data.DefaultWormArt)
 	}
-	return artwork(gs, wormArtKey)
 }
 
 // goodTip is what resting on one says. **It explains what a stone and a worm each are**, since the

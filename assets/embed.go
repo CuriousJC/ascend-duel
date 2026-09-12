@@ -167,13 +167,21 @@ var bossPortraits embed.FS
 //go:embed relic/*.png
 var relicArt embed.FS
 
-// The worm faces, the same way and for the same reason. `worm/default-worm.png` is what every
-// worm and every parasite draws until they have art of their own — **a copy of the relic's
-// default rather than a share of it** *(owner's call, 2026-08-22)*: two files that happen to
-// look alike today are two files that can be replaced one at a time.
+// The worm faces, the same way and for the same reason. `worm/default-worm.png` is what a worm
+// with no Art of its own draws — **a copy of the relic's default rather than a share of it**
+// *(owner's call, 2026-08-22)*: two files that happen to look alike today are two files that can
+// be replaced one at a time.
 //
 //go:embed worm/*.png
 var wormArt embed.FS
+
+// The parasite faces, a family of their own as of 2026-09-12. **They wore the worm's placeholder
+// until then**, and the same argument that split the worm's off the relic's splits this off the
+// worm's: the day either catalogue gets art, one shared picture is a page where a drawn worm and
+// an undrawn parasite look identical, and a backlog you cannot see is a backlog nobody clears.
+//
+//go:embed parasite/*.png
+var parasiteArt embed.FS
 
 //go:embed effect/fire-effect.png
 var fireeffect_png []byte
@@ -276,6 +284,7 @@ func LoadImageData() map[string][]byte {
 	// embedFamily, and the //go:embed lines above for what each key ends up being.
 	embedFamily(images, relicArt, "relic")
 	embedFamily(images, wormArt, "worm")
+	embedFamily(images, parasiteArt, "parasite")
 	embedFamily(images, portraits, "enemy")
 	embedFamily(images, bossPortraits, "boss")
 

@@ -233,6 +233,16 @@ type Parasite struct {
 	Text   string
 	Target ParasiteTarget
 
+	// Art is the assets key of the picture this parasite draws, already resolved through
+	// data.ParasiteData.ArtKey — never empty, and the placeholder for a record nobody has drawn.
+	Art string
+
+	// Family and Draw are authored, ignored by everything that plays the game, and read only by
+	// tools/parasitesheet — the motif the record was written under, and the art brief for its
+	// picture.
+	Family string
+	Draw   string
+
 	// Change is the class of alteration this parasite makes — see ParasiteChange. It is what says
 	// whether spending it discards the card's existing upgrade.
 	Change ParasiteChange
@@ -343,7 +353,8 @@ func resolveParasite(r data.ParasiteData) (Parasite, error) {
 
 	p := Parasite{Record: r.ParasiteRecord, Name: r.Name, Text: r.Text,
 		Target: target, Change: change, Count: r.Count, Concept: combat.NoConcept,
-		Element: combat.Basic, Form: combat.FormNone}
+		Element: combat.Basic, Form: combat.FormNone,
+		Art: r.ArtKey(), Family: r.Family, Draw: r.Draw}
 
 	// **The count is checked against the target rather than in general.** A parasite aimed at no
 	// card and one aimed at two are both legal, and the mistake worth catching is the mismatch: a

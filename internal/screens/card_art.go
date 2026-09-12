@@ -570,6 +570,10 @@ var _ = func(c combat.Card, dmg int) (string, string, string, int, int) {
 // no mark for FormNone. What is left is exactly the name and the text, which is the whole of
 // what a worm has to say. A style of its own is what this wants the day a worm has art.
 //
+// **The picture comes off the record** *(2026-09-12)*, through `data.WormData.ArtKey`, which is
+// already resolved by the time a `session.Worm` exists — so a worm nobody has drawn wears the
+// placeholder and one that has been drawn wears its own, and this call site does not know which.
+//
 // **The border carries the element for the same reason a card's does**: an Ember Worm is red
 // because what it hands you is red. The ones that take a card away rather than colour it are
 // basic, which is the mid grey `cards.BorderOf` gives that element — deliberately not a fifth hue,
@@ -580,24 +584,12 @@ func wormSpec(gs *state.GlobalState, w session.Worm, enabled bool) cards.Spec {
 		Form:       cards.FormNone,
 		Cost:       0,
 		Element:    artFor(w.Element),
-		Art:        artwork(gs, wormArtKey),
+		Art:        artwork(gs, w.Art),
 		Text:       w.Text,
 		Highlights: cards.ElementHighlights(w.Text),
 		Enabled:    enabled,
 	}
 }
-
-// wormArtKey is the picture every worm draws today: `assets/worm/default-worm.png`, a placeholder
-// of its own rather than a borrowed relic.
-//
-// **Keys are not file paths** — `LoadImageData` files this under `default-worm`, which is what a
-// lookup has to spell. Writing the filename here is why the first version of this drew nothing and
-// logged `no artwork named "default-relic"`.
-//
-// It is one constant rather than a field on the record because when worms get art it becomes a key
-// per worm, and that change should be a `data/worms.json` field appearing, not a fallback being
-// unpicked.
-const wormArtKey = "default-worm"
 
 // stoneSpec is a stone drawn as a card: a name, the rung it raises, and what it is worth.
 //
@@ -641,9 +633,10 @@ func stoneLine(st session.Stone) string {
 // than a gap in the design — so the text states the *shape* of the offer ("4 stones, keep 1") and
 // nothing about the four.
 //
-// **They borrow the two catalogues' own pictures**: the bag draws the boulder every stone card
-// draws, the can draws the placeholder every worm card draws. A third picture would be a third
-// thing to recognise for no gain — what is in the bag is exactly what the picture shows.
+// **They borrow their own catalogue's picture**: the bag draws the boulder every stone card draws,
+// the can the worm catalogue's default face, the bucket the parasite catalogue's. A picture of
+// their own would be a third thing to recognise for no gain — what is in the good is exactly what
+// the picture shows. See goodArt, which is where the three are chosen.
 func goodSpec(gs *state.GlobalState, name, line string, art image.Image, enabled bool) cards.Spec {
 	return cards.Spec{
 		Name:       name,

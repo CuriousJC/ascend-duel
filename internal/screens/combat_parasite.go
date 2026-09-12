@@ -64,11 +64,11 @@ func heldParasites(gs *state.GlobalState) []session.Parasite {
 
 // parasiteSpec is a parasite drawn as a card.
 //
-// **It borrows the worm's picture**, `wormArtKey`, because there is no parasite art and a card with
-// no face at all would be worse than one wearing a placeholder its sibling already wears. It is one
-// constant rather than a field on the record for the reason the worm's is: when parasites get art
-// it becomes a key per parasite, and that should be a `data/parasites.json` field appearing rather
-// than a fallback being unpicked.
+// **The picture comes off the record** *(2026-09-12)*, through `data.ParasiteData.ArtKey`, already
+// resolved by the time a `session.Parasite` exists. It borrowed the worm's placeholder through one
+// constant until then, and the note on that constant said the day parasites got art it should be a
+// `data/parasites.json` field appearing rather than a fallback being unpicked — so the fallback is
+// `assets/parasite/default-parasite.png` now, a seat of the catalogue's own.
 // chimeraBreak is the authored line break on a chimera's face — see cards.WrapText, which honours
 // one. It is a constant rather than a literal so the escape does not have to survive being read
 // back out of this file.
@@ -90,7 +90,7 @@ func parasiteSpec(gs *state.GlobalState, p session.Parasite, enabled, selected b
 		Name:       p.Name,
 		Form:       cards.FormNone,
 		Element:    cards.Basic,
-		Art:        artwork(gs, wormArtKey),
+		Art:        artwork(gs, p.Art),
 		Text:       text,
 		Highlights: cards.ElementHighlights(text),
 		Enabled:    enabled,

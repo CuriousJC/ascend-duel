@@ -65,7 +65,31 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
     font-size: 11.5px; color: var(--dim);
   }
   .border { margin: 10px 0 0; font-size: 11.5px; color: var(--dim); }
-  .art { margin: 6px 0 0; font-size: 11.5px; color: var(--pink); }
+  .art { margin: 6px 0 0; font-size: 11.5px; color: var(--dim); }
+  .art.missing { color: var(--pink); }
+  /* The subject paragraph is an *input* to the art generator, so it is set apart from the
+     authored line a player reads: indented, quieted, and marked when nobody has written one
+     yet. Same pink the missing-art line takes, because they are one backlog. */
+  .draw {
+    margin: 10px 0 0; font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--rule); padding-left: 9px;
+  }
+  .draw.missing { color: var(--pink); border-left-color: var(--pink); }
+  h3.family {
+    font-size: 15px; font-weight: 600;
+    margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
+  }
+  h3.family span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 10px;
+  }
+  /* The target counts, which used to be the page's headings and are now a list at the top. */
+  ul.targets { list-style: none; padding: 0; margin: 14px 0 0; }
+  li.target {
+    font-size: 12.5px; color: var(--dim); padding: 5px 0 5px 10px;
+    border-left: 3px solid var(--rule); margin-bottom: 3px;
+  }
+  li.target strong { color: var(--ink); text-transform: capitalize; margin-right: 6px; }
+  li.target.empty { opacity: .62; }
   .cells { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 22px; }
   figure { margin: 0; }
   figcaption { color: var(--dim); font-size: 11.5px; margin-top: 7px; max-width: 180px; }
@@ -73,8 +97,9 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
 
 <h1>Worm sheet</h1>
 <p class="facts">
-  {{.Count}} worms, {{.Offered}} offered after a won fight — {{.Share}}% of the catalogue gets a
-  seat. Worm card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
+  {{.Count}} worms, {{.Undrawn}} of them drawing the default face, {{.Unwritten}} with no subject
+  paragraph written. {{.Offered}} are offered after a won fight — {{.Share}}% of the catalogue gets
+  a seat. Worm card <code>{{index .Style "width"}}&times;{{index .Style "height"}}</code>,
   corner radius <code>{{index .Style "cornerRadius"}}</code>,
   border <code>{{index .Style "borderWidth"}}</code>,
   art box inset <code>{{index .Style "artInset"}}</code> from
@@ -94,24 +119,44 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
   the rule that actually fires. Nothing in the codebase checks one against the other.
 </p>
 <p class="note">
-  <strong>Every worm draws the same placeholder.</strong> <code>default-worm.png</code> is the
-  seat art goes into, not a fallback that has gone wrong — so what is being reviewed here is the
-  shape of the box and the wording, not the picture.
+  <strong>The subject paragraph is the art brief, and it lives on the record.</strong> The quoted
+  block under each worm is <code>Draw</code> in <code>data/worms.json</code>: what the thing
+  <em>is</em> and what it is doing, in one sentence. Nothing in the game reads it. It is pasted
+  under the shared prompt in <code>docs/art/card_art_prompt.MD</code>, which is the only part of a
+  brief that is not about one record. <strong>A worm with no subject and no art is the
+  backlog</strong> — both lines go pink, so the page can be scrolled for what still needs writing
+  rather than a worklist being kept in step by hand. <code>default-worm.png</code> is the seat art
+  goes into, not a fallback that has gone wrong.
 </p>
 
-<h2>The catalogue, by target</h2>
+<h2>What the catalogue changes</h2>
 <p class="note">
-  <strong>Grouped by what a worm changes</strong>, because that is the design axis: the target
-  vocabulary is closed, so what a review needs is every recolour side by side and a count of
-  everything else. A target with nothing under it is a rung nobody has authored into.
+  <strong>Every target, and how many worms sit at it.</strong> The target vocabulary is closed —
+  a new one is a Go change plus one place applying it, never something a file can assert into
+  existence — so a target with nothing under it is a mechanic that was built and never reached for.
+  This was the page's grouping until families landed; it is a count now, because the target is a
+  fact about one worm and a family is a block of them.
+</p>
+<ul class="targets">
+{{range .Targets}}
+  <li class="target{{if not .Count}} empty{{end}}"><strong>{{.Target}}</strong>
+    {{.Count}} worms{{if not .Count}} — nobody has authored one{{end}}</li>
+{{end}}
+</ul>
+
+<h2>The catalogue, by family</h2>
+<p class="note">
+  <strong>Grouped by the motif each worm was authored beside, in the file's own order.</strong>
+  <code>Family</code> is authored and the engine ignores it, exactly as it ignores <code>Art</code>
+  and <code>Draw</code> — so it can go quietly out of date when a worm is retargeted, and nothing
+  fails. Treat a family that disagrees with the rule beside it as a label to fix.
 </p>
 
-{{range .Groups}}
-<h3 class="group">
-  {{.Target}}
-  <span>{{.Count}} worms</span>
+{{range .Families}}
+<h3 class="family">
+  {{.Name}}
+  <span>{{.Count}} {{.Noun}}</span>
 </h3>
-{{if not .Worms}}<p class="note">Nothing is authored at this target.</p>{{end}}
 <div class="plates">
   {{range .Worms}}
     <div class="plate">
@@ -121,9 +166,18 @@ var tmpl = template.Must(template.New("wormsheet").Parse(`<!doctype html>
         <p class="name">{{.Name}}</p>
         <div class="record">{{.Record}}</div>
         <p class="text">{{.Text}}</p>
+        {{if .Draw}}
+          <p class="draw">{{.Draw}}</p>
+        {{else}}
+          <p class="draw missing">no subject written yet</p>
+        {{end}}
         <p class="rule">{{.Rule}}</p>
         <p class="border">border: {{.Element}}</p>
-        <p class="art">no art of its own — drawing default-worm.png</p>
+        {{if .Default}}
+          <p class="art missing">no art of its own — drawing default-worm.png</p>
+        {{else}}
+          <p class="art">art: <code>{{.Art}}</code></p>
+        {{end}}
       </div>
     </div>
   {{end}}

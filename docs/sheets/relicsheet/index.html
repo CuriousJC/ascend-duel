@@ -24,18 +24,23 @@
     color: var(--dim); font-weight: 600;
     margin: 44px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
   }
-  h3.tier {
-    font-size: 15px; font-weight: 600; text-transform: capitalize;
+  h3.family {
+    font-size: 15px; font-weight: 600;
     margin: 34px 0 0; padding-bottom: 7px; border-bottom: 2px solid var(--rule);
   }
-  h3.tier span {
-    text-transform: none; font-weight: 400; font-size: 12px; color: var(--dim);
-    margin-left: 10px;
+  h3.family span {
+    font-weight: 400; font-size: 12px; color: var(--dim); margin-left: 10px;
   }
    
-  h3.tier.common { border-bottom-color: var(--rule); }
-  h3.tier.uncommon { border-bottom-color: #6c8fb5; }
-  h3.tier.rare { border-bottom-color: var(--pink); }
+  ul.shelf { list-style: none; padding: 0; margin: 14px 0 0; }
+  li.tier {
+    font-size: 12.5px; color: var(--dim); padding: 5px 0 5px 10px;
+    border-left: 3px solid var(--rule); margin-bottom: 3px;
+  }
+  li.tier strong { color: var(--ink); text-transform: capitalize; margin-right: 6px; }
+  li.tier.common { border-left-color: var(--rule); }
+  li.tier.uncommon { border-left-color: #6c8fb5; }
+  li.tier.rare { border-left-color: var(--pink); }
   .facts { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
   .facts code { color: var(--ink); }
   .note { color: var(--dim); font-size: 12.5px; max-width: 68ch; margin: 12px 0 0; }
@@ -72,8 +77,8 @@
 
 <h1>Relic sheet</h1>
 <p class="facts">
-  139 relics, 92 of them drawing the default face,
-  91 with no subject paragraph written.
+  138 relics, 57 of them drawing the default face,
+  44 with no subject paragraph written.
   Relic card <code>200&times;280</code>,
   corner radius <code>15</code>,
   border <code>4</code>,
@@ -121,582 +126,678 @@
   player, and this is the only place the two are visible together.
 </p>
 
-<h2>The catalogue, by rarity</h2>
+<h2>The shelf</h2>
 <p class="note">
-  <strong>Grouped by tier because that is the pricing decision.</strong> A relic is rebalanced by
-  moving it between these three, never by writing a number, so what a review needs is every
-  common side by side. The share is how often a single shelf seat lands in that tier — the
-  tier's tickets over the whole catalogue's.
+  <strong>What a single shelf seat costs and how often it lands in each tier.</strong> Rarity is
+  the only pricing dial there is — a relic is rebalanced by moving it between these three, never
+  by writing a number — and the share is the tier's tickets over the whole catalogue's.
+</p>
+<ul class="shelf">
+
+  <li class="tier common"><strong>common</strong>
+    56 relics &middot; 3 vitae, sells for 1 &middot;
+    weight 10 each &middot; 69.1% of a shelf draw</li>
+
+  <li class="tier uncommon"><strong>uncommon</strong>
+    56 relics &middot; 5 vitae, sells for 2 &middot;
+    weight 4 each &middot; 27.7% of a shelf draw</li>
+
+  <li class="tier rare"><strong>rare</strong>
+    26 relics &middot; 7 vitae, sells for 3 &middot;
+    weight 1 each &middot; 3.2% of a shelf draw</li>
+
+</ul>
+
+<h2>The catalogue, by family</h2>
+<p class="note">
+  <strong>Grouped by the motif each relic was authored beside, in the file's own order.</strong>
+  The pricing review survives the move because nearly every family is one tier throughout: a
+  heading reading <em>all common</em> asks "does one of these belong a tier up" of the whole block
+  at once, and a family with a mix says so on its heading rather than hiding it.
 </p>
 
 
-<h3 class="tier common">
-  common
-  <span>57 relics &middot; 3 vitae, sells for 1 &middot;
-    weight 10 each &middot; 69.5% of a shelf draw</span>
+<h3 class="family">
+  Elemental flips
+  <span>20 relics &middot; all uncommon</span>
 </h3>
-
 <div class="plates">
   
     <div class="plate">
-      <img src="relic-arcane.png" width="228" height="308"
-           alt="Arcane">
+      <img src="relic-frozen-lightning.png" width="228" height="308"
+           alt="Frozen Lightning">
       <div class="about">
-        <p class="name">Arcane</p>
-        <div class="record">arcane</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Arcane cards deal 2x DMG.</p>
+        <p class="name">Frozen Lightning</p>
+        <div class="record">frozen-lightning</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every lightning card is dealt as an ice card.</p>
         
-          <p class="draw">a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top</p>
+          <p class="draw">ball lightning locked in a frozen ice shard</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if arcane → scale-damage &#43;200</li>
+          <li>when card-drawn, if lightning → set-element ice</li>
         </ul>
         
-          <p class="art">art: <code>arcane</code></p>
+          <p class="art">art: <code>frozen-lightning</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-ballast.png" width="228" height="308"
-           alt="Ballast">
+      <img src="relic-permafrost.png" width="228" height="308"
+           alt="Permafrost">
       <div class="about">
-        <p class="name">Ballast</p>
-        <div class="record">ballast</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each earth card
-kept in hand.</p>
+        <p class="name">Permafrost</p>
+        <div class="record">permafrost</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every earth card is dealt as an ice card.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a rock surrounded by variegated blue and purple ice</p>
         
         
         <ul class="rules">
-          <li>when blow-formed, if earth → add-damage-per-held &#43;5</li>
+          <li>when card-drawn, if earth → set-element ice</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>permafrost</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-banker.png" width="228" height="308"
-           alt="Banker">
+      <img src="relic-frostbite.png" width="228" height="308"
+           alt="Frostbite">
       <div class="about">
-        <p class="name">Banker</p>
-        <div class="record">banker</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Vitae propagates twice as fast.</p>
+        <p class="name">Frostbite</p>
+        <div class="record">frostbite</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every fire card is dealt as an ice card.</p>
         
-          <p class="draw">a wide gold band woven from braided ropes of gold with rows of small red gems set between the braids</p>
+          <p class="draw">ice shaped into flickering fire</p>
         
         
         <ul class="rules">
-          <li>when fight-won → scale-propagation &#43;200</li>
+          <li>when card-drawn, if fire → set-element ice</li>
         </ul>
         
-          <p class="art">art: <code>banker</code></p>
+          <p class="art">art: <code>frostbite</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-basher.png" width="228" height="308"
-           alt="The Basher">
+      <img src="relic-meltdown.png" width="228" height="308"
+           alt="Meltdown">
       <div class="about">
-        <p class="name">The Basher</p>
-        <div class="record">basher</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Bash deals 4x DMG.</p>
+        <p class="name">Meltdown</p>
+        <div class="record">meltdown</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every ice card is dealt as a fire card.</p>
         
-          <p class="draw">a mechanics hammer with a copper handle and a silver head</p>
+          <p class="draw">shard of ice burning with fire</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if Bash → scale-damage &#43;400</li>
+          <li>when card-drawn, if ice → set-element fire</li>
         </ul>
         
-          <p class="art">art: <code>basher</code></p>
+          <p class="art">art: <code>meltdown</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-bedrock.png" width="228" height="308"
-           alt="Bedrock">
+      <img src="relic-firestorm.png" width="228" height="308"
+           alt="Firestorm">
       <div class="about">
-        <p class="name">Bedrock</p>
-        <div class="record">bedrock</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each earth card
-kept in hand.</p>
+        <p class="name">Firestorm</p>
+        <div class="record">firestorm</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every lightning card is dealt as a fire card.</p>
         
-          <p class="draw">a gold ring holding a rough grey unfaceted rock in gold claws, with scrollwork along the shoulders of the band</p>
+          <p class="draw">ball lightning surrounded by flames</p>
         
         
         <ul class="rules">
-          <li>when blow-formed, if earth → add-damage-per-held &#43;5</li>
+          <li>when card-drawn, if lightning → set-element fire</li>
         </ul>
         
-          <p class="art">art: <code>bedrock</code></p>
+          <p class="art">art: <code>firestorm</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-brass-knuckles.png" width="228" height="308"
-           alt="The Knuckles">
+      <img src="relic-magma.png" width="228" height="308"
+           alt="Magma">
       <div class="about">
-        <p class="name">The Knuckles</p>
-        <div class="record">brass-knuckles</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Thump deals 4x DMG.</p>
+        <p class="name">Magma</p>
+        <div class="record">magma</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every earth card is dealt as a fire card.</p>
         
-          <p class="draw">a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar</p>
+          <p class="draw">a glowing mass of molten rock</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if Thump → scale-damage &#43;400</li>
+          <li>when card-drawn, if earth → set-element fire</li>
         </ul>
         
-          <p class="art">art: <code>brass-knuckles</code></p>
+          <p class="art">art: <code>magma</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-bread-knife.png" width="228" height="308"
-           alt="The Bread Knife">
+      <img src="relic-thundersnow.png" width="228" height="308"
+           alt="Thundersnow">
       <div class="about">
-        <p class="name">The Bread Knife</p>
-        <div class="record">bread-knife</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Nick deals 4x DMG.</p>
+        <p class="name">Thundersnow</p>
+        <div class="record">thundersnow</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every ice card is dealt as a lightning card.</p>
         
-          <p class="draw">a bread knife</p>
+          <p class="draw">a snowflake crackling with electricity</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if Nick → scale-damage &#43;400</li>
+          <li>when card-drawn, if ice → set-element lightning</li>
         </ul>
         
-          <p class="art">art: <code>bread-knife</code></p>
+          <p class="art">art: <code>thundersnow</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-bulwark.png" width="228" height="308"
-           alt="Bulwark">
+      <img src="relic-heat-lightning.png" width="228" height="308"
+           alt="Heat Lightning">
       <div class="about">
-        <p class="name">Bulwark</p>
-        <div class="record">bulwark</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">&#43;25 HP for every fight.</p>
+        <p class="name">Heat Lightning</p>
+        <div class="record">heat-lightning</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every fire card is dealt as a lightning card.</p>
         
-          <p class="draw">a wide gold armband clasped around a thick bare bicep, a round gold boss in the centre holding a gem with a stud either side</p>
+          <p class="draw">ball of fire wrapped in yellow lightning</p>
         
         
         <ul class="rules">
-          <li>when fight-start → add-hp &#43;25</li>
+          <li>when card-drawn, if fire → set-element lightning</li>
         </ul>
         
-          <p class="art">art: <code>bulwark</code></p>
+          <p class="art">art: <code>heat-lightning</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-cleaver.png" width="228" height="308"
-           alt="The Cleaver">
+      <img src="relic-dust-storm.png" width="228" height="308"
+           alt="Dust Storm">
       <div class="about">
-        <p class="name">The Cleaver</p>
-        <div class="record">cleaver</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Cleave deals 4x DMG.</p>
+        <p class="name">Dust Storm</p>
+        <div class="record">dust-storm</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every earth card is dealt as a lightning card.</p>
         
-          <p class="draw">large cleaver with a silver blade and a copper handle</p>
+          <p class="draw">a rock surrounded with variegated yellow and purple lightning</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if Cleave → scale-damage &#43;400</li>
+          <li>when card-drawn, if earth → set-element lightning</li>
         </ul>
         
-          <p class="art">art: <code>cleaver</code></p>
+          <p class="art">art: <code>dust-storm</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-club.png" width="228" height="308"
-           alt="The Club">
+      <img src="relic-glacier.png" width="228" height="308"
+           alt="Glacier">
       <div class="about">
-        <p class="name">The Club</p>
-        <div class="record">club</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every crush card deals double DMG.</p>
+        <p class="name">Glacier</p>
+        <div class="record">glacier</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every ice card is dealt as an earth card.</p>
         
-          <p class="draw">a heavy club with a leather strap</p>
+          <p class="draw">a shard of ice dipped in muddy earth</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if crush → scale-damage &#43;200</li>
+          <li>when card-drawn, if ice → set-element earth</li>
         </ul>
         
-          <p class="art">art: <code>club</code></p>
+          <p class="art">art: <code>glacier</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-coiled.png" width="228" height="308"
-           alt="Coiled">
+      <img src="relic-obsidian.png" width="228" height="308"
+           alt="Obsidian">
       <div class="about">
-        <p class="name">Coiled</p>
-        <div class="record">coiled</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each crush card
-kept in hand.</p>
+        <p class="name">Obsidian</p>
+        <div class="record">obsidian</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every fire card is dealt as an earth card.</p>
         
-          <p class="draw">tightly braided jade metal relic</p>
+          <p class="draw">a jagged piece of obsidian rock</p>
         
         
         <ul class="rules">
-          <li>when blow-formed, if crush → add-damage-per-held &#43;5</li>
+          <li>when card-drawn, if fire → set-element earth</li>
         </ul>
         
-          <p class="art">art: <code>coiled</code></p>
+          <p class="art">art: <code>obsidian</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-concept-five-of-a-kind-hand.png" width="228" height="308"
-           alt="Perfect">
+      <img src="relic-fulgurite.png" width="228" height="308"
+           alt="Fulgurite">
       <div class="about">
-        <p class="name">Perfect</p>
-        <div class="record">concept-five-of-a-kind-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Card Five of a Kind deals 16 more DMG before the multiplier.</p>
+        <p class="name">Fulgurite</p>
+        <div class="record">fulgurite</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every lightning card is dealt as an earth card.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a glowing piece of rock in the shape of a lightning bolt</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;16</li>
+          <li>when card-drawn, if lightning → set-element earth</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>fulgurite</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-concept-four-of-a-kind-hand.png" width="228" height="308"
-           alt="Quartered">
+      <img src="relic-burning-mana.png" width="228" height="308"
+           alt="Burning Mana">
       <div class="about">
-        <p class="name">Quartered</p>
-        <div class="record">concept-four-of-a-kind-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Card Four of a Kind deals 10 more DMG before the multiplier.</p>
+        <p class="name">Burning Mana</p>
+        <div class="record">burning-mana</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every fire card is dealt as an arcane card.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a swirling mass of purple flames</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;10</li>
+          <li>when card-drawn, if fire → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>burning-mana</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-concept-full-house-hand.png" width="228" height="308"
-           alt="Laden">
+      <img src="relic-frozen-mana.png" width="228" height="308"
+           alt="Frozen Mana">
       <div class="about">
-        <p class="name">Laden</p>
-        <div class="record">concept-full-house-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Card Full House deals 8 more DMG before the multiplier.</p>
+        <p class="name">Frozen Mana</p>
+        <div class="record">frozen-mana</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every ice card is dealt as an arcane card.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">jagged piece of ice with purple energy surrounding it</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;8</li>
+          <li>when card-drawn, if ice → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>frozen-mana</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-concept-three-of-a-kind-hand.png" width="228" height="308"
-           alt="Trined">
+      <img src="relic-electrified-mana.png" width="228" height="308"
+           alt="Electrified Mana">
       <div class="about">
-        <p class="name">Trined</p>
-        <div class="record">concept-three-of-a-kind-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Card Three of a Kind deals 5 more DMG before the multiplier.</p>
+        <p class="name">Electrified Mana</p>
+        <div class="record">electrified-mana</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every lightning card is dealt as an arcane card.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">ball lightning that is encapsulated in a purple arcane sphere</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;5</li>
+          <li>when card-drawn, if lightning → set-element arcane</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>electrified-mana</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-concept-two-pair-hand.png" width="228" height="308"
-           alt="Doubled">
+      <img src="relic-enchanted-earth.png" width="228" height="308"
+           alt="Enchanted Earth">
       <div class="about">
-        <p class="name">Doubled</p>
-        <div class="record">concept-two-pair-hand</div>
+        <p class="name">Enchanted Earth</p>
+        <div class="record">enchanted-earth</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every earth card is dealt as an arcane card.</p>
+        
+          <p class="draw">a rock with a purple glowing vein inside of it</p>
+        
+        
+        <ul class="rules">
+          <li>when card-drawn, if earth → set-element arcane</li>
+        </ul>
+        
+          <p class="art">art: <code>enchanted-earth</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-burning-orb.png" width="228" height="308"
+           alt="Burning Orb">
+      <div class="about">
+        <p class="name">Burning Orb</p>
+        <div class="record">burning-orb</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every arcane card is dealt as a fire card.</p>
+        
+          <p class="draw">a purple sphere that is burning with a red flame</p>
+        
+        
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element fire</li>
+        </ul>
+        
+          <p class="art">art: <code>burning-orb</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-frozen-orb.png" width="228" height="308"
+           alt="Frozen Orb">
+      <div class="about">
+        <p class="name">Frozen Orb</p>
+        <div class="record">frozen-orb</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every arcane card is dealt as an ice card.</p>
+        
+          <p class="draw">a shard of ice with purple energy surrounding it</p>
+        
+        
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element ice</li>
+        </ul>
+        
+          <p class="art">art: <code>frozen-orb</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-charged-orb.png" width="228" height="308"
+           alt="Charged Orb">
+      <div class="about">
+        <p class="name">Charged Orb</p>
+        <div class="record">charged-orb</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every arcane card is dealt as a lightning card.</p>
+        
+          <p class="draw">a purple sphere with yellow lightning crackling around it</p>
+        
+        
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element lightning</li>
+        </ul>
+        
+          <p class="art">art: <code>charged-orb</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-stone-orb.png" width="228" height="308"
+           alt="Stone Orb">
+      <div class="about">
+        <p class="name">Stone Orb</p>
+        <div class="record">stone-orb</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every arcane card is dealt as a earth card.</p>
+        
+          <p class="draw">a purple sphere dipped into muddy earth</p>
+        
+        
+        <ul class="rules">
+          <li>when card-drawn, if arcane → set-element earth</li>
+        </ul>
+        
+          <p class="art">art: <code>stone-orb</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Jade rings
+  <span>7 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-singular-ring.png" width="228" height="308"
+           alt="Singular Ring">
+      <div class="about">
+        <p class="name">Singular Ring</p>
+        <div class="record">singular-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">A High Card deals 2 more DMG before the multiplier.</p>
+        
+          <p class="draw">jade ring with a single diamond</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → add-hand-damage &#43;2</li>
+        </ul>
+        
+          <p class="art">art: <code>singular-ring</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-twinned-ring.png" width="228" height="308"
+           alt="Twinned Ring">
+      <div class="about">
+        <p class="name">Twinned Ring</p>
+        <div class="record">twinned-ring</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">A Pair deals 2 more DMG before the multiplier.</p>
+        
+          <p class="draw">jade ring with two diamonds</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → add-hand-damage &#43;2</li>
+        </ul>
+        
+          <p class="art">art: <code>twinned-ring</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-concept-doubled-ring.png" width="228" height="308"
+           alt="Doubled Ring">
+      <div class="about">
+        <p class="name">Doubled Ring</p>
+        <div class="record">concept-doubled-ring</div>
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">A Card Two Pair deals 4 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">jade ring with two diamonds and two black gems</p>
         
         
         <ul class="rules">
           <li>when blow-formed → add-hand-damage &#43;4</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>concept-doubled-ring</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-earth.png" width="228" height="308"
-           alt="Earth">
+      <img src="relic-concept-tripled-ring.png" width="228" height="308"
+           alt="Tripled Ring">
       <div class="about">
-        <p class="name">Earth</p>
-        <div class="record">earth</div>
+        <p class="name">Tripled Ring</p>
+        <div class="record">concept-tripled-ring</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Earth cards deal 2x DMG.</p>
+        <p class="text">A Card Three of a Kind deals 5 more DMG before the multiplier.</p>
         
-          <p class="draw">a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it</p>
+          <p class="draw">jade ring with three diamonds</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if earth → scale-damage &#43;200</li>
+          <li>when blow-formed → add-hand-damage &#43;5</li>
         </ul>
         
-          <p class="art">art: <code>earth</code></p>
+          <p class="art">art: <code>concept-tripled-ring</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-element-five-of-a-kind-hand.png" width="228" height="308"
-           alt="Elemental">
+      <img src="relic-concept-full-house-hand.png" width="228" height="308"
+           alt="Filled Ring">
       <div class="about">
-        <p class="name">Elemental</p>
-        <div class="record">element-five-of-a-kind-hand</div>
+        <p class="name">Filled Ring</p>
+        <div class="record">concept-full-house-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Elemental Five of a Kind deals 14 more DMG before the multiplier.</p>
+        <p class="text">A Card Full House deals 8 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">jade ring with three diamonds and two black gems</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;14</li>
+          <li>when blow-formed → add-hand-damage &#43;8</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>concept-full-house-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-element-four-of-a-kind-hand.png" width="228" height="308"
-           alt="Confluent">
+      <img src="relic-concept-four-of-a-kind-hand.png" width="228" height="308"
+           alt="Fourth Ring">
       <div class="about">
-        <p class="name">Confluent</p>
-        <div class="record">element-four-of-a-kind-hand</div>
+        <p class="name">Fourth Ring</p>
+        <div class="record">concept-four-of-a-kind-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Elemental Four of a Kind deals 7 more DMG before the multiplier.</p>
+        <p class="text">A Card Four of a Kind deals 10 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">jade ring with four diamonds</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;7</li>
+          <li>when blow-formed → add-hand-damage &#43;10</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>concept-four-of-a-kind-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-element-full-house-hand.png" width="228" height="308"
-           alt="Convergent">
+      <img src="relic-concept-five-of-a-kind-hand.png" width="228" height="308"
+           alt="Perfect Ring">
       <div class="about">
-        <p class="name">Convergent</p>
-        <div class="record">element-full-house-hand</div>
+        <p class="name">Perfect Ring</p>
+        <div class="record">concept-five-of-a-kind-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Elemental Full House deals 7 more DMG before the multiplier.</p>
+        <p class="text">A Card Five of a Kind deals 16 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">jade ring with five diamonds</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;7</li>
+          <li>when blow-formed → add-hand-damage &#43;16</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>concept-five-of-a-kind-hand</code></p>
         
       </div>
     </div>
   
-    <div class="plate">
-      <img src="relic-element-three-of-a-kind-hand.png" width="228" height="308"
-           alt="Attuned">
-      <div class="about">
-        <p class="name">Attuned</p>
-        <div class="record">element-three-of-a-kind-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Elemental Three of a Kind deals 3 more DMG before the multiplier.</p>
-        
-          <p class="draw">a gold ring set with three gems side by side, a red one and a blue one in the middle and a green one, with scrollwork on the shoulders</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;3</li>
-        </ul>
-        
-          <p class="art">art: <code>element-three-of-a-kind-hand</code></p>
-        
-      </div>
-    </div>
+</div>
+
+<h3 class="family">
+  Indigo rings
+  <span>5 relics &middot; all common</span>
+</h3>
+<div class="plates">
   
     <div class="plate">
-      <img src="relic-element-two-pair-hand.png" width="228" height="308"
-           alt="Twinflame">
+      <img src="relic-form-two-pair-hand.png" width="228" height="308"
+           alt="Paired Ring">
       <div class="about">
-        <p class="name">Twinflame</p>
-        <div class="record">element-two-pair-hand</div>
+        <p class="name">Paired Ring</p>
+        <div class="record">form-two-pair-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Elemental Two Pair deals 3 more DMG before the multiplier.</p>
+        <p class="text">A Form Two Pair deals 3 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">indigo ring with two golden gems and two silver gems</p>
         
         
         <ul class="rules">
           <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>form-two-pair-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-epee.png" width="228" height="308"
-           alt="The Epee">
+      <img src="relic-form-three-of-a-kind-hand.png" width="228" height="308"
+           alt="Trine Ring">
       <div class="about">
-        <p class="name">The Epee</p>
-        <div class="record">epee</div>
+        <p class="name">Trine Ring</p>
+        <div class="record">form-three-of-a-kind-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Thrust deals 4x DMG.</p>
+        <p class="text">A Form Three of a Kind deals 3 more DMG before the multiplier.</p>
         
-          <p class="draw">an epee with an oversized guard to differentiate from a foil</p>
+          <p class="draw">indigo ring with three golden gems</p>
         
         
         <ul class="rules">
-          <li>when card-damage, if Thrust → scale-damage &#43;400</li>
+          <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art">art: <code>epee</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-fire.png" width="228" height="308"
-           alt="Fire">
-      <div class="about">
-        <p class="name">Fire</p>
-        <div class="record">fire</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Fire cards deal 2x DMG.</p>
-        
-          <p class="draw">a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if fire → scale-damage &#43;200</li>
-        </ul>
-        
-          <p class="art">art: <code>fire</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-form-five-of-a-kind-hand.png" width="228" height="308"
-           alt="Panoply">
-      <div class="about">
-        <p class="name">Panoply</p>
-        <div class="record">form-five-of-a-kind-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Form Five of a Kind deals 12 more DMG before the multiplier.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;12</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-form-four-of-a-kind-hand.png" width="228" height="308"
-           alt="Arsenal">
-      <div class="about">
-        <p class="name">Arsenal</p>
-        <div class="record">form-four-of-a-kind-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Form Four of a Kind deals 6 more DMG before the multiplier.</p>
-        
-          <p class="draw">a plain heavy steel ring standing in front of a heaped pile of weapons, swords and spears and axes and shields and helmets stacked behind it</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;6</li>
-        </ul>
-        
-          <p class="art">art: <code>form-four-of-a-kind-hand</code></p>
+          <p class="art">art: <code>form-three-of-a-kind-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
       <img src="relic-form-full-house-hand.png" width="228" height="308"
-           alt="Armoury">
+           alt="Full Ring">
       <div class="about">
-        <p class="name">Armoury</p>
+        <p class="name">Full Ring</p>
         <div class="record">form-full-house-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
         <p class="text">A Form Full House deals 6 more DMG before the multiplier.</p>
         
-          <p class="draw">a plain heavy steel ring standing in front of an armoury wall, swords and spears and an axe and a shield racked behind it under hanging banners</p>
+          <p class="draw">indigo ring with three golden gems and two silver gems</p>
         
         
         <ul class="rules">
@@ -709,736 +810,167 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-form-three-of-a-kind-hand.png" width="228" height="308"
-           alt="Forged">
+      <img src="relic-form-four-of-a-kind-hand.png" width="228" height="308"
+           alt="Quad Ring">
       <div class="about">
-        <p class="name">Forged</p>
-        <div class="record">form-three-of-a-kind-hand</div>
+        <p class="name">Quad Ring</p>
+        <div class="record">form-four-of-a-kind-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Form Three of a Kind deals 3 more DMG before the multiplier.</p>
+        <p class="text">A Form Four of a Kind deals 6 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">indigo ring with four golden gems</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;3</li>
+          <li>when blow-formed → add-hand-damage &#43;6</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>form-four-of-a-kind-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-form-two-pair-hand.png" width="228" height="308"
-           alt="Paired">
+      <img src="relic-form-five-of-a-kind-hand.png" width="228" height="308"
+           alt="Pent Ring">
       <div class="about">
-        <p class="name">Paired</p>
-        <div class="record">form-two-pair-hand</div>
+        <p class="name">Pent Ring</p>
+        <div class="record">form-five-of-a-kind-hand</div>
         <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Form Two Pair deals 3 more DMG before the multiplier.</p>
+        <p class="text">A Form Five of a Kind deals 12 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">indigo ring with five golden gems</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;3</li>
+          <li>when blow-formed → add-hand-damage &#43;12</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-frostbank.png" width="228" height="308"
-           alt="Frostbank">
-      <div class="about">
-        <p class="name">Frostbank</p>
-        <div class="record">frostbank</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each ice card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if ice → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-headsman.png" width="228" height="308"
-           alt="The Headsman">
-      <div class="about">
-        <p class="name">The Headsman</p>
-        <div class="record">headsman</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Sever deals 4x DMG.</p>
-        
-          <p class="draw">Black steel executioner axe with a silver handle</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Sever → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>headsman</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-heart.png" width="228" height="308"
-           alt="Heart">
-      <div class="about">
-        <p class="name">Heart</p>
-        <div class="record">heart</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">&#43;5 HP, and 5 more for every fight won.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        <p class="art">badge: <code>&#43;5</code> at Grown 0</p>
-        <ul class="rules">
-          <li>when fight-start → add-hp &#43;5</li><li>when fight-won → grow-on-win &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-high-card-hand.png" width="228" height="308"
-           alt="Lone">
-      <div class="about">
-        <p class="name">Lone</p>
-        <div class="record">high-card-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A High Card deals 2 more DMG before the multiplier.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-hungry.png" width="228" height="308"
-           alt="Hungry">
-      <div class="about">
-        <p class="name">Hungry</p>
-        <div class="record">hungry</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Two prizes after a fight instead of one.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when prizes-dealt → adjust-picks &#43;1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-hunting-knife.png" width="228" height="308"
-           alt="The Hunting Knife">
-      <div class="about">
-        <p class="name">The Hunting Knife</p>
-        <div class="record">hunting-knife</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Cut deals 4x DMG.</p>
-        
-          <p class="draw">an extra large hunting knife</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Cut → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>hunting-knife</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-ice.png" width="228" height="308"
-           alt="Ice">
-      <div class="about">
-        <p class="name">Ice</p>
-        <div class="record">ice</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Ice cards deal 2x DMG.</p>
-        
-          <p class="draw">a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if ice → scale-damage &#43;200</li>
-        </ul>
-        
-          <p class="art">art: <code>ice</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-katana-blade.png" width="228" height="308"
-           alt="The Blade">
-      <div class="about">
-        <p class="name">The Blade</p>
-        <div class="record">katana-blade</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Slice card
-deals 4x DMG.</p>
-        
-          <p class="draw">a silver edge katana with wavy damascus steel pattern</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Slice → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>katana-blade</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-lance.png" width="228" height="308"
-           alt="The Lance">
-      <div class="about">
-        <p class="name">The Lance</p>
-        <div class="record">lance</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Impale deals 4x DMG.</p>
-        
-          <p class="draw">A long obsidian lance with a silver hilt</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Impale → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>lance</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-lightning.png" width="228" height="308"
-           alt="Lightning">
-      <div class="about">
-        <p class="name">Lightning</p>
-        <div class="record">lightning</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Lightning cards deal 2x DMG.</p>
-        
-          <p class="draw">a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if lightning → scale-damage &#43;200</li>
-        </ul>
-        
-          <p class="art">art: <code>lightning</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-might.png" width="228" height="308"
-           alt="Might">
-      <div class="about">
-        <p class="name">Might</p>
-        <div class="record">might</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">&#43;10 DMG for every fight.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when fight-start → add-dmg &#43;10</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-momentum.png" width="228" height="308"
-           alt="Momentum">
-      <div class="about">
-        <p class="name">Momentum</p>
-        <div class="record">momentum</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        <p class="art">badge: <code>1.0</code> at Grown 0</p>
-        <ul class="rules">
-          <li>when card-damage → scale-damage &#43;100</li><li>when turn-taken → grow-on-turn &#43;20</li><li>when turn-taken, if defend → reset-growth</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-needle.png" width="228" height="308"
-           alt="The Needle">
-      <div class="about">
-        <p class="name">The Needle</p>
-        <div class="record">needle</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every stab card deals double DMG.</p>
-        
-          <p class="draw">fencing foil with a sharp tip and a leather hilt</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if stab → scale-damage &#43;200</li>
-        </ul>
-        
-          <p class="art">art: <code>needle</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-old-dagger.png" width="228" height="308"
-           alt="The Old Dagger">
-      <div class="about">
-        <p class="name">The Old Dagger</p>
-        <div class="record">old-dagger</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Jab deals 4x DMG.</p>
-        
-          <p class="draw">a rusty dagger</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Jab → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>old-dagger</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-pair-hand.png" width="228" height="308"
-           alt="Twinned">
-      <div class="about">
-        <p class="name">Twinned</p>
-        <div class="record">pair-hand</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A Pair deals 2 more DMG before the multiplier.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → add-hand-damage &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-poised.png" width="228" height="308"
-           alt="Poised">
-      <div class="about">
-        <p class="name">Poised</p>
-        <div class="record">poised</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each stab card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if stab → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-potential.png" width="228" height="308"
-           alt="Potential">
-      <div class="about">
-        <p class="name">Potential</p>
-        <div class="record">potential</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each lightning card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if lightning → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-sheathed.png" width="228" height="308"
-           alt="Sheathed">
-      <div class="about">
-        <p class="name">Sheathed</p>
-        <div class="record">sheathed</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each slash card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if slash → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-shouldered.png" width="228" height="308"
-           alt="Shouldered">
-      <div class="about">
-        <p class="name">Shouldered</p>
-        <div class="record">shouldered</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each crush card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if crush → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-sickle.png" width="228" height="308"
-           alt="The Sickle">
-      <div class="about">
-        <p class="name">The Sickle</p>
-        <div class="record">sickle</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every slash card deals double DMG.</p>
-        
-          <p class="draw">a sickle with a leather hilt</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if slash → scale-damage &#43;200</li>
-        </ul>
-        
-          <p class="art">art: <code>sickle</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-skewer-spear.png" width="228" height="308"
-           alt="The Skewer">
-      <div class="about">
-        <p class="name">The Skewer</p>
-        <div class="record">skewer-spear</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Skewer deals 4x DMG.</p>
-        
-          <p class="draw">a wood spear with a copper tip that is longer like a sword tip</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Skewer → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>skewer-spear</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-smoulder.png" width="228" height="308"
-           alt="Smoulder">
-      <div class="about">
-        <p class="name">Smoulder</p>
-        <div class="record">smoulder</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each fire card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if fire → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-soul-taker.png" width="228" height="308"
-           alt="Soul Taker">
-      <div class="about">
-        <p class="name">Soul Taker</p>
-        <div class="record">soul-taker</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">A won room pays 5 more vitae.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when prizes-dealt → adjust-prize-vitae &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-spoon.png" width="228" height="308"
-           alt="Mom&#39;s Spoon">
-      <div class="about">
-        <p class="name">Mom&#39;s Spoon</p>
-        <div class="record">spoon</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Tap deals 4x DMG.</p>
-        
-          <p class="draw">a wooden spoon</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Tap → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>spoon</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-stick.png" width="228" height="308"
-           alt="The Stick">
-      <div class="about">
-        <p class="name">The Stick</p>
-        <div class="record">stick</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Poke deals 4x DMG.</p>
-        
-          <p class="draw">a sharpened stick</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Poke → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>stick</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-stone-maul.png" width="228" height="308"
-           alt="The Maul">
-      <div class="about">
-        <p class="name">The Maul</p>
-        <div class="record">stone-maul</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Pulverize deals 4x DMG.</p>
-        
-          <p class="draw">a large stone maul with a wooden handle</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Pulverize → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-warhammer.png" width="228" height="308"
-           alt="The Warhammer">
-      <div class="about">
-        <p class="name">The Warhammer</p>
-        <div class="record">warhammer</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Every Smash deals 4x DMG.</p>
-        
-          <p class="draw">A silver warhammer with a black steel handle</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if Smash → scale-damage &#43;400</li>
-        </ul>
-        
-          <p class="art">art: <code>warhammer</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-wellspring.png" width="228" height="308"
-           alt="Wellspring">
-      <div class="about">
-        <p class="name">Wellspring</p>
-        <div class="record">wellspring</div>
-        <p class="price">3 vitae, sells back for 1</p>
-        <p class="text">Deals 5 more DMG for each arcane card
-kept in hand.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if arcane → add-damage-per-held &#43;5</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>form-five-of-a-kind-hand</code></p>
         
       </div>
     </div>
   
 </div>
 
-<h3 class="tier uncommon">
-  uncommon
-  <span>56 relics &middot; 5 vitae, sells for 2 &middot;
-    weight 4 each &middot; 27.3% of a shelf draw</span>
+<h3 class="family">
+  Sandstone rings
+  <span>5 relics &middot; all common</span>
 </h3>
-
 <div class="plates">
   
     <div class="plate">
-      <img src="relic-aftershock.png" width="228" height="308"
-           alt="Aftershock">
+      <img src="relic-element-two-pair-hand.png" width="228" height="308"
+           alt="Duet Ring">
       <div class="about">
-        <p class="name">Aftershock</p>
-        <div class="record">aftershock</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every crush card lands twice, both at full DMG.</p>
+        <p class="name">Duet Ring</p>
+        <div class="record">element-two-pair-hand</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">An Elemental Two Pair deals 3 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">sandstone ring with two turquoise gems and two rubies</p>
         
         
         <ul class="rules">
-          <li>when blow-formed, if crush → repeat-card &#43;2</li>
+          <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>element-two-pair-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-backdraft.png" width="228" height="308"
-           alt="Backdraft">
+      <img src="relic-element-three-of-a-kind-hand.png" width="228" height="308"
+           alt="Trio Ring">
       <div class="about">
-        <p class="name">Backdraft</p>
-        <div class="record">backdraft</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every fire card lands twice, both at full DMG.</p>
+        <p class="name">Trio Ring</p>
+        <div class="record">element-three-of-a-kind-hand</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">An Elemental Three of a Kind deals 3 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">sandstone ring with three turquoise gems</p>
         
         
         <ul class="rules">
-          <li>when blow-formed, if fire → repeat-card &#43;2</li>
+          <li>when blow-formed → add-hand-damage &#43;3</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>element-three-of-a-kind-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-braced.png" width="228" height="308"
-           alt="Braced">
+      <img src="relic-element-full-house-hand.png" width="228" height="308"
+           alt="Laden Ring">
       <div class="about">
-        <p class="name">Braced</p>
-        <div class="record">braced</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Defend cards cost 1 AP less. &#43;15 HP for every fight.</p>
+        <p class="name">Laden Ring</p>
+        <div class="record">element-full-house-hand</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">An Elemental Full House deals 7 more DMG before the multiplier.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">sandstone ring with three turquoise gems and two rubies</p>
         
         
         <ul class="rules">
-          <li>when card-cost, if defend → adjust-cost -1</li><li>when fight-start → add-hp &#43;15</li>
+          <li>when blow-formed → add-hand-damage &#43;7</li>
         </ul>
         
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
+          <p class="art">art: <code>element-full-house-hand</code></p>
         
       </div>
     </div>
   
     <div class="plate">
-      <img src="relic-bruise.png" width="228" height="308"
-           alt="The Bruise">
+      <img src="relic-element-four-of-a-kind-hand.png" width="228" height="308"
+           alt="Quartet Ring">
       <div class="about">
-        <p class="name">The Bruise</p>
-        <div class="record">bruise</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</p>
+        <p class="name">Quartet Ring</p>
+        <div class="record">element-four-of-a-kind-hand</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">An Elemental Four of a Kind deals 7 more DMG before the multiplier.</p>
         
-          <p class="draw">an obsidian mace topped with a green glowing blunt rock</p>
+          <p class="draw">sandstone ring with four turquoise gems</p>
         
         
         <ul class="rules">
-          <li>when attack-lands, if crush → apply-status weighted</li>
+          <li>when blow-formed → add-hand-damage &#43;7</li>
         </ul>
         
-          <p class="art">art: <code>bruise</code></p>
+          <p class="art">art: <code>element-four-of-a-kind-hand</code></p>
         
       </div>
     </div>
+  
+    <div class="plate">
+      <img src="relic-element-five-of-a-kind-hand.png" width="228" height="308"
+           alt="Quintet Ring">
+      <div class="about">
+        <p class="name">Quintet Ring</p>
+        <div class="record">element-five-of-a-kind-hand</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">An Elemental Five of a Kind deals 14 more DMG before the multiplier.</p>
+        
+          <p class="draw">sandstone ring with five turquoise gems</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → add-hand-damage &#43;14</li>
+        </ul>
+        
+          <p class="art">art: <code>element-five-of-a-kind-hand</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Elemental statuses
+  <span>5 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
   
     <div class="plate">
       <img src="relic-burning.png" width="228" height="308"
@@ -1483,19 +1015,633 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-crown.png" width="228" height="308"
-           alt="Crown">
+      <img src="relic-shocking.png" width="228" height="308"
+           alt="Shocking">
       <div class="about">
-        <p class="name">Crown</p>
-        <div class="record">crown</div>
+        <p class="name">Shocking</p>
+        <div class="record">shocking</div>
         <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every 3 AP card deals 2.5x DMG.</p>
+        <p class="text">Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a gold ring with a yellow gem, electricity crackling up the sides of the ring</p>
         
         
         <ul class="rules">
-          <li>when card-damage → scale-damage &#43;250</li>
+          <li>when attack-lands, if lightning → apply-status shocked</li>
+        </ul>
+        
+          <p class="art">art: <code>shocking</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-weighted.png" width="228" height="308"
+           alt="Weighted">
+      <div class="about">
+        <p class="name">Weighted</p>
+        <div class="record">weighted</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</p>
+        
+          <p class="draw">a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if earth → apply-status weighted</li>
+        </ul>
+        
+          <p class="art">art: <code>weighted</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-weakening.png" width="228" height="308"
+           alt="Weakening">
+      <div class="about">
+        <p class="name">Weakening</p>
+        <div class="record">weakening</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
+        
+          <p class="draw">a gold ring with a purple gem, purple flames licking up the sides of the ring</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status weakened</li>
+        </ul>
+        
+          <p class="art">art: <code>weakening</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Paired statuses
+  <span>10 relics &middot; all rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-storm.png" width="228" height="308"
+           alt="Storm">
+      <div class="about">
+        <p class="name">Storm</p>
+        <div class="record">storm</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Lightning attacks SHOCK and CHILL the target.</p>
+        
+          <p class="draw">a gold ring with a yellow gem and cold blue lightning burning off it, there should be 2 smaller blue gems beside it with some blue bleeding into the gold band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if lightning → apply-status shocked and apply-status chilled</li>
+        </ul>
+        
+          <p class="art">art: <code>storm</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-scald.png" width="228" height="308"
+           alt="Scald">
+      <div class="about">
+        <p class="name">Scald</p>
+        <div class="record">scald</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Fire attacks BURN and CHILL the target.</p>
+        
+          <p class="draw">a ring with a red gem surrounded by steam.  it should have two yellow gems along the side with some yellow bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if fire → apply-status burning and apply-status chilled</li>
+        </ul>
+        
+          <p class="art">art: <code>scald</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-wildfire.png" width="228" height="308"
+           alt="Wildfire">
+      <div class="about">
+        <p class="name">Wildfire</p>
+        <div class="record">wildfire</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Fire attacks BURN and SHOCK the target.</p>
+        
+          <p class="draw">a ring with a red gem surrounded by yellow, the flames should be licking up the sides of the ring.  it should have two yellow gems along the side with some yellow bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if fire → apply-status burning and apply-status shocked</li>
+        </ul>
+        
+          <p class="art">art: <code>wildfire</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-hoarfrost.png" width="228" height="308"
+           alt="Hoarfrost">
+      <div class="about">
+        <p class="name">Hoarfrost</p>
+        <div class="record">hoarfrost</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Ice attacks CHILL and WEIGH the target.</p>
+        
+          <p class="draw">a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  it should have two green gems along the side with some green bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if ice → apply-status chilled and apply-status weighted</li>
+        </ul>
+        
+          <p class="art">art: <code>hoarfrost</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-brittle.png" width="228" height="308"
+           alt="Brittle">
+      <div class="about">
+        <p class="name">Brittle</p>
+        <div class="record">brittle</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Ice attacks CHILL and WEAKEN the target.</p>
+        
+          <p class="draw">a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band </p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if ice → apply-status chilled and apply-status weakened</li>
+        </ul>
+        
+          <p class="art">art: <code>brittle</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-palsy.png" width="228" height="308"
+           alt="Palsy">
+      <div class="about">
+        <p class="name">Palsy</p>
+        <div class="record">palsy</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Lightning attacks SHOCK and WEAKEN the target.</p>
+        
+          <p class="draw">a ring with a yellow gem sparking with electricity and with 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if lightning → apply-status shocked and apply-status weakened</li>
+        </ul>
+        
+          <p class="art">art: <code>palsy</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-caldera.png" width="228" height="308"
+           alt="Caldera">
+      <div class="about">
+        <p class="name">Caldera</p>
+        <div class="record">caldera</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Earth attacks WEIGH and BURN the target.</p>
+        
+          <p class="draw">a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if earth → apply-status weighted and apply-status burning</li>
+        </ul>
+        
+          <p class="art">art: <code>caldera</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-tremor.png" width="228" height="308"
+           alt="Tremor">
+      <div class="about">
+        <p class="name">Tremor</p>
+        <div class="record">tremor</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Earth attacks WEIGH and SHOCK the target.</p>
+        
+          <p class="draw">a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, the yellow gems should have some yellow bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if earth → apply-status weighted and apply-status shocked</li>
+        </ul>
+        
+          <p class="art">art: <code>tremor</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-blightfire.png" width="228" height="308"
+           alt="Blightfire">
+      <div class="about">
+        <p class="name">Blightfire</p>
+        <div class="record">blightfire</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Arcane attacks WEAKEN and BURN the target.</p>
+        
+          <p class="draw">a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status weakened and apply-status burning</li>
+        </ul>
+        
+          <p class="art">art: <code>blightfire</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-millstone.png" width="228" height="308"
+           alt="Millstone">
+      <div class="about">
+        <p class="name">Millstone</p>
+        <div class="record">millstone</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Arcane attacks WEAKEN and WEIGH the target.</p>
+        
+          <p class="draw">a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, the green gems should have some green bleeding into the copper band</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if arcane → apply-status weakened and apply-status weighted</li>
+        </ul>
+        
+          <p class="art">art: <code>millstone</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Weapons
+  <span>15 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-stick.png" width="228" height="308"
+           alt="The Stick">
+      <div class="about">
+        <p class="name">The Stick</p>
+        <div class="record">stick</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Poke deals 4x DMG.</p>
+        
+          <p class="draw">a sharpened stick</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Poke → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>stick</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-old-dagger.png" width="228" height="308"
+           alt="The Old Dagger">
+      <div class="about">
+        <p class="name">The Old Dagger</p>
+        <div class="record">old-dagger</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Jab deals 4x DMG.</p>
+        
+          <p class="draw">a rusty dagger</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Jab → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>old-dagger</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-epee.png" width="228" height="308"
+           alt="The Epee">
+      <div class="about">
+        <p class="name">The Epee</p>
+        <div class="record">epee</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Thrust deals 4x DMG.</p>
+        
+          <p class="draw">an epee with an oversized guard to differentiate from a foil</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Thrust → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>epee</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-skewer-spear.png" width="228" height="308"
+           alt="The Skewer">
+      <div class="about">
+        <p class="name">The Skewer</p>
+        <div class="record">skewer-spear</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Skewer deals 4x DMG.</p>
+        
+          <p class="draw">a wood spear with a copper tip that is longer like a sword tip</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Skewer → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>skewer-spear</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-lance.png" width="228" height="308"
+           alt="The Lance">
+      <div class="about">
+        <p class="name">The Lance</p>
+        <div class="record">lance</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Impale deals 4x DMG.</p>
+        
+          <p class="draw">A long obsidian lance with a silver hilt</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Impale → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>lance</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-bread-knife.png" width="228" height="308"
+           alt="The Bread Knife">
+      <div class="about">
+        <p class="name">The Bread Knife</p>
+        <div class="record">bread-knife</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Nick deals 4x DMG.</p>
+        
+          <p class="draw">a bread knife</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Nick → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>bread-knife</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-hunting-knife.png" width="228" height="308"
+           alt="The Hunting Knife">
+      <div class="about">
+        <p class="name">The Hunting Knife</p>
+        <div class="record">hunting-knife</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Cut deals 4x DMG.</p>
+        
+          <p class="draw">an extra large hunting knife</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Cut → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>hunting-knife</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-katana-blade.png" width="228" height="308"
+           alt="The Blade">
+      <div class="about">
+        <p class="name">The Blade</p>
+        <div class="record">katana-blade</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Slice card
+deals 4x DMG.</p>
+        
+          <p class="draw">a silver edge katana with wavy damascus steel pattern</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Slice → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>katana-blade</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-cleaver.png" width="228" height="308"
+           alt="The Cleaver">
+      <div class="about">
+        <p class="name">The Cleaver</p>
+        <div class="record">cleaver</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Cleave deals 4x DMG.</p>
+        
+          <p class="draw">large cleaver with a silver blade and a copper handle</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Cleave → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>cleaver</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-headsman.png" width="228" height="308"
+           alt="The Headsman">
+      <div class="about">
+        <p class="name">The Headsman</p>
+        <div class="record">headsman</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Sever deals 4x DMG.</p>
+        
+          <p class="draw">Black steel executioner axe with a silver handle</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Sever → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>headsman</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-spoon.png" width="228" height="308"
+           alt="Mom&#39;s Spoon">
+      <div class="about">
+        <p class="name">Mom&#39;s Spoon</p>
+        <div class="record">spoon</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Tap deals 4x DMG.</p>
+        
+          <p class="draw">a wooden spoon</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Tap → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>spoon</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-brass-knuckles.png" width="228" height="308"
+           alt="The Knuckles">
+      <div class="about">
+        <p class="name">The Knuckles</p>
+        <div class="record">brass-knuckles</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Thump deals 4x DMG.</p>
+        
+          <p class="draw">a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Thump → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>brass-knuckles</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-basher.png" width="228" height="308"
+           alt="The Basher">
+      <div class="about">
+        <p class="name">The Basher</p>
+        <div class="record">basher</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Bash deals 4x DMG.</p>
+        
+          <p class="draw">a mechanics hammer with a copper handle and a silver head</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Bash → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>basher</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-warhammer.png" width="228" height="308"
+           alt="The Warhammer">
+      <div class="about">
+        <p class="name">The Warhammer</p>
+        <div class="record">warhammer</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Smash deals 4x DMG.</p>
+        
+          <p class="draw">A silver warhammer with a black steel handle</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Smash → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>warhammer</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-stone-maul.png" width="228" height="308"
+           alt="The Maul">
+      <div class="about">
+        <p class="name">The Maul</p>
+        <div class="record">stone-maul</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every Pulverize deals 4x DMG.</p>
+        
+          <p class="draw">a large stone maul with a wooden handle</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if Pulverize → scale-damage &#43;400</li>
+        </ul>
+        
+          <p class="art">art: <code>stone-maul</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Elements held
+  <span>5 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-jar-fire.png" width="228" height="308"
+           alt="Smouldering Jar">
+      <div class="about">
+        <p class="name">Smouldering Jar</p>
+        <div class="record">jar-fire</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each fire card
+kept in hand.</p>
+        
+          <p class="draw">a jar with burning coals inside, the jar is made of clear glass with a copper lid</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if fire → add-damage-per-held &#43;5</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1504,20 +1650,20 @@ kept in hand.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-dual-wield.png" width="228" height="308"
-           alt="Dual Wield">
+      <img src="relic-jar-ice.png" width="228" height="308"
+           alt="Jar of Ice">
       <div class="about">
-        <p class="name">Dual Wield</p>
-        <div class="record">dual-wield</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">A pair built from two
-different forms deals 3x DMG.</p>
+        <p class="name">Jar of Ice</p>
+        <div class="record">jar-ice</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each ice card
+kept in hand.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a jar with large shards of ice inside, the jar is made of clear glass with a copper lid</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → scale-hand-damage &#43;300</li>
+          <li>when blow-formed, if ice → add-damage-per-held &#43;5</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1526,19 +1672,20 @@ different forms deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-dust-storm.png" width="228" height="308"
-           alt="Dust Storm">
+      <img src="relic-jar-lightning.png" width="228" height="308"
+           alt="Jar of Sparks">
       <div class="about">
-        <p class="name">Dust Storm</p>
-        <div class="record">dust-storm</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every earth card is dealt as a lightning card.</p>
+        <p class="name">Jar of Sparks</p>
+        <div class="record">jar-lightning</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each lightning card
+kept in hand.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a jar with a small lightning bolts inside, the jar is made of clear glass with a copper lid</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if earth → set-element lightning</li>
+          <li>when blow-formed, if lightning → add-damage-per-held &#43;5</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1547,25 +1694,282 @@ different forms deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-echo.png" width="228" height="308"
-           alt="Echo">
+      <img src="relic-jar-earth.png" width="228" height="308"
+           alt="Jar of Earth">
       <div class="about">
-        <p class="name">Echo</p>
-        <div class="record">echo</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</p>
+        <p class="name">Jar of Earth</p>
+        <div class="record">jar-earth</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each earth card
+kept in hand.</p>
         
-          <p class="draw missing">no subject written yet</p>
+          <p class="draw">a jar with a small rocks inside, the jar is made of clear glass with a copper lid</p>
         
         
         <ul class="rules">
-          <li>when blow-formed → echo-attack &#43;3</li>
+          <li>when blow-formed, if earth → add-damage-per-held &#43;5</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>
+  
+    <div class="plate">
+      <img src="relic-jar-arcane.png" width="228" height="308"
+           alt="Jar of Magic">
+      <div class="about">
+        <p class="name">Jar of Magic</p>
+        <div class="record">jar-arcane</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each arcane card
+kept in hand.</p>
+        
+          <p class="draw">a jar with a small glowing orbs inside, the jar is made of clear glass with a copper lid</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if arcane → add-damage-per-held &#43;5</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Elemental damage
+  <span>5 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-fire.png" width="228" height="308"
+           alt="Fire">
+      <div class="about">
+        <p class="name">Fire</p>
+        <div class="record">fire</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Fire cards deal 2x DMG.</p>
+        
+          <p class="draw">a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if fire → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>fire</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-ice.png" width="228" height="308"
+           alt="Ice">
+      <div class="about">
+        <p class="name">Ice</p>
+        <div class="record">ice</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Ice cards deal 2x DMG.</p>
+        
+          <p class="draw">a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if ice → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>ice</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-lightning.png" width="228" height="308"
+           alt="Lightning">
+      <div class="about">
+        <p class="name">Lightning</p>
+        <div class="record">lightning</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Lightning cards deal 2x DMG.</p>
+        
+          <p class="draw">a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if lightning → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>lightning</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-earth.png" width="228" height="308"
+           alt="Earth">
+      <div class="about">
+        <p class="name">Earth</p>
+        <div class="record">earth</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Earth cards deal 2x DMG.</p>
+        
+          <p class="draw">a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if earth → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>earth</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-arcane.png" width="228" height="308"
+           alt="Arcane">
+      <div class="about">
+        <p class="name">Arcane</p>
+        <div class="record">arcane</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Arcane cards deal 2x DMG.</p>
+        
+          <p class="draw">a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if arcane → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>arcane</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Elemental repeats
+  <span>5 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-repeat-fire.png" width="228" height="308"
+           alt="Backdraft">
+      <div class="about">
+        <p class="name">Backdraft</p>
+        <div class="record">repeat-fire</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every fire card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of fire</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if fire → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-repeat-ice.png" width="228" height="308"
+           alt="Shatter Ring">
+      <div class="about">
+        <p class="name">Shatter Ring</p>
+        <div class="record">repeat-ice</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every ice card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of ice</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if ice → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-repeat-lightning.png" width="228" height="308"
+           alt="Forked">
+      <div class="about">
+        <p class="name">Forked</p>
+        <div class="record">repeat-lightning</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every lightning card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of lightning</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if lightning → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-repeat-earth.png" width="228" height="308"
+           alt="Landslide">
+      <div class="about">
+        <p class="name">Landslide</p>
+        <div class="record">repeat-earth</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every earth card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of earth</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if earth → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-repeat-arcane.png" width="228" height="308"
+           alt="Recursion">
+      <div class="about">
+        <p class="name">Recursion</p>
+        <div class="record">repeat-arcane</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every arcane card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of arcane</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if arcane → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Elemental growth
+  <span>5 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
   
     <div class="plate">
       <img src="relic-enflamed.png" width="228" height="308"
@@ -1581,112 +1985,6 @@ different forms deals 3x DMG.</p>
         <p class="art">badge: <code>1.0</code> at Grown 0</p>
         <ul class="rules">
           <li>when card-damage, if fire → scale-damage &#43;100</li><li>when attack-lands, if fire → grow-on-hit &#43;10</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-fire-of-life.png" width="228" height="308"
-           alt="Fire of Life">
-      <div class="about">
-        <p class="name">Fire of Life</p>
-        <div class="record">fire-of-life</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Fire cards gain 0.1x DMG
-for every 10 vitae you hold.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if fire → scale-damage-per-vitae &#43;1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-firestorm.png" width="228" height="308"
-           alt="Firestorm">
-      <div class="about">
-        <p class="name">Firestorm</p>
-        <div class="record">firestorm</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every lightning card is dealt as a fire card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if lightning → set-element fire</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-flurry.png" width="228" height="308"
-           alt="Flurry">
-      <div class="about">
-        <p class="name">Flurry</p>
-        <div class="record">flurry</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every stab card lands twice, both at full DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if stab → repeat-card &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-forked.png" width="228" height="308"
-           alt="Forked">
-      <div class="about">
-        <p class="name">Forked</p>
-        <div class="record">forked</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every lightning card lands twice, both at full DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if lightning → repeat-card &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-frostbite.png" width="228" height="308"
-           alt="Frostbite">
-      <div class="about">
-        <p class="name">Frostbite</p>
-        <div class="record">frostbite</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every fire card is dealt as an ice card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if fire → set-element ice</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1716,61 +2014,19 @@ for every 10 vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-frozen-lightning.png" width="228" height="308"
-           alt="Frozen Lightning">
+      <img src="relic-lithium.png" width="228" height="308"
+           alt="Lithium">
       <div class="about">
-        <p class="name">Frozen Lightning</p>
-        <div class="record">frozen-lightning</div>
+        <p class="name">Lithium</p>
+        <div class="record">lithium</div>
         <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every lightning card is dealt as an ice card.</p>
+        <p class="text">Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.</p>
         
           <p class="draw missing">no subject written yet</p>
         
-        
+        <p class="art">badge: <code>1.0</code> at Grown 0</p>
         <ul class="rules">
-          <li>when card-drawn, if lightning → set-element ice</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-fulgurite.png" width="228" height="308"
-           alt="Fulgurite">
-      <div class="about">
-        <p class="name">Fulgurite</p>
-        <div class="record">fulgurite</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every lightning card is dealt as an earth card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if lightning → set-element earth</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-glacier.png" width="228" height="308"
-           alt="Glacier">
-      <div class="about">
-        <p class="name">Glacier</p>
-        <div class="record">glacier</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every ice card is dealt as an earth card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if ice → set-element earth</li>
+          <li>when card-damage, if lightning → scale-damage &#43;100</li><li>when attack-lands, if lightning → grow-on-hit &#43;10</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1800,19 +2056,48 @@ for every 10 vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-heat-lightning.png" width="228" height="308"
-           alt="Heat Lightning">
+      <img src="relic-unravelled.png" width="228" height="308"
+           alt="Unravelled">
       <div class="about">
-        <p class="name">Heat Lightning</p>
-        <div class="record">heat-lightning</div>
+        <p class="name">Unravelled</p>
+        <div class="record">unravelled</div>
         <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every fire card is dealt as a lightning card.</p>
+        <p class="text">Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        <p class="art">badge: <code>1.0</code> at Grown 0</p>
+        <ul class="rules">
+          <li>when card-damage, if arcane → scale-damage &#43;100</li><li>when attack-lands, if arcane → grow-on-hit &#43;10</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Elemental discounts
+  <span>5 relics &middot; all rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-warm.png" width="228" height="308"
+           alt="Warm">
+      <div class="about">
+        <p class="name">Warm</p>
+        <div class="record">warm</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Fire cards cost 1 AP less.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if fire → set-element lightning</li>
+          <li>when card-cost, if fire → adjust-cost -1</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1821,19 +2106,19 @@ for every 10 vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-hexbolt.png" width="228" height="308"
-           alt="Hexbolt">
+      <img src="relic-cold.png" width="228" height="308"
+           alt="Cold">
       <div class="about">
-        <p class="name">Hexbolt</p>
-        <div class="record">hexbolt</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every arcane card is dealt as a lightning card.</p>
+        <p class="name">Cold</p>
+        <div class="record">cold</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Ice cards cost 1 AP less.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if arcane → set-element lightning</li>
+          <li>when card-cost, if ice → adjust-cost -1</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1842,19 +2127,19 @@ for every 10 vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-hexfire.png" width="228" height="308"
-           alt="Hexfire">
+      <img src="relic-static.png" width="228" height="308"
+           alt="Static">
       <div class="about">
-        <p class="name">Hexfire</p>
-        <div class="record">hexfire</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every arcane card is dealt as a fire card.</p>
+        <p class="name">Static</p>
+        <div class="record">static</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Lightning cards cost 1 AP less.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if arcane → set-element fire</li>
+          <li>when card-cost, if lightning → adjust-cost -1</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1863,19 +2148,19 @@ for every 10 vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-hexfrost.png" width="228" height="308"
-           alt="Hexfrost">
+      <img src="relic-dirty.png" width="228" height="308"
+           alt="Dirty">
       <div class="about">
-        <p class="name">Hexfrost</p>
-        <div class="record">hexfrost</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every arcane card is dealt as an ice card.</p>
+        <p class="name">Dirty</p>
+        <div class="record">dirty</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Earth cards cost 1 AP less.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if arcane → set-element ice</li>
+          <li>when card-cost, if earth → adjust-cost -1</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1884,19 +2169,70 @@ for every 10 vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-hexstone.png" width="228" height="308"
-           alt="Hexstone">
+      <img src="relic-eerie.png" width="228" height="308"
+           alt="Eerie">
       <div class="about">
-        <p class="name">Hexstone</p>
-        <div class="record">hexstone</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every arcane card is dealt as a earth card.</p>
+        <p class="name">Eerie</p>
+        <div class="record">eerie</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Arcane cards cost 1 AP less.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if arcane → set-element earth</li>
+          <li>when card-cost, if arcane → adjust-cost -1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Hand multipliers
+  <span>5 relics &middot; 3 uncommon, 2 rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-pairing.png" width="228" height="308"
+           alt="Pairing">
+      <div class="about">
+        <p class="name">Pairing</p>
+        <div class="record">pairing</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every pair deals 2x DMG.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → scale-hand-damage &#43;200</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-triplicate-form.png" width="228" height="308"
+           alt="Triplicate Form">
+      <div class="about">
+        <p class="name">Triplicate Form</p>
+        <div class="record">triplicate-form</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every Three of a Kind
+deals 3x DMG.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1927,19 +2263,20 @@ deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-landslide.png" width="228" height="308"
-           alt="Landslide">
+      <img src="relic-oak.png" width="228" height="308"
+           alt="Oak">
       <div class="about">
-        <p class="name">Landslide</p>
-        <div class="record">landslide</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every earth card lands twice, both at full DMG.</p>
+        <p class="name">Oak</p>
+        <div class="record">oak</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Every Four of a Kind
+deals 4x DMG.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when blow-formed, if earth → repeat-card &#43;2</li>
+          <li>when blow-formed → scale-hand-damage &#43;400</li><li>when blow-formed → scale-hand-damage &#43;400</li><li>when blow-formed → scale-hand-damage &#43;400</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1948,19 +2285,50 @@ deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-leyline.png" width="228" height="308"
-           alt="Leyline">
+      <img src="relic-pentacle.png" width="228" height="308"
+           alt="Pentacle">
       <div class="about">
-        <p class="name">Leyline</p>
-        <div class="record">leyline</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every earth card is dealt as an arcane card.</p>
+        <p class="name">Pentacle</p>
+        <div class="record">pentacle</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Every Five of a Kind
+deals 5x DMG.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-drawn, if earth → set-element arcane</li>
+          <li>when blow-formed → scale-hand-damage &#43;500</li><li>when blow-formed → scale-hand-damage &#43;500</li><li>when blow-formed → scale-hand-damage &#43;500</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Forms held
+  <span>4 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-poised.png" width="228" height="308"
+           alt="Poised">
+      <div class="about">
+        <p class="name">Poised</p>
+        <div class="record">poised</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each stab card
+kept in hand.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if stab → add-damage-per-held &#43;5</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -1969,124 +2337,306 @@ deals 3x DMG.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-lithium.png" width="228" height="308"
-           alt="Lithium">
+      <img src="relic-sheathed.png" width="228" height="308"
+           alt="Sheathed">
       <div class="about">
-        <p class="name">Lithium</p>
-        <div class="record">lithium</div>
+        <p class="name">Sheathed</p>
+        <div class="record">sheathed</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each slash card
+kept in hand.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if slash → add-damage-per-held &#43;5</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-coiled.png" width="228" height="308"
+           alt="Coiled">
+      <div class="about">
+        <p class="name">Coiled</p>
+        <div class="record">coiled</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each crush card
+kept in hand.</p>
+        
+          <p class="draw">tightly braided jade metal relic</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if crush → add-damage-per-held &#43;5</li>
+        </ul>
+        
+          <p class="art">art: <code>coiled</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-shouldered.png" width="228" height="308"
+           alt="Shouldered">
+      <div class="about">
+        <p class="name">Shouldered</p>
+        <div class="record">shouldered</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Deals 5 more DMG for each crush card
+kept in hand.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if crush → add-damage-per-held &#43;5</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Form statuses
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-sundering.png" width="228" height="308"
+           alt="The Sundering">
+      <div class="about">
+        <p class="name">The Sundering</p>
+        <div class="record">sundering</div>
         <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.</p>
+        <p class="text">Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
+        
+          <p class="draw">an obsidion scimitar with a purple glowing gem in the hilt angled to the right</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if slash → apply-status weakened</li>
+        </ul>
+        
+          <p class="art">art: <code>sundering</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-bruise.png" width="228" height="308"
+           alt="The Bruise">
+      <div class="about">
+        <p class="name">The Bruise</p>
+        <div class="record">bruise</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</p>
+        
+          <p class="draw">an obsidian mace topped with a green glowing blunt rock</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if crush → apply-status weighted</li>
+        </ul>
+        
+          <p class="art">art: <code>bruise</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-strike.png" width="228" height="308"
+           alt="The Strike">
+      <div class="about">
+        <p class="name">The Strike</p>
+        <div class="record">strike</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.</p>
+        
+          <p class="draw">a spear made of yellow glass with lightning crackling along the shaft</p>
+        
+        
+        <ul class="rules">
+          <li>when attack-lands, if stab → apply-status shocked</li>
+        </ul>
+        
+          <p class="art">art: <code>strike</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Form weapons
+  <span>3 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-sickle.png" width="228" height="308"
+           alt="The Sickle">
+      <div class="about">
+        <p class="name">The Sickle</p>
+        <div class="record">sickle</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every slash card deals double DMG.</p>
+        
+          <p class="draw">a sickle with a leather hilt</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if slash → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>sickle</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-club.png" width="228" height="308"
+           alt="The Club">
+      <div class="about">
+        <p class="name">The Club</p>
+        <div class="record">club</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every crush card deals double DMG.</p>
+        
+          <p class="draw">a heavy club with a leather strap</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if crush → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>club</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-needle.png" width="228" height="308"
+           alt="The Needle">
+      <div class="about">
+        <p class="name">The Needle</p>
+        <div class="record">needle</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every stab card deals double DMG.</p>
+        
+          <p class="draw">fencing foil with a sharp tip and a leather hilt</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if stab → scale-damage &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>needle</code></p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Form repeats
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-repeat-stab.png" width="228" height="308"
+           alt="Flurry">
+      <div class="about">
+        <p class="name">Flurry</p>
+        <div class="record">repeat-stab</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every stab card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of a spear</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if stab → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-repeat-slash.png" width="228" height="308"
+           alt="Rend">
+      <div class="about">
+        <p class="name">Rend</p>
+        <div class="record">repeat-slash</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every slash card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of a sword</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if slash → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-repeat-crush.png" width="228" height="308"
+           alt="Aftershock">
+      <div class="about">
+        <p class="name">Aftershock</p>
+        <div class="record">repeat-crush</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every crush card lands twice, both at full DMG.</p>
+        
+          <p class="draw">a dual ring that&#39;s wrapped into a circle twice in the shape of an axe</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed, if crush → repeat-card &#43;2</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Form growth
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-sharpening.png" width="228" height="308"
+           alt="Sharpening">
+      <div class="about">
+        <p class="name">Sharpening</p>
+        <div class="record">sharpening</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         <p class="art">badge: <code>1.0</code> at Grown 0</p>
         <ul class="rules">
-          <li>when card-damage, if lightning → scale-damage &#43;100</li><li>when attack-lands, if lightning → grow-on-hit &#43;10</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-magma.png" width="228" height="308"
-           alt="Magma">
-      <div class="about">
-        <p class="name">Magma</p>
-        <div class="record">magma</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every earth card is dealt as a fire card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if earth → set-element fire</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-meltdown.png" width="228" height="308"
-           alt="Meltdown">
-      <div class="about">
-        <p class="name">Meltdown</p>
-        <div class="record">meltdown</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every ice card is dealt as a fire card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if ice → set-element fire</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-obsidian.png" width="228" height="308"
-           alt="Obsidian">
-      <div class="about">
-        <p class="name">Obsidian</p>
-        <div class="record">obsidian</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every fire card is dealt as an earth card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if fire → set-element earth</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-pairing.png" width="228" height="308"
-           alt="Pairing">
-      <div class="about">
-        <p class="name">Pairing</p>
-        <div class="record">pairing</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every pair deals 2x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → scale-hand-damage &#43;200</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-permafrost.png" width="228" height="308"
-           alt="Permafrost">
-      <div class="about">
-        <p class="name">Permafrost</p>
-        <div class="record">permafrost</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every earth card is dealt as an ice card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if earth → set-element ice</li>
+          <li>when card-damage, if slash → scale-damage &#43;100</li><li>when attack-lands, if slash → grow-on-hit &#43;10</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -2136,417 +2686,12 @@ deals 3x DMG.</p>
       </div>
     </div>
   
-    <div class="plate">
-      <img src="relic-recursion.png" width="228" height="308"
-           alt="Recursion">
-      <div class="about">
-        <p class="name">Recursion</p>
-        <div class="record">recursion</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every arcane card lands twice, both at full DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if arcane → repeat-card &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-rend.png" width="228" height="308"
-           alt="Rend">
-      <div class="about">
-        <p class="name">Rend</p>
-        <div class="record">rend</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every slash card lands twice, both at full DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if slash → repeat-card &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-runefrost.png" width="228" height="308"
-           alt="Runefrost">
-      <div class="about">
-        <p class="name">Runefrost</p>
-        <div class="record">runefrost</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every ice card is dealt as an arcane card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if ice → set-element arcane</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-sharp-as-ice.png" width="228" height="308"
-           alt="Sharp as Ice">
-      <div class="about">
-        <p class="name">Sharp as Ice</p>
-        <div class="record">sharp-as-ice</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every ice slash card
-deals 3x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if ice and slash → scale-damage &#43;300</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-sharpening.png" width="228" height="308"
-           alt="Sharpening">
-      <div class="about">
-        <p class="name">Sharpening</p>
-        <div class="record">sharpening</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        <p class="art">badge: <code>1.0</code> at Grown 0</p>
-        <ul class="rules">
-          <li>when card-damage, if slash → scale-damage &#43;100</li><li>when attack-lands, if slash → grow-on-hit &#43;10</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-shatter.png" width="228" height="308"
-           alt="Shatter">
-      <div class="about">
-        <p class="name">Shatter</p>
-        <div class="record">shatter</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every ice card lands twice, both at full DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed, if ice → repeat-card &#43;2</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-shocking.png" width="228" height="308"
-           alt="Shocking">
-      <div class="about">
-        <p class="name">Shocking</p>
-        <div class="record">shocking</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.</p>
-        
-          <p class="draw">a gold ring with a yellow gem, electricity crackling up the sides of the ring</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if lightning → apply-status shocked</li>
-        </ul>
-        
-          <p class="art">art: <code>shocking</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-spellbolt.png" width="228" height="308"
-           alt="Spellbolt">
-      <div class="about">
-        <p class="name">Spellbolt</p>
-        <div class="record">spellbolt</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every lightning card is dealt as an arcane card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if lightning → set-element arcane</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-strike.png" width="228" height="308"
-           alt="The Strike">
-      <div class="about">
-        <p class="name">The Strike</p>
-        <div class="record">strike</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.</p>
-        
-          <p class="draw">a spear made of yellow glass with lightning crackling along the shaft</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if stab → apply-status shocked</li>
-        </ul>
-        
-          <p class="art">art: <code>strike</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-struck-by-lightning.png" width="228" height="308"
-           alt="Struck by Lightning">
-      <div class="about">
-        <p class="name">Struck by Lightning</p>
-        <div class="record">struck-by-lightning</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every lightning stab card
-deals 3x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if lightning and stab → scale-damage &#43;300</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-sundering.png" width="228" height="308"
-           alt="The Sundering">
-      <div class="about">
-        <p class="name">The Sundering</p>
-        <div class="record">sundering</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
-        
-          <p class="draw">an obsidion scimitar with a purple glowing gem in the hilt angled to the right</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if slash → apply-status weakened</li>
-        </ul>
-        
-          <p class="art">art: <code>sundering</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-swarm.png" width="228" height="308"
-           alt="Swarm">
-      <div class="about">
-        <p class="name">Swarm</p>
-        <div class="record">swarm</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every 1 AP card deals 3x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage → scale-damage &#43;300</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-thundersnow.png" width="228" height="308"
-           alt="Thundersnow">
-      <div class="about">
-        <p class="name">Thundersnow</p>
-        <div class="record">thundersnow</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every ice card is dealt as a lightning card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if ice → set-element lightning</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-triplicate-form.png" width="228" height="308"
-           alt="Triplicate Form">
-      <div class="about">
-        <p class="name">Triplicate Form</p>
-        <div class="record">triplicate-form</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every Three of a Kind
-deals 3x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li><li>when blow-formed → scale-hand-damage &#43;300</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-unravelled.png" width="228" height="308"
-           alt="Unravelled">
-      <div class="about">
-        <p class="name">Unravelled</p>
-        <div class="record">unravelled</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        <p class="art">badge: <code>1.0</code> at Grown 0</p>
-        <ul class="rules">
-          <li>when card-damage, if arcane → scale-damage &#43;100</li><li>when attack-lands, if arcane → grow-on-hit &#43;10</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-weakening.png" width="228" height="308"
-           alt="Weakening">
-      <div class="about">
-        <p class="name">Weakening</p>
-        <div class="record">weakening</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.</p>
-        
-          <p class="draw">a gold ring with a purple gem, purple flames licking up the sides of the ring</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if arcane → apply-status weakened</li>
-        </ul>
-        
-          <p class="art">art: <code>weakening</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-weight-of-the-earth.png" width="228" height="308"
-           alt="Weight of the Earth">
-      <div class="about">
-        <p class="name">Weight of the Earth</p>
-        <div class="record">weight-of-the-earth</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every earth crush card
-deals 3x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-damage, if earth and crush → scale-damage &#43;300</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-weighted.png" width="228" height="308"
-           alt="Weighted">
-      <div class="about">
-        <p class="name">Weighted</p>
-        <div class="record">weighted</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.</p>
-        
-          <p class="draw">a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if earth → apply-status weighted</li>
-        </ul>
-        
-          <p class="art">art: <code>weighted</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-witchfire.png" width="228" height="308"
-           alt="Witchfire">
-      <div class="about">
-        <p class="name">Witchfire</p>
-        <div class="record">witchfire</div>
-        <p class="price">5 vitae, sells back for 2</p>
-        <p class="text">Every fire card is dealt as an arcane card.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-drawn, if fire → set-element arcane</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
 </div>
 
-<h3 class="tier rare">
-  rare
-  <span>26 relics &middot; 7 vitae, sells for 3 &middot;
-    weight 1 each &middot; 3.2% of a shelf draw</span>
+<h3 class="family">
+  Tier demotions
+  <span>3 relics &middot; all rare</span>
 </h3>
-
 <div class="plates">
   
     <div class="plate">
@@ -2563,155 +2708,6 @@ deals 3x DMG.</p>
         
         <ul class="rules">
           <li>when deck-built → demote-card &#43;1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-blightfire.png" width="228" height="308"
-           alt="Blightfire">
-      <div class="about">
-        <p class="name">Blightfire</p>
-        <div class="record">blightfire</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Arcane attacks WEAKEN and BURN the target.</p>
-        
-          <p class="draw">a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if arcane → apply-status weakened and apply-status burning</li>
-        </ul>
-        
-          <p class="art">art: <code>blightfire</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-brittle.png" width="228" height="308"
-           alt="Brittle">
-      <div class="about">
-        <p class="name">Brittle</p>
-        <div class="record">brittle</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Ice attacks CHILL and WEAKEN the target.</p>
-        
-          <p class="draw">a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band </p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if ice → apply-status chilled and apply-status weakened</li>
-        </ul>
-        
-          <p class="art">art: <code>brittle</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-caldera.png" width="228" height="308"
-           alt="Caldera">
-      <div class="about">
-        <p class="name">Caldera</p>
-        <div class="record">caldera</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Earth attacks WEIGH and BURN the target.</p>
-        
-          <p class="draw">a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if earth → apply-status weighted and apply-status burning</li>
-        </ul>
-        
-          <p class="art">art: <code>caldera</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-cold.png" width="228" height="308"
-           alt="Cold">
-      <div class="about">
-        <p class="name">Cold</p>
-        <div class="record">cold</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Ice cards cost 1 AP less.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-cost, if ice → adjust-cost -1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-dirty.png" width="228" height="308"
-           alt="Dirty">
-      <div class="about">
-        <p class="name">Dirty</p>
-        <div class="record">dirty</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Earth cards cost 1 AP less.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-cost, if earth → adjust-cost -1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-ebb-and-flow.png" width="228" height="308"
-           alt="Ebb &amp; Flow">
-      <div class="about">
-        <p class="name">Ebb &amp; Flow</p>
-        <div class="record">ebb-and-flow</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Every card gains 0.2x DMG
-for each shield card
-you play. Grows while worn.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        <p class="art">badge: <code>1.0</code> at Grown 0</p>
-        <ul class="rules">
-          <li>when card-damage → scale-damage &#43;100</li><li>when turn-taken, if defend → grow-per-card &#43;20</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-eerie.png" width="228" height="308"
-           alt="Eerie">
-      <div class="about">
-        <p class="name">Eerie</p>
-        <div class="record">eerie</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Arcane cards cost 1 AP less.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-cost, if arcane → adjust-cost -1</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -2741,6 +2737,56 @@ you play. Grows while worn.</p>
     </div>
   
     <div class="plate">
+      <img src="relic-whittle.png" width="228" height="308"
+           alt="Whittle">
+      <div class="about">
+        <p class="name">Whittle</p>
+        <div class="record">whittle</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Every 1 AP attack is dealt as its 0 AP version.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when deck-built → demote-card &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Form discounts
+  <span>3 relics &middot; all rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-whetted.png" width="228" height="308"
+           alt="Whetted">
+      <div class="about">
+        <p class="name">Whetted</p>
+        <div class="record">whetted</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Slash cards cost 1 AP less.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when card-cost, if slash → adjust-cost -1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
       <img src="relic-hefted.png" width="228" height="308"
            alt="Hefted">
       <div class="about">
@@ -2757,219 +2803,6 @@ you play. Grows while worn.</p>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-hoarfrost.png" width="228" height="308"
-           alt="Hoarfrost">
-      <div class="about">
-        <p class="name">Hoarfrost</p>
-        <div class="record">hoarfrost</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Ice attacks CHILL and WEIGH the target.</p>
-        
-          <p class="draw">a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  it should have two green gems along the side with some green bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if ice → apply-status chilled and apply-status weighted</li>
-        </ul>
-        
-          <p class="art">art: <code>hoarfrost</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-millstone.png" width="228" height="308"
-           alt="Millstone">
-      <div class="about">
-        <p class="name">Millstone</p>
-        <div class="record">millstone</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Arcane attacks WEAKEN and WEIGH the target.</p>
-        
-          <p class="draw">a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, the green gems should have some green bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if arcane → apply-status weakened and apply-status weighted</li>
-        </ul>
-        
-          <p class="art">art: <code>millstone</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-oak.png" width="228" height="308"
-           alt="Oak">
-      <div class="about">
-        <p class="name">Oak</p>
-        <div class="record">oak</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Every Four of a Kind
-deals 4x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → scale-hand-damage &#43;400</li><li>when blow-formed → scale-hand-damage &#43;400</li><li>when blow-formed → scale-hand-damage &#43;400</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-onslaught.png" width="228" height="308"
-           alt="Onslaught">
-      <div class="about">
-        <p class="name">Onslaught</p>
-        <div class="record">onslaught</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Every card costs 1 AP less. Lose 25% of your HP.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-cost → adjust-cost -1</li><li>when fight-start → scale-hp &#43;75</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-palsy.png" width="228" height="308"
-           alt="Palsy">
-      <div class="about">
-        <p class="name">Palsy</p>
-        <div class="record">palsy</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Lightning attacks SHOCK and WEAKEN the target.</p>
-        
-          <p class="draw">a ring with a yellow gem sparking with electricity and with 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if lightning → apply-status shocked and apply-status weakened</li>
-        </ul>
-        
-          <p class="art">art: <code>palsy</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-pentacle.png" width="228" height="308"
-           alt="Pentacle">
-      <div class="about">
-        <p class="name">Pentacle</p>
-        <div class="record">pentacle</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Every Five of a Kind
-deals 5x DMG.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when blow-formed → scale-hand-damage &#43;500</li><li>when blow-formed → scale-hand-damage &#43;500</li><li>when blow-formed → scale-hand-damage &#43;500</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-rampant.png" width="228" height="308"
-           alt="Rampant">
-      <div class="about">
-        <p class="name">Rampant</p>
-        <div class="record">rampant</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Every blow deals 1 more DMG
-for each vitae you hold.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when fight-start → add-damage-per-vitae &#43;1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-scald.png" width="228" height="308"
-           alt="Scald">
-      <div class="about">
-        <p class="name">Scald</p>
-        <div class="record">scald</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Fire attacks BURN and CHILL the target.</p>
-        
-          <p class="draw">a ring with a red gem surrounded by steam.  it should have two yellow gems along the side with some yellow bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if fire → apply-status burning and apply-status chilled</li>
-        </ul>
-        
-          <p class="art">art: <code>scald</code></p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-static.png" width="228" height="308"
-           alt="Static">
-      <div class="about">
-        <p class="name">Static</p>
-        <div class="record">static</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Lightning cards cost 1 AP less.</p>
-        
-          <p class="draw missing">no subject written yet</p>
-        
-        
-        <ul class="rules">
-          <li>when card-cost, if lightning → adjust-cost -1</li>
-        </ul>
-        
-          <p class="art missing">no art of its own — drawing default-relic.png</p>
-        
-      </div>
-    </div>
-  
-    <div class="plate">
-      <img src="relic-storm.png" width="228" height="308"
-           alt="Storm">
-      <div class="about">
-        <p class="name">Storm</p>
-        <div class="record">storm</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Lightning attacks SHOCK and CHILL the target.</p>
-        
-          <p class="draw">a gold ring with a yellow gem and cold blue lightning burning off it, there should be 2 smaller blue gems beside it with some blue bleeding into the gold band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if lightning → apply-status shocked and apply-status chilled</li>
-        </ul>
-        
-          <p class="art">art: <code>storm</code></p>
         
       </div>
     </div>
@@ -2995,41 +2828,29 @@ for each vitae you hold.</p>
       </div>
     </div>
   
-    <div class="plate">
-      <img src="relic-tremor.png" width="228" height="308"
-           alt="Tremor">
-      <div class="about">
-        <p class="name">Tremor</p>
-        <div class="record">tremor</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Earth attacks WEIGH and SHOCK the target.</p>
-        
-          <p class="draw">a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, the yellow gems should have some yellow bleeding into the copper band</p>
-        
-        
-        <ul class="rules">
-          <li>when attack-lands, if earth → apply-status weighted and apply-status shocked</li>
-        </ul>
-        
-          <p class="art">art: <code>tremor</code></p>
-        
-      </div>
-    </div>
+</div>
+
+<h3 class="family">
+  Element and form
+  <span>3 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
   
     <div class="plate">
-      <img src="relic-warm.png" width="228" height="308"
-           alt="Warm">
+      <img src="relic-weight-of-the-earth.png" width="228" height="308"
+           alt="Weight of the Earth">
       <div class="about">
-        <p class="name">Warm</p>
-        <div class="record">warm</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Fire cards cost 1 AP less.</p>
+        <p class="name">Weight of the Earth</p>
+        <div class="record">weight-of-the-earth</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every earth crush card
+deals 3x DMG.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-cost, if fire → adjust-cost -1</li>
+          <li>when card-damage, if earth and crush → scale-damage &#43;300</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -3038,19 +2859,20 @@ for each vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-whetted.png" width="228" height="308"
-           alt="Whetted">
+      <img src="relic-struck-by-lightning.png" width="228" height="308"
+           alt="Struck by Lightning">
       <div class="about">
-        <p class="name">Whetted</p>
-        <div class="record">whetted</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Slash cards cost 1 AP less.</p>
+        <p class="name">Struck by Lightning</p>
+        <div class="record">struck-by-lightning</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every lightning stab card
+deals 3x DMG.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when card-cost, if slash → adjust-cost -1</li>
+          <li>when card-damage, if lightning and stab → scale-damage &#43;300</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -3059,19 +2881,49 @@ for each vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-whittle.png" width="228" height="308"
-           alt="Whittle">
+      <img src="relic-sharp-as-ice.png" width="228" height="308"
+           alt="Sharp as Ice">
       <div class="about">
-        <p class="name">Whittle</p>
-        <div class="record">whittle</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Every 1 AP attack is dealt as its 0 AP version.</p>
+        <p class="name">Sharp as Ice</p>
+        <div class="record">sharp-as-ice</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every ice slash card
+deals 3x DMG.</p>
         
           <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when deck-built → demote-card &#43;1</li>
+          <li>when card-damage, if ice and slash → scale-damage &#43;300</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Tier damage
+  <span>2 relics &middot; all uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-swarm.png" width="228" height="308"
+           alt="Swarm">
+      <div class="about">
+        <p class="name">Swarm</p>
+        <div class="record">swarm</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every 1 AP card deals 3x DMG.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage → scale-damage &#43;300</li>
         </ul>
         
           <p class="art missing">no art of its own — drawing default-relic.png</p>
@@ -3080,22 +2932,377 @@ for each vitae you hold.</p>
     </div>
   
     <div class="plate">
-      <img src="relic-wildfire.png" width="228" height="308"
-           alt="Wildfire">
+      <img src="relic-crown.png" width="228" height="308"
+           alt="Crown">
       <div class="about">
-        <p class="name">Wildfire</p>
-        <div class="record">wildfire</div>
-        <p class="price">7 vitae, sells back for 3</p>
-        <p class="text">Fire attacks BURN and SHOCK the target.</p>
+        <p class="name">Crown</p>
+        <div class="record">crown</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Every 3 AP card deals 2.5x DMG.</p>
         
-          <p class="draw">a ring with a red gem surrounded by yellow, the flames should be licking up the sides of the ring.  it should have two yellow gems along the side with some yellow bleeding into the copper band</p>
+          <p class="draw missing">no subject written yet</p>
         
         
         <ul class="rules">
-          <li>when attack-lands, if fire → apply-status burning and apply-status shocked</li>
+          <li>when card-damage → scale-damage &#43;250</li>
         </ul>
         
-          <p class="art">art: <code>wildfire</code></p>
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Shield streaks
+  <span>2 relics &middot; 1 common, 1 rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-ebb-and-flow.png" width="228" height="308"
+           alt="Ebb &amp; Flow">
+      <div class="about">
+        <p class="name">Ebb &amp; Flow</p>
+        <div class="record">ebb-and-flow</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Every card gains 0.2x DMG
+for each shield card
+you play. Grows while worn.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        <p class="art">badge: <code>1.0</code> at Grown 0</p>
+        <ul class="rules">
+          <li>when card-damage → scale-damage &#43;100</li><li>when turn-taken, if defend → grow-per-card &#43;20</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-momentum.png" width="228" height="308"
+           alt="Momentum">
+      <div class="about">
+        <p class="name">Momentum</p>
+        <div class="record">momentum</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        <p class="art">badge: <code>1.0</code> at Grown 0</p>
+        <ul class="rules">
+          <li>when card-damage → scale-damage &#43;100</li><li>when turn-taken → grow-on-turn &#43;20</li><li>when turn-taken, if defend → reset-growth</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Lead attack
+  <span>1 relic &middot; uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-echo.png" width="228" height="308"
+           alt="Echo">
+      <div class="about">
+        <p class="name">Echo</p>
+        <div class="record">echo</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Your first attack lands 3 times: full DMG, then 2/3, then 1/3.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → echo-attack &#43;3</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Cost bargains
+  <span>2 relics &middot; 1 uncommon, 1 rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-onslaught.png" width="228" height="308"
+           alt="Onslaught">
+      <div class="about">
+        <p class="name">Onslaught</p>
+        <div class="record">onslaught</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Every card costs 1 AP less. Lose 25% of your HP.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when card-cost → adjust-cost -1</li><li>when fight-start → scale-hp &#43;75</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-braced.png" width="228" height="308"
+           alt="Braced">
+      <div class="about">
+        <p class="name">Braced</p>
+        <div class="record">braced</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Defend cards cost 1 AP less. &#43;15 HP for every fight.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when card-cost, if defend → adjust-cost -1</li><li>when fight-start → add-hp &#43;15</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Standing stats
+  <span>3 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-might.png" width="228" height="308"
+           alt="Might">
+      <div class="about">
+        <p class="name">Might</p>
+        <div class="record">might</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">&#43;10 DMG for every fight.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when fight-start → add-dmg &#43;10</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-bulwark.png" width="228" height="308"
+           alt="Bulwark">
+      <div class="about">
+        <p class="name">Bulwark</p>
+        <div class="record">bulwark</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">&#43;25 HP for every fight.</p>
+        
+          <p class="draw">a wide gold armband clasped around a thick bare bicep, a round gold boss in the centre holding a gem with a stud either side</p>
+        
+        
+        <ul class="rules">
+          <li>when fight-start → add-hp &#43;25</li>
+        </ul>
+        
+          <p class="art">art: <code>bulwark</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-heart.png" width="228" height="308"
+           alt="Heart">
+      <div class="about">
+        <p class="name">Heart</p>
+        <div class="record">heart</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">&#43;5 HP, and 5 more for every fight won.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        <p class="art">badge: <code>&#43;5</code> at Grown 0</p>
+        <ul class="rules">
+          <li>when fight-start → add-hp &#43;5</li><li>when fight-won → grow-on-win &#43;5</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Vitae power
+  <span>2 relics &middot; 1 uncommon, 1 rare</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-rampant.png" width="228" height="308"
+           alt="Rampant">
+      <div class="about">
+        <p class="name">Rampant</p>
+        <div class="record">rampant</div>
+        <p class="price">7 vitae, sells back for 3</p>
+        <p class="text">Every blow deals 1 more DMG
+for each vitae you hold.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when fight-start → add-damage-per-vitae &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-fire-of-life.png" width="228" height="308"
+           alt="Fire of Life">
+      <div class="about">
+        <p class="name">Fire of Life</p>
+        <div class="record">fire-of-life</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">Fire cards gain 0.1x DMG
+for every 10 vitae you hold.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when card-damage, if fire → scale-damage-per-vitae &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Mixed hands
+  <span>1 relic &middot; uncommon</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-dual-wield.png" width="228" height="308"
+           alt="Dual Wield">
+      <div class="about">
+        <p class="name">Dual Wield</p>
+        <div class="record">dual-wield</div>
+        <p class="price">5 vitae, sells back for 2</p>
+        <p class="text">A pair built from two
+different forms deals 3x DMG.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when blow-formed → scale-hand-damage &#43;300</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+</div>
+
+<h3 class="family">
+  Spoils
+  <span>3 relics &middot; all common</span>
+</h3>
+<div class="plates">
+  
+    <div class="plate">
+      <img src="relic-banker.png" width="228" height="308"
+           alt="Banker">
+      <div class="about">
+        <p class="name">Banker</p>
+        <div class="record">banker</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Vitae propagates twice as fast.</p>
+        
+          <p class="draw">a wide gold band woven from braided ropes of gold with rows of small red gems set between the braids</p>
+        
+        
+        <ul class="rules">
+          <li>when fight-won → scale-propagation &#43;200</li>
+        </ul>
+        
+          <p class="art">art: <code>banker</code></p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-soul-taker.png" width="228" height="308"
+           alt="Soul Taker">
+      <div class="about">
+        <p class="name">Soul Taker</p>
+        <div class="record">soul-taker</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">A won room pays 5 more vitae.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when prizes-dealt → adjust-prize-vitae &#43;5</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
+        
+      </div>
+    </div>
+  
+    <div class="plate">
+      <img src="relic-hungry.png" width="228" height="308"
+           alt="Hungry">
+      <div class="about">
+        <p class="name">Hungry</p>
+        <div class="record">hungry</div>
+        <p class="price">3 vitae, sells back for 1</p>
+        <p class="text">Two prizes after a fight instead of one.</p>
+        
+          <p class="draw missing">no subject written yet</p>
+        
+        
+        <ul class="rules">
+          <li>when prizes-dealt → adjust-picks &#43;1</li>
+        </ul>
+        
+          <p class="art missing">no art of its own — drawing default-relic.png</p>
         
       </div>
     </div>

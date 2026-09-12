@@ -46,6 +46,28 @@ type RelicData struct {
 	// name is read in the tooltip and in the shop rather than looked at on the face.
 	Name string `json:"Name"`
 
+	// Family is the motif this relic belongs to — the block of siblings it was authored beside,
+	// and the heading it is reviewed under on the relic sheet.
+	//
+	// **The engine ignores it, exactly as it ignores Art and Draw.** It groups the review page and
+	// nothing else reads it; a relic with no Family still loads, still sells and still fires.
+	//
+	// **It is a restatement of the rules in words, and it is authored on purpose** *(owner's call,
+	// 2026-09-12)*. Nearly every value here is already implied by the record's own
+	// (When, Do, predicate) — the flips are all card-drawn/set-element, the weapons all
+	// card-damage/scale-damage on a Concept — so this is not a fact the file knows and the rules do
+	// not. **What it buys is legibility for whoever is authoring the catalogue**: a signature is
+	// something to decode and "Jade rings" is something to read, and the three ring families differ
+	// by the gem in the picture as much as by the axis in the rule.
+	//
+	// So the usual objection to an authored tag does not apply the way it does to CostTier, which
+	// the rules also consulted: nothing resolves a round differently because of this string. What
+	// it can still do is go quietly out of date — a relic retuned into a different family keeps the
+	// label it was born with and no test fails. **Re-read the block when you change a relic's
+	// rules**, and treat a Family that disagrees with the rules as a note to fix rather than as a
+	// second opinion about what the relic is.
+	Family string `json:"Family"`
+
 	// Art is the assets.LoadImageData key for the picture on the face. **Empty means the
 	// default relic face** — see ArtKey; an unknown name draws a relic with no artwork and logs
 	// once, the same choice the enemy portraits make, and for the same reason: a card with a
@@ -209,6 +231,27 @@ func LoadRelics() map[string]RelicData {
 //
 // By key rather than by name or element: it is the one field guaranteed unique, and a sort
 // on something that can tie is a sort that can still shuffle.
+// RelicFileOrder is every record id in the order data/relics.json writes them.
+//
+// **This is the motif order the file is authored in** — the flips together, the three ring
+// families in ladder order, the weapons along the concept ladder — which is information
+// RelicOrder's sorted keys throw away. The relic sheet groups by Family and walks this, so the
+// page reads as the file does.
+//
+// It is a second walk of the JSON rather than an ordering stored on the map, because a map has no
+// order to store one on and every other caller wants the sorted keys.
+func RelicFileOrder() []string {
+	var list []RelicData
+	if err := json.Unmarshal(relicsJSON, &list); err != nil {
+		panic("Failed to unmarshal our RelicData: " + err.Error())
+	}
+	out := make([]string, 0, len(list))
+	for _, r := range list {
+		out = append(out, r.RelicRecord)
+	}
+	return out
+}
+
 func RelicOrder(relics map[string]RelicData) []string {
 	keys := make([]string, 0, len(relics))
 	for k := range relics {

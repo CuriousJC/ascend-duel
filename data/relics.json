@@ -2,8 +2,9 @@
   {
     "RelicRecord": "frozen-lightning",
     "Name": "Frozen Lightning",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "frozen-lightning",
+    "Draw": "ball lightning locked in a frozen ice shard",
     "Text": "Every lightning card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -17,8 +18,9 @@
   {
     "RelicRecord": "permafrost",
     "Name": "Permafrost",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "permafrost",
+    "Draw": "a rock surrounded by variegated blue and purple ice",
     "Text": "Every earth card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -32,8 +34,9 @@
   {
     "RelicRecord": "frostbite",
     "Name": "Frostbite",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "frostbite",
+    "Draw": "ice shaped into flickering fire",
     "Text": "Every fire card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -47,8 +50,9 @@
   {
     "RelicRecord": "meltdown",
     "Name": "Meltdown",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "meltdown",
+    "Draw": "shard of ice burning with fire",
     "Text": "Every ice card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -62,8 +66,9 @@
   {
     "RelicRecord": "firestorm",
     "Name": "Firestorm",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "firestorm",
+    "Draw": "ball lightning surrounded by flames",
     "Text": "Every lightning card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -77,8 +82,9 @@
   {
     "RelicRecord": "magma",
     "Name": "Magma",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "magma",
+    "Draw": "a glowing mass of molten rock",
     "Text": "Every earth card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -92,8 +98,9 @@
   {
     "RelicRecord": "thundersnow",
     "Name": "Thundersnow",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "thundersnow",
+    "Draw": "a snowflake crackling with electricity",
     "Text": "Every ice card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -107,8 +114,9 @@
   {
     "RelicRecord": "heat-lightning",
     "Name": "Heat Lightning",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "heat-lightning",
+    "Draw": "ball of fire wrapped in yellow lightning",
     "Text": "Every fire card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -122,8 +130,9 @@
   {
     "RelicRecord": "dust-storm",
     "Name": "Dust Storm",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "dust-storm",
+    "Draw": "a rock surrounded with variegated yellow and purple lightning",
     "Text": "Every earth card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -137,8 +146,9 @@
   {
     "RelicRecord": "glacier",
     "Name": "Glacier",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "glacier",
+    "Draw": "a shard of ice dipped in muddy earth",
     "Text": "Every ice card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -152,8 +162,9 @@
   {
     "RelicRecord": "obsidian",
     "Name": "Obsidian",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "obsidian",
+    "Draw": "a jagged piece of obsidian rock",
     "Text": "Every fire card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -167,8 +178,9 @@
   {
     "RelicRecord": "fulgurite",
     "Name": "Fulgurite",
-    "Art": "",
-    "Draw": "",
+    "Family": "Elemental flips",
+    "Art": "fulgurite",
+    "Draw": "a glowing piece of rock in the shape of a lightning bolt",
     "Text": "Every lightning card is dealt as an earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -180,10 +192,11 @@
     ]
   },
   {
-    "RelicRecord": "witchfire",
-    "Name": "Witchfire",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "burning-mana",
+    "Name": "Burning Mana",
+    "Family": "Elemental flips",
+    "Art": "burning-mana",
+    "Draw": "a swirling mass of purple flames",
     "Text": "Every fire card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -195,10 +208,11 @@
     ]
   },
   {
-    "RelicRecord": "runefrost",
-    "Name": "Runefrost",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "frozen-mana",
+    "Name": "Frozen Mana",
+    "Family": "Elemental flips",
+    "Art": "frozen-mana",
+    "Draw": "jagged piece of ice with purple energy surrounding it",
     "Text": "Every ice card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -210,10 +224,11 @@
     ]
   },
   {
-    "RelicRecord": "spellbolt",
-    "Name": "Spellbolt",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "electrified-mana",
+    "Name": "Electrified Mana",
+    "Family": "Elemental flips",
+    "Art": "electrified-mana",
+    "Draw": "ball lightning that is encapsulated in a purple arcane sphere",
     "Text": "Every lightning card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -225,10 +240,11 @@
     ]
   },
   {
-    "RelicRecord": "leyline",
-    "Name": "Leyline",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "enchanted-earth",
+    "Name": "Enchanted Earth",
+    "Family": "Elemental flips",
+    "Art": "enchanted-earth",
+    "Draw": "a rock with a purple glowing vein inside of it",
     "Text": "Every earth card is dealt as an arcane card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -240,10 +256,11 @@
     ]
   },
   {
-    "RelicRecord": "hexfire",
-    "Name": "Hexfire",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "burning-orb",
+    "Name": "Burning Orb",
+    "Family": "Elemental flips",
+    "Art": "burning-orb",
+    "Draw": "a purple sphere that is burning with a red flame",
     "Text": "Every arcane card is dealt as a fire card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -255,10 +272,11 @@
     ]
   },
   {
-    "RelicRecord": "hexfrost",
-    "Name": "Hexfrost",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "frozen-orb",
+    "Name": "Frozen Orb",
+    "Family": "Elemental flips",
+    "Art": "frozen-orb",
+    "Draw": "a shard of ice with purple energy surrounding it",
     "Text": "Every arcane card is dealt as an ice card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -270,10 +288,11 @@
     ]
   },
   {
-    "RelicRecord": "hexbolt",
-    "Name": "Hexbolt",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "charged-orb",
+    "Name": "Charged Orb",
+    "Family": "Elemental flips",
+    "Art": "charged-orb",
+    "Draw": "a purple sphere with yellow lightning crackling around it",
     "Text": "Every arcane card is dealt as a lightning card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -285,10 +304,11 @@
     ]
   },
   {
-    "RelicRecord": "hexstone",
-    "Name": "Hexstone",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "stone-orb",
+    "Name": "Stone Orb",
+    "Family": "Elemental flips",
+    "Art": "stone-orb",
+    "Draw": "a purple sphere dipped into muddy earth",
     "Text": "Every arcane card is dealt as a earth card.",
     "Rarity": "uncommon",
     "Rules": [
@@ -300,10 +320,11 @@
     ]
   },
   {
-    "RelicRecord": "high-card-hand",
-    "Name": "Lone",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "singular-ring",
+    "Name": "Singular Ring",
+    "Family": "Jade rings",
+    "Art": "singular-ring",
+    "Draw": "jade ring with a single diamond",
     "Text": "A High Card deals 2 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -315,10 +336,11 @@
     ]
   },
   {
-    "RelicRecord": "pair-hand",
-    "Name": "Twinned",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "twinned-ring",
+    "Name": "Twinned Ring",
+    "Family": "Jade rings",
+    "Art": "twinned-ring",
+    "Draw": "jade ring with two diamonds",
     "Text": "A Pair deals 2 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -330,10 +352,11 @@
     ]
   },
   {
-    "RelicRecord": "concept-two-pair-hand",
-    "Name": "Doubled",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "concept-doubled-ring",
+    "Name": "Doubled Ring",
+    "Family": "Jade rings",
+    "Art": "concept-doubled-ring",
+    "Draw": "jade ring with two diamonds and two black gems",
     "Text": "A Card Two Pair deals 4 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -345,10 +368,11 @@
     ]
   },
   {
-    "RelicRecord": "concept-three-of-a-kind-hand",
-    "Name": "Trined",
-    "Art": "",
-    "Draw": "",
+    "RelicRecord": "concept-tripled-ring",
+    "Name": "Tripled Ring",
+    "Family": "Jade rings",
+    "Art": "concept-tripled-ring",
+    "Draw": "jade ring with three diamonds",
     "Text": "A Card Three of a Kind deals 5 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -361,9 +385,10 @@
   },
   {
     "RelicRecord": "concept-full-house-hand",
-    "Name": "Laden",
-    "Art": "",
-    "Draw": "",
+    "Name": "Filled Ring",
+    "Family": "Jade rings",
+    "Art": "concept-full-house-hand",
+    "Draw": "jade ring with three diamonds and two black gems",
     "Text": "A Card Full House deals 8 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -376,9 +401,10 @@
   },
   {
     "RelicRecord": "concept-four-of-a-kind-hand",
-    "Name": "Quartered",
-    "Art": "",
-    "Draw": "",
+    "Name": "Fourth Ring",
+    "Family": "Jade rings",
+    "Art": "concept-four-of-a-kind-hand",
+    "Draw": "jade ring with four diamonds",
     "Text": "A Card Four of a Kind deals 10 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -391,9 +417,10 @@
   },
   {
     "RelicRecord": "concept-five-of-a-kind-hand",
-    "Name": "Perfect",
-    "Art": "",
-    "Draw": "",
+    "Name": "Perfect Ring",
+    "Family": "Jade rings",
+    "Art": "concept-five-of-a-kind-hand",
+    "Draw": "jade ring with five diamonds",
     "Text": "A Card Five of a Kind deals 16 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -406,9 +433,10 @@
   },
   {
     "RelicRecord": "form-two-pair-hand",
-    "Name": "Paired",
-    "Art": "",
-    "Draw": "",
+    "Name": "Paired Ring",
+    "Family": "Indigo rings",
+    "Art": "form-two-pair-hand",
+    "Draw": "indigo ring with two golden gems and two silver gems",
     "Text": "A Form Two Pair deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -421,9 +449,10 @@
   },
   {
     "RelicRecord": "form-three-of-a-kind-hand",
-    "Name": "Forged",
-    "Art": "",
-    "Draw": "",
+    "Name": "Trine Ring",
+    "Family": "Indigo rings",
+    "Art": "form-three-of-a-kind-hand",
+    "Draw": "indigo ring with three golden gems",
     "Text": "A Form Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -436,9 +465,10 @@
   },
   {
     "RelicRecord": "form-full-house-hand",
-    "Name": "Armoury",
+    "Name": "Full Ring",
+    "Family": "Indigo rings",
     "Art": "form-full-house-hand",
-    "Draw": "a plain heavy steel ring standing in front of an armoury wall, swords and spears and an axe and a shield racked behind it under hanging banners",
+    "Draw": "indigo ring with three golden gems and two silver gems",
     "Text": "A Form Full House deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -451,9 +481,10 @@
   },
   {
     "RelicRecord": "form-four-of-a-kind-hand",
-    "Name": "Arsenal",
+    "Name": "Quad Ring",
+    "Family": "Indigo rings",
     "Art": "form-four-of-a-kind-hand",
-    "Draw": "a plain heavy steel ring standing in front of a heaped pile of weapons, swords and spears and axes and shields and helmets stacked behind it",
+    "Draw": "indigo ring with four golden gems",
     "Text": "A Form Four of a Kind deals 6 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -466,9 +497,10 @@
   },
   {
     "RelicRecord": "form-five-of-a-kind-hand",
-    "Name": "Panoply",
-    "Art": "",
-    "Draw": "",
+    "Name": "Pent Ring",
+    "Family": "Indigo rings",
+    "Art": "form-five-of-a-kind-hand",
+    "Draw": "indigo ring with five golden gems",
     "Text": "A Form Five of a Kind deals 12 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
@@ -481,10 +513,11 @@
   },
   {
     "RelicRecord": "element-two-pair-hand",
-    "Name": "Twinflame",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Two Pair deals 3 more DMG before the multiplier.",
+    "Name": "Duet Ring",
+    "Family": "Sandstone rings",
+    "Art": "element-two-pair-hand",
+    "Draw": "sandstone ring with two turquoise gems and two rubies",
+    "Text": "An Elemental Two Pair deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
       {
@@ -496,10 +529,11 @@
   },
   {
     "RelicRecord": "element-three-of-a-kind-hand",
-    "Name": "Attuned",
+    "Name": "Trio Ring",
+    "Family": "Sandstone rings",
     "Art": "element-three-of-a-kind-hand",
-    "Draw": "a gold ring set with three gems side by side, a red one and a blue one in the middle and a green one, with scrollwork on the shoulders",
-    "Text": "A Elemental Three of a Kind deals 3 more DMG before the multiplier.",
+    "Draw": "sandstone ring with three turquoise gems",
+    "Text": "An Elemental Three of a Kind deals 3 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
       {
@@ -511,10 +545,11 @@
   },
   {
     "RelicRecord": "element-full-house-hand",
-    "Name": "Convergent",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Full House deals 7 more DMG before the multiplier.",
+    "Name": "Laden Ring",
+    "Family": "Sandstone rings",
+    "Art": "element-full-house-hand",
+    "Draw": "sandstone ring with three turquoise gems and two rubies",
+    "Text": "An Elemental Full House deals 7 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
       {
@@ -526,10 +561,11 @@
   },
   {
     "RelicRecord": "element-four-of-a-kind-hand",
-    "Name": "Confluent",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Four of a Kind deals 7 more DMG before the multiplier.",
+    "Name": "Quartet Ring",
+    "Family": "Sandstone rings",
+    "Art": "element-four-of-a-kind-hand",
+    "Draw": "sandstone ring with four turquoise gems",
+    "Text": "An Elemental Four of a Kind deals 7 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
       {
@@ -541,10 +577,11 @@
   },
   {
     "RelicRecord": "element-five-of-a-kind-hand",
-    "Name": "Elemental",
-    "Art": "",
-    "Draw": "",
-    "Text": "A Elemental Five of a Kind deals 14 more DMG before the multiplier.",
+    "Name": "Quintet Ring",
+    "Family": "Sandstone rings",
+    "Art": "element-five-of-a-kind-hand",
+    "Draw": "sandstone ring with five turquoise gems",
+    "Text": "An Elemental Five of a Kind deals 14 more DMG before the multiplier.",
     "Rarity": "common",
     "Rules": [
       {
@@ -557,6 +594,7 @@
   {
     "RelicRecord": "burning",
     "Name": "Burning",
+    "Family": "Elemental statuses",
     "Art": "burning",
     "Draw": "a gold ring with a red gem, the flames should be licking up the sides of the ring",
     "Text": "Fire attacks apply BURNING status to target. BURNING enemies receive 50% DMG each turn.",
@@ -572,6 +610,7 @@
   {
     "RelicRecord": "chilling",
     "Name": "Chilling",
+    "Family": "Elemental statuses",
     "Art": "chilling",
     "Draw": "a gold ring with a blue gem, icicles hanging off the shoulders and frost dripping down the sides of the band",
     "Text": "Ice attacks apply CHILLED status to target. CHILLED enemies lose 1 attack each turn.",
@@ -587,6 +626,7 @@
   {
     "RelicRecord": "shocking",
     "Name": "Shocking",
+    "Family": "Elemental statuses",
     "Art": "shocking",
     "Draw": "a gold ring with a yellow gem, electricity crackling up the sides of the ring",
     "Text": "Lightning attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
@@ -602,6 +642,7 @@
   {
     "RelicRecord": "weighted",
     "Name": "Weighted",
+    "Family": "Elemental statuses",
     "Art": "weighted",
     "Draw": "a gold ring with a green gem, chunks of rock stuck along the shoulders of the band and a few loose pebbles around it",
     "Text": "Earth attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
@@ -617,6 +658,7 @@
   {
     "RelicRecord": "weakening",
     "Name": "Weakening",
+    "Family": "Elemental statuses",
     "Art": "weakening",
     "Draw": "a gold ring with a purple gem, purple flames licking up the sides of the ring",
     "Text": "Arcane attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
@@ -632,6 +674,7 @@
   {
     "RelicRecord": "storm",
     "Name": "Storm",
+    "Family": "Paired statuses",
     "Art": "storm",
     "Draw": "a gold ring with a yellow gem and cold blue lightning burning off it, there should be 2 smaller blue gems beside it with some blue bleeding into the gold band",
     "Text": "Lightning attacks SHOCK and CHILL the target.",
@@ -650,6 +693,7 @@
   {
     "RelicRecord": "scald",
     "Name": "Scald",
+    "Family": "Paired statuses",
     "Art": "scald",
     "Draw": "a ring with a red gem surrounded by steam.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and CHILL the target.",
@@ -668,6 +712,7 @@
   {
     "RelicRecord": "wildfire",
     "Name": "Wildfire",
+    "Family": "Paired statuses",
     "Art": "wildfire",
     "Draw": "a ring with a red gem surrounded by yellow, the flames should be licking up the sides of the ring.  it should have two yellow gems along the side with some yellow bleeding into the copper band",
     "Text": "Fire attacks BURN and SHOCK the target.",
@@ -686,6 +731,7 @@
   {
     "RelicRecord": "hoarfrost",
     "Name": "Hoarfrost",
+    "Family": "Paired statuses",
     "Art": "hoarfrost",
     "Draw": "a ring with a blue gem surrounded by frosty ice shards, the frost should be dripping down the sides of the ring.  it should have two green gems along the side with some green bleeding into the copper band",
     "Text": "Ice attacks CHILL and WEIGH the target.",
@@ -704,6 +750,7 @@
   {
     "RelicRecord": "brittle",
     "Name": "Brittle",
+    "Family": "Paired statuses",
     "Art": "brittle",
     "Draw": "a ring with a blue gem that has a crack running through it, the crack should be glowing with a faint blue light.  there should be 2 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band ",
     "Text": "Ice attacks CHILL and WEAKEN the target.",
@@ -722,6 +769,7 @@
   {
     "RelicRecord": "palsy",
     "Name": "Palsy",
+    "Family": "Paired statuses",
     "Art": "palsy",
     "Draw": "a ring with a yellow gem sparking with electricity and with 2 smaller purple gems beside it, the purple gems should have some purple bleeding into the copper band",
     "Text": "Lightning attacks SHOCK and WEAKEN the target.",
@@ -740,6 +788,7 @@
   {
     "RelicRecord": "caldera",
     "Name": "Caldera",
+    "Family": "Paired statuses",
     "Art": "caldera",
     "Draw": "a ring with a green gem surrounded by molten rock, the rock should be glowing with a faint green light.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
     "Text": "Earth attacks WEIGH and BURN the target.",
@@ -758,6 +807,7 @@
   {
     "RelicRecord": "tremor",
     "Name": "Tremor",
+    "Family": "Paired statuses",
     "Art": "tremor",
     "Draw": "a ring with a green gem surrounded by lightning, the lightning should be sparking up the sides of the ring.  there should be 2 smaller yellow gems beside it, the yellow gems should have some yellow bleeding into the copper band",
     "Text": "Earth attacks WEIGH and SHOCK the target.",
@@ -776,6 +826,7 @@
   {
     "RelicRecord": "blightfire",
     "Name": "Blightfire",
+    "Family": "Paired statuses",
     "Art": "blightfire",
     "Draw": "a ring with a purple gem surrounded by flames, the flames should be licking up the sides of the ring.  there should be 2 smaller red gems beside it, the red gems should have some red bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and BURN the target.",
@@ -794,6 +845,7 @@
   {
     "RelicRecord": "millstone",
     "Name": "Millstone",
+    "Family": "Paired statuses",
     "Art": "millstone",
     "Draw": "a ring with a purple gem surrounded by rock, the rock should be glowing with a faint purple light.  there should be 2 smaller green gems beside it, the green gems should have some green bleeding into the copper band",
     "Text": "Arcane attacks WEAKEN and WEIGH the target.",
@@ -812,6 +864,7 @@
   {
     "RelicRecord": "stick",
     "Name": "The Stick",
+    "Family": "Weapons",
     "Art": "stick",
     "Draw": "a sharpened stick",
     "Text": "Every Poke deals 4x DMG.",
@@ -827,6 +880,7 @@
   {
     "RelicRecord": "old-dagger",
     "Name": "The Old Dagger",
+    "Family": "Weapons",
     "Art": "old-dagger",
     "Draw": "a rusty dagger",
     "Text": "Every Jab deals 4x DMG.",
@@ -842,6 +896,7 @@
   {
     "RelicRecord": "epee",
     "Name": "The Epee",
+    "Family": "Weapons",
     "Art": "epee",
     "Draw": "an epee with an oversized guard to differentiate from a foil",
     "Text": "Every Thrust deals 4x DMG.",
@@ -857,6 +912,7 @@
   {
     "RelicRecord": "skewer-spear",
     "Name": "The Skewer",
+    "Family": "Weapons",
     "Art": "skewer-spear",
     "Draw": "a wood spear with a copper tip that is longer like a sword tip",
     "Text": "Every Skewer deals 4x DMG.",
@@ -872,6 +928,7 @@
   {
     "RelicRecord": "lance",
     "Name": "The Lance",
+    "Family": "Weapons",
     "Art": "lance",
     "Draw": "A long obsidian lance with a silver hilt",
     "Text": "Every Impale deals 4x DMG.",
@@ -887,6 +944,7 @@
   {
     "RelicRecord": "bread-knife",
     "Name": "The Bread Knife",
+    "Family": "Weapons",
     "Art": "bread-knife",
     "Draw": "a bread knife",
     "Text": "Every Nick deals 4x DMG.",
@@ -902,6 +960,7 @@
   {
     "RelicRecord": "hunting-knife",
     "Name": "The Hunting Knife",
+    "Family": "Weapons",
     "Art": "hunting-knife",
     "Draw": "an extra large hunting knife",
     "Text": "Every Cut deals 4x DMG.",
@@ -917,6 +976,7 @@
   {
     "RelicRecord": "katana-blade",
     "Name": "The Blade",
+    "Family": "Weapons",
     "Art": "katana-blade",
     "Draw": "a silver edge katana with wavy damascus steel pattern",
     "Text": "Every Slice card\ndeals 4x DMG.",
@@ -932,6 +992,7 @@
   {
     "RelicRecord": "cleaver",
     "Name": "The Cleaver",
+    "Family": "Weapons",
     "Art": "cleaver",
     "Draw": "large cleaver with a silver blade and a copper handle",
     "Text": "Every Cleave deals 4x DMG.",
@@ -947,6 +1008,7 @@
   {
     "RelicRecord": "headsman",
     "Name": "The Headsman",
+    "Family": "Weapons",
     "Art": "headsman",
     "Draw": "Black steel executioner axe with a silver handle",
     "Text": "Every Sever deals 4x DMG.",
@@ -962,6 +1024,7 @@
   {
     "RelicRecord": "spoon",
     "Name": "Mom's Spoon",
+    "Family": "Weapons",
     "Art": "spoon",
     "Draw": "a wooden spoon",
     "Text": "Every Tap deals 4x DMG.",
@@ -977,6 +1040,7 @@
   {
     "RelicRecord": "brass-knuckles",
     "Name": "The Knuckles",
+    "Family": "Weapons",
     "Art": "brass-knuckles",
     "Draw": "a set of solid brass knuckles with four finger holes, scrollwork and a small star engraved along the front bar",
     "Text": "Every Thump deals 4x DMG.",
@@ -992,6 +1056,7 @@
   {
     "RelicRecord": "basher",
     "Name": "The Basher",
+    "Family": "Weapons",
     "Art": "basher",
     "Draw": "a mechanics hammer with a copper handle and a silver head",
     "Text": "Every Bash deals 4x DMG.",
@@ -1007,6 +1072,7 @@
   {
     "RelicRecord": "warhammer",
     "Name": "The Warhammer",
+    "Family": "Weapons",
     "Art": "warhammer",
     "Draw": "A silver warhammer with a black steel handle",
     "Text": "Every Smash deals 4x DMG.",
@@ -1022,7 +1088,8 @@
   {
     "RelicRecord": "stone-maul",
     "Name": "The Maul",
-    "Art": "",
+    "Family": "Weapons",
+    "Art": "stone-maul",
     "Draw": "a large stone maul with a wooden handle",
     "Text": "Every Pulverize deals 4x DMG.",
     "Rarity": "common",
@@ -1035,10 +1102,11 @@
     ]
   },
   {
-    "RelicRecord": "smoulder",
-    "Name": "Smoulder",
+    "RelicRecord": "jar-fire",
+    "Name": "Smouldering Jar",
+    "Family": "Elements held",
     "Art": "",
-    "Draw": "",
+    "Draw": "a jar with burning coals inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each fire card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1050,10 +1118,11 @@
     ]
   },
   {
-    "RelicRecord": "frostbank",
-    "Name": "Frostbank",
+    "RelicRecord": "jar-ice",
+    "Name": "Jar of Ice",
+    "Family": "Elements held",
     "Art": "",
-    "Draw": "",
+    "Draw": "a jar with large shards of ice inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each ice card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1065,10 +1134,11 @@
     ]
   },
   {
-    "RelicRecord": "potential",
-    "Name": "Potential",
+    "RelicRecord": "jar-lightning",
+    "Name": "Jar of Sparks",
+    "Family": "Elements held",
     "Art": "",
-    "Draw": "",
+    "Draw": "a jar with a small lightning bolts inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each lightning card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1080,10 +1150,11 @@
     ]
   },
   {
-    "RelicRecord": "bedrock",
-    "Name": "Bedrock",
-    "Art": "bedrock",
-    "Draw": "a gold ring holding a rough grey unfaceted rock in gold claws, with scrollwork along the shoulders of the band",
+    "RelicRecord": "jar-earth",
+    "Name": "Jar of Earth",
+    "Family": "Elements held",
+    "Art": "",
+    "Draw": "a jar with a small rocks inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1095,10 +1166,11 @@
     ]
   },
   {
-    "RelicRecord": "wellspring",
-    "Name": "Wellspring",
+    "RelicRecord": "jar-arcane",
+    "Name": "Jar of Magic",
+    "Family": "Elements held",
     "Art": "",
-    "Draw": "",
+    "Draw": "a jar with a small glowing orbs inside, the jar is made of clear glass with a copper lid",
     "Text": "Deals 5 more DMG for each arcane card\nkept in hand.",
     "Rarity": "common",
     "Rules": [
@@ -1110,23 +1182,9 @@
     ]
   },
   {
-    "RelicRecord": "ballast",
-    "Name": "Ballast",
-    "Art": "",
-    "Draw": "",
-    "Text": "Deals 5 more DMG for each earth card\nkept in hand.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "blow-formed",
-        "If": { "Element": "earth" },
-        "Then": [{ "Do": "add-damage-per-held", "Amount": 5 }]
-      }
-    ]
-  },
-  {
     "RelicRecord": "fire",
     "Name": "Fire",
+    "Family": "Elemental damage",
     "Art": "fire",
     "Draw": "a ring made entirely of fire, no band and no gem, a circle of red and orange flame with the flames licking up off the top",
     "Text": "Fire cards deal 2x DMG.",
@@ -1142,6 +1200,7 @@
   {
     "RelicRecord": "ice",
     "Name": "Ice",
+    "Family": "Elemental damage",
     "Art": "ice",
     "Draw": "a ring made entirely of ice, no band and no gem, a circle of pale blue ice with a cluster of crystals at the top and icicles hanging off the bottom",
     "Text": "Ice cards deal 2x DMG.",
@@ -1157,6 +1216,7 @@
   {
     "RelicRecord": "lightning",
     "Name": "Lightning",
+    "Family": "Elemental damage",
     "Art": "lightning",
     "Draw": "a ring made entirely of lightning, no band and no gem, a circle of yellow electricity arcing up off the top",
     "Text": "Lightning cards deal 2x DMG.",
@@ -1172,6 +1232,7 @@
   {
     "RelicRecord": "earth",
     "Name": "Earth",
+    "Family": "Elemental damage",
     "Art": "earth",
     "Draw": "a ring made entirely of rock, no band and no gem, a circle of brown stone slabs with loose pebbles breaking off it",
     "Text": "Earth cards deal 2x DMG.",
@@ -1187,6 +1248,7 @@
   {
     "RelicRecord": "arcane",
     "Name": "Arcane",
+    "Family": "Elemental damage",
     "Art": "arcane",
     "Draw": "a ring made entirely of arcane fire, no band and no gem, a circle of purple flame licking up off the top",
     "Text": "Arcane cards deal 2x DMG.",
@@ -1200,10 +1262,11 @@
     ]
   },
   {
-    "RelicRecord": "backdraft",
+    "RelicRecord": "repeat-fire",
     "Name": "Backdraft",
+    "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice formed of burning copper",
     "Text": "Every fire card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1215,10 +1278,11 @@
     ]
   },
   {
-    "RelicRecord": "shatter",
-    "Name": "Shatter",
+    "RelicRecord": "repeat-ice",
+    "Name": "Shatter Ring",
+    "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice formed of icy covered copper",
     "Text": "Every ice card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1230,10 +1294,11 @@
     ]
   },
   {
-    "RelicRecord": "forked",
+    "RelicRecord": "repeat-lightning",
     "Name": "Forked",
+    "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice formed of sparking copper",
     "Text": "Every lightning card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1245,10 +1310,11 @@
     ]
   },
   {
-    "RelicRecord": "landslide",
+    "RelicRecord": "repeat-earth",
     "Name": "Landslide",
+    "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice formed of rocky copper",
     "Text": "Every earth card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1260,10 +1326,11 @@
     ]
   },
   {
-    "RelicRecord": "recursion",
+    "RelicRecord": "repeat-arcane",
     "Name": "Recursion",
+    "Family": "Elemental repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice formed of purple lightning covered copper",
     "Text": "Every arcane card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1277,6 +1344,7 @@
   {
     "RelicRecord": "enflamed",
     "Name": "Enflamed",
+    "Family": "Elemental growth",
     "Art": "",
     "Draw": "",
     "Text": "Fire cards gain 0.1x DMG every time a fire attack lands. Grows while worn.",
@@ -1297,6 +1365,7 @@
   {
     "RelicRecord": "frostbitten",
     "Name": "Frostbitten",
+    "Family": "Elemental growth",
     "Art": "",
     "Draw": "",
     "Text": "Ice cards gain 0.1x DMG every time a ice attack lands. Grows while worn.",
@@ -1317,6 +1386,7 @@
   {
     "RelicRecord": "lithium",
     "Name": "Lithium",
+    "Family": "Elemental growth",
     "Art": "",
     "Draw": "",
     "Text": "Lightning cards gain 0.1x DMG every time a lightning attack lands. Grows while worn.",
@@ -1337,6 +1407,7 @@
   {
     "RelicRecord": "granite",
     "Name": "Granite",
+    "Family": "Elemental growth",
     "Art": "",
     "Draw": "",
     "Text": "Earth cards gain 0.1x DMG every time a earth attack lands. Grows while worn.",
@@ -1357,6 +1428,7 @@
   {
     "RelicRecord": "unravelled",
     "Name": "Unravelled",
+    "Family": "Elemental growth",
     "Art": "",
     "Draw": "",
     "Text": "Arcane cards gain 0.1x DMG every time an arcane attack lands. Grows while worn.",
@@ -1377,6 +1449,7 @@
   {
     "RelicRecord": "warm",
     "Name": "Warm",
+    "Family": "Elemental discounts",
     "Art": "",
     "Draw": "",
     "Text": "Fire cards cost 1 AP less.",
@@ -1392,6 +1465,7 @@
   {
     "RelicRecord": "cold",
     "Name": "Cold",
+    "Family": "Elemental discounts",
     "Art": "",
     "Draw": "",
     "Text": "Ice cards cost 1 AP less.",
@@ -1407,6 +1481,7 @@
   {
     "RelicRecord": "static",
     "Name": "Static",
+    "Family": "Elemental discounts",
     "Art": "",
     "Draw": "",
     "Text": "Lightning cards cost 1 AP less.",
@@ -1422,6 +1497,7 @@
   {
     "RelicRecord": "dirty",
     "Name": "Dirty",
+    "Family": "Elemental discounts",
     "Art": "",
     "Draw": "",
     "Text": "Earth cards cost 1 AP less.",
@@ -1437,6 +1513,7 @@
   {
     "RelicRecord": "eerie",
     "Name": "Eerie",
+    "Family": "Elemental discounts",
     "Art": "",
     "Draw": "",
     "Text": "Arcane cards cost 1 AP less.",
@@ -1452,6 +1529,7 @@
   {
     "RelicRecord": "pairing",
     "Name": "Pairing",
+    "Family": "Hand multipliers",
     "Art": "",
     "Draw": "",
     "Text": "Every pair deals 2x DMG.",
@@ -1467,6 +1545,7 @@
   {
     "RelicRecord": "triplicate-form",
     "Name": "Triplicate Form",
+    "Family": "Hand multipliers",
     "Art": "",
     "Draw": "",
     "Text": "Every Three of a Kind\ndeals 3x DMG.",
@@ -1492,6 +1571,7 @@
   {
     "RelicRecord": "house-of-pain",
     "Name": "House of Pain",
+    "Family": "Hand multipliers",
     "Art": "",
     "Draw": "",
     "Text": "Every Full House\ndeals 3x DMG.",
@@ -1517,6 +1597,7 @@
   {
     "RelicRecord": "oak",
     "Name": "Oak",
+    "Family": "Hand multipliers",
     "Art": "",
     "Draw": "",
     "Text": "Every Four of a Kind\ndeals 4x DMG.",
@@ -1542,6 +1623,7 @@
   {
     "RelicRecord": "pentacle",
     "Name": "Pentacle",
+    "Family": "Hand multipliers",
     "Art": "",
     "Draw": "",
     "Text": "Every Five of a Kind\ndeals 5x DMG.",
@@ -1567,6 +1649,7 @@
   {
     "RelicRecord": "poised",
     "Name": "Poised",
+    "Family": "Forms held",
     "Art": "",
     "Draw": "",
     "Text": "Deals 5 more DMG for each stab card\nkept in hand.",
@@ -1582,6 +1665,7 @@
   {
     "RelicRecord": "sheathed",
     "Name": "Sheathed",
+    "Family": "Forms held",
     "Art": "",
     "Draw": "",
     "Text": "Deals 5 more DMG for each slash card\nkept in hand.",
@@ -1597,6 +1681,7 @@
   {
     "RelicRecord": "coiled",
     "Name": "Coiled",
+    "Family": "Forms held",
     "Art": "coiled",
     "Draw": "tightly braided jade metal relic",
     "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
@@ -1612,6 +1697,7 @@
   {
     "RelicRecord": "shouldered",
     "Name": "Shouldered",
+    "Family": "Forms held",
     "Art": "",
     "Draw": "",
     "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
@@ -1627,6 +1713,7 @@
   {
     "RelicRecord": "sundering",
     "Name": "The Sundering",
+    "Family": "Form statuses",
     "Art": "sundering",
     "Draw": "an obsidion scimitar with a purple glowing gem in the hilt angled to the right",
     "Text": "Slash attacks apply WEAKENED status to target. WEAKENED enemies take 2x DMG from everything.",
@@ -1642,6 +1729,7 @@
   {
     "RelicRecord": "bruise",
     "Name": "The Bruise",
+    "Family": "Form statuses",
     "Art": "bruise",
     "Draw": "an obsidian mace topped with a green glowing blunt rock",
     "Text": "Crush attacks apply WEIGHTED status to target. WEIGHTED enemies deal 25% less DMG.",
@@ -1657,6 +1745,7 @@
   {
     "RelicRecord": "strike",
     "Name": "The Strike",
+    "Family": "Form statuses",
     "Art": "strike",
     "Draw": "a spear made of yellow glass with lightning crackling along the shaft",
     "Text": "Stab attacks apply SHOCKED status to target. SHOCKED enemies have 25% chance to miss.",
@@ -1672,6 +1761,7 @@
   {
     "RelicRecord": "sickle",
     "Name": "The Sickle",
+    "Family": "Form weapons",
     "Art": "sickle",
     "Draw": "a sickle with a leather hilt",
     "Text": "Every slash card deals double DMG.",
@@ -1687,6 +1777,7 @@
   {
     "RelicRecord": "club",
     "Name": "The Club",
+    "Family": "Form weapons",
     "Art": "club",
     "Draw": "a heavy club with a leather strap",
     "Text": "Every crush card deals double DMG.",
@@ -1702,6 +1793,7 @@
   {
     "RelicRecord": "needle",
     "Name": "The Needle",
+    "Family": "Form weapons",
     "Art": "needle",
     "Draw": "fencing foil with a sharp tip and a leather hilt",
     "Text": "Every stab card deals double DMG.",
@@ -1715,10 +1807,11 @@
     ]
   },
   {
-    "RelicRecord": "flurry",
+    "RelicRecord": "repeat-stab",
     "Name": "Flurry",
+    "Family": "Form repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice in the shape of a spear",
     "Text": "Every stab card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1730,10 +1823,11 @@
     ]
   },
   {
-    "RelicRecord": "rend",
+    "RelicRecord": "repeat-slash",
     "Name": "Rend",
+    "Family": "Form repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice in the shape of a sword",
     "Text": "Every slash card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1745,10 +1839,11 @@
     ]
   },
   {
-    "RelicRecord": "aftershock",
+    "RelicRecord": "repeat-crush",
     "Name": "Aftershock",
+    "Family": "Form repeats",
     "Art": "",
-    "Draw": "",
+    "Draw": "a dual ring that's wrapped into a circle twice in the shape of an axe",
     "Text": "Every crush card lands twice, both at full DMG.",
     "Rarity": "uncommon",
     "Rules": [
@@ -1762,6 +1857,7 @@
   {
     "RelicRecord": "sharpening",
     "Name": "Sharpening",
+    "Family": "Form growth",
     "Art": "",
     "Draw": "",
     "Text": "Slash cards gain 0.1x DMG every time a slash attack lands. Grows while worn.",
@@ -1782,6 +1878,7 @@
   {
     "RelicRecord": "pounding",
     "Name": "Pounding",
+    "Family": "Form growth",
     "Art": "",
     "Draw": "",
     "Text": "Crush cards gain 0.1x DMG every time a crush attack lands. Grows while worn.",
@@ -1802,6 +1899,7 @@
   {
     "RelicRecord": "quickening",
     "Name": "Quickening",
+    "Family": "Form growth",
     "Art": "",
     "Draw": "",
     "Text": "Stab cards gain 0.1x DMG every time a stab attack lands. Grows while worn.",
@@ -1822,6 +1920,7 @@
   {
     "RelicRecord": "atrophy",
     "Name": "Atrophy",
+    "Family": "Tier demotions",
     "Art": "",
     "Draw": "",
     "Text": "Every 3 AP attack is dealt as its 2 AP version.",
@@ -1837,6 +1936,7 @@
   {
     "RelicRecord": "erode",
     "Name": "Erode",
+    "Family": "Tier demotions",
     "Art": "",
     "Draw": "",
     "Text": "Every 2 AP card is dealt as its 1 AP version.",
@@ -1852,6 +1952,7 @@
   {
     "RelicRecord": "whittle",
     "Name": "Whittle",
+    "Family": "Tier demotions",
     "Art": "",
     "Draw": "",
     "Text": "Every 1 AP attack is dealt as its 0 AP version.",
@@ -1867,6 +1968,7 @@
   {
     "RelicRecord": "whetted",
     "Name": "Whetted",
+    "Family": "Form discounts",
     "Art": "",
     "Draw": "",
     "Text": "Slash cards cost 1 AP less.",
@@ -1882,6 +1984,7 @@
   {
     "RelicRecord": "hefted",
     "Name": "Hefted",
+    "Family": "Form discounts",
     "Art": "",
     "Draw": "",
     "Text": "Crush cards cost 1 AP less.",
@@ -1897,6 +2000,7 @@
   {
     "RelicRecord": "tapered",
     "Name": "Tapered",
+    "Family": "Form discounts",
     "Art": "",
     "Draw": "",
     "Text": "Stab cards cost 1 AP less.",
@@ -1912,6 +2016,7 @@
   {
     "RelicRecord": "weight-of-the-earth",
     "Name": "Weight of the Earth",
+    "Family": "Element and form",
     "Art": "",
     "Draw": "",
     "Text": "Every earth crush card\ndeals 3x DMG.",
@@ -1927,6 +2032,7 @@
   {
     "RelicRecord": "struck-by-lightning",
     "Name": "Struck by Lightning",
+    "Family": "Element and form",
     "Art": "",
     "Draw": "",
     "Text": "Every lightning stab card\ndeals 3x DMG.",
@@ -1942,6 +2048,7 @@
   {
     "RelicRecord": "sharp-as-ice",
     "Name": "Sharp as Ice",
+    "Family": "Element and form",
     "Art": "",
     "Draw": "",
     "Text": "Every ice slash card\ndeals 3x DMG.",
@@ -1957,6 +2064,7 @@
   {
     "RelicRecord": "swarm",
     "Name": "Swarm",
+    "Family": "Tier damage",
     "Art": "",
     "Draw": "",
     "Text": "Every 1 AP card deals 3x DMG.",
@@ -1972,6 +2080,7 @@
   {
     "RelicRecord": "crown",
     "Name": "Crown",
+    "Family": "Tier damage",
     "Art": "",
     "Draw": "",
     "Text": "Every 3 AP card deals 2.5x DMG.",
@@ -1987,6 +2096,7 @@
   {
     "RelicRecord": "ebb-and-flow",
     "Name": "Ebb & Flow",
+    "Family": "Shield streaks",
     "Art": "",
     "Draw": "",
     "Text": "Every card gains 0.2x DMG\nfor each shield card\nyou play. Grows while worn.",
@@ -2006,6 +2116,7 @@
   {
     "RelicRecord": "momentum",
     "Name": "Momentum",
+    "Family": "Shield streaks",
     "Art": "",
     "Draw": "",
     "Text": "Every card gains 0.2x DMG each turn you raise no shields. A defend card resets it.",
@@ -2029,6 +2140,7 @@
   {
     "RelicRecord": "echo",
     "Name": "Echo",
+    "Family": "Lead attack",
     "Art": "",
     "Draw": "",
     "Text": "Your first attack lands 3 times: full DMG, then 2/3, then 1/3.",
@@ -2044,6 +2156,7 @@
   {
     "RelicRecord": "onslaught",
     "Name": "Onslaught",
+    "Family": "Cost bargains",
     "Art": "",
     "Draw": "",
     "Text": "Every card costs 1 AP less. Lose 25% of your HP.",
@@ -2062,6 +2175,7 @@
   {
     "RelicRecord": "braced",
     "Name": "Braced",
+    "Family": "Cost bargains",
     "Art": "",
     "Draw": "",
     "Text": "Defend cards cost 1 AP less. +15 HP for every fight.",
@@ -2081,6 +2195,7 @@
   {
     "RelicRecord": "might",
     "Name": "Might",
+    "Family": "Standing stats",
     "Art": "",
     "Draw": "",
     "Text": "+10 DMG for every fight.",
@@ -2095,6 +2210,7 @@
   {
     "RelicRecord": "bulwark",
     "Name": "Bulwark",
+    "Family": "Standing stats",
     "Art": "bulwark",
     "Draw": "a wide gold armband clasped around a thick bare bicep, a round gold boss in the centre holding a gem with a stud either side",
     "Text": "+25 HP for every fight.",
@@ -2109,6 +2225,7 @@
   {
     "RelicRecord": "heart",
     "Name": "Heart",
+    "Family": "Standing stats",
     "Art": "",
     "Draw": "",
     "Text": "+5 HP, and 5 more for every fight won.",
@@ -2127,6 +2244,7 @@
   {
     "RelicRecord": "rampant",
     "Name": "Rampant",
+    "Family": "Vitae power",
     "Art": "",
     "Draw": "",
     "Text": "Every blow deals 1 more DMG\nfor each vitae you hold.",
@@ -2141,6 +2259,7 @@
   {
     "RelicRecord": "fire-of-life",
     "Name": "Fire of Life",
+    "Family": "Vitae power",
     "Art": "",
     "Draw": "",
     "Text": "Fire cards gain 0.1x DMG\nfor every 10 vitae you hold.",
@@ -2156,6 +2275,7 @@
   {
     "RelicRecord": "dual-wield",
     "Name": "Dual Wield",
+    "Family": "Mixed hands",
     "Art": "",
     "Draw": "",
     "Text": "A pair built from two\ndifferent forms deals 3x DMG.",
@@ -2171,6 +2291,7 @@
   {
     "RelicRecord": "banker",
     "Name": "Banker",
+    "Family": "Spoils",
     "Art": "banker",
     "Draw": "a wide gold band woven from braided ropes of gold with rows of small red gems set between the braids",
     "Text": "Vitae propagates twice as fast.",
@@ -2185,6 +2306,7 @@
   {
     "RelicRecord": "soul-taker",
     "Name": "Soul Taker",
+    "Family": "Spoils",
     "Art": "",
     "Draw": "",
     "Text": "A won room pays 5 more vitae.",
@@ -2199,6 +2321,7 @@
   {
     "RelicRecord": "hungry",
     "Name": "Hungry",
+    "Family": "Spoils",
     "Art": "",
     "Draw": "",
     "Text": "Two prizes after a fight instead of one.",

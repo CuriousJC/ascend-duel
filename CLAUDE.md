@@ -1183,11 +1183,34 @@ in the table under it.
   importing that package registers every concept at init — so a card naming a verb the rules do
   not have fails the sheet exactly as it fails a launch.
 
-**It groups by rarity, and prints each tier's share of a shelf draw** *(2026-08-22)*. The tier is
-the whole pricing decision — a relic is rebalanced by moving it, never by writing a number — so the
-review question is "does any of these commons belong a tier up", which an alphabetical list
-cannot answer. The share is the tier's tickets over the catalogue's, to a tenth of a percent,
-because a scarce tier rounds to `0%` and would read as unreachable.
+**It groups by family, in the file's own order** *(owner's call, 2026-09-12)*, having grouped by
+rarity from 2026-08-22 until then. `data/relics.json` is authored in motif order — the twenty flips
+together, the three ring families walking their ladders, the weapons along the concept ladder — and
+the page sorted all of it by key, which is the one ordering that throws that away. `Family` is the
+field, `data.RelicFileOrder` is the walk, and both are new.
+
+**`Family` restates the rules in words, and it is authored for the owner's own reading**
+*(owner's call, 2026-09-12)*. Nearly every value is implied by the record's `(When, Do, predicate)`
+— the flips are all `card-drawn`/`set-element`, the weapons all `card-damage`/`scale-damage` on a
+Concept — so a derived grouping would reproduce it almost exactly. It is authored anyway because a
+signature is something to decode and "Jade rings" is something to read, and the three ring families
+differ by the gem in the picture as much as by the axis in the rule.
+
+**This is not the `CostTier` mistake, and the difference is who consults it.** `CostTier` was a
+figure the *rules* also knew, so a file could contradict the game; nothing resolves a round
+differently because of this string, and the `relic-balance` skill's derived taxonomy is untouched
+and still the authority on what a relic *is*. What the field can still do is go quietly out of
+date — a relic retuned into a different family keeps its old label and no test fails — so
+**re-read the block when you change a relic's rules**, and treat a disagreement as a label to fix
+rather than as a second opinion.
+
+**The pricing review survives the move because nearly every family is one tier throughout.** A
+heading reading "15 relics, all common" asks "does one of these belong a tier up" of the whole
+block at once, and a family with a mix prints the mix rather than hiding it — which is the question
+the rarity grouping existed to answer. The three tier shares moved to the page header, where they
+are about the shelf rather than about a motif: the share is the tier's tickets over the
+catalogue's, to a tenth of a percent, because a scarce tier rounds to `0%` and would read as
+unreachable.
 
 **Every word naming an element is written in that element's colour** *(owner's call, 2026-09-08)*.
 `cards.ElementRuns` is the one vocabulary — the five element names plus each status's `Name` and
@@ -1583,7 +1606,7 @@ player's.
   whatever the clock had rolled and described a hand it had not dealt. **A promise and the thing
   that makes it true belong in one file.** The scenario entry keeps only `"Teach": true`.
 - **The taught fight is two rounds, and the shield is why** *(owner's call, 2026-09-06)*. Run code
-  `0000GY` deals `Jab Brace Thrust Bash`, all lightning, for exactly 6 AP — an Elemental Four of a
+  `0009D4` deals `Jab Brace Thrust Bash`, all arcane, for exactly 6 AP — an Elemental Four of a
   Kind dealing 69 into a GiantBat's 80. **One of the four is a Brace**, which teaches the thing a
   hand of pure attacks cannot: a defence carries an element and joins a hand like anything else,
   bringing no damage with it. Because it brings none, the creature lives on 11, takes its turn —
@@ -1597,7 +1620,23 @@ player's.
 - **The other four cards are an arcane, an earth, a fire and an ice**, so there is no competing set,
   and the first card dealt is one of the four — which the opening step needs, since it queues
   `first-card` and a stray would break both the budget and the hand.
-- **Both halves of the promise are tested, and they check each other.**
+- **Finding a replacement seed is `TestFindATutorialSeed`** *(2026-09-12)*, skipped unless
+`SEEDSEARCH=1` is set. Every test below ends "the fix is a new seed, not a weaker check" and none
+of them said how to find one; the constraints live in four files and a candidate has to satisfy all
+of them at once. It is a test rather than a tool because the shop internals it has to deal from are
+unexported, and `tools/seeds` cannot answer this one — that tallies concepts and the tutorial
+matches on element. **It proposes and asserts nothing**: take a candidate, pin it, and let the four
+tests below confirm it. **Prefer a marked candidate**, which keeps the cards the steps name — a
+seed dealing a different four means re-authoring the lesson rather than changing one string. **Expect to re-run it whenever `relics.json` gains, loses or renames a record.** The shelf is a
+weighted draw over the catalogue's sorted keys, so any of those three reshuffles what the taught
+seed lands on, and the shop step is the only part of the lesson a catalogue edit can break. It
+broke twice on 2026-09-12 alone — once on a relic being deleted, once on five being renamed — and
+the seed went `0000GY` → `0001J4` → `0009D4`. **That is the cost of drawing the taught shop rather
+than pinning it**, and pinning it is the fix to argue for if this keeps happening. Each replacement
+deals the identical four cards against the identical creature, so no step text has ever had to
+change; the taught colour has, and the lesson never names it.
+
+**Both halves of the promise are tested, and they check each other.**
   `TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt` in `internal/combat` proves the
   rules resolve that turn to a wound — **it is two-sided**, failing if the blow starts killing, if
   it leaves more than half the creature standing, or if the taught set stops holding exactly one

@@ -45,7 +45,7 @@ func TestTheRoomIsWorthThreeFourFive(t *testing.T) {
 // TestSoulTakerPaysTheRoomFlat. The `prizes-dealt` relic was retargeted when the vitae card went;
 // what it moves now is the room award, and it is still flat rather than a scaling.
 func TestSoulTakerPaysTheRoomFlat(t *testing.T) {
-	run := wearing(t, "soul-taker-ring")
+	run := wearing(t, "soul-taker")
 	run.fight = 2
 	run.WonFight(0, 0)
 

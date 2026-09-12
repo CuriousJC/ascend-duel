@@ -79,7 +79,7 @@ func TestADiscountRelicStillReachesTheCost(t *testing.T) {
 	card := aSlash(t)
 
 	bare := held{}
-	worn := wearing(t, 12, "onslaught-ring")
+	worn := wearing(t, 12, "onslaught")
 
 	if worn.cost == bare.cost {
 		t.Skip("onslaught-ring does not discount this card")
@@ -252,13 +252,13 @@ func TestADiscountRelicExplainsThePrice(t *testing.T) {
 		t.Skip("no fire attack in the deck")
 	}
 
-	h := wearing(t, 12, "warm-ring")
+	h := wearing(t, 12, "warm")
 	h.cost = combat.CostWith(h.worn, fire)
 
 	_, lines := cardTip(fire, h)
 	joined := strings.Join(lines, " | ")
 
-	if !strings.Contains(joined, "Warm Ring") {
+	if !strings.Contains(joined, "Warm") {
 		t.Errorf("a discounted card does not name the relic: %s", joined)
 	}
 }

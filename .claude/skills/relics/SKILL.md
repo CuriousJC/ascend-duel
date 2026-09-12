@@ -21,7 +21,7 @@ costs if it does not.
 
 ```json
 {
-  "RelicRecord": "chilling-ring",
+  "RelicRecord": "chilling",
   "Name": "Chilling Ring",
   "Art": "",
   "Text": "Ice attacks CHILL the target.",
@@ -247,7 +247,7 @@ not — it carries a number that lives on the run:
 
 ```json
 {
-  "RelicRecord": "heart-ring",
+  "RelicRecord": "heart",
   "Name": "Heart Ring",
   "Rules": [
     { "When": "fight-start", "Then": [{ "Do": "add-hp", "Amount": 5 }] },

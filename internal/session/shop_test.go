@@ -169,12 +169,12 @@ func TestTheSixthRelicIsRefusedRatherThanSwapped(t *testing.T) {
 
 func TestABoughtRelicIsNotOfferedAgain(t *testing.T) {
 	run := rich(t)
-	if !run.Buy("banker-ring") {
+	if !run.Buy("banker") {
 		t.Fatal("the purchase was refused")
 	}
 	held := run.Vitae()
 
-	if run.CanBuy("banker-ring") || run.Buy("banker-ring") {
+	if run.CanBuy("banker") || run.Buy("banker") {
 		t.Error("the same relic went on twice")
 	}
 	if run.Vitae() != held {
@@ -183,7 +183,7 @@ func TestABoughtRelicIsNotOfferedAgain(t *testing.T) {
 }
 
 func TestSellingTakesTheRelicOffAndPaysBack(t *testing.T) {
-	run := wearing(t, "fire-ring", "sickle", "banker-ring")
+	run := wearing(t, "fire", "sickle", "banker")
 	run.vitae = 0
 
 	if !run.Sell("sickle") {
@@ -195,13 +195,13 @@ func TestSellingTakesTheRelicOffAndPaysBack(t *testing.T) {
 
 	// **Worn order is the firing order**, so what is left has to stay in the order it went on.
 	got := run.Worn()
-	if len(got) != 2 || got[0] != "fire-ring" || got[1] != "banker-ring" {
+	if len(got) != 2 || got[0] != "fire" || got[1] != "banker" {
 		t.Errorf("the row came out %v, want the other two in worn order", got)
 	}
 }
 
 func TestSellingSomethingYouAreNotWearingDoesNothing(t *testing.T) {
-	run := wearing(t, "fire-ring")
+	run := wearing(t, "fire")
 	held := run.Vitae()
 
 	if run.Sell("sickle") {
@@ -217,27 +217,27 @@ func TestASoldRelicLosesItsGrowth(t *testing.T) {
 	// so a relic taken off and put back on is the same relic; the decision is that it is not the same
 	// number. It is what stops a Heart Ring being parked in the shop between fights.
 	run := rich(t)
-	if !run.Buy("heart-ring") {
+	if !run.Buy("heart") {
 		t.Fatal("the purchase was refused")
 	}
 	run.WonFight(0, 0)
 	run.WonFight(0, 0)
 
-	if got := run.Grown("heart-ring"); got != 10 {
+	if got := run.Grown("heart"); got != 10 {
 		t.Fatalf("two wins grew it by %d, want 10", got)
 	}
 
-	if !run.Sell("heart-ring") {
+	if !run.Sell("heart") {
 		t.Fatal("the sale was refused")
 	}
-	if got := run.Grown("heart-ring"); got != 0 {
+	if got := run.Grown("heart"); got != 0 {
 		t.Errorf("a sold relic kept %d of its growth", got)
 	}
 
-	if !run.Buy("heart-ring") {
+	if !run.Buy("heart") {
 		t.Fatal("it would not go back on")
 	}
-	if got := run.Grown("heart-ring"); got != 0 {
+	if got := run.Grown("heart"); got != 0 {
 		t.Errorf("re-buying it started at %d, want 0", got)
 	}
 }

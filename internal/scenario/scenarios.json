@@ -3,11 +3,11 @@
     "ScenarioRecord": "new-rings-fire-ice-lightning",
     "Note": "The five dual-status rings drawn on 2026-09-12 that carry a fire, ice or lightning rule, worn at once so the artwork can be read on the pane at the size a player actually sees it - Scald, Wildfire, Hoarfrost, Brittle and Palsy. It is a batch of art rather than an interaction, which is what RelicSlots exists for: the shipped cap is five, so looking at nine new rings used to mean buying one, selling it and buying the next. The art is the question, but the rules are worth watching too, because every one of these applies TWO statuses off one attack: the hand is a fire slash, an ice slash, a lightning crush and two more of the same colours, so a single turn puts BURNED, CHILLED, SHOCKED and WEAKENED on the badge row under the creature's fraction at once. Against a dummy, so the statuses can be stacked and read rather than killed off; 15 AP so the choice is which cards rather than which are affordable.",
     "Relics": [
-      "scald-ring",
-      "wildfire-ring",
-      "hoarfrost-ring",
-      "brittle-ring",
-      "palsy-ring"
+      "scald",
+      "wildfire",
+      "hoarfrost",
+      "brittle",
+      "palsy"
     ],
     "Hand": [
       { "Card": "Cut", "Element": "fire" },
@@ -24,13 +24,13 @@
     "Note": "The other seven relics drawn on 2026-09-12: the four dual-status rings on earth and arcane - Caldera, Tremor, Blightfire and Millstone - plus the three records whose art is not a ring at all. The Sundering is an obsidian scimitar and The Bruise an obsidian mace, and they are the reason this fixture exists as well as the art: a relic is the category and a ring is one kind of it, so this is the page where a weapon and a ring are worn in the same row and can be told apart at a glance. Coiled is the third, and it is the one that says nothing until cards are LEFT in hand - it reads crush cards kept, so playing three of these five is a different blow from playing all five. The hand is earth and arcane in slash and crush, so Sundering fires on the slashes, Bruise on the crushes, and all four rings on the colours. RelicSlots is 7, which is under combat.MaxWornRelics and over the shipped cap. Against a dummy, 15 AP.",
     "RelicSlots": 7,
     "Relics": [
-      "caldera-ring",
-      "tremor-ring",
-      "blightfire-ring",
-      "millstone-ring",
+      "caldera",
+      "tremor",
+      "blightfire",
+      "millstone",
       "sundering",
       "bruise",
-      "coiled-ring"
+      "coiled"
     ],
     "Hand": [
       { "Card": "Cut", "Element": "earth" },
@@ -44,15 +44,15 @@
   },
   {
     "ScenarioRecord": "new-relic-art",
-    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, Boxer, Brass Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, Boxer doubles the Jab, Brass Knuckles doubles the Thump, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
+    "Note": "The six relics drawn on 2026-09-11, worn at once so the artwork can be read on the pane at the size a player sees it - Bulwark, Banker, Bedrock, The Old Dagger, The Knuckles and Attuned. It is six rather than five because RelicSlots is 6: the shipped cap is combat.DefaultRelicSlots and a run cannot exceed it, so looking at a batch of art used to mean buying one, selling it and buying the next. The hand is five earth cards, which is four relics firing at once and one deliberately not: Attuned pays an Elemental Three of a Kind, The Old Dagger quadruples the Jab, The Knuckles quadruples the Thump, and Bedrock reads whatever earth is left in hand - so playing three and keeping two is a different blow from playing all five. Banker is the one that says nothing here, because vitae propagates between fights. Against a dummy, so every combination can be tried; the budget is 15 AP so the choice is which cards rather than which are affordable.",
     "RelicSlots": 6,
     "Relics": [
-      "bulwark-ring",
-      "banker-ring",
-      "bedrock-ring",
-      "boxer-ring",
-      "brass-knuckles-ring",
-      "element-three-of-a-kind-hand-ring"
+      "bulwark",
+      "banker",
+      "bedrock",
+      "old-dagger",
+      "brass-knuckles",
+      "element-three-of-a-kind-hand"
     ],
     "Hand": [
       { "Card": "Jab", "Element": "earth" },
@@ -68,7 +68,7 @@
     "ScenarioRecord": "arsenal-on-a-dummy",
     "Note": "The Arsenal Ring on the finger and a Form Four of a Kind in the opening hand, against a dummy that cannot die - so the relic fires on the first DUEL! and can be fired again every turn after it. The deck is nothing but stabs, written by go run ./tools/scenariodeck -form stab -size 40, so every refill deals another four-of-a-kind. The hand opens Poke, Jab, Thrust, Jab - four stabs, with a Brace beside them so the obvious play is the four rather than a five. The budget is 15 AP rather than the usual 6, so any four cards in the hand can be paid for and picking the set you want is the only decision - a turn is still five cards, which combat.MaxActions bounds and no fixture lifts. Watch the arithmetic panel: Arsenal adds 6 to the blow BEFORE the Form Four of a Kind multiplier, so the relic's term sits inside the sum rather than on the end of it, and the figure it moved is written in the relic pink. The relic pane is where the new artwork is.",
     "Relics": [
-      "form-four-of-a-kind-hand-ring"
+      "form-four-of-a-kind-hand"
     ],
     "Deck": [
       {
@@ -221,8 +221,8 @@
     "ScenarioRecord": "form-hand-relics",
     "Note": "The two new form-hand relics on the fingers, Armoury and Arsenal, so the artwork can be looked at on the relic pane and the rules can be made to fire in the same launch. The hand holds four stabs and two slashes, all of them cheap: take the four stabs for a Form Four of a Kind and Arsenal adds 6 before the multiplier, or take three stabs and both slashes for a Form Full House and Armoury adds 6. Both fit the 6 AP turn with room to spare, so the two can be compared on consecutive turns. Watch the arithmetic panel for the relic term, and the relic pane for whether the two pictures are tellable apart at the size they are drawn - they are two relics about the same axis, and the card carries no title.",
     "Relics": [
-      "form-full-house-hand-ring",
-      "form-four-of-a-kind-hand-ring"
+      "form-full-house-hand",
+      "form-four-of-a-kind-hand"
     ],
     "Deck": [
       { "Card": "Poke", "Element": "fire", "Copies": 6 },
@@ -761,7 +761,7 @@
     "ScenarioRecord": "reward-payout",
     "Note": "The reward screen with something to say: a purse big enough to earn interest, a fight won on 63 life, and the stairway's award. Watch the three sentences type and each figure fly to the duelist card.",
     "Relics": [
-      "heart-ring"
+      "heart"
     ],
     "Hand": [],
     "Screen": "reward",
@@ -773,7 +773,7 @@
     "ScenarioRecord": "shop-shelf",
     "Note": "The shop with money to spend, two fingers already full, a parasite in the bucket and a wound to heal. Straight to the shelf without playing three duels to reach it, and hurt enough that a Salve is worth buying.",
     "Relics": [
-      "heart-ring",
+      "heart",
       "sickle"
     ],
     "Hand": [],
@@ -789,7 +789,7 @@
     "ScenarioRecord": "stairway-boss",
     "Note": "A stairway protector on his own card: name, title, portrait and a deck out of bosses.json rather than the roster. The first stairway a run reaches is fight 2, which is where this opens.",
     "Relics": [
-      "heart-ring"
+      "heart"
     ],
     "Hand": [
       {
@@ -820,9 +820,9 @@
     "ScenarioRecord": "echo-and-growth",
     "Note": "Does an echoed fire card grow Enflamed three times? Play the Skewer first: it leads the blow, so Echo seats it three times and Enflamed should step 0.3x rather than 0.1x.",
     "Relics": [
-      "echo-ring",
-      "enflamed-ring",
-      "fire-ring"
+      "echo",
+      "enflamed",
+      "fire"
     ],
     "Hand": [
       {
@@ -852,8 +852,8 @@
     "ScenarioRecord": "seven-term-sum",
     "Note": "The widest sum the math box can be asked to draw: five cards, the lead one echoed twice. Watch whether the line shrinks and whether it is still readable.",
     "Relics": [
-      "echo-ring",
-      "aftershock-ring"
+      "echo",
+      "aftershock"
     ],
     "Hand": [
       {
@@ -883,8 +883,8 @@
     "ScenarioRecord": "momentum-and-atrophy",
     "Note": "Atrophy deals the 3 AP attacks as 2 AP ones, so the whole hand fits a turn â€” and the Block at the end of it is what resets Momentum, so the growth should climb 0.2x a round and then drop to nothing.",
     "Relics": [
-      "atrophy-ring",
-      "momentum-ring"
+      "atrophy",
+      "momentum"
     ],
     "Hand": [
       {
@@ -910,9 +910,9 @@
     "ScenarioRecord": "altered-deck",
     "Note": "Two flips and a demotion, so the deck panel's ALTERATIONS toggle has something to show. Open the draw pile: earth and lightning are dealt as fire, the 3 AP attacks are dealt a rung down, and AS OWNED puts all of it back. FULL/PLAYED after a round or two.",
     "Relics": [
-      "magma-ring",
-      "firestorm-ring",
-      "atrophy-ring"
+      "magma",
+      "firestorm",
+      "atrophy"
     ],
     "Hand": [],
     "Screen": "",

@@ -151,8 +151,8 @@ var portraits embed.FS
 //go:embed boss/*-boss.png
 var bossPortraits embed.FS
 
-// The relic faces, globbed as a family and keyed by filename stem — `relic/fire-ring.png` is
-// `fire-ring`, which is what `data/relics.json` writes in its Art field.
+// The relic faces, globbed as a family and keyed by filename stem — `relic/fire.png` is
+// `fire`, which is what `data/relics.json` writes in its Art field.
 //
 // **It became a family on 2026-09-11**, having been one `//go:embed` var per file. Five pictures
 // is three edits each and readable; a catalogue of a hundred and thirty-seven relics being drawn
@@ -313,7 +313,7 @@ func LoadImageData() map[string][]byte {
 
 // embedFamily files every PNG in one embedded directory into images, keyed by filename stem —
 // `enemy/ogrewarlord-portrait.png` is `ogrewarlord-portrait`, which is what `data/enemies.json`
-// writes in its Portrait field, and `relic/fire-ring.png` is `fire-ring`.
+// writes in its Portrait field, and `relic/fire.png` is `fire`.
 //
 // **Four directories read the same way, so it is one function** *(2026-09-11)*. It was two
 // hand-written walks for the two portrait families; the relic and worm art joined them and a

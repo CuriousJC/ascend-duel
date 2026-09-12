@@ -144,7 +144,7 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 
 // relicSpecs is the first pass at a relic, in the card format.
 //
-// The art is assets/fire-ring.png. **That is first-party work** — README credits the art
+// The art is assets/fire.png. **That is first-party work** — README credits the art
 // to CuriousJC and KingSherman1820, and only the sheets prefixed `tyrian_` come from the
 // Tyrian set. So it carries no provenance question and is not part of the release blocker
 // that set represents; it can ship.
@@ -153,7 +153,7 @@ func disabled(s cards.Spec) cards.Spec { s.Enabled = false; return s }
 // and has no phase. What it keeps is the footprint, the corners and the border, so it
 // reads as the same game.
 func relicSpecs() ([]cards.Spec, error) {
-	art, err := loadPNG("fire-ring")
+	art, err := loadPNG("fire")
 	if err != nil {
 		return nil, err
 	}
@@ -161,13 +161,13 @@ func relicSpecs() ([]cards.Spec, error) {
 	// so Spec.Name is what a mark's pattern is derived from and nothing else. It is written out
 	// in full here, as the game and tools/relicsheet pass it.
 	return []cards.Spec{
-		{Name: "Fire Ring", Element: cards.Relic, Art: art, Enabled: true},
+		{Name: "Fire", Element: cards.Relic, Art: art, Enabled: true},
 
 		// The same relic mid-drag. **Not "not equipped"** — a relic you do not have is not
 		// shown at all, so that state does not exist to draw. Being carried by the cursor
 		// does exist, and it is the one thing a relic in a card format has to look like
 		// besides sitting still.
-		{Name: "Fire Ring", Element: cards.Relic, Art: art, Enabled: true, Dragging: true},
+		{Name: "Fire", Element: cards.Relic, Art: art, Enabled: true, Dragging: true},
 	}, nil
 }
 

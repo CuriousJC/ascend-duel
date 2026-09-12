@@ -49,7 +49,7 @@ type concept struct {
 // **Three forms by five tiers, and the tiers cost and hit the same in each** *(2026-08-24)*.
 // 0 AP is a quarter, 1 AP is half, 2 AP is one, 3 AP is two, 4 AP is four, in Stab and Slash and
 // Crush alike. So a form is *which* pair you are building rather than a stronger or weaker way to
-// build one, and the only thing separating Lunge from Cleave is what it pairs with.
+// build one, and the only thing separating Skewer from Cleave is what it pairs with.
 //
 // **The defences are a four-rung ladder of their own** *(2026-09-06)*, Flinch through Guard, with
 // the shield count where the attacks have a damage multiplier — so a Grow or a Shrink walks it too.
@@ -67,7 +67,7 @@ var concepts = []concept{
 	{"Poke", cards.FormStab, 0, "STAB\nDMG 0.25x"},
 	{"Jab", cards.FormStab, 1, "STAB\nDMG 0.5x"},
 	{"Thrust", cards.FormStab, 2, "STAB\nDMG 1x"},
-	{"Lunge", cards.FormStab, 3, "STAB\nDMG 3x"},
+	{"Skewer", cards.FormStab, 3, "STAB\nDMG 3x"},
 	{"Impale", cards.FormStab, 4, "STAB\nDMG 4x"},
 
 	{"Nick", cards.FormSlash, 0, "SLASH\nDMG 0.25x"},
@@ -77,14 +77,14 @@ var concepts = []concept{
 	{"Sever", cards.FormSlash, 4, "SLASH\nDMG 4x"},
 
 	{"Tap", cards.FormCrush, 0, "CRUSH\nDMG 0.25x"},
-	{"Bash", cards.FormCrush, 1, "CRUSH\nDMG 0.5x"},
-	{"Strike", cards.FormCrush, 2, "CRUSH\nDMG 1x"},
+	{"Thump", cards.FormCrush, 1, "CRUSH\nDMG 0.5x"},
+	{"Bash", cards.FormCrush, 2, "CRUSH\nDMG 1x"},
 	{"Smash", cards.FormCrush, 3, "CRUSH\nDMG 3x"},
 	{"Pulverize", cards.FormCrush, 4, "CRUSH\nDMG 4x"},
 
 	{"Flinch", cards.FormDefend, 0, "SHIELD\n1"},
-	{"Ward", cards.FormDefend, 1, "SHIELD\n1"},
-	{"Brace", cards.FormDefend, 2, "SHIELD\n2"},
+	{"Brace", cards.FormDefend, 1, "SHIELD\n1"},
+	{"Block", cards.FormDefend, 2, "SHIELD\n2"},
 	{"Guard", cards.FormDefend, 3, "SHIELD\n3"},
 }
 

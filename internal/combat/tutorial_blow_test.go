@@ -9,8 +9,8 @@ import (
 // **The tutorial promises a blow that wounds and does not kill, and several files can quietly
 // break it in either direction.**
 //
-// The lesson `data/tutorial.json` teaches is four cards of one colour — a Jab, a Ward, a Thrust
-// and a Strike, all lightning — swung at a GiantBat: an Elemental Four of a Kind against the
+// The lesson `data/tutorial.json` teaches is four cards of one colour — a Jab, a Brace, a Thrust
+// and a Bash, all lightning — swung at a GiantBat: an Elemental Four of a Kind against the
 // gentlest opponent on floor one. **One of the four is a shield**, which is the whole of the
 // second lesson: it deals nothing, it counts toward the hand anyway, and it eats one of the
 // three attacks the bat swings back. That is why the taught round no longer ends the fight —
@@ -42,7 +42,7 @@ func TestTheTutorialsBlowWoundsTheTutorialsEnemyWithoutKillingIt(t *testing.T) {
 
 	// The taught turn, as `data/tutorial.json`'s seed deals it: four lightning cards, 6 AP exactly,
 	// one of them a shield.
-	taught := []string{"Jab", "Ward", "Thrust", "Strike"}
+	taught := []string{"Jab", "Brace", "Thrust", "Bash"}
 	const taughtElement = Lightning
 
 	// **The opponent is read off the script rather than written here** *(2026-08-25)*, since

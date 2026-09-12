@@ -83,15 +83,15 @@ const (
 	// the hand was formed from. Amount is a percentage, so 200 is twice.
 	//
 	// **Formed from, not merely played.** `Blow.Cards` is the scoring set, and a turn can play a
-	// card that pays nothing into it — a lone Ward beside a pair, a third element in a two-card
+	// card that pays nothing into it — a lone Brace beside a pair, a third element in a two-card
 	// hand. So this asks a question the player can lose: the card has to make the hand.
 	RiderScaleInCombo
 
 	// RiderWildElement makes this card count as **every** element at once when a hand is formed.
 	// It carries no amount.
 	//
-	// **The card keeps its own element and everything else keeps reading it.** A wild fire Strike
-	// is still a fire Strike: it lands a burn, it is drawn from the fire row of the deck panel,
+	// **The card keeps its own element and everything else keeps reading it.** A wild fire Bash
+	// is still a fire Bash: it lands a burn, it is drawn from the fire row of the deck panel,
 	// and `Blow.Elements` reports fire for it. What changes is one question — what it counts as on
 	// the element axis — and it answers that with "whatever you need".
 	//

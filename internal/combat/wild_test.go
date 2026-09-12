@@ -18,7 +18,7 @@ func TestAWildcardCompletesAnElementalGroup(t *testing.T) {
 		t.Skip("the catalogue has no element four of a kind")
 	}
 
-	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Bash, Fire), wild(Slice, Ice)}
+	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Thump, Fire), wild(Slice, Ice)}
 	cards, got, _, formed := matchHand(slots(turn), handTable)
 	if !formed {
 		t.Fatal("three fire cards and a wildcard formed no hand at all")
@@ -66,7 +66,7 @@ func TestAWildcardJoinsTheBiggestGroup(t *testing.T) {
 		t.Skip("the catalogue has no element three of a kind")
 	}
 
-	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Bash, Ice), wild(Slice, Ice)}
+	turn := []Card{Of(Jab, Fire), Of(Cut, Fire), Of(Thump, Ice), wild(Slice, Ice)}
 	_, got, _, formed := matchHand(slots(turn), handTable)
 	if !formed {
 		t.Fatal("no hand formed")
@@ -111,7 +111,7 @@ func TestAWildcardIsSpentOnce(t *testing.T) {
 	// lone ice and the lone earth with nothing to top either of them up to two.
 	turn := []Card{
 		Of(Jab, Fire), Of(Cut, Fire),
-		Of(Bash, Ice), Of(Smash, Earth),
+		Of(Thump, Ice), Of(Smash, Earth),
 		wild(Slice, Lightning),
 	}
 	if _, _, ok := matchCountOf(slots(turn), full.On(AxisElement)); !ok {

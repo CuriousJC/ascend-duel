@@ -123,18 +123,18 @@ func mustHandID(key string) HandID {
 	return id
 }
 
-// blowDamage resolves one round of two identical Strikes and reports what landed.
+// blowDamage resolves one round of two identical Bashes and reports what landed.
 func blowDamage(t *testing.T, d Duelist) int {
 	t.Helper()
 
 	target := Duelist{DMG: 10, Actions: 6, MaxLife: 500, CurrentLife: 500}
-	cards := []Card{Plain(Strike), Plain(Strike)}
+	cards := []Card{Plain(Bash), Plain(Bash)}
 
 	_, _, after := ResolveRound(d, target, cards, nil, 1, Sources{})
 	return target.CurrentLife - after.CurrentLife
 }
 
-// blowBase is what the two Strikes are worth before any multiplier.
+// blowBase is what the two Bashes are worth before any multiplier.
 func blowBase(d Duelist) int {
-	return 2 * Plain(Strike).Damage(d.DMG)
+	return 2 * Plain(Bash).Damage(d.DMG)
 }

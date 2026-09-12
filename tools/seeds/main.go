@@ -2,7 +2,7 @@
 // already catalogued in internal/screens.
 //
 // **A seed is an opening hand.** The shuffle is deterministic, so asking "give me a hand I can
-// click a Strike Flurry out of" is answered by a number rather than by relaunching the game
+// click a Bash Flurry out of" is answered by a number rather than by relaunching the game
 // until one turns up. The catalogue that number lands in is `seedCatalog`, and this is the
 // tool that fills it.
 //
@@ -12,7 +12,7 @@
 // **Re-run it whenever `startingDeck` or `handSize` changes.** A seed is a fact about one
 // particular deck; change the deck and every catalogued number silently becomes a hand nobody
 // asked for. The re-check at the top is there to make that loud — a demo testing a Flurry
-// against a hand that no longer holds three Strikes is worse than no demo, because it passes.
+// against a hand that no longer holds three Bashes is worse than no demo, because it passes.
 //
 // It is a tool rather than a test because the answer is a table to read and act on, not a pass
 // or a fail. What *would* make a reasonable test one day
@@ -38,14 +38,14 @@ type want struct {
 
 var wants = []want{
 	{
-		"three-strikes",
-		"three or more Strikes: a Three of a Kind that can be clicked",
-		func(c map[combat.ConceptID]int) bool { return c[combat.Strike] >= 3 },
+		"three-bashes",
+		"three or more Bashes: a Three of a Kind that can be clicked",
+		func(c map[combat.ConceptID]int) bool { return c[combat.Bash] >= 3 },
 	},
 	{
-		"four-strikes",
-		"four Strikes: a Four of a Kind, the top of the ladder",
-		func(c map[combat.ConceptID]int) bool { return c[combat.Strike] >= 4 },
+		"four-bashes",
+		"four Bashes: a Four of a Kind, the top of the ladder",
+		func(c map[combat.ConceptID]int) bool { return c[combat.Bash] >= 4 },
 	},
 	{
 		"three-smashes",
@@ -69,9 +69,9 @@ var wants = []want{
 	},
 	{
 		"all-shields",
-		"a Ward and a Brace: the whole defend vocabulary in hand",
+		"a Brace and a Block: the whole defend vocabulary in hand",
 		func(c map[combat.ConceptID]int) bool {
-			return c[combat.Ward] >= 1 && c[combat.Brace] >= 1
+			return c[combat.Brace] >= 1 && c[combat.Block] >= 1
 		},
 	},
 }

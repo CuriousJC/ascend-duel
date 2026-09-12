@@ -13,12 +13,12 @@ import (
 func signalScene() *CombatScene {
 	s := &CombatScene{}
 	s.theatre.resolved = []resolvedCard{
-		{card: combat.Plain(combat.Strike)},
-		{card: combat.Plain(combat.Strike)},
+		{card: combat.Plain(combat.Bash)},
+		{card: combat.Plain(combat.Bash)},
 	}
 	s.hand = []paletteCard{
-		{actionCard: combat.Plain(combat.Strike)},
-		{actionCard: combat.Plain(combat.Strike)},
+		{actionCard: combat.Plain(combat.Bash)},
+		{actionCard: combat.Plain(combat.Bash)},
 	}
 	s.fighter = &entities.Combatant{}
 	s.enemy = &entities.Combatant{}
@@ -30,7 +30,7 @@ func grantEvent(kind combat.EventKind, rider combat.RiderKind, slot, amount int)
 		Kind:   kind,
 		Side:   combat.SideA,
 		Target: combat.SideA,
-		Action: combat.Strike,
+		Action: combat.Bash,
 		Rider:  rider,
 		Slot:   slot,
 		Amount: amount,

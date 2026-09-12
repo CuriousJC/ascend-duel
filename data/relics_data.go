@@ -52,6 +52,19 @@ type RelicData struct {
 	// hole in it gets reported, a game that refuses to start over a missing picture is worse.
 	Art string `json:"Art"`
 
+	// Draw is the subject paragraph the art generator is given for this relic — what the object
+	// *is* and what the effect is doing to it, in one sentence. **Nothing in the game reads it**,
+	// exactly like Art's own key and a status's Badge; it is here because it is the one place a
+	// relic's identity is written down beside the rules that made it.
+	//
+	// **It is on the record so that regenerating a picture does not mean writing its brief again**
+	// *(owner's call, 2026-09-12)*. The *generic* prompt is still in docs/art/, because that one is
+	// shared by every card and is about no record at all.
+	//
+	// **Empty means nobody has written one yet**, which — read against an empty Art — is what the
+	// relic sheet reports as the backlog.
+	Draw string `json:"Draw"`
+
 	// Text is one line saying what the relic does, for the long press that does not exist yet.
 	// Written now because it is the thing whoever adds a relic will want to write down, and a
 	// field added later is a field every existing entry is missing.
@@ -111,7 +124,7 @@ type RelicIfData struct {
 	// other moment knows which card leads.
 	Lead bool `json:"Lead,omitempty"`
 
-	// Concept names one card by its label — `Strike`. Resolved at load the way a deck list is,
+	// Concept names one card by its label — `Bash`. Resolved at load the way a deck list is,
 	// because a concept's ID is registration-ordered and must never be written in a file.
 	//
 	// **A concept relic is a much narrower object than a form relic** and pricing them alike is a

@@ -118,7 +118,7 @@ func TestAStatusTheFilesDoNotHoldIsRefused(t *testing.T) {
 // --- what wearing one does --------------------------------------------------------------------
 
 func TestADiscountIsAPropertyOfThePairing(t *testing.T) {
-	// The whole reason cost moved off the card: the same Strike costs one duelist less than
+	// The whole reason cost moved off the card: the same Bash costs one duelist less than
 	// another, so nothing may ask a card what it costs without saying who is holding it.
 	thrifty := relic(t, "thrifty", RelicRule{
 		When: MomentCardCost,
@@ -129,13 +129,13 @@ func TestADiscountIsAPropertyOfThePairing(t *testing.T) {
 	bare := duelist(10, 5, 100)
 	worn := bare.Wearing(WornRelic{Relic: thrifty})
 
-	hot, cold := Of(Strike, Fire), Of(Strike, Ice)
+	hot, cold := Of(Bash, Fire), Of(Bash, Ice)
 
 	if got, want := worn.CardCost(hot), bare.CardCost(hot)-1; got != want {
-		t.Errorf("a discounted fire Strike costs %d, want %d", got, want)
+		t.Errorf("a discounted fire Bash costs %d, want %d", got, want)
 	}
 	if got, want := worn.CardCost(cold), bare.CardCost(cold); got != want {
-		t.Errorf("the discount reached an ice Strike: %d, want %d", got, want)
+		t.Errorf("the discount reached an ice Bash: %d, want %d", got, want)
 	}
 }
 
@@ -168,7 +168,7 @@ func TestAFormRelicDoublesEveryMatchingCardInTheTurn(t *testing.T) {
 	if got, want := worn.CardDamage(Plain(Slice)), bare.CardDamage(Plain(Slice))*2; got != want {
 		t.Errorf("a Slice under the keen relic deals %d, want %d", got, want)
 	}
-	if got, want := worn.CardDamage(Plain(Strike)), bare.CardDamage(Plain(Strike)); got != want {
+	if got, want := worn.CardDamage(Plain(Bash)), bare.CardDamage(Plain(Bash)); got != want {
 		t.Errorf("the slash relic reached a crush card: %d, want %d", got, want)
 	}
 }
@@ -200,19 +200,19 @@ func TestAConceptRelicReachesOneCardOnly(t *testing.T) {
 	// the distinction this holds and the reason the two must not be priced alike.
 	striker := relic(t, "striker", RelicRule{
 		When: MomentCardDamage,
-		If:   RelicCondition{Concept: Strike, HasConcept: true},
+		If:   RelicCondition{Concept: Bash, HasConcept: true},
 		Then: []RelicEffect{{Do: DoScaleDamage, Amount: 200}},
 	})
 
 	bare := duelist(10, 5, 100)
 	worn := bare.Wearing(WornRelic{Relic: striker})
 
-	if got, want := worn.CardDamage(Plain(Strike)), bare.CardDamage(Plain(Strike))*2; got != want {
-		t.Errorf("a Strike under the striker relic deals %d, want %d", got, want)
+	if got, want := worn.CardDamage(Plain(Bash)), bare.CardDamage(Plain(Bash))*2; got != want {
+		t.Errorf("a Bash under the striker relic deals %d, want %d", got, want)
 	}
-	for _, id := range []ConceptID{Bash, Smash, Slice} {
+	for _, id := range []ConceptID{Thump, Smash, Slice} {
 		if got, want := worn.CardDamage(Plain(id)), bare.CardDamage(Plain(id)); got != want {
-			t.Errorf("%v under a Strike relic deals %d, want %d", ConceptOf(id).Label, got, want)
+			t.Errorf("%v under a Bash relic deals %d, want %d", ConceptOf(id).Label, got, want)
 		}
 	}
 }
@@ -233,7 +233,7 @@ func TestTwoPredicatesNarrowARuleRatherThanWidenIt(t *testing.T) {
 	if got, want := worn.CardDamage(Of(Slice, Fire)), bare.CardDamage(Of(Slice, Fire))*2; got != want {
 		t.Errorf("a fire slash deals %d, want %d", got, want)
 	}
-	for _, c := range []Card{Of(Slice, Ice), Of(Strike, Fire)} {
+	for _, c := range []Card{Of(Slice, Ice), Of(Bash, Fire)} {
 		if got, want := worn.CardDamage(c), bare.CardDamage(c); got != want {
 			t.Errorf("%v matched a rule wanting both predicates: %d, want %d", c, got, want)
 		}
@@ -354,7 +354,7 @@ func TestOneRuleCanApplyTwoStatuses(t *testing.T) {
 	a := duelist(10, 5, 500).Wearing(WornRelic{Relic: storm})
 	b := duelist(10, 5, 500)
 
-	_, _, bAfter := resolve(a, b, []Card{Of(Strike, Lightning)}, nil, 1)
+	_, _, bAfter := resolve(a, b, []Card{Of(Bash, Lightning)}, nil, 1)
 
 	if !bAfter.Statuses[shocked].Active() || !bAfter.Statuses[chilled].Active() {
 		t.Errorf("one storm hit left shocked=%v chilled=%v, want both",
@@ -379,13 +379,13 @@ func TestFlipsDoNotCompose(t *testing.T) {
 
 	worn := []WornRelic{{Relic: toIce}, {Relic: toEarth}}
 
-	if e, ok := FlipElement(worn, Of(Strike, Lightning)); !ok || e != Ice {
+	if e, ok := FlipElement(worn, Of(Bash, Lightning)); !ok || e != Ice {
 		t.Errorf("a lightning card became %v (flipped %v), want ice — the second flip chained", e, ok)
 	}
-	if e, ok := FlipElement(worn, Of(Strike, Ice)); !ok || e != Earth {
+	if e, ok := FlipElement(worn, Of(Bash, Ice)); !ok || e != Earth {
 		t.Errorf("an ice card became %v (flipped %v), want earth", e, ok)
 	}
-	if _, ok := FlipElement(worn, Of(Strike, Fire)); ok {
+	if _, ok := FlipElement(worn, Of(Bash, Fire)); ok {
 		t.Error("a fire card was flipped by relics that do not name it")
 	}
 }
@@ -484,8 +484,8 @@ func TestAnEnemyWearsNothing(t *testing.T) {
 	if n := len(enemy.WornRelics()); n != 0 {
 		t.Errorf("a zero duelist wears %d relics", n)
 	}
-	if got := enemy.statusesFrom([]Card{Of(Strike, Fire)}); len(got) != 0 {
-		t.Errorf("a relicless duelist's fire Strike applied %d statuses", len(got))
+	if got := enemy.statusesFrom([]Card{Of(Bash, Fire)}); len(got) != 0 {
+		t.Errorf("a relicless duelist's fire Bash applied %d statuses", len(got))
 	}
 }
 
@@ -524,7 +524,7 @@ func TestAnEchoSeatsTheLeadCardAgainAtDecreasingAmounts(t *testing.T) {
 		Then: []RelicEffect{{Do: DoEchoAttack, Amount: 3}},
 	})
 
-	card := Of(Strike, Fire)
+	card := Of(Bash, Fire)
 
 	if got := LandingAmounts(nil, card, true, 30); len(got) != 1 || got[0] != 30 {
 		t.Errorf("a bare duelist pays %v for a 30 card, want [30]", got)
@@ -668,7 +668,7 @@ func TestAGrowOnHitRelicGetsStrongerInsideOneFight(t *testing.T) {
 
 	d := duelist(100, 5, 100).Wearing(WornRelic{Relic: enflamed})
 
-	fire, ice := Of(Strike, Fire), Of(Strike, Ice)
+	fire, ice := Of(Bash, Fire), Of(Bash, Ice)
 
 	// Fresh, the relic is worth nothing: 100% of the card is the card.
 	if got, want := d.CardDamage(fire), d.CardDamage(ice); got != want {
@@ -722,7 +722,7 @@ func TestEchoAndAGrowOnHitRelicCompound(t *testing.T) {
 		Then: []RelicEffect{{Do: DoEchoAttack, Amount: 3}},
 	})
 
-	fire := Of(Strike, Fire)
+	fire := Of(Bash, Fire)
 
 	// **Through the real round**, because the echo's extra landings are seated by the sum: they are
 	// terms of one blow rather than cards of a turn, so nothing below the round can see them.
@@ -759,7 +759,7 @@ func TestAFourOfAKindGrowsOnceForEachCard(t *testing.T) {
 		})
 
 	attacker := duelist(10, 8, 100).Wearing(WornRelic{Relic: enflamed})
-	fire := Of(Strike, Fire)
+	fire := Of(Bash, Fire)
 
 	_, after, _ := resolve(attacker, duelist(10, 5, 1000),
 		[]Card{fire, fire, fire, fire}, nil, 1)
@@ -771,7 +771,7 @@ func TestAFourOfAKindGrowsOnceForEachCard(t *testing.T) {
 
 	// A hand of one colour among others still only pays for its own colour.
 	_, mixed, _ := resolve(attacker, duelist(10, 5, 1000),
-		[]Card{fire, Of(Strike, Ice), fire}, nil, 1)
+		[]Card{fire, Of(Bash, Ice), fire}, nil, 1)
 	if got := mixed.WornRelics()[0].Grown; got != 20 {
 		t.Errorf("two fire cards beside an ice one grew the relic by %d, want 20", got)
 	}
@@ -798,7 +798,7 @@ func TestMomentumBuildsAcrossTurnsAndADefenceWipesIt(t *testing.T) {
 
 	d := duelist(100, 8, 100).Wearing(WornRelic{Relic: momentum})
 	target := duelist(10, 5, 100000)
-	strike := Of(Strike, Basic)
+	strike := Of(Bash, Basic)
 
 	_, d, target = resolve(d, target, []Card{strike}, nil, 1)
 	if got := d.WornRelics()[0].Grown; got != 20 {
@@ -811,7 +811,7 @@ func TestMomentumBuildsAcrossTurnsAndADefenceWipesIt(t *testing.T) {
 	}
 
 	// A turn with any plan card in it nets zero, however much else it held.
-	_, d, target = resolve(d, target, []Card{strike, Plain(Ward)}, nil, 3)
+	_, d, target = resolve(d, target, []Card{strike, Plain(Brace)}, nil, 3)
 	if got := d.WornRelics()[0].Grown; got != 0 {
 		t.Errorf("a turn holding a plan card left Momentum at %d, want 0", got)
 	}
@@ -1031,8 +1031,8 @@ func TestTheHeldBonusPaysPerMatchingCardKeptBack(t *testing.T) {
 		Then: []RelicEffect{{Do: DoAddDamagePerHeld, Amount: 5}},
 	})
 
-	fire := Of(Strike, Fire)
-	ice := Of(Strike, Ice)
+	fire := Of(Bash, Fire)
+	ice := Of(Bash, Ice)
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: smoulder})
 
 	for _, tc := range []struct {
@@ -1067,7 +1067,7 @@ func TestTheHeldBonusReachesTheBlowAndIsMultiplied(t *testing.T) {
 	})
 
 	played := []Card{Of(Slice, Earth), Of(Slice, Earth)}
-	held := []Card{Of(Strike, Fire), Of(Strike, Fire)}
+	held := []Card{Of(Bash, Fire), Of(Bash, Fire)}
 
 	bare, _, _ := ResolveRoundHolding(duelist(10, 5, 100), duelist(10, 5, 100000),
 		played, nil, held, nil, 1, Sources{})
@@ -1100,7 +1100,7 @@ func TestAHeldCardPaysAgainEveryTurnItIsStillHeld(t *testing.T) {
 
 	wearer := duelist(10, 5, 100).Wearing(WornRelic{Relic: bedrock})
 	played := []Card{Of(Slice, Fire), Of(Slice, Fire)}
-	held := []Card{Of(Strike, Earth)}
+	held := []Card{Of(Bash, Earth)}
 
 	for round := 1; round <= 3; round++ {
 		events, _, _ := ResolveRoundHolding(wearer, duelist(10, 5, 100000),
@@ -1315,7 +1315,7 @@ func TestMinFormsCountsTheScoringSet(t *testing.T) {
 
 	// Two fire cards of different forms: an elemental pair covering two weapons.
 	mixed, _, _ := resolve(wearer, duelist(10, 5, 100000),
-		[]Card{Of(Slice, Fire), Of(Strike, Fire)}, nil, 1)
+		[]Card{Of(Slice, Fire), Of(Bash, Fire)}, nil, 1)
 	if e := handEventOf(t, mixed, SideA); e.HandScale != 300 {
 		t.Errorf("a pair of two different forms paid %d, want 300", e.HandScale)
 	}

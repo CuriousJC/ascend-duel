@@ -159,7 +159,7 @@ type Palette struct {
 // **Colour is being kept unspent.** Every glyph is drawn in one hueless palette so that
 // when an element or a block type arrives it can land on colour and mean something on
 // arrival. Painting the glyphs different colours now would look better today and would
-// spend the only channel left for saying "this Strike is fire" — the reader would already
+// spend the only channel left for saying "this Bash is fire" — the reader would already
 // have learned that the sword is grey, and the element would read as an inconsistency.
 type PaletteName string
 

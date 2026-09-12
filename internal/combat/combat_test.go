@@ -142,7 +142,7 @@ func TestSideATakesItsWholeTurnFirst(t *testing.T) {
 	b := duelist(10, 54, 500)
 
 	events, _, _ := resolve(a, b,
-		PlainCards(Strike, Strike), PlainCards(Strike, Strike), 1)
+		PlainCards(Bash, Bash), PlainCards(Bash, Bash), 1)
 
 	want := []Side{SideA, SideA, SideB, SideB}
 	if order := actionOrder(events); !sidesEqual(order, want) {
@@ -157,10 +157,10 @@ func TestATurnResolvesInCategoryOrder(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
 
-	queued := PlainCards(Ward, Strike, Brace, testGuard, Smash)
+	queued := PlainCards(Brace, Bash, Block, testGuard, Smash)
 	events, _, _ := resolve(a, b, queued, nil, 1)
 
-	want := PlainCards(Strike, Smash, Ward, Brace, testGuard)
+	want := PlainCards(Bash, Smash, Brace, Block, testGuard)
 	if got := playedCards(events); !cardsEqual(got, want) {
 		t.Errorf("played %v, want %v", got, want)
 	}
@@ -189,7 +189,7 @@ func TestResolutionOrderIsWhatResolveRoundPlays(t *testing.T) {
 	// they are the same sequence rather than trusting the shared call.
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
-	aPlan := PlainCards(Smash, Ward, Brace)
+	aPlan := PlainCards(Smash, Brace, Block)
 	bPlan := PlainCards(Jab, testGuard)
 
 	events, _, _ := resolve(a, b, aPlan, bPlan, 1)
@@ -208,8 +208,8 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 	// ResolveRound expires side B's defenses at the first B slot, which is only the start
 	// of B's turn if A's slots never follow it. Pin the block structure that relies on.
 	order := ResolutionOrder(
-		PlainCards(Ward, Strike, Brace),
-		PlainCards(testGuard, Smash, Ward))
+		PlainCards(Brace, Bash, Block),
+		PlainCards(testGuard, Smash, Brace))
 
 	seenB := false
 	for _, slot := range order {
@@ -226,7 +226,7 @@ func TestResolutionOrderNeverPutsAAfterB(t *testing.T) {
 func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	// Index is where the card sits in the player's queue, not where it lands in the round.
 	// Anything wanting "how far through the round are we" has to count slots instead.
-	order := ResolutionOrder(PlainCards(Ward, Jab), nil)
+	order := ResolutionOrder(PlainCards(Brace, Jab), nil)
 
 	if len(order) != 2 {
 		t.Fatalf("got %d slots, want 2", len(order))
@@ -234,8 +234,8 @@ func TestSlotIndexIsThePositionInItsOwnQueue(t *testing.T) {
 	if order[0].Card.Concept != Jab || order[0].Index != 1 {
 		t.Errorf("first slot = %v index %d, want Jab index 1", order[0].Card.Concept, order[0].Index)
 	}
-	if order[1].Card.Concept != Ward || order[1].Index != 0 {
-		t.Errorf("second slot = %v index %d, want Ward index 0", order[1].Card.Concept, order[1].Index)
+	if order[1].Card.Concept != Brace || order[1].Index != 0 {
+		t.Errorf("second slot = %v index %d, want Brace index 0", order[1].Card.Concept, order[1].Index)
 	}
 }
 
@@ -243,14 +243,14 @@ func TestStrikeDealsDMGAsDamage(t *testing.T) {
 	a := duelist(10, 5, 100)
 	b := duelist(10, 5, 100)
 
-	events, _, bAfter := resolve(a, b, PlainCards(Strike), nil, 1)
+	events, _, bAfter := resolve(a, b, PlainCards(Bash), nil, 1)
 
 	got := firstDamage(t, events, SideA)
 	if got.Amount != 10 {
-		t.Errorf("Strike damage = %d, want 10 (attacker DMG)", got.Amount)
+		t.Errorf("Bash damage = %d, want 10 (attacker DMG)", got.Amount)
 	}
 	if bAfter.CurrentLife != 90 {
-		t.Errorf("target life after Strike = %d, want 90", bAfter.CurrentLife)
+		t.Errorf("target life after Bash = %d, want 90", bAfter.CurrentLife)
 	}
 }
 
@@ -258,7 +258,7 @@ func TestTheTopTierHitsThreeTimesAsHardAsTheMiddleOne(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := duelist(1, 5, 500)
 
-	strikeLog, _, _ := resolve(a, b, PlainCards(Strike), nil, 1)
+	strikeLog, _, _ := resolve(a, b, PlainCards(Bash), nil, 1)
 	smashLog, _, _ := resolve(a, b, PlainCards(Smash), nil, 1)
 
 	strike := firstDamage(t, strikeLog, SideA)
@@ -269,7 +269,7 @@ func TestTheTopTierHitsThreeTimesAsHardAsTheMiddleOne(t *testing.T) {
 	// therefore no reason to play one; at triple they buy something the budget cannot get by
 	// spending the same points on cheaper cards.
 	if smash.Amount != strike.Amount*3 {
-		t.Errorf("Smash = %d, Strike = %d; want the 3 AP card to be triple", smash.Amount, strike.Amount)
+		t.Errorf("Smash = %d, Bash = %d; want the 3 AP card to be triple", smash.Amount, strike.Amount)
 	}
 }
 
@@ -286,7 +286,7 @@ func TestJabHitsForHalfButNeverZero(t *testing.T) {
 func TestOnlyAttacksDealDamage(t *testing.T) {
 	// **Nothing in the plan form hits back.** A defence is a wall, not a counter, so a turn made
 	// of plans alone is a turn in which nobody is hurt.
-	for _, a := range []ConceptID{Brace, Ward, testGuard} {
+	for _, a := range []ConceptID{Block, Brace, testGuard} {
 		events, _, bAfter := resolve(duelist(10, 5, 100), duelist(10, 5, 100),
 			PlainCards(a), nil, 1)
 
@@ -306,8 +306,8 @@ func TestADefendHalvesTheHandRatherThanTheCards(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
 
-	open, _, _ := resolve(a, b, nil, PlainCards(Strike, Strike, Strike), 1)
-	shielded, _, _ := resolve(a, b, PlainCards(testGuard), PlainCards(Strike, Strike, Strike), 1)
+	open, _, _ := resolve(a, b, nil, PlainCards(Bash, Bash, Bash), 1)
+	shielded, _, _ := resolve(a, b, PlainCards(testGuard), PlainCards(Bash, Bash, Bash), 1)
 
 	if n := damageCount(open); n != 1 {
 		t.Fatalf("an open turn produced %d damage events, want 1 — a turn is one blow", n)
@@ -333,17 +333,17 @@ func TestADefendCoversExactlyOneOpposingTurn(t *testing.T) {
 	a := duelist(10, 5, 500)
 	b := duelist(10, 5, 500)
 
-	round1, a1, b1 := resolve(a, b, PlainCards(testGuard), PlainCards(Strike), 1)
+	round1, a1, b1 := resolve(a, b, PlainCards(testGuard), PlainCards(Bash), 1)
 	if hit := firstDamage(t, round1, SideB); hit.Amount != 5 {
 		t.Errorf("round 1 hit into a fresh testGuard = %d, want 5", hit.Amount)
 	}
-	// **Spent, not standing.** A defence answers exactly one blow and goes with it, so B's Strike
+	// **Spent, not standing.** A defence answers exactly one blow and goes with it, so B's Bash
 	// is what consumed it — which is the same reason round two below arrives at full strength.
 	if a1.DefendCount != 0 {
 		t.Fatalf("A ended the round holding %d defences, want the testGuard spent on B's blow", a1.DefendCount)
 	}
 
-	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
+	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Bash), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
 		t.Errorf("round 2 hit after the testGuard expired = %d, want full 10", hit.Amount)
 	}
@@ -361,7 +361,7 @@ func TestSideBsDefenceProtectsItInTheFollowingRound(t *testing.T) {
 		t.Fatal("side B's testGuard did not survive the round it was raised in")
 	}
 
-	round2, _, _ := resolve(a1, b1, PlainCards(Strike), nil, 2)
+	round2, _, _ := resolve(a1, b1, PlainCards(Bash), nil, 2)
 	if hit := firstDamage(t, round2, SideA); hit.Amount != 5 {
 		t.Errorf("A's hit into B's carried testGuard = %d, want 5", hit.Amount)
 	}
@@ -375,7 +375,7 @@ func TestAnIdleDuelistLosesItsDefence(t *testing.T) {
 
 	_, a1, b1 := resolve(a, b, PlainCards(testGuard), nil, 1)
 
-	round2, _, _ := resolve(a1, b1, nil, PlainCards(Strike), 2)
+	round2, _, _ := resolve(a1, b1, nil, PlainCards(Bash), 2)
 	if hit := firstDamage(t, round2, SideB); hit.Amount != 10 {
 		t.Errorf("hit in round 2 = %d, want full 10 — an idle turn still expires a defence", hit.Amount)
 	}
@@ -396,7 +396,7 @@ func TestTheOrderDefencesWereRaisedInChangesNothing(t *testing.T) {
 		PlainCards(testWeakGuard, testGuard),
 	} {
 		events, _, _ := resolve(duelist(10, 5, 500), duelist(10, 5, 500),
-			raised, PlainCards(Strike, Strike), 1)
+			raised, PlainCards(Bash, Bash), 1)
 		took = append(took, firstDamage(t, events, SideB).Amount)
 	}
 
@@ -417,7 +417,7 @@ func TestDefensesExpireWithTheTurnTheyCovered(t *testing.T) {
 			a1.DefendCount, a1.Defends[0].Card)
 	}
 
-	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Strike), 2)
+	round2, _, _ := resolve(a1, b1, PlainCards(Jab), PlainCards(Bash), 2)
 	if n := damageCount(round2); n != 2 {
 		t.Errorf("damage events in round 2 = %d, want 2 — the defence expired at A's turn", n)
 	}
@@ -441,8 +441,8 @@ func TestCanAffordEnforcesTheBudget(t *testing.T) {
 	if !d.CanAfford(PlainCards(Smash, Thrust)) { // 3 + 2
 		t.Error("Smash + Thrust costs 5 and should fit a 5 AP budget")
 	}
-	if d.CanAfford(PlainCards(testGuard, Lunge)) { // 3 + 3
-		t.Error("testGuard + Lunge costs 6 and should not fit a 5 AP budget")
+	if d.CanAfford(PlainCards(testGuard, Skewer)) { // 3 + 3
+		t.Error("testGuard + Skewer costs 6 and should not fit a 5 AP budget")
 	}
 }
 
@@ -453,7 +453,7 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 	want := map[ConceptID]Category{
 		Jab:    CategoryAttack,
 		Thrust: CategoryAttack,
-		Lunge:  CategoryAttack,
+		Skewer: CategoryAttack,
 		Poke:   CategoryAttack,
 		Impale: CategoryAttack,
 
@@ -463,15 +463,15 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 		Nick:   CategoryAttack,
 		Sever:  CategoryAttack,
 
+		Thump:     CategoryAttack,
 		Bash:      CategoryAttack,
-		Strike:    CategoryAttack,
 		Smash:     CategoryAttack,
 		Tap:       CategoryAttack,
 		Pulverize: CategoryAttack,
 
 		Flinch: CategoryDefend,
-		Ward:   CategoryDefend,
 		Brace:  CategoryDefend,
+		Block:  CategoryDefend,
 		Guard:  CategoryDefend,
 	}
 
@@ -487,10 +487,10 @@ func TestCategoriesCoverEveryPlayerConcept(t *testing.T) {
 }
 
 func TestDefeatStopsTheRoundEarly(t *testing.T) {
-	// A queues three strikes into an enemy that cannot survive the hand they form. B must never
+	// A queues three bashes into an enemy that cannot survive the hand they form. B must never
 	// get its reply.
 	//
-	// **The three Strikes are one blow, and they are still three beats.** They are announced
+	// **The three Bashes are one blow, and they are still three beats.** They are announced
 	// before the hand is scored, so A's turn contributes three actions and B's contributes none —
 	// which is the honest reading of "the round stopped at the kill" now that a turn cannot be
 	// cut off partway through its own attack.
@@ -498,7 +498,7 @@ func TestDefeatStopsTheRoundEarly(t *testing.T) {
 	b := duelist(10, 5, 10)
 
 	events, _, bAfter := resolve(a, b,
-		PlainCards(Strike, Strike, Strike), PlainCards(Strike), 1)
+		PlainCards(Bash, Bash, Bash), PlainCards(Bash), 1)
 
 	if bAfter.Alive() {
 		t.Fatalf("side B survived with %d life, want defeated", bAfter.CurrentLife)
@@ -513,7 +513,7 @@ func TestDefeatStopsTheRoundEarly(t *testing.T) {
 
 func TestLifeNeverGoesNegative(t *testing.T) {
 	events, _, bAfter := resolve(duelist(1000, 5, 100), duelist(1, 5, 5),
-		PlainCards(Strike), nil, 1)
+		PlainCards(Bash), nil, 1)
 
 	for _, e := range events {
 		if e.Life < 0 {
@@ -531,7 +531,7 @@ func TestResolveRoundDoesNotMutateItsInputs(t *testing.T) {
 	a := duelist(10, 5, 100)
 	b := duelist(10, 5, 100)
 
-	resolve(a, b, PlainCards(Strike), PlainCards(Strike), 1)
+	resolve(a, b, PlainCards(Bash), PlainCards(Bash), 1)
 
 	if a.CurrentLife != 100 || b.CurrentLife != 100 {
 		t.Errorf("inputs mutated: a=%d b=%d, want both 100", a.CurrentLife, b.CurrentLife)
@@ -560,7 +560,7 @@ func TestRoundIsDeterministic(t *testing.T) {
 	a := duelist(7, 5, 300)
 	b := duelist(9, 5, 300)
 
-	aPlan := PlainCards(Strike, testGuard, Brace)
+	aPlan := PlainCards(Bash, testGuard, Block)
 	bPlan := PlainCards(Jab, testGuard)
 
 	first, a1, b1 := resolve(a, b, aPlan, bPlan, 1)
@@ -596,7 +596,7 @@ func TestEmptyQueueIsAHarmlessRound(t *testing.T) {
 func stockHand() []Card {
 	var hand []Card
 	for i := 0; i < 6; i++ {
-		hand = append(hand, PlainCards(Brace, testGuard, Jab, Strike, Smash)...)
+		hand = append(hand, PlainCards(Block, testGuard, Jab, Bash, Smash)...)
 	}
 	return hand
 }
@@ -610,8 +610,8 @@ func TestThePlannerNeverPlaysACardItWasNotDealt(t *testing.T) {
 		nil,
 		PlainCards(Jab),
 		PlainCards(Jab, Jab, Jab),
-		PlainCards(testGuard, Brace, Ward), // no attacks at all
-		PlainCards(testGuard, Brace),
+		PlainCards(testGuard, Block, Brace), // no attacks at all
+		PlainCards(testGuard, Block),
 		PlainCards(Smash, Smash, Jab, testGuard),
 	}
 
@@ -640,7 +640,7 @@ func TestPlanningIsReproducible(t *testing.T) {
 	// The determinism rule, at the planner. Nothing here may consult a map's iteration order
 	// or a clock, so the same hand must plan the same round every time — which is what lets a
 	// seeded run be replayed and what the balance tool depends on.
-	hand := PlainCards(Smash, Jab, Strike, testGuard, Jab, Brace, Strike, Smash)
+	hand := PlainCards(Smash, Jab, Bash, testGuard, Jab, Block, Bash, Smash)
 
 	d := duelist(10, 4, 100)
 	want := planKey(PlanFor(d, hand))
@@ -707,7 +707,7 @@ func TestThePlannerSpendsWhatTheAttacksDidNotWant(t *testing.T) {
 	// that only maximised damage would never raise a shield, so every defensive card authored into
 	// the roster would sit in a discard pile forever.
 	d := duelist(10, 5, 100) // 2 AP of attack, 3 left over
-	hand := PlainCards(Strike, testGuard)
+	hand := PlainCards(Bash, testGuard)
 
 	plan := PlanFor(d, hand)
 
@@ -721,7 +721,7 @@ func TestThePlannerSpendsWhatTheAttacksDidNotWant(t *testing.T) {
 		}
 	}
 	if attacks != 1 || shields != 1 {
-		t.Errorf("planned %v, want the Strike and the testGuard", planKey(plan))
+		t.Errorf("planned %v, want the Bash and the testGuard", planKey(plan))
 	}
 }
 
@@ -729,7 +729,7 @@ func TestThePlannerPrefersAShieldToABank(t *testing.T) {
 	// The one tie-break among the leftovers, and the reason for it: a defence is the leftover that
 	// decides whether the enemy is alive to use the next one.
 	d := duelist(10, 5, 100)
-	hand := PlainCards(Strike, Brace, testGuard)
+	hand := PlainCards(Bash, Block, testGuard)
 
 	plan := PlanFor(d, hand)
 	for _, c := range plan {

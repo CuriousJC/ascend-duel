@@ -40,9 +40,9 @@ import (
 // be naming a colour that is the absence of one.
 //
 // **A wildcard is CHROMATIC, not the element it happens to be** *(owner's call, 2026-09-09)*. The
-// card still *is* an arcane Lunge — it burns as one, it is drawn from the arcane row — but the
+// card still *is* an arcane Skewer — it burns as one, it is drawn from the arcane row — but the
 // title is where the panel says what the player is holding, and what they are holding counts as
-// every element. `ARCANE LUNGE` over a line reading `COUNTS AS EVERY ELEMENT` is the panel
+// every element. `ARCANE SKEWER` over a line reading `COUNTS AS EVERY ELEMENT` is the panel
 // contradicting itself in two lines. See Chromatic.
 func Title(c combat.Card) string {
 	name := upper(c.Label())
@@ -158,7 +158,7 @@ func RiderLines(c combat.Card) []string {
 			out = append(out, plus(r.Amount)+" VITAE IN HAND")
 		case combat.RiderScaleInCombo:
 			// **"IF IT SCORES", not "ON PLAY".** `Blow.Cards` is the scoring set and a turn can play
-			// a card that pays nothing into it — a lone Ward beside a pair. The distinction is the
+			// a card that pays nothing into it — a lone Brace beside a pair. The distinction is the
 			// whole of what separates this from damage-on-play, and it is one the player can lose.
 			out = append(out, Multiplier(r.Amount)+" DMG IF IT SCORES")
 		case combat.RiderWildElement:

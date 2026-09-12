@@ -45,7 +45,7 @@ type DuelistData struct {
 	// and Constitution were conversions into the action-point budget and into life; they went the
 	// day after Strength went, and for the same reason. See combat.Duelist.
 	//
-	// DMG is what one Strike deals in this duelist's hands. It was `Strength` until
+	// DMG is what one Bash deals in this duelist's hands. It was `Strength` until
 	// 2026-08-16, when the stat and the figure it converted into turned out to be one number
 	// wearing two names — see combat.Duelist.DMG.
 	DMG     int `json:"DMG"`

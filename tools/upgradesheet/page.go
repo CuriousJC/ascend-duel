@@ -120,7 +120,7 @@ var tmpl = template.Must(template.New("upgradesheet").Funcs(funcs).Parse(`<!doct
 <p class="note">
   Each upgrade below carries the <strong>tooltip a card wearing it actually shows</strong>, built by
   <code>internal/carddesc</code> — the same call <code>screens.cardTip</code> makes, not a copy of
-  it. The card is a fire Lunge and the duelist behind it hits for 10, so a figure that looks wrong
+  it. The card is a fire Skewer and the duelist behind it hits for 10, so a figure that looks wrong
   can be checked by eye. There are no relics on, which is why the block is the whole panel: the game
   appends its damage chain only when a relic has moved something. <strong>The colouring is the game's
   too</strong> — the same <code>cards.ElementRuns</code> table the screen reads — which is why FIRE

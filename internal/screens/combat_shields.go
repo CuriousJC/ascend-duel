@@ -40,7 +40,7 @@ import (
 
 // shieldFlight is a defend card's pips on their way to the card that will carry them.
 //
-// **It carries a count rather than one pip per flight.** Brace raises two and Guard three, and
+// **It carries a count rather than one pip per flight.** Block raises two and Guard three, and
 // three objects crossing the same gap on the same beat would read as three cards having been
 // played rather than as one card worth three.
 type shieldFlight struct {
@@ -290,7 +290,7 @@ const (
 	shieldToScale   = 1.0
 
 	// shieldSpread is how far apart two pips of one flight ride, in pixels at full size, so a
-	// Brace reads as two things rather than as one thicker one.
+	// Block reads as two things rather than as one thicker one.
 	shieldSpread = 26
 )
 

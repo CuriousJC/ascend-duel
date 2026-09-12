@@ -52,7 +52,7 @@
     },
     {
       "StepRecord": "the-shield",
-      "Text": "One of those four is a Ward - a shield, not a blow. It deals nothing, but it counts toward the hand all the same. It buys you one shield, and a shield does not eat whatever swings first - it picks their hardest blow and swallows that one.",
+      "Text": "One of those four is a Brace - a shield, not a blow. It deals nothing, but it counts toward the hand all the same. It buys you one shield, and a shield does not eat whatever swings first - it picks their hardest blow and swallows that one.",
       "Anchor": "matching-cards",
       "Until": "next"
     },

@@ -511,7 +511,7 @@ func TestTheAxisDecidesWhichCardsAreTheSet(t *testing.T) {
 		{actionCard: combat.Card{Concept: combat.Jab, Element: combat.Fire}},
 		{actionCard: combat.Card{Concept: combat.Cleave, Element: combat.Fire}},
 		{actionCard: combat.Card{Concept: combat.Smash, Element: combat.Fire}},
-		{actionCard: combat.Card{Concept: combat.Strike, Element: combat.Fire}},
+		{actionCard: combat.Card{Concept: combat.Bash, Element: combat.Fire}},
 		{actionCard: combat.Card{Concept: combat.Jab, Element: combat.Ice}},
 	}
 

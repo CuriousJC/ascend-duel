@@ -111,7 +111,7 @@ func TestEachLadderRungIsOneHand(t *testing.T) {
 
 // **A hand's name is the whole of its name** *(2026-08-17)*. It used to hold a `{card}` template
 // filled from whichever concept formed it, and to be prefixed on screen by the element makeup, so
-// one hand could print as "Duo Strike Flurry". Both axes are gone; what the feed prints is what the
+// one hand could print as "Duo Bash Flurry". Both axes are gone; what the feed prints is what the
 // file says.
 func TestAHandCarriesItsWholeName(t *testing.T) {
 	for _, h := range Hands() {

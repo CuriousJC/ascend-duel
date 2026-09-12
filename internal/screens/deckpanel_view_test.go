@@ -33,9 +33,9 @@ func panelRun(t *testing.T, deck []combat.Card, relics ...string) *session.Sessi
 // take and something to leave alone.
 func panelDeck() []combat.Card {
 	return []combat.Card{
-		{Concept: combat.Strike, Element: combat.Lightning},
-		{Concept: combat.Strike, Element: combat.Lightning},
-		{Concept: combat.Strike, Element: combat.Fire},
+		{Concept: combat.Bash, Element: combat.Lightning},
+		{Concept: combat.Bash, Element: combat.Lightning},
+		{Concept: combat.Bash, Element: combat.Fire},
 	}
 }
 

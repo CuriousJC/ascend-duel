@@ -39,7 +39,7 @@ func main() {
 	//
 	// **It is not needed to reach any rung of the ladder**, which was the reason it was added and
 	// stopped being true. Every rung has a build a 6 AP round can pay for — an elemental five of a
-	// kind is Jab, Cut, Bash, Ward and Thrust in one colour, 6 AP exactly, since the defences carry
+	// kind is Jab, Cut, Thump, Brace and Thrust in one colour, 6 AP exactly, since the defences carry
 	// a colour and join hands. What `-ap` answers now is how much a discount widens the *set* of
 	// hands that reach a rung, which is a different and still useful question.
 	budget := flag.Int("ap", hands.Budget(), "action points a turn may spend")

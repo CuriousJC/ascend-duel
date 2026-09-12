@@ -145,7 +145,7 @@ func TestTheStepAsksOnlyForTheCardsStillToTake(t *testing.T) {
 	}
 
 	// **And the whole set still has an anchor**, because the step after this one describes all four
-	// — including the Ward, which is the card that step is about.
+	// — including the Brace, which is the card that step is about.
 	whole, ok := s.tutorialRects(gs, tutorial.AnchorMatchingCards)
 	if !ok || len(whole) != len(match) {
 		t.Errorf("the describing step lights %d of the %d taught cards", len(whole), len(match))

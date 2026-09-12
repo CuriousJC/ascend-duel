@@ -97,7 +97,7 @@ func TestTheClockDoesNotFireOverABody(t *testing.T) {
 	a.RoundLimit = 1
 	b := duelist(500, 5, 300)
 
-	events, after, _ := resolve(a, b, nil, PlainCards(Strike), 1)
+	events, after, _ := resolve(a, b, nil, PlainCards(Bash), 1)
 
 	if after.Alive() {
 		t.Fatal("the test's blow did not kill, so it proves nothing about the clock")
@@ -117,7 +117,7 @@ func TestKillingOnTheLastRoundIsAWin(t *testing.T) {
 	a.RoundLimit = DefaultRoundLimit
 	b := duelist(1, 5, 1)
 
-	_, after, enemy := resolve(a, b, PlainCards(Strike), nil, DefaultRoundLimit)
+	_, after, enemy := resolve(a, b, PlainCards(Bash), nil, DefaultRoundLimit)
 
 	if enemy.Alive() {
 		t.Fatal("the test's blow did not kill, so it proves nothing about the ordering")

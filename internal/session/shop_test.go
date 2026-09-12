@@ -70,16 +70,16 @@ func TestEachTierPaysBackItsOwnFigure(t *testing.T) {
 
 func TestBuyingPaysAndPutsTheRelicOn(t *testing.T) {
 	run := rich(t)
-	price := priceOf(t, "keen-ring")
+	price := priceOf(t, "sickle")
 	before := run.Vitae()
 
-	if !run.Buy("keen-ring") {
+	if !run.Buy("sickle") {
 		t.Fatal("the purchase was refused")
 	}
 	if got := run.Vitae(); got != before-price {
 		t.Errorf("the purse came out %d, want %d", got, before-price)
 	}
-	if got := run.Worn(); len(got) != 1 || got[0] != "keen-ring" {
+	if got := run.Worn(); len(got) != 1 || got[0] != "sickle" {
 		t.Errorf("the run is wearing %v", got)
 	}
 }
@@ -88,15 +88,15 @@ func TestAnEmptyPurseBuysNothingAndChangesNothing(t *testing.T) {
 	// **A run cannot go into debt**, and a refused purchase has to leave it exactly as it was —
 	// the failure this guards is a relic going on before the purse is asked.
 	run := bare(t)
-	run.vitae = priceOf(t, "keen-ring") - 1
+	run.vitae = priceOf(t, "sickle") - 1
 
-	if run.CanBuy("keen-ring") {
+	if run.CanBuy("sickle") {
 		t.Error("CanBuy said yes on a short purse")
 	}
-	if run.Buy("keen-ring") {
+	if run.Buy("sickle") {
 		t.Fatal("a relic was bought that could not be afforded")
 	}
-	if got := run.Vitae(); got != priceOf(t, "keen-ring")-1 {
+	if got := run.Vitae(); got != priceOf(t, "sickle")-1 {
 		t.Errorf("the purse moved to %d on a refused purchase", got)
 	}
 	if len(run.Worn()) != 0 {
@@ -183,14 +183,14 @@ func TestABoughtRelicIsNotOfferedAgain(t *testing.T) {
 }
 
 func TestSellingTakesTheRelicOffAndPaysBack(t *testing.T) {
-	run := wearing(t, "fire-ring", "keen-ring", "banker-ring")
+	run := wearing(t, "fire-ring", "sickle", "banker-ring")
 	run.vitae = 0
 
-	if !run.Sell("keen-ring") {
+	if !run.Sell("sickle") {
 		t.Fatal("the sale was refused")
 	}
-	if got := run.Vitae(); got != SellValue("keen-ring") {
-		t.Errorf("the sale paid %d, want %d", got, SellValue("keen-ring"))
+	if got := run.Vitae(); got != SellValue("sickle") {
+		t.Errorf("the sale paid %d, want %d", got, SellValue("sickle"))
 	}
 
 	// **Worn order is the firing order**, so what is left has to stay in the order it went on.
@@ -204,7 +204,7 @@ func TestSellingSomethingYouAreNotWearingDoesNothing(t *testing.T) {
 	run := wearing(t, "fire-ring")
 	held := run.Vitae()
 
-	if run.Sell("keen-ring") {
+	if run.Sell("sickle") {
 		t.Fatal("a relic that was not worn was sold")
 	}
 	if run.Vitae() != held {

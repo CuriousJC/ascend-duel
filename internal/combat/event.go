@@ -205,7 +205,7 @@ type Event struct {
 	//
 	// **Set on every event a rider produces**, which is KindHealed, KindRaised from a shielding
 	// attack, KindVitae from either metal, and both grants. It is deliberately not set on the
-	// events a *card* produces - a Ward's KindRaised carries RiderNone, because the card raising
+	// events a *card* produces - a Brace's KindRaised carries RiderNone, because the card raising
 	// shields is the card doing its own job.
 	Rider RiderKind
 
@@ -265,7 +265,7 @@ type Event struct {
 	// multiplier, and there is no third term: **the multiplier multiplies the cards** *(2026-08-18,
 	// owner's call)*. It used to be applied to a separate reference swing of one 1x attack at the
 	// attacker's DMG, added on top of the cards — which meant a hand's percent bought a fixed
-	// figure rather than a proportion, so 500% was worth 2.5x the base on Jabs and 0.6x on Lunges.
+	// figure rather than a proportion, so 500% was worth 2.5x the base on Jabs and 0.6x on Skewers.
 	//
 	// **Amount is the blow before the attacker's weight and before anything the defender raised**,
 	// so it is what the hand was worth rather than what landed. What landed is the KindDamage

@@ -1210,7 +1210,7 @@ func (s *CombatScene) startRound() {
 //
 // combat.Event is one struct covering six kinds, so most of its fields are zero on any
 // given event: Action is set on KindAction alone, Amount and Target on the damage-ish ones.
-// Printing them all made every round-start read "side A Strike amount 0 life 0", which is
+// Printing them all made every round-start read "side A Bash amount 0 life 0", which is
 // four facts of which none were true. A trace that invents detail is worse than one that
 // omits it — the whole reason for having it is to be believed.
 func eventLabel(e combat.Event) string {
@@ -1370,7 +1370,7 @@ func (s *CombatScene) advancePlayback(gs *state.GlobalState) {
 		s.theatre.mathBox.clear()
 
 		// **Anything the sum never claimed fires now.** A card can be played and earn no term — a
-		// lone Ward beside a pair, a third element in a two-card hand — so it has no beat in the
+		// lone Brace beside a pair, a third element in a two-card hand — so it has no beat in the
 		// script to be thrown on, and a signal parked for a seat nobody scored would otherwise sit
 		// there until the side changed. See combat_signal.go.
 		s.flushSignals()
@@ -1832,7 +1832,7 @@ func (s *CombatScene) traceLayout(gs *state.GlobalState) {
 	trace.Rect("deck stack", deckStackBounds(gs))
 }
 
-// cardLabel names a card for a trace line: "Strike/fire", or just "Strike" when plain.
+// cardLabel names a card for a trace line: "Bash/fire", or just "Bash" when plain.
 func cardLabel(c actionCard) string {
 	if c.Element == combat.Basic {
 		return c.Label()
@@ -1856,7 +1856,7 @@ func handLabel(hand []paletteCard) string {
 	return out
 }
 
-// planLabel renders a queued set as "Guard + Strike + Jab".
+// planLabel renders a queued set as "Guard + Bash + Jab".
 func planLabel(cards []combat.Card) string {
 	if len(cards) == 0 {
 		return "(nothing)"

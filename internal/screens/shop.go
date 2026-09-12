@@ -208,7 +208,7 @@ type ShopScene struct {
 	pouch pouchToggle
 
 	// tip explains a relic: what it does, what it costs, and where it would sit in the firing order.
-	// **The case the tooltip was built for** — a shelf offering Keen Ring says a name and a price
+	// **The case the tooltip was built for** — a shelf offering The Sickle says a name and a price
 	// and nothing at all about slashes.
 	tip models.Tooltip
 }

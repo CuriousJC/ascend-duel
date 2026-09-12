@@ -15,7 +15,7 @@ func TestTheLedgerSurvivesASnapshot(t *testing.T) {
 			{Text: "attacks", Ink: InkAttack, Mark: true},
 			{Text: " with a fire strike"},
 		}},
-		Line(VoiceTerm, "Strike  20  x Keen 2x"),
+		Line(VoiceTerm, "Bash  20  x Keen 2x"),
 	}, 40)
 	s.EndFight(OutcomeWon)
 

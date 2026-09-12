@@ -31,7 +31,7 @@ func TestTheGridCoversTheWholeCardExactlyOnce(t *testing.T) {
 // purpose — see DissolveCells. Without it a morph would be over before its own clock was, and the
 // ends of the window would be dead air on screen.
 func TestTheDissolveStartsAtZeroAndFinishesAtOne(t *testing.T) {
-	for _, name := range []string{"Jab", "Ward", "Thrust", "Smash", "Guard"} {
+	for _, name := range []string{"Jab", "Brace", "Thrust", "Smash", "Guard"} {
 		cells := DissolveCells(162, 224, MarkSeed(name))
 		if len(cells) == 0 {
 			t.Fatalf("%s: no cells", name)
@@ -92,7 +92,7 @@ func TestTheSameCardComesApartTheSameWay(t *testing.T) {
 		}
 	}
 
-	other := DissolveCells(162, 224, MarkSeed("Ward"))
+	other := DissolveCells(162, 224, MarkSeed("Brace"))
 	same := 0
 	for i := range first {
 		if first[i].Delay == other[i].Delay {

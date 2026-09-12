@@ -35,7 +35,7 @@ import (
 // bare and buys its first relic out of what the first fights pay.
 //
 // **What that means for a launch, said plainly:** every element is inert until the first relic is
-// bought — an ice Strike is a plain Strike with a blue border — so the opening fights carry no
+// bought — an ice Bash is a plain Bash with a blue border — so the opening fights carry no
 // statuses at all. That is the intended shape of a run rather than an oversight, and it is the
 // thing to look at first if the early tower reads as flat.
 //

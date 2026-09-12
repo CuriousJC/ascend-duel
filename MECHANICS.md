@@ -61,7 +61,7 @@ move with playtesting. **There is no conversion left to freeze** *(2026-08-16)* 
 **All three conversions were removed over two days, and each for the same reason: a stat that
 leads to a second stat and stops there is a step the player must learn and can never act on.**
 
-- **`Str` became `DMG`** *(2026-08-16)*. The conversion was an identity — `Strike.Damage(Str)`
+- **`Str` became `DMG`** *(2026-08-16)*. The conversion was an identity — `Bash.Damage(Str)`
   returned `Str` — so two names described one number.
 - **`Con` became `HP`** *(2026-08-16)*. Life was `Con × 5`, so the roster was tuned in units of
   a fifth of a life total.
@@ -118,18 +118,18 @@ what used to make Shrink dead on every 1 AP card and Grow dead on every 3 AP one
 
 | Form | 0 AP · 0.25× | 1 AP · 0.5× | 2 AP · 1× | 3 AP · 2× | 4 AP · 4× |
 |---|---|---|---|---|---|
-| **stab** | Poke | Jab | Thrust | Lunge | Impale |
+| **stab** | Poke | Jab | Thrust | Skewer | Impale |
 | **slash** | Nick | Cut | Slash | Cleave | Sever |
-| **crush** | Tap | Bash | Strike | Smash | Pulverize |
+| **crush** | Tap | Thump | Bash | Smash | Pulverize |
 
 | Form | Concept | AP | Effect |
 |---|---|---|---|
-| **stab** | Poke / Jab / Thrust / Lunge / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 4` |
+| **stab** | Poke / Jab / Thrust / Skewer / Impale | 0 / 1 / 2 / 3 / 4 | Stabs for `DMG/4` / `DMG/2` (both min 1) / `DMG` / `DMG × 3` / `DMG × 4` |
 | **slash** | Nick / Cut / Slash / Cleave / Sever | 0 / 1 / 2 / 3 / 4 | Slashes for the same five figures |
-| **crush** | Tap / Bash / Strike / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
+| **crush** | Tap / Thump / Bash / Smash / Pulverize | 0 / 1 / 2 / 3 / 4 | Crushes for the same five figures |
 | **defend** | Flinch | 0 | Raises **1 shield** |
-| | Ward | 1 | Raises **1 shield** |
-| | Brace | 2 | Raises **2 shields** |
+| | Brace | 1 | Raises **1 shield** |
+| | Block | 2 | Raises **2 shields** |
 | | Guard | 3 | Raises **3 shields** |
 
 **The 3 AP attacks pay triple, not double** *(owner's call, 2026-09-01)*. At `DMG × 2` they were a
@@ -139,7 +139,7 @@ cheaper cards.
 
 **The defend ladder is four rungs and the dealt two are the middle** *(owner's call, 2026-09-06)*.
 `Flinch` at 0 AP and `Guard` at 3 AP ship at zero copies exactly as the outer attack rungs do, so
-the deck opens on Ward and Brace and the two ends are somewhere a worm can walk a card to. Guard
+the deck opens on Brace and Block and the two ends are somewhere a worm can walk a card to. Guard
 left the deck on 2026-09-01; Flinch was added to give the defences the same shape.
 
 **Nine attack concepts × five colours = 45 cards; two defences × five colours = 10.** A **55-card
@@ -149,7 +149,7 @@ is drab** *(2026-08-25)*: every card ships in one of the five elements, the defe
 **A 0 AP card is bounded by the count rather than the cost**, which is the shift `minCardCost`
 already took deliberately when Whetworm could drive a card to free: a turn is capped at
 `MaxActions` cards however cheap they are. **A 4 AP card is the first single card that beats a
-whole cheap turn**, at 1.33× a Lunge for 1.33× the price — which is the rung the 3 AP raise to
+whole cheap turn**, at 1.33× a Skewer for 1.33× the price — which is the rung the 3 AP raise to
 triple flattened, and it is now priced level rather than above — the reason it is a worm's prize rather
 than something a run can stock.
 
@@ -161,12 +161,12 @@ on it would make the top card the only one worth holding.
 
 **Flinch raises a shield for nothing, and that is the floor rather than a mistake** *(owner's call,
 2026-09-06)*. A shield eats a whole blow, so there is no fraction of one to fall to: where Poke is a
-Jab at a quarter of the damage, Flinch is a Ward at none of the cost. What bounds it is the count —
+Jab at a quarter of the damage, Flinch is a Brace at none of the cost. What bounds it is the count —
 a turn plays at most `MaxActions` cards however cheap they are — rather than the budget, which is
 the same shift `minCardCost` took when Whetworm could drive a card to free. **The duelist's own
 shield cap is not part of that bound any more**; see §Shields.
 
-**`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so a Grow promotes a Ward and
+**`combat.Neighbour` walks this ladder** *(owner's call, 2026-09-06)*, so a Grow promotes a Brace and
 a Shrink demotes a Guard. **This reverses the 2026-08-31 call** that kept the worms to the damage
 ladders on the argument that a free shield changes how many hits a run takes for the rest of the
 tower — which is still true, and is now something a run is allowed to build toward: a deck of ten
@@ -174,8 +174,8 @@ defences shrunk to Flinches is five free shields a turn, and since 2026-09-09 no
 fifth away. It is matched on the *verb* rather than pinned to attacks, so the two ladders can never
 step onto each other.
 
-**`Strike` is the 1× reference the ladder is written against**, and that is why the crush form
-holds the name: `DMG` on the fighter card is `Strike.Damage(DMG)`, so the figure the player reads
+**`Bash` is the 1× reference the ladder is written against**, and that is why the crush form
+holds the name: `DMG` on the fighter card is `Bash.Damage(DMG)`, so the figure the player reads
 is what one middle-rung card deals. Nothing stops that reference moving to another form's middle
 rung; it is one constant. **What it is no longer is a term in the damage formula** *(2026-08-18)* —
 a hand's multiplier applies to the cards that formed it, not to a reference swing added on top, so
@@ -206,7 +206,7 @@ now, the border having stopped saying it the same day.
 
 **A shield eats one incoming attack, whole** *(owner's call, 2026-08-31)*. No damage and no partial
 figure: the attack lands nothing at all, and the feed says so in a line of its own because there is
-no damage line for it to hang off. Ward and Brace raise one and two shields for one and two AP; Guard
+no damage line for it to hang off. Brace and Block raise one and two shields for one and two AP; Guard
 is a third rung the file still holds at zero copies.
 
 **The point is that the player decides how many hits they take.** A creature turn is a known number
@@ -352,7 +352,7 @@ deck is half ice" from being confused with "my deck contains more ice cards".
   `remove` the card is gone from every pile and the deck is genuinely smaller; after Grow or Shrink
   it is a different concept from then on. Nothing takes a worm back.
 - **A relic can rewrite the deck as a fight's deck is built** — the `deck-built` moment. Atrophy
-  steps every 3 AP attack one rung down its own form's ladder, so a Lunge is dealt as a Thrust for
+  steps every 3 AP attack one rung down its own form's ladder, so a Skewer is dealt as a Thrust for
   the whole fight. It lasts as long as the relic is worn and no longer.
 - **A relic can also rewrite a card as it is dealt** — the `card-drawn` moment, which leaves even
   the fight's deck alone. Frozen Lightning and Hexfrost both `set-element` to ice, which is why a
@@ -612,7 +612,7 @@ card before an affix can gate it would hand it a free status, which is exactly w
 forbids.
 
 **A run opens wearing no relics at all** *(owner's call, 2026-08-21)*, so **every element is inert
-until the first one is bought**: an ice Strike is a plain Strike with a blue border. That is what
+until the first one is bought**: an ice Bash is a plain Bash with a blue border. That is what
 makes the shop the first thing a run saves for. `session.StartingRelics` is the seat for putting one
 on without playing to a shop — the relic counterpart of `deckSeedName` — and it ships empty.
 
@@ -643,7 +643,7 @@ once however many cards matched it — so the four elemental relics still read a
 distinct non-basic colour", and a form or concept relic reaches the same moment by the same route.
 An all-basic hand lands nothing, because no elemental rule matches a colourless card. A defend card
 carries its element for the relic discount and applies nothing itself;
-the alternative — every card applying its status — would make a 1-AP Ward as good a delivery as
+the alternative — every card applying its status — would make a 1-AP Brace as good a delivery as
 a 1-AP Jab and turn the defend phase into the status engine. (This
 is a rule waiting for a card rather than one currently biting.)
 
@@ -653,10 +653,10 @@ its keep by what it leaves on the victim, not by hitting harder.
 
 Three consequences, all of them changes from the per-card version:
 
-- **A colour is counted once however many cards carry it.** Two ice Strikes and an ice Jab land
+- **A colour is counted once however many cards carry it.** Two ice Bashes and an ice Jab land
   one chill, where three separate ice hits used to land three. Status volume moved from "how many
   coloured cards" to "how many *different* coloured cards".
-- **Cards outside the hand carry no colour at all.** `Strike, Jab, Strike` in fire, ice, fire is a
+- **Cards outside the hand carry no colour at all.** `Bash, Jab, Bash` in fire, ice, fire is a
   fire Pair — one burn — and the ice Jab contributes neither damage nor a chill.
 - **The status lands because the hand formed, not because the blow hurt.** A hand halved by a
   guard still connected, and making the status conditional on the final figure would let a
@@ -789,7 +789,7 @@ its own duelist rather than contributing to a shared blow.
 
 **And the phase says one thing, not one thing per card.** The announcements still happen — each is
 a beat, and the screen raises the card that made it — but the *sentence* is the hand's: "HAND!
-Duelist lands a Pair (20 x 1.5 = 30), 30 damage". Five lines saying a Strike was
+Duelist lands a Pair (20 x 1.5 = 30), 30 damage". Five lines saying a Bash was
 swung describe five blows, which is exactly the reading this rule was written to end. **A blow that
 forms no hand still gets its own ordinary sentence**, because a High Card is not a hand and
 announcing one over every attack would empty the word.
@@ -895,10 +895,10 @@ four:
 
 | Axis | Cards agree on | Two that form a pair | Two that do not |
 |---|---|---|---|
-| `concept` | the same card | ice Bash + fire Bash | Bash + Strike |
-| `form` | stab, slash, crush or defend | Bash + Smash (both crush) | Bash + Thrust |
-| `element` | fire, ice, lightning, earth or arcane | ice Bash + ice Thrust | ice Bash + fire Bash |
-| `cost` | the same action points | Bash + Cut (both 1 AP) | Bash + Thrust |
+| `concept` | the same card | ice Thump + fire Thump | Thump + Bash |
+| `form` | stab, slash, crush or defend | Thump + Smash (both crush) | Thump + Thrust |
+| `element` | fire, ice, lightning, earth or arcane | ice Thump + ice Thrust | ice Thump + fire Thump |
+| `cost` | the same action points | Thump + Cut (both 1 AP) | Thump + Thrust |
 
 **`cost` is the fourth axis and it arrived last** *(owner's call, 2026-09-05)*. It is genuinely
 orthogonal to the other three in the player's deck — every cost tier holds three or four forms, and
@@ -915,7 +915,7 @@ the argument for keeping the rest apart is written down.
 
 **The axes are not parallel, and the nesting is the thing to hold onto.** A concept fixes a form,
 so **every card hand is also a form hand**; element is independent of both, which is why an ice
-Bash beside a fire Bash is a card hand and no kind of elemental one. That asymmetry is what the
+Thump beside a fire Thump is a card hand and no kind of elemental one. That asymmetry is what the
 tie-break and the multiplier ordering below both exist to answer.
 
 **A card with no value on an axis matches nothing on it.** `FormNone` and `Basic` are absences
@@ -923,13 +923,13 @@ rather than values, so an enemy's formless colourless deck cannot build a form o
 at all — its whole ladder is the concept axis, which is what its `Copies` field was always buying.
 The player's defences carry a colour like everything else, and it is inert for the same reason.
 
-**Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Bashes and two Cleaves
+**Exactly one hand still applies, and a tie goes to the narrowest axis.** Two Thumps and two Cleaves
 satisfy the Card Two Pair and the Form Two Pair at once; the narrower one is what the player aimed
 at, so `concept`
 beats `form` beats `element` beats `cost` whenever the multipliers are level. `combat.Axis` is written in that
 order for exactly this reason and is never serialized, so the order is free to mean something.
 
-**Exactly one hand applies.** It wins on its multiplier — four Strikes are a Four of a Kind rather
+**Exactly one hand applies.** It wins on its multiplier — four Bashes are a Four of a Kind rather
 than also the pair and the trips inside it — so a turn produces one hand with no ranking
 machinery beyond that comparison.
 
@@ -939,12 +939,12 @@ hardest-hitting attack card is the blow, ties going to the card queued first.
 **The fallback almost never fires any more, and that is the biggest single consequence of the three
 axes** *(2026-08-19)*. Two attacks used to have to be the same card to both count; now they need
 only share a form or a colour, so a turn of two mismatched attacks that landed the bigger one alone
-lands the sum of both times a multiplier. Smash + Strike at DMG 10 goes from **20** — the Smash, by
+lands the sum of both times a multiplier. Smash + Bash at DMG 10 goes from **20** — the Smash, by
 itself — to **33**, and none of that comes from the multiplier being generous: 1.1x of two cards
 beats 1.0x of one. Two attacks that agree on nothing at all are now the rare case rather than the
 common one, and the High Card is what names it.
 
-**Attack cards outside the hand contribute nothing.** `Strike, Jab, Strike` is a Pair; the Jab is
+**Attack cards outside the hand contribute nothing.** `Bash, Jab, Bash` is a Pair; the Jab is
 announced, is not in the hand, adds no damage and carries no colour. That is a stated rule rather
 than a consequence — it is what makes *choosing a shape* pay more than throwing everything you
 drew.
@@ -952,7 +952,7 @@ drew.
 **Every card in the turn is counted, and that is the matcher's rule rather than the catalogue's**
 *(2026-08-17, widened 2026-08-23)*. An entry used to name the categories it counted and could never
 change what was counted, so the field only invited an entry to claim otherwise. What is left out is
-decided by the axis — a card with no value on it — and by nothing else. **A Ward joins a hand**
+decided by the axis — a card with no value on it — and by nothing else. **A Brace joins a hand**
 and brings no damage into it.
 
 ### Damage: one blow, one multiplier
@@ -963,7 +963,7 @@ A turn deals damage **once**, in the attack phase, and the figure is:
 (damage of each card in the hand)  ×  (hand multiplier)
 ```
 
-So a pair of Lunges at DMG 10 is `(20 + 20) × 1.5` = **60**.
+So a pair of Skewers at DMG 10 is `(20 + 20) × 1.5` = **60**.
 
 | Hand | Cards | Multiplier |
 |---|---|---|
@@ -978,7 +978,7 @@ So a pair of Lunges at DMG 10 is `(20 + 20) × 1.5` = **60**.
 then the formula carried a third term — `Σ cards + DMG × multiplier` — where `DMG` was a reference
 swing of one 1× attack at the attacker's strength, *added on top of* what the cards dealt. The
 percent therefore bought a **fixed figure rather than a proportion**: at DMG 10 a Four of a Kind
-was worth +50 whether it was built from four Jabs dealing 5 each or four Lunges dealing 20 each —
+was worth +50 whether it was built from four Jabs dealing 5 each or four Skewers dealing 20 each —
 2.5× the base in the first case and 0.6× in the second. **The ladder paid least to the decks that
 had climbed furthest**, which is backwards, and the arithmetic could not be read off `hands.json`
 because the number the percent applied to was not in the file.
@@ -987,7 +987,7 @@ Two things follow and both were the reason for the change:
 
 - **The ladder is tunable from `data/hands.json` alone.** The percent now applies to a figure the
   file's reader can see, so an entry means what it says.
-- **A hand is worth more on bigger cards, in proportion.** A Pair of Lunges beats a Pair of Jabs by
+- **A hand is worth more on bigger cards, in proportion.** A Pair of Skewers beats a Pair of Jabs by
   exactly the 4× the cards themselves are apart.
 
 **The High Card pays the identity** *(2026-08-18)*. When a turn builds no pair or better, the
@@ -1005,12 +1005,12 @@ Card is a hand, and it is not something anybody built.
 
 **Colour buys statuses and no damage** *(2026-08-17)*. The distinct non-basic elements in the
 formed hand each land their status, gated on the attacker wearing that element's relic; basic is
-not a colour and never counts, so two basic Strikes and an ice Strike show one colour. That list
+not a colour and never counts, so two basic Bashes and an ice Bash show one colour. That list
 is all that survives of the second axis.
 
 ### What the axis costs
 
-- **Counted matching only.** A hand reads the turn as a set, so a Jab between two Strikes does
+- **Counted matching only.** A hand reads the turn as a set, so a Jab between two Bashes does
   not break the pair, and no hand can ask for an *ordered* run of cards.
 - **A hand cut short still pays out.** Nothing can interrupt it — a turn's attacks resolve as one
   event — so this is true by construction rather than by rule.
@@ -1025,8 +1025,8 @@ is all that survives of the second axis.
   coloured, and the turn is bounded by AP rather than by the draw. See *The multipliers come from how often a hand can actually be built*
   above for the model and the table.
 - **A turn's mismatched attacks sum**, rather than the biggest one landing alone, so a hand is
-  worth more the dearer its cards are: at DMG 10 four Lunges are **400** where four Jabs are
-  **100** and three Bashes are **30**. **Nothing on the enemy side is tuned against that** — the
+  worth more the dearer its cards are: at DMG 10 four Skewers are **400** where four Jabs are
+  **100** and three Thumps are **30**. **Nothing on the enemy side is tuned against that** — the
   ladder, the ascent curve and the roster are independent, and the ladder is one file.
 
 ### The catalogue's shape
@@ -1067,7 +1067,7 @@ a five-group form hand is a rung nobody could climb and would otherwise fail sil
 *three* forms until 2026-08-23, when the fourth joined them.
 
 **A hand names one axis to count on, not one per group.** A mixed hand — three ice cards *and* a
-pair of Bashes — is deliberately not expressible; reopening it is a schema change and should be
+pair of Thumps — is deliberately not expressible; reopening it is a schema change and should be
 argued for here first. **`"match": "any"` is not that door**: a merged rung is the *same* groups
 read on one axis at a time, and whichever reading it satisfies it satisfies whole.
 
@@ -1118,10 +1118,10 @@ What that changed, in order of how much it matters:
 - **`defend` is a fourth countable form.** Any two defences are a Pair regardless of concept or
   colour, and twelve of forty-eight cards carry it.
 - **A defence brings no damage into the hand it joins.** `Card.Damage` is zero for every verb that is
-  not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Ward
-  beside two fire Strikes turns a Pair into an Elemental Three of a Kind and pays it on the two
-  Strikes' damage. That is the whole of what the change buys.
-- **A defence's colour arms a status.** `elementsOf` reads the formed hand, so a fire Ward shows fire
+  not an attack, so the multiplier multiplies the attacks that are in there with it — a fire Brace
+  beside two fire Bashes turns a Pair into an Elemental Three of a Kind and pays it on the two
+  Bashes' damage. That is the whole of what the change buys.
+- **A defence's colour arms a status.** `elementsOf` reads the formed hand, so a fire Brace shows fire
   and lands a burn on a turn with no fire attack in it. That is the sharper half of the same
   decision.
 - **A hand of nothing but shields is real and lands nothing**, which is the accepted cost — see the
@@ -1240,9 +1240,9 @@ Three things fall out of it and are worth keeping:
 *(owner's call, 2026-08-23)*. It was an open question while the two could only disagree by a little;
 defences joining hands made them disagree by everything, and the answer is to leave the matcher alone.
 
-The case that forced it: a turn of `Strike + two shields` forms a **Pair on zero damage**, because
-any two defences share `FormDefend` and a formed hand beats the High Card fallback — so the Strike is
-announced and lands nothing, where the Strike alone would have landed its face damage. **The Pair
+The case that forced it: a turn of `Bash + two shields` forms a **Pair on zero damage**, because
+any two defences share `FormDefend` and a formed hand beats the High Card fallback — so the Bash is
+announced and lands nothing, where the Bash alone would have landed its face damage. **The Pair
 dropping to 1x narrowed this rather than closing it** *(2026-09-05)*: the two are level on
 multiplier now, and what still costs the player the blow is that the pair's own cards are the two
 shields, which deal nothing. Playing defences beside a single attack can cost you the blow, and
@@ -1262,18 +1262,18 @@ Once a profile does exist, they freeze.
 **Straights are dropped rather than invented** — the concepts have no natural order to be
 consecutive in, and the grammar has no notion of consecutiveness for one to be written in.
 
-What keeps the top of the ladder rare is the deck and the budget: three Strikes is exactly 6 AP,
-a starting fighter's entire budget, and **five Strikes is 10 AP**, reachable only by spending a
-whole round on shields. **Five Strikes is dealable as of 2026-08-25** — the deck holds five, one
+What keeps the top of the ladder rare is the deck and the budget: three Bashes is exactly 6 AP,
+a starting fighter's entire budget, and **five Bashes is 10 AP**, reachable only by spending a
+whole round on shields. **Five Bashes is dealable as of 2026-08-25** — the deck holds five, one
 per colour — which is what turned the concept five-of-a-kind from a worm's rung into the rarest
 measurable hand in the game. Being dealable and being affordable are still two different questions,
 which is why the wide five-of-a-kind rungs are the cheapest cards of a form or a colour rather than
 of a concept.
 
-**A colour's cheapest five now includes a defence** *(2026-08-23)* — fire Jab, Cut, Bash and Ward at
+**A colour's cheapest five now includes a defence** *(2026-08-23)* — fire Jab, Cut, Thump and Brace at
 1 AP each plus a fire Thrust at 2 is **6 AP**, which is a plain round's whole budget and the first
 time an elemental five-of-a-kind has been affordable out of a plain budget. It used to be 7 AP, because a
-colour held one card per form per tier and nothing cheaper. The Ward pays nothing into the 5.65x;
+colour held one card per form per tier and nothing cheaper. The Brace pays nothing into the 5.65x;
 what it does is take the place of the second 2 AP attack the hand used to need, so it is a rung the
 defences *open* rather than a rung they win. `go run ./tools/handsheet` draws it.
 
@@ -1293,7 +1293,7 @@ defences *open* rather than a rung they win. `go run ./tools/handsheet` draws it
 - **A place to browse hands** — a reference the player can return to. Probably belongs with the
   profile rather than inside a duel. `Hands()` exists for it to read.
 - **The attack phase writes one line, and it is the hand's.** *Done.* Attack cards no longer draw
-  a row each — a turn of five Strikes read as five actions and one figure, which is the model the
+  a row each — a turn of five Bashes read as five actions and one figure, which is the model the
   pane was contradicting. The line carries the arithmetic (`20 x 1.5 = 30`) off the event, so
   the sum shown is the sum used, and the damage attaches to it. **The hand dialog now carries the
   same arithmetic at the size of the screen**, spelled out card by card; the line stays because it
@@ -1524,7 +1524,7 @@ became **Warm** and grew three siblings.
 | **Fire / Ice / Lightning / Earth / Arcane** | `card-damage` | doubles every card of that colour — *element* multipliers, where Keen/Heavy/Needle are form ones |
 | **Storm** | `attack-lands` | lightning shocks *and* chills |
 | **Keen / Heavy / Needle** | `card-damage` | doubles **every** slash / crush / stab card in the turn |
-| **Striker** | `card-damage` | doubles every Strike — a concept relic, 5 cards where a form covers 15, and priced accordingly |
+| **Striker** | `card-damage` | doubles every Bash — a concept relic, 5 cards where a form covers 15, and priced accordingly |
 | **Banker** | `fight-won` | a second +1 vitae per 5 held, on top of propagation |
 | **Soul Taker** | `prizes-dealt` | the vitae prize card pays +10 rather than +5. A **flat** +5, not a scaling |
 | **Hungry** | `prizes-dealt` | two post-battle choices instead of one |
@@ -1616,8 +1616,8 @@ duelist away.
 
 ### Atrophy, and the ladder as a relic *(2026-08-22, owner's call)*
 
-**Every 3 AP attack is dealt as its 2 AP version**: Lunge becomes Thrust, Cleave becomes Slash,
-Smash becomes Strike. Rare.
+**Every 3 AP attack is dealt as its 2 AP version**: Skewer becomes Thrust, Cleave becomes Slice,
+Smash becomes Bash. Rare.
 
 **It is the flip's shape applied to the other axis, at the other moment.** A flip changes a card's
 colour as that card is *drawn*; Atrophy changes its *concept* as the fight's draw pile is built, one
@@ -1625,9 +1625,9 @@ rung down the same form's ladder. The two moments matter for how the deck panel 
 nothing else in play — see the flip relics below. Everything downstream — cost, damage, the hand it forms, the card face — follows
 because the card genuinely is a Thrust.
 
-- **What the player buys is a turn with more cards in it.** Three Lunges cost 9 AP and do not fit a
+- **What the player buys is a turn with more cards in it.** Three Skewers cost 9 AP and do not fit a
   6 AP turn; three Thrusts cost 6 and do. It trades damage per card for cards per turn, which is a
-  hand-ladder decision rather than a damage one — a Three of a Kind of Thrusts against one Lunge and
+  hand-ladder decision rather than a damage one — a Three of a Kind of Thrusts against one Skewer and
   a Jab.
 - **`combat.Neighbour` already existed**, built for worms, so the ladder is still a consequence of
   `duelist_cards.json` rather than a table written twice. A card with no rung below it is left alone.
@@ -1653,7 +1653,7 @@ itself at a smaller figure, and the turn reads as *seven cards played, the first
 times*.
 
 - **The echo never reaches the matcher.** `blowFor` has already run when `handEvent` adds the
-  echoes, so an echoed Strike does not turn a Pair into Three of a Kind. It pays into the hand the
+  echoes, so an echoed Bash does not turn a Pair into Three of a Kind. It pays into the hand the
   real cards formed — which is also what stops one relic rewriting the hand ladder.
 - **The multiplier therefore multiplies the echoes too**, since they are in the base sum. Echo is
   worth about two thirds of the lead card, times the hand — strongest in a big hand, which is the
@@ -1959,7 +1959,7 @@ rung relic can be written either as a term the hand contributed or as a multipli
 
 **Nothing in the vocabulary names a shield.** `CardDamage` returns zero immediately for a card that
 deals none, so a `card-damage` rule on a defend concept is a record that can never fire — which is
-why Ward, Brace and Guard got no concept relic when the other fourteen were written, and why
+why Brace, Block and Guard got no concept relic when the other fourteen were written, and why
 **Braced** reaches shields sideways, through cost, rather than head on.
 
 It is recorded as a **gap rather than a decision**: 138 of 139 relics are about attacking, in a game
@@ -2135,7 +2135,7 @@ and `internal/session/worm.go`, which is where a record is validated.
 | `duplicate` | — | puts a second copy of one card into the run |
 | `cost` | a signed delta | changes what one card costs |
 | `amount` | a percentage | scales one card's figure, whatever that figure is |
-| `promote` | — | one rung up its form's ladder: Jab → Strike → Smash |
+| `promote` | — | one rung up its form's ladder: Thump → Bash → Smash |
 | `demote` | — | one rung down: cheaper and weaker |
 
 **The vocabulary is closed**, the same posture the card verbs take: a new target is a Go change
@@ -2177,7 +2177,7 @@ scratch before adding one.
 
 **Effect text reads the card, not the concept** *(2026-08-17)*. It was already a template over the
 value; what changed is which value it reads. So an altered Defend prints the percentage it
-actually cuts and an altered Ward prints the shields it actually raises. **A card whose face disagreed
+actually cuts and an altered Brace prints the shields it actually raises. **A card whose face disagreed
 with its behaviour is the worst thing an alteration mechanic can produce**, and it is the reason
 this was not deferred.
 
@@ -2401,8 +2401,8 @@ changed my card", and what separates them is what the *next* parasite does.
   the middle of one, and the fight's piles were dealt before the copy existed — so a copy that went
   only into the run would not be playable until the *next* fight and would read as a dud. The copy
   is a new card with a new identity, arrives unselected, and `Session.Duplicated` is the handover.
-- **`form` is an override on the card, not a swap of the concept.** A Ward told to be a crush is
-  still a Ward: it still shields, and it now counts as a crush when the hand is matched. **A defend
+- **`form` is an override on the card, not a swap of the concept.** A Brace told to be a crush is
+  still a Brace: it still shields, and it now counts as a crush when the hand is matched. **A defend
   card is a legal target and that is the point** *(owner's call)* — it produces a card that shields
   and matches on an attack axis, which nothing in the catalogue does. `combat.Card.FormOverride` is
   the field and `Card.Form` is the one chokepoint that reads it.
@@ -2623,8 +2623,8 @@ so is a panel that trains the player not to read it.
   `FIRE JAB`, so it was the place that mattered most. Both are `TipLine` now and go through one
   drawing.
 - **A wildcard is CHROMATIC, not the element it happens to be.** The card still *is* an arcane
-  Lunge — it burns as one, it is drawn from the arcane row, `Blow.Elements` reports arcane — but the
-  title says what the player is holding, and `ARCANE LUNGE` over a line reading `COUNTS AS EVERY
+  Skewer — it burns as one, it is drawn from the arcane row, `Blow.Elements` reports arcane — but the
+  title says what the player is holding, and `ARCANE SKEWER` over a line reading `COUNTS AS EVERY
   ELEMENT` is a panel contradicting itself in two lines. **CHROMATIC takes no colour**: the wheel
   has none left for "all of them", and writing it in one of the five would claim the one thing the
   word exists to deny.
@@ -2634,8 +2634,8 @@ so is a panel that trains the player not to read it.
 `RiderWildElement` makes one card count as **every element at once** when a hand is formed. It is
 attached by the **Motley** parasite and it is the eighth rider kind.
 
-**The card keeps its own element and everything else goes on reading it.** A wild fire Strike is
-still a fire Strike: it lands a burn, it sits in the fire row of the deck panel, and `Blow.Elements`
+**The card keeps its own element and everything else goes on reading it.** A wild fire Bash is
+still a fire Bash: it lands a burn, it sits in the fire row of the deck panel, and `Blow.Elements`
 reports fire for it. One question changes — what it counts as on the element axis — and the answer
 is "whatever the hand needs".
 
@@ -3201,7 +3201,7 @@ The list looks heterogeneous and is not. It is three families, and only one of t
   **This family is pure grammar**, and four of them were rungs of the hand ladder until 2026-09-05 —
   cut because the ladder could not *price* them, not because they could not be matched. This is
   where they went, and it is the right home: a shape worth naming that is not worth paying for.
-- **A lifetime count** — three hundred slashing cards, two hundred Strikes. A tally on the profile,
+- **A lifetime count** — three hundred slashing cards, two hundred Bashes. A tally on the profile,
   not a predicate over anything the process is holding.
 - **A named moment** — a duel won, the tutorial finished, the fifth floor reached, a card altered
   into a Flinch, ten shields standing at once. The only family that costs a line of Go each, and
@@ -3226,7 +3226,7 @@ or demoting — which makes "five 4 AP attacks of one card" a statement about a 
 *built*, and the reason those two achievements are worth naming at all.
 
 **It reads `Card.Cost()` and not the concept's figure.** A worm's `CostDelta` is part of what the
-turn cost, so five Lunges a Grow pushed to 4 AP count and five Impales a Whetworm made cheap do not.
+turn cost, so five Skewers a Grow pushed to 4 AP count and five Impales a Whetworm made cheap do not.
 The achievement is about what was paid.
 
 **Zero is a filter and not an absence**, which is why the field is a pointer in the JSON struct —
@@ -3283,7 +3283,7 @@ the record of what was swung on the way up.
 **Counters are per concept and per form, and never per concept and element** *(owner's call)*. Five
 colours of twelve concepts is sixty tallies to say what twelve say. Both axes are counted because
 the two questions are genuinely different: "how many slashing cards" is the form and "how many
-Strikes" is the concept.
+Bashes" is the concept.
 
 ### The failure this shape exists to prevent
 

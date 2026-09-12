@@ -31,7 +31,7 @@ type Card struct {
 
 	// CostDelta and AmountPct are **per-card modifiers, and they are what a worm writes**
 	// *(2026-08-17)*. Everything else about a card lives on the shared concept, so altering one
-	// copy of a Strike would otherwise alter every Strike in the deck.
+	// copy of a Bash would otherwise alter every Bash in the deck.
 	//
 	// CostDelta is added to the concept's cost; AmountPct scales its amount, as a percentage, with
 	// **zero meaning unmodified** so a plain card is still the zero value and every existing
@@ -48,7 +48,7 @@ type Card struct {
 	// and every `Card{Concept: x}` literal keeps working — the same trade AmountPct made.
 	//
 	// **It is a per-card modifier and not a concept swap**, because that is the difference the
-	// owner asked for: a Ward turned into a crush is still a Ward, still defends, and now counts
+	// owner asked for: a Brace turned into a crush is still a Brace, still defends, and now counts
 	// as a crush when the hand is matched. That produces a card that shields and matches on an
 	// attack axis, which is a legal weird thing rather than a bug *(owner's call, 2026-09-02)*.
 	//
@@ -250,8 +250,8 @@ func Concepts(cards []Card) []ConceptID {
 }
 
 // Category is which phase of a turn an action resolves in, and the axis the whole round
-// is built on. It is a property of the action, not an independent choice: a fire Lunge
-// and a plain Lunge are both attacks.
+// is built on. It is a property of the action, not an independent choice: a fire Skewer
+// and a plain Skewer are both attacks.
 //
 // **There are two of them as of 2026-08-15**, down from prepare/attack/defend. The deck is
 // three attack forms and one defend form, and the three-way split was describing a deck that

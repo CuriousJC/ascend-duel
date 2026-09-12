@@ -58,7 +58,7 @@ func TestNoTwoRidersShareAnUpgrade(t *testing.T) {
 // **An unridden card carries no upgrade**, which is what makes the common case the zero value and
 // what stops every plain card in the deck being washed in something.
 func TestAnUnriddenCardHasNoUpgrade(t *testing.T) {
-	if got := upgradeOf(combat.Plain(combat.Strike)); got != systems.UpgradeNone {
+	if got := upgradeOf(combat.Plain(combat.Bash)); got != systems.UpgradeNone {
 		t.Errorf("a plain card draws as %s", got)
 	}
 }
@@ -67,7 +67,7 @@ func TestAnUnriddenCardHasNoUpgrade(t *testing.T) {
 // combat.TestACardCarriesOneUpgradeAndNoMore; this is the drawing agreeing with it, because a card
 // whose face still said gold after a Leech would be the one place last-one-wins is invisible.
 func TestTheFaceShowsTheLastUpgradePutOn(t *testing.T) {
-	c := combat.Plain(combat.Strike).
+	c := combat.Plain(combat.Bash).
 		SetRider(combat.Rider{Kind: combat.RiderGolden, Amount: 5}).
 		SetRider(combat.Rider{Kind: combat.RiderHealOnPlay, Amount: 10})
 	if got := upgradeOf(c); got != systems.UpgradeHeal {

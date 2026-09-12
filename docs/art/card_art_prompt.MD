@@ -1,35 +1,5 @@
 # Card art prompt
 
-**One prompt for every card that carries a picture** — relics, parasites, worms and
-stones. They are all the same card: a full-bleed 5:7 portrait behind a face that writes no
-title, so a separate prompt per catalogue was three copies of one paragraph drifting apart.
-
-## How to use it
-
-1. Paste everything under **The prompt** below, verbatim, into the image generator.
-2. Pick **one** of the two composition blocks and paste that with it. Which one is a fact
-   about the card style, not a preference — see the table.
-3. Replace the last line with the subject: what the object or creature *is*, and what the
-   effect is doing to it, in one paragraph. The prompt never names the subject, so this is the
-   only place the generator learns there is a relic on fire rather than a relic made of teeth.
-   The per-record paragraphs live in the worklists — `relics_to_draw.md` for relics.
-4. Save the result to `.scratch/<kind>-art/<key>.png`, reduce it to 200x280, and commit it as
-   `assets/<kind>/<key>.png`. The reduction is not optional — see [README.md](README.md).
-5. Set `"Art": "<key>"` on the record and strike it from the worklist.
-
-| Card style | Draws | Composition | What covers the art |
-|---|---|---|---|
-| `cards.RelicStyle` | relics | **Whole card** | a counter disc in the bottom-right corner |
-| `cards.WormStyle` | parasites, worms, stones | **Upper band** | the text band, from y 140 to y 265 |
-
-**A parasite needs one thing more**: a body plan, from the closed list in
-[parasite_art_prompt.MD](parasite_art_prompt.MD). A relic is an object and can be described from
-nothing; a creature handed no shape is a different animal every time.
-
----
-
-## The prompt
-
 Pixel art illustration of a single subject. No text anywhere in the image — no title, no
 label, no caption, no signature. The subject and its background, nothing else.
 
@@ -79,19 +49,22 @@ them:
   the height on the top and bottom edges
 - the bottom-right corner: a box 22.5% of the width across and 16% of the height down
 
-### Upper band
+## The subject — pasted as the record
 
-Composition: subject centred horizontally and sitting in the upper two thirds of the canvas,
-filling roughly the middle 60% of the width and the band from 7% to 50% of the height down.
+The block below is one record from the game's own catalogue, in JSON.
 
-Keep these areas simple and low-contrast, and draw nothing in them — they are covered after
-the fact by elements that are not part of this image, so nothing may be added to represent
-them:
+**Read `Draw` and nothing else as the subject.** `Name`, `Text` and `Rules` are context for
+what the object does and are never to be rendered — no title, no caption, no rules text, no
+numbers anywhere in the image. If `Draw` is empty, stop and say so rather than inventing a
+subject.
 
-- a margin around all four sides: 7.5% of the width on the left and right edges, and 5.5% of
-  the height on the top and bottom edges
-- everything below 50% of the height
-
-## The subject — written per record
-
-The subject to draw: <what it is, and the effect it carries>
+```json
+{
+  "RelicRecord": "coiled-ring",
+  "Name": "Coiled Ring",
+  "Art": "",
+  "Draw": "tightly braided jade metal relic",
+  "Text": "Deals 5 more DMG for each crush card\nkept in hand.",
+  "Rarity": "common"
+}
+```

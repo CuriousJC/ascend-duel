@@ -23,7 +23,7 @@ func TestARiddenCardHealsItsOwnerAsItIsPlayed(t *testing.T) {
 	a.CurrentLife = 50
 	b := duelist(0, 0, 100)
 
-	events, after, _ := resolve(a, b, []Card{ridden(Strike, 10)}, nil, 1)
+	events, after, _ := resolve(a, b, []Card{ridden(Bash, 10)}, nil, 1)
 
 	if got := healedBy(events, SideA); got != 10 {
 		t.Errorf("a rider worth 10 healed %d", got)
@@ -37,7 +37,7 @@ func TestASecondRiderReplacesTheFirst(t *testing.T) {
 	// **Last one wins** — see Card.SetRider. A card holds one upgrade, so a second heal is not a
 	// second ten: it is the card forgetting the first one. This is the test that would go red if
 	// stacking came back in.
-	c := ridden(Strike, 10).SetRider(Rider{Kind: RiderHealOnPlay, Amount: 7})
+	c := ridden(Bash, 10).SetRider(Rider{Kind: RiderHealOnPlay, Amount: 7})
 
 	a := duelist(10, 3, 100)
 	a.CurrentLife = 50
@@ -58,7 +58,7 @@ func TestAHealNeverGoesAboveFullLife(t *testing.T) {
 	a := duelist(10, 3, 100)
 	a.CurrentLife = 95
 
-	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Strike, 10)}, nil, 1)
+	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Bash, 10)}, nil, 1)
 
 	if after.CurrentLife != 100 {
 		t.Errorf("life ended at %d, wanted the cap at 100", after.CurrentLife)
@@ -73,7 +73,7 @@ func TestAHealOnFullLifeIsSilent(t *testing.T) {
 	// restored. The rider is still spent, because it is a property of the card rather than a charge.
 	a := duelist(10, 3, 100)
 
-	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Strike, 10)}, nil, 1)
+	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Bash, 10)}, nil, 1)
 
 	if after.CurrentLife != 100 {
 		t.Errorf("life moved to %d on a full-life heal", after.CurrentLife)
@@ -93,7 +93,7 @@ func TestAChilledCardHealsNothing(t *testing.T) {
 	a.CurrentLife = 50
 	a.Statuses[statusOf(Ice)] = Status{Amount: 1, Rounds: 2}
 
-	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Strike, 10)}, nil, 1)
+	events, after, _ := resolve(a, duelist(0, 0, 100), []Card{ridden(Bash, 10)}, nil, 1)
 
 	if got := healedBy(events, SideA); got != 0 {
 		t.Errorf("a chilled card healed %d", got)
@@ -106,7 +106,7 @@ func TestAChilledCardHealsNothing(t *testing.T) {
 func TestAnUnriddenCardIsTheZeroValue(t *testing.T) {
 	// Nothing may *require* a rider, and the common case has to stay the plain literal every test
 	// in this package writes.
-	c := Plain(Strike)
+	c := Plain(Bash)
 	if c.RiderCount() != 0 || c.HealOnPlay() != 0 || len(c.RiderList()) != 0 {
 		t.Errorf("a plain card reported riders: %+v", c)
 	}
@@ -119,7 +119,7 @@ func TestACardCarriesOneUpgradeAndNoMore(t *testing.T) {
 	if MaxCardRiders != 1 {
 		t.Fatalf("a card holds %d riders; the whole upgrade grammar assumes one", MaxCardRiders)
 	}
-	c := Plain(Strike).
+	c := Plain(Bash).
 		SetRider(Rider{Kind: RiderHealOnPlay, Amount: 1}).
 		SetRider(Rider{Kind: RiderWildElement})
 	if c.RiderCount() != 1 {
@@ -151,10 +151,10 @@ func TestARiderDoesNotStopACardBeingComparable(t *testing.T) {
 	// The screen's face cache and TestRoundIsDeterministic both compare cards by value, which is
 	// why Riders is a fixed array. A slice here would not compile at all; this is what says so out
 	// loud, so the field is not "tidied up" into one later.
-	if ridden(Strike, 10) != ridden(Strike, 10) {
+	if ridden(Bash, 10) != ridden(Bash, 10) {
 		t.Error("two identically ridden cards did not compare equal")
 	}
-	if ridden(Strike, 10) == ridden(Strike, 20) {
+	if ridden(Bash, 10) == ridden(Bash, 20) {
 		t.Error("two differently ridden cards compared equal")
 	}
 }
@@ -188,8 +188,8 @@ func TestACardHeldBackAddsToTheDuelistsDamage(t *testing.T) {
 	a := duelist(10, 3, 100)
 	b := duelist(0, 0, 1000)
 
-	bare, _, _ := holding(a, b, PlainCards(Strike, Strike), nil, 1)
-	held, _, _ := holding(a, b, PlainCards(Strike, Strike),
+	bare, _, _ := holding(a, b, PlainCards(Bash, Bash), nil, 1)
+	held, _, _ := holding(a, b, PlainCards(Bash, Bash),
 		[]Card{carrying(Jab, RiderDamageInHand, 10)}, 1)
 
 	if blowOf(held, SideA) <= blowOf(bare, SideA) {
@@ -199,14 +199,14 @@ func TestACardHeldBackAddsToTheDuelistsDamage(t *testing.T) {
 }
 
 func TestACardHeldBackIsNotPlayedAndDoesNotFormTheHand(t *testing.T) {
-	// The held card is a Strike and so are the two played ones. If holding it reached the matcher
+	// The held card is a Bash and so are the two played ones. If holding it reached the matcher
 	// it would make trips out of a pair, and the multiplier would move — which would be the
 	// resolver treating a card nobody played as one that was.
 	a := duelist(10, 3, 100)
 	b := duelist(0, 0, 1000)
 
-	pair, _, _ := holding(a, b, PlainCards(Strike, Strike), nil, 1)
-	withHeld, _, _ := holding(a, b, PlainCards(Strike, Strike), PlainCards(Strike), 1)
+	pair, _, _ := holding(a, b, PlainCards(Bash, Bash), nil, 1)
+	withHeld, _, _ := holding(a, b, PlainCards(Bash, Bash), PlainCards(Bash), 1)
 
 	one, ok := handEventFor(pair, SideA)
 	if !ok {
@@ -217,7 +217,7 @@ func TestACardHeldBackIsNotPlayedAndDoesNotFormTheHand(t *testing.T) {
 		t.Fatal("a pair with a card held back formed no hand")
 	}
 	if one.Hand != two.Hand || one.Multiplier != two.Multiplier {
-		t.Errorf("holding a third Strike changed the hand from %d (x%d) to %d (x%d)",
+		t.Errorf("holding a third Bash changed the hand from %d (x%d) to %d (x%d)",
 			one.Hand, one.Multiplier, two.Hand, two.Multiplier)
 	}
 }
@@ -230,7 +230,7 @@ func TestACardHeldBackPaysVitaeEveryTurnItIsHeld(t *testing.T) {
 	held := []Card{carrying(Jab, RiderVitaeInHand, 3)}
 
 	for round := 1; round <= 3; round++ {
-		events, _, _ := holding(a, b, PlainCards(Strike), held, round)
+		events, _, _ := holding(a, b, PlainCards(Bash), held, round)
 
 		paid := 0
 		for _, e := range events {
@@ -272,9 +272,9 @@ func TestARiderThatScalesInComboNeedsTheCardToMakeTheHand(t *testing.T) {
 	a := duelist(10, 3, 100)
 	b := duelist(0, 0, 1000)
 
-	// Two Strikes form a pair; the ridden Strike is one of them.
-	inHand, _, _ := resolve(a, b, []Card{carrying(Strike, RiderScaleInCombo, 200), Plain(Strike)}, nil, 1)
-	bare, _, _ := resolve(a, b, PlainCards(Strike, Strike), nil, 1)
+	// Two Bashes form a pair; the ridden Bash is one of them.
+	inHand, _, _ := resolve(a, b, []Card{carrying(Bash, RiderScaleInCombo, 200), Plain(Bash)}, nil, 1)
+	bare, _, _ := resolve(a, b, PlainCards(Bash, Bash), nil, 1)
 
 	// **Within a point, because the multiplier truncates** *(2026-09-05)*. scaleDamage is integer
 	// arithmetic rounding toward zero, so doubling the DMG and *then* scaling is not always the
@@ -293,7 +293,7 @@ func TestARidersDamageBonusDoesNotOutliveTheBlow(t *testing.T) {
 	// would turn a one-turn rider into a permanent upgrade, silently.
 	a := duelist(10, 3, 100)
 	_, after, _ := resolve(a, duelist(0, 0, 1000),
-		[]Card{carrying(Strike, RiderDamageOnPlay, 10)}, nil, 1)
+		[]Card{carrying(Bash, RiderDamageOnPlay, 10)}, nil, 1)
 
 	if after.DMG != 10 {
 		t.Errorf("the duelist came out of the round at %d DMG, wanted 10", after.DMG)

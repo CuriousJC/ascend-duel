@@ -11,11 +11,11 @@ import (
 // washed in five colours explained by a grey title is the one tooltip that does not look like the
 // thing under the cursor.
 func TestTheChromaticTitleIsWrittenInTheWash(t *testing.T) {
-	wild := combat.Plain(combat.Lunge).SetRider(combat.Rider{Kind: combat.RiderWildElement})
+	wild := combat.Plain(combat.Skewer).SetRider(combat.Rider{Kind: combat.RiderWildElement})
 	runs := tipLine(carddesc.Title(wild))
 
-	if got := runs.Text(); got != carddesc.Chromatic+" LUNGE" {
-		t.Fatalf("the title reads %q, want %q", got, carddesc.Chromatic+" LUNGE")
+	if got := runs.Text(); got != carddesc.Chromatic+" SKEWER" {
+		t.Fatalf("the title reads %q, want %q", got, carddesc.Chromatic+" SKEWER")
 	}
 
 	inks := map[string]bool{}
@@ -34,7 +34,7 @@ func TestTheChromaticTitleIsWrittenInTheWash(t *testing.T) {
 // **The rest of the line is left alone.** The word is lit, not the sentence around it — the same
 // rule every element word in a tooltip is under.
 func TestOnlyTheWordChromaticIsLit(t *testing.T) {
-	runs := tipLine(carddesc.Chromatic + " LUNGE")
+	runs := tipLine(carddesc.Chromatic + " SKEWER")
 
 	lit := ""
 	plain := ""
@@ -48,8 +48,8 @@ func TestOnlyTheWordChromaticIsLit(t *testing.T) {
 	if lit != carddesc.Chromatic {
 		t.Errorf("the lit run is %q, want %q", lit, carddesc.Chromatic)
 	}
-	if plain != " LUNGE" {
-		t.Errorf("the plain run is %q, want %q", plain, " LUNGE")
+	if plain != " SKEWER" {
+		t.Errorf("the plain run is %q, want %q", plain, " SKEWER")
 	}
 }
 

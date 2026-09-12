@@ -27,7 +27,7 @@
     "Copies": 1
   },
   {
-    "Label": "Lunge",
+    "Label": "Skewer",
     "Verb": "attack",
     "Amount": 300,
     "Cost": 3,
@@ -101,7 +101,7 @@
     "Copies": 0
   },
   {
-    "Label": "Bash",
+    "Label": "Thump",
     "Verb": "attack",
     "Amount": 50,
     "Cost": 1,
@@ -110,7 +110,7 @@
     "Copies": 1
   },
   {
-    "Label": "Strike",
+    "Label": "Bash",
     "Verb": "attack",
     "Amount": 100,
     "Cost": 2,
@@ -147,7 +147,7 @@
     "Copies": 0
   },
   {
-    "Label": "Ward",
+    "Label": "Brace",
     "Verb": "shield",
     "Amount": 1,
     "Cost": 1,
@@ -156,7 +156,7 @@
     "Copies": 1
   },
   {
-    "Label": "Brace",
+    "Label": "Block",
     "Verb": "shield",
     "Amount": 2,
     "Cost": 2,

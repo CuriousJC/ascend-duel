@@ -150,7 +150,7 @@ func (c clause) holds(turn []combat.Card) bool {
 // costs narrows a selection to the cards of one AP, or leaves it alone when the clause named none.
 //
 // **`Card.Cost()` rather than the concept's figure**, so a worm's CostDelta is read — which is what
-// makes "five 4 AP attacks" true of five promoted Lunges and false of five Impales a Whetworm has
+// makes "five 4 AP attacks" true of five promoted Skewers and false of five Impales a Whetworm has
 // made cheap. See data.ClauseData.Cost.
 func (c clause) costs(cards []combat.Card) []combat.Card {
 	if c.cost == nil {
@@ -209,7 +209,7 @@ func axisValue(c combat.Card, axis combat.Axis) (int, bool) { return combat.Matc
 // CountersFor is what one played turn adds to the lifetime tallies.
 //
 // **Two names per card, on two axes**, because the two questions a player asks are genuinely
-// different: "how many slashing cards have I played" is the form, and "how many Strikes" is the
+// different: "how many slashing cards have I played" is the form, and "how many Bashes" is the
 // concept. Counting both costs one map entry each and is what lets an achievement be authored on
 // either without a Go change.
 //
@@ -227,7 +227,7 @@ func CountersFor(turn []combat.Card) map[string]int {
 }
 
 // CounterLabel is a tally's name written for a person: `form:slash` as "slash cards", and
-// `concept:Strike` as "Strike". It exists for a progress line the achievements page may yet want,
+// `concept:Bash` as "Bash". It exists for a progress line the achievements page may yet want,
 // and for an error message that has to name one.
 func CounterLabel(name string) string {
 	switch {

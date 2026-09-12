@@ -32,7 +32,7 @@ func gamble(a, b Duelist, aCards []Card, seed int64) ([]Event, Duelist) {
 // three outcomes, not two rolls — see rollGolden, which is where the argument against a 4% double
 // payout is written down.
 func TestAGoldenCardGrantsAtMostOneThingPerPlay(t *testing.T) {
-	card := Plain(Strike).SetRider(Rider{Kind: RiderGolden, Amount: LuckOutcomes})
+	card := Plain(Bash).SetRider(Rider{Kind: RiderGolden, Amount: LuckOutcomes})
 
 	dmgs, lives, duds := 0, 0, 0
 	for seed := int64(0); seed < 60; seed++ {
@@ -69,7 +69,7 @@ func TestAGoldenCardGrantsAtMostOneThingPerPlay(t *testing.T) {
 // worth something for the rest of the fight; the event is what makes it worth something for the
 // rest of the run, and both halves are needed. See screens.settleGrants.
 func TestAGrantMovesTheDuelistItWasRolledFor(t *testing.T) {
-	card := Plain(Strike).SetRider(Rider{Kind: RiderGolden, Amount: LuckOutcomes})
+	card := Plain(Bash).SetRider(Rider{Kind: RiderGolden, Amount: LuckOutcomes})
 
 	for seed := int64(0); seed < 60; seed++ {
 		a := duelist(10, 3, 100)
@@ -96,7 +96,7 @@ func TestAGrantMovesTheDuelistItWasRolledFor(t *testing.T) {
 // vitae already travels out of a resolved round as the difference between the purse the duel opened
 // with and the one it closes with — see screens.payHeldVitae.
 func TestASilverCardPaysThePurse(t *testing.T) {
-	card := Plain(Strike).SetRider(Rider{Kind: RiderSilver, Amount: LuckOutcomes})
+	card := Plain(Bash).SetRider(Rider{Kind: RiderSilver, Amount: LuckOutcomes})
 
 	paid, duds := 0, 0
 	for seed := int64(0); seed < 60; seed++ {
@@ -125,7 +125,7 @@ func TestASilverCardPaysThePurse(t *testing.T) {
 // TestRoundIsDeterministic depends on, one field over.
 func TestNoLuckSourceTakesNoGamble(t *testing.T) {
 	for _, kind := range []RiderKind{RiderGolden, RiderSilver} {
-		card := Plain(Strike).SetRider(Rider{Kind: kind, Amount: LuckOutcomes})
+		card := Plain(Bash).SetRider(Rider{Kind: kind, Amount: LuckOutcomes})
 		a := duelist(10, 3, 100)
 		events, after, _ := resolveRound(a, duelist(0, 0, 100000), []Card{card}, nil, nil, nil,
 			1, handTable, Sources{})
@@ -142,7 +142,7 @@ func TestNoLuckSourceTakesNoGamble(t *testing.T) {
 // **A card that is not a metal never gambles**, which is the shape every rider reader takes: ask the
 // card, get nothing, carry on. Nothing branches on whether a card is ridden.
 func TestAnOrdinaryCardHasNoOdds(t *testing.T) {
-	c := Plain(Strike)
+	c := Plain(Bash)
 	if c.GoldenOdds() != 0 || c.SilverOdds() != 0 {
 		t.Errorf("a plain card reported odds: gold %d, silver %d", c.GoldenOdds(), c.SilverOdds())
 	}

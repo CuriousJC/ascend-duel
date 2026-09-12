@@ -125,18 +125,26 @@ func run(dir string) error {
 			// **The page prints the full name and the card face does not** — the heading beside
 			// a card is a place a relic is named in a sentence, which is exactly where the noun
 			// still earns its place.
-			Name:    record.Name,
-			Text:    record.Text,
-			Price:   price,
-			Rarity:  string(record.Rarity),
-			Sell:    session.SellValue(key),
-			Art:     record.Art,
+			Name:   record.Name,
+			Text:   record.Text,
+			Price:  price,
+			Rarity: string(record.Rarity),
+			Sell:   session.SellValue(key),
+			Art:    record.Art,
+			// **The subject paragraph, beside the picture it produced.** It lived in a worklist
+			// under docs/art/ until 2026-09-12, struck the moment the art was filed — so the
+			// words that made a picture went at the moment they became the record of how it was
+			// made. It is a field on the record now, and this is where the two are read together.
+			Draw:    record.Draw,
 			Counter: spec.Counter,
 			Default: record.Art == "",
 			Rules:   ruleLines(record),
 		})
 		if record.Art == "" {
 			page.Undrawn++
+		}
+		if record.Draw == "" {
+			page.Unwritten++
 		}
 	}
 
@@ -170,8 +178,9 @@ func run(dir string) error {
 		return fmt.Errorf("writing %s: %w", out, err)
 	}
 
-	fmt.Printf("wrote %s and %d PNGs — %d of %d relics have art of their own\n",
-		out, len(plates)+len(page.States), page.Count-page.Undrawn, page.Count)
+	fmt.Printf("wrote %s and %d PNGs — %d of %d relics have art of their own and %d a subject\n",
+		out, len(plates)+len(page.States), page.Count-page.Undrawn, page.Count,
+		page.Count-page.Unwritten)
 	for _, t := range page.Tiers {
 		fmt.Printf("  %-9s %2d relics at %d vitae, sells for %d — %s%% of a shelf draw\n",
 			t.Rarity, t.Count, t.Price, t.Sell, t.Share)
@@ -403,6 +412,7 @@ type plate struct {
 	Rarity  string
 	Sell    int
 	Art     string
+	Draw    string
 	Counter string
 	Default bool
 	Rules   []string
@@ -426,10 +436,11 @@ type tier struct {
 }
 
 type page struct {
-	Ground  string
-	Style   map[string]int
-	Count   int
-	Undrawn int
-	Tiers   []tier
-	States  []cell
+	Ground    string
+	Style     map[string]int
+	Count     int
+	Undrawn   int
+	Unwritten int
+	Tiers     []tier
+	States    []cell
 }

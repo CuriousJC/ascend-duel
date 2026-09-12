@@ -85,9 +85,9 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 	widest := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Ice),
-		card("Bash", combat.Lightning),
+		card("Thump", combat.Lightning),
 		card("Thrust", combat.Earth),
-		card("Ward", combat.Arcane),
+		card("Brace", combat.Arcane),
 	}
 
 	// A one-form five-element turn, for Prism.
@@ -95,7 +95,7 @@ func TestEveryShippedAchievementIsReachable(t *testing.T) {
 		card("Jab", combat.Fire),
 		card("Thrust", combat.Ice),
 		card("Poke", combat.Lightning),
-		card("Lunge", combat.Earth),
+		card("Skewer", combat.Earth),
 		card("Impale", combat.Arcane),
 	}
 
@@ -143,7 +143,7 @@ func TestSpectrumIsAtLeastFourElements(t *testing.T) {
 	five := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Ice),
-		card("Bash", combat.Lightning),
+		card("Thump", combat.Lightning),
 		card("Thrust", combat.Earth),
 		card("Nick", combat.Arcane),
 	}
@@ -165,7 +165,7 @@ func TestFourElementsIsNotFive(t *testing.T) {
 	four := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Ice),
-		card("Bash", combat.Lightning),
+		card("Thump", combat.Lightning),
 		card("Thrust", combat.Earth),
 	}
 	for _, k := range Loaded().ByTurn(four) {
@@ -182,7 +182,7 @@ func TestArsenalNeedsTheDefenceBesideTheThreeForms(t *testing.T) {
 	threeForms := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Fire),
-		card("Bash", combat.Fire),
+		card("Thump", combat.Fire),
 	}
 	got := map[string]bool{}
 	for _, k := range Loaded().ByTurn(threeForms) {
@@ -195,7 +195,7 @@ func TestArsenalNeedsTheDefenceBesideTheThreeForms(t *testing.T) {
 		t.Error("three attack forms with no defence is not the arsenal")
 	}
 
-	withDefence := append(append([]combat.Card{}, threeForms...), card("Ward", combat.Fire))
+	withDefence := append(append([]combat.Card{}, threeForms...), card("Brace", combat.Fire))
 	got = map[string]bool{}
 	for _, k := range Loaded().ByTurn(withDefence) {
 		got[k] = true
@@ -205,14 +205,14 @@ func TestArsenalNeedsTheDefenceBesideTheThreeForms(t *testing.T) {
 	}
 }
 
-// TestADefenceIsNotAnAttackForm is what stops Weaponmaster being earned by two attacks and a Ward.
+// TestADefenceIsNotAnAttackForm is what stops Weaponmaster being earned by two attacks and a Brace.
 // **Defend is a fourth form** and joins hands like anything else, so the only thing keeping it out
 // of an attack-form count is the clause's own category filter.
 func TestADefenceIsNotAnAttackForm(t *testing.T) {
 	turn := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Fire),
-		card("Ward", combat.Fire),
+		card("Brace", combat.Fire),
 	}
 	for _, k := range Loaded().ByTurn(turn) {
 		if k == "weaponmaster" {
@@ -228,20 +228,20 @@ func TestPrismWantsOneShapeInEveryColour(t *testing.T) {
 		card("Jab", combat.Fire),
 		card("Thrust", combat.Ice),
 		card("Poke", combat.Lightning),
-		card("Lunge", combat.Earth),
+		card("Skewer", combat.Earth),
 		card("Impale", combat.Arcane),
 	}
 	oneCard := []combat.Card{
-		card("Strike", combat.Fire),
-		card("Strike", combat.Ice),
-		card("Strike", combat.Lightning),
-		card("Strike", combat.Earth),
-		card("Strike", combat.Arcane),
+		card("Bash", combat.Fire),
+		card("Bash", combat.Ice),
+		card("Bash", combat.Lightning),
+		card("Bash", combat.Earth),
+		card("Bash", combat.Arcane),
 	}
 	mixed := []combat.Card{
 		card("Jab", combat.Fire),
 		card("Cut", combat.Ice),
-		card("Bash", combat.Lightning),
+		card("Thump", combat.Lightning),
 		card("Thrust", combat.Earth),
 		card("Nick", combat.Arcane),
 	}
@@ -294,8 +294,8 @@ func TestCardAlteredMatchesOnTheResultingCard(t *testing.T) {
 	if !found {
 		t.Error("a card becoming a Flinch is the flinch achievement")
 	}
-	if got := Loaded().ByMoment(CardAltered("Ward")); len(got) != 0 {
-		t.Errorf("a Ward is not a Flinch, got %v", got)
+	if got := Loaded().ByMoment(CardAltered("Brace")); len(got) != 0 {
+		t.Errorf("a Brace is not a Flinch, got %v", got)
 	}
 }
 
@@ -305,7 +305,7 @@ func TestCountersNameBothAxes(t *testing.T) {
 	turn := []combat.Card{
 		card("Slice", combat.Fire),
 		card("Cut", combat.Ice),
-		card("Ward", combat.Earth),
+		card("Brace", combat.Earth),
 	}
 	got := CountersFor(turn)
 
@@ -316,7 +316,7 @@ func TestCountersNameBothAxes(t *testing.T) {
 		t.Errorf("one of them is the card called Slice, got %d", got["concept:Slice"])
 	}
 	if got["form:defend"] != 1 {
-		t.Errorf("a Ward is a defending card, got %d", got["form:defend"])
+		t.Errorf("a Brace is a defending card, got %d", got["form:defend"])
 	}
 	if _, ok := got["form:none"]; ok {
 		t.Error("a counter must never name an absence")
@@ -465,7 +465,7 @@ func TestAnAxisReadsTheSameWayTheHandMatcherDoes(t *testing.T) {
 }
 
 // **A cost clause reads the card's cost, not its concept's** *(2026-09-09)*. That is what makes
-// godslayer true of five promoted Lunges and false of five Impales a Whetworm has made cheap — the
+// godslayer true of five promoted Skewers and false of five Impales a Whetworm has made cheap — the
 // achievement is about what the turn actually cost, and Card.Cost is where a worm's CostDelta lands.
 func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
 	turn := func(delta int) []combat.Card {
@@ -496,17 +496,17 @@ func TestACostClauseReadsTheCardRatherThanTheConcept(t *testing.T) {
 		t.Error("five Impales a worm made 3 AP are not five 4 AP attacks")
 	}
 
-	// And the other direction: a Lunge a worm made dearer *is* a 4 AP attack.
+	// And the other direction: a Skewer a worm made dearer *is* a 4 AP attack.
 	lunges := make([]combat.Card, 0, 5)
 	for _, e := range []combat.Element{
 		combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Arcane,
 	} {
-		c := card("Lunge", e)
+		c := card("Skewer", e)
 		c.CostDelta = 1
 		lunges = append(lunges, c)
 	}
 	if !earned(lunges) {
-		t.Error("five Lunges a worm made 4 AP are five 4 AP attacks of one card")
+		t.Error("five Skewers a worm made 4 AP are five 4 AP attacks of one card")
 	}
 }
 

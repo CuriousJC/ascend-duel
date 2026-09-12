@@ -41,10 +41,10 @@ func TestCostIsTheDefaultSort(t *testing.T) {
 
 func TestCostSortRunsCheapestFirst(t *testing.T) {
 	hand := sortHandOf(sortByCost,
-		card(combat.Cleave, combat.Ice), // 3
-		card(combat.Ward, combat.Basic), // 1
-		card(combat.Slice, combat.Fire), // 2
-		card(combat.Jab, combat.Earth),  // 1
+		card(combat.Cleave, combat.Ice),  // 3
+		card(combat.Brace, combat.Basic), // 1
+		card(combat.Slice, combat.Fire),  // 2
+		card(combat.Jab, combat.Earth),   // 1
 	)
 
 	last := 0
@@ -61,7 +61,7 @@ func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
 	hand := sortHandOf(sortByType,
 		card(combat.Guard, combat.Basic), // plan, 3
 		card(combat.Cleave, combat.Ice),  // attack, 3
-		card(combat.Ward, combat.Basic),  // plan, 1
+		card(combat.Brace, combat.Basic), // plan, 1
 		card(combat.Jab, combat.Fire),    // attack, 1
 	)
 
@@ -79,7 +79,7 @@ func TestTypeSortPutsEveryAttackBeforeEveryPlan(t *testing.T) {
 	if hand[0].Concept != combat.Jab || hand[1].Concept != combat.Cleave {
 		t.Errorf("attacks run %s, want the cheaper one first", handLabel(hand[:2]))
 	}
-	if hand[2].Concept != combat.Ward || hand[3].Concept != combat.Guard {
+	if hand[2].Concept != combat.Brace || hand[3].Concept != combat.Guard {
 		t.Errorf("plans run %s, want the cheaper one first", handLabel(hand[2:]))
 	}
 }
@@ -90,7 +90,7 @@ func TestElementSortRunsFireIceLightningEarthThenDrab(t *testing.T) {
 	want := []combat.Element{combat.Fire, combat.Ice, combat.Lightning, combat.Earth, combat.Basic}
 
 	hand := sortHandOf(sortByElement,
-		card(combat.Ward, combat.Basic),
+		card(combat.Brace, combat.Basic),
 		card(combat.Jab, combat.Earth),
 		card(combat.Jab, combat.Fire),
 		card(combat.Jab, combat.Lightning),
@@ -125,7 +125,7 @@ func TestEverySortFallsThroughToTheSameChain(t *testing.T) {
 	// Two cards a mode's leading key cannot separate must come out in the cost chain's order,
 	// whichever mode is asking. That is what makes the three arrangements read alike: only the
 	// first key differs.
-	cheap, dear := card(combat.Jab, combat.Fire), card(combat.Lunge, combat.Fire)
+	cheap, dear := card(combat.Jab, combat.Fire), card(combat.Skewer, combat.Fire)
 
 	for _, mode := range []handSort{sortByCost, sortByType, sortByElement} {
 		hand := sortHandOf(mode, dear, cheap)
@@ -204,7 +204,7 @@ func TestAnInboundFlightPointsAtTheSlotItsCardEndedIn(t *testing.T) {
 	s := flightScene(selectedHand(6, 3))
 	s.deck = nil
 	for i := 0; i < 30; i++ {
-		s.deck = append(s.deck, card(combat.Ward, combat.Basic))
+		s.deck = append(s.deck, card(combat.Brace, combat.Basic))
 	}
 	s.spendSelected()
 

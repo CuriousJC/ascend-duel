@@ -29,7 +29,7 @@ func TestOnlyAShieldCardRaisesPips(t *testing.T) {
 		t.Errorf("a ward raises %d pips, want %d", got, combat.Plain(ward).Amount())
 	}
 
-	s = shieldScene(combat.Card{Concept: combat.Strike})
+	s = shieldScene(combat.Card{Concept: combat.Bash})
 	if got := s.shieldsRaisedBy(combat.SideA, 0); got != 0 {
 		t.Errorf("an attack raises %d pips, want none", got)
 	}
@@ -44,7 +44,7 @@ func TestOnlyAShieldCardRaisesPips(t *testing.T) {
 // combat.MaxShields and the pip row draws exactly that many, so a prediction that ignored the
 // ceiling would draw a pip with no seat.
 func TestPipsNeverPredictPastTheCap(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike})
+	s := shieldScene(combat.Card{Concept: combat.Bash})
 
 	s.noteShieldFlight(combat.SideA, 0, 3, combat.MaxShields-1)
 	if len(s.theatre.shields) != 1 {
@@ -65,7 +65,7 @@ func TestPipsNeverPredictPastTheCap(t *testing.T) {
 // The pips are paid into the shown count when they arrive, once, and the count then follows the
 // events again — a KindRaised sets it outright, which is what corrects a wrong guess.
 func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike})
+	s := shieldScene(combat.Card{Concept: combat.Bash})
 	s.noteShieldFlight(combat.SideA, 0, 2, 0)
 
 	s.landShields()
@@ -99,7 +99,7 @@ func TestPipsArePaidInOnArrivalAndOnlyOnce(t *testing.T) {
 // — the announcement flies them instead, and the row takes the count the announcement carries when
 // they land rather than the moment it is spoken.
 func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike})
+	s := shieldScene(combat.Card{Concept: combat.Bash})
 	s.theatre.firingSeats = []int{0}
 
 	raise := combat.Event{Kind: combat.KindRaised, Side: combat.SideA, Amount: 2, Life: 2}
@@ -122,7 +122,7 @@ func TestAnAnnouncedRaiseFliesItsOwnPips(t *testing.T) {
 // A card that already sent its pips with its figure does not send them again when the defend phase
 // announces the raise — that is the same shields being spoken about twice.
 func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike})
+	s := shieldScene(combat.Card{Concept: combat.Bash})
 	s.theatre.firingSeats = []int{0}
 
 	s.noteShieldFlight(combat.SideA, 0, 2, 0)
@@ -139,7 +139,7 @@ func TestPipsAreNotFlownTwiceForOneCard(t *testing.T) {
 func TestALandedPipKeepsItsColour(t *testing.T) {
 	fire := cards.BorderOf(artFor(combat.Fire))
 
-	s := shieldScene(combat.Card{Concept: combat.Strike, Element: combat.Fire})
+	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldFlight(combat.SideA, 0, 2, 0)
 	for i := 0; i < shieldFlyTicks; i++ {
 		s.theatre.tick()
@@ -175,7 +175,7 @@ func TestALandedPipKeepsItsColour(t *testing.T) {
 // which used to draw the extra pips as the bare white mark and flicker one into the row between an
 // attack and the next. A raise pads and never trims.
 func TestARaiseNeverLeavesAPipColourless(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike, Element: combat.Fire})
+	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldFlight(combat.SideA, 0, 1, 0)
 	for i := 0; i < shieldFlyTicks; i++ {
 		s.theatre.tick()
@@ -200,7 +200,7 @@ func TestARaiseNeverLeavesAPipColourless(t *testing.T) {
 // then "2 shields up", both after the pips have flown — so a row taking the first outright drops
 // the second card's pip and puts it back a beat later.
 func TestARaiseNeverLowersTheRow(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike, Element: combat.Fire})
+	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.noteShieldFlight(combat.SideA, 0, 2, 0)
 	for i := 0; i < shieldFlyTicks; i++ {
 		s.theatre.tick()
@@ -224,7 +224,7 @@ func TestARaiseNeverLowersTheRow(t *testing.T) {
 // landing in a seat that flew last round would otherwise never fly, and a pip that never flew has
 // no colour to land in.
 func TestFlownSeatsAreForgottenEachRound(t *testing.T) {
-	s := shieldScene(combat.Card{Concept: combat.Strike, Element: combat.Fire})
+	s := shieldScene(combat.Card{Concept: combat.Bash, Element: combat.Fire})
 	s.enemy = &entities.Combatant{}
 	s.fighterAfter, s.enemyAfter = s.fighter.Duelist, s.enemy.Duelist
 	s.theatre.firingSeats = []int{0}

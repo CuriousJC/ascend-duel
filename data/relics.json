@@ -420,32 +420,17 @@
     ]
   },
   {
-    "RelicRecord": "striker-ring",
-    "Name": "Striker Ring",
-    "Art": "",
-    "Draw": "",
-    "Text": "Every Bash deals double DMG.",
-    "Rarity": "common",
-    "Rules": [
-      {
-        "When": "card-damage",
-        "If": { "Concept": "Bash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
-      }
-    ]
-  },
-  {
     "RelicRecord": "prodder-ring",
     "Name": "Prodder Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Poke deals double DMG.",
+    "Text": "Every Poke deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Poke" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -454,13 +439,13 @@
     "Name": "Boxer Ring",
     "Art": "boxer-ring",
     "Draw": "",
-    "Text": "Every Jab deals double DMG.",
+    "Text": "Every Jab deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Jab" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -469,13 +454,13 @@
     "Name": "Lancer Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Thrust deals double DMG.",
+    "Text": "Every Thrust deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Thrust" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -484,13 +469,13 @@
     "Name": "Fencer Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Skewer deals double DMG.",
+    "Text": "Every Skewer deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Skewer" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -499,13 +484,13 @@
     "Name": "Impaler Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Impale deals double DMG.",
+    "Text": "Every Impale deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Impale" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -514,13 +499,13 @@
     "Name": "Skirmisher Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Nick deals double DMG.",
+    "Text": "Every Nick deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Nick" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -529,13 +514,13 @@
     "Name": "Cutter Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Cut deals double DMG.",
+    "Text": "Every Cut deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Cut" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -544,13 +529,13 @@
     "Name": "Slicer Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Slice card\ndeals double DMG.",
+    "Text": "Every Slice card\ndeals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Slice" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -559,13 +544,13 @@
     "Name": "Cleaver Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Cleave deals double DMG.",
+    "Text": "Every Cleave deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Cleave" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -574,13 +559,13 @@
     "Name": "Headsman Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Sever deals double DMG.",
+    "Text": "Every Sever deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Sever" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -589,13 +574,13 @@
     "Name": "Knocker Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Tap deals double DMG.",
+    "Text": "Every Tap deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Tap" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -604,13 +589,28 @@
     "Name": "Brass Knuckles Ring",
     "Art": "brass-knuckles-ring",
     "Draw": "",
-    "Text": "Every Thump deals double DMG.",
+    "Text": "Every Thump deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Thump" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
+      }
+    ]
+  },
+  {
+    "RelicRecord": "striker-ring",
+    "Name": "Striker Ring",
+    "Art": "",
+    "Draw": "",
+    "Text": "Every Bash deals triple DMG.",
+    "Rarity": "common",
+    "Rules": [
+      {
+        "When": "card-damage",
+        "If": { "Concept": "Bash" },
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -619,13 +619,13 @@
     "Name": "Smasher Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Smash deals double DMG.",
+    "Text": "Every Smash deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Smash" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
@@ -634,13 +634,13 @@
     "Name": "Grinder Ring",
     "Art": "",
     "Draw": "",
-    "Text": "Every Pulverize deals double DMG.",
+    "Text": "Every Pulverize deals triple DMG.",
     "Rarity": "common",
     "Rules": [
       {
         "When": "card-damage",
         "If": { "Concept": "Pulverize" },
-        "Then": [{ "Do": "scale-damage", "Amount": 200 }]
+        "Then": [{ "Do": "scale-damage", "Amount": 300 }]
       }
     ]
   },
